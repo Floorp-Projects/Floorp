@@ -1,4 +1,5 @@
 use std::num::ParseIntError;
+use std::num::ParseFloatError;
 use std::net::AddrParseError;
 use std::fmt;
 use std::error;
@@ -12,6 +13,7 @@ pub enum SdpParserInternalError {
     Generic(String),
     Unsupported(String),
     Integer(ParseIntError),
+    Float(ParseFloatError),
     Address(AddrParseError),
 }
 
@@ -27,6 +29,9 @@ impl fmt::Display for SdpParserInternalError {
             SdpParserInternalError::Integer(ref error) => {
                 write!(f, "Integer parsing error: {}", error.description())
             }
+            SdpParserInternalError::Float(ref error) => {
+                write!(f, "Float parsing error: {}", error.description())
+            }
             SdpParserInternalError::Address(ref error) => {
                 write!(f, "IP address parsing error: {}", error.description())
             }
@@ -40,6 +45,7 @@ impl error::Error for SdpParserInternalError {
             SdpParserInternalError::Generic(ref message) |
             SdpParserInternalError::Unsupported(ref message) => message,
             SdpParserInternalError::Integer(ref error) => error.description(),
+            SdpParserInternalError::Float(ref error) => error.description(),
             SdpParserInternalError::Address(ref error) => error.description(),
         }
     }
@@ -47,6 +53,7 @@ impl error::Error for SdpParserInternalError {
     fn cause(&self) -> Option<&error::Error> {
         match *self {
             SdpParserInternalError::Integer(ref error) => Some(error),
+            SdpParserInternalError::Float(ref error) => Some(error),
             SdpParserInternalError::Address(ref error) => Some(error),
             // Can't tell much more about our internal errors
             _ => None,
@@ -208,6 +215,12 @@ impl From<ParseIntError> for SdpParserInternalError {
 impl From<AddrParseError> for SdpParserInternalError {
     fn from(err: AddrParseError) -> SdpParserInternalError {
         SdpParserInternalError::Address(err)
+    }
+}
+
+impl From<ParseFloatError> for SdpParserInternalError {
+    fn from(err: ParseFloatError) -> SdpParserInternalError {
+        SdpParserInternalError::Float(err)
     }
 }
 

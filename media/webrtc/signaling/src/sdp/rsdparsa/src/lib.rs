@@ -16,7 +16,8 @@ pub mod media_type;
 pub mod network;
 pub mod unsupported_types;
 
-use attribute_type::{SdpAttribute, SdpAttributeType, parse_attribute};
+use attribute_type::{SdpAttribute, SdpSingleDirection, SdpAttributeType, parse_attribute,
+                     SdpAttributeSimulcastVersion, SdpAttributeRid};
 use error::{SdpParserInternalError, SdpParserError};
 use media_type::{SdpMedia, SdpMediaLine, parse_media, parse_media_vector, SdpProtocolValue,
                  SdpMediaValue, SdpFormatList};
@@ -552,6 +553,7 @@ fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserEr
         .map_err(|e| match e {
                      SdpParserInternalError::Generic(..) |
                      SdpParserInternalError::Integer(..) |
+                     SdpParserInternalError::Float(..) |
                      SdpParserInternalError::Address(..) => {
                          SdpParserError::Line {
                              error: e,
@@ -619,6 +621,11 @@ fn test_parse_sdp_line_invalid_a_line() {
 }
 
 fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> {
+    let make_error = |x: &str| SdpParserError::Sequence {
+        message: x.to_string(),
+        line_number: 0,
+    };
+
     if !session.has_timing() {
         return Err(SdpParserError::Sequence {
                        message: "Missing timing type".to_string(),
@@ -666,6 +673,52 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
                     });
                 }
             }
+        }
+
+        let rids:Vec<&SdpAttributeRid> = msection.get_attributes().iter().filter_map(|attr| {
+                                                      match attr {
+                                                          &SdpAttribute::Rid(ref rid) => Some(rid),
+                                                          _ => None,
+                                                         }
+                                                  }).collect();
+        let recv_rids:Vec<&str> = rids.iter().filter_map(|rid| {
+          match rid.direction {
+              SdpSingleDirection::Recv => Some(rid.id.as_str()),
+              _ => None,
+          }
+        }).collect();
+
+
+        for rid_format in rids.iter().flat_map(|rid| &rid.formats) {
+            match msection.get_formats() {
+                &SdpFormatList::Integers(ref int_fmt) => {
+                    if !int_fmt.contains(&(*rid_format as u32))  {
+                        return Err(make_error("Rid pts must be declared in the media section"));
+                    }
+                },
+                &SdpFormatList::Strings(ref str_fmt) => {
+                    if !str_fmt.contains(&rid_format.to_string())  {
+                        return Err(make_error("Rid pts must be declared in the media section"));
+                    }
+                }
+            }
+        }
+
+        if let Some(&SdpAttribute::Simulcast(ref simulcast)) =
+                                            msection.get_attribute(SdpAttributeType::Simulcast) {
+            // This is already a closure as the next Bug 1432931 will require the same procedure
+            let check_defined_rids = |simulcast_version_list: &Vec<SdpAttributeSimulcastVersion>,
+                                      rid_ids: &[&str]| -> Result<(),SdpParserError> {
+                for simulcast_rid in simulcast_version_list.iter().flat_map(|x| &x.ids) {
+                    if !rid_ids.contains(&simulcast_rid.id.as_str()) {
+                        return Err(make_error(
+                                       "Simulcast RIDs must be defined in any rid attribute"));
+                    }
+                }
+                Ok(())
+            };
+
+            check_defined_rids(&simulcast.receive, &recv_rids)?
         }
     }
 
