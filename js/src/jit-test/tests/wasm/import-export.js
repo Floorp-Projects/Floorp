@@ -37,8 +37,8 @@ assertErrorMessage(() => new Memory({initial: 0, maximum: 65537}), RangeError, /
 assertErrorMessage(() => new Table({initial:2, maximum:1, element:"anyfunc"}), RangeError, /bad Table maximum size/);
 new Table({ initial: 10000000, element:"anyfunc" });
 assertErrorMessage(() => new Table({initial:10000001, element:"anyfunc"}), RangeError, /bad Table initial size/);
-new Table({ initial: 0, maximum: 2**32 - 1, element:"anyfunc" });
-assertErrorMessage(() => new Table({initial:0, maximum: 2**32, element:"anyfunc"}), RangeError, /bad Table maximum size/);
+new Table({ initial: 0, maximum: 10000000, element:"anyfunc" });
+assertErrorMessage(() => new Table({initial:0, maximum: 10000001, element:"anyfunc"}), RangeError, /bad Table maximum size/);
 
 const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);
