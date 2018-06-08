@@ -344,6 +344,7 @@ UNIFIED_SOURCES += [
     'vm/CallNonGenericMethod.cpp',
     'vm/CharacterEncoding.cpp',
     'vm/CodeCoverage.cpp',
+    'vm/Compartment.cpp',
     'vm/Compression.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',
