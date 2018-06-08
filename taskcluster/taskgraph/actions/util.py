@@ -111,12 +111,17 @@ def update_parent(task, graph):
 
 
 def create_tasks(to_run, full_task_graph, label_to_taskid,
-                 params, decision_task_id=None, suffix=''):
+                 params, decision_task_id=None, suffix='', modifier=lambda t: t):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
     this function to create new tasks,
     allowing easy debugging with `mach taskgraph action-callback --test`.
     This builds up all required tasks to run in order to run the tasks requested.
+
+    Optionally this function takes a `modifier` function that is passed in each
+    task before it is put into a new graph. It should return a valid task. Note
+    that this is passed _all_ tasks in the graph, not just the set in to_run. You
+    may want to skip modifying tasks not in your to_run list.
 
     If you wish to create the tasks in a new group, leave out decision_task_id."""
     if suffix != '':
@@ -129,7 +134,7 @@ def create_tasks(to_run, full_task_graph, label_to_taskid,
 
     target_graph = full_task_graph.graph.transitive_closure(to_run)
     target_task_graph = TaskGraph(
-        {l: full_task_graph[l] for l in target_graph.nodes},
+        {l: modifier(full_task_graph[l]) for l in target_graph.nodes},
         target_graph)
     target_task_graph.for_each_task(update_parent)
     optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
