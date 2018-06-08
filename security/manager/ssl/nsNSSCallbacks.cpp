@@ -954,17 +954,16 @@ AccumulateCipherSuite(Telemetry::HistogramID probe, const SSLChannelInfo& channe
 
 // In the case of session resumption, the AuthCertificate hook has been bypassed
 // (because we've previously successfully connected to our peer). That being the
-// case, we unfortunately don't know what the verified certificate chain was, if
-// the peer's server certificate verified as extended validation, or what its CT
-// status is (if enabled). To address this, we attempt to build a certificate
-// chain here using as much of the original context as possible (e.g. stapled
-// OCSP responses, SCTs, the hostname, the first party domain, etc.). Note that
-// because we are on the socket thread, this must not cause any network
-// requests, hence the use of FLAG_LOCAL_ONLY.
+// case, we unfortunately don't know if the peer's server certificate verified
+// as extended validation or not. To address this, we attempt to build a
+// verified EV certificate chain here using as much of the original context as
+// possible (e.g. stapled OCSP responses, SCTs, the hostname, the first party
+// domain, etc.). Note that because we are on the socket thread, this must not
+// cause any network requests, hence the use of FLAG_LOCAL_ONLY.
+// Similarly, we need to determine the certificate's CT status.
 static void
-RebuildVerifiedCertificateInformation(RefPtr<nsSSLStatus> sslStatus,
-                                      PRFileDesc* fd,
-                                      nsNSSSocketInfo* infoObject)
+DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
+                                    PRFileDesc* fd, nsNSSSocketInfo* infoObject)
 {
   MOZ_ASSERT(sslStatus);
   MOZ_ASSERT(fd);
@@ -1002,7 +1001,8 @@ RebuildVerifiedCertificateInformation(RefPtr<nsSSLStatus> sslStatus,
     sctsFromTLSExtension = nullptr;
   }
 
-  int flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY;
+  int flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY |
+              mozilla::psm::CertVerifier::FLAG_MUST_BE_EV;
   if (!infoObject->SharedState().IsOCSPStaplingEnabled() ||
       !infoObject->SharedState().IsOCSPMustStapleEnabled()) {
     flags |= CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
@@ -1029,11 +1029,6 @@ RebuildVerifiedCertificateInformation(RefPtr<nsSSLStatus> sslStatus,
     nullptr, // SHA-1 telemetry
     nullptr, // pinning telemetry
     &certificateTransparencyInfo);
-
-  if (rv != Success) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("HandshakeCallback: couldn't rebuild verified certificate info"));
-  }
 
   RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(cert.get()));
   if (rv == Success && evOidPolicy != SEC_OID_UNKNOWN) {
@@ -1253,7 +1248,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("HandshakeCallback KEEPING existing cert\n"));
   } else {
-    RebuildVerifiedCertificateInformation(status, fd, infoObject);
+    DetermineEVAndCTStatusAndSetNewCert(status, fd, infoObject);
   }
 
   nsCOMPtr<nsIX509CertList> succeededCertChain;
