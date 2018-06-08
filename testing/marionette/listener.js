@@ -13,6 +13,7 @@ const winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/accessibility.js");
 ChromeUtils.import("chrome://marionette/content/action.js");
@@ -42,7 +43,7 @@ ChromeUtils.import("chrome://marionette/content/navigate.js");
 ChromeUtils.import("chrome://marionette/content/proxy.js");
 ChromeUtils.import("chrome://marionette/content/session.js");
 
-Cu.importGlobalProperties(["URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 let curContainer = {frame: content, shadowRoot: null};
 
