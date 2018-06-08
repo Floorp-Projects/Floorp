@@ -104,20 +104,27 @@ const char* ScopeKindString(ScopeKind kind);
 
 class BindingName
 {
-    // A JSAtom* with its low bit used as a tag for whether it is closed over
-    // (i.e., exists in the environment shape).
+    // A JSAtom* with its low bit used as a tag for the:
+    //  * whether it is closed over (i.e., exists in the environment shape)
+    //  * whether it is a top-level function binding in global or eval scope,
+    //    instead of var binding (both are in the same range in Scope data)
     uintptr_t bits_;
 
     static const uintptr_t ClosedOverFlag = 0x1;
-    static const uintptr_t FlagMask = 0x1;
+    // TODO: We should reuse this bit for let vs class distinction to
+    //       show the better redeclaration error message (bug 1428672).
+    static const uintptr_t TopLevelFunctionFlag = 0x2;
+    static const uintptr_t FlagMask = 0x3;
 
   public:
     BindingName()
       : bits_(0)
     { }
 
-    BindingName(JSAtom* name, bool closedOver)
-      : bits_(uintptr_t(name) | (closedOver ? ClosedOverFlag : 0x0))
+    BindingName(JSAtom* name, bool closedOver, bool isTopLevelFunction = false)
+      : bits_(uintptr_t(name) |
+              (closedOver ? ClosedOverFlag : 0x0) |
+              (isTopLevelFunction? TopLevelFunctionFlag : 0x0))
     { }
 
     JSAtom* name() const {
@@ -128,6 +135,15 @@ class BindingName
         return bits_ & ClosedOverFlag;
     }
 
+  private:
+    friend class BindingIter;
+    // This method should be called only for binding names in `vars` range in
+    // BindingIter.
+    bool isTopLevelFunction() const {
+        return bits_ & TopLevelFunctionFlag;
+    }
+
+  public:
     void trace(JSTracer* trc);
 };
 
@@ -747,12 +763,12 @@ class GlobalScope : public Scope
     struct Data
     {
         // Bindings are sorted by kind.
+        // `vars` includes top-level functions which is distinguished by a bit
+        // on the BindingName.
         //
-        // top-level funcs - [0, varStart)
-        //            vars - [varStart, letStart)
+        //            vars - [0, letStart)
         //            lets - [letStart, constStart)
         //          consts - [constStart, length)
-        uint32_t varStart = 0;
         uint32_t letStart = 0;
         uint32_t constStart = 0;
         uint32_t length = 0;
@@ -853,11 +869,11 @@ class EvalScope : public Scope
     {
         // All bindings in an eval script are 'var' bindings. The implicit
         // lexical scope around the eval is present regardless of strictness
-        // and is its own LexicalScope. However, we need to track top-level
-        // functions specially for redeclaration checks.
+        // and is its own LexicalScope.
+        // `vars` includes top-level functions which is distinguished by a bit
+        // on the BindingName.
         //
-        // top-level funcs - [0, varStart)
-        //            vars - [varStart, length)
+        //            vars - [0, length)
         uint32_t varStart = 0;
         uint32_t length = 0;
 
@@ -1152,8 +1168,7 @@ class BindingIter
     //
     //            imports - [0, positionalFormalStart)
     // positional formals - [positionalFormalStart, nonPositionalFormalStart)
-    //      other formals - [nonPositionalParamStart, topLevelFunctionStart)
-    //    top-level funcs - [topLevelFunctionStart, varStart)
+    //      other formals - [nonPositionalParamStart, varStart)
     //               vars - [varStart, letStart)
     //               lets - [letStart, constStart)
     //             consts - [constStart, length)
@@ -1163,7 +1178,6 @@ class BindingIter
     //            imports - name
     // positional formals - argument slot
     //      other formals - frame slot
-    //    top-level funcs - frame slot
     //               vars - frame slot
     //               lets - frame slot
     //             consts - frame slot
@@ -1173,13 +1187,11 @@ class BindingIter
     //            imports - name
     // positional formals - environment slot or name
     //      other formals - environment slot or name
-    //    top-level funcs - environment slot or name
     //               vars - environment slot or name
     //               lets - environment slot or name
     //             consts - environment slot or name
     MOZ_INIT_OUTSIDE_CTOR uint32_t positionalFormalStart_;
     MOZ_INIT_OUTSIDE_CTOR uint32_t nonPositionalFormalStart_;
-    MOZ_INIT_OUTSIDE_CTOR uint32_t topLevelFunctionStart_;
     MOZ_INIT_OUTSIDE_CTOR uint32_t varStart_;
     MOZ_INIT_OUTSIDE_CTOR uint32_t letStart_;
     MOZ_INIT_OUTSIDE_CTOR uint32_t constStart_;
@@ -1211,14 +1223,12 @@ class BindingIter
     MOZ_INIT_OUTSIDE_CTOR BindingName* names_;
 
     void init(uint32_t positionalFormalStart, uint32_t nonPositionalFormalStart,
-              uint32_t topLevelFunctionStart, uint32_t varStart,
-              uint32_t letStart, uint32_t constStart,
+              uint32_t varStart, uint32_t letStart, uint32_t constStart,
               uint8_t flags, uint32_t firstFrameSlot, uint32_t firstEnvironmentSlot,
               BindingName* names, uint32_t length)
     {
         positionalFormalStart_ = positionalFormalStart;
         nonPositionalFormalStart_ = nonPositionalFormalStart;
-        topLevelFunctionStart_ = topLevelFunctionStart;
         varStart_ = varStart;
         letStart_ = letStart;
         constStart_ = constStart;
@@ -1385,7 +1395,7 @@ class BindingIter
         MOZ_ASSERT(!done());
         if (index_ < positionalFormalStart_)
             return BindingKind::Import;
-        if (index_ < topLevelFunctionStart_) {
+        if (index_ < varStart_) {
             // When the parameter list has expressions, the parameters act
             // like lexical bindings and have TDZ.
             if (hasFormalParameterExprs())
@@ -1403,7 +1413,9 @@ class BindingIter
 
     bool isTopLevelFunction() const {
         MOZ_ASSERT(!done());
-        return index_ >= topLevelFunctionStart_ && index_ < varStart_;
+        bool result = names_[index_].isTopLevelFunction();
+        MOZ_ASSERT_IF(result, kind() == BindingKind::Var);
+        return result;
     }
 
     bool hasArgumentSlot() const {
