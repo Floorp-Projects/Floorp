@@ -13804,14 +13804,5 @@
     "high": 50,
     "n_buckets": 20,
     "description": "Total number of doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
-  },
-  "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
-    "record_in_processes": ["content"],
-    "alert_emails": ["xquan@mozilla.com", "botond@mozilla.com"],
-    "bug_numbers": [1423013, 1423017],
-    "expires_in_version": "65",
-    "kind": "categorical",
-    "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
-    "description": "How common are different types of out-of-reach viewport overflow?"
   }
 }
