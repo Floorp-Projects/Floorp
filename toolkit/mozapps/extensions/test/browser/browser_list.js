@@ -458,9 +458,14 @@ add_task(async function() {
 });
 
 
+function tick() {
+  return new Promise(SimpleTest.executeSoon);
+}
+
 add_task(async function() {
   info("Enabling lightweight theme");
   LightweightThemeManager.currentTheme = gLWTheme;
+  await tick();
 
   gManagerWindow.loadView("addons://list/theme");
   await new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
@@ -474,6 +479,7 @@ add_task(async function() {
 
   info("Disabling lightweight theme");
   LightweightThemeManager.currentTheme = null;
+  await tick();
 
   is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
   is_element_visible(get_node(addon, "enable-btn"), "Enable button should be hidden");
