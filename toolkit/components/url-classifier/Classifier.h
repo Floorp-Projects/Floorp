@@ -229,6 +229,8 @@ private:
   // be accessed in CopyInUseDirForUpdate().
   // It will be initialized right before update on the worker thread.
   nsCOMPtr<nsIFile> mRootStoreDirectoryForUpdate;
+
+  bool mIsClosed; // true once Close() has been called
 };
 
 } // namespace safebrowsing

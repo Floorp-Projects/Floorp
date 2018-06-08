@@ -123,6 +123,7 @@ Classifier::GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
 Classifier::Classifier()
   : mIsTableRequestResultOutdated(true)
   , mUpdateInterrupted(true)
+  , mIsClosed(false)
 {
   NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),
                     getter_AddRefs(mUpdateThread));
@@ -178,6 +179,10 @@ Classifier::SetupPathNames()
 nsresult
 Classifier::CreateStoreDirectory()
 {
+  if (mIsClosed) {
+    return NS_OK; // nothing to do, the classifier is done
+  }
+
   // Ensure the safebrowsing directory exists.
   bool storeExists;
   nsresult rv = mRootStoreDirectory->Exists(&storeExists);
@@ -243,6 +248,7 @@ Classifier::Close()
 {
   // Close will be called by PreShutdown, so it is important to note that
   // things put here should not affect an ongoing update thread.
+  mIsClosed = true;
   DropStores();
 }
 
@@ -257,6 +263,9 @@ Classifier::Reset()
 
   RefPtr<Classifier> self = this;
   auto resetFunc = [self] {
+    if (self->mIsClosed) {
+      return; // too late to reset, bail
+    }
     self->DropStores();
 
     self->mRootStoreDirectory->Remove(true);
@@ -895,6 +904,10 @@ Classifier::DropStores()
 nsresult
 Classifier::RegenActiveTables()
 {
+  if (mIsClosed) {
+    return NS_OK; // nothing to do, the classifier is done
+  }
+
   mActiveTablesCache.Clear();
 
   nsTArray<nsCString> foundTables;
