@@ -1903,7 +1903,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Limits limits;
-    if (!GetLimits(cx, obj, MaxTableInitialLength, MaxTableMaximumLength, "Table", &limits,
+    if (!GetLimits(cx, obj, MaxTableInitialLength, UINT32_MAX, "Table", &limits,
                    Shareable::False))
     {
         return false;
