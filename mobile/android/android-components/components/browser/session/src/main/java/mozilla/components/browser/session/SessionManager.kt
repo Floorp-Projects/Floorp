@@ -4,12 +4,16 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.support.utils.observer.Observable
+import mozilla.components.support.utils.observer.ObserverRegistry
+
 /**
  * This class provides access to a centralized registry of all active sessions.
  */
-class SessionManager(initialSession: Session) {
+class SessionManager(
+    initialSession: Session
+) : Observable<SessionManager.Observer> by registry {
     private val sessions: ObservableList<Session> = ObservableList(mutableListOf(initialSession), 0)
-    private val observers = mutableListOf<Observer>()
 
     /**
      * Returns the number of sessions.
@@ -35,27 +39,14 @@ class SessionManager(initialSession: Session) {
     }
 
     /**
-     * Registers an observer to get notified about changes regarding sessions (e.g. adding a new
-     * session or removing an existing session).
-     */
-    fun register(observer: Observer) {
-        observers.add(observer)
-    }
-
-    /**
-     * Unregisters an observer.
-     */
-    fun unregister(observer: Observer) {
-        observers.remove(observer)
-    }
-
-    /**
      * Marks the given session as selected.
      */
     fun select(session: Session) {
         sessions.select(session)
 
-        observers.forEach { it.onSessionSelected(session) }
+        registry.notifyObservers {
+            onSessionSelected(session)
+        }
     }
 
     /**
@@ -68,3 +59,5 @@ class SessionManager(initialSession: Session) {
         fun onSessionSelected(session: Session)
     }
 }
+
+private val registry = ObserverRegistry<SessionManager.Observer>()

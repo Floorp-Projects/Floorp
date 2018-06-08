@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.support.utils.observer.Observable
+import mozilla.components.support.utils.observer.ObserverRegistry
 import java.util.UUID
 import kotlin.properties.Delegates
 
@@ -13,7 +15,7 @@ import kotlin.properties.Delegates
 class Session(
     initialUrl: String,
     val id: String = UUID.randomUUID().toString()
-) {
+) : Observable<Session.Observer> by registry {
     /**
      * Interface to be implemented by classes that want to observe a session.
      */
@@ -25,8 +27,6 @@ class Session(
         fun onSearch()
         fun onSecurityChanged()
     }
-
-    private val observers = mutableListOf<Observer>()
 
     /**
      * A value type holding security information for a Session.
@@ -89,31 +89,12 @@ class Session(
     }
 
     /**
-     * Registers an observer that gets notified when the session changes.
-     */
-    fun register(observer: Observer) = synchronized(observers) {
-        observers.add(observer)
-    }
-
-    /**
-     * Unregisters an observer.
-     */
-    fun unregister(observer: Observer) = synchronized(observers) {
-        observers.remove(observer)
-    }
-
-    /**
      * Helper method to notify observers.
      */
-
-    private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) = synchronized(observers) {
+    private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) {
         if (old != new) {
             notifyObservers(block)
         }
-    }
-
-    internal fun notifyObservers(block: Observer.() -> Unit) = synchronized(observers) {
-        observers.forEach { it.block() }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -129,3 +110,5 @@ class Session(
         return id.hashCode()
     }
 }
+
+private val registry = ObserverRegistry<Session.Observer>()

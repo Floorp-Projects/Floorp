@@ -5,13 +5,15 @@
 package mozilla.components.concept.engine
 
 import android.support.annotation.CallSuper
+import mozilla.components.support.utils.observer.Observable
+import mozilla.components.support.utils.observer.ObserverRegistry
 
 /**
  * Class representing a single engine session.
  *
  * In browsers usually a session corresponds to a tab.
  */
-abstract class EngineSession {
+abstract class EngineSession : Observable<EngineSession.Observer> by registry {
     /**
      * Interface to be implemented by classes that want to observe this engine session.
      */
@@ -21,31 +23,6 @@ abstract class EngineSession {
         fun onLoadingStateChange(loading: Boolean)
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)
         fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null)
-    }
-
-    private val observers = mutableListOf<Observer>()
-
-    /**
-     * Register an observer that will be notified if this session changes (e.g. new location).
-     */
-    fun register(observer: Observer) = synchronized(observers) {
-        observers.add(observer)
-    }
-
-    /**
-     * Unregister an observer.
-     */
-    fun unregister(observer: Observer) = synchronized(observers) {
-        observers.remove(observer)
-    }
-
-    /**
-     * Helper method for notifying all observers.
-     */
-    protected fun notifyObservers(block: Observer.() -> Unit) = synchronized(observers) {
-        observers.forEach {
-            it.block()
-        }
     }
 
     /**
@@ -90,7 +67,7 @@ abstract class EngineSession {
      * this session.
      */
     @CallSuper
-    fun close() = synchronized(observers) {
-        observers.clear()
-    }
+    fun close() = registry.unregisterObservers()
 }
+
+val registry = ObserverRegistry<EngineSession.Observer>()

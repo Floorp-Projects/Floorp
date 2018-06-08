@@ -31,6 +31,10 @@ dependencies {
 
     implementation "com.android.support:support-annotations:${rootProject.ext.dependencies['supportLibraries']}"
 
+    // We expose this as API because we are using Observable in our public API and do not want every
+    // consumer to have to manually import "utils".
+    api project(':support-utils')
+
     testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
     testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
