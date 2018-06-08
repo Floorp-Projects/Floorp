@@ -27,27 +27,6 @@ linux64-clang-3.9:
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-4:
-    description: "Clang 4 toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(clang4)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
-    worker:
-        max-run-time: 7200
-    run:
-        using: toolchain-script
-        script: build-clang-4-linux.sh
-        resources:
-            - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-4-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-gcc-4.9
-
 linux64-clang-5:
     description: "Clang 5 toolchain build"
     treeherder:
