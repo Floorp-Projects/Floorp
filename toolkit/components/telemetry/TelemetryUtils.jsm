@@ -24,6 +24,57 @@ const IS_CONTENT_PROCESS = (function() {
   return runtime.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 })();
 
+/**
+ * When reflecting a histogram into JS, Telemetry hands us an object
+ * with the following properties:
+ *
+ * - min, max, histogram_type, sum, sum_squares_{lo,hi}: simple integers;
+ * - counts: array of counts for histogram buckets;
+ * - ranges: array of calculated bucket sizes.
+ *
+ * This format is not straightforward to read and potentially bulky
+ * with lots of zeros in the counts array.  Packing histograms makes
+ * raw histograms easier to read and compresses the data a little bit.
+ *
+ * Returns an object:
+ * { range: [min, max], bucket_count: <number of buckets>,
+ *   histogram_type: <histogram_type>, sum: <sum>,
+ *   values: { bucket1: count1, bucket2: count2, ... } }
+ */
+function packHistogram(hgram) {
+  let r = hgram.ranges;
+  let c = hgram.counts;
+  let retgram = {
+    range: [r[1], r[r.length - 1]],
+    bucket_count: r.length,
+    histogram_type: hgram.histogram_type,
+    values: {},
+    sum: hgram.sum
+  };
+
+  let first = true;
+  let last = 0;
+
+  for (let i = 0; i < c.length; i++) {
+    let value = c[i];
+    if (!value)
+      continue;
+
+    // add a lower bound
+    if (i && first) {
+      retgram.values[r[i - 1]] = 0;
+    }
+    first = false;
+    last = i + 1;
+    retgram.values[r[i]] = value;
+  }
+
+  // add an upper bound
+  if (last && last < c.length)
+    retgram.values[r[last]] = 0;
+  return retgram;
+}
+
 var TelemetryUtils = {
   Preferences: Object.freeze({
     // General Preferences
@@ -225,5 +276,93 @@ var TelemetryUtils = {
     Services.telemetry.canRecordExtended = isPrereleaseChannel ||
       isReleaseCandidateOnBeta ||
       Services.prefs.getBoolPref(this.Preferences.OverridePreRelease, false);
+  },
+
+  /**
+   * Converts histograms from the raw to the packed format.
+   * This additionally filters TELEMETRY_TEST_ histograms.
+   *
+   * @param {Object} snapshot - The histogram snapshot.
+   * @param {Boolean} [testingMode=false] - Whether or not testing histograms
+   *        should be filtered.
+   * @returns {Object}
+   *
+   * {
+   *  "<process>": {
+   *    "<histogram>": {
+   *      range: [min, max],
+   *      bucket_count: <number of buckets>,
+   *      histogram_type: <histogram_type>,
+   *      sum: <sum>,
+   *      values: { bucket1: count1, bucket2: count2, ... }
+   *    },
+   *   ..
+   *   },
+   *  ..
+   * }
+   */
+  packHistograms(snapshot, testingMode = false) {
+    let ret = {};
+
+    for (let [process, histograms] of Object.entries(snapshot)) {
+      ret[process] = {};
+      for (let [name, value] of Object.entries(histograms)) {
+        if (testingMode || !name.startsWith("TELEMETRY_TEST_")) {
+          ret[process][name] = packHistogram(value);
+        }
+      }
+    }
+
+    return ret;
+  },
+
+  /**
+   * Converts keyed histograms from the raw to the packed format.
+   * This additionally filters TELEMETRY_TEST_ histograms and skips
+   * empty keyed histograms.
+   *
+   * @param {Object} snapshot - The keyed histogram snapshot.
+   * @param {Boolean} [testingMode=false] - Whether or not testing histograms should
+   *        be filtered.
+   * @returns {Object}
+   *
+   * {
+   *  "<process>": {
+   *    "<histogram>": {
+   *      "<key>": {
+   *        range: [min, max],
+   *        bucket_count: <number of buckets>,
+   *        histogram_type: <histogram_type>,
+   *        sum: <sum>,
+   *        values: { bucket1: count1, bucket2: count2, ... }
+   *      },
+   *      ..
+   *    },
+   *   ..
+   *   },
+   *  ..
+   * }
+   */
+  packKeyedHistograms(snapshot, testingMode = false) {
+    let ret = {};
+
+    for (let [process, histograms] of Object.entries(snapshot)) {
+      ret[process] = {};
+      for (let [name, value] of Object.entries(histograms)) {
+        if (testingMode || !name.startsWith("TELEMETRY_TEST_")) {
+          let keys = Object.keys(value);
+          if (keys.length == 0) {
+            // Skip empty keyed histogram
+            continue;
+          }
+          ret[process][name] = {};
+          for (let [key, hgram] of Object.entries(value)) {
+            ret[process][name][key] = packHistogram(hgram);
+          }
+        }
+      }
+    }
+
+    return ret;
   },
 };

@@ -812,57 +812,6 @@ var Impl = {
   },
 
   /**
-   * When reflecting a histogram into JS, Telemetry hands us an object
-   * with the following properties:
-   *
-   * - min, max, histogram_type, sum, sum_squares_{lo,hi}: simple integers;
-   * - counts: array of counts for histogram buckets;
-   * - ranges: array of calculated bucket sizes.
-   *
-   * This format is not straightforward to read and potentially bulky
-   * with lots of zeros in the counts array.  Packing histograms makes
-   * raw histograms easier to read and compresses the data a little bit.
-   *
-   * Returns an object:
-   * { range: [min, max], bucket_count: <number of buckets>,
-   *   histogram_type: <histogram_type>, sum: <sum>,
-   *   values: { bucket1: count1, bucket2: count2, ... } }
-   */
-  packHistogram: function packHistogram(hgram) {
-    let r = hgram.ranges;
-    let c = hgram.counts;
-    let retgram = {
-      range: [r[1], r[r.length - 1]],
-      bucket_count: r.length,
-      histogram_type: hgram.histogram_type,
-      values: {},
-      sum: hgram.sum
-    };
-
-    let first = true;
-    let last = 0;
-
-    for (let i = 0; i < c.length; i++) {
-      let value = c[i];
-      if (!value)
-        continue;
-
-      // add a lower bound
-      if (i && first) {
-        retgram.values[r[i - 1]] = 0;
-      }
-      first = false;
-      last = i + 1;
-      retgram.values[r[i]] = value;
-    }
-
-    // add an upper bound
-    if (last && last < c.length)
-      retgram.values[r[last]] = 0;
-    return retgram;
-  },
-
-  /**
    * Get the type of the dataset that needs to be collected, based on the preferences.
    * @return {Integer} A value from nsITelemetry.DATASET_*.
    */
@@ -873,42 +822,12 @@ var Impl = {
 
   getHistograms: function getHistograms(clearSubsession) {
     let hls = Telemetry.snapshotHistograms(this.getDatasetType(), clearSubsession);
-    let ret = {};
-
-    for (let [process, histograms] of Object.entries(hls)) {
-      ret[process] = {};
-      for (let [name, value] of Object.entries(histograms)) {
-        if (this._testing || !name.startsWith("TELEMETRY_TEST_")) {
-          ret[process][name] = this.packHistogram(value);
-        }
-      }
-    }
-
-    return ret;
+    return TelemetryUtils.packHistograms(hls, this._testing);
   },
 
   getKeyedHistograms(clearSubsession) {
     let khs = Telemetry.snapshotKeyedHistograms(this.getDatasetType(), clearSubsession);
-    let ret = {};
-
-    for (let [process, histograms] of Object.entries(khs)) {
-      ret[process] = {};
-      for (let [name, value] of Object.entries(histograms)) {
-        if (this._testing || !name.startsWith("TELEMETRY_TEST_")) {
-          let keys = Object.keys(value);
-          if (keys.length == 0) {
-            // Skip empty keyed histogram
-            continue;
-          }
-          ret[process][name] = {};
-          for (let [key, hgram] of Object.entries(value)) {
-            ret[process][name][key] = this.packHistogram(hgram);
-          }
-        }
-      }
-    }
-
-    return ret;
+    return TelemetryUtils.packKeyedHistograms(khs, this._testing);
   },
 
   /**
