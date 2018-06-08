@@ -20,8 +20,8 @@
 
 #include "mozilla/CheckedInt.h"
 
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
 

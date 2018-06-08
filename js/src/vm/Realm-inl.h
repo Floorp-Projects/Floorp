@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_JSCompartment_inl_h
-#define vm_JSCompartment_inl_h
+#ifndef vm_Realm_inl_h
+#define vm_Realm_inl_h
 
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
@@ -184,4 +184,4 @@ js::ObjectRealm::objectMaybeInIteration(JSObject* obj)
     return true;
 }
 
-#endif /* vm_JSCompartment_inl_h */
+#endif /* vm_Realm_inl_h */

@@ -26,11 +26,11 @@
 #include "wasm/WasmGenerator.h"
 
 #include "gc/PrivateIterators-inl.h"
-#include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 

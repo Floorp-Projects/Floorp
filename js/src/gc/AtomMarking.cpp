@@ -7,7 +7,7 @@
 #include "gc/AtomMarking-inl.h"
 
 #include "gc/PublicIterators.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 #include "gc/GC-inl.h"
 #include "gc/Heap-inl.h"

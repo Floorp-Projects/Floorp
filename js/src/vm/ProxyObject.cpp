@@ -9,7 +9,7 @@
 #include "gc/Allocator.h"
 #include "gc/GCTrace.h"
 #include "proxy/DeadObjectProxy.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"

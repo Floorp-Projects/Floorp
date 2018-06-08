@@ -18,7 +18,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 using namespace js;
 using namespace js::jit;

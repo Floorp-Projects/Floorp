@@ -21,8 +21,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
 
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmValidate.h"
 

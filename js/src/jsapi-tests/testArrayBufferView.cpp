@@ -5,10 +5,10 @@
 #include "jsfriendapi.h"
 
 #include "jsapi-tests/tests.h"
-#include "vm/JSCompartment.h"
 #include "vm/ProxyObject.h"
+#include "vm/Realm.h"
 
-#include "vm/JSCompartment-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 

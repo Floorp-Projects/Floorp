@@ -15,8 +15,8 @@
 #include "jit/JitRealm.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "vm/Shape.h"
 #include "vm/TraceLogging.h"
 

@@ -9,8 +9,8 @@
 
 #include "builtin/String.h"
 #include "jsapi-tests/tests.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 #include "vm/StringType-inl.h"
 
