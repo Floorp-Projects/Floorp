@@ -2312,8 +2312,6 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
     MOZ_ASSERT(untilChar == '\'' || untilChar == '"' || untilChar == '`',
                "unexpected string/template literal delimiter");
 
-    int c;
-
     bool parsingTemplate = (untilChar == '`');
     bool templateHead = false;
 
@@ -2329,35 +2327,36 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
     // We need to detect any of these chars:  " or ', \n (or its
     // equivalents), \\, EOF.  Because we detect EOL sequences here and
     // put them back immediately, we can use getCodeUnit().
-    while ((c = getCodeUnit()) != untilChar) {
-        if (c == EOF) {
-            ungetCodeUnit(c);
+    int32_t unit;
+    while ((unit = getCodeUnit()) != untilChar) {
+        if (unit == EOF) {
+            ungetCodeUnit(unit);
             const char delimiters[] = { untilChar, untilChar, '\0' };
             error(JSMSG_EOF_BEFORE_END_OF_LITERAL, delimiters);
             return false;
         }
 
-        if (c == '\\') {
+        if (unit == '\\') {
             // When parsing templates, we don't immediately report errors for
             // invalid escapes; these are handled by the parser.
             // In those cases we don't append to tokenbuf, since it won't be
             // read.
-            if (!getChar(&c))
+            if (!getChar(&unit))
                 return false;
 
-            if (c == EOF) {
+            if (unit == EOF) {
                 const char delimiters[] = { untilChar, untilChar, '\0' };
                 error(JSMSG_EOF_IN_ESCAPE_IN_LITERAL, delimiters);
                 return false;
             }
 
-            switch (static_cast<CharT>(c)) {
-              case 'b': c = '\b'; break;
-              case 'f': c = '\f'; break;
-              case 'n': c = '\n'; break;
-              case 'r': c = '\r'; break;
-              case 't': c = '\t'; break;
-              case 'v': c = '\v'; break;
+            switch (static_cast<CharT>(unit)) {
+              case 'b': unit = '\b'; break;
+              case 'f': unit = '\f'; break;
+              case 'n': unit = '\n'; break;
+              case 'r': unit = '\r'; break;
+              case 't': unit = '\t'; break;
+              case 'v': unit = '\v'; break;
 
               case '\n':
                 // ES5 7.8.4: an escaped line terminator represents
@@ -2373,8 +2372,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     bool first = true;
                     bool valid = true;
                     do {
-                        int32_t c = getCodeUnit();
-                        if (c == EOF) {
+                        int32_t u3 = getCodeUnit();
+                        if (u3 == EOF) {
                             if (parsingTemplate) {
                                 TokenStreamAnyChars& anyChars = anyCharsAccess();
                                 anyChars.setInvalidTemplateEscape(start,
@@ -2385,7 +2384,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                             reportInvalidEscapeError(start, InvalidEscapeType::Unicode);
                             return false;
                         }
-                        if (c == '}') {
+                        if (u3 == '}') {
                             if (first) {
                                 if (parsingTemplate) {
                                     TokenStreamAnyChars& anyChars = anyCharsAccess();
@@ -2400,12 +2399,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                             break;
                         }
 
-                        if (!JS7_ISHEX(c)) {
+                        if (!JS7_ISHEX(u3)) {
                             if (parsingTemplate) {
                                 // We put the character back so that we read
                                 // it on the next pass, which matters if it
                                 // was '`' or '\'.
-                                ungetCodeUnit(c);
+                                ungetCodeUnit(u3);
 
                                 TokenStreamAnyChars& anyChars = anyCharsAccess();
                                 anyChars.setInvalidTemplateEscape(start,
@@ -2417,7 +2416,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                             return false;
                         }
 
-                        code = (code << 4) | JS7_UNHEX(c);
+                        code = (code << 4) | JS7_UNHEX(u3);
                         if (code > unicode::NonBMPMax) {
                             if (parsingTemplate) {
                                 TokenStreamAnyChars& anyChars = anyCharsAccess();
@@ -2438,11 +2437,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
                     MOZ_ASSERT(code <= unicode::NonBMPMax);
                     if (code < unicode::NonBMPMin) {
-                        c = code;
+                        unit = code;
                     } else {
                         if (!tokenbuf.append(unicode::LeadSurrogate(code)))
                             return false;
-                        c = unicode::TrailSurrogate(code);
+                        unit = unicode::TrailSurrogate(code);
                     }
                     break;
                 }
@@ -2451,10 +2450,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 if (JS7_ISHEX(c2) && peekChars(3, cp) &&
                     JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
                 {
-                    c = (JS7_UNHEX(c2) << 12) |
-                        (JS7_UNHEX(cp[0]) << 8) |
-                        (JS7_UNHEX(cp[1]) << 4) |
-                        JS7_UNHEX(cp[2]);
+                    unit = (JS7_UNHEX(c2) << 12) |
+                           (JS7_UNHEX(cp[0]) << 8) |
+                           (JS7_UNHEX(cp[1]) << 4) |
+                           JS7_UNHEX(cp[2]);
                     skipChars(3);
                 } else {
                     ungetCodeUnit(c2);
@@ -2474,7 +2473,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
               case 'x': {
                 CharT cp[2];
                 if (peekChars(2, cp) && JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1])) {
-                    c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
+                    unit = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
                     skipChars(2);
                 } else {
                     uint32_t start = sourceUnits.offset() - 2;
@@ -2491,14 +2490,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
               default:
                 // Octal character specification.
-                if (JS7_ISOCT(c)) {
-                    int32_t val = JS7_UNOCT(c);
+                if (JS7_ISOCT(unit)) {
+                    int32_t val = JS7_UNOCT(unit);
 
-                    if (!peekChar(&c))
+                    if (!peekChar(&unit))
                         return false;
 
                     // Strict mode code allows only \0, then a non-digit.
-                    if (val != 0 || IsAsciiDigit(c)) {
+                    if (val != 0 || IsAsciiDigit(unit)) {
                         TokenStreamAnyChars& anyChars = anyCharsAccess();
                         if (parsingTemplate) {
                             anyChars.setInvalidTemplateEscape(sourceUnits.offset() - 2,
@@ -2510,36 +2509,36 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                         anyChars.flags.sawOctalEscape = true;
                     }
 
-                    if (JS7_ISOCT(c)) {
-                        val = 8 * val + JS7_UNOCT(c);
-                        consumeKnownChar(c);
-                        if (!peekChar(&c))
+                    if (JS7_ISOCT(unit)) {
+                        val = 8 * val + JS7_UNOCT(unit);
+                        consumeKnownChar(unit);
+                        if (!peekChar(&unit))
                             return false;
-                        if (JS7_ISOCT(c)) {
+                        if (JS7_ISOCT(unit)) {
                             int32_t save = val;
-                            val = 8 * val + JS7_UNOCT(c);
+                            val = 8 * val + JS7_UNOCT(unit);
                             if (val <= 0xFF)
-                                consumeKnownChar(c);
+                                consumeKnownChar(unit);
                             else
                                 val = save;
                         }
                     }
 
-                    c = char16_t(val);
+                    unit = char16_t(val);
                 }
                 break;
             }
-        } else if (c == '\r' || c == '\n') {
+        } else if (unit == '\r' || unit == '\n') {
             if (!parsingTemplate) {
                 // String literals don't allow ASCII line breaks.
-                ungetCodeUnit(c);
+                ungetCodeUnit(unit);
                 const char delimiters[] = { untilChar, untilChar, '\0' };
                 error(JSMSG_EOL_BEFORE_END_OF_STRING, delimiters);
                 return false;
             }
 
-            if (c == '\r') {
-                c = '\n';
+            if (unit == '\r') {
+                unit = '\n';
 
                 // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
                 if (sourceUnits.hasRawChars())
@@ -2550,7 +2549,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 return false;
 
             anyCharsAccess().updateFlagsForEOL();
-        } else if (c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR) {
+        } else if (unit == unicode::LINE_SEPARATOR || unit == unicode::PARA_SEPARATOR) {
             // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR encode
             // their literal values in template literals and (as of fairly
             // recently) string literals, but they still count as line
@@ -2559,12 +2558,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 return false;
 
             anyCharsAccess().updateFlagsForEOL();
-        } else if (parsingTemplate && c == '$' && matchCodeUnit('{')) {
+        } else if (parsingTemplate && unit == '$' && matchCodeUnit('{')) {
             templateHead = true;
             break;
         }
 
-        if (!tokenbuf.append(c)) {
+        if (!tokenbuf.append(unit)) {
             ReportOutOfMemory(anyCharsAccess().cx);
             return false;
         }
