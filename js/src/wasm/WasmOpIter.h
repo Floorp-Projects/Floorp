@@ -193,6 +193,8 @@ enum class OpKind {
     MemOrTableInit,
     RefNull,
     StructNew,
+    StructGet,
+    StructSet,
 };
 
 // Return the OpKind for a given Op. This is used for sanity-checking that
@@ -386,6 +388,9 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
     MOZ_MUST_USE bool readLinearMemoryAddressAligned(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
     MOZ_MUST_USE bool readBlockType(ExprType* expr);
+    MOZ_MUST_USE bool readStructTypeIndex(uint32_t* typeIndex);
+    MOZ_MUST_USE bool readFieldIndex(uint32_t* fieldIndex, const StructType& structType);
+
     MOZ_MUST_USE bool popCallArgs(const ValTypeVector& expectedTypes, Vector<Value, 8, SystemAllocPolicy>* values);
 
     MOZ_MUST_USE bool popAnyType(StackType* type, Value* value);
@@ -566,6 +571,8 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                          Value* dst, Value* src, Value* len);
     MOZ_MUST_USE bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
+    MOZ_MUST_USE bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr);
+    MOZ_MUST_USE bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr, Value* val);
 
     // At a location where readOp is allowed, peek at the next opcode
     // without consuming it or updating any internal state.
@@ -2123,20 +2130,46 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readStructNew(uint32_t* typeIndex, ValueVector* argValues)
+OpIter<Policy>::readStructTypeIndex(uint32_t* typeIndex)
 {
-    MOZ_ASSERT(Classify(op_) == OpKind::StructNew);
-
     if (!readVarU32(typeIndex)) {
-        return fail("unable to read call type index");
+        return fail("unable to read type index");
     }
 
     if (*typeIndex >= env_.types.length()) {
-        return fail("struct index out of range");
+        return fail("type index out of range");
     }
 
     if (!env_.types[*typeIndex].isStructType()) {
         return fail("not a struct type");
+    }
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readFieldIndex(uint32_t* fieldIndex, const StructType& structType)
+{
+    if (!readVarU32(fieldIndex)) {
+        return fail("unable to read field index");
+    }
+
+    if (structType.fields_.length() <= *fieldIndex) {
+        return fail("field index out of range");
+    }
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readStructNew(uint32_t* typeIndex, ValueVector* argValues)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::StructNew);
+
+    if (!readStructTypeIndex(typeIndex)) {
+        return false;
     }
 
     const StructType& str = env_.types[*typeIndex].structType();
@@ -2154,6 +2187,62 @@ OpIter<Policy>::readStructNew(uint32_t* typeIndex, ValueVector* argValues)
     }
 
     return push(ValType(PackTypeCode(TypeCode::Ref, *typeIndex)));
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr)
+{
+    MOZ_ASSERT(typeIndex != fieldIndex);
+    MOZ_ASSERT(Classify(op_) == OpKind::StructGet);
+
+    if (!readStructTypeIndex(typeIndex)) {
+        return false;
+    }
+
+    const StructType& structType = env_.types[*typeIndex].structType();
+
+    if (!readFieldIndex(fieldIndex, structType)) {
+        return false;
+    }
+
+    if (!popWithType(ValType(ValType::Ref, *typeIndex), ptr)) {
+        return false;
+    }
+
+    return push(structType.fields_[*fieldIndex].type);
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr, Value* val)
+{
+    MOZ_ASSERT(typeIndex != fieldIndex);
+    MOZ_ASSERT(Classify(op_) == OpKind::StructSet);
+
+    if (!readStructTypeIndex(typeIndex)) {
+        return false;
+    }
+
+    const StructType& structType = env_.types[*typeIndex].structType();
+
+    if (!readFieldIndex(fieldIndex, structType)) {
+        return false;
+    }
+
+    if (!popWithType(structType.fields_[*fieldIndex].type, val)) {
+        return false;
+    }
+
+    if (!structType.fields_[*fieldIndex].isMutable) {
+        return fail("field is not mutable");
+    }
+
+    if (!popWithType(ValType(ValType::Ref, *typeIndex), ptr)) {
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace wasm
