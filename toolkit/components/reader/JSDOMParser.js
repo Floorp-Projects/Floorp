@@ -618,6 +618,13 @@
   };
 
   var Element = function (tag) {
+    // We use this to find the closing tag.
+    this._matchingTag = tag;
+    // We're explicitly a non-namespace aware parser, we just pretend it's all HTML.
+    var lastColonIndex = tag.lastIndexOf(":");
+    if (lastColonIndex != -1) {
+      tag = tag.substring(lastColonIndex + 1);
+    }
     this.attributes = [];
     this.childNodes = [];
     this.children = [];
@@ -785,7 +792,13 @@
           break;
         }
       }
-    }
+    },
+
+    hasAttribute: function (name) {
+      return this.attributes.some(function (attr) {
+        return attr.name == name;
+      });
+    },
   };
 
   var Style = function (node) {
@@ -1062,9 +1075,10 @@
         return null;
 
       // Read any text as Text node
+      var textNode;
       if (c !== "<") {
         --this.currentChar;
-        var textNode = new Text();
+        textNode = new Text();
         var n = this.html.indexOf("<", this.currentChar);
         if (n === -1) {
           textNode.innerHTML = this.html.substring(this.currentChar, this.html.length);
@@ -1073,6 +1087,18 @@
           textNode.innerHTML = this.html.substring(this.currentChar, n);
           this.currentChar = n;
         }
+        return textNode;
+      }
+
+      if (this.match("![CDATA[")) {
+        var endChar = this.html.indexOf("]]>", this.currentChar);
+        if (endChar === -1) {
+          this.error("unclosed CDATA section");
+          return null;
+        }
+        textNode = new Text();
+        textNode.textContent = this.html.substring(this.currentChar, endChar);
+        this.currentChar = endChar + ("]]>").length;
         return textNode;
       }
 
@@ -1107,7 +1133,7 @@
       // If this isn't a void Element, read its child nodes
       if (!closed) {
         this.readChildren(node);
-        var closingTag = "</" + localName + ">";
+        var closingTag = "</" + node._matchingTag + ">";
         if (!this.match(closingTag)) {
           this.error("expected '" + closingTag + "' and got " + this.html.substr(this.currentChar, closingTag.length));
           return null;
