@@ -1157,7 +1157,8 @@ GetOrCreateDOMReflectorNoWrap(JSContext* cx, T* value,
 
 // Create a JSObject wrapping "value", for cases when "value" is a
 // non-wrapper-cached object using WebIDL bindings.  "value" must implement a
-// WrapObject() method taking a JSContext and a scope.
+// WrapObject() method taking a JSContext and a prototype (possibly null) and
+// returning the resulting object via a MutableHandle<JSObject*> outparam.
 template <class T>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx,
@@ -1202,9 +1203,11 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
 }
 
 // Create a JSObject wrapping "value", for cases when "value" is a
-// non-wrapper-cached owned object using WebIDL bindings.  "value" must implement a
-// WrapObject() method taking a JSContext, a scope, and a boolean outparam that
-// is true if the JSObject took ownership
+// non-wrapper-cached owned object using WebIDL bindings.  "value" must
+// implement a WrapObject() method taking a taking a JSContext and a prototype
+// (possibly null) and returning two pieces of information: the resulting object
+// via a MutableHandle<JSObject*> outparam and a boolean return value that is
+// true if the JSObject took ownership
 template <class T>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx,
