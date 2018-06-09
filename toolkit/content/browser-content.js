@@ -26,6 +26,12 @@ ChromeUtils.defineModuleGetter(this, "RemoteFinder",
 XPCOMUtils.defineLazyProxy(this, "SelectionSourceContent",
   "resource://gre/modules/SelectionSourceContent.jsm");
 
+XPCOMUtils.defineLazyProxy(this, "DateTimePickerContent", () => {
+  let tmp = {};
+  ChromeUtils.import("resource://gre/modules/DateTimePickerContent.jsm", tmp);
+  return new tmp.DateTimePickerContent(this);
+});
+
 var global = this;
 
 
@@ -48,6 +54,8 @@ var AutoScrollListener = {
   }
 };
 Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
+
+addEventListener("MozOpenDateTimePicker", DateTimePickerContent);
 
 var PopupBlocking = {
   popupData: null,
