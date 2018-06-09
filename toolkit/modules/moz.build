@@ -52,6 +52,9 @@ with Files('tests/xpcshell/test_client_id.js'):
 with Files('AsyncPrefs.jsm'):
     BUG_COMPONENT = ('Core', 'Security: Process Sandboxing')
 
+with Files('AutoScrollController.jsm'):
+    BUG_COMPONENT = ('Core', 'Panning and Zooming')
+
 with Files('CharsetMenu.jsm'):
     BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
@@ -180,6 +183,7 @@ EXTRA_JS_MODULES += [
     'addons/WebRequestUpload.jsm',
     'AppMenuNotifications.jsm',
     'AsyncPrefs.jsm',
+    'AutoScrollController.jsm',
     'Battery.jsm',
     'BinarySearch.jsm',
     'BrowserUtils.jsm',
