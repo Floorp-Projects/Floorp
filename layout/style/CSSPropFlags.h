@@ -49,9 +49,6 @@ enum class CSSPropFlags : uint8_t
   // the DOM. Properties with this flag are defined in an #ifndef
   // CSS_PROP_LIST_EXCLUDE_INTERNAL section.
   Internal = 1 << 5,
-
-  // Whether this property should be serialized by Servo in getComputedStyle.
-  SerializedByServo = 1 << 6,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSPropFlags)
