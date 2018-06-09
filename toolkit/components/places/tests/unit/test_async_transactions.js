@@ -244,14 +244,20 @@ function ensureAnnotationsSet(aGuid, aAnnos) {
 }
 
 function ensureItemsMoved(...items) {
-  Assert.equal(observer.itemsMoved.size, items.length);
+  Assert.equal(observer.itemsMoved.size, items.length,
+    "Should have received the correct number of moved notifications");
   for (let item of items) {
-    Assert.ok(observer.itemsMoved.has(item.guid));
+    Assert.ok(observer.itemsMoved.has(item.guid),
+      `Observer should have a move for ${item.guid}`);
     let info = observer.itemsMoved.get(item.guid);
-    Assert.equal(info.oldParentGuid, item.oldParentGuid);
-    Assert.equal(info.oldIndex, item.oldIndex);
-    Assert.equal(info.newParentGuid, item.newParentGuid);
-    Assert.equal(info.newIndex, item.newIndex);
+    Assert.equal(info.oldParentGuid, item.oldParentGuid,
+      "Should have the correct old parent guid");
+    Assert.equal(info.oldIndex, item.oldIndex,
+      "Should have the correct old index");
+    Assert.equal(info.newParentGuid, item.newParentGuid,
+      "Should have the correct new parent guid");
+    Assert.equal(info.newIndex, item.newIndex,
+      "Should have the correct new index");
   }
 }
 
@@ -695,6 +701,139 @@ add_task(async function test_move_items_to_folder() {
   ensureUndoState([ [moveTxn],
                     [folder_b_txn],
                     [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
+  await PT.clearTransactionsHistory();
+  ensureUndoState();
+});
+
+add_task(async function test_move_multiple_items_to_folder() {
+  let folder_a_info = createTestFolderInfo("Folder A");
+  let bkm_a_info = { url: "http://test_move_items.com",
+                     title: "Bookmark A" };
+  let bkm_b_info = { url: "http://test_move_items.com",
+                     title: "Bookmark B" };
+  let bkm_c_info = { url: "http://test_move_items.com",
+                    title: "Bookmark C" };
+
+  // Test moving items within the same folder.
+  let [folder_a_txn_result,
+       bkm_a_txn_result,
+       bkm_b_txn_result,
+       bkm_c_txn_result] = await PT.batch(async function() {
+    let folder_a_txn = PT.NewFolder(folder_a_info);
+
+    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid =
+      bkm_c_info.parentGuid = await folder_a_txn.transact();
+    let bkm_a_txn = PT.NewBookmark(bkm_a_info);
+    bkm_a_info.guid = await bkm_a_txn.transact();
+    let bkm_b_txn = PT.NewBookmark(bkm_b_info);
+    bkm_b_info.guid = await bkm_b_txn.transact();
+    let bkm_c_txn = PT.NewBookmark(bkm_c_info);
+    bkm_c_info.guid = await bkm_c_txn.transact();
+    return [folder_a_txn, bkm_a_txn, bkm_b_txn, bkm_c_txn];
+  });
+
+  ensureUndoState([[bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+
+  let moveTxn = PT.Move({ guids: [bkm_a_info.guid, bkm_b_info.guid],
+                          newParentGuid: folder_a_info.guid });
+  await moveTxn.transact();
+
+  let ensureDo = () => {
+    ensureUndoState([[moveTxn], [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 0,
+      newIndex: 2
+    }, {
+      guid: bkm_b_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 1,
+      newIndex: 2
+    });
+    observer.reset();
+  };
+  let ensureUndo = () => {
+    ensureUndoState([[moveTxn], [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 1);
+    ensureItemsMoved({
+      guid: bkm_a_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 1,
+      newIndex: 0
+    }, {
+      guid: bkm_b_info.guid,
+      oldParentGuid: folder_a_info.guid,
+      newParentGuid: folder_a_info.guid,
+      oldIndex: 2,
+      newIndex: 1
+    });
+    observer.reset();
+  };
+
+  ensureDo();
+  await PT.undo();
+  ensureUndo();
+  await PT.redo();
+  ensureDo();
+  await PT.undo();
+  ensureUndo();
+
+  await PT.clearTransactionsHistory(false, true);
+  ensureUndoState([[bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
+
+  // Test moving items between folders.
+  let folder_b_info = createTestFolderInfo("Folder B");
+  let folder_b_txn = PT.NewFolder(folder_b_info);
+  folder_b_info.guid = await folder_b_txn.transact();
+  ensureUndoState([ [folder_b_txn],
+                    [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
+
+  moveTxn = PT.Move({ guid:          bkm_a_info.guid,
+                      newParentGuid: folder_b_info.guid,
+                      newIndex:      bmsvc.DEFAULT_INDEX });
+  await moveTxn.transact();
+
+  ensureDo = () => {
+    ensureUndoState([ [moveTxn],
+                      [folder_b_txn],
+                      [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
+    ensureItemsMoved({ guid:          bkm_a_info.guid,
+                       oldParentGuid: folder_a_info.guid,
+                       newParentGuid: folder_b_info.guid,
+                       oldIndex:      0,
+                       newIndex:      0 });
+    observer.reset();
+  };
+  ensureUndo = () => {
+    ensureUndoState([ [moveTxn],
+                      [folder_b_txn],
+                      [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 1);
+    ensureItemsMoved({ guid:          bkm_a_info.guid,
+                       oldParentGuid: folder_b_info.guid,
+                       newParentGuid: folder_a_info.guid,
+                       oldIndex:      0,
+                       newIndex:      0 });
+    observer.reset();
+  };
+
+  ensureDo();
+  await PT.undo();
+  ensureUndo();
+  await PT.redo();
+  ensureDo();
+  await PT.undo();
+  ensureUndo();
+
+  // Clean up
+  await PT.undo(); // folder_b_txn
+  await PT.undo(); // folder_a_txn + the bookmarks;
+  Assert.equal(observer.itemsRemoved.size, 5);
+  ensureUndoState([ [moveTxn],
+                    [folder_b_txn],
+                    [bkm_c_txn_result, bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
   await PT.clearTransactionsHistory();
   ensureUndoState();
 });

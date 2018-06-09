@@ -7,6 +7,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 import json
 import sys
+import shutil
 
 import mozpack.path as mozpath
 from mozbuild import shellutil
@@ -277,10 +278,17 @@ class TupBackend(CommonBackend):
             args += ['-j%d' % jobs]
         else:
             args += ['-j%d' % multiprocessing.cpu_count()]
-        return config.run_process(args=args,
+        status = config.run_process(args=args,
                                   line_handler=output.on_line,
                                   ensure_exit_code=False,
                                   append_env=self._get_mozconfig_env(config))
+        # upload Tup db
+        if (not status and
+            self.environment.substs.get('MOZ_AUTOMATION') and self.environment.substs.get('UPLOAD_TUP_DB')):
+            src = mozpath.join(self.environment.topsrcdir, '.tup')
+            dst = mozpath.join(os.environ['UPLOAD_PATH'], 'tup_db')
+            shutil.make_archive(dst, 'zip', src)
+        return status
 
     def _get_backend_file(self, relobjdir):
         objdir = mozpath.normpath(mozpath.join(self.environment.topobjdir, relobjdir))

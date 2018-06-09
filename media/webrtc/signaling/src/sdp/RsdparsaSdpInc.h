@@ -32,7 +32,7 @@ struct RustIpAddr {
 };
 
 struct StringView {
-  char* buf;
+  const char* buf;
   size_t len;
 };
 
@@ -222,6 +222,11 @@ nsresult sdp_get_media_connection(const RustMediaSection* aMediaSec,
 
 RustAttributeList*
 sdp_get_media_attribute_list(const RustMediaSection* aMediaSec);
+
+nsresult sdp_media_add_codec(const RustMediaSection* aMediaSec,
+                             uint8_t aPT, StringView aCodecName,
+                             uint32_t aClockrate, uint16_t channels);
+void sdp_media_clear_codecs(const RustMediaSection* aMediaSec);
 
 nsresult sdp_get_iceufrag(const RustAttributeList* aList, StringView* ret);
 nsresult sdp_get_icepwd(const RustAttributeList* aList, StringView* ret);

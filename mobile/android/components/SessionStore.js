@@ -1232,6 +1232,7 @@ SessionStore.prototype = {
       // a single timer per histogram.
       Services.telemetry.getHistogramById("FX_SESSION_RESTORE_WRITE_FILE_MS").add(Math.round(stopWriteMs - startWriteMs));
       Services.obs.notifyObservers(null, "sessionstore-state-write-complete");
+      EventDispatcher.instance.sendRequest({type: "Session:DataWritten"});
       this._sessionDataIsGood = true;
     });
   },

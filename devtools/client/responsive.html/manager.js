@@ -88,11 +88,6 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       this.showRemoteOnlyNotification(window, tab, options);
       return promise.reject(new Error("RDM only available for remote tabs."));
     }
-    // Remove this once we support this case in bug 1306975.
-    if (tab.linkedBrowser.hasAttribute("usercontextid")) {
-      this.showNoContainerTabsNotification(window, tab, options);
-      return promise.reject(new Error("RDM not available for container tabs."));
-    }
     if (!this.isActiveForTab(tab)) {
       this.initMenuCheckListenerFor(window);
 
@@ -269,14 +264,6 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
     });
   },
-
-  showNoContainerTabsNotification(window, tab, { trigger } = {}) {
-    showNotification(window, tab, {
-      command: trigger == "command",
-      msg: l10n.getStr("responsive.noContainerTabs"),
-      priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
-    });
-  },
 };
 
 // GCLI commands in ./commands.js listen for events from this object to know
@@ -357,7 +344,10 @@ ResponsiveUI.prototype = {
         toolWindow.addEventListener("message", ui);
         debug("Wait until init from inner");
         await message.request(toolWindow, "init");
-        toolWindow.addInitialViewport("about:blank");
+        toolWindow.addInitialViewport({
+          uri: "about:blank",
+          userContextId: ui.tab.userContextId,
+        });
         debug("Wait until browser mounted");
         await message.wait(toolWindow, "browser-mounted");
         return ui.getViewportBrowser();

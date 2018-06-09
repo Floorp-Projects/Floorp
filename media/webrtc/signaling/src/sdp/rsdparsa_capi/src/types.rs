@@ -1,4 +1,8 @@
 use libc::{size_t, uint32_t};
+use std::ffi::CStr;
+use std::{str, slice};
+use std::error::Error;
+use std::boxed::Box;
 
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 
@@ -15,6 +19,32 @@ pub const NULL_STRING: StringView = StringView { buffer: 0 as *const u8,
 impl<'a> From<&'a str> for StringView {
     fn from(input: &str) -> StringView {
         StringView { buffer: input.as_ptr(), len: input.len()}
+    }
+}
+
+impl Into<Result<String,Box<Error>>> for StringView {
+    fn into(self) -> Result<String,Box<Error>> {
+
+        // This block must be unsafe as it converts a StringView, most likly provided from the
+        // C++ code, into a rust String and thus needs to operate with raw pointers.
+        let string_slice: &[u8];
+        unsafe {
+            // Add one to the length as the length passed in the StringView is the length of
+            // the string and is missing the null terminator
+            string_slice = slice::from_raw_parts(self.buffer, self.len+1 as usize);
+        }
+
+         let c_str = match CStr::from_bytes_with_nul(string_slice) {
+                 Ok(string) => string,
+                 Err(x) => { return Err(Box::new(x)); },
+         };
+
+         let str_slice: &str = match str::from_utf8(c_str.to_bytes()) {
+                 Ok(string) => string,
+                 Err(x) => { return Err(Box::new(x)); },
+         };
+
+         Ok(str_slice.to_string())
     }
 }
 
