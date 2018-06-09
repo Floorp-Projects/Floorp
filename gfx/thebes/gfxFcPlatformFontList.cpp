@@ -41,7 +41,7 @@
 #include "mozilla/X11Util.h"
 #endif
 
-#ifdef MOZ_CONTENT_SANDBOX
+#if defined(MOZ_CONTENT_SANDBOX) && defined (XP_LINUX)
 #include "mozilla/SandboxBrokerPolicyFactory.h"
 #include "mozilla/SandboxSettings.h"
 #endif
