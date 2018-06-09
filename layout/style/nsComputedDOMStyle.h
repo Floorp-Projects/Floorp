@@ -59,6 +59,10 @@ private:
   typedef mozilla::dom::CSSValue CSSValue;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
 
+  already_AddRefed<CSSValue>
+  GetPropertyCSSValueWithoutWarning(const nsAString& aProp,
+                                    mozilla::ErrorResult& aRv);
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsComputedDOMStyle,
@@ -612,6 +616,9 @@ private:
   already_AddRefed<CSSValue> DoGetPaintOrder();
 
   already_AddRefed<CSSValue> DoGetContextProperties();
+
+  /* Custom properties */
+  already_AddRefed<CSSValue> DoGetCustomProperty(const nsAString& aPropertyName);
 
   /* Helper functions */
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);

@@ -226,10 +226,6 @@ class Longhand(object):
         # See compute_damage for the various values this can take
         self.servo_restyle_damage = servo_restyle_damage
 
-    @staticmethod
-    def type():
-        return "longhand"
-
     def experimental(self, product):
         if product == "gecko":
             return bool(self.gecko_pref)
@@ -365,10 +361,6 @@ class Shorthand(object):
     animatable = property(get_animatable)
     transitionable = property(get_transitionable)
 
-    @staticmethod
-    def type():
-        return "shorthand"
-
     def experimental(self, product):
         if product == "gecko":
             return bool(self.gecko_pref)
@@ -399,10 +391,6 @@ class Alias(object):
         self.gecko_pref = gecko_pref
         self.allowed_in_page_rule = original.allowed_in_page_rule
         self.allowed_in_keyframe_block = original.allowed_in_keyframe_block
-
-    @staticmethod
-    def type():
-        return "alias"
 
     def experimental(self, product):
         if product == "gecko":
