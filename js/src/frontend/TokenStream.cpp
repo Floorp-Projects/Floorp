@@ -1049,7 +1049,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::errorAt(uint32_t offset, unsigned er
 // cases, do not advance along the buffer.
 template<typename CharT, class AnyCharsAccess>
 uint32_t
-TokenStreamSpecific<CharT, AnyCharsAccess>::peekUnicodeEscape(uint32_t* codePoint)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::peekUnicodeEscape(uint32_t* codePoint)
 {
     int32_t c = getCodeUnit();
     if (c != 'u') {
@@ -1082,9 +1082,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekUnicodeEscape(uint32_t* codePoin
 
 template<typename CharT, class AnyCharsAccess>
 uint32_t
-TokenStreamSpecific<CharT, AnyCharsAccess>::peekExtendedUnicodeEscape(uint32_t* codePoint)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::peekExtendedUnicodeEscape(uint32_t* codePoint)
 {
-    // The opening brace character was already read.
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '{');
+
     int32_t c = getCodeUnit();
 
     // Skip leading zeros.
@@ -1122,7 +1123,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekExtendedUnicodeEscape(uint32_t* 
 
 template<typename CharT, class AnyCharsAccess>
 uint32_t
-TokenStreamSpecific<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32_t* codePoint)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32_t* codePoint)
 {
     uint32_t length = peekUnicodeEscape(codePoint);
     if (length > 0 && unicode::IsIdentifierStart(*codePoint)) {
@@ -1134,7 +1135,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32_t* 
 
 template<typename CharT, class AnyCharsAccess>
 bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t* codePoint)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t* codePoint)
 {
     uint32_t length = peekUnicodeEscape(codePoint);
     if (length > 0 && unicode::IsIdentifierPart(*codePoint)) {
