@@ -5713,7 +5713,7 @@ private:
   // This stores the ASR that this sticky container item would have assuming it
   // has no fixed descendants. This may be the same as the ASR returned by
   // GetActiveScrolledRoot(), or it may be a descendant of that.
-  const ActiveScrolledRoot* mContainerASR;
+  RefPtr<const ActiveScrolledRoot> mContainerASR;
 };
 
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
@@ -5728,6 +5728,7 @@ public:
     , mAnimatedGeometryRootForScrollMetadata(aOther.mAnimatedGeometryRootForScrollMetadata)
     , mIndex(aOther.mIndex)
     , mIsFixedBackground(aOther.mIsFixedBackground)
+    , mContainerASR(aOther.mContainerASR)
   {
     MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   }
@@ -5797,7 +5798,7 @@ protected:
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   uint32_t mIndex;
   bool mIsFixedBackground;
-  const ActiveScrolledRoot* mContainerASR;
+  RefPtr<const ActiveScrolledRoot> mContainerASR;
 };
 
 class nsDisplayTableFixedPosition : public nsDisplayFixedPosition
