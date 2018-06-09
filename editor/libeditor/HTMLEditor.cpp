@@ -1445,7 +1445,7 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
     }
     CloneAttributesWithTransaction(*rootElement, *divElement);
 
-    return BeginningOfDocument();
+    return MaybeCollapseSelectionAtFirstEditableNode(false);
   }
 
   rv = LoadHTML(Substring(beginbody, endtotal));
@@ -1485,7 +1485,7 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   CloneAttributesWithTransaction(*rootElement, *child->AsElement());
 
   // place selection at first editable content
-  return BeginningOfDocument();
+  return MaybeCollapseSelectionAtFirstEditableNode(false);
 }
 
 EditorRawDOMPoint
@@ -4964,7 +4964,7 @@ HTMLEditor::NotifyRootChanged()
     return;
   }
 
-  rv = BeginningOfDocument();
+  rv = MaybeCollapseSelectionAtFirstEditableNode(false);
   if (NS_FAILED(rv)) {
     return;
   }
