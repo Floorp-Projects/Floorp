@@ -434,8 +434,11 @@ void RtpFrameReferenceFinder::ManageFrameVp9(
       LOG(LS_WARNING) << "Received keyframe without scalability structure";
 
     frame->num_references = 0;
-    GofInfo info = gof_info_.find(codec_header.tl0_pic_idx)->second;
-    FrameReceivedVp9(frame->picture_id, &info);
+    auto gof_info_it = gof_info_.find(codec_header.tl0_pic_idx);
+    if (gof_info_it == gof_info_.end())
+      return;
+
+    FrameReceivedVp9(frame->picture_id, &gof_info_it->second);
     CompletedFrameVp9(std::move(frame));
     return;
   }
@@ -507,6 +510,12 @@ bool RtpFrameReferenceFinder::MissingRequiredFrameVp9(uint16_t picture_id,
       ForwardDiff<uint16_t, kPicIdLength>(info.gof->pid_start, picture_id);
   size_t gof_idx = diff % info.gof->num_frames_in_gof;
   size_t temporal_idx = info.gof->temporal_idx[gof_idx];
+
+  if (temporal_idx >= kMaxTemporalLayers) {
+    LOG(LS_WARNING) << "At most " << kMaxTemporalLayers << " temporal "
+                    << "layers are supported.";
+    return true;
+  }
 
   // For every reference this frame has, check if there is a frame missing in
   // the interval (|ref_pid|, |picture_id|) in any of the lower temporal
