@@ -1595,7 +1595,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::consumeRestOfSingleLineComment()
 
 template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart start,
+TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int32_t unit, TokenStart start,
                                                           const CharT* numStart,
                                                           Modifier modifier, TokenKind* out)
 {
@@ -1606,14 +1606,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
     });
 
     // Consume integral component digits.
-    while (IsAsciiDigit(c))
-        c = getCodeUnit();
+    while (IsAsciiDigit(unit))
+        unit = getCodeUnit();
 
     // Numbers contain no escapes, so we can read directly from |sourceUnits|.
     double dval;
     DecimalPoint decimalPoint = NoDecimal;
-    if (c != '.' && c != 'e' && c != 'E') {
-        ungetCodeUnit(c);
+    if (unit != '.' && unit != 'e' && unit != 'E') {
+        // NOTE: |unit| may be EOF here.
+        ungetCodeUnit(unit);
 
         // Most numbers are pure decimal integers without fractional component
         // or exponential notation.  Handle that with optimized code.
@@ -1624,33 +1625,33 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
         }
     } else {
         // Consume any decimal dot and fractional component.
-        if (c == '.') {
+        if (unit == '.') {
             decimalPoint = HasDecimal;
             do {
-                c = getCodeUnit();
-            } while (IsAsciiDigit(c));
+                unit = getCodeUnit();
+            } while (IsAsciiDigit(unit));
         }
 
         // Consume any exponential notation.
-        if (c == 'e' || c == 'E') {
-            c = getCodeUnit();
-            if (c == '+' || c == '-')
-                c = getCodeUnit();
+        if (unit == 'e' || unit == 'E') {
+            unit = getCodeUnit();
+            if (unit == '+' || unit == '-')
+                unit = getCodeUnit();
 
             // Exponential notation must contain at least one digit.
-            if (!IsAsciiDigit(c)) {
-                ungetCodeUnit(c);
+            if (!IsAsciiDigit(unit)) {
+                ungetCodeUnit(unit);
                 error(JSMSG_MISSING_EXPONENT);
                 return false;
             }
 
             // Consume exponential digits.
             do {
-                c = getCodeUnit();
-            } while (IsAsciiDigit(c));
+                unit = getCodeUnit();
+            } while (IsAsciiDigit(unit));
         }
 
-        ungetCodeUnit(c);
+        ungetCodeUnit(unit);
 
         const CharT* dummy;
         if (!js_strtod(anyCharsAccess().cx, numStart, sourceUnits.addressOfNextCodeUnit(), &dummy,
@@ -1663,31 +1664,25 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::decimalNumber(int c, TokenStart star
     // Number followed by IdentifierStart is an error.  (This is the only place
     // in ECMAScript where token boundary is inadequate to properly separate
     // two tokens, necessitating this unaesthetic lookahead.)
-    if (c != EOF) {
-        if (unicode::IsIdentifierStart(char16_t(c))) {
-            error(JSMSG_IDSTART_AFTER_NUMBER);
-            return false;
-        }
-
-        consumeKnownCharIgnoreEOL(c);
-
-        uint32_t codePoint;
-        if (!matchMultiUnitCodePoint(c, &codePoint))
-            return false;
-
-        if (codePoint) {
-            // In all cases revert the get of the overall code point.
-            ungetCodePointIgnoreEOL(codePoint);
-
-            if (unicode::IsIdentifierStart(codePoint)) {
-                // This will properly point at the start of the code point.
+    if (unit != EOF) {
+        if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+            if (unicode::IsIdentifierStart(char16_t(unit))) {
                 error(JSMSG_IDSTART_AFTER_NUMBER);
                 return false;
             }
         } else {
-            // If not a multi-unit code point, we only need to unget the single
-            // code unit consumed.
-            ungetCodeUnit(c);
+            int32_t codePoint;
+            if (!getCodePoint(&codePoint))
+                return false;
+
+            ungetCodePointIgnoreEOL(codePoint);
+            if (codePoint == unicode::LINE_SEPARATOR || codePoint == unicode::PARA_SEPARATOR)
+                anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+
+            if (unicode::IsIdentifierStart(uint32_t(codePoint))) {
+                error(JSMSG_IDSTART_AFTER_NUMBER);
+                return false;
+            }
         }
     }
 
