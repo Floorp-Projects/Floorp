@@ -10,10 +10,10 @@
 #include "gc/Allocator.h"
 #include "gc/Rooting.h"
 #include "util/StringBuffer.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
-#include "vm/JSCompartment-inl.h"
+#include "vm/Realm-inl.h"
 
 using JS::Symbol;
 using namespace js;

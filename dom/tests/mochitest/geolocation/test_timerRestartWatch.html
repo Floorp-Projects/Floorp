@@ -14,10 +14,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=526326
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=526326">Mozilla Bug 526326</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -30,8 +31,11 @@ var watchID;
 var times = 0;
 
 function errorCallback(err) {
-  ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
+  is(err.code, err.TIMEOUT, "ensure error is a timeout.");
+
   times++;
+  isnot(times, 0, "times should be nonzero");
+  isnot(times, 4, "should not receive more than three error callbacks");
 
   // make sure we got at least 3 times errorCallback
   if (times >= 3) {
@@ -45,7 +49,9 @@ function errorCallback(err) {
 
 function successCallback(position) {
   ok(1, "on success");
-  // Now that we got a success callback, lets try to ensure
+  check_geolocation(position);
+
+  // Now that we got a success callback, let's try to ensure
   // that we get a timeout error.
   // The network cache is already off, now stop the sjs from reponding to requests
   stop_geolocationProvider(function(){});
@@ -66,4 +72,3 @@ function test1() {
 </pre>
 </body>
 </html>
-

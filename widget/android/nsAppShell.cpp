@@ -343,7 +343,8 @@ public:
 
     static void OnLocationChanged(double aLatitude, double aLongitude,
                                   double aAltitude, float aAccuracy,
-                                  float aBearing, float aSpeed, int64_t aTime)
+                                  float aAltitudeAccuracy,
+                                  float aHeading, float aSpeed, int64_t aTime)
     {
         if (!gLocationCallback) {
             return;
@@ -351,7 +352,7 @@ public:
 
         RefPtr<nsIDOMGeoPosition> geoPosition(
                 new nsGeoPosition(aLatitude, aLongitude, aAltitude, aAccuracy,
-                                  aAccuracy, aBearing, aSpeed, aTime));
+                                  aAltitudeAccuracy, aHeading, aSpeed, aTime));
         gLocationCallback->Update(geoPosition);
     }
 

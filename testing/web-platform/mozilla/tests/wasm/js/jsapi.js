@@ -526,7 +526,7 @@ test(() => {
     assert_equals(new Table({initial:1, element:"anyfunc"}) instanceof Table, true);
     assert_equals(new Table({initial:1.5, element:"anyfunc"}) instanceof Table, true);
     assert_equals(new Table({initial:1, maximum:1.5, element:"anyfunc"}) instanceof Table, true);
-    assert_equals(new Table({initial:1, maximum:Math.pow(2,32)-1, element:"anyfunc"}) instanceof Table, true);
+    assertThrows(() => new Table({initial:1, maximum:Math.pow(2,32)-1, element:"anyfunc"}), RangeError);
 }, "'WebAssembly.Table' constructor function");
 
 test(() => {

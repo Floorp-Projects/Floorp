@@ -17,7 +17,7 @@
 
 #include "builtin/Array.h"
 #include "util/StringBuffer.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 #include "vm/NativeObject-inl.h"
 

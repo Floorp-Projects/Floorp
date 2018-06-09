@@ -55,6 +55,9 @@ class GeckoViewModule {
   // Override to initialize module.
   onInit() {}
 
+  // Override to cleanup when the window is closed
+  onDestroy() {}
+
   // Override to detect settings change. Access settings via this.settings.
   onSettingsUpdate() {}
 

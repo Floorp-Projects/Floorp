@@ -48,12 +48,12 @@ AccessibilityView.prototype = {
    *                                walker and enable/disable accessibility
    *                                services.
    */
-  async initialize(accessibility, walker, isOldVersion) {
+  async initialize(accessibility, walker, supportsLatestAccessibility) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(accessibility));
     const container = document.getElementById("content");
 
-    if (isOldVersion) {
+    if (!supportsLatestAccessibility) {
       ReactDOM.render(OldVersionDescription(), container);
       return;
     }

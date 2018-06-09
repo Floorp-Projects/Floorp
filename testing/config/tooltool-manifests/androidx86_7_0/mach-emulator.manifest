@@ -1,10 +1,10 @@
 [
   {
-    "size": 445624230,
+    "size": 445632170,
     "visibility": "public",
-    "digest": "fb951185e21ba6124d8c8ba42202613312401c65e56d52480cc08c87816936b9dd00024f4fc00183ee0e199c91ed5b9209867983c1d13daf5b34bcdc14ee9fb6",
+    "digest": "65c3a232e611cce8b203cbb0abcfd92e6440f87388921a52f7c20914d8d278db4ada22b17d14552a9e369f8119d33def5a410268b5c87d5a5eb797b411eb8af1",
     "algorithm": "sha512",
-    "filename": "AVDs-x86-android-7.0-build-2017-12-08.tar.gz",
+    "filename": "AVDs-x86-android-7.0-build-2018-06-07.tar.gz",
     "unpack": true
   }
 ]

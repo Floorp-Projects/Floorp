@@ -9,9 +9,9 @@
 
 <window id="PermissionsDialog" class="windowDialog"
         windowtype="Browser:Permissions"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-id="permissions-window"
         data-l10n-attrs="title, style"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gPermissionManager.onLoad();"
         onunload="gPermissionManager.uninit();"
         persist="screenX screenY width height"
@@ -51,7 +51,7 @@
     <tree id="permissionsTree" flex="1" style="height: 18em;"
           hidecolumnpicker="true"
           onkeypress="gPermissionManager.onPermissionKeyPress(event)"
-          onselect="gPermissionManager.onPermissionSelected();">
+          onselect="gPermissionManager.onPermissionSelect();">
       <treecols>
         <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3"
                  data-field-name="origin" persist="width"/>
@@ -67,11 +67,11 @@
       <button id="removePermission" disabled="true"
               data-l10n-id="permissions-remove"
               icon="remove"
-              oncommand="gPermissionManager.onPermissionDeleted();"/>
+              oncommand="gPermissionManager.onPermissionDelete();"/>
       <button id="removeAllPermissions"
               data-l10n-id="permissions-remove-all"
               icon="clear"
-              oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
+              oncommand="gPermissionManager.onAllPermissionsDelete();"/>
     </hbox>
     <spacer flex="1"/>
     <hbox class="actionButtons" align="right" flex="1">

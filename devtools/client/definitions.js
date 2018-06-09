@@ -28,6 +28,7 @@ loader.lazyGetter(this, "AccessibilityPanel", () => require("devtools/client/acc
 loader.lazyGetter(this, "ApplicationPanel", () => require("devtools/client/application/panel").ApplicationPanel);
 
 // Other dependencies
+loader.lazyRequireGetter(this, "AccessibilityStartup", "devtools/client/accessibility/accessibility-startup", true);
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "CommandState", "devtools/shared/gcli/command-state", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
@@ -452,7 +453,12 @@ Tools.accessibility = {
   },
 
   build(iframeWindow, toolbox) {
-    return new AccessibilityPanel(iframeWindow, toolbox);
+    const startup = toolbox.getToolStartup("accessibility");
+    return new AccessibilityPanel(iframeWindow, toolbox, startup);
+  },
+
+  buildToolStartup(toolbox) {
+    return new AccessibilityStartup(toolbox);
   }
 };
 

@@ -14,7 +14,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/Zone.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 namespace js {
 

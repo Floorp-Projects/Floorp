@@ -29,7 +29,7 @@ sm-mozjs-sys-linux64/debug:
         symbol: SM(mozjs-crate)
     run:
         using: spidermonkey-mozjs-crate
-        spidermonkey-variant: plain
+        spidermonkey-variant: plaindebug
     run-on-projects: ['integration', 'release', 'try']
 
 sm-rust-bindings-linux64/debug:
@@ -44,7 +44,7 @@ sm-rust-bindings-linux64/debug:
         docker-image: {in-tree: debian7-mozjs-rust-build}
     run:
         using: spidermonkey-rust-bindings
-        spidermonkey-variant: plain
+        spidermonkey-variant: plaindebug
     run-on-projects: ['integration', 'release', 'try']
 
 sm-plain-linux64/debug:

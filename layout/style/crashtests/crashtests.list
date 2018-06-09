@@ -119,6 +119,7 @@ pref(dom.webcomponents.shadowdom.enabled,true) load 1089463-1.html
 load 1136010-1.html
 load 1146101-1.html
 load 1153693-1.html
+load 1156969.svg
 load 1161320-1.html
 pref(dom.animations-api.core.enabled,true) load 1161320-2.html
 load 1161366-1.html
@@ -131,11 +132,13 @@ load 1206105-1.html
 load 1223688-1.html
 load 1223694-1.html
 load 1226400-1.html
+load 1227498.html
 load 1227501-1.html
 load 1228789-1.html
 load 1230408-1.html
 load 1233135-1.html
 load 1233135-2.html
+# load 1236398.xhtml bug 1467917
 load 1238660-1.html
 load 1245260-1.html
 load 1247865-1.html

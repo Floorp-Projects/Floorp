@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    addScopedSheet("#x { }");
+}
+
+function addScopedSheet(text)
+{
+    var sheet = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    sheet.appendChild(document.createTextNode(text));
+    sheet.scoped = true;
+    document.documentElement.appendChild(sheet);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+  <embed type="application/x-missing-plugin"></embed>
+</body>
+</html>

@@ -205,3 +205,42 @@ test-coverage:
                     - unittests/win_taskcluster_unittest.py
         extra-options:
             - --per-test-coverage
+
+test-coverage-gpu:
+    description: "Per-test coverage for tests that require gpu instances"
+    suite: test-coverage
+    treeherder-symbol: TCg
+    loopback-video: true
+    virtualization: virtual-with-gpu
+    instance-size: default
+    max-run-time: 10800
+    allow-software-gl-layers: false
+    run-on-projects:
+        by-test-platform:
+            # only run on mozilla-central and try.
+            .*-ccov/.*: ['mozilla-central', 'try']
+            default: []
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: 2
+    mozharness:
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android.*:
+                    - android/android_common.py
+                    - android/androidarm_4_3.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+        extra-options:
+            - --per-test-coverage
+            - --gpu-required
