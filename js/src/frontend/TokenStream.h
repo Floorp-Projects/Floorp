@@ -1392,7 +1392,35 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      */
     MOZ_MUST_USE bool getNonAsciiCodePoint(char16_t lead, int32_t* cp);
 
+    /**
+     * Unget a full code point (ASCII or not) without altering line/column
+     * state.  If line/column state must be updated, this must happen manually.
+     * This method ungets a single code point, not a LineTerminatorSequence
+     * that is multiple code points.  (Generally you shouldn't be in a state
+     * where you've just consumed "\r\n" and want to unget that full sequence.)
+     *
+     * This function ordinarily should be used to unget code points that have
+     * been consumed *without* line/column state having been updated.
+     */
     void ungetCodePointIgnoreEOL(uint32_t codePoint);
+
+    /**
+     * Unget an originally non-ASCII, normalized code point, including undoing
+     * line/column updates that were performed for it.  Don't use this if the
+     * code point was gotten *without* line/column state being updated!
+     */
+    void ungetNonAsciiNormalizedCodePoint(uint32_t codePoint) {
+        MOZ_ASSERT_IF(isAsciiCodePoint(codePoint),
+                      codePoint == '\n');
+        MOZ_ASSERT(codePoint != unicode::LINE_SEPARATOR,
+                   "should not be ungetting un-normalized code points");
+        MOZ_ASSERT(codePoint != unicode::PARA_SEPARATOR,
+                   "should not be ungetting un-normalized code points");
+
+        ungetCodePointIgnoreEOL(codePoint);
+        if (codePoint == '\n')
+            anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+    }
 
     /**
      * Unget a just-gotten LineTerminator sequence: '\r', '\n', '\r\n', or
@@ -1504,6 +1532,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::ungetChar;
     using CharsBase::ungetCodePointIgnoreEOL;
     using CharsSharedBase::ungetCodeUnit;
+    using CharsBase::ungetNonAsciiNormalizedCodePoint;
     using GeneralCharsBase::updateLineInfoForEOL;
 
     template<typename CharU> friend class TokenStreamPosition;
