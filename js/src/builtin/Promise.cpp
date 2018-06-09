@@ -21,6 +21,7 @@
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 
+#include "vm/Compartment-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

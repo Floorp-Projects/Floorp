@@ -118,6 +118,10 @@ class ToolboxController extends Component {
     this.setState({ canRender: true }, this.updateButtonIds);
   }
 
+  isToolHighlighted(toolID) {
+    return this.state.highlightedTools.has(toolID);
+  }
+
   highlightTool(highlightedTool) {
     const { highlightedTools } = this.state;
     highlightedTools.add(highlightedTool);

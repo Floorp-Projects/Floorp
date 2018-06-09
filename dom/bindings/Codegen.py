@@ -3756,6 +3756,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
         return fill(
             """
+            static_assert(!IsBaseOf<NonRefcountedDOMObject, ${nativeType}>::value,
+                          "Shouldn't have wrappercached things that are not refcounted.");
             $*{assertInheritance}
             MOZ_ASSERT_IF(aGivenProto, js::IsObjectInContextCompartment(aGivenProto, aCx));
             MOZ_ASSERT(!aCache->GetWrapper(),
@@ -3807,6 +3809,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             return true;
             """,
+            nativeType=self.descriptor.nativeType,
             assertInheritance=AssertInheritanceChain(self.descriptor),
             declareProto=DeclareProto(),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),

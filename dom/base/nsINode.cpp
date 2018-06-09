@@ -201,20 +201,6 @@ nsINode::CreateSlots()
   return new nsSlots();
 }
 
-bool
-nsINode::IsEditable() const
-{
-  if (HasFlag(NODE_IS_EDITABLE)) {
-    // The node is in an editable contentEditable subtree.
-    return true;
-  }
-
-  nsIDocument *doc = GetUncomposedDoc();
-
-  // Check if the node is in a document and the document is in designMode.
-  return doc && doc->HasFlag(NODE_IS_EDITABLE);
-}
-
 nsIContent*
 nsINode::GetTextEditorRootContent(TextEditor** aTextEditor)
 {

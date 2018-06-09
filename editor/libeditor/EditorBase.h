@@ -22,6 +22,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"                // for nsIDocument
+#include "nsIContentInlines.h"          // for nsINode::IsEditable()
 #include "nsIEditor.h"                  // for nsIEditor, etc.
 #include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc.
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.

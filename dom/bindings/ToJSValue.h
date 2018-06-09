@@ -9,12 +9,15 @@
 
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TypedArray.h"
 #include "jsapi.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -150,6 +153,74 @@ ToJSValue(JSContext* aCx,
   MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
 
   return GetOrCreateDOMReflector(aCx, aArgument, aValue);
+}
+
+// Accept non-refcounted DOM objects that do not inherit from
+// nsWrapperCache.  Refcounted ones would be too much of a footgun:
+// you could convert them to JS twice and get two different objects.
+namespace binding_detail {
+template<class T>
+MOZ_MUST_USE
+typename EnableIf<IsBaseOf<NonRefcountedDOMObject, T>::value, bool>::Type
+ToJSValueFromPointerHelper(JSContext* aCx,
+                           T* aArgument,
+                           JS::MutableHandle<JS::Value> aValue)
+{
+  // Make sure we're called in a compartment
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+
+  // This is a cut-down version of
+  // WrapNewBindingNonWrapperCachedObject that doesn't need to deal
+  // with nearly as many cases.
+  if (!aArgument) {
+    aValue.setNull();
+    return true;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx);
+  if (!aArgument->WrapObject(aCx, nullptr, &obj)) {
+    return false;
+  }
+
+  aValue.setObject(*obj);
+  return true;
+}
+} // namespace binding_detail
+
+// We can take a non-refcounted non-wrapper-cached DOM object that lives in an
+// nsAutoPtr.
+template<class T>
+MOZ_MUST_USE
+typename EnableIf<IsBaseOf<NonRefcountedDOMObject, T>::value, bool>::Type
+ToJSValue(JSContext* aCx,
+          nsAutoPtr<T>&& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  if (!binding_detail::ToJSValueFromPointerHelper(aCx, aArgument.get(), aValue)) {
+    return false;
+  }
+
+  // JS object took ownership
+  aArgument.forget();
+  return true;
+}
+
+// We can take a non-refcounted non-wrapper-cached DOM object that lives in a
+// UniquePtr.
+template<class T>
+MOZ_MUST_USE
+typename EnableIf<IsBaseOf<NonRefcountedDOMObject, T>::value, bool>::Type
+ToJSValue(JSContext* aCx,
+          UniquePtr<T>&& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  if (!binding_detail::ToJSValueFromPointerHelper(aCx, aArgument.get(), aValue)) {
+    return false;
+  }
+
+  // JS object took ownership
+  Unused << aArgument.release();
+  return true;
 }
 
 // Accept typed arrays built from appropriate nsTArray values

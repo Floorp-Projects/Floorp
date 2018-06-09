@@ -302,7 +302,8 @@ static already_AddRefed<gfxDrawable>
 CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
                                  gfxContext* aContext,
                                  const ImageRegion& aRegion,
-                                 const SurfaceFormat aFormat)
+                                 const SurfaceFormat aFormat,
+                                 bool aUseOptimalFillOp)
 {
     AUTO_PROFILER_LABEL("CreateSamplingRestrictedDrawable", GRAPHICS);
 
@@ -338,7 +339,9 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     RefPtr<gfxContext> tmpCtx = gfxContext::CreateOrNull(target);
     MOZ_ASSERT(tmpCtx); // already checked the target above
 
-    tmpCtx->SetOp(OptimalFillOp());
+    if (aUseOptimalFillOp) {
+        tmpCtx->SetOp(OptimalFillOp());
+    }
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), ExtendMode::REPEAT,
                     SamplingFilter::LINEAR,
                     1.0, gfxMatrix::Translation(needed.TopLeft()));
@@ -524,7 +527,8 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
                            const SurfaceFormat aFormat,
                            SamplingFilter      aSamplingFilter,
                            uint32_t            aImageFlags,
-                           gfxFloat            aOpacity)
+                           gfxFloat            aOpacity,
+                           bool                aUseOptimalFillOp)
 {
     AUTO_PROFILER_LABEL("gfxUtils::DrawPixelSnapped", GRAPHICS);
 
@@ -571,7 +575,8 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
 #if !defined(MOZ_GFX_OPTIMIZE_MOBILE)
             RefPtr<gfxDrawable> restrictedDrawable =
               CreateSamplingRestrictedDrawable(aDrawable, aContext,
-                                               aRegion, aFormat);
+                                               aRegion, aFormat,
+                                               aUseOptimalFillOp);
             if (restrictedDrawable) {
               drawable.swap(restrictedDrawable);
 

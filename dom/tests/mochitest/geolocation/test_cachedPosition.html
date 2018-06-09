@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850442
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -53,23 +54,23 @@ function errorCallback(err) {
   done();
 }
 
-function areTimesEqual(loc1, loc2) {
-  return loc1.timestamp === loc2.timestamp;
-}
-
 function test_cachedPosition() {
    var cached = null;
    navigator.geolocation.getCurrentPosition(function(pos) {
-    // first call is just to warm up the cache
+     // first call is just to warm up the cache
+     check_geolocation(pos);
 
      navigator.geolocation.getCurrentPosition(function(pos) {
+      check_geolocation(pos);
       cached = pos;
 
       navigator.geolocation.getCurrentPosition(function(pos) {
-        ok(areTimesEqual(pos, cached), "position should be equal to cached position");
+        check_geolocation(pos);
+        is(pos.timestamp, cached.timestamp, "position should be equal to cached position");
         navigator.geolocation.getCurrentPosition(function(pos) {
           // force new position, can't be the one we have
-          ok(!areTimesEqual(pos, cached), "position should not be equal to cached position");
+          check_geolocation(pos);
+          isnot(pos.timestamp, cached.timestamp, "position should not be equal to cached position");
           done();
         }, errorCallback, {maximumAge: 0});
       }, errorCallback, {maximumAge: 21600000});
@@ -80,4 +81,3 @@ function test_cachedPosition() {
 </pre>
 </body>
 </html>
-

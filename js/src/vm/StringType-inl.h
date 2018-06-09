@@ -16,8 +16,8 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 #include "gc/StoreBuffer-inl.h"
 

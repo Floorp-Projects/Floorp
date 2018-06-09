@@ -14,13 +14,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493615
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=493615">Mozilla Bug 493615</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
+
 var finished = false;
 
 function successCallback(position) {
+  check_geolocation(position);
+
   // watchPosition can notify more than once.
   if (finished) {
     return;

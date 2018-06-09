@@ -104,13 +104,14 @@ public class GeckoSession extends LayerSession
         new GeckoSessionHandler<ContentDelegate>(
             "GeckoViewContent", this,
             new String[]{
+                "GeckoView:ContentCrash",
                 "GeckoView:ContextMenu",
                 "GeckoView:DOMTitleChanged",
                 "GeckoView:DOMWindowFocus",
                 "GeckoView:DOMWindowClose",
                 "GeckoView:ExternalResponse",
                 "GeckoView:FullScreenEnter",
-                "GeckoView:FullScreenExit"
+                "GeckoView:FullScreenExit",
             }
         ) {
             @Override
@@ -119,7 +120,10 @@ public class GeckoSession extends LayerSession
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
-                if ("GeckoView:ContextMenu".equals(event)) {
+                if ("GeckoView:ContentCrash".equals(event)) {
+                    close();
+                    delegate.onCrash(GeckoSession.this);
+                } else if ("GeckoView:ContextMenu".equals(event)) {
                     final int type = getContentElementType(
                         message.getString("elementType"));
 
@@ -1891,6 +1895,17 @@ public class GeckoSession extends LayerSession
          * @param response the WebResponseInfo for the external response
          */
         void onExternalResponse(GeckoSession session, WebResponseInfo response);
+
+        /**
+         * The content process hosting this GeckoSession has crashed. The
+         * GeckoSession is now closed and unusable. You may call
+         * {@link #open(GeckoRuntime)} to recover the session, but no state
+         * is preserved. Most applications will want to call
+         * {@link #loadUri(Uri)} or {@link #restoreState(SessionState)} at this point.
+         *
+         * @param session The GeckoSession that crashed.
+         */
+        void onCrash(GeckoSession session);
     }
 
     public interface SelectionActionDelegate {

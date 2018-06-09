@@ -12,6 +12,7 @@
 #include "CoreLocationLocationProvider.h"
 #include "nsCocoaFeatures.h"
 #include "prtime.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "MLSFallback.h"
@@ -73,12 +74,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 
   // The CL provider does not fallback to GeoIP, so use NetworkGeolocationProvider for this.
   // The concept here is: on error, hand off geolocation to MLS, which will then report
-  // back a location or error. We can't call this with no delay however, as this method
-  // is called with an error code of 0 in both failed geolocation cases, and also when
-  // geolocation is not immediately available.
-  // The 2 sec delay is arbitrarily large enough that CL has a reasonable head start and
-  // if it is likely to succeed, it should complete before the MLS provider.
-  // Take note that in locationManager:didUpdateLocations: the handoff to MLS is stopped.
+  // back a location or error.
   mProvider->CreateMLSFallbackProvider();
 }
 
@@ -92,14 +88,36 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 
   CLLocation* location = [aLocations objectAtIndex:0];
 
+  double altitude;
+  double altitudeAccuracy;
+
+  // A negative verticalAccuracy indicates that the altitude value is invalid.
+  if (location.verticalAccuracy >= 0) {
+    altitude = location.altitude;
+    altitudeAccuracy = location.verticalAccuracy;
+  } else {
+    altitude = UnspecifiedNaN<double>();
+    altitudeAccuracy = UnspecifiedNaN<double>();
+  }
+
+  double speed = location.speed >= 0
+               ? location.speed
+               : UnspecifiedNaN<double>();
+
+  double heading = location.course >= 0
+                 ? location.course
+                 : UnspecifiedNaN<double>();
+
+  // nsGeoPositionCoords will convert NaNs to null for optional properties of
+  // the JavaScript Coordinates object.
   nsCOMPtr<nsIDOMGeoPosition> geoPosition =
     new nsGeoPosition(location.coordinate.latitude,
                       location.coordinate.longitude,
-                      location.altitude,
+                      altitude,
                       location.horizontalAccuracy,
-                      location.verticalAccuracy,
-                      location.course,
-                      location.speed,
+                      altitudeAccuracy,
+                      heading,
+                      speed,
                       PR_Now() / PR_USEC_PER_MSEC);
 
   mProvider->Update(geoPosition);
@@ -126,12 +144,14 @@ CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
   Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, true);
   return NS_OK;
 }
+
 NS_IMETHODIMP
 CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
 {
   mParentLocationProvider.NotifyError(error);
   return NS_OK;
 }
+
 class CoreLocationObjects {
 public:
   nsresult Init(CoreLocationLocationProvider* aProvider) {
@@ -233,13 +253,11 @@ CoreLocationLocationProvider::Update(nsIDOMGeoPosition* aSomewhere)
     mCallback->Update(aSomewhere);
   }
 }
-
 void
 CoreLocationLocationProvider::NotifyError(uint16_t aErrorCode)
 {
   mCallback->NotifyError(aErrorCode);
 }
-
 void
 CoreLocationLocationProvider::CreateMLSFallbackProvider()
 {
@@ -247,7 +265,7 @@ CoreLocationLocationProvider::CreateMLSFallbackProvider()
     return;
   }
 
-  mMLSFallbackProvider = new MLSFallback();
+  mMLSFallbackProvider = new MLSFallback(0);
   mMLSFallbackProvider->Startup(new MLSUpdate(*this));
 }
 

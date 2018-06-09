@@ -18,7 +18,7 @@
 
 #include "wasm/WasmRealm.h"
 
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "wasm/WasmInstance.h"
 
 #include "vm/Debugger-inl.h"

@@ -12,7 +12,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
 #include "vm/JSContext-inl.h"

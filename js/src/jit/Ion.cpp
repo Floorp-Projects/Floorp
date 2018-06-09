@@ -49,7 +49,7 @@
 #include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
@@ -59,9 +59,9 @@
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
-#include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/Realm-inl.h"
 #include "vm/Stack-inl.h"
 
 #if defined(ANDROID)

@@ -85,6 +85,10 @@ public class TestRunnerActivity extends Activity {
         @Override
         public void onExternalResponse(GeckoSession session, GeckoSession.WebResponseInfo request) {
         }
+
+        @Override
+        public void onCrash(GeckoSession session) {
+        }
     };
 
     private GeckoSession createSession() {

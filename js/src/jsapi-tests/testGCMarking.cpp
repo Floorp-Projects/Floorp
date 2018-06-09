@@ -10,7 +10,7 @@
 #include "js/RootingAPI.h"
 #include "js/SliceBudget.h"
 #include "jsapi-tests/tests.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 static bool
 ConstructCCW(JSContext* cx, const JSClass* globalClasp,

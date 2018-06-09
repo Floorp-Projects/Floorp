@@ -7,8 +7,8 @@
 #include "js/UbiNodeCensus.h"
 
 #include "util/Text.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

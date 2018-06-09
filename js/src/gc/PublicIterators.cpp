@@ -8,7 +8,7 @@
 
 #include "gc/GCInternals.h"
 #include "js/HashTable.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 #include "vm/Runtime.h"
 
 #include "gc/PrivateIterators-inl.h"

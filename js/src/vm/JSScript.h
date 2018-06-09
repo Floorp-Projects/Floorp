@@ -2049,7 +2049,7 @@ class JSScript : public js::gc::TenuredCell
     bool hasBreakpointsAt(jsbytecode* pc);
     bool hasAnyBreakpointsOrStepMode() { return bitFields_.hasDebugScript_; }
 
-    // See comment above 'debugMode' in JSCompartment.h for explanation of
+    // See comment above 'debugMode' in Realm.h for explanation of
     // invariants of debuggee compartments, scripts, and frames.
     inline bool isDebuggee() const;
 

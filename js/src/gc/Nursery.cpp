@@ -24,8 +24,8 @@
 #if defined(DEBUG)
 #include "vm/EnvironmentObject.h"
 #endif
-#include "vm/JSCompartment.h"
 #include "vm/JSONPrinter.h"
+#include "vm/Realm.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeInference.h"
