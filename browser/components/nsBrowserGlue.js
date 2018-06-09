@@ -105,7 +105,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContentClick: "resource:///modules/ContentClick.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
-  DateTimePickerHelper: "resource://gre/modules/DateTimePickerHelper.jsm",
+  DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   Feeds: "resource:///modules/Feeds.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
@@ -1048,7 +1048,7 @@ BrowserGlue.prototype = {
     this._checkForOldBuildUpdates();
 
     AutoCompletePopup.init();
-    DateTimePickerHelper.init();
+    DateTimePickerParent.init();
     // Check if Sync is configured
     if (Services.prefs.prefHasUserValue("services.sync.username")) {
       WeaveService.init();
@@ -1112,7 +1112,7 @@ BrowserGlue.prototype = {
     NewTabUtils.uninit();
     AboutPrivateBrowsingHandler.uninit();
     AutoCompletePopup.uninit();
-    DateTimePickerHelper.uninit();
+    DateTimePickerParent.uninit();
 
     // Browser errors are only collected on Nightly
     if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_DATA_REPORTING) {

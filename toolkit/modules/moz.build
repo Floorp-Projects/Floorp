@@ -67,7 +67,7 @@ with Files('Color.jsm'):
 with Files('Console.jsm'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
 
-with Files('DateTimePickerHelper.jsm'):
+with Files('DateTimePicker*.jsm'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls ')
 
 with Files('DeferredTask.jsm'):
@@ -195,7 +195,8 @@ EXTRA_JS_MODULES += [
     'Console.jsm',
     'CreditCard.jsm',
     'css-selector.js',
-    'DateTimePickerHelper.jsm',
+    'DateTimePickerContent.jsm',
+    'DateTimePickerParent.jsm',
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'E10SUtils.jsm',
