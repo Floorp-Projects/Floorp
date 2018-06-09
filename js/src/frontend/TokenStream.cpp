@@ -548,8 +548,13 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(char16_t lead, 
     // The code point is usually |lead|: overwrite later if needed.
     *codePoint = lead;
 
-    // Dispense with single-unit code points ("code points", when a lone
-    // trailing surrogate is encountered).
+    // ECMAScript specifically requires that unpaired UTF-16 surrogates be
+    // treated as the corresponding code point and not as an error.  See
+    // <https://tc39.github.io/ecma262/#sec-ecmascript-language-types-string-type>.
+    // Thus this function does not consider any sequence of 16-bit numbers to
+    // be intrinsically in error.
+
+    // Dispense with single-unit code points and lone trailing surrogates.
     if (MOZ_LIKELY(!unicode::IsLeadSurrogate(lead))) {
         if (MOZ_UNLIKELY(lead == unicode::LINE_SEPARATOR ||
                          lead == unicode::PARA_SEPARATOR))
@@ -570,8 +575,7 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(char16_t lead, 
         return true;
     }
 
-    // If there are no more units, or the next unit isn't a trailing surrogate,
-    // it's also a "code point".
+    // Also handle a lead surrogate not paired with a trailing surrogate.
     if (MOZ_UNLIKELY(sourceUnits.atEnd() ||
                      !unicode::IsTrailSurrogate(sourceUnits.peekCodeUnit())))
     {
@@ -1381,24 +1385,6 @@ TokenStreamCharsBase<char16_t>::appendCodePointToTokenbuf(uint32_t codePoint)
     return tokenbuf.append(units[1]);
 }
 
-template<class AnyCharsAccess>
-void
-TokenStreamChars<char16_t, AnyCharsAccess>::matchMultiUnitCodePointSlow(char16_t lead,
-                                                                        uint32_t* codePoint)
-{
-    MOZ_ASSERT(unicode::IsLeadSurrogate(lead),
-               "matchMultiUnitCodepoint should have ensured |lead| is a lead "
-               "surrogate");
-
-    int32_t maybeTrail = getCodeUnit();
-    if (MOZ_LIKELY(unicode::IsTrailSurrogate(maybeTrail))) {
-        *codePoint = unicode::UTF16Decode(lead, maybeTrail);
-    } else {
-        ungetCodeUnit(maybeTrail);
-        *codePoint = 0;
-    }
-}
-
 template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* identStart)
@@ -1854,23 +1840,31 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     // This loop runs more than once only when whitespace or comments are
     // encountered.
     do {
-        if (MOZ_UNLIKELY(sourceUnits.atEnd())) {
+        int32_t unit = getCodeUnit();
+        if (MOZ_UNLIKELY(unit == EOF)) {
+            MOZ_ASSERT(sourceUnits.atEnd());
             anyCharsAccess().flags.isEOF = true;
             TokenStart start(sourceUnits, 0);
             newSimpleToken(TokenKind::Eof, start, modifier, ttp);
             return true;
         }
 
-        int c = sourceUnits.getCodeUnit();
-        MOZ_ASSERT(c != EOF);
+        if (MOZ_UNLIKELY(!isAsciiCodePoint(unit))) {
+            // Non-ASCII code points can only be identifiers or whitespace.
+            // It would be nice to compute these *after* discarding whitespace,
+            // but IN A WORLD where |unicode::IsSpaceOrBOM2| requires consuming
+            // a variable number of code points, it's easier to assume it's an
+            // identifier and maybe do a little wasted work, than to unget and
+            // compute and reget if whitespace.
+            TokenStart start(sourceUnits, -1);
+            const CharT* identStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-        // Chars not in the range 0..127 are rare.  Getting them out of the way
-        // early allows subsequent checking to be faster.
-        if (MOZ_UNLIKELY(c >= 128)) {
-            if (unicode::IsSpaceOrBOM2(c)) {
-                if (c == unicode::LINE_SEPARATOR ||
-                    c == unicode::PARA_SEPARATOR)
-                {
+            int32_t codePoint;
+            if (!getNonAsciiCodePoint(unit, &codePoint))
+                return badToken();
+
+            if (unicode::IsSpaceOrBOM2(codePoint)) {
+                if (codePoint == unicode::LINE_SEPARATOR || codePoint == unicode::PARA_SEPARATOR) {
                     if (!updateLineInfoForEOL())
                         return badToken();
 
@@ -1880,33 +1874,22 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 continue;
             }
 
-            // If there's an identifier here (and no error occurs), it starts
-            // at the previous code unit.
-            TokenStart start(sourceUnits, -1);
-            const CharT* identStart = sourceUnits.addressOfNextCodeUnit() - 1;
-
-            static_assert('$' < 128,
+            static_assert(isAsciiCodePoint('$'),
                           "IdentifierStart contains '$', but as "
                           "!IsUnicodeIDStart('$'), ensure that '$' is never "
                           "handled here");
-            static_assert('_' < 128,
+            static_assert(isAsciiCodePoint('_'),
                           "IdentifierStart contains '_', but as "
                           "!IsUnicodeIDStart('_'), ensure that '_' is never "
                           "handled here");
-            if (unicode::IsUnicodeIDStart(char16_t(c)))
-                return identifierName(start, identStart, IdentifierEscapes::None, modifier, ttp);
 
-            uint32_t codePoint = c;
-            if (!matchMultiUnitCodePoint(c, &codePoint))
-                return badToken();
-
-            if (codePoint && unicode::IsUnicodeIDStart(codePoint))
+            if (unicode::IsUnicodeIDStart(uint32_t(codePoint)))
                 return identifierName(start, identStart, IdentifierEscapes::None, modifier, ttp);
 
             ungetCodePointIgnoreEOL(codePoint);
             error(JSMSG_ILLEGAL_CHARACTER);
             return badToken();
-        }
+        } // !isAsciiCodePoint(unit)
 
         // Get the token kind, based on the first char.  The ordering of c1kind
         // comparison is based on the frequency of tokens in real code:
@@ -1927,7 +1910,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         // frequencies used to break close categories (e.g. |Dec| and
         // |String|).  |Other| is biggish, but no other token kind is common
         // enough for it to be worth adding extra values to FirstCharKind.
-        FirstCharKind c1kind = FirstCharKind(firstCharKinds[c]);
+        FirstCharKind c1kind = FirstCharKind(firstCharKinds[unit]);
 
         // Look for an unambiguous single-char token.
         //
@@ -1955,19 +1938,19 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         if (c1kind == Dec) {
             TokenStart start(sourceUnits, -1);
             const CharT* numStart = sourceUnits.addressOfNextCodeUnit() - 1;
-            return decimalNumber(c, start, numStart, modifier, ttp);
+            return decimalNumber(unit, start, numStart, modifier, ttp);
         }
 
         // Look for a string or a template string.
         //
         if (c1kind == String)
-            return getStringOrTemplateToken(static_cast<char>(c), modifier, ttp);
+            return getStringOrTemplateToken(static_cast<char>(unit), modifier, ttp);
 
         // Skip over EOL chars, updating line state along the way.
         //
         if (c1kind == EOL) {
             // If it's a \r\n sequence, consume it as a single EOL.
-            if (c == '\r' && !sourceUnits.atEnd())
+            if (unit == '\r' && !sourceUnits.atEnd())
                 sourceUnits.matchCodeUnit('\n');
 
             if (!updateLineInfoForEOL())
@@ -1986,50 +1969,53 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
             int radix;
             const CharT* numStart;
-            c = getCodeUnit();
-            if (c == 'x' || c == 'X') {
+            unit = getCodeUnit();
+            if (unit == 'x' || unit == 'X') {
                 radix = 16;
-                c = getCodeUnit();
-                if (!JS7_ISHEX(c)) {
-                    ungetCodeUnit(c);
-                    reportError(JSMSG_MISSING_HEXDIGITS);
+                unit = getCodeUnit();
+                if (!JS7_ISHEX(unit)) {
+                    // NOTE: |unit| may be EOF here.
+                    ungetCodeUnit(unit);
+                    error(JSMSG_MISSING_HEXDIGITS);
                     return badToken();
                 }
 
                 // one past the '0x'
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-                while (JS7_ISHEX(c))
-                    c = getCodeUnit();
-            } else if (c == 'b' || c == 'B') {
+                while (JS7_ISHEX(unit))
+                    unit = getCodeUnit();
+            } else if (unit == 'b' || unit == 'B') {
                 radix = 2;
-                c = getCodeUnit();
-                if (c != '0' && c != '1') {
-                    ungetCodeUnit(c);
-                    reportError(JSMSG_MISSING_BINARY_DIGITS);
+                unit = getCodeUnit();
+                if (unit != '0' && unit != '1') {
+                    // NOTE: |unit| may be EOF here.
+                    ungetCodeUnit(unit);
+                    error(JSMSG_MISSING_BINARY_DIGITS);
                     return badToken();
                 }
 
                 // one past the '0b'
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-                while (c == '0' || c == '1')
-                    c = getCodeUnit();
-            } else if (c == 'o' || c == 'O') {
+                while (unit == '0' || unit == '1')
+                    unit = getCodeUnit();
+            } else if (unit == 'o' || unit == 'O') {
                 radix = 8;
-                c = getCodeUnit();
-                if (c < '0' || c > '7') {
-                    ungetCodeUnit(c);
-                    reportError(JSMSG_MISSING_OCTAL_DIGITS);
+                unit = getCodeUnit();
+                if (!JS7_ISOCT(unit)) {
+                    // NOTE: |unit| may be EOF here.
+                    ungetCodeUnit(unit);
+                    error(JSMSG_MISSING_OCTAL_DIGITS);
                     return badToken();
                 }
 
                 // one past the '0o'
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-                while ('0' <= c && c <= '7')
-                    c = getCodeUnit();
-            } else if (IsAsciiDigit(c)) {
+                while (JS7_ISOCT(unit))
+                    unit = getCodeUnit();
+            } else if (IsAsciiDigit(unit)) {
                 radix = 8;
                 // one past the '0'
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
@@ -2044,50 +2030,52 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     // numbers, which makes our behaviour a superset of the
                     // ECMA numeric grammar. We might not always be so
                     // permissive, so we warn about it.
-                    if (c >= '8') {
-                        if (!warning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09"))
+                    if (unit >= '8') {
+                        if (!warning(JSMSG_BAD_OCTAL, unit == '8' ? "08" : "09"))
                             return badToken();
 
                         // Use the decimal scanner for the rest of the number.
-                        return decimalNumber(c, start, numStart, modifier, ttp);
+                        return decimalNumber(unit, start, numStart, modifier, ttp);
                     }
 
-                    c = getCodeUnit();
-                } while (IsAsciiDigit(c));
+                    unit = getCodeUnit();
+                } while (IsAsciiDigit(unit));
             } else {
                 // '0' not followed by [XxBbOo0-9];  scan as a decimal number.
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-                return decimalNumber(c, start, numStart, modifier, ttp);
+                // NOTE: |unit| may be EOF here.  (This is permitted by case #3
+                //       in TokenStream.h docs for this function.)
+                return decimalNumber(unit, start, numStart, modifier, ttp);
             }
-            ungetCodeUnit(c);
 
-            if (c != EOF) {
-                if (unicode::IsIdentifierStart(char16_t(c))) {
+            // Check for an identifier-start code point immediately after the
+            // number.  This must be an error, and somewhat surprisingly, if
+            // a check doesn't happen here, it never will.
+            if (MOZ_UNLIKELY(unit == EOF)) {
+                // Technically this isn't necessary -- ungetting EOF does
+                // nothing -- but it's conceptually nicer if we consider all
+                // gets requiring an unget to revert them.
+                ungetCodeUnit(unit);
+            } else if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+                ungetCodeUnit(unit);
+
+                if (unicode::IsIdentifierStart(char16_t(unit))) {
                     error(JSMSG_IDSTART_AFTER_NUMBER);
                     return badToken();
                 }
-
-                consumeKnownCharIgnoreEOL(c);
-
-                uint32_t codePoint;
-                if (!matchMultiUnitCodePoint(c, &codePoint))
+            } else {
+                int32_t codePoint;
+                if (!getNonAsciiCodePoint(unit, &codePoint))
                     return badToken();
 
-                if (codePoint) {
-                    // In all cases revert the get of the overall code point.
-                    ungetCodePointIgnoreEOL(codePoint);
+                ungetCodePointIgnoreEOL(codePoint);
+                if (codePoint == unicode::LINE_SEPARATOR || codePoint == unicode::PARA_SEPARATOR)
+                    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
 
-                    if (unicode::IsIdentifierStart(codePoint)) {
-                        // This will properly point at the start of the code
-                        // point.
-                        error(JSMSG_IDSTART_AFTER_NUMBER);
-                        return badToken();
-                    }
-                } else {
-                    // If not a multi-unit code point, we only need to unget
-                    // the single code unit consumed.
-                    ungetCodeUnit(c);
+                if (unicode::IsIdentifierStart(uint32_t(codePoint))) {
+                    error(JSMSG_IDSTART_AFTER_NUMBER);
+                    return badToken();
                 }
             }
 
@@ -2115,21 +2103,24 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 #ifdef DEBUG
         simpleKind = TokenKind::Limit; // sentinel value for code after switch
 #endif
-        switch (c) {
+        switch (static_cast<CharT>(unit)) {
           case '.':
-            c = getCodeUnit();
-            if (IsAsciiDigit(c)) {
+            unit = getCodeUnit();
+            if (IsAsciiDigit(unit)) {
                 return decimalNumber('.', start, sourceUnits.addressOfNextCodeUnit() - 2, modifier,
                                      ttp);
             }
 
-            if (c == '.') {
+            if (unit == '.') {
                 if (matchCodeUnit('.')) {
                     simpleKind = TokenKind::TripleDot;
                     break;
                 }
             }
-            ungetCodeUnit(c);
+
+            // NOTE: |unit| may be EOF here.  A stray '.' at EOF would be an
+            //       error, but subsequent code will handle it.
+            ungetCodeUnit(unit);
 
             simpleKind = TokenKind::Dot;
             break;
@@ -2151,8 +2142,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             break;
 
           case '\\': {
-            uint32_t qc;
-            if (uint32_t escapeLength = matchUnicodeEscapeIdStart(&qc)) {
+            uint32_t codePoint;
+            if (uint32_t escapeLength = matchUnicodeEscapeIdStart(&codePoint)) {
                 return identifierName(start,
                                       sourceUnits.addressOfNextCodeUnit() - escapeLength - 1,
                                       IdentifierEscapes::SawUnicodeEscape, modifier, ttp);
@@ -2237,13 +2228,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
           case '/':
             // Look for a single-line comment.
             if (matchCodeUnit('/')) {
-                c = getCodeUnit();
-                if (c == '@' || c == '#') {
-                    bool shouldWarn = c == '@';
+                unit = getCodeUnit();
+                if (unit == '@' || unit == '#') {
+                    bool shouldWarn = unit == '@';
                     if (!getDirectives(false, shouldWarn))
                         return false;
                 } else {
-                    ungetCodeUnit(c);
+                    // NOTE: |unit| may be EOF here.
+                    ungetCodeUnit(unit);
                 }
 
                 consumeRestOfSingleLineComment();
@@ -2315,12 +2307,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             break;
 
           default:
-            // We consumed a bad character/code point.  Put it back so the
-            // error location is the bad character.
-            ungetCodePointIgnoreEOL(c);
+            // We consumed a bad ASCII code point/unit.  Put it back so the
+            // error location is the bad code point.
+            ungetCodeUnit(unit);
             error(JSMSG_ILLEGAL_CHARACTER);
             return badToken();
-        }
+        } // switch (static_cast<CharT>(unit))
 
         MOZ_ASSERT(simpleKind != TokenKind::Limit,
                    "switch-statement should have set |simpleKind| before "
