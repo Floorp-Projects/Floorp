@@ -825,7 +825,7 @@ SERVO_BINDING_FUNC(Servo_SerializeFontValueForCanvas, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsAString* buffer)
 
-// GetComputedStyle APIs.
+// Get custom property value.
 SERVO_BINDING_FUNC(Servo_GetCustomPropertyValue, bool,
                    ComputedStyleBorrowed computed_values,
                    const nsAString* name, nsAString* value)
@@ -837,9 +837,6 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
                    ComputedStyleBorrowed, uint32_t index,
                    nsAString* name)
 
-SERVO_BINDING_FUNC(Servo_GetPropertyValue, void,
-                   ComputedStyleBorrowed computed_values,
-                   nsCSSPropertyID property, nsAString* value)
 
 SERVO_BINDING_FUNC(Servo_ProcessInvalidations, void,
                    RawServoStyleSetBorrowed set,
