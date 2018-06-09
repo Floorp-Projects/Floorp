@@ -4,6 +4,7 @@
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   await promiseAutocompleteResultPopup("www.mozilla.org");
+  await waitForAutocompleteResultAt(0);
 
   gURLBar.selectTextRange(4, 4);
 

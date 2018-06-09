@@ -138,14 +138,52 @@ RsdparsaSdpMediaSection::AddCodec(const std::string& pt,
                                   const std::string& name,
                                   uint32_t clockrate, uint16_t channels)
 {
-  //TODO: see Bug 1438289
+  StringView rustName{name.c_str(),name.size()};
+
+  // call the rust interface
+  auto nr = sdp_media_add_codec(mSection, std::stoul(pt),rustName,clockrate,channels);
+
+  if (NS_SUCCEEDED(nr)) {
+    // If the rust call was successful, adjust the shadow C++ structures
+    mFormats.push_back(pt);
+
+    // Add a rtpmap in mAttributeList
+    SdpRtpmapAttributeList* rtpmap = new SdpRtpmapAttributeList();
+    if (mAttributeList->HasAttribute(SdpAttribute::kRtpmapAttribute)) {
+      const SdpRtpmapAttributeList& old = mAttributeList->GetRtpmap();
+      for (auto it = old.mRtpmaps.begin(); it != old.mRtpmaps.end(); ++it) {
+        rtpmap->mRtpmaps.push_back(*it);
+      }
+    }
+
+    SdpRtpmapAttributeList::CodecType codec = SdpRtpmapAttributeList::kOtherCodec;
+    if (name == "opus") {
+      codec = SdpRtpmapAttributeList::kOpus;
+    } else if (name == "VP8") {
+      codec = SdpRtpmapAttributeList::kVP8;
+    } else if (name == "VP9") {
+      codec = SdpRtpmapAttributeList::kVP9;
+    } else if (name == "H264") {
+      codec = SdpRtpmapAttributeList::kH264;
+    }
+
+    rtpmap->PushEntry(pt, codec, name, clockrate, channels);
+    mAttributeList->SetAttribute(rtpmap);
+  }
+
 }
 
 void
 RsdparsaSdpMediaSection::ClearCodecs()
 {
+  // Clear the codecs in rust
+  sdp_media_clear_codecs(mSection);
 
-  //TODO: see Bug 1438289
+  mFormats.clear();
+  mAttributeList->RemoveAttribute(SdpAttribute::kRtpmapAttribute);
+  mAttributeList->RemoveAttribute(SdpAttribute::kFmtpAttribute);
+  mAttributeList->RemoveAttribute(SdpAttribute::kSctpmapAttribute);
+  mAttributeList->RemoveAttribute(SdpAttribute::kRtcpFbAttribute);
 }
 
 void

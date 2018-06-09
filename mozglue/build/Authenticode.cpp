@@ -148,6 +148,7 @@ SignedBinary::VerifySignature(const wchar_t* aFilePath)
   trustData.dwUnionChoice = WTD_CHOICE_FILE;
   trustData.pFile = &fileInfo;
   trustData.dwStateAction = WTD_STATEACTION_VERIFY;
+  trustData.dwProvFlags = WTD_CACHE_ONLY_URL_RETRIEVAL;
 
   const HWND hwnd = (HWND) INVALID_HANDLE_VALUE;
   GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;

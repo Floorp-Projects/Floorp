@@ -144,7 +144,8 @@
       "SELECT IFNULL(MAX(frecency), 0) " \
       "FROM moz_places " \
       "WHERE moz_places.origin_id = moz_origins.id " \
-    "); " \
+    ") " \
+    "WHERE prefix = OLD.prefix AND host = OLD.host; " \
   "END" \
 )
 

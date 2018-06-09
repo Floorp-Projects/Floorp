@@ -4487,8 +4487,8 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   // XXX Should we allow to block web page to prevent its default with
   //     Ctrl+Shift+F10 or Alt+Shift+F10 instead?
   if (aEventMessage == eContextMenu && aIsContextMenuKey && event.IsShift() &&
-      NativeKey::LastKeyMSG().message == WM_SYSKEYDOWN &&
-      NativeKey::LastKeyMSG().wParam == VK_F10) {
+      NativeKey::LastKeyOrCharMSG().message == WM_SYSKEYDOWN &&
+      NativeKey::LastKeyOrCharMSG().wParam == VK_F10) {
     event.mModifiers &= ~MODIFIER_SHIFT;
   }
 

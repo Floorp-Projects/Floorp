@@ -1182,7 +1182,6 @@ nsGlobalWindowInner::FreeInnerObjects()
   }
 
   mHistory = nullptr;
-  mCustomElements = nullptr;
 
   if (mNavigator) {
     mNavigator->OnNavigation();

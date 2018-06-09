@@ -932,10 +932,8 @@ var PlacesUIUtils = {
       // If we're not a tag, then we need to get the ids of the items to select.
       batchingItem = async () => {
         for (let transaction of transactions) {
-          let guid = await transaction.transact();
-          if (guid) {
-            guidsToSelect.push(guid);
-          }
+          let result = await transaction.transact();
+          guidsToSelect = guidsToSelect.concat(result);
         }
       };
     }
@@ -1158,57 +1156,17 @@ async function getTransactionsForTransferItems(items, insertionIndex,
     doMove = false;
   }
 
-  return doMove ? getTransactionsForMove(items, insertionIndex, insertionParentGuid) :
-                  getTransactionsForCopy(items, insertionIndex, insertionParentGuid);
-}
-
-/**
- * Processes a set of transfer items and returns an array of transactions.
- *
- * @param {Array} items A list of unwrapped nodes to get transactions for.
- * @param {Integer} insertionIndex The requested index for insertion.
- * @param {String} insertionParentGuid The guid of the parent folder to insert
- *                                     or move the items to.
- * @return {Array} Returns an array of created PlacesTransactions.
- */
-async function getTransactionsForMove(items, insertionIndex,
-                                      insertionParentGuid) {
-  let transactions = [];
-  let index = insertionIndex;
-
-  for (let item of items) {
-    if (index != -1 && item.itemGuid) {
-      // Note: we use the parent from the existing bookmark as the sidebar
-      // gives us an unwrapped.parent that is actually a query and not the real
-      // parent.
-      let existingBookmark = await PlacesUtils.bookmarks.fetch(item.itemGuid);
-
-      // If we're dropping on the same folder, then we may need to adjust
-      // the index to insert at the correct place.
-      if (existingBookmark && insertionParentGuid == existingBookmark.parentGuid) {
-        if (index > existingBookmark.index) {
-          // If we're dragging down, we need to go one lower to insert at
-          // the real point as moving the element changes the index of
-          // everything below by 1.
-          index--;
-        } else if (index == existingBookmark.index) {
-          // This isn't moving so we skip it.
-          continue;
-        }
-      }
-    }
-
-    transactions.push(PlacesTransactions.Move({
-      guid: item.itemGuid,
-      newIndex: index,
+  if (doMove) {
+    // Move is simple, we pass the transaction a list of GUIDs and where to move
+    // them to.
+    return [PlacesTransactions.Move({
+      guids: items.map(item => item.itemGuid),
       newParentGuid: insertionParentGuid,
-    }));
-
-    if (index != -1 && item.itemGuid) {
-      index++;
-    }
+      newIndex: insertionIndex,
+    })];
   }
-  return transactions;
+
+  return getTransactionsForCopy(items, insertionIndex, insertionParentGuid);
 }
 
 /**

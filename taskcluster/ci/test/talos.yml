@@ -25,6 +25,33 @@ job-defaults:
                 default:
                     - talos/linux_config.py
 
+talos-bcv:
+    description: "Talos basic compositor video"
+    try-name: bcv
+    treeherder-symbol: T(bcv)
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: []  # this test is not useful with webrender
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --suite=bcv
+
+talos-bcv-profiling:
+    description: "Talos profiling basic compositor video"
+    try-name: bcv-profiling
+    treeherder-symbol: T-P(bcv)
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: []  # this test is not useful with webrender
+            default: ['mozilla-central', 'try']
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --suite=bcv
+            - --geckoProfile
+
 talos-chrome:
     description: "Talos chrome"
     try-name: chromez
