@@ -967,6 +967,13 @@ class SourceUnits
         ptr += n;
     }
 
+    void unskipCodeUnits(uint32_t n) {
+        MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
+        MOZ_ASSERT(n <= mozilla::PointerRangeSize(base_, ptr),
+                   "shouldn't skip beyond start of SourceUnits");
+        ptr -= n;
+    }
+
     bool matchCodeUnit(CharT c) {
         if (*ptr == c) {    // this will nullptr-crash if poisoned
             ptr++;
@@ -1180,8 +1187,8 @@ class GeneralTokenStreamChars
         return token;
     }
 
-    uint32_t peekUnicodeEscape(uint32_t* codePoint);
-    uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
+    uint32_t matchUnicodeEscape(uint32_t* codePoint);
+    uint32_t matchExtendedUnicodeEscape(uint32_t* codePoint);
 
   protected:
     using typename CharsSharedBase::SourceUnits;
