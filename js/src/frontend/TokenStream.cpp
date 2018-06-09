@@ -1049,87 +1049,94 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::errorAt(uint32_t offset, unsigned er
 // cases, do not advance along the buffer.
 template<typename CharT, class AnyCharsAccess>
 uint32_t
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::peekUnicodeEscape(uint32_t* codePoint)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* codePoint)
 {
-    int32_t c = getCodeUnit();
-    if (c != 'u') {
-        ungetCodeUnit(c);
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '\\');
+
+    int32_t unit = getCodeUnit();
+    if (unit != 'u') {
+        // NOTE: |unit| may be EOF here.
+        ungetCodeUnit(unit);
+        MOZ_ASSERT(sourceUnits.previousCodeUnit() == '\\');
         return 0;
     }
 
     CharT cp[3];
-    uint32_t length;
-    c = getCodeUnit();
-    if (JS7_ISHEX(c) &&
+    unit = getCodeUnit();
+    if (JS7_ISHEX(unit) &&
         sourceUnits.peekCodeUnits(3, cp) &&
         JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
     {
-        *codePoint = (JS7_UNHEX(c) << 12) |
+        *codePoint = (JS7_UNHEX(unit) << 12) |
                      (JS7_UNHEX(cp[0]) << 8) |
                      (JS7_UNHEX(cp[1]) << 4) |
                      JS7_UNHEX(cp[2]);
-        length = 5;
-    } else if (c == '{') {
-        length = peekExtendedUnicodeEscape(codePoint);
-    } else {
-        length = 0;
+        sourceUnits.skipCodeUnits(3);
+        return 5;
     }
 
-    ungetCodeUnit(c);
+    if (unit == '{')
+        return matchExtendedUnicodeEscape(codePoint);
+
+    // NOTE: |unit| may be EOF here, so this ungets either one or two units.
+    ungetCodeUnit(unit);
     ungetCodeUnit('u');
-    return length;
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '\\');
+    return 0;
 }
 
 template<typename CharT, class AnyCharsAccess>
 uint32_t
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::peekExtendedUnicodeEscape(uint32_t* codePoint)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchExtendedUnicodeEscape(uint32_t* codePoint)
 {
     MOZ_ASSERT(sourceUnits.previousCodeUnit() == '{');
 
-    int32_t c = getCodeUnit();
+    int32_t unit = getCodeUnit();
 
-    // Skip leading zeros.
-    uint32_t leadingZeros = 0;
-    while (c == '0') {
-        leadingZeros++;
-        c = getCodeUnit();
+    // Skip leading zeroes.
+    uint32_t leadingZeroes = 0;
+    while (unit == '0') {
+        leadingZeroes++;
+        unit = getCodeUnit();
     }
 
-    CharT cp[6];
     size_t i = 0;
     uint32_t code = 0;
-    while (JS7_ISHEX(c) && i < 6) {
-        cp[i++] = c;
-        code = code << 4 | JS7_UNHEX(c);
-        c = getCodeUnit();
+    while (JS7_ISHEX(unit) && i < 6) {
+        code = (code << 4) | JS7_UNHEX(unit);
+        unit = getCodeUnit();
+        i++;
     }
 
-    uint32_t length;
-    if (c == '}' && (leadingZeros > 0 || i > 0) && code <= unicode::NonBMPMax) {
+    uint32_t gotten =
+        2 + // 'u{'
+        leadingZeroes +
+        i + // significant hexdigits
+        (unit != EOF); // subtract a get if it didn't contribute to length
+
+    if (unit == '}' && (leadingZeroes > 0 || i > 0) && code <= unicode::NonBMPMax) {
         *codePoint = code;
-        length = leadingZeros + i + 3;
-    } else {
-        length = 0;
+        return gotten;
     }
 
-    ungetCodeUnit(c);
-    while (i--)
-        ungetCodeUnit(cp[i]);
-    while (leadingZeros--)
-        ungetCodeUnit('0');
-
-    return length;
+    sourceUnits.unskipCodeUnits(gotten);
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '\\');
+    return 0;
 }
 
 template<typename CharT, class AnyCharsAccess>
 uint32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdStart(uint32_t* codePoint)
 {
-    uint32_t length = peekUnicodeEscape(codePoint);
-    if (length > 0 && unicode::IsIdentifierStart(*codePoint)) {
-        sourceUnits.skipCodeUnits(length);
-        return length;
+    uint32_t length = matchUnicodeEscape(codePoint);
+    if (MOZ_LIKELY(length > 0)) {
+        if (MOZ_LIKELY(unicode::IsIdentifierStart(*codePoint)))
+            return length;
+
+        sourceUnits.unskipCodeUnits(length);
     }
+
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '\\');
     return 0;
 }
 
@@ -1137,11 +1144,15 @@ template<typename CharT, class AnyCharsAccess>
 bool
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscapeIdent(uint32_t* codePoint)
 {
-    uint32_t length = peekUnicodeEscape(codePoint);
-    if (length > 0 && unicode::IsIdentifierPart(*codePoint)) {
-        sourceUnits.skipCodeUnits(length);
-        return true;
+    uint32_t length = matchUnicodeEscape(codePoint);
+    if (MOZ_LIKELY(length > 0)) {
+        if (MOZ_LIKELY(unicode::IsIdentifierPart(*codePoint)))
+            return true;
+
+        sourceUnits.unskipCodeUnits(length);
     }
+
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == '\\');
     return false;
 }
 
