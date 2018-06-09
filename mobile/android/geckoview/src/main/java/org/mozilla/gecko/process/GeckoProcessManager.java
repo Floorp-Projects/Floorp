@@ -89,6 +89,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         public synchronized void unbind() {
+            final Context context = GeckoAppShell.getApplicationContext();
+            context.unbindService(this);
+
             final int pid = getPid();
             if (pid != 0) {
                 Process.killProcess(pid);
@@ -136,6 +139,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             Log.i(LOGTAG, "Binder died for " + mType);
             if (mChild != null) {
                 mChild = null;
+                mPid = 0;
                 GeckoAppShell.getApplicationContext().unbindService(this);
             }
         }

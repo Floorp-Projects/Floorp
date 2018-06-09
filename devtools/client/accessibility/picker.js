@@ -23,7 +23,7 @@ class Picker {
   }
 
   get walker() {
-    return this._panel._walker;
+    return this._panel.walker;
   }
 
   get pickerButton() {
@@ -71,8 +71,8 @@ class Picker {
   updateButton() {
     this.pickerButton.description = this.getStr("accessibility.pick");
     this.pickerButton.className = "accessibility";
-    this.pickerButton.disabled = !this._panel._front.enabled;
-    if (!this._panel._front.enabled && this.isPicking) {
+    this.pickerButton.disabled = !this._panel.front.enabled;
+    if (!this._panel.front.enabled && this.isPicking) {
       this.cancel();
     }
   }

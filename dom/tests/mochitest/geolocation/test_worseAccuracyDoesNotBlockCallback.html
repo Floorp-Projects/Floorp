@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=494924
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -25,13 +26,17 @@ resume_geolocationProvider(function() {
   force_prompt(true, test1);
 });
 
+// The magic numbers 100 and 42 below are the accuracy results returned from the
+// mock geolocation service and defined in network_geolocation.sjs.
 function successCallback2(position) {
   check_geolocation(position);
+  is(position.coords.accuracy, 100, "worse accuracy");
   SimpleTest.finish();
 }
 
 function successCallback1(position) {
   check_geolocation(position);
+  is(position.coords.accuracy, 42, "high accuracy");
   worse_geolocationProvider(function() {
     navigator.geolocation.getCurrentPosition(successCallback2, null, { maximumAge: 0 });
   });
@@ -44,4 +49,3 @@ function test1() {
 </pre>
 </body>
 </html>
-

@@ -26,6 +26,7 @@ import kotlin.reflect.KClass
 open class BaseSessionTest(noErrorCollector: Boolean = false) {
     companion object {
         const val CLICK_TO_RELOAD_HTML_PATH = "/assets/www/clickToReload.html"
+        const val CONTENT_CRASH_URL = "about:crashcontent"
         const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
         const val HELLO_HTML_PATH = "/assets/www/hello.html"
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html"

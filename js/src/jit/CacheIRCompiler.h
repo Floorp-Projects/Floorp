@@ -80,6 +80,7 @@ namespace jit {
     _(Breakpoint)                         \
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
+    _(MegamorphicStoreSlot)               \
     _(MegamorphicHasPropResult)           \
     _(CallObjectHasSparseElementResult)   \
     _(WrapResult)

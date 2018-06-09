@@ -10,11 +10,11 @@
 #include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
-#include "vm/JSCompartment.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "vm/Realm.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"

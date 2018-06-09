@@ -33,8 +33,8 @@
 #include "util/Unicode.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSAtom.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 using mozilla::ArrayLength;
 using mozilla::IsAscii;

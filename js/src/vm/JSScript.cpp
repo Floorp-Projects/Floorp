@@ -57,6 +57,7 @@
 #include "vtune/VTuneWrapper.h"
 
 #include "gc/Marking-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"

@@ -1249,7 +1249,7 @@ public:
     }
   }
 
-  bool IsEditable() const;
+  inline bool IsEditable() const;
 
   /**
    * Returns true if |this| or any of its ancestors is native anonymous.

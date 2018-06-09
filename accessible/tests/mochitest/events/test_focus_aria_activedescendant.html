@@ -44,8 +44,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
       this.invoke = function insertItemNFocus_invoke() {
         var container  = getNode(aID);
+
         var itemNode = document.createElement("div");
         itemNode.setAttribute("id", aNewItemID);
+        itemNode.setAttribute("role", "listitem");
         itemNode.textContent = aNewItemID;
         container.appendChild(itemNode);
 
@@ -68,8 +70,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       gQueue.push(new synthFocus("combobox_entry", new focusChecker("combobox_entry")));
       gQueue.push(new changeARIAActiveDescendant("combobox", "combobox_option2"));
 
-      todo(false, "No focus for inserted element, bug 687011");
-      // gQueue.push(new insertItemNFocus("listbox", "item4"));
+      gQueue.push(new synthFocus("listbox", new focusChecker("item3")));
+      gQueue.push(new insertItemNFocus("listbox", "item4"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

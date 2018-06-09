@@ -63,6 +63,15 @@ var ModuleManager = {
     this.forEach(module => {
       module.onInit();
     });
+
+    window.addEventListener("unload", () => {
+      this.forEach(module => {
+        module.enabled = false;
+        module.onDestroy();
+      });
+
+      this._modules.clear();
+    });
   },
 
   get window() {
@@ -198,6 +207,12 @@ class ModuleInfo {
     this._onInitPhase = null;
 
     this.enabled = this._enabledOnInit;
+  }
+
+  onDestroy() {
+    if (this._impl) {
+      this._impl.onDestroy();
+    }
   }
 
   /**

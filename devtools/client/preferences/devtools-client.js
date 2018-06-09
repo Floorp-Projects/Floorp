@@ -36,8 +36,12 @@ pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.activeSidebar", "ruleview");
 pref("devtools.inspector.remote", false);
 
-// Show the 3 pane onboarding tooltip in the inspector
+// Show the 3 pane onboarding tooltip in the inspector only in release or beta builds.
+#if defined(RELEASE_OR_BETA)
 pref("devtools.inspector.show-three-pane-tooltip", true);
+#else
+pref("devtools.inspector.show-three-pane-tooltip", false);
+#endif
 // Enable the 3 pane mode in the inspector
 pref("devtools.inspector.three-pane-enabled", true);
 

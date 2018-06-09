@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global gToolbox */
-
 const {
   ENABLE,
   DISABLE,
@@ -136,7 +134,6 @@ function onCanBeEnabledChange(state, { canBeEnabled }) {
  */
 function onReset(state, { accessibility }) {
   const { enabled, canBeDisabled, canBeEnabled } = accessibility;
-  toggleHighlightTool(enabled);
   return Object.assign({}, state, { enabled, canBeDisabled, canBeEnabled });
 }
 
@@ -153,16 +150,7 @@ function onToggle(state, { error }, enabled) {
     return state;
   }
 
-  toggleHighlightTool(enabled);
   return Object.assign({}, state, { enabled });
-}
-
-function toggleHighlightTool(enabled) {
-  if (enabled) {
-    gToolbox.highlightTool("accessibility");
-  } else {
-    gToolbox.unhighlightTool("accessibility");
-  }
 }
 
 exports.ui = ui;

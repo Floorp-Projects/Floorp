@@ -7,6 +7,7 @@
 #ifndef gc_DeletePolicy_h
 #define gc_DeletePolicy_h
 
+#include "gc/Barrier.h"
 #include "js/TracingAPI.h"
 #ifdef ENABLE_BIGINT
 #include "vm/BigIntType.h"
@@ -73,8 +74,13 @@ struct GCManagedDeletePolicy
     void operator()(const T* constPtr) {
         if (constPtr) {
             auto ptr = const_cast<T*>(constPtr);
-            gc::ClearEdgesTracer trc;
-            ptr->trace(&trc);
+            if (JS::CurrentThreadIsHeapCollecting()) {
+                MOZ_ASSERT(js::CurrentThreadIsGCSweeping());
+                // Do not attempt to clear out storebuffer edges.
+            } else {
+                gc::ClearEdgesTracer trc;
+                ptr->trace(&trc);
+            }
             js_delete(ptr);
         }
     }

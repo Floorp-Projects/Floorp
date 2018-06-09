@@ -124,9 +124,9 @@ BottomHost.prototype = {
  * Base Host object for the in-browser sidebar
  */
 class SidebarHost {
-  constructor(hostTab, hostType) {
+  constructor(hostTab, type) {
     this.hostTab = hostTab;
-    this.type = hostType;
+    this.type = type;
     this.widthPref = "devtools.toolbox.sidebar.width";
 
     EventEmitter.decorate(this);
@@ -154,7 +154,7 @@ class SidebarHost {
       this._sidebar.clientWidth - MIN_PAGE_SIZE
     );
 
-    if (this.hostType == "right") {
+    if (this.type == "right") {
       this._sidebar.appendChild(this._splitter);
       this._sidebar.appendChild(this.frame);
     } else {

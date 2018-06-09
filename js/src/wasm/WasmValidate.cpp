@@ -23,8 +23,8 @@
 
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "wasm/WasmOpIter.h"
 
 using namespace js;
@@ -1226,7 +1226,12 @@ DecodeTableLimits(Decoder& d, TableDescVector* tables)
     if (!DecodeLimits(d, &limits))
         return false;
 
-    if (limits.initial > MaxTableInitialLength)
+    // If there's a maximum, check it is in range.  The check to exclude
+    // initial > maximum is carried out by the DecodeLimits call above, so
+    // we don't repeat it here.
+    if (limits.initial > MaxTableInitialLength ||
+        ((limits.maximum.isSome() &&
+          limits.maximum.value() > MaxTableMaximumLength)))
         return d.fail("too many table elements");
 
     if (tables->length())

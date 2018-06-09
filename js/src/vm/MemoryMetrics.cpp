@@ -17,9 +17,9 @@
 #include "vm/BigIntType.h"
 #endif
 #include "vm/HelperThreads.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/Realm.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"

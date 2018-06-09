@@ -19,6 +19,7 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=886026">Mozilla Bug 886026</a
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 resume_geolocationProvider(function() {
@@ -31,14 +32,16 @@ function run_test() {
 
   var watchId = navigator.geolocation.watchPosition(
     function(pos) {
+      check_geolocation(pos);
       successCallbackCalled = true;
     }, function(err) {
-         errorCallbackCalled = true;
-       }
+      errorCallbackCalled = true;
+    }
   );
 
   navigator.geolocation.getCurrentPosition(
     function(pos) {
+      check_geolocation(pos);
       SimpleTest.executeSoon(function() {
         ok(successCallbackCalled == false,
         "getCurrentPosition : Success callback should not have been called");

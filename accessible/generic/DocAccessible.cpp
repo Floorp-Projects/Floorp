@@ -959,11 +959,13 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsAtom* aAttribute)
 
   // The activedescendant universal property redirects accessible focus events
   // to the element with the id that activedescendant points to. Make sure
-  // the tree up to date before processing.
+  // the tree up to date before processing. In other words, when a node has just
+  // been inserted, the tree won't be up to date yet, so we must always schedule
+  // an async notification so that a newly inserted node will be present in
+  // the tree.
   if (aAttribute == nsGkAtoms::aria_activedescendant) {
-    mNotificationController->HandleNotification<DocAccessible, Accessible>
+    mNotificationController->ScheduleNotification<DocAccessible, Accessible>
       (this, &DocAccessible::ARIAActiveDescendantChanged, aAccessible);
-
     return;
   }
 

@@ -318,6 +318,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
         start_time = datetime.now()
         max_per_test_time = timedelta(minutes=60)
         max_per_test_tests = 10
+        if self.per_test_coverage:
+            max_per_test_tests = 30
         executed_tests = 0
         executed_too_many_tests = False
 

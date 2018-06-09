@@ -22,8 +22,8 @@
 #include "js/Utility.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "vm/SavedStacks.h"
 
 #include "vm/Debugger-inl.h"

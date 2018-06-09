@@ -15,8 +15,8 @@
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
-#include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -532,51 +532,6 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
     masm.load32(stubAddress(reader.stubOffset()), scratch);
     masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
     masm.loadValue(BaseIndex(scratch2, scratch, TimesOne), output.valueReg());
-    return true;
-}
-
-bool
-BaselineCacheIRCompiler::emitMegamorphicStoreSlot()
-{
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Address nameAddr = stubAddress(reader.stubOffset());
-    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-    bool needsTypeBarrier = reader.readBool();
-
-    AutoScratchRegister scratch1(allocator, masm);
-    AutoScratchRegister scratch2(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    masm.Push(val);
-    masm.moveStackPtrTo(val.scratchReg());
-
-    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
-    volatileRegs.takeUnchecked(scratch1);
-    volatileRegs.takeUnchecked(scratch2);
-    volatileRegs.takeUnchecked(val);
-    masm.PushRegsInMask(volatileRegs);
-
-    masm.setupUnalignedABICall(scratch1);
-    masm.loadJSContext(scratch1);
-    masm.passABIArg(scratch1);
-    masm.passABIArg(obj);
-    masm.loadPtr(nameAddr, scratch2);
-    masm.passABIArg(scratch2);
-    masm.passABIArg(val.scratchReg());
-    if (needsTypeBarrier)
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<true>)));
-    else
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataProperty<false>)));
-    masm.mov(ReturnReg, scratch1);
-    masm.PopRegsInMask(volatileRegs);
-
-    masm.loadValue(Address(masm.getStackPointer(), 0), val);
-    masm.adjustStack(sizeof(Value));
-
-    masm.branchIfFalseBool(scratch1, failure->label());
     return true;
 }
 

@@ -10,9 +10,9 @@
 
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
+#include "vm/Realm.h"
 #include "vm/Shape.h"
 
 #ifdef MOZ_VTUNE

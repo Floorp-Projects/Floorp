@@ -10,7 +10,7 @@
 #include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
-#include "vm/JSCompartment.h"
+#include "vm/Realm.h"
 
 namespace js {
 namespace jit {

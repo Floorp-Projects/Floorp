@@ -14,8 +14,8 @@
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICList.h"
 #include "jit/SharedICRegisters.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "vm/ReceiverGuard.h"
 #include "vm/TypedArrayObject.h"
 

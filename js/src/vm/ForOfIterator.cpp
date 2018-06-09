@@ -7,10 +7,10 @@
 #include "jsapi.h"
 
 #include "vm/Interpreter.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
+#include "vm/Realm.h"
 
 #include "vm/JSObject-inl.h"
 

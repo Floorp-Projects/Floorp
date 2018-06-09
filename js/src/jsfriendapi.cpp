@@ -24,9 +24,9 @@
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/Realm.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 

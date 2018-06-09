@@ -18,8 +18,8 @@
 #include "js/GCVector.h"
 #include "vm/ArrayObject.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "vm/UnboxedObject.h"
 
 namespace js {

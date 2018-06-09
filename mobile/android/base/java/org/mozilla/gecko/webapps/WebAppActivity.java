@@ -369,6 +369,12 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override // GeckoSession.ContentDelegate
     public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
+        // Won't happen, as we don't use the GeckoView download support in Fennec
+    }
+
+    @Override // GeckoSession.ContentDelegate
+    public void onCrash(final GeckoSession session) {
+        // Won't happen, as we don't use e10s in Fennec
     }
 
     @Override // GeckoSession.ContentDelegate
