@@ -1056,7 +1056,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     GetAxisStart(direction, mFrameMetrics.GetScrollableRect().TopLeft());
   CSSCoord maxScrollPosition =
     GetAxisStart(direction, mFrameMetrics.GetScrollableRect().BottomRight()) -
-    GetAxisLength(direction, mFrameMetrics.CalculateCompositedRectInCssPixels());
+    GetAxisLength(direction, mFrameMetrics.CalculateCompositionBoundsInCssPixelsOfSurroundingContent());
   CSSCoord scrollPosition = minScrollPosition + (scrollPercent * (maxScrollPosition - minScrollPosition));
 
   scrollPosition = std::max(scrollPosition, minScrollPosition);
@@ -1750,7 +1750,7 @@ AsyncPanZoomController::ConvertScrollbarPoint(const ParentLayerPoint& aScrollbar
   scrollbarPoint = scrollbarPoint * mFrameMetrics.GetPresShellResolution();
 
   // Now, get it to be relative to the beginning of the scroll track.
-  CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositedRectInCssPixels();
+  CSSRect cssCompositionBound = mFrameMetrics.CalculateCompositionBoundsInCssPixelsOfSurroundingContent();
   return GetAxisStart(*aThumbData.mDirection, scrollbarPoint)
       - GetAxisStart(*aThumbData.mDirection, cssCompositionBound)
       - aThumbData.mScrollTrackStart;
