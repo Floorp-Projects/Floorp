@@ -1119,7 +1119,7 @@ class TokenStreamCharsBase
      * (The code point's exact value might not be used, however, if subsequent
      * code observes that |unit| is part of a LineTerminatorSequence.)
      */
-    static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool isAsciiCodePoint(CharT unit) {
+    static constexpr MOZ_ALWAYS_INLINE MOZ_MUST_USE bool isAsciiCodePoint(CharT unit) {
         return mozilla::IsAscii(unit);
     }
 
@@ -1294,8 +1294,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
     using typename GeneralCharsBase::TokenStreamSpecific;
 
-    void matchMultiUnitCodePointSlow(char16_t lead, uint32_t* codePoint);
-
   protected:
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
@@ -1307,31 +1305,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using typename GeneralCharsBase::SourceUnits;
 
     using GeneralCharsBase::GeneralCharsBase;
-
-    // |c| must be the code unit just gotten.  If it and the subsequent code
-    // unit form a valid surrogate pair, get the second code unit, set
-    // |*codePoint| to the code point encoded by the surrogate pair, and return
-    // true.  Otherwise do not get a second code unit, set |*codePoint = 0|,
-    // and return true.
-    //
-    // ECMAScript specifically requires that unpaired UTF-16 surrogates be
-    // treated as the corresponding code point and not as an error.  See
-    // <https://tc39.github.io/ecma262/#sec-ecmascript-language-types-string-type>.
-    // Therefore this function always returns true.  The |bool| return type
-    // exists so that a future UTF-8 |TokenStreamChars| can treat malformed
-    // multi-code unit UTF-8 sequences as errors.  (Because ECMAScript only
-    // interprets UTF-16 inputs, the process of translating the UTF-8 to UTF-16
-    // would fail, so no script should execute.  Technically, we shouldn't even
-    // be tokenizing -- but it probably isn't realistic to assume every user
-    // correctly passes only valid UTF-8, at least not without better types in
-    // our codebase for strings that by construction only contain valid UTF-8.)
-    MOZ_ALWAYS_INLINE bool matchMultiUnitCodePoint(char16_t c, uint32_t* codePoint) {
-        if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
-            *codePoint = 0;
-        else
-            matchMultiUnitCodePointSlow(c, codePoint);
-        return true;
-    }
 
     // Try to get the next code point, normalizing '\r', '\r\n', '\n', and the
     // Unicode line/paragraph separators into '\n'.  Also updates internal
@@ -1518,7 +1491,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsBase::getNonAsciiCodePoint;
     using CharsSharedBase::isAsciiCodePoint;
     using CharsSharedBase::matchCodeUnit;
-    using CharsBase::matchMultiUnitCodePoint;
     using GeneralCharsBase::matchUnicodeEscapeIdent;
     using GeneralCharsBase::matchUnicodeEscapeIdStart;
     using GeneralCharsBase::newAtomToken;
@@ -1887,14 +1859,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
                                    UniquePtr<char16_t[], JS::FreePolicy>* destination);
     MOZ_MUST_USE bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
-
-    void consumeKnownCharIgnoreEOL(int32_t expect) {
-#ifdef DEBUG
-        auto c =
-#endif
-            getCodeUnit();
-        MOZ_ASSERT(c == expect);
-    }
 };
 
 // It's preferable to define this in TokenStream.cpp, but its template-ness
