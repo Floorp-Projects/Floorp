@@ -1628,14 +1628,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
      * Tokenize a decimal number that begins at |numStart| into the provided
      * token.
      *
-     * |c| must be one of these values:
+     * |unit| must be one of these values:
      *
      *   1. The first decimal digit in the integral part of a decimal number
      *      not starting with '0' or '.', e.g. '1' for "17", '3' for "3.14", or
      *      '8' for "8.675309e6".
      *
      *   In this case, the next |getCodeUnit()| must return the code unit after
-     *   |c| in the overall number.
+     *   |unit| in the overall number.
      *
      *   2. The '.' in a "."/"0."-prefixed decimal number or the 'e'/'E' in a
      *      "0e"/"0E"-prefixed decimal number, e.g. ".17", "0.42", or "0.1e3".
@@ -1647,8 +1647,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
      *
      *   3. The code unit after the '0' where "0" is the entire number token.
      *
-     *   In this case, the next |getCodeUnit()| returns the code unit after
-     *   |c|.
+     *   In this case, the next |getCodeUnit()| would return the code unit
+     *   after |unit|, but this function will never perform such call.
      *
      *   4. (Non-strict mode code only)  The first '8' or '9' in a "noctal"
      *      number that begins with a '0' but contains a non-octal digit in its
@@ -1656,13 +1656,13 @@ class MOZ_STACK_CLASS TokenStreamSpecific
      *      '8' in "0386" or '9' in "09+7" (three separate tokens").
      *
      *   In this case, the next |getCodeUnit()| returns the code unit after
-     *   |c|: '.', '6', or '+' in the examples above.
+     *   |unit|: '.', '6', or '+' in the examples above.
      *
      * This interface is super-hairy and horribly stateful.  Unfortunately, its
      * hair merely reflects the intricacy of ECMAScript numeric literal syntax.
      * And incredibly, it *improves* on the goto-based horror that predated it.
      */
-    MOZ_MUST_USE bool decimalNumber(int c, TokenStart start, const CharT* numStart,
+    MOZ_MUST_USE bool decimalNumber(int32_t unit, TokenStart start, const CharT* numStart,
                                     Modifier modifier, TokenKind* out);
 
     /** Tokenize a regular expression literal beginning at |start|. */
