@@ -104,14 +104,15 @@ class Configuration(DescriptorProvider):
                             "%s" %
                             (partialIface.location, iface.location))
                 if not (iface.getExtendedAttribute("ChromeOnly") or
+                        iface.getExtendedAttribute("Func") == ["IsChromeOrXBL"] or
                         not (iface.hasInterfaceObject() or
                              iface.isNavigatorProperty()) or
                         isInWebIDLRoot(iface.filename())):
                     raise TypeError(
                         "Interfaces which are exposed to the web may only be "
                         "defined in a DOM WebIDL root %r. Consider marking "
-                        "the interface [ChromeOnly] if you do not want it "
-                        "exposed to the web.\n"
+                        "the interface [ChromeOnly] or [Func='IsChromeOrXBL'] "
+                        "if you do not want it exposed to the web.\n"
                         "%s" %
                         (webRoots, iface.location))
             self.interfaces[iface.identifier.name] = iface
