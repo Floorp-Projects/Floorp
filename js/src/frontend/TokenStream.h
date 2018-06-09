@@ -1848,25 +1848,12 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     MOZ_MUST_USE bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
 
-    void consumeKnownChar(int32_t expect) {
-        int32_t c;
-        MOZ_ALWAYS_TRUE(getChar(&c));
-        MOZ_ASSERT(c == expect);
-    }
-
     void consumeKnownCharIgnoreEOL(int32_t expect) {
 #ifdef DEBUG
         auto c =
 #endif
             getCodeUnit();
         MOZ_ASSERT(c == expect);
-    }
-
-    MOZ_MUST_USE bool peekChar(int32_t* c) {
-        if (!getChar(c))
-            return false;
-        ungetChar(*c);
-        return true;
     }
 };
 

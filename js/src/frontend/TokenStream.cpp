@@ -1225,31 +1225,50 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
     tokenbuf.clear();
 
     do {
-        int32_t c;
-        if (!peekChar(&c))
-            return false;
-
-        if (c == EOF || unicode::IsSpaceOrBOM2(c))
+        int32_t unit = peekCodeUnit();
+        if (unit == EOF)
             break;
 
-        consumeKnownChar(c);
+        if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+            if (unicode::IsSpaceOrBOM2(unit))
+                break;
 
-        // Debugging directives can occur in both single- and multi-line
-        // comments. If we're currently inside a multi-line comment, we also
-        // need to recognize multi-line comment terminators.
-        if (isMultiline && c == '*' && matchCodeUnit('/')) {
-            ungetCodeUnit('/');
-            ungetCodeUnit('*');
+            consumeKnownCodeUnit(unit);
+
+            // Debugging directives can occur in both single- and multi-line
+            // comments. If we're currently inside a multi-line comment, we
+            // also must recognize multi-line comment terminators.
+            if (isMultiline && unit == '*' && peekCodeUnit() == '/') {
+                ungetCodeUnit('*');
+                break;
+            }
+
+            if (!tokenbuf.append(unit))
+                return false;
+
+            continue;
+        }
+
+        int32_t codePoint;
+        if (!getCodePoint(&codePoint))
+            return false;
+
+        if (unicode::IsSpaceOrBOM2(codePoint)) {
+            ungetCodePointIgnoreEOL(codePoint);
+
+            if (codePoint == unicode::LINE_SEPARATOR || codePoint == unicode::PARA_SEPARATOR)
+                anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+
             break;
         }
 
-        if (!tokenbuf.append(c))
+        if (!appendCodePointToTokenbuf(codePoint))
             return false;
     } while (true);
 
     if (tokenbuf.empty()) {
-        // The directive's URL was missing, but this is not quite an
-        // exception that we should stop and drop everything for.
+        // The directive's URL was missing, but comments can contain anything,
+        // so it isn't an error.
         return true;
     }
 
