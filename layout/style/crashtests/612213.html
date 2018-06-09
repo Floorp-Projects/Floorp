@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  var v = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+  document.body.appendChild(v);
+  var s = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  s.setAttribute("style", "filter: url(#g);");
+  document.body.appendChild(s);
+
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body id="g" onload="setTimeout(boom, 0);"></body></html>
