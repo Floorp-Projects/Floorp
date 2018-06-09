@@ -1180,6 +1180,9 @@ class GeneralTokenStreamChars
         return token;
     }
 
+    uint32_t peekUnicodeEscape(uint32_t* codePoint);
+    uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
+
   protected:
     using typename CharsSharedBase::SourceUnits;
 
@@ -1263,6 +1266,10 @@ class GeneralTokenStreamChars
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL() {
         return anyCharsAccess().internalUpdateLineInfoForEOL(sourceUnits.offset());
     }
+
+  protected:
+    uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
+    bool matchUnicodeEscapeIdent(uint32_t* codePoint);
 };
 
 template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
@@ -1477,6 +1484,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::isAsciiCodePoint;
     using CharsSharedBase::matchCodeUnit;
     using CharsBase::matchMultiUnitCodePoint;
+    using GeneralCharsBase::matchUnicodeEscapeIdent;
+    using GeneralCharsBase::matchUnicodeEscapeIdStart;
     using GeneralCharsBase::newAtomToken;
     using GeneralCharsBase::newNameToken;
     using GeneralCharsBase::newNumberToken;
@@ -1834,11 +1843,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     MOZ_MUST_USE bool getTokenInternal(TokenKind* const ttp, const Modifier modifier);
 
     MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Modifier modifier, TokenKind* out);
-
-    uint32_t peekUnicodeEscape(uint32_t* codePoint);
-    uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
-    uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
-    bool matchUnicodeEscapeIdent(uint32_t* codePoint);
 
     MOZ_MUST_USE bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
