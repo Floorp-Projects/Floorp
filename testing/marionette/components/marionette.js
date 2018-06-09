@@ -319,7 +319,7 @@ class MarionetteParentProcess {
     switch (topic) {
       case "nsPref:changed":
         if (this.enabled) {
-          this.init();
+          this.init(false);
         } else {
           this.uninit();
         }
@@ -413,7 +413,7 @@ class MarionetteParentProcess {
     }, {once: true});
   }
 
-  init() {
+  init(quit = true) {
     if (this.running || !this.enabled || !this.finalUIStartup) {
       log.debug(`Init aborted (running=${this.running}, ` +
                 `enabled=${this.enabled}, finalUIStartup=${this.finalUIStartup})`);
@@ -448,7 +448,9 @@ class MarionetteParentProcess {
       } catch (e) {
         log.fatal("Remote protocol server failed to start", e);
         this.uninit();
-        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        if (quit) {
+          Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        }
         return;
       }
 
