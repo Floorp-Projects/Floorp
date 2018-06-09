@@ -23,7 +23,7 @@
 #include <cairo.h>
 #include <cairo-ft.h>
 
-#ifdef MOZ_CONTENT_SANDBOX
+#if defined(MOZ_CONTENT_SANDBOX) && defined (XP_LINUX)
 #include "mozilla/SandboxBroker.h"
 #endif
 
