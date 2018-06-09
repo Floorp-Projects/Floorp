@@ -438,8 +438,14 @@ var LoginManagerContent = {
   _fetchLoginsFromParentAndFillForm(form, window) {
     this._detectInsecureFormLikes(window);
 
+    const isPrivateWindow = PrivateBrowsingUtils.isContentWindowPrivate(window);
+
     let messageManager = messageManagerFromWindow(window);
-    messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
+    messageManager.sendAsyncMessage("LoginStats:LoginEncountered",
+                                    {
+                                      isPrivateWindow,
+                                      isPwmgrEnabled: gEnabled,
+                                    });
 
     if (!gEnabled) {
       return;

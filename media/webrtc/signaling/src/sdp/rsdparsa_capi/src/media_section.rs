@@ -7,9 +7,10 @@ use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 use rsdparsa::{SdpBandwidth, SdpSession};
 use rsdparsa::media_type::{SdpMedia, SdpMediaValue, SdpProtocolValue,
                            SdpFormatList};
-use rsdparsa::attribute_type::SdpAttribute;
+use rsdparsa::attribute_type::{SdpAttribute, SdpAttributeRtpmap};
 
 use network::{get_bandwidth, RustSdpConnection};
+use types::StringView;
 
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_media_section(session: *const SdpSession,
@@ -148,4 +149,32 @@ pub unsafe extern "C" fn sdp_get_media_connection(sdp_media: *const SdpMedia, re
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_media_attribute_list(sdp_media: *const SdpMedia) -> *const Vec<SdpAttribute> {
     (*sdp_media).get_attributes()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_media_clear_codecs(sdp_media: *mut SdpMedia) {
+    (*sdp_media).remove_codecs()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_media_add_codec(sdp_media: *mut SdpMedia, pt: u8,
+                                             codec_name: StringView, clockrate: u32,
+                                             channels: u16) -> nsresult {
+     let rtpmap = SdpAttributeRtpmap{
+                     payload_type: pt,
+                     codec_name: match codec_name.into() {
+                         Ok(x) => x,
+                         Err(boxed_error) => {
+                             println!("Error while pasing string, description: {:?}", (*boxed_error).description());
+                             return NS_ERROR_INVALID_ARG;
+                         }
+                     },
+                     frequency: clockrate,
+                     channels: Some(channels as u32),
+     };
+
+    match (*sdp_media).add_codec(rtpmap) {
+        Ok(_) => NS_OK,
+        Err(_) => NS_ERROR_INVALID_ARG,
+    }
 }

@@ -376,12 +376,12 @@ pub mod platform {
             (true, "Applications/Firefox.app/Contents/MacOS/firefox-bin"),
         ].iter()
         {
-            let path = match (home, prefix_home) {
+            let path = match (home.as_ref(), prefix_home) {
                 (Some(ref home_dir), true) => home_dir.join(trial_path),
                 (None, true) => continue,
-                (_, false) => trial_path.to_path_buf(),
+                (_, false) => PathBuf::from(trial_path),
             };
-            if is_binary(path) {
+            if is_binary(&path) {
                 return Some(path);
             }
         }

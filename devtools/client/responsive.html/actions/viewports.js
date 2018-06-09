@@ -22,9 +22,10 @@ module.exports = {
   /**
    * Add an additional viewport to display the document.
    */
-  addViewport() {
+  addViewport(userContextId = 0) {
     return {
       type: ADD_VIEWPORT,
+      userContextId,
     };
   },
 

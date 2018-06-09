@@ -3804,7 +3804,6 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchPt) {
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432934
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3923,6 +3922,67 @@ TEST_P(NewSdpTest, CheckSetPort) {
 
    mSdp->GetMediaSection(0).SetPort(currentPort+1);
    ASSERT_EQ(currentPort+1,mSdp->GetMediaSection(0).GetPort());
+}
+
+TEST_P(NewSdpTest, CheckAddCodec) {
+  // Parse any valid sdp with a media section
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendonly" CRLF);
+
+   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+   ASSERT_EQ(1U,mSdp->GetMediaSectionCount());
+
+   ASSERT_EQ(1U,mSdp->GetMediaSection(0).GetFormats().size());
+   ASSERT_EQ(1U,mSdp->GetMediaSection(0).GetAttributeList().GetRtpmap().mRtpmaps.size());
+
+   mSdp->GetMediaSection(0).AddCodec("110","opus",48000,2);
+
+   ASSERT_EQ(2U,mSdp->GetMediaSection(0).GetFormats().size());
+   const auto& rtpmaps = mSdp->GetMediaSection(0).GetAttributeList().GetRtpmap();
+   ASSERT_EQ(2U,rtpmaps.mRtpmaps.size());
+
+   ASSERT_TRUE(rtpmaps.HasEntry("120"));
+   ASSERT_TRUE(rtpmaps.HasEntry("110"));
+   const auto aRtpmap = rtpmaps.GetEntry("110");
+   ASSERT_EQ(aRtpmap.pt,"110");
+   ASSERT_EQ(aRtpmap.codec,SdpRtpmapAttributeList::kOpus);
+   ASSERT_EQ(aRtpmap.name,"opus");
+   ASSERT_EQ(aRtpmap.clock,48000U);
+   ASSERT_EQ(aRtpmap.channels,2U);
+}
+
+TEST_P(NewSdpTest, CheckClearCodecs) {
+  // Parse any valid sdp with a media section
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120 110" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendonly" CRLF
+           "a=rtpmap:110 opus/48000/2" CRLF);
+
+     ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+     ASSERT_EQ(1U,mSdp->GetMediaSectionCount());
+
+     ASSERT_EQ(2U,mSdp->GetMediaSection(0).GetFormats().size());
+     ASSERT_EQ(2U,mSdp->GetMediaSection(0).GetAttributeList().
+                  GetRtpmap().mRtpmaps.size());
+
+     mSdp->GetMediaSection(0).ClearCodecs();
+
+     ASSERT_EQ(0U,mSdp->GetMediaSection(0).GetFormats().size());
+     ASSERT_FALSE(mSdp->GetMediaSection(0).GetAttributeList().
+                  HasAttribute(SdpAttribute::kRtpmapAttribute));
 }
 
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {

@@ -8,18 +8,21 @@ use network::{parse_nettype, parse_addrtype, parse_unicast_addr};
 
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributePayloadType {
     PayloadType(u8),
     Wildcard, // Wildcard means "*",
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeCandidateTransport {
     Udp,
     Tcp,
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeCandidateType {
     Host,
     Srflx,
@@ -28,6 +31,7 @@ pub enum SdpAttributeCandidateType {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeCandidateTcpType {
     Active,
     Passive,
@@ -35,6 +39,7 @@ pub enum SdpAttributeCandidateTcpType {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeCandidate {
     pub foundation: String,
     pub component: u32,
@@ -103,6 +108,7 @@ impl SdpAttributeCandidate {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeRemoteCandidate {
     pub component: u32,
     pub address: IpAddr,
@@ -110,6 +116,7 @@ pub struct SdpAttributeRemoteCandidate {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeSimulcastId {
     pub id: String,
     pub paused: bool,
@@ -132,6 +139,7 @@ impl SdpAttributeSimulcastId {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeSimulcastAlternatives {
     pub ids: Vec<SdpAttributeSimulcastId>,
 }
@@ -149,6 +157,7 @@ impl SdpAttributeSimulcastAlternatives {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeSimulcast {
     pub send: Vec<SdpAttributeSimulcastAlternatives>,
     pub receive: Vec<SdpAttributeSimulcastAlternatives>,
@@ -171,6 +180,7 @@ impl SdpAttributeSimulcast {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeRtcp {
     pub port: u16,
     pub unicast_addr: Option<IpAddr>,
@@ -190,6 +200,7 @@ impl SdpAttributeRtcp {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeRtcpFbType {
     Ack = 0,
     Ccm = 2, // This is explicitly 2 to make the conversion to the
@@ -197,10 +208,12 @@ pub enum SdpAttributeRtcpFbType {
              // in the place of 1
     Nack,
     TrrInt,
-    Remb
+    Remb,
+    TransCC
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeRtcpFb {
     pub payload_type: SdpAttributePayloadType,
     pub feedback_type: SdpAttributeRtcpFbType,
@@ -209,6 +222,7 @@ pub struct SdpAttributeRtcpFb {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeDirection {
     Recvonly,
     Sendonly,
@@ -216,6 +230,7 @@ pub enum SdpAttributeDirection {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeExtmap {
     pub id: u16,
     pub direction: Option<SdpAttributeDirection>,
@@ -224,12 +239,14 @@ pub struct SdpAttributeExtmap {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeFmtp {
     pub payload_type: u8,
     pub tokens: Vec<String>,
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeFingerprint {
     // TODO turn the supported hash algorithms into an enum?
     pub hash_algorithm: String,
@@ -237,12 +254,14 @@ pub struct SdpAttributeFingerprint {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeSctpmap {
     pub port: u16,
     pub channels: u32,
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeGroupSemantic {
     LipSynchronization,
     FlowIdentification,
@@ -254,24 +273,28 @@ pub enum SdpAttributeGroupSemantic {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeGroup {
     pub semantics: SdpAttributeGroupSemantic,
     pub tags: Vec<String>,
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeMsid {
     pub id: String,
     pub appdata: Option<String>,
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeMsidSemantic {
     pub semantic: String,
     pub msids: Vec<String>,
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeRtpmap {
     pub payload_type: u8,
     pub codec_name: String,
@@ -295,6 +318,7 @@ impl SdpAttributeRtpmap {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttributeSetup {
     Active,
     Actpass,
@@ -303,6 +327,7 @@ pub enum SdpAttributeSetup {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeSsrc {
     pub id: u32,
     pub attribute: Option<String>,
@@ -330,6 +355,7 @@ impl SdpAttributeSsrc {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpAttribute {
     BundleOnly,
     Candidate(SdpAttributeCandidate),
@@ -1066,6 +1092,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
             "nack" => SdpAttributeRtcpFbType::Nack,
             "trr-int" => SdpAttributeRtcpFbType::TrrInt,
             "goog-remb" => SdpAttributeRtcpFbType::Remb,
+            "transport-cc" => SdpAttributeRtcpFbType::TransCC,
             _ => {
                 return Err(SdpParserInternalError::Unsupported(
                     format!("Unknown rtcpfb feedback type: {:?}",x).to_string()
@@ -1089,7 +1116,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                         format!("Unknown rtcpfb ack parameter: {:?}",x).to_string()
                     ))
                 },
-            }
+            },
             None => {
                 return Err(SdpParserInternalError::Unsupported(
                     format!("The rtcpfb ack feeback type needs a parameter:").to_string()
@@ -1104,7 +1131,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                         format!("Unknown rtcpfb ccm parameter: {:?}",x).to_string()
                     ))
                 },
-            }
+            },
             None => "".to_string(),
         },
         &SdpAttributeRtcpFbType::Nack => match tokens.get(2) {
@@ -1115,7 +1142,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                         format!("Unknown rtcpfb nack parameter: {:?}",x).to_string()
                     ))
                 },
-            }
+            },
             None => "".to_string(),
         },
         &SdpAttributeRtcpFbType::TrrInt => match tokens.get(2) {
@@ -1126,7 +1153,7 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                         format!("Unknown rtcpfb trr-int parameter: {:?}",x).to_string()
                     ))
                 },
-            }
+            },
             None => {
                     return Err(SdpParserInternalError::Generic(
                         format!("The rtcpfb trr-int feedback type needs a parameter").to_string()
@@ -1140,7 +1167,17 @@ fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError>
                         format!("Unknown rtcpfb remb parameter: {:?}",x).to_string()
                     ))
                 },
-            }
+            },
+            None => "".to_string(),
+        },
+        &SdpAttributeRtcpFbType::TransCC => match tokens.get(2) {
+            Some(x) => match x {
+                _ => {
+                    return Err(SdpParserInternalError::Unsupported(
+                        format!("Unknown rtcpfb transport-cc parameter: {:?}",x).to_string()
+                    ))
+                },
+            },
             None => "".to_string(),
         }
     };
