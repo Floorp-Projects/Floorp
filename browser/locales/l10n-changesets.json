@@ -177,7 +177,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "7432fbe9c5dc"
+        "revision": "81b5606dc963"
     }, 
     "bs": {
         "platforms": [
@@ -237,7 +237,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "00c52dfb58b2"
+        "revision": "92890a6fa736"
     }, 
     "cy": {
         "platforms": [
@@ -582,7 +582,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d84c6b5feeb8"
+        "revision": "415ec59b625e"
     }, 
     "gu-IN": {
         "platforms": [
@@ -612,7 +612,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ce5fd753bcac"
+        "revision": "2b5b311f3f0c"
     }, 
     "hi-IN": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "aa38c9e18914"
+        "revision": "441a6857aae0"
     }, 
     "kab": {
         "platforms": [
@@ -887,7 +887,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ebaf3396e902"
+        "revision": "80efc1ff53fd"
     }, 
     "lv": {
         "platforms": [
@@ -1067,7 +1067,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "50698ad92545"
+        "revision": "fe8a55637572"
     }, 
     "or": {
         "platforms": [
@@ -1127,7 +1127,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "522792e59d98"
+        "revision": "b3205edb5aa7"
     }, 
     "pt-PT": {
         "platforms": [
@@ -1142,7 +1142,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "551cb3b48dc8"
+        "revision": "f5421e034cc8"
     }, 
     "rm": {
         "platforms": [
@@ -1337,7 +1337,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "b46e3bf5530f"
+        "revision": "95a4189ef457"
     }, 
     "tr": {
         "platforms": [
