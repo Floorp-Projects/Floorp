@@ -705,7 +705,7 @@ SwitchTextDirectionCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->SwitchTextDirection();
+  return textEditor->ToggleTextDirection();
 }
 
 NS_IMETHODIMP

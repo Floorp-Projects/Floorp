@@ -105,8 +105,6 @@ public:
 
   virtual dom::EventTarget* GetDOMEventTarget() override;
 
-  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
-
   /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
    * Although this method is implementation of nsIPlaintextEditor.insertText(),
@@ -363,6 +361,8 @@ protected: // Shouldn't be used by friend classes
    *                    for committing the composition, returns false.
    */
   bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
+
+  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
 
 protected:
   nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;

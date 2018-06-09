@@ -432,14 +432,6 @@ interface nsIEditor  : nsISupports
    */
   void markNodeDirty(in Node node);
 
-/* ---------- direction controller ---------- */
-
-  /**
-   * Switches the editor element direction; from "Left-to-Right" to
-   * "Right-to-Left", and vice versa.
-   */
-  void switchTextDirection();
-
 /* ------------ Output methods -------------- */
 
   /**

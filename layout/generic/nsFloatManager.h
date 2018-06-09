@@ -10,6 +10,7 @@
 #define nsFloatManager_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WritingModes.h"
 #include "nsCoord.h"
@@ -26,23 +27,40 @@ struct ReflowInput;
 class StyleBasicShape;
 } // namespace mozilla
 
+enum class nsFlowAreaRectFlags : uint32_t {
+  NO_FLAGS   = 0,
+  HAS_FLOATS = 1 << 0,
+  MAY_WIDEN  = 1 << 1
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsFlowAreaRectFlags)
+
 /**
  * The available space for content not occupied by floats is divided
  * into a sequence of rectangles in the block direction.  However, we
  * need to know not only the rectangle, but also whether it was reduced
  * (from the content rectangle) by floats that actually intruded into
- * the content rectangle.
+ * the content rectangle. If it has been reduced by floats, then we also
+ * track whether the flow area might widen as the floats narrow in the
+ * block direction.
  */
 struct nsFlowAreaRect {
   mozilla::LogicalRect mRect;
-  bool mHasFloats;
+
+  nsFlowAreaRectFlags mAreaFlags;
 
   nsFlowAreaRect(mozilla::WritingMode aWritingMode,
                  nscoord aICoord, nscoord aBCoord,
                  nscoord aISize, nscoord aBSize,
-                 bool aHasFloats)
+                 nsFlowAreaRectFlags aAreaFlags)
     : mRect(aWritingMode, aICoord, aBCoord, aISize, aBSize)
-    , mHasFloats(aHasFloats) {}
+    , mAreaFlags(aAreaFlags) {}
+
+  bool HasFloats() const {
+    return (bool)(mAreaFlags & nsFlowAreaRectFlags::HAS_FLOATS);
+  }
+  bool MayWiden() const {
+    return (bool)(mAreaFlags & nsFlowAreaRectFlags::MAY_WIDEN);
+  }
 };
 
 #define NS_FLOAT_MANAGER_CACHE_SIZE 64
@@ -374,6 +392,7 @@ private:
     nscoord BStart(ShapeType aShapeType) const;
     nscoord BEnd(ShapeType aShapeType) const;
     bool IsEmpty(ShapeType aShapeType) const;
+    bool MayNarrowInBlockDirection(ShapeType aShapeType) const;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     FloatInfo(FloatInfo&& aOther);
