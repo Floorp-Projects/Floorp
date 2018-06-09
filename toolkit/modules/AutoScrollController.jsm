@@ -3,13 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint no-unused-vars: ["error", {args: "none"}] */
+
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var EXPORTED_SYMBOLS = ["AutoScrollController"];
 
-var AutoScrollController = {
-  init: function init() {
+class AutoScrollController {
+  constructor(global) {
     this._scrollable = null;
     this._scrolldir = "";
     this._startX = null;
@@ -19,16 +21,16 @@ var AutoScrollController = {
     this._lastFrame = null;
     this._autoscrollHandledByApz = false;
     this._scrollId = null;
+    this._global = global;
     this.autoscrollLoop = this.autoscrollLoop.bind(this);
 
-    Services.els.addSystemEventListener(global, "mousedown", this, true);
-
-    addMessageListener("Autoscroll:Stop", this);
-  },
+    global.addMessageListener("Autoscroll:Stop", this);
+  }
 
   isAutoscrollBlocker(node) {
     let mmPaste = Services.prefs.getBoolPref("middlemouse.paste");
     let mmScrollbarPosition = Services.prefs.getBoolPref("middlemouse.scrollbarPosition");
+    let content = node.ownerGlobal;
 
     while (node) {
       if ((node instanceof content.HTMLAnchorElement || node instanceof content.HTMLAreaElement) &&
@@ -49,17 +51,19 @@ var AutoScrollController = {
       node = node.parentNode;
     }
     return false;
-  },
+  }
 
   isScrollableElement(aNode) {
+    let content = aNode.ownerGlobal;
     if (aNode instanceof content.HTMLElement) {
       return !(aNode instanceof content.HTMLSelectElement) || aNode.multiple;
     }
 
     return aNode instanceof content.XULElement;
-  },
+  }
 
   getXBLNodes(parent, array) {
+    let content = parent.ownerGlobal;
     let anonNodes = content.document.getAnonymousNodes(parent);
     let nodes = Array.from(anonNodes || parent.childNodes || []);
     for (let node of nodes) {
@@ -72,9 +76,11 @@ var AutoScrollController = {
       }
     }
     return false;
-  },
+  }
 
   * parentNodeIterator(aNode) {
+    let content = aNode.ownerGlobal;
+
     while (aNode) {
       yield aNode;
 
@@ -94,9 +100,11 @@ var AutoScrollController = {
 
       aNode = parent;
     }
-  },
+  }
 
   findNearestScrollableElement(aNode) {
+    let content = aNode.ownerGlobal;
+
     // this is a list of overflow property values that allow scrolling
     const scrollingAllowed = ["scroll", "auto"];
 
@@ -152,7 +160,7 @@ var AutoScrollController = {
         this._scrollable = null; // abort scrolling
       }
     }
-  },
+  }
 
   startScroll(event) {
 
@@ -160,6 +168,8 @@ var AutoScrollController = {
 
     if (!this._scrollable)
       return;
+
+    let content = event.originalTarget.ownerGlobal;
 
     // In some configurations like Print Preview, content.performance
     // (which we use below) is null. Autoscrolling is broken in Print
@@ -181,19 +191,19 @@ var AutoScrollController = {
       // No view ID - leave this._scrollId as null. Receiving side will check.
     }
     let presShellId = domUtils.getPresShellId();
-    let [result] = sendSyncMessage("Autoscroll:Start",
-                                   {scrolldir: this._scrolldir,
-                                    screenX: event.screenX,
-                                    screenY: event.screenY,
-                                    scrollId: this._scrollId,
-                                    presShellId});
+    let [result] = this._global.sendSyncMessage("Autoscroll:Start",
+                                                {scrolldir: this._scrolldir,
+                                                 screenX: event.screenX,
+                                                 screenY: event.screenY,
+                                                 scrollId: this._scrollId,
+                                                 presShellId});
     if (!result.autoscrollEnabled) {
       this._scrollable = null;
       return;
     }
 
-    Services.els.addSystemEventListener(global, "mousemove", this, true);
-    addEventListener("pagehide", this, true);
+    Services.els.addSystemEventListener(this._global, "mousemove", this, true);
+    this._global.addEventListener("pagehide", this, true);
 
     this._ignoreMouseEvents = true;
     this._startX = event.screenX;
@@ -214,25 +224,26 @@ var AutoScrollController = {
       // and we need to take over.
       Services.obs.addObserver(this, "autoscroll-rejected-by-apz");
     }
-  },
+  }
 
   startMainThreadScroll() {
+    let content = this._global.content;
     this._lastFrame = content.performance.now();
     content.requestAnimationFrame(this.autoscrollLoop);
-  },
+  }
 
   stopScroll() {
     if (this._scrollable) {
       this._scrollable.mozScrollSnap();
       this._scrollable = null;
 
-      Services.els.removeSystemEventListener(global, "mousemove", this, true);
-      removeEventListener("pagehide", this, true);
+      Services.els.removeSystemEventListener(this._global, "mousemove", this, true);
+      this._global.removeEventListener("pagehide", this, true);
       if (this._autoscrollHandledByApz) {
         Services.obs.removeObserver(this, "autoscroll-rejected-by-apz");
       }
     }
-  },
+  }
 
   accelerate(curr, start) {
     const speed = 12;
@@ -243,13 +254,13 @@ var AutoScrollController = {
     if (val < -1)
       return val * Math.sqrt(-val) + 1;
     return 0;
-  },
+  }
 
   roundToZero(num) {
     if (num > 0)
       return Math.floor(num);
     return Math.ceil(num);
-  },
+  }
 
   autoscrollLoop(timestamp) {
     if (!this._scrollable) {
@@ -288,18 +299,15 @@ var AutoScrollController = {
       behavior: "instant"
     });
 
-    content.requestAnimationFrame(this.autoscrollLoop);
-  },
+    this._scrollable.ownerGlobal.requestAnimationFrame(this.autoscrollLoop);
+  }
 
   handleEvent(event) {
     if (event.type == "mousemove") {
       this._screenX = event.screenX;
       this._screenY = event.screenY;
     } else if (event.type == "mousedown") {
-      if (event.isTrusted &
-          !event.defaultPrevented &&
-          event.button == 1 &&
-          !this._scrollable &&
+      if (!this._scrollable &&
           !this.isAutoscrollBlocker(event.originalTarget)) {
         this.startScroll(event);
       }
@@ -308,11 +316,11 @@ var AutoScrollController = {
         var doc =
           this._scrollable.ownerDocument || this._scrollable.document;
         if (doc == event.target) {
-          sendAsyncMessage("Autoscroll:Cancel");
+          this._global.sendAsyncMessage("Autoscroll:Cancel");
         }
       }
     }
-  },
+  }
 
   receiveMessage(msg) {
     switch (msg.name) {
@@ -321,7 +329,7 @@ var AutoScrollController = {
         break;
       }
     }
-  },
+  }
 
   observe(subject, topic, data) {
     if (topic === "autoscroll-rejected-by-apz") {
@@ -332,5 +340,5 @@ var AutoScrollController = {
         Services.obs.removeObserver(this, "autoscroll-rejected-by-apz");
       }
     }
-  },
-};
+  }
+}

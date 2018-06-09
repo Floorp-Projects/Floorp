@@ -10,6 +10,8 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AutoScrollController",
+  "resource://gre/modules/AutoScrollController.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "SelectContentHelper",
@@ -32,6 +34,20 @@ addMessageListener("Finder:Initialize", function() {
   let {RemoteFinderListener} = ChromeUtils.import("resource://gre/modules/RemoteFinder.jsm", {});
   new RemoteFinderListener(global);
 });
+
+var AutoScrollListener = {
+  handleEvent(event) {
+    if (event.isTrusted &
+        !event.defaultPrevented &&
+        event.button == 1) {
+      if (!this._controller) {
+        this._controller = new AutoScrollController(global);
+      }
+      this._controller.handleEvent(event);
+    }
+  }
+};
+Services.els.addSystemEventListener(global, "mousedown", AutoScrollListener, true);
 
 var PopupBlocking = {
   popupData: null,
