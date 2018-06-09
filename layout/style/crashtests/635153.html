@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var r = document.documentElement;
+  document.__proto__ = document.createTextNode("text");
+  r.style.counterReset = "a";
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
