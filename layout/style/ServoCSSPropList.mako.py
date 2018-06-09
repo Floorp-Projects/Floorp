@@ -68,34 +68,6 @@ def method(prop):
         return prop.camel_case[1:]
     return prop.camel_case
 
-# Colors, integers and lengths are easy as well.
-#
-# TODO(emilio): This will go away once the rest of the longhands have been
-# moved or perhaps using a blacklist for the ones with non-layout-dependence
-# but other non-trivial dependence like scrollbar colors.
-SERIALIZED_PREDEFINED_TYPES = [
-    "Color",
-    "Integer",
-    "Length",
-    "Opacity",
-]
-
-def serialized_by_servo(prop):
-    # If the property requires layout information, no such luck.
-    if "GETCS_NEEDS_LAYOUT_FLUSH" in prop.flags:
-        return False
-    # No shorthands yet.
-    if prop.type() == "shorthand":
-        return False
-    # Keywords are all fine.
-    if prop.keyword:
-        return True
-    if prop.predefined_type in SERIALIZED_PREDEFINED_TYPES:
-        return True
-    # TODO(emilio): Enable the rest of the longhands.
-    return False
-
-
 def flags(prop):
     result = []
     if prop.explicitly_enabled_in_chrome():
@@ -110,8 +82,6 @@ def flags(prop):
         result.append("GetCSNeedsLayoutFlush")
     if "CAN_ANIMATE_ON_COMPOSITOR" in prop.flags:
         result.append("CanAnimateOnCompositor")
-    if serialized_by_servo(prop):
-        result.append("SerializedByServo")
     return ", ".join('"CSSPropFlags::{}"'.format(flag) for flag in result)
 
 def pref(prop):
