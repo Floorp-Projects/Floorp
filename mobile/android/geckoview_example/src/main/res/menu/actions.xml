@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/multiprocess" android:id="@+id/action_e10s" android:checkable="true"
+          android:showAsAction="never"/>
+    <item android:title="@string/tracking_protection" android:id="@+id/action_tp" android:showAsAction="never"
+          android:checkable="true"/>
+    <item android:title="@string/private_browsing" android:checkable="true" android:id="@+id/action_pb"/>
+    <item android:title="@string/forward" android:id="@+id/action_forward"/>
+    <item android:title="@string/reload" android:id="@+id/action_reload"/>
+</menu>

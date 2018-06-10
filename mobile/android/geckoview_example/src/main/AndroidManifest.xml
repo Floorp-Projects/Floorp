@@ -15,8 +15,9 @@
         <uses-library android:name="android.test.runner" />
 
         <activity android:name="org.mozilla.geckoview_example.GeckoViewActivity"
-                  android:label="GeckoViewActivity"
+                  android:label="GeckoView Example"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Theme.AppCompat.Light.NoActionBar"
                   android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,6 +36,12 @@
                 <data android:scheme="about" />
                 <data android:scheme="javascript" />
             </intent-filter>
+        </activity>
+
+        <activity android:name="org.mozilla.geckoview_example.SessionActivity"
+                  android:label="GeckoView Example"
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         </activity>
 
     </application>
