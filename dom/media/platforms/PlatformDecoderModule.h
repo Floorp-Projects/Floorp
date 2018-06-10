@@ -60,6 +60,17 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
     bool mUse = false;
   };
 
+  // Do not wrap H264 decoder in a H264Converter.
+  struct NoWrapper
+  {
+    NoWrapper() = default;
+    explicit NoWrapper(bool aDontUseWrapper)
+      : mDontUseWrapper(aDontUseWrapper)
+    {
+    }
+    bool mDontUseWrapper = false;
+  };
+
   struct VideoFrameRate
   {
     VideoFrameRate() = default;
@@ -102,6 +113,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<GMPCrashHelper> mCrashHelper;
   UseNullDecoder mUseNullDecoder;
+  NoWrapper mNoWrapper;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
   MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
   OptionSet mOptions = OptionSet(Option::Default);
@@ -120,6 +132,7 @@ private:
   void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   void Set(UseNullDecoder aUseNullDecoder) { mUseNullDecoder = aUseNullDecoder; }
+  void Set(NoWrapper aNoWrapper) { mNoWrapper = aNoWrapper; }
   void Set(OptionSet aOptions) { mOptions = aOptions; }
   void Set(VideoFrameRate aRate) { mRate = aRate; }
   void Set(layers::KnowsCompositor* aKnowsCompositor)
