@@ -177,6 +177,9 @@ MediaCapabilities::DecodingInfo(
                                     compositor,
                                     CreateDecoderParams::VideoFrameRate(
                                       frameRate),
+#ifdef XP_WIN
+                                    CreateDecoderParams::NoWrapper(true),
+#endif
                                     TrackInfo::kVideoTrack };
 
         RefPtr<PDMFactory> pdm = new PDMFactory();
