@@ -30,7 +30,6 @@
 #include "VideoSegment.h"
 #include "VideoStreamTrack.h"
 #include "VideoUtils.h"
-#include "databuffer.h"
 #include "libyuv/convert.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/Preferences.h"
@@ -675,8 +674,6 @@ protected:
   UniquePtr<AudioConverter> mAudioConverter;
 };
 
-static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
-
 MediaPipeline::MediaPipeline(const std::string& aPc,
                              DirectionType aDirection,
                              nsCOMPtr<nsIEventTarget> aMainThread,
@@ -689,9 +686,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
   , mRtcp(nullptr, RTCP)
   , mMainThread(aMainThread)
   , mStsThread(aStsThread)
-  , mTransport(new PipelineTransport(this)) // PipelineTransport() will access
-                                            // this->mStsThread; moved here
-                                            // for safety
+  , mTransport(new PipelineTransport(aStsThread))
   , mRtpPacketsSent(0)
   , mRtcpPacketsSent(0)
   , mRtpPacketsReceived(0)
@@ -866,9 +861,9 @@ MediaPipeline::GetContributingSourceStats(
 }
 
 void
-MediaPipeline::StateChange(TransportFlow* aFlow, TransportLayer::State aState)
+MediaPipeline::StateChange(TransportLayer* aLayer, TransportLayer::State aState)
 {
-  TransportInfo* info = GetTransportInfo_s(aFlow);
+  TransportInfo* info = GetTransportInfo_s(aLayer);
   MOZ_ASSERT(info);
 
   if (aState == TransportLayer::TS_OPEN) {
@@ -921,101 +916,14 @@ MediaPipeline::TransportReady_s(TransportInfo& aInfo)
              mDescription.c_str(),
              ToString(aInfo.mType));
 
-  // TODO(bcampen@mozilla.com): Should we disconnect from the flow on failure?
-  nsresult res;
-
-  // Now instantiate the SRTP objects
-  TransportLayerDtls* dtls = static_cast<TransportLayerDtls*>(
-    aInfo.mTransport->GetLayer(TransportLayerDtls::ID()));
-  MOZ_ASSERT(dtls); // DTLS is mandatory
-
-  uint16_t cipher_suite;
-  res = dtls->GetSrtpCipher(&cipher_suite);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "Failed to negotiate DTLS-SRTP. This is an error");
-    aInfo.mState = StateType::MP_CLOSED;
-    UpdateRtcpMuxState(aInfo);
-    return res;
-  }
-
-  // SRTP Key Exporter as per RFC 5764 S 4.2
-  unsigned char srtp_block[SRTP_TOTAL_KEY_LENGTH * 2];
-  res = dtls->ExportKeyingMaterial(
-    kDTLSExporterLabel, false, "", srtp_block, sizeof(srtp_block));
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "Failed to compute DTLS-SRTP keys. This is an error");
-    aInfo.mState = StateType::MP_CLOSED;
-    UpdateRtcpMuxState(aInfo);
-    MOZ_CRASH(); // TODO: Remove once we have enough field experience to
-                 // know it doesn't happen. bug 798797. Note that the
-                 // code after this never executes.
-    return res;
-  }
-
-  // Slice and dice as per RFC 5764 S 4.2
-  unsigned char client_write_key[SRTP_TOTAL_KEY_LENGTH];
-  unsigned char server_write_key[SRTP_TOTAL_KEY_LENGTH];
-  int offset = 0;
-  memcpy(client_write_key, srtp_block + offset, SRTP_MASTER_KEY_LENGTH);
-  offset += SRTP_MASTER_KEY_LENGTH;
-  memcpy(server_write_key, srtp_block + offset, SRTP_MASTER_KEY_LENGTH);
-  offset += SRTP_MASTER_KEY_LENGTH;
-  memcpy(client_write_key + SRTP_MASTER_KEY_LENGTH,
-         srtp_block + offset,
-         SRTP_MASTER_SALT_LENGTH);
-  offset += SRTP_MASTER_SALT_LENGTH;
-  memcpy(server_write_key + SRTP_MASTER_KEY_LENGTH,
-         srtp_block + offset,
-         SRTP_MASTER_SALT_LENGTH);
-  offset += SRTP_MASTER_SALT_LENGTH;
-  MOZ_ASSERT(offset == sizeof(srtp_block));
-
-  unsigned char* write_key;
-  unsigned char* read_key;
-
-  if (dtls->role() == TransportLayerDtls::CLIENT) {
-    write_key = client_write_key;
-    read_key = server_write_key;
-  } else {
-    write_key = server_write_key;
-    read_key = client_write_key;
-  }
-
-  MOZ_ASSERT(!aInfo.mSendSrtp && !aInfo.mRecvSrtp);
-  aInfo.mSendSrtp =
-    SrtpFlow::Create(cipher_suite, false, write_key, SRTP_TOTAL_KEY_LENGTH);
-  aInfo.mRecvSrtp =
-    SrtpFlow::Create(cipher_suite, true, read_key, SRTP_TOTAL_KEY_LENGTH);
-  if (!aInfo.mSendSrtp || !aInfo.mRecvSrtp) {
-    CSFLogError(
-      LOGTAG, "Couldn't create SRTP flow for %s", ToString(aInfo.mType));
-    aInfo.mState = StateType::MP_CLOSED;
-    UpdateRtcpMuxState(aInfo);
-    return NS_ERROR_FAILURE;
-  }
-
   if (mDirection == DirectionType::RECEIVE) {
     CSFLogInfo(LOGTAG,
                "Listening for %s packets received on %p",
                ToString(aInfo.mType),
-               dtls->downward());
+               aInfo.mSrtp);
 
-    switch (aInfo.mType) {
-      case RTP:
-        dtls->downward()->SignalPacketReceived.connect(
-          this, &MediaPipeline::RtpPacketReceived);
-        break;
-      case RTCP:
-        dtls->downward()->SignalPacketReceived.connect(
-          this, &MediaPipeline::RtcpPacketReceived);
-        break;
-      case MUX:
-        dtls->downward()->SignalPacketReceived.connect(
-          this, &MediaPipeline::PacketReceived);
-        break;
-      default:
-        MOZ_CRASH();
-    }
+    aInfo.mSrtp->SignalPacketReceived.connect(
+        this, &MediaPipeline::PacketReceived);
   }
 
   aInfo.mState = StateType::MP_OPEN;
@@ -1050,28 +958,19 @@ MediaPipeline::UpdateRtcpMuxState(TransportInfo& aInfo)
   if (aInfo.mType == MUX) {
     if (aInfo.mTransport == mRtcp.mTransport) {
       mRtcp.mState = aInfo.mState;
-      if (!mRtcp.mSendSrtp) {
-        mRtcp.mSendSrtp = aInfo.mSendSrtp;
-        mRtcp.mRecvSrtp = aInfo.mRecvSrtp;
-      }
     }
   }
 }
 
 nsresult
-MediaPipeline::SendPacket(const TransportFlow* aFlow, const void* aData, int aLen)
+MediaPipeline::SendPacket(TransportLayer* aLayer, MediaPacket& packet)
 {
   ASSERT_ON_THREAD(mStsThread);
 
-  // Note that we bypass the DTLS layer here
-  TransportLayerDtls* dtls =
-    static_cast<TransportLayerDtls*>(aFlow->GetLayer(TransportLayerDtls::ID()));
-  MOZ_ASSERT(dtls);
+  int len = packet.len();
+  TransportResult res = aLayer->SendPacket(packet);
 
-  TransportResult res =
-    dtls->downward()->SendPacket(static_cast<const unsigned char*>(aData), aLen);
-
-  if (res != aLen) {
+  if (res != len) {
     // Ignore blocking indications
     if (res == TE_WOULDBLOCK)
       return NS_OK;
@@ -1148,9 +1047,7 @@ MediaPipeline::IncrementRtcpPacketsReceived()
 }
 
 void
-MediaPipeline::RtpPacketReceived(TransportLayer* aLayer,
-                                 const unsigned char* aData,
-                                 size_t aLen)
+MediaPipeline::RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
 {
   if (mDirection == DirectionType::TRANSMIT) {
     return;
@@ -1171,25 +1068,17 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer,
     return;
   }
 
-  if (mRtp.mTransport->state() != TransportLayer::TS_OPEN) {
+  if (mRtp.mSrtp->state() != TransportLayer::TS_OPEN) {
     CSFLogError(LOGTAG, "Discarding incoming packet; transport not open");
     return;
   }
 
-  // This should never happen.
-  MOZ_ASSERT(mRtp.mRecvSrtp);
-
-  if (!aLen) {
-    return;
-  }
-
-  // Filter out everything but RTP/RTCP
-  if (aData[0] < 128 || aData[0] > 191) {
+  if (!packet.len()) {
     return;
   }
 
   webrtc::RTPHeader header;
-  if (!mRtpParser->Parse(aData, aLen, &header, true)) {
+  if (!mRtpParser->Parse(packet.data(), packet.len(), &header, true)) {
     return;
   }
 
@@ -1235,49 +1124,26 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer,
     }
   }
 
-  mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Srtp, false, aData, aLen);
-
-  // Make a copy rather than cast away constness
-  auto innerData = MakeUnique<unsigned char[]>(aLen);
-  memcpy(innerData.get(), aData, aLen);
-  int outLen = 0;
-  nsresult res =
-    mRtp.mRecvSrtp->UnprotectRtp(innerData.get(), aLen, aLen, &outLen);
-  if (!NS_SUCCEEDED(res)) {
-    char tmp[16];
-
-    SprintfLiteral(tmp,
-                   "%.2x %.2x %.2x %.2x",
-                   innerData[0],
-                   innerData[1],
-                   innerData[2],
-                   innerData[3]);
-
-    CSFLogError(LOGTAG,
-                "Error unprotecting RTP in %s len= %zu [%s]",
-                mDescription.c_str(),
-                aLen,
-                tmp);
-    return;
-  }
   CSFLogDebug(LOGTAG, "%s received RTP packet.", mDescription.c_str());
-  IncrementRtpPacketsReceived(outLen);
+  IncrementRtpPacketsReceived(packet.len());
   OnRtpPacketReceived();
 
-  RtpLogger::LogPacket(
-    innerData.get(), outLen, true, true, header.headerLength, mDescription);
+  RtpLogger::LogPacket(packet, true, header.headerLength, mDescription);
+
+  // Might be nice to pass ownership of the buffer in this case, but it is a
+  // small optimization in a rare case.
+  mPacketDumper->Dump(
+    mLevel, dom::mozPacketDumpType::Srtp, false, packet.encrypted_data(), packet.encrypted_len());
 
   mPacketDumper->Dump(
-    mLevel, dom::mozPacketDumpType::Rtp, false, innerData.get(), outLen);
+    mLevel, dom::mozPacketDumpType::Rtp, false, packet.data(), packet.len());
 
   (void)mConduit->ReceivedRTPPacket(
-    innerData.get(), outLen, header.ssrc); // Ignore error codes
+    packet.data(), packet.len(), header.ssrc); // Ignore error codes
 }
 
 void
-MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer,
-                                  const unsigned char* aData,
-                                  size_t aLen)
+MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
 {
   if (!mTransport->Pipeline()) {
     CSFLogDebug(LOGTAG, "Discarding incoming packet; transport disconnected");
@@ -1294,103 +1160,55 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer,
     return;
   }
 
-  if (mRtcp.mTransport->state() != TransportLayer::TS_OPEN) {
+  if (mRtcp.mSrtp->state() != TransportLayer::TS_OPEN) {
     CSFLogError(LOGTAG, "Discarding incoming packet; transport not open");
     return;
   }
 
-  if (!aLen) {
-    return;
-  }
-
-  // Filter out everything but RTP/RTCP
-  if (aData[0] < 128 || aData[0] > 191) {
+  if (!packet.len()) {
     return;
   }
 
   // We do not filter receiver reports, since the webrtc.org code for
   // senders already has logic to ignore RRs that do not apply.
   // TODO bug 1279153: remove SR check for reduced size RTCP
-  if (mFilter && !mFilter->FilterSenderReport(aData, aLen)) {
+  if (mFilter && !mFilter->FilterSenderReport(packet.data(), packet.len())) {
     CSFLogWarn(LOGTAG, "Dropping incoming RTCP packet; filtered out");
     return;
   }
 
-  mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Srtcp, false, aData, aLen);
-
-  // Make a copy rather than cast away constness
-  auto innerData = MakeUnique<unsigned char[]>(aLen);
-  memcpy(innerData.get(), aData, aLen);
-  int outLen;
-
-  nsresult res =
-    mRtcp.mRecvSrtp->UnprotectRtcp(innerData.get(), aLen, aLen, &outLen);
-
-  if (!NS_SUCCEEDED(res))
-    return;
-
   CSFLogDebug(LOGTAG, "%s received RTCP packet.", mDescription.c_str());
   IncrementRtcpPacketsReceived();
 
-  RtpLogger::LogPacket(innerData.get(), outLen, true, false, 0, mDescription);
+  RtpLogger::LogPacket(packet, true, 0, mDescription);
 
-  mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtcp, false, aData, aLen);
+  // Might be nice to pass ownership of the buffer in this case, but it is a
+  // small optimization in a rare case.
+  mPacketDumper->Dump(
+    mLevel, dom::mozPacketDumpType::Srtcp, false, packet.encrypted_data(), packet.encrypted_len());
 
-  MOZ_ASSERT(mRtcp.mRecvSrtp); // This should never happen
+  mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtcp, false, packet.data(), packet.len());
 
-  (void)mConduit->ReceivedRTCPPacket(innerData.get(),
-                                     outLen); // Ignore error codes
-}
-
-bool
-MediaPipeline::IsRtp(const unsigned char* aData, size_t aLen) const
-{
-  if (aLen < 2)
-    return false;
-
-  // Check if this is a RTCP packet. Logic based on the types listed in
-  // media/webrtc/trunk/src/modules/rtp_rtcp/source/rtp_utility.cc
-
-  // Anything outside this range is RTP.
-  if ((aData[1] < 192) || (aData[1] > 207))
-    return true;
-
-  if (aData[1] == 192) // FIR
-    return false;
-
-  if (aData[1] == 193) // NACK, but could also be RTP. This makes us sad
-    return true;      // but it's how webrtc.org behaves.
-
-  if (aData[1] == 194)
-    return true;
-
-  if (aData[1] == 195) // IJ.
-    return false;
-
-  if ((aData[1] > 195) && (aData[1] < 200)) // the > 195 is redundant
-    return true;
-
-  if ((aData[1] >= 200) && (aData[1] <= 207)) // SR, RR, SDES, BYE,
-    return false;                           // APP, RTPFB, PSFB, XR
-
-  MOZ_ASSERT(false); // Not reached, belt and suspenders.
-  return true;
+  (void)mConduit->ReceivedRTCPPacket(packet.data(), packet.len()); // Ignore error codes
 }
 
 void
-MediaPipeline::PacketReceived(TransportLayer* aLayer,
-                              const unsigned char* aData,
-                              size_t aLen)
+MediaPipeline::PacketReceived(TransportLayer* aLayer, MediaPacket& packet)
 {
   if (!mTransport->Pipeline()) {
     CSFLogDebug(LOGTAG, "Discarding incoming packet; transport disconnected");
     return;
   }
 
-  if (IsRtp(aData, aLen)) {
-    RtpPacketReceived(aLayer, aData, aLen);
-  } else {
-    RtcpPacketReceived(aLayer, aData, aLen);
+  switch (packet.type()) {
+    case MediaPacket::RTP:
+      RtpPacketReceived(aLayer, packet);
+      break;
+    case MediaPacket::RTCP:
+      RtcpPacketReceived(aLayer, packet);
+      break;
+    default:
+      MOZ_CRASH("TransportLayerSrtp let something other than RTP/RTCP through");
   }
 }
 
@@ -1519,7 +1337,6 @@ MediaPipelineTransmit::MediaPipelineTransmit(
   nsCOMPtr<nsIEventTarget> aMainThread,
   nsCOMPtr<nsIEventTarget> aStsThread,
   bool aIsVideo,
-  dom::MediaStreamTrack* aDomTrack,
   RefPtr<MediaSessionConduit> aConduit)
   : MediaPipeline(aPc,
                   DirectionType::TRANSMIT,
@@ -1534,10 +1351,8 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                                 // calls back to a VideoFrameFeeder
                                 // that feeds I420 frames to
                                 // VideoConduit.
-  , mDomTrack(aDomTrack)
   , mTransmitting(false)
 {
-  SetDescription();
   if (!IsVideo()) {
     mAudioProcessing = MakeAndAddRef<AudioProxyThread>(
       static_cast<AudioSessionConduit*>(aConduit.get()));
@@ -1719,7 +1534,7 @@ MediaPipelineTransmit::TransportReady_s(TransportInfo& aInfo)
 }
 
 nsresult
-MediaPipelineTransmit::ReplaceTrack(RefPtr<MediaStreamTrack>& aDomTrack)
+MediaPipelineTransmit::SetTrack(MediaStreamTrack* aDomTrack)
 {
   // MainThread, checked in calls we make
   if (aDomTrack) {
@@ -1750,10 +1565,11 @@ nsresult
 MediaPipeline::ConnectTransport_s(TransportInfo& aInfo)
 {
   MOZ_ASSERT(aInfo.mTransport);
+  MOZ_ASSERT(aInfo.mSrtp);
   ASSERT_ON_THREAD(mStsThread);
 
   // Look to see if the transport is ready
-  if (aInfo.mTransport->state() == TransportLayer::TS_OPEN) {
+  if (aInfo.mSrtp->state() == TransportLayer::TS_OPEN) {
     nsresult res = TransportReady_s(aInfo);
     if (NS_FAILED(res)) {
       CSFLogError(LOGTAG,
@@ -1762,27 +1578,27 @@ MediaPipeline::ConnectTransport_s(TransportInfo& aInfo)
                   __FUNCTION__);
       return res;
     }
-  } else if (aInfo.mTransport->state() == TransportLayer::TS_ERROR) {
+  } else if (aInfo.mSrtp->state() == TransportLayer::TS_ERROR) {
     CSFLogError(
       LOGTAG, "%s transport is already in error state", ToString(aInfo.mType));
     TransportFailed_s(aInfo);
     return NS_ERROR_FAILURE;
   }
 
-  aInfo.mTransport->SignalStateChange.connect(this, &MediaPipeline::StateChange);
+  aInfo.mSrtp->SignalStateChange.connect(this, &MediaPipeline::StateChange);
 
   return NS_OK;
 }
 
 MediaPipeline::TransportInfo*
-MediaPipeline::GetTransportInfo_s(TransportFlow* aFlow)
+MediaPipeline::GetTransportInfo_s(TransportLayer* aLayer)
 {
   ASSERT_ON_THREAD(mStsThread);
-  if (aFlow == mRtp.mTransport) {
+  if (aLayer == mRtp.mSrtp) {
     return &mRtp;
   }
 
-  if (aFlow == mRtcp.mTransport) {
+  if (aLayer == mRtcp.mSrtp) {
     return &mRtcp;
   }
 
@@ -1792,16 +1608,15 @@ MediaPipeline::GetTransportInfo_s(TransportFlow* aFlow)
 nsresult
 MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData, size_t aLen)
 {
-
-  nsAutoPtr<DataBuffer> buf(
-    new DataBuffer(aData, aLen, aLen + SRTP_MAX_EXPANSION));
+  nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  packet->Copy(aData, aLen, aLen + SRTP_MAX_EXPANSION);
+  packet->SetType(MediaPacket::RTP);
 
   RUN_ON_THREAD(
     mStsThread,
     WrapRunnable(RefPtr<MediaPipeline::PipelineTransport>(this),
                  &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
-                 buf,
-                 true),
+                 packet),
     NS_DISPATCH_NORMAL);
 
   return NS_OK;
@@ -1809,108 +1624,75 @@ MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData, size_t aLe
 
 nsresult
 MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
-  nsAutoPtr<DataBuffer> aData,
-  bool aIsRtp)
+  nsAutoPtr<MediaPacket> aPacket)
 {
+  bool isRtp = aPacket->type() == MediaPacket::RTP;
 
   ASSERT_ON_THREAD(mStsThread);
   if (!mPipeline) {
     return NS_OK; // Detached
   }
-  TransportInfo& transport = aIsRtp ? mPipeline->mRtp : mPipeline->mRtcp;
 
-  if (!transport.mSendSrtp) {
-    CSFLogDebug(LOGTAG, "Couldn't write RTP/RTCP packet; SRTP not set up yet");
+  TransportInfo& transport = isRtp ? mPipeline->mRtp : mPipeline->mRtcp;
+
+  if (transport.mSrtp->state() != TransportLayer::TS_OPEN) {
+    // SRTP not ready yet.
     return NS_OK;
   }
 
   MOZ_ASSERT(transport.mTransport);
   NS_ENSURE_TRUE(transport.mTransport, NS_ERROR_NULL_POINTER);
 
-  // libsrtp enciphers in place, so we need a big enough buffer.
-  MOZ_ASSERT(aData->capacity() >= aData->len() + SRTP_MAX_EXPANSION);
+  MediaPacket packet(std::move(*aPacket));
+  packet.sdp_level() = Some(mPipeline->Level());
 
   if (RtpLogger::IsPacketLoggingOn()) {
     int headerLen = 12;
     webrtc::RTPHeader header;
     if (mPipeline->mRtpParser &&
-        mPipeline->mRtpParser->Parse(aData->data(), aData->len(), &header)) {
+        mPipeline->mRtpParser->Parse(packet.data(), packet.len(), &header)) {
       headerLen = header.headerLength;
     }
-    RtpLogger::LogPacket(aData->data(),
-                         aData->len(),
-                         false,
-                         aIsRtp,
-                         headerLen,
-                         mPipeline->mDescription);
+    RtpLogger::LogPacket(packet, false, headerLen, mPipeline->mDescription);
   }
 
-  int out_len;
-  nsresult res;
-  if (aIsRtp) {
+  if (isRtp) {
     mPipeline->mPacketDumper->Dump(mPipeline->Level(),
                                     dom::mozPacketDumpType::Rtp,
                                     true,
-                                    aData->data(),
-                                    aData->len());
-
-    res = transport.mSendSrtp->ProtectRtp(
-      aData->data(), aData->len(), aData->capacity(), &out_len);
+                                    packet.data(),
+                                    packet.len());
+    mPipeline->IncrementRtpPacketsSent(packet.len());
   } else {
     mPipeline->mPacketDumper->Dump(mPipeline->Level(),
                                     dom::mozPacketDumpType::Rtcp,
                                     true,
-                                    aData->data(),
-                                    aData->len());
-
-    res = transport.mSendSrtp->ProtectRtcp(
-      aData->data(), aData->len(), aData->capacity(), &out_len);
+                                    packet.data(),
+                                    packet.len());
+    mPipeline->IncrementRtcpPacketsSent();
   }
-  if (!NS_SUCCEEDED(res)) {
-    return res;
-  }
-
-  // paranoia; don't have uninitialized bytes included in data->len()
-  aData->SetLength(out_len);
 
   CSFLogDebug(LOGTAG,
               "%s sending %s packet",
               mPipeline->mDescription.c_str(),
-              (aIsRtp ? "RTP" : "RTCP"));
-  if (aIsRtp) {
-    mPipeline->mPacketDumper->Dump(mPipeline->Level(),
-                                    dom::mozPacketDumpType::Srtp,
-                                    true,
-                                    aData->data(),
-                                    out_len);
+              (isRtp ? "RTP" : "RTCP"));
 
-    mPipeline->IncrementRtpPacketsSent(out_len);
-  } else {
-    mPipeline->mPacketDumper->Dump(mPipeline->Level(),
-                                    dom::mozPacketDumpType::Srtcp,
-                                    true,
-                                    aData->data(),
-                                    out_len);
-
-    mPipeline->IncrementRtcpPacketsSent();
-  }
-  return mPipeline->SendPacket(transport.mTransport, aData->data(), out_len);
+  return mPipeline->SendPacket(transport.mSrtp, packet);
 }
 
 nsresult
 MediaPipeline::PipelineTransport::SendRtcpPacket(const uint8_t* aData,
                                                  size_t aLen)
 {
-
-  nsAutoPtr<DataBuffer> buf(
-    new DataBuffer(aData, aLen, aLen + SRTP_MAX_EXPANSION));
+  nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  packet->Copy(aData, aLen, aLen + SRTP_MAX_EXPANSION);
+  packet->SetType(MediaPacket::RTCP);
 
   RUN_ON_THREAD(
     mStsThread,
     WrapRunnable(RefPtr<MediaPipeline::PipelineTransport>(this),
                  &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
-                 buf,
-                 false),
+                 packet),
     NS_DISPATCH_NORMAL);
 
   return NS_OK;

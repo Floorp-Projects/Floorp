@@ -80,7 +80,7 @@ nrappkit copyright:
 #include "logging.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "databuffer.h"
+#include "mediapacket.h"
 
 // mozilla/utils.h defines this as well
 #ifdef UNIMPLEMENTED
@@ -392,13 +392,14 @@ struct DeferredStunOperation {
                         nr_transport_addr *addr,
                         nr_socket *sock) :
       server_(server),
-      buffer_(reinterpret_cast<const uint8_t *>(data), len),
+      buffer_(),
       sock_(sock) {
+    buffer_.Copy(reinterpret_cast<const uint8_t *>(data), len);
     nr_transport_addr_copy(&addr_, addr);
   }
 
   TestStunServer *server_;
-  DataBuffer buffer_;
+  MediaPacket buffer_;
   nr_transport_addr addr_;
   nr_socket *sock_;
 };

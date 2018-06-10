@@ -6,6 +6,7 @@
 
 mtransport_lcppsrcs = [
     'dtlsidentity.cpp',
+    'mediapacket.cpp',
     'nr_socket_prsock.cpp',
     'nr_timer.cpp',
     'nricectx.cpp',
@@ -17,6 +18,7 @@ mtransport_lcppsrcs = [
     'nrinterfaceprioritizer.cpp',
     'rlogconnector.cpp',
     'simpletokenbucket.cpp',
+    'SrtpFlow.cpp',
     'stun_socket_filter.cpp',
     'test_nr_socket.cpp',
     'transportflow.cpp',
@@ -25,6 +27,7 @@ mtransport_lcppsrcs = [
     'transportlayerice.cpp',
     'transportlayerlog.cpp',
     'transportlayerloopback.cpp',
+    'transportlayersrtp.cpp',
 ]
 
 mtransport_cppsrcs = [
@@ -47,6 +50,8 @@ LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/share',
     '/media/mtransport/third_party/nrappkit/src/stats',
     '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/netwerk/srtp/src/crypto/include',
+    '/netwerk/srtp/src/include',
 ]
 
 if CONFIG['OS_TARGET'] in ['Darwin', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
