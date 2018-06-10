@@ -138,11 +138,11 @@ def decode_console_text(pipe, text):
     try:
         if pipe.encoding:
             return text.decode(pipe.encoding, 'replace')
-    except:
+    except Exception:
         pass
     try:
         return text.decode(locale.getpreferredencoding(), 'replace')
-    except:
+    except Exception:
         return text.decode('utf8', 'replace')
 
 # Allocate a temporary file name and delete it when done. We need an extra
@@ -163,7 +163,7 @@ class ScopedTempFilename(object):
             return
         try:
             os.unlink(self.name)
-        except:
+        except Exception:
             pass
 
 
