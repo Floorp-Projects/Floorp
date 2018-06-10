@@ -34,7 +34,6 @@ class GLConstHeader:
     def __init__(self, f):
         self.f = f
 
-
     def write(self, arg):
         if isinstance(arg, list):
             self.f.write('\n'.join(arg) + '\n')
@@ -42,7 +41,6 @@ class GLConstHeader:
             self.f.write('\n' * arg)
         else:
             self.f.write(str(arg) + '\n')
-
 
     def formatFileBegin(self):
         self.write([
@@ -63,11 +61,9 @@ class GLConstHeader:
             ''
         ])
 
-
     def formatLibBegin(self, lib):
         # lib would be 'GL', 'EGL', 'GLX' or 'WGL'
         self.write('// ' + lib)
-
 
     def formatLibConstant(self, lib, name, value):
         # lib would be 'GL', 'EGL', 'GLX' or 'WGL'
@@ -76,23 +72,21 @@ class GLConstHeader:
 
         define = '#define LOCAL_' + lib + '_' + name
         whitespace = 60 - len(define)
-        
+
         if whitespace < 0:
             whitespace = whitespace % 8
-        
-        self.write(define + ' ' * whitespace + ' ' + value)
 
+        self.write(define + ' ' * whitespace + ' ' + value)
 
     def formatLibEnd(self, lib):
         # lib would be 'GL', 'EGL', 'GLX' or 'WGL'
         self.write(2)
 
-
     def formatFileEnd(self):
         self.write([
-                    '',
-                    '#endif // GLCONSTS_H_'
-                   ])
+            '',
+            '#endif // GLCONSTS_H_'
+        ])
 
 
 ################################################################################
@@ -131,7 +125,6 @@ class GLDatabase:
         self.vendors = set(['EXT', 'ATI'])
         # there is no vendor="EXT" and vendor="ATI" in gl.xml,
         # so we manualy declare them
-
 
     def loadXML(self, path):
         xmlPath = getXMLDir() + path
@@ -179,9 +172,8 @@ class GLDatabase:
 
         return True
 
-
     def exportConsts(self, path):
-        with open(getScriptDir() + path,'w') as f:
+        with open(getScriptDir() + path, 'w') as f:
 
             headerFile = GLConstHeader(f)
             headerFile.formatFileBegin()
