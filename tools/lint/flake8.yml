@@ -22,6 +22,7 @@ flake8:
         - python/safety
         - security/
         - security/manager
+        - servo/
         - taskcluster
         - testing/firefox-ui
         - testing/mach_commands.py
