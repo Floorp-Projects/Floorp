@@ -23,6 +23,7 @@ this.EXPORTED_SYMBOLS = [
   "PageLoadStrategy",
   "Proxy",
   "Timeouts",
+  "UnhandledPromptBehavior",
 ];
 
 // Enable testing this module, as Services.appinfo.* is not available
@@ -357,6 +358,30 @@ class Proxy {
   toString() { return "[object Proxy]"; }
 }
 
+/**
+ * Enum of unhandled prompt behavior.
+ *
+ * @enum
+ */
+const UnhandledPromptBehavior = {
+  /** All simple dialogs encountered should be accepted. */
+  Accept: "accept",
+  /**
+   * All simple dialogs encountered should be accepted, and an error
+   * returned that the dialog was handled.
+   */
+  AcceptAndNotify: "accept and notify",
+  /** All simple dialogs encountered should be dismissed. */
+  Dismiss: "dismiss",
+  /**
+   * All simple dialogs encountered should be dismissed, and an error
+   * returned that the dialog was handled.
+   */
+  DismissAndNotify: "dismiss and notify",
+  /** All simple dialogs encountered should be left to the user to handle. */
+  Ignore: "ignore",
+};
+
 /** WebDriver session capabilities representation. */
 class Capabilities extends Map {
   /** @class */
@@ -367,10 +392,11 @@ class Capabilities extends Map {
       ["browserVersion", appinfo.version],
       ["platformName", getWebDriverPlatformName()],
       ["platformVersion", Services.sysinfo.getProperty("version")],
-      ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["acceptInsecureCerts", false],
-      ["timeouts", new Timeouts()],
+      ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["proxy", new Proxy()],
+      ["timeouts", new Timeouts()],
+      ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
 
       // features
       ["rotatable", appinfo.name == "B2G"],
@@ -470,6 +496,19 @@ class Capabilities extends Map {
           matched.set("timeouts", timeouts);
           break;
 
+        case "unhandledPromptBehavior":
+          assert.string(v,
+              pprint`Expected ${k} to be a string, got ${v}`);
+
+          if (Object.values(UnhandledPromptBehavior).includes(v)) {
+            matched.set("unhandledPromptBehavior", v);
+          } else {
+            throw new InvalidArgumentError(
+                `Unknown unhandled prompt behavior: ${v}`);
+          }
+
+          break;
+
         case "moz:accessibilityChecks":
           assert.boolean(v,
               pprint`Expected ${k} to be a boolean, got ${v}`);
@@ -498,6 +537,7 @@ this.Capabilities = Capabilities;
 this.PageLoadStrategy = PageLoadStrategy;
 this.Proxy = Proxy;
 this.Timeouts = Timeouts;
+this.UnhandledPromptBehavior = UnhandledPromptBehavior;
 
 function getWebDriverPlatformName() {
   let name = Services.sysinfo.getProperty("name");

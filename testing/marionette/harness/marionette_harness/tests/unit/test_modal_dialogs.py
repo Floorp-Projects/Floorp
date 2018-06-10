@@ -15,6 +15,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
 
+    @property
     def alert_present(self):
         try:
             Alert(self.marionette).text
@@ -24,11 +25,11 @@ class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def wait_for_alert(self, timeout=None):
         Wait(self.marionette, timeout=timeout).until(
-            lambda _: self.alert_present())
+            lambda _: self.alert_present)
 
     def wait_for_alert_closed(self, timeout=None):
         Wait(self.marionette, timeout=timeout).until(
-            lambda _: not self.alert_present())
+            lambda _: not self.alert_present)
 
 
 class TestTabModalAlerts(BaseAlertTestCase):
@@ -38,7 +39,8 @@ class TestTabModalAlerts(BaseAlertTestCase):
         self.assertTrue(self.marionette.get_pref("prompts.tab_modal.enabled",
                         "Tab modal alerts should be enabled by default."))
 
-        self.marionette.navigate(self.marionette.absolute_url("test_tab_modal_dialogs.html"))
+        self.test_page = self.marionette.absolute_url("test_tab_modal_dialogs.html")
+        self.marionette.navigate(self.test_page)
 
     def tearDown(self):
         # Ensure to close a possible remaining tab modal dialog
@@ -183,7 +185,7 @@ class TestTabModalAlerts(BaseAlertTestCase):
         with self.assertRaises(errors.UnexpectedAlertOpen):
             self.marionette.find_element(By.ID, "click-result")
 
-        assert not self.alert_present()
+        assert not self.alert_present
 
 
 class TestModalAlerts(BaseAlertTestCase):
