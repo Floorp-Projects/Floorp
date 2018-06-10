@@ -120,7 +120,9 @@ class Raptor(object):
         raptor_webext = os.path.join(webext_dir, 'raptor')
         self.log.info("installing webext %s" % raptor_webext)
         self.profile.addons.install(raptor_webext)
-        webext_id = self.profile.addons.addon_details(raptor_webext)['id']
+        # on firefox we can get an addon id; chrome addon actually is just cmd line arg
+        if self.config['app'] == "firefox":
+            webext_id = self.profile.addons.addon_details(raptor_webext)['id']
 
         # some tests require tools to playback the test pages
         if test.get('playback', None) is not None:
@@ -146,8 +148,10 @@ class Raptor(object):
             self.playback.stop()
 
         # remove the raptor webext; as it must be reloaded with each subtest anyway
-        self.log.info("removing webext %s" % raptor_webext)
-        self.profile.addons.remove_addon(webext_id)
+        # applies to firefox only; chrome the addon is actually just cmd line arg
+        if self.config['app'] == "firefox":
+            self.log.info("removing webext %s" % raptor_webext)
+            self.profile.addons.remove_addon(webext_id)
 
         if self.runner.is_running():
             self.log("Application timed out after {} seconds".format(timeout))
@@ -178,6 +182,8 @@ def main(args=sys.argv[1:]):
     args = parse_args()
     commandline.setup_logging('raptor', args, {'tbpl': sys.stdout})
     LOG = get_default_logger(component='raptor-main')
+
+    LOG.info("received command line arguments: %s" % str(args))
 
     # if a test name specified on command line, and it exists, just run that one
     # otherwise run all available raptor tests that are found for this browser

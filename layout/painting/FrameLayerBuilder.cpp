@@ -588,14 +588,7 @@ public:
   nsRegion CombinedTouchActionRegion();
 
   /**
-   * Add the given hit regions to the hit regions for this PaintedLayer.
-   */
-  void AccumulateEventRegions(ContainerState* aState,
-                              nsDisplayLayerEventRegions* aEventRegions);
-
-  /**
-   * Similar to AccumulateEventRegions() but uses different display item to
-   * track hit regions.
+   * Add the given hit test info to the hit regions for this PaintedLayer.
    */
   void AccumulateHitTestInfo(ContainerState* aState,
                              nsDisplayCompositorHitTestInfo* aItem);
@@ -3404,7 +3397,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   }
 
   for (auto& item : data->mAssignedDisplayItems) {
-    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
     MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
 
     if (item.mType == DisplayItemEntryType::POP_OPACITY) {
@@ -3821,38 +3813,6 @@ PaintedLayerData::CombinedTouchActionRegion()
   result.Or(mHorizontalPanRegion, mVerticalPanRegion);
   result.OrWith(mNoActionRegion);
   return result;
-}
-
-void
-PaintedLayerData::AccumulateEventRegions(ContainerState* aState, nsDisplayLayerEventRegions* aEventRegions)
-{
-  FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
-
-  mHitRegion.OrWith(aEventRegions->HitRegion());
-  mMaybeHitRegion.OrWith(aEventRegions->MaybeHitRegion());
-  mDispatchToContentHitRegion.OrWith(aEventRegions->DispatchToContentHitRegion());
-
-  // See the comment in nsDisplayList::AddFrame, where the touch action regions
-  // are handled. The same thing applies here.
-  bool alreadyHadRegions = !mNoActionRegion.IsEmpty() ||
-      !mHorizontalPanRegion.IsEmpty() ||
-      !mVerticalPanRegion.IsEmpty();
-  mNoActionRegion.OrWith(aEventRegions->NoActionRegion());
-  mHorizontalPanRegion.OrWith(aEventRegions->HorizontalPanRegion());
-  mVerticalPanRegion.OrWith(aEventRegions->VerticalPanRegion());
-  if (alreadyHadRegions) {
-    mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
-  }
-
-  // Avoid quadratic performance as a result of the region growing to include
-  // and arbitrarily large number of rects, which can happen on some pages.
-  mMaybeHitRegion.SimplifyOutward(8);
-  mDispatchToContentHitRegion.SimplifyOutward(8);
-
-  // Calculate scaled versions of the bounds of mHitRegion and mMaybeHitRegion
-  // for quick access in FindPaintedLayerFor().
-  mScaledHitRegionBounds = aState->ScaleToOutsidePixels(mHitRegion.GetBounds());
-  mScaledMaybeHitRegionBounds = aState->ScaleToOutsidePixels(mMaybeHitRegion.GetBounds());
 }
 
 void
@@ -4297,11 +4257,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   int32_t maxLayers = gfxPrefs::MaxActiveLayers();
   int layerCount = 0;
 
-#ifdef DEBUG
-  bool hadLayerEventRegions = false;
-  bool hadCompositorHitTestInfo = false;
-#endif
-
   if (!mManager->IsWidgetLayerManager()) {
     mPaintedLayerDataTree.InitializeForInactiveLayer(mContainerAnimatedGeometryRoot);
   }
@@ -4324,24 +4279,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     MOZ_ASSERT(item);
     DisplayItemType itemType = item->GetType();
 
-    // If the item is a event regions item, but is empty (has no regions in it)
-    // then we should just throw it out
-    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
-#ifdef DEBUG
-      hadLayerEventRegions = true;
-#endif
-      nsDisplayLayerEventRegions* eventRegions =
-        static_cast<nsDisplayLayerEventRegions*>(item);
-
-      if (eventRegions->IsEmpty()) {
-        continue;
-      }
-    }
-
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-#ifdef DEBUG
-      hadCompositorHitTestInfo = true;
-#endif
       nsDisplayCompositorHitTestInfo* hitTestInfo =
         static_cast<nsDisplayCompositorHitTestInfo*>(item);
 
@@ -4349,9 +4287,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         continue;
       }
     }
-
-    // Only allow either LayerEventRegions or CompositorHitTestInfo items.
-    MOZ_ASSERT(!(hadLayerEventRegions && hadCompositorHitTestInfo));
 
     if (marker == DisplayItemEntryType::ITEM) {
       // Peek ahead to the next item and see if it can be merged with the
@@ -4389,8 +4324,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
 
     if (mParameters.mForEventsAndPluginsOnly && !item->GetChildren() &&
-        (itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
-         itemType != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
+        (itemType != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
          itemType != DisplayItemType::TYPE_PLUGIN)) {
       continue;
     }
@@ -4440,16 +4374,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
-    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
-      nsDisplayLayerEventRegions* eventRegions =
-        static_cast<nsDisplayLayerEventRegions*>(item);
-      itemContent = eventRegions->GetHitRegionBounds(mBuilder, &snap);
-    }
 
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-      nsDisplayCompositorHitTestInfo* eventRegions =
+      nsDisplayCompositorHitTestInfo* hitInfo =
         static_cast<nsDisplayCompositorHitTestInfo*>(item);
-      itemContent = eventRegions->Area();
+      itemContent = hitInfo->Area();
     }
 
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
@@ -4468,8 +4397,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 #ifdef DEBUG
     nsRect bounds = itemContent;
 
-    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS ||
-        itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+    if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
       bounds.SetEmpty();
     }
 
@@ -4844,11 +4772,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
       MOZ_ASSERT(paintedLayerData);
 
-      if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
-        nsDisplayLayerEventRegions* eventRegions =
-          static_cast<nsDisplayLayerEventRegions*>(item);
-        paintedLayerData->AccumulateEventRegions(this, eventRegions);
-      } else if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
         nsDisplayCompositorHitTestInfo* hitTestInfo =
           static_cast<nsDisplayCompositorHitTestInfo*>(item);
         paintedLayerData->AccumulateHitTestInfo(this, hitTestInfo);

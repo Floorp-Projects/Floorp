@@ -7,24 +7,24 @@
 const DEBUG = false;
 function debug(aStr) {
   if (DEBUG) {
-    dump("-*- DateTimePickerHelper: " + aStr + "\n");
+    dump("-*- DateTimePickerParent: " + aStr + "\n");
   }
 }
 
 var EXPORTED_SYMBOLS = [
-  "DateTimePickerHelper"
+  "DateTimePickerParent"
 ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
- * DateTimePickerHelper receives message from content side (input box) and
- * is reposible for opening, closing and updating the picker. Similary,
- * DateTimePickerHelper listens for picker's events and notifies the content
+ * DateTimePickerParent receives message from content side (input box) and
+ * is reposible for opening, closing and updating the picker. Similarly,
+ * DateTimePickerParent listens for picker's events and notifies the content
  * side (input box) about them.
  */
-var DateTimePickerHelper = {
+var DateTimePickerParent = {
   picker: null,
   weakBrowser: null,
 
