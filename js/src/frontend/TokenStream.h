@@ -1050,7 +1050,12 @@ template<typename CharT>
 class TokenStreamCharsBase
 {
   protected:
-    void ungetCodeUnit(int32_t c);
+    void ungetCodeUnit(int32_t c) {
+        if (c == EOF)
+            return;
+
+        sourceUnits.ungetCodeUnit();
+    }
 
   public:
     using CharBuffer = Vector<CharT, 32>;
@@ -1254,7 +1259,23 @@ class GeneralTokenStreamChars
 
     MOZ_COLD bool badToken();
 
-    int32_t getCodeUnit();
+    /**
+     * Get the next code unit -- the next numeric sub-unit of source text,
+     * possibly smaller than a full code point -- without updating line/column
+     * counters or consuming LineTerminatorSequences.
+     *
+     * Because of these limitations, only use this if (a) the resulting code
+     * unit is guaranteed to be ungotten (by ungetCodeUnit()) if it's an EOL,
+     * and (b) the line-related state (lineno, linebase) is not used before
+     * it's ungotten.
+     */
+    int32_t getCodeUnit() {
+        if (MOZ_LIKELY(!sourceUnits.atEnd()))
+            return sourceUnits.getCodeUnit();
+
+        anyCharsAccess().flags.isEOF = true;
+        return EOF;
+    }
 
     void ungetCodeUnit(int32_t c) {
         MOZ_ASSERT_IF(c == EOF, anyCharsAccess().flags.isEOF);
