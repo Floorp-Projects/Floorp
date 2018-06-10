@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os, sys
+import os
+import sys
 
 from ipdl.ast import Visitor
+
 
 class CodePrinter:
     def __init__(self, outf=sys.stdout, indentCols=4):
@@ -16,19 +18,20 @@ class CodePrinter:
         self.outf.write(str)
 
     def printdent(self, str=''):
-        self.write((' '* self.col) + str)
+        self.write((' ' * self.col) + str)
 
     def println(self, str=''):
-        self.write(str +'\n')
+        self.write(str + '\n')
 
     def printdentln(self, str):
-        self.write((' '* self.col) + str +'\n')
+        self.write((' ' * self.col) + str + '\n')
 
     def indent(self):  self.col += self.indentCols
+
     def dedent(self):  self.col -= self.indentCols
 
 
-##-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class IPDLCodeGen(CodePrinter, Visitor):
     '''Spits back out equivalent IPDL to the code that generated this.
 Also known as pretty-printing.'''
@@ -43,10 +46,10 @@ Also known as pretty-printing.'''
         CodeGen.visitTranslationUnit(self, tu)
 
     def visitCxxInclude(self, inc):
-        self.println('include "'+ inc.file +'";')
+        self.println('include "' + inc.file + '";')
 
     def visitProtocolInclude(self, inc):
-        self.println('include protocol "'+ inc.file +'";')
+        self.println('include protocol "' + inc.file + '";')
         if inc.tu.filename not in self.printed:
             self.println('/* Included file:')
             IPDLCodeGen(outf=self.outf, indentCols=self.indentCols,
@@ -56,33 +59,37 @@ Also known as pretty-printing.'''
 
     def visitProtocol(self, p):
         self.println()
-        for namespace in p.namespaces:  namespace.accept(self)
+        for namespace in p.namespaces:
+            namespace.accept(self)
 
-        self.println('%s protocol %s\n{'% (p.sendSemantics[0], p.name))
+        self.println('%s protocol %s\n{' % (p.sendSemantics[0], p.name))
         self.indent()
 
         for mgs in p.managesStmts:
             mgs.accept(self)
-        if len(p.managesStmts):  self.println()
+        if len(p.managesStmts):
+            self.println()
 
-        for msgDecl in p.messageDecls:  msgDecl.accept(self)
+        for msgDecl in p.messageDecls:
+            msgDecl.accept(self)
         self.println()
 
         self.dedent()
         self.println('}')
-        self.write('}\n'* len(p.namespaces))
+        self.write('}\n' * len(p.namespaces))
 
     def visitManagerStmt(self, mgr):
-        self.printdentln('manager '+ mgr.name +';')
+        self.printdentln('manager ' + mgr.name + ';')
 
     def visitManagesStmt(self, mgs):
-        self.printdentln('manages '+ mgs.name +';')
+        self.printdentln('manages ' + mgs.name + ';')
 
     def visitMessageDecl(self, msg):
-        self.printdent('%s %s %s('% (msg.sendSemantics[0], msg.direction[0], msg.name))
+        self.printdent('%s %s %s(' % (msg.sendSemantics[0], msg.direction[0], msg.name))
         for i, inp in enumerate(msg.inParams):
             inp.accept(self)
-            if i != (len(msg.inParams) - 1):  self.write(', ')
+            if i != (len(msg.inParams) - 1):
+                self.write(', ')
         self.write(')')
         if 0 == len(msg.outParams):
             self.println(';')
@@ -93,6 +100,7 @@ Also known as pretty-printing.'''
         self.printdent('returns (')
         for i, outp in enumerate(msg.outParams):
             outp.accept(self)
-            if i != (len(msg.outParams) - 1):  self.write(', ')
+            if i != (len(msg.outParams) - 1):
+                self.write(', ')
         self.println(');')
         self.dedent()
