@@ -16,7 +16,6 @@ class ToolbarPresenter(
     private val toolbar: Toolbar,
     private val sessionManager: SessionManager
 ) : SessionManager.Observer, Session.Observer {
-
     var session: Session = sessionManager.selectedSession
 
     /**
