@@ -461,7 +461,7 @@ EventListenerManager::ProcessApzAwareEventListenerAdd()
     }
   }
 
-  if (doc && nsDisplayListBuilder::LayerEventRegionsEnabled()) {
+  if (doc && gfxPlatform::AsyncPanZoomEnabled()) {
     nsIPresShell* ps = doc->GetShell();
     if (ps) {
       nsIFrame* f = ps->GetRootFrame();

@@ -18,6 +18,8 @@ treeherder:
         'R-e10s': 'Reftests with e10s'
         'Rap': 'Raptor performance tests on Firefox'
         'Rap-e10s': 'Raptor performance tests on Firefox with e10s'
+        'Rap-C': 'Raptor performance tests on Google Chrome'
+        'Rap-C-e10s': 'Raptor performance tests on Google Chrome with e10s'
         'T': 'Talos performance tests'
         'Tsd': 'Talos performance tests with Stylo disabled'
         'Tss': 'Talos performance tests with Stylo sequential'

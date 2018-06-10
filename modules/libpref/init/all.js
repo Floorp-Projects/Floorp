@@ -605,9 +605,6 @@ pref("layers.amd-switchable-gfx.enabled", true);
 // Whether to use async panning and zooming
 pref("layers.async-pan-zoom.enabled", true);
 
-// Whether to enable event region building during painting
-pref("layout.event-regions.enabled", false);
-
 // Whether to enable arbitrary layer geometry for OpenGL compositor
 pref("layers.geometry.opengl.enabled", true);
 
@@ -873,7 +870,6 @@ pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.async-scene-build", true);
 pref("gfx.webrender.blob-images", true);
 pref("gfx.webrender.blob.invalidation", true);
-pref("gfx.webrender.hit-test", true);
 
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);

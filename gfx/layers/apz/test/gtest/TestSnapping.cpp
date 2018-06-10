@@ -15,7 +15,7 @@ class APZCSnappingTester : public APZCTreeManagerTester
 
 TEST_F(APZCSnappingTester, Bug1265510)
 {
-  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+  SCOPED_GFX_VAR(UseWebRender, bool, false);
 
   const char* layerTreeSyntax = "c(t)";
   nsIntRegion layerVisibleRegion[] = {
@@ -68,7 +68,7 @@ TEST_F(APZCSnappingTester, Bug1265510)
 
 TEST_F(APZCSnappingTester, Snap_After_Pinch)
 {
-  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+  SCOPED_GFX_VAR(UseWebRender, bool, false);
 
   const char* layerTreeSyntax = "c";
   nsIntRegion layerVisibleRegion[] = {

@@ -2469,7 +2469,7 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
   CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
   HitTestingTreeNode* scrollbarNode = nullptr;
   RefPtr<AsyncPanZoomController> target;
-  if (gfx::gfxVars::UseWebRender() && gfxPrefs::WebRenderHitTest()) {
+  if (gfx::gfxVars::UseWebRender()) {
     target = GetAPZCAtPointWR(aPoint, &hitResult, &scrollbarNode);
   } else {
     target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, &scrollbarNode);

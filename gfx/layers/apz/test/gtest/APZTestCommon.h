@@ -16,6 +16,7 @@
 #include "gmock/gmock.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -62,30 +63,36 @@ CreateSingleTouchData(int32_t aIdentifier, ScreenIntCoord aX, ScreenIntCoord aY)
   return CreateSingleTouchData(aIdentifier, ScreenIntPoint(aX, aY));
 }
 
-template<class T>
-class ScopedGfxPref {
+template<class SetArg, class Storage>
+class ScopedGfxSetting {
 public:
-  ScopedGfxPref(T (*aGetPrefFunc)(void), void (*aSetPrefFunc)(T), T aVal)
+  ScopedGfxSetting(SetArg (*aGetPrefFunc)(void), void (*aSetPrefFunc)(SetArg), SetArg aVal)
     : mSetPrefFunc(aSetPrefFunc)
   {
     mOldVal = aGetPrefFunc();
     aSetPrefFunc(aVal);
   }
 
-  ~ScopedGfxPref() {
+  ~ScopedGfxSetting() {
     mSetPrefFunc(mOldVal);
   }
 
 private:
-  void (*mSetPrefFunc)(T);
-  T mOldVal;
+  void (*mSetPrefFunc)(SetArg);
+  Storage mOldVal;
 };
 
 #define SCOPED_GFX_PREF(prefBase, prefType, prefValue) \
-  ScopedGfxPref<prefType> pref_##prefBase( \
+  ScopedGfxSetting<prefType, prefType> pref_##prefBase( \
     &(gfxPrefs::prefBase), \
     &(gfxPrefs::Set##prefBase), \
     prefValue)
+
+#define SCOPED_GFX_VAR(varBase, varType, varValue) \
+  ScopedGfxSetting<const varType&, varType> var_##varBase( \
+    &(gfxVars::varBase), \
+    &(gfxVars::Set##varBase), \
+    varValue)
 
 static TimeStamp GetStartupTime() {
   static TimeStamp sStartupTime = TimeStamp::Now();

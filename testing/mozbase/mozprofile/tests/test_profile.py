@@ -89,9 +89,13 @@ def test_merge_profile(cls):
     assert len(prefs) == len(profile.preference_file_names) + 1
     assert all(name in prefs for name in profile.preference_file_names)
 
-    assert len(profile._addons) == 1
-    assert profile._addons[0].endswith('empty.xpi')
-    assert os.path.exists(profile._addons[0])
+    # for Google Chrome currently we ignore webext in profile prefs
+    if cls == Profile:
+        assert len(profile._addons) == 1
+        assert profile._addons[0].endswith('empty.xpi')
+        assert os.path.exists(profile._addons[0])
+    else:
+        assert len(profile._addons) == 0
 
 
 if __name__ == '__main__':

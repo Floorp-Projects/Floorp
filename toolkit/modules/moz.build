@@ -52,6 +52,9 @@ with Files('tests/xpcshell/test_client_id.js'):
 with Files('AsyncPrefs.jsm'):
     BUG_COMPONENT = ('Core', 'Security: Process Sandboxing')
 
+with Files('AutoScrollController.jsm'):
+    BUG_COMPONENT = ('Core', 'Panning and Zooming')
+
 with Files('CharsetMenu.jsm'):
     BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
@@ -64,7 +67,7 @@ with Files('Color.jsm'):
 with Files('Console.jsm'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
 
-with Files('DateTimePickerHelper.jsm'):
+with Files('DateTimePicker*.jsm'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls ')
 
 with Files('DeferredTask.jsm'):
@@ -180,6 +183,7 @@ EXTRA_JS_MODULES += [
     'addons/WebRequestUpload.jsm',
     'AppMenuNotifications.jsm',
     'AsyncPrefs.jsm',
+    'AutoScrollController.jsm',
     'Battery.jsm',
     'BinarySearch.jsm',
     'BrowserUtils.jsm',
@@ -191,7 +195,8 @@ EXTRA_JS_MODULES += [
     'Console.jsm',
     'CreditCard.jsm',
     'css-selector.js',
-    'DateTimePickerHelper.jsm',
+    'DateTimePickerContent.jsm',
+    'DateTimePickerParent.jsm',
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'E10SUtils.jsm',
