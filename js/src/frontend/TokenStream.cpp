@@ -39,6 +39,7 @@
 #include "vm/Realm.h"
 
 using mozilla::ArrayLength;
+using mozilla::AssertedCast;
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
@@ -1411,27 +1412,46 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
         });
 
     tokenbuf.clear();
-    for (;;) {
-        int32_t c = getCodeUnit();
+    do {
+        int32_t unit = getCodeUnit();
+        if (unit == EOF)
+            break;
 
         uint32_t codePoint;
-        if (!matchMultiUnitCodePoint(c, &codePoint))
-            return false;
-        if (codePoint) {
-            if (!unicode::IsIdentifierPart(codePoint))
+        if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
+            if (MOZ_LIKELY(unicode::IsIdentifierPart(char16_t(unit)))) {
+                if (!tokenbuf.append(unit))
+                    return false;
+
+                continue;
+            }
+
+            if (unit != '\\' || !matchUnicodeEscapeIdent(&codePoint))
                 break;
         } else {
-            if (unicode::IsIdentifierPart(char16_t(c))) {
-                codePoint = c;
-            } else {
-                if (c != '\\' || !matchUnicodeEscapeIdent(&codePoint))
-                    break;
+            int32_t cp;
+            if (!getNonAsciiCodePoint(unit, &cp))
+                return false;
+
+            codePoint = AssertedCast<uint32_t>(cp);
+        }
+
+        if (!unicode::IsIdentifierPart(codePoint)) {
+            if (MOZ_UNLIKELY(codePoint == unicode::LINE_SEPARATOR ||
+                             codePoint == unicode::PARA_SEPARATOR))
+            {
+                // |restoreNextRawCharAddress| undoes all gets, but it doesn't
+                // revert line/column updates.  The ASCII code path never
+                // updates line/column state, so only Unicode separators gotten
+                // by |getNonAsciiCodePoint| require this.
+                anyCharsAccess().undoInternalUpdateLineInfoForEOL();
             }
+            break;
         }
 
         if (!appendCodePointToTokenbuf(codePoint))
             return false;
-    }
+    } while (true);
 
     return true;
 }
