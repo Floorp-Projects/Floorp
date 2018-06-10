@@ -589,26 +589,6 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(char16_t lead, 
     return true;
 }
 
-// This gets the next code unit -- the next numeric sub-unit of source text,
-// possibly smaller than a full code point.  It is simple and stupid, and it
-// doesn't understand EOL, update line counters, or anything like that.  If you
-// use it to consume an EOL sequence, line counters *will not* be correct for
-// subsequent code.
-//
-// Only use this if (a) the resulting code unit is guaranteed to be ungotten
-// (by ungetCodeUnit()) if it's an EOL, and (b) the line-related state (lineno,
-// linebase) is not used before it's ungotten.
-template<typename CharT, class AnyCharsAccess>
-int32_t
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCodeUnit()
-{
-    if (MOZ_LIKELY(!sourceUnits.atEnd()))
-        return sourceUnits.getCodeUnit();
-
-    anyCharsAccess().flags.isEOF = true;
-    return EOF;
-}
-
 template<typename CharT, class AnyCharsAccess>
 void
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
@@ -629,16 +609,6 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
     } else {
         MOZ_ASSERT(sourceUnits.peekCodeUnit() == c);
     }
-}
-
-template<typename CharT>
-void
-TokenStreamCharsBase<CharT>::ungetCodeUnit(int32_t c)
-{
-    if (c == EOF)
-        return;
-
-    sourceUnits.ungetCodeUnit();
 }
 
 template<class AnyCharsAccess>
