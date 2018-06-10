@@ -101,6 +101,7 @@ extern "C" {
 
 #include "mozilla/UniquePtr.h"
 #include "prinrval.h"
+#include "mediapacket.h"
 
 namespace mozilla {
 
@@ -241,14 +242,15 @@ class TestNrSocket : public NrSocketBase {
     class UdpPacket {
       public:
         UdpPacket(const void *msg, size_t len, const nr_transport_addr &addr) :
-          buffer_(new DataBuffer(static_cast<const uint8_t*>(msg), len)) {
+          buffer_(new MediaPacket) {
+          buffer_->Copy(static_cast<const uint8_t*>(msg), len);
           // TODO(bug 1170299): Remove const_cast when no longer necessary
           nr_transport_addr_copy(&remote_address_,
                                  const_cast<nr_transport_addr*>(&addr));
         }
 
         nr_transport_addr remote_address_;
-        UniquePtr<DataBuffer> buffer_;
+        UniquePtr<MediaPacket> buffer_;
 
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UdpPacket);
       private:
@@ -290,14 +292,15 @@ class TestNrSocket : public NrSocketBase {
                      nr_transport_addr *addr,
                      RefPtr<NrSocketBase> internal_socket) :
           socket_(sock),
-          buffer_(reinterpret_cast<const uint8_t *>(data), len),
+          buffer_(),
           flags_(flags),
           internal_socket_(internal_socket) {
+        buffer_.Copy(reinterpret_cast<const uint8_t *>(data), len);
         nr_transport_addr_copy(&to_, addr);
       }
 
       TestNrSocket *socket_;
-      DataBuffer buffer_;
+      MediaPacket buffer_;
       int flags_;
       nr_transport_addr to_;
       RefPtr<NrSocketBase> internal_socket_;

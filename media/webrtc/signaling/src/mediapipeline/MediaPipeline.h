@@ -16,7 +16,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Atomics.h"
 #include "SrtpFlow.h"
-#include "databuffer.h"
+#include "mediapacket.h"
 #include "mtransport/runnable_utils.h"
 #include "mtransport/transportflow.h"
 #include "AudioPacketizer.h"
@@ -185,9 +185,9 @@ public:
   {
   public:
     // Implement the TransportInterface functions
-    explicit PipelineTransport(MediaPipeline* aPipeline)
-      : mPipeline(aPipeline)
-      , mStsThread(aPipeline->mStsThread)
+    explicit PipelineTransport(nsIEventTarget* aStsThread)
+      : mPipeline(nullptr)
+      , mStsThread(aStsThread)
     {
     }
 
@@ -199,7 +199,7 @@ public:
     virtual nsresult SendRtcpPacket(const uint8_t* aData, size_t aLen) override;
 
   private:
-    nsresult SendRtpRtcpPacket_s(nsAutoPtr<DataBuffer> aData, bool aIsRtp);
+    nsresult SendRtpRtcpPacket_s(nsAutoPtr<MediaPacket> aData);
 
     // Creates a cycle, which we break with Detach
     RefPtr<MediaPipeline> mPipeline;
@@ -215,6 +215,7 @@ protected:
   {
     TransportInfo(RefPtr<TransportFlow> aFlow, RtpType aType)
       : mTransport(aFlow)
+      , mSrtp(mTransport ? mTransport->GetLayer("srtp") : nullptr)
       , mState(StateType::MP_CONNECTING)
       , mType(aType)
     {
@@ -223,14 +224,12 @@ protected:
     void Detach()
     {
       mTransport = nullptr;
-      mSendSrtp = nullptr;
-      mRecvSrtp = nullptr;
+      mSrtp = nullptr;
     }
 
     RefPtr<TransportFlow> mTransport;
+    TransportLayer* mSrtp;
     StateType mState;
-    RefPtr<SrtpFlow> mSendSrtp;
-    RefPtr<SrtpFlow> mRecvSrtp;
     RtpType mType;
   };
 
@@ -242,7 +241,7 @@ protected:
 
   nsresult ConnectTransport_s(TransportInfo& aInfo);
 
-  TransportInfo* GetTransportInfo_s(TransportFlow* aFlow);
+  TransportInfo* GetTransportInfo_s(TransportLayer* aLayer);
 
   void IncrementRtpPacketsSent(int aBytes);
   void IncrementRtcpPacketsSent();
@@ -250,21 +249,14 @@ protected:
   virtual void OnRtpPacketReceived() {};
   void IncrementRtcpPacketsReceived();
 
-  virtual nsresult SendPacket(const TransportFlow* aFlow,
-                              const void* aData,
-                              int aLen);
+  virtual nsresult SendPacket(TransportLayer* aLayer,
+                              MediaPacket& packet);
 
   // Process slots on transports
-  void StateChange(TransportFlow* aFlow, TransportLayer::State);
-  void RtpPacketReceived(TransportLayer* aLayer,
-                         const unsigned char* aData,
-                         size_t aLen);
-  void RtcpPacketReceived(TransportLayer* aLayer,
-                          const unsigned char* aData,
-                          size_t aLen);
-  void PacketReceived(TransportLayer* aLayer,
-                      const unsigned char* aData,
-                      size_t aLen);
+  void StateChange(TransportLayer* aLayer, TransportLayer::State);
+  void RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet);
+  void RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet);
+  void PacketReceived(TransportLayer* aLayer, MediaPacket& packet);
 
   void SetDescription_s(const std::string& description);
 
@@ -326,7 +318,6 @@ public:
                         nsCOMPtr<nsIEventTarget> aMainThread,
                         nsCOMPtr<nsIEventTarget> aStsThread,
                         bool aIsVideo,
-                        dom::MediaStreamTrack* aDomTrack,
                         RefPtr<MediaSessionConduit> aConduit);
 
   void Start() override;
@@ -352,7 +343,7 @@ public:
   // In non-compliance with the likely final spec, allow the new
   // track to be part of a different stream (since we don't support
   // multiple tracks of a type in a stream yet).  bug 1056650
-  virtual nsresult ReplaceTrack(RefPtr<dom::MediaStreamTrack>& aDomTrack);
+  virtual nsresult SetTrack(dom::MediaStreamTrack* aDomTrack);
 
   // Separate classes to allow ref counting
   class PipelineListener;

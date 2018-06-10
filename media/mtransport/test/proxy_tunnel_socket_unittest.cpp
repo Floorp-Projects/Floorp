@@ -20,7 +20,6 @@ extern "C" {
 #include "stun.h"
 }
 
-#include "databuffer.h"
 #include "dummysocket.h"
 
 #include "nr_socket_prsock.h"
