@@ -375,6 +375,10 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword_checkbox_label,         NS_THEME_CHECKBOX_LABEL },
   { eCSSKeyword_radio_label,            NS_THEME_RADIO_LABEL },
   { eCSSKeyword_button_focus,           NS_THEME_BUTTON_FOCUS },
+  // Even though window is meant for OS window styling, web developers use
+  // `window` on <select> to remove the dropmarker. Care should be taken when
+  // changing -moz-appearance:window to avoid web compatibility regressions.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1466715#c10
   { eCSSKeyword_window,                 NS_THEME_WINDOW },
   { eCSSKeyword_dialog,                 NS_THEME_DIALOG },
   { eCSSKeyword_menubar,                NS_THEME_MENUBAR },
