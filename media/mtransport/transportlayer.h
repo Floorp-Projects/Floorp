@@ -17,6 +17,7 @@
 #include "nsIEventTarget.h"
 
 #include "m_cpp_utils.h"
+#include "mediapacket.h"
 
 namespace mozilla {
 
@@ -51,8 +52,9 @@ class TransportLayer : public sigslot::has_slots<> {
   nsresult Init();  // Called by Insert() to set up -- do not override
   virtual nsresult InitInternal() { return NS_OK; } // Called by Init
 
-  // Called when inserted into a flow
-  virtual void Inserted(TransportFlow *flow, TransportLayer *downward);
+  void SetFlowId(const std::string& flow_id) {flow_id_ = flow_id;}
+
+  virtual void Chain(TransportLayer *downward);
 
   // Downward interface
   TransportLayer *downward() { return downward_; }
@@ -60,7 +62,7 @@ class TransportLayer : public sigslot::has_slots<> {
   // Get the state
   State state() const { return state_; }
   // Must be implemented by derived classes
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len) = 0;
+  virtual TransportResult SendPacket(MediaPacket& packet) = 0;
 
   // Get the thread.
   const nsCOMPtr<nsIEventTarget> GetThread() const {
@@ -71,8 +73,7 @@ class TransportLayer : public sigslot::has_slots<> {
   // State has changed
   sigslot::signal2<TransportLayer*, State> SignalStateChange;
   // Data received on the flow
-  sigslot::signal3<TransportLayer*, const unsigned char *, size_t>
-                         SignalPacketReceived;
+  sigslot::signal2<TransportLayer*, MediaPacket&> SignalPacketReceived;
 
   // Return the layer id for this layer
   virtual const std::string id() const = 0;

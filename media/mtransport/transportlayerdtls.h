@@ -23,7 +23,6 @@
 #include "ScopedNSSTypes.h"
 #include "m_cpp_utils.h"
 #include "dtlsidentity.h"
-#include "transportflow.h"
 #include "transportlayer.h"
 
 namespace mozilla {
@@ -37,7 +36,7 @@ class TransportLayerNSPRAdapter {
   input_(),
   enabled_(true) {}
 
-  void PacketReceived(const void *data, int32_t len);
+  void PacketReceived(MediaPacket& packet);
   int32_t Recv(void *buf, int32_t buflen);
   int32_t Write(const void *buf, int32_t length);
   void SetEnabled(bool enabled) { enabled_ = enabled; }
@@ -46,7 +45,7 @@ class TransportLayerNSPRAdapter {
   DISALLOW_COPY_ASSIGN(TransportLayerNSPRAdapter);
 
   TransportLayer *output_;
-  std::queue<Packet *> input_;
+  std::queue<MediaPacket *> input_;
   bool enabled_;
 };
 
@@ -95,12 +94,11 @@ class TransportLayerDtls final : public TransportLayer {
   // Transport layer overrides.
   nsresult InitInternal() override;
   void WasInserted() override;
-  TransportResult SendPacket(const unsigned char *data, size_t len) override;
+  TransportResult SendPacket(MediaPacket& packet) override;
 
   // Signals
   void StateChange(TransportLayer *layer, State state);
-  void PacketReceived(TransportLayer* layer, const unsigned char *data,
-                      size_t len);
+  void PacketReceived(TransportLayer* layer, MediaPacket& packet);
 
   // For testing use only.  Returns the fd.
   PRFileDesc* internal_fd() { CheckThread(); return ssl_fd_.get(); }
@@ -140,6 +138,7 @@ class TransportLayerDtls final : public TransportLayer {
   bool Setup();
   bool SetupCipherSuites(UniquePRFileDesc& ssl_fd) const;
   bool SetupAlpn(UniquePRFileDesc& ssl_fd) const;
+  void GetDecryptedPackets();
   void Handshake();
 
   bool CheckAlpn();

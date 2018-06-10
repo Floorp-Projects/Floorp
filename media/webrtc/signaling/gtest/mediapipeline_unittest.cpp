@@ -24,6 +24,7 @@
 #include "transportflow.h"
 #include "transportlayerloopback.h"
 #include "transportlayerdtls.h"
+#include "transportlayersrtp.h"
 #include "mozilla/SyncRunnable.h"
 #include "mtransport_test_utils.h"
 #include "SharedBuffer.h"
@@ -169,52 +170,40 @@ class TransportInfo {
  public:
   TransportInfo() :
     flow_(nullptr),
-    loopback_(nullptr),
-    dtls_(nullptr) {}
+    loopback_(nullptr) {}
 
   static void InitAndConnect(TransportInfo &client, TransportInfo &server) {
     client.Init(true);
     server.Init(false);
-    client.PushLayers();
-    server.PushLayers();
     client.Connect(&server);
     server.Connect(&client);
   }
 
   void Init(bool client) {
-    nsresult res;
-
-    flow_ = new TransportFlow();
-    loopback_ = new TransportLayerLoopback();
-    dtls_ = new TransportLayerDtls();
-
-    res = loopback_->Init();
-    if (res != NS_OK) {
-      FreeLayers();
-    }
-    ASSERT_EQ((nsresult)NS_OK, res);
+    UniquePtr<TransportLayerLoopback> loopback(new TransportLayerLoopback);
+    UniquePtr<TransportLayerDtls> dtls(new TransportLayerDtls);
+    UniquePtr<TransportLayerSrtp> srtp(new TransportLayerSrtp(*dtls));
 
     std::vector<uint16_t> ciphers;
     ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
-    dtls_->SetSrtpCiphers(ciphers);
-    dtls_->SetIdentity(DtlsIdentity::Generate());
-    dtls_->SetRole(client ? TransportLayerDtls::CLIENT :
+    dtls->SetSrtpCiphers(ciphers);
+    dtls->SetIdentity(DtlsIdentity::Generate());
+    dtls->SetRole(client ? TransportLayerDtls::CLIENT :
       TransportLayerDtls::SERVER);
-    dtls_->SetVerificationAllowAll();
-  }
+    dtls->SetVerificationAllowAll();
 
-  void PushLayers() {
-    nsresult res;
+    ASSERT_EQ(NS_OK, loopback->Init());
+    ASSERT_EQ(NS_OK, dtls->Init());
+    ASSERT_EQ(NS_OK, srtp->Init());
 
-    nsAutoPtr<std::queue<TransportLayer *> > layers(
-      new std::queue<TransportLayer *>);
-    layers->push(loopback_);
-    layers->push(dtls_);
-    res = flow_->PushLayers(layers);
-    if (res != NS_OK) {
-      FreeLayers();
-    }
-    ASSERT_EQ((nsresult)NS_OK, res);
+    dtls->Chain(loopback.get());
+    srtp->Chain(loopback.get());
+
+    flow_ = new TransportFlow();
+    loopback_ = loopback.release();
+    flow_->PushLayer(loopback_);
+    flow_->PushLayer(dtls.release());
+    flow_->PushLayer(srtp.release());
   }
 
   void Connect(TransportInfo* peer) {
@@ -224,27 +213,16 @@ class TransportInfo {
     loopback_->Connect(peer->loopback_);
   }
 
-  // Free the memory allocated at the beginning of Init
-  // if failure occurs before layers setup.
-  void FreeLayers() {
-    delete loopback_;
-    loopback_ = nullptr;
-    delete dtls_;
-    dtls_ = nullptr;
-  }
-
   void Shutdown() {
     if (loopback_) {
       loopback_->Disconnect();
     }
     loopback_ = nullptr;
-    dtls_ = nullptr;
     flow_ = nullptr;
   }
 
   RefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
-  TransportLayerDtls *dtls_;
 };
 
 class TestAgent {
@@ -369,9 +347,9 @@ class TestAgentSend : public TestAgent {
         nullptr,
         test_utils->sts_target(),
         false,
-        audio_stream_track_.get(),
         audio_conduit_);
 
+    audio_pipeline->SetTrack(audio_stream_track_.get());
     audio_pipeline->Start();
 
     audio_pipeline_ = audio_pipeline;

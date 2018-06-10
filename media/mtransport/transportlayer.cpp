@@ -30,9 +30,8 @@ nsresult TransportLayer::Init() {
   return NS_OK;
 }
 
-void TransportLayer::Inserted(TransportFlow *flow, TransportLayer *downward) {
+void TransportLayer::Chain(TransportLayer *downward) {
   downward_ = downward;
-  flow_id_ = flow->id();
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Inserted: downward='" <<
     (downward ? downward->id(): "none") << "'");
 
