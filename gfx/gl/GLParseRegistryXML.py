@@ -22,6 +22,7 @@
 ################################################################################
 
 # includes
+from __future__ import print_function
 import os
 import sys
 import xml.etree.ElementTree
@@ -130,7 +131,7 @@ class GLDatabase:
         xmlPath = getXMLDir() + path
 
         if not os.path.isfile(xmlPath):
-            print 'missing file "' + xmlPath + '"'
+            print('missing file "' + xmlPath + '"')
             return False
 
         tree = xml.etree.ElementTree.parse(xmlPath)
