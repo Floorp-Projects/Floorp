@@ -1,4 +1,5 @@
-import os, unittest
+import os
+import unittest
 
 from IPDLCompile import IPDLCompile
 
@@ -25,10 +26,10 @@ class IPDLTestCase(unittest.TestCase):
         return '''
 ### Command: %s
 ### stderr:
-%s'''% (' '.join(self.compile.argv), self.compile.stderr)
+%s''' % (' '.join(self.compile.argv), self.compile.stderr)
 
     def shortDescription(self):
-        return '%s test of "%s"'% (self.__class__.__name__, self.filename)
+        return '%s test of "%s"' % (self.__class__.__name__, self.filename)
 
 
 class OkTestCase(IPDLTestCase):
@@ -57,7 +58,6 @@ The IPDL compiler *should* produce errors but not exceptions.'''
                 self.expectedErrorMessage.append(l[2:-1])
         f.close()
 
-
     def checkPassed(self):
         self.assertNotEqual(self.expectedErrorMessage, [],
                             self.mkCustomMsg("Error test should contain at least " +
@@ -78,22 +78,26 @@ if __name__ == '__main__':
     errordir = sys.argv[2]
     assert os.path.isdir(errordir)
 
-    ipdlargv = [ ]
+    ipdlargv = []
     oksuite = unittest.TestSuite()
     errorsuite = unittest.TestSuite()
 
     oktests, errortests = 0, 0
     for arg in sys.argv[3:]:
         if errortests:
-            errorsuite.addTest(ErrorTestCase(ipdlargv+ [ '-I', errordir ],
+            errorsuite.addTest(ErrorTestCase(ipdlargv + ['-I', errordir],
                                              arg))
         elif oktests:
-            if 'ERRORTESTS' == arg: errortests = 1; continue
-            oksuite.addTest(OkTestCase(ipdlargv+ [ '-I', okdir ],
+            if 'ERRORTESTS' == arg:
+                errortests = 1
+                continue
+            oksuite.addTest(OkTestCase(ipdlargv + ['-I', okdir],
                                        arg))
         else:
-            if 'OKTESTS' == arg: oktests = 1; continue
+            if 'OKTESTS' == arg:
+                oktests = 1
+                continue
             ipdlargv.append(arg)
 
     (unittest.TextTestRunner()).run(
-        unittest.TestSuite([ oksuite, errorsuite ]))
+        unittest.TestSuite([oksuite, errorsuite]))
