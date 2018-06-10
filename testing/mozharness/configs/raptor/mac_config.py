@@ -26,6 +26,7 @@ config = {
         "clobber",
         "download-and-extract",
         "populate-webroot",
+        "install-chrome",
         "create-virtualenv",
         "install",
         "run-tests",

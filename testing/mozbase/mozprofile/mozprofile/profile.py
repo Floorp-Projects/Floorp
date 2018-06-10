@@ -496,8 +496,8 @@ class ChromeProfile(BaseProfile):
 
         @classmethod
         def is_addon(self, addon):
-            # TODO Implement this properly
-            return os.path.exists(addon)
+            # Don't include testing/profiles on Google Chrome
+            return False
 
     def __init__(self, **kwargs):
         super(ChromeProfile, self).__init__(**kwargs)
