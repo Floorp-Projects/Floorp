@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">geckoview_example</string>
+    <string name="activity_label">GeckoView Example</string>
+    <string name="location_hint">Enter URL or search keywords...</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="clear_field">Clear</string>
@@ -12,4 +14,13 @@
     <string name="media_front_camera">Front camera</string>
     <string name="media_microphone">Microphone</string>
     <string name="media_other">Unknown source</string>
+
+    <string name="crash_native">Native</string>
+    <string name="crash_java">Java</string>
+    <string name="crash_content_native">Content (Native)</string>
+    <string name="multiprocess">Multiprocess</string>
+    <string name="tracking_protection">Tracking Protection</string>
+    <string name="private_browsing">Private Browsing</string>
+    <string name="forward">Forward</string>
+    <string name="reload">Reload</string>
 </resources>

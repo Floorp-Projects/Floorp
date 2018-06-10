@@ -435,20 +435,47 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 {
   aReturn.Truncate();
 
-  ErrorResult error;
-  RefPtr<CSSValue> val =
-    GetPropertyCSSValueWithoutWarning(aPropertyName, error);
-  if (error.Failed()) {
-    return error.StealNSResult();
+  nsCSSPropertyID prop =
+    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+
+  const ComputedStyleMap::Entry* entry = nullptr;
+  if (prop != eCSSPropertyExtra_variable) {
+    entry = GetComputedStyleMap()->FindEntryForProperty(prop);
+    if (!entry) {
+      return NS_OK;
+    }
   }
 
-  if (val) {
-    nsString text;
-    val->GetCssText(text, error);
-    aReturn.Assign(text);
-    return error.StealNSResult();
+  const bool layoutFlushIsNeeded = entry && entry->IsLayoutFlushNeeded();
+  UpdateCurrentStyleSources(layoutFlushIsNeeded);
+  if (!mComputedStyle) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
+  auto cleanup = mozilla::MakeScopeExit([&] {
+    ClearCurrentStyleSources();
+  });
+
+  if (!entry) {
+    MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
+    const nsAString& name =
+      Substring(aPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
+    Servo_GetCustomPropertyValue(mComputedStyle, &name, &aReturn);
+    return NS_OK;
+  }
+
+  if (!nsCSSProps::PropHasFlags(prop, CSSPropFlags::SerializedByServo)) {
+    if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
+      ErrorResult rv;
+      nsString text;
+      value->GetCssText(text, rv);
+      aReturn.Assign(text);
+      return rv.StealNSResult();
+    }
+    return NS_OK;
+  }
+
+  Servo_GetPropertyValue(mComputedStyle, prop, &aReturn);
   return NS_OK;
 }
 
@@ -985,57 +1012,6 @@ nsComputedDOMStyle::ClearCurrentStyleSources()
   mOuterFrame = nullptr;
   mInnerFrame = nullptr;
   mPresShell = nullptr;
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetPropertyCSSValueWithoutWarning(
-  const nsAString& aPropertyName,
-  ErrorResult& aRv)
-{
-  nsCSSPropertyID prop =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
-
-  bool needsLayoutFlush;
-  ComputedStyleMap::Entry::ComputeMethod getter;
-
-  if (prop == eCSSPropertyExtra_variable) {
-    needsLayoutFlush = false;
-    getter = nullptr;
-  } else {
-    const ComputedStyleMap::Entry* propEntry =
-      GetComputedStyleMap()->FindEntryForProperty(prop);
-
-    if (!propEntry) {
-#ifdef DEBUG_ComputedDOMStyle
-      NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) +
-                                    NS_LITERAL_CSTRING(" is not queryable!")).get());
-#endif
-
-      // NOTE:  For branches, we should flush here for compatibility!
-      return nullptr;
-    }
-
-    needsLayoutFlush = propEntry->IsLayoutFlushNeeded();
-    getter = propEntry->mGetter;
-  }
-
-  UpdateCurrentStyleSources(needsLayoutFlush);
-  if (!mComputedStyle) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
-  RefPtr<CSSValue> val;
-  if (prop == eCSSPropertyExtra_variable) {
-    val = DoGetCustomProperty(aPropertyName);
-  } else {
-    // Call our pointer-to-member-function.
-    val = (this->*getter)();
-  }
-
-  ClearCurrentStyleSources();
-
-  return val.forget();
 }
 
 NS_IMETHODIMP
@@ -7190,26 +7166,6 @@ static void
 MarkComputedStyleMapDirty(const char* aPref, void* aData)
 {
   static_cast<ComputedStyleMap*>(aData)->MarkDirty();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
-{
-  MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
-
-  nsString variableValue;
-  const nsAString& name = Substring(aPropertyName,
-                                    CSS_CUSTOM_NAME_PREFIX_LENGTH);
-  bool present =
-    Servo_GetCustomPropertyValue(mComputedStyle, &name, &variableValue);
-  if (!present) {
-    return nullptr;
-  }
-
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetString(variableValue);
-
-  return val.forget();
 }
 
 void
