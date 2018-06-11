@@ -396,7 +396,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
   , mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
-  , mServiceWorkerTaintingSynthesized(rhs.mServiceWorkerTaintingSynthesized)
+  // mServiceWorkerTaintingSynthesized must be handled specially during redirect
+  , mServiceWorkerTaintingSynthesized(false)
 {
 }
 
