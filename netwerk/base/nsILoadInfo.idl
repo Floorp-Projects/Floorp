@@ -44,6 +44,7 @@ native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_ServiceWorkerDescriptorRef(const mozilla::dom::ServiceWorkerDescriptor);
 [ref] native const_MaybeServiceWorkerDescriptorRef(const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>);
 [ptr] native PerformanceStoragePtr(mozilla::dom::PerformanceStorage);
+      native LoadTainting(mozilla::LoadTainting);
 
 typedef unsigned long nsSecurityFlags;
 
@@ -991,4 +992,14 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, nostdcall, notxpcom]
   PerformanceStoragePtr GetPerformanceStorage();
+
+  /* The service worker and fetch specifications require returning the
+   * exact tainting level of the Response passed to FetchEvent.respondWith().
+   * This method allows us to override the tainting level in that case.
+   *
+   * NOTE: This should not be used outside of service worker code! Use
+   *       nsILoadInfo::MaybeIncreaseTainting() instead.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SynthesizeServiceWorkerTainting(in LoadTainting aTainting);
 };
