@@ -99,6 +99,24 @@ GeneratorObject::finalSuspend(HandleObject obj)
     genObj->setClosed();
 }
 
+GeneratorObject*
+js::GetGeneratorObjectForFrame(JSContext* cx, AbstractFramePtr frame)
+{
+    MOZ_ASSERT(frame.isFunctionFrame() &&
+               (frame.callee()->isGenerator() || frame.callee()->isAsync()));
+
+    // The ".generator" binding is always present and always "aliased".
+    CallObject& callObj = frame.callObj();
+    Shape* shape = callObj.lookup(cx, cx->names().dotGenerator);
+    Value genValue = callObj.getSlot(shape->slot());
+
+    // If the `generator; setaliasedvar ".generator"; initialyield` bytecode
+    // sequence has not run yet, genValue is undefined.
+    return genValue.isObject()
+           ? &genValue.toObject().as<GeneratorObject>()
+           : nullptr;
+}
+
 void
 js::SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame)
 {
