@@ -903,3 +903,9 @@ rtc > rt {
 ruby, rb, rt, rtc {
   unicode-bidi: isolate;
 }
+
+/* Shadow DOM v1
+ * https://drafts.csswg.org/css-scoping/#slots-in-shadow-tree */
+slot {
+  display: contents;
+}
