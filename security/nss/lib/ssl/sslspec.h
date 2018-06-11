@@ -170,6 +170,10 @@ struct ssl3CipherSpecStr {
     /* The number of 0-RTT bytes that can be sent or received in TLS 1.3. This
      * will be zero for everything but 0-RTT. */
     PRUint32 earlyDataRemaining;
+    /* The maximum plaintext length.  This differs from the configured or
+     * negotiated value for TLS 1.3; it is reduced by one to account for the
+     * content type octet. */
+    PRUint16 recordSizeLimit;
 };
 
 typedef void (*sslCipherSpecChangedFunc)(void *arg,

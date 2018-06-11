@@ -178,7 +178,7 @@ loser:
         SECKEY_DestroyPrivateKey(privKey);
     }
     if (data) {
-        PORT_Free(data);
+        PR_Free(data);
     }
     PORT_FreeArena(arena, PR_FALSE);
 
