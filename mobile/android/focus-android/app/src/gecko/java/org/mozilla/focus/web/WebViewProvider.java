@@ -284,6 +284,13 @@ public class WebViewProvider {
                 }
 
                 @Override
+                public void onCrash(GeckoSession session) {
+                    Log.i(TAG, "Crashed, reopening session");
+                    session.open(geckoRuntime);
+                    session.loadUri(currentUrl);
+                }
+
+                @Override
                 public void onFocusRequest(GeckoSession geckoSession) {
 
                 }
