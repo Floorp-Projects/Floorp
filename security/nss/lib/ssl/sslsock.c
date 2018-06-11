@@ -55,6 +55,7 @@ static const sslSocketOps ssl_secure_ops = { /* SSL. */
 static sslOptions ssl_defaults = {
     .nextProtoNego = { siBuffer, NULL, 0 },
     .maxEarlyDataSize = 1 << 16,
+    .recordSizeLimit = MAX_FRAGMENT_LENGTH + 1,
     .useSecurity = PR_TRUE,
     .useSocks = PR_FALSE,
     .requestCertificate = PR_FALSE,
@@ -803,6 +804,15 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRIntn val)
             ss->opt.enable0RttData = val;
             break;
 
+        case SSL_RECORD_SIZE_LIMIT:
+            if (val < 64 || val > (MAX_FRAGMENT_LENGTH + 1)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                rv = SECFailure;
+            } else {
+                ss->opt.recordSizeLimit = val;
+            }
+            break;
+
         case SSL_ENABLE_TLS13_COMPAT_MODE:
             ss->opt.enableTls13CompatMode = val;
             break;
@@ -944,6 +954,9 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRIntn *pVal)
         case SSL_ENABLE_0RTT_DATA:
             val = ss->opt.enable0RttData;
             break;
+        case SSL_RECORD_SIZE_LIMIT:
+            val = ss->opt.recordSizeLimit;
+            break;
         case SSL_ENABLE_TLS13_COMPAT_MODE:
             val = ss->opt.enableTls13CompatMode;
             break;
@@ -1066,6 +1079,9 @@ SSL_OptionGetDefault(PRInt32 which, PRIntn *pVal)
             break;
         case SSL_ENABLE_0RTT_DATA:
             val = ssl_defaults.enable0RttData;
+            break;
+        case SSL_RECORD_SIZE_LIMIT:
+            val = ssl_defaults.recordSizeLimit;
             break;
         case SSL_ENABLE_TLS13_COMPAT_MODE:
             val = ssl_defaults.enableTls13CompatMode;
@@ -1250,6 +1266,14 @@ SSL_OptionSetDefault(PRInt32 which, PRIntn val)
 
         case SSL_ENABLE_0RTT_DATA:
             ssl_defaults.enable0RttData = val;
+            break;
+
+        case SSL_RECORD_SIZE_LIMIT:
+            if (val < 64 || val > (MAX_FRAGMENT_LENGTH + 1)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            ssl_defaults.recordSizeLimit = val;
             break;
 
         case SSL_ENABLE_TLS13_COMPAT_MODE:
