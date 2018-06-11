@@ -67,8 +67,11 @@ tasks:
               - "index.gecko.v2.${repository.project}.revision.${push.revision}.firefox.decision"
             else:
               $if: 'tasks_for == "action"'
-              then: "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
-              else:
+              then:
+              - "notify.email.taskcluster-notifications+action-task@mozilla.com.on-failed"
+              - "notify.email.taskcluster-notifications+action-task@mozilla.com.on-exception"
+              - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
+              else:  # cron
               - "index.gecko.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
               - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
 
