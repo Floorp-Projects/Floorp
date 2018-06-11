@@ -11263,10 +11263,31 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     }
   }
 
+  // Inherit the touch-action flags from the parent, if there is one. We do this
+  // because of how the touch-action on a frame combines the touch-action from
+  // ancestor DOM elements. Refer to the documentation in TouchActionHelper.cpp
+  // for details; this code is meant to be equivalent to that code, but woven
+  // into the top-down recursive display list building process.
+  CompositorHitTestInfo inheritedTouchAction = CompositorHitTestInfo::eInvisibleToHitTest;
+  if (nsDisplayCompositorHitTestInfo* parentInfo = aBuilder->GetCompositorHitTestInfo()) {
+    inheritedTouchAction = (parentInfo->HitTestInfo() & CompositorHitTestInfo::eTouchActionMask);
+  }
+
   nsIFrame* touchActionFrame = this;
   if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this)) {
     touchActionFrame = do_QueryFrame(scrollFrame);
+    // On scrollframes, stop inheriting the pan-x and pan-y flags; instead,
+    // reset them back to zero to allow panning on the scrollframe unless we
+    // encounter an element that disables it that's inside the scrollframe.
+    // This is equivalent to the |considerPanning| variable in
+    // TouchActionHelper.cpp, but for a top-down traversal.
+    CompositorHitTestInfo panMask = CompositorHitTestInfo::eTouchActionPanXDisabled
+                                  | CompositorHitTestInfo::eTouchActionPanYDisabled;
+    inheritedTouchAction &= ~panMask;
   }
+
+  result |= inheritedTouchAction;
+
   const uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
   // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
   // so we can eliminate some combinations of things.
