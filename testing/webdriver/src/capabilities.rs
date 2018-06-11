@@ -296,7 +296,11 @@ impl SpecNewSessionParameters {
         );
 
         match behaviour {
-            "dismiss" | "accept" => {}
+            "accept" |
+            "accept and notify" |
+            "dismiss" |
+            "dismiss and notify" |
+            "ignore" => {},
             x => {
                 return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
