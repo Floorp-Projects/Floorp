@@ -936,6 +936,33 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &resumeMode, &value);
 
+    // If we are yielding or awaiting, the generator is currently in the
+    // "suspended" state.  Letting script observe this state, with the
+    // generator on stack and yet also reenterable, would be bad, so mark
+    // it running while we fire events.
+    int32_t yieldAwaitIndex = 0;
+    Rooted<GeneratorObject*> genObj(cx);
+    if (frame.isFunctionFrame() && (frame.callee()->isGenerator() || frame.callee()->isAsync())) {
+        genObj = GetGeneratorObjectForFrame(cx, frame);
+        if (genObj) {
+            if (!genObj->isClosed() && genObj->isSuspended()) {
+                yieldAwaitIndex =
+                    genObj->getFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
+                genObj->setRunning();
+            } else {
+                // We're returning or throwing, not yielding or awaiting. The
+                // generator is already closed.
+                genObj = nullptr;
+            }
+        }
+    }
+    auto restoreGenSuspended = MakeScopeExit([&] {
+        if (genObj) {
+            genObj->setFixedSlot(GeneratorObject::YIELD_AND_AWAIT_INDEX_SLOT,
+                                 Int32Value(yieldAwaitIndex));
+        }
+    });
+
     // This path can be hit via unwinding the stack due to over-recursion or
     // OOM. In those cases, don't fire the frames' onPop handlers, because
     // invoking JS will only trigger the same condition. See
@@ -969,8 +996,8 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 nextResumeMode = dbg->processParsedHandlerResult(ar, frame, pc, success,
                                                                  nextResumeMode, &nextValue);
 
-                // At this point, we are back in the debuggee compartment, and any error has
-                // been wrapped up as a completion value.
+                // At this point, we are back in the debuggee compartment, and
+                // any error has been wrapped up as a completion value.
                 MOZ_ASSERT(cx->compartment() == debuggeeGlobal->compartment());
                 MOZ_ASSERT(!cx->isExceptionPending());
 
