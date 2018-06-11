@@ -32,7 +32,6 @@ const CONNECTION_PROTOCOLS = (function() {
 XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
                                    "@mozilla.org/push/Notifier;1",
                                    "nsIPushNotifier");
-ChromeUtils.defineModuleGetter(this, "pushBroadcastService", "resource://gre/modules/PushBroadcastService.jsm");
 
 var EXPORTED_SYMBOLS = ["PushService"];
 
@@ -241,19 +240,14 @@ var PushService = {
     }
 
     let records = await this.getAllUnexpired();
-    let broadcastListeners = await pushBroadcastService.getListeners();
 
-    // In principle, a listener could be added to the
-    // pushBroadcastService here, after we have gotten listeners and
-    // before we're RUNNING, but this can't happen in practice because
-    // the only caller that can add listeners is PushBroadcastService,
-    // and it waits on the same promise we are before it can add
-    // listeners. If PushBroadcastService gets woken first, it will
-    // update the value that is eventually returned from
-    // getListeners.
     this._setState(PUSH_SERVICE_RUNNING);
 
-    this._service.connect(records, broadcastListeners);
+    if (records.length > 0 || prefs.get("alwaysConnect")) {
+      // Connect if we have existing subscriptions, or if the always-on pref
+      // is set.
+      this._service.connect(records);
+    }
   },
 
   _changeStateConnectionEnabledEvent: function(enabled) {
@@ -492,13 +486,13 @@ var PushService = {
     if (options.serverURI) {
       // this is use for xpcshell test.
 
-      return this._stateChangeProcessEnqueue(_ =>
+      this._stateChangeProcessEnqueue(_ =>
         this._changeServerURL(options.serverURI, STARTING_SERVICE_EVENT, options));
 
     } else {
       // This is only used for testing. Different tests require connecting to
       // slightly different URLs.
-      return this._stateChangeProcessEnqueue(_ =>
+      this._stateChangeProcessEnqueue(_ =>
         this._changeServerURL(prefs.get("serverURL"), STARTING_SERVICE_EVENT));
     }
   },
@@ -768,16 +762,6 @@ var PushService = {
       console.error("receivedPushMessage: Error notifying app", error);
       return Ci.nsIPushErrorReporter.ACK_NOT_DELIVERED;
     });
-  },
-
-  /**
-   * Dispatches a broadcast notification to the BroadcastService.
-   */
-  receivedBroadcastMessage(message) {
-    pushBroadcastService.receivedBroadcastMessage(message.broadcasts)
-      .catch(e => {
-        console.error(e);
-      });;
   },
 
   /**
@@ -1096,21 +1080,6 @@ var PushService = {
       }
       return record.toSubscription();
     });
-  },
-
-  /*
-   * Called only by the PushBroadcastService on the receipt of a new
-   * subscription. Don't call this directly. Go through PushBroadcastService.
-   */
-  async subscribeBroadcast(broadcastId, version) {
-    if (this._state != PUSH_SERVICE_RUNNING) {
-      // Ignore any request to subscribe before we send a hello.
-      // We'll send all the broadcast listeners as part of the hello
-      // anyhow.
-      return;
-    }
-
-    await this._service.sendSubscribeBroadcast(broadcastId, version);
   },
 
   /**

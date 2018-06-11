@@ -15,9 +15,7 @@ ChromeUtils.defineModuleGetter(this, 'PlacesTestUtils',
 XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
                                    '@mozilla.org/push/Service;1', 'nsIPushService');
 
-const pushServiceExports = ChromeUtils.import('resource://gre/modules/PushService.jsm', {});
-const broadcastServiceExports = ChromeUtils.import('resource://gre/modules/PushBroadcastService.jsm', {});
-const serviceExports = {...pushServiceExports, ...broadcastServiceExports};
+const serviceExports = ChromeUtils.import('resource://gre/modules/PushService.jsm', {});
 const servicePrefs = new Preferences('dom.push.');
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
@@ -187,7 +185,6 @@ function MockWebSocket(originalURI, handlers = {}) {
   this._onUnregister = handlers.onUnregister;
   this._onACK = handlers.onACK;
   this._onPing = handlers.onPing;
-  this._onBroadcastSubscribe = handlers.onBroadcastSubscribe;
 }
 
 MockWebSocket.prototype = {
@@ -258,13 +255,6 @@ MockWebSocket.prototype = {
         // Echo ping packets.
         this.serverSendMsg('{}');
       }
-      break;
-
-    case 'broadcast_subscribe':
-      if (typeof this._onBroadcastSubscribe != 'function') {
-        throw new Error('Unexpected broadcast_subscribe');
-      }
-      this._onBroadcastSubscribe(request);
       break;
 
     default:
