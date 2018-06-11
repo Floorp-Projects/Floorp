@@ -724,13 +724,16 @@ dtls_FragmentHandshake(sslSocket *ss, DTLSQueuedMessage *msg)
         PORT_Assert(end <= contentLen);
         fragmentLen = PR_MIN(end, contentLen) - fragmentOffset;
 
-        /* Reduce to the space remaining in the MTU.  Allow for any existing
-         * messages, record expansion, and the handshake header. */
+        /* Limit further by the record size limit.  Account for the header. */
+        fragmentLen = PR_MIN(fragmentLen,
+                             msg->cwSpec->recordSizeLimit - DTLS_HS_HDR_LEN);
+
+        /* Reduce to the space remaining in the MTU. */
         fragmentLen = PR_MIN(fragmentLen,
                              ss->ssl3.mtu -           /* MTU estimate. */
-                                 ss->pendingBuf.len - /* Less unsent records. */
+                                 ss->pendingBuf.len - /* Less any unsent records. */
                                  DTLS_MAX_EXPANSION - /* Allow for expansion. */
-                                 DTLS_HS_HDR_LEN);    /* + handshake header. */
+                                 DTLS_HS_HDR_LEN);    /* And the handshake header. */
         PORT_Assert(fragmentLen > 0 || fragmentOffset == 0);
 
         /* Make totally sure that we will fit in the buffer. This should be

@@ -410,7 +410,7 @@ bool TlsRecordFilter::Unprotect(const TlsRecordHeader& header,
 bool TlsRecordFilter::Protect(const TlsRecordHeader& header,
                               uint8_t inner_content_type,
                               const DataBuffer& plaintext,
-                              DataBuffer* ciphertext) {
+                              DataBuffer* ciphertext, size_t padding) {
   if (!cipher_spec_ || header.content_type() != kTlsApplicationDataType) {
     *ciphertext = plaintext;
     return true;
@@ -418,8 +418,10 @@ bool TlsRecordFilter::Protect(const TlsRecordHeader& header,
   if (g_ssl_gtest_verbose) {
     std::cerr << "protect: " << header.sequence_number() << std::endl;
   }
-  DataBuffer padded = plaintext;
-  padded.Write(padded.len(), inner_content_type, 1);
+  DataBuffer padded;
+  padded.Allocate(plaintext.len() + 1 + padding);
+  size_t offset = padded.Write(0, plaintext.data(), plaintext.len());
+  padded.Write(offset, inner_content_type, 1);
   return cipher_spec_->Protect(header, padded, ciphertext);
 }
 
