@@ -601,6 +601,12 @@
         },
         "PreventInstalls": {
           "type": "boolean"
+        },
+        "Remove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
