@@ -590,7 +590,9 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
                                   ParentLoadInfoForwarderArgs* aForwarderArgsOut)
 {
   if (!aLoadInfo) {
-    *aForwarderArgsOut = ParentLoadInfoForwarderArgs(false, void_t());
+    *aForwarderArgsOut = ParentLoadInfoForwarderArgs(false, void_t(),
+                                                     nsILoadInfo::TAINTING_BASIC,
+                                                     false);
     return;
   }
 
@@ -600,9 +602,14 @@ LoadInfoToParentLoadInfoForwarder(nsILoadInfo* aLoadInfo,
     ipcController = controller.ref().ToIPC();
   }
 
+  uint32_t tainting = nsILoadInfo::TAINTING_BASIC;
+  Unused << aLoadInfo->GetTainting(&tainting);
+
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
     aLoadInfo->GetAllowInsecureRedirectToDataURI(),
-    ipcController
+    ipcController,
+    tainting,
+    aLoadInfo->GetServiceWorkerTaintingSynthesized()
   );
 }
 
@@ -625,6 +632,13 @@ MergeParentLoadInfoForwarder(ParentLoadInfoForwarderArgs const& aForwarderArgs,
   if (controller.type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
     aLoadInfo->SetController(
       ServiceWorkerDescriptor(controller.get_IPCServiceWorkerDescriptor()));
+  }
+
+  if (aForwarderArgs.serviceWorkerTaintingSynthesized()) {
+    aLoadInfo->SynthesizeServiceWorkerTainting(
+      static_cast<LoadTainting>(aForwarderArgs.tainting()));
+  } else {
+    aLoadInfo->MaybeIncreaseTainting(aForwarderArgs.tainting());
   }
 
   return NS_OK;
