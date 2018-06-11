@@ -31,6 +31,30 @@ const { ORDERED_PROPS } = require("devtools/client/accessibility/constants");
 Services.prefs.setBoolPref("devtools.accessibility.enabled", true);
 
 /**
+ * Enable accessibility service and wait for a11y init event.
+ * @return {Object}  instance of accessibility service.
+ */
+async function initA11y() {
+  if (Services.appinfo.accessibilityEnabled) {
+    return Cc["@mozilla.org/accessibilityService;1"].getService(
+      Ci.nsIAccessibilityService);
+  }
+
+  const initPromise = new Promise(resolve => {
+    const observe = () => {
+      Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
+      resolve();
+    };
+    Services.obs.addObserver(observe, "a11y-init-or-shutdown");
+  });
+
+  const a11yService = Cc["@mozilla.org/accessibilityService;1"].getService(
+    Ci.nsIAccessibilityService);
+  await initPromise;
+  return a11yService;
+}
+
+/**
  * Wait for accessibility service to shut down. We consider it shut down when
  * an "a11y-init-or-shutdown" event is received with a value of "0".
  */
@@ -83,8 +107,11 @@ async function addTestTab(url) {
   let doc = win.document;
   let store = win.view.store;
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    doc.getElementById("accessibility-enable-button"), win);
+  const enableButton = doc.getElementById("accessibility-enable-button");
+  // If enable button is not found, asume the tool is already enabled.
+  if (enableButton) {
+    EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
+  }
 
   await waitUntilState(store, state =>
     state.accessibles.size === 1 && state.details.accessible &&
@@ -110,12 +137,13 @@ async function addTestTab(url) {
  * cleanup function to make sure that the panel is still present.
  */
 async function disableAccessibilityInspector(env) {
-  let { doc, win, panel } = env;
+  const { doc, win, panel } = env;
   // Disable accessibility service through the panel and wait for the shutdown
   // event.
-  let shutdown = panel._front.once("shutdown");
-  EventUtils.sendMouseEvent({ type: "click" },
-    doc.getElementById("accessibility-disable-button"), win);
+  const shutdown = panel.front.once("shutdown");
+  const disableButton = await BrowserTestUtils.waitForCondition(() =>
+    doc.getElementById("accessibility-disable-button"), "Wait for the disable button.");
+  EventUtils.sendMouseEvent({ type: "click" }, disableButton, win);
   await shutdown;
 }
 

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../shared/test/shared-head.js */
-/* import-globals-from ../../shared/test/test-actor-registry.js */
 /* import-globals-from ../../inspector/test/shared-head.js */
 "use strict";
 
@@ -17,11 +16,6 @@ Services.scriptloader.loadSubScript(
 // SimpleTest.registerCleanupFunction(() => {
 //   Services.prefs.clearUserPref("devtools.debugger.log");
 // });
-
-// Import helpers registering the test-actor in remote targets
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this);
 
 // Import helpers for the inspector that are also shared with others
 Services.scriptloader.loadSubScript(
