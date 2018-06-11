@@ -493,7 +493,7 @@ if AUTOMATION:
         "--show-output",
         "--show-cmd",
         "--failed-only",
-        "--output-file={}/jstests.fail.txt".format(env.get('MOZ_UPLOAD_DIR', '/tmp'))
+        "--output-file={}/jstests.fail.txt".format(env.get('MOZ_UPLOAD_DIR', '/tmp')),
         env.get('JSTESTS_EXTRA_ARGS', ''))
     env['JITTEST_EXTRA_ARGS'] = " ".join(
         "--write-failures={}/jit-tests.fail.txt".format(env.get('MOZ_UPLOAD_DIR', '/tmp')),
