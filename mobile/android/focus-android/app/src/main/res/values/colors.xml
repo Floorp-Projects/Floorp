@@ -52,7 +52,7 @@
     <color name="dialogAccent">@color/photonBlue50</color>
 
     <color name="colorSession">@color/photonInk80</color>
-    <color name="colorActiveSession">#e6202340</color>
+    <color name="colorActiveSession">#353852</color>
     <color name="colorAction">@color/photonBlue50</color>
 
     <color name="add_to_homescreen_text">#B3FFFFFF</color>
