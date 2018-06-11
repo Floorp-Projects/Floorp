@@ -197,12 +197,25 @@ public:
     return mCompositionBounds.Size() / GetZoom();
   }
 
-  CSSRect CalculateCompositedRectInCssPixels() const
+  /*
+   * Calculate the composition bounds of this frame in the CSS pixels of
+   * the content surrounding the scroll frame. (This can be thought of as
+   * "parent CSS" pixels).
+   * Note that it does not make to ask for the composition bounds in the
+   * CSS pixels of the scrolled content (that is, regular CSS pixels),
+   * because the origin of the composition bounds is not meaningful in that
+   * coordinate space. (The size is, use CalculateCompositedSizeInCssPixels()
+   * for that.)
+   */
+  CSSRect CalculateCompositionBoundsInCssPixelsOfSurroundingContent() const
   {
     if (GetZoom() == CSSToParentLayerScale2D(0, 0)) {
       return CSSRect();  // avoid division by zero
     }
-    return mCompositionBounds / GetZoom();
+    // The CSS pixels of the scrolled content and the CSS pixels of the
+    // surrounding content only differ if the scrolled content is rendered
+    // at a higher resolution, and the difference is the resolution.
+    return mCompositionBounds / GetZoom() * CSSToCSSScale{mPresShellResolution};
   }
 
   CSSSize CalculateBoundedCompositedSizeInCssPixels() const

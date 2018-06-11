@@ -210,10 +210,10 @@ SetDisplayPortMargins(nsIPresShell* aPresShell,
         aContent->GetPrimaryFrame(), nsLayoutUtils::RepaintMode::Repaint);
   }
 
-  CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
+  CSSSize baseSize = aMetrics.CalculateCompositedSizeInCssPixels();
   nsRect base(0, 0,
-              baseCSS.Width() * nsPresContext::AppUnitsPerCSSPixel(),
-              baseCSS.Height() * nsPresContext::AppUnitsPerCSSPixel());
+              baseSize.width * nsPresContext::AppUnitsPerCSSPixel(),
+              baseSize.height * nsPresContext::AppUnitsPerCSSPixel());
   nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
 }
 

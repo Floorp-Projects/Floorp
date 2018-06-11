@@ -31,7 +31,8 @@ var watchID;
 var times = 0;
 
 function errorCallback(err) {
-  is(err.code, err.TIMEOUT, "ensure error is a timeout.");
+  ok(err.code === err.TIMEOUT ||
+     err.code === err.POSITION_UNAVAILABLE, `check error code: ${err.code}`);
 
   times++;
   isnot(times, 0, "times should be nonzero");
