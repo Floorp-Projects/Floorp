@@ -426,12 +426,8 @@ var PushServiceHttp2 = {
     return serverURI.scheme == "https";
   },
 
-  connect: function(subscriptions, broadcastListeners) {
+  connect: function(subscriptions) {
     this.startConnections(subscriptions);
-  },
-
-  sendSubscribeBroadcast: async function(serviceId, version) {
-    // Not implemented yet
   },
 
   isConnected: function() {
