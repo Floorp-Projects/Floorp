@@ -4,16 +4,24 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const {
   UPDATE_SHOW_GRID_AREAS,
   UPDATE_SHOW_GRID_LINE_NUMBERS,
   UPDATE_SHOW_INFINITE_LINES
 } = require("../actions/index");
 
-const INITIAL_HIGHLIGHTER_SETTINGS = {
-  showGridAreasOverlay: false,
-  showGridLineNumbers: false,
-  showInfiniteLines: false,
+const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
+const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
+const SHOW_INFINITE_LINES = "devtools.gridinspector.showInfiniteLines";
+
+const INITIAL_HIGHLIGHTER_SETTINGS = () => {
+  return {
+    showGridAreasOverlay: Services.prefs.getBoolPref(SHOW_GRID_AREAS),
+    showGridLineNumbers: Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS),
+    showInfiniteLines: Services.prefs.getBoolPref(SHOW_INFINITE_LINES),
+  };
 };
 
 const reducers = {
@@ -38,7 +46,7 @@ const reducers = {
 
 };
 
-module.exports = function(highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS, action) {
+module.exports = function(highlighterSettings = INITIAL_HIGHLIGHTER_SETTINGS(), action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return highlighterSettings;
