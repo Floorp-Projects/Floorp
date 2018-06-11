@@ -18,11 +18,11 @@ abstract class EngineSession : Observable<EngineSession.Observer> by registry {
      * Interface to be implemented by classes that want to observe this engine session.
      */
     interface Observer {
-        fun onLocationChange(url: String)
-        fun onProgress(progress: Int)
-        fun onLoadingStateChange(loading: Boolean)
-        fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)
-        fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null)
+        fun onLocationChange(url: String) = Unit
+        fun onProgress(progress: Int) = Unit
+        fun onLoadingStateChange(loading: Boolean) = Unit
+        fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null) = Unit
+        fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null) = Unit
     }
 
     /**

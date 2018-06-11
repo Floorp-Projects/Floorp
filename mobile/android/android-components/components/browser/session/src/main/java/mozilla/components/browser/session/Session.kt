@@ -21,13 +21,13 @@ class Session(
      * Interface to be implemented by classes that want to observe a session.
      */
     interface Observer {
-        fun onUrlChanged()
-        fun onProgress()
-        fun onLoadingStateChanged()
-        fun onNavigationStateChanged()
-        fun onSearch()
-        fun onSecurityChanged()
-        fun onCustomTabConfigChanged() { }
+        fun onUrlChanged() = Unit
+        fun onProgress() = Unit
+        fun onLoadingStateChanged() = Unit
+        fun onNavigationStateChanged() = Unit
+        fun onSearch() = Unit
+        fun onSecurityChanged() = Unit
+        fun onCustomTabConfigChanged() = Unit
     }
 
     /**
