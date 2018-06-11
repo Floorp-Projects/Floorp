@@ -14,27 +14,28 @@
 
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-const CONTENT_WIN = typeof(window) != "undefined" ? window : content.window;
+const CONTENT_WIN = typeof(window) != "undefined" ? window : this;
 
 const L10N_ATTRIBUTES = ["data-localization", "data-localization-region"];
 
-let mutationObserver = new CONTENT_WIN.MutationObserver(function onMutation(mutations) {
-  for (let mutation of mutations) {
-    if (!mutation.target.hasAttribute(mutation.attributeName)) {
-      // The attribute was removed in the meantime.
-      continue;
-    }
-    FormAutofillUtils.localizeAttributeForElement(mutation.target, mutation.attributeName);
-  }
-});
+// eslint-disable-next-line mozilla/balanced-listeners
+CONTENT_WIN.addEventListener("DOMContentLoaded", function onDCL(evt) {
+  let doc = evt.target;
+  FormAutofillUtils.localizeMarkup(doc);
 
-CONTENT_WIN.document.addEventListener("DOMContentLoaded", function onDCL() {
-  FormAutofillUtils.localizeMarkup(CONTENT_WIN.document);
-  mutationObserver.observe(CONTENT_WIN.document, {
+  let mutationObserver = new doc.ownerGlobal.MutationObserver(function onMutation(mutations) {
+    for (let mutation of mutations) {
+      if (!mutation.target.hasAttribute(mutation.attributeName)) {
+        // The attribute was removed in the meantime.
+        continue;
+      }
+      FormAutofillUtils.localizeAttributeForElement(mutation.target, mutation.attributeName);
+    }
+  });
+
+  mutationObserver.observe(doc, {
     attributes: true,
     attributeFilter: L10N_ATTRIBUTES,
     subtree: true,
   });
-}, {
-  once: true,
 });

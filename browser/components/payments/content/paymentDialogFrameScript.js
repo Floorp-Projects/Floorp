@@ -62,12 +62,6 @@ let PaymentFrameScript = {
     }
   },
 
-  setupL10n() {
-    // Until we have bug 1446164 and bug 1407418 we use form autofill's temporary
-    // shim for data-localization* attributes.
-    Services.scriptloader.loadSubScript("chrome://formautofill/content/l10n.js");
-  },
-
   /**
    * Expose privileged utility functions to the unprivileged page.
    */
@@ -99,7 +93,6 @@ let PaymentFrameScript = {
     let {messageType} = detail;
     if (messageType == "initializeRequest") {
       this.setupContentConsole();
-      this.setupL10n();
       this.exposeUtilityFunctions();
     }
     this.log.debug("sendToChrome:", messageType, detail);

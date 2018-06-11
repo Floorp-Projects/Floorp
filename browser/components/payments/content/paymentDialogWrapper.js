@@ -193,6 +193,9 @@ var paymentDialogWrapper = {
     this.mm = frame.frameLoader.messageManager;
     this.mm.addMessageListener("paymentContentToChrome", this);
     this.mm.loadFrameScript("chrome://payments/content/paymentDialogFrameScript.js", true);
+    // Until we have bug 1446164 and bug 1407418 we use form autofill's temporary
+    // shim for data-localization* attributes.
+    this.mm.loadFrameScript("chrome://formautofill/content/l10n.js", true);
     if (AppConstants.platform == "win") {
       this.frame.setAttribute("selectmenulist", "ContentSelectDropdown-windows");
     }
