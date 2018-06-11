@@ -379,6 +379,17 @@ function testSuspendResumeEventLoop() {
   }
 }
 
+function testResumeInStateChangeForResumeCallback() {
+  // Regression test for bug 1468085.
+  var ac = new AudioContext;
+  ac.onstatechange = function() {
+    ac.resume().then(() => {
+        ok(true, "resume promise resolved as expected.");
+        finish();
+    });
+  }
+}
+
 var remaining = 0;
 function finish() {
   remaining--;
@@ -395,7 +406,8 @@ addLoadEvent(function() {
     testScriptProcessNodeSuspended,
     testMultiContextOutput,
     testMultiContextInput,
-    testSuspendResumeEventLoop
+    testSuspendResumeEventLoop,
+    testResumeInStateChangeForResumeCallback
   ];
 
   // See Bug 1305136, many intermittent failures on Linux
