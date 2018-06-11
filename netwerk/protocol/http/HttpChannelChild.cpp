@@ -1808,6 +1808,10 @@ HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
 {
   LOG(("HttpChannelChild::BeginNonIPCRedirect [this=%p]\n", this));
 
+  // This method is only used by child-side service workers.  It should not be
+  // used by new code.  We want to remove it in the future.
+  MOZ_DIAGNOSTIC_ASSERT(mSynthesizedResponse);
+
   // If the response has been redirected, propagate all the URLs to content.
   // Thus, the exact value of the redirect flag does not matter as long as it's
   // not REDIRECT_INTERNAL.
@@ -1831,6 +1835,20 @@ HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
     if (mSecurityInfo && channelChild) {
       HttpChannelChild* httpChannelChild = static_cast<HttpChannelChild*>(channelChild.get());
       httpChannelChild->OverrideSecurityInfoForNonIPCRedirect(mSecurityInfo);
+    }
+
+    // Normally we don't propagate the LoadInfo's service worker tainting
+    // synthesis flag on redirect.  A real redirect normally will want to allow
+    // normal tainting to proceed from its starting taint.  For this particular
+    // redirect, though, we are performing a redirect to communicate the URL of
+    // the service worker synthetic response itself.  This redirect still represents
+    // the synthetic response, so we must preserve the flag.
+    if (mLoadInfo && mLoadInfo->GetServiceWorkerTaintingSynthesized()) {
+      nsCOMPtr<nsILoadInfo> newChannelLoadInfo;
+      Unused << newChannel->GetLoadInfo(getter_AddRefs(newChannelLoadInfo));
+      if (newChannelLoadInfo) {
+        newChannelLoadInfo->SynthesizeServiceWorkerTainting(mLoadInfo->GetTainting());
+      }
     }
 
     nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();

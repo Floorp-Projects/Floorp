@@ -438,7 +438,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     void switchToPrologue() { current = &prologue; }
     bool inPrologue() const { return current == &prologue; }
 
-    SrcNotesVector& notes() const { return current->notes; }
+    SrcNotesVector& notes() const {
+        // Prologue shouldn't have source notes.
+        MOZ_ASSERT(!inPrologue());
+        return current->notes;
+    }
     ptrdiff_t lastNoteOffset() const { return current->lastNoteOffset; }
     unsigned currentLine() const { return current->currentLine; }
 

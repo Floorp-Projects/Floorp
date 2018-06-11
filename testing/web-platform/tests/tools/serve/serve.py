@@ -160,8 +160,11 @@ class HtmlWrapperHandler(WrapperHandler):
             if value == b"long":
                 return '<meta name="timeout" content="long">'
         if key == b"script":
-            attribute = value.decode('utf-8').replace('"', "&quot;").replace(">", "&gt;")
+            attribute = value.decode('utf-8').replace("&", "&amp;").replace('"', "&quot;")
             return '<script src="%s"></script>' % attribute
+        if key == b"title":
+            value = value.decode('utf-8').replace("&", "&amp;").replace("<", "&lt;")
+            return '<title>%s</title>' % value
         return None
 
 
@@ -454,7 +457,7 @@ def make_hosts_file(config, host):
     # for this context. These systems do not reserve any value for this
     # purpose, so the inavailability of the domains must be taken for granted.
     #
-    # https://github.com/w3c/web-platform-tests/issues/10560
+    # https://github.com/web-platform-tests/wpt/issues/10560
     if platform.uname()[0] == "Windows":
         for not_domain in config.not_domains_set:
             rv.append("0.0.0.0\t%s\n" % not_domain)
