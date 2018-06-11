@@ -1006,6 +1006,10 @@ public:
     CHECK_WRITING_MODE(aWritingMode);
     return mSize.height;
   }
+  nscoord Size(LogicalAxis aAxis, WritingMode aWM) const
+  {
+    return aAxis == eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
+  }
 
   nscoord Width(WritingMode aWritingMode) const
   {
@@ -1030,6 +1034,10 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     return mSize.height;
+  }
+  nscoord& Size(LogicalAxis aAxis, WritingMode aWM)
+  {
+    return aAxis == eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
   }
 
   /**
@@ -1224,6 +1232,14 @@ public:
     CHECK_WRITING_MODE(aWritingMode);
     return mMargin.bottom;
   }
+  nscoord Start(LogicalAxis aAxis, WritingMode aWM) const
+  {
+    return aAxis == eLogicalAxisInline ? IStart(aWM) : BStart(aWM);
+  }
+  nscoord End(LogicalAxis aAxis, WritingMode aWM) const
+  {
+    return aAxis == eLogicalAxisInline ? IEnd(aWM) : BEnd(aWM);
+  }
 
   nscoord& IStart(WritingMode aWritingMode) // inline-start margin
   {
@@ -1245,6 +1261,14 @@ public:
     CHECK_WRITING_MODE(aWritingMode);
     return mMargin.bottom;
   }
+  nscoord& Start(LogicalAxis aAxis, WritingMode aWM)
+  {
+    return aAxis == eLogicalAxisInline ? IStart(aWM) : BStart(aWM);
+  }
+  nscoord& End(LogicalAxis aAxis, WritingMode aWM)
+  {
+    return aAxis == eLogicalAxisInline ? IEnd(aWM) : BEnd(aWM);
+  }
 
   nscoord IStartEnd(WritingMode aWritingMode) const // inline margins
   {
@@ -1255,6 +1279,10 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     return mMargin.TopBottom();
+  }
+  nscoord StartEnd(LogicalAxis aAxis, WritingMode aWM) const
+  {
+    return aAxis == eLogicalAxisInline ? IStartEnd(aWM) : BStartEnd(aWM);
   }
 
   /*
