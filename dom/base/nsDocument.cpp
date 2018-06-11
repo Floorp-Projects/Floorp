@@ -248,6 +248,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
@@ -4192,9 +4193,13 @@ nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
     if (nsIPresShell* shell = GetShell()) {
       // Note that prepending here is necessary to make sure that html.css etc.
-      // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
-      // have an insertion point to match the order of
+      // does not override Firefox OS/Mobile's content.css sheet.
+      //
+      // Maybe we should have an insertion point to match the order of
       // nsDocumentViewer::CreateStyleSet though?
+      //
+      // FIXME(emilio): We probably should, randomly prepending stuff here is
+      // very prone to subtle bugs, behavior differences...
       shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet);
       shell->ApplicableStylesChanged();
     }
@@ -5391,6 +5396,12 @@ nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
   if (!shell || !shell->GetCanvasFrame()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
+  }
+
+  // We're about to insert random content here that will be rendered. We're
+  // going to need more than svg.css here...
+  if (IsSVGDocument()) {
+    AsSVGDocument()->EnsureNonSVGUserAgentStyleSheetsLoaded();
   }
 
   nsAutoScriptBlocker scriptBlocker;
