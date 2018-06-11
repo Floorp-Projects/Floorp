@@ -734,6 +734,10 @@ public:
   {
     mCompositorHitTestInfo = aHitTestInfo;
   }
+  nsDisplayCompositorHitTestInfo* GetCompositorHitTestInfo() const
+  {
+    return mCompositorHitTestInfo;
+  }
 
   /**
    * Builds a new nsDisplayCompositorHitTestInfo for the frame |aFrame| if
