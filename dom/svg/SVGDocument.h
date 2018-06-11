@@ -23,6 +23,7 @@ class SVGForeignObjectElement;
 class SVGDocument final : public XMLDocument
 {
   friend class SVGForeignObjectElement; // To call EnsureNonSVGUserAgentStyleSheetsLoaded
+  friend class nsIDocument; // Same reason.
 
 public:
   SVGDocument()
