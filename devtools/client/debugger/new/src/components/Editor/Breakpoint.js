@@ -78,15 +78,6 @@ class Breakpoint extends _react.Component {
     };
   }
 
-  shouldComponentUpdate(nextProps) {
-    const {
-      editor,
-      breakpoint,
-      selectedSource
-    } = this.props;
-    return editor !== nextProps.editor || breakpoint.disabled !== nextProps.breakpoint.disabled || breakpoint.hidden !== nextProps.breakpoint.hidden || breakpoint.condition !== nextProps.breakpoint.condition || breakpoint.loading !== nextProps.breakpoint.loading || selectedSource !== nextProps.selectedSource;
-  }
-
   componentDidMount() {
     this.addBreakpoint();
   }
