@@ -11457,60 +11457,48 @@ BytecodeEmitter::finishTakingSrcNotes(uint32_t* out)
 {
     MOZ_ASSERT(current == &main);
 
-    unsigned prologueCount = prologue.notes.length();
-    if (prologueCount && prologue.currentLine != firstLine) {
-        switchToPrologue();
-        if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(firstLine)))
-            return false;
-        switchToMain();
-    } else {
-        /*
-         * Either no prologue srcnotes, or no line number change over prologue.
-         * We don't need a SRC_SETLINE, but we may need to adjust the offset
-         * of the first main note, by adding to its delta and possibly even
-         * prepending SRC_XDELTA notes to it to account for prologue bytecodes
-         * that came at and after the last annotated bytecode.
-         */
-        ptrdiff_t offset = prologueOffset() - prologue.lastNoteOffset;
-        MOZ_ASSERT(offset >= 0);
-        if (offset > 0 && main.notes.length() != 0) {
-            /* NB: Use as much of the first main note's delta as we can. */
-            jssrcnote* sn = main.notes.begin();
-            ptrdiff_t delta = SN_IS_XDELTA(sn)
-                            ? SN_XDELTA_MASK - (*sn & SN_XDELTA_MASK)
-                            : SN_DELTA_MASK - (*sn & SN_DELTA_MASK);
-            if (offset < delta)
-                delta = offset;
-            for (;;) {
-                if (!addToSrcNoteDelta(sn, delta))
-                    return false;
-                offset -= delta;
-                if (offset == 0)
-                    break;
-                delta = Min(offset, SN_XDELTA_MASK);
-                sn = main.notes.begin();
-            }
+    MOZ_ASSERT(prologue.notes.length() == 0);
+    MOZ_ASSERT(prologue.lastNoteOffset == 0);
+
+    // We may need to adjust the offset of the first main note, by adding to
+    // its delta and possibly even prepending SRC_XDELTA notes to it to account
+    // for prologue bytecodes.
+    ptrdiff_t offset = prologueOffset();
+    MOZ_ASSERT(offset >= 0);
+    if (offset > 0 && main.notes.length() != 0) {
+        // NB: Use as much of the first main note's delta as we can.
+        jssrcnote* sn = main.notes.begin();
+        ptrdiff_t delta = SN_IS_XDELTA(sn)
+                          ? SN_XDELTA_MASK - (*sn & SN_XDELTA_MASK)
+                          : SN_DELTA_MASK - (*sn & SN_DELTA_MASK);
+        if (offset < delta)
+            delta = offset;
+        for (;;) {
+            if (!addToSrcNoteDelta(sn, delta))
+                return false;
+            offset -= delta;
+            if (offset == 0)
+                break;
+            delta = Min(offset, SN_XDELTA_MASK);
+            sn = main.notes.begin();
         }
     }
 
-    // The prologue count might have changed, so we can't reuse prologueCount.
     // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
     // when the notes are copied to their final destination by copySrcNotes.
-    *out = prologue.notes.length() + main.notes.length() + 1;
+    *out = main.notes.length() + 1;
     return true;
 }
 
 void
 BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes)
 {
-    unsigned prologueCount = prologue.notes.length();
+    MOZ_ASSERT(prologue.notes.length() == 0);
     unsigned mainCount = main.notes.length();
-    unsigned totalCount = prologueCount + mainCount;
-    MOZ_ASSERT(totalCount == nsrcnotes - 1);
-    if (prologueCount)
-        PodCopy(destination, prologue.notes.begin(), prologueCount);
-    PodCopy(destination + prologueCount, main.notes.begin(), mainCount);
-    SN_MAKE_TERMINATOR(&destination[totalCount]);
+    // nsrcnotes includes SN_MAKE_TERMINATOR in addition to main.notes.
+    MOZ_ASSERT(mainCount == nsrcnotes - 1);
+    PodCopy(destination, main.notes.begin(), mainCount);
+    SN_MAKE_TERMINATOR(&destination[mainCount]);
 }
 
 void
