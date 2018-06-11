@@ -83,14 +83,6 @@ public:
   // when a separate request is made with the same security properties.
   already_AddRefed<nsILoadInfo> CloneForNewRequest() const;
 
-  // The service worker and fetch specifications require returning the
-  // exact tainting level of the Response passed to FetchEvent.respondWith().
-  // This method allows us to override the tainting level in that case.
-  //
-  // NOTE: This should not be used outside of service worker code! Use
-  //       nsILoadInfo::MaybeIncreaseTainting() instead.
-  void SynthesizeServiceWorkerTainting(LoadTainting aTainting);
-
   void SetIsPreflight();
   void SetUpgradeInsecureRequests();
   void SetBrowserUpgradeInsecureRequests();
