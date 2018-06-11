@@ -58,6 +58,7 @@ public class WebViewProvider {
                     new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.useContentProcessHint(true);
             runtimeSettingsBuilder.javaCrashReportingEnabled(true);
+            runtimeSettingsBuilder.nativeCrashReportingEnabled(true);
             geckoRuntime = GeckoRuntime.create(context.getApplicationContext(), runtimeSettingsBuilder.build());
         }
     }
@@ -69,21 +70,18 @@ public class WebViewProvider {
         private boolean canGoBack;
         private boolean canGoForward;
         private boolean isSecure;
-        private final GeckoSession geckoSession;
+        private GeckoSession geckoSession;
         private String webViewTitle;
 
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
-
-            final GeckoSessionSettings settings = new GeckoSessionSettings();
-            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true);
-            settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
-
-            geckoSession = new GeckoSession(settings);
-
             PreferenceManager.getDefaultSharedPreferences(context)
                     .registerOnSharedPreferenceChangeListener(this);
+            geckoSession = createGeckoSession();
+            openAndSetGeckoSession();
+        }
 
+        private void openAndSetGeckoSession() {
             applyAppSettings();
             updateBlocking();
 
@@ -92,12 +90,21 @@ public class WebViewProvider {
             geckoSession.setNavigationDelegate(createNavigationDelegate());
             geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
             geckoSession.setPromptDelegate(createPromptDelegate());
-            setSession(geckoSession, geckoRuntime);
+            geckoSession.open(geckoRuntime);
+            setSession(geckoSession);
+        }
+
+        private GeckoSession createGeckoSession() {
+            final GeckoSessionSettings settings = new GeckoSessionSettings();
+            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true);
+            settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
+
+            return new GeckoSession(settings);
         }
 
         @Override
         public void setCallback(Callback callback) {
-            this.callback =  callback;
+            this.callback = callback;
         }
 
         @Override
@@ -285,9 +292,11 @@ public class WebViewProvider {
 
                 @Override
                 public void onCrash(GeckoSession session) {
-                    Log.i(TAG, "Crashed, reopening session");
-                    session.open(geckoRuntime);
-                    session.loadUri(currentUrl);
+                    Log.i(TAG, "Crashed, opening new session");
+                    geckoSession.close();
+                    geckoSession = createGeckoSession();
+                    openAndSetGeckoSession();
+                    geckoSession.loadUri(currentUrl);
                 }
 
                 @Override
@@ -356,7 +365,7 @@ public class WebViewProvider {
                 }
 
                 public void onCanGoBack(GeckoSession session, boolean canGoBack) {
-                    GeckoWebView.this.canGoBack =  canGoBack;
+                    GeckoWebView.this.canGoBack = canGoBack;
                 }
 
                 public void onCanGoForward(GeckoSession session, boolean canGoForward) {
@@ -404,7 +413,7 @@ public class WebViewProvider {
         }
 
         private GeckoSession.TrackingProtectionDelegate createTrackingProtectionDelegate() {
-           return new GeckoSession.TrackingProtectionDelegate() {
+            return new GeckoSession.TrackingProtectionDelegate() {
                 @Override
                 public void onTrackerBlocked(GeckoSession geckoSession, String s, int i) {
                     if (callback != null) {
