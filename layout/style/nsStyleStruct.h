@@ -2376,11 +2376,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   bool IsInnerTableStyle() const {
     return mozilla::StyleDisplay::TableCaption == mDisplay ||
            mozilla::StyleDisplay::TableCell == mDisplay ||
-           IsInternalTableStyleExceptCell();
-  }
-
-  bool IsInternalTableStyleExceptCell() const {
-    return mozilla::StyleDisplay::TableRow == mDisplay ||
+           mozilla::StyleDisplay::TableRow == mDisplay ||
            mozilla::StyleDisplay::TableRowGroup == mDisplay ||
            mozilla::StyleDisplay::TableHeaderGroup == mDisplay ||
            mozilla::StyleDisplay::TableFooterGroup == mDisplay ||
@@ -2408,11 +2404,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   static bool IsRubyDisplayType(mozilla::StyleDisplay aDisplay) {
     return mozilla::StyleDisplay::Ruby == aDisplay ||
-           IsInternalRubyDisplayType(aDisplay);
-  }
-
-  static bool IsInternalRubyDisplayType(mozilla::StyleDisplay aDisplay) {
-    return mozilla::StyleDisplay::RubyBase == aDisplay ||
+           mozilla::StyleDisplay::RubyBase == aDisplay ||
            mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
            mozilla::StyleDisplay::RubyText == aDisplay ||
            mozilla::StyleDisplay::RubyTextContainer == aDisplay;
@@ -2420,10 +2412,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   bool IsRubyDisplayType() const {
     return IsRubyDisplayType(mDisplay);
-  }
-
-  bool IsInternalRubyDisplayType() const {
-    return IsInternalRubyDisplayType(mDisplay);
   }
 
   bool IsOutOfFlowStyle() const {
@@ -2438,9 +2426,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   }
 
   bool IsContainPaint() const {
-    return (NS_STYLE_CONTAIN_PAINT & mContain) &&
-           !IsInternalRubyDisplayType() &&
-           !IsInternalTableStyleExceptCell();
+    return NS_STYLE_CONTAIN_PAINT & mContain;
   }
 
   /* Returns whether the element has the -moz-transform property
