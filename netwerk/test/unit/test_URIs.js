@@ -594,11 +594,26 @@ function check_nested_mutations()
   do_check_uri_eq(uri3, uri1);
 }
 
+function check_space_escaping()
+{
+  let uri = gIoService.newURI("data:text/plain,hello%20world#space hash");
+  Assert.equal(uri.spec, "data:text/plain,hello%20world#space%20hash");
+  uri = gIoService.newURI("data:text/plain,hello%20world#space%20hash");
+  Assert.equal(uri.spec, "data:text/plain,hello%20world#space%20hash");
+  uri = gIoService.newURI("data:text/plain,hello world#space%20hash");
+  Assert.equal(uri.spec, "data:text/plain,hello world#space%20hash");
+  uri = gIoService.newURI("data:text/plain,hello world#space hash");
+  Assert.equal(uri.spec, "data:text/plain,hello world#space%20hash");
+  uri = gIoService.newURI("http://example.com/test path#test path");
+  uri = gIoService.newURI("http://example.com/test%20path#test%20path");
+}
+
 // TEST MAIN FUNCTION
 // ------------------
 function run_test()
 {
   check_nested_mutations();
+  check_space_escaping();
 
   // UTF-8 check - From bug 622981
   // ASCII
