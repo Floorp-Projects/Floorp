@@ -7,6 +7,7 @@
     <color name="colorPrimaryDark">#6c3b6e</color>
     <color name="colorAccent">@color/photonMagenta70</color>
 
+    <color name="colorSettingsTint">#f9f9fa</color>
     <color name="colorAccentSettings">@color/photonBlue50</color>
 
     <color name="colorGradientStart">#ffa01142</color>
@@ -60,7 +61,7 @@
 
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
 
-    <color name="preference_row_selected">#414146</color>
+    <color name="preference_row_selected">#353852</color>
     <color name="preference_row_disabled">#B3313131</color>
 
     <color name="scrollbarThumb">#b2b2b2b2</color>
