@@ -1547,6 +1547,17 @@ HttpBaseChannel::GetIsTrackingResource(bool* aIsTrackingResource)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::OverrideTrackingResource(bool aIsTracking)
+{
+  LOG(("HttpBaseChannel::OverrideTrackingResource(%d) %p "
+       "mIsTrackingResource=%d",
+      (int) aIsTracking, this, (int) mIsTrackingResource));
+
+  mIsTrackingResource = aIsTracking;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetTransferSize(uint64_t *aTransferSize)
 {
   *aTransferSize = mTransferSize;
