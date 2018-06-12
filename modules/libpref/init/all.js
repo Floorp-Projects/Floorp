@@ -5122,11 +5122,13 @@ pref("memory.blob_report.stack_frames", 0);
 // observers (bug 780507).
 pref("dom.idle-observers-api.fuzz_time.disabled", true);
 
-// Minimum delay in milliseconds between network activity notifications (0 means
-// no notifications). The delay is the same for both download and upload, though
+// Minimum delay in milliseconds between I/O activity notifications (0 means
+// no notifications). I/O activity includes socket and disk files.
+//
+// The delay is the same for both read and write, though
 // they are handled separately. This pref is only read once at startup:
 // a restart is required to enable a new value.
-pref("network.activity.intervalMilliseconds", 0);
+pref("io.activity.intervalMilliseconds", 0);
 
 // If true, reuse the same global for (almost) everything loaded by the component
 // loader (JS components, JSMs, etc). This saves memory, but makes it possible
