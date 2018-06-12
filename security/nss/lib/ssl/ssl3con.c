@@ -1476,6 +1476,13 @@ ssl3_SetupBothPendingCipherSpecs(sslSocket *ss)
         goto loser;
     }
 
+    if (ssl3_ExtensionNegotiated(ss, ssl_record_size_limit_xtn)) {
+        ss->ssl3.prSpec->recordSizeLimit = PR_MIN(MAX_FRAGMENT_LENGTH,
+                                                  ss->opt.recordSizeLimit);
+        ss->ssl3.pwSpec->recordSizeLimit = PR_MIN(MAX_FRAGMENT_LENGTH,
+                                                  ss->xtnData.recordSizeLimit);
+    }
+
     ssl_ReleaseSpecWriteLock(ss); /*******************************/
     return SECSuccess;
 
@@ -2272,7 +2279,7 @@ ssl_ProtectNextRecord(sslSocket *ss, ssl3CipherSpec *spec, SSL3ContentType type,
     unsigned int spaceNeeded;
     SECStatus rv;
 
-    contentLen = PR_MIN(nIn, MAX_FRAGMENT_LENGTH);
+    contentLen = PR_MIN(nIn, spec->recordSizeLimit);
     spaceNeeded = contentLen + SSL3_BUFFER_FUDGE;
     if (spec->version >= SSL_LIBRARY_VERSION_TLS_1_1 &&
         spec->cipherDef->type == type_block) {
@@ -12147,6 +12154,11 @@ ssl3_GetCipherSpec(sslSocket *ss, SSL3Ciphertext *cText)
     return NULL;
 }
 
+/* MAX_EXPANSION is the amount by which a record might plausibly be expanded
+ * when protected.  It's the worst case estimate, so the sum of block cipher
+ * padding (up to 256 octets) and HMAC (48 octets for SHA-384). */
+#define MAX_EXPANSION (256 + 48)
+
 /* if cText is non-null, then decipher and check the MAC of the
  * SSL record from cText->buf (typically gs->inbuf)
  * into databuf (typically gs->buf), and any previous contents of databuf
@@ -12176,6 +12188,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     PRBool isTLS;
     DTLSEpoch epoch;
     ssl3CipherSpec *spec = NULL;
+    PRUint16 recordSizeLimit;
     PRBool outOfOrderSpec = PR_FALSE;
     SSL3ContentType rType;
     sslBuffer *plaintext = &ss->gs.buf;
@@ -12230,12 +12243,20 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
         return SECFailure;
     }
 
-    if (plaintext->space < MAX_FRAGMENT_LENGTH) {
-        rv = sslBuffer_Grow(plaintext, MAX_FRAGMENT_LENGTH + 2048);
+    recordSizeLimit = spec->recordSizeLimit;
+    if (cText->buf->len > recordSizeLimit + MAX_EXPANSION) {
+        ssl_ReleaseSpecReadLock(ss); /*****************************/
+        SSL3_SendAlert(ss, alert_fatal, record_overflow);
+        PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
+        return SECFailure;
+    }
+
+    if (plaintext->space < recordSizeLimit + MAX_EXPANSION) {
+        rv = sslBuffer_Grow(plaintext, recordSizeLimit + MAX_EXPANSION);
         if (rv != SECSuccess) {
             ssl_ReleaseSpecReadLock(ss); /*************************/
             SSL_DBG(("%d: SSL3[%d]: HandleRecord, tried to get %d bytes",
-                     SSL_GETPID(), ss->fd, MAX_FRAGMENT_LENGTH + 2048));
+                     SSL_GETPID(), ss->fd, recordSizeLimit + MAX_EXPANSION));
             /* sslBuffer_Grow has set a memory error code. */
             /* Perhaps we should send an alert. (but we have no memory!) */
             return SECFailure;
@@ -12294,7 +12315,10 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
         if (IS_DTLS(ss) ||
             (ss->sec.isServer &&
              ss->ssl3.hs.zeroRttIgnore == ssl_0rtt_ignore_trial)) {
-            /* Silently drop the packet */
+            /* Silently drop the packet unless we sent a fatal alert. */
+            if (ss->ssl3.fatalAlertSent) {
+                return SECFailure;
+            }
             return SECSuccess;
         }
 
@@ -12330,7 +12354,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     }
 
     /* Check the length of the plaintext. */
-    if (isTLS && plaintext->len > MAX_FRAGMENT_LENGTH) {
+    if (isTLS && plaintext->len > recordSizeLimit) {
         plaintext->len = 0;
         SSL3_SendAlert(ss, alert_fatal, record_overflow);
         PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);

@@ -939,9 +939,9 @@ static bool ErrorIsNonFatal(PRErrorCode code) {
 }
 
 void TlsAgent::SendData(size_t bytes, size_t blocksize) {
-  uint8_t block[4096];
+  uint8_t block[16385];  // One larger than the maximum record size.
 
-  ASSERT_LT(blocksize, sizeof(block));
+  ASSERT_LE(blocksize, sizeof(block));
 
   while (bytes) {
     size_t tosend = std::min(blocksize, bytes);
