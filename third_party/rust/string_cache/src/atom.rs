@@ -12,7 +12,6 @@
 use phf_shared;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::cmp::Ordering::{self, Equal};
 use std::fmt;
