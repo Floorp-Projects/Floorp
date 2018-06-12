@@ -138,12 +138,14 @@ sftkdb_decodeCipherText(SECItem *cipherText, sftkCipherValue *cipherValue)
     SFTKDBEncryptedDataInfo edi;
     SECStatus rv;
 
+    PORT_Assert(cipherValue);
+    cipherValue->arena = NULL;
+    cipherValue->param = NULL;
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
         return SECFailure;
     }
-    cipherValue->arena = NULL;
-    cipherValue->param = NULL;
 
     rv = SEC_QuickDERDecodeItem(arena, &edi, sftkdb_EncryptedDataInfoTemplate,
                                 cipherText);

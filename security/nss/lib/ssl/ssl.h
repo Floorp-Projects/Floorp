@@ -243,6 +243,28 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  */
 #define SSL_ENABLE_0RTT_DATA 33
 
+/* Sets a limit to the size of encrypted records (see
+ * draft-ietf-tls-record-limit). This is the value that is advertised to peers,
+ * not a limit on the size of records that will be created.  Setting this value
+ * reduces the size of records that will be received (not sent).
+ *
+ * This limit applies to the plaintext, but the records that appear on the wire
+ * will be bigger.  This doesn't include record headers, IVs, block cipher
+ * padding, and authentication tags or MACs.
+ *
+ * NSS always advertises the record size limit extension.  If this option is not
+ * set, the extension will contain the maximum allowed size for the selected TLS
+ * version (currently this is 16384 or 2^14 for TLS 1.2 and lower and 16385 for
+ * TLS 1.3).
+ *
+ * By default, NSS creates records that are the maximum size possible, using all
+ * the data that was written by the application.  Writes larger than the maximum
+ * are split into maximum sized records, and any remainder (unless
+ * SSL_CBC_RANDOM_IV is enabled and active).  If a peer advertises a record size
+ * limit then that value is used instead.
+ */
+#define SSL_RECORD_SIZE_LIMIT 34
+
 /* Enables TLS 1.3 compatibility mode.  In this mode, the client includes a fake
  * session ID in the handshake and sends a ChangeCipherSpec.  A server will
  * always use the setting chosen by the client, so the value of this option has
