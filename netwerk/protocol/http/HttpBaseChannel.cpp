@@ -472,21 +472,6 @@ HttpBaseChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 NS_IMETHODIMP
 HttpBaseChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-  bool synthesized = false;
-  nsresult rv = GetResponseSynthesized(&synthesized);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If this channel is marked as awaiting a synthesized response,
-  // modifying certain load flags can interfere with the implementation
-  // of the network interception logic. This takes care of a couple
-  // known cases that attempt to mark channels as anonymous due
-  // to cross-origin redirects; since the response is entirely synthesized
-  // this is an unnecessary precaution.
-  // This should be removed when bug 1201683 is fixed.
-  if (synthesized && aLoadFlags != mLoadFlags) {
-    aLoadFlags &= ~LOAD_ANONYMOUS;
-  }
-
   mLoadFlags = aLoadFlags;
   return NS_OK;
 }

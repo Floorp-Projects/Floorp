@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.550';
-var pdfjsBuild = '76337fdc';
+var pdfjsVersion = '2.0.575';
+var pdfjsBuild = '2030d171';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -293,7 +293,7 @@ var WorkerMessageHandler = {
       }
       testMessageProcessed = true;
       if (!(data instanceof Uint8Array)) {
-        handler.send('test', 'main', false);
+        handler.send('test', false);
         return;
       }
       var supportTransfers = data[0] === 255;
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.550';
+    let workerVersion = '2.0.575';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -526,7 +526,6 @@ var WorkerMessageHandler = {
           throw new Error('Worker was terminated');
         }
         pdfManager = newPdfManager;
-        handler.send('PDFManagerReady', null);
         pdfManager.onLoadedStream().then(function (stream) {
           handler.send('DataLoaded', { length: stream.bytes.byteLength });
         });
@@ -534,16 +533,12 @@ var WorkerMessageHandler = {
     }
     handler.on('GetPage', function wphSetupGetPage(data) {
       return pdfManager.getPage(data.pageIndex).then(function (page) {
-        var rotatePromise = pdfManager.ensure(page, 'rotate');
-        var refPromise = pdfManager.ensure(page, 'ref');
-        var userUnitPromise = pdfManager.ensure(page, 'userUnit');
-        var viewPromise = pdfManager.ensure(page, 'view');
-        return Promise.all([rotatePromise, refPromise, userUnitPromise, viewPromise]).then(function (results) {
+        return Promise.all([pdfManager.ensure(page, 'rotate'), pdfManager.ensure(page, 'ref'), pdfManager.ensure(page, 'userUnit'), pdfManager.ensure(page, 'view')]).then(function ([rotate, ref, userUnit, view]) {
           return {
-            rotate: results[0],
-            ref: results[1],
-            userUnit: results[2],
-            view: results[3]
+            rotate,
+            ref,
+            userUnit,
+            view
           };
         });
       });
@@ -1369,12 +1364,6 @@ var Util = function UtilClosure() {
     var romanStr = romanBuf.join('');
     return lowerCase ? romanStr.toLowerCase() : romanStr;
   };
-  Util.appendToArray = function Util_appendToArray(arr1, arr2) {
-    Array.prototype.push.apply(arr1, arr2);
-  };
-  Util.prependToArray = function Util_prependToArray(arr1, arr2) {
-    Array.prototype.unshift.apply(arr1, arr2);
-  };
   Util.extendObj = function extendObj(obj1, obj2) {
     for (var key in obj2) {
       obj1[key] = obj2[key];
@@ -1386,20 +1375,6 @@ var Util = function UtilClosure() {
     for (var prop in prototype) {
       sub.prototype[prop] = prototype[prop];
     }
-  };
-  Util.loadScript = function Util_loadScript(src, callback) {
-    var script = document.createElement('script');
-    var loaded = false;
-    script.setAttribute('src', src);
-    if (callback) {
-      script.onload = function () {
-        if (!loaded) {
-          callback();
-        }
-        loaded = true;
-      };
-    }
-    document.getElementsByTagName('head')[0].appendChild(script);
   };
   return Util;
 }();
@@ -8789,7 +8764,7 @@ var StreamsSequenceStream = function StreamsSequenceStreamClosure() {
     for (var i = 0, ii = this.streams.length; i < ii; i++) {
       var stream = this.streams[i];
       if (stream.getBaseStreams) {
-        _util.Util.appendToArray(baseStreams, stream.getBaseStreams());
+        baseStreams.push(...stream.getBaseStreams());
       }
     }
     return baseStreams;
