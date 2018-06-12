@@ -8,6 +8,7 @@ exclude =
     build/moz.configure/*.configure,
     build/pymake/,
     editor/libeditor/tests/browserscope/,
+    ipc/chromium/,
     gfx/angle/,
     gfx/harfbuzz,
     glx/skia/,
