@@ -35,22 +35,6 @@ class nsISupports;
 #define STATE_ATTRIBUTE "state_attribute"
 #define STATE_DATA "state_data"
 
-static
-nsresult
-GetPresContextFromEditor(TextEditor* aTextEditor, nsPresContext** aResult)
-{
-  if (NS_WARN_IF(!aResult) || NS_WARN_IF(!aTextEditor)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aResult = nullptr;
-  nsCOMPtr<nsIPresShell> presShell = aTextEditor->GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    return NS_ERROR_FAILURE;
-  }
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  presContext.forget(aResult);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
@@ -90,11 +74,10 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
 
-  RefPtr<nsPresContext> presContext;
-  nsresult rv =
-    GetPresContextFromEditor(textEditor, getter_AddRefs(presContext));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  RefPtr<nsPresContext> presContext = textEditor->GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return NS_ERROR_FAILURE;
+  }
 
   int32_t animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
@@ -140,10 +123,10 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get pres context
-  RefPtr<nsPresContext> presContext;
-  rv = GetPresContextFromEditor(textEditor, getter_AddRefs(presContext));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  RefPtr<nsPresContext> presContext = textEditor->GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return NS_ERROR_FAILURE;
+  }
 
   int32_t animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
