@@ -10,12 +10,10 @@
  * for a given host & port.
  */
 [scriptable, builtinclass, uuid(30d5f743-939e-46c6-808a-7ea07c77028e)]
-interface nsINetworkActivityData : nsISupports
+interface nsIIOActivityData : nsISupports
 {
-  readonly attribute DOMString host;
-  readonly attribute long port;
+  readonly attribute AUTF8String location;
   readonly attribute long rx;
   readonly attribute long tx;
-  readonly attribute long fd;
 };
 

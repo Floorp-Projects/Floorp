@@ -12,6 +12,7 @@
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
+#include "mozilla/net/IOActivityMonitor.h"
 #include "mozilla/IOInterposer.h"
 
 // The last VFS version for which this file has been updated.
@@ -34,6 +35,7 @@ namespace {
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;
+using namespace mozilla::net;
 
 struct Histograms {
   const char *name;
@@ -149,6 +151,9 @@ struct telemetry_file {
   // The chunk size for this file. See the documentation for
   // sqlite3_file_control() and FCNTL_CHUNK_SIZE.
   int fileChunkSize;
+
+  // The filename
+  char* location;
 
   // This contains the vfs that actually does work
   sqlite3_file pReal[1];
@@ -361,6 +366,7 @@ xClose(sqlite3_file *pFile)
     delete p->base.pMethods;
     p->base.pMethods = nullptr;
     p->quotaObject = nullptr;
+    delete[] p->location;
 #ifdef DEBUG
     p->fileChunkSize = 0;
 #endif
@@ -378,6 +384,9 @@ xRead(sqlite3_file *pFile, void *zBuf, int iAmt, sqlite_int64 iOfst)
   IOThreadAutoTimer ioTimer(p->histograms->readMS, IOInterposeObserver::OpRead);
   int rc;
   rc = p->pReal->pMethods->xRead(p->pReal, zBuf, iAmt, iOfst);
+  if (rc == SQLITE_OK && IOActivityMonitor::IsActive()) {
+    IOActivityMonitor::Read(nsDependentCString(p->location), iAmt);
+  }
   // sqlite likes to read from empty files, this is normal, ignore it.
   if (rc != SQLITE_IOERR_SHORT_READ)
     Telemetry::Accumulate(p->histograms->readB, rc == SQLITE_OK ? iAmt : 0);
@@ -413,6 +422,10 @@ xWrite(sqlite3_file *pFile, const void *zBuf, int iAmt, sqlite_int64 iOfst)
     }
   }
   rc = p->pReal->pMethods->xWrite(p->pReal, zBuf, iAmt, iOfst);
+  if (rc == SQLITE_OK && IOActivityMonitor::IsActive()) {
+    IOActivityMonitor::Write(nsDependentCString(p->location), iAmt);
+  }
+
   Telemetry::Accumulate(p->histograms->writeB, rc == SQLITE_OK ? iAmt : 0);
   if (p->quotaObject && rc != SQLITE_OK) {
     NS_WARNING("xWrite failed on a quota-controlled file, attempting to "
@@ -664,6 +677,16 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
   rc = orig_vfs->xOpen(orig_vfs, zName, p->pReal, flags, pOutFlags);
   if( rc != SQLITE_OK )
     return rc;
+
+  if (zName) {
+    p->location = new char[7 + strlen(zName) + 1];
+    strcpy(p->location, "file://");
+    strcpy(p->location + 7, zName);
+  } else {
+    p->location = new char[8];
+    strcpy(p->location, "file://");
+  }
+
   if( p->pReal->pMethods ){
     sqlite3_io_methods *pNew = new sqlite3_io_methods;
     const sqlite3_io_methods *pSub = p->pReal->pMethods;
