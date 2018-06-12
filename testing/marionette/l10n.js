@@ -17,8 +17,9 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(["DOMParser"]);
-const domParser = new DOMParser();
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
+XPCOMUtils.defineLazyGetter(this, "domParser", () => new DOMParser());
 
 const {NoSuchElementError} =
     ChromeUtils.import("chrome://marionette/content/error.js", {});

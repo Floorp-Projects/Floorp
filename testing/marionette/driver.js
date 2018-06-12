@@ -57,7 +57,7 @@ const {
   TimedPromise,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
-Cu.importGlobalProperties(["URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver"];
 

@@ -4,10 +4,9 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["URL"]);
-
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
 const {
@@ -16,6 +15,8 @@ const {
 const {
   pprint,
 } = ChromeUtils.import("chrome://marionette/content/format.js", {});
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 this.EXPORTED_SYMBOLS = ["session"];
 
