@@ -5,9 +5,10 @@
 /// The solution here wraps `IResult` in a `Result`: a `Ok` indicates usual
 /// backtracking, `Err` indicates that we must "cut".
 
-#[macro_use]
-extern crate nom;
+#[allow(unused_imports)]
+#[macro_use] extern crate nom;
 
+#[cfg(feature = "verbose_errors")]
 macro_rules! n (
     ($name:ident( $i:ty ) -> $o:ty, $submac:ident!( $($args:tt)* )) => (
         fn $name( i: $i ) -> std::result::Result<nom::IResult<$i,$o,u32>, nom::Err<$i, u32>> {
@@ -61,6 +62,7 @@ macro_rules! n (
     );
 );
 
+#[cfg(feature = "verbose_errors")]
 macro_rules! cut (
   ($i:expr, $code:expr, $submac:ident!( $($args:tt)* )) => (
     {
@@ -82,6 +84,7 @@ macro_rules! cut (
   );
 );
 
+#[cfg(feature = "verbose_errors")]
 macro_rules! c (
   ($i:expr, $f:expr) => (
     {
@@ -97,14 +100,16 @@ macro_rules! c (
   );
 );
 
+#[cfg(feature = "verbose_errors")]
 n!(pub foo< bool >,
-    chain!(
-        tag!("a") ~
-        cut!(nom::ErrorKind::Custom(42),dbg_dmp!(tag!("b"))) ,
-        || { true }
+    do_parse!(
+        tag!("a") >>
+        cut!(nom::ErrorKind::Custom(42),dbg_dmp!(tag!("b"))) >>
+        (true)
     )
 );
 
+#[cfg(feature = "verbose_errors")]
 n!(pub foos< Vec<bool> >,
     delimited!(
         tag!("("),
@@ -113,6 +118,7 @@ n!(pub foos< Vec<bool> >,
     )
 );
 
+#[cfg(feature = "verbose_errors")]
 #[test]
 fn test_ok() {
     let r = foos(b"(abab)");
@@ -123,6 +129,7 @@ fn test_ok() {
     }
 }
 
+#[cfg(feature = "verbose_errors")]
 #[test]
 fn test_err() {
     let input = b"(ac)";
