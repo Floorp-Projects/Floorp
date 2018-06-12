@@ -276,19 +276,14 @@ protected:
 
 // composer commands
 
-NS_DECL_COMPOSER_COMMAND(nsCloseCommand)
 NS_DECL_COMPOSER_COMMAND(nsDocumentStateCommand)
 NS_DECL_COMPOSER_COMMAND(nsSetDocumentStateCommand)
 NS_DECL_COMPOSER_COMMAND(nsSetDocumentOptionsCommand)
-//NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
 
 NS_DECL_COMPOSER_COMMAND(nsDecreaseZIndexCommand)
 NS_DECL_COMPOSER_COMMAND(nsIncreaseZIndexCommand)
 
 // Generic commands
-
-// File menu
-NS_DECL_COMPOSER_COMMAND(nsNewCommands)   // handles 'new' anything
 
 // Edit menu
 NS_DECL_COMPOSER_COMMAND(nsPasteNoFormattingCommand)
