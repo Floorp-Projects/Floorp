@@ -20,10 +20,6 @@ const IMPLICIT_ID_ID = "webext_implicit_id@tests.mozilla.org";
 // applications or browser_specific_settings, so its id comes
 // from its signature, which should be the ID constant defined below.
 add_task(async function test_implicit_id() {
-  // This test needs to read the xpi certificate which only works
-  // if signing is enabled.
-  ok(AddonSettings.ADDON_SIGNING, "Add-on signing is enabled");
-
   let addon = await promiseAddonByID(IMPLICIT_ID_ID);
   equal(addon, null, "Add-on is not installed");
 
@@ -39,10 +35,6 @@ add_task(async function test_implicit_id() {
 // and it should look just like the regular install (ie, the ID should
 // come from the signature)
 add_task(async function test_implicit_id_temp() {
-  // This test needs to read the xpi certificate which only works
-  // if signing is enabled.
-  ok(AddonSettings.ADDON_SIGNING, "Add-on signing is enabled");
-
   let addon = await promiseAddonByID(IMPLICIT_ID_ID);
   equal(addon, null, "Add-on is not installed");
 

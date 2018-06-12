@@ -115,7 +115,7 @@ add_task(async function() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   let onShutdown = waitForBootstrapEvent("shutdown", ID);
@@ -153,7 +153,7 @@ add_task(async function() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   let tempdir = gTmpD.clone();
@@ -250,7 +250,7 @@ add_task(async function() {
         appDisabled: false,
         isActive: true,
         type: "extension",
-        signedState: mozinfo.addon_signing ? signedState : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+        signedState,
       });
 
       // Now restart, the temporary addon will go away which should
@@ -312,7 +312,7 @@ add_task(async function() {
         appDisabled: false,
         isActive: true,
         type: "extension",
-        signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+        signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
       });
 
       Services.obs.notifyObservers(target, "flush-cache-entry");
@@ -359,7 +359,7 @@ add_task(async function test_samefile() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   Services.obs.notifyObservers(webext, "flush-cache-entry");
@@ -387,7 +387,7 @@ add_task(async function test_samefile() {
     isActive: true,
     type: "extension",
     isWebExtension: true,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await addon.uninstall();
@@ -468,7 +468,7 @@ add_task(async function() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_UNKNOWN,
   });
 
   await addon.uninstall();
@@ -486,7 +486,7 @@ add_task(async function() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   unpacked_addon.remove(true);
@@ -720,7 +720,7 @@ add_task(async function() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_UNKNOWN,
   });
 
   await tempAddon.uninstall();
@@ -741,7 +741,7 @@ add_task(async function() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await addon.uninstall();
@@ -770,7 +770,7 @@ add_task(async function() {
     isActive: true,
     type: "extension",
     isWebExtension: false,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await AddonManager.installTemporaryAddon(XPIS.test_bootstrap1_1);

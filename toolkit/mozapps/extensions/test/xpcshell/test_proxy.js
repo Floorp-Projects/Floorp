@@ -55,7 +55,7 @@ add_task(async function() {
     Assert.ok(!addon.appDisabled);
     Assert.ok(addon.isActive);
     Assert.equal(addon.type, "extension");
-    Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_UNKNOWN);
 
     Assert.ok(proxyFile.exists());
 
