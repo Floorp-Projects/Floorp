@@ -2386,12 +2386,13 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
     return;
   }
 
-  const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
+  const nsStyleDisplay* styleDisplay = mFrame->StyleDisplay();
+  const StyleShapeSource& shapeOutside = styleDisplay->mShapeOutside;
 
   nscoord shapeMargin = (shapeOutside.GetType() == StyleShapeSourceType::None)
    ? 0
    : nsLayoutUtils::ResolveToLength<true>(
-       mFrame->StyleDisplay()->mShapeMargin,
+       styleDisplay->mShapeMargin,
        LogicalSize(aWM, aContainerSize).ISize(aWM));
 
   switch (shapeOutside.GetType()) {
@@ -2404,7 +2405,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       return;
 
     case StyleShapeSourceType::Image: {
-      float shapeImageThreshold = mFrame->StyleDisplay()->mShapeImageThreshold;
+      float shapeImageThreshold = styleDisplay->mShapeImageThreshold;
       mShapeInfo = ShapeInfo::CreateImageShape(shapeOutside.GetShapeImage(),
                                                shapeImageThreshold,
                                                shapeMargin,

@@ -5,6 +5,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/accessibility.js");
 ChromeUtils.import("chrome://marionette/content/atom.js");
@@ -19,7 +20,7 @@ ChromeUtils.import("chrome://marionette/content/event.js");
 const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 const {TimedPromise} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
-Cu.importGlobalProperties(["File"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
 this.EXPORTED_SYMBOLS = ["interaction"];
 
