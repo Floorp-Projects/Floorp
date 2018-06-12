@@ -5,24 +5,6 @@
 
 package org.mozilla.gecko.notifications;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLConnection;
-import java.net.URLDecoder;
-import java.util.List;
-
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoActivityMonitor;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.mozglue.SafeIntent;
-import org.mozilla.gecko.util.BitmapUtils;
-import org.mozilla.gecko.util.BundleEventListener;
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ComponentName;
@@ -36,6 +18,23 @@ import android.os.StrictMode;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoActivityMonitor;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.util.BitmapUtils;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.util.List;
 
 public final class NotificationHelper implements BundleEventListener {
     public static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
@@ -183,6 +182,7 @@ public final class NotificationHelper implements BundleEventListener {
 
     private Intent buildNotificationIntent(final GeckoBundle message, final Uri.Builder builder) {
         final Intent notificationIntent = new Intent(HELPER_BROADCAST_ACTION);
+        notificationIntent.setClass(mContext, NotificationReceiver.class);
         final boolean ongoing = message.getBoolean(ONGOING_ATTR);
         notificationIntent.putExtra(ONGOING_ATTR, ongoing);
 
