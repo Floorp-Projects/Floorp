@@ -1,159 +1,100 @@
-use command::Parameters;
-use common::{Nullable, WebElement};
-use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use rustc_serialize::json::{ToJson, Json};
-use unicode_segmentation::UnicodeSegmentation;
-use std::collections::BTreeMap;
+use common::WebElement;
+use serde::de::{self, Deserialize, Deserializer};
+use serde::ser::{Serialize, Serializer};
 use std::default::Default;
+use unicode_segmentation::UnicodeSegmentation;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ActionSequence {
-    pub id: Nullable<String>,
-    pub actions: ActionsType
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(flatten)]
+    pub actions: ActionsType,
 }
 
-impl Parameters for ActionSequence {
-    fn from_json(body: &Json) -> WebDriverResult<ActionSequence> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Actions chain was not an object");
-
-        let type_name = try_opt!(try_opt!(data.get("type"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing type parameter").as_string(),
-                                 ErrorStatus::InvalidArgument,
-                                 "Parameter ;type' was not a string");
-
-        let id = match data.get("id") {
-            Some(x) => Some(try_opt!(x.as_string(),
-                                     ErrorStatus::InvalidArgument,
-                                     "Parameter 'id' was not a string").to_owned()),
-            None => None
-        };
-
-
-        // Note that unlike the spec we get the pointer parameters in ActionsType::from_json
-
-        let actions = match type_name {
-            "none" | "key" | "pointer" => try!(ActionsType::from_json(&body)),
-            _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                "Invalid action type"))
-        };
-
-        Ok(ActionSequence {
-            id: id.into(),
-            actions: actions
-        })
-    }
-}
-
-impl ToJson for ActionSequence {
-    fn to_json(&self) -> Json {
-        let mut data: BTreeMap<String, Json> = BTreeMap::new();
-        data.insert("id".into(), self.id.to_json());
-        let (action_type, actions) = match self.actions {
-            ActionsType::Null(ref actions) => {
-                ("none",
-                 actions.iter().map(|x| x.to_json()).collect::<Vec<Json>>())
-            }
-            ActionsType::Key(ref actions) => {
-                ("key",
-                 actions.iter().map(|x| x.to_json()).collect::<Vec<Json>>())
-            }
-            ActionsType::Pointer(ref parameters, ref actions) => {
-                data.insert("parameters".into(), parameters.to_json());
-                ("pointer",
-                 actions.iter().map(|x| x.to_json()).collect::<Vec<Json>>())
-            }
-        };
-        data.insert("type".into(), action_type.to_json());
-        data.insert("actions".into(), actions.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum ActionsType {
-    Null(Vec<NullActionItem>),
-    Key(Vec<KeyActionItem>),
-    Pointer(PointerActionParameters, Vec<PointerActionItem>)
+    #[serde(rename = "none")]
+    Null { actions: Vec<NullActionItem> },
+    #[serde(rename = "key")]
+    Key { actions: Vec<KeyActionItem> },
+    #[serde(rename = "pointer")]
+    Pointer {
+        parameters: PointerActionParameters,
+        actions: Vec<PointerActionItem>,
+    },
 }
 
-impl Parameters for ActionsType {
-    fn from_json(body: &Json) -> WebDriverResult<ActionsType> {
-        // These unwraps are OK as long as this is only called from ActionSequence::from_json
-        let data = body.as_object().expect("Body should be a JSON Object");
-        let actions_type = body.find("type").and_then(|x| x.as_string()).expect("Type should be a string");
-        let actions_chain = try_opt!(try_opt!(data.get("actions"),
-                                              ErrorStatus::InvalidArgument,
-                                              "Missing actions parameter").as_array(),
-                                     ErrorStatus::InvalidArgument,
-                                     "Parameter 'actions' was not an array");
-        match actions_type {
-            "none" => {
-                let mut actions = Vec::with_capacity(actions_chain.len());
-                for action_body in actions_chain.iter() {
-                    actions.push(try!(NullActionItem::from_json(action_body)));
-                };
-                Ok(ActionsType::Null(actions))
-            },
-            "key" => {
-                let mut actions = Vec::with_capacity(actions_chain.len());
-                for action_body in actions_chain.iter() {
-                    actions.push(try!(KeyActionItem::from_json(action_body)));
-                };
-                Ok(ActionsType::Key(actions))
-            },
-            "pointer" => {
-                let mut actions = Vec::with_capacity(actions_chain.len());
-                let parameters = match data.get("parameters") {
-                    Some(x) => try!(PointerActionParameters::from_json(x)),
-                    None => Default::default()
-                };
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum NullActionItem {
+    General(GeneralAction),
+}
 
-                for action_body in actions_chain.iter() {
-                    actions.push(try!(PointerActionItem::from_json(action_body)));
-                }
-                Ok(ActionsType::Pointer(parameters, actions))
-            }
-            _ => panic!("Got unexpected action type after checking type")
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum GeneralAction {
+    #[serde(rename = "pause")]
+    Pause(PauseAction),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct PauseAction {
+    pub duration: u64,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum KeyActionItem {
+    General(GeneralAction),
+    Key(KeyAction),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum KeyAction {
+    #[serde(rename = "keyDown")]
+    Down(KeyDownAction),
+    #[serde(rename = "keyUp")]
+    Up(KeyUpAction),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct KeyDownAction {
+    #[serde(deserialize_with = "deserialize_key_action_value")]
+    pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct KeyUpAction {
+    #[serde(deserialize_with = "deserialize_key_action_value")]
+    pub value: String,
+}
+
+fn deserialize_key_action_value<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(|value| {
+        // Only a single Unicode grapheme cluster is allowed
+        if value.graphemes(true).collect::<Vec<&str>>().len() != 1 {
+            return Err(de::Error::custom(format!(
+                "'{}' should only contain a single Unicode code point",
+                value
+            )));
         }
-    }
+
+        Ok(value)
+    })?
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum PointerType {
     Mouse,
     Pen,
     Touch,
-}
-
-impl Parameters for PointerType {
-    fn from_json(body: &Json) -> WebDriverResult<PointerType> {
-        match body.as_string() {
-            Some("mouse") => Ok(PointerType::Mouse),
-            Some("pen") => Ok(PointerType::Pen),
-            Some("touch") => Ok(PointerType::Touch),
-            Some(_) => Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "Unsupported pointer type"
-            )),
-            None => Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "Pointer type was not a string"
-            ))
-        }
-    }
-}
-
-impl ToJson for PointerType {
-    fn to_json(&self) -> Json {
-        match *self {
-            PointerType::Mouse => "mouse".to_json(),
-            PointerType::Pen => "pen".to_json(),
-            PointerType::Touch => "touch".to_json(),
-        }.to_json()
-    }
 }
 
 impl Default for PointerType {
@@ -162,326 +103,78 @@ impl Default for PointerType {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PointerActionParameters {
-    pub pointer_type: PointerType
+    #[serde(rename = "pointerType")]
+    pub pointer_type: PointerType,
 }
 
-impl Parameters for PointerActionParameters {
-    fn from_json(body: &Json) -> WebDriverResult<PointerActionParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Parameter 'parameters' was not an object");
-        let pointer_type = match data.get("pointerType") {
-            Some(x) => try!(PointerType::from_json(x)),
-            None => PointerType::default()
-        };
-        Ok(PointerActionParameters {
-            pointer_type: pointer_type
-        })
-    }
-}
-
-impl ToJson for PointerActionParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("pointerType".to_owned(),
-                    self.pointer_type.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum NullActionItem {
-    General(GeneralAction)
-}
-
-impl Parameters for NullActionItem {
-    fn from_json(body: &Json) -> WebDriverResult<NullActionItem> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Actions chain was not an object");
-        let type_name = try_opt!(
-            try_opt!(data.get("type"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'type' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "Parameter 'type' was not a string");
-        match type_name {
-            "pause" => Ok(NullActionItem::General(
-                try!(GeneralAction::from_json(body)))),
-            _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                "Invalid type attribute"))
-        }
-    }
-}
-
-impl ToJson for NullActionItem {
-    fn to_json(&self) -> Json {
-        match self {
-            &NullActionItem::General(ref x) => x.to_json(),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum KeyActionItem {
-    General(GeneralAction),
-    Key(KeyAction)
-}
-
-impl Parameters for KeyActionItem {
-    fn from_json(body: &Json) -> WebDriverResult<KeyActionItem> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Key action item was not an object");
-        let type_name = try_opt!(
-            try_opt!(data.get("type"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'type' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "Parameter 'type' was not a string");
-        match type_name {
-            "pause" => Ok(KeyActionItem::General(
-                try!(GeneralAction::from_json(body)))),
-            _ => Ok(KeyActionItem::Key(
-                try!(KeyAction::from_json(body))))
-        }
-    }
-}
-
-impl ToJson for KeyActionItem {
-    fn to_json(&self) -> Json {
-        match *self {
-            KeyActionItem::General(ref x) => x.to_json(),
-            KeyActionItem::Key(ref x) => x.to_json()
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum PointerActionItem {
     General(GeneralAction),
-    Pointer(PointerAction)
+    Pointer(PointerAction),
 }
 
-impl Parameters for PointerActionItem {
-    fn from_json(body: &Json) -> WebDriverResult<PointerActionItem> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Pointer action item was not an object");
-        let type_name = try_opt!(
-            try_opt!(data.get("type"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'type' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "Parameter 'type' was not a string");
-
-        match type_name {
-            "pause" => Ok(PointerActionItem::General(try!(GeneralAction::from_json(body)))),
-            _ => Ok(PointerActionItem::Pointer(try!(PointerAction::from_json(body))))
-        }
-    }
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum PointerAction {
+    #[serde(rename = "pointerCancel")]
+    Cancel,
+    #[serde(rename = "pointerDown")]
+    Down(PointerDownAction),
+    #[serde(rename = "pointerMove")]
+    Move(PointerMoveAction),
+    #[serde(rename = "pointerUp")]
+    Up(PointerUpAction),
 }
 
-impl ToJson for PointerActionItem {
-    fn to_json(&self) -> Json {
-        match self {
-            &PointerActionItem::General(ref x) => x.to_json(),
-            &PointerActionItem::Pointer(ref x) => x.to_json()
-        }
-    }
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PointerDownAction {
+    pub button: u64,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum GeneralAction {
-    Pause(PauseAction)
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PointerMoveAction {
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub duration: Option<u64>,
+    #[serde(default)]
+    pub origin: PointerOrigin,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_i64"
+    )]
+    pub x: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_i64"
+    )]
+    pub y: Option<i64>,
 }
 
-impl Parameters for GeneralAction {
-    fn from_json(body: &Json) -> WebDriverResult<GeneralAction> {
-        match body.find("type").and_then(|x| x.as_string()) {
-            Some("pause") => Ok(GeneralAction::Pause(try!(PauseAction::from_json(body)))),
-            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                         "Invalid or missing type attribute"))
-        }
-    }
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PointerUpAction {
+    pub button: u64,
 }
 
-impl ToJson for GeneralAction {
-    fn to_json(&self) -> Json {
-        match self {
-            &GeneralAction::Pause(ref x) => x.to_json()
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct PauseAction {
-    pub duration: u64
-}
-
-impl Parameters for PauseAction {
-    fn from_json(body: &Json) -> WebDriverResult<PauseAction> {
-        let default = Json::U64(0);
-        Ok(PauseAction {
-            duration: try_opt!(body.find("duration").unwrap_or(&default).as_u64(),
-                               ErrorStatus::InvalidArgument,
-                               "Parameter 'duration' was not a positive integer")
-        })
-    }
-}
-
-impl ToJson for PauseAction {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("type".to_owned(),
-                    "pause".to_json());
-        data.insert("duration".to_owned(),
-                    self.duration.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum KeyAction {
-    Up(KeyUpAction),
-    Down(KeyDownAction)
-}
-
-impl Parameters for KeyAction {
-    fn from_json(body: &Json) -> WebDriverResult<KeyAction> {
-        match body.find("type").and_then(|x| x.as_string()) {
-            Some("keyDown") => Ok(KeyAction::Down(try!(KeyDownAction::from_json(body)))),
-            Some("keyUp") => Ok(KeyAction::Up(try!(KeyUpAction::from_json(body)))),
-            Some(_) | None => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                      "Invalid type attribute value for key action"))
-        }
-    }
-}
-
-impl ToJson for KeyAction {
-    fn to_json(&self) -> Json {
-        match self {
-            &KeyAction::Down(ref x) => x.to_json(),
-            &KeyAction::Up(ref x) => x.to_json(),
-        }
-    }
-}
-
-fn validate_key_value(value_str: &str) -> WebDriverResult<String> {
-    let mut graphemes = value_str.graphemes(true);
-    let value = if let Some(g) = graphemes.next() {
-        g
-    } else {
-        return Err(WebDriverError::new(
-            ErrorStatus::InvalidArgument,
-            "Parameter 'value' was an empty string"))
-    };
-    if graphemes.next().is_some() {
-        return Err(WebDriverError::new(
-            ErrorStatus::InvalidArgument,
-            "Parameter 'value' contained multiple graphemes"))
-    };
-    Ok(value.to_string())
-}
-
-#[derive(Debug, PartialEq)]
-pub struct KeyUpAction {
-    pub value: String
-}
-
-impl Parameters for KeyUpAction {
-    fn from_json(body: &Json) -> WebDriverResult<KeyUpAction> {
-        let value_str = try_opt!(
-                try_opt!(body.find("value"),
-                         ErrorStatus::InvalidArgument,
-                         "Missing value parameter").as_string(),
-                ErrorStatus::InvalidArgument,
-            "Parameter 'value' was not a string");
-
-        let value = try!(validate_key_value(value_str));
-        Ok(KeyUpAction {
-            value: value
-        })
-    }
-}
-
-impl ToJson for KeyUpAction {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("type".to_owned(),
-                    "keyUp".to_json());
-        data.insert("value".to_string(),
-                    self.value.to_string().to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct KeyDownAction {
-    pub value: String
-}
-
-impl Parameters for KeyDownAction {
-    fn from_json(body: &Json) -> WebDriverResult<KeyDownAction> {
-        let value_str = try_opt!(
-                try_opt!(body.find("value"),
-                         ErrorStatus::InvalidArgument,
-                         "Missing value parameter").as_string(),
-                ErrorStatus::InvalidArgument,
-            "Parameter 'value' was not a string");
-        let value = try!(validate_key_value(value_str));
-        Ok(KeyDownAction {
-            value: value
-        })
-    }
-}
-
-impl ToJson for KeyDownAction {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("type".to_owned(),
-                    "keyDown".to_json());
-        data.insert("value".to_owned(),
-                    self.value.to_string().to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PointerOrigin {
-    Viewport,
-    Pointer,
+    #[serde(
+        rename = "element-6066-11e4-a52e-4f735466cecf",
+        serialize_with = "serialize_webelement_id",
+        deserialize_with = "deserialize_webelement_id"
+    )]
     Element(WebElement),
-}
-
-impl Parameters for PointerOrigin {
-    fn from_json(body: &Json) -> WebDriverResult<PointerOrigin> {
-        match *body {
-            Json::String(ref x) => {
-                match &**x {
-                    "viewport" => Ok(PointerOrigin::Viewport),
-                    "pointer" => Ok(PointerOrigin::Pointer),
-                    _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                 "Unknown pointer origin"))
-                }
-            },
-            Json::Object(_) => Ok(PointerOrigin::Element(try!(WebElement::from_json(body)))),
-            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                        "Pointer origin was not a string or an object"))
-        }
-    }
-}
-
-impl ToJson for PointerOrigin {
-    fn to_json(&self) -> Json {
-        match *self {
-            PointerOrigin::Viewport => "viewport".to_json(),
-            PointerOrigin::Pointer => "pointer".to_json(),
-            PointerOrigin::Element(ref x) => x.to_json(),
-        }
-    }
+    #[serde(rename = "pointer")]
+    Pointer,
+    #[serde(rename = "viewport")]
+    Viewport,
 }
 
 impl Default for PointerOrigin {
@@ -490,171 +183,866 @@ impl Default for PointerOrigin {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum PointerAction {
-    Up(PointerUpAction),
-    Down(PointerDownAction),
-    Move(PointerMoveAction),
-    Cancel
+fn serialize_webelement_id<S>(element: &WebElement, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    element.id.serialize(serializer)
 }
 
-impl Parameters for PointerAction {
-    fn from_json(body: &Json) -> WebDriverResult<PointerAction> {
-        match body.find("type").and_then(|x| x.as_string()) {
-            Some("pointerUp") => Ok(PointerAction::Up(try!(PointerUpAction::from_json(body)))),
-            Some("pointerDown") => Ok(PointerAction::Down(try!(PointerDownAction::from_json(body)))),
-            Some("pointerMove") => Ok(PointerAction::Move(try!(PointerMoveAction::from_json(body)))),
-            Some("pointerCancel") => Ok(PointerAction::Cancel),
-            Some(_) | None => Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "Missing or invalid type argument for pointer action"))
-        }
-    }
+fn deserialize_webelement_id<'de, D>(deserializer: D) -> Result<WebElement, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(|id| WebElement { id })
 }
 
-impl ToJson for PointerAction {
-    fn to_json(&self) -> Json {
-        match self {
-            &PointerAction::Down(ref x) => x.to_json(),
-            &PointerAction::Up(ref x) => x.to_json(),
-            &PointerAction::Move(ref x) => x.to_json(),
-            &PointerAction::Cancel => {
-                let mut data = BTreeMap::new();
-                data.insert("type".to_owned(),
-                            "pointerCancel".to_json());
-                Json::Object(data)
-            }
-        }
-    }
+fn deserialize_to_option_i64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::deserialize(deserializer)?
+        .ok_or_else(|| de::Error::custom("invalid type: null, expected i64"))
+        .map(|v: i64| Some(v))
 }
 
-#[derive(Debug, PartialEq)]
-pub struct PointerUpAction {
-    pub button: u64,
+fn deserialize_to_option_u64<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::deserialize(deserializer)?
+        .ok_or_else(|| de::Error::custom("invalid type: null, expected i64"))
+        .map(|v: u64| Some(v))
 }
 
-impl Parameters for PointerUpAction {
-    fn from_json(body: &Json) -> WebDriverResult<PointerUpAction> {
-        let button = try_opt!(
-            try_opt!(body.find("button"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing button parameter").as_u64(),
-            ErrorStatus::InvalidArgument,
-            "Parameter 'button' was not a positive integer");
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde_json;
+    use test::{check_deserialize, check_serialize_deserialize};
 
-        Ok(PointerUpAction {
-            button: button
-        })
-    }
-}
-
-impl ToJson for PointerUpAction {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("type".to_owned(),
-                    "pointerUp".to_json());
-        data.insert("button".to_owned(), self.button.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct PointerDownAction {
-    pub button: u64,
-}
-
-impl Parameters for PointerDownAction {
-    fn from_json(body: &Json) -> WebDriverResult<PointerDownAction> {
-        let button = try_opt!(
-            try_opt!(body.find("button"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing button parameter").as_u64(),
-            ErrorStatus::InvalidArgument,
-            "Parameter 'button' was not a positive integer");
-
-        Ok(PointerDownAction {
-            button: button
-        })
-    }
-}
-
-impl ToJson for PointerDownAction {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("type".to_owned(),
-                    "pointerDown".to_json());
-        data.insert("button".to_owned(), self.button.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct PointerMoveAction {
-    pub duration: Nullable<u64>,
-    pub origin: PointerOrigin,
-    pub x: Nullable<i64>,
-    pub y: Nullable<i64>
-}
-
-impl Parameters for PointerMoveAction {
-    fn from_json(body: &Json) -> WebDriverResult<PointerMoveAction> {
-        let duration = match body.find("duration") {
-            Some(duration) => Some(try_opt!(duration.as_u64(),
-                                            ErrorStatus::InvalidArgument,
-                                            "Parameter 'duration' was not a positive integer")),
-            None => None
-
-        };
-
-        let origin = match body.find("origin") {
-            Some(o) => try!(PointerOrigin::from_json(o)),
-            None => PointerOrigin::default()
-        };
-
-        let x = match body.find("x") {
-            Some(x) => {
-                Some(try_opt!(x.as_i64(),
-                              ErrorStatus::InvalidArgument,
-                              "Parameter 'x' was not an integer"))
+    #[test]
+    fn test_json_action_sequence_null() {
+        let json = r#"{
+            "id":"none",
+            "type":"none",
+            "actions":[{
+                "type":"pause","duration":1
+            }]
+        }"#;
+        let data = ActionSequence {
+            id: Some("none".into()),
+            actions: ActionsType::Null {
+                actions: vec![NullActionItem::General(GeneralAction::Pause(PauseAction {
+                    duration: 1,
+                }))],
             },
-            None => None
         };
 
-        let y = match body.find("y") {
-            Some(y) => {
-                Some(try_opt!(y.as_i64(),
-                              ErrorStatus::InvalidArgument,
-                              "Parameter 'y' was not an integer"))
-            },
-            None => None
-        };
-
-        Ok(PointerMoveAction {
-            duration: duration.into(),
-            origin: origin.into(),
-            x: x.into(),
-            y: y.into(),
-        })
+        check_serialize_deserialize(&json, &data);
     }
-}
 
-impl ToJson for PointerMoveAction {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("type".to_owned(), "pointerMove".to_json());
-        if self.duration.is_value() {
-            data.insert("duration".to_owned(),
-                        self.duration.to_json());
-        }
+    #[test]
+    fn test_json_action_sequence_key() {
+        let json = r#"{
+            "id":"some_key",
+            "type":"key",
+            "actions":[
+                {"type":"keyDown","value":"f"}
+            ]
+        }"#;
+        let data = ActionSequence {
+            id: Some("some_key".into()),
+            actions: ActionsType::Key {
+                actions: vec![KeyActionItem::Key(KeyAction::Down(KeyDownAction {
+                    value: String::from("f"),
+                }))],
+            },
+        };
 
-        data.insert("origin".to_owned(), self.origin.to_json());
+        check_serialize_deserialize(&json, &data);
+    }
 
-        if self.x.is_value() {
-            data.insert("x".to_owned(), self.x.to_json());
-        }
-        if self.y.is_value() {
-            data.insert("y".to_owned(), self.y.to_json());
-        }
-        Json::Object(data)
+    #[test]
+    fn test_json_action_sequence_pointer() {
+        let json = r#"{
+            "id":"some_pointer",
+            "type":"pointer",
+            "parameters":{
+                "pointerType":"mouse"
+            },
+            "actions":[
+                {"type":"pointerDown","button":0},
+                {"type":"pointerMove","origin":"pointer","x":10,"y":20},
+                {"type":"pointerUp","button":0}
+            ]
+        }"#;
+        let data = ActionSequence {
+            id: Some("some_pointer".into()),
+            actions: ActionsType::Pointer {
+                parameters: PointerActionParameters {
+                    pointer_type: PointerType::Mouse,
+                },
+                actions: vec![
+                    PointerActionItem::Pointer(PointerAction::Down(PointerDownAction {
+                        button: 0,
+                    })),
+                    PointerActionItem::Pointer(PointerAction::Move(PointerMoveAction {
+                        origin: PointerOrigin::Pointer,
+                        duration: None,
+                        x: Some(10),
+                        y: Some(20),
+                    })),
+                    PointerActionItem::Pointer(PointerAction::Up(PointerUpAction { button: 0 })),
+                ],
+            },
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_action_sequence_actions_missing() {
+        let json = r#"{
+            "id": "3"
+        }"#;
+
+        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_action_sequence_actions_null() {
+        let json = r#"{
+            "id": "3",
+            "actions": null
+        }"#;
+
+        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_action_sequence_actions_invalid_type() {
+        let json = r#"{
+            "id": "3",
+            "actions": "foo"
+        }"#;
+
+        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_actions_type_null() {
+        let json = r#"{
+            "type":"none",
+            "actions":[{
+                "type":"pause",
+                "duration":1
+            }]
+        }"#;
+        let data = ActionsType::Null {
+            actions: vec![NullActionItem::General(GeneralAction::Pause(PauseAction {
+                duration: 1,
+            }))],
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_actions_type_key() {
+        let json = r#"{
+            "type":"key",
+            "actions":[{
+                "type":"keyDown",
+                "value":"f"
+            }]
+        }"#;
+        let data = ActionsType::Key {
+            actions: vec![KeyActionItem::Key(KeyAction::Down(KeyDownAction {
+                value: String::from("f"),
+            }))],
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_actions_type_pointer() {
+        let json = r#"{
+            "type":"pointer",
+            "parameters":{"pointerType":"mouse"},
+            "actions":[
+                {"type":"pointerDown","button":1}
+            ]}"#;
+        let data = ActionsType::Pointer {
+            parameters: PointerActionParameters {
+                pointer_type: PointerType::Mouse,
+            },
+            actions: vec![PointerActionItem::Pointer(PointerAction::Down(
+                PointerDownAction { button: 1 },
+            ))],
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_actions_type_invalid() {
+        let json = r#"{"actions":[{"foo":"bar"}]}"#;
+        assert!(serde_json::from_str::<ActionsType>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_null_action_item_general() {
+        let json = r#"{"type":"pause","duration":1}"#;
+        let data = NullActionItem::General(GeneralAction::Pause(PauseAction { duration: 1 }));
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_null_action_item_invalid_type() {
+        let json = r#"{"type":"invalid"}"#;
+        assert!(serde_json::from_str::<NullActionItem>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_general_action_pause() {
+        let json = r#"{"type":"pause","duration":1}"#;
+        let data = GeneralAction::Pause(PauseAction { duration: 1 });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_general_action_pause_with_duration_missing() {
+        let json = r#"{"type":"pause"}"#;
+
+        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_general_action_pause_with_duration_null() {
+        let json = r#"{"type":"pause","duration":null}"#;
+
+        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_general_action_pause_with_duration_invalid_type() {
+        let json = r#"{"type":"pause","duration":"foo"}"#;
+
+        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_general_action_pause_with_duration_negative() {
+        let json = r#"{"type":"pause","duration":-30}"#;
+
+        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_item_general() {
+        let json = r#"{"type":"pause","duration":1}"#;
+        let data = KeyActionItem::General(GeneralAction::Pause(PauseAction { duration: 1 }));
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_item_key() {
+        let json = r#"{"type":"keyDown","value":"f"}"#;
+        let data = KeyActionItem::Key(KeyAction::Down(KeyDownAction {
+            value: String::from("f"),
+        }));
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_item_invalid_type() {
+        let json = r#"{"type":"invalid"}"#;
+        assert!(serde_json::from_str::<KeyActionItem>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_missing_subtype() {
+        let json = r#"{"value":"f"}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_wrong_subtype() {
+        let json = r#"{"type":"pause","value":"f"}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_down() {
+        let json = r#"{"type":"keyDown","value":"f"}"#;
+        let data = KeyAction::Down(KeyDownAction {
+            value: "f".to_owned(),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_down_with_value_unicode() {
+        let json = r#"{"type":"keyDown","value":"à"}"#;
+        let data = KeyAction::Down(KeyDownAction {
+            value: "à".to_owned(),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_down_with_value_unicode_encoded() {
+        let json = r#"{"type":"keyDown","value":"\u00E0"}"#;
+        let data = KeyAction::Down(KeyDownAction {
+            value: "à".to_owned(),
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_down_with_value_missing() {
+        let json = r#"{"type":"keyDown"}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_down_with_value_null() {
+        let json = r#"{"type":"keyDown","value":null}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_down_with_value_invalid_type() {
+        let json = r#"{"type":"keyDown,"value":["f","o","o"]}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_down_with_multiple_code_points() {
+        let json = r#"{"type":"keyDown","value":"fo"}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_up() {
+        let json = r#"{"type":"keyUp","value":"f"}"#;
+        let data = KeyAction::Up(KeyUpAction {
+            value: "f".to_owned(),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_up_with_value_unicode() {
+        let json = r#"{"type":"keyUp","value":"à"}"#;
+        let data = KeyAction::Up(KeyUpAction {
+            value: "à".to_owned(),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_up_with_value_unicode_encoded() {
+        let json = r#"{"type":"keyUp","value":"\u00E0"}"#;
+        let data = KeyAction::Up(KeyUpAction {
+            value: "à".to_owned(),
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_key_action_up_with_value_missing() {
+        let json = r#"{"type":"keyUp"}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_up_with_value_null() {
+        let json = r#"{"type":"keyUp,"value":null}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_up_with_value_invalid_type() {
+        let json = r#"{"type":"keyUp,"value":["f","o","o"]}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_key_action_up_with_multiple_code_points() {
+        let json = r#"{"type":"keyUp","value":"fo"}"#;
+
+        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_item_general() {
+        let json = r#"{"type":"pause","duration":1}"#;
+        let data = PointerActionItem::General(GeneralAction::Pause(PauseAction { duration: 1 }));
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_item_pointer() {
+        let json = r#"{"type":"pointerCancel"}"#;
+        let data = PointerActionItem::Pointer(PointerAction::Cancel);
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_item_invalid() {
+        let json = r#"{"type":"invalid"}"#;
+
+        assert!(serde_json::from_str::<PointerActionItem>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_parameters_mouse() {
+        let json = r#"{"pointerType":"mouse"}"#;
+        let data = PointerActionParameters {
+            pointer_type: PointerType::Mouse,
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_parameters_pen() {
+        let json = r#"{"pointerType":"pen"}"#;
+        let data = PointerActionParameters {
+            pointer_type: PointerType::Pen,
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_parameters_touch() {
+        let json = r#"{"pointerType":"touch"}"#;
+        let data = PointerActionParameters {
+            pointer_type: PointerType::Touch,
+        };
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_item_invalid_type() {
+        let json = r#"{"type":"pointerInvalid"}"#;
+        assert!(serde_json::from_str::<PointerActionItem>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_with_subtype_missing() {
+        let json = r#"{"button":1}"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_with_subtype_invalid() {
+        let json = r#"{"type":"invalid"}"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_with_subtype_wrong() {
+        let json = r#"{"type":"pointerMove",button":1}"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_cancel() {
+        let json = r#"{"type":"pointerCancel"}"#;
+        let data = PointerAction::Cancel;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_down() {
+        let json = r#"{"type":"pointerDown","button":1}"#;
+        let data = PointerAction::Down(PointerDownAction { button: 1 });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_down_with_button_missing() {
+        let json = r#"{"type":"pointerDown"}"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_down_with_button_null() {
+        let json = r#"{
+            "type":"pointerDown",
+            "button":null
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_down_with_button_invalid_type() {
+        let json = r#"{
+            "type":"pointerDown",
+            "button":"foo",
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_down_with_button_negative() {
+        let json = r#"{
+            "type":"pointerDown",
+            "button":-30
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: Some(100),
+            origin: PointerOrigin::Viewport,
+            x: Some(5),
+            y: Some(10),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_missing_subtype() {
+        let json = r#"{
+            "duration":100,
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_wrong_subtype() {
+        let json = r#"{
+            "type":"pointerUp",
+            "duration":100,
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_duration_missing() {
+        let json = r#"{
+            "type":"pointerMove",
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: None,
+            origin: PointerOrigin::Viewport,
+            x: Some(5),
+            y: Some(10),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_duration_null() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":null,
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_duration_invalid_type() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":"invalid",
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_duration_negative() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":-30,
+            "origin":"viewport",
+            "x":5,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_origin_missing() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "x":5,
+            "y":10
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: Some(100),
+            origin: PointerOrigin::Viewport,
+            x: Some(5),
+            y: Some(10),
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_x_missing() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "y":10
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: Some(100),
+            origin: PointerOrigin::Viewport,
+            x: None,
+            y: Some(10),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_x_null() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "x": null,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_x_invalid_type() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "x": "invalid",
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_y_missing() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "x":5
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: Some(100),
+            origin: PointerOrigin::Viewport,
+            x: Some(5),
+            y: None,
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_y_null() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "x":5,
+            "y":null
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_y_invalid_type() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":"viewport",
+            "x":5,
+            "y":"invalid"
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_up() {
+        let json = r#"{
+            "type":"pointerUp",
+            "button":1
+        }"#;
+        let data = PointerAction::Up(PointerUpAction { button: 1 });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_up_with_button_missing() {
+        let json = r#"{
+            "type":"pointerUp"
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_up_with_button_null() {
+        let json = r#"{
+            "type":"pointerUp",
+            "button":null
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_up_with_button_invalid_type() {
+        let json = r#"{
+            "type":"pointerUp",
+            "button":"foo",
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_action_up_with_button_negative() {
+        let json = r#"{
+            "type":"pointerUp",
+            "button":-30
+        }"#;
+
+        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_origin_pointer() {
+        let json = r#""pointer""#;
+        let data = PointerOrigin::Pointer;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_origin_viewport() {
+        let json = r#""viewport""#;
+        let data = PointerOrigin::Viewport;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_origin_web_element() {
+        let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
+        let data = PointerOrigin::Element(WebElement { id: "elem".into() });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_origin_invalid_type() {
+        let data = r#""invalid""#;
+        assert!(serde_json::from_str::<PointerOrigin>(&data).is_err());
+    }
+
+    #[test]
+    fn test_json_pointer_type_mouse() {
+        let json = r#""mouse""#;
+        let data = PointerType::Mouse;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_type_pen() {
+        let json = r#""pen""#;
+        let data = PointerType::Pen;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_type_touch() {
+        let json = r#""touch""#;
+        let data = PointerType::Touch;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_type_invalid_type() {
+        let json = r#""invalid""#;
+        assert!(serde_json::from_str::<PointerType>(&json).is_err());
     }
 }
