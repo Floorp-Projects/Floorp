@@ -67,6 +67,7 @@ private:
   bool mTimerActive;
   MayStopProcessingCallbackType mMayStopProcessing;
   TaskCategory mTaskCategory;
+  const char* mName;
 };
 
 } // end of namespace mozilla.
