@@ -1,10 +1,13 @@
 [package]
 name = "u2fhid"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Kyle Machulis <kyle@nonpolynomial.com>", "J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libudev = "^0.2"
+
+[target.'cfg(target_os = "freebsd")'.dependencies]
+devd-rs = "0.2.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = "0.6.0"

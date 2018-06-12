@@ -46,6 +46,16 @@ pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
     }
 }
 
+#[cfg(any(target_os = "freebsd"))]
+pub fn from_unix_result<T: Signed>(rv: T) -> io::Result<T> {
+    if rv.is_negative() {
+        let errno = unsafe { *libc::__error() };
+        Err(io::Error::from_raw_os_error(errno))
+    } else {
+        Ok(rv)
+    }
+}
+
 pub fn io_err(msg: &str) -> io::Error {
     io::Error::new(io::ErrorKind::Other, msg)
 }
