@@ -51,7 +51,7 @@ function* test(testDriver) {
   // also apply a async scroll offset in the y-direction such that the
   // scrollframe scrolls to the bottom of its range.
   utils.setDisplayPortForElement(0, 0, 500, 500, scroller, 1);
-  yield waitForAllPaints(testDriver);
+  yield waitForApzFlushedRepaints(testDriver);
   var scrollY = scroller.scrollTopMax;
   utils.setAsyncScrollOffset(scroller, 0, scrollY);
   if (config.isWebRender) {
