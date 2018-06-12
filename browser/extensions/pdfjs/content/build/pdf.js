@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.550';
-var pdfjsBuild = '76337fdc';
+var pdfjsVersion = '2.0.575';
+var pdfjsBuild = '2030d171';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(6);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
@@ -162,6 +162,7 @@ exports.RenderingCancelledException = pdfjsDisplayDOMUtils.RenderingCancelledExc
 exports.getFilenameFromUrl = pdfjsDisplayDOMUtils.getFilenameFromUrl;
 exports.LinkTarget = pdfjsDisplayDOMUtils.LinkTarget;
 exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
+exports.loadScript = pdfjsDisplayDOMUtils.loadScript;
 exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
 
@@ -824,12 +825,6 @@ var Util = function UtilClosure() {
     var romanStr = romanBuf.join('');
     return lowerCase ? romanStr.toLowerCase() : romanStr;
   };
-  Util.appendToArray = function Util_appendToArray(arr1, arr2) {
-    Array.prototype.push.apply(arr1, arr2);
-  };
-  Util.prependToArray = function Util_prependToArray(arr1, arr2) {
-    Array.prototype.unshift.apply(arr1, arr2);
-  };
   Util.extendObj = function extendObj(obj1, obj2) {
     for (var key in obj2) {
       obj1[key] = obj2[key];
@@ -841,20 +836,6 @@ var Util = function UtilClosure() {
     for (var prop in prototype) {
       sub.prototype[prop] = prototype[prop];
     }
-  };
-  Util.loadScript = function Util_loadScript(src, callback) {
-    var script = document.createElement('script');
-    var loaded = false;
-    script.setAttribute('src', src);
-    if (callback) {
-      script.onload = function () {
-        if (!loaded) {
-          callback();
-        }
-        loaded = true;
-      };
-    }
-    document.getElementsByTagName('head')[0].appendChild(script);
   };
   return Util;
 }();
@@ -4131,7 +4112,6 @@ function getDocument(src) {
   let params = Object.create(null);
   var rangeTransport = null;
   let worker = null;
-  let CMapReaderFactory = _dom_utils.DOMCMapReaderFactory;
   for (var key in source) {
     if (key === 'url' && typeof window !== 'undefined') {
       params[key] = new URL(source[key], window.location).href;
@@ -4154,13 +4134,11 @@ function getDocument(src) {
         throw new Error('Invalid PDF binary data: either typed array, ' + 'string or array-like object is expected in the ' + 'data property.');
       }
       continue;
-    } else if (key === 'CMapReaderFactory') {
-      CMapReaderFactory = source[key];
-      continue;
     }
     params[key] = source[key];
   }
   params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
+  params.CMapReaderFactory = params.CMapReaderFactory || _dom_utils.DOMCMapReaderFactory;
   params.ignoreErrors = params.stopAtErrors !== true;
   params.pdfBug = params.pdfBug === true;
   const NativeImageDecoderValues = Object.values(_util.NativeImageDecoding);
@@ -4233,7 +4211,7 @@ function getDocument(src) {
       }
       var messageHandler = new _message_handler.MessageHandler(docId, workerId, worker.port);
       messageHandler.postMessageTransfers = worker.postMessageTransfers;
-      var transport = new WorkerTransport(messageHandler, task, networkStream, params, CMapReaderFactory);
+      var transport = new WorkerTransport(messageHandler, task, networkStream, params);
       task._transport = transport;
       messageHandler.send('Ready', null);
     });
@@ -4250,7 +4228,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.550',
+    apiVersion: '2.0.575',
     source: {
       data: source.data,
       url: source.url,
@@ -4360,16 +4338,16 @@ var PDFDataRangeTransport = function pdfDataRangeTransportClosure() {
 }();
 var PDFDocumentProxy = function PDFDocumentProxyClosure() {
   function PDFDocumentProxy(pdfInfo, transport, loadingTask) {
-    this.pdfInfo = pdfInfo;
+    this._pdfInfo = pdfInfo;
     this.transport = transport;
     this.loadingTask = loadingTask;
   }
   PDFDocumentProxy.prototype = {
     get numPages() {
-      return this.pdfInfo.numPages;
+      return this._pdfInfo.numPages;
     },
     get fingerprint() {
-      return this.pdfInfo.fingerprint;
+      return this._pdfInfo.fingerprint;
     },
     getPage(pageNumber) {
       return this.transport.getPage(pageNumber);
@@ -4425,7 +4403,7 @@ var PDFDocumentProxy = function PDFDocumentProxyClosure() {
 var PDFPageProxy = function PDFPageProxyClosure() {
   function PDFPageProxy(pageIndex, pageInfo, transport, pdfBug = false) {
     this.pageIndex = pageIndex;
-    this.pageInfo = pageInfo;
+    this._pageInfo = pageInfo;
     this.transport = transport;
     this._stats = pdfBug ? new _dom_utils.StatTimer() : _dom_utils.DummyStatTimer;
     this._pdfBug = pdfBug;
@@ -4441,16 +4419,16 @@ var PDFPageProxy = function PDFPageProxyClosure() {
       return this.pageIndex + 1;
     },
     get rotate() {
-      return this.pageInfo.rotate;
+      return this._pageInfo.rotate;
     },
     get ref() {
-      return this.pageInfo.ref;
+      return this._pageInfo.ref;
     },
     get userUnit() {
-      return this.pageInfo.userUnit;
+      return this._pageInfo.userUnit;
     },
     get view() {
-      return this.pageInfo.view;
+      return this._pageInfo.view;
     },
     getViewport(scale, rotate = this.rotate, dontFlip = false) {
       return new _dom_utils.PageViewport({
@@ -4588,7 +4566,7 @@ var PDFPageProxy = function PDFPageProxyClosure() {
               return;
             }
             _util.Util.extendObj(textContent.styles, value.styles);
-            _util.Util.appendToArray(textContent.items, value.items);
+            textContent.items.push(...value.items);
             pump();
           }, reject);
         }
@@ -4766,7 +4744,7 @@ var PDFWorker = function PDFWorkerClosure() {
       return fakeWorkerFilesLoadedCapability.promise;
     }
     let loader = fakeWorkerFilesLoader || function (callback) {
-      _util.Util.loadScript(getWorkerSrc(), function () {
+      (0, _dom_utils.loadScript)(getWorkerSrc()).then(function () {
         callback(window.pdfjsWorker.WorkerMessageHandler);
       });
     };
@@ -4778,14 +4756,14 @@ var PDFWorker = function PDFWorkerClosure() {
     return URL.createObjectURL(new Blob([wrapper]));
   }
   let pdfWorkerPorts = new WeakMap();
-  function PDFWorker({ name = null, port = null, postMessageTransfers = true, verbosity = null } = {}) {
+  function PDFWorker({ name = null, port = null, postMessageTransfers = true, verbosity = (0, _util.getVerbosityLevel)() } = {}) {
     if (port && pdfWorkerPorts.has(port)) {
       throw new Error('Cannot use more than one PDFWorker per port');
     }
     this.name = name;
     this.destroyed = false;
     this.postMessageTransfers = postMessageTransfers !== false;
-    this.verbosity = (0, _util.isNum)(verbosity) ? verbosity : (0, _util.getVerbosityLevel)();
+    this.verbosity = verbosity;
     this._readyCapability = (0, _util.createPromiseCapability)();
     this._port = null;
     this._webWorker = null;
@@ -4841,8 +4819,7 @@ var PDFWorker = function PDFWorkerClosure() {
               terminateEarly();
               return;
             }
-            var supportTypedArray = data && data.supportTypedArray;
-            if (supportTypedArray) {
+            if (data && data.supportTypedArray) {
               this._messageHandler = messageHandler;
               this._port = worker;
               this._webWorker = worker;
@@ -4897,8 +4874,7 @@ var PDFWorker = function PDFWorkerClosure() {
           this._readyCapability.reject(new Error('Worker was destroyed'));
           return;
         }
-        var isTypedArraysPresent = Uint8Array !== Float32Array;
-        var port = new LoopbackPort(isTypedArraysPresent);
+        let port = new LoopbackPort();
         this._port = port;
         var id = 'fake' + nextFakeWorkerId++;
         var workerHandler = new _message_handler.MessageHandler(id + '_worker', id, port);
@@ -4923,6 +4899,9 @@ var PDFWorker = function PDFWorkerClosure() {
     }
   };
   PDFWorker.fromPort = function (params) {
+    if (!params || !params.port) {
+      throw new Error('PDFWorker.fromPort - invalid method signature.');
+    }
     if (pdfWorkerPorts.has(params.port)) {
       return pdfWorkerPorts.get(params.port);
     }
@@ -4934,13 +4913,13 @@ var PDFWorker = function PDFWorkerClosure() {
   return PDFWorker;
 }();
 var WorkerTransport = function WorkerTransportClosure() {
-  function WorkerTransport(messageHandler, loadingTask, networkStream, params, CMapReaderFactory) {
+  function WorkerTransport(messageHandler, loadingTask, networkStream, params) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
     this.fontLoader = new _font_loader.FontLoader(loadingTask.docId);
     this._params = params;
-    this.CMapReaderFactory = new CMapReaderFactory({
+    this.CMapReaderFactory = new params.CMapReaderFactory({
       baseUrl: params.cMapUrl,
       isCompressed: params.cMapPacked
     });
@@ -5105,7 +5084,6 @@ var WorkerTransport = function WorkerTransportClosure() {
       messageHandler.on('DataLoaded', function transportPage(data) {
         this.downloadInfoCapability.resolve(data);
       }, this);
-      messageHandler.on('PDFManagerReady', function transportPage(data) {}, this);
       messageHandler.on('StartRenderPage', function transportRender(data) {
         if (this.destroyed) {
           return;
@@ -5262,7 +5240,7 @@ var WorkerTransport = function WorkerTransportClosure() {
             var height = img.height;
             var size = width * height;
             var rgbaLength = size * 4;
-            var buf = new Uint8Array(size * components);
+            var buf = new Uint8ClampedArray(size * components);
             var tmpCanvas = document.createElement('canvas');
             tmpCanvas.width = width;
             tmpCanvas.height = height;
@@ -5560,7 +5538,7 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
       if (this.useRequestAnimationFrame && typeof window !== 'undefined') {
         window.requestAnimationFrame(this._nextBound);
       } else {
-        Promise.resolve(undefined).then(this._nextBound);
+        Promise.resolve().then(this._nextBound).catch(this.callback);
       }
     },
     _next: function InternalRenderTask__next() {
@@ -5584,8 +5562,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.550';
-  exports.build = build = '76337fdc';
+  exports.version = version = '2.0.575';
+  exports.build = build = '2030d171';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -5607,7 +5585,7 @@ exports.build = build;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = exports.PageViewport = undefined;
+exports.loadScript = exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = exports.PageViewport = undefined;
 
 var _util = __w_pdfjs_require__(1);
 
@@ -5878,6 +5856,17 @@ class DummyStatTimer {
     return '';
   }
 }
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    let script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = function () {
+      reject(new Error(`Cannot load script at: ${script.src}`));
+    };
+    (document.head || document.documentElement).appendChild(script);
+  });
+}
 exports.PageViewport = PageViewport;
 exports.RenderingCancelledException = RenderingCancelledException;
 exports.addLinkAttributes = addLinkAttributes;
@@ -5889,6 +5878,7 @@ exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
 exports.DOMSVGFactory = DOMSVGFactory;
 exports.StatTimer = StatTimer;
 exports.DummyStatTimer = DummyStatTimer;
+exports.loadScript = loadScript;
 
 /***/ }),
 /* 8 */
