@@ -170,6 +170,7 @@ protected:
               const uint32_t&            aCorsMode,
               const uint32_t&            aRedirectMode,
               const uint64_t&            aChannelId,
+              const nsString&            aIntegrityMetadata,
               const uint64_t&            aContentWindowId,
               const nsCString&           aPreferredAlternativeType,
               const uint64_t&            aTopLevelOuterContentWindowId,

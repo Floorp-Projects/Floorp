@@ -230,6 +230,7 @@ struct HttpChannelOpenArgs
   uint32_t                    corsMode;
   uint32_t                    redirectMode;
   uint64_t                    channelId;
+  nsString                    integrityMetadata;
   uint64_t                    contentWindowId;
   nsCString                   preferredAlternativeType;
   uint64_t                    topLevelOuterContentWindowId;
