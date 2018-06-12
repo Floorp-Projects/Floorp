@@ -28,7 +28,8 @@ const {
 const { Task } = require("devtools/shared/task");
 const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const {KeyCodes} = require("devtools/client/shared/keycodes");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
 const FUNCTION_SEARCH_POPUP_POSITION = "topcenter bottomleft";
@@ -898,10 +899,8 @@ SourcesView.prototype = extend(WidgetMethods, {
    * Opens selected item source in a new tab.
    */
   _onNewTabCommand: function () {
-    let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     let selected = this.selectedItem.attachment;
-    win.openWebLinkIn(selected.source.url, "tab", {
-      triggeringPrincipal: win.document.nodePrincipal,
+    openContentLink(selected.source.url, {
       relatedToCurrent: true,
     });
   },
