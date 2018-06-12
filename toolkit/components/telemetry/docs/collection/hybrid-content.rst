@@ -60,10 +60,11 @@ Including the library
 To use hybrid content telemetry the related content JS library needs to be included in the page. We have different integration options:
 
 * Add ``mozilla-hybrid-content-telemetry`` as a dependency to the project and require it in the code.
-* Load it directly from the external unpkg CDN.
+* Load it directly from the `external unpkg CDN <https://unpkg.com/mozilla-hybrid-content-telemetry/HybridContentTelemetry-lib.js>`_.
 * Manually fetch the latest version from the `main repository <https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/hybrid-content/HybridContentTelemetry-lib.js>`_ and add it to the page repository. Then this file can be deployed along with the page.
 
 Example (manual inclusion):
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: html
 
@@ -75,6 +76,35 @@ Example (manual inclusion):
     </head>
     <body> <!-- Other body stuff --> </body>
   </html>
+
+Example (NPM dependency):
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add the dependency to your project:
+
+.. code-block:: shell
+
+  npm install --save mozilla-hybrid-content-telemetry@1.0.0
+
+In your app load the module and use the :ref:`API <the-api>`:
+
+.. code-block:: js
+
+  const ContentTelemetry = require("mozilla-hybrid-content-telemetry");
+
+  ContentTelemetry.registerEvents("page.interaction", {
+    "click": {
+      methods: ["click"],
+      objects: ["red_button", "blue_button"],
+    }
+  });
+
+  // Now events can be recorded.
+  ContentTelemetry.recordEvent("page.interaction", "click", "red_button");
+
+.. note::
+
+  The following examples assume the manual inclusion of the JS library.
 
 Registering the probes
 ----------------------
@@ -177,6 +207,9 @@ Example:
       </div>
     </body>
   </html>
+
+
+.. _the-api:
 
 The API
 =======
