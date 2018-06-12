@@ -51,6 +51,20 @@ raptor-firefox-speedometer:
         extra-options:
             - --test=raptor-speedometer
 
+raptor-chrome-tp6:
+    description: "Raptor Chrome tp6"
+    try-name: raptor-chrome-tp6
+    treeherder-symbol: Rap-C(tp6)
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['try']
+            default: ['try']
+    max-run-time: 1200
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6
+            - --app=chrome
+
 raptor-chrome-speedometer:
     description: "Raptor Chrome speedometer"
     try-name: raptor-chrome-speedometer
