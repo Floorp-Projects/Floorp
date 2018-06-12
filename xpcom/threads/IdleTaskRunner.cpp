@@ -42,6 +42,7 @@ IdleTaskRunner::IdleTaskRunner(const CallbackType& aCallback,
   , mRepeating(aRepeating), mTimerActive(false)
   , mMayStopProcessing(aMayStopProcessing)
   , mTaskCategory(aTaskCategory)
+  , mName(aRunnableName)
 {
 }
 
@@ -159,7 +160,7 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
       // short timeout.
       mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, this, 16,
                                                 nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                                "IdleTaskRunner");
+                                                mName);
     }
   }
 }
@@ -201,7 +202,7 @@ IdleTaskRunner::SetTimerInternal(uint32_t aDelay)
     }
     mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
                                       nsITimer::TYPE_ONE_SHOT,
-                                      "IdleTaskRunner");
+                                      mName);
     mTimerActive = true;
   }
 }

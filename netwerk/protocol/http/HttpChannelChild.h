@@ -182,8 +182,6 @@ protected:
 
   virtual void DoAsyncAbort(nsresult aStatus) override;
 
-  NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
-
   nsresult
   AsyncCall(void (HttpChannelChild::*funcPtr)(),
             nsRunnableMethod<HttpChannelChild> **retval = nullptr) override;

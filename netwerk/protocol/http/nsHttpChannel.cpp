@@ -8469,14 +8469,6 @@ nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
     return rv;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::GetResponseSynthesized(bool* aSynthesized)
-{
-    NS_ENSURE_ARG_POINTER(aSynthesized);
-    *aSynthesized = false;
-    return NS_OK;
-}
-
 bool
 nsHttpChannel::AwaitingCacheCallbacks()
 {
