@@ -1337,35 +1337,16 @@ let PDFViewerApplication = {
 let validateFileURL;
 ;
 function loadFakeWorker() {
-  return new Promise(function (resolve, reject) {
-    if (!_pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      _pdfjsLib.GlobalWorkerOptions.workerSrc = _app_options.AppOptions.get('workerSrc');
-    }
-    let script = document.createElement('script');
-    script.src = _pdfjsLib.PDFWorker.getWorkerSrc();
-    script.onload = function () {
-      resolve();
-    };
-    script.onerror = function () {
-      reject(new Error(`Cannot load fake worker at: ${script.src}`));
-    };
-    (document.head || document.documentElement).appendChild(script);
-  });
+  if (!_pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    _pdfjsLib.GlobalWorkerOptions.workerSrc = _app_options.AppOptions.get('workerSrc');
+  }
+  return (0, _pdfjsLib.loadScript)(_pdfjsLib.PDFWorker.getWorkerSrc());
 }
 function loadAndEnablePDFBug(enabledTabs) {
-  return new Promise(function (resolve, reject) {
-    let appConfig = PDFViewerApplication.appConfig;
-    let script = document.createElement('script');
-    script.src = appConfig.debuggerScriptPath;
-    script.onload = function () {
-      PDFBug.enable(enabledTabs);
-      PDFBug.init({ OPS: _pdfjsLib.OPS }, appConfig.mainContainer);
-      resolve();
-    };
-    script.onerror = function () {
-      reject(new Error('Cannot load debugger at ' + script.src));
-    };
-    (document.getElementsByTagName('head')[0] || document.body).appendChild(script);
+  let appConfig = PDFViewerApplication.appConfig;
+  return (0, _pdfjsLib.loadScript)(appConfig.debuggerScriptPath).then(function () {
+    PDFBug.enable(enabledTabs);
+    PDFBug.init({ OPS: _pdfjsLib.OPS }, appConfig.mainContainer);
   });
 }
 function webViewerInitialized() {

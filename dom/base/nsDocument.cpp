@@ -2603,13 +2603,8 @@ WarnIfSandboxIneffective(nsIDocShell* aDocShell,
 
 bool
 nsIDocument::IsSynthesized() {
-  nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(mChannel);
-  bool synthesized = false;
-  if (internalChan) {
-    DebugOnly<nsresult> rv = internalChan->GetResponseSynthesized(&synthesized);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "GetResponseSynthesized shouldn't fail.");
-  }
-  return synthesized;
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->GetLoadInfo() : nullptr;
+  return loadInfo && loadInfo->GetServiceWorkerTaintingSynthesized();
 }
 
 bool
