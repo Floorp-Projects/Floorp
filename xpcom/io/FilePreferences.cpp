@@ -99,8 +99,10 @@ bool Normalizer::Get(nsAString& aNormalizedFilePath)
     aNormalizedFilePath.Append(mSeparator.AsChar());
   }
 
-  if (!ConsumeName()) {
-    return false;
+  while (HasInput()) {
+    if (!ConsumeName()) {
+      return false;
+    }
   }
 
   for (auto const& name : mStack) {
@@ -112,12 +114,12 @@ bool Normalizer::Get(nsAString& aNormalizedFilePath)
 
 bool Normalizer::ConsumeName()
 {
-  if (!HasInput() || CheckEOF()) {
+  if (CheckEOF()) {
     return true;
   }
 
   if (CheckCurrentDir()) {
-    return ConsumeName();
+    return true;
   }
 
   if (CheckParentDir()) {
@@ -127,7 +129,7 @@ bool Normalizer::ConsumeName()
     }
 
     mStack.RemoveLastElement();
-    return ConsumeName();
+    return true;
   }
 
   nsDependentSubstring name;
@@ -137,7 +139,7 @@ bool Normalizer::ConsumeName()
   }
   mStack.AppendElement(name);
 
-  return ConsumeName();
+  return true;
 }
 
 bool Normalizer::CheckCurrentDir()
