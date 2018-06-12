@@ -8,15 +8,15 @@ extern crate core_foundation_sys;
 extern crate libc;
 
 use consts::{FIDO_USAGE_U2FHID, FIDO_USAGE_PAGE};
+use core_foundation::dictionary::*;
+use core_foundation::number::*;
+use core_foundation::string::*;
 use core_foundation_sys::base::*;
 use core_foundation_sys::dictionary::*;
 use core_foundation_sys::runloop::*;
 use core_foundation_sys::string::*;
-use core_foundation::dictionary::*;
-use core_foundation::string::*;
-use core_foundation::number::*;
-use std::os::raw::c_void;
 use std::ops::Deref;
+use std::os::raw::c_void;
 
 type IOOptionBits = u32;
 
@@ -168,7 +168,7 @@ impl IOHIDDeviceMatcher {
                 CFString::from_static_string("DeviceUsagePage"),
                 CFNumber::from(FIDO_USAGE_PAGE as i32),
             ),
-            ]);
+        ]);
         Self { dict }
     }
 }
