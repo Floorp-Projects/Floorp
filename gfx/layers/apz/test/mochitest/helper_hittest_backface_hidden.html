@@ -49,7 +49,7 @@ function* test(testDriver) {
   // This is not required for exercising the behavior we want to test,
   // but it's needed to be able to assert the results reliably.
   config.utils.setDisplayPortForElement(0, 0, 1000, 1000, subframe, 1);
-  yield waitForAllPaints(testDriver);
+  yield waitForApzFlushedRepaints(testDriver);
 
   var subframeViewId = config.utils.getViewId(subframe);
 
