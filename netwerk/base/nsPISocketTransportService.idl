@@ -49,13 +49,13 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
 
 %{C++
 /*
- * Network activity: we send out this topic no more than every
+ * I/O activity: we send out this topic no more than every
  * intervalMilliseconds (as set by the
- * "network.activity.intervalMilliseconds" preference: if 0 no notifications
- * are sent) if the network is currently active (i.e. we're sending/receiving
- * data to/from the socket).
+ * "io.activity.intervalMilliseconds" preference: if 0 no notifications
+ * are sent) if the I/O is currently active (i.e. we're sending/receiving
+ * data to/from the socket or writing/reading to/from a file).
  */
-#define NS_NETWORK_ACTIVITY "network-activity"
+#define NS_IO_ACTIVITY "io-activity"
 
 
 %}

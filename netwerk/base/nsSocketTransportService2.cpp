@@ -5,7 +5,7 @@
 
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
-#include "NetworkActivityMonitor.h"
+#include "IOActivityMonitor.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsIOService.h"
@@ -49,7 +49,7 @@ static Atomic<PRThread*, Relaxed> gSocketThread;
 #define KEEPALIVE_PROBE_COUNT_PREF "network.tcp.keepalive.probe_count"
 #define SOCKET_LIMIT_TARGET 1000U
 #define SOCKET_LIMIT_MIN      50U
-#define INTERVAL_PREF "network.activity.intervalMilliseconds"
+#define IO_ACTIVITY_INTERVAL_PREF "io.activity.intervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
 #define POLL_BUSY_WAIT_PERIOD "network.sts.poll_busy_wait_period"
 #define POLL_BUSY_WAIT_PERIOD_TIMEOUT "network.sts.poll_busy_wait_period_timeout"
@@ -711,7 +711,7 @@ nsSocketTransportService::ShutdownThread()
         mAfterWakeUpTimer = nullptr;
     }
 
-    NetworkActivityMonitor::Shutdown();
+    IOActivityMonitor::Shutdown();
 
     mInitialized = false;
     mShuttingDown = false;
@@ -1446,12 +1446,12 @@ nsSocketTransportService::Observe(nsISupports *subject,
     }
 
     if (!strcmp(topic, "profile-initial-state")) {
-        int32_t interval = Preferences::GetInt(INTERVAL_PREF, 0);
+        int32_t interval = Preferences::GetInt(IO_ACTIVITY_INTERVAL_PREF, 0);
         if (interval <= 0) {
             return NS_OK;
         }
 
-        return net::NetworkActivityMonitor::Init(interval);
+        return net::IOActivityMonitor::Init(interval);
     }
 
     if (!strcmp(topic, "last-pb-context-exited")) {

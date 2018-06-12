@@ -15,11 +15,15 @@
 #endif
 
 #include "private/pprio.h"
+#include "prerror.h"
 
+#include "IOActivityMonitor.h"
 #include "nsFileStreams.h"
 #include "nsIFile.h"
 #include "nsReadLine.h"
 #include "nsIClassInfoImpl.h"
+#include "nsLiteralString.h"
+#include "nsSocketTransport2.h"    // for ErrorAccordingToNSPR()
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/FileUtils.h"
@@ -29,6 +33,8 @@
 typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
 
 using namespace mozilla::ipc;
+using namespace mozilla::net;
+
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
@@ -355,7 +361,22 @@ nsFileStreamBase::DoOpen()
                                                    &fd);
     }
 
+    if (rv == NS_OK && IOActivityMonitor::IsActive()) {
+      auto nativePath = mOpenParams.localFile->NativePath();
+      if (!nativePath.IsEmpty()) {
+        // registering the file to the activity monitor
+        #ifdef XP_WIN
+        // 16 bits unicode
+        IOActivityMonitor::MonitorFile(fd, NS_ConvertUTF16toUTF8(nativePath.get()).get());
+        #else
+        // 8 bit unicode
+        IOActivityMonitor::MonitorFile(fd, nativePath.get());
+        #endif
+      }
+    }
+
     CleanUpOpen();
+
     if (NS_FAILED(rv)) {
         mState = eError;
         mErrorValue = rv;
