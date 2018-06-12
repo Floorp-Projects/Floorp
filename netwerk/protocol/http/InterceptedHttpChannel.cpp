@@ -608,13 +608,6 @@ InterceptedHttpChannel::SetupFallbackChannel(const char*  aFallbackKey)
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetResponseSynthesized(bool* aResponseSynthesized)
-{
-  *aResponseSynthesized = mResponseHead || mBodyReader;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 InterceptedHttpChannel::SetPriority(int32_t aPriority)
 {
   mPriority = clamped<int32_t>(aPriority, INT16_MIN, INT16_MAX);

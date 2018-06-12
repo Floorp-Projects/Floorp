@@ -3638,14 +3638,6 @@ HttpChannelChild::ResetInterception()
   }
 }
 
-NS_IMETHODIMP
-HttpChannelChild::GetResponseSynthesized(bool* aSynthesized)
-{
-  NS_ENSURE_ARG_POINTER(aSynthesized);
-  *aSynthesized = mSynthesizedResponse;
-  return NS_OK;
-}
-
 void
 HttpChannelChild::TrySendDeletingChannel()
 {
