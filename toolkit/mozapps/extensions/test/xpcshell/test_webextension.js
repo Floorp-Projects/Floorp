@@ -95,7 +95,7 @@ add_task(async function test_1() {
     isSystem: false,
     type: "extension",
     isWebExtension: true,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     iconURL: `${uri}icon48.png`,
     icon64URL: `${uri}icon64.png`,
   });
@@ -122,7 +122,7 @@ add_task(async function test_1() {
     isActive: true,
     isSystem: false,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     iconURL: `${uri}icon48.png`,
     icon64URL: `${uri}icon64.png`,
   });
@@ -168,7 +168,7 @@ add_task(async function test_2() {
     isActive: true,
     isSystem: false,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await addon.uninstall();
@@ -410,7 +410,7 @@ add_task(async function testThemeExtension() {
     isSystem: false,
     type: "theme",
     isWebExtension: true,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await addon.uninstall();
@@ -456,7 +456,7 @@ add_task(async function test_theme_upgrade() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   // Create a webextension theme with the same ID
