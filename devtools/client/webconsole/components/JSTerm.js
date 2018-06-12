@@ -1343,6 +1343,11 @@ class JSTerm extends Component {
       this.hud.window.removeEventListener("blur", this._blurEventHandler);
     }
 
+    if (this.editor) {
+      this.editor.destroy();
+      this.editor = null;
+    }
+
     this.hud = null;
   }
 
