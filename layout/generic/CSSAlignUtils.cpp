@@ -15,8 +15,7 @@ static nscoord
 SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
             LogicalAxis aAxis, nscoord aCBSize)
 {
-  nscoord size = aAxis == eLogicalAxisBlock ? aSize.BSize(aWM)
-                                            : aSize.ISize(aWM);
+  nscoord size = aSize.Size(aAxis, aWM);
   return aCBSize - (size + aMargin);
 }
 
@@ -129,8 +128,7 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
       if (MOZ_LIKELY(isSameSide == (aAlignment == NS_STYLE_ALIGN_BASELINE))) {
         offset = marginStart + aBaselineAdjust;
       } else {
-        nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
-                                                  : aChildSize.ISize(wm);
+        nscoord size = aChildSize.Size(aAxis, wm);
         offset = aCBSize - (size + marginEnd) - aBaselineAdjust;
       }
       break;
@@ -140,14 +138,12 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
       offset = marginStart;
       break;
     case NS_STYLE_ALIGN_END: {
-      nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
-                                                : aChildSize.ISize(wm);
+      nscoord size = aChildSize.Size(aAxis, wm);
       offset = aCBSize - (size + marginEnd);
       break;
     }
     case NS_STYLE_ALIGN_CENTER: {
-      nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
-                                                : aChildSize.ISize(wm);
+      nscoord size = aChildSize.Size(aAxis, wm);
       offset = (aCBSize - size + marginStart - marginEnd) / 2;
       break;
     }
