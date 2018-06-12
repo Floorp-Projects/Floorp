@@ -1607,6 +1607,34 @@ js::ToNumberSlow(JSContext* cx, HandleValue v_, double* out)
     return false;
 }
 
+// BigInt proposal section 3.1.6
+bool
+js::ToNumericSlow(JSContext* cx, MutableHandleValue vp)
+{
+    MOZ_ASSERT(!vp.isNumber());
+#ifdef ENABLE_BIGINT
+    MOZ_ASSERT(!vp.isBigInt());
+#endif
+
+    // Step 1.
+    if (!vp.isPrimitive()) {
+        if (cx->helperThread())
+            return false;
+        if (!ToPrimitive(cx, JSTYPE_NUMBER, vp))
+            return false;
+    }
+
+    // Step 2.
+#ifdef ENABLE_BIGINT
+    if (vp.isBigInt()) {
+        return true;
+    }
+#endif
+
+    // Step 3.
+    return ToNumber(cx, vp);
+}
+
 /*
  * Convert a value to an int8_t, according to the WebIDL rules for byte
  * conversion. Return converted value in *out on success, false on failure.
