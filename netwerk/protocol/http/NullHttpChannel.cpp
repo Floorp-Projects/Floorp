@@ -100,6 +100,12 @@ NullHttpChannel::GetIsTrackingResource(bool* aIsTrackingResource)
 }
 
 NS_IMETHODIMP
+NullHttpChannel::OverrideTrackingResource(bool aIsTracking)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetTransferSize(uint64_t *aTransferSize)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
