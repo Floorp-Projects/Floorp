@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import time
 import unittest
 
 from mozunit import main
@@ -174,6 +175,30 @@ class TestCcacheStats(unittest.TestCase):
     max cache size                       5.0 GB
     """
 
+    # Substitute a locally-generated timestamp because the timestamp format is
+    # locale-dependent.
+    STAT8 = """
+    cache directory                     /home/psimonyi/.ccache
+    primary config                      /home/psimonyi/.ccache/ccache.conf
+    secondary config      (readonly)    /etc/ccache.conf
+    stats zero time                     {timestamp}
+    cache hit (direct)                   571
+    cache hit (preprocessed)            1203
+    cache miss                         11747
+    cache hit rate                     13.12 %
+    called for link                      623
+    called for preprocessing            7194
+    compile failed                        32
+    preprocessor error                   137
+    bad compiler arguments                 4
+    autoconf compile/link                348
+    no input file                        162
+    cleanups performed                    77
+    files in cache                     13464
+    cache size                           6.2 GB
+    max cache size                       7.0 GB
+    """.format(timestamp=time.strftime('%c'))
+
     def test_parse_garbage_stats_message(self):
         self.assertRaises(ValueError, CCacheStats, self.STAT_GARBAGE)
 
@@ -230,6 +255,11 @@ class TestCcacheStats(unittest.TestCase):
         # Test stats for 3.3.3.
         stat7 = CCacheStats(self.STAT7)
         self.assertTrue(stat7)
+
+    def test_stats_version34(self):
+        # Test parsing 3.4 output.
+        stat8 = CCacheStats(self.STAT8)
+        self.assertTrue(stat8)
 
 if __name__ == '__main__':
     main()

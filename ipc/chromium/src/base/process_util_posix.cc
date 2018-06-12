@@ -121,9 +121,10 @@ class ScopedDIRClose {
 typedef mozilla::UniquePtr<DIR, ScopedDIRClose> ScopedDIR;
 
 
-void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
-  // DANGER: no calls to malloc are allowed from now on:
-  // http://crbug.com/36678
+void CloseSuperfluousFds(std::function<bool(int)>&& should_preserve) {
+  // DANGER: no calls to malloc (or locks, etc.) are allowed from now on:
+  // https://crbug.com/36678
+  // Also, beware of STL iterators: https://crbug.com/331459
 #if defined(ANDROID)
   static const rlim_t kSystemDefaultMaxFds = 1024;
   static const char kFDDir[] = "/proc/self/fd";
@@ -160,19 +161,14 @@ void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
     // Fallback case: Try every possible fd.
     for (rlim_t i = 0; i < max_fds; ++i) {
       const int fd = static_cast<int>(i);
-      if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO)
+      if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO ||
+          should_preserve(fd)) {
         continue;
-      InjectiveMultimap::const_iterator j;
-      for (j = saved_mapping.begin(); j != saved_mapping.end(); j++) {
-        if (fd == j->dest)
-          break;
       }
-      if (j != saved_mapping.end())
-        continue;
 
       // Since we're just trying to close anything we can find,
       // ignore any error return values of close().
-      IGNORE_EINTR(close(fd));
+      close(fd);
     }
     return;
   }
@@ -189,17 +185,12 @@ void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
     const long int fd = strtol(fd_dir.name(), &endptr, 10);
     if (fd_dir.name()[0] == 0 || *endptr || fd < 0 || errno)
       continue;
-    if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO)
-      continue;
-    InjectiveMultimap::const_iterator i;
-    for (i = saved_mapping.begin(); i != saved_mapping.end(); i++) {
-      if (fd == i->dest)
-        break;
-    }
-    if (i != saved_mapping.end())
-      continue;
     if (fd == dir_fd)
       continue;
+    if (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO ||
+        should_preserve(fd)) {
+      continue;
+    }
 
     // When running under Valgrind, Valgrind opens several FDs for its
     // own use and will complain if we try to close them.  All of
