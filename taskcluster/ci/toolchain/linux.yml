@@ -415,6 +415,29 @@ linux64-rust-1.24:
         toolchain-alias: linux64-rust
         toolchain-artifact: public/build/rustc.tar.xz
 
+linux64-rust-nightly:
+    description: "rust nightly repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust-nightly)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', 'nightly-2018-05-21',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+        toolchain-artifact: public/build/rustc.tar.xz
+
 linux64-rust-macos-1.24:
     description: "rust repack with macos-cross support"
     treeherder:
