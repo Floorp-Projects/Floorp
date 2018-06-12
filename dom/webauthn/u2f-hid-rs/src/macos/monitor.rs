@@ -5,13 +5,13 @@
 extern crate libc;
 extern crate log;
 
+use core_foundation::base::TCFType;
 use core_foundation_sys::base::*;
 use core_foundation_sys::runloop::*;
-use core_foundation::base::TCFType;
-use std::os::raw::c_void;
 use platform::iokit::*;
 use runloop::RunLoop;
 use std::collections::HashMap;
+use std::os::raw::c_void;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{io, slice};
 use util::io_err;
