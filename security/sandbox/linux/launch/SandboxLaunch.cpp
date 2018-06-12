@@ -212,8 +212,6 @@ private:
   int mFlags;
   int mChrootServer;
   int mChrootClient;
-  // For CloseSuperfluousFds in the chroot helper process:
-  base::InjectiveMultimap mChrootMap;
 
   void StartChrootServer();
   SandboxFork(const SandboxFork&) = delete;
@@ -347,10 +345,6 @@ SandboxFork::SandboxFork(int aFlags, bool aChroot)
     }
     mChrootClient = fds[0];
     mChrootServer = fds[1];
-    // Do this here because the child process won't be able to malloc.
-    mChrootMap.push_back(base::InjectionArc(mChrootServer,
-                                            mChrootServer,
-                                            false));
   }
 }
 
@@ -596,7 +590,7 @@ SandboxFork::StartChrootServer()
     MOZ_DIAGNOSTIC_ASSERT(false);
   }
 
-  CloseSuperfluousFds(mChrootMap);
+  base::CloseSuperfluousFds([this](int fd) { return fd == mChrootServer; });
 
   char msg;
   ssize_t msgLen = HANDLE_EINTR(read(mChrootServer, &msg, 1));

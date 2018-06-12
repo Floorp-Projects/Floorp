@@ -3713,7 +3713,7 @@ nsWindow::Create(nsIWidget* aParent,
         if (Preferences::GetBool("mozilla.widget.use-argb-visuals", false))
             useAlphaVisual = true;
 
-#ifdef GL_PROVIDER_GLX
+#ifdef MOZ_X11
         // Ensure gfxPlatform is initialized, since that is what initializes
         // gfxVars, used below.
         Unused << gfxPlatform::GetPlatform();
@@ -3740,7 +3740,7 @@ nsWindow::Create(nsIWidget* aParent,
                                                                    visualId));
             }
         } else
-#endif // GL_PROVIDER_GLX
+#endif // MOZ_X11
         {
             if (useAlphaVisual) {
                 GdkScreen *screen = gtk_widget_get_screen(mShell);

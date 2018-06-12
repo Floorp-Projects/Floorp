@@ -126,6 +126,14 @@ else:
         'ProcessUtils_none.cpp',
     ]
 
+if CONFIG['OS_ARCH'] != 'WINNT':
+    EXPORTS.mozilla.ipc += [
+        'FileDescriptorShuffle.h',
+    ]
+    UNIFIED_SOURCES += [
+        'FileDescriptorShuffle.cpp',
+    ]
+
 EXPORTS.ipc += [
     'IPCMessageUtils.h',
 ]

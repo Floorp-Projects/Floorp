@@ -28,6 +28,8 @@ namespace ipc {
 
 class PBackgroundChild;
 class PBackgroundParent;
+class PChildToParentStreamChild;
+class PParentToChildStreamParent;
 
 // The IPCStream IPC actor is designed to push an nsIInputStream from child to
 // parent or parent to child incrementally.  This is mainly needed for streams

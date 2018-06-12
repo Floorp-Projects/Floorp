@@ -1771,7 +1771,7 @@ fuzzy-if(asyncPan,190,510) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,510) ran
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
 == 829958.html 829958-ref.html
-fuzzy-if(webrender&&gtkWidget,1-2,44000-135600) == 836844-1.html 836844-1-ref.html
+fuzzy-if(webrender&&gtkWidget,1-2,44000-152400) == 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
 == 844178.html 844178-ref.html
 fuzzy-if(OSX,1,364) fuzzy-if(skiaContent,1,320) == 846144-1.html 846144-1-ref.html
