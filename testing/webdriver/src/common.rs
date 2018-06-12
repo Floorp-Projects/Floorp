@@ -1,224 +1,169 @@
-use rustc_serialize::{Encodable, Encoder};
-use rustc_serialize::json::{Json, ToJson};
-use std::collections::BTreeMap;
-
-use error::{WebDriverResult, WebDriverError, ErrorStatus};
+use serde::ser::{Serialize, Serializer};
 
 pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 pub static FRAME_KEY: &'static str = "frame-075b-4da1-b6ba-e579c2d3230a";
 pub static WINDOW_KEY: &'static str = "window-fcc6-11e5-b4f8-330a88ab9d7f";
 
-#[derive(Clone, Debug, PartialEq, RustcEncodable)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Cookie {
+    pub name: String,
+    pub value: String,
+    pub path: Option<String>,
+    pub domain: Option<String>,
+    #[serde(default)]
+    pub secure: bool,
+    #[serde(default)]
+    pub httpOnly: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry: Option<Date>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Date(pub u64);
 
-impl Date {
-    pub fn new(timestamp: u64) -> Date {
-        Date(timestamp)
-    }
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum FrameId {
+    Short(u16),
+    #[serde(
+        rename = "element-6066-11e4-a52e-4f735466cecf", serialize_with = "serialize_webelement_id"
+    )]
+    Element(WebElement),
 }
 
-impl ToJson for Date {
-    fn to_json(&self) -> Json {
-        let &Date(x) = self;
-        x.to_json()
-    }
+// TODO(Henrik): Remove when ToMarionette trait has been fixed
+fn serialize_webelement_id<S>(element: &WebElement, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    element.id.serialize(serializer)
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Nullable<T: ToJson> {
-    Value(T),
-    Null
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum LocatorStrategy {
+    #[serde(rename = "css selector")]
+    CSSSelector,
+    #[serde(rename = "link text")]
+    LinkText,
+    #[serde(rename = "partial link text")]
+    PartialLinkText,
+    #[serde(rename = "tag name")]
+    TagName,
+    #[serde(rename = "xpath")]
+    XPath,
 }
 
-impl<T: ToJson> Nullable<T> {
-     pub fn is_null(&self) -> bool {
-        match *self {
-            Nullable::Value(_) => false,
-            Nullable::Null => true
-        }
-    }
-
-     pub fn is_value(&self) -> bool {
-        match *self {
-            Nullable::Value(_) => true,
-            Nullable::Null => false
-        }
-    }
-
-    pub fn map<F, U: ToJson>(self, f: F) -> Nullable<U>
-        where F: FnOnce(T) -> U {
-        match self {
-            Nullable::Value(val) => Nullable::Value(f(val)),
-            Nullable::Null => Nullable::Null
-        }
-    }
-}
-
-impl<T: ToJson> Nullable<T> {
-    //This is not very pretty
-    pub fn from_json<F: FnOnce(&Json) -> WebDriverResult<T>>(value: &Json, f: F) -> WebDriverResult<Nullable<T>> {
-        if value.is_null() {
-            Ok(Nullable::Null)
-        } else {
-            Ok(Nullable::Value(try!(f(value))))
-        }
-    }
-}
-
-impl<T: ToJson> ToJson for Nullable<T> {
-    fn to_json(&self) -> Json {
-        match *self {
-            Nullable::Value(ref x) => x.to_json(),
-            Nullable::Null => Json::Null
-        }
-    }
-}
-
-impl<T: ToJson> Encodable for Nullable<T> {
-    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        match *self {
-            Nullable::Value(ref x) => x.to_json().encode(s),
-            Nullable::Null => s.emit_option_none()
-        }
-    }
-}
-
-impl<T: ToJson> Into<Option<T>> for Nullable<T> {
-    fn into(self) -> Option<T> {
-        match self {
-            Nullable::Value(val) => Some(val),
-            Nullable::Null => None
-        }
-    }
-}
-
-impl<T: ToJson> From<Option<T>> for Nullable<T> {
-    fn from(option: Option<T>) -> Nullable<T> {
-        match option {
-            Some(val) => Nullable::Value(val),
-            None => Nullable::Null,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WebElement {
-    pub id: String
+    #[serde(rename = "element-6066-11e4-a52e-4f735466cecf")]
+    pub id: String,
 }
 
 impl WebElement {
     pub fn new(id: String) -> WebElement {
-        WebElement {
-            id: id
-        }
-    }
-
-    pub fn from_json(data: &Json) -> WebDriverResult<WebElement> {
-        let object = try_opt!(data.as_object(),
-                              ErrorStatus::InvalidArgument,
-                              "Could not convert webelement to object");
-        let id_value = try_opt!(object.get(ELEMENT_KEY),
-                                ErrorStatus::InvalidArgument,
-                                "Could not find webelement key");
-
-        let id = try_opt!(id_value.as_string(),
-                          ErrorStatus::InvalidArgument,
-                          "Could not convert web element to string").to_string();
-
-        Ok(WebElement::new(id))
+        WebElement { id: id }
     }
 }
 
-impl ToJson for WebElement {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert(ELEMENT_KEY.to_string(), self.id.to_json());
-        Json::Object(data)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+    use test::check_serialize_deserialize;
+
+    #[test]
+    fn test_json_date() {
+        let json = r#"1234"#;
+        let data = Date(1234);
+
+        check_serialize_deserialize(&json, &data);
     }
-}
 
-impl <T> From<T> for WebElement
-    where T: Into<String> {
-    fn from(data: T) -> WebElement {
-        WebElement::new(data.into())
+    #[test]
+    fn test_json_date_invalid() {
+        let json = r#""2018-01-01""#;
+        assert!(serde_json::from_str::<Date>(&json).is_err());
     }
-}
 
-#[derive(Debug, PartialEq)]
-pub enum FrameId {
-    Short(u16),
-    Element(WebElement),
-    Null
-}
+    #[test]
+    fn test_json_frame_id_short() {
+        let json = r#"1234"#;
+        let data = FrameId::Short(1234);
 
-impl FrameId {
-    pub fn from_json(data: &Json) -> WebDriverResult<FrameId> {
-        match data {
-            &Json::U64(x) => {
-                if x > u16::max_value() as u64 || x < u16::min_value() as u64 {
-                    return Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
-                                                   "frame id out of range"))
-                };
-                Ok(FrameId::Short(x as u16))
-            },
-            &Json::Null => Ok(FrameId::Null),
-            &Json::Object(_) => Ok(FrameId::Element(
-                try!(WebElement::from_json(data)))),
-            _ => Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
-                                         "frame id has unexpected type"))
-        }
+        check_serialize_deserialize(&json, &data);
     }
-}
 
-impl ToJson for FrameId {
-    fn to_json(&self) -> Json {
-        match *self {
-            FrameId::Short(x) => {
-                Json::U64(x as u64)
-            },
-            FrameId::Element(ref x) => {
-                Json::String(x.id.clone())
-            },
-            FrameId::Null => {
-                Json::Null
-            }
-        }
+    #[test]
+    fn test_json_frame_id_webelement() {
+        let json = r#""elem""#;
+        let data = FrameId::Element(WebElement::new("elem".into()));
+
+        check_serialize_deserialize(&json, &data);
     }
-}
 
-#[derive(Debug, PartialEq)]
-pub enum LocatorStrategy {
-    CSSSelector,
-    LinkText,
-    PartialLinkText,
-    TagName,
-    XPath,
-}
-
-impl LocatorStrategy {
-    pub fn from_json(body: &Json) -> WebDriverResult<LocatorStrategy> {
-        match try_opt!(body.as_string(),
-                       ErrorStatus::InvalidArgument,
-                       "Expected locator strategy as string") {
-            "css selector" => Ok(LocatorStrategy::CSSSelector),
-            "link text" => Ok(LocatorStrategy::LinkText),
-            "partial link text" => Ok(LocatorStrategy::PartialLinkText),
-            "tag name" => Ok(LocatorStrategy::TagName),
-            "xpath" => Ok(LocatorStrategy::XPath),
-            x => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                         format!("Unknown locator strategy {}", x)))
-        }
+    #[test]
+    fn test_json_frame_id_invalid() {
+        let json = r#"true"#;
+        assert!(serde_json::from_str::<FrameId>(&json).is_err());
     }
-}
 
-impl ToJson for LocatorStrategy {
-    fn to_json(&self) -> Json {
-        Json::String(match *self {
-            LocatorStrategy::CSSSelector => "css selector",
-            LocatorStrategy::LinkText => "link text",
-            LocatorStrategy::PartialLinkText => "partial link text",
-            LocatorStrategy::TagName => "tag name",
-            LocatorStrategy::XPath => "xpath"
-        }.to_string())
+    #[test]
+    fn test_json_locator_strategy_css_selector() {
+        let json = r#""css selector""#;
+        let data = LocatorStrategy::CSSSelector;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_locator_strategy_link_text() {
+        let json = r#""link text""#;
+        let data = LocatorStrategy::LinkText;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_locator_strategy_partial_link_text() {
+        let json = r#""partial link text""#;
+        let data = LocatorStrategy::PartialLinkText;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_locator_strategy_tag_name() {
+        let json = r#""tag name""#;
+        let data = LocatorStrategy::TagName;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_locator_strategy_xpath() {
+        let json = r#""xpath""#;
+        let data = LocatorStrategy::XPath;
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_locator_strategy_invalid() {
+        let json = r#""foo""#;
+        assert!(serde_json::from_str::<LocatorStrategy>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_webelement() {
+        let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
+        let data = WebElement::new("elem".into());
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_webelement_invalid() {
+        let data = r#"{"elem-6066-11e4-a52e-4f735466cecf":"elem"}"#;
+        assert!(serde_json::from_str::<WebElement>(&data).is_err());
     }
 }
