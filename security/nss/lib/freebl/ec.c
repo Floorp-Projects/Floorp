@@ -653,6 +653,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     mp_int r, s; /* tuple (r, s) is the signature */
     mp_int t;    /* holding tmp values */
     mp_int n;
+    mp_int ar; /* blinding value */
     mp_err err = MP_OKAY;
     ECParams *ecParams = NULL;
     SECItem kGpoint = { siBuffer, NULL, 0 };
@@ -674,6 +675,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     MP_DIGITS(&s) = 0;
     MP_DIGITS(&n) = 0;
     MP_DIGITS(&t) = 0;
+    MP_DIGITS(&ar) = 0;
 
     /* Check args */
     if (!key || !signature || !digest || !kb || (kblen < 0)) {
@@ -700,6 +702,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     CHECK_MPI_OK(mp_init(&s));
     CHECK_MPI_OK(mp_init(&n));
     CHECK_MPI_OK(mp_init(&t));
+    CHECK_MPI_OK(mp_init(&ar));
 
     SECITEM_TO_MPINT(ecParams->order, &n);
     SECITEM_TO_MPINT(key->privateValue, &d);
@@ -815,12 +818,25 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
         goto cleanup;
     }
     CHECK_MPI_OK(mp_read_unsigned_octets(&t, t2, 2 * ecParams->order.len)); /* t <-$ Zn */
-    CHECK_MPI_OK(mp_mulmod(&k, &t, &n, &k));                                /* k = k * t mod n */
-    CHECK_MPI_OK(mp_invmod(&k, &n, &k));                                    /* k = k**-1 mod n */
-    CHECK_MPI_OK(mp_mulmod(&k, &t, &n, &k));                                /* k = k * t mod n */
-    CHECK_MPI_OK(mp_mulmod(&d, &r, &n, &d));                                /* d = d * r mod n */
-    CHECK_MPI_OK(mp_addmod(&s, &d, &n, &s));                                /* s = s + d mod n */
-    CHECK_MPI_OK(mp_mulmod(&s, &k, &n, &s));                                /* s = s * k mod n */
+    PORT_Memset(t2, 0, 2 * ecParams->order.len);
+    if (RNG_GenerateGlobalRandomBytes(t2, 2 * ecParams->order.len) != SECSuccess) {
+        PORT_SetError(SEC_ERROR_NEED_RANDOM);
+        rv = SECFailure;
+        goto cleanup;
+    }
+    CHECK_MPI_OK(mp_read_unsigned_octets(&ar, t2, 2 * ecParams->order.len)); /* ar <-$ Zn */
+
+    /* Using mp_invmod on k directly would leak bits from k. */
+    CHECK_MPI_OK(mp_mul(&k, &ar, &k));       /* k = k * ar */
+    CHECK_MPI_OK(mp_mulmod(&k, &t, &n, &k)); /* k = k * t mod n */
+    CHECK_MPI_OK(mp_invmod(&k, &n, &k));     /* k = k**-1 mod n */
+    CHECK_MPI_OK(mp_mulmod(&k, &t, &n, &k)); /* k = k * t mod n */
+    /* To avoid leaking secret bits here the addition is blinded. */
+    CHECK_MPI_OK(mp_mul(&d, &ar, &t));        /* t = d * ar */
+    CHECK_MPI_OK(mp_mulmod(&t, &r, &n, &d));  /* d = t * r mod n */
+    CHECK_MPI_OK(mp_mulmod(&s, &ar, &n, &t)); /* t = s * ar mod n */
+    CHECK_MPI_OK(mp_add(&t, &d, &s));         /* s = t + d */
+    CHECK_MPI_OK(mp_mulmod(&s, &k, &n, &s));  /* s = s * k mod n */
 
 #if EC_DEBUG
     mp_todecimal(&s, mpstr);
@@ -858,6 +874,7 @@ cleanup:
     mp_clear(&s);
     mp_clear(&n);
     mp_clear(&t);
+    mp_clear(&ar);
 
     if (t2) {
         PORT_Free(t2);

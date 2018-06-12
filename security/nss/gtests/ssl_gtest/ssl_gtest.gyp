@@ -37,6 +37,7 @@
         'ssl_loopback_unittest.cc',
         'ssl_misc_unittest.cc',
         'ssl_record_unittest.cc',
+        'ssl_recordsize_unittest.cc',
         'ssl_resumption_unittest.cc',
         'ssl_renegotiation_unittest.cc',
         'ssl_skip_unittest.cc',

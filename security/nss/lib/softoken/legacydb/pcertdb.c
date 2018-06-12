@@ -2577,13 +2577,12 @@ ReadDBSubjectEntry(NSSLOWCERTCertDBHandle *handle, SECItem *derSubject)
     SECItem dbentry;
     SECStatus rv;
 
+    PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         goto loser;
     }
-
-    PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
 
     entry = (certDBEntrySubject *)PORT_ArenaAlloc(arena,
                                                   sizeof(certDBEntrySubject));

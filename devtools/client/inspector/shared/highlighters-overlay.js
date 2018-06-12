@@ -6,23 +6,13 @@
 
 "use strict";
 
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE
 } = require("devtools/client/inspector/shared/node-types");
 
-const {
-  updateShowGridAreas,
-  updateShowGridLineNumbers,
-  updateShowInfiniteLines,
-} = require("devtools/client/inspector/grids/actions/highlighter-settings");
-
 const DEFAULT_GRID_COLOR = "#4B0082";
-const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
-const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
-const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
 /**
  * Highlighters overlay is a singleton managing all highlighters in the Inspector.
@@ -87,8 +77,6 @@ class HighlightersOverlay {
     this.inspector.on("markupmutation", this.onMarkupMutation);
     this.inspector.target.on("will-navigate", this.onWillNavigate);
 
-    this.loadGridHighlighterSettings();
-
     EventEmitter.decorate(this);
   }
 
@@ -130,21 +118,6 @@ class HighlightersOverlay {
     el.removeEventListener("click", this.onClick, true);
     el.removeEventListener("mousemove", this.onMouseMove);
     el.removeEventListener("mouseout", this.onMouseOut);
-  }
-
-  /**
-   * Load the grid highligher display settings into the store from the stored preferences.
-   */
-  loadGridHighlighterSettings() {
-    const { dispatch } = this.inspector.store;
-
-    const showGridAreas = Services.prefs.getBoolPref(SHOW_GRID_AREAS);
-    const showGridLineNumbers = Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS);
-    const showInfinteLines = Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF);
-
-    dispatch(updateShowGridAreas(showGridAreas));
-    dispatch(updateShowGridLineNumbers(showGridLineNumbers));
-    dispatch(updateShowInfiniteLines(showInfinteLines));
   }
 
   /**

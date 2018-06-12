@@ -12,7 +12,7 @@
 
 [package]
 name = "string_cache"
-version = "0.7.1"
+version = "0.7.3"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 description = "A string interning library for Rust, developed as part of the Servo project."
@@ -22,11 +22,11 @@ repository = "https://github.com/servo/string-cache"
 
 [lib]
 name = "string_cache"
-[dependencies.debug_unreachable]
-version = "0.1.1"
-
 [dependencies.lazy_static]
 version = "1"
+
+[dependencies.new_debug_unreachable]
+version = "1.0"
 
 [dependencies.phf_shared]
 version = "0.7.4"
@@ -40,7 +40,7 @@ version = "1"
 [dependencies.string_cache_shared]
 version = "0.3"
 [dev-dependencies.rand]
-version = "0.3"
+version = "0.4"
 [build-dependencies.string_cache_codegen]
 version = "0.4"
 

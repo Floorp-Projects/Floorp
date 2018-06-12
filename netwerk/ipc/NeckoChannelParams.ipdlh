@@ -132,6 +132,14 @@ struct ParentLoadInfoForwarderArgs
   // interception occurs.
   OptionalIPCServiceWorkerDescriptor controller;
 
+  // The service worker may synthesize a Response with a particular
+  // tainting value.
+  uint32_t tainting;
+
+  // We must also note that the tainting value was explicitly set
+  // by the service worker.
+  bool serviceWorkerTaintingSynthesized;
+
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
   // in BackgroundUtils.cpp/.h!
