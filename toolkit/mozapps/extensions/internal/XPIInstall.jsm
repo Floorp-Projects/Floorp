@@ -960,9 +960,9 @@ function shouldVerifySignedState(aAddon) {
   if (aAddon.location.name == KEY_APP_SYSTEM_DEFAULTS)
     return false;
 
-  // Otherwise only check signatures if signing is enabled and the add-on is one
-  // of the signed types.
-  return AddonSettings.ADDON_SIGNING && XPIDatabase.SIGNED_TYPES.has(aAddon.type);
+  // Otherwise only check signatures if the add-on is one of the signed
+  // types.
+  return XPIDatabase.SIGNED_TYPES.has(aAddon.type);
 }
 
 /**

@@ -2542,7 +2542,6 @@ this.XPIDatabaseReconcile = {
     logger.debug(`Updating compatibility for add-on ${aOldAddon.id} in ${aLocation.name}`);
 
     let checkSigning = (aOldAddon.signedState === undefined &&
-                        AddonSettings.ADDON_SIGNING &&
                         SIGNED_TYPES.has(aOldAddon.type));
 
     let manifest = null;

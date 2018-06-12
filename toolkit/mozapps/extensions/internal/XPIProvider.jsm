@@ -192,7 +192,6 @@ function awaitPromise(promise) {
   if (!success)
     throw result;
   return result;
-
 }
 
 /**
