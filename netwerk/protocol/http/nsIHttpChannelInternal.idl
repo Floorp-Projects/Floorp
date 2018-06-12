@@ -231,8 +231,6 @@ interface nsIHttpChannelInternal : nsISupports
 
     [must_use] readonly attribute PRTime lastModifiedTime;
 
-    [must_use] readonly attribute boolean responseSynthesized;
-
     /**
      * Set by nsCORSListenerProxy if credentials should be included in
      * cross-origin requests. false indicates "same-origin", users should still
