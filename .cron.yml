@@ -109,18 +109,21 @@ jobs:
           target-tasks-method: file_update
       run-on-projects:
           - mozilla-central
+          - mozilla-beta
+          - mozilla-release
+          - mozilla-esr60
       when:
           by-project:
               # No default branch
               mozilla-central:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
-              mozilla-esr60:
+              mozilla-beta:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
               mozilla-release:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
-              mozilla-beta:
+              mozilla-esr60:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
