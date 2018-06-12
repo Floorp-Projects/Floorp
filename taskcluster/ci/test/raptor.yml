@@ -31,7 +31,7 @@ raptor-firefox-tp6:
     treeherder-symbol: Rap(tp6)
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['try']
+            macosx.*: ['try', 'mozilla-central']
             default: ['try']
     max-run-time: 1200
     mozharness:
@@ -44,7 +44,7 @@ raptor-firefox-speedometer:
     treeherder-symbol: Rap(sp)
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['try']
+            macosx.*: ['try', 'mozilla-central']
             default: ['try']
     max-run-time: 1500
     mozharness:
@@ -57,7 +57,7 @@ raptor-chrome-speedometer:
     treeherder-symbol: Rap-C(sp)
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['try']
+            macosx.*: ['try', 'mozilla-central']
             default: ['try']
     max-run-time: 1500
     mozharness:
