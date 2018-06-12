@@ -52,9 +52,10 @@ ParentLayerCoord GetCurrentSpan(const MultiTouchInput& aEvent)
   return delta.Length();
 }
 
-ParentLayerCoord GestureEventListener::GetYSpanFromStartPoint()
+ParentLayerCoord GestureEventListener::GetYSpanFromGestureStartPoint()
 {
-  const ParentLayerPoint start = mTouchStartPosition;
+  // use the position that began the one-touch-pinch gesture rather mTouchStartPosition
+  const ParentLayerPoint start = mOneTouchPinchStartPosition;
   const ParentLayerPoint& current = mTouches[0].mLocalScreenPoint;
   return current.y - start.y;
 }
@@ -313,6 +314,9 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
       ParentLayerCoord currentSpan = 1.0f;
       ParentLayerPoint currentFocus = mTouchStartPosition;
 
+      // save the position that the one-touch-pinch gesture actually begins
+      mOneTouchPinchStartPosition = mLastTouchInput.mTouches[0].mLocalScreenPoint;
+
       PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_START,
                                    mLastTouchInput.mTime,
                                    mLastTouchInput.mTimeStamp,
@@ -388,7 +392,7 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
   }
 
   case GESTURE_ONE_TOUCH_PINCH: {
-    ParentLayerCoord currentSpan = GetYSpanFromStartPoint();
+    ParentLayerCoord currentSpan = GetYSpanFromGestureStartPoint();
     float effectiveSpan = 1.0f + (fabsf(currentSpan.value) * ONE_TOUCH_PINCH_SPEED);
     ParentLayerPoint currentFocus = mTouchStartPosition;
 

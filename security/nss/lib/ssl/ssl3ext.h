@@ -98,6 +98,9 @@ struct TLSExtensionDataStr {
     /* The application token contains a value that was passed to the client via
      * a session ticket, or the cookie in a HelloRetryRequest. */
     SECItem applicationToken;
+
+    /* The record size limit set by the peer. Our value is kept in ss->opt. */
+    PRUint16 recordSizeLimit;
 };
 
 typedef struct TLSExtensionStr {

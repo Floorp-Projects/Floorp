@@ -119,4 +119,11 @@ SECStatus ssl_SendSupportedGroupsXtn(const sslSocket *ss,
 SECStatus ssl3_SendSupportedPointFormatsXtn(const sslSocket *ss,
                                             TLSExtensionData *xtnData,
                                             sslBuffer *buf, PRBool *added);
+SECStatus ssl_HandleRecordSizeLimitXtn(const sslSocket *ss,
+                                       TLSExtensionData *xtnData,
+                                       SECItem *data);
+SECStatus ssl_SendRecordSizeLimitXtn(const sslSocket *ss,
+                                     TLSExtensionData *xtnData,
+                                     sslBuffer *buf, PRBool *added);
+
 #endif
