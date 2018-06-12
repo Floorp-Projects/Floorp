@@ -20,6 +20,7 @@ const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
 const {getJSON} = require("devtools/client/shared/getjson");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
+const {openContentLink} = require("devtools/client/shared/link");
 
 const Strings =
   Services.strings.createBundle("chrome://devtools/locale/webide.properties");
@@ -177,14 +178,7 @@ var UI = {
   },
 
   openInBrowser: function(url) {
-    // Open a URL in a Firefox window
-    const mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-    if (mainWindow) {
-      mainWindow.openWebLinkIn(url, "tab");
-      mainWindow.focus();
-    } else {
-      window.open(url);
-    }
+    openContentLink(url);
   },
 
   updateTitle: function() {
