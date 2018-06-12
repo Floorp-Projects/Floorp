@@ -1,13 +1,12 @@
-use actions::{ActionSequence};
-use capabilities::{SpecNewSessionParameters, LegacyNewSessionParameters,
-                   CapabilitiesMatching, BrowserCapabilities, Capabilities};
-use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
-use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use httpapi::{Route, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
+use actions::ActionSequence;
+use capabilities::{BrowserCapabilities, Capabilities, CapabilitiesMatching,
+                   LegacyNewSessionParameters, SpecNewSessionParameters};
+use common::{Date, FrameId, LocatorStrategy, WebElement};
+use error::{ErrorStatus, WebDriverError, WebDriverResult};
+use httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
 use regex::Captures;
-use rustc_serialize::json;
-use rustc_serialize::json::{ToJson, Json};
-use std::collections::BTreeMap;
+use serde::de::{self, Deserialize, Deserializer};
+use serde_json::{self, Value};
 
 #[derive(Debug, PartialEq)]
 pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
@@ -65,58 +64,53 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetAlertText,
     SendAlertText(SendKeysParameters),
     TakeScreenshot,
-    TakeElementScreenshot(WebElement),
+    TakeElementScreenshot(TakeScreenshotParameters),
     Status,
-    Extension(T)
+    Extension(T),
 }
 
-pub trait WebDriverExtensionCommand : Clone + Send + PartialEq {
-    fn parameters_json(&self) -> Option<Json>;
+pub trait WebDriverExtensionCommand: Clone + Send + PartialEq {
+    fn parameters_json(&self) -> Option<Value>;
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct VoidWebDriverExtensionCommand;
 
 impl WebDriverExtensionCommand for VoidWebDriverExtensionCommand {
-    fn parameters_json(&self) -> Option<Json> {
+    fn parameters_json(&self) -> Option<Value> {
         panic!("No extensions implemented");
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub struct WebDriverMessage <U: WebDriverExtensionRoute=VoidWebDriverExtensionRoute> {
+pub struct WebDriverMessage<U: WebDriverExtensionRoute = VoidWebDriverExtensionRoute> {
     pub session_id: Option<String>,
     pub command: WebDriverCommand<U::Command>,
 }
 
 impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
-    pub fn new(session_id: Option<String>,
-               command: WebDriverCommand<U::Command>)
-               -> WebDriverMessage<U> {
+    pub fn new(
+        session_id: Option<String>,
+        command: WebDriverCommand<U::Command>,
+    ) -> WebDriverMessage<U> {
         WebDriverMessage {
             session_id: session_id,
             command: command,
         }
     }
 
-    pub fn from_http(match_type: Route<U>,
-                     params: &Captures,
-                     raw_body: &str,
-                     requires_body: bool)
-                     -> WebDriverResult<WebDriverMessage<U>> {
+    pub fn from_http(
+        match_type: Route<U>,
+        params: &Captures,
+        raw_body: &str,
+        requires_body: bool,
+    ) -> WebDriverResult<WebDriverMessage<U>> {
         let session_id = WebDriverMessage::<U>::get_session_id(params);
-        let body_data = try!(WebDriverMessage::<U>::decode_body(raw_body, requires_body));
-
+        let body_data = WebDriverMessage::<U>::decode_body(raw_body, requires_body)?;
         let command = match match_type {
-            Route::NewSession => {
-                let parameters: NewSessionParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::NewSession(parameters)
-            },
+            Route::NewSession => WebDriverCommand::NewSession(serde_json::from_str(raw_body)?),
             Route::DeleteSession => WebDriverCommand::DeleteSession,
-            Route::Get => {
-                let parameters: GetParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::Get(parameters)
-            },
+            Route::Get => WebDriverCommand::Get(serde_json::from_str(raw_body)?),
             Route::GetCurrentUrl => WebDriverCommand::GetCurrentUrl,
             Route::GoBack => WebDriverCommand::GoBack,
             Route::GoForward => WebDriverCommand::GoForward,
@@ -127,215 +121,219 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::GetWindowHandles => WebDriverCommand::GetWindowHandles,
             Route::CloseWindow => WebDriverCommand::CloseWindow,
             Route::GetTimeouts => WebDriverCommand::GetTimeouts,
-            Route::SetTimeouts => {
-                let parameters: TimeoutsParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::SetTimeouts(parameters)
-            },
-            Route::GetWindowRect | Route::GetWindowPosition | Route::GetWindowSize => WebDriverCommand::GetWindowRect,
+            Route::SetTimeouts => WebDriverCommand::SetTimeouts(serde_json::from_str(raw_body)?),
+            Route::GetWindowRect | Route::GetWindowPosition | Route::GetWindowSize => {
+                WebDriverCommand::GetWindowRect
+            }
             Route::SetWindowRect | Route::SetWindowPosition | Route::SetWindowSize => {
-                let parameters: WindowRectParameters = Parameters::from_json(&body_data)?;
-                WebDriverCommand::SetWindowRect(parameters)
-            },
+                WebDriverCommand::SetWindowRect(serde_json::from_str(raw_body)?)
+            }
             Route::MinimizeWindow => WebDriverCommand::MinimizeWindow,
             Route::MaximizeWindow => WebDriverCommand::MaximizeWindow,
             Route::FullscreenWindow => WebDriverCommand::FullscreenWindow,
             Route::SwitchToWindow => {
-                let parameters: SwitchToWindowParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::SwitchToWindow(parameters)
+                WebDriverCommand::SwitchToWindow(serde_json::from_str(raw_body)?)
             }
             Route::SwitchToFrame => {
-                let parameters: SwitchToFrameParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::SwitchToFrame(parameters)
-            },
+                WebDriverCommand::SwitchToFrame(serde_json::from_str(raw_body)?)
+            }
             Route::SwitchToParentFrame => WebDriverCommand::SwitchToParentFrame,
-            Route::FindElement => {
-                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::FindElement(parameters)
-            },
-            Route::FindElements => {
-                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::FindElements(parameters)
-            },
+            Route::FindElement => WebDriverCommand::FindElement(serde_json::from_str(raw_body)?),
+            Route::FindElements => WebDriverCommand::FindElements(serde_json::from_str(raw_body)?),
             Route::FindElementElement => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
-                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::FindElementElement(element, parameters)
-            },
+                WebDriverCommand::FindElementElement(element, serde_json::from_str(raw_body)?)
+            }
             Route::FindElementElements => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
-                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::FindElementElements(element, parameters)
-            },
+                WebDriverCommand::FindElementElements(element, serde_json::from_str(raw_body)?)
+            }
             Route::GetActiveElement => WebDriverCommand::GetActiveElement,
             Route::IsDisplayed => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::IsDisplayed(element)
-            },
+            }
             Route::IsSelected => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::IsSelected(element)
-            },
+            }
             Route::GetElementAttribute => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
-                let attr = try_opt!(params.name("name"),
-                                    ErrorStatus::InvalidArgument,
-                                    "Missing name parameter").as_str();
+                let attr = try_opt!(
+                    params.name("name"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing name parameter"
+                ).as_str();
                 WebDriverCommand::GetElementAttribute(element, attr.into())
-            },
+            }
             Route::GetElementProperty => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
-                let property = try_opt!(params.name("name"),
-                                        ErrorStatus::InvalidArgument,
-                                        "Missing name parameter").as_str();
+                let property = try_opt!(
+                    params.name("name"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing name parameter"
+                ).as_str();
                 WebDriverCommand::GetElementProperty(element, property.into())
-            },
+            }
             Route::GetCSSValue => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
-                let property = try_opt!(params.name("propertyName"),
-                                        ErrorStatus::InvalidArgument,
-                                        "Missing propertyName parameter").as_str();
+                let property = try_opt!(
+                    params.name("propertyName"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing propertyName parameter"
+                ).as_str();
                 WebDriverCommand::GetCSSValue(element, property.into())
-            },
+            }
             Route::GetElementText => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::GetElementText(element)
-            },
+            }
             Route::GetElementTagName => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::GetElementTagName(element)
-            },
+            }
             Route::GetElementRect => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::GetElementRect(element)
-            },
+            }
             Route::IsEnabled => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::IsEnabled(element)
-            },
+            }
             Route::ElementClick => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementClick(element)
-            },
+            }
             Route::ElementTap => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementTap(element)
-            },
+            }
             Route::ElementClear => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementClear(element)
-            },
-            Route::ElementSendKeys => {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
-                let element = WebElement::new(element_id.as_str().into());
-                let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::ElementSendKeys(element, parameters)
-            },
-            Route::ExecuteScript => {
-                let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::ExecuteScript(parameters)
-            },
-            Route::ExecuteAsyncScript => {
-                let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::ExecuteAsyncScript(parameters)
-            },
-            Route::GetCookies => {
-                WebDriverCommand::GetCookies
-            },
-            Route::GetNamedCookie => {
-                let name = try_opt!(params.name("name"),
-                                    ErrorStatus::InvalidArgument,
-                                    "Missing 'name' parameter").as_str().into();
-                WebDriverCommand::GetNamedCookie(name)
-            },
-            Route::AddCookie => {
-                let parameters: AddCookieParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::AddCookie(parameters)
-            },
-            Route::DeleteCookies => {
-                WebDriverCommand::DeleteCookies
-            },
-            Route::DeleteCookie => {
-                let name = try_opt!(params.name("name"),
-                                    ErrorStatus::InvalidArgument,
-                                    "Missing name parameter").as_str().into();
-                WebDriverCommand::DeleteCookie(name)
-            },
-            Route::PerformActions => {
-                let parameters: ActionsParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::PerformActions(parameters)
-            },
-            Route::ReleaseActions => {
-                WebDriverCommand::ReleaseActions
-            },
-            Route::DismissAlert => {
-                WebDriverCommand::DismissAlert
-            },
-            Route::AcceptAlert => {
-                WebDriverCommand::AcceptAlert
-            },
-            Route::GetAlertText => {
-                WebDriverCommand::GetAlertText
-            },
-            Route::SendAlertText => {
-                let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::SendAlertText(parameters)
-            },
-            Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
-            Route::TakeElementScreenshot =>  {
-                let element_id = try_opt!(params.name("elementId"),
-                                          ErrorStatus::InvalidArgument,
-                                          "Missing elementId parameter");
-                let element = WebElement::new(element_id.as_str().into());
-                WebDriverCommand::TakeElementScreenshot(element)
-            },
-            Route::Status => WebDriverCommand::Status,
-            Route::Extension(ref extension) => {
-                try!(extension.command(params, &body_data))
             }
+            Route::ElementSendKeys => {
+                let element_id = try_opt!(
+                    params.name("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
+                let element = WebElement::new(element_id.as_str().into());
+                WebDriverCommand::ElementSendKeys(element, serde_json::from_str(raw_body)?)
+            }
+            Route::ExecuteScript => {
+                WebDriverCommand::ExecuteScript(serde_json::from_str(raw_body)?)
+            }
+            Route::ExecuteAsyncScript => {
+                WebDriverCommand::ExecuteAsyncScript(serde_json::from_str(raw_body)?)
+            }
+            Route::GetCookies => WebDriverCommand::GetCookies,
+            Route::GetNamedCookie => {
+                let name = try_opt!(
+                    params.name("name"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing 'name' parameter"
+                ).as_str()
+                    .into();
+                WebDriverCommand::GetNamedCookie(name)
+            }
+            Route::AddCookie => WebDriverCommand::AddCookie(serde_json::from_str(raw_body)?),
+            Route::DeleteCookies => WebDriverCommand::DeleteCookies,
+            Route::DeleteCookie => {
+                let name = try_opt!(
+                    params.name("name"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing name parameter"
+                ).as_str()
+                    .into();
+                WebDriverCommand::DeleteCookie(name)
+            }
+            Route::PerformActions => {
+                WebDriverCommand::PerformActions(serde_json::from_str(raw_body)?)
+            }
+            Route::ReleaseActions => WebDriverCommand::ReleaseActions,
+            Route::DismissAlert => WebDriverCommand::DismissAlert,
+            Route::AcceptAlert => WebDriverCommand::AcceptAlert,
+            Route::GetAlertText => WebDriverCommand::GetAlertText,
+            Route::SendAlertText => {
+                WebDriverCommand::SendAlertText(serde_json::from_str(raw_body)?)
+            }
+            Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
+            Route::TakeElementScreenshot => {
+                WebDriverCommand::TakeElementScreenshot(serde_json::from_str(raw_body)?)
+            }
+            Route::Status => WebDriverCommand::Status,
+            Route::Extension(ref extension) => try!(extension.command(params, &body_data)),
         };
         Ok(WebDriverMessage::new(session_id, command))
     }
@@ -344,105 +342,92 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
         params.name("sessionId").map(|x| x.as_str().into())
     }
 
-    fn decode_body(body: &str, requires_body: bool) -> WebDriverResult<Json> {
+    fn decode_body(body: &str, requires_body: bool) -> WebDriverResult<Value> {
         if requires_body {
-            match Json::from_str(body) {
-                Ok(x @ Json::Object(_)) => Ok(x),
-                Ok(_) => {
-                    Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                            "Body was not a JSON Object"))
-                }
-                Err(json::ParserError::SyntaxError(_, line, col)) => {
-                    let msg = format!("Failed to decode request as JSON: \"{}\"", body);
-                    let stack = format!("Syntax error at :{}:{}", line, col);
-                    Err(WebDriverError::new_with_stack(ErrorStatus::InvalidArgument, msg, stack))
-                }
-                Err(json::ParserError::IoError(e)) => {
-                    Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                            format!("I/O error whilst decoding body: {}", e)))
+            match serde_json::from_str(body) {
+                Ok(x @ Value::Object(_)) => Ok(x),
+                Ok(_) => Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "Body was not a JSON Object",
+                )),
+                Err(e) => {
+                    if e.is_io() {
+                        Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("I/O error whilst decoding body: {}", e),
+                        ))
+                    } else {
+                        let msg = format!("Failed to decode request as JSON: {}", body);
+                        let stack = format!("Syntax error at :{}:{}", e.line(), e.column());
+                        Err(WebDriverError::new_with_stack(
+                            ErrorStatus::InvalidArgument,
+                            msg,
+                            stack,
+                        ))
+                    }
                 }
             }
         } else {
-            Ok(Json::Null)
+            Ok(Value::Null)
         }
     }
 }
 
-impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
-    fn to_json(&self) -> Json {
-        let parameters = match self.command {
-            WebDriverCommand::AcceptAlert |
-            WebDriverCommand::CloseWindow |
-            WebDriverCommand::ReleaseActions |
-            WebDriverCommand::DeleteCookie(_) |
-            WebDriverCommand::DeleteCookies |
-            WebDriverCommand::DeleteSession |
-            WebDriverCommand::DismissAlert |
-            WebDriverCommand::ElementClear(_) |
-            WebDriverCommand::ElementClick(_) |
-            WebDriverCommand::ElementTap(_) |
-            WebDriverCommand::GetActiveElement |
-            WebDriverCommand::GetAlertText |
-            WebDriverCommand::GetNamedCookie(_) |
-            WebDriverCommand::GetCookies |
-            WebDriverCommand::GetCSSValue(_, _) |
-            WebDriverCommand::GetCurrentUrl |
-            WebDriverCommand::GetElementAttribute(_, _) |
-            WebDriverCommand::GetElementProperty(_, _) |
-            WebDriverCommand::GetElementRect(_) |
-            WebDriverCommand::GetElementTagName(_) |
-            WebDriverCommand::GetElementText(_) |
-            WebDriverCommand::GetPageSource |
-            WebDriverCommand::GetTimeouts |
-            WebDriverCommand::GetTitle |
-            WebDriverCommand::GetWindowHandle |
-            WebDriverCommand::GetWindowHandles |
-            WebDriverCommand::GetWindowRect |
-            WebDriverCommand::GoBack |
-            WebDriverCommand::GoForward |
-            WebDriverCommand::IsDisplayed(_) |
-            WebDriverCommand::IsEnabled(_) |
-            WebDriverCommand::IsSelected(_) |
-            WebDriverCommand::MinimizeWindow |
-            WebDriverCommand::MaximizeWindow |
-            WebDriverCommand::FullscreenWindow |
-            WebDriverCommand::NewSession(_) |
-            WebDriverCommand::Refresh |
-            WebDriverCommand::Status |
-            WebDriverCommand::SwitchToParentFrame |
-            WebDriverCommand::TakeElementScreenshot(_) |
-            WebDriverCommand::TakeScreenshot => {
-                None
-            },
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ActionsParameters {
+    pub actions: Vec<ActionSequence>,
+}
 
-            WebDriverCommand::AddCookie(ref x) => Some(x.to_json()),
-            WebDriverCommand::ElementSendKeys(_, ref x) => Some(x.to_json()),
-            WebDriverCommand::ExecuteAsyncScript(ref x) |
-            WebDriverCommand::ExecuteScript(ref x) => Some(x.to_json()),
-            WebDriverCommand::FindElementElement(_, ref x) => Some(x.to_json()),
-            WebDriverCommand::FindElementElements(_, ref x) => Some(x.to_json()),
-            WebDriverCommand::FindElement(ref x) => Some(x.to_json()),
-            WebDriverCommand::FindElements(ref x) => Some(x.to_json()),
-            WebDriverCommand::Get(ref x) => Some(x.to_json()),
-            WebDriverCommand::PerformActions(ref x) => Some(x.to_json()),
-            WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetTimeouts(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetWindowRect(ref x) => Some(x.to_json()),
-            WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
-            WebDriverCommand::SwitchToWindow(ref x) => Some(x.to_json()),
-            WebDriverCommand::Extension(ref x) => x.parameters_json(),
-        };
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(remote = "Self")]
+pub struct AddCookieParameters {
+    pub name: String,
+    pub value: String,
+    pub path: Option<String>,
+    pub domain: Option<String>,
+    #[serde(default)]
+    pub secure: bool,
+    #[serde(default)]
+    pub httpOnly: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry: Option<Date>,
+}
 
-        let mut data = BTreeMap::new();
-        if let Some(parameters) = parameters {
-            data.insert("parameters".to_string(), parameters);
+impl<'de> Deserialize<'de> for AddCookieParameters {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Wrapper {
+            #[serde(with = "AddCookieParameters")]
+            cookie: AddCookieParameters,
         }
-        Json::Object(data)
+
+        Wrapper::deserialize(deserializer).map(|wrapper| wrapper.cookie)
     }
 }
 
-pub trait Parameters: Sized {
-    fn from_json(body: &Json) -> WebDriverResult<Self>;
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct GetParameters {
+    pub url: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct GetNamedCookieParameters {
+    pub name: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct JavascriptCommandParameters {
+    pub script: String,
+    pub args: Option<Vec<Value>>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct LocatorParameters {
+    pub using: LocatorStrategy,
+    pub value: String,
 }
 
 /// Wrapper around the two supported variants of new session paramters
@@ -451,136 +436,69 @@ pub trait Parameters: Sized {
 /// the legacy variant is used to store desiredCapabilities/requiredCapabilities
 /// parameters, and is intended to minimise breakage as we transition users to
 /// the spec design.
+
 #[derive(Debug, PartialEq)]
 pub enum NewSessionParameters {
     Spec(SpecNewSessionParameters),
     Legacy(LegacyNewSessionParameters),
 }
 
-impl Parameters for NewSessionParameters {
-    fn from_json(body: &Json) -> WebDriverResult<NewSessionParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Message body was not an object");
-        if data.get("capabilities").is_some() {
-            Ok(NewSessionParameters::Spec(try!(SpecNewSessionParameters::from_json(body))))
-        } else {
-            Ok(NewSessionParameters::Legacy(try!(LegacyNewSessionParameters::from_json(body))))
+impl<'de> Deserialize<'de> for NewSessionParameters {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        if let Some(caps) = value.get("capabilities") {
+            let caps = SpecNewSessionParameters::deserialize(caps).map_err(de::Error::custom)?;
+            return Ok(NewSessionParameters::Spec(caps));
         }
-    }
-}
 
-impl ToJson for NewSessionParameters {
-    fn to_json(&self) -> Json {
-        match self {
-            &NewSessionParameters::Spec(ref x) => x.to_json(),
-            &NewSessionParameters::Legacy(ref x) => x.to_json()
-        }
+        let legacy = LegacyNewSessionParameters::deserialize(value).map_err(de::Error::custom)?;
+        Ok(NewSessionParameters::Legacy(legacy))
     }
 }
 
 impl CapabilitiesMatching for NewSessionParameters {
-    fn match_browser<T: BrowserCapabilities>(&self, browser_capabilities: &mut T)
-                                             -> WebDriverResult<Option<Capabilities>> {
+    fn match_browser<T: BrowserCapabilities>(
+        &self,
+        browser_capabilities: &mut T,
+    ) -> WebDriverResult<Option<Capabilities>> {
         match self {
             &NewSessionParameters::Spec(ref x) => x.match_browser(browser_capabilities),
-            &NewSessionParameters::Legacy(ref x) => x.match_browser(browser_capabilities)
+            &NewSessionParameters::Legacy(ref x) => x.match_browser(browser_capabilities),
         }
     }
 }
 
-
-#[derive(Debug, PartialEq)]
-pub struct GetParameters {
-    pub url: String
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct SendKeysParameters {
+    pub text: String,
 }
 
-impl Parameters for GetParameters {
-    fn from_json(body: &Json) -> WebDriverResult<GetParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
-                            "Message body was not an object");
-        let url = try_opt!(
-            try_opt!(data.get("url"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'url' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'url' not a string");
-        Ok(GetParameters {
-            url: url.to_string()
-        })
-    }
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct SwitchToFrameParameters {
+    pub id: Option<FrameId>,
 }
 
-impl ToJson for GetParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("url".to_string(), self.url.to_json());
-        Json::Object(data)
-    }
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct SwitchToWindowParameters {
+    pub handle: String,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct TakeScreenshotParameters {
+    pub element: Option<WebElement>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct TimeoutsParameters {
-    pub script: Option<u64>,
-    pub page_load: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub implicit: Option<u64>,
-}
-
-impl Parameters for TimeoutsParameters {
-    fn from_json(body: &Json) -> WebDriverResult<TimeoutsParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Message body was not an object");
-
-        let script = match data.get("script") {
-            Some(json) => {
-                Some(try_opt!(json.as_u64(),
-                              ErrorStatus::InvalidArgument,
-                              "Script timeout duration was not a signed integer"))
-            }
-            None => None,
-        };
-
-        let page_load = match data.get("pageLoad") {
-            Some(json) => {
-                Some(try_opt!(json.as_u64(),
-                              ErrorStatus::InvalidArgument,
-                              "Page load timeout duration was not a signed integer"))
-            }
-            None => None,
-        };
-
-        let implicit = match data.get("implicit") {
-            Some(json) => {
-                Some(try_opt!(json.as_u64(),
-                              ErrorStatus::InvalidArgument,
-                              "Implicit timeout duration was not a signed integer"))
-            }
-            None => None,
-        };
-
-        Ok(TimeoutsParameters {
-            script: script,
-            page_load: page_load,
-            implicit: implicit,
-        })
-    }
-}
-
-impl ToJson for TimeoutsParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        if let Some(ms) = self.script {
-            data.insert("script".into(), ms.to_json());
-        }
-        if let Some(ms) = self.page_load {
-            data.insert("pageLoad".into(), ms.to_json());
-        }
-        if let Some(ms) = self.implicit {
-            data.insert("implicit".into(), ms.to_json());
-        }
-        Json::Object(data)
-    }
+    #[serde(rename = "pageLoad", skip_serializing_if = "Option::is_none")]
+    pub page_load: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub script: Option<u64>,
 }
 
 /// A top-level browsing context’s window rect is a dictionary of the
@@ -593,545 +511,568 @@ impl ToJson for TimeoutsParameters {
 ///
 /// [`screenX`]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-screenx
 /// [`screenY`]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-screeny
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct WindowRectParameters {
-    pub x: Nullable<i32>,
-    pub y: Nullable<i32>,
-    pub width: Nullable<i32>,
-    pub height: Nullable<i32>,
+    #[serde(default, deserialize_with = "deserialize_to_i32")]
+    pub x: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_to_i32")]
+    pub y: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_to_positive_i32")]
+    pub width: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_to_positive_i32")]
+    pub height: Option<i32>,
 }
 
-impl Parameters for WindowRectParameters {
-    fn from_json(body: &Json) -> WebDriverResult<WindowRectParameters> {
-        let data = try_opt!(body.as_object(),
-            ErrorStatus::InvalidArgument, "Message body was not an object");
-
-        let x = match data.get("x") {
-            Some(json) => try!(Nullable::from_json(json, |n| {
-                let x = try_opt!(
-                    n.as_f64(),
-                    ErrorStatus::InvalidArgument,
-                    "'x' is not a number"
-                ) as i64;
-                if x < i32::min_value() as i64 || x > i32::max_value() as i64 {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        "'x' is larger than i32",
-                    ));
-                }
-                Ok(x as i32)
-            })),
-            None => Nullable::Null,
-        };
-
-        let y = match data.get("y") {
-            Some(json) => try!(Nullable::from_json(json, |n| {
-                let y = try_opt!(
-                    n.as_f64(),
-                    ErrorStatus::InvalidArgument,
-                    "'y' is not a number"
-                ) as i64;
-                if y < i32::min_value() as i64 || y > i32::max_value() as i64 {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        "'y' is larger than i32",
-                    ));
-                }
-                Ok(y as i32)
-            })),
-            None => Nullable::Null,
-        };
-
-        let width = match data.get("width") {
-            Some(json) => try!(Nullable::from_json(json, |n| {
-                let width = try_opt!(
-                    n.as_f64(),
-                    ErrorStatus::InvalidArgument,
-                    "'width' is not a number"
-                ) as i64;
-                if width < 0 || width > i32::max_value() as i64 {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        "'width' is larger than i32",
-                    ));
-                }
-                Ok(width as i32)
-            })),
-            None => Nullable::Null,
-        };
-
-        let height = match data.get("height") {
-            Some(json) => try!(Nullable::from_json(json, |n| {
-                let height = try_opt!(
-                    n.as_f64(),
-                    ErrorStatus::InvalidArgument,
-                    "'height' is not a positive integer"
-                ) as i64;
-                if height < 0 || height > i32::max_value() as i64 {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        "'height' is larger than i32",
-                    ));
-                }
-                Ok(height as i32)
-            })),
-            None => Nullable::Null,
-        };
-
-        Ok(WindowRectParameters { x, y, width, height })
-    }
-}
-
-impl ToJson for WindowRectParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("x".to_string(), self.x.to_json());
-        data.insert("y".to_string(), self.y.to_json());
-        data.insert("width".to_string(), self.width.to_json());
-        data.insert("height".to_string(), self.height.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct SwitchToWindowParameters {
-    pub handle: String
-}
-
-impl Parameters for SwitchToWindowParameters {
-    fn from_json(body: &Json) -> WebDriverResult<SwitchToWindowParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
-                            "Message body was not an object");
-        let handle = try_opt!(
-            try_opt!(data.get("handle"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'handle' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'handle' not a string");
-        return Ok(SwitchToWindowParameters {
-            handle: handle.to_string()
-        })
-    }
-}
-
-impl ToJson for SwitchToWindowParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("handle".to_string(), self.handle.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct LocatorParameters {
-    pub using: LocatorStrategy,
-    pub value: String
-}
-
-impl Parameters for LocatorParameters {
-    fn from_json(body: &Json) -> WebDriverResult<LocatorParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
-                            "Message body was not an object");
-
-        let using = try!(LocatorStrategy::from_json(
-            try_opt!(data.get("using"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'using' parameter")));
-
-        let value = try_opt!(
-            try_opt!(data.get("value"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'value' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "Could not convert using to string").to_string();
-
-        return Ok(LocatorParameters {
-            using: using,
-            value: value
-        })
-    }
-}
-
-impl ToJson for LocatorParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("using".to_string(), self.using.to_json());
-        data.insert("value".to_string(), self.value.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct SwitchToFrameParameters {
-    pub id: FrameId
-}
-
-impl Parameters for SwitchToFrameParameters {
-    fn from_json(body: &Json) -> WebDriverResult<SwitchToFrameParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Message body was not an object");
-        let id = try!(FrameId::from_json(try_opt!(data.get("id"),
-                                                  ErrorStatus::UnknownError,
-                                                  "Missing 'id' parameter")));
-
-        Ok(SwitchToFrameParameters {
-            id: id
-        })
-    }
-}
-
-impl ToJson for SwitchToFrameParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("id".to_string(), self.id.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct SendKeysParameters {
-    pub text: String
-}
-
-impl Parameters for SendKeysParameters {
-    fn from_json(body: &Json) -> WebDriverResult<SendKeysParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Message body was not an object");
-        let text = try_opt!(try_opt!(data.get("text"),
-                                     ErrorStatus::InvalidArgument,
-                                     "Missing 'text' parameter").as_string(),
-                            ErrorStatus::InvalidArgument,
-                            "Could not convert 'text' to string");
-
-        Ok(SendKeysParameters {
-            text: text.into()
-        })
-    }
-}
-
-impl ToJson for SendKeysParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("value".to_string(), self.text.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct JavascriptCommandParameters {
-    pub script: String,
-    pub args: Nullable<Vec<Json>>
-}
-
-impl Parameters for JavascriptCommandParameters {
-    fn from_json(body: &Json) -> WebDriverResult<JavascriptCommandParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Message body was not an object");
-
-        let args_json = try_opt!(data.get("args"),
-                                 ErrorStatus::InvalidArgument,
-                                 "Missing args parameter");
-
-        let args = try!(Nullable::from_json(
-            args_json,
-            |x| {
-                Ok((try_opt!(x.as_array(),
-                             ErrorStatus::InvalidArgument,
-                             "Failed to convert args to Array")).clone())
-            }));
-
-         //TODO: Look for WebElements in args?
-        let script = try_opt!(
-            try_opt!(data.get("script"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing script parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "Failed to convert script to String");
-        Ok(JavascriptCommandParameters {
-            script: script.to_string(),
-            args: args.clone()
-        })
-    }
-}
-
-impl ToJson for JavascriptCommandParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        //TODO: Wrap script so that it becomes marionette-compatible
-        data.insert("script".to_string(), self.script.to_json());
-        data.insert("args".to_string(), self.args.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct GetNamedCookieParameters {
-    pub name: Nullable<String>,
-}
-
-impl Parameters for GetNamedCookieParameters {
-    fn from_json(body: &Json) -> WebDriverResult<GetNamedCookieParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Message body was not an object");
-        let name_json = try_opt!(data.get("name"),
-                                 ErrorStatus::InvalidArgument,
-                                 "Missing 'name' parameter");
-        let name = try!(Nullable::from_json(name_json, |x| {
-            Ok(try_opt!(x.as_string(),
-                        ErrorStatus::InvalidArgument,
-                        "Failed to convert name to string")
-                .to_string())
-        }));
-        return Ok(GetNamedCookieParameters { name: name });
-    }
-}
-
-impl ToJson for GetNamedCookieParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("name".to_string(), self.name.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct AddCookieParameters {
-    pub name: String,
-    pub value: String,
-    pub path: Nullable<String>,
-    pub domain: Nullable<String>,
-    pub expiry: Nullable<Date>,
-    pub secure: bool,
-    pub httpOnly: bool
-}
-
-impl Parameters for AddCookieParameters {
-    fn from_json(body: &Json) -> WebDriverResult<AddCookieParameters> {
-        if !body.is_object() {
-            return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                           "Message body was not an object"));
+fn deserialize_to_i32<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::deserialize(deserializer)?.map(|value: f64| value as i64);
+    let value = match opt {
+        Some(n) => {
+            if n < i32::min_value() as i64 || n > i32::max_value() as i64 {
+                return Err(de::Error::custom(format!("'{}' is larger than i32", n)));
+            }
+            Some(n as i32)
         }
+        None => None,
+    };
 
-        let data = try_opt!(body.find("cookie").and_then(|x| x.as_object()),
-                            ErrorStatus::InvalidArgument,
-                            "Cookie parameter not found or not an object");
-
-        let name = try_opt!(
-            try_opt!(data.get("name"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'name' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'name' is not a string").to_string();
-
-        let value = try_opt!(
-            try_opt!(data.get("value"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'value' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'value' is not a string").to_string();
-
-        let path = match data.get("path") {
-            Some(path_json) => {
-                try!(Nullable::from_json(
-                    path_json,
-                    |x| {
-                        Ok(try_opt!(x.as_string(),
-                                    ErrorStatus::InvalidArgument,
-                                    "Failed to convert path to String").to_string())
-                    }))
-            },
-            None => Nullable::Null
-        };
-
-        let domain = match data.get("domain") {
-            Some(domain_json) => {
-                try!(Nullable::from_json(
-                    domain_json,
-                    |x| {
-                        Ok(try_opt!(x.as_string(),
-                                    ErrorStatus::InvalidArgument,
-                                    "Failed to convert domain to String").to_string())
-                    }))
-            },
-            None => Nullable::Null
-        };
-
-        let expiry = match data.get("expiry") {
-            Some(expiry_json) => {
-                try!(Nullable::from_json(
-                    expiry_json,
-                    |x| {
-                        Ok(Date::new(try_opt!(x.as_u64(),
-                                              ErrorStatus::InvalidArgument,
-                                              "Failed to convert expiry to Date")))
-                    }))
-            },
-            None => Nullable::Null
-        };
-
-        let secure = match data.get("secure") {
-            Some(x) => try_opt!(x.as_boolean(),
-                                ErrorStatus::InvalidArgument,
-                                "Failed to convert secure to boolean"),
-            None => false
-        };
-
-        let http_only = match data.get("httpOnly") {
-            Some(x) => try_opt!(x.as_boolean(),
-                                ErrorStatus::InvalidArgument,
-                                "Failed to convert httpOnly to boolean"),
-            None => false
-        };
-
-        return Ok(AddCookieParameters {
-            name: name,
-            value: value,
-            path: path,
-            domain: domain,
-            expiry: expiry,
-            secure: secure,
-            httpOnly: http_only
-        })
-    }
+    Ok(value)
 }
 
-impl ToJson for AddCookieParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("name".to_string(), self.name.to_json());
-        data.insert("value".to_string(), self.value.to_json());
-        data.insert("path".to_string(), self.path.to_json());
-        data.insert("domain".to_string(), self.domain.to_json());
-        data.insert("expiry".to_string(), self.expiry.to_json());
-        data.insert("secure".to_string(), self.secure.to_json());
-        data.insert("httpOnly".to_string(), self.httpOnly.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct TakeScreenshotParameters {
-    pub element: Nullable<WebElement>
-}
-
-impl Parameters for TakeScreenshotParameters {
-    fn from_json(body: &Json) -> WebDriverResult<TakeScreenshotParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Message body was not an object");
-        let element = match data.get("element") {
-            Some(element_json) => try!(Nullable::from_json(
-                element_json,
-                |x| {
-                    Ok(try!(WebElement::from_json(x)))
-                })),
-            None => Nullable::Null
-        };
-
-        return Ok(TakeScreenshotParameters {
-            element: element
-        })
-    }
-}
-
-impl ToJson for TakeScreenshotParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("element".to_string(), self.element.to_json());
-        Json::Object(data)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct ActionsParameters {
-    pub actions: Vec<ActionSequence>
-}
-
-impl Parameters for ActionsParameters {
-    fn from_json(body: &Json) -> WebDriverResult<ActionsParameters> {
-        try_opt!(body.as_object(),
-                 ErrorStatus::InvalidArgument,
-                 "Message body was not an object");
-        let actions = try_opt!(
-            try_opt!(body.find("actions"),
-                     ErrorStatus::InvalidArgument,
-                     "No actions parameter found").as_array(),
-            ErrorStatus::InvalidArgument,
-            "Parameter 'actions' was not an array");
-
-        let mut result = Vec::with_capacity(actions.len());
-        for chain in actions.iter() {
-            result.push(try!(ActionSequence::from_json(chain)));
+fn deserialize_to_positive_i32<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::deserialize(deserializer)?.map(|value: f64| value as i64);
+    let value = match opt {
+        Some(n) => {
+            if n < 0 || n > i32::max_value() as i64 {
+                return Err(de::Error::custom(format!("'{}' is outside of i32", n)));
+            }
+            Some(n as i32)
         }
-        Ok(ActionsParameters {
-            actions: result
-        })
-    }
-}
+        None => None,
+    };
 
-impl ToJson for ActionsParameters {
-    fn to_json(&self) -> Json {
-        let mut data = BTreeMap::new();
-        data.insert("actions".to_owned(),
-                    self.actions.iter().map(|x| x.to_json()).collect::<Vec<Json>>().to_json());
-        Json::Object(data)
-    }
+    Ok(value)
 }
 
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::Json;
-    use super::{Nullable, Parameters, WindowRectParameters};
+    use super::*;
+    use capabilities::SpecNewSessionParameters;
+    use serde_json;
+    use test::check_deserialize;
 
     #[test]
-    fn test_window_rect() {
-        let expected = WindowRectParameters {
-            x: Nullable::Value(0i32),
-            y: Nullable::Value(1i32),
-            width: Nullable::Value(2i32),
-            height: Nullable::Value(3i32),
-        };
-        let actual = Json::from_str(r#"{"x": 0, "y": 1, "width": 2, "height": 3}"#).unwrap();
-        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+    fn test_json_actions_parameters_missing_actions_field() {
+        let json = r#"{}"#;
+        assert!(serde_json::from_str::<ActionsParameters>(&json).is_err());
     }
 
     #[test]
-    fn test_window_rect_nullable() {
-        let expected = WindowRectParameters {
-            x: Nullable::Value(0i32),
-            y: Nullable::Null,
-            width: Nullable::Value(2i32),
-            height: Nullable::Null,
-        };
-        let actual = Json::from_str(r#"{"x": 0, "y": null, "width": 2, "height": null}"#).unwrap();
-        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+    fn test_json_actions_parameters_invalid() {
+        let json = r#"{"actions":null}"#;
+        assert!(serde_json::from_str::<ActionsParameters>(&json).is_err());
     }
 
     #[test]
-    fn test_window_rect_missing_fields() {
-        let expected = WindowRectParameters {
-            x: Nullable::Value(0i32),
-            y: Nullable::Null,
-            width: Nullable::Value(2i32),
-            height: Nullable::Null,
-        };
-        let actual = Json::from_str(r#"{"x": 0, "width": 2}"#).unwrap();
-        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+    fn test_json_action_parameters_empty_list() {
+        let json = r#"{"actions":[]}"#;
+        let data = ActionsParameters { actions: vec![] };
+
+        check_deserialize(&json, &data);
     }
 
     #[test]
-    fn test_window_rect_floats() {
-        let expected = WindowRectParameters {
-            x: Nullable::Value(1i32),
-            y: Nullable::Value(2i32),
-            width: Nullable::Value(3i32),
-            height: Nullable::Value(4i32),
+    fn test_json_add_cookie_parameters_with_values() {
+        let json = r#"{"cookie":{
+            "name":"foo",
+            "value":"bar",
+            "path":"/",
+            "domain":"foo.bar",
+            "expiry":123,
+            "secure":true,
+            "httpOnly":false
+        }}"#;
+        let data = AddCookieParameters {
+            name: "foo".into(),
+            value: "bar".into(),
+            path: Some("/".into()),
+            domain: Some("foo.bar".into()),
+            expiry: Some(Date(123)),
+            secure: true,
+            httpOnly: false,
         };
-        let actual = Json::from_str(r#"{"x": 1.1, "y": 2.2, "width": 3.3, "height": 4.4}"#).unwrap();
-        assert_eq!(expected, Parameters::from_json(&actual).unwrap());
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_add_cookie_parameters_with_optional_null_fields() {
+        let json = r#"{"cookie":{
+            "name":"foo",
+            "value":"bar",
+            "path":null,
+            "domain":null,
+            "expiry":null,
+            "secure":true,
+            "httpOnly":false
+        }}"#;
+        let data = AddCookieParameters {
+            name: "foo".into(),
+            value: "bar".into(),
+            path: None,
+            domain: None,
+            expiry: None,
+            secure: true,
+            httpOnly: false,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_add_cookie_parameters_without_optional_fields() {
+        let json = r#"{"cookie":{
+            "name":"foo",
+            "value":"bar",
+            "secure":true,
+            "httpOnly":false
+        }}"#;
+        let data = AddCookieParameters {
+            name: "foo".into(),
+            value: "bar".into(),
+            path: None,
+            domain: None,
+            expiry: None,
+            secure: true,
+            httpOnly: false,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_add_cookie_parameters_with_invalid_cookie_field() {
+        let json = r#"{"name":"foo"}"#;
+
+        assert!(serde_json::from_str::<AddCookieParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_get_parameters_with_url() {
+        let json = r#"{"url":"foo.bar"}"#;
+        let data = GetParameters {
+            url: "foo.bar".into(),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_get_parameters_with_invalid_url_value() {
+        let json = r#"{"url":3}"#;
+
+        assert!(serde_json::from_str::<GetParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_get_parameters_with_invalid_url_field() {
+        let json = r#"{"foo":"bar"}"#;
+
+        assert!(serde_json::from_str::<GetParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_get_named_cookie_parameters_with_value() {
+        let json = r#"{"name":"foo"}"#;
+        let data = GetNamedCookieParameters {
+            name: Some("foo".into()),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_get_named_cookie_parameters_with_optional_null_field() {
+        let json = r#"{"name":null}"#;
+        let data = GetNamedCookieParameters { name: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_get_named_cookie_parameters_without_optional_null_field() {
+        let json = r#"{}"#;
+        let data = GetNamedCookieParameters { name: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_get_named_cookie_parameters_with_invalid_name_field() {
+        let json = r#"{"name":3"#;
+
+        assert!(serde_json::from_str::<GetNamedCookieParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_javascript_command_parameters_with_values() {
+        let json = r#"{"script":"foo","args":["1",2]}"#;
+        let data = JavascriptCommandParameters {
+            script: "foo".into(),
+            args: Some(vec!["1".into(), 2.into()]),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_javascript_command_parameters_with_optional_null_field() {
+        let json = r#"{"script":"foo","args":null}"#;
+        let data = JavascriptCommandParameters {
+            script: "foo".into(),
+            args: None,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_javascript_command_parameters_without_optional_null_field() {
+        let json = r#"{"script":"foo"}"#;
+        let data = JavascriptCommandParameters {
+            script: "foo".into(),
+            args: None,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_javascript_command_parameters_invalid_script_field() {
+        let json = r#"{"script":null}"#;
+
+        assert!(serde_json::from_str::<JavascriptCommandParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_javascript_command_parameters_invalid_args_field() {
+        let json = r#"{"script":null,"args":"1"}"#;
+
+        assert!(serde_json::from_str::<JavascriptCommandParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_javascript_command_parameters_missing_script_field() {
+        let json = r#"{"args":null}"#;
+
+        assert!(serde_json::from_str::<JavascriptCommandParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_locator_parameters_with_values() {
+        let json = r#"{"using":"xpath","value":"bar"}"#;
+        let data = LocatorParameters {
+            using: LocatorStrategy::XPath,
+            value: "bar".into(),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_locator_parameters_invalid_using_field() {
+        let json = r#"{"using":"foo","value":"bar"}"#;
+
+        assert!(serde_json::from_str::<LocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_locator_parameters_invalid_value_field() {
+        let json = r#"{"using":"xpath","value":3}"#;
+
+        assert!(serde_json::from_str::<LocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_locator_parameters_missing_using_field() {
+        let json = r#"{"value":"bar"}"#;
+
+        assert!(serde_json::from_str::<LocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_locator_parameters_missing_value_field() {
+        let json = r#"{"using":"xpath"}"#;
+
+        assert!(serde_json::from_str::<LocatorParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_new_session_parameters_spec() {
+        let json = r#"{"capabilities":{"alwaysMatch":{},"firstMatch":[{}]}}"#;
+        let data = NewSessionParameters::Spec(SpecNewSessionParameters {
+            alwaysMatch: Capabilities::new(),
+            firstMatch: vec![Capabilities::new()],
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_session_parameters_capabilities_null() {
+        let json = r#"{"capabilities":null}"#;
+
+        assert!(serde_json::from_str::<NewSessionParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_new_session_parameters_legacy() {
+        let json = r#"{"desired":{},"required":{}}"#;
+        let data = NewSessionParameters::Legacy(LegacyNewSessionParameters {
+            desired: Capabilities::new(),
+            required: Capabilities::new(),
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_new_session_parameters_spec_and_legacy() {
+        let json = r#"{
+            "capabilities":{
+                "alwaysMatch":{},
+                "firstMatch":[{}]
+            },
+            "desired":{},
+            "required":{}
+        }"#;
+        let data = NewSessionParameters::Spec(SpecNewSessionParameters {
+            alwaysMatch: Capabilities::new(),
+            firstMatch: vec![Capabilities::new()],
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_send_keys_parameters_with_value() {
+        let json = r#"{"text":"foo"}"#;
+        let data = SendKeysParameters { text: "foo".into() };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_send_keys_parameters_invalid_text_field() {
+        let json = r#"{"text":3}"#;
+
+        assert!(serde_json::from_str::<SendKeysParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_send_keys_parameters_missing_text_field() {
+        let json = r#"{}"#;
+
+        assert!(serde_json::from_str::<SendKeysParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_switch_to_frame_parameters_with_value() {
+        let json = r#"{"id":3}"#;
+        let data = SwitchToFrameParameters {
+            id: Some(FrameId::Short(3)),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_switch_to_frame_parameters_with_optional_null_field() {
+        let json = r#"{"id":null}"#;
+        let data = SwitchToFrameParameters { id: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_switch_to_frame_parameters_without_optional_null_field() {
+        let json = r#"{}"#;
+        let data = SwitchToFrameParameters { id: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_switch_to_frame_parameters_with_invalid_id_field() {
+        let json = r#"{"id":"3""#;
+
+        assert!(serde_json::from_str::<SwitchToFrameParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_switch_to_window_parameters_with_value() {
+        let json = r#"{"handle":"foo"}"#;
+        let data = SwitchToWindowParameters {
+            handle: "foo".into(),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_switch_to_window_parameters_invalid_handle_field() {
+        let json = r#"{"handle":3}"#;
+
+        assert!(serde_json::from_str::<SwitchToWindowParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_switch_to_window_parameters_missing_handle_field() {
+        let json = r#"{}"#;
+
+        assert!(serde_json::from_str::<SwitchToWindowParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_take_screenshot_parameters_with_element() {
+        let json = r#"{"element":{"element-6066-11e4-a52e-4f735466cecf":"elem"}}"#;
+        let data = TakeScreenshotParameters {
+            element: Some(WebElement::new("elem".into())),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_take_screenshot_parameters_with_optional_null_field() {
+        let json = r#"{"element":null}"#;
+        let data = TakeScreenshotParameters { element: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_take_screenshot_parameters_without_optional_null_field() {
+        let json = r#"{}"#;
+        let data = TakeScreenshotParameters { element: None };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_take_screenshot_parameters_with_invalid_element_field() {
+        let json = r#"{"element":"foo"}"#;
+        assert!(serde_json::from_str::<TakeScreenshotParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_values() {
+        let json = r#"{"implicit":1,"pageLoad":2,"script":3}"#;
+        let data = TimeoutsParameters {
+            implicit: Some(1u64),
+            page_load: Some(2u64),
+            script: Some(3u64),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_optional_null_field() {
+        let json = r#"{"implicit":null,"pageLoad":null,"script":null}"#;
+        let data = TimeoutsParameters {
+            implicit: None,
+            page_load: None,
+            script: None,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_without_optional_null_field() {
+        let json = r#"{}"#;
+        let data = TimeoutsParameters {
+            implicit: None,
+            page_load: None,
+            script: None,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_invalid_implicit_value() {
+        let json = r#"{"implicit":1.1}"#;
+        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_invalid_page_load_value() {
+        let json = r#"{"pageLoad":1.2}"#;
+        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_timeout_parameters_with_invalid_script_value() {
+        let json = r#"{"script":1.3}"#;
+        assert!(serde_json::from_str::<TimeoutsParameters>(&json).is_err());
+    }
+
+    #[test]
+    fn test_json_window_rect_parameters_with_values() {
+        let json = r#"{"x":0,"y":1,"width":2,"height":3}"#;
+        let data = WindowRectParameters {
+            x: Some(0i32),
+            y: Some(1i32),
+            width: Some(2i32),
+            height: Some(3i32),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_window_rect_parameters_with_optional_null_fields() {
+        let json = r#"{"x":null,"y": null,"width":null,"height":null}"#;
+        let data = WindowRectParameters {
+            x: None,
+            y: None,
+            width: None,
+            height: None,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_window_rect_parameters_without_optional_fields() {
+        let json = r#"{}"#;
+        let data = WindowRectParameters {
+            x: None,
+            y: None,
+            width: None,
+            height: None,
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_window_rect_parameters_invalid_values_float() {
+        let json = r#"{"x":1.1,"y":2.2,"width":3.3,"height":4.4}"#;
+        let data = WindowRectParameters {
+            x: Some(1),
+            y: Some(2),
+            width: Some(3),
+            height: Some(4),
+        };
+
+        check_deserialize(&json, &data);
     }
 }
