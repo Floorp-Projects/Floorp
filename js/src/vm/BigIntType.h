@@ -69,6 +69,7 @@ class BigInt final : public js::gc::TenuredCell
 
     static BigInt* copy(JSContext* cx, Handle<BigInt*> x);
 
+    static double numberValue(BigInt* x);
     static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
 };
 

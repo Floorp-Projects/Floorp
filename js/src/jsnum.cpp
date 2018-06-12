@@ -29,6 +29,9 @@
 #include "js/Conversions.h"
 #include "util/DoubleToString.h"
 #include "util/StringBuffer.h"
+#ifdef ENABLE_BIGINT
+#include "vm/BigIntType.h"
+#endif
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -487,8 +490,14 @@ Number(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() > 0) {
-        if (!ToNumber(cx, args[0]))
+        // BigInt proposal section 6.2, steps 2a-c.
+        if (!ToNumeric(cx, args[0]))
             return false;
+#ifdef ENABLE_BIGINT
+        if (args[0].isBigInt())
+            args[0].setNumber(BigInt::numberValue(args[0].toBigInt()));
+#endif
+        MOZ_ASSERT(args[0].isNumber());
     }
 
     if (!args.isConstructing()) {
