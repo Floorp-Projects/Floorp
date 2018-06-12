@@ -28,7 +28,7 @@ function* test(testDriver) {
   // scrollframe scrolls all the way to the bottom of its range, where it's
   // sure to checkerboard.
   utils.setDisplayPortForElement(0, 0, 300, 1000, scroller, 1);
-  yield waitForAllPaints(testDriver);
+  yield waitForApzFlushedRepaints(testDriver);
   var scrollY = scroller.scrollTopMax;
   utils.setAsyncScrollOffset(scroller, 0, scrollY);
   if (config.isWebRender) {
