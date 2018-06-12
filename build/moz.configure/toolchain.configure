@@ -1539,40 +1539,6 @@ def cargo_incremental(opt_level, debug_rust, automation):
 
 set_config('CARGO_INCREMENTAL', cargo_incremental)
 
-# Libstdc++ compatibility hacks
-# ==============================================================
-#
-js_option('--enable-stdcxx-compat', env='MOZ_STDCXX_COMPAT',
-          help='Enable compatibility with older libstdc++')
-
-
-@depends('--enable-stdcxx-compat')
-def stdcxx_compat(value):
-    return bool(value) or None
-
-
-@template
-def libstdcxx_version(var, compiler):
-    @depends(compiler, when='--enable-stdcxx-compat')
-    @imports(_from='mozbuild.configure.libstdcxx', _import='find_version')
-    def version(compiler):
-        result = find_version(
-            compiler.wrapper + [compiler.compiler] + compiler.flags)
-        if result:
-            return str(result)
-
-    set_config(var, version)
-    return version
-
-
-add_gcc_flag(
-    '-D_GLIBCXX_USE_CXX11_ABI=0', cxx_compiler,
-    when=libstdcxx_version('MOZ_LIBSTDCXX_TARGET_VERSION', cxx_compiler))
-add_gcc_flag(
-    '-D_GLIBCXX_USE_CXX11_ABI=0', host_cxx_compiler,
-    when=libstdcxx_version('MOZ_LIBSTDCXX_HOST_VERSION', host_cxx_compiler))
-
-
 # Linker detection
 # ==============================================================
 
@@ -1596,11 +1562,11 @@ js_option('--enable-linker', nargs=1,
 
 
 @depends('--enable-linker', c_compiler, developer_options,
-         extra_toolchain_flags, stdcxx_compat, when=is_linker_option_enabled)
+         extra_toolchain_flags, when=is_linker_option_enabled)
 @checking('for linker', lambda x: x.KIND)
 @imports('os')
 @imports('shutil')
-def select_linker(linker, c_compiler, developer_options, toolchain_flags, stdcxx_compat):
+def select_linker(linker, c_compiler, developer_options, toolchain_flags):
 
     linker = linker[0] if linker else None
 
@@ -1640,14 +1606,11 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags, stdcxx
 
     result = try_linker(linker)
 
-    if linker is None and developer_options and result.KIND == 'bfd' and not stdcxx_compat:
+    if linker is None and developer_options and result.KIND == 'bfd':
         gold = try_linker('gold')
 
         if gold.KIND == 'gold':
             result = gold
-
-    if stdcxx_compat and result.KIND == 'gold':
-        die("--enable-stdcxx-compat is not compatible with the gold linker")
 
     # If an explicit linker was given, error out if what we found is different.
     if linker and not linker.startswith(result.KIND):
@@ -1688,6 +1651,35 @@ def code_coverage(value):
 
 set_config('MOZ_CODE_COVERAGE', code_coverage)
 set_define('MOZ_CODE_COVERAGE', code_coverage)
+
+# Libstdc++ compatibility hacks
+# ==============================================================
+#
+js_option('--enable-stdcxx-compat', env='MOZ_STDCXX_COMPAT',
+          help='Enable compatibility with older libstdc++')
+
+
+@template
+def libstdcxx_version(var, compiler):
+    @depends(compiler, when='--enable-stdcxx-compat')
+    @imports(_from='mozbuild.configure.libstdcxx', _import='find_version')
+    def version(compiler):
+        result = find_version(
+            compiler.wrapper + [compiler.compiler] + compiler.flags)
+        if result:
+            return str(result)
+
+    set_config(var, version)
+    return version
+
+
+add_gcc_flag(
+    '-D_GLIBCXX_USE_CXX11_ABI=0', cxx_compiler,
+    when=libstdcxx_version('MOZ_LIBSTDCXX_TARGET_VERSION', cxx_compiler))
+add_gcc_flag(
+    '-D_GLIBCXX_USE_CXX11_ABI=0', host_cxx_compiler,
+    when=libstdcxx_version('MOZ_LIBSTDCXX_HOST_VERSION', host_cxx_compiler))
+
 
 @depends(c_compiler.try_compile(flags=['-fsanitize=fuzzer-no-link'],
          check_msg='whether the C compiler supports -fsanitize=fuzzer-no-link'))
