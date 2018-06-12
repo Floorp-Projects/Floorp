@@ -1068,6 +1068,24 @@ nsHTMLDocument::CreateDummyChannelForCookies(nsIURI* aCodebaseURI)
     return nullptr;
   }
   pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
+
+  nsCOMPtr<nsIHttpChannel> docHTTPChannel =
+    do_QueryInterface(GetChannel());
+  if (docHTTPChannel) {
+    bool isTracking = docHTTPChannel->GetIsTrackingResource();
+    if (isTracking) {
+      // If our document channel is from a tracking resource, we must
+      // override our channel's tracking status.
+      nsCOMPtr<nsIHttpChannel> httpChannel =
+        do_QueryInterface(channel);
+      MOZ_ASSERT(httpChannel, "How come we're coming from an HTTP doc but "
+                              "we don't have an HTTP channel here?");
+      if (httpChannel) {
+        httpChannel->OverrideTrackingResource(isTracking);
+      }
+    }
+  }
+
   return channel.forget();
 }
 
