@@ -236,6 +236,7 @@ typedef struct sslOptionsStr {
     /* If SSL_SetNextProtoNego has been called, then this contains the
      * list of supported protocols. */
     SECItem nextProtoNego;
+    PRUint16 recordSizeLimit;
 
     PRUint32 maxEarlyDataSize;
     unsigned int useSecurity : 1;

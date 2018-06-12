@@ -150,10 +150,10 @@ private:
   bool SecondTapIsFar() const;
 
   /**
-   * Returns current vertical span, counting from the where the user first put
-   * her finger down.
+   * Returns current vertical span, counting from the where the gesture first
+   * began (after a brief delay detecting the gesture from first touch).
    */
-  ParentLayerCoord GetYSpanFromStartPoint();
+  ParentLayerCoord GetYSpanFromGestureStartPoint();
 
   /**
    * Do actual state transition and reset substates.
@@ -207,6 +207,16 @@ private:
    * For more info see bug 947892.
    */
   MultiTouchInput mLastTapInput;
+
+  /**
+   * Position of the last touch that exceeds the GetTouchStartTolerance when
+   * performing a one-touch-pinch gesture; using the mTouchStartPosition is
+   * slightly inaccurate because by the time the touch position has passed
+   * the threshold for the gesture, there is already a span that the zoom
+   * is calculated from, instead of starting at 1.0 when the threshold gets
+   * passed.
+   */
+  ParentLayerPoint mOneTouchPinchStartPosition;
 
   /**
    * Position of the last touch starting. This is only valid during an attempt
