@@ -347,8 +347,6 @@ extern uint32_t sdp_getnextnumtok(const char *str, const char **str_end,
 extern uint32_t sdp_getnextnumtok_or_null(const char *str, const char **str_end,
                                      const char *delim, tinybool *null_ind,
                                      sdp_result_e *result);
-extern tinybool sdp_getchoosetok(const char *str, const char **str_end,
-                                 const char *delim, sdp_result_e *result);
 
 extern
 tinybool verify_sdescriptions_mki(char *buf, char *mkiVal, uint16_t *mkiLen);
