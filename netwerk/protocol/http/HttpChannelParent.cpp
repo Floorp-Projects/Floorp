@@ -145,7 +145,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.suspendAfterSynthesizeResponse(),
                        a.allowStaleCacheContent(), a.contentTypeHint(),
                        a.corsMode(), a.redirectMode(),
-                       a.channelId(), a.contentWindowId(), a.preferredAlternativeType(),
+                       a.channelId(), a.integrityMetadata(),
+                       a.contentWindowId(), a.preferredAlternativeType(),
                        a.topLevelOuterContentWindowId(),
                        a.launchServiceWorkerStart(),
                        a.launchServiceWorkerEnd(),
@@ -443,6 +444,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const uint32_t&            aCorsMode,
                                  const uint32_t&            aRedirectMode,
                                  const uint64_t&            aChannelId,
+                                 const nsString&            aIntegrityMetadata,
                                  const uint64_t&            aContentWindowId,
                                  const nsCString&           aPreferredAlternativeType,
                                  const uint64_t&            aTopLevelOuterContentWindowId,
@@ -506,6 +508,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   httpChannel->SetChannelId(aChannelId);
   httpChannel->SetTopLevelContentWindowId(aContentWindowId);
   httpChannel->SetTopLevelOuterContentWindowId(aTopLevelOuterContentWindowId);
+
+  httpChannel->SetIntegrityMetadata(aIntegrityMetadata);
 
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(httpChannel);
   if (httpChannelImpl) {

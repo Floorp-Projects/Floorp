@@ -171,6 +171,22 @@ ToNumber(JSContext* cx, JS::MutableHandleValue vp)
     return true;
 }
 
+bool
+ToNumericSlow(JSContext* cx, JS::MutableHandleValue vp);
+
+// BigInt proposal section 3.1.6
+MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
+ToNumeric(JSContext* cx, JS::MutableHandleValue vp)
+{
+    if (vp.isNumber())
+        return true;
+#ifdef ENABLE_BIGINT
+    if (vp.isBigInt())
+        return true;
+#endif
+    return ToNumericSlow(cx, vp);
+}
+
 MOZ_MUST_USE bool
 num_parseInt(JSContext* cx, unsigned argc, Value* vp);
 
