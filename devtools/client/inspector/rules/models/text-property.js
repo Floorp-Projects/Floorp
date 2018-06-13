@@ -119,7 +119,7 @@ TextProperty.prototype = {
     const store = this.rule.elementStyle.store;
 
     if (this.editor && value !== this.editor.committed.value || force) {
-      store.userProperties.setProperty(this.rule.style, this.name, value);
+      store.userProperties.setProperty(this.rule.domRule, this.name, value);
     }
 
     this.rule.setPropertyValue(this, value, priority);
@@ -144,7 +144,7 @@ TextProperty.prototype = {
     const store = this.rule.elementStyle.store;
 
     if (name !== this.name) {
-      store.userProperties.setProperty(this.rule.style, name,
+      store.userProperties.setProperty(this.rule.domRule, name,
                                        this.editor.committed.value);
     }
 

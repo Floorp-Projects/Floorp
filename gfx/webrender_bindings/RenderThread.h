@@ -165,6 +165,13 @@ public:
   /// Can only be called from the render thread.
   WebRenderProgramCache* ProgramCache();
 
+  /// Can only be called from the render thread.
+  void HandleDeviceReset(const char* aWhere);
+  /// Can only be called from the render thread.
+  bool IsHandlingDeviceReset();
+
+  size_t RendererCount();
+
 private:
   explicit RenderThread(base::Thread* aThread);
 
@@ -193,6 +200,8 @@ private:
   Mutex mRenderTextureMapLock;
   nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;
   bool mHasShutdown;
+
+  bool mHandlingDeviceReset;
 };
 
 } // namespace wr

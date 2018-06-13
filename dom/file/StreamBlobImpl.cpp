@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EmptyBlobImpl.h"
+#include "mozilla/InputStreamLengthWrapper.h"
 #include "mozilla/SlicedInputStream.h"
 #include "StreamBlobImpl.h"
 #include "nsStreamUtils.h"
@@ -17,48 +18,52 @@ namespace dom {
 NS_IMPL_ISUPPORTS_INHERITED(StreamBlobImpl, BlobImpl, nsIMemoryReporter)
 
 /* static */ already_AddRefed<StreamBlobImpl>
-StreamBlobImpl::Create(nsIInputStream* aInputStream,
+StreamBlobImpl::Create(already_AddRefed<nsIInputStream> aInputStream,
                        const nsAString& aContentType,
                        uint64_t aLength)
 {
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
+
   RefPtr<StreamBlobImpl> blobImplStream =
-    new StreamBlobImpl(aInputStream, aContentType, aLength);
+    new StreamBlobImpl(inputStream.forget(), aContentType, aLength);
   blobImplStream->MaybeRegisterMemoryReporter();
   return blobImplStream.forget();
 }
 
 /* static */ already_AddRefed<StreamBlobImpl>
-StreamBlobImpl::Create(nsIInputStream* aInputStream,
+StreamBlobImpl::Create(already_AddRefed<nsIInputStream> aInputStream,
                        const nsAString& aName,
                        const nsAString& aContentType,
                        int64_t aLastModifiedDate,
                        uint64_t aLength)
 {
+  nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
+
   RefPtr<StreamBlobImpl> blobImplStream =
-    new StreamBlobImpl(aInputStream, aName, aContentType, aLastModifiedDate,
-                       aLength);
+    new StreamBlobImpl(inputStream.forget(), aName, aContentType,
+                       aLastModifiedDate, aLength);
   blobImplStream->MaybeRegisterMemoryReporter();
   return blobImplStream.forget();
 }
 
-StreamBlobImpl::StreamBlobImpl(nsIInputStream* aInputStream,
+StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                                const nsAString& aContentType,
                                uint64_t aLength)
   : BaseBlobImpl(aContentType, aLength)
-  , mInputStream(aInputStream)
+  , mInputStream(std::move(aInputStream))
   , mIsDirectory(false)
   , mFileId(-1)
 {
   mImmutable = true;
 }
 
-StreamBlobImpl::StreamBlobImpl(nsIInputStream* aInputStream,
+StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                                const nsAString& aName,
                                const nsAString& aContentType,
                                int64_t aLastModifiedDate,
                                uint64_t aLength)
   : BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate)
-  , mInputStream(aInputStream)
+  , mInputStream(std::move(aInputStream))
   , mIsDirectory(false)
   , mFileId(-1)
 {
@@ -86,7 +91,10 @@ StreamBlobImpl::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv)
     mInputStream = replacementStream.forget();
   }
 
-  clonedStream.forget(aStream);
+  nsCOMPtr<nsIInputStream> wrappedStream =
+    InputStreamLengthWrapper::MaybeWrap(clonedStream.forget(), mLength);
+
+  wrappedStream.forget(aStream);
 }
 
 already_AddRefed<BlobImpl>
@@ -120,7 +128,7 @@ StreamBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   MOZ_ASSERT(clonedStream);
 
   RefPtr<BlobImpl> impl =
-    new StreamBlobImpl(clonedStream, aContentType, aLength);
+    new StreamBlobImpl(clonedStream.forget(), aContentType, aLength);
   return impl.forget();
 }
 

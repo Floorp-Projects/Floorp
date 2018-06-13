@@ -588,7 +588,7 @@ class FontInspector {
     this.textProperties.clear();
     // Select the node's inline style as the rule where to write property value changes.
     this.selectedRule =
-      this.ruleView.rules.find(rule => rule.style.type === ELEMENT_STYLE);
+      this.ruleView.rules.find(rule => rule.domRule.type === ELEMENT_STYLE);
     const fontEditor = this.store.getState().fontEditor;
     const properties = this.getFontProperties();
     // Names of fonts declared in font-family property without quotes and space trimmed.

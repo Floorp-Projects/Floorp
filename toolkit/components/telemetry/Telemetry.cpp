@@ -999,7 +999,7 @@ TelemetryImpl::GetLoadedModules(JSContext *cx, Promise** aPromise)
   }
 
   nsMainThreadPtrHandle<Promise> mainThreadPromise(
-    new nsMainThreadPtrHolder<Promise>("Promise", promise));
+    new nsMainThreadPtrHolder<Promise>("TelemetryImpl::GetLoadedModules::Promise", promise));
   nsCOMPtr<nsIRunnable> runnable = new GetLoadedModulesRunnable(mainThreadPromise);
   promise.forget(aPromise);
 

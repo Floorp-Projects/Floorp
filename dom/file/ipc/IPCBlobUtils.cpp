@@ -61,12 +61,12 @@ Deserialize(const IPCBlob& aIPCBlob)
   RefPtr<StreamBlobImpl> blobImpl;
 
   if (aIPCBlob.file().type() == IPCFileUnion::Tvoid_t) {
-    blobImpl = StreamBlobImpl::Create(inputStream,
+    blobImpl = StreamBlobImpl::Create(inputStream.forget(),
                                       aIPCBlob.type(),
                                       aIPCBlob.size());
   } else {
     const IPCFile& file = aIPCBlob.file().get_IPCFile();
-    blobImpl = StreamBlobImpl::Create(inputStream,
+    blobImpl = StreamBlobImpl::Create(inputStream.forget(),
                                       file.name(),
                                       aIPCBlob.type(),
                                       file.lastModified(),
