@@ -6,12 +6,9 @@
 
 const promise = require("devtools/shared/deprecated-sync-thenables");
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const eventSource = require("devtools/shared/client/event-source");
 const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-
-const noop = () => {};
 
 /**
  * Creates a tab client for the remote debugging protocol server. This client
@@ -49,13 +46,9 @@ TabClient.prototype = {
    * @param object options
    *        Configuration options.
    *        - useSourceMaps: whether to use source maps or not.
-   * @param function onResponse
-   *        Called with the response packet and a ThreadClient
-   *        (which will be undefined on error).
    */
-  attachThread: function(options = {}, onResponse = noop) {
+  attachThread: function(options = {}) {
     if (this.thread) {
-      DevToolsUtils.executeSoon(() => onResponse({}, this.thread));
       return promise.resolve([{}, this.thread]);
     }
 
@@ -65,20 +58,14 @@ TabClient.prototype = {
       options,
     };
     return this.request(packet).then(response => {
-      if (!response.error) {
-        this.thread = new ThreadClient(this, this._threadActor);
-        this.client.registerClient(this.thread);
-      }
-      onResponse(response, this.thread);
+      this.thread = new ThreadClient(this, this._threadActor);
+      this.client.registerClient(this.thread);
       return [response, this.thread];
     });
   },
 
   /**
    * Detach the client from the tab actor.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
     type: "detach"
@@ -140,8 +127,6 @@ TabClient.prototype = {
    *
    * @param object options
    *        A dictionary object of the new options to use in the tab actor.
-   * @param function onResponse
-   *        Called with the response packet.
    */
   reconfigure: DebuggerClient.requester({
     type: "reconfigure",
@@ -152,8 +137,8 @@ TabClient.prototype = {
     type: "listWorkers"
   }),
 
-  attachWorker: function(workerTargetActor, onResponse) {
-    return this.client.attachWorker(workerTargetActor, onResponse);
+  attachWorker: function(workerTargetActor) {
+    return this.client.attachWorker(workerTargetActor);
   },
 };
 

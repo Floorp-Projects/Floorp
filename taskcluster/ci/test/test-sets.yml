@@ -79,6 +79,12 @@ talos:
     - talos-h1
     - talos-h2
 
+raptor:
+    - raptor-firefox-tp6
+    - raptor-firefox-speedometer
+    - raptor-chrome-tp6
+    - raptor-chrome-speedometer
+
 awsy:
     - awsy
     - awsy-base
@@ -279,11 +285,6 @@ macosx64-talos-profiling:
 
 macosx64-qr-tests:
     - reftest
-
-macosx64-raptor:
-    - raptor-firefox-tp6
-    - raptor-firefox-speedometer
-    - raptor-chrome-speedometer
 
 linux32-tests:
     - cppunit

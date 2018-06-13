@@ -40,7 +40,7 @@ function test_remove_breakpoint() {
     const source = gThreadClient.source(packet.frame.where.source);
     const location = { line: gDebuggee.line0 + 2 };
 
-    source.setBreakpoint(location, function(response, bpClient) {
+    source.setBreakpoint(location).then(function([response, bpClient]) {
       gThreadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value.
         Assert.equal(packet.type, "paused");

@@ -40,7 +40,7 @@ function test_simple_breakpoint() {
     const source = gThreadClient.source(packet.frame.where.source);
     const location = { line: gDebuggee.line0 + 2 };
 
-    source.setBreakpoint(location, async function(response, bpClient) {
+    source.setBreakpoint(location).then(async function([response, bpClient]) {
       const testCallbacks = [
         function(packet) {
           // Check that the stepping worked.

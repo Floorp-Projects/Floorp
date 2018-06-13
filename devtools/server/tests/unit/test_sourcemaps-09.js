@@ -46,10 +46,7 @@ function test_minified() {
     };
 
     getSource(gThreadClient, "http://example.com/foo.js").then(source => {
-      source.setBreakpoint(location, function(response, bpClient) {
-        Assert.ok(!response.error);
-        testHitBreakpoint();
-      });
+      source.setBreakpoint(location).then(() => testHitBreakpoint());
     });
   });
 

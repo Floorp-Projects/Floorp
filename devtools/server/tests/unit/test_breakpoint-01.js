@@ -40,7 +40,7 @@ function test_simple_breakpoint() {
       line: gDebuggee.line0 + 3
     };
 
-    source.setBreakpoint(location, function(response, bpClient) {
+    source.setBreakpoint(location).then(function([response, bpClient]) {
       gThreadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value.
         Assert.equal(packet.type, "paused");

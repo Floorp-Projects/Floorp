@@ -633,13 +633,15 @@ class Dumper:
                     }]}
                 ]
             }
-            for opt in os.environ.get('PERFHERDER_EXTRA_OPTIONS', '').split():
+            perfherder_extra_options = os.environ.get('PERFHERDER_EXTRA_OPTIONS', '')
+            for opt in perfherder_extra_options.split():
                 for suite in perfherder_data['suites']:
                     if opt not in suite.get('extraOptions', []):
                         suite.setdefault('extraOptions', []).append(opt)
 
-            print('PERFHERDER_DATA: %s' % json.dumps(perfherder_data),
-                  file=sys.stderr)
+            if 'asan' not in perfherder_extra_options.lower():
+                print('PERFHERDER_DATA: %s' % json.dumps(perfherder_data),
+                    file=sys.stderr)
 
         elapsed = time.time() - t_start
         print('Finished processing %s in %.2fs' % (file, elapsed),

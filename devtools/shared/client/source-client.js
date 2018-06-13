@@ -47,9 +47,6 @@ SourceClient.prototype = {
 
   /**
    * Black box this SourceClient's source.
-   *
-   * @param callback Function
-   *        The callback function called when we receive the response from the server.
    */
   blackBox: DebuggerClient.requester({
     type: "blackbox"
@@ -67,9 +64,6 @@ SourceClient.prototype = {
 
   /**
    * Un-black box this SourceClient's source.
-   *
-   * @param callback Function
-   *        The callback function called when we receive the response from the server.
    */
   unblackBox: DebuggerClient.requester({
     type: "unblackbox"
@@ -87,9 +81,6 @@ SourceClient.prototype = {
 
   /**
    * Get Executable Lines from a source
-   *
-   * @param callback Function
-   *        The callback function called when we receive the response from the server.
    */
   getExecutableLines: function(cb = noop) {
     const packet = {
@@ -106,61 +97,51 @@ SourceClient.prototype = {
   /**
    * Get a long string grip for this SourceClient's source.
    */
-  source: function(callback = noop) {
+  source: function() {
     const packet = {
       to: this._form.actor,
       type: "source"
     };
     return this._client.request(packet).then(response => {
-      return this._onSourceResponse(response, callback);
+      return this._onSourceResponse(response);
     });
   },
 
   /**
    * Pretty print this source's text.
    */
-  prettyPrint: function(indent, callback = noop) {
+  prettyPrint: function(indent) {
     const packet = {
       to: this._form.actor,
       type: "prettyPrint",
       indent
     };
     return this._client.request(packet).then(response => {
-      if (!response.error) {
-        this._isPrettyPrinted = true;
-        this._activeThread._clearFrames();
-        this._activeThread.emit("prettyprintchange", this);
-      }
-      return this._onSourceResponse(response, callback);
+      this._isPrettyPrinted = true;
+      this._activeThread._clearFrames();
+      this._activeThread.emit("prettyprintchange", this);
+      return this._onSourceResponse(response);
     });
   },
 
   /**
    * Stop pretty printing this source's text.
    */
-  disablePrettyPrint: function(callback = noop) {
+  disablePrettyPrint: function() {
     const packet = {
       to: this._form.actor,
       type: "disablePrettyPrint"
     };
     return this._client.request(packet).then(response => {
-      if (!response.error) {
-        this._isPrettyPrinted = false;
-        this._activeThread._clearFrames();
-        this._activeThread.emit("prettyprintchange", this);
-      }
-      return this._onSourceResponse(response, callback);
+      this._isPrettyPrinted = false;
+      this._activeThread._clearFrames();
+      this._activeThread.emit("prettyprintchange", this);
+      return this._onSourceResponse(response);
     });
   },
 
-  _onSourceResponse: function(response, callback) {
-    if (response.error) {
-      callback(response);
-      return response;
-    }
-
+  _onSourceResponse: function(response) {
     if (typeof response.source === "string") {
-      callback(response);
       return response;
     }
 
@@ -169,7 +150,6 @@ SourceClient.prototype = {
       const arrayBuffer = this._activeThread.threadArrayBuffer(source);
       return arrayBuffer.slice(0, arrayBuffer.length).then(function(resp) {
         if (resp.error) {
-          callback(resp);
           return resp;
         }
         // Keeping str as a string, ArrayBuffer/Uint8Array will not survive
@@ -182,7 +162,6 @@ SourceClient.prototype = {
           },
           contentType,
         };
-        callback(newResponse);
         return newResponse;
       });
     }
@@ -190,7 +169,6 @@ SourceClient.prototype = {
     const longString = this._activeThread.threadLongString(source);
     return longString.substring(0, longString.length).then(function(resp) {
       if (resp.error) {
-        callback(resp);
         return resp;
       }
 
@@ -198,7 +176,6 @@ SourceClient.prototype = {
         source: resp.substring,
         contentType: contentType
       };
-      callback(newResponse);
       return newResponse;
     });
   },
@@ -209,10 +186,8 @@ SourceClient.prototype = {
    * @param object location
    *        The location and condition of the breakpoint in
    *        the form of { line[, column, condition] }.
-   * @param function onResponse
-   *        Called with the thread's response.
    */
-  setBreakpoint: function({ line, column, condition, noSliding }, onResponse = noop) {
+  setBreakpoint: function({ line, column, condition, noSliding }) {
     // A helper function that sets the breakpoint.
     const doSetBreakpoint = callback => {
       const root = this._client.mainRoot;
@@ -249,7 +224,6 @@ SourceClient.prototype = {
             root.traits.conditionalBreakpoints ? condition : undefined
           );
         }
-        onResponse(response, bpClient);
         if (callback) {
           callback();
         }
@@ -265,7 +239,6 @@ SourceClient.prototype = {
     return this._activeThread.interrupt().then(response => {
       if (response.error) {
         // Can't set the breakpoint if pausing failed.
-        onResponse(response);
         return response;
       }
 
