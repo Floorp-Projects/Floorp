@@ -375,14 +375,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param  {Object} workerTargetActor
    *         worker actor form to debug
    */
-  openWorkerToolbox(client, workerTargetActor) {
-    client.attachWorker(workerTargetActor, (response, workerClient) => {
-      const workerTarget = TargetFactory.forWorker(workerClient);
-      gDevTools.showToolbox(workerTarget, null, Toolbox.HostType.WINDOW)
-        .then(toolbox => {
-          toolbox.once("destroy", () => workerClient.detach());
-        });
-    });
+  async openWorkerToolbox(client, workerTargetActor) {
+    const [, workerClient] = await client.attachWorker(workerTargetActor);
+    const workerTarget = TargetFactory.forWorker(workerClient);
+    const toolbox = await gDevTools.showToolbox(workerTarget, null, Toolbox.HostType.WINDOW);
+    toolbox.once("destroy", () => workerClient.detach());
   },
 
   /**

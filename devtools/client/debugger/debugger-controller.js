@@ -523,7 +523,7 @@ Workers.prototype = {
   },
 
   _onWorkerSelect: function (workerForm) {
-    DebuggerController.client.attachWorker(workerForm.actor, (response, workerClient) => {
+    DebuggerController.client.attachWorker(workerForm.actor).then(([response, workerClient]) => {
       let toolbox = gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
                                           "jsdebugger", Toolbox.HostType.WINDOW);
       window.emit(EVENTS.WORKER_SELECTED, toolbox);

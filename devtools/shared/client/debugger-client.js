@@ -26,11 +26,8 @@ loader.lazyRequireGetter(this, "AddonClient", "devtools/shared/client/addon-clie
 loader.lazyRequireGetter(this, "RootClient", "devtools/shared/client/root-client");
 loader.lazyRequireGetter(this, "TabClient", "devtools/shared/client/tab-client");
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
-loader.lazyRequireGetter(this, "TraceClient", "devtools/shared/client/trace-client");
 loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
-
-const noop = () => {};
 
 // Define the minimum officially supported version of Firefox when connecting to a remote
 // runtime. (Use ".0a1" to support the very first nightly version)
@@ -331,11 +328,8 @@ DebuggerClient.prototype = {
    *
    * @param string targetActor
    *        The target actor ID for the tab to attach.
-   * @param function onResponse
-   *        Called with the response packet and a TabClient
-   *        (which will be undefined on error).
    */
-  attachTab: function(targetActor, onResponse = noop) {
+  attachTab: function(targetActor) {
     if (this._clients.has(targetActor)) {
       const cachedTab = this._clients.get(targetActor);
       const cachedResponse = {
@@ -343,7 +337,6 @@ DebuggerClient.prototype = {
         javascriptEnabled: cachedTab.javascriptEnabled,
         traits: cachedTab.traits,
       };
-      DevToolsUtils.executeSoon(() => onResponse(cachedResponse, cachedTab));
       return promise.resolve([cachedResponse, cachedTab]);
     }
 
@@ -352,17 +345,13 @@ DebuggerClient.prototype = {
       type: "attach"
     };
     return this.request(packet).then(response => {
-      let tabClient;
-      if (!response.error) {
-        tabClient = new TabClient(this, response);
-        this.registerClient(tabClient);
-      }
-      onResponse(response, tabClient);
+      const tabClient = new TabClient(this, response);
+      this.registerClient(tabClient);
       return [response, tabClient];
     });
   },
 
-  attachWorker: function(workerTargetActor, onResponse = noop) {
+  attachWorker: function(workerTargetActor) {
     let workerClient = this._clients.get(workerTargetActor);
     if (workerClient !== undefined) {
       const response = {
@@ -370,19 +359,12 @@ DebuggerClient.prototype = {
         type: "attached",
         url: workerClient.url
       };
-      DevToolsUtils.executeSoon(() => onResponse(response, workerClient));
       return promise.resolve([response, workerClient]);
     }
 
     return this.request({ to: workerTargetActor, type: "attach" }).then(response => {
-      if (response.error) {
-        onResponse(response, null);
-        return [response, null];
-      }
-
       workerClient = new WorkerClient(this, response);
       this.registerClient(workerClient);
-      onResponse(response, workerClient);
       return [response, workerClient];
     });
   },
@@ -392,23 +374,16 @@ DebuggerClient.prototype = {
    *
    * @param string addonTargetActor
    *        The actor ID for the addon to attach.
-   * @param function onResponse
-   *        Called with the response packet and a AddonClient
-   *        (which will be undefined on error).
    */
-  attachAddon: function(addonTargetActor, onResponse = noop) {
+  attachAddon: function(addonTargetActor) {
     const packet = {
       to: addonTargetActor,
       type: "attach"
     };
     return this.request(packet).then(response => {
-      let addonClient;
-      if (!response.error) {
-        addonClient = new AddonClient(this, addonTargetActor);
-        this.registerClient(addonClient);
-        this.activeAddon = addonClient;
-      }
-      onResponse(response, addonClient);
+      const addonClient = new AddonClient(this, addonTargetActor);
+      this.registerClient(addonClient);
+      this.activeAddon = addonClient;
       return [response, addonClient];
     });
   },
@@ -420,12 +395,8 @@ DebuggerClient.prototype = {
    *        The ID for the console actor to attach to.
    * @param array listeners
    *        The console listeners you want to start.
-   * @param function onResponse
-   *        Called with the response packet and a WebConsoleClient
-   *        instance (which will be undefined on error).
    */
-  attachConsole:
-  function(consoleActor, listeners, onResponse = noop) {
+  attachConsole: function(consoleActor, listeners) {
     const packet = {
       to: consoleActor,
       type: "startListeners",
@@ -434,15 +405,12 @@ DebuggerClient.prototype = {
 
     return this.request(packet).then(response => {
       let consoleClient;
-      if (!response.error) {
-        if (this._clients.has(consoleActor)) {
-          consoleClient = this._clients.get(consoleActor);
-        } else {
-          consoleClient = new WebConsoleClient(this, response);
-          this.registerClient(consoleClient);
-        }
+      if (this._clients.has(consoleActor)) {
+        consoleClient = this._clients.get(consoleActor);
+      } else {
+        consoleClient = new WebConsoleClient(this, response);
+        this.registerClient(consoleClient);
       }
-      onResponse(response, consoleClient);
       return [response, consoleClient];
     });
   },
@@ -452,17 +420,13 @@ DebuggerClient.prototype = {
    *
    * @param string threadActor
    *        The actor ID for the thread to attach.
-   * @param function onResponse
-   *        Called with the response packet and a ThreadClient
-   *        (which will be undefined on error).
    * @param object options
    *        Configuration options.
    *        - useSourceMaps: whether to use source maps or not.
    */
-  attachThread: function(threadActor, onResponse = noop, options = {}) {
+  attachThread: function(threadActor, options = {}) {
     if (this._clients.has(threadActor)) {
       const client = this._clients.get(threadActor);
-      DevToolsUtils.executeSoon(() => onResponse({}, client));
       return promise.resolve([{}, client]);
     }
 
@@ -472,50 +436,15 @@ DebuggerClient.prototype = {
       options,
     };
     return this.request(packet).then(response => {
-      let threadClient;
-      if (!response.error) {
-        threadClient = new ThreadClient(this, threadActor);
-        this.registerClient(threadClient);
-      }
-      onResponse(response, threadClient);
+      const threadClient = new ThreadClient(this, threadActor);
+      this.registerClient(threadClient);
       return [response, threadClient];
     });
   },
 
   /**
-   * Attach to a trace actor.
-   *
-   * @param string traceActor
-   *        The actor ID for the tracer to attach.
-   * @param function onResponse
-   *        Called with the response packet and a TraceClient
-   *        (which will be undefined on error).
-   */
-  attachTracer: function(traceActor, onResponse = noop) {
-    if (this._clients.has(traceActor)) {
-      const client = this._clients.get(traceActor);
-      DevToolsUtils.executeSoon(() => onResponse({}, client));
-      return promise.resolve([{}, client]);
-    }
-
-    const packet = {
-      to: traceActor,
-      type: "attach"
-    };
-    return this.request(packet).then(response => {
-      let traceClient;
-      if (!response.error) {
-        traceClient = new TraceClient(this, traceActor);
-        this.registerClient(traceClient);
-      }
-      onResponse(response, traceClient);
-      return [response, traceClient];
-    });
-  },
-
-  /**
-   * Fetch the ParentProcessTargetActor for the main process or
-   * ContentProcessTargetActor for a given content process ID.
+   * Fetch the ChromeActor for the main process or ChildProcessActor for a
+   * a given child process ID.
    *
    * @param number id
    *        The ID for the process to attach (returned by `listProcesses`).
@@ -537,9 +466,6 @@ DebuggerClient.prototype = {
    *
    * @param string actor
    *        The actor ID to send the request to.
-   * @param onResponse function
-   *        If specified, will be called with the response packet when
-   *        debugging server responds.
    */
   release: DebuggerClient.requester({
     to: arg(0),

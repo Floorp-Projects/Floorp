@@ -36,7 +36,7 @@ function findSource() {
 }
 
 function prettyPrintSource() {
-  gThreadClient.source(gSource).prettyPrint(4, testPrettyPrinted);
+  gThreadClient.source(gSource).prettyPrint(4).then(testPrettyPrinted);
 }
 
 function testPrettyPrinted({ error, source }) {
@@ -47,7 +47,7 @@ function testPrettyPrinted({ error, source }) {
 }
 
 function disablePrettyPrint() {
-  gThreadClient.source(gSource).disablePrettyPrint(testUgly);
+  gThreadClient.source(gSource).disablePrettyPrint().then(testUgly);
 }
 
 function testUgly({ error, source }) {

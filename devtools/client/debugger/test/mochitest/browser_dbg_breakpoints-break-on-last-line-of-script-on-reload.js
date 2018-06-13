@@ -105,10 +105,7 @@ function test() {
     let source = gThreadClient.source(item.attachment.source);
 
     let deferred = promise.defer();
-    source.setBreakpoint(location, ({ error, message }, bpClient) => {
-      if (error) {
-        deferred.reject(error + ": " + message);
-      }
+    source.setBreakpoint(location).then(([response, bpClient]) => {
       deferred.resolve(bpClient);
     });
     return deferred.promise;

@@ -50,9 +50,7 @@ function testSetBreakpoint() {
   let sourceForm = getSourceForm(gSources, JS_URL);
   let source = gDebugger.gThreadClient.source(sourceForm);
 
-  source.setBreakpoint({ line: 30 }, aResponse => {
-    ok(!aResponse.error,
-      "Should be able to set a breakpoint in a js file.");
+  source.setBreakpoint({ line: 30 }).then(([aResponse]) => {
     ok(!aResponse.actualLocation,
       "Should be able to set a breakpoint on line 30.");
 
