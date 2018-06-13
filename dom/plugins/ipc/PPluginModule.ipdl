@@ -15,6 +15,7 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using class mac_plugin_interposing::NSCursorInfo from "mozilla/plugins/PluginMessageUtils.h";
 using struct nsID from "nsID.h";
 using struct mozilla::plugins::NPAudioDeviceChangeDetailsIPC from "mozilla/plugins/PluginMessageUtils.h";
+using struct mozilla::plugins::NPAudioDeviceStateChangedIPC from "mozilla/plugins/PluginMessageUtils.h";
 
 namespace mozilla {
 namespace plugins {
@@ -93,6 +94,7 @@ child:
   async SettingChanged(PluginSettings settings);
 
   async NPP_SetValue_NPNVaudioDeviceChangeDetails(NPAudioDeviceChangeDetailsIPC changeDetails);
+  async NPP_SetValue_NPNVaudioDeviceStateChanged(NPAudioDeviceStateChangedIPC deviceState);
 
   async InitPluginModuleChild(Endpoint<PPluginModuleChild> endpoint);
 
