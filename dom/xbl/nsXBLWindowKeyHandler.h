@@ -55,14 +55,12 @@ protected:
   // walk the handlers, looking for one to handle the event
   bool WalkHandlersInternal(KeyboardEvent* aKeyEvent,
                             nsAtom* aEventType,
-                            nsXBLPrototypeHandler* aHandler,
                             bool aExecute,
                             bool* aOutReservedForChrome = nullptr);
 
   // walk the handlers for aEvent, aCharCode and aIgnoreModifierState. Execute
   // it if aExecute = true.
   bool WalkHandlersAndExecute(KeyboardEvent* aKeyEvent, nsAtom* aEventType,
-                              nsXBLPrototypeHandler* aHandler,
                               uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState,
                               bool aExecute,
@@ -131,7 +129,6 @@ protected:
   // these are not owning references; the prototype handlers are owned
   // by the prototype bindings which are owned by the docinfo.
   nsXBLPrototypeHandler* mHandler;     // platform bindings
-  nsXBLPrototypeHandler* mUserHandler; // user-specific bindings
 
   // holds reference count to document info about bindings
   static uint32_t sRefCnt;
