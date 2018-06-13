@@ -112,7 +112,8 @@ child:
                        uint32_t            cacheKey,
                        nsCString           altDataType,
                        int64_t             altDataLength,
-                       bool                applyConversion);
+                       bool                applyConversion,
+                       ResourceTimingStruct timing);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
