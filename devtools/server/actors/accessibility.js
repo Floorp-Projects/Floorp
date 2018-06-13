@@ -435,6 +435,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       }
     }
 
+    this._childrenPromise = null;
     delete this.a11yService;
     this.setA11yServiceGetter();
   },

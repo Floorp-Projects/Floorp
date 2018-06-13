@@ -657,7 +657,8 @@ StructuredCloneWriteCallback(JSContext* aCx,
     } else {
       nsCOMPtr<nsIInputStream> stream(new WasmCompiledModuleStream(module));
 
-      blobImpl = StreamBlobImpl::Create(stream, EmptyString(), UINT64_MAX);
+      blobImpl = StreamBlobImpl::Create(stream.forget(), EmptyString(),
+                                        UINT64_MAX);
     }
 
     RefPtr<Blob> compiledBlob = Blob::Create(nullptr, blobImpl);

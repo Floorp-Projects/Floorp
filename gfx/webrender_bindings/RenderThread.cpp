@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "mtransport/runnable_utils.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
+#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
@@ -32,6 +33,7 @@ RenderThread::RenderThread(base::Thread* aThread)
   , mFrameCountMapLock("RenderThread.mFrameCountMapLock")
   , mRenderTextureMapLock("RenderThread.mRenderTextureMapLock")
   , mHasShutdown(false)
+  , mHandlingDeviceReset(false)
 {
 
 }
@@ -163,6 +165,10 @@ RenderThread::RemoveRenderer(wr::WindowId aWindowId)
 
   mRenderers.erase(aWindowId);
 
+  if (mRenderers.size() == 0 && mHandlingDeviceReset) {
+    mHandlingDeviceReset = false;
+  }
+
   MutexAutoLock lock(mFrameCountMapLock);
   mWindowInfos.Remove(AsUint64(aWindowId));
 }
@@ -182,6 +188,13 @@ RenderThread::GetRenderer(wr::WindowId aWindowId)
   return it->second.get();
 }
 
+size_t
+RenderThread::RendererCount()
+{
+  MOZ_ASSERT(IsInRenderThread());
+  return mRenderers.size();
+}
+
 void
 RenderThread::NewFrameReady(wr::WindowId aWindowId)
 {
@@ -199,6 +212,10 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
   }
 
   if (IsDestroyed(aWindowId)) {
+    return;
+  }
+
+  if (mHandlingDeviceReset) {
     return;
   }
 
@@ -223,6 +240,10 @@ RenderThread::WakeUp(wr::WindowId aWindowId)
   }
 
   if (IsDestroyed(aWindowId)) {
+    return;
+  }
+
+  if (mHandlingDeviceReset) {
     return;
   }
 
@@ -525,6 +546,35 @@ void
 RenderThread::ProgramCacheTask()
 {
   ProgramCache();
+}
+
+void
+RenderThread::HandleDeviceReset(const char* aWhere)
+{
+  MOZ_ASSERT(IsInRenderThread());
+
+  if (mHandlingDeviceReset) {
+    return;
+  }
+
+  gfxCriticalNote << "GFX: RenderThread detected a device reset in " << aWhere;
+  if (XRE_IsGPUProcess()) {
+    gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+  }
+
+  for (auto iter = mRenderTextures.Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->ClearCachedResources();
+  }
+
+  mHandlingDeviceReset = true;
+  // All RenderCompositors will be destroyed by GPUChild::RecvNotifyDeviceReset()
+}
+
+bool
+RenderThread::IsHandlingDeviceReset()
+{
+  MOZ_ASSERT(IsInRenderThread());
+  return mHandlingDeviceReset;
 }
 
 WebRenderProgramCache*

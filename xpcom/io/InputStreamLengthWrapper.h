@@ -39,6 +39,17 @@ public:
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINPUTSTREAMLENGTH
 
+  // This method creates a InputStreamLengthWrapper around aInputStream if
+  // this doesn't implement nsIInputStreamLength or
+  // nsIInputStreamAsyncLength interface, but it implements
+  // nsIAsyncInputStream. For this kind of streams,
+  // InputStreamLengthHelper is not able to retrieve the length. This
+  // method will make such streams ready to be used with
+  // InputStreamLengthHelper.
+  static already_AddRefed<nsIInputStream>
+  MaybeWrap(already_AddRefed<nsIInputStream> aInputStream,
+            int64_t aLength);
+
   // The length here will be used when nsIInputStreamLength::Length() is called.
   InputStreamLengthWrapper(already_AddRefed<nsIInputStream> aInputStream,
                            int64_t aLength);

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BlobURLProtocolHandler.h"
+#include "BlobURLChannel.h"
 
 #include "mozilla/dom/BlobURL.h"
 #include "mozilla/dom/ChromeUtils.h"
@@ -841,29 +842,34 @@ BlobURLProtocolHandler::NewURI(const nsACString& aSpec,
 }
 
 NS_IMETHODIMP
-BlobURLProtocolHandler::NewChannel2(nsIURI* uri,
+BlobURLProtocolHandler::NewChannel2(nsIURI* aURI,
                                     nsILoadInfo* aLoadInfo,
-                                    nsIChannel** result)
+                                    nsIChannel** aResult)
 {
-  *result = nullptr;
+  RefPtr<BlobURLChannel> channel = new BlobURLChannel(aURI, aLoadInfo);
 
-  DataInfo* info = GetDataInfoFromURI(uri, true /*aAlsoIfRevoked */);
+  auto raii = MakeScopeExit([&] {
+    channel->InitFailed();
+    channel.forget(aResult);
+  });
+
+  DataInfo* info = GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
   if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
-    return NS_ERROR_DOM_BAD_URI;
+    return NS_OK;
   }
 
   RefPtr<BlobImpl> blobImpl = info->mBlobImpl;
-  nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
+  nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
   if (!uriPrinc) {
-    return NS_ERROR_DOM_BAD_URI;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   if (!principal) {
-    return NS_ERROR_DOM_BAD_URI;
+    return NS_OK;
   }
 
   MOZ_ASSERT(info->mPrincipal == principal);
@@ -881,47 +887,13 @@ BlobURLProtocolHandler::NewChannel2(nsIURI* uri,
       !nsContentUtils::IsSystemPrincipal(aLoadInfo->LoadingPrincipal()) &&
       !ChromeUtils::IsOriginAttributesEqualIgnoringFPD(aLoadInfo->GetOriginAttributes(),
                                                          BasePrincipal::Cast(principal)->OriginAttributesRef())) {
-    return NS_ERROR_DOM_BAD_URI;
+    return NS_OK;
   }
 
-  ErrorResult error;
-  nsCOMPtr<nsIInputStream> stream;
-  blobImpl->CreateInputStream(getter_AddRefs(stream), error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
+  raii.release();
 
-  nsAutoString contentType;
-  blobImpl->GetType(contentType);
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
-                                        uri,
-                                        stream.forget(),
-                                        NS_ConvertUTF16toUTF8(contentType),
-                                        EmptyCString(), // aContentCharset
-                                        aLoadInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (blobImpl->IsFile()) {
-    nsString filename;
-    blobImpl->GetName(filename);
-    channel->SetContentDispositionFilename(filename);
-  }
-
-  uint64_t size = blobImpl->GetSize(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  channel->SetOriginalURI(uri);
-  channel->SetContentType(NS_ConvertUTF16toUTF8(contentType));
-  channel->SetContentLength(size);
-
-  channel.forget(result);
-
+  channel->Initialize(blobImpl);
+  channel.forget(aResult);
   return NS_OK;
 }
 

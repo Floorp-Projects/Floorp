@@ -190,6 +190,13 @@ RenderDXGITextureHostOGL::Unlock()
 }
 
 void
+RenderDXGITextureHostOGL::ClearCachedResources()
+{
+  DeleteTextureHandle();
+  mGL = nullptr;
+}
+
+void
 RenderDXGITextureHostOGL::DeleteTextureHandle()
 {
   if (mTextureHandle[0] == 0) {
@@ -376,6 +383,13 @@ RenderDXGIYCbCrTextureHostOGL::Unlock()
     }
     mLocked = false;
   }
+}
+
+void
+RenderDXGIYCbCrTextureHostOGL::ClearCachedResources()
+{
+  DeleteTextureHandle();
+  mGL = nullptr;
 }
 
 GLuint
