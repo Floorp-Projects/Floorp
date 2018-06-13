@@ -51,6 +51,7 @@ protected:
   void DestroyEGLSurface();
   ID3D11Device* GetDeviceOfEGLDisplay();
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
+  bool SutdownEGLLibraryIfNecessary();
 
   RefPtr<gl::GLContext> mGL;
   EGLConfig mEGLConfig;
