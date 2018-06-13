@@ -1,4 +1,4 @@
-'''This helps loading mitmproxy's cert and change proxy settings for Firefox.'''
+'''Functions to download, install, setup, and use the mitmproxy playback tool'''
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -21,8 +21,13 @@ from .base import Playback
 here = os.path.dirname(os.path.realpath(__file__))
 LOG = get_proxy_logger(component='raptor-mitmproxy')
 
+# needed so unit tests can find their imports
 mozharness_dir = os.path.join(here, '../../../mozharness')
 sys.path.insert(0, mozharness_dir)
+raptor_dir = os.path.join(here, '..')
+sys.path.insert(0, raptor_dir)
+
+from utils import transform_platform
 
 external_tools_path = os.environ.get('EXTERNALTOOLSPATH', None)
 
@@ -117,10 +122,12 @@ class Mitmproxy(Playback):
             os.makedirs(self.raptor_dir)
         LOG.info("downloading mitmproxy binary")
         _manifest = os.path.join(here, self.config['playback_binary_manifest'])
-        self._tooltool_fetch(_manifest)
+        transformed_manifest = transform_platform(_manifest, self.config['platform'])
+        self._tooltool_fetch(transformed_manifest)
         LOG.info("downloading mitmproxy pageset")
         _manifest = os.path.join(here, self.config['playback_pageset_manifest'])
-        self._tooltool_fetch(_manifest)
+        transformed_manifest = transform_platform(_manifest, self.config['platform'])
+        self._tooltool_fetch(transformed_manifest)
         return
 
     def setup(self):
