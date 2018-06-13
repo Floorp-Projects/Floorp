@@ -263,6 +263,7 @@ dom/url/**
 dom/vr/**
 dom/webauthn/**
 dom/webbrowserpersist/**
+dom/webgpu/**
 dom/webidl/**
 dom/websocket/**
 dom/workers/**
