@@ -23,6 +23,9 @@
 #include <algorithm>
 #include "LayersLogging.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 // If debugging this code you may wish to enable this logging, and also
 // uncomment the DumpFrameTree call near the bottom of the file.
 #define PET_LOG(...)
