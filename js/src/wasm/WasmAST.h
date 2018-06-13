@@ -502,6 +502,7 @@ enum class AstExprKind
     StructNew,
     StructGet,
     StructSet,
+    StructNarrow,
 #endif
     Nop,
     Pop,
@@ -1112,6 +1113,25 @@ class AstStructSet : public AstExpr
     uint32_t index() { return index_; }
     AstExpr& ptr() const { return *ptr_; }
     AstExpr& value() const { return *value_; }
+};
+
+class AstStructNarrow : public AstExpr
+{
+    AstValType inputStruct_;
+    AstValType outputStruct_;
+    AstExpr*   ptr_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::StructNarrow;
+    AstStructNarrow(AstValType inputStruct, AstValType outputStruct, AstExpr* ptr)
+      : AstExpr(Kind, AstExprType(outputStruct)),
+        inputStruct_(inputStruct),
+        outputStruct_(outputStruct),
+        ptr_(ptr)
+    {}
+    AstValType& inputStruct() { return inputStruct_; }
+    AstValType& outputStruct() { return outputStruct_; }
+    AstExpr& ptr() const { return *ptr_; }
 };
 #endif
 

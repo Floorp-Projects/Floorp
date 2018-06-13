@@ -195,6 +195,7 @@ enum class OpKind {
     StructNew,
     StructGet,
     StructSet,
+    StructNarrow,
 };
 
 // Return the OpKind for a given Op. This is used for sanity-checking that
@@ -482,6 +483,9 @@ class MOZ_STACK_CLASS OpIter : private Policy
     // Report a general failure.
     MOZ_MUST_USE bool fail(const char* msg) MOZ_COLD;
 
+    // Report a general failure with a context
+    MOZ_MUST_USE bool fail_ctx(const char* fmt, const char* context) MOZ_COLD;
+
     // Report an unrecognized opcode.
     MOZ_MUST_USE bool unrecognizedOpcode(const OpBytes* expr) MOZ_COLD;
 
@@ -573,6 +577,8 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
     MOZ_MUST_USE bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr);
     MOZ_MUST_USE bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* ptr, Value* val);
+    MOZ_MUST_USE bool readStructNarrow(ValType* inputType, ValType* outputType, Value* ptr);
+    MOZ_MUST_USE bool readReferenceType(ValType* type, const char* const context);
 
     // At a location where readOp is allowed, peek at the next opcode
     // without consuming it or updating any internal state.
@@ -716,6 +722,17 @@ inline bool
 OpIter<Policy>::fail(const char* msg)
 {
     return d_.fail(lastOpcodeOffset(), msg);
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::fail_ctx(const char* fmt, const char* context)
+{
+    UniqueChars error(JS_smprintf(fmt, context));
+    if (!error) {
+        return false;
+    }
+    return fail(error.get());
 }
 
 // This function pops exactly one value from the stack, yielding Any types in
@@ -1684,20 +1701,38 @@ inline bool
 OpIter<Policy>::readRefNull(ValType* type)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
+    if (!readReferenceType(type, "ref.null")) {
+        return false;
+    }
+
+    return push(StackType(*type));
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readReferenceType(ValType* type, const char* context)
+{
     uint8_t code;
     uint32_t refTypeIndex;
+
     if (!d_.readValType(&code, &refTypeIndex)) {
-        return fail("unknown nullref type");
+        return fail_ctx("invalid reference type for %s", context);
     }
+
     if (code == uint8_t(TypeCode::Ref)) {
-        if (refTypeIndex >= MaxTypes || refTypeIndex >= env_.types.length()) {
-            return fail("invalid nullref type");
+        if (refTypeIndex >= env_.types.length()) {
+            return fail_ctx("invalid reference type for %s", context);
+        }
+        if (!env_.types[refTypeIndex].isStructType()) {
+            return fail_ctx("reference to struct required for %s", context);
         }
     } else if (code != uint8_t(TypeCode::AnyRef)) {
-        return fail("unknown nullref type");
+        return fail_ctx("invalid reference type for %s", context);
     }
+
     *type = ValType(ValType::Code(code), refTypeIndex);
-    return push(StackType(*type));
+
+    return true;
 }
 
 template <typename Policy>
@@ -2162,6 +2197,9 @@ OpIter<Policy>::readFieldIndex(uint32_t* fieldIndex, const StructType& structTyp
     return true;
 }
 
+// Semantics of struct.new, struct.get, struct.set, and struct.narrow documented
+// (for now) on https://github.com/lars-t-hansen/moz-gc-experiments.
+
 template <typename Policy>
 inline bool
 OpIter<Policy>::readStructNew(uint32_t* typeIndex, ValueVector* argValues)
@@ -2186,7 +2224,7 @@ OpIter<Policy>::readStructNew(uint32_t* typeIndex, ValueVector* argValues)
         }
     }
 
-    return push(ValType(PackTypeCode(TypeCode::Ref, *typeIndex)));
+    return push(ValType(ValType::Ref, *typeIndex));
 }
 
 template <typename Policy>
@@ -2243,6 +2281,45 @@ OpIter<Policy>::readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex, Value* 
     }
 
     return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readStructNarrow(ValType* inputType, ValType* outputType, Value* ptr)
+{
+    MOZ_ASSERT(inputType != outputType);
+    MOZ_ASSERT(Classify(op_) == OpKind::StructNarrow);
+
+    if (!readReferenceType(inputType, "struct.narrow")) {
+        return false;
+    }
+
+    if (!readReferenceType(outputType, "struct.narrow")) {
+        return false;
+    }
+
+    if (inputType->isRef()) {
+        if (!outputType->isRef()) {
+            return fail("invalid type combination in struct.narrow");
+        }
+
+        const StructType& inputStruct = env_.types[inputType->refTypeIndex()].structType();
+        const StructType& outputStruct = env_.types[outputType->refTypeIndex()].structType();
+
+        if (!outputStruct.hasPrefix(inputStruct)) {
+            return fail("invalid narrowing operation");
+        }
+    } else if (*outputType == ValType::AnyRef) {
+        if (*inputType != ValType::AnyRef) {
+            return fail("invalid type combination in struct.narrow");
+        }
+    }
+
+    if (!popWithType(*inputType, ptr)) {
+        return false;
+    }
+
+    return push(*outputType);
 }
 
 } // namespace wasm

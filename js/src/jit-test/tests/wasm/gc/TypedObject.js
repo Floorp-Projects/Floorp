@@ -127,3 +127,24 @@ if (!wasmGcEnabled())
                        Error,
                        /setting immutable field/);
 }
+
+// A consequence of the current mapping of i64 as two i32 fields is that we run
+// a risk of struct.narrow not recognizing the difference.  So check this.
+
+{
+    let ins = wasmEvalText(
+        `(module
+          (gc_feature_opt_in 1)
+          (type $p (struct (field i64)))
+          (type $q (struct (field i32) (field i32)))
+          (func $f (param anyref) (result i32)
+           (ref.is_null (struct.narrow anyref (ref $q) (get_local 0))))
+          (func $g (param anyref) (result i32)
+           (ref.is_null (struct.narrow anyref (ref $p) (get_local 0))))
+          (func (export "t1") (result i32)
+           (call $f (struct.new $p (i64.const 0))))
+          (func (export "t2") (result i32)
+           (call $g (struct.new $q (i32.const 0) (i32.const 0)))))`).exports;
+    assertEq(ins.t1(), 1);
+    assertEq(ins.t2(), 1);
+}

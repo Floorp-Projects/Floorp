@@ -262,6 +262,24 @@ assertEq(the_list, null);
                       (field (mut i64))
                       (field (mut i32))))
 
+          (func (export "set") (param anyref)
+           (local (ref $big))
+           (set_local 1 (struct.narrow anyref (ref $big) (get_local 0)))
+           (struct.set $big 1 (get_local 1) (i64.const 0x3333333376544567)))
+
+          (func (export "set2") (param $p anyref)
+           (struct.set $big 1
+            (struct.narrow anyref (ref $big) (get_local $p))
+            (i64.const 0x3141592653589793)))
+
+          (func (export "low") (param $p anyref) (result i32)
+           (i32.wrap/i64 (struct.get $big 1 (struct.narrow anyref (ref $big) (get_local $p)))))
+
+          (func (export "high") (param $p anyref) (result i32)
+           (i32.wrap/i64 (i64.shr_u
+                          (struct.get $big 1 (struct.narrow anyref (ref $big) (get_local $p)))
+                          (i64.const 32))))
+
           (func (export "mk") (result anyref)
            (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
 
@@ -274,10 +292,24 @@ assertEq(the_list, null);
     assertEq(v._0, 0x7aaaaaaa);
     assertEq(v._1_low, 0x01020337);
     assertEq(v._1_high, 0x42);
+    assertEq(ins.low(v), 0x01020337);
+    assertEq(ins.high(v), 0x42);
+    assertEq(v._2, 0x6bbbbbbb);
 
     v._0 = 0x5ccccccc;
     v._2 = 0x4ddddddd;
     assertEq(v._1_low, 0x01020337);
+
+    ins.set(v);
+    assertEq(v._0, 0x5ccccccc);
+    assertEq(v._1_low, 0x76544567);
+    assertEq(v._2, 0x4ddddddd);
+
+    ins.set2(v);
+    assertEq(v._1_low, 0x53589793);
+    assertEq(v._1_high, 0x31415926)
+    assertEq(ins.low(v), 0x53589793);
+    assertEq(ins.high(v), 0x31415926)
 }
 
 {
@@ -393,6 +425,24 @@ assertEq(ins.is_empty(), 1);
 assertErrorMessage(() => ins.pop(),
                    WebAssembly.RuntimeError,
                    /dereferencing null pointer/);
+
+// Check that a wrapped object cannot be unboxed from anyref even if the wrapper
+// points to the right type.  This is a temporary restriction, until we're able
+// to avoid dealing with wrappers inside the engine.
+
+{
+    var ins = wasmEvalText(
+        `(module
+          (gc_feature_opt_in 1)
+          (type $Node (struct (field i32)))
+          (func (export "mk") (result anyref)
+           (struct.new $Node (i32.const 37)))
+          (func (export "f") (param $n anyref) (result anyref)
+           (struct.narrow anyref (ref $Node) (get_local $n))))`).exports;
+    var n = ins.mk();
+    assertEq(ins.f(n), n);
+    assertEq(ins.f(wrapWithProto(n, {})), null);
+}
 
 // negative tests
 

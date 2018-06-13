@@ -125,6 +125,7 @@ class WasmToken
         StructNew,
         StructGet,
         StructSet,
+        StructNarrow,
 #endif
         Nop,
         Offset,
@@ -369,6 +370,7 @@ class WasmToken
           case StructNew:
           case StructGet:
           case StructSet:
+          case StructNarrow:
 #endif
           case Nop:
           case RefNull:
@@ -2106,6 +2108,9 @@ WasmTokenStream::next()
             if (consume(u".set")) {
                 return WasmToken(WasmToken::StructSet, begin, cur_);
             }
+            if (consume(u".narrow")) {
+                return WasmToken(WasmToken::StructNarrow, begin, cur_);
+            }
 #endif
             return WasmToken(WasmToken::Struct, begin, cur_);
         }
@@ -3690,6 +3695,37 @@ ParseStructSet(WasmParseContext& c, bool inParens)
 
     return new(c.lifo) AstStructSet(typeDef, fieldDef.index(), ptr, value);
 }
+
+static AstExpr*
+ParseStructNarrow(WasmParseContext& c, bool inParens)
+{
+    AstValType inputType;
+    if (!ParseValType(c, &inputType)) {
+        return nullptr;
+    }
+
+    if (!inputType.isRefType()) {
+        c.ts.generateError(c.ts.peek(), "struct.narrow requires ref type", c.error);
+        return nullptr;
+    }
+
+    AstValType outputType;
+    if (!ParseValType(c, &outputType)) {
+        return nullptr;
+    }
+
+    if (!outputType.isRefType()) {
+        c.ts.generateError(c.ts.peek(), "struct.narrow requires ref type", c.error);
+        return nullptr;
+    }
+
+    AstExpr* ptr = ParseExpr(c, inParens);
+    if (!ptr) {
+        return nullptr;
+    }
+
+    return new(c.lifo) AstStructNarrow(inputType, outputType, ptr);
+}
 #endif
 
 static AstExpr*
@@ -3810,6 +3846,8 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
         return ParseStructGet(c, inParens);
       case WasmToken::StructSet:
         return ParseStructSet(c, inParens);
+      case WasmToken::StructNarrow:
+        return ParseStructNarrow(c, inParens);
 #endif
       case WasmToken::RefNull:
         return ParseRefNull(c);
@@ -5482,6 +5520,20 @@ ResolveStructSet(Resolver& r, AstStructSet& s)
 
     return ResolveExpr(r, s.ptr()) && ResolveExpr(r, s.value());
 }
+
+static bool
+ResolveStructNarrow(Resolver& r, AstStructNarrow& s)
+{
+    if (!ResolveType(r, s.inputStruct())) {
+        return false;
+    }
+
+    if (!ResolveType(r, s.outputStruct())) {
+        return false;
+    }
+
+    return ResolveExpr(r, s.ptr());
+}
 #endif
 
 static bool
@@ -5580,6 +5632,8 @@ ResolveExpr(Resolver& r, AstExpr& expr)
         return ResolveStructGet(r, expr.as<AstStructGet>());
       case AstExprKind::StructSet:
         return ResolveStructSet(r, expr.as<AstStructSet>());
+      case AstExprKind::StructNarrow:
+        return ResolveStructNarrow(r, expr.as<AstStructNarrow>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
@@ -6335,6 +6389,24 @@ EncodeStructSet(Encoder& e, AstStructSet& s)
     }
     return true;
 }
+
+static bool
+EncodeStructNarrow(Encoder& e, AstStructNarrow& s)
+{
+    if (!EncodeExpr(e, s.ptr())) {
+        return false;
+    }
+    if (!e.writeOp(MiscOp::StructNarrow)) {
+        return false;
+    }
+    if (!e.writeValType(s.inputStruct().type())) {
+        return false;
+    }
+    if (!e.writeValType(s.outputStruct().type())) {
+        return false;
+    }
+    return true;
+}
 #endif
 
 static bool
@@ -6437,6 +6509,8 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeStructGet(e, expr.as<AstStructGet>());
       case AstExprKind::StructSet:
         return EncodeStructSet(e, expr.as<AstStructSet>());
+      case AstExprKind::StructNarrow:
+        return EncodeStructNarrow(e, expr.as<AstStructNarrow>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
