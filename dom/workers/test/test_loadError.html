@@ -25,23 +25,18 @@ function nextTest() {
     var b = new Blob([workerfunc+'workerfunc();']);
     var u = URL.createObjectURL(b);
     function callworker(i) {
-      try {
-        var w = new Worker(u);
-        URL.revokeObjectURL(u);
-        is(i, 0, 'worker creation succeeded');
-      } catch (e) {
-        is(i, 1, 'worker creation failed');
-        SimpleTest.finish();
-        return;
-      }
+      var w = new Worker(u);
+      URL.revokeObjectURL(u);
       w.onmessage = function(e) {
+        is(i, 0, 'Message received');
         is(e.data, "ERROR",
            "Should catch the error when loading inner script");
         if (++i < 2) callworker(i);
         else SimpleTest.finish();
       };
-      w.onerrror = function(e) {
-        ok(false, "Should not get any errors from this worker");
+      w.onerror = function(e) {
+        is(i, 1, 'OnError received');
+        SimpleTest.finish();
       }
     }
     callworker(0);

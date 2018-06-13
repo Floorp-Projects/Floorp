@@ -39,6 +39,10 @@ protected:
     TextureAllocationFlags aAllocFlags) override;
 
   RefPtr<ID3D11Device> mDevice;
+  /**
+   * Used for checking if CompositorDevice/ContentDevice is updated.
+   */
+  RefPtr<ID3D11Device> mImageDevice;
 };
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image

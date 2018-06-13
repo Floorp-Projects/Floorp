@@ -23,12 +23,12 @@ public:
   NS_DECL_NSIMEMORYREPORTER
 
   static already_AddRefed<StreamBlobImpl>
-  Create(nsIInputStream* aInputStream,
+  Create(already_AddRefed<nsIInputStream> aInputStream,
          const nsAString& aContentType,
          uint64_t aLength);
 
   static already_AddRefed<StreamBlobImpl>
-  Create(nsIInputStream* aInputStream,
+  Create(already_AddRefed<nsIInputStream> aInputStream,
          const nsAString& aName,
          const nsAString& aContentType,
          int64_t aLastModifiedDate,
@@ -80,11 +80,11 @@ public:
   size_t GetAllocationSize() const override;
 
 private:
-  StreamBlobImpl(nsIInputStream* aInputStream,
+  StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                  const nsAString& aContentType,
                  uint64_t aLength);
 
-  StreamBlobImpl(nsIInputStream* aInputStream,
+  StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                  const nsAString& aName,
                  const nsAString& aContentType,
                  int64_t aLastModifiedDate,

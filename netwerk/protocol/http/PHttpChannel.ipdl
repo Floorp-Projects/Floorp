@@ -123,6 +123,7 @@ child:
   // on the content process and reports result via Redirect2Verify above
   async Redirect1Begin(uint32_t           registrarId,
                        URIParams          newOriginalUri,
+                       uint32_t           newLoadFlags,
                        uint32_t           redirectFlags,
                        ParentLoadInfoForwarderArgs loadInfoForwarder,
                        nsHttpResponseHead responseHead,
