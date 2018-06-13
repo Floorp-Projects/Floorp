@@ -45,6 +45,7 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/webgpu/InstanceProvider.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIIdleObserver.h"
 #include "nsIDocument.h"
@@ -217,6 +218,7 @@ class nsGlobalWindowInner final
   , public nsIInterfaceRequestor
   , public PRCListStr
   , public nsAPostRefreshObserver
+  , public mozilla::webgpu::InstanceProvider
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;

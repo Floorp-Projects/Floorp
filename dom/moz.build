@@ -39,6 +39,7 @@ DIRS += [
     'browser-element',
     'cache',
     'canvas',
+    'webgpu',
     'chrome-webidl',
     'clients',
     'commandhandler',

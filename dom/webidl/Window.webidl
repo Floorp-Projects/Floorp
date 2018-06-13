@@ -563,3 +563,5 @@ partial interface Window {
   [Throws, Func="IsChromeOrXBL"]
   readonly attribute IntlUtils intlUtils;
 };
+
+Window implements WebGPUProvider;
