@@ -222,6 +222,32 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 
 // static
 bool
+TouchEvent::PlatformSupportsTouch()
+{
+#if defined(MOZ_WIDGET_ANDROID)
+  // Touch support is always enabled on android.
+  return true;
+#elif defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  static bool sDidCheckTouchDeviceSupport = false;
+  static bool sIsTouchDeviceSupportPresent = false;
+  // On Windows and GTK3 we auto-detect based on device support.
+  if (!sDidCheckTouchDeviceSupport) {
+    sDidCheckTouchDeviceSupport = true;
+    sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();
+    // But touch events are only actually supported if APZ is enabled. If
+    // APZ is disabled globally, we can check that once and incorporate that
+    // into the cached state. If APZ is enabled, we need to further check
+    // based on the widget, which we do below (and don't cache that result).
+    sIsTouchDeviceSupportPresent &= gfxPlatform::AsyncPanZoomEnabled();
+  }
+  return sIsTouchDeviceSupportPresent;
+#else
+  return false;
+#endif
+}
+
+// static
+bool
 TouchEvent::PrefEnabled(nsIDocShell* aDocShell)
 {
   static bool sPrefCached = false;
@@ -244,23 +270,20 @@ TouchEvent::PrefEnabled(nsIDocShell* aDocShell)
     enabled = false;
   } else {
     if (sPrefCacheValue == 2) {
-#if defined(MOZ_WIDGET_ANDROID)
-      // Touch support is always enabled on B2G and android.
-      enabled = true;
-#elif defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      static bool sDidCheckTouchDeviceSupport = false;
-      static bool sIsTouchDeviceSupportPresent = false;
-      // On Windows and GTK3 we auto-detect based on device support.
-      if (!sDidCheckTouchDeviceSupport) {
-        sDidCheckTouchDeviceSupport = true;
-        sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();
-        // But touch events are only actually supported if APZ is enabled. If
-        // APZ is disabled globally, we can check that once and incorporate that
-        // into the cached state. If APZ is enabled, we need to further check
-        // based on the widget, which we do below (and don't cache that result).
-        sIsTouchDeviceSupportPresent &= gfxPlatform::AsyncPanZoomEnabled();
+      enabled = PlatformSupportsTouch();
+
+      static bool firstTime = true;
+      // The touch screen data seems to be inaccurate in the parent process,
+      // and we really need the crash annotation in child processes.
+      if (firstTime && !XRE_IsParentProcess()) {
+        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("HasDeviceTouchScreen"),
+                                           enabled ?
+                                             NS_LITERAL_CSTRING("1") :
+                                             NS_LITERAL_CSTRING("0"));
+        firstTime = false;
       }
-      enabled = sIsTouchDeviceSupportPresent;
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
       if (enabled && aDocShell) {
         // APZ might be disabled on this particular widget, in which case
         // TouchEvent support will also be disabled. Try to detect that.
@@ -270,8 +293,6 @@ TouchEvent::PrefEnabled(nsIDocShell* aDocShell)
           enabled &= pc->GetRootWidget()->AsyncPanZoomEnabled();
         }
       }
-#else
-      enabled = false;
 #endif
     } else {
       enabled = !!sPrefCacheValue;
