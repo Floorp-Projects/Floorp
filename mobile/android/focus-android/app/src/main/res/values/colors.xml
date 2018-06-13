@@ -17,9 +17,9 @@
     <color name="colorProgressGradientStart">#FF9400FF</color>
     <color name="colorProgressGradientEnd">#FFFF1AD9</color>
 
-    <color name="coloInactiveGradientStart">#ff453440</color>
-    <color name="colorInactiveGradientCenter">#ff433446</color>
-    <color name="colorInactiveGradientEnd">#ff3b3445</color>
+    <color name="coloInactiveGradientStart">#421c41</color>
+    <color name="colorInactiveGradientCenter">#3e1c4d</color>
+    <color name="colorInactiveGradientEnd">#271c44</color>
 
     <color name="colorErase">@color/photonMagenta70</color>
     <color name="colorErasePressed">@color/photonMagenta80</color>
