@@ -1927,6 +1927,7 @@ class BaseCompiler final : public BaseCompilerInterface
     MIRTypeVector               SigPII_;
     MIRTypeVector               SigPIII_;
     MIRTypeVector               SigPIIL_;
+    MIRTypeVector               SigPIIP_;
     MIRTypeVector               SigPILL_;
     MIRTypeVector               SigPIIII_;
     NonAssertingLabel           returnLabel_;
@@ -6167,6 +6168,7 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool emitStructNew();
     MOZ_MUST_USE bool emitStructGet();
     MOZ_MUST_USE bool emitStructSet();
+    MOZ_MUST_USE bool emitStructNarrow();
 #endif
 };
 
@@ -9231,8 +9233,9 @@ BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode, const MIRTypeVector& sig
     for (uint32_t i = 1; i < sig.length(); i++) {
         ValType t;
         switch (sig[i]) {
-          case MIRType::Int32: t = ValType::I32; break;
-          case MIRType::Int64: t = ValType::I64; break;
+          case MIRType::Int32:   t = ValType::I32; break;
+          case MIRType::Int64:   t = ValType::I64; break;
+          case MIRType::Pointer: t = ValType::AnyRef; break;
           default:             MOZ_CRASH("Unexpected type");
         }
         passArg(t, peek(numArgs - i), &baselineCall);
@@ -10066,6 +10069,56 @@ BaseCompiler::emitStructSet()
 
     return true;
 }
+
+bool
+BaseCompiler::emitStructNarrow()
+{
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+    ValType inputType, outputType;
+    Nothing nothing;
+    if (!iter_.readStructNarrow(&inputType, &outputType, &nothing)) {
+        return false;
+    }
+
+    if (deadCode_) {
+        return true;
+    }
+
+    // AnyRef -> AnyRef is a no-op, just leave the value on the stack.
+
+    if (inputType == ValType::AnyRef && outputType == ValType::AnyRef) {
+        return true;
+    }
+
+    // Null pointers are just passed through.
+
+    Label done;
+    Label doTest;
+    RegPtr rp = popRef();
+    masm.branchTestPtr(Assembler::NotEqual, rp, rp, &doTest);
+    pushRef(NULLREF_VALUE);
+    masm.jump(&done);
+
+    // AnyRef -> (ref T) must first unbox; leaves rp or null
+
+    bool mustUnboxAnyref = inputType == ValType::AnyRef;
+
+    // Dynamic downcast (ref T) -> (ref U), leaves rp or null
+
+    const StructType& outputStruct = env_.types[outputType.refTypeIndex()].structType();
+
+    masm.bind(&doTest);
+
+    pushI32(mustUnboxAnyref);
+    pushI32(outputStruct.moduleIndex_);
+    pushRef(rp);
+    emitInstanceCall(lineOrBytecode, SigPIIP_, ExprType::AnyRef, SymbolicAddress::StructNarrow);
+
+    masm.bind(&done);
+
+    return true;
+}
 #endif
 
 bool
@@ -10737,6 +10790,11 @@ BaseCompiler::emitBody()
                   return iter_.unrecognizedOpcode(&op);
                 }
                 CHECK_NEXT(emitStructSet());
+              case uint16_t(MiscOp::StructNarrow):
+                if (env_.gcTypesEnabled() == HasGcTypes::False) {
+                  return iter_.unrecognizedOpcode(&op);
+                }
+                CHECK_NEXT(emitStructNarrow());
 #endif
               default:
                 break;
@@ -11000,6 +11058,11 @@ BaseCompiler::init()
     }
     if (!SigPIIL_.append(MIRType::Pointer) || !SigPIIL_.append(MIRType::Int32) ||
         !SigPIIL_.append(MIRType::Int32) || !SigPIIL_.append(MIRType::Int64))
+    {
+        return false;
+    }
+    if (!SigPIIP_.append(MIRType::Pointer) || !SigPIIP_.append(MIRType::Int32) ||
+        !SigPIIP_.append(MIRType::Int32) || !SigPIIP_.append(MIRType::Pointer))
     {
         return false;
     }

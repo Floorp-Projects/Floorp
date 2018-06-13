@@ -703,6 +703,9 @@ class Decoder
             if (!readVarU32(refTypeIndex)) {
                 return false;
             }
+            if (*refTypeIndex > MaxTypes) {
+                return false;
+            }
         } else {
             *refTypeIndex = NoRefTypeIndex;
         }

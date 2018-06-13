@@ -197,7 +197,6 @@ Module::serializedSize(const LinkData& linkData) const
            linkData.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
-           SerializedVectorSize(structTypes_) +
            SerializedVectorSize(dataSegments_) +
            SerializedVectorSize(elemSegments_) +
            SerializedVectorSize(customSections_) +
@@ -219,7 +218,6 @@ Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
     cursor = linkData.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
     cursor = SerializeVector(cursor, exports_);
-    cursor = SerializeVector(cursor, structTypes_);
     cursor = SerializeVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = SerializeVector(cursor, customSections_);
@@ -269,12 +267,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
         return nullptr;
     }
 
-    StructTypeVector structTypes;
-    cursor = DeserializeVector(cursor, &structTypes);
-    if (!cursor) {
-        return nullptr;
-    }
-
     DataSegmentVector dataSegments;
     cursor = DeserializeVector(cursor, &dataSegments);
     if (!cursor) {
@@ -312,7 +304,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     return js_new<Module>(*code,
                           std::move(imports),
                           std::move(exports),
-                          std::move(structTypes),
                           std::move(dataSegments),
                           std::move(elemSegments),
                           std::move(customSections));
@@ -460,7 +451,6 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +
-             SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              SizeOfVectorExcludingThis(dataSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(customSections_, mallocSizeOf);
@@ -980,7 +970,17 @@ Module::getDebugEnabledCode() const
         return nullptr;
     }
 
-    MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables));
+    StructTypeVector structTypes;
+    if (!structTypes.resize(code_->structTypes().length())) {
+        return nullptr;
+    }
+    for (uint32_t i = 0; i < code_->structTypes().length(); i++) {
+        if (!structTypes[i].copyFrom(code_->structTypes()[i])) {
+            return nullptr;
+        }
+    }
+    MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables),
+                                         std::move(structTypes));
     if (!debugCode || !debugCode->initialize(*debugLinkData_)) {
         return nullptr;
     }
@@ -1156,7 +1156,7 @@ Module::makeStructTypeDescrs(JSContext* cx,
     RootedObject prototype(cx, &toModule->getReservedSlot(
                                    TypedObjectModuleObject::StructTypePrototype).toObject());
 
-    for (const StructType& structType : structTypes_) {
+    for (const StructType& structType : structTypes()) {
         AutoIdVector ids(cx);
         AutoValueVector fieldTypeObjs(cx);
         Vector<StructFieldProps> fieldProps(cx);

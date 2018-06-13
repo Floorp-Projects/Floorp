@@ -956,6 +956,13 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
                 uint32_t unusedUint1, unusedUint2;
                 CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing, &nothing));
               }
+              case uint16_t(MiscOp::StructNarrow): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                ValType unusedTy, unusedTy2;
+                CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
+              }
 #endif
               default:
                 return iter.unrecognizedOpcode(&op);

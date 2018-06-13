@@ -696,6 +696,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::StructNew:
         *abiType = Args_General2;
         return FuncCast(Instance::structNew, *abiType);
+      case SymbolicAddress::StructNarrow:
+        *abiType = Args_General4;
+        return FuncCast(Instance::structNarrow, *abiType);
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
         return &js::jit::gAtomic64Lock;
@@ -781,6 +784,7 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::PostBarrier:
 #endif
       case SymbolicAddress::StructNew:
+      case SymbolicAddress::StructNarrow:
         return true;
       case SymbolicAddress::Limit:
         break;

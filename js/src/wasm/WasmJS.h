@@ -231,7 +231,7 @@ class WasmInstanceObject : public NativeObject
                                       wasm::UniqueTlsData tlsData,
                                       HandleWasmMemoryObject memory,
                                       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
-                                      GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>&& structs,
+                                      GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>&& structTypeDescrs,
                                       Handle<FunctionVector> funcImports,
                                       const wasm::GlobalDescVector& globals,
                                       wasm::HandleValVector globalImportValues,

@@ -142,3 +142,9 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
       (func (struct.set 0 0)))`)),
                    WebAssembly.CompileError,
                    /unrecognized opcode/);
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
+    `(module
+      (func (struct.narrow anyref anyref)))`)),
+                   WebAssembly.CompileError,
+                   /unrecognized opcode/);

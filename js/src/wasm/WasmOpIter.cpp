@@ -275,6 +275,8 @@ wasm::Classify(OpBytes op)
               return OpKind::StructGet;
             case MiscOp::StructSet:
               return OpKind::StructSet;
+            case MiscOp::StructNarrow:
+              return OpKind::StructNarrow;
 #endif
             default:
               break;
