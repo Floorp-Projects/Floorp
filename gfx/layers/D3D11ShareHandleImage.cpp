@@ -198,6 +198,14 @@ already_AddRefed<TextureClient>
 D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                                              const gfx::IntSize& aSize)
 {
+  // When CompositorDevice or ContentDevice is updated,
+  // we could not reuse old D3D11Textures. It could cause video flickering.
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
+  if (!!mImageDevice && mImageDevice != device) {
+    ShrinkToMinimumSize();
+  }
+  mImageDevice = device;
+
   TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_DEFAULT;
   if (gfxPrefs::PDMWMFUseSyncTexture() || mDevice == DeviceManagerDx::Get()->GetCompositorDevice()) {
     // If our device is the compositor device, we don't need any synchronization in practice.
