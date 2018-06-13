@@ -405,6 +405,7 @@ enum class MiscOp
     StructNew                            = 0x50,
     StructGet                            = 0x51,
     StructSet                            = 0x52,
+    StructNarrow                         = 0x53,
 
     Limit
 };

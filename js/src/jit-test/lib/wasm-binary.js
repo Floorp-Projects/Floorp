@@ -40,6 +40,7 @@ const I64Code          = 0x7e;
 const F32Code          = 0x7d;
 const F64Code          = 0x7c;
 const AnyFuncCode      = 0x70;
+const AnyrefCode       = 0x6f;
 const RefCode          = 0x6e;
 const FuncCode         = 0x60;
 const VoidCode         = 0x40;
@@ -105,6 +106,12 @@ const MiscPrefix = 0xfc;
 const SimdPrefix = 0xfd;
 const ThreadPrefix = 0xfe;
 const MozPrefix = 0xff;
+
+// Secondary opcode bytes for misc prefix
+const StructNew = 0x50;         // UNOFFICIAL
+const StructGet = 0x51;         // UNOFFICIAL
+const StructSet = 0x52;         // UNOFFICIAL
+const StructNarrow = 0x53;      // UNOFFICIAL
 
 // DefinitionKind
 const FunctionCode     = 0x00;

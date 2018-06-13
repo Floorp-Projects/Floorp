@@ -865,6 +865,15 @@ class StructType
         isInline_(isInline)
     {}
 
+    bool copyFrom(const StructType& src) {
+        if (!fields_.appendAll(src.fields_)) {
+            return false;
+        }
+        moduleIndex_ = src.moduleIndex_;
+        isInline_ = src.isInline_;
+        return true;
+    }
+
     bool hasPrefix(const StructType& other) const;
 
     WASM_DECLARE_SERIALIZABLE(StructType)
@@ -1887,6 +1896,7 @@ enum class SymbolicAddress
     PostBarrier,
 #endif
     StructNew,
+    StructNarrow,
 #if defined(JS_CODEGEN_MIPS32)
     js_jit_gAtomic64Lock,
 #endif

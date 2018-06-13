@@ -30,7 +30,7 @@ const invalidRefNullBody = funcBody({locals:[], body:[
     SelectCode,
     DropCode
 ]});
-checkInvalid(invalidRefNullBody, /invalid nullref type/);
+checkInvalid(invalidRefNullBody, /invalid reference type for ref.null/);
 
 const invalidRefBlockType = funcBody({locals:[], body:[
     BlockCode,

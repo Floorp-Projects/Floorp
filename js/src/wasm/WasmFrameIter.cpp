@@ -1407,6 +1407,8 @@ ThunkedNativeToDescription(SymbolicAddress func)
 #endif
       case SymbolicAddress::StructNew:
         return "call to native struct.new (in wasm)";
+      case SymbolicAddress::StructNarrow:
+        return "call to native struct.narrow (in wasm)";
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
         MOZ_CRASH();

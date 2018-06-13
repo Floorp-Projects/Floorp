@@ -110,6 +110,7 @@ class Instance
 #ifdef JS_SIMULATOR
     bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
 #endif
+    const StructTypeVector& structTypes() const { return code_->structTypes(); }
 
     static constexpr size_t offsetOfJSJitArgsRectifier() {
         return offsetof(Instance, jsJitArgsRectifier_);
@@ -199,6 +200,7 @@ class Instance
     static void postBarrier(Instance* instance, gc::Cell** location);
 #endif
     static void* structNew(Instance* instance, uint32_t typeIndex);
+    static void* structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex, void* ptr);
 };
 
 typedef UniquePtr<Instance> UniqueInstance;
