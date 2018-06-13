@@ -175,20 +175,6 @@ TextPropertyEditor.prototype = {
     this.valueSpan.textProperty = this.prop;
     this.nameSpan.textProperty = this.prop;
 
-    // If the value is a color property we need to put it through the parser
-    // so that colors can be coerced into the default color type. This prevents
-    // us from thinking that when colors are coerced they have been changed by
-    // the user.
-    const outputParser = this.ruleView._outputParser;
-    const frag = outputParser.parseCssProperty(this.prop.name, this.prop.value);
-    const parsedValue = frag.textContent;
-
-    // Save the initial value as the last committed value,
-    // for restoring after pressing escape.
-    this.committed = { name: this.prop.name,
-                       value: parsedValue,
-                       priority: this.prop.priority };
-
     appendText(this.valueContainer, ";");
 
     this.warning = createChild(this.container, "div", {
@@ -384,13 +370,13 @@ TextPropertyEditor.prototype = {
     // Combine the property's value and priority into one string for
     // the value.
     const store = this.rule.elementStyle.store;
-    let val = store.userProperties.getProperty(this.rule.style, name,
+    let val = store.userProperties.getProperty(this.rule.domRule, name,
                                                this.prop.value);
     if (this.prop.priority) {
       val += " !" + this.prop.priority;
     }
 
-    const propDirty = store.userProperties.contains(this.rule.style, name);
+    const propDirty = store.userProperties.contains(this.rule.domRule, name);
 
     if (propDirty) {
       this.element.setAttribute("dirty", "");
@@ -421,6 +407,17 @@ TextPropertyEditor.prototype = {
       isVariableInUse: varName => this.rule.elementStyle.getVariable(varName),
     };
     const frag = outputParser.parseCssProperty(name, val, parserOptions);
+
+    // Save the initial value as the last committed value,
+    // for restoring after pressing escape.
+    if (!this.committed) {
+      this.committed = {
+        name,
+        value: frag.textContent,
+        priority: this.prop.priority,
+      };
+    }
+
     this.valueSpan.innerHTML = "";
     this.valueSpan.appendChild(frag);
 
