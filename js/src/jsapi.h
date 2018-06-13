@@ -1207,41 +1207,6 @@ ProtoKeyToId(JSContext* cx, JSProtoKey key, JS::MutableHandleId idp);
 extern JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext* cx, JS::HandleId id);
 
-/**
- * Returns the original value of |Function.prototype| from the global object in
- * which |forObj| was created.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetFunctionPrototype(JSContext* cx, JS::HandleObject forObj);
-
-/**
- * Returns the original value of |Object.prototype| from the global object in
- * which |forObj| was created.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetObjectPrototype(JSContext* cx, JS::HandleObject forObj);
-
-/**
- * Returns the original value of |Array.prototype| from the global object in
- * which |forObj| was created.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetArrayPrototype(JSContext* cx, JS::HandleObject forObj);
-
-/**
- * Returns the original value of |Error.prototype| from the global
- * object of the current compartment of cx.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetErrorPrototype(JSContext* cx);
-
-/**
- * Returns the %IteratorPrototype% object that all built-in iterator prototype
- * chains go through for the global object of the current compartment of cx.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetIteratorPrototype(JSContext* cx);
-
 extern JS_PUBLIC_API(JSObject*)
 JS_GetGlobalForObject(JSContext* cx, JSObject* obj);
 
