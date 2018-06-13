@@ -13,7 +13,7 @@ var EXPORTED_SYMBOLS = ["Blocklist"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
@@ -29,6 +29,65 @@ ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
+
+  /**
+#    The blocklist XML file looks something like this:
+#
+#    <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+#      <emItems>
+#        <emItem id="item_1@domain" blockID="i1">
+#          <prefs>
+#            <pref>accessibility.accesskeycausesactivation</pref>
+#            <pref>accessibility.blockautorefresh</pref>
+#          </prefs>
+#          <versionRange minVersion="1.0" maxVersion="2.0.*">
+#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#              <versionRange minVersion="1.7" maxVersion="1.7.*"/>
+#            </targetApplication>
+#            <targetApplication id="toolkit@mozilla.org">
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
+#            </targetApplication>
+#          </versionRange>
+#          <versionRange minVersion="3.0" maxVersion="3.0.*">
+#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#            </targetApplication>
+#            <targetApplication id="toolkit@mozilla.org">
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
+#            </targetApplication>
+#          </versionRange>
+#        </emItem>
+#        <emItem id="item_2@domain" blockID="i2">
+#          <versionRange minVersion="3.1" maxVersion="4.*"/>
+#        </emItem>
+#        <emItem id="item_3@domain">
+#          <versionRange>
+#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#            </targetApplication>
+#          </versionRange>
+#        </emItem>
+#        <emItem id="item_4@domain" blockID="i3">
+#          <versionRange>
+#            <targetApplication>
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#            </targetApplication>
+#          </versionRange>
+#        <emItem id="/@badperson\.com$/"/>
+#      </emItems>
+#      <pluginItems>
+#        <pluginItem blockID="i4">
+#          <!-- All match tags must match a plugin to blocklist a plugin -->
+#          <match name="name" exp="some plugin"/>
+#          <match name="description" exp="1[.]2[.]3"/>
+#        </pluginItem>
+#      </pluginItems>
+#      <gfxItems>
+#        <gfxItem ... />
+#      </gfxItems>
+#    </blocklist>
+   */
 
 // The remote settings updater is the new system in charge of fetching remote data
 // securely and efficiently. It will replace the current XML-based system.
@@ -313,8 +372,20 @@ var Blocklist = {
           break;
         case PREF_BLOCKLIST_ENABLED:
           gBlocklistEnabled = Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true);
-          this._loadBlocklist();
-          this._blocklistUpdated(null, null);
+          // This is a bit messy. Especially in tests, but in principle also by users toggling
+          // this preference repeatedly, plugin loads could race with each other if we don't
+          // enforce that they are applied sequentially.
+          // So we only update once the previous `_blocklistUpdated` call finishes running.
+          let lastUpdate = this._lastUpdate || undefined;
+          let newUpdate = this._lastUpdate = (async () => {
+            await lastUpdate;
+            this._clear();
+            await this.loadBlocklistAsync();
+            await this._blocklistUpdated(null, null);
+            if (newUpdate == this._lastUpdate) {
+              delete this._lastUpdate;
+            }
+          })().catch(Cu.reportError);
           break;
         case PREF_BLOCKLIST_LEVEL:
           gBlocklistLevel = Math.min(Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
@@ -615,11 +686,6 @@ var Blocklist = {
     request.addEventListener("load", event => this.onXMLLoad(event));
     request.send(null);
 
-    // When the blocklist loads we need to compare it to the current copy so
-    // make sure we have loaded it.
-    if (!this.isLoaded)
-      this._loadBlocklist();
-
     // If blocklist update via Kinto is enabled, poll for changes and sync.
     // Currently certificates blocklist relies on it by default.
     if (Services.prefs.getBoolPref(PREF_BLOCKLIST_UPDATE_ENABLED)) {
@@ -659,6 +725,10 @@ var Blocklist = {
     const lastModified = request.getResponseHeader("Last-Modified") || "";
     Services.prefs.setCharPref(PREF_BLOCKLIST_LAST_MODIFIED, lastModified);
 
+    if (!this.isLoaded) {
+      await this.loadBlocklistAsync();
+    }
+
     var oldAddonEntries = this._addonEntries;
     var oldPluginEntries = this._pluginEntries;
 
@@ -697,135 +767,6 @@ var Blocklist = {
   },
 
   /**
-   * Finds the newest blocklist file from the application and the profile and
-   * load it or does nothing if neither exist.
-   */
-  _loadBlocklist() {
-    this._addonEntries = [];
-    this._gfxEntries = [];
-    this._pluginEntries = [];
-
-    Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(true);
-
-    var profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-    try {
-      this._loadBlocklistFromFile(profFile);
-    } catch (ex) {
-      LOG("Blocklist::_loadBlocklist: couldn't load file from profile, trying app dir");
-      try {
-        var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-        this._loadBlocklistFromFile(appFile);
-      } catch (ex) {
-        LOG("Blocklist::_loadBlocklist: no XML File found");
-      }
-    }
-  },
-
-  /**
-#    The blocklist XML file looks something like this:
-#
-#    <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
-#      <emItems>
-#        <emItem id="item_1@domain" blockID="i1">
-#          <prefs>
-#            <pref>accessibility.accesskeycausesactivation</pref>
-#            <pref>accessibility.blockautorefresh</pref>
-#          </prefs>
-#          <versionRange minVersion="1.0" maxVersion="2.0.*">
-#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#              <versionRange minVersion="1.7" maxVersion="1.7.*"/>
-#            </targetApplication>
-#            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
-#            </targetApplication>
-#          </versionRange>
-#          <versionRange minVersion="3.0" maxVersion="3.0.*">
-#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#            </targetApplication>
-#            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
-#            </targetApplication>
-#          </versionRange>
-#        </emItem>
-#        <emItem id="item_2@domain" blockID="i2">
-#          <versionRange minVersion="3.1" maxVersion="4.*"/>
-#        </emItem>
-#        <emItem id="item_3@domain">
-#          <versionRange>
-#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#            </targetApplication>
-#          </versionRange>
-#        </emItem>
-#        <emItem id="item_4@domain" blockID="i3">
-#          <versionRange>
-#            <targetApplication>
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#            </targetApplication>
-#          </versionRange>
-#        <emItem id="/@badperson\.com$/"/>
-#      </emItems>
-#      <pluginItems>
-#        <pluginItem blockID="i4">
-#          <!-- All match tags must match a plugin to blocklist a plugin -->
-#          <match name="name" exp="some plugin"/>
-#          <match name="description" exp="1[.]2[.]3"/>
-#        </pluginItem>
-#      </pluginItems>
-#      <gfxItems>
-#        <gfxItem ... />
-#      </gfxItems>
-#    </blocklist>
-   */
-
-  _loadBlocklistFromFile(file) {
-    if (!gBlocklistEnabled) {
-      LOG("Blocklist::_loadBlocklistFromFile: blocklist is disabled");
-      return;
-    }
-
-    let text = "";
-    let fstream = null;
-    let cstream = null;
-
-    try {
-      fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-      cstream = Cc["@mozilla.org/intl/converter-input-stream;1"]
-                  .createInstance(Ci.nsIConverterInputStream);
-
-      fstream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-      cstream.init(fstream, "UTF-8", 0, 0);
-
-      let str = {};
-      let read = 0;
-
-      do {
-        read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-        text += str.value;
-      } while (read != 0);
-    } finally {
-      // There's no catch block because the callers will catch exceptions,
-      // and may try to read another file if reading this file failed.
-      if (cstream) {
-        try {
-          cstream.close();
-        } catch (ex) {}
-      }
-      if (fstream) {
-        try {
-          fstream.close();
-        } catch (ex) {}
-      }
-    }
-
-    if (text)
-      this._loadBlocklistFromString(text);
-  },
-
-  /**
    * Whether or not we've finished loading the blocklist.
    */
   get isLoaded() {
@@ -856,8 +797,8 @@ var Blocklist = {
   async _loadBlocklistAsyncInternal() {
     try {
       // Get the path inside the try...catch because there's no profileDir in e.g. xpcshell tests.
-      let profPath = OS.Path.join(OS.Constants.Path.profileDir, FILE_BLOCKLIST);
-      await this._preloadBlocklistFile(profPath);
+      let profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
+      await this._preloadBlocklistFile(profFile);
       return;
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
@@ -865,7 +806,7 @@ var Blocklist = {
 
     var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
     try {
-      await this._preloadBlocklistFile(appFile.path);
+      await this._preloadBlocklistFile(appFile);
       return;
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
@@ -879,7 +820,7 @@ var Blocklist = {
     this._pluginEntries = [];
   },
 
-  async _preloadBlocklistFile(path) {
+  async _preloadBlocklistFile(file) {
     if (this.isLoaded) {
       return;
     }
@@ -889,34 +830,39 @@ var Blocklist = {
       return;
     }
 
-    let text = await OS.File.read(path, { encoding: "utf-8" });
+    let xmlDoc = await new Promise((resolve, reject) => {
+      let request = new XMLHttpRequest();
+      request.open("GET", Services.io.newFileURI(file).spec, true);
+      request.overrideMimeType("text/xml");
+      request.addEventListener("error", reject);
+      request.addEventListener("load", function() {
+        let {status} = request;
+        if (status != 200 && status != 0) {
+          LOG("_preloadBlocklistFile: there was an error during load, got status: " + status);
+          reject(new Error("Couldn't load blocklist file"));
+          return;
+        }
+        let doc = request.responseXML;
+        if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
+          LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
+              "XML Namespace.\nExpected: " + XMLURI_BLOCKLIST + "\n" +
+              "Received: " + doc.documentElement.namespaceURI);
+          reject(new Error("Local blocklist file has the wrong namespace!"));
+          return;
+        }
+        resolve(doc);
+      });
+      request.send(null);
+    });
 
-    await new Promise((resolve, reject) => {
+    await new Promise(resolve => {
       ChromeUtils.idleDispatch(() => {
         if (!this.isLoaded) {
-          Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(false);
-          try {
-            this._loadBlocklistFromString(text);
-          } catch (ex) {
-            // Loading the blocklist failed. Ensure the caller knows.
-            reject(ex);
-          }
+          this._loadBlocklistFromXML(xmlDoc);
         }
         resolve();
       });
     });
-  },
-
-  _loadBlocklistFromString(text) {
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(text, "text/xml");
-    if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
-      LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
-          "XML Namespace.\r\nExpected: " + XMLURI_BLOCKLIST + "\r\n" +
-          "Received: " + doc.documentElement.namespaceURI);
-      throw new Error("Couldn't find an XML doc with the right namespace!");
-    }
-    this._loadBlocklistFromXML(doc);
   },
 
   _loadBlocklistFromXML(doc) {
