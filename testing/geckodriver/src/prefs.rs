@@ -35,10 +35,6 @@ lazy_static! {
         // Skip check for default browser on startup
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
 
-        // Do not warn when quitting with multiple tabs
-        // TODO: Remove once minimum supported Firefox release is 61.
-        ("browser.showQuitWarning", Pref::new(false)),
-
         // Disable Android snippets
         ("browser.snippets.enabled", Pref::new(false)),
         ("browser.snippets.syncPromo.enabled", Pref::new(false)),

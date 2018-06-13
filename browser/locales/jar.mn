@@ -30,7 +30,6 @@
     locale/browser/uiDensity.properties            (%chrome/browser/uiDensity.properties)
     locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
-    locale/browser/quitDialog.properties           (%chrome/browser/quitDialog.properties)
     locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/search.properties               (%chrome/browser/search.properties)
