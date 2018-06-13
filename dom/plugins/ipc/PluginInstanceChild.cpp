@@ -812,8 +812,16 @@ PluginInstanceChild::DefaultAudioDeviceChanged(NPAudioDeviceChangeDetails& detai
     }
     return mPluginIface->setvalue(GetNPP(), NPNVaudioDeviceChangeDetails, (void*)&details);
 }
-#endif
 
+NPError
+PluginInstanceChild::AudioDeviceStateChanged(NPAudioDeviceStateChanged& aDeviceState)
+{
+  if (!mPluginIface->setvalue) {
+    return NPERR_GENERIC_ERROR;
+  }
+  return mPluginIface->setvalue(GetNPP(), NPNVaudioDeviceStateChanged, (void*)&aDeviceState);
+}
+#endif
 
 mozilla::ipc::IPCResult
 PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
