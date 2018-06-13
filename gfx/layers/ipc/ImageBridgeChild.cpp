@@ -44,6 +44,10 @@
 #include "mozilla/layers/TextureClient.h"
 #include "SynchronousTask.h"
 
+#if defined(XP_WIN)
+#include "mozilla/gfx/DeviceManagerDx.h"
+#endif
+
 namespace mozilla {
 namespace ipc {
 class Shmem;
@@ -704,7 +708,16 @@ ImageBridgeChild::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier&
                             aIdentifier.mParentBackend != LayersBackend::LAYERS_WR;
   // D3DTexture might become obsolte. To prevent to use obsoleted D3DTexture,
   // drop all ImageContainers' ImageClients.
-  bool needsDrop = GetCompositorBackendType() == LayersBackend::LAYERS_D3D11 || disablingWebRender;
+#if defined(XP_WIN)
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
+  bool needsDrop = !!mImageDevice &&
+                   mImageDevice != device &&
+                   GetCompositorBackendType() == LayersBackend::LAYERS_D3D11 ||
+                   disablingWebRender;
+  mImageDevice = device;
+#else
+  bool needsDrop = disablingWebRender;
+#endif
 
   IdentifyTextureHost(aIdentifier);
   if (needsDrop) {

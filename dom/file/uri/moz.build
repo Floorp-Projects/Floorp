@@ -15,12 +15,14 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'BlobURL.cpp',
+    'BlobURLChannel.cpp',
     'BlobURLProtocolHandler.cpp',
     'FontTableURIProtocolHandler.cpp',
 ]
 
 LOCAL_INCLUDES += [
     '/dom/file',
+    '/netwerk/base',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -402,6 +402,13 @@ private:
    */
   Mutex mContainerMapLock;
   nsRefPtrHashtable<nsUint64HashKey, ImageContainerListener> mImageContainerListeners;
+
+#if defined(XP_WIN)
+  /**
+   * Used for checking if D3D11Device is updated.
+   */
+  RefPtr<ID3D11Device> mImageDevice;
+#endif
 };
 
 } // namespace layers
