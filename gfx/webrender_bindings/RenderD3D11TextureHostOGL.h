@@ -26,6 +26,7 @@ public:
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
+  void ClearCachedResources() override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const;
@@ -65,6 +66,7 @@ public:
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   virtual void Unlock() override;
+  void ClearCachedResources() override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const;
