@@ -76,6 +76,8 @@ class Raptor(object):
         self.runner = runner_cls(
             binary, profile=self.profile, process_args=process_args)
 
+        self.log.info("raptor config: %s" % str(self.config))
+
     @property
     def profile_data_dir(self):
         if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
