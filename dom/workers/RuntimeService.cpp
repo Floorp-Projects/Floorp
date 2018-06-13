@@ -2562,7 +2562,7 @@ RuntimeService::ClampedHardwareConcurrency() const
     }
     uint32_t clampedValue = std::min(uint32_t(numberOfProcessors),
                                      gMaxHardwareConcurrency);
-    clampedHardwareConcurrency.compareExchange(0, clampedValue);
+    Unused << clampedHardwareConcurrency.compareExchange(0, clampedValue);
   }
 
   return clampedHardwareConcurrency;
