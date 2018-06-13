@@ -6,6 +6,9 @@
 
 #include "vm/Scope.h"
 
+#include <memory>
+#include <new>
+
 #include "builtin/ModuleObject.h"
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"
@@ -143,32 +146,24 @@ CopyScopeData(JSContext* cx, Handle<typename ConcreteScope::Data*> data)
 {
     // Make sure the binding names are marked in the context's zone, if we are
     // copying data from another zone.
-    BindingName* names = nullptr;
-    uint32_t length = 0;
-    ConcreteScope::getDataNamesAndLength(data, &names, &length);
+    BindingName* names = data->trailingNames.start();
+    uint32_t length = data->length;
     for (size_t i = 0; i < length; i++) {
         if (JSAtom* name = names[i].name())
             cx->markAtom(name);
     }
 
-    size_t dataSize = ConcreteScope::sizeOfData(data->length);
-    size_t headerSize = sizeof(typename ConcreteScope::Data);
-    MOZ_ASSERT(dataSize >= headerSize);
-    size_t extraSize = dataSize - headerSize;
-
-    uint8_t* copyBytes = cx->zone()->pod_malloc<uint8_t>(dataSize);
-    if (!copyBytes) {
+    size_t size = SizeOfData<typename ConcreteScope::Data>(data->length);
+    void* bytes = cx->zone()->pod_malloc<char>(size);
+    if (!bytes) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    auto dataCopy = reinterpret_cast<typename ConcreteScope::Data*>(copyBytes);
-    new (dataCopy) typename ConcreteScope::Data(*data);
+    auto* dataCopy = new (bytes) typename ConcreteScope::Data(*data);
 
-    uint8_t* extra = reinterpret_cast<uint8_t*>(data.get()) + headerSize;
-    uint8_t* extraCopy = copyBytes + headerSize;
+    std::uninitialized_copy_n(names, length, dataCopy->trailingNames.start());
 
-    mozilla::PodCopy<uint8_t>(extraCopy, extra, extraSize);
     return UniquePtr<typename ConcreteScope::Data>(dataCopy);
 }
 
@@ -203,7 +198,8 @@ template <typename ConcreteScope>
 static UniquePtr<typename ConcreteScope::Data>
 NewEmptyScopeData(JSContext* cx, uint32_t length = 0)
 {
-    uint8_t* bytes = cx->zone()->pod_malloc<uint8_t>(ConcreteScope::sizeOfData(length));
+    size_t dataSize = SizeOfData<typename ConcreteScope::Data>(length);
+    uint8_t* bytes = cx->zone()->pod_malloc<uint8_t>(dataSize);
     if (!bytes)
         ReportOutOfMemory(cx);
     auto data = reinterpret_cast<typename ConcreteScope::Data*>(bytes);
