@@ -122,7 +122,7 @@ let REQUEST_2 = {
         label: "Slow",
         amount: {
           currency: "USD",
-          value: 10,
+          value: 1,
         },
         selected: false,
       },

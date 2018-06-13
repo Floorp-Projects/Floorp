@@ -28,5 +28,5 @@ rich-select[open] > .rich-select-popup-box {
   display: grid;
   border-bottom: 1px solid #ddd;
   background: #fff; /* TODO: system colors */
-  padding: 5px 20px;
+  padding: 8px;
 }
