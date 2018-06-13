@@ -2764,6 +2764,8 @@ HttpChannelChild::ContinueAsyncOpen()
 
   openArgs.channelId() = mChannelId;
 
+  openArgs.integrityMetadata() = mIntegrityMetadata;
+
   openArgs.contentWindowId() = contentWindowId;
   openArgs.topLevelOuterContentWindowId() = mTopLevelOuterContentWindowId;
 
