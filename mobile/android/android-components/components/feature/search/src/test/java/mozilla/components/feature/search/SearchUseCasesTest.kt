@@ -7,8 +7,8 @@ package mozilla.components.feature.search
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.feature.session.SessionProvider
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,8 +23,8 @@ class SearchUseCasesTest {
 
     private val searchEngine = mock(SearchEngine::class.java)
     private val searchEngineManager = mock(SearchEngineManager::class.java)
-    private val sessionProvider = mock(SessionProvider::class.java)
-    private val useCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionProvider)
+    private val sessionManager = mock(SessionManager::class.java)
+    private val useCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
 
     @Test
     fun testDefaultSearch() {
@@ -36,7 +36,7 @@ class SearchUseCasesTest {
 
         `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
-        `when`(sessionProvider.getEngineSession(session)).thenReturn(engineSession)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.defaultSearch.invoke(searchTerms, session)
 

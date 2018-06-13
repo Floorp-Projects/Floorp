@@ -4,26 +4,28 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.concept.engine.Engine
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.concept.engine.EngineView
 
 /**
  * Feature implementation for connecting the engine module with the session module.
  */
 class SessionFeature(
-    private val sessionProvider: SessionProvider,
+    private val sessionManager: SessionManager,
     private val sessionUseCases: SessionUseCases,
-    private val engine: Engine,
-    engineView: EngineView
+    engineView: EngineView,
+    private val sessionStorage: SessionStorage? = null
 ) {
-    internal val presenter = EngineViewPresenter(sessionProvider, engine, engineView)
+    internal val presenter = EngineViewPresenter(sessionManager, engineView)
 
     /**
      * Start feature: App is in the foreground.
      */
     fun start() {
-        sessionProvider.start(engine)
         presenter.start()
+
+        sessionStorage?.start(sessionManager)
     }
 
     /**
@@ -32,7 +34,7 @@ class SessionFeature(
      * @return true if the event was handled, otherwise false.
      */
     fun handleBackPressed(): Boolean {
-        if (sessionProvider.selectedSession.canGoBack) {
+        if (sessionManager.selectedSession.canGoBack) {
             sessionUseCases.goBack.invoke()
             return true
         }
@@ -45,6 +47,8 @@ class SessionFeature(
      */
     fun stop() {
         presenter.stop()
-        sessionProvider.stop()
+
+        sessionStorage?.stop()
+        sessionStorage?.persist(sessionManager)
     }
 }

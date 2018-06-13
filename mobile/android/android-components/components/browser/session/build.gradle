@@ -27,6 +27,7 @@ android {
 }
 
 dependencies {
+    implementation project(':concept-engine')
     implementation project(':support-utils')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"

@@ -6,7 +6,6 @@ package mozilla.components.feature.session
 
 import android.content.Intent
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -23,15 +22,12 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SessionIntentProcessorTest {
     private val sessionManager = mock(SessionManager::class.java)
-    private val engine = mock(Engine::class.java)
     private val engineSession = mock(EngineSession::class.java)
-    private val sessionProvider = mock(SessionProvider::class.java)
-    private val useCases = SessionUseCases(sessionProvider, engine)
+    private val useCases = SessionUseCases(sessionManager)
 
     @Before
     fun setup() {
-        `when`(sessionProvider.sessionManager).thenReturn(sessionManager)
-        `when`(sessionProvider.getOrCreateEngineSession(engine)).thenReturn(engineSession)
+        `when`(sessionManager.getOrCreateEngineSession()).thenReturn(engineSession)
     }
 
     @Test
@@ -67,7 +63,7 @@ class SessionIntentProcessorTest {
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
 
         var handlerInvoked = false
-        handler.registerHandler(Intent.ACTION_SEND, { intent ->
+        handler.registerHandler(Intent.ACTION_SEND, { _ ->
             handlerInvoked = true
             true
         })

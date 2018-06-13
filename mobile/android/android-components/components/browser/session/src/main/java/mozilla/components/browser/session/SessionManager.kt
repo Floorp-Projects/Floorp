@@ -4,6 +4,9 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.engine.EngineObserver
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.utils.observer.Observable
 import mozilla.components.support.utils.observer.ObserverRegistry
 
@@ -11,10 +14,10 @@ import mozilla.components.support.utils.observer.ObserverRegistry
  * This class provides access to a centralized registry of all active sessions.
  */
 class SessionManager(
-    initialSession: Session? = null
+    private val engine: Engine
 ) : Observable<SessionManager.Observer> by registry {
-    private val values = if (initialSession == null) mutableListOf() else mutableListOf(initialSession)
-    private var selectedIndex: Int = if (initialSession == null) NO_SELECTION else 0
+    private val values = mutableListOf<Session>()
+    private var selectedIndex: Int = NO_SELECTION
 
     /**
      * Returns the number of values.
@@ -42,13 +45,54 @@ class SessionManager(
     /**
      * Adds the provided session.
      */
-    fun add(session: Session, selected: Boolean = false) = synchronized(values) {
+    fun add(session: Session, selected: Boolean = false, engineSession: EngineSession? = null) = synchronized(values) {
         values.add(session)
+
+        engineSession?.let { link(session, it) }
 
         notifyObservers { onSessionAdded(session) }
 
         if (selected || selectedIndex == NO_SELECTION) {
             select(session)
+        }
+    }
+
+    /**
+     * Gets the linked engine session for the provided session (if it exists).
+     */
+    fun getEngineSession(session: Session = selectedSession) = session.engineSessionHolder.engineSession
+
+    /**
+     * Gets the linked engine session for the provided session and creates it if needed.
+     */
+    fun getOrCreateEngineSession(session: Session = selectedSession): EngineSession {
+        getEngineSession(session)?.let { return it }
+
+        return engine.createSession().apply {
+            link(session, this)
+        }
+    }
+
+    private fun link(session: Session, engineSession: EngineSession) {
+        unlink(session)
+
+        session.engineSessionHolder.apply {
+            this.engineSession = engineSession
+            this.engineObserver = EngineObserver(session).also { observer ->
+                engineSession.register(observer)
+                engineSession.loadUrl(session.url)
+            }
+        }
+    }
+
+    private fun unlink(session: Session) {
+        session.engineSessionHolder.engineObserver?.let { observer ->
+            session.engineSessionHolder.apply {
+                engineSession?.unregister(observer)
+                engineSession?.close()
+                engineSession = null
+                engineObserver = null
+            }
         }
     }
 
@@ -62,6 +106,8 @@ class SessionManager(
         }
 
         values.removeAt(indexToRemove)
+
+        unlink(session)
 
         notifyObservers { onSessionRemoved(session) }
 
@@ -92,6 +138,10 @@ class SessionManager(
      * Removes all sessions.
      */
     fun removeAll() = synchronized(values) {
+        values.forEach { session ->
+            unlink(session)
+        }
+
         values.clear()
 
         selectedIndex = NO_SELECTION

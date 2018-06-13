@@ -27,9 +27,14 @@ android {
     }
 }
 
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
+
 dependencies {
     implementation project(':concept-engine')
-    implementation project(':concept-session-storage')
     implementation project(':concept-toolbar')
 
     implementation project(':browser-engine-system')

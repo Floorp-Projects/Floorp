@@ -6,7 +6,6 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Before
 import org.junit.Test
@@ -14,23 +13,19 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.never
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class SessionUseCasesTest {
     private val sessionManager = mock(SessionManager::class.java)
-    private val engine = mock(Engine::class.java)
     private val selectedEngineSession = mock(EngineSession::class.java)
     private val selectedSession = mock(Session::class.java)
-    private val sessionProvider = mock(SessionProvider::class.java)
-    private val useCases = SessionUseCases(sessionProvider, engine)
+    private val useCases = SessionUseCases(sessionManager)
 
     @Before
     fun setup() {
-        `when`(sessionProvider.sessionManager).thenReturn(sessionManager)
-        `when`(sessionProvider.selectedSession).thenReturn(selectedSession)
-        `when`(sessionProvider.getOrCreateEngineSession(engine)).thenReturn(selectedEngineSession)
+        `when`(sessionManager.selectedSession).thenReturn(selectedSession)
+        `when`(sessionManager.getOrCreateEngineSession()).thenReturn(selectedEngineSession)
     }
 
     @Test
@@ -43,16 +38,12 @@ class SessionUseCasesTest {
     fun testReload() {
         val engineSession = mock(EngineSession::class.java)
         val session = mock(Session::class.java)
-        `when`(sessionProvider.getEngineSession(session)).thenReturn(engineSession)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.reload.invoke(session)
         verify(engineSession).reload()
 
-        `when`(sessionProvider.getEngineSession(selectedSession)).thenReturn(null)
-        useCases.reload.invoke()
-        verify(selectedEngineSession, never()).reload()
-
-        `when`(sessionProvider.getEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.reload.invoke()
         verify(selectedEngineSession).reload()
     }

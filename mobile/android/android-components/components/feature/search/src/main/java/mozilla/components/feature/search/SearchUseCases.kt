@@ -7,7 +7,7 @@ package mozilla.components.feature.search
 import android.content.Context
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
-import mozilla.components.feature.session.SessionProvider
+import mozilla.components.browser.session.SessionManager
 
 /**
  * Contains use cases related to the search feature.
@@ -15,13 +15,13 @@ import mozilla.components.feature.session.SessionProvider
 class SearchUseCases(
     private val context: Context,
     private val searchEngineManager: SearchEngineManager,
-    private val sessionProvider: SessionProvider
+    private val sessionManager: SessionManager
 ) {
 
     class DefaultSearchUrlUseCase(
         private val context: Context,
         private val searchEngineManager: SearchEngineManager,
-        private val sessionProvider: SessionProvider
+        private val sessionManager: SessionManager
     ) {
 
         /**
@@ -31,18 +31,17 @@ class SearchUseCases(
          * @param session the session to use, or the currently selected session if none
          * is provided.
          */
-        fun invoke(searchTerms: String, session: Session = sessionProvider.sessionManager.selectedSession) {
+        fun invoke(searchTerms: String, session: Session = sessionManager.selectedSession) {
             val searchEngine = searchEngineManager.getDefaultSearchEngine(context)
             val searchUrl = searchEngine.buildSearchUrl(searchTerms)
 
             session.searchTerms = searchTerms
 
-            val engineSession = sessionProvider.getEngineSession(session)
-            engineSession?.loadUrl(searchUrl)
+            sessionManager.getOrCreateEngineSession(session).loadUrl(searchUrl)
         }
     }
 
     val defaultSearch: DefaultSearchUrlUseCase by lazy {
-        DefaultSearchUrlUseCase(context, searchEngineManager, sessionProvider)
+        DefaultSearchUrlUseCase(context, searchEngineManager, sessionManager)
     }
 }

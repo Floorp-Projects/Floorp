@@ -29,14 +29,14 @@ class MainActivity : AppCompatActivity() {
         toolbar.setMenuBuilder(components.menuBuilder)
 
         sessionFeature = SessionFeature(
-            components.sessionProvider,
+            components.sessionManager,
             components.sessionUseCases,
-            components.engine,
-            engineView)
+            engineView,
+            components.sessionStorage)
 
         toolbarFeature = ToolbarFeature(
             toolbar,
-            components.sessionProvider.sessionManager,
+            components.sessionManager,
             components.sessionUseCases.loadUrl,
             components.defaultSearchUseCase)
 

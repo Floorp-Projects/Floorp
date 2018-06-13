@@ -13,11 +13,11 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.session.DefaultSessionStorage
+import mozilla.components.browser.session.storage.DefaultSessionStorage
 import mozilla.components.feature.session.SessionIntentProcessor
-import mozilla.components.feature.session.SessionProvider
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.geckoview.GeckoRuntime
 
@@ -32,9 +32,22 @@ class Components(private val applicationContext: Context) {
     val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
 
     // Session
-    val sessionProvider = SessionProvider(Session("https://www.mozilla.org"), DefaultSessionStorage(applicationContext))
-    val sessionUseCases = SessionUseCases(sessionProvider, engine)
-    val sessionIntentProcessor = SessionIntentProcessor(sessionUseCases)
+
+    val sessionStorage by lazy { DefaultSessionStorage(applicationContext) }
+
+    val sessionManager by lazy {
+        SessionManager(engine).apply {
+            sessionStorage.restore(engine, this)
+
+            if (size == 0) {
+                val initialSession =  Session("https://www.mozilla.org")
+                add(initialSession)
+            }
+        }
+    }
+
+    val sessionUseCases by lazy { SessionUseCases(sessionManager) }
+    val sessionIntentProcessor by lazy { SessionIntentProcessor(sessionUseCases) }
 
     // Search
     private val searchEngineManager by lazy {
@@ -42,8 +55,9 @@ class Components(private val applicationContext: Context) {
             async { load(applicationContext) }
         }
     }
-    private val searchUseCases = SearchUseCases(applicationContext, searchEngineManager, sessionProvider)
-    val defaultSearchUseCase = { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) }
+
+    private val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
+    val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
 
     // Menu
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }

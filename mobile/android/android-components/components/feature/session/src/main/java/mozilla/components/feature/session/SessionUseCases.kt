@@ -5,19 +5,17 @@
 package mozilla.components.feature.session
 
 import mozilla.components.browser.session.Session
-import mozilla.components.concept.engine.Engine
+import mozilla.components.browser.session.SessionManager
 
 /**
  * Contains use cases related to the session feature.
  */
 class SessionUseCases(
-    sessionProvider: SessionProvider,
-    engine: Engine
+    sessionManager: SessionManager
 ) {
 
     class LoadUrlUseCase internal constructor(
-        private val sessionProvider: SessionProvider,
-        private val engine: Engine
+        private val sessionManager: SessionManager
     ) {
         /**
          * Loads the provided URL using the currently selected session.
@@ -25,13 +23,12 @@ class SessionUseCases(
          * @param url url to load.
          */
         fun invoke(url: String) {
-            val engineSession = sessionProvider.getOrCreateEngineSession(engine)
-            engineSession.loadUrl(url)
+            sessionManager.getOrCreateEngineSession().loadUrl(url)
         }
     }
 
     class ReloadUrlUseCase internal constructor(
-        private val sessionProvider: SessionProvider
+        private val sessionManager: SessionManager
     ) {
         /**
          * Reloads the current URL of the provided session (or the currently
@@ -39,40 +36,35 @@ class SessionUseCases(
          *
          * @param session the session for which reload should be triggered.
          */
-        fun invoke(session: Session = sessionProvider.selectedSession) {
-            val engineSession = sessionProvider.getEngineSession(session)
-            engineSession?.reload()
+        fun invoke(session: Session = sessionManager.selectedSession) {
+            sessionManager.getOrCreateEngineSession(session).reload()
         }
     }
 
     class GoBackUseCase internal constructor(
-        private val sessionProvider: SessionProvider,
-        private val engine: Engine
+        private val sessionManager: SessionManager
     ) {
         /**
          * Navigates back in the history of the currently selected session
          */
         fun invoke() {
-            val engineSession = sessionProvider.getOrCreateEngineSession(engine)
-            engineSession.goBack()
+            sessionManager.getOrCreateEngineSession().goBack()
         }
     }
 
     class GoForwardUseCase internal constructor(
-        private val sessionProvider: SessionProvider,
-        private val engine: Engine
+        private val sessionManager: SessionManager
     ) {
         /**
          * Navigates forward in the history of the currently selected session
          */
         fun invoke() {
-            val engineSession = sessionProvider.getOrCreateEngineSession(engine)
-            engineSession.goForward()
+            sessionManager.getOrCreateEngineSession().goForward()
         }
     }
 
-    val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionProvider, engine) }
-    val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(sessionProvider) }
-    val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionProvider, engine) }
-    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionProvider, engine) }
+    val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionManager) }
+    val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(sessionManager) }
+    val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager) }
+    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager) }
 }

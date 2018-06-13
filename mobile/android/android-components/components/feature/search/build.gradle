@@ -32,7 +32,6 @@ dependencies {
     implementation project(':feature-session')
     implementation project(':browser-session')
     implementation project(':concept-engine')
-    implementation project(':concept-session-storage')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 

@@ -5,10 +5,14 @@
 package mozilla.components.browser.session
 
 import mozilla.components.browser.session.helper.mock
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
@@ -16,11 +20,11 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 class SessionManagerTest {
     @Test
     fun `session can be added`() {
-        val manager = SessionManager(Session("http://www.mozilla.org"))
+        val manager = SessionManager(mock())
         manager.add(Session("http://getpocket.com"))
         manager.add(Session("http://www.firefox.com"), true)
 
-        assertEquals(3, manager.size)
+        assertEquals(2, manager.size)
         assertEquals("http://www.firefox.com", manager.selectedSession.url)
     }
 
@@ -29,7 +33,8 @@ class SessionManagerTest {
         val session1 = Session("http://www.mozilla.org")
         val session2 = Session("http://www.firefox.com")
 
-        val manager = SessionManager(session1)
+        val manager = SessionManager(mock())
+        manager.add(session1)
         manager.add(session2)
 
         assertEquals("http://www.mozilla.org", manager.selectedSession.url)
@@ -42,7 +47,8 @@ class SessionManagerTest {
         val session1 = Session("http://www.mozilla.org")
         val session2 = Session("http://www.firefox.com")
 
-        val manager = SessionManager(session1)
+        val manager = SessionManager(mock())
+        manager.add(session1)
         manager.add(session2)
 
         val observer: SessionManager.Observer = mock()
@@ -55,7 +61,8 @@ class SessionManagerTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `manager throws exception if unknown session is selected`() {
-        val manager = SessionManager(Session("http://www.mozilla.org"))
+        val manager = SessionManager(mock())
+        manager.add(Session("http://www.mozilla.org"))
 
         manager.select(Session("https://getpocket.com"))
     }
@@ -65,7 +72,8 @@ class SessionManagerTest {
         val session1 = Session("http://www.mozilla.org")
         val session2 = Session("http://www.firefox.com")
 
-        val manager = SessionManager(session1)
+        val manager = SessionManager(mock())
+        manager.add(session1)
         manager.add(session2)
 
         val observer: SessionManager.Observer = mock()
@@ -86,7 +94,7 @@ class SessionManagerTest {
 
     @Test
     fun `observer is called when session is added`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
         val session = Session("https://www.mozilla.org")
 
         val observer: SessionManager.Observer = mock()
@@ -101,7 +109,7 @@ class SessionManagerTest {
 
     @Test
     fun `observer is called when session is removed`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
 
@@ -119,7 +127,7 @@ class SessionManagerTest {
 
     @Test
     fun `observer is not called when session to remove is not in list`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
 
@@ -137,7 +145,8 @@ class SessionManagerTest {
     fun `initial session is selected`() {
         val session = Session("https://www.mozilla.org")
 
-        val manager = SessionManager(session)
+        val manager = SessionManager(mock())
+        manager.add(session)
 
         assertEquals(1, manager.size)
         assertEquals(session, manager.selectedSession)
@@ -145,20 +154,20 @@ class SessionManagerTest {
 
     @Test
     fun `manager can have no session`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
 
         assertEquals(0, manager.size)
     }
 
     @Test(expected = IllegalStateException::class)
     fun `exception is thrown if selected session is selected with no selection`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
         manager.selectedSession
     }
 
     @Test
     fun `selected session will be recalculated when selected session gets removed`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
 
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
@@ -200,7 +209,7 @@ class SessionManagerTest {
 
     @Test
     fun `sessions property removes immutable copy`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
 
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
@@ -228,7 +237,7 @@ class SessionManagerTest {
 
     @Test
     fun `removeAll removes all sessions and notifies observer`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
 
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
@@ -255,7 +264,7 @@ class SessionManagerTest {
 
     @Test
     fun `findSessionById returns session with same id`() {
-        val manager = SessionManager()
+        val manager = SessionManager(mock())
 
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
@@ -273,5 +282,67 @@ class SessionManagerTest {
         assertEquals(session4, manager.findSessionById(session4.id))
 
         assertNull(manager.findSessionById("banana"))
+    }
+
+    @Test
+    fun `session manager creates and links engine session`() {
+        val engine: Engine = mock()
+
+        val actualEngineSession: EngineSession = mock()
+        doReturn(actualEngineSession).`when`(engine).createSession()
+
+        val sessionManager = SessionManager(engine)
+
+        val session = Session("https://www.mozilla.org")
+        sessionManager.add(session)
+
+        assertNull(sessionManager.getEngineSession(session))
+
+        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
+        assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
+        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
+    }
+
+    @Test
+    fun `removing a session unlinks the engine session`() {
+        val engine: Engine = mock()
+
+        val actualEngineSession: EngineSession = mock()
+        doReturn(actualEngineSession).`when`(engine).createSession()
+
+        val sessionManager = SessionManager(engine)
+
+        val session = Session("https://www.mozilla.org")
+        sessionManager.add(session)
+
+        assertNotNull(sessionManager.getOrCreateEngineSession(session))
+        assertNotNull(session.engineSessionHolder.engineSession)
+        assertNotNull(session.engineSessionHolder.engineObserver)
+
+        sessionManager.remove(session)
+
+        assertNull(session.engineSessionHolder.engineSession)
+        assertNull(session.engineSessionHolder.engineObserver)
+    }
+
+    @Test
+    fun `add will link an engine session if provided`() {
+        val engine: Engine = mock()
+
+        val actualEngineSession: EngineSession = mock()
+        val sessionManager = SessionManager(engine)
+
+        val session = Session("https://www.mozilla.org")
+        assertNull(session.engineSessionHolder.engineSession)
+        assertNull(session.engineSessionHolder.engineObserver)
+
+        sessionManager.add(session, engineSession = actualEngineSession)
+
+        assertNotNull(session.engineSessionHolder.engineSession)
+        assertNotNull(session.engineSessionHolder.engineObserver)
+
+        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
+        assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
+        assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
     }
 }

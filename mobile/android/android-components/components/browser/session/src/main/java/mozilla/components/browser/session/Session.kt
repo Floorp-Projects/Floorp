@@ -4,9 +4,10 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.engine.EngineSessionHolder
+import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.observer.Observable
 import mozilla.components.support.utils.observer.ObserverRegistry
-import mozilla.components.browser.session.tab.CustomTabConfig
 import java.util.UUID
 import kotlin.properties.Delegates
 
@@ -17,6 +18,12 @@ class Session(
     initialUrl: String,
     val id: String = UUID.randomUUID().toString()
 ) : Observable<Session.Observer> by registry {
+    /**
+     * Holder for keeping a reference to an engine session and its observer to update this session
+     * object.
+     */
+    internal val engineSessionHolder = EngineSessionHolder()
+
     /**
      * Interface to be implemented by classes that want to observe a session.
      */

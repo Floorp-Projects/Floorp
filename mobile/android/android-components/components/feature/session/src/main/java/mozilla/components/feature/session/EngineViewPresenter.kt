@@ -4,17 +4,15 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineView
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineView
 
 /**
  * Presenter implementation for EngineView.
  */
 class EngineViewPresenter(
-    private val sessionProvider: SessionProvider,
-    private val engine: Engine,
+    private val sessionManager: SessionManager,
     private val engineView: EngineView
 ) : SessionManager.Observer {
 
@@ -22,16 +20,16 @@ class EngineViewPresenter(
      * Start presenter and display data in view.
      */
     fun start() {
-        renderSession(sessionProvider.selectedSession)
+        renderSession(sessionManager.selectedSession)
 
-        sessionProvider.sessionManager.register(this)
+        sessionManager.register(this)
     }
 
     /**
      * Stop presenter from updating view.
      */
     fun stop() {
-        sessionProvider.sessionManager.unregister(this)
+        sessionManager.unregister(this)
     }
 
     /**
@@ -42,8 +40,6 @@ class EngineViewPresenter(
     }
 
     private fun renderSession(session: Session) {
-        val engineSession = sessionProvider.getOrCreateEngineSession(engine, session)
-
-        engineView.render(engineSession)
+        engineView.render(sessionManager.getOrCreateEngineSession(session))
     }
 }

@@ -2,19 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.session
+package mozilla.components.browser.session.storage
 
 import android.content.Context
 import android.util.AtomicFile
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.session.storage.SessionStorage
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 const val SELECTED_SESSION_KEY = "selectedSession"
 const val SESSION_KEY = "session"
@@ -41,13 +45,31 @@ const val FILE_NAME = "mozilla_components_session_storage.json"
  *     }
  * }
  */
-class DefaultSessionStorage(private val context: Context) : SessionStorage {
+class DefaultSessionStorage(
+    private val context: Context,
+    private val savePeriodically: Boolean = true,
+    private val saveIntervalInSeconds: Long = 300,
+    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+) : SessionStorage {
+    private var scheduledFuture: ScheduledFuture<*>? = null
+
+    override fun start(sessionManager: SessionManager) {
+        if (savePeriodically) {
+            scheduledFuture = scheduler.scheduleAtFixedRate(
+                { persist(sessionManager) },
+                saveIntervalInSeconds,
+                saveIntervalInSeconds,
+                TimeUnit.SECONDS)
+        }
+    }
+
+    override fun stop() {
+        scheduledFuture?.cancel(false)
+    }
 
     @Synchronized
-    override fun restore(engine: Engine): Pair<Map<Session, EngineSession>, String> {
+    override fun restore(engine: Engine, sessionManager: SessionManager): Boolean {
         return try {
-            val sessions = mutableMapOf<Session, EngineSession>()
-
             getFile().openRead().use {
                 val json = it.bufferedReader().use {
                     it.readText()
@@ -62,31 +84,36 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
                     val jsonSession = jsonRoot.getJSONObject(it)
                     val session = deserializeSession(it, jsonSession.getJSONObject(SESSION_KEY))
                     val engineSession = deserializeEngineSession(engine, jsonSession.getJSONObject(ENGINE_SESSION_KEY))
-                    sessions[session] = engineSession
+
+                    sessionManager.add(session, engineSession = engineSession)
                 }
-                Pair(sessions, selectedSessionId)
+
+                sessionManager.findSessionById(selectedSessionId)?.let { session ->
+                    sessionManager.select(session)
+                }
             }
+            true
         } catch (_: IOException) {
-            Pair(emptyMap(), "")
+            false
         } catch (_: JSONException) {
-            Pair(emptyMap(), "")
+            false
         }
     }
 
     @Synchronized
-    override fun persist(sessions: Map<Session, EngineSession>, selectedSession: String): Boolean {
+    override fun persist(sessionManager: SessionManager): Boolean {
         var file: AtomicFile? = null
         var outputStream: FileOutputStream? = null
 
         return try {
             val json = JSONObject()
             json.put(VERSION_KEY, VERSION)
-            json.put(SELECTED_SESSION_KEY, selectedSession)
+            json.put(SELECTED_SESSION_KEY, sessionManager.selectedSession.id)
 
-            sessions.forEach({ (session, engineSession) ->
+            sessionManager.sessions.forEach({ session ->
                 val sessionJson = JSONObject()
                 sessionJson.put(SESSION_KEY, serializeSession(session))
-                sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(engineSession))
+                sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(sessionManager.getEngineSession(session)))
                 json.put(session.id, sessionJson)
             })
 
@@ -120,7 +147,10 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
         return Session(json.getString("url"), id)
     }
 
-    private fun serializeEngineSession(engineSession: EngineSession): JSONObject {
+    private fun serializeEngineSession(engineSession: EngineSession?): JSONObject {
+        if (engineSession == null) {
+            return JSONObject()
+        }
         return JSONObject().apply {
             engineSession.saveState().forEach({ k, v -> if (shouldSerialize(v)) put(k, v) })
         }
