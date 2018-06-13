@@ -2,9 +2,13 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<vector android:height="24dp" android:viewportHeight="16"
-    android:viewportWidth="16" android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="#FFFFFF" android:pathData="M6,12a0.5,0.5 0,0 0,0.5 -0.5v-6a0.5,0.5 0,0 0,-1 0v6a0.5,0.5 0,0 0,0.5 0.5zM8,12a0.5,0.5 0,0 0,0.5 -0.5v-6a0.5,0.5 0,0 0,-1 0v6a0.5,0.5 0,0 0,0.5 0.5zM10,12a0.5,0.5 0,0 0,0.5 -0.5v-6a0.5,0.5 0,0 0,-1 0v6a0.5,0.5 0,0 0,0.5 0.5z"/>
-
-    <path android:fillColor="#FFFFFF" android:pathData="M13.5,2h-3.05a2.5,2.5 0,0 0,-4.9 0L2.5,2a1,1 0,0 0,0 2v9a3,3 0,0 0,3 3h5a3,3 0,0 0,3 -3L13.5,4a1,1 0,0 0,0 -2zM8,1a1.49,1.49 0,0 1,1.391 1L6.609,2A1.49,1.49 0,0 1,8 1zM11.5,13a1,1 0,0 1,-1 1h-5a1,1 0,0 1,-1 -1L4.5,4h7z"/>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:pathData="M20,5L15,5C15,3.3432 13.6569,2 12,2C10.3431,2 9,3.3432 9,5L4,5C3.4477,5 3,5.4477 3,6C3,6.5523 3.4477,7 4,7L5,7L5,19C5,20.6569 6.3431,22 8,22L16,22C17.6569,22 19,20.6569 19,19L19,7L20,7C20.5523,7 21,6.5523 21,6C21,5.4477 20.5523,5 20,5ZM12,3C13.1046,3 14,3.8954 14,5L10,5C10,3.8954 10.8954,3 12,3ZM7,7L7,19C7,19.5523 7.4477,20 8,20L16,20C16.5523,20 17,19.5523 17,19L17,7L7,7ZM9.5385,9.0021C9.2624,9.001 9.0376,9.2239 9.0364,9.5L9.0021,17.4999C9.001,17.7761 9.2239,18.0009 9.5,18.0021C9.7761,18.0032 10.0009,17.7803 10.0021,17.5042L10.0364,9.5043C10.0376,9.2281 9.8147,9.0033 9.5385,9.0021ZM14.0364,9.5C14.0376,9.2239 14.2624,9.001 14.5385,9.0021C14.8147,9.0033 15.0376,9.2281 15.0364,9.5043L15.0021,17.5042C15.0009,17.7803 14.7762,18.0032 14.5,18.0021C14.2239,18.0009 14.001,17.7761 14.0021,17.4999L14.0364,9.5ZM12,9.0021C11.7239,9.001 11.4991,9.2239 11.4979,9.5L11.4636,17.4999C11.4624,17.7761 11.6853,18.0009 11.9615,18.0021C12.2376,18.0032 12.4624,17.7803 12.4636,17.5042L12.4979,9.5043C12.499,9.2281 12.2761,9.0033 12,9.0021Z"
+      android:fillColor="#FFFFFF"
+      android:fillType="evenOdd"/>
 </vector>
