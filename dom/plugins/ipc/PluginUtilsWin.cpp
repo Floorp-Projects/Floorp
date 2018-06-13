@@ -17,13 +17,22 @@ namespace PluginUtilsWin {
 typedef nsTHashtable<nsPtrHashKey<PluginModuleParent>> PluginModuleSet;
 StaticMutex sMutex;
 
-class AudioDeviceChangedRunnable : public Runnable
+class AudioDeviceMessageRunnable : public Runnable
 {
 public:
-  explicit AudioDeviceChangedRunnable(const PluginModuleSet* aAudioNotificationSet,
+  explicit AudioDeviceMessageRunnable(const PluginModuleSet* aAudioNotificationSet,
                                       NPAudioDeviceChangeDetailsIPC aChangeDetails) :
-    Runnable("AudioDeviceChangedRunnable")
+    Runnable("AudioDeviceMessageRunnableCD")
     , mChangeDetails(aChangeDetails)
+    , mMessageType(DEFAULT_DEVICE_CHANGED)
+    , mAudioNotificationSet(aAudioNotificationSet)
+  {}
+
+  explicit AudioDeviceMessageRunnable(const PluginModuleSet* aAudioNotificationSet,
+                                      NPAudioDeviceStateChangedIPC aDeviceState) :
+    Runnable("AudioDeviceMessageRunnableSC")
+    , mDeviceState(aDeviceState)
+    , mMessageType(DEVICE_STATE_CHANGED)
     , mAudioNotificationSet(aAudioNotificationSet)
   {}
 
@@ -35,7 +44,18 @@ public:
 
     for (auto iter = mAudioNotificationSet->ConstIter(); !iter.Done(); iter.Next()) {
       PluginModuleParent* pluginModule = iter.Get()->GetKey();
-      if(!pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(mChangeDetails)) {
+      bool success = false;
+      switch (mMessageType) {
+      case DEFAULT_DEVICE_CHANGED:
+        success = pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(mChangeDetails);
+        break;
+      case DEVICE_STATE_CHANGED:
+        success = pluginModule->SendNPP_SetValue_NPNVaudioDeviceStateChanged(mDeviceState);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("bad AudioDeviceMessageRunnable state");
+      }
+      if(!success) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -43,7 +63,11 @@ public:
   }
 
 protected:
+  // The potential payloads for the message.  Type determined by mMessageType.
   NPAudioDeviceChangeDetailsIPC mChangeDetails;
+  NPAudioDeviceStateChangedIPC mDeviceState;
+  enum { DEFAULT_DEVICE_CHANGED, DEVICE_STATE_CHANGED } mMessageType;
+
   const PluginModuleSet* mAudioNotificationSet;
 };
 
@@ -82,8 +106,8 @@ public:
     changeDetails.defaultDevice = device_id ? std::wstring(device_id) : L"";
 
     // Make sure that plugin is notified on the main thread.
-    RefPtr<AudioDeviceChangedRunnable> runnable =
-      new AudioDeviceChangedRunnable(&mAudioNotificationSet, changeDetails);
+    RefPtr<AudioDeviceMessageRunnable> runnable =
+      new AudioDeviceMessageRunnable(&mAudioNotificationSet, changeDetails);
     NS_DispatchToMainThread(runnable);
     return S_OK;
   }
@@ -103,6 +127,14 @@ public:
   HRESULT STDMETHODCALLTYPE
   OnDeviceStateChanged(LPCWSTR device_id, DWORD new_state) override
   {
+    NPAudioDeviceStateChangedIPC deviceStateIPC;
+    deviceStateIPC.device = device_id ? std::wstring(device_id) : L"";
+    deviceStateIPC.state = (uint32_t)new_state;
+
+    // Make sure that plugin is notified on the main thread.
+    RefPtr<AudioDeviceMessageRunnable> runnable =
+      new AudioDeviceMessageRunnable(&mAudioNotificationSet, deviceStateIPC);
+    NS_DispatchToMainThread(runnable);
     return S_OK;
   }
 
