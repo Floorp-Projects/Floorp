@@ -2675,7 +2675,8 @@ RestyleManager::ProcessPostTraversal(
              "display: contents node has a frame, yet we didn't reframe it"
              " above?");
   const bool isDisplayContents =
-    !styleFrame && Servo_Element_IsDisplayContents(aElement);
+    !styleFrame && aElement->HasServoData() &&
+    Servo_Element_IsDisplayContents(aElement);
   if (isDisplayContents) {
     oldOrDisplayContentsStyle =
       aRestyleState.StyleSet().ResolveServoStyle(aElement);
