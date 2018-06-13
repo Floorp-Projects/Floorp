@@ -180,6 +180,10 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
 
+XPCOMUtils.defineLazyGetter(this, "gTabbrowserBundle", function() {
+  return Services.strings.createBundle("chrome://browser/locale/tabbrowser.properties");
+});
+
 const global = this;
 
 const listeners = {
@@ -1365,11 +1369,7 @@ BrowserGlue.prototype = {
     // 4. The browser is currently in Private Browsing mode
     // 5. The browser will be restarted.
     //
-    // Otherwise these are the conditions and the associated dialogs that will be shown:
-    // 1. aQuitType == "lastwindow" or "quit" and browser.showQuitWarning == true
-    //    - The quit dialog will be shown
-    // 2. aQuitType == "lastwindow" && browser.tabs.warnOnClose == true
-    //    - The "closing multiple tabs" dialog will be shown
+    // Otherwise, we will show the "closing multiple tabs" dialog.
     //
     // aQuitType == "lastwindow" is overloaded. "lastwindow" is used to indicate
     // "the last window is closing but we're not quitting (a non-browser window is open)"
@@ -1380,21 +1380,16 @@ BrowserGlue.prototype = {
 
     var windowcount = 0;
     var pagecount = 0;
-    var browserEnum = Services.wm.getEnumerator("navigator:browser");
-    let allWindowsPrivate = true;
-    while (browserEnum.hasMoreElements()) {
-      // XXXbz should we skip closed windows here?
+    for (let win of BrowserWindowTracker.orderedWindows) {
+      if (win.closed) {
+        continue;
+      }
       windowcount++;
-
-      var browser = browserEnum.getNext();
-      if (!PrivateBrowsingUtils.isWindowPrivate(browser))
-        allWindowsPrivate = false;
-      var tabbrowser = browser.ownerGlobal.gBrowser;
+      let tabbrowser = win.gBrowser;
       if (tabbrowser)
         pagecount += tabbrowser.browsers.length - tabbrowser._numPinnedTabs;
     }
 
-    this._saveSession = false;
     if (pagecount < 2)
       return;
 
@@ -1407,80 +1402,26 @@ BrowserGlue.prototype = {
 
     var sessionWillBeRestored = Services.prefs.getIntPref("browser.startup.page") == 3 ||
                                 Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-    if (sessionWillBeRestored || !Services.prefs.getBoolPref("browser.warnOnQuit"))
+    if (sessionWillBeRestored || !Services.prefs.getBoolPref("browser.warnOnQuit") ||
+        !Services.prefs.getBoolPref("browser.tabs.warnOnClose"))
       return;
 
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let win = BrowserWindowTracker.getTopWindow();
 
-    // On last window close or quit && showQuitWarning, we want to show the
-    // quit warning.
-    if (!Services.prefs.getBoolPref("browser.showQuitWarning")) {
-      if (aQuitType == "lastwindow") {
-        // If aQuitType is "lastwindow" and we aren't showing the quit warning,
-        // we should show the window closing warning instead. warnAboutClosing
-        // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
-        // the window. It doesn't actually close the window.
-        aCancelQuit.data =
-          !win.gBrowser.warnAboutClosingTabs(win.gBrowser.closingTabsEnum.ALL);
-      }
-      return;
-    }
-
-    let prompt = Services.prompt;
-    let quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
-    let appName = gBrandBundle.GetStringFromName("brandShortName");
-    let quitDialogTitle = quitBundle.formatStringFromName("quitDialogTitle",
-                                                          [appName], 1);
-    let neverAskText = quitBundle.GetStringFromName("neverAsk2");
-    let neverAsk = {value: false};
-
-    let choice;
-    if (allWindowsPrivate) {
-      let text = quitBundle.formatStringFromName("messagePrivate", [appName], 1);
-      let flags = prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0 +
-                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_1 +
-                  prompt.BUTTON_POS_0_DEFAULT;
-      choice = prompt.confirmEx(win, quitDialogTitle, text, flags,
-                                quitBundle.GetStringFromName("quitTitle"),
-                                quitBundle.GetStringFromName("cancelTitle"),
-                                null,
-                                neverAskText, neverAsk);
-
-      // The order of the buttons differs between the prompt.confirmEx calls
-      // here so we need to fix this for proper handling below.
-      if (choice == 0) {
-        choice = 2;
-      }
+    // warnAboutClosingTabs checks browser.tabs.warnOnClose and returns if it's
+    // ok to close the window. It doesn't actually close the window.
+    if (windowcount == 1) {
+      aCancelQuit.data =
+        !win.gBrowser.warnAboutClosingTabs(win.gBrowser.closingTabsEnum.ALL);
     } else {
-      let text = quitBundle.formatStringFromName(
-        windowcount == 1 ? "messageNoWindows" : "message", [appName], 1);
-      let flags = prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0 +
-                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_1 +
-                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_2 +
-                  prompt.BUTTON_POS_0_DEFAULT;
-      choice = prompt.confirmEx(win, quitDialogTitle, text, flags,
-                                quitBundle.GetStringFromName("saveTitle"),
-                                quitBundle.GetStringFromName("cancelTitle"),
-                                quitBundle.GetStringFromName("quitTitle"),
-                                neverAskText, neverAsk);
-    }
-
-    switch (choice) {
-    case 2: // Quit
-      if (neverAsk.value)
-        Services.prefs.setBoolPref("browser.showQuitWarning", false);
-      break;
-    case 1: // Cancel
-      aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
-      aCancelQuit.data = true;
-      break;
-    case 0: // Save & Quit
-      this._saveSession = true;
-      if (neverAsk.value) {
-        // always save state when shutting down
-        Services.prefs.setIntPref("browser.startup.page", 3);
-      }
-      break;
+      // More than 1 window. Compose our own message.
+      let tabSubstring = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindowsTabSnippet");
+      tabSubstring = PluralForm.get(pagecount, tabSubstring).replace(/#1/, pagecount);
+      let windowString = gTabbrowserBundle.GetStringFromName("tabs.closeWarningMultipleWindows");
+      windowString = PluralForm.get(windowcount, windowString).replace(/#1/, windowcount);
+      windowString = windowString.replace(/%(?:1$)?S/i, tabSubstring);
+      aCancelQuit.data =
+        !win.gBrowser.warnAboutClosingTabs(win.gBrowser.closingTabsEnum.ALL, null, windowString);
     }
   },
 
