@@ -143,7 +143,11 @@ struct CookieDomainTuple
 // conveniently switch state when entering or exiting private browsing.
 struct DBState final
 {
-  DBState() : cookieCount(0), cookieOldestTime(INT64_MAX), corruptFlag(OK)
+  DBState()
+    : cookieCount(0)
+    , cookieOldestTime(INT64_MAX)
+    , corruptFlag(OK)
+    , readListener(nullptr)
   {
   }
 
