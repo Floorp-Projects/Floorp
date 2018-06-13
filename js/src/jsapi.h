@@ -1138,16 +1138,6 @@ extern JS_PUBLIC_API(void)
 JS_MarkCrossZoneIdValue(JSContext* cx, const JS::Value& value);
 
 /**
- * Initialize standard JS class constructors, prototypes, and any top-level
- * functions and constants associated with the standard classes (e.g. isNaN
- * for Number).
- *
- * NB: This sets cx's global object to obj if it was null.
- */
-extern JS_PUBLIC_API(bool)
-JS_InitStandardClasses(JSContext* cx, JS::Handle<JSObject*> obj);
-
-/**
  * Resolve id, which must contain either a string or an int, to a standard
  * class name in obj if possible, defining the class's constructor and/or
  * prototype and storing true in *resolved.  If id does not name a standard
