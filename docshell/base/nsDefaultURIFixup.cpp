@@ -133,6 +133,15 @@ HasUserPassword(const nsACString& aStringURI)
   return false;
 }
 
+// Assume that 1 tab is accidental, but more than 1 implies this is
+// supposed to be tab-separated content.
+static bool
+MaybeTabSeparatedContent(const nsCString& aStringURI)
+{
+  auto firstTab = aStringURI.FindChar('\t');
+  return firstTab != kNotFound && aStringURI.RFindChar('\t') != firstTab;
+}
+
 NS_IMETHODIMP
 nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
                                    uint32_t aFixupFlags,
@@ -147,8 +156,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
 
   // Eliminate embedded newlines, which single-line text fields now allow:
   uriString.StripCRLF();
-  // Cleanup the empty spaces that might be on each end:
-  uriString.Trim(" ");
+  // Cleanup the empty spaces and tabs that might be on each end:
+  uriString.Trim(" \t");
 
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
@@ -360,12 +369,16 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     inputHadDuffProtocol = true;
   }
 
-  // NB: this rv gets returned at the end of this method if we never
-  // do a keyword fixup after this (because the pref or the flags passed
-  // might not let us).
-  rv = FixupURIProtocol(uriString, info, getter_AddRefs(uriWithProtocol));
-  if (uriWithProtocol) {
-    info->mFixedURI = uriWithProtocol;
+  // Note: this rv gets returned at the end of this method if we don't fix up
+  // the protocol and don't do a keyword fixup after this (because the pref
+  // or the flags passed might not let us).
+  rv = NS_OK;
+  // Avoid fixing up content that looks like tab-separated values
+  if (!MaybeTabSeparatedContent(uriString)) {
+    rv = FixupURIProtocol(uriString, info, getter_AddRefs(uriWithProtocol));
+    if (uriWithProtocol) {
+      info->mFixedURI = uriWithProtocol;
+    }
   }
 
   // See if it is a keyword
