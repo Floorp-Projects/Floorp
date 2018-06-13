@@ -25,21 +25,6 @@
     android:baselineAligned="false"
     android:paddingStart="?android:attr/listPreferredItemPaddingStart"
     android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
-    <LinearLayout
-        android:id="@+id/icon_frame"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:gravity="center"
-        android:orientation="horizontal">
-        <ImageView
-            android:id="@android:id/icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="16dp"
-            android:tint="@color/colorSettingsTint"
-            android:alpha="0.8"
-            android:importantForAccessibility="no"/>
-    </LinearLayout>
 
     <RelativeLayout
         android:layout_width="0dp"
@@ -64,6 +49,19 @@
 
     </RelativeLayout>
 
+    <LinearLayout
+            android:id="@+id/icon_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="end|center_vertical"
+            android:orientation="horizontal">
+            <ImageView
+                android:id="@android:id/icon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:importantForAccessibility="no"
+                android:layout_marginEnd="16dp" />
+        </LinearLayout>
     <!-- Preference should place its actual preference widget here. -->
     <LinearLayout android:id="@android:id/widget_frame"
         android:layout_width="wrap_content"
