@@ -598,11 +598,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
       rv = httpChannel->OverrideSecurityInfo(secInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  } else if (!ServiceWorkerParentInterceptEnabled()) {
-    nsLoadFlags newLoadFlags;
-    httpChannel->GetLoadFlags(&newLoadFlags);
-    newLoadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-    httpChannel->SetLoadFlags(newLoadFlags);
   }
 
   nsCOMPtr<nsICacheInfoChannel> cacheChannel =
