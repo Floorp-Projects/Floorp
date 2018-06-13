@@ -69,6 +69,7 @@
 #include <algorithm>
 #include <limits>
 #include "mozilla/dom/AnonymousContent.h"
+#include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
