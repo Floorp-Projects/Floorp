@@ -489,12 +489,12 @@ MCREPO="https://${HGHOST}/mozilla-central"
 
 # Remove once 52esr is off support
 VERSION=$(get_version "${HGREPO}")
-MAJOR_VERSION="${VERSION%.*}"
+MAJOR_VERSION="${VERSION%%.*}"
 echo "INFO: parsed version is ${VERSION}"
 if [ "${USE_MC}" == "true" ]; then
   MCVERSION=$(get_version "${MCREPO}")
   echo "INFO: parsed mozilla-central version is ${MCVERSION}"
-  MAJOR_VERSION="${MCVERSION%.*}"
+  MAJOR_VERSION="${MCVERSION%%.*}"
 fi
 
 BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
