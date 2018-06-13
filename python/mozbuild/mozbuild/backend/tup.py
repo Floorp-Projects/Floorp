@@ -100,8 +100,6 @@ class BackendTupfile(object):
         # depends on them.
         self._skip_files = [
             'signmar',
-            'libxul.so',
-            'libtestcrasher.so',
         ]
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True, dry_run=dry_run)
@@ -325,6 +323,9 @@ class TupBackend(CommonBackend):
     def _gen_shared_library(self, backend_file):
         shlib = backend_file.shared_lib
 
+        if backend_file.objdir.endswith('gtest') and shlib.name == 'libxul.so':
+            return
+
         if shlib.cxx_link:
             mkshlib = (
                 [backend_file.environment.substs['CXX']] +
@@ -350,7 +351,16 @@ class TupBackend(CommonBackend):
         list_file_name = '%s.list' % shlib.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
 
+        rust_linked = self._lib_paths(backend_file.objdir,
+                                      (l for l in backend_file.shared_lib.linked_libraries
+                                       if isinstance(l, RustLibrary)))
+
         inputs = objs + static_libs + shared_libs
+
+        extra_inputs = []
+        if rust_linked:
+            extra_inputs = [self._rust_libs]
+            static_libs += rust_linked
 
         symbols_file = []
         if shlib.symbols_file:
@@ -371,6 +381,7 @@ class TupBackend(CommonBackend):
         backend_file.rule(
             cmd=cmd,
             inputs=inputs,
+            extra_inputs=extra_inputs,
             outputs=[shlib.lib_name],
             display='LINK %o'
         )
@@ -801,12 +812,7 @@ class TupBackend(CommonBackend):
 
 
     def _process_generated_file(self, backend_file, obj):
-        # TODO: These are directories that don't work in the tup backend
-        # yet, because things they depend on aren't built yet.
-        skip_directories = (
-            'toolkit/library', # libxul.so
-        )
-        if obj.script and obj.method and obj.relobjdir not in skip_directories:
+        if obj.script and obj.method:
             backend_file.export_shell()
             cmd = self._py_action('file_generate')
             if obj.localized:
