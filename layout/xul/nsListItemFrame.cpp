@@ -15,6 +15,8 @@
 #include "nsBoxLayout.h"
 #include "nsIContent.h"
 
+using namespace mozilla;
+
 nsListItemFrame::nsListItemFrame(ComputedStyle* aStyle,
                                  bool aIsRoot,
                                  nsBoxLayout* aLayoutManager)
