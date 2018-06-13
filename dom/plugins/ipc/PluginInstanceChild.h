@@ -256,6 +256,7 @@ public:
 
 #if defined(XP_WIN)
     NPError DefaultAudioDeviceChanged(NPAudioDeviceChangeDetails& details);
+    NPError AudioDeviceStateChanged(NPAudioDeviceStateChanged& aDeviceState);
 #endif
 
 private:

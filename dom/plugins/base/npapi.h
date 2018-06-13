@@ -279,6 +279,18 @@ typedef struct _NPAudioDeviceChangeDetails
 
 #endif /* XP_WIN */
 
+/*
+ * This is the value of the NPNVaudioDeviceStateChanged variable.
+ */
+typedef struct _NPAudioDeviceStateChanged
+{
+  /* Name of device that changed state.  This string is only valid during
+   * the call to NPPSetValue.
+   */
+  const wchar_t* device;
+  uint32_t newState;
+} NPAudioDeviceStateChanged;
+
 typedef enum {
   NPDrawingModelDUMMY
 #if defined(XP_MACOSX)
@@ -468,6 +480,7 @@ typedef enum {
   , NPNVmuteAudioBool = 4000 /* Request that the browser wants to mute or unmute the plugin */
 #if defined(XP_WIN)
   , NPNVaudioDeviceChangeDetails = 4001 /* Provides information about the new default audio device */
+  , NPNVaudioDeviceStateChanged = 4002 /* Provides information if any audio device changes state */
 #endif
 #if defined(XP_MACOSX)
   , NPNVsupportsCompositingCoreAnimationPluginsBool = 74656 /* TRUE if the browser supports
