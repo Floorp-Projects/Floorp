@@ -1845,6 +1845,9 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
   URIParams uriParams;
   SerializeURI(newOriginalURI, uriParams);
 
+  uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
+  MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadFlags(&newLoadFlags));
+
   nsCString secInfoSerialization;
   UpdateAndSerializeSecurityInfo(secInfoSerialization);
 
@@ -1879,8 +1882,8 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
 
   bool result = false;
   if (!mIPCClosed) {
-    result = SendRedirect1Begin(registrarId, uriParams, redirectFlags,
-                                loadInfoForwarderArg,
+    result = SendRedirect1Begin(registrarId, uriParams, newLoadFlags,
+                                redirectFlags, loadInfoForwarderArg,
                                 *responseHead,
                                 secInfoSerialization,
                                 channelId,
