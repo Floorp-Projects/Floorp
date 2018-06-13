@@ -1031,15 +1031,12 @@ var Blocklist = {
       blockEntry.blockID = blocklistElement.getAttribute("blockID");
     }
 
-    // Trim helper (spaces, tabs, no-break spaces..)
-    const trim = (s) => (s || "").replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
-
     for (let matchElement of blocklistElement.children) {
       let value;
       if (matchElement.localName == "devices") {
         value = [];
         for (let childElement of matchElement.children) {
-          const childValue = trim(childElement.textContent);
+          const childValue = (childElement.textContent || "").trim();
           // Make sure no empty value is added.
           if (childValue) {
             if (/,/.test(childValue)) {
@@ -1053,10 +1050,10 @@ var Blocklist = {
           }
         }
       } else if (matchElement.localName == "versionRange") {
-        value = {minVersion: trim(matchElement.getAttribute("minVersion")) || "0",
-                 maxVersion: trim(matchElement.getAttribute("maxVersion")) || "*"};
+        value = {minVersion: (matchElement.getAttribute("minVersion") || "").trim() || "0",
+                 maxVersion: (matchElement.getAttribute("maxVersion") || "").trim() || "*"};
       } else {
-        value = trim(matchElement.textContent);
+        value = (matchElement.textContent || "").trim();
       }
       if (value) {
         blockEntry[matchElement.localName] = value;
@@ -1194,21 +1191,31 @@ var Blocklist = {
   },
 
   _notifyObserversBlocklistGFX() {
+    let sortedProps = [
+      "blockID", "devices", "driverVersion", "driverVersionComparator", "driverVersionMax",
+      "feature", "featureStatus", "hardware", "manufacturer", "model", "os", "osversion",
+      "product", "vendor", "versionRange",
+    ];
     // Notify `GfxInfoBase`, by passing a string serialization.
     // This way we avoid spreading XML structure logics there.
-    const payload = this._gfxEntries.map((r) => {
-      return Object.keys(r).sort().filter((k) => !/id|last_modified/.test(k)).map((key) => {
-        let value = r[key];
-        if (Array.isArray(value)) {
-          value = value.join(",");
-        } else if (value.hasOwnProperty("minVersion")) {
-          // When XML is parsed, both minVersion and maxVersion are set.
-          value = `${value.minVersion},${value.maxVersion}`;
+    let payload = [];
+    for (let gfxEntry of this._gfxEntries) {
+      let entryLines = [];
+      for (let key of sortedProps) {
+        if (gfxEntry[key]) {
+          let value = gfxEntry[key];
+          if (Array.isArray(value)) {
+            value = value.join(",");
+          } else if (value.maxVersion) {
+            // When XML is parsed, both minVersion and maxVersion are set.
+            value = value.minVersion + "," + value.maxVersion;
+          }
+          entryLines.push(key + ":" + value);
         }
-        return `${key}:${value}`;
-      }).join("\t");
-    }).join("\n");
-    Services.obs.notifyObservers(null, "blocklist-data-gfxItems", payload);
+      }
+      payload.push(entryLines.join("\t"));
+    }
+    Services.obs.notifyObservers(null, "blocklist-data-gfxItems", payload.join("\n"));
   },
 
   _notifyObserversBlocklistUpdated() {
