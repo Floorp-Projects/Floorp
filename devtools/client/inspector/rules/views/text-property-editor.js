@@ -384,13 +384,13 @@ TextPropertyEditor.prototype = {
     // Combine the property's value and priority into one string for
     // the value.
     const store = this.rule.elementStyle.store;
-    let val = store.userProperties.getProperty(this.rule.style, name,
+    let val = store.userProperties.getProperty(this.rule.domRule, name,
                                                this.prop.value);
     if (this.prop.priority) {
       val += " !" + this.prop.priority;
     }
 
-    const propDirty = store.userProperties.contains(this.rule.style, name);
+    const propDirty = store.userProperties.contains(this.rule.domRule, name);
 
     if (propDirty) {
       this.element.setAttribute("dirty", "");
