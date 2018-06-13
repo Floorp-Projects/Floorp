@@ -2525,7 +2525,7 @@ window._gBrowser = {
     return t;
   },
 
-  warnAboutClosingTabs(aCloseTabs, aTab) {
+  warnAboutClosingTabs(aCloseTabs, aTab, aOptionalMessage) {
     var tabsToClose;
     switch (aCloseTabs) {
       case this.closingTabsEnum.ALL:
@@ -2568,9 +2568,14 @@ window._gBrowser = {
     // solve the problem of windows "obscuring" the prompt.
     // see bug #350299 for more details
     window.focus();
-    var warningMessage =
-      PluralForm.get(tabsToClose, gTabBrowserBundle.GetStringFromName("tabs.closeWarningMultiple"))
-      .replace("#1", tabsToClose);
+    var warningMessage;
+    if (aOptionalMessage) {
+      warningMessage = aOptionalMessage;
+    } else {
+      warningMessage =
+        PluralForm.get(tabsToClose, gTabBrowserBundle.GetStringFromName("tabs.closeWarningMultiple"))
+          .replace("#1", tabsToClose);
+    }
     var buttonPressed =
       ps.confirmEx(window,
         gTabBrowserBundle.GetStringFromName("tabs.closeWarningTitle"),
