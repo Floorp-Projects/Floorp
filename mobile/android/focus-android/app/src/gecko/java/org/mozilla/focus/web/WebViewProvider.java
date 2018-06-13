@@ -78,10 +78,10 @@ public class WebViewProvider {
             PreferenceManager.getDefaultSharedPreferences(context)
                     .registerOnSharedPreferenceChangeListener(this);
             geckoSession = createGeckoSession();
-            openAndSetGeckoSession();
+            setGeckoSession();
         }
 
-        private void openAndSetGeckoSession() {
+        private void setGeckoSession() {
             applyAppSettings();
             updateBlocking();
 
@@ -90,8 +90,7 @@ public class WebViewProvider {
             geckoSession.setNavigationDelegate(createNavigationDelegate());
             geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
             geckoSession.setPromptDelegate(createPromptDelegate());
-            geckoSession.open(geckoRuntime);
-            setSession(geckoSession);
+            setSession(geckoSession, geckoRuntime);
         }
 
         private GeckoSession createGeckoSession() {
@@ -295,7 +294,8 @@ public class WebViewProvider {
                     Log.i(TAG, "Crashed, opening new session");
                     geckoSession.close();
                     geckoSession = createGeckoSession();
-                    openAndSetGeckoSession();
+                    setGeckoSession();
+                    geckoSession.open(geckoRuntime);
                     geckoSession.loadUri(currentUrl);
                 }
 
