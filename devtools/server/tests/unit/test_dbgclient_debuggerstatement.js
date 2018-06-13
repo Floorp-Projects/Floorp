@@ -25,7 +25,7 @@ function run_test() {
 
 function test_threadAttach(threadActorID) {
   info("Trying to attach to thread " + threadActorID);
-  gTabClient.attachThread({}, function(response, threadClient) {
+  gTabClient.attachThread({}).then(function([response, threadClient]) {
     Assert.equal(threadClient.state, "paused");
     Assert.equal(threadClient.actor, threadActorID);
     threadClient.resume(function() {

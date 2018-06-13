@@ -66,9 +66,7 @@ function testSetBreakpoint() {
 
   gDebugger.gThreadClient.interrupt(aResponse => {
     let source = gDebugger.gThreadClient.source(sourceForm);
-    source.setBreakpoint({ line: 5 }, aResponse => {
-      ok(!aResponse.error,
-        "Should be able to set a breakpoint in a coffee source file.");
+    source.setBreakpoint({ line: 5 }).then(([aResponse]) => {
       ok(!aResponse.actualLocation,
         "Should be able to set a breakpoint on line 5.");
 
@@ -84,9 +82,7 @@ function testSetBreakpointBlankLine() {
   let sourceForm = getSourceForm(gSources, COFFEE_URL);
 
   let source = gDebugger.gThreadClient.source(sourceForm);
-  source.setBreakpoint({ line: 8 }, aResponse => {
-    ok(!aResponse.error,
-       "Should be able to set a breakpoint in a coffee source file on a blank line.");
+  source.setBreakpoint({ line: 8 }).then(([aResponse]) => {
     ok(!aResponse.isPending,
        "Should not be a pending breakpoint.");
     ok(!aResponse.actualLocation,

@@ -140,10 +140,12 @@ async function fetchLatestChanges(url, lastEtag) {
   //     "collection":"certificates"
   //    }]}
 
-  // Use ETag to obtain a `304 Not modified` when no change occurred.
+  // Use ETag to obtain a `304 Not modified` when no change occurred,
+  // and `?_since` parameter to only keep entries that weren't processed yet.
   const headers = {};
   if (lastEtag) {
     headers["If-None-Match"] = lastEtag;
+    url += `?_since=${lastEtag}`;
   }
   const response = await fetch(url, {headers});
 

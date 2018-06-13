@@ -69,10 +69,7 @@ function testSetBreakpoint() {
   let sourceForm = getSourceForm(gSources, JS_URL);
   let source = gDebugger.gThreadClient.source(sourceForm);
 
-  source.setBreakpoint({ line: 7 }, aResponse => {
-    ok(!aResponse.error,
-      "Should be able to set a breakpoint in a js file.");
-
+  source.setBreakpoint({ line: 7 }).then(([aResponse]) => {
     gDebugger.gClient.addOneTimeListener("resumed", () => {
       waitForCaretAndScopes(gPanel, 7).then(() => {
         // Make sure that we have JavaScript stack frames.

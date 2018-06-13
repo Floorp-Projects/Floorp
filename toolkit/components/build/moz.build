@@ -28,6 +28,7 @@ LOCAL_INCLUDES += [
     '../reputationservice',
     '../startup',
     '../statusfilter',
+    '../telemetry',
     '../typeaheadfind',
     '../url-classifier',
 ]

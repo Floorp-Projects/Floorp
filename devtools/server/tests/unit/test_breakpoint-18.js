@@ -55,8 +55,7 @@ function setBreakpoint(event, packet) {
   const source = gThreadClient.source(packet.frame.where.source);
   gClient.addOneTimeListener("resumed", runCode);
 
-  source.setBreakpoint({ line: 2 }, ({ error }) => {
-    Assert.ok(!error);
+  source.setBreakpoint({ line: 2 }).then(() => {
     gThreadClient.resume();
   });
 }

@@ -63,6 +63,7 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     'CombinedStacks.cpp',
+    'geckoview/TelemetryGeckoViewPersistence.cpp',
     'HangReports.cpp',
     'ipc/TelemetryIPC.cpp',
     'ipc/TelemetryIPCAccumulator.cpp',
@@ -209,12 +210,19 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     # yet (see bug 1318091).
     DEFINES['MOZ_TELEMETRY_GECKOVIEW'] = True
 
-    SOURCES += [
-        'geckoview/TelemetryGeckoViewPersistence.cpp'
-    ]
-
     EXTRA_JS_MODULES += [
         'geckoview/GeckoViewTelemetryController.jsm',
+    ]
+
+# Include the GeckoView testing IDL if we're building tests
+# as well. This will be used in xpcshell tests.
+if CONFIG['ENABLE_TESTS']:
+    XPIDL_SOURCES += [
+        'geckoview/nsITelemetryGeckoViewTesting.idl'
+    ]
+
+    SOURCES += [
+        'geckoview/TelemetryGeckoViewTesting.cpp'
     ]
 
 with Files('**'):

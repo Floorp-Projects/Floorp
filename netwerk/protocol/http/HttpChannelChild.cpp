@@ -428,7 +428,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                     const uint32_t& aCacheKey,
                     const nsCString& altDataType,
                     const int64_t& altDataLen,
-                    const bool& aApplyConversion)
+                    const bool& aApplyConversion,
+                    const ResourceTimingStruct& aTiming)
   : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
   , mChannelStatus(aChannelStatus)
   , mResponseHead(aResponseHead)
@@ -448,6 +449,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mAltDataType(altDataType)
   , mAltDataLen(altDataLen)
   , mLoadInfoForwarder(loadInfoForwarder)
+  , mTiming(aTiming)
   {}
 
   void Run() override
@@ -460,7 +462,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                            mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
                            mCacheKey, mAltDataType, mAltDataLen,
-                           mApplyConversion);
+                           mApplyConversion, mTiming);
   }
 
  private:
@@ -482,6 +484,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   nsCString mAltDataType;
   int64_t mAltDataLen;
   ParentLoadInfoForwarderArgs mLoadInfoForwarder;
+  ResourceTimingStruct mTiming;
 };
 
 mozilla::ipc::IPCResult
@@ -503,7 +506,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const uint32_t& cacheKey,
                                      const nsCString& altDataType,
                                      const int64_t& altDataLen,
-                                     const bool& aApplyConversion)
+                                     const bool& aApplyConversion,
+                                     const ResourceTimingStruct& aTiming)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -525,7 +529,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
                                               altDataType, altDataLen,
-                                              aApplyConversion));
+                                              aApplyConversion,
+                                              aTiming));
 
   {
     // Child's mEventQ is to control the execution order of the IPC messages
@@ -567,7 +572,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const uint32_t& cacheKey,
                                  const nsCString& altDataType,
                                  const int64_t& altDataLen,
-                                 const bool& aApplyConversion)
+                                 const bool& aApplyConversion,
+                                 const ResourceTimingStruct& aTiming)
 {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -625,6 +631,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   // gHttpHandler->OnExamineResponse(this);
 
   mTracingEnabled = false;
+
+  mTransactionTimings = aTiming;
 
   DoOnStartRequest(this, mListenerContext);
 }

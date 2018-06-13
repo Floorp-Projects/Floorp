@@ -188,21 +188,14 @@ exports.script.useTarget = function(tgt) {
 
       consoleActor = target._form.consoleActor;
 
-      var onAttach = function(response, wcc) {
-        webConsoleClient = wcc;
-
-        if (response.error != null) {
-          reject(response);
-        }
-        else {
-          resolve(response);
-        }
-
-        // TODO: add _onTabNavigated code?
-      };
-
       var listeners = [ 'PageError', 'ConsoleAPI' ];
-      client.attachConsole(consoleActor, listeners, onAttach);
+      client.attachConsole(consoleActor, listeners)
+        .then(([response, wcc]) => {
+          webConsoleClient = wcc;
+          resolve(response);
+        }, response => {
+          reject(response);
+        });
     });
   });
 };

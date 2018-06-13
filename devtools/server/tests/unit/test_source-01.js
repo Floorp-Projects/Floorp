@@ -54,9 +54,8 @@ function test_source() {
       Assert.ok(!!source);
 
       const sourceClient = gThreadClient.source(source);
-      sourceClient.source(function(response) {
+      sourceClient.source().then(function(response) {
         Assert.ok(!!response);
-        Assert.ok(!response.error);
         Assert.ok(!!response.contentType);
         Assert.ok(response.contentType.includes("javascript"));
 

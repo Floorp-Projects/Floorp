@@ -83,6 +83,11 @@
 #define NS_ADDONCONTENTPOLICY_CONTRACTID \
   "@mozilla.org/addons/content-policy;1"
 
+#if defined(ENABLE_TESTS)
+#define NS_TELEMETRYGECKOVIEWTESTING_CONTRACTID \
+  "@mozilla.org/telemetry/geckoview-testing;1"
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 
 #define ALERT_NOTIFICATION_CID \
@@ -183,3 +188,8 @@
 
 #define NS_ADDON_POLICY_SERVICE_CONTRACTID \
   "@mozilla.org/addons/policy-service;1"
+
+#if defined(ENABLE_TESTS)
+#define NS_TELEMETRYGECKOVIEWTESTING_CID \
+  { 0xaaa3f7f2, 0x8ef0, 0x41ec, { 0x8d, 0x3, 0xae, 0xd6, 0x67, 0xcf, 0x7f, 0xa2 } };
+#endif

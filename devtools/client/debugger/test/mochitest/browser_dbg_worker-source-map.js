@@ -47,7 +47,7 @@ function test() {
     yield threadClient.interrupt();
     let sourceForm = getSourceForm(Sources, COFFEE_URL);
     let source = threadClient.source(sourceForm);
-    let response = yield source.setBreakpoint({ line: 5 });
+    let [response] = yield source.setBreakpoint({ line: 5 });
 
     ok(!response.error,
       "Should be able to set a breakpoint in a coffee source file.");

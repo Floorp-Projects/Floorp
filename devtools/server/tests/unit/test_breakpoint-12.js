@@ -44,7 +44,7 @@ function test_child_skip_breakpoint() {
     const source = gThreadClient.source(packet.frame.where.source);
     const location = { line: gDebuggee.line0 + 3};
 
-    source.setBreakpoint(location, function(response, bpClient) {
+    source.setBreakpoint(location).then(function([response, bpClient]) {
       // Check that the breakpoint has properly skipped forward one line.
       Assert.equal(response.actualLocation.source.actor, source.actor);
       Assert.equal(response.actualLocation.line, location.line + 1);
@@ -71,7 +71,7 @@ function test_child_skip_breakpoint() {
 // Set many breakpoints at the same location.
 function set_breakpoints(source, location) {
   Assert.notEqual(gCount, NUM_BREAKPOINTS);
-  source.setBreakpoint(location, function(response, bpClient) {
+  source.setBreakpoint(location).then(function([response, bpClient]) {
     // Check that the breakpoint has properly skipped forward one line.
     Assert.equal(response.actualLocation.source.actor, source.actor);
     Assert.equal(response.actualLocation.line, location.line + 1);
