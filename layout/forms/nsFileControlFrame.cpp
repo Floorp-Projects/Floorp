@@ -87,8 +87,6 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
   button->SetIsNativeAnonymousRoot();
   button->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                   NS_LITERAL_STRING("button"), false);
-  button->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                  NS_LITERAL_STRING("auto"), false);
 
   // Set the file picking button text depending on the current locale.
   nsAutoString buttonTxt;
