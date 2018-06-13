@@ -32,7 +32,7 @@ public:
 
   virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) = 0;
   virtual void Unlock() = 0;
-
+  virtual void ClearCachedResources() {}
 protected:
   virtual ~RenderTextureHost();
 };

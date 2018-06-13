@@ -151,6 +151,7 @@ protected:
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(const uint32_t& registrarId,
                                              const URIParams& newURI,
+                                             const uint32_t& newLoadFlags,
                                              const uint32_t& redirectFlags,
                                              const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                                              const nsHttpResponseHead& responseHead,
@@ -438,6 +439,7 @@ private:
   void HandleAsyncAbort();
   void Redirect1Begin(const uint32_t& registrarId,
                       const URIParams& newUri,
+                      const uint32_t& newLoadFlags,
                       const uint32_t& redirectFlags,
                       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                       const nsHttpResponseHead& responseHead,
