@@ -108,6 +108,12 @@ SetRealmNameCallback(JSContext* cx, RealmNameCallback callback);
 extern JS_PUBLIC_API(JSObject*)
 GetRealmGlobalOrNull(Handle<Realm*> realm);
 
+// Initialize standard JS class constructors, prototypes, and any top-level
+// functions and constants associated with the standard classes (e.g. isNaN
+// for Number).
+extern JS_PUBLIC_API(bool)
+InitRealmStandardClasses(JSContext* cx);
+
 /*
  * Ways to get various per-Realm objects. All the getters declared below operate
  * on the JSContext's current Realm.

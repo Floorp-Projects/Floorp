@@ -358,7 +358,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS::GetWellKnownSymbol",
     "JS_GlobalObjectTraceHook",
     "JS::HideScriptedCaller",
-    "JS_InitStandardClasses",
+    "JS::InitRealmStandardClasses",
     "JS_IsArrayObject",
     "JS_IsExceptionPending",
     "JS_IsGlobalObject",
