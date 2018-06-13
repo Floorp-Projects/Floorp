@@ -92,33 +92,84 @@ assertErrorMessage(() => wasmEvalText(`
 `),
 SyntaxError, /Type label.*not found/);
 
-// Ref type mismatch in parameter
+// Ref type mismatch in parameter is allowed through the prefix rule
+// but not if the structs are incompatible.
 
-assertErrorMessage(() => wasmEvalText(`
+wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
  (func $f (param (ref $s)) (unreachable))
- (func $g (param (ref $t)) (call $f (get_local 0)) drop))
-`),
-WebAssembly.CompileError, /expression has type ref.*but expected ref/);
-
-// Ref type mismatch in assignment to local
+ (func $g (param (ref $t)) (call $f (get_local 0)))
+)`);
 
 assertErrorMessage(() => wasmEvalText(`
+(module
+ (type $s (struct (field i32)))
+ (type $t (struct (field f32))) ;; Incompatible type
+ (func $f (param (ref $s)) (unreachable))
+ (func $g (param (ref $t)) (call $f (get_local 0)))
+)`),
+WebAssembly.CompileError, /expression has type ref.*but expected ref/);
+
+assertErrorMessage(() => wasmEvalText(`
+(module
+ (type $s (struct (field i32)))
+ (type $t (struct (field (mut i32)))) ;; Incompatible mutability
+ (func $f (param (ref $s)) (unreachable))
+ (func $g (param (ref $t)) (call $f (get_local 0)))
+)`),
+WebAssembly.CompileError, /expression has type ref.*but expected ref/);
+
+// Ref type mismatch in assignment to local but the prefix rule allows
+// the assignment to succeed if the structs are the same.
+
+wasmEvalText(`
 (module
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
  (func $f (param (ref $s)) (local (ref $t)) (set_local 1 (get_local 0))))
-`),
-WebAssembly.CompileError, /expression has type ref.*but expected ref/);
-
-// Ref type mismatch in return
+`)
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type $s (struct (field i32)))
+ (type $t (struct (field f32)))
+ (func $f (param (ref $s)) (local (ref $t)) (set_local 1 (get_local 0))))
+`),
+WebAssembly.CompileError, /expression has type ref.*but expected ref/);
+
+assertErrorMessage(() => wasmEvalText(`
+(module
+ (type $s (struct (field i32)))
+ (type $t (struct (field (mut i32))))
+ (func $f (param (ref $s)) (unreachable))
+ (func $g (param (ref $t)) (call $f (get_local 0)))
+)`),
+WebAssembly.CompileError, /expression has type ref.*but expected ref/);
+
+// Ref type mismatch in return but the prefix rule allows the return
+// to succeed if the structs are the same.
+
+wasmEvalText(`
+(module
+ (type $s (struct (field i32)))
  (type $t (struct (field i32)))
+ (func $f (param (ref $s)) (result (ref $t)) (get_local 0)))
+`);
+
+assertErrorMessage(() => wasmEvalText(`
+(module
+ (type $s (struct (field i32)))
+ (type $t (struct (field f32)))
+ (func $f (param (ref $s)) (result (ref $t)) (get_local 0)))
+`),
+WebAssembly.CompileError, /expression has type ref.*but expected ref/);
+
+assertErrorMessage(() => wasmEvalText(`
+(module
+ (type $s (struct (field i32)))
+ (type $t (struct (field (mut i32))))
  (func $f (param (ref $s)) (result (ref $t)) (get_local 0)))
 `),
 WebAssembly.CompileError, /expression has type ref.*but expected ref/);

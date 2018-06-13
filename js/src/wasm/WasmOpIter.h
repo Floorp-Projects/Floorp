@@ -147,79 +147,6 @@ NonAnyToValType(StackType type)
     return ValType(type.packed());
 }
 
-static inline bool
-IsSubtypeOf(StackType one, StackType two)
-{
-    MOZ_ASSERT(one.isRefOrAnyRef());
-    MOZ_ASSERT(two.isRefOrAnyRef());
-    return one == two || two == StackType::AnyRef;
-}
-
-static inline bool
-Unify(HasGcTypes gcTypesEnabled, StackType observed, StackType expected, StackType* result)
-{
-    if (MOZ_LIKELY(observed == expected)) {
-        *result = observed;
-        return true;
-    }
-
-    if (observed == StackType::Any) {
-        *result = expected;
-        return true;
-    }
-
-    if (expected == StackType::Any) {
-        *result = observed;
-        return true;
-    }
-
-    if (gcTypesEnabled == HasGcTypes::True && observed.isRefOrAnyRef() &&
-        expected.isRefOrAnyRef() && IsSubtypeOf(observed, expected))
-    {
-        *result = expected;
-        return true;
-    }
-
-    return false;
-}
-
-static inline bool
-Join(HasGcTypes gcTypesEnabled, StackType one, StackType two, StackType* result)
-{
-    if (MOZ_LIKELY(one == two)) {
-        *result = one;
-        return true;
-    }
-
-    if (one == StackType::Any) {
-        *result = two;
-        return true;
-    }
-
-    if (two == StackType::Any) {
-        *result = one;
-        return true;
-    }
-
-    if (gcTypesEnabled == HasGcTypes::True && one.isRefOrAnyRef() && two.isRefOrAnyRef()) {
-        if (IsSubtypeOf(two, one)) {
-            *result = one;
-            return true;
-        }
-
-        if (IsSubtypeOf(one, two)) {
-            *result = two;
-            return true;
-        }
-
-        // No subtyping relations between the two types.
-        *result = StackType::AnyRef;
-        return true;
-    }
-
-    return false;
-}
-
 #ifdef DEBUG
 // Families of opcodes that share a signature and validation logic.
 enum class OpKind {
@@ -565,6 +492,11 @@ class MOZ_STACK_CLASS OpIter : private Policy
         controlStack_.back().setPolymorphicBase();
     }
 
+    inline bool IsPrefixOf(StackType a, StackType b);
+    inline bool IsSubtypeOf(StackType one, StackType two);
+    inline bool Unify(StackType observed, StackType expected, StackType* result);
+    inline bool Join(StackType one, StackType two, StackType* result);
+
   public:
     typedef Vector<Value, 8, SystemAllocPolicy> ValueVector;
 
@@ -774,6 +706,90 @@ class MOZ_STACK_CLASS OpIter : private Policy
 
 template <typename Policy>
 inline bool
+OpIter<Policy>::IsPrefixOf(StackType a, StackType b)
+{
+    const StructType& other = env_.types[a.refTypeIndex()].structType();
+    return env_.types[b.refTypeIndex()].structType().hasPrefix(other);
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::IsSubtypeOf(StackType one, StackType two)
+{
+    MOZ_ASSERT(one.isRefOrAnyRef());
+    MOZ_ASSERT(two.isRefOrAnyRef());
+    return one == two || two == StackType::AnyRef || (one.isRef() && IsPrefixOf(two, one));
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::Unify(StackType observed, StackType expected, StackType* result)
+{
+    if (MOZ_LIKELY(observed == expected)) {
+        *result = observed;
+        return true;
+    }
+
+    if (observed == StackType::Any) {
+        *result = expected;
+        return true;
+    }
+
+    if (expected == StackType::Any) {
+        *result = observed;
+        return true;
+    }
+
+    if (env_.gcTypesEnabled == HasGcTypes::True && observed.isRefOrAnyRef() &&
+        expected.isRefOrAnyRef() && IsSubtypeOf(observed, expected))
+    {
+        *result = expected;
+        return true;
+    }
+
+    return false;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::Join(StackType one, StackType two, StackType* result)
+{
+    if (MOZ_LIKELY(one == two)) {
+        *result = one;
+        return true;
+    }
+
+    if (one == StackType::Any) {
+        *result = two;
+        return true;
+    }
+
+    if (two == StackType::Any) {
+        *result = one;
+        return true;
+    }
+
+    if (env_.gcTypesEnabled == HasGcTypes::True && one.isRefOrAnyRef() && two.isRefOrAnyRef()) {
+        if (IsSubtypeOf(two, one)) {
+            *result = one;
+            return true;
+        }
+
+        if (IsSubtypeOf(one, two)) {
+            *result = two;
+            return true;
+        }
+
+        // No subtyping relations between the two types.
+        *result = StackType::AnyRef;
+        return true;
+    }
+
+    return false;
+}
+
+template <typename Policy>
+inline bool
 OpIter<Policy>::unrecognizedOpcode(const OpBytes* expr)
 {
     UniqueChars error(JS_smprintf("unrecognized opcode: %x %x", expr->b0,
@@ -867,7 +883,7 @@ OpIter<Policy>::popWithType(StackType expectedType, Value* value)
     TypeAndValue<Value> tv = valueStack_.popCopy();
 
     StackType _;
-    if (MOZ_UNLIKELY(!Unify(env_.gcTypesEnabled, tv.type(), expectedType, &_)))
+    if (MOZ_UNLIKELY(!Unify(tv.type(), expectedType, &_)))
         return typeMismatch(tv.type(), expectedType);
 
     *value = tv.value();
@@ -919,11 +935,8 @@ OpIter<Policy>::topWithType(ValType expectedType, Value* value)
 
     TypeAndValue<Value>& tv = valueStack_.back();
 
-    if (MOZ_UNLIKELY(!Unify(env_.gcTypesEnabled, tv.type(), StackType(expectedType),
-                            &tv.typeRef())))
-    {
+    if (MOZ_UNLIKELY(!Unify(tv.type(), StackType(expectedType), &tv.typeRef())))
         return typeMismatch(tv.type(), StackType(expectedType));
-    }
 
     *value = tv.value();
     return true;
@@ -1533,7 +1546,7 @@ OpIter<Policy>::readSelect(StackType* type, Value* trueValue, Value* falseValue,
     if (!popAnyType(&trueType, trueValue))
         return false;
 
-    if (!Join(env_.gcTypesEnabled, falseType, trueType, type))
+    if (!Join(falseType, trueType, type))
         return fail("select operand types must match");
 
     infalliblePush(*type);

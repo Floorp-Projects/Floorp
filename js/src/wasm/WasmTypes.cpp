@@ -330,6 +330,24 @@ FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
     return FuncType::sizeOfExcludingThis(mallocSizeOf);
 }
 
+// A simple notion of prefix: types and mutability must match exactly.
+
+bool
+StructType::hasPrefix(const StructType& other) const
+{
+    if (fields_.length() < other.fields_.length())
+        return false;
+    uint32_t limit = other.fields_.length();
+    for (uint32_t i = 0; i < limit; i++) {
+        if (fields_[i].type != other.fields_[i].type ||
+            fields_[i].isMutable != other.fields_[i].isMutable)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 size_t
 StructType::serializedSize() const
 {
