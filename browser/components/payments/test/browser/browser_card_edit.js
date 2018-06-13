@@ -26,7 +26,7 @@ add_task(async function test_add_link() {
              Object.keys(state.savedAddresses).length == 0;
     }, "Check no cards or addresses present at beginning of test");
 
-    let title = content.document.querySelector("basic-card-form h1");
+    let title = content.document.querySelector("basic-card-form h2");
     is(title.textContent, "Add Credit Card", "Add title should be set");
 
     ok(!state.isPrivate,
@@ -57,7 +57,7 @@ add_task(async function test_add_link() {
       return state.page.id == "address-page" && !state["address-page"].guid;
     }, "Check address page state");
 
-    let addressTitle = content.document.querySelector("address-form h1");
+    let addressTitle = content.document.querySelector("address-form h2");
     is(addressTitle.textContent, "Add Billing Address",
        "Address on add address page should be correct");
 
@@ -166,7 +166,7 @@ add_task(async function test_edit_link() {
              Object.keys(state.savedAddresses).length == 1;
     }, "Check card and address present at beginning of test");
 
-    let title = content.document.querySelector("basic-card-form h1");
+    let title = content.document.querySelector("basic-card-form h2");
     is(title.textContent, "Edit Credit Card", "Edit title should be set");
 
     let card = Object.assign({}, PTU.BasicCards.JohnDoe);
@@ -198,7 +198,7 @@ add_task(async function test_edit_link() {
       return state.page.id == "address-page" && !state["address-page"].guid;
     }, "Clicking edit button when the empty option is selected will go to 'add' page (no guid)");
 
-    let addressTitle = content.document.querySelector("address-form h1");
+    let addressTitle = content.document.querySelector("address-form h2");
     is(addressTitle.textContent, "Add Billing Address",
        "Address on add address page should be correct");
 

@@ -51,7 +51,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       ok(header.textContent, "Total Header contains text");
 
       info("Check if the page title is visible on the address page");
-      let addressPageTitle = content.document.querySelector("address-form h1");
+      let addressPageTitle = content.document.querySelector("address-form h2");
       ok(content.isVisible(addressPageTitle), "Address page title is visible");
       is(addressPageTitle.textContent, "Add Shipping Address",
          "Address page title is correctly shown");
@@ -77,7 +77,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       let cardSaveButton = content.document.querySelector("basic-card-form .save-button");
       ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
 
-      let basicCardTitle = content.document.querySelector("basic-card-form h1");
+      let basicCardTitle = content.document.querySelector("basic-card-form h2");
       ok(content.isVisible(basicCardTitle), "Basic card page title is visible");
       is(basicCardTitle.textContent, "Add Credit Card", "Basic card page title is correctly shown");
 
@@ -324,7 +324,7 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
          "Address save button is rendered");
 
       info("Check if the page title is visible on the address page");
-      let addressPageTitle = content.document.querySelector("address-form h1");
+      let addressPageTitle = content.document.querySelector("address-form h2");
       ok(content.isVisible(addressPageTitle), "Address page title is visible");
       is(addressPageTitle.textContent, "Add Billing Address",
          "Address page title is correctly shown");
