@@ -29,12 +29,10 @@ class SharedMessagePortMessage;
 class StrongWorkerRef;
 
 class MessagePort final : public DOMEventTargetHelper
-                        , public nsIObserver
 {
   friend class PostMessageRunnable;
 
 public:
-  NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort,
                                            DOMEventTargetHelper)
@@ -93,6 +91,8 @@ public:
 private:
   explicit MessagePort(nsIGlobalObject* aGlobal);
   ~MessagePort();
+
+  void DisconnectFromOwner() override;
 
   enum State {
     // When a port is created by a MessageChannel it is entangled with the
@@ -179,8 +179,6 @@ private:
   nsTArray<RefPtr<SharedMessagePortMessage>> mMessagesForTheOtherPort;
 
   nsAutoPtr<MessagePortIdentifier> mIdentifier;
-
-  uint64_t mInnerID;
 
   State mState;
 
