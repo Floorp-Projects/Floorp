@@ -16,7 +16,7 @@
 // Its important here that we create a listener callback from
 // the DOM objects back to the frame's global in order to
 // exercise the leak condition.
-async function useBroadcastChannel(contentWindow) {
+async function useMessagePort(contentWindow) {
   contentWindow.messageCount = 0;
 
   let mc = new contentWindow.MessageChannel
@@ -34,7 +34,7 @@ async function useBroadcastChannel(contentWindow) {
 
 async function runTest() {
   try {
-    await checkForEventListenerLeaks("MessageChannel", useBroadcastChannel);
+    await checkForEventListenerLeaks("MessageChannel", useMessagePort);
   } catch (e) {
     ok(false, e);
   } finally {
