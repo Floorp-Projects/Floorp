@@ -104,7 +104,6 @@ toolbarseparator + #sidebar-extensions-separator {
   list-style-image: none;
   background: url(chrome://browser/skin/check.svg) no-repeat transparent;
   background-size: 11px 11px;
-  color: var(--arrowpanel-color);
 }
 
 %ifdef XP_MACOSX
