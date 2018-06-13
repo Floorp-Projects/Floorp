@@ -9,10 +9,16 @@ RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
     python3.6 python3-setuptools python3-cryptography libgetopt-simple-perl \
     bzip2 clamav clamav-freshclam python3-requests python3-sh curl \
-    python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl && \
+    python3-dev gcc liblzma-dev xz-utils jq libdpkg-perl locales && \
     apt-get clean
 RUN useradd -d /home/worker -s /bin/bash -m worker
 COPY requirements.txt /tmp/
+
+RUN locale-gen en_CA.UTF-8
+ENV LANG en_CA.UTF-8
+ENV LANGUAGE en_CA.UTF-8
+ENV LANG_ALL en_CA.UTF-8
+ENV LC_ALL en_CA.UTF-8
 
 # Freshclam may be flaky, retry if it fails
 RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
