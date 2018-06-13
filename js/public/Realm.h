@@ -4,12 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Ways to get various per-Realm objects. All the getters declared in this
- * header operate on the Realm corresponding to the current compartment on the
- * JSContext.
- */
-
 #ifndef js_Realm_h
 #define js_Realm_h
 
@@ -113,6 +107,11 @@ SetRealmNameCallback(JSContext* cx, RealmNameCallback callback);
 // GC, between collecting the global object and destroying the Realm.
 extern JS_PUBLIC_API(JSObject*)
 GetRealmGlobalOrNull(Handle<Realm*> realm);
+
+/*
+ * Ways to get various per-Realm objects. All the getters declared below operate
+ * on the JSContext's current Realm.
+ */
 
 extern JS_PUBLIC_API(JSObject*)
 GetRealmObjectPrototype(JSContext* cx);

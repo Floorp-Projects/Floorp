@@ -1224,49 +1224,6 @@ JS_IdToProtoKey(JSContext* cx, HandleId id)
 }
 
 JS_PUBLIC_API(JSObject*)
-JS_GetObjectPrototype(JSContext* cx, HandleObject forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    Rooted<GlobalObject*> global(cx, &forObj->global());
-    return GlobalObject::getOrCreateObjectPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetFunctionPrototype(JSContext* cx, HandleObject forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    Rooted<GlobalObject*> global(cx, &forObj->global());
-    return GlobalObject::getOrCreateFunctionPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetArrayPrototype(JSContext* cx, HandleObject forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    Rooted<GlobalObject*> global(cx, &forObj->global());
-    return GlobalObject::getOrCreateArrayPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetErrorPrototype(JSContext* cx)
-{
-    CHECK_REQUEST(cx);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    return GlobalObject::getOrCreateCustomErrorPrototype(cx, global, JSEXN_ERR);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetIteratorPrototype(JSContext* cx)
-{
-    CHECK_REQUEST(cx);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    return GlobalObject::getOrCreateIteratorPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
 JS_GetGlobalForObject(JSContext* cx, JSObject* obj)
 {
     AssertHeapIsIdle();
