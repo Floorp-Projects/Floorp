@@ -175,6 +175,18 @@ js::ToBigInt(JSContext* cx, HandleValue val)
     return nullptr;
 }
 
+// ES 2019 draft 6.1.6
+double
+BigInt::numberValue(BigInt* x)
+{
+    // mpz_get_d may cause a hardware overflow trap, so use
+    // mpz_get_d_2exp to get the fractional part and exponent
+    // separately.
+    signed long int exp;
+    double d = mpz_get_d_2exp(&exp, x->num_);
+    return ldexp(d, exp);
+}
+
 JSLinearString*
 BigInt::toString(JSContext* cx, BigInt* x, uint8_t radix)
 {
