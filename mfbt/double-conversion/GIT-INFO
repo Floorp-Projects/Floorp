@@ -1,37 +1,9 @@
-commit 1b5fa314800a0e68e2b5d00d17e87a5b1fa3ac5d
-Author: Shane <sffc@sffc1.com>
-Date:   Fri Mar 2 01:26:53 2018 -0800
+commit 9a8e518bedcf171d99eb1c00eef4beb1ecc20a4b
+Merge: ae9ad90 da420c3
+Author: Florian Loitsch <floitsch@google.com>
+Date:   Tue May 22 11:24:13 2018 +0200
 
-    Clarify output charset in DoubleToAscii documentation (#61)
+    Merge pull request #68 from floitschG/static_size_assert
     
-    * Clarify output charset in DoubleToAscii documentation
-    
-    * Fixing typo in charset docs.
+    Use `static_assert` with newer compilers.
 
-diff --git a/double-conversion/double-conversion.h b/double-conversion/double-conversion.h
-index 9978bde..1ccd7fc 100644
---- a/double-conversion/double-conversion.h
-+++ b/double-conversion/double-conversion.h
-@@ -294,13 +294,18 @@ class DoubleToStringConverter {
-   // should be at least kBase10MaximalLength + 1 characters long.
-   static const int kBase10MaximalLength = 17;
- 
--  // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
--  // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
--  // after it has been casted to a single-precision float. That is, in this
--  // mode static_cast<float>(v) must not be NaN, +Infinity or -Infinity.
-+  // Converts the given double 'v' to digit characters. 'v' must not be NaN,
-+  // +Infinity, or -Infinity. In SHORTEST_SINGLE-mode this restriction also
-+  // applies to 'v' after it has been casted to a single-precision float. That
-+  // is, in this mode static_cast<float>(v) must not be NaN, +Infinity or
-+  // -Infinity.
-   //
-   // The result should be interpreted as buffer * 10^(point-length).
-   //
-+  // The digits are written to the buffer in the platform's charset, which is
-+  // often UTF-8 (with ASCII-range digits) but may be another charset, such
-+  // as EBCDIC.
-+  //
-   // The output depends on the given mode:
-   //  - SHORTEST: produce the least amount of digits for which the internal
-   //   identity requirement is still satisfied. If the digits are printed
