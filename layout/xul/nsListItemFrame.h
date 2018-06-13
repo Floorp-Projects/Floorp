@@ -7,10 +7,8 @@
 #include "mozilla/Attributes.h"
 #include "nsGridRowLeafFrame.h"
 
-using namespace mozilla;
-
 nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell,
-                              ComputedStyle* aStyle);
+                              mozilla::ComputedStyle* aStyle);
 
 class nsListItemFrame final : public nsGridRowLeafFrame
 {
