@@ -19,7 +19,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
   constructor() {
     super();
 
-    this.pageTitle = document.createElement("h1");
+    this.pageTitle = document.createElement("h2");
     this.genericErrorText = document.createElement("div");
 
     this.cancelButton = document.createElement("button");
@@ -31,7 +31,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.backButton.addEventListener("click", this);
 
     this.saveButton = document.createElement("button");
-    this.saveButton.className = "save-button";
+    this.saveButton.className = "save-button primary";
     this.saveButton.addEventListener("click", this);
 
     this.persistCheckbox = new LabelledCheckbox();
