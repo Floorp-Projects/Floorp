@@ -1355,13 +1355,46 @@ nsHTMLDocument::Open(JSContext* cx,
 
   // The open occurred after the document finished loading.
   // So we reset the document and then reinitialize it.
+  nsCOMPtr<nsIDocShell> curDocShell = GetDocShell();
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  if (curDocShell) {
+    curDocShell->GetSameTypeParent(getter_AddRefs(parent));
+  }
+  
+  // We are using the same technique as in nsDocShell to figure
+  // out the content policy type. If there is no same type parent,
+  // we know we are loading a new top level document.
+  nsContentPolicyType policyType;
+  if (!parent) {
+    policyType = nsIContentPolicy::TYPE_DOCUMENT;
+  } else {
+    Element* requestingElement = nullptr;
+    nsPIDOMWindowInner* window = GetInnerWindow();
+    if (window) {
+      nsPIDOMWindowOuter* outer =
+        nsPIDOMWindowOuter::GetFromCurrentInner(window);
+      if (outer) {
+        nsGlobalWindowOuter* win = nsGlobalWindowOuter::Cast(outer);
+        requestingElement = win->AsOuter()->GetFrameElementInternal();
+      }
+    }
+    if (requestingElement) {
+      policyType = requestingElement->IsHTMLElement(nsGkAtoms::iframe) ?
+        nsIContentPolicy::TYPE_INTERNAL_IFRAME : nsIContentPolicy::TYPE_INTERNAL_FRAME;
+    } else {
+      // If we have lost our frame element by now, just assume we're
+      // an iframe since that's more common.
+      policyType = nsIContentPolicy::TYPE_INTERNAL_IFRAME;
+    }
+  }
+
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
   aError = NS_NewChannel(getter_AddRefs(channel),
                          uri,
                          callerDoc,
                          nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-                         nsIContentPolicy::TYPE_OTHER,
+                         policyType,
                          nullptr, // PerformanceStorage
                          group);
 
