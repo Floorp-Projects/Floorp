@@ -870,22 +870,20 @@ var Blocklist = {
     this._gfxEntries = [];
     this._pluginEntries = [];
     try {
-      var childNodes = doc.documentElement.childNodes;
-      for (let element of childNodes) {
-        if (element.nodeType != doc.ELEMENT_NODE)
-          continue;
+      var children = doc.documentElement.children;
+      for (let element of children) {
         switch (element.localName) {
         case "emItems":
-          this._addonEntries = this._processItemNodes(element.childNodes, "emItem",
+          this._addonEntries = this._processItemNodes(element.children, "emItem",
                                                       this._handleEmItemNode);
           break;
         case "pluginItems":
-          this._pluginEntries = this._processItemNodes(element.childNodes, "pluginItem",
+          this._pluginEntries = this._processItemNodes(element.children, "pluginItem",
                                                        this._handlePluginItemNode);
           break;
         case "gfxItems":
           // Parse as simple list of objects.
-          this._gfxEntries = this._processItemNodes(element.childNodes, "gfxBlacklistEntry",
+          this._gfxEntries = this._processItemNodes(element.children, "gfxBlacklistEntry",
                                                     this._handleGfxBlacklistNode);
           break;
         default:
@@ -906,15 +904,12 @@ var Blocklist = {
     });
   },
 
-  _processItemNodes(itemNodes, itemName, handler) {
+  _processItemNodes(items, itemName, handler) {
     var result = [];
-    for (var i = 0; i < itemNodes.length; ++i) {
-      var blocklistElement = itemNodes.item(i);
-      if (blocklistElement.nodeType != blocklistElement.ELEMENT_NODE ||
-          blocklistElement.localName != itemName)
-        continue;
-
-      handler(blocklistElement, result);
+    for (let item of items) {
+      if (item.localName == itemName) {
+        handler(item, result);
+      }
     }
     return result;
   },
@@ -943,23 +938,19 @@ var Blocklist = {
         blockEntry.attributes.set(filter, regExpCheck(attr));
     }
 
-    var childNodes = blocklistElement.childNodes;
+    var children = blocklistElement.children;
 
-    for (let x = 0; x < childNodes.length; x++) {
-      var childElement = childNodes.item(x);
-      if (childElement.nodeType != childElement.ELEMENT_NODE)
-        continue;
+    for (let childElement of children) {
       if (childElement.localName === "prefs") {
-        let prefElements = childElement.childNodes;
-        for (let i = 0; i < prefElements.length; i++) {
-          let prefElement = prefElements.item(i);
-          if (prefElement.nodeType != prefElement.ELEMENT_NODE ||
-              prefElement.localName !== "pref")
-            continue;
-          blockEntry.prefs.push(prefElement.textContent);
+        let prefElements = childElement.children;
+        for (let prefElement of prefElements) {
+          if (prefElement.localName == "pref") {
+            blockEntry.prefs.push(prefElement.textContent);
+          }
         }
-      } else if (childElement.localName === "versionRange")
+      } else if (childElement.localName === "versionRange") {
         blockEntry.versions.push(new BlocklistItemData(childElement));
+      }
     }
     // if only the extension ID is specified block all versions of the
     // extension for the current application.
@@ -975,7 +966,7 @@ var Blocklist = {
     if (!matchesOSABI(blocklistElement))
       return;
 
-    var matchNodes = blocklistElement.childNodes;
+    let children = blocklistElement.children;
     var blockEntry = {
       matches: {},
       versions: [],
@@ -983,24 +974,20 @@ var Blocklist = {
       infoURL: null,
     };
     var hasMatch = false;
-    for (var x = 0; x < matchNodes.length; ++x) {
-      var matchElement = matchNodes.item(x);
-      if (matchElement.nodeType != matchElement.ELEMENT_NODE)
-        continue;
-      if (matchElement.localName == "match") {
-        var name = matchElement.getAttribute("name");
-        var exp = matchElement.getAttribute("exp");
+    for (let childElement of children) {
+      if (childElement.localName == "match") {
+        var name = childElement.getAttribute("name");
+        var exp = childElement.getAttribute("exp");
         try {
           blockEntry.matches[name] = new RegExp(exp, "m");
           hasMatch = true;
         } catch (e) {
           // Ignore invalid regular expressions
         }
-      }
-      if (matchElement.localName == "versionRange") {
-        blockEntry.versions.push(new BlocklistItemData(matchElement));
-      } else if (matchElement.localName == "infoURL") {
-        blockEntry.infoURL = matchElement.textContent;
+      } else if (childElement.localName == "versionRange") {
+        blockEntry.versions.push(new BlocklistItemData(childElement));
+      } else if (childElement.localName == "infoURL") {
+        blockEntry.infoURL = childElement.textContent;
       }
     }
     // Plugin entries require *something* to match to an actual plugin
@@ -1047,16 +1034,11 @@ var Blocklist = {
     // Trim helper (spaces, tabs, no-break spaces..)
     const trim = (s) => (s || "").replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
 
-    for (let i = 0; i < blocklistElement.childNodes.length; ++i) {
-      var matchElement = blocklistElement.childNodes.item(i);
-      if (matchElement.nodeType != matchElement.ELEMENT_NODE)
-        continue;
-
+    for (let matchElement of blocklistElement.children) {
       let value;
       if (matchElement.localName == "devices") {
         value = [];
-        for (let j = 0; j < matchElement.childNodes.length; j++) {
-          const childElement = matchElement.childNodes.item(j);
+        for (let childElement of matchElement.children) {
           const childValue = trim(childElement.textContent);
           // Make sure no empty value is added.
           if (childValue) {
@@ -1436,10 +1418,8 @@ function BlocklistItemData(versionRangeElement) {
   var found = false;
 
   if (versionRangeElement) {
-    for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
-      var targetAppElement = versionRangeElement.childNodes.item(i);
-      if (targetAppElement.nodeType != targetAppElement.ELEMENT_NODE ||
-          targetAppElement.localName != "targetApplication")
+    for (let targetAppElement of versionRangeElement.children) {
+      if (targetAppElement.localName != "targetApplication")
         continue;
       found = true;
       // default to the current application if id is not provided.
@@ -1545,12 +1525,10 @@ BlocklistItemData.prototype = {
     var appVersions = [ ];
 
     if (targetAppElement) {
-      for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
-        var versionRangeElement = targetAppElement.childNodes.item(i);
-        if (versionRangeElement.nodeType != versionRangeElement.ELEMENT_NODE ||
-            versionRangeElement.localName != "versionRange")
-          continue;
-        appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
+      for (let versionRangeElement of targetAppElement.children) {
+        if (versionRangeElement.localName == "versionRange") {
+          appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
+        }
       }
     }
     // return minVersion = null and maxVersion = null if no specific versionRange
