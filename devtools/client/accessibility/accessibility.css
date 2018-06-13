@@ -123,6 +123,9 @@ body {
 .treeTable > thead {
   position: sticky;
   top: 0;
+  /* Bug 1466806 - fix expander arrow for expanding treeview rows rendering over the
+     thead */
+  z-index: 1;
 }
 
 .split-box:not(.horz) .treeTable {
