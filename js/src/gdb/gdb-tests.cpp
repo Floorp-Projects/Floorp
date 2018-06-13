@@ -92,7 +92,7 @@ main(int argc, const char** argv)
 
     /* Populate the global object with the standard globals,
        like Object and Array. */
-    checkBool(JS_InitStandardClasses(cx, global));
+    checkBool(JS::InitRealmStandardClasses(cx));
 
     argv++;
     while (*argv) {

@@ -3442,7 +3442,7 @@ NewSandbox(JSContext* cx, bool lazy)
 
     {
         JSAutoRealm ar(cx, obj);
-        if (!lazy && !JS_InitStandardClasses(cx, obj))
+        if (!lazy && !JS::InitRealmStandardClasses(cx))
             return nullptr;
 
         RootedValue value(cx, BooleanValue(lazy));
@@ -8283,7 +8283,7 @@ NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
         JSAutoRealm ar(cx, glob);
 
 #ifndef LAZY_STANDARD_CLASSES
-        if (!JS_InitStandardClasses(cx, glob))
+        if (!JS::InitRealmStandardClasses(cx))
             return nullptr;
 #endif
 

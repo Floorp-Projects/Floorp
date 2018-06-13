@@ -946,19 +946,6 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, HandleObject obj)
     return RemapAllWrappersForObject(cx, obj, obj);
 }
 
-JS_PUBLIC_API(bool)
-JS_InitStandardClasses(JSContext* cx, HandleObject obj)
-{
-    MOZ_ASSERT(!cx->zone()->isAtomsZone());
-    AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
-
-    assertSameCompartment(cx, obj);
-
-    Rooted<GlobalObject*> global(cx, &obj->global());
-    return GlobalObject::initStandardClasses(cx, global);
-}
-
 typedef struct JSStdName {
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     JSProtoKey  key;
