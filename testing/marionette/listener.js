@@ -79,7 +79,7 @@ let legacyactions = new legacyaction.Chain();
 let multiLast = {};
 
 // TODO: Log.jsm is not e10s compatible (see https://bugzil.la/1411513),
-// query the main process for the current log level
+// query the parent process for the current log level
 const logger = Log.repository.getLogger("Marionette");
 if (logger.ownAppenders.length == 0) {
   let log = Services.cpmm.initialProcessData["Marionette:Log"];

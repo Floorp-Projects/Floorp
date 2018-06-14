@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ServoNamespaceRule.h"
+#include "mozilla/dom/CSSNamespaceRule.h"
 
 #include "mozilla/ServoBindings.h"
 
@@ -12,13 +12,13 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-ServoNamespaceRule::~ServoNamespaceRule()
+CSSNamespaceRule::~CSSNamespaceRule()
 {
 }
 
 #ifdef DEBUG
 void
-ServoNamespaceRule::List(FILE* out, int32_t aIndent) const
+CSSNamespaceRule::List(FILE* out, int32_t aIndent) const
 {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
@@ -30,26 +30,26 @@ ServoNamespaceRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 nsAtom*
-ServoNamespaceRule::GetPrefix() const
+CSSNamespaceRule::GetPrefix() const
 {
   return Servo_NamespaceRule_GetPrefix(mRawRule);
 }
 
 void
-ServoNamespaceRule::GetURLSpec(nsString& aURLSpec) const
+CSSNamespaceRule::GetURLSpec(nsString& aURLSpec) const
 {
   nsAtom* atom = Servo_NamespaceRule_GetURI(mRawRule);
   atom->ToString(aURLSpec);
 }
 
 void
-ServoNamespaceRule::GetCssText(nsAString& aCssText) const
+CSSNamespaceRule::GetCssText(nsAString& aCssText) const
 {
   Servo_NamespaceRule_GetCssText(mRawRule, &aCssText);
 }
 
 size_t
-ServoNamespaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+CSSNamespaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }

@@ -25,6 +25,9 @@
 #include "nsITimer.h"
 #include "nsPresContext.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 namespace mozilla {
 
 #undef AC_LOG

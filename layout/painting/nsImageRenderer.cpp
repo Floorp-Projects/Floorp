@@ -509,7 +509,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     case eStyleImageType_Gradient:
     {
       nsCSSGradientRenderer renderer =
-        nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
+        nsCSSGradientRenderer::Create(aPresContext, mForFrame->Style(),
+                                      mGradientData, mSize);
 
       renderer.Paint(*ctx, aDest, aFill, aRepeatSize, aSrc, aDirtyRect, aOpacity);
       break;
@@ -586,7 +587,8 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext* aPresContext,
     case eStyleImageType_Gradient:
     {
       nsCSSGradientRenderer renderer =
-        nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
+        nsCSSGradientRenderer::Create(aPresContext, mForFrame->Style(),
+                                      mGradientData, mSize);
 
       renderer.BuildWebRenderDisplayItems(aBuilder, aSc, aDest, aFill,
                                           aRepeatSize, aSrc, !aItem->BackfaceIsHidden(), aOpacity);
@@ -997,7 +999,8 @@ nsImageRenderer::DrawShapeImage(nsPresContext* aPresContext,
 
     case eStyleImageType_Gradient: {
       nsCSSGradientRenderer renderer =
-        nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
+        nsCSSGradientRenderer::Create(aPresContext, mForFrame->Style(),
+                                      mGradientData, mSize);
       nsRect dest(nsPoint(0, 0), mSize);
 
       renderer.Paint(aRenderingContext, dest, dest, mSize,

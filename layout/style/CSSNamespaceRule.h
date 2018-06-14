@@ -9,40 +9,58 @@
 
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSNamespaceRuleBinding.h"
+#include "mozilla/ServoBindingTypes.h"
 
 class nsAtom;
 
 namespace mozilla {
 namespace dom {
 
-class CSSNamespaceRule : public css::Rule
+class CSSNamespaceRule final : public css::Rule
 {
-protected:
-  using Rule::Rule;
-
 public:
+  CSSNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule,
+                   uint32_t aLine, uint32_t aColumn)
+    : css::Rule(aLine, aColumn)
+    , mRawRule(std::move(aRule))
+  {
+  }
+
   bool IsCCLeaf() const final {
     return Rule::IsCCLeaf();
   }
 
-  virtual nsAtom* GetPrefix() const = 0;
-  virtual void GetURLSpec(nsString& aURLSpec) const = 0;
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  nsAtom* GetPrefix() const;
+  void GetURLSpec(nsString& aURLSpec) const;
+
+  // WebIDL interface
+  void GetCssText(nsAString& aCssText) const final;
 
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRuleBinding::NAMESPACE_RULE; }
+
   void GetNamespaceURI(nsString& aNamespaceURI) {
     GetURLSpec(aNamespaceURI);
   }
+
   void GetPrefix(DOMString& aPrefix) {
     aPrefix.SetKnownLiveAtom(GetPrefix(), DOMString::eTreatNullAsEmpty);
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) final {
     return CSSNamespaceRuleBinding::Wrap(aCx, this, aGivenProto);
   }
+
+private:
+  ~CSSNamespaceRule();
+  RefPtr<RawServoNamespaceRule> mRawRule;
 };
 
 } // namespace dom

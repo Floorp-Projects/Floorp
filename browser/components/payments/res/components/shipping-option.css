@@ -2,20 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-shipping-option {
-  grid-row-gap: 5px;
-  grid-column-gap: 10px;
-  grid-template-areas:
-    "label amount";
-}
-
-shipping-option > .label {
-  grid-area: label;
-  font-weight: bold;
-}
-
-shipping-option > .amount {
-  grid-area: amount;
+shipping-option.rich-option {
+  display: block;
 }
 
 shipping-option > .label,

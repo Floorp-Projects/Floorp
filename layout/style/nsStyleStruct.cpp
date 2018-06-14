@@ -2013,7 +2013,9 @@ bool
 nsStyleGradient::IsOpaque()
 {
   for (uint32_t i = 0; i < mStops.Length(); i++) {
-    if (NS_GET_A(mStops[i].mColor) < 255) {
+    if (mStops[i].mColor.MaybeTransparent()) {
+      // We don't know the foreground color here, so if it's being used
+      // we must assume it might be transparent.
       return false;
     }
   }

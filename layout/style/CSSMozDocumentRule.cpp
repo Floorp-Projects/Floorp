@@ -67,5 +67,59 @@ CSSMozDocumentRule::Match(nsIDocument* aDoc,
   return false;
 }
 
+CSSMozDocumentRule::CSSMozDocumentRule(RefPtr<RawServoMozDocumentRule> aRawRule,
+                                       uint32_t aLine, uint32_t aColumn)
+  : css::ConditionRule(Servo_MozDocumentRule_GetRules(aRawRule).Consume(),
+                       aLine, aColumn)
+  , mRawRule(std::move(aRawRule))
+{
+}
+
+NS_IMPL_ADDREF_INHERITED(CSSMozDocumentRule, css::ConditionRule)
+NS_IMPL_RELEASE_INHERITED(CSSMozDocumentRule, css::ConditionRule)
+
+// QueryInterface implementation for MozDocumentRule
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSMozDocumentRule)
+NS_INTERFACE_MAP_END_INHERITING(css::ConditionRule)
+
+#ifdef DEBUG
+/* virtual */ void
+CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const
+{
+  nsAutoCString str;
+  for (int32_t i = 0; i < aIndent; i++) {
+    str.AppendLiteral("  ");
+  }
+  Servo_MozDocumentRule_Debug(mRawRule, &str);
+  fprintf_stderr(out, "%s\n", str.get());
+}
+#endif
+
+void
+CSSMozDocumentRule::GetConditionText(nsAString& aConditionText)
+{
+  Servo_MozDocumentRule_GetConditionText(mRawRule, &aConditionText);
+}
+
+void
+CSSMozDocumentRule::SetConditionText(const nsAString& aConditionText,
+                                     ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+/* virtual */ void
+CSSMozDocumentRule::GetCssText(nsAString& aCssText) const
+{
+  Servo_MozDocumentRule_GetCssText(mRawRule, &aCssText);
+}
+
+/* virtual */ size_t
+CSSMozDocumentRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // TODO Implement this!
+  return aMallocSizeOf(this);
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -3,8 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html {
-  background: -moz-dialog;
+  /* Based on global.css styles for top-level XUL windows */
+  color: -moz-DialogText;
+  font: message-box;
   height: 100%;
+}
+
+body {
+  /* Override font-size from in-content/common.css which is too large */
+  font-size: inherit;
+}
+
+#order-details-overlay,
+html {
+  /* Based on global.css styles for top-level XUL windows */
+  -moz-appearance: dialog;
+  background-color: -moz-Dialog;
 }
 
 body {
@@ -18,17 +32,23 @@ body {
 }
 
 #debugging-console {
+  /* include the default borders in the max-height */
+  box-sizing: border-box;
   float: right;
+  /* avoid causing the body to scroll */
+  max-height: 100vh;
   /* Float above the other overlays */
   position: relative;
   z-index: 99;
 }
 
 payment-dialog {
+  box-sizing: border-box;
   display: grid;
   grid-template-rows: fit-content(10%) auto;
   height: 100%;
   margin: 0 10%;
+  padding: 1em;
 }
 
 payment-dialog > header {
@@ -52,7 +72,6 @@ payment-dialog > header {
 }
 
 #order-details-overlay {
-  background-color: -moz-dialog;
   overflow: auto;
   position: absolute;
   top: 0;
@@ -78,12 +97,6 @@ payment-dialog > footer {
 #total .label {
   font-size: 15px;
   font-weight: bold;
-}
-
-#pay {
-  background-color: #0060df;
-  color: white;
-  border: none;
 }
 
 payment-dialog[changes-prevented][completion-state="fail"] #pay,

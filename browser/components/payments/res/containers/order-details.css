@@ -47,5 +47,5 @@ order-details > .details-total {
 }
 .details-total > currency-amount {
   font-size: large;
-  text-align: start;
+  text-align: end;
 }

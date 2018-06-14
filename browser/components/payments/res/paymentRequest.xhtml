@@ -61,6 +61,7 @@
   <!-- chrome: is needed for global.dtd -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' chrome:"/>
 
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css"/>
   <link rel="stylesheet" href="paymentRequest.css"/>
   <link rel="stylesheet" href="components/rich-select.css"/>
   <link rel="stylesheet" href="components/address-option.css"/>
@@ -91,7 +92,7 @@
 
     <div id="main-container">
       <section id="payment-summary" class="page">
-        <h1>&paymentSummaryTitle;</h1>
+        <h2>&paymentSummaryTitle;</h2>
 
         <section>
           <div id="error-text"></div>
@@ -127,6 +128,7 @@
         <footer id="controls-container">
           <button id="cancel">&cancelPaymentButton.label;</button>
           <button id="pay"
+                  class="primary"
                   data-initial-label="&approvePaymentButton.label;"
                   data-processing-label="&processingPaymentButton.label;"
                   data-fail-label="&failPaymentButton.label;"
@@ -135,7 +137,7 @@
         </footer>
       </section>
       <section id="order-details-overlay" hidden="hidden">
-        <h1>&orderDetailsLabel;</h1>
+        <h2>&orderDetailsLabel;</h2>
         <order-details></order-details>
       </section>
 
