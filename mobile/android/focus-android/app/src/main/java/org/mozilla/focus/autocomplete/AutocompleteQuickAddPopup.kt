@@ -28,17 +28,17 @@ class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
 
         val button = view.findViewById<Button>(R.id.quick_add_autocomplete_button)
 
-        var URLAlreadyExists = false
+        var duplicateURL = false
         button.setOnClickListener {
             val job = launch {
-                URLAlreadyExists = CustomDomains.load(context).contains(url)
+                duplicateURL = CustomDomains.load(context).contains(url)
 
-                if (URLAlreadyExists) return@launch
+                if (duplicateURL) return@launch
                 CustomDomains.add(context, url)
 
                 TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.QUICK_ADD)
             }
-            job.invokeOnCompletion { onUrlAdded?.invoke(!URLAlreadyExists) }
+            job.invokeOnCompletion { onUrlAdded?.invoke(!duplicateURL) }
         }
 
         isFocusable = true
