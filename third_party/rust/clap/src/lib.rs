@@ -29,7 +29,7 @@
 //!
 //! The following examples show a quick example of some of the very basic functionality of `clap`.
 //! For more advanced usage, such as requirements, conflicts, groups, multiple values and
-//! occurrences see the [documentation](https://docs.rs/clap/), [examples/](examples) directory of
+//! occurrences see the [documentation](https://docs.rs/clap/), [examples/](https://github.com/kbknapp/clap-rs/tree/master/examples) directory of
 //! this repository or the [video tutorials](https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U).
 //!
 //! **NOTE:** All of these examples are functionally the same, but show different styles in which to
@@ -366,13 +366,13 @@
 //!  * **Red** Color: **NOT** included by default (must use cargo `features` to enable)
 //!  * **Blue** Color: Dev dependency, only used while developing.
 //!
-//! ![clap dependencies](clap_dep_graph.png)
+//! ![clap dependencies](https://raw.githubusercontent.com/kbknapp/clap-rs/master/clap_dep_graph.png)
 //!
 //! ### More Information
 //!
 //! You can find complete documentation on the [docs.rs](https://docs.rs/clap/) for this project.
 //!
-//! You can also find usage examples in the [examples/](examples) directory of this repo.
+//! You can also find usage examples in the [examples/](https://github.com/kbknapp/clap-rs/tree/master/examples) directory of this repo.
 //!
 //! #### Video Tutorials
 //!
@@ -391,7 +391,7 @@
 //! `clap`. You can either add it to the [examples/](examples) directory, or file an issue and tell
 //! me. I'm all about giving credit where credit is due :)
 //!
-//! Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) before you start contributing.
+//! Please read [CONTRIBUTING.md](https://raw.githubusercontent.com/kbknapp/clap-rs/master/.github/CONTRIBUTING.md) before you start contributing.
 //!
 //!
 //! ### Testing Code
@@ -404,13 +404,13 @@
 //! ```
 //!
 //! Alternatively, if you have [`just`](https://github.com/casey/just) installed you can run the
-//! prebuilt recipies. *Not* using `just` is prfeclty fine as well, it simply bundles commands
+//! prebuilt recipies. *Not* using `just` is perfectly fine as well, it simply bundles commands
 //! automatically.
 //!
 //! For example, to test the code, as above simply run:
 //!
 //! ```text
-//! $ just run-tests`
+//! $ just run-tests
 //! ```
 //!
 //! From here on, I will lis the appropriate `cargo` command as well as the `just` command.
@@ -513,7 +513,7 @@
 //! this repository for more information.
 
 #![crate_type = "lib"]
-#![doc(html_root_url = "https://docs.rs/clap/2.29.0")]
+#![doc(html_root_url = "https://docs.rs/clap/2.31.2")]
 #![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
         unused_import_braces, unused_allocation)]
 // Lints we'd like to deny but are currently failing for upstream crates
@@ -528,7 +528,7 @@
 #![cfg_attr(feature = "lints", allow(doc_markdown))]
 #![cfg_attr(feature = "lints", allow(explicit_iter_loop))]
 
-#[cfg(feature = "color")]
+#[cfg(all(feature = "color", not(target_os = "windows")))]
 extern crate ansi_term;
 #[cfg(feature = "color")]
 extern crate atty;

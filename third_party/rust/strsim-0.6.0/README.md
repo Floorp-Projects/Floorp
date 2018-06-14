@@ -11,7 +11,7 @@
 ```toml
 # Cargo.toml
 [dependencies]
-strsim = "0.7.0"
+strsim = "0.6.0"
 ```
 
 ### [Documentation](https://docs.rs/strsim/)
@@ -24,7 +24,9 @@ version in the
 extern crate strsim;
 
 use strsim::{hamming, levenshtein, osa_distance, damerau_levenshtein, jaro,
-             jaro_winkler};
+             jaro_winkler, levenshtein_against_vec, osa_distance_against_vec,
+             damerau_levenshtein_against_vec, jaro_against_vec,
+             jaro_winkler_against_vec};
 
 fn main() {
     match hamming("hamming", "hammers") {
@@ -43,12 +45,41 @@ fn main() {
 
     assert!((0.911 - jaro_winkler("cheeseburger", "cheese fries")).abs() <
             0.001);
+
+    // get vectors of values back
+    let v = vec!["test", "test1", "test12", "test123", "", "tset", "tsvet"];
+
+    assert_eq!(levenshtein_against_vec("test", &v),
+               vec![0, 1, 2, 3, 4, 2, 3]);
+
+    assert_eq!(osa_distance_against_vec("test", &v),
+               vec![0, 1, 2, 3, 4, 1, 3]);
+
+    assert_eq!(damerau_levenshtein_against_vec("test", &v),
+               vec![0, 1, 2, 3, 4, 1, 2]);
+
+    let jaro_distances = jaro_against_vec("test", &v);
+    let jaro_expected = vec![1.0, 0.933333, 0.888889, 0.857143, 0.0, 0.916667];
+    let jaro_delta: f64 = jaro_distances.iter()
+                                        .zip(jaro_expected.iter())
+                                        .map(|(x, y)| (x - y).abs() as f64)
+                                        .fold(0.0, |x, y| x + y as f64);
+    assert!(jaro_delta < 0.0001);
+
+    let jaro_winkler_distances = jaro_winkler_against_vec("test", &v);
+    let jaro_winkler_expected = vec![1.0, 0.96, 0.933333, 0.914286, 0.0, 0.925];
+    let jaro_winkler_delta = jaro_winkler_distances.iter()
+                                 .zip(jaro_winkler_expected.iter())
+                                 .map(|(x, y)| (x - y).abs() as f64)
+                                 .fold(0.0, |x, y| x + y as f64);
+    assert!(jaro_winkler_delta < 0.0001);
 }
 ```
 
 ### Development
-If you don't want to install Rust itself, you can run `$ ./dev` for a
-development CLI if you have [Docker] installed.
+If you don't want to install Rust itself, you can install [Docker], and run
+`$ ./dev`. This should bring up a temporary container from which you can run
+[cargo] commands.
 
 ### License
 [MIT](https://github.com/dguo/strsim-rs/blob/master/LICENSE)
@@ -60,3 +91,5 @@ development CLI if you have [Docker] installed.
 [Hamming]:http://en.wikipedia.org/wiki/Hamming_distance
 [Optimal string alignment]:https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance#Optimal_string_alignment_distance
 [Docker]:https://docs.docker.com/engine/installation/
+[cargo]:https://github.com/rust-lang/cargo
+
