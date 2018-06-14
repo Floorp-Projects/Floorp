@@ -1936,6 +1936,9 @@ CacheIRCompiler::emitTruncateDoubleToUInt32()
     if (mode_ != Mode::Baseline)
         masm.push(FloatReg0);
 
+    Label int32, done;
+    masm.branchTestInt32(Assembler::Equal, val, &int32);
+
     masm.unboxDouble(val, FloatReg0);
     masm.branchTruncateDoubleMaybeModUint32(FloatReg0, res, &truncateABICall);
     masm.jump(&doneTruncate);
@@ -1960,6 +1963,13 @@ CacheIRCompiler::emitTruncateDoubleToUInt32()
     masm.bind(&doneTruncate);
     if (mode_ != Mode::Baseline)
         masm.pop(FloatReg0);
+
+    masm.jump(&done);
+    masm.bind(&int32);
+
+    masm.unboxInt32(val, res);
+
+    masm.bind(&done);
     return true;
 }
 
