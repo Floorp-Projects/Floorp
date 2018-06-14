@@ -1950,7 +1950,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
     if (link) {
       nsCOMPtr<nsIURI> href = content->GetHrefURI();
       if (href) {
-        href->Clone(aHref);
+        href.forget(aHref);
       }
       status = (*aHref != nullptr);
 
