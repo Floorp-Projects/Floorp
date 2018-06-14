@@ -267,8 +267,6 @@ checkbox:-moz-focusring {
 .devtools-button:-moz-focusring,
 .devtools-tab:-moz-focusring {
   outline:none;
-  padding-inline-end: 0;
-  padding-inline-start: 0;
 }
 
 /* Toolbar buttons */
