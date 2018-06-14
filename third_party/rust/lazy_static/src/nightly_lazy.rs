@@ -6,6 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 extern crate std;
+extern crate core;
 
 use self::std::prelude::v1::*;
 use self::std::sync::Once;
@@ -27,7 +28,7 @@ impl<T: Sync> Lazy<T> {
         unsafe {
             match self.0 {
                 Some(ref x) => x,
-                None => std::mem::unreachable(),
+                None => core::hint::unreachable_unchecked(),
             }
         }
     }
