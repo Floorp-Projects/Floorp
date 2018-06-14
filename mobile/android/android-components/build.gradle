@@ -6,11 +6,14 @@ buildscript {
         kotlin: '1.2.50',
         coroutines: '0.23.3',
         supportLibraries: '27.1.1',
+        fxa: '0.1.2',
+        jna: '4.5.1',
         // Test only:
         junit: '4.12',
         robolectric: '3.8',
         mockito: '2.18.0',
         mockwebserver: '3.7.0',
+        // Docs only"
         dokka: '0.9.16'
     ]
 

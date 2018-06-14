@@ -48,3 +48,6 @@ l10n-repo/
 # OS X
 .DS_Store
 
+# jniLibs
+*.so
+!libjnidispatch.so

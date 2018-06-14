@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+
+    defaultConfig {
+        applicationId "org.mozilla.samples.fxa"
+        minSdkVersion rootProject.ext.build['minSdkVersion']
+        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "abi"
+
+    productFlavors {
+        // Processor architecture
+        arm {
+            dimension "abi"
+        }
+        x86 {
+            dimension "abi"
+        }
+        aarch64 {
+            dimension "abi"
+        }
+    }
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
+
+
+dependencies {
+    implementation project(':service-fxa')   
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
+
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation "com.android.support:customtabs:${rootProject.ext.dependencies['supportLibraries']}"
+}
