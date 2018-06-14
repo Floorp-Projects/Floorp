@@ -275,6 +275,14 @@ function test()
   isnot(typeof Object.getOwnPropertyDescriptor(win.Node.prototype, "ELEMENT_NODE"), "undefined",
         "Should see constant property on prototype objects");
 
+  // Adopting nodes should not lose expandos.
+  var elem = doc.createElement("span");
+  elem.expando = 5;
+  is(elem.expando, 5, "We just set this property");
+  document.adoptNode(elem);
+  is(elem.wrappedJSObject, undefined, "Shouldn't be an Xray anymore");
+  is(elem.expando, 5, "Expando should not get lost");
+
   SimpleTest.finish();
 }
 

@@ -1267,23 +1267,51 @@ XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst, HandleObject srcC
 
     RootedObject oldHead(cx, srcChain);
     while (oldHead) {
+        // If movingIntoXrayCompartment is true, then our new reflector is in a
+        // compartment that used to have an Xray-with-expandos to the old reflector
+        // and we should copy the expandos to the new reflector directly.
+        bool movingIntoXrayCompartment;
+
+        // exclusiveWrapper is only used if movingIntoXrayCompartment ends up true.
         RootedObject exclusiveWrapper(cx);
         RootedObject wrapperHolder(cx, JS_GetReservedSlot(oldHead,
                                                           JSSLOT_EXPANDO_EXCLUSIVE_WRAPPER_HOLDER)
                                                          .toObjectOrNull());
         if (wrapperHolder) {
-            // The global containing this wrapper holder has an xray for |src|
-            // with expandos. Create an xray in the global for |dst| which
-            // will be associated with a clone of |src|'s expando object.
-            JSAutoRealm ar(cx, UncheckedUnwrap(wrapperHolder));
-            exclusiveWrapper = dst;
-            if (!JS_WrapObject(cx, &exclusiveWrapper))
+            RootedObject unwrappedHolder(cx, UncheckedUnwrap(wrapperHolder));
+            // unwrappedHolder is the compartment of the relevant Xray, so check
+            // whether that matches the compartment of cx (which matches the
+            // compartment of dst).
+            movingIntoXrayCompartment =
+                js::IsObjectInContextCompartment(unwrappedHolder, cx);
+
+            if (!movingIntoXrayCompartment) {
+                // The global containing this wrapper holder has an xray for |src|
+                // with expandos. Create an xray in the global for |dst| which
+                // will be associated with a clone of |src|'s expando object.
+                JSAutoRealm ar(cx, unwrappedHolder);
+                exclusiveWrapper = dst;
+                if (!JS_WrapObject(cx, &exclusiveWrapper))
+                    return false;
+            }
+        } else {
+            JSAutoRealm ar(cx, oldHead);
+            movingIntoXrayCompartment =
+                expandoObjectMatchesConsumer(cx, oldHead, ObjectPrincipal(dst));
+        }
+
+        if (movingIntoXrayCompartment) {
+            // Just copy properties directly onto dst.
+            if (!JS_CopyPropertiesFrom(cx, dst, oldHead))
+                return false;
+        } else {
+            // Create a new expando object in the compartment of dst to replace
+            // oldHead.
+            RootedObject newHead(cx, attachExpandoObject(cx, dst, exclusiveWrapper,
+                                                         GetExpandoObjectPrincipal(oldHead)));
+            if (!JS_CopyPropertiesFrom(cx, newHead, oldHead))
                 return false;
         }
-        RootedObject newHead(cx, attachExpandoObject(cx, dst, exclusiveWrapper,
-                                                     GetExpandoObjectPrincipal(oldHead)));
-        if (!JS_CopyPropertiesFrom(cx, newHead, oldHead))
-            return false;
         oldHead = JS_GetReservedSlot(oldHead, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
     return true;
