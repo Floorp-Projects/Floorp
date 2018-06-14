@@ -116,6 +116,38 @@ add_task(async function test_check_success() {
 add_task(clear_state);
 
 
+add_task(async function test_update_timer_interface() {
+  const remoteSettings = Cc["@mozilla.org/services/settings;1"]
+    .getService(Ci.nsITimerCallback);
+
+  const serverTime = 8000;
+  server.registerPathHandler(CHANGES_PATH, serveChangesEntries(serverTime, [{
+    id: "028261ad-16d4-40c2-a96a-66f72914d125",
+    last_modified: 42,
+    host: "localhost",
+    bucket: "main",
+    collection: "whatever-collection"
+  }]));
+
+  await new Promise((resolve) => {
+    const e = "remote-settings-changes-polled";
+    const changesPolledObserver = {
+      observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(this, e);
+        resolve();
+      }
+    };
+    Services.obs.addObserver(changesPolledObserver, e);
+    remoteSettings.notify(null);
+  });
+
+  // Everything went fine.
+  Assert.equal(Services.prefs.getCharPref(PREF_LAST_ETAG), "\"42\"");
+  Assert.equal(Services.prefs.getIntPref(PREF_LAST_UPDATE), serverTime / 1000);
+});
+add_task(clear_state);
+
+
 add_task(async function test_check_up_to_date() {
   // Simulate a poll with up-to-date collection.
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
@@ -208,6 +240,26 @@ add_task(async function test_success_with_partial_list() {
   Assert.equal(maybeSyncCount, 1, "maybeSync should not be called twice");
 });
 add_task(clear_state);
+
+
+add_task(async function test_server_bad_json() {
+  function simulateBadJSON(request, response) {
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.write("<html></html>");
+    response.setStatusLine(null, 200, "OK");
+  }
+  server.registerPathHandler(CHANGES_PATH, simulateBadJSON);
+
+  let error;
+  try {
+    await RemoteSettings.pollChanges();
+  } catch (e) {
+    error = e;
+  }
+  Assert.ok(/JSON.parse: unexpected character/.test(error.message));
+});
+add_task(clear_state);
+
 
 add_task(async function test_server_error() {
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
