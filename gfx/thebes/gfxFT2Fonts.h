@@ -21,6 +21,7 @@ class gfxFT2Font : public gfxFT2FontBase {
 public: // new functions
     gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
                cairo_scaled_font_t *aCairoFont,
+               FT_Face aFTFace,
                FT2FontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle);
     virtual ~gfxFT2Font ();
@@ -82,6 +83,7 @@ protected:
     typedef nsBaseHashtableET<nsUint32HashKey, CachedGlyphData> CharGlyphMapEntryType;
     typedef nsTHashtable<CharGlyphMapEntryType> CharGlyphMap;
     CharGlyphMap mCharGlyphCache;
+    FT_Face mFTFace;
 };
 
 #endif /* GFX_FT2FONTS_H */

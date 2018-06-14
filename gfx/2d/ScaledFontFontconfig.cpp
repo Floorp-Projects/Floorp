@@ -6,7 +6,7 @@
 
 #include "ScaledFontFontconfig.h"
 #include "UnscaledFontFreeType.h"
-#include "NativeFontResourceFontconfig.h"
+#include "NativeFontResourceFreeType.h"
 #include "Logging.h"
 #include "StackArray.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -16,7 +16,6 @@
 #endif
 
 #include <fontconfig/fcfreetype.h>
-#include <dlfcn.h>
 
 #include FT_MULTIPLE_MASTERS_H
 
@@ -110,13 +109,6 @@ ScaledFontFontconfig::InstanceData::InstanceData(cairo_scaled_font_t* aScaledFon
     }
   }
   cairo_font_options_destroy(fontOptions);
-
-  // Some fonts supply an adjusted size or otherwise use the font matrix for italicization.
-  // Record the scale and the skew to accomodate both of these cases.
-  cairo_matrix_t fontMatrix;
-  cairo_scaled_font_get_font_matrix(aScaledFont, &fontMatrix);
-  mScale = Float(fontMatrix.xx);
-  mSkew = Float(fontMatrix.xy);
 }
 
 void
@@ -220,68 +212,6 @@ ScaledFontFontconfig::InstanceData::SetupFontOptions(cairo_font_options_t* aFont
   }
 }
 
-void
-ScaledFontFontconfig::InstanceData::SetupFontMatrix(cairo_matrix_t* aFontMatrix) const
-{
-  // Build a font matrix that will reproduce a possibly adjusted size
-  // and any italics/skew. This is just the concatenation of a simple
-  // scale matrix with a matrix that skews on the X axis.
-  cairo_matrix_init(aFontMatrix, mScale, 0, mSkew, mScale, 0, 0);
-}
-
-void
-ScaledFontFontconfig::GetVariationSettings(std::vector<FontVariation>* aVariations)
-{
-  aVariations->clear();
-
-  typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
-  typedef FT_Error (*DoneVarFunc)(FT_Library, FT_MM_Var*);
-  typedef FT_Error (*GetVarDesignCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
-  static GetVarFunc getVar;
-  static DoneVarFunc doneVar;
-  static GetVarDesignCoordsFunc getCoords;
-  static bool firstTime = true;
-  if (firstTime) {
-    firstTime = false;
-    getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
-    doneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
-    getCoords = (GetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Get_Var_Design_Coordinates");
-  }
-
-  if (!getVar || !getCoords) {
-    return;
-  }
-
-  cairo_scaled_font_t* sf = GetCairoScaledFont();
-  FT_Face face = cairo_ft_scaled_font_lock_face(sf);
-  if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-    FT_MM_Var* mmVar;
-    if ((*getVar)(face, &mmVar) == FT_Err_Ok) {
-      aVariations->reserve(mmVar->num_axis);
-      StackArray<FT_Fixed, 32> coords(mmVar->num_axis);
-      if ((*getCoords)(face, mmVar->num_axis, coords.data()) == FT_Err_Ok) {
-        bool changed = false;
-        for (uint32_t i = 0; i < mmVar->num_axis; i++) {
-          if (coords[i] != mmVar->axis[i].def) {
-            changed = true;
-          }
-          aVariations->push_back(FontVariation{uint32_t(mmVar->axis[i].tag),
-                                               float(coords[i] / 65536.0)});
-        }
-        if (!changed) {
-          aVariations->clear();
-        }
-      }
-      if (doneVar) {
-        (*doneVar)(face->glyph->library, mmVar);
-      } else {
-        free(mmVar);
-      }
-    }
-  }
-  cairo_ft_scaled_font_unlock_face(sf);
-}
-
 bool
 ScaledFontFontconfig::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 {
@@ -289,7 +219,10 @@ ScaledFontFontconfig::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBat
 
   std::vector<FontVariation> variations;
   if (HasVariationSettings()) {
-    GetVariationSettings(&variations);
+    FT_Face face = nullptr;
+    if (FcPatternGetFTFace(mPattern, FC_FT_FACE, 0, &face) == FcResultMatch) {
+      UnscaledFontFreeType::GetVariationSettingsFromFace(&variations, face);
+    }
   }
 
   aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance),
@@ -414,7 +347,10 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
   *aOutPlatformOptions = Some(platformOptions);
 
   if (HasVariationSettings()) {
-    GetVariationSettings(aOutVariations);
+    FT_Face face = nullptr;
+    if (FcPatternGetFTFace(mPattern, FC_FT_FACE, 0, &face) == FcResultMatch) {
+      UnscaledFontFreeType::GetVariationSettingsFromFace(aOutVariations, face);
+    }
   }
 
   return true;
@@ -542,7 +478,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   }
 
   cairo_matrix_t sizeMatrix;
-  aInstanceData.SetupFontMatrix(&sizeMatrix);
+  cairo_matrix_init(&sizeMatrix, aSize, 0, 0, aSize, 0, 0);
 
   cairo_matrix_t identityMatrix;
   cairo_matrix_init_identity(&identityMatrix);
@@ -571,40 +507,10 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   // Only apply variations if we have an explicitly cloned face. Otherwise,
   // if the pattern holds the pathname, Cairo will handle setting of variations.
   if (varFace) {
-    scaledFont->ApplyVariations(aVariations, aNumVariations);
+    UnscaledFontFreeType::ApplyVariationsToFace(aVariations, aNumVariations, varFace);
   }
 
   return scaledFont.forget();
-}
-
-void
-ScaledFontFontconfig::ApplyVariations(const FontVariation* aVariations,
-                                      uint32_t aNumVariations)
-{
-  typedef FT_Error (*SetVarDesignCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
-  static SetVarDesignCoordsFunc setCoords;
-  static bool firstTime = true;
-  if (firstTime) {
-    firstTime = false;
-    setCoords = (SetVarDesignCoordsFunc)dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
-  }
-
-  if (!setCoords) {
-    return;
-  }
-
-  cairo_scaled_font_t* sf = GetCairoScaledFont();
-  FT_Face face = cairo_ft_scaled_font_lock_face(sf);
-  if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-    StackArray<FT_Fixed, 32> coords(aNumVariations);
-    for (uint32_t i = 0; i < aNumVariations; i++) {
-      coords[i] = std::round(aVariations[i].mValue * 65536.0f);
-    }
-    if ((*setCoords)(face, aNumVariations, coords.data()) != FT_Err_Ok) {
-      // ignore the problem?
-    }
-  }
-  cairo_ft_scaled_font_unlock_face(sf);
 }
 
 bool
@@ -620,31 +526,13 @@ ScaledFontFontconfig::HasVariationSettings()
 already_AddRefed<UnscaledFont>
 UnscaledFontFontconfig::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex)
 {
-  if (aDataLength <= 1) {
+  if (aDataLength == 0) {
     gfxWarning() << "Fontconfig font descriptor is truncated.";
     return nullptr;
   }
   const char* path = reinterpret_cast<const char*>(aData);
-  if (path[aDataLength - 1] != '\0') {
-    gfxWarning() << "Pathname in Fontconfig font descriptor is not terminated.";
-    return nullptr;
-  }
-
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(path, aIndex);
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(std::string(path, aDataLength), aIndex);
   return unscaledFont.forget();
-}
-
-bool
-UnscaledFontFontconfig::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton)
-{
-  if (mFile.empty()) {
-    return false;
-  }
-
-  const char* path = mFile.c_str();
-  size_t pathLength = strlen(path);
-  aCb(reinterpret_cast<const uint8_t*>(path), pathLength, mIndex, aBaton);
-  return true;
 }
 
 } // namespace gfx

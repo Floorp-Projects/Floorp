@@ -3062,7 +3062,7 @@ RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails)
 template<class S>
 RecordedFontData::RecordedFontData(S &aStream)
   : RecordedEventDerived(FONTDATA)
-  , mType(FontType::SKIA)
+  , mType(FontType::UNKNOWN)
   , mData(nullptr)
 {
   ReadElement(aStream, mType);

@@ -39,15 +39,11 @@ public:
                                 Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                 std::vector<FontVariation>* aOutVariations) override;
 
-  void ApplyVariations(const FontVariation* aVariations, uint32_t aNumVariations);
-
   bool HasVariationSettings() override;
 
 private:
   friend class NativeFontResourceFontconfig;
   friend class UnscaledFontFontconfig;
-
-  void GetVariationSettings(std::vector<FontVariation>* aVariations);
 
   struct InstanceData
   {
@@ -64,14 +60,11 @@ private:
 
     void SetupPattern(FcPattern* aPattern) const;
     void SetupFontOptions(cairo_font_options_t* aFontOptions) const;
-    void SetupFontMatrix(cairo_matrix_t* aFontMatrix) const;
 
     uint8_t mFlags;
     uint8_t mHintStyle;
     uint8_t mSubpixelOrder;
     uint8_t mLcdFilter;
-    Float mScale;
-    Float mSkew;
   };
 
   static already_AddRefed<ScaledFont>
