@@ -303,19 +303,25 @@ nsPluginTag::nsPluginTag(uint32_t aId,
                          bool aFromExtension,
                          int32_t aSandboxLevel,
                          uint32_t aBlocklistState)
-  : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion, aMimeTypes,
-                         aMimeDescriptions, aExtensions),
-    mId(aId),
-    mContentProcessRunningCount(0),
-    mLibrary(nullptr),
-    mIsFlashPlugin(aIsFlashPlugin),
-    mSupportsAsyncRender(aSupportsAsyncRender),
-    mLastModifiedTime(aLastModifiedTime),
-    mSandboxLevel(aSandboxLevel),
-    mIsSandboxLoggingEnabled(false),
-    mNiceFileName(),
-    mIsFromExtension(aFromExtension),
-    mBlocklistState(aBlocklistState)
+  : nsIInternalPluginTag(aName,
+                         aDescription,
+                         aFileName,
+                         aVersion,
+                         aMimeTypes,
+                         aMimeDescriptions,
+                         aExtensions)
+  , mId(aId)
+  , mContentProcessRunningCount(0)
+  , mHadLocalInstance(false)
+  , mLibrary(nullptr)
+  , mIsFlashPlugin(aIsFlashPlugin)
+  , mSupportsAsyncRender(aSupportsAsyncRender)
+  , mLastModifiedTime(aLastModifiedTime)
+  , mSandboxLevel(aSandboxLevel)
+  , mIsSandboxLoggingEnabled(false)
+  , mNiceFileName()
+  , mIsFromExtension(aFromExtension)
+  , mBlocklistState(aBlocklistState)
 {
 }
 
