@@ -33,11 +33,11 @@ the [Testing :: GeckoDriver] component.
 Supported clients
 =================
 
-[Selenium] users must update to [version 3.5] or later to
+[Selenium] users must update to [version 3.11] or later to
 use geckodriver.  Other clients that follow the [W3C WebDriver
 specification] are also supported.
 
-[version 3.5]: https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.5.0
+[version 3.11]: https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.11.0
 [W3C WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
 
 
