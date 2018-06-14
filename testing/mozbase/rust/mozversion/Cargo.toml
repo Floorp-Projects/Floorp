@@ -9,5 +9,5 @@ license = "MPL-2.0"
 
 [dependencies]
 regex = "0.2"
-rust-ini = "0.10.2"
+rust-ini = "0.10"
 semver = "0.6"
