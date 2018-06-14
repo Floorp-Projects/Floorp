@@ -175,6 +175,9 @@
 #![warn(trivial_casts, trivial_numeric_casts)]
 #![warn(unused_extern_crates, unused_qualifications)]
 
+#[cfg(target_os="windows")]
+extern crate winapi;
+
 mod ansi;
 pub use ansi::{Prefix, Infix, Suffix};
 

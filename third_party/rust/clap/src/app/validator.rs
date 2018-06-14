@@ -36,11 +36,14 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
         self.0.add_defaults(matcher)?;
         if let ParseResult::Opt(a) = needs_val_of {
             debugln!("Validator::validate: needs_val_of={:?}", a);
-            let o = self.0
+            let o = {
+                self.0
                 .opts
                 .iter()
                 .find(|o| o.b.name == a)
-                .expect(INTERNAL_ERROR_MSG);
+                .expect(INTERNAL_ERROR_MSG)
+                .clone()
+            };
             self.validate_required(matcher)?;
             reqs_validated = true;
             let should_err = if let Some(v) = matcher.0.args.get(&*o.b.name) {
@@ -50,7 +53,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
             };
             if should_err {
                 return Err(Error::empty_value(
-                    o,
+                    &o,
                     &*usage::create_error_usage(self.0, matcher, None),
                     self.0.color(),
                 ));
@@ -78,7 +81,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
         Ok(())
     }
 
-    fn validate_values<A>(
+    fn validate_arg_values<A>(
         &self,
         arg: &A,
         ma: &MatchedArg,
@@ -87,11 +90,11 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
     where
         A: AnyArg<'a, 'b> + Display,
     {
-        debugln!("Validator::validate_values: arg={:?}", arg.name());
+        debugln!("Validator::validate_arg_values: arg={:?}", arg.name());
         for val in &ma.vals {
             if self.0.is_set(AS::StrictUtf8) && val.to_str().is_none() {
                 debugln!(
-                    "Validator::validate_values: invalid UTF-8 found in val {:?}",
+                    "Validator::validate_arg_values: invalid UTF-8 found in val {:?}",
                     val
                 );
                 return Err(Error::invalid_utf8(
@@ -100,7 +103,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
                 ));
             }
             if let Some(p_vals) = arg.possible_vals() {
-                debugln!("Validator::validate_values: possible_vals={:?}", p_vals);
+                debugln!("Validator::validate_arg_values: possible_vals={:?}", p_vals);
                 let val_str = val.to_string_lossy();
                 let ok = if arg.is_set(ArgSettings::CaseInsensitive) {
                     p_vals.iter().any(|pv| pv.eq_ignore_ascii_case(&*val_str))
@@ -120,7 +123,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
             if !arg.is_set(ArgSettings::EmptyValues) && val.is_empty_()
                 && matcher.contains(&*arg.name())
             {
-                debugln!("Validator::validate_values: illegal empty val found");
+                debugln!("Validator::validate_arg_values: illegal empty val found");
                 return Err(Error::empty_value(
                     arg,
                     &*usage::create_error_usage(self.0, matcher, None),
@@ -128,7 +131,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
                 ));
             }
             if let Some(vtor) = arg.validator() {
-                debug!("Validator::validate_values: checking validator...");
+                debug!("Validator::validate_arg_values: checking validator...");
                 if let Err(e) = vtor(val.to_string_lossy().into_owned()) {
                     sdebugln!("error");
                     return Err(Error::value_validation(Some(arg), e, self.0.color()));
@@ -137,7 +140,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
                 }
             }
             if let Some(vtor) = arg.validator_os() {
-                debug!("Validator::validate_values: checking validator_os...");
+                debug!("Validator::validate_arg_values: checking validator_os...");
                 if let Err(e) = vtor(val) {
                     sdebugln!("error");
                     return Err(Error::value_validation(
@@ -153,44 +156,83 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
         Ok(())
     }
 
-    fn validate_blacklist(&self, matcher: &mut ArgMatcher) -> ClapResult<()> {
-        debugln!(
-            "Validator::validate_blacklist: blacklist={:?}",
-            self.0.blacklist
+    fn build_err(&self, name: &str, matcher: &ArgMatcher) -> ClapResult<()> {
+        debugln!("build_err!: name={}", name);
+        let mut c_with = find_from!(self.0, &name, blacklist, &matcher);
+        c_with = c_with.or(
+        self.0.find_any_arg(&name).map_or(None, |aa| aa.blacklist())
+            .map_or(None,
+                    |bl| bl.iter().find(|arg| matcher.contains(arg)))
+            .map_or(None, |an| self.0.find_any_arg(an))
+            .map_or(None, |aa| Some(format!("{}", aa)))
         );
-        macro_rules! build_err {
-            ($p:expr, $name:expr, $matcher:ident) => ({
-                debugln!("build_err!: name={}", $name);
-                let mut c_with = find_from!($p, &$name, blacklist, &$matcher);
-                c_with = c_with.or(
-                    $p.find_any_arg(&$name).map_or(None, |aa| aa.blacklist())
-                                           .map_or(None,
-                                                |bl| bl.iter().find(|arg| $matcher.contains(arg)))
-                                           .map_or(None, |an| $p.find_any_arg(an))
-                                           .map_or(None, |aa| Some(format!("{}", aa)))
-                );
-                debugln!("build_err!: '{:?}' conflicts with '{}'", c_with, &$name);
-                $matcher.remove(&$name);
-                let usg = usage::create_error_usage($p, $matcher, None);
-                if let Some(f) = find_by_name!($p, $name, flags, iter) {
-                    debugln!("build_err!: It was a flag...");
-                    Error::argument_conflict(f, c_with, &*usg, self.0.color())
-                } else if let Some(o) = find_by_name!($p, $name, opts, iter) {
-                   debugln!("build_err!: It was an option...");
-                    Error::argument_conflict(o, c_with, &*usg, self.0.color())
-                } else {
-                    match find_by_name!($p, $name, positionals, values) {
-                        Some(p) => {
-                            debugln!("build_err!: It was a positional...");
-                            Error::argument_conflict(p, c_with, &*usg, self.0.color())
-                        },
-                        None    => panic!(INTERNAL_ERROR_MSG)
+        debugln!("build_err!: '{:?}' conflicts with '{}'", c_with, &name);
+//        matcher.remove(&name);
+        let usg = usage::create_error_usage(self.0, matcher, None);
+        if let Some(f) = find_by_name!(self.0, name, flags, iter) {
+            debugln!("build_err!: It was a flag...");
+            Err(Error::argument_conflict(f, c_with, &*usg, self.0.color()))
+        } else if let Some(o) = find_by_name!(self.0, name, opts, iter) {
+            debugln!("build_err!: It was an option...");
+            Err(Error::argument_conflict(o, c_with, &*usg, self.0.color()))
+        } else {
+            match find_by_name!(self.0, name, positionals, values) {
+                Some(p) => {
+                    debugln!("build_err!: It was a positional...");
+                    Err(Error::argument_conflict(p, c_with, &*usg, self.0.color()))
+                },
+                None    => panic!(INTERNAL_ERROR_MSG)
+            }
+        }
+    }
+
+    fn validate_blacklist(&self, matcher: &mut ArgMatcher) -> ClapResult<()> {
+        debugln!("Validator::validate_blacklist;");
+        let mut conflicts: Vec<&str> = vec![];
+        for (&name, _) in matcher.iter() {
+            debugln!("Validator::validate_blacklist:iter:{};", name);
+            if let Some(grps) = self.0.groups_for_arg(name) {
+                for grp in &grps {
+                    if let Some(g) = self.0.groups.iter().find(|g| &g.name == grp) {
+                        if !g.multiple {
+                            for arg in &g.args {
+                                if arg == &name {
+                                    continue;
+                                }
+                                conflicts.push(arg);
+                            }
+                        }
+                        if let Some(ref gc) = g.conflicts {
+                            conflicts.extend(&*gc);
+                        }
                     }
                 }
-            });
+            }
+            if let Some(arg) = find_any_by_name!(self.0, name) {
+                if let Some(bl) = arg.blacklist() {
+                    for conf in bl {
+                        if matcher.get(conf).is_some() {
+                            conflicts.push(conf);
+                        }
+                    }
+                }
+            } else {
+                debugln!("Validator::validate_blacklist:iter:{}:group;", name);
+                let args = self.0.arg_names_in_group(name);
+                for arg in &args {
+                    debugln!("Validator::validate_blacklist:iter:{}:group:iter:{};", name, arg);
+                    if let Some(bl) = find_any_by_name!(self.0, *arg).unwrap().blacklist() {
+                        for conf in bl {
+                            if matcher.get(conf).is_some() {
+                                conflicts.push(conf);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        for name in &self.0.blacklist {
+        for name in &conflicts {
             debugln!(
                 "Validator::validate_blacklist:iter:{}: Checking blacklisted arg",
                 name
@@ -213,7 +255,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
                             name,
                             n
                         );
-                        return Err(build_err!(self.0, n, matcher));
+                        return self.build_err(n, matcher);
                     }
                 }
             } else if let Some(ma) = matcher.get(name) {
@@ -224,7 +266,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
                 should_err = ma.occurs > 0;
             }
             if should_err {
-                return Err(build_err!(self.0, *name, matcher));
+                return self.build_err(*name, matcher);
             }
         }
         Ok(())
@@ -240,7 +282,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
             );
             if let Some(opt) = find_by_name!(self.0, *name, opts, iter) {
                 self.validate_arg_num_vals(opt, ma, matcher)?;
-                self.validate_values(opt, ma, matcher)?;
+                self.validate_arg_values(opt, ma, matcher)?;
                 self.validate_arg_requires(opt, ma, matcher)?;
                 self.validate_arg_num_occurs(opt, ma, matcher)?;
             } else if let Some(flag) = find_by_name!(self.0, *name, flags, iter) {
@@ -249,7 +291,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
             } else if let Some(pos) = find_by_name!(self.0, *name, positionals, values) {
                 self.validate_arg_num_vals(pos, ma, matcher)?;
                 self.validate_arg_num_occurs(pos, ma, matcher)?;
-                self.validate_values(pos, ma, matcher)?;
+                self.validate_arg_values(pos, ma, matcher)?;
                 self.validate_arg_requires(pos, ma, matcher)?;
             } else {
                 let grp = self.0
@@ -297,7 +339,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
     where
         A: AnyArg<'a, 'b> + Display,
     {
-        debugln!("Validator::validate_arg_num_vals;");
+        debugln!("Validator::validate_arg_num_vals:{}", a.name());
         if let Some(num) = a.num_vals() {
             debugln!("Validator::validate_arg_num_vals: num_vals set...{}", num);
             let should_err = if a.is_set(ArgSettings::Multiple) {
@@ -381,7 +423,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
     where
         A: AnyArg<'a, 'b> + Display,
     {
-        debugln!("Validator::validate_arg_requires;");
+        debugln!("Validator::validate_arg_requires:{};", a.name());
         if let Some(a_reqs) = a.requires() {
             for &(val, name) in a_reqs.iter().filter(|&&(val, _)| val.is_some()) {
                 let missing_req =
@@ -390,31 +432,55 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
                     return self.missing_required_error(matcher, None);
                 }
             }
+            for &(_, name) in a_reqs.iter().filter(|&&(val, _)| val.is_none()) {
+                if !matcher.contains(name) {
+                    return self.missing_required_error(matcher, Some(name));
+                }
+            }
         }
         Ok(())
     }
 
-    fn validate_required(&self, matcher: &ArgMatcher) -> ClapResult<()> {
+    fn validate_required(&mut self, matcher: &ArgMatcher) -> ClapResult<()> {
         debugln!(
             "Validator::validate_required: required={:?};",
             self.0.required
         );
-        'outer: for name in &self.0.required {
+
+        let mut should_err = false;
+        let mut to_rem = Vec::new();
+        for name in &self.0.required {
             debugln!("Validator::validate_required:iter:{}:", name);
             if matcher.contains(name) {
-                continue 'outer;
+                continue;
             }
-            if let Some(a) = find_by_name!(self.0, *name, flags, iter) {
+            if to_rem.contains(name) {
+                continue;
+            } else if let Some(a) = find_any_by_name!(self.0, *name) {
                 if self.is_missing_required_ok(a, matcher) {
-                    continue 'outer;
+                    to_rem.push(a.name());
+                    if let Some(reqs) = a.requires() {
+                        for r in reqs
+                            .iter()
+                            .filter(|&&(val, _)| val.is_none())
+                            .map(|&(_, name)| name)
+                        {
+                            to_rem.push(r);
+                        }
+                    }
+                    continue;
                 }
-            } else if let Some(a) = find_by_name!(self.0, *name, opts, iter) {
-                if self.is_missing_required_ok(a, matcher) {
-                    continue 'outer;
-                }
-            } else if let Some(a) = find_by_name!(self.0, *name, positionals, values) {
-                if self.is_missing_required_ok(a, matcher) {
-                    continue 'outer;
+            }
+            should_err = true;
+            break;
+        }
+        if should_err {
+            for r in &to_rem {
+                'inner: for i in (0 .. self.0.required.len()).rev() {
+                    if &self.0.required[i] == r {
+                        self.0.required.swap_remove(i);
+                        break 'inner;
+                    }
                 }
             }
             return self.missing_required_error(matcher, None);
@@ -431,11 +497,8 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
         Ok(())
     }
 
-    fn validate_conflicts<A>(&self, a: &A, matcher: &ArgMatcher) -> Option<bool>
-    where
-        A: AnyArg<'a, 'b>,
-    {
-        debugln!("Validator::validate_conflicts: a={:?};", a.name());
+    fn validate_arg_conflicts(&self, a: &AnyArg, matcher: &ArgMatcher) -> Option<bool> {
+        debugln!("Validator::validate_arg_conflicts: a={:?};", a.name());
         a.blacklist().map(|bl| {
             bl.iter().any(|conf| {
                 matcher.contains(conf)
@@ -448,10 +511,7 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
         })
     }
 
-    fn validate_required_unless<A>(&self, a: &A, matcher: &ArgMatcher) -> Option<bool>
-    where
-        A: AnyArg<'a, 'b>,
-    {
+    fn validate_required_unless(&self, a: &AnyArg, matcher: &ArgMatcher) -> Option<bool> {
         debugln!("Validator::validate_required_unless: a={:?};", a.name());
         macro_rules! check {
             ($how:ident, $_self:expr, $a:ident, $m:ident) => {{
@@ -506,12 +566,9 @@ impl<'a, 'b, 'z> Validator<'a, 'b, 'z> {
     }
 
     #[inline]
-    fn is_missing_required_ok<A>(&self, a: &A, matcher: &ArgMatcher) -> bool
-    where
-        A: AnyArg<'a, 'b>,
-    {
+    fn is_missing_required_ok(&self, a: &AnyArg, matcher: &ArgMatcher) -> bool {
         debugln!("Validator::is_missing_required_ok: a={}", a.name());
-        self.validate_conflicts(a, matcher).unwrap_or(false)
+        self.validate_arg_conflicts(a, matcher).unwrap_or(false)
             || self.validate_required_unless(a, matcher).unwrap_or(false)
     }
 }
