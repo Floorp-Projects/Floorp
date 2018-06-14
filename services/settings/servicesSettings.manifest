@@ -1,2 +1,7 @@
 # Register resource aliases
 resource services-settings resource://gre/modules/services-settings/
+
+# Schedule polling of remote settings changes
+component {5e756573-234a-49ea-bbe4-59ec7a70657d} RemoteSettingsComponents.js
+contract @mozilla.org/services/settings;1 {5e756573-234a-49ea-bbe4-59ec7a70657d}
+category update-timer RemoteSettingsComponents @mozilla.org/services/settings;1,getService,services-settings-poll-changes,services.settings.poll_interval,86400

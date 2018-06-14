@@ -188,6 +188,7 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
+@BINPATH@/components/RemoteSettingsComponents.js
 
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/TelemetryStartup.js

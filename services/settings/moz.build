@@ -10,6 +10,7 @@ DIRS += [
 ]
 
 EXTRA_COMPONENTS += [
+    'RemoteSettingsComponents.js',
     'servicesSettings.manifest',
 ]
 
