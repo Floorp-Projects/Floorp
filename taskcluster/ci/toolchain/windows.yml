@@ -214,27 +214,6 @@ win64-sccache:
     toolchains:
         - win64-rust-1.24
 
-win64-rust-size:
-    description: "rust-size toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TW64(rust-size)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 1800
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
-    run:
-        using: toolchain-script
-        script: build-rust-size.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/rust-size.tar.bz2
-    toolchains:
-        - win64-rust-1.24
-
 win32-gn:
     description: "gn toolchain build"
     treeherder:

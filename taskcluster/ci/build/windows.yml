@@ -24,7 +24,6 @@ win32/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32/opt:
@@ -53,7 +52,6 @@ win32/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-dmd/opt:
@@ -85,7 +83,6 @@ win32-dmd/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32/pgo:
@@ -114,7 +111,6 @@ win32/pgo:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64/debug:
@@ -143,7 +139,6 @@ win64/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-plain/debug:
@@ -201,7 +196,6 @@ win64/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-plain/opt:
@@ -262,7 +256,6 @@ win64-dmd/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-nightly/opt:
@@ -305,7 +298,6 @@ win32-nightly/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-nightly/opt:
@@ -341,7 +333,6 @@ win64-nightly/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64/pgo:
@@ -370,7 +361,6 @@ win64/pgo:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-add-on-devel/opt:
@@ -400,7 +390,6 @@ win32-add-on-devel/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-add-on-devel/opt:
@@ -430,7 +419,6 @@ win64-add-on-devel/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-noopt/debug:
@@ -460,7 +448,6 @@ win64-noopt/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-noopt/debug:
@@ -490,7 +477,6 @@ win32-noopt/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-rusttests/opt:
@@ -580,7 +566,6 @@ win64-ccov/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-asan/debug:
@@ -611,7 +596,6 @@ win64-asan/debug:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-asan/opt:
@@ -642,7 +626,6 @@ win64-asan/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-devedition-nightly/opt:
@@ -686,7 +669,6 @@ win32-devedition-nightly/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win64-devedition-nightly/opt:
@@ -723,7 +705,6 @@ win64-devedition-nightly/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
-        - win64-rust-size
         - win64-sccache
 
 win32-mingw32/opt:
