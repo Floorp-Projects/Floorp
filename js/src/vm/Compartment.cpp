@@ -198,15 +198,15 @@ Compartment::wrap(JSContext* cx, MutableHandleBigInt bi)
 bool
 Compartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHandleObject obj)
 {
-    // Ensure that we have entered a compartment.
+    // Ensure that we have entered a realm.
     MOZ_ASSERT(cx->global());
 
     // If we have a cross-compartment wrapper, make sure that the cx isn't
-    // associated with the self-hosting global. We don't want to create
+    // associated with the self-hosting zone. We don't want to create
     // wrappers for objects in other runtimes, which may be the case for the
-    // self-hosting global.
-    MOZ_ASSERT(!cx->runtime()->isSelfHostingGlobal(cx->global()));
-    MOZ_ASSERT(!cx->runtime()->isSelfHostingGlobal(&obj->global()));
+    // self-hosting zone.
+    MOZ_ASSERT(!cx->runtime()->isSelfHostingZone(cx->zone()));
+    MOZ_ASSERT(!cx->runtime()->isSelfHostingZone(obj->zone()));
 
     // The object is already in the right compartment. Normally same-
     // compartment returns the object itself, however, windows are always
