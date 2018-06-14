@@ -181,6 +181,14 @@ XPCOMUtils.defineLazyGetter(this, "gApp", function() {
   return appinfo;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gAppID", function() {
+  return gApp.ID;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gAppVersion", function() {
+  return gApp.version;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gABI", function() {
   let abi = null;
   try {
@@ -248,14 +256,16 @@ function restartApp() {
  *        Whether the entry matches the current OS.
  */
 function matchesOSABI(blocklistElement) {
-  if (blocklistElement.hasAttribute("os")) {
-    var choices = blocklistElement.getAttribute("os").split(",");
+  let os = blocklistElement.getAttribute("os");
+  if (os) {
+    let choices = os.split(",");
     if (choices.length > 0 && !choices.includes(gApp.OS))
       return false;
   }
 
-  if (blocklistElement.hasAttribute("xpcomabi")) {
-    choices = blocklistElement.getAttribute("xpcomabi").split(",");
+  let xpcomabi = blocklistElement.getAttribute("xpcomabi");
+  if (xpcomabi) {
+    let choices = xpcomabi.split(",");
     if (choices.length > 0 && !choices.includes(gApp.XPCOMABI))
       return false;
   }
@@ -277,22 +287,6 @@ function getLocale() {
 /* Get the distribution pref values, from defaults only */
 function getDistributionPrefValue(aPrefName) {
   return Services.prefs.getDefaultBranch(null).getCharPref(aPrefName, "default");
-}
-
-/**
- * Parse a string representation of a regular expression. Needed because we
- * use the /pattern/flags form (because it's detectable), which is only
- * supported as a literal in JS.
- *
- * @param {string} aStr
- *         String representation of regexp
- * @return {RegExp} instance
- */
-function parseRegExp(aStr) {
-  let lastSlash = aStr.lastIndexOf("/");
-  let pattern = aStr.slice(1, lastSlash);
-  let flags = aStr.slice(lastSlash + 1);
-  return new RegExp(pattern, flags);
 }
 
 /**
@@ -441,11 +435,11 @@ var Blocklist = {
       return null;
 
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (!appVersion && !gApp.version)
+    if (!appVersion && !gAppVersion)
       return null;
 
     if (!appVersion)
-      appVersion = gApp.version;
+      appVersion = gAppVersion;
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
@@ -536,7 +530,7 @@ var Blocklist = {
     // (For every non-null property in entry, the same key must exist in
     // params and value must be the same)
     function checkEntry(entry, params) {
-      for (let [key, value] of entry) {
+      for (let [key, value] of Object.entries(entry)) {
         if (value === null || value === undefined)
           continue;
         if (params[key]) {
@@ -612,27 +606,33 @@ var Blocklist = {
     if (pingCountTotal < 1)
       pingCountTotal = 1;
 
-    dsURI = dsURI.replace(/%APP_ID%/g, gApp.ID);
-    // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (gApp.version)
-      dsURI = dsURI.replace(/%APP_VERSION%/g, gApp.version);
-    dsURI = dsURI.replace(/%PRODUCT%/g, gApp.name);
-    // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (gApp.version)
-      dsURI = dsURI.replace(/%VERSION%/g, gApp.version);
-    dsURI = dsURI.replace(/%BUILD_ID%/g, gApp.appBuildID);
-    dsURI = dsURI.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
-    dsURI = dsURI.replace(/%OS_VERSION%/g, gOSVersion);
-    dsURI = dsURI.replace(/%LOCALE%/g, getLocale());
-    dsURI = dsURI.replace(/%CHANNEL%/g, UpdateUtils.UpdateChannel);
-    dsURI = dsURI.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
-    dsURI = dsURI.replace(/%DISTRIBUTION%/g,
-                      getDistributionPrefValue(PREF_APP_DISTRIBUTION));
-    dsURI = dsURI.replace(/%DISTRIBUTION_VERSION%/g,
-                      getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
-    dsURI = dsURI.replace(/%PING_COUNT%/g, pingCountVersion);
-    dsURI = dsURI.replace(/%TOTAL_PING_COUNT%/g, pingCountTotal);
-    dsURI = dsURI.replace(/%DAYS_SINCE_LAST_PING%/g, daysSinceLastPing);
+    let replacements = {
+      APP_ID: gAppID,
+      PRODUCT: gApp.name,
+      BUILD_ID: gApp.appBuildID,
+      BUILD_TARGET: gApp.OS + "_" + gABI,
+      OS_VERSION: gOSVersion,
+      LOCALE: getLocale(),
+      CHANNEL: UpdateUtils.UpdateChannel,
+      PLATFORM_VERSION: gApp.platformVersion,
+      DISTRIBUTION: getDistributionPrefValue(PREF_APP_DISTRIBUTION),
+      DISTRIBUTION_VERSION: getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION),
+      PING_COUNT: pingCountVersion,
+      TOTAL_PING_COUNT: pingCountTotal,
+      DAYS_SINCE_LAST_PING: daysSinceLastPing,
+    };
+    dsURI = dsURI.replace(/%([A-Z_]+)%/g, function(fullMatch, name) {
+      // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
+      if (gAppVersion && (name == "APP_VERSION" || name == "VERSION")) {
+        return gAppVersion;
+      }
+      // Some items, like DAYS_SINCE_LAST_PING, can be undefined, so we can't just
+      // `return replacements[name] || fullMatch` or something like that.
+      if (!replacements.hasOwnProperty(name)) {
+        return fullMatch;
+      }
+      return replacements[name];
+    });
     dsURI = dsURI.replace(/\+/g, "%2B");
 
     // Under normal operations it will take around 5,883,516 years before the
@@ -922,33 +922,38 @@ var Blocklist = {
       versions: [],
       prefs: [],
       blockID: null,
-      attributes: new Map()
+      attributes: {},
       // Atleast one of EXTENSION_BLOCK_FILTERS must get added to attributes
     };
 
-    // Any filter starting with '/' is interpreted as a regex. So if an attribute
-    // starts with a '/' it must be checked via a regex.
-    function regExpCheck(attr) {
-      return attr.startsWith("/") ? parseRegExp(attr) : attr;
-    }
-
     for (let filter of EXTENSION_BLOCK_FILTERS) {
       let attr = blocklistElement.getAttribute(filter);
-      if (attr)
-        blockEntry.attributes.set(filter, regExpCheck(attr));
+      if (attr) {
+        // Any filter starting with '/' is interpreted as a regex. So if an attribute
+        // starts with a '/' it must be checked via a regex.
+        if (attr.startsWith("/")) {
+          let lastSlash = attr.lastIndexOf("/");
+          let pattern = attr.slice(1, lastSlash);
+          let flags = attr.slice(lastSlash + 1);
+          blockEntry.attributes[filter] = new RegExp(pattern, flags);
+        } else {
+          blockEntry.attributes[filter] = attr;
+        }
+      }
     }
 
     var children = blocklistElement.children;
 
     for (let childElement of children) {
-      if (childElement.localName === "prefs") {
+      let localName = childElement.localName;
+      if (localName == "prefs" && childElement.hasChildNodes) {
         let prefElements = childElement.children;
         for (let prefElement of prefElements) {
           if (prefElement.localName == "pref") {
             blockEntry.prefs.push(prefElement.textContent);
           }
         }
-      } else if (childElement.localName === "versionRange") {
+      } else if (localName == "versionRange") {
         blockEntry.versions.push(new BlocklistItemData(childElement));
       }
     }
@@ -975,19 +980,23 @@ var Blocklist = {
     };
     var hasMatch = false;
     for (let childElement of children) {
-      if (childElement.localName == "match") {
-        var name = childElement.getAttribute("name");
-        var exp = childElement.getAttribute("exp");
-        try {
-          blockEntry.matches[name] = new RegExp(exp, "m");
-          hasMatch = true;
-        } catch (e) {
-          // Ignore invalid regular expressions
-        }
-      } else if (childElement.localName == "versionRange") {
-        blockEntry.versions.push(new BlocklistItemData(childElement));
-      } else if (childElement.localName == "infoURL") {
-        blockEntry.infoURL = childElement.textContent;
+      switch (childElement.localName) {
+        case "match":
+          var name = childElement.getAttribute("name");
+          var exp = childElement.getAttribute("exp");
+          try {
+            blockEntry.matches[name] = new RegExp(exp, "m");
+            hasMatch = true;
+          } catch (e) {
+            // Ignore invalid regular expressions
+          }
+          break;
+        case "versionRange":
+          blockEntry.versions.push(new BlocklistItemData(childElement));
+          break;
+        case "infoURL":
+          blockEntry.infoURL = childElement.textContent;
+          break;
       }
     }
     // Plugin entries require *something* to match to an actual plugin
@@ -1095,11 +1104,11 @@ var Blocklist = {
       return null;
 
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (!appVersion && !gApp.version)
+    if (!appVersion && !gAppVersion)
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
 
     if (!appVersion)
-      appVersion = gApp.version;
+      appVersion = gAppVersion;
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
@@ -1409,35 +1418,35 @@ var Blocklist = {
  * Helper for constructing a blocklist.
  */
 function BlocklistItemData(versionRangeElement) {
-  var versionRange = this.getBlocklistVersionRange(versionRangeElement);
-  this.minVersion = versionRange.minVersion;
-  this.maxVersion = versionRange.maxVersion;
-  if (versionRangeElement && versionRangeElement.hasAttribute("severity"))
-    this.severity = versionRangeElement.getAttribute("severity");
-  else
-    this.severity = DEFAULT_SEVERITY;
-  if (versionRangeElement && versionRangeElement.hasAttribute("vulnerabilitystatus")) {
-    this.vulnerabilityStatus = versionRangeElement.getAttribute("vulnerabilitystatus");
-  } else {
-    this.vulnerabilityStatus = VULNERABILITYSTATUS_NONE;
-  }
-  this.targetApps = { };
-  var found = false;
-
+  this.targetApps = {};
+  let foundTarget = false;
+  this.severity = DEFAULT_SEVERITY;
+  this.vulnerabilityStatus = VULNERABILITYSTATUS_NONE;
   if (versionRangeElement) {
-    for (let targetAppElement of versionRangeElement.children) {
-      if (targetAppElement.localName != "targetApplication")
-        continue;
-      found = true;
-      // default to the current application if id is not provided.
-      var appID = targetAppElement.hasAttribute("id") ? targetAppElement.getAttribute("id") : gApp.ID;
-      this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
+    let versionRange = this.getBlocklistVersionRange(versionRangeElement);
+    this.minVersion = versionRange.minVersion;
+    this.maxVersion = versionRange.maxVersion;
+    if (versionRangeElement.hasAttribute("severity"))
+      this.severity = versionRangeElement.getAttribute("severity");
+    if (versionRangeElement.hasAttribute("vulnerabilitystatus")) {
+      this.vulnerabilityStatus = versionRangeElement.getAttribute("vulnerabilitystatus");
     }
+    for (let targetAppElement of versionRangeElement.children) {
+      if (targetAppElement.localName == "targetApplication") {
+        foundTarget = true;
+        // default to the current application if id is not provided.
+        let appID = targetAppElement.id || gAppID;
+        this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
+      }
+    }
+  } else {
+    this.minVersion = this.maxVersion = null;
   }
+
   // Default to all versions of the current application when no targetApplication
   // elements were found
-  if (!found)
-    this.targetApps[gApp.ID] = this.getBlocklistAppVersions(null);
+  if (!foundTarget)
+    this.targetApps[gAppID] = [{minVersion: null, maxVersion: null}];
 }
 
 BlocklistItemData.prototype = {
@@ -1466,7 +1475,7 @@ BlocklistItemData.prototype = {
       return false;
 
     // Check if the application version matches
-    if (this.matchesTargetRange(gApp.ID, appVersion))
+    if (this.matchesTargetRange(gAppID, appVersion))
       return true;
 
     // Check if the toolkit version matches
@@ -1541,7 +1550,7 @@ BlocklistItemData.prototype = {
     // return minVersion = null and maxVersion = null if no specific versionRange
     // elements were found
     if (appVersions.length == 0)
-      appVersions.push(this.getBlocklistVersionRange(null));
+      appVersions.push({minVersion: null, maxVersion: null});
     return appVersions;
   },
 
@@ -1558,15 +1567,9 @@ BlocklistItemData.prototype = {
    *          "maxVersion"  The maximum version in a version range (default = null).
    */
   getBlocklistVersionRange(versionRangeElement) {
-    var minVersion = null;
-    var maxVersion = null;
-    if (!versionRangeElement)
-      return { minVersion, maxVersion };
-
-    if (versionRangeElement.hasAttribute("minVersion"))
-      minVersion = versionRangeElement.getAttribute("minVersion");
-    if (versionRangeElement.hasAttribute("maxVersion"))
-      maxVersion = versionRangeElement.getAttribute("maxVersion");
+    // getAttribute returns null if the attribute is not present.
+    let minVersion = versionRangeElement.getAttribute("minVersion");
+    let maxVersion = versionRangeElement.getAttribute("maxVersion");
 
     return { minVersion, maxVersion };
   }
