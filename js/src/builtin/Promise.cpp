@@ -755,7 +755,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     if (objectFromIncumbentGlobal) {
         objectFromIncumbentGlobal = CheckedUnwrap(objectFromIncumbentGlobal);
         MOZ_ASSERT(objectFromIncumbentGlobal);
-        global = &objectFromIncumbentGlobal->global();
+        global = &objectFromIncumbentGlobal->nonCCWGlobal();
     }
 
     // Note: the global we pass here might be from a different compartment
@@ -1027,7 +1027,7 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
             // floor.
             RootedObject realReason(cx, UncheckedUnwrap(&reason.toObject()));
             RootedValue realReasonVal(cx, ObjectValue(*realReason));
-            RootedObject realGlobal(cx, &realReason->global());
+            RootedObject realGlobal(cx, &realReason->nonCCWGlobal());
             ReportErrorToGlobal(cx, realGlobal, realReasonVal);
 
             // Async stacks are only properly adopted if there's at least one

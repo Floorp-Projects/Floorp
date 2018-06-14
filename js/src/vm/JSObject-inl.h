@@ -402,6 +402,13 @@ JSObject::global() const
     return *realm()->unsafeUnbarrieredMaybeGlobal();
 }
 
+inline js::GlobalObject&
+JSObject::nonCCWGlobal() const
+{
+    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(this));
+    return global();
+}
+
 inline js::GlobalObject*
 JSObject::globalForTracing(JSTracer*) const
 {
