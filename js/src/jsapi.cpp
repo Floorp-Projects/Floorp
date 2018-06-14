@@ -4388,7 +4388,8 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
 
     cx->clearPendingException();
 
-    char16_t* chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get();
+    UniquePtr<char16_t> chars
+        { JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get() };
     if (!chars)
         return true;
 
@@ -4407,7 +4408,7 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
         return false;
 
     frontend::Parser<frontend::FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(),
-                                                                  options, chars, length,
+                                                                  options, chars.get(), length,
                                                                   /* foldConstants = */ true,
                                                                   usedNames, nullptr, nullptr,
                                                                   sourceObject,
@@ -4424,7 +4425,6 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
     }
     JS::SetWarningReporter(cx, older);
 
-    js_free(chars);
     return result;
 }
 
