@@ -15,7 +15,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPAUTHENTICATOR
 
-    nsHttpNTLMAuth() = default;
+    nsHttpNTLMAuth() : mUseNative(false) {}
 
 private:
     virtual ~nsHttpNTLMAuth() = default;
