@@ -4996,6 +4996,7 @@ UnaryArithIRGenerator::trackAttached(const char* name)
 #ifdef JS_CACHEIR_SPEW
     if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
         sp.valueProperty("val", val_);
+        sp.valueProperty("res", res_);
     }
 #endif
 }
