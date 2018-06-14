@@ -3951,8 +3951,8 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
 
     /* Add the initial debuggees, if any. */
     for (unsigned i = 0; i < args.length(); i++) {
-        Rooted<GlobalObject*>
-            debuggee(cx, &args[i].toObject().as<ProxyObject>().private_().toObject().global());
+        JSObject& wrappedObj = args[i].toObject().as<ProxyObject>().private_().toObject();
+        Rooted<GlobalObject*> debuggee(cx, &wrappedObj.deprecatedGlobal());
         if (!debugger->addDebuggeeGlobal(cx, debuggee))
             return false;
     }
@@ -9960,7 +9960,7 @@ DebuggerObject::getGlobal(JSContext* cx, HandleDebuggerObject object,
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    RootedObject global(cx, &referent->global());
+    RootedObject global(cx, &referent->deprecatedGlobal());
     return dbg->wrapDebuggeeObject(cx, global, result);
 }
 

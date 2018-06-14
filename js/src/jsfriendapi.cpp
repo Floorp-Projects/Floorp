@@ -385,7 +385,7 @@ js::IsFunctionObject(JSObject* obj)
 JS_FRIEND_API(JSObject*)
 js::GetGlobalForObjectCrossCompartment(JSObject* obj)
 {
-    return &obj->global();
+    return &obj->deprecatedGlobal();
 }
 
 JS_FRIEND_API(JSObject*)
