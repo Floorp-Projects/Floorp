@@ -504,25 +504,6 @@ linux64-sccache:
     toolchains:
         - linux64-rust-1.24
 
-linux64-rust-size:
-    description: "rust-size toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(rust-size)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 1800
-    run:
-        using: toolchain-script
-        script: build-rust-size.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/rust-size.tar.xz
-    toolchains:
-        - linux64-rust-1.24
-
 linux64-gn:
     description: "gn toolchain build"
     treeherder:
