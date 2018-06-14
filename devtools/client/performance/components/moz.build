@@ -4,16 +4,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'jit-optimizations-item.js',
-    'jit-optimizations.js',
-    'recording-button.js',
-    'recording-controls.js',
-    'recording-list-item.js',
-    'recording-list.js',
-    'waterfall-header.js',
-    'waterfall-tree-row.js',
-    'waterfall-tree.js',
-    'waterfall.js',
+    'JITOptimizations.js',
+    'JITOptimizationsItem.js',
+    'RecordingButton.js',
+    'RecordingControls.js',
+    'RecordingList.js',
+    'RecordingListItem.js',
+    'Waterfall.js',
+    'WaterfallHeader.js',
+    'WaterfallTree.js',
+    'WaterfallTreeRow.js',
 )
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
