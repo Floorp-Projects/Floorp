@@ -124,6 +124,10 @@ try {
   }
 } catch (e) { }
 
+if (runningInParent) {
+  _Services.prefs.setBoolPref("dom.push.connection.enabled", false);
+}
+
 // Configure a console listener so messages sent to it are logged as part
 // of the test.
 try {
