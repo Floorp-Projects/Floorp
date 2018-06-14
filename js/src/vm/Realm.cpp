@@ -1049,6 +1049,15 @@ JS::GetRealmGlobalOrNull(Handle<JS::Realm*> realm)
     return realm->maybeGlobal();
 }
 
+JS_PUBLIC_API(bool)
+JS::InitRealmStandardClasses(JSContext* cx)
+{
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
+    AssertHeapIsIdle();
+    CHECK_REQUEST(cx);
+    return GlobalObject::initStandardClasses(cx, cx->global());
+}
+
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmObjectPrototype(JSContext* cx)
 {

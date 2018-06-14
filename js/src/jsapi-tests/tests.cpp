@@ -92,7 +92,7 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals)
 
     // Populate the global object with the standard globals like Object and
     // Array.
-    if (!JS_InitStandardClasses(cx, newGlobal))
+    if (!JS::InitRealmStandardClasses(cx))
         return nullptr;
 
     global = newGlobal;

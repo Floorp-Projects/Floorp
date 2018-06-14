@@ -44,6 +44,7 @@ NS_IMPL_ISUPPORTS(nsPluginStreamListenerPeer,
                   nsIChannelEventSink)
 
 nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
+  : mLength(0)
 {
   mStreamType = NP_NORMAL;
   mStartBinding = false;

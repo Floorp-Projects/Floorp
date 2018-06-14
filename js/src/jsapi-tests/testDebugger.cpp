@@ -20,7 +20,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
     CHECK(g);
     {
         JSAutoRealm ae(cx, g);
-        CHECK(JS_InitStandardClasses(cx, g));
+        CHECK(JS::InitRealmStandardClasses(cx));
     }
 
     JS::RootedObject gWrapper(cx, g);

@@ -480,6 +480,14 @@ public:
     SwapScaleWidthHeightForRotation(scaleHint, rotationDeg);
     container->SetScaleHint(scaleHint);
 
+    Matrix transformHint;
+    if (rotationDeg != VideoInfo::Rotation::kDegree_0) {
+      transformHint = ComputeRotationMatrix(destGFXRect.Width(),
+                                            destGFXRect.Height(),
+                                            rotationDeg);
+    }
+    container->SetTransformHint(transformHint);
+
     // If the image container is empty, we don't want to fallback. Any other
     // failure will be due to resource constraints and fallback is unlikely to
     // help us. Hence we can ignore the return value from PushImage.

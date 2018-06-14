@@ -1134,7 +1134,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
 
         // Ensure |Object.prototype| is instantiated before prototype-
         // splicing below.
-        if (!JS_GetObjectPrototype(cx, sandbox))
+        if (!JS::GetRealmObjectPrototype(cx))
             return NS_ERROR_XPC_UNEXPECTED;
 
         if (options.proto) {

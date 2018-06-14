@@ -946,19 +946,6 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, HandleObject obj)
     return RemapAllWrappersForObject(cx, obj, obj);
 }
 
-JS_PUBLIC_API(bool)
-JS_InitStandardClasses(JSContext* cx, HandleObject obj)
-{
-    MOZ_ASSERT(!cx->zone()->isAtomsZone());
-    AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
-
-    assertSameCompartment(cx, obj);
-
-    Rooted<GlobalObject*> global(cx, &obj->global());
-    return GlobalObject::initStandardClasses(cx, global);
-}
-
 typedef struct JSStdName {
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     JSProtoKey  key;
@@ -1221,49 +1208,6 @@ JS_IdToProtoKey(JSContext* cx, HandleId id)
 
     MOZ_ASSERT(MOZ_ARRAY_LENGTH(standard_class_names) == JSProto_LIMIT + 1);
     return static_cast<JSProtoKey>(stdnm - standard_class_names);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetObjectPrototype(JSContext* cx, HandleObject forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    Rooted<GlobalObject*> global(cx, &forObj->global());
-    return GlobalObject::getOrCreateObjectPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetFunctionPrototype(JSContext* cx, HandleObject forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    Rooted<GlobalObject*> global(cx, &forObj->global());
-    return GlobalObject::getOrCreateFunctionPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetArrayPrototype(JSContext* cx, HandleObject forObj)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, forObj);
-    Rooted<GlobalObject*> global(cx, &forObj->global());
-    return GlobalObject::getOrCreateArrayPrototype(cx, global);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetErrorPrototype(JSContext* cx)
-{
-    CHECK_REQUEST(cx);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    return GlobalObject::getOrCreateCustomErrorPrototype(cx, global, JSEXN_ERR);
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_GetIteratorPrototype(JSContext* cx)
-{
-    CHECK_REQUEST(cx);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    return GlobalObject::getOrCreateIteratorPrototype(cx, global);
 }
 
 JS_PUBLIC_API(JSObject*)

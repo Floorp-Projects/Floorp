@@ -211,6 +211,7 @@ public:
   NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t *aWindowId) override;
   NS_IMETHOD SetTopLevelOuterContentWindowId(uint64_t aWindowId) override;
   NS_IMETHOD GetIsTrackingResource(bool* aIsTrackingResource) override;
+  NS_IMETHOD OverrideTrackingResource(bool aIsTracking) override;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
