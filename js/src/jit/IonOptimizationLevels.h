@@ -149,7 +149,36 @@ class OptimizationInfo
     // as a multiplication of inliningWarmUpThreshold.
     uint32_t inliningRecompileThresholdFactor_;
 
-    OptimizationInfo()
+    constexpr OptimizationInfo()
+      : level_(OptimizationLevel::Normal),
+        eaa_(false),
+        ama_(false),
+        edgeCaseAnalysis_(false),
+        eliminateRedundantChecks_(false),
+        inlineInterpreted_(false),
+        inlineNative_(false),
+        eagerSimdUnbox_(false),
+        gvn_(false),
+        licm_(false),
+        rangeAnalysis_(false),
+        loopUnrolling_(false),
+        reordering_(false),
+        autoTruncate_(false),
+        sincos_(false),
+        sink_(false),
+        registerAllocator_(RegisterAllocator_Backtracking),
+        inlineMaxBytecodePerCallSiteHelperThread_(0),
+        inlineMaxBytecodePerCallSiteMainThread_(0),
+        inlineMaxCalleeInlinedBytecodeLength_(0),
+        inlineMaxTotalBytecodeLength_(0),
+        inliningMaxCallerBytecodeLength_(0),
+        maxInlineDepth_(0),
+        scalarReplacement_(false),
+        smallFunctionMaxInlineDepth_(0),
+        compilerWarmUpThreshold_(0),
+        compilerSmallFunctionWarmUpThreshold_(0),
+        inliningWarmUpThresholdFactor_(0.0),
+        inliningRecompileThresholdFactor_(0)
     { }
 
     void initNormalOptimizationInfo();

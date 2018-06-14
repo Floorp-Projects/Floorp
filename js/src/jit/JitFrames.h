@@ -230,8 +230,7 @@ class FrameSizeClass
     { }
 
   public:
-    FrameSizeClass()
-    { }
+    FrameSizeClass() = delete;
 
     static FrameSizeClass None() {
         return FrameSizeClass(NO_FRAME_SIZE_CLASS_ID);

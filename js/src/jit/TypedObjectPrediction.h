@@ -118,7 +118,8 @@ class TypedObjectPrediction {
     // Constructing a prediction. Generally, you start with an empty
     // prediction and invoke addDescr() repeatedly.
 
-    TypedObjectPrediction() {
+    TypedObjectPrediction()
+      : data_() {
         kind_ = Empty;
     }
 
