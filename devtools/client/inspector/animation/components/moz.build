@@ -33,5 +33,8 @@ DevToolsModules(
     'NoAnimationPanel.js',
     'PauseResumeButton.js',
     'PlaybackRateSelector.js',
+    'ProgressInspectionPanel.js',
     'RewindButton.js',
+    'TickLabels.js',
+    'TickLines.js',
 )
