@@ -90,7 +90,7 @@ import java.util.List;
 import java.util.Objects;
 
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
 import mozilla.components.support.utils.ColorUtils;
 import mozilla.components.support.utils.DownloadUtils;
 import mozilla.components.support.utils.DrawableUtils;
@@ -1294,13 +1294,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             AutocompleteQuickAddPopup autocompletePopup = new AutocompleteQuickAddPopup(context, urlView.getText().toString());
 
             // Show the Snackbar and dismiss the popup when a new URL is added.
-            autocompletePopup.setOnUrlAdded(new Function0<Unit>() {
+            autocompletePopup.setOnUrlAdded(new Function1<Boolean, Unit>() {
                 @Override
-                public Unit invoke() {
+                public Unit invoke(final Boolean didAddSuccessfully) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ViewUtils.showBrandedSnackbar(Objects.requireNonNull(getView()), R.string.preference_autocomplete_add_confirmation, 0);
+                            final int messageId = didAddSuccessfully ? R.string.preference_autocomplete_add_confirmation : R.string.preference_autocomplete_duplicate_url_error;
+                            ViewUtils.showBrandedSnackbar(Objects.requireNonNull(getView()), messageId, 0);
                             dismissAutocompletePopup();
                         }
                     });
