@@ -22,7 +22,14 @@ class JSONExperimentParser {
         val matchObject: JSONObject? = jsonObject.optJSONObject(MATCH_KEY)
         val regions: List<String>? = matchObject?.optJSONArray(REGIONS_KEY)?.toList()
         val matcher = if (matchObject != null) {
-            Experiment.Matcher(matchObject.tryGetString(LANG_KEY), matchObject.tryGetString(APP_ID_KEY), regions)
+            Experiment.Matcher(
+                matchObject.tryGetString(LANG_KEY),
+                matchObject.tryGetString(APP_ID_KEY),
+                regions,
+                matchObject.tryGetString(VERSION_KEY),
+                matchObject.tryGetString(MANUFACTURER_KEY),
+                matchObject.tryGetString(DEVICE_KEY),
+                matchObject.tryGetString(COUNTRY_KEY))
         } else null
         val bucket = if (bucketsObject != null) {
             Experiment.Bucket(bucketsObject.tryGetInt(MAX_KEY), bucketsObject.tryGetInt(MIN_KEY))
@@ -107,6 +114,10 @@ class JSONExperimentParser {
         private const val REGIONS_KEY = "regions"
         private const val LANG_KEY = "lang"
         private const val APP_ID_KEY = "appId"
+        private const val VERSION_KEY = "version"
+        private const val MANUFACTURER_KEY = "manufacturer"
+        private const val DEVICE_KEY = "device"
+        private const val COUNTRY_KEY = "country"
         private const val MAX_KEY = "max"
         private const val MIN_KEY = "min"
         private const val ID_KEY = "id"

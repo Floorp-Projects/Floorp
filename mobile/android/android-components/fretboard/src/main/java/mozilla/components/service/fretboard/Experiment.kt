@@ -20,7 +20,11 @@ data class Experiment(
     data class Matcher(
         val language: String? = null,
         val appId: String? = null,
-        val regions: List<String>? = null
+        val regions: List<String>? = null,
+        val version: String? = null,
+        val manufacturer: String? = null,
+        val device: String? = null,
+        val country: String? = null
     )
 
     data class Bucket(
