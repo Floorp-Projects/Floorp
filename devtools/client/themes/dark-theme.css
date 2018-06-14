@@ -27,6 +27,13 @@ body {
   color: var(--theme-selection-color);
 }
 
+:root[platform="win"] {
+  /* Set colors for native scrollbars on Windows dark theme */
+  /* Other platforms support for scrollbar theming is Bug 1460109 */
+  scrollbar-face-color: var(--theme-body-color-inactive);
+  scrollbar-track-color: var(--theme-splitter-color);
+}
+
 .theme-selected,
 .CodeMirror-hint-active {
   background-color: var(--theme-selection-background);
