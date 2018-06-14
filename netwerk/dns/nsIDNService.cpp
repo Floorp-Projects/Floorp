@@ -141,6 +141,7 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 nsIDNService::nsIDNService()
   : mLock("DNService pref value lock")
   , mShowPunycode(false)
+  , mRestrictionProfile(static_cast<restrictionProfile>(0))
   , mIDNUseWhitelist(false)
 {
   MOZ_ASSERT(NS_IsMainThread());

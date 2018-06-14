@@ -277,6 +277,7 @@ PendingPACQuery::PendingPACQuery(nsPACMan* pacMan,
                                  nsPACManCallback* callback,
                                  bool mainThreadResponse)
   : Runnable("net::PendingPACQuery")
+  , mPort(0)
   , mPACMan(pacMan)
   , mCallback(callback)
   , mOnMainThreadOnly(mainThreadResponse)

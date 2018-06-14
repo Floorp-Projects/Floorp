@@ -464,7 +464,8 @@ RequestContextService *RequestContextService::sSelf = nullptr;
 NS_IMPL_ISUPPORTS(RequestContextService, nsIRequestContextService, nsIObserver)
 
 RequestContextService::RequestContextService()
-  : mNextRCID(1)
+  : mRCIDNamespace(0)
+  , mNextRCID(1)
 {
   MOZ_ASSERT(!sSelf, "multiple rcs instances!");
   MOZ_ASSERT(NS_IsMainThread());

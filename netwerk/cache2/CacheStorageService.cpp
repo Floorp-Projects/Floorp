@@ -368,6 +368,7 @@ public:
     : WalkCacheRunnable(aVisitor, aVisitEntries)
     , mLoadInfo(aLoadInfo)
     , mPass(COLLECT_STATS)
+    , mCount(0)
   {
   }
 
@@ -396,6 +397,11 @@ private:
     explicit OnCacheEntryInfoRunnable(WalkDiskCacheRunnable* aWalker)
       : Runnable("net::WalkDiskCacheRunnable::OnCacheEntryInfoRunnable")
       , mWalker(aWalker)
+      , mDataSize(0)
+      , mFetchCount(0)
+      , mLastModifiedTime(0)
+      , mExpirationTime(0)
+      , mPinned(false)
     {
     }
 
@@ -1633,7 +1639,10 @@ public:
   NS_DECL_NSIRUNNABLE
 
   explicit CacheEntryDoomByKeyCallback(nsICacheEntryDoomCallback* aCallback)
-    : mCallback(aCallback) { }
+    : mCallback(aCallback)
+    , mResult(NS_ERROR_NOT_INITIALIZED)
+  {
+  }
 
 private:
   virtual ~CacheEntryDoomByKeyCallback();

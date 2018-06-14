@@ -43,7 +43,9 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
   , mEncryptedTextSize(0)
   , mSegmentReader(aReader)
   , mSegmentWriter(aWriter)
+  , mFilterReadCode(NS_ERROR_NOT_INITIALIZED)
   , mForce(false)
+  , mReadSegmentBlocked(false)
   , mNudgeCounter(0)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");

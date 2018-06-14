@@ -213,7 +213,8 @@ protected:
 
 public:
   explicit MulticastTimerCallback(WaitForCondition* waiter)
-    : mWaiter(waiter)
+    : mResult(NS_ERROR_NOT_INITIALIZED)
+    , mWaiter(waiter)
   { }
 
   NS_DECL_THREADSAFE_ISUPPORTS

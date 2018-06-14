@@ -66,8 +66,12 @@ nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)
 
 nsFtpControlConnection::nsFtpControlConnection(const nsACString& host,
                                                uint32_t port)
-    : mServerType(0), mSessionId(gFtpHandler->GetSessionId())
-    , mUseUTF8(false), mHost(host), mPort(port)
+    : mServerType(0)
+    , mSuspendedWrite(0)
+    , mSessionId(gFtpHandler->GetSessionId())
+    , mUseUTF8(false)
+    , mHost(host)
+    , mPort(port)
 {
     LOG_INFO(("FTP:CC created @%p", this));
 }
