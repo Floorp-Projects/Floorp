@@ -205,8 +205,9 @@ Firefox capabilities
 
 geckodriver has a few capabilities that are specific to Firefox.
 
-moz:firefoxOptions
-------------------
+
+`moz:firefoxOptions`
+--------------------
 
 A dictionary used to define options which control how Firefox gets started
 and run. It may contain any of the following fields:
@@ -283,8 +284,9 @@ and run. It may contain any of the following fields:
  </tr>
 </table>
 
-moz:useNonSpecCompliantPointerOrigin
-------------------------------------
+
+`moz:useNonSpecCompliantPointerOrigin`
+--------------------------------------
 
 A boolean value to indicate how the pointer origin for an action command
 will be calculated.
@@ -300,8 +302,9 @@ for this capability.
 Please note that this capability exists only temporarily, and that it will be
 removed once all Selenium bindings can handle the new behavior.
 
-moz:webdriverClick
-------------------
+
+`moz:webdriverClick`
+--------------------
 
 A boolean value to indicate which kind of interactability checks to run
 when performing a click or sending keys to an elements. For Firefoxen prior to
@@ -323,6 +326,7 @@ for this capability.
 
 Please note that this capability exists only temporarily, and that it will be
 removed once the interactability checks have been stabilized.
+
 
 `log` object
 ------------
