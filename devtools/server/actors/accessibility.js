@@ -245,7 +245,12 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     if (this.isDefunct) {
       return null;
     }
-    return this.rawAccessible.keyboardShortcut;
+    // Gecko accessibility exposes two key bindings: Accessible::AccessKey and
+    // Accessible::KeyboardShortcut. The former is used for accesskey, where the latter
+    // is used for global shortcuts defined by XUL menu items, etc. Here - do what the
+    // Windows implementation does: try AccessKey first, and if that's empty, use
+    // KeyboardShortcut.
+    return this.rawAccessible.accessKey || this.rawAccessible.keyboardShortcut;
   },
 
   get childCount() {
@@ -684,9 +689,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
           events.emit(accessible, "attributes-change", accessible.attributes);
         }
         break;
+      // EVENT_ACCELERATOR_CHANGE is currently not fired by gecko accessibility.
       case EVENT_ACCELERATOR_CHANGE:
         if (accessible) {
-          events.emit(accessible, "shortcut-change", rawAccessible.keyboardShortcut);
+          events.emit(accessible, "shortcut-change", accessible.keyboardShortcut);
         }
         break;
       default:
