@@ -160,11 +160,13 @@ async function fetchLatestChanges(url, lastEtag) {
     let payload;
     try {
       payload = await response.json();
-    } catch (e) {}
+    } catch (e) {
+      payload = e.message;
+    }
     if (!payload.hasOwnProperty("data")) {
       // If the server is failing, the JSON response might not contain the
       // expected data (e.g. error response - Bug 1259145)
-      throw new Error(`Server error response ${JSON.stringify(payload)}`);
+      throw new Error(`Server error ${response.status} ${response.statusText}: ${JSON.stringify(payload)}`);
     }
     changes = payload.data;
   }
@@ -804,19 +806,24 @@ function remoteSettingsFunction() {
     };
   };
 
-
-  const broadcastID = "remote-settings/monitor_changes";
-  // When we start on a new profile there will be no ETag stored.
-  // Use an arbitrary ETag that is guaranteed not to occur.
-  // This will trigger a broadcast message but that's fine because we
-  // will check the changes on each collection and retrieve only the
-  // changes (e.g. nothing if we have a dump with the same data).
-  const currentVersion = Services.prefs.getStringPref(PREF_SETTINGS_LAST_ETAG, "\"0\"");
-  const moduleInfo = {
-    moduleURI: __URI__,
-    symbolName: "remoteSettingsBroadcastHandler",
+  /**
+   * Startup function called from nsBrowserGlue.
+   */
+  remoteSettings.init = () => {
+    // Hook the Push broadcast and RemoteSettings polling.
+    const broadcastID = "remote-settings/monitor_changes";
+    // When we start on a new profile there will be no ETag stored.
+    // Use an arbitrary ETag that is guaranteed not to occur.
+    // This will trigger a broadcast message but that's fine because we
+    // will check the changes on each collection and retrieve only the
+    // changes (e.g. nothing if we have a dump with the same data).
+    const currentVersion = Services.prefs.getStringPref(PREF_SETTINGS_LAST_ETAG, "\"0\"");
+    const moduleInfo = {
+      moduleURI: __URI__,
+      symbolName: "remoteSettingsBroadcastHandler",
+    };
+    pushBroadcastService.addListener(broadcastID, currentVersion, moduleInfo);
   };
-  pushBroadcastService.addListener(broadcastID, currentVersion, moduleInfo);
 
   return remoteSettings;
 }
