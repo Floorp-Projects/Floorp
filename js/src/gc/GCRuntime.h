@@ -562,7 +562,6 @@ class GCRuntime
     friend class AutoCallGCCallbacks;
     void maybeCallGCCallback(JSGCStatus status);
 
-    void changeToNonIncrementalGC();
     void pushZealSelectedObjects();
     void purgeRuntime();
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
