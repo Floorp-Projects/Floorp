@@ -22,12 +22,12 @@
 //! Ini
 
 use std::collections::HashMap;
-use std::collections::hash_map::{Iter, IterMut, IntoIter, Keys};
+use std::collections::hash_map::{IntoIter, Iter, IterMut, Keys};
 use std::collections::hash_map::Entry;
-use std::fs::{OpenOptions, File};
+use std::fs::{File, OpenOptions};
 use std::ops::{Index, IndexMut};
 use std::char;
-use std::io::{self, Write, Read};
+use std::io::{self, Read, Write};
 use std::fmt::{self, Display};
 use std::path::Path;
 use std::str::Chars;
@@ -82,9 +82,7 @@ impl EscapePolicy {
     /// per this policy or false if not.
     pub fn should_escape(&self, c: char) -> bool {
         match c {
-            '\\' |
-            '\x00'...'\x1f' |
-            '\x7f'...'\u{00ff}' => self.escape_basics(),
+            '\\' | '\x00'...'\x1f' | '\x7f'...'\u{00ff}' => self.escape_basics(),
             ';' | '#' | '=' | ':' => self.escape_reserved(),
             '\u{0080}'...'\u{FFFF}' => self.escape_unicode(),
             _ => false,
@@ -121,9 +119,9 @@ fn escape_str(s: &str, policy: EscapePolicy) -> String {
         match c {
             '\\' => escaped.push_str("\\\\"),
             '\0' => escaped.push_str("\\0"),
-            '\x01'...'\x06' |
-            '\x0e'...'\x1f' |
-            '\x7f'...'\u{00ff}' => escaped.push_str(&format!("\\x{:04x}", c as isize)[..]),
+            '\x01'...'\x06' | '\x0e'...'\x1f' | '\x7f'...'\u{00ff}' => {
+                escaped.push_str(&format!("\\x{:04x}", c as isize)[..])
+            }
             '\x07' => escaped.push_str("\\a"),
             '\x08' => escaped.push_str("\\b"),
             '\x0c' => escaped.push_str("\\f"),
@@ -157,8 +155,9 @@ impl<'a> SectionSetter<'a> {
 
     /// Set key-value pair in this section
     pub fn set<K, V>(&'a mut self, key: K, value: V) -> &'a mut SectionSetter<'a>
-        where K: Into<String>,
-              V: Into<String>
+    where
+        K: Into<String>,
+        V: Into<String>,
     {
         {
             let prop = match self.ini.sections.entry(self.section_name.clone()) {
@@ -172,8 +171,9 @@ impl<'a> SectionSetter<'a> {
 
     /// Delete the entry in this section with `key`
     pub fn delete<K>(&'a mut self, key: &K) -> &'a mut SectionSetter<'a>
-        where String: Borrow<K>,
-              K: Hash + Eq + ?Sized
+    where
+        String: Borrow<K>,
+        K: Hash + Eq + ?Sized,
     {
         if let Some(prop) = self.ini.sections.get_mut(&self.section_name) {
             prop.remove(key);
@@ -183,8 +183,9 @@ impl<'a> SectionSetter<'a> {
 
     /// Get the entry in this section with `key`
     pub fn get<K>(&'a mut self, key: &K) -> Option<&'a str>
-        where String: Borrow<K>,
-              K: Hash + Eq + ?Sized
+    where
+        String: Borrow<K>,
+        K: Hash + Eq + ?Sized,
     {
         self.ini
             .sections
@@ -205,36 +206,43 @@ pub struct Ini {
 impl Ini {
     /// Create an instance
     pub fn new() -> Ini {
-        Ini { sections: HashMap::new() }
+        Ini {
+            sections: HashMap::new(),
+        }
     }
 
     /// Set with a specified section, `None` is for the general section
     pub fn with_section<'b, S>(&'b mut self, section: Option<S>) -> SectionSetter<'b>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         SectionSetter::new(self, section.map(|s| s.into()))
     }
 
     /// Get the immmutable general section
     pub fn general_section(&self) -> &Properties {
-        self.section(None::<String>).expect("There is no general section in this Ini")
+        self.section(None::<String>)
+            .expect("There is no general section in this Ini")
     }
 
     /// Get the mutable general section
     pub fn general_section_mut(&mut self) -> &mut Properties {
-        self.section_mut(None::<String>).expect("There is no general section in this Ini")
+        self.section_mut(None::<String>)
+            .expect("There is no general section in this Ini")
     }
 
     /// Get a immutable section
     pub fn section<'a, S>(&'a self, name: Option<S>) -> Option<&'a Properties>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.sections.get(&name.map(|s| s.into()))
     }
 
     /// Get a mutable section
     pub fn section_mut<'a, S>(&'a mut self, name: Option<S>) -> Option<&'a mut Properties>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.sections.get_mut(&name.map(|s| s.into()))
     }
@@ -256,7 +264,8 @@ impl Ini {
 
     /// Set key-value to a section
     pub fn set_to<S>(&mut self, section: Option<S>, key: String, value: String)
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.with_section(section).set(key, value);
     }
@@ -272,16 +281,15 @@ impl Ini {
     /// assert_eq!(ini.get_from(Some("sec"), "abc"), Some("def"));
     /// ```
     pub fn get_from<'a, S>(&'a self, section: Option<S>, key: &str) -> Option<&'a str>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         match self.sections.get(&section.map(|s| s.into())) {
             None => None,
-            Some(ref prop) => {
-                match prop.get(key) {
-                    Some(p) => Some(&p[..]),
-                    None => None,
-                }
-            }
+            Some(ref prop) => match prop.get(key) {
+                Some(p) => Some(&p[..]),
+                None => None,
+            },
         }
     }
 
@@ -296,22 +304,22 @@ impl Ini {
     /// assert_eq!(ini.get_from_or(Some("sec"), "key", "default"), "default");
     /// ```
     pub fn get_from_or<'a, S>(&'a self, section: Option<S>, key: &str, default: &'a str) -> &'a str
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         match self.sections.get(&section.map(|s| s.into())) {
             None => default,
-            Some(ref prop) => {
-                match prop.get(key) {
-                    Some(p) => &p[..],
-                    None => default,
-                }
-            }
+            Some(ref prop) => match prop.get(key) {
+                Some(p) => &p[..],
+                None => default,
+            },
         }
     }
 
     /// Get the mutable from a section with key
     pub fn get_from_mut<'a, S>(&'a mut self, section: Option<S>, key: &str) -> Option<&'a str>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         match self.sections.get_mut(&section.map(|s| s.into())) {
             None => None,
@@ -321,13 +329,15 @@ impl Ini {
 
     /// Delete a section, return the properties if it exists
     pub fn delete<S>(&mut self, section: Option<S>) -> Option<Properties>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.sections.remove(&section.map(|s| s.into()))
     }
 
     pub fn delete_from<S>(&mut self, section: Option<S>, key: &str) -> Option<String>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         match self.section_mut(section) {
             None => return None,
@@ -383,15 +393,18 @@ impl Ini {
     }
 
     /// Write to a file
-    pub fn write_to_file_policy<P: AsRef<Path>>(&self,
-                                                filename: P,
-                                                policy: EscapePolicy)
-                                                -> io::Result<()> {
-        let mut file = try!(OpenOptions::new()
-            .write(true)
-            .truncate(true)
-            .create(true)
-            .open(filename.as_ref()));
+    pub fn write_to_file_policy<P: AsRef<Path>>(
+        &self,
+        filename: P,
+        policy: EscapePolicy,
+    ) -> io::Result<()> {
+        let mut file = try!(
+            OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open(filename.as_ref())
+        );
         self.write_to_policy(&mut file, policy)
     }
 
@@ -401,10 +414,11 @@ impl Ini {
     }
 
     /// Write to a writer
-    pub fn write_to_policy<W: Write>(&self,
-                                     writer: &mut W,
-                                     policy: EscapePolicy)
-                                     -> io::Result<()> {
+    pub fn write_to_policy<W: Write>(
+        &self,
+        writer: &mut W,
+        policy: EscapePolicy,
+    ) -> io::Result<()> {
         let mut firstline = true;
 
         match self.sections.get(&None) {
@@ -456,12 +470,10 @@ impl Ini {
     /// Load from a reader
     pub fn read_from<R: Read>(reader: &mut R) -> Result<Ini, Error> {
         let mut s = String::new();
-        try!(reader.read_to_string(&mut s).map_err(|err| {
-            Error {
-                line: 0,
-                col: 0,
-                msg: format!("{}", err),
-            }
+        try!(reader.read_to_string(&mut s).map_err(|err| Error {
+            line: 0,
+            col: 0,
+            msg: format!("{}", err),
         }));
         let mut parser = Parser::new(s.chars(), false);
         parser.parse()
@@ -470,12 +482,10 @@ impl Ini {
     /// Load from a reader, but do not interpret '\' as an escape character
     pub fn read_from_noescape<R: Read>(reader: &mut R) -> Result<Ini, Error> {
         let mut s = String::new();
-        try!(reader.read_to_string(&mut s).map_err(|err| {
-            Error {
-                line: 0,
-                col: 0,
-                msg: format!("{}", err),
-            }
+        try!(reader.read_to_string(&mut s).map_err(|err| Error {
+            line: 0,
+            col: 0,
+            msg: format!("{}", err),
         }));
         let mut parser = Parser::new(s.chars(), true);
         parser.parse()
@@ -525,18 +535,24 @@ pub struct SectionMutIterator<'a> {
 impl<'a> Ini {
     /// Immutable iterate though sections
     pub fn iter(&'a self) -> SectionIterator<'a> {
-        SectionIterator { mapiter: self.sections.iter() }
+        SectionIterator {
+            mapiter: self.sections.iter(),
+        }
     }
 
     /// Mutable iterate though sections
     /// *Deprecated! Use `iter_mut` instead!*
     pub fn mut_iter(&'a mut self) -> SectionMutIterator<'a> {
-        SectionMutIterator { mapiter: self.sections.iter_mut() }
+        SectionMutIterator {
+            mapiter: self.sections.iter_mut(),
+        }
     }
 
     /// Mutable iterate though sections
     pub fn iter_mut(&'a mut self) -> SectionMutIterator<'a> {
-        SectionMutIterator { mapiter: self.sections.iter_mut() }
+        SectionMutIterator {
+            mapiter: self.sections.iter_mut(),
+        }
     }
 }
 
@@ -592,7 +608,9 @@ impl IntoIterator for Ini {
     type IntoIter = SectionIntoIter;
 
     fn into_iter(self) -> SectionIntoIter {
-        SectionIntoIter { iter: self.sections.into_iter() }
+        SectionIntoIter {
+            iter: self.sections.into_iter(),
+        }
     }
 }
 
@@ -697,24 +715,22 @@ impl<'a> Parser<'a> {
 
         self.parse_whitespace();
         while let Some(cur_ch) = self.ch {
-            debug!("line:{}, col:{}", self.line, self.col);
             match cur_ch {
                 ';' | '#' => {
                     self.parse_comment();
-                    debug!("parse comment");
                 }
-                '[' => {
-                    match self.parse_section() {
-                        Ok(sec) => {
-                            let msec = &sec[..].trim();
-                            debug!("Got section: {}", msec);
-                            cursec = Some(msec.to_string());
-                            result.sections.entry(cursec.clone()).or_insert(HashMap::new());
-                            self.bump();
-                        }
-                        Err(e) => return Err(e),
+                '[' => match self.parse_section() {
+                    Ok(sec) => {
+                        let msec = &sec[..].trim();
+                        cursec = Some(msec.to_string());
+                        result
+                            .sections
+                            .entry(cursec.clone())
+                            .or_insert(HashMap::new());
+                        self.bump();
                     }
-                }
+                    Err(e) => return Err(e),
+                },
                 '=' | ':' => {
                     if (&curkey[..]).is_empty() {
                         return self.error("Missing key".to_string());
@@ -722,8 +738,8 @@ impl<'a> Parser<'a> {
                     match self.parse_val() {
                         Ok(val) => {
                             let mval = val[..].trim().to_owned();
-                            debug!("Got value: {}", mval);
-                            let sec = result.sections
+                            let sec = result
+                                .sections
                                 .entry(cursec.clone())
                                 .or_insert(HashMap::new());
                             sec.insert(curkey, mval);
@@ -732,16 +748,13 @@ impl<'a> Parser<'a> {
                         Err(e) => return Err(e),
                     }
                 }
-                _ => {
-                    match self.parse_key() {
-                        Ok(key) => {
-                            let mkey: String = key[..].trim().to_owned();
-                            debug!("Got key: {}", mkey);
-                            curkey = mkey.into();
-                        }
-                        Err(e) => return Err(e),
+                _ => match self.parse_key() {
+                    Ok(key) => {
+                        let mkey: String = key[..].trim().to_owned();
+                        curkey = mkey.into();
                     }
-                }
+                    Err(e) => return Err(e),
+                },
             }
 
             self.parse_whitespace();
@@ -786,14 +799,18 @@ impl<'a> Parser<'a> {
                             for _ in 0..4 {
                                 self.bump();
                                 if self.eof() {
-                                    return self.error(format!("Expecting \"{:?}\" but found EOF.",
-                                                              endpoint));
+                                    return self.error(format!(
+                                        "Expecting \"{:?}\" but found EOF.",
+                                        endpoint
+                                    ));
                                 } else if let Some('\\') = self.ch {
                                     self.bump();
                                     if self.ch != Some('\n') {
-                                        return self.error(format!("Expecting \"\\\\n\" but \
-                                                                   found \"{:?}\".",
-                                                                  self.ch));
+                                        return self.error(format!(
+                                            "Expecting \"\\\\n\" but \
+                                             found \"{:?}\".",
+                                            self.ch
+                                        ));
                                     }
                                 }
                                 code.push(self.ch.unwrap());
@@ -878,7 +895,6 @@ mod test {
         assert_eq!(sec1[&key1], val1);
         let val2: String = "377".into();
         assert_eq!(sec1[&key2], val2);
-
     }
 
     #[test]
@@ -940,8 +956,10 @@ gender : mail ; abdddd
 ";
         let ini = Ini::load_from_str(input).unwrap();
         assert_eq!(ini.get_from(Some("section name"), "name").unwrap(), "hello");
-        assert_eq!(ini.get_from(Some("section name"), "gender").unwrap(),
-                   "mail");
+        assert_eq!(
+            ini.get_from(Some("section name"), "gender").unwrap(),
+            "mail"
+        );
     }
 
     #[test]
@@ -964,8 +982,10 @@ Key = \"Value
 Otherline\"
 ";
         let ini = Ini::load_from_str(input).unwrap();
-        assert_eq!(ini.get_from(Some("section name"), "Key").unwrap(),
-                   "Value\nOtherline");
+        assert_eq!(
+            ini.get_from(Some("section name"), "Key").unwrap(),
+            "Value\nOtherline"
+        );
     }
 
     #[test]
@@ -977,8 +997,10 @@ Key = \"Value   # This is not a comment ; at all\"
 Stuff = Other
 ";
         let ini = Ini::load_from_str(input).unwrap();
-        assert_eq!(ini.get_from(Some("section name"), "Key").unwrap(),
-                   "Value   # This is not a comment ; at all");
+        assert_eq!(
+            ini.get_from(Some("section name"), "Key").unwrap(),
+            "Value   # This is not a comment ; at all"
+        );
     }
 
     #[test]
@@ -1001,8 +1023,10 @@ Comment[tr]=İnternet'e erişin
 Comment[uk]=Доступ до Інтернету
 ";
         let ini = Ini::load_from_str(input).unwrap();
-        assert_eq!(ini.get_from(Some("Test"), "Comment[tr]").unwrap(),
-                   "İnternet'e erişin");
+        assert_eq!(
+            ini.get_from(Some("Test"), "Comment[tr]").unwrap(),
+            "İnternet'e erişin"
+        );
     }
 
     #[test]
@@ -1015,8 +1039,10 @@ Otherline'
 Stuff = Other
 ";
         let ini = Ini::load_from_str(input).unwrap();
-        assert_eq!(ini.get_from(Some("section name"), "Key").unwrap(),
-                   "Value\nOtherline");
+        assert_eq!(
+            ini.get_from(Some("section name"), "Key").unwrap(),
+            "Value\nOtherline"
+        );
     }
 
     #[test]
@@ -1027,8 +1053,10 @@ Stuff = Other
 Key = 'Value   # This is not a comment ; at all'
 ";
         let ini = Ini::load_from_str(input).unwrap();
-        assert_eq!(ini.get_from(Some("section name"), "Key").unwrap(),
-                   "Value   # This is not a comment ; at all");
+        assert_eq!(
+            ini.get_from(Some("section name"), "Key").unwrap(),
+            "Value   # This is not a comment ; at all"
+        );
     }
 
     #[test]
