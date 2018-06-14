@@ -26,9 +26,9 @@
 //! extern crate time;
 //! ```
 //!
-//! This crate uses the same syntax for format strings as the [strftime()]
-//! (http://man7.org/linux/man-pages/man3/strftime.3.html) function from the C
-//! standard library.
+//! This crate uses the same syntax for format strings as the
+//! [`strftime()`](http://man7.org/linux/man-pages/man3/strftime.3.html)
+//! function from the C standard library.
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -38,12 +38,10 @@
 
 #[cfg(target_os = "redox")] extern crate syscall;
 #[cfg(unix)] extern crate libc;
-#[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] extern crate winapi;
 #[cfg(feature = "rustc-serialize")] extern crate rustc_serialize;
 
 #[cfg(test)] #[macro_use] extern crate log;
-#[cfg(all(windows, test))] extern crate advapi32;
 
 use std::cmp::Ordering;
 use std::error::Error;
@@ -158,6 +156,7 @@ pub fn get_time() -> Timespec {
  * Returns the current value of a high-resolution performance counter
  * in nanoseconds since an unspecified epoch.
  */
+#[inline]
 pub fn precise_time_ns() -> u64 {
     sys::get_precise_ns()
 }
@@ -332,7 +331,7 @@ pub struct Tm {
     /// Identifies the time zone that was used to compute this broken-down time
     /// value, including any adjustment for Daylight Saving Time. This is the
     /// number of seconds east of UTC. For example, for U.S. Pacific Daylight
-    /// Time, the value is -7*60*60 = -25200.
+    /// Time, the value is `-7*60*60 = -25200`.
     pub tm_utcoff: i32,
 
     /// Nanoseconds after the second - [0, 10<sup>9</sup> - 1]

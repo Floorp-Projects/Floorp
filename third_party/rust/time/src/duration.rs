@@ -193,7 +193,7 @@ impl Duration {
     }
 
     /// Returns the total number of whole microseconds in the duration,
-    /// or `None` on overflow (exceeding 2^63 microseconds in either direction).
+    /// or `None` on overflow (exceeding 2<sup>63</sup> microseconds in either direction).
     pub fn num_microseconds(&self) -> Option<i64> {
         let secs_part = try_opt!(self.num_seconds().checked_mul(MICROS_PER_SEC));
         let nanos_part = self.nanos_mod_sec() / NANOS_PER_MICRO;
@@ -201,7 +201,7 @@ impl Duration {
     }
 
     /// Returns the total number of whole nanoseconds in the duration,
-    /// or `None` on overflow (exceeding 2^63 nanoseconds in either direction).
+    /// or `None` on overflow (exceeding 2<sup>63</sup> nanoseconds in either direction).
     pub fn num_nanoseconds(&self) -> Option<i64> {
         let secs_part = try_opt!(self.num_seconds().checked_mul(NANOS_PER_SEC as i64));
         let nanos_part = self.nanos_mod_sec();
