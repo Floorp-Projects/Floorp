@@ -921,14 +921,6 @@ nsIFrame::AddDisplayItem(nsDisplayItem* aItem)
 bool
 nsIFrame::RemoveDisplayItem(nsDisplayItem* aItem)
 {
-  // Unset any pointers from our DisplayItemData to the removed item
-  for (size_t i = 0; i < mDisplayItemData.Length(); i++) {
-    mozilla::DisplayItemData* data = mozilla::DisplayItemData::AssertDisplayItemData(mDisplayItemData.ElementAt(i));
-    if (data->GetItem() == aItem) {
-      data->SetItem(nullptr);
-    }
-  }
-
   DisplayItemArray* items = GetProperty(DisplayItems());
   if (!items) {
     return false;

@@ -2008,7 +2008,7 @@ MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs)
     mozilla::DisplayItemData* did = array.ElementAt(i);
     if (did->GetDisplayItemKey() == item->GetPerFrameKey()) {
       if (!did->HasMergedFrames()) {
-        item->SetDisplayItemData(did, did->GetLayer()->Manager());
+        item->SetDisplayItemData(did);
       }
       break;
     }
@@ -2808,16 +2808,11 @@ public:
       nsDisplayListBuilder* aBuilder,
       const ActiveScrolledRoot* aASR) const;
 
-  void SetDisplayItemData(mozilla::DisplayItemData* aDID, mozilla::layers::LayerManager* aLayerManager) {
-    if (aDID) {
-      aDID->SetItem(this);
-    }
+  void SetDisplayItemData(mozilla::DisplayItemData* aDID) {
     mDisplayItemData = aDID;
-    mDisplayItemDataLayerManager = aLayerManager;
   }
 
   mozilla::DisplayItemData* GetDisplayItemData() { return mDisplayItemData; }
-  mozilla::layers::LayerManager* GetDisplayItemDataLayerManager() { return mDisplayItemDataLayerManager; }
 
   // Set the nsDisplayList that this item belongs to, and what
   // index it is within that list. Temporary state for merging
@@ -2863,8 +2858,7 @@ protected:
   RefPtr<struct AnimatedGeometryRoot> mAnimatedGeometryRoot;
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
   nsPoint   mToReferenceFrame;
-  mozilla::DisplayItemData* mDisplayItemData = nullptr;
-  mozilla::layers::LayerManager* mDisplayItemDataLayerManager = nullptr;
+  RefPtr<mozilla::DisplayItemData> mDisplayItemData;
 
 private:
   // This is the rectangle that nsDisplayListBuilder was using as the visible
