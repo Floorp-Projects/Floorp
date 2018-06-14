@@ -12,7 +12,7 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Tree = createFactory(require("devtools/client/shared/components/VirtualizedTree"));
-const OptimizationsItem = createFactory(require("./jit-optimizations-item"));
+const OptimizationsItem = createFactory(require("./JITOptimizationsItem"));
 const FrameView = createFactory(require("../../shared/components/Frame"));
 const JIT_TITLE = L10N.getStr("jit.title");
 // If TREE_ROW_HEIGHT changes, be sure to change `var(--jit-tree-row-height)`
