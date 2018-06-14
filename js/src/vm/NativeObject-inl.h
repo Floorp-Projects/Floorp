@@ -669,6 +669,12 @@ NativeObject::allocKindForTenure() const
     return GetBackgroundAllocKind(kind);
 }
 
+inline js::GlobalObject&
+NativeObject::global() const
+{
+    return JSObject::global();
+}
+
 inline js::gc::AllocKind
 PlainObject::allocKindForTenure() const
 {
