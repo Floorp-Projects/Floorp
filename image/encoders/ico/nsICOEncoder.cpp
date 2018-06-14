@@ -17,13 +17,16 @@ using namespace mozilla::image;
 NS_IMPL_ISUPPORTS(nsICOEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
 
-nsICOEncoder::nsICOEncoder() : mImageBufferStart(nullptr),
-                               mImageBufferCurr(0),
-                               mImageBufferSize(0),
-                               mImageBufferReadPoint(0),
-                               mFinished(false),
-                               mUsePNG(true),
-                               mNotifyThreshold(0)
+nsICOEncoder::nsICOEncoder()
+  : mICOFileHeader{}
+  , mICODirEntry{}
+  , mImageBufferStart(nullptr)
+  , mImageBufferCurr(0)
+  , mImageBufferSize(0)
+  , mImageBufferReadPoint(0)
+  , mFinished(false)
+  , mUsePNG(true)
+  , mNotifyThreshold(0)
 {
 }
 

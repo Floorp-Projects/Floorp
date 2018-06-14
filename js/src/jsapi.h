@@ -1138,16 +1138,6 @@ extern JS_PUBLIC_API(void)
 JS_MarkCrossZoneIdValue(JSContext* cx, const JS::Value& value);
 
 /**
- * Initialize standard JS class constructors, prototypes, and any top-level
- * functions and constants associated with the standard classes (e.g. isNaN
- * for Number).
- *
- * NB: This sets cx's global object to obj if it was null.
- */
-extern JS_PUBLIC_API(bool)
-JS_InitStandardClasses(JSContext* cx, JS::Handle<JSObject*> obj);
-
-/**
  * Resolve id, which must contain either a string or an int, to a standard
  * class name in obj if possible, defining the class's constructor and/or
  * prototype and storing true in *resolved.  If id does not name a standard
@@ -1206,41 +1196,6 @@ ProtoKeyToId(JSContext* cx, JSProtoKey key, JS::MutableHandleId idp);
 
 extern JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext* cx, JS::HandleId id);
-
-/**
- * Returns the original value of |Function.prototype| from the global object in
- * which |forObj| was created.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetFunctionPrototype(JSContext* cx, JS::HandleObject forObj);
-
-/**
- * Returns the original value of |Object.prototype| from the global object in
- * which |forObj| was created.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetObjectPrototype(JSContext* cx, JS::HandleObject forObj);
-
-/**
- * Returns the original value of |Array.prototype| from the global object in
- * which |forObj| was created.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetArrayPrototype(JSContext* cx, JS::HandleObject forObj);
-
-/**
- * Returns the original value of |Error.prototype| from the global
- * object of the current compartment of cx.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetErrorPrototype(JSContext* cx);
-
-/**
- * Returns the %IteratorPrototype% object that all built-in iterator prototype
- * chains go through for the global object of the current compartment of cx.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetIteratorPrototype(JSContext* cx);
 
 extern JS_PUBLIC_API(JSObject*)
 JS_GetGlobalForObject(JSContext* cx, JSObject* obj);

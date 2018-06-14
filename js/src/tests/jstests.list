@@ -46,11 +46,6 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script non262/SIMD/load-sab-b
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
 
-# flatMap and flatten are Nightly-only
-skip-if(!Array.prototype.flatMap) include test262/built-ins/Array/prototype/flatMap/jstests.list
-skip-if(!Array.prototype.flat) include test262/built-ins/Array/prototype/flat/jstests.list
-
-
 #####################################
 # Test262 tests disabled on browser #
 #####################################
@@ -129,9 +124,6 @@ skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buff
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-greater-than-last-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-lower-than-zero.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-minus-zero.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-not-canonical-index.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-not-integer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Get/key-is-not-canonical-index.js
@@ -139,10 +131,8 @@ skip script test262/built-ins/TypedArrayConstructors/internals/Get/key-is-not-in
 skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/key-is-not-canonical-index.js
 skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-not-canonical-index.js
 skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-canonical-index.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-throws.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317405

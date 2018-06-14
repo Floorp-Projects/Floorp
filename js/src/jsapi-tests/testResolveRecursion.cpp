@@ -148,7 +148,7 @@ END_TEST(testResolveRecursion)
  */
 BEGIN_TEST(testResolveRecursion_InitStandardClasses)
 {
-    CHECK(JS_InitStandardClasses(cx, global));
+    CHECK(JS::InitRealmStandardClasses(cx));
     return true;
 }
 
