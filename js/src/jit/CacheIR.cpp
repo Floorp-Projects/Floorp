@@ -5045,7 +5045,7 @@ UnaryArithIRGenerator::tryAttachNumber()
         return false;
 
     ValOperandId valId(writer.setInputOperandId(0));
-    writer.guardType(valId, JSVAL_TYPE_DOUBLE);
+    writer.guardIsNumber(valId);
     Int32OperandId truncatedId;
     switch (op_) {
       case JSOP_BITNOT:
