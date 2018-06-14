@@ -671,12 +671,15 @@ IProtocol::ManagedState::GetActorEventTarget(IProtocol* aActor)
   return mProtocol->Manager()->GetActorEventTarget(aActor);
 }
 
-IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId, Side aSide)
- : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide)),
-   mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor"),
-   mProtocolId(aProtoId),
-   mOtherPid(mozilla::ipc::kInvalidProcessId),
-   mOtherPidState(ProcessIdState::eUnstarted)
+IToplevelProtocol::IToplevelProtocol(const char* aName,
+                                     ProtocolId aProtoId,
+                                     Side aSide)
+  : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide))
+  , mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor")
+  , mProtocolId(aProtoId)
+  , mOtherPid(mozilla::ipc::kInvalidProcessId)
+  , mOtherPidState(ProcessIdState::eUnstarted)
+  , mIsMainThreadProtocol(false)
 {
 }
 
