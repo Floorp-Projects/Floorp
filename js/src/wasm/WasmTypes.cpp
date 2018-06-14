@@ -47,10 +47,18 @@ using mozilla::MakeEnumeratedRange;
 #  endif
 #endif
 
-// Another sanity check.
+// More sanity checks.
 
 static_assert(MaxMemoryInitialPages <= ArrayBufferObject::MaxBufferByteLength / PageSize,
               "Memory sizing constraint");
+
+// All plausible targets must be able to do at least IEEE754 double
+// loads/stores, hence the lower limit of 8.  Some Intel processors support
+// AVX-512 loads/stores, hence the upper limit of 64.
+static_assert(MaxMemoryAccessSize >= 8,  "MaxMemoryAccessSize too low");
+static_assert(MaxMemoryAccessSize <= 64, "MaxMemoryAccessSize too high");
+static_assert((MaxMemoryAccessSize & (MaxMemoryAccessSize-1)) == 0,
+              "MaxMemoryAccessSize is not a power of two");
 
 void
 Val::writePayload(uint8_t* dst) const
