@@ -1490,14 +1490,21 @@ ModuleBuilder::processExportObjectBinding(frontend::ParseNode* pn)
     for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
         MOZ_ASSERT(node->isKind(ParseNodeKind::MutateProto) ||
                    node->isKind(ParseNodeKind::Colon) ||
-                   node->isKind(ParseNodeKind::Shorthand));
+                   node->isKind(ParseNodeKind::Shorthand) ||
+                   node->isKind(ParseNodeKind::Spread));
 
-        ParseNode* target = node->isKind(ParseNodeKind::MutateProto)
-            ? node->pn_kid
-            : node->pn_right;
+        ParseNode* target;
+        if (node->isKind(ParseNodeKind::Spread)) {
+            target = node->pn_kid;
+        } else {
+            if (node->isKind(ParseNodeKind::MutateProto))
+                target = node->pn_kid;
+            else
+                target = node->pn_right;
 
-        if (target->isKind(ParseNodeKind::Assign))
-            target = target->pn_left;
+            if (target->isKind(ParseNodeKind::Assign))
+                target = target->pn_left;
+        }
 
         if (!processExportBinding(target))
             return false;
