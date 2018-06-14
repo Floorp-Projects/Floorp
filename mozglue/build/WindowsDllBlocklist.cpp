@@ -374,6 +374,45 @@ static wchar_t* lastslash(wchar_t* s, int len)
   return nullptr;
 }
 
+
+#ifdef ENABLE_TESTS
+DllLoadHookType gDllLoadHook = nullptr;
+
+void
+DllBlocklist_SetDllLoadHook(DllLoadHookType aHook)
+{
+  gDllLoadHook = aHook;
+}
+
+void
+CallDllLoadHook(bool aDllLoaded, NTSTATUS aStatus, HANDLE aDllBase, PUNICODE_STRING aDllName)
+{
+  if (gDllLoadHook) {
+    gDllLoadHook(aDllLoaded, aStatus, aDllBase, aDllName);
+  }
+}
+
+CreateThreadHookType gCreateThreadHook = nullptr;
+
+void
+DllBlocklist_SetCreateThreadHook(CreateThreadHookType aHook)
+{
+  gCreateThreadHook = aHook;
+}
+
+void
+CallCreateThreadHook(bool aWasAllowed, void* aStartAddress)
+{
+  if (gCreateThreadHook) {
+    gCreateThreadHook(aWasAllowed, aStartAddress);
+  }
+}
+
+#else // ENABLE_TESTS
+#define CallDllLoadHook(...)
+#define CallCreateThreadHook(...)
+#endif // ENABLE_TESTS
+
 static NTSTATUS NTAPI
 patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle)
 {
@@ -453,6 +492,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       char * end = nullptr;
       _strtoui64(dot+1, &end, 16);
       if (end == dot+13) {
+        CallDllLoadHook(false, STATUS_DLL_NOT_FOUND, 0, moduleFileName);
         return STATUS_DLL_NOT_FOUND;
       }
     }
@@ -463,6 +503,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
         current++;
       }
       if (current == dot) {
+        CallDllLoadHook(false, STATUS_DLL_NOT_FOUND, 0, moduleFileName);
         return STATUS_DLL_NOT_FOUND;
       }
     }
@@ -510,6 +551,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
         if (!full_fname) {
           // uh, we couldn't find the DLL at all, so...
           printf_stderr("LdrLoadDll: Blocking load of '%s' (SearchPathW didn't find it?)\n", dllName);
+          CallDllLoadHook(false, STATUS_DLL_NOT_FOUND, 0, moduleFileName);
           return STATUS_DLL_NOT_FOUND;
         }
 
@@ -548,6 +590,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       if (!load_ok) {
         printf_stderr("LdrLoadDll: Blocking load of '%s' -- see http://www.mozilla.com/en-US/blocklist/\n", dllName);
         DllBlockSet::Add(info->name, fVersion);
+        CallDllLoadHook(false, STATUS_DLL_NOT_FOUND, 0, moduleFileName);
         return STATUS_DLL_NOT_FOUND;
       }
     }
@@ -570,7 +613,9 @@ continue_loading:
   AutoSuppressStackWalking suppress;
 #endif
 
-  return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
+  NTSTATUS ret = stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
+  CallDllLoadHook(true, ret, handle ? *handle : 0, moduleFileName);
+  return ret;
 }
 
 #if defined(NIGHTLY_BUILD)
@@ -616,7 +661,10 @@ patched_BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress,
                             void* aThreadParam)
 {
   if (ShouldBlockThread(aStartAddress)) {
+    CallCreateThreadHook(false, aStartAddress);
     aStartAddress = (void*)NopThreadProc;
+  } else {
+    CallCreateThreadHook(true, aStartAddress);
   }
 
   stub_BaseThreadInitThunk(aIsInitialThread, aStartAddress, aThreadParam);
