@@ -440,9 +440,16 @@ ActiveLayerTracker::IsStyleAnimated(nsDisplayListBuilder* aBuilder,
   LayerActivity* layerActivity = GetLayerActivity(aFrame);
   if (layerActivity) {
     LayerActivity::ActivityIndex activityIndex = LayerActivity::GetActivityIndexForProperty(aProperty);
-    if (layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT] < 2 &&
-        layerActivity->mRestyleCounts[activityIndex] >= 2) {
-      return true;
+    if (layerActivity->mRestyleCounts[activityIndex] >= 2) {
+      // If the frame needs to be repainted frequently, we probably don't get
+      // much from treating the property as animated, *unless* this frame's
+      // 'scale' (which includes the bounds changes of a rotation) is changing.
+      // Marking a scaling transform as animating allows us to avoid resizing
+      // the texture, even if we have to repaint the contents of that texture.
+      if (layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT] < 2 ||
+          (aProperty == eCSSProperty_transform && IsScaleSubjectToAnimation(aFrame))) {
+        return true;
+      }
     }
     if (CheckScrollInducedActivity(layerActivity, activityIndex, aBuilder)) {
       return true;
