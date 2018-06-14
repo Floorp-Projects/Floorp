@@ -732,7 +732,7 @@ var Blocklist = {
     var oldAddonEntries = this._addonEntries;
     var oldPluginEntries = this._pluginEntries;
 
-    this._loadBlocklistFromXML(responseXML);
+    await this._loadBlocklistFromXML(responseXML);
     // We don't inform the users when the graphics blocklist changed at runtime.
     // However addons and plugins blocking status is refreshed.
     this._blocklistUpdated(oldAddonEntries, oldPluginEntries);
@@ -778,7 +778,7 @@ var Blocklist = {
     this._addonEntries = null;
     this._gfxEntries = null;
     this._pluginEntries = null;
-    delete this._preloadPromise;
+    delete this._loadPromise;
   },
 
   /**
@@ -788,17 +788,17 @@ var Blocklist = {
     if (this.isLoaded) {
       return;
     }
-    if (!this._preloadPromise) {
-      this._preloadPromise = this._loadBlocklistAsyncInternal();
+    if (!this._loadPromise) {
+      this._loadPromise = this._loadBlocklistAsyncInternal();
     }
-    await this._preloadPromise;
+    await this._loadPromise;
   },
 
   async _loadBlocklistAsyncInternal() {
     try {
       // Get the path inside the try...catch because there's no profileDir in e.g. xpcshell tests.
       let profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-      await this._preloadBlocklistFile(profFile);
+      await this._loadFileInternal(profFile);
       return;
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
@@ -806,7 +806,7 @@ var Blocklist = {
 
     var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
     try {
-      await this._preloadBlocklistFile(appFile);
+      await this._loadFileInternal(appFile);
       return;
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
@@ -820,13 +820,13 @@ var Blocklist = {
     this._pluginEntries = [];
   },
 
-  async _preloadBlocklistFile(file) {
+  async _loadFileInternal(file) {
     if (this.isLoaded) {
       return;
     }
 
     if (!gBlocklistEnabled) {
-      LOG("Blocklist::_preloadBlocklistFile: blocklist is disabled");
+      LOG("Blocklist::_loadFileInternal: blocklist is disabled");
       return;
     }
 
@@ -838,7 +838,7 @@ var Blocklist = {
       request.addEventListener("load", function() {
         let {status} = request;
         if (status != 200 && status != 0) {
-          LOG("_preloadBlocklistFile: there was an error during load, got status: " + status);
+          LOG("_loadFileInternal: there was an error during load, got status: " + status);
           reject(new Error("Couldn't load blocklist file"));
           return;
         }
@@ -856,16 +856,16 @@ var Blocklist = {
     });
 
     await new Promise(resolve => {
-      ChromeUtils.idleDispatch(() => {
+      ChromeUtils.idleDispatch(async () => {
         if (!this.isLoaded) {
-          this._loadBlocklistFromXML(xmlDoc);
+          await this._loadBlocklistFromXML(xmlDoc);
         }
         resolve();
       });
     });
   },
 
-  _loadBlocklistFromXML(doc) {
+  async _loadBlocklistFromXML(doc) {
     this._addonEntries = [];
     this._gfxEntries = [];
     this._pluginEntries = [];
@@ -874,17 +874,17 @@ var Blocklist = {
       for (let element of children) {
         switch (element.localName) {
         case "emItems":
-          this._addonEntries = this._processItemNodes(element.children, "emItem",
-                                                      this._handleEmItemNode);
+          this._addonEntries = await this._processItemNodes(element.children, "emItem",
+                                                            this._handleEmItemNode);
           break;
         case "pluginItems":
-          this._pluginEntries = this._processItemNodes(element.children, "pluginItem",
-                                                       this._handlePluginItemNode);
+          this._pluginEntries = await this._processItemNodes(element.children, "pluginItem",
+                                                             this._handlePluginItemNode);
           break;
         case "gfxItems":
           // Parse as simple list of objects.
-          this._gfxEntries = this._processItemNodes(element.children, "gfxBlacklistEntry",
-                                                    this._handleGfxBlacklistNode);
+          this._gfxEntries = await this._processItemNodes(element.children, "gfxBlacklistEntry",
+                                                          this._handleGfxBlacklistNode);
           break;
         default:
           LOG("Blocklist::_loadBlocklistFromXML: ignored entries " + element.localName);
@@ -904,11 +904,15 @@ var Blocklist = {
     });
   },
 
-  _processItemNodes(items, itemName, handler) {
+  async _processItemNodes(items, itemName, handler) {
     var result = [];
+    let deadline = await new Promise(ChromeUtils.idleDispatch);
     for (let item of items) {
       if (item.localName == itemName) {
         handler(item, result);
+      }
+      if (!deadline || deadline.didTimeout || deadline.timeRemaining() < 1) {
+        deadline = await new Promise(ChromeUtils.idleDispatch);
       }
     }
     return result;
