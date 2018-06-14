@@ -9,6 +9,7 @@
 #include "nsAutoPtr.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamLoader.h"
 #include "nsIHttpChannel.h"
@@ -2801,50 +2802,6 @@ ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistr
   RemoveScopeAndRegistration(aRegistration);
 }
 
-namespace {
-/**
- * See toolkit/modules/sessionstore/Utils.jsm function hasRootDomain().
- *
- * Returns true if the |url| passed in is part of the given root |domain|.
- * For example, if |url| is "www.mozilla.org", and we pass in |domain| as
- * "mozilla.org", this will return true. It would return false the other way
- * around.
- */
-bool
-HasRootDomain(nsIURI* aURI, const nsACString& aDomain)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aURI);
-
-  nsAutoCString host;
-  nsresult rv = aURI->GetHost(host);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  nsACString::const_iterator start, end;
-  host.BeginReading(start);
-  host.EndReading(end);
-  if (!FindInReadable(aDomain, start, end)) {
-    return false;
-  }
-
-  if (host.Equals(aDomain)) {
-    return true;
-  }
-
-  // Beginning of the string matches, can't look at the previous char.
-  if (start.get() == host.BeginReading()) {
-    // Equals failed so this is fine.
-    return false;
-  }
-
-  char prevChar = *(--start);
-  return prevChar == '.';
-}
-
-} // namespace
-
 NS_IMETHODIMP
 ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
 {
@@ -2900,6 +2857,12 @@ ServiceWorkerManager::Remove(const nsACString& aHost)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (NS_WARN_IF(!tldService)) {
+    return;
+  }
+
   for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
     ServiceWorkerManager::RegistrationDataPerPrincipal* data = it1.UserData();
     for (auto it2 = data->mInfos.Iter(); !it2.Done(); it2.Next()) {
@@ -2907,8 +2870,24 @@ ServiceWorkerManager::Remove(const nsACString& aHost)
       nsCOMPtr<nsIURI> scopeURI;
       nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), it2.Key(),
                               nullptr, nullptr);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      nsAutoCString host;
+      rv = scopeURI->GetHost(host);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
       // This way subdomains are also cleared.
-      if (NS_SUCCEEDED(rv) && HasRootDomain(scopeURI, aHost)) {
+      bool hasRootDomain = false;
+      rv = tldService->HasRootDomain(host, aHost, &hasRootDomain);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      if (hasRootDomain) {
         ForceUnregister(data, reg);
       }
     }
