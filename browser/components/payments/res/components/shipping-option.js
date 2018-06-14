@@ -33,6 +33,7 @@ export default class ShippingOption extends ObservedPropertiesMixin(RichOption) 
 
   connectedCallback() {
     this.appendChild(this._currencyAmount);
+    this.append(" ");
     this.appendChild(this._label);
     super.connectedCallback();
   }

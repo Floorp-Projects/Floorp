@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ServoCounterStyleRule.h"
+#include "mozilla/dom/CSSCounterStyleRule.h"
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/CSSCounterStyleRuleBinding.h"
@@ -12,16 +12,17 @@
 #include "nsStyleUtil.h"
 
 namespace mozilla {
+namespace dom {
 
 bool
-ServoCounterStyleRule::IsCCLeaf() const
+CSSCounterStyleRule::IsCCLeaf() const
 {
   return Rule::IsCCLeaf();
 }
 
 #ifdef DEBUG
 void
-ServoCounterStyleRule::List(FILE* out, int32_t aIndent) const
+CSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
 {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
@@ -33,19 +34,19 @@ ServoCounterStyleRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 uint16_t
-ServoCounterStyleRule::Type() const
+CSSCounterStyleRule::Type() const
 {
   return CSSRuleBinding::COUNTER_STYLE_RULE;
 }
 
 void
-ServoCounterStyleRule::GetCssText(nsAString& aCssText) const
+CSSCounterStyleRule::GetCssText(nsAString& aCssText) const
 {
   Servo_CounterStyleRule_GetCssText(mRawRule, &aCssText);
 }
 
 void
-ServoCounterStyleRule::GetName(nsAString& aName)
+CSSCounterStyleRule::GetName(nsAString& aName)
 {
   aName.Truncate();
   nsAtom* name = Servo_CounterStyleRule_GetName(mRawRule);
@@ -54,7 +55,7 @@ ServoCounterStyleRule::GetName(nsAString& aName)
 }
 
 void
-ServoCounterStyleRule::SetName(const nsAString& aName)
+CSSCounterStyleRule::SetName(const nsAString& aName)
 {
   NS_ConvertUTF16toUTF8 name(aName);
   if (Servo_CounterStyleRule_SetName(mRawRule, &name)) {
@@ -66,14 +67,14 @@ ServoCounterStyleRule::SetName(const nsAString& aName)
 
 #define CSS_COUNTER_DESC(name_, method_)                        \
   void                                                          \
-  ServoCounterStyleRule::Get##method_(nsAString& aValue)        \
+  CSSCounterStyleRule::Get##method_(nsAString& aValue)          \
   {                                                             \
     aValue.Truncate();                                          \
     Servo_CounterStyleRule_GetDescriptorCssText(                \
       mRawRule, eCSSCounterDesc_##method_, &aValue);            \
   }                                                             \
   void                                                          \
-  ServoCounterStyleRule::Set##method_(const nsAString& aValue)  \
+  CSSCounterStyleRule::Set##method_(const nsAString& aValue)    \
   {                                                             \
     NS_ConvertUTF16toUTF8 value(aValue);                        \
     if (Servo_CounterStyleRule_SetDescriptor(                   \
@@ -87,16 +88,17 @@ ServoCounterStyleRule::SetName(const nsAString& aName)
 #undef CSS_COUNTER_DESC
 
 /* virtual */ size_t
-ServoCounterStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+CSSCounterStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }
 
 /* virtual */ JSObject*
-ServoCounterStyleRule::WrapObject(JSContext* aCx,
-                                  JS::Handle<JSObject*> aGivenProto)
+CSSCounterStyleRule::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto)
 {
   return CSSCounterStyleRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
+} // namespace dom
 } // namespace mozilla

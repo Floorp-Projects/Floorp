@@ -7,11 +7,11 @@
 #include "mozilla/ServoStyleRuleMap.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleBinding.h"
+#include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/ServoImportRule.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsDocument.h"
 #include "nsStyleSheetService.h"
@@ -92,7 +92,7 @@ ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
 
   switch (aStyleRule.Type()) {
     case CSSRuleBinding::STYLE_RULE: {
-      auto& rule = static_cast<ServoStyleRule&>(aStyleRule);
+      auto& rule = static_cast<CSSStyleRule&>(aStyleRule);
       mTable.Remove(rule.Raw());
       break;
     }
@@ -130,7 +130,7 @@ ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
 {
   switch (aRule.Type()) {
     case CSSRuleBinding::STYLE_RULE: {
-      auto& rule = static_cast<ServoStyleRule&>(aRule);
+      auto& rule = static_cast<CSSStyleRule&>(aRule);
       mTable.Put(rule.Raw(), &rule);
       break;
     }
@@ -143,7 +143,7 @@ ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
       break;
     }
     case CSSRuleBinding::IMPORT_RULE: {
-      auto& rule = static_cast<ServoImportRule&>(aRule);
+      auto& rule = static_cast<CSSImportRule&>(aRule);
       MOZ_ASSERT(aRule.GetStyleSheet());
       FillTableFromStyleSheet(*rule.GetStyleSheet());
       break;

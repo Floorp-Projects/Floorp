@@ -1649,10 +1649,11 @@ Gecko_CreateGradient(uint8_t aShape,
   result->mRadiusX.SetNoneValue();
   result->mRadiusY.SetNoneValue();
 
-  nsStyleGradientStop dummyStop;
-  dummyStop.mLocation.SetNoneValue();
-  dummyStop.mColor = NS_RGB(0, 0, 0);
-  dummyStop.mIsInterpolationHint = 0;
+  nsStyleGradientStop dummyStop = {
+    nsStyleCoord(eStyleUnit_None),
+    StyleComplexColor::FromColor(NS_RGB(0, 0, 0)),
+    0
+  };
 
   for (uint32_t i = 0; i < aStopCount; i++) {
     result->mStops.AppendElement(dummyStop);

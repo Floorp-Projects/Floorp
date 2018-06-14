@@ -9,28 +9,48 @@
 
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/URLMatchingFunction.h"
+#include "mozilla/ServoBindingTypes.h"
 
 namespace mozilla {
 namespace dom {
 
-class CSSMozDocumentRule : public css::ConditionRule
+class CSSMozDocumentRule final : public css::ConditionRule
 {
-protected:
-  using ConditionRule::ConditionRule;
-  virtual ~CSSMozDocumentRule() {}
-
 public:
+  CSSMozDocumentRule(RefPtr<RawServoMozDocumentRule> aRawRule,
+                     uint32_t aLine, uint32_t aColumn);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
   static bool Match(nsIDocument* aDoc,
                     nsIURI* aDocURI,
                     const nsACString& aDocURISpec,
                     const nsACString& aPattern,
                     css::URLMatchingFunction aUrlMatchingFunction);
 
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  RawServoMozDocumentRule* Raw() const { return mRawRule; }
+
   // WebIDL interface
   uint16_t Type() const final { return CSSRuleBinding::DOCUMENT_RULE; }
+  void GetCssText(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const override;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+private:
+  ~CSSMozDocumentRule() = default;
+
+  RefPtr<RawServoMozDocumentRule> mRawRule;
 };
 
 } // namespace dom

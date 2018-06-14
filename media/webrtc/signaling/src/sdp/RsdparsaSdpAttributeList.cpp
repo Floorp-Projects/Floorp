@@ -698,19 +698,85 @@ RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList)
 void
 RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList)
 {
-  // TODO: Not implemented, see Bug 1432918
-#if 0
   size_t numFmtp = sdp_get_fmtp_count(attributeList);
     if (numFmtp == 0) {
     return;
   }
   auto rustFmtps = MakeUnique<RustSdpAttributeFmtp[]>(numFmtp);
-  size_t numValidFmtp = sdp_get_fmtp(attributeList, numFmtp,
-                                        rustFmtps.get());
+  size_t numValidFmtp = sdp_get_fmtp(attributeList, numFmtp,rustFmtps.get());
+  auto fmtpList = MakeUnique<SdpFmtpAttributeList>();
   for(size_t i = 0; i < numValidFmtp; i++) {
-    RustSdpAttributeFmtp& fmtp = rustFmtps[i];
+    const RustSdpAttributeFmtp& fmtp = rustFmtps[i];
+    uint8_t payloadType = fmtp.payloadType;
+    std::string codecName = convertStringView(fmtp.codecName);
+    const RustSdpAttributeFmtpParameters& rustFmtpParameters = fmtp.parameters;
+
+    UniquePtr<SdpFmtpAttributeList::Parameters> fmtpParameters;
+
+    // use the upper case version of the codec name
+    std::transform(codecName.begin(), codecName.end(),
+                   codecName.begin(), ::toupper);
+
+    if(codecName == "H264"){
+      SdpFmtpAttributeList::H264Parameters h264Parameters;
+
+      h264Parameters.packetization_mode = rustFmtpParameters.packetization_mode;
+      h264Parameters.level_asymmetry_allowed =
+                                  rustFmtpParameters.level_asymmetry_allowed;
+      h264Parameters.profile_level_id = rustFmtpParameters.profile_level_id;
+      h264Parameters.max_mbps = rustFmtpParameters.max_mbps;
+      h264Parameters.max_fs = rustFmtpParameters.max_fs;
+      h264Parameters.max_cpb = rustFmtpParameters.max_cpb;
+      h264Parameters.max_dpb = rustFmtpParameters.max_dpb;
+      h264Parameters.max_br = rustFmtpParameters.max_br;
+
+      // TODO(bug 1466859): Support sprop-parameter-sets
+
+      fmtpParameters.reset(new SdpFmtpAttributeList::H264Parameters(
+                                                    std::move(h264Parameters)));
+    } else if(codecName == "OPUS"){
+      SdpFmtpAttributeList::OpusParameters opusParameters;
+
+      opusParameters.maxplaybackrate = rustFmtpParameters.maxplaybackrate;
+      opusParameters.stereo = rustFmtpParameters.stereo;
+      opusParameters.useInBandFec = rustFmtpParameters.useinbandfec;
+
+      fmtpParameters.reset(new SdpFmtpAttributeList::OpusParameters(
+                                                    std::move(opusParameters)));
+    } else if((codecName == "VP8") || (codecName == "VP9")){
+      SdpFmtpAttributeList::VP8Parameters
+                                    vp8Parameters(codecName == "VP8" ?
+                                                  SdpRtpmapAttributeList::kVP8 :
+                                                  SdpRtpmapAttributeList::kVP9);
+
+      vp8Parameters.max_fs = rustFmtpParameters.max_fs;
+      vp8Parameters.max_fr = rustFmtpParameters.max_fr;
+
+      fmtpParameters.reset(new SdpFmtpAttributeList::VP8Parameters(
+                                                     std::move(vp8Parameters)));
+    } else if(codecName == "TELEPHONE-EVENT"){
+      SdpFmtpAttributeList::TelephoneEventParameters telephoneEventParameters;
+
+      telephoneEventParameters.dtmfTones =
+                              convertStringView(rustFmtpParameters.dtmf_tones);
+
+      fmtpParameters.reset(new SdpFmtpAttributeList::TelephoneEventParameters(
+                                          std::move(telephoneEventParameters)));
+    } else if(codecName == "RED") {
+      SdpFmtpAttributeList::RedParameters redParameters;
+
+      redParameters.encodings = convertU8Vec(rustFmtpParameters.encodings);
+
+      fmtpParameters.reset(new SdpFmtpAttributeList::RedParameters(
+                                                     std::move(redParameters)));
+    } else{
+      // The parameter set is unknown so skip it
+      continue;
+    }
+
+    fmtpList->PushEntry(std::to_string(payloadType), std::move(fmtpParameters));
   }
-#endif
+  SetAttribute(fmtpList.release());
 }
 
 void

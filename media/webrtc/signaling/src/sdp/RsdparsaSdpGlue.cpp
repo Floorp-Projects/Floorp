@@ -45,4 +45,18 @@ sdp::AddrType convertAddressType(RustSdpAddrType addrType)
   MOZ_CRASH("unknown address type");
 }
 
+std::vector<uint8_t> convertU8Vec(U8Vec* vec)
+{
+  std::vector<std::uint8_t> ret;
+
+  size_t len = u8_vec_len(vec);
+  for (size_t i = 0; i < len; i++) {
+    uint8_t byte;
+    u8_vec_get(vec, i, &byte);
+    ret.push_back(byte);
+  }
+
+  return ret;
+}
+
 }

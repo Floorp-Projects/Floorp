@@ -7,7 +7,7 @@ use std::error::Error;
 use serde::ser::{Serializer, Serialize, SerializeStruct};
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SdpParserInternalError {
     Generic(String),
     Unsupported(String),
@@ -99,7 +99,7 @@ fn test_sdp_parser_internal_error_address() {
     assert!(!addr_err.cause().is_none());
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SdpParserError {
     Line {
         error: SdpParserInternalError,

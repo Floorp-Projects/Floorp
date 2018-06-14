@@ -41,7 +41,6 @@ use style::gecko_bindings::bindings::{RawServoAuthorStyles, RawServoAuthorStyles
 use style::gecko_bindings::bindings::{RawServoAuthorStylesBorrowedMut, RawServoAuthorStylesOwned};
 use style::gecko_bindings::bindings::{RawServoCounterStyleRule, RawServoCounterStyleRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoDeclarationBlockBorrowed, RawServoDeclarationBlockStrong};
-use style::gecko_bindings::bindings::{RawServoDocumentRule, RawServoDocumentRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoFontFaceRuleBorrowed, RawServoFontFaceRuleStrong};
 use style::gecko_bindings::bindings::{RawServoFontFeatureValuesRule, RawServoFontFeatureValuesRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoImportRule, RawServoImportRuleBorrowed};
@@ -49,6 +48,7 @@ use style::gecko_bindings::bindings::{RawServoKeyframe, RawServoKeyframeBorrowed
 use style::gecko_bindings::bindings::{RawServoKeyframesRule, RawServoKeyframesRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoMediaListBorrowed, RawServoMediaListStrong};
 use style::gecko_bindings::bindings::{RawServoMediaRule, RawServoMediaRuleBorrowed};
+use style::gecko_bindings::bindings::{RawServoMozDocumentRule, RawServoMozDocumentRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoNamespaceRule, RawServoNamespaceRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoPageRule, RawServoPageRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoSelectorListBorrowed, RawServoSelectorListOwned};
@@ -1840,11 +1840,11 @@ impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
     to_css: Servo_SupportsRule_GetCssText,
 }
 
-impl_group_rule_funcs! { (Document, DocumentRule, RawServoDocumentRule),
-    get_rules: Servo_DocumentRule_GetRules,
-    getter: Servo_CssRules_GetDocumentRuleAt,
-    debug: Servo_DocumentRule_Debug,
-    to_css: Servo_DocumentRule_GetCssText,
+impl_group_rule_funcs! { (Document, DocumentRule, RawServoMozDocumentRule),
+    get_rules: Servo_MozDocumentRule_GetRules,
+    getter: Servo_CssRules_GetMozDocumentRuleAt,
+    debug: Servo_MozDocumentRule_Debug,
+    to_css: Servo_MozDocumentRule_GetCssText,
 }
 
 impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, RawServoFontFeatureValuesRule),
@@ -2293,8 +2293,8 @@ pub extern "C" fn Servo_SupportsRule_GetConditionText(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_DocumentRule_GetConditionText(
-    rule: RawServoDocumentRuleBorrowed,
+pub extern "C" fn Servo_MozDocumentRule_GetConditionText(
+    rule: RawServoMozDocumentRuleBorrowed,
     result: *mut nsAString,
 ) {
     read_locked_arc(rule, |rule: &DocumentRule| {
