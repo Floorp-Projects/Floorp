@@ -88,8 +88,8 @@ geckodriver supports a number of [capabilities]:
  <tr>
   <td><code>acceptInsecureCerts</code>
   <td>boolean
-  <td>Boolean initially set to false,
-   indicating the session will not implicitly trust untrusted
+  <td>false
+  <td>Indicates the session will not implicitly trust untrusted
    or self-signed TLS certificates on navigation.
   <td>
  </tr>
@@ -97,6 +97,7 @@ geckodriver supports a number of [capabilities]:
  <tr>
   <td><code>pageLoadStrategy</code>
   <td>string
+  <td>`normal`
   <td>Defines the page load strategy
    to use for the duration of the session.
    Setting a page load strategy will cause navigation
