@@ -44,22 +44,23 @@ specification] are also supported.
 Supported Firefoxen
 ===================
 
-geckodriver is not yet feature complete.  This means that it does not
-yet offer full conformance with the [WebDriver] standard or complete
-compatibility with [Selenium].  You can track the [implementation
-status] of the latest [Firefox Nightly](http://whattrainisitnow.com/)
-on [MDN].  We also keep track of known [Selenium], [remote protocol],
-and [specification] problems in our [issue tracker].
+geckodriver is not yet feature complete.  This means that it does
+not yet offer full conformance with the [WebDriver] standard or
+complete compatibility with [Selenium].  You can track the
+[implementation status] of the latest [Firefox Nightly] on MDN.  We
+also keep track of known [Selenium], [remote protocol], and
+[specification] problems in our [issue tracker].
 
-Support is best in Firefox 57 and greater, although generally the more
-recent the Firefox version, the better the experience as they have more
-bug fixes and features.  Some features will only be available in the
-most recent Firefox versions, and we strongly advise using the latest
-[Firefox Nightly] with geckodriver.  Since Windows XP support in Firefox
-was dropped with Firefox 53, we do not support this platform.
+Support is best in Firefox 57 and greater, although generally the
+more recent the Firefox version, the better the experience as they
+have more bug fixes and features.  Some features will only be
+available in the most recent Firefox versions, and we strongly
+advise using the latest [Firefox Nightly] with geckodriver.  Since
+Windows XP support in Firefox was dropped with Firefox 53, we do
+not support this platform.
 
-[implementation status]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status
-[MDN]: https://developer.mozilla.org/
+[implementation status]: https://bugzilla.mozilla.org/showdependencytree.cgi?id=721859&hide_resolved=1
+[Firefox Nightly]: https://whattrainisitnow.com/
 [selenium]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium
 [remote protocol]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette
 [specification]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec
