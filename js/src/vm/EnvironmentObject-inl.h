@@ -78,7 +78,7 @@ JSObject::enclosingEnvironment() const
         return nullptr;
 
     MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
-    return &global();
+    return &nonCCWGlobal();
 }
 
 #endif /* vm_EnvironmentObject_inl_h */

@@ -233,7 +233,7 @@ GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHan
      * before the global object.
      */
     if (IsGlobalOp(JSOp(*pc)) && !fp->script()->hasNonSyntacticScope())
-        envChain = &envChain->global().lexicalEnvironment();
+        envChain = &cx->global()->lexicalEnvironment();
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_GETNAME_LENGTH]);

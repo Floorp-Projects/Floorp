@@ -10821,7 +10821,7 @@ DebuggerEnvironment_checkThis(JSContext* cx, const CallArgs& args, const char* f
      */
     if (requireDebuggee) {
         Rooted<Env*> env(cx, static_cast<Env*>(nthisobj->getPrivate()));
-        if (!Debugger::fromChildJSObject(nthisobj)->observesGlobal(&env->global())) {
+        if (!Debugger::fromChildJSObject(nthisobj)->observesGlobal(&env->nonCCWGlobal())) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_DEBUGGEE,
                                       "Debugger.Environment", "environment");
             return nullptr;
@@ -11171,7 +11171,7 @@ DebuggerEnvironment::isDebuggee() const
     MOZ_ASSERT(referent());
     MOZ_ASSERT(!referent()->is<EnvironmentObject>());
 
-    return owner()->observesGlobal(&referent()->global());
+    return owner()->observesGlobal(&referent()->nonCCWGlobal());
 }
 
 bool
