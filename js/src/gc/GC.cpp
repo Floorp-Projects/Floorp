@@ -4405,10 +4405,8 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session
      * allocations refill them and end up marking new cells back. See
      * arenaAllocatedDuringGC().
      */
-    if (isIncremental) {
-        for (GCZonesIter zone(rt); !zone.done(); zone.next())
-            zone->arenas.clearFreeLists();
-    }
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
+        zone->arenas.clearFreeLists();
 
     marker.start();
     GCMarker* gcmarker = &marker;
@@ -5729,8 +5727,7 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         zone->changeGCState(Zone::Mark, Zone::Sweep);
 
         /* Purge the ArenaLists before sweeping. */
-        if (isIncremental)
-            zone->arenas.unmarkPreMarkedFreeCells();
+        zone->arenas.unmarkPreMarkedFreeCells();
         zone->arenas.clearFreeLists();
 
         if (zone->isAtomsZone())
@@ -5860,8 +5857,7 @@ GCRuntime::endSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
                                       schedulingState, lock);
         zone->updateAllGCMallocCountersOnGCEnd(lock);
-        if (isIncremental)
-            zone->arenas.unmarkPreMarkedFreeCells();
+        zone->arenas.unmarkPreMarkedFreeCells();
     }
 
     /*
@@ -6946,6 +6942,11 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoTraceSession& session)
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->gcState.scheduledForDestruction = false;
 
+        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+            if (zone->isGCMarking())
+                zone->arenas.unmarkPreMarkedFreeCells();
+        }
+
         /* Finish sweeping the current sweep group, then abort. */
         abortSweepAfterCurrentGroup = true;
 
@@ -7074,17 +7075,6 @@ GCRuntime::pushZealSelectedObjects()
 #endif
 }
 
-void
-GCRuntime::changeToNonIncrementalGC()
-{
-    MOZ_ASSERT(isIncremental);
-
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (zone->isGCMarking() || zone->isGCSweeping())
-            zone->arenas.unmarkPreMarkedFreeCells();
-    }
-}
-
 static bool
 IsShutdownGC(JS::gcreason::Reason reason)
 {
@@ -7137,8 +7127,6 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
     }
 #endif
     MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
-    if (isIncrementalGCInProgress() && budget.isUnlimited())
-        changeToNonIncrementalGC();
 
     isIncremental = !budget.isUnlimited();
 
