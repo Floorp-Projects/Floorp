@@ -8,5 +8,5 @@ DevToolsModules(
     'addons.js',
     'console.js',
     'webextension-inspected-window.js',
-    'webextension-parent.js',
+    'webextension.js',
 )

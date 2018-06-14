@@ -14,7 +14,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
 loader.lazyRequireGetter(this, "FrameTargetActorProxy", "devtools/server/actors/targets/frame-proxy", true);
 loader.lazyRequireGetter(this, "AddonTargetActor", "devtools/server/actors/targets/addon", true);
-loader.lazyRequireGetter(this, "WebExtensionParentActor", "devtools/server/actors/addon/webextension-parent", true);
+loader.lazyRequireGetter(this, "WebExtensionActor", "devtools/server/actors/addon/webextension", true);
 loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker/worker-list", true);
 loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
@@ -699,7 +699,7 @@ BrowserAddonList.prototype.getList = async function() {
     let actor = this._actorByAddonId.get(addon.id);
     if (!actor) {
       if (addon.isWebExtension) {
-        actor = new WebExtensionParentActor(this._connection, addon);
+        actor = new WebExtensionActor(this._connection, addon);
       } else {
         actor = new AddonTargetActor(this._connection, addon);
       }

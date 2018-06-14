@@ -421,7 +421,7 @@ TabTarget.prototype = {
       this._chrome = false;
     } else if (this._form.isWebExtension &&
           this.client.mainRoot.traits.webExtensionAddonConnect) {
-      // The addonTargetActor form is related to a WebExtensionParentActor instance,
+      // The addonTargetActor form is related to a WebExtensionActor instance,
       // which isn't a target actor on its own, it is an actor living in the parent
       // process with access to the addon metadata, it can control the addon (e.g.
       // reloading it) and listen to the AddonManager events related to the lifecycle of

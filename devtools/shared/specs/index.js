@@ -33,14 +33,14 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
+    types: ["webExtension"],
+    spec: "devtools/shared/specs/addon/webextension",
+    front: null,
+  },
+  {
     types: ["webExtensionInspectedWindow"],
     spec: "devtools/shared/specs/addon/webextension-inspected-window",
     front: "devtools/shared/fronts/addon/webextension-inspected-window",
-  },
-  {
-    types: ["webExtensionAddon"],
-    spec: "devtools/shared/specs/addon/webextension-parent",
-    front: null,
   },
   {
     types: ["animationplayer", "animations"],

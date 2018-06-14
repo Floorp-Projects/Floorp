@@ -6,7 +6,7 @@
 const {RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
 const webExtensionSpec = generateActorSpec({
-  typeName: "webExtensionAddon",
+  typeName: "webExtension",
 
   methods: {
     reload: {
