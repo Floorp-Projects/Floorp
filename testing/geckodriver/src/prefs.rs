@@ -8,7 +8,7 @@ use mozprofile::preferences::Pref;
 // a Testing :: Marionette peer before you make any changes to this file.
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 52] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 53] = [
         // Make sure Shield doesn't hit the network.
         ("app.normandy.api_url", Pref::new("")),
 
@@ -92,6 +92,10 @@ lazy_static! {
         // Make sure Shield doesn't hit the network.
         // TODO: Remove once minimum supported Firefox release is 60.
         ("extensions.shield-recipe-client.api_url", Pref::new("")),
+
+        // Disable extensions compatibility dialogue.
+        // TODO: Remove once minimum supported Firefox release is 61.
+        ("extensions.showMismatchUI", Pref::new(false)),
 
         // Turn off extension updates so they do not bother tests
         ("extensions.update.enabled", Pref::new(false)),
