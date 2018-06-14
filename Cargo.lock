@@ -780,7 +780,7 @@ dependencies = [
 
 [[package]]
 name = "geckodriver"
-version = "0.20.1"
+version = "0.21.0"
 dependencies = [
  "chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
