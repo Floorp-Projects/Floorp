@@ -26,7 +26,6 @@ add_task(async function() {
     role: "pushbutton",
     value: "",
     description: "Accessibility Test",
-    help: "",
     keyboardShortcut: modifiers + "b",
     childCount: 1,
     domNodeType: 1,
