@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=426246
+-->
+<html>
+<head>
+  <title>Test for Bug 426246</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426246">Mozilla Bug 426246</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div contenteditable="true" id="contenteditable1">
+  <p>first line</p>
+  <p>this is the second line</p>
+</div>
+
+<div contenteditable="true" id="contenteditable2">first line<br>this is the second line</div>
+<div contenteditable="true" id="contenteditable3"><ul><li>first line</li><li>this is the second line</li></ul></div>
+<pre contenteditable="true" id="contenteditable4">first line
+this is the second line</pre>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let elm1 = document.getElementById("contenteditable1");
+  elm1.focus();
+  window.getSelection().collapse(elm1.lastElementChild.firstChild, "this is the ".length);
+  SpecialPowers.doCommand(window, "cmd_deleteToBeginningOfLine");
+  is(elm1.firstElementChild.textContent, "first line", "two paragraphs: the first line should stay untouched");
+  is(elm1.lastElementChild.textContent, "second line", "two paragraphs: the characters after the caret should remain");
+
+  let elm2 = document.getElementById("contenteditable2");
+  elm2.focus();
+  window.getSelection().collapse(elm2.lastChild, "this is the ".length);
+  is(elm2.lastChild.textContent, "this is the second line", "br: correct initial content");
+  SpecialPowers.doCommand(window, "cmd_deleteToBeginningOfLine");
+  is(elm2.firstChild.textContent, "first line", "br: the first line should stay untouched");
+  is(elm2.lastChild.textContent, "second line", "br: the characters after the caret should remain");
+
+  let elm3 = document.getElementById("contenteditable3");
+  elm3.focus();
+  let firstLineLI = elm3.querySelector("li:first-child");
+  let secondLineLI = elm3.querySelector("li:last-child");
+  window.getSelection().collapse(secondLineLI.firstChild, "this is the ".length);
+  is(secondLineLI.textContent, "this is the second line", "li: correct initial content");
+  SpecialPowers.doCommand(window, "cmd_deleteToBeginningOfLine");
+  is(firstLineLI.textContent, "first line", "li: the first line should stay untouched");
+  is(secondLineLI.textContent, "second line", "li: the characters after the caret should remain");
+
+  let elm4 = document.getElementById("contenteditable4");
+  elm4.focus();
+  window.getSelection().collapse(elm4.firstChild, "first line\nthis is the ".length);
+  is(elm4.textContent, "first line\nthis is the second line", "pre: correct initial content");
+  SpecialPowers.doCommand(window, "cmd_deleteToBeginningOfLine");
+  is(elm4.textContent, "first line\nsecond line", "pre: the first line should stay untouched and the characters after the caret in the second line should remain");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
