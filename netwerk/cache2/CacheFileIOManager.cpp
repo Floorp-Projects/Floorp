@@ -1065,6 +1065,11 @@ public:
     , mHasHasAltData(false)
     , mHasOnStartTime(false)
     , mHasOnStopTime(false)
+    , mFrecency(0)
+    , mExpirationTime(0)
+    , mHasAltData(false)
+    , mOnStartTime(0)
+    , mOnStopTime(0)
   {
     if (aFrecency) {
       mHasFrecency = true;
@@ -4279,9 +4284,11 @@ public:
                         nsTArray<CacheFileHandle*> const& specialHandles)
     : Runnable("net::SizeOfHandlesRunnable")
     , mMonitor("SizeOfHandlesRunnable.mMonitor")
+    , mMonitorNotified(false)
     , mMallocSizeOf(mallocSizeOf)
     , mHandles(handles)
     , mSpecialHandles(specialHandles)
+    , mSize(0)
   {
   }
 

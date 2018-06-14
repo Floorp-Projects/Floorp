@@ -493,10 +493,16 @@ nsDNSService::nsDNSService()
     : mLock("nsDNSServer.mLock")
     , mDisableIPv6(false)
     , mDisablePrefetch(false)
+    , mBlockDotOnion(false)
     , mNotifyResolution(false)
     , mOfflineLocalhost(false)
     , mForceResolveOn(false)
+    , mProxyType(0)
     , mTrrService(nullptr)
+    , mResCacheEntries(0)
+    , mResCacheExpiration(0)
+    , mResCacheGrace(0)
+    , mResolverPrefsUpdated(false)
 {
 }
 

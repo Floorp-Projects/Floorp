@@ -27,6 +27,8 @@ nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, uint32_t aPartID,
   mMultipartChannel(aMultipartChannel),
   mListener(aListener),
   mStatus(NS_OK),
+  mLoadFlags(0),
+  mContentDisposition(0),
   mContentLength(UINT64_MAX),
   mIsByteRangeRequest(false),
   mByteRangeStart(0),
@@ -813,6 +815,7 @@ nsMultiMixedConv::SwitchToControlParsing()
 nsMultiMixedConv::nsMultiMixedConv() :
     mCurrentPartID(0),
     mInOnDataAvailable(false),
+    mResponseHeader(HEADER_UNKNOWN),
     // XXX: This is a hack to bypass the raw pointer to refcounted object in
     // lambda analysis. It should be removed and replaced when the
     // IncrementalTokenizer API is improved to avoid the need for such

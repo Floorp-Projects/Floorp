@@ -794,6 +794,10 @@ nsSocketTransport::nsSocketTransport()
     , mFirstRetryError(NS_OK)
     , mDoNotRetryToConnect(false)
 {
+    this->mNetAddr.raw.family = 0;
+    this->mNetAddr.inet = {};
+    this->mSelfAddr.raw.family = 0;
+    this->mSelfAddr.inet = {};
     SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
 
     mTimeouts[TIMEOUT_CONNECT]    = UINT16_MAX; // no timeout
