@@ -375,6 +375,7 @@ VectorImage::VectorImage(nsIURI* aURI /* = nullptr */) :
   ImageResource(aURI), // invoke superclass's constructor
   mLockCount(0),
   mIsInitialized(false),
+  mDiscardable(false),
   mIsFullyLoaded(false),
   mIsDrawing(false),
   mHaveAnimations(false),

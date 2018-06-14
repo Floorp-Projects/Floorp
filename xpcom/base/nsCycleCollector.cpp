@@ -610,6 +610,11 @@ public:
 
   // Allow NodePool::NodeBlock's constructor to compile.
   PtrInfo()
+    : mPointer{ nullptr }
+    , mParticipant{ nullptr }
+    , mColor{ 0 }
+    , mInternalRefs{ 0 }
+    , mRefCount{ 0 }
   {
     NS_NOTREACHED("should never be called");
   }
@@ -691,6 +696,7 @@ private:
     // We create and destroy NodeBlock using moz_xmalloc/free rather than new
     // and delete to avoid calling its constructor and destructor.
     NodeBlock()
+      : mNext{ nullptr }
     {
       NS_NOTREACHED("should never be called");
 

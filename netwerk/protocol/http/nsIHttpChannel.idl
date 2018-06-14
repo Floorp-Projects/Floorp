@@ -483,6 +483,16 @@ interface nsIHttpChannel : nsIChannel
     [infallible] readonly attribute boolean isTrackingResource;
 
     /**
+     * This method is used in order to override the tracking status of an HTTP
+     * channel.  This should only be called by Gecko under certain circumstances
+     * when Gecko can guarantee that the channel classifier service will not be
+     * determining the tracking status of the channel.
+     *
+     * Please avoid calling this API if you're unsure whether you should be using it.
+     */
+    [noscript] void overrideTrackingResource(in boolean aIsTracking);
+
+    /**
      * ID of the top-level outer content window. Identifies this channel's
      * top-level window it comes from.
      *

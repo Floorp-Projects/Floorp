@@ -11,7 +11,7 @@ use js::conversions::ConversionResult;
 use js::conversions::FromJSValConvertible;
 use js::conversions::ToJSValConvertible;
 use js::jsapi::root::JS::RealmOptions;
-use js::jsapi::root::JS_InitStandardClasses;
+use js::jsapi::root::JS::InitRealmStandardClasses;
 use js::jsapi::root::JS_NewGlobalObject;
 use js::jsapi::root::JS::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
@@ -43,7 +43,7 @@ fn vec_conversion() {
         let global = global_root.handle();
 
         let _ac = AutoCompartment::with_obj(cx, global.get());
-        assert!(JS_InitStandardClasses(cx, global));
+        assert!(InitRealmStandardClasses(cx));
 
         rooted!(in(cx) let mut rval = UndefinedValue());
 

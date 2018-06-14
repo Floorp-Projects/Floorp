@@ -2228,8 +2228,11 @@ js::DefineTypedArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
     // Steps iv-v.
     // We (wrongly) ignore out of range defines with a value.
     uint32_t length = obj->as<TypedArrayObject>().length();
-    if (index >= length)
-        return result.succeed();
+    if (index >= length) {
+        if (obj->as<TypedArrayObject>().hasDetachedBuffer())
+            return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+        return result.failSoft(JSMSG_BAD_INDEX);
+    }
 
     // Step vi.
     if (desc.isAccessorDescriptor())

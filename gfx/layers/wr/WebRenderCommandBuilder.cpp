@@ -1407,6 +1407,7 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
     if (!aContainer->GetScaleHint().IsEmpty()) {
       scaleToSize = Some(aContainer->GetScaleHint());
     }
+    gfx::Matrix4x4 transform = gfx::Matrix4x4::From2D(aContainer->GetTransformHint());
     // TODO!
     // We appear to be using the image bridge for a lot (most/all?) of
     // layers-free image handling and that breaks frame consistency.
@@ -1415,7 +1416,7 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
                                                  aSc,
                                                  rect,
                                                  scBounds,
-                                                 gfx::Matrix4x4(),
+                                                 transform,
                                                  scaleToSize,
                                                  wr::ImageRendering::Auto,
                                                  wr::MixBlendMode::Normal,

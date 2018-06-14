@@ -235,7 +235,10 @@ private: // methods
   struct SurfaceWithFormat {
     RefPtr<gfxDrawable> mDrawable;
     SurfaceFormat mFormat;
-    SurfaceWithFormat() { }
+    SurfaceWithFormat()
+      : mFormat(SurfaceFormat::UNKNOWN)
+    {
+    }
     SurfaceWithFormat(gfxDrawable* aDrawable, SurfaceFormat aFormat)
       : mDrawable(aDrawable), mFormat(aFormat)
     { }

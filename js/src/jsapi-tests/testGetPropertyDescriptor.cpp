@@ -39,7 +39,7 @@ BEGIN_TEST(test_GetPropertyDescriptor)
   CHECK_EQUAL(desc.object(), nullptr);
 
   CHECK(JS_GetPropertyDescriptor(cx, obj, "toString", &desc));
-  JS::RootedObject objectProto(cx, JS_GetObjectPrototype(cx, obj));
+  JS::RootedObject objectProto(cx, JS::GetRealmObjectPrototype(cx));
   CHECK(objectProto);
   CHECK_EQUAL(desc.object(), objectProto);
   CHECK(desc.value().isObject());

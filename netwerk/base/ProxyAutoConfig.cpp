@@ -665,7 +665,7 @@ private:
 
     JSAutoRealm ar(mContext, global);
     AutoPACErrorReporter aper(mContext);
-    if (!JS_InitStandardClasses(mContext, global)) {
+    if (!JS::InitRealmStandardClasses(mContext)) {
       return NS_ERROR_FAILURE;
     }
     if (!JS_DefineFunctions(mContext, global, PACGlobalFunctions)) {
