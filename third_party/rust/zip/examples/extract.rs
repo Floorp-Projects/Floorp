@@ -20,7 +20,7 @@ fn real_main() -> i32 {
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
-        let outpath = sanitize_filename(file.name());
+        let outpath = file.sanitized_name();
 
         {
             let comment = file.comment();
@@ -54,22 +54,4 @@ fn real_main() -> i32 {
         }
     }
     return 0;
-}
-
-fn sanitize_filename(filename: &str) -> std::path::PathBuf {
-    let no_null_filename = match filename.find('\0') {
-        Some(index) => &filename[0..index],
-        None => filename,
-    };
-
-    std::path::Path::new(no_null_filename)
-        .components()
-        .filter(|component| match *component {
-            std::path::Component::Normal(..) => true,
-            _ => false,
-        })
-        .fold(std::path::PathBuf::new(), |mut path, ref cur| {
-            path.push(cur.as_os_str());
-            path
-        })
 }

@@ -794,7 +794,7 @@ dependencies = [
  "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "webdriver 0.35.1",
- "zip 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "zip 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2503,7 +2503,7 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bzip2 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2752,4 +2752,4 @@ dependencies = [
 "checksum ws2_32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 "checksum xml-rs 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3c1cb601d29fe2c2ac60a2b2e5e293994d87a1f6fa9687a31a15270f909be9c2"
 "checksum yaml-rust 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "57ab38ee1a4a266ed033496cf9af1828d8d6e6c1cfa5f643a2809effcae4d628"
-"checksum zip 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "10931e278527cea65682696481e6d840371d581079df529ebfee186e0eaad719"
+"checksum zip 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "77ce0ceee93c995954a31f77903925a6a8bb094709445238e344f2107910e29e"

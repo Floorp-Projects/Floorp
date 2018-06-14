@@ -415,6 +415,11 @@ impl<'a> ZipFile<'a> {
     pub fn name_raw(&self) -> &[u8] {
         &*self.data.file_name_raw
     }
+    /// Get the name of the file in a sanitized form. It truncates the name to the first NULL byte,
+    /// removes a leading '/' and removes '..' parts.
+    pub fn sanitized_name(&self) -> ::std::path::PathBuf {
+        self.data.file_name_sanitized()
+    }
     /// Get the comment of the file
     pub fn comment(&self) -> &str {
         &*self.data.file_comment
