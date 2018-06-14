@@ -37,6 +37,7 @@ class LIRGeneratorShared
       : gen(gen),
         graph(graph),
         lirGraph_(lirGraph),
+        current(nullptr),
         lastResumePoint_(nullptr),
         cachedRecoverInfo_(nullptr),
         osiPoint_(nullptr)

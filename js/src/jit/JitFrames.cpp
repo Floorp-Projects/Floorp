@@ -1541,6 +1541,7 @@ SnapshotIterator::SnapshotIterator()
   : snapshot_(nullptr, 0, 0, 0),
     recover_(snapshot_, nullptr, 0),
     fp_(nullptr),
+    machine_(nullptr),
     ionScript_(nullptr),
     instructionResults_(nullptr)
 {
@@ -2054,7 +2055,9 @@ SnapshotIterator::maybeReadAllocByIndex(size_t index)
 InlineFrameIterator::InlineFrameIterator(JSContext* cx, const JSJitFrameIter* iter)
   : calleeTemplate_(cx),
     calleeRVA_(),
-    script_(cx)
+    script_(cx),
+    pc_(nullptr),
+    numActualArgs_(0)
 {
     resetOn(iter);
 }
@@ -2065,7 +2068,9 @@ InlineFrameIterator::InlineFrameIterator(JSContext* cx, const InlineFrameIterato
     frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
     calleeTemplate_(cx),
     calleeRVA_(),
-    script_(cx)
+    script_(cx),
+    pc_(nullptr),
+    numActualArgs_(0)
 {
     if (frame_) {
         machine_ = iter->machine_;
