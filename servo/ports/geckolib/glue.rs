@@ -125,7 +125,7 @@ use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::gecko_properties;
 use style::invalidation::element::restyle_hints;
-use style::media_queries::{MediaList, parse_media_query_list};
+use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext, self};
 use style::properties::{ComputedValues, DeclarationSource, Importance};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
@@ -3760,7 +3760,7 @@ pub unsafe extern "C" fn Servo_MediaList_SetText(
     );
 
     write_locked_arc(list, |list: &mut MediaList| {
-        *list = parse_media_query_list(
+        *list = MediaList::parse(
             &context,
             &mut parser,
             &NullReporter,
