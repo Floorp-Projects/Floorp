@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.4.2] - 2018-06-05
+
+### Improved
+
+* Log invocations now generate less code.
+
+### Fixed
+
+* Example Logger implementations now properly set the max log level.
+
 ## [0.4.1] - 2017-12-30
 
 ### Fixed
@@ -77,7 +87,8 @@ version using log 0.4.x to avoid losing module and file information.
 
 Look at the [release tags] for information about older releases.
 
-[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.2...HEAD
+[0.4.2]: https://github.com/rust-lang-nursery/log/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/rust-lang-nursery/log/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/rust-lang-nursery/log/compare/0.3.8...0.4.0
 [release tags]: https://github.com/rust-lang-nursery/log/releases
