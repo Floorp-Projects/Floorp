@@ -743,8 +743,13 @@ var AddonTestUtils = {
       throw new Error("Attempting to startup manager that was already started.");
 
 
-    if (newVersion)
+    if (newVersion) {
       this.appInfo.version = newVersion;
+      if (Cu.isModuleLoaded("resource://gre/modules/Blocklist.jsm")) {
+        let bsPassBlocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
+        Object.defineProperty(bsPassBlocklist, "gAppVersion", {value: newVersion});
+      }
+    }
 
     let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
     XPIScope.AsyncShutdown = MockAsyncShutdown;
