@@ -369,8 +369,8 @@ var PlacesOrganizer = {
     }
   },
 
-  openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
-    if (aContainer.itemId != -1) {
+  openFlatContainer(aContainer) {
+    if (aContainer.bookmarkGuid) {
       PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
       this._places.selectItems([aContainer.bookmarkGuid], false);
     } else if (PlacesUtils.nodeIsQuery(aContainer)) {
