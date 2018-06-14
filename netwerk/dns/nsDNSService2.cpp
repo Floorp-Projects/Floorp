@@ -396,7 +396,7 @@ NS_IMETHODIMP
 nsDNSAsyncRequest::Cancel(nsresult reason)
 {
     NS_ENSURE_ARG(NS_FAILED(reason));
-    mResolver->DetachCallback(mHost.get(), mOriginAttributes, mFlags, mAF,
+    mResolver->DetachCallback(mHost, mOriginAttributes, mFlags, mAF,
                               this, reason);
     return NS_OK;
 }
@@ -877,7 +877,7 @@ nsDNSService::AsyncResolveNative(const nsACString        &aHostname,
     if (!req)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = res->ResolveHost(req->mHost.get(), req->mOriginAttributes, flags, af, req);
+    rv = res->ResolveHost(req->mHost, req->mOriginAttributes, flags, af, req);
     req.forget(result);
     return rv;
 }
@@ -937,7 +937,7 @@ nsDNSService::CancelAsyncResolveNative(const nsACString       &aHostname,
 
     uint16_t af = GetAFForLookup(hostname, aFlags);
 
-    res->CancelAsyncRequest(hostname.get(), aOriginAttributes, aFlags, af,
+    res->CancelAsyncRequest(hostname, aOriginAttributes, aFlags, af,
                             aListener, aReason);
     return NS_OK;
 }
@@ -1037,7 +1037,7 @@ nsDNSService::ResolveInternal(const nsACString        &aHostname,
 
     uint16_t af = GetAFForLookup(hostname, flags);
 
-    rv = res->ResolveHost(hostname.get(), aOriginAttributes, flags, af, syncReq);
+    rv = res->ResolveHost(hostname, aOriginAttributes, flags, af, syncReq);
     if (NS_SUCCEEDED(rv)) {
         // wait for result
         while (!syncReq->mDone) {
