@@ -53,7 +53,7 @@ internal class ExperimentEvaluator {
     }
 
     private fun getUserBucket(context: Context): Int {
-        val uuid = DeviceUuidFactory(context).uuid.toString()
+        val uuid = DeviceUuidFactory(context).uuid
         val crc = CRC32()
         crc.update(uuid.toByteArray())
         val checksum = crc.value

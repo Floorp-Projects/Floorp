@@ -14,11 +14,11 @@ internal class DeviceUuidFactory(context: Context) {
         val prefUuid = preferences.getString(PREF_UUID_KEY, null)
 
         if (prefUuid != null) {
-            UUID.fromString(prefUuid)
+            UUID.fromString(prefUuid).toString()
         } else {
             val uuid = UUID.randomUUID()
             preferences.edit().putString(PREF_UUID_KEY, uuid.toString()).apply()
-            uuid
+            uuid.toString()
         }
     }
 

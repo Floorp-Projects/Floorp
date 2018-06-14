@@ -7,7 +7,6 @@ package mozilla.components.service.fretboard
 import android.content.Context
 import android.content.SharedPreferences
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -19,7 +18,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class DeviceUuidFactoryTest {
@@ -33,8 +31,7 @@ class DeviceUuidFactoryTest {
         `when`(sharedPreferences.getString(eq("device_uuid"), ArgumentMatchers.any())).thenReturn(null)
         `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPreferences)
         val uuid = DeviceUuidFactory(context).uuid
-        assertTrue(uuid is UUID)
-        verify(editor).putString("device_uuid", uuid.toString())
+        verify(editor).putString("device_uuid", uuid)
     }
 
     @Test
@@ -44,6 +41,6 @@ class DeviceUuidFactoryTest {
         val sharedPreferences = mock(SharedPreferences::class.java)
         `when`(sharedPreferences.getString(eq("device_uuid"), any())).thenReturn(savedUuid)
         `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPreferences)
-        assertEquals(savedUuid, DeviceUuidFactory(context).uuid.toString())
+        assertEquals(savedUuid, DeviceUuidFactory(context).uuid)
     }
 }
