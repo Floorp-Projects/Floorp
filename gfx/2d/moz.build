@@ -106,13 +106,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
         'UnscaledFontFreeType.h',
     ]
     SOURCES += [
+        'NativeFontResourceFreeType.cpp',
         'UnscaledFontFreeType.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     SOURCES += [
-        'NativeFontResourceFontconfig.cpp',
         'ScaledFontFontconfig.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    SOURCES += [
+        'ScaledFontFreeType.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
@@ -184,7 +189,6 @@ UNIFIED_SOURCES += [
     'RecordedEvent.cpp',
     'Scale.cpp',
     'ScaledFontBase.cpp',
-    'ScaledFontCairo.cpp',
     'SFNTData.cpp',
     'SFNTNameTable.cpp',
     'SourceSurfaceCairo.cpp',

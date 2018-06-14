@@ -1458,11 +1458,15 @@ already_AddRefed<ScaledFont>
 gfxFontconfigFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
     if (!mAzureScaledFont) {
+        NativeFont nativeFont;
+        nativeFont.mType = NativeFontType::FONTCONFIG_PATTERN;
+        nativeFont.mFont = GetPattern();
+
         mAzureScaledFont =
-            Factory::CreateScaledFontForFontconfigFont(GetCairoScaledFont(),
-                                                       GetPattern(),
-                                                       GetUnscaledFont(),
-                                                       GetAdjustedSize());
+          Factory::CreateScaledFontForNativeFont(nativeFont,
+                                                 GetUnscaledFont(),
+                                                 GetAdjustedSize(),
+                                                 GetCairoScaledFont());
     }
 
     RefPtr<ScaledFont> scaledFont(mAzureScaledFont);

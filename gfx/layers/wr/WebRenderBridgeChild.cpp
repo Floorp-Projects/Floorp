@@ -289,9 +289,7 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aScaledFont);
-  MOZ_ASSERT((aScaledFont->GetType() == gfx::FontType::DWRITE) ||
-             (aScaledFont->GetType() == gfx::FontType::MAC) ||
-             (aScaledFont->GetType() == gfx::FontType::FONTCONFIG));
+  MOZ_ASSERT(aScaledFont->CanSerialize());
 
   wr::FontInstanceKey instanceKey = { wr::IdNamespace { 0 }, 0 };
   if (mFontInstanceKeys.Get(aScaledFont, &instanceKey)) {
