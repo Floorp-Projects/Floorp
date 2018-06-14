@@ -707,13 +707,13 @@ nsHostResolver::Shutdown()
 }
 
 nsresult
-nsHostResolver::GetHostRecord(const char *host,
+nsHostResolver::GetHostRecord(const nsACString &host,
                               uint16_t flags, uint16_t af, bool pb,
                               const nsCString &originSuffix,
                               nsHostRecord **result)
 {
     MutexAutoLock lock(mLock);
-    nsHostKey key(nsCString(host), flags, af, pb, originSuffix);
+    nsHostKey key(host, flags, af, pb, originSuffix);
 
     RefPtr<nsHostRecord>& entry = mRecordDB.GetOrInsert(key);
     if (!entry) {
@@ -732,21 +732,22 @@ nsHostResolver::GetHostRecord(const char *host,
 }
 
 nsresult
-nsHostResolver::ResolveHost(const char             *host,
+nsHostResolver::ResolveHost(const nsACString &aHost,
                             const OriginAttributes &aOriginAttributes,
                             uint16_t                flags,
                             uint16_t                af,
                             nsResolveHostCallback  *aCallback)
 {
-    NS_ENSURE_TRUE(host && *host, NS_ERROR_UNEXPECTED);
+    nsAutoCString host(aHost);
+    NS_ENSURE_TRUE(!host.IsEmpty(), NS_ERROR_UNEXPECTED);
 
-    LOG(("Resolving host [%s]%s%s.\n", host,
+    LOG(("Resolving host [%s]%s%s.\n", host.get(),
          flags & RES_BYPASS_CACHE ? " - bypassing cache" : "",
          flags & RES_REFRESH_CACHE ? " - refresh cache" : ""));
 
     // ensure that we are working with a valid hostname before proceeding.  see
     // bug 304904 for details.
-    if (!net_IsValidHostName(nsDependentCString(host)))
+    if (!net_IsValidHostName(host))
         return NS_ERROR_UNKNOWN_HOST;
 
     RefPtr<nsResolveHostCallback> callback(aCallback);
@@ -775,7 +776,7 @@ nsHostResolver::ResolveHost(const char             *host,
             nsAutoCString originSuffix;
             aOriginAttributes.CreateSuffix(originSuffix);
 
-            nsHostKey key(nsCString(host), flags, af,
+            nsHostKey key(host, flags, af,
                           (aOriginAttributes.mPrivateBrowsingId > 0),
                           originSuffix);
             RefPtr<nsHostRecord>& entry = mRecordDB.GetOrInsert(key);
@@ -787,7 +788,7 @@ nsHostResolver::ResolveHost(const char             *host,
             MOZ_ASSERT(rec, "Record should not be null");
             if (!(flags & RES_BYPASS_CACHE) &&
                      rec->HasUsableResult(TimeStamp::NowLoRes(), flags)) {
-                LOG(("  Using cached record for host [%s].\n", host));
+                LOG(("  Using cached record for host [%s].\n", host.get()));
                 // put reference to host record on stack...
                 result = rec;
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_HIT);
@@ -798,7 +799,7 @@ nsHostResolver::ResolveHost(const char             *host,
                 ConditionallyRefreshRecord(rec, host);
 
                 if (rec->negative) {
-                    LOG(("  Negative cache entry for host [%s].\n", host));
+                    LOG(("  Negative cache entry for host [%s].\n", host.get()));
                     Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                                           METHOD_NEGATIVE_HIT);
                     status = NS_ERROR_UNKNOWN_HOST;
@@ -806,15 +807,15 @@ nsHostResolver::ResolveHost(const char             *host,
             } else if (rec->addr) {
                 // if the host name is an IP address literal and has been parsed,
                 // go ahead and use it.
-                LOG(("  Using cached address for IP Literal [%s].\n", host));
+                LOG(("  Using cached address for IP Literal [%s].\n", host.get()));
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                                       METHOD_LITERAL);
                 result = rec;
-            } else if (PR_StringToNetAddr(host, &tempAddr) == PR_SUCCESS) {
+            } else if (PR_StringToNetAddr(host.get(), &tempAddr) == PR_SUCCESS) {
                 // try parsing the host name as an IP address literal to short
                 // circuit full host resolution.  (this is necessary on some
                 // platforms like Win9x.  see bug 219376 for more details.)
-                LOG(("  Host is IP Literal [%s].\n", host));
+                LOG(("  Host is IP Literal [%s].\n", host.get()));
                 // ok, just copy the result into the host record, and be done
                 // with it! ;-)
                 rec->addr = MakeUnique<NetAddr>();
@@ -828,13 +829,13 @@ nsHostResolver::ResolveHost(const char             *host,
                        !rec->mResolving) {
                 LOG(("  Lookup queue full: dropping %s priority request for "
                      "host [%s].\n",
-                     IsMediumPriority(flags) ? "medium" : "low", host));
+                     IsMediumPriority(flags) ? "medium" : "low", host.get()));
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                                       METHOD_OVERFLOW);
                 // This is a lower priority request and we are swamped, so refuse it.
                 rv = NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
             } else if (flags & RES_OFFLINE) {
-                LOG(("  Offline request for host [%s]; ignoring.\n", host));
+                LOG(("  Offline request for host [%s]; ignoring.\n", host.get()));
                 rv = NS_ERROR_OFFLINE;
             } else if (!rec->mResolving) {
                 // If this is an IPV4 or IPV6 specific request, check if there is
@@ -843,7 +844,7 @@ nsHostResolver::ResolveHost(const char             *host,
                 if (!(flags & RES_BYPASS_CACHE) &&
                     ((af == PR_AF_INET) || (af == PR_AF_INET6))) {
                     // First, search for an entry with AF_UNSPEC
-                    const nsHostKey unspecKey(nsCString(host), flags, PR_AF_UNSPEC,
+                    const nsHostKey unspecKey(host, flags, PR_AF_UNSPEC,
                                               (aOriginAttributes.mPrivateBrowsingId > 0),
                                               originSuffix);
                     RefPtr<nsHostRecord> unspecRec = mRecordDB.Get(unspecKey);
@@ -854,7 +855,7 @@ nsHostResolver::ResolveHost(const char             *host,
                         MOZ_ASSERT(unspecRec->addr_info || unspecRec->negative,
                                    "Entry should be resolved or negative.");
 
-                        LOG(("  Trying AF_UNSPEC entry for host [%s] af: %s.\n", host,
+                        LOG(("  Trying AF_UNSPEC entry for host [%s] af: %s.\n", host.get(),
                              (af == PR_AF_INET) ? "AF_INET" : "AF_INET6"));
 
                         // We need to lock in case any other thread is reading
@@ -906,7 +907,7 @@ nsHostResolver::ResolveHost(const char             *host,
                             // AF_UNSPEC addresses, so we mark this record as
                             // negative.
                             LOG(("  No AF_INET6 in AF_UNSPEC entry: "
-                                 "host [%s] unknown host.", host));
+                                 "host [%s] unknown host.", host.get()));
                             result = rec;
                             rec->negative = true;
                             status = NS_ERROR_UNKNOWN_HOST;
@@ -918,7 +919,7 @@ nsHostResolver::ResolveHost(const char             *host,
                 // If no valid address was found in the cache or this is an
                 // AF_UNSPEC request, then start a new lookup.
                 if (!result) {
-                    LOG(("  No usable address in cache for host [%s].", host));
+                    LOG(("  No usable address in cache for host [%s].", host.get()));
 
                     if (flags & RES_REFRESH_CACHE) {
                         rec->Invalidate();
@@ -935,7 +936,7 @@ nsHostResolver::ResolveHost(const char             *host,
                     } else {
                         LOG(("  DNS lookup for host [%s] blocking "
                              "pending 'getaddrinfo' query: callback [%p]",
-                             host, callback.get()));
+                             host.get(), callback.get()));
                     }
                 }
             } else if (rec->mDidCallbacks) {
@@ -944,10 +945,10 @@ nsHostResolver::ResolveHost(const char             *host,
                 result = rec;
                 // make it count as a hit
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_HIT);
-                LOG(("  Host [%s] re-using early TRR resolve data\n", host));
+                LOG(("  Host [%s] re-using early TRR resolve data\n", host.get()));
             } else {
                 LOG(("  Host [%s] is being resolved. Appending callback "
-                     "[%p].", host, callback.get()));
+                     "[%p].", host.get(), callback.get()));
 
                 rec->mCallbacks.insertBack(callback);
                 if (rec->onQueue) {
@@ -991,7 +992,7 @@ nsHostResolver::ResolveHost(const char             *host,
 }
 
 void
-nsHostResolver::DetachCallback(const char             *host,
+nsHostResolver::DetachCallback(const nsACString &host,
                                const OriginAttributes &aOriginAttributes,
                                uint16_t                flags,
                                uint16_t                af,
@@ -1007,7 +1008,7 @@ nsHostResolver::DetachCallback(const char             *host,
         nsAutoCString originSuffix;
         aOriginAttributes.CreateSuffix(originSuffix);
 
-        nsHostKey key(nsCString(host), flags, af,
+        nsHostKey key(host, flags, af,
                       (aOriginAttributes.mPrivateBrowsingId > 0),
                       originSuffix);
         RefPtr<nsHostRecord> entry = mRecordDB.Get(key);
@@ -1266,12 +1267,12 @@ nsHostResolver::NameLookup(nsHostRecord *rec)
 }
 
 nsresult
-nsHostResolver::ConditionallyRefreshRecord(nsHostRecord *rec, const char *host)
+nsHostResolver::ConditionallyRefreshRecord(nsHostRecord *rec, const nsACString &host)
 {
     if ((rec->CheckExpiration(TimeStamp::NowLoRes()) != nsHostRecord::EXP_VALID
             || rec->negative) && !rec->mResolving) {
         LOG(("  Using %s cache entry for host [%s] but starting async renewal.",
-            rec->negative ? "negative" :"positive", host));
+            rec->negative ? "negative" :"positive", host.BeginReading()));
         NameLookup(rec);
 
         if (!rec->negative) {
@@ -1704,7 +1705,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
 }
 
 void
-nsHostResolver::CancelAsyncRequest(const char             *host,
+nsHostResolver::CancelAsyncRequest(const nsACString &host,
                                    const OriginAttributes &aOriginAttributes,
                                    uint16_t                flags,
                                    uint16_t                af,
@@ -1719,7 +1720,7 @@ nsHostResolver::CancelAsyncRequest(const char             *host,
 
     // Lookup the host record associated with host, flags & address family
 
-    nsHostKey key(nsCString(host), flags, af,
+    nsHostKey key(host, flags, af,
                   (aOriginAttributes.mPrivateBrowsingId > 0),
                   originSuffix);
     RefPtr<nsHostRecord> rec = mRecordDB.Get(key);
@@ -1801,12 +1802,12 @@ nsHostResolver::ThreadFunc(void *arg)
         
         TimeStamp startTime = TimeStamp::Now();
         bool getTtl = rec->mGetTtl;
-        nsresult status = GetAddrInfo(rec->host.get(), rec->af,
+        nsresult status = GetAddrInfo(rec->host, rec->af,
                                       rec->flags, &ai,
                                       getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
         if (NS_FAILED(status) && rs.Reset()) {
-            status = GetAddrInfo(rec->host.get(), rec->af,
+            status = GetAddrInfo(rec->host, rec->af,
                                  rec->flags, &ai, getTtl);
         }
 #endif
