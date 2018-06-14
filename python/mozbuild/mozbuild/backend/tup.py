@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import itertools
 import json
 import sys
 import shutil
@@ -45,6 +46,7 @@ from ..frontend.data import (
     HostLibrary,
     HostProgram,
     HostSimpleProgram,
+    RustLibrary,
     SharedLibrary,
     Sources,
     StaticLibrary,
@@ -58,6 +60,10 @@ from ..frontend.context import (
     AbsolutePath,
     ObjDirPath,
     RenamedSourcePath,
+)
+from .cargo_build_defs import (
+    cargo_extra_outputs,
+    cargo_extra_flags,
 )
 
 
@@ -82,6 +88,7 @@ class BackendTupfile(object):
         self.sources = defaultdict(list)
         self.host_sources = defaultdict(list)
         self.variables = {}
+        self.rust_library = None
         self.static_lib = None
         self.shared_lib = None
         self.programs = []
@@ -245,6 +252,7 @@ class TupBackend(CommonBackend):
         # will be built before any rules that list this as an input.
         self._installed_idls = '$(MOZ_OBJ_ROOT)/<installed-idls>'
         self._installed_files = '$(MOZ_OBJ_ROOT)/<installed-files>'
+        self._rust_libs = '$(MOZ_OBJ_ROOT)/<rust-libs>'
         # The preprocessor including source-repo.h and buildid.h creates
         # dependencies that aren't specified by moz.build and cause errors
         # in Tup. Express these as a group dependency.
@@ -546,6 +554,8 @@ class TupBackend(CommonBackend):
             backend_file.host_sources[obj.canonical_suffix].extend(obj.files)
         elif isinstance(obj, VariablePassthru):
             backend_file.variables = obj.variables
+        elif isinstance(obj, RustLibrary):
+            backend_file.rust_library = obj
         elif isinstance(obj, StaticLibrary):
             backend_file.static_lib = obj
         elif isinstance(obj, SharedLibrary):
@@ -583,7 +593,8 @@ class TupBackend(CommonBackend):
                                      self._gen_static_library),
                                     (backend_file.programs, self._gen_programs),
                                     (backend_file.host_programs, self._gen_host_programs),
-                                    (backend_file.host_library, self._gen_host_library)):
+                                    (backend_file.host_library, self._gen_host_library),
+                                    (backend_file.rust_library, self._gen_rust)):
                 if var:
                     backend_file.export_shell()
                     gen_method(backend_file)
@@ -620,6 +631,174 @@ class TupBackend(CommonBackend):
         if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
             tup = self.environment.substs.get('TUP', 'tup')
             self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init'])
+
+
+    def _get_cargo_flags(self, obj):
+        cargo_flags = ['--build-plan', '-Z', 'unstable-options']
+        if not self.environment.substs.get('MOZ_DEBUG_RUST'):
+            cargo_flags += ['--release']
+        cargo_flags += [
+            '--frozen',
+            '--manifest-path', mozpath.join(obj.srcdir, 'Cargo.toml'),
+            '--lib',
+            '--target=%s' % self.environment.substs['RUST_TARGET'],
+        ]
+        if obj.features:
+            cargo_flags += [
+                '--features', ' '.join(obj.features)
+            ]
+        return cargo_flags
+
+    def _get_cargo_env(self, backend_file):
+        lib = backend_file.rust_library
+        env = {
+            'CARGO_TARGET_DIR': mozpath.normpath(mozpath.join(lib.objdir,
+                                                              lib.target_dir)),
+            'RUSTC': self.environment.substs['RUSTC'],
+            'MOZ_SRC': self.environment.topsrcdir,
+            'MOZ_DIST': self.environment.substs['DIST'],
+            'LIBCLANG_PATH': self.environment.substs['MOZ_LIBCLANG_PATH'],
+            'CLANG_PATH': self.environment.substs['MOZ_CLANG_PATH'],
+            'PKG_CONFIG_ALLOW_CROSS': '1',
+            'RUST_BACKTRACE': 'full',
+            'MOZ_TOPOBJDIR': self.environment.topobjdir,
+            'PYTHON': self.environment.substs['PYTHON'],
+            'PYTHONDONTWRITEBYTECODE': '1',
+        }
+        cargo_incremental = self.environment.substs.get('CARGO_INCREMENTAL')
+        if cargo_incremental is not None:
+            # TODO (bug 1468527): CARGO_INCREMENTAL produces outputs that Tup
+            # doesn't know about, disable it unconditionally for now.
+            pass # env['CARGO_INCREMENTAL'] = cargo_incremental
+
+        rust_simd = self.environment.substs.get('MOZ_RUST_SIMD')
+        if rust_simd is not None:
+            env['RUSTC_BOOTSTRAP'] = '1'
+
+        linker_env_var = ('CARGO_TARGET_%s_LINKER' %
+                          self.environment.substs['RUST_TARGET_ENV_NAME'])
+
+        env.update({
+            'MOZ_CARGO_WRAP_LDFLAGS': ' '.join(backend_file.local_flags['LDFLAGS']),
+            'MOZ_CARGO_WRAP_LD': backend_file.environment.substs['CC'],
+            linker_env_var: mozpath.join(self.environment.topsrcdir,
+                                         'build', 'cargo-linker'),
+            'RUSTFLAGS': '%s %s' % (' '.join(self.environment.substs['MOZ_RUST_DEFAULT_FLAGS']),
+                                    ' '.join(self.environment.substs['RUSTFLAGS'])),
+        })
+        return env
+
+    def _gen_cargo_rules(self, backend_file, build_plan, cargo_env):
+        invocations = build_plan['invocations']
+        processed = set()
+
+        def get_libloading_outdir():
+            for invocation in invocations:
+                if (invocation['package_name'] == 'libloading' and
+                    invocation['outputs'][0].endswith('.rlib')):
+                    return invocation['env']['OUT_DIR']
+
+        def display_name(invocation):
+            output_str = ''
+            if invocation['outputs']:
+                output_str = ' -> %s' % ' '.join([os.path.basename(f)
+                                                  for f in invocation['outputs']])
+            return '{name} v{version} {kind}{output}'.format(
+                name=invocation['package_name'],
+                version=invocation['package_version'],
+                kind=invocation['kind'],
+                output=output_str
+            )
+
+        def cargo_quote(s):
+            return shell_quote(s.replace('\n', '\\n'))
+
+        def _process(key, invocation):
+            if key in processed:
+                return
+            processed.add(key)
+            inputs = set()
+            shortname = invocation['package_name']
+            for dep in invocation['deps']:
+                # We'd expect to just handle dependencies transitively (so use
+                # invocations[dep]['outputs'] here, but because the weird host dependencies
+                # sometimes get used in the final library and not intermediate
+                # libraries, tup doesn't work well with them. So build up the full set
+                # of intermediate dependencies with 'full-deps'
+                depmod = invocations[dep]
+                _process(dep, depmod)
+                inputs.update(depmod['full-deps'])
+
+            command = [
+                'cd %s &&' % invocation['cwd'],
+                'env',
+            ]
+            envvars = invocation.get('env')
+            for k, v in itertools.chain(cargo_env.iteritems(),
+                                        envvars.iteritems()):
+                command.append("%s=%s" % (k, cargo_quote(v)))
+            command.append(invocation['program'])
+            command.extend(cargo_quote(a.replace('dep-info,', ''))
+                           for a in invocation['args'])
+            outputs = invocation['outputs']
+            if os.path.basename(invocation['program']) == 'build-script-build':
+                for output in cargo_extra_outputs.get(shortname, []):
+                    outputs.append(os.path.join(invocation['env']['OUT_DIR'], output))
+
+            if (invocation['target_kind'][0] == 'custom-build' and
+                os.path.basename(invocation['program']) == 'rustc'):
+                flags = cargo_extra_flags.get(shortname, [])
+                for flag in flags:
+                    command.append(flag % {'libloading_outdir': get_libloading_outdir()})
+
+            if 'rustc' in invocation['program']:
+                header = 'RUSTC'
+            else:
+                inputs.add(invocation['program'])
+                header = 'RUN'
+
+            invocation['full-deps'] = set(inputs)
+            invocation['full-deps'].update(invocation['outputs'])
+
+            backend_file.rule(
+                command,
+                inputs=sorted(inputs),
+                outputs=outputs,
+                extra_outputs=[self._rust_libs],
+                extra_inputs=[self._installed_files],
+                display='%s %s' % (header, display_name(invocation)),
+            )
+
+            for dst, link in invocation['links'].iteritems():
+                backend_file.symlink_rule(link, dst, self._rust_libs)
+
+        for val in enumerate(invocations):
+            _process(*val)
+
+
+    def _gen_rust(self, backend_file):
+        # TODO (bug 1468547): The gtest rust library depends on many of the same
+        # libraries as the main rust library, so we'll need to handle these all
+        # at once in order to build the gtest rust library.
+        if 'toolkit/library/gtest' in backend_file.objdir:
+            return
+
+        cargo_flags = self._get_cargo_flags(backend_file.rust_library)
+        cargo_env = self._get_cargo_env(backend_file)
+
+        output_lines = []
+        def accumulate_output(line):
+            output_lines.append(line)
+
+        cargo_status = self._cmd.run_process(
+            [self.environment.substs['CARGO'], 'build'] + cargo_flags,
+            line_handler=accumulate_output,
+            explicit_env=cargo_env)
+
+        cargo_plan = json.loads(''.join(output_lines))
+        self._gen_cargo_rules(backend_file, cargo_plan, cargo_env)
+        self.backend_input_files |= set(cargo_plan['inputs'])
+
 
     def _process_generated_file(self, backend_file, obj):
         # TODO: These are directories that don't work in the tup backend
