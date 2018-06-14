@@ -1,31 +1,33 @@
 language: rust
-rust:
-- nightly
-- beta
-- stable
-before_script:
-- |
-  pip install 'travis-cargo<0.2' --user &&
-  export PATH=`python -m site --user-base`/bin:$PATH
+matrix:
+  include:
+    - rust: 1.21.0
+    - rust: stable
+    - os: osx
+    - rust: beta
+    - rust: nightly
+      script:
+        - cargo test
+        - cargo bench
+        - cargo test --features nightly
+        - cargo bench --features nightly
+        - cargo test --features spin_no_std
+        - cargo bench --features spin_no_std
+        - cd compiletest
+        - cargo clean
+        - cargo test
+        - cd ../
+
+    - rust: nightly
+      before_script:
+        - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+      script:
+        - cargo doc --no-deps --all-features
+      after_success:
+        - travis-cargo --only nightly doc-upload
 script:
-- |
-  travis-cargo build &&
-  travis-cargo test &&
-  travis-cargo bench &&
-  travis-cargo --only nightly build -- --features spin_no_std &&
-  travis-cargo --only nightly test -- --features spin_no_std &&
-  travis-cargo --only nightly bench -- --features spin_no_std &&
-  travis-cargo --only nightly clean &&
-  travis-cargo --only nightly build -- --features compiletest &&
-  travis-cargo --only nightly test -- --features compiletest &&
-  travis-cargo --only nightly clean &&
-  travis-cargo --only stable doc
-after_success:
-- travis-cargo --only stable doc-upload
+  - cargo test
+
 env:
   global:
-  - TRAVIS_CARGO_NIGHTLY_FEATURE=nightly
   - secure: YXu24LptjeYirjWYjWGsMT2m3mB7LvQATE6TVo7VEUXv8GYoy2ORIHD83PeImxC93MmZ01QeUezRzuCW51ZcK92VnNSBttlF60SvIX18VsJrV92tsAhievFstqYQ+fB8DIuQ8noU0jPz7GpI+R9dlTRSImAqWOnVIghA+Wzz7Js=
-os:
-  - linux
-  - osx
