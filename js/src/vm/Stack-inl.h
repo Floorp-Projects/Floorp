@@ -37,7 +37,7 @@ InterpreterFrame::environmentChain() const
 inline GlobalObject&
 InterpreterFrame::global() const
 {
-    return environmentChain()->global();
+    return script()->global();
 }
 
 inline JSObject&
