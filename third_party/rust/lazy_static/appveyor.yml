@@ -53,7 +53,9 @@ test_script:
   - cargo build --verbose
   - cargo test
   - if [%CHANNEL%]==[nightly] (
+      cd compiletest &&
       cargo clean &&
-      cargo build --verbose --features "compiletest" &&
-      cargo test --features "compiletest"
+      cargo build --verbose &&
+      cargo test &&
+      cd ../
     )
