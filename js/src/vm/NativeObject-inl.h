@@ -672,7 +672,7 @@ NativeObject::allocKindForTenure() const
 inline js::GlobalObject&
 NativeObject::global() const
 {
-    return JSObject::global();
+    return nonCCWGlobal();
 }
 
 inline js::gc::AllocKind
