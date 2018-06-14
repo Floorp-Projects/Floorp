@@ -1029,7 +1029,7 @@ class BuildDriver(MozbuildObject):
                         print('Build configuration changed. Regenerating backend.')
                         args = [config.substs['PYTHON'],
                                 mozpath.join(self.topobjdir, 'config.status')]
-                        self.run_process(args, cwd=self.topobjdir)
+                        self.run_process(args, cwd=self.topobjdir, pass_thru=True)
                     backend_cls = get_backend_class(active_backend)(config)
                     return backend_cls.build(self, output, jobs, verbose, what)
                 return None
