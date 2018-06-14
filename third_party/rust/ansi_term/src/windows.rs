@@ -7,28 +7,33 @@
 ///
 /// Returns a `Result` with the Windows error code if unsuccessful.
 #[cfg(windows)]
-pub fn enable_ansi_support() -> Result<(), u64> {
+pub fn enable_ansi_support() -> Result<(), u32> {
+    use winapi::um::processenv::GetStdHandle;
+    use winapi::um::errhandlingapi::GetLastError;
+    use winapi::um::consoleapi::{GetConsoleMode, SetConsoleMode};
 
-    #[link(name = "kernel32")]
-    extern {
-        fn GetStdHandle(handle: u64) -> *const i32;
-        fn SetConsoleMode(handle: *const i32, mode: u32) -> bool;
-        fn GetLastError() -> u64;
-    }
+    const STD_OUT_HANDLE: u32 = -11i32 as u32;
+    const ENABLE_VIRTUAL_TERMINAL_PROCESSING: u32 = 0x0004;
 
     unsafe {
-        const STD_OUT_HANDLE: u64 = -11i32 as u64;
-        const ENABLE_ANSI_CODES: u32 = 7;
-
-        // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683231(v=vs.85).aspx
+        // https://docs.microsoft.com/en-us/windows/console/getstdhandle
         let std_out_handle = GetStdHandle(STD_OUT_HANDLE);
         let error_code = GetLastError();
         if error_code != 0 { return Err(error_code); }
-
-        // https://msdn.microsoft.com/en-us/library/windows/desktop/ms686033(v=vs.85).aspx
-        SetConsoleMode(std_out_handle, ENABLE_ANSI_CODES);
+        
+        // https://docs.microsoft.com/en-us/windows/console/getconsolemode
+        let mut console_mode: u32 = 0;
+        GetConsoleMode(std_out_handle, &mut console_mode);
         let error_code = GetLastError();
         if error_code != 0 { return Err(error_code); }
+
+        // VT processing not already enabled?
+        if console_mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING == 0 {
+            // https://docs.microsoft.com/en-us/windows/console/setconsolemode
+            SetConsoleMode(std_out_handle, console_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+            let error_code = GetLastError();
+            if error_code != 0 { return Err(error_code); }
+        }
     }
 
     return Ok(());
