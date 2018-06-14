@@ -61,9 +61,20 @@ fn get_cache_path_from_prof_path(prof_path: &nsAString) -> Option<PathBuf> {
 }
 
 #[cfg(not(target_os="windows"))]
-fn get_cache_path_from_prof_path(_prof_path: &nsAString) -> Option<PathBuf> {
-    // Not supported yet.
-    None
+fn get_cache_path_from_prof_path(prof_path: &nsAString) -> Option<PathBuf> {
+    if prof_path.is_empty() {
+        // Empty means that we do not use disk cache.
+        return None;
+    }
+
+    use std::ffi::OsString;
+
+    let utf8 = String::from_utf16(prof_path.as_ref()).unwrap();
+    let prof_path = OsString::from(utf8);
+    let mut cache_path = PathBuf::from(&prof_path);
+    cache_path.push("shader-cache");
+
+    Some(cache_path)
 }
 
 struct WrProgramBinaryDiskCache {
@@ -236,7 +247,6 @@ pub struct WrProgramCache {
 }
 
 impl WrProgramCache {
-    #[cfg(target_os = "windows")]
     pub fn new(prof_path: &nsAString, workers: &Arc<ThreadPool>) -> Self {
         let disk_cache = Rc::new(RefCell::new(WrProgramBinaryDiskCache::new(prof_path, workers)));
         let program_cache_observer = Box::new(WrProgramCacheObserver::new(Rc::clone(&disk_cache)));
@@ -245,16 +255,6 @@ impl WrProgramCache {
         WrProgramCache {
             program_cache,
             disk_cache: Some(disk_cache),
-        }
-    }
-
-    #[cfg(not(target_os="windows"))]
-    pub fn new(_prof_path: &nsAString, _: &Arc<ThreadPool>) -> Self {
-        let program_cache = ProgramCache::new(None);
-
-        WrProgramCache {
-            program_cache,
-            disk_cache: None,
         }
     }
 
@@ -271,7 +271,6 @@ impl WrProgramCache {
     }
 }
 
-#[cfg(target_os = "windows")]
 pub fn remove_disk_cache(prof_path: &nsAString) -> Result<(), Error> {
     use std::fs::remove_dir_all;
     use std::time::{Instant};
@@ -289,10 +288,3 @@ pub fn remove_disk_cache(prof_path: &nsAString) -> Result<(), Error> {
     }
     Ok(())
 }
-
-#[cfg(not(target_os="windows"))]
-pub fn remove_disk_cache(_prof_path: &nsAString) -> Result<(), Error> {
-    error!("Shader disk cache is not supported");
-    return Err(Error::new(ErrorKind::Other, "Not supported"))
-}
-

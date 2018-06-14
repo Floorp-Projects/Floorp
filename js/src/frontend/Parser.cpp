@@ -23,6 +23,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 
+#include <memory>
 #include <new>
 
 #include "jsapi.h"
@@ -1766,7 +1767,7 @@ typename Scope::Data*
 NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
 {
     using Data = typename Scope::Data;
-    size_t allocSize = Scope::sizeOfData(numBindings);
+    size_t allocSize = SizeOfData<typename Scope::Data>(numBindings);
     auto* bindings = alloc.allocInSize<Data>(allocSize, numBindings);
     if (!bindings)
         ReportOutOfMemory(cx);
@@ -1780,9 +1781,7 @@ NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
 static MOZ_MUST_USE BindingName*
 FreshlyInitializeBindings(BindingName* cursor, const Vector<BindingName>& bindings)
 {
-    for (const BindingName& binding : bindings)
-        new (cursor++) BindingName(binding);
-    return cursor;
+    return std::uninitialized_copy(bindings.begin(), bindings.end(), cursor);
 }
 
 Maybe<GlobalScope::Data*>
