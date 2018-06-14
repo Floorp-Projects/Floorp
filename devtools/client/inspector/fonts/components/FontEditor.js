@@ -89,6 +89,10 @@ class FontEditor extends PureComponent {
    * @return {DOMNode}
    */
   renderFontFamily(fonts, onToggleFontHighlight) {
+    if (!fonts.length) {
+      return null;
+    }
+
     const fontList = dom.ul(
       {
         className: "fonts-list"
@@ -121,21 +125,21 @@ class FontEditor extends PureComponent {
   }
 
   renderFontSize(value) {
-    return FontSize({
+    return value && FontSize({
       onChange: this.props.onPropertyChange,
       value,
     });
   }
 
   renderFontStyle(value) {
-    return FontStyle({
+    return value && FontStyle({
       onChange: this.props.onPropertyChange,
       value,
     });
   }
 
   renderFontWeight(value) {
-    return FontWeight({
+    return value && FontWeight({
       onChange: this.props.onPropertyChange,
       value,
     });
@@ -200,6 +204,15 @@ class FontEditor extends PureComponent {
     );
   }
 
+  renderWarning() {
+    return dom.div(
+      {
+        className: "devtools-sidepanel-no-result"
+      },
+      getStr("fontinspector.noFontsOnSelectedElement")
+    );
+  }
+
   render() {
     const { fontEditor, onToggleFontHighlight } = this.props;
     const { fonts, axes, instance, properties } = fontEditor;
@@ -214,11 +227,15 @@ class FontEditor extends PureComponent {
     const hasWeightAxis = hasFontAxes && font.variationAxes.find(axis => {
       return axis.tag === "wght";
     });
+    // Check for falsy font-weight value (undefined or empty string).
+    const hasWeight = properties["font-weight"] != null;
 
     return dom.div(
       {
         id: "font-editor"
       },
+      // Render empty state message for nodes that don't have font properties.
+      !hasWeight && this.renderWarning(),
       // Always render UI for font family, format and font file URL.
       this.renderFontFamily(fonts, onToggleFontHighlight),
       // Render UI for font variation instances if they are defined.
