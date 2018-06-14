@@ -24,6 +24,7 @@
 #include "jit/BaselineFrame-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/NativeObject-inl.h"
 
 namespace js {
 
