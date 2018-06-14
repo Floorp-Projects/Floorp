@@ -604,6 +604,8 @@ a.learn-more-link.webconsole-learn-more-link {
 
 #split-console-close-button {
   margin-inline-end: 0;
+  height: 100%;
+  margin: 0;
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {
