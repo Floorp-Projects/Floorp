@@ -45,6 +45,11 @@ unicode-segmentation = "1.1.0"
 
 # Change Log
 
+## 1.2.0
+
+* New `GraphemeCursor` API allows random access and bidirectional iteration.
+* Fixed incorrect splitting of certain emoji modifier sequences.
+
 ## 1.1.0
 
 * Add `as_str` methods to the iterator types.
