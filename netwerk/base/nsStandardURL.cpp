@@ -2273,7 +2273,7 @@ nsStandardURL::StartClone()
     return clone;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::Clone(nsIURI **result)
 {
     return CloneInternal(eHonorRef, EmptyCString(), result);

@@ -99,6 +99,7 @@ protected:
     nsCString        mCharsetHint;
 
 private:
+    nsresult Clone(nsIURI** aURI);
     nsresult SetSpecInternal(const nsACString &input);
     nsresult SetScheme(const nsACString &input);
     nsresult SetUserPass(const nsACString &input);

@@ -13476,15 +13476,6 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     CopyUTF8toUTF16(type, typeHint);
   }
 
-  // Clone the URI now, in case a content policy or something messes
-  // with it under InternalLoad; we do _not_ want to change the URI
-  // our caller passed in.
-  nsCOMPtr<nsIURI> clonedURI;
-  aURI->Clone(getter_AddRefs(clonedURI));
-  if (!clonedURI) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // if the triggeringPrincipal is not passed explicitly, then we
   // fall back to using doc->NodePrincipal() as the triggeringPrincipal.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
@@ -13501,7 +13492,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     flags |= INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED;
   }
 
-  nsresult rv = InternalLoad(clonedURI,                 // New URI
+  nsresult rv = InternalLoad(aURI,                      // New URI
                              nullptr,                   // Original URI
                              Nothing(),                 // Let the protocol handler assign it
                              false,                     // LoadReplace
