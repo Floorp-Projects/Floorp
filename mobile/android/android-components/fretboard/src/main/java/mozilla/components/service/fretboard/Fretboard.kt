@@ -16,7 +16,6 @@ class Fretboard(
 ) {
     private var experiments: List<Experiment> = listOf()
     private var experimentsLoaded: Boolean = false
-    private val evaluator = ExperimentEvaluator()
 
     /**
      * Loads experiments from local storage

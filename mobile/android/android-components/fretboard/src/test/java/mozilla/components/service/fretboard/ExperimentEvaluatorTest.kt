@@ -371,27 +371,19 @@ class ExperimentEvaluatorTest {
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        val evaluator = ExperimentEvaluator()
+        var evaluator = ExperimentEvaluator(object : RegionProvider {
+            override fun getRegion(): String {
+                return "USA"
+            }
+        })
+
         assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
-        experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+        evaluator = ExperimentEvaluator(object : RegionProvider {
+            override fun getRegion(): String {
+                return "ESP"
+            }
+        })
 
         assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }

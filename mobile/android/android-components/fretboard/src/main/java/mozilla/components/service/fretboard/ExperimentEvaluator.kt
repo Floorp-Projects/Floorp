@@ -10,7 +10,7 @@ import android.text.TextUtils
 import java.util.Locale
 import java.util.zip.CRC32
 
-internal class ExperimentEvaluator {
+internal class ExperimentEvaluator(private val regionProvider: RegionProvider? = null) {
     fun evaluate(
         context: Context,
         experimentDescriptor: ExperimentDescriptor,
@@ -23,8 +23,9 @@ internal class ExperimentEvaluator {
 
     private fun matches(context: Context, experiment: Experiment): Boolean {
         if (experiment.match != null) {
-            val region = Locale.getDefault().isO3Country
-            val matchesRegion = !(experiment.match.regions != null &&
+            val region = regionProvider?.getRegion()
+            val matchesRegion = !(region != null &&
+                                        experiment.match.regions != null &&
                                         experiment.match.regions.isNotEmpty() &&
                                         experiment.match.regions.none { it == region })
             val appVersion = context.packageManager.getPackageInfo(context.packageName, 0).versionName
