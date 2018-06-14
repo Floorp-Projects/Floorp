@@ -53,9 +53,9 @@
 //! extern crate log;
 //!
 //! # #[derive(Debug)] pub struct Yak(String);
-//! # impl Yak { fn shave(&self, _: u32) {} }
+//! # impl Yak { fn shave(&mut self, _: u32) {} }
 //! # fn find_a_razor() -> Result<u32, u32> { Ok(1) }
-//! pub fn shave_the_yak(yak: &Yak) {
+//! pub fn shave_the_yak(yak: &mut Yak) {
 //!     info!(target: "yak_events", "Commencing yak shaving for {:?}", yak);
 //!
 //!     loop {
@@ -138,16 +138,16 @@
 //! # fn main() {}
 //! ```
 //!
-//! Loggers are installed by calling the [`set_logger`] function. It takes a
-//! closure which is provided a [`MaxLevelFilter`] token and returns a
-//! [`Log`] trait object. The [`MaxLevelFilter`] token controls the global
-//! maximum log level. The logging facade uses this as an optimization to
-//! improve performance of log messages at levels that are disabled. In the
-//! case of our example logger, we'll want to set the maximum log level to
-//! [`Info`][level_link], since we ignore any [`Debug`][level_link] or
-//! [`Trace`][level_link] level log messages. A logging implementation
-//! should provide a function that wraps a call to [`set_logger`], handling
-//! initialization of the logger:
+//! Loggers are installed by calling the [`set_logger`] function. The maximum
+//! log level also needs to be adjusted via the [`set_max_level`] function. The
+//! logging facade uses this as an optimization to improve performance of log
+//! messages at levels that are disabled. It's important to set it, as it
+//! defaults to [`Off`][filter_link], so no log messages will ever be captured!
+//! In the case of our example logger, we'll want to set the maximum log level
+//! to [`Info`][filter_link], since we ignore any [`Debug`][level_link] or
+//! [`Trace`][level_link] level log messages. A logging implementation should
+//! provide a function that wraps a call to [`set_logger`] and
+//! [`set_max_level`], handling initialization of the logger:
 //!
 //! ```rust
 //! # extern crate log;
@@ -165,16 +165,20 @@
 //!
 //! pub fn init() -> Result<(), SetLoggerError> {
 //!     log::set_logger(&LOGGER)
+//!         .map(|()| log::set_max_level(LevelFilter::Info))
 //! }
 //! ```
 //!
+//! Implementations that adjust their configurations at runtime should take care
+//! to adjust the maximum log level as well.
+//!
 //! # Use with `std`
 //!
-//! `set_logger` requires you to provide a `&'static Log`, which can be hard if
-//! your logger depends on some runtime configuration. The `set_boxed_logger`
-//! function is available with the `std` Cargo feature. It is identical to
-//! `set_logger` except that it requires you to provide a `Box<Log>` rather than
-//! a `&'static Log`:
+//! `set_logger` requires you to provide a `&'static Log`, which can be hard to
+//! obtain if your logger depends on some runtime configuration. The
+//! `set_boxed_logger` function is available with the `std` Cargo feature. It is
+//! identical to `set_logger` except that it takes a `Box<Log>` rather than a
+//! `&'static Log`:
 //!
 //! ```rust
 //! # extern crate log;
@@ -189,6 +193,7 @@
 //! # #[cfg(feature = "std")]
 //! pub fn init() -> Result<(), SetLoggerError> {
 //!     log::set_boxed_logger(Box::new(SimpleLogger))
+//!         .map(|()| log::set_max_level(LevelFilter::Info))
 //! }
 //! ```
 //!
@@ -222,6 +227,19 @@
 //! [dependencies]
 //! log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
 //! ```
+//! # Crate Feature Flags
+//!
+//! The following crate feature flags are avaliable in addition to the filters. They are
+//! configured in your `Cargo.toml`.
+//!
+//! * `std` allows use of `std` crate instead of the default `core`. Enables using `std::error` and
+//! `set_boxed_logger` functionality.
+//! * `serde` enables support for serialization and deserialization of `Level` and `LevelFilter`.
+//!
+//! ```toml
+//! [dependencies]
+//! log = { version = "0.4", features = ["std", "serde"] }
+//! ```
 //!
 //! # Version compatibility
 //!
@@ -232,8 +250,9 @@
 //!
 //! [`Log`]: trait.Log.html
 //! [level_link]: enum.Level.html
+//! [filter_link]: enum.LevelFilter.html
 //! [`set_logger`]: fn.set_logger.html
-//! [`MaxLevelFilter`]: struct.MaxLevelFilter.html
+//! [`set_max_level`]: fn.set_max_level.html
 //! [`try_set_logger_raw`]: fn.try_set_logger_raw.html
 //! [`shutdown_logger_raw`]: fn.shutdown_logger_raw.html
 //! [env_logger]: https://docs.rs/env_logger/*/env_logger/
@@ -247,14 +266,14 @@
 //! [log4rs]: https://docs.rs/log4rs/*/log4rs/
 //! [fern]: https://docs.rs/fern/*/fern/
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/log/0.4.1")]
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://docs.rs/log/0.4"
+)]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
-
 #![cfg_attr(not(feature = "std"), no_std)]
-
 // When compiled for the rustc compiler itself we want to make sure that this is
 // an unstable crate
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
@@ -272,7 +291,7 @@ use std::error;
 use std::fmt;
 use std::mem;
 use std::str::FromStr;
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 
 #[macro_use]
 mod macros;
@@ -294,10 +313,10 @@ static MAX_LOG_LEVEL_FILTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
 static LOG_LEVEL_NAMES: [&'static str; 6] = ["OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
 
-static SET_LOGGER_ERROR: &'static str = "attempted to set a logger after the logging system was \
-    already initialized";
-static LEVEL_PARSE_ERROR: &'static str = "attempted to convert a string that doesn't match an \
-    existing log level";
+static SET_LOGGER_ERROR: &'static str = "attempted to set a logger after the logging system \
+                                         was already initialized";
+static LEVEL_PARSE_ERROR: &'static str =
+    "attempted to convert a string that doesn't match an existing log level";
 
 /// An enum representing the available verbosity levels of the logger.
 ///
@@ -390,9 +409,9 @@ fn eq_ignore_ascii_case(a: &str, b: &str) -> bool {
     }
 
     if a.len() == b.len() {
-        a.bytes().zip(b.bytes()).all(|(a, b)| {
-            to_ascii_uppercase(a) == to_ascii_uppercase(b)
-        })
+        a.bytes()
+            .zip(b.bytes())
+            .all(|(a, b)| to_ascii_uppercase(a) == to_ascii_uppercase(b))
     } else {
         false
     }
@@ -1048,7 +1067,7 @@ pub fn set_logger(logger: &'static Log) -> Result<(), SetLoggerError> {
 
 fn set_logger_inner<F>(make_logger: F) -> Result<(), SetLoggerError>
 where
-    F: FnOnce() -> &'static Log
+    F: FnOnce() -> &'static Log,
 {
     unsafe {
         if STATE.compare_and_swap(UNINITIALIZED, INITIALIZING, Ordering::SeqCst) != UNINITIALIZED {
@@ -1117,6 +1136,34 @@ pub fn logger() -> &'static Log {
     }
 }
 
+// WARNING: this is not part of the crate's public API and is subject to change at any time
+#[doc(hidden)]
+pub fn __private_api_log(
+    args: fmt::Arguments,
+    level: Level,
+    target: &str,
+    module_path: &str,
+    file: &str,
+    line: u32,
+) {
+    logger().log(
+        &Record::builder()
+            .args(args)
+            .level(level)
+            .target(target)
+            .module_path(Some(module_path))
+            .file(Some(file))
+            .line(Some(line))
+            .build(),
+    );
+}
+
+// WARNING: this is not part of the crate's public API and is subject to change at any time
+#[doc(hidden)]
+pub fn __private_api_enabled(level: Level, target: &str) -> bool {
+    logger().enabled(&Metadata::builder().level(level).target(target).build())
+}
+
 /// The statically resolved maximum log level.
 ///
 /// See the crate level documentation for information on how to configure this.
@@ -1159,8 +1206,8 @@ cfg_if! {
 #[cfg(test)]
 mod tests {
     extern crate std;
-    use tests::std::string::ToString;
     use super::{Level, LevelFilter, ParseLevelError};
+    use tests::std::string::ToString;
 
     #[test]
     fn test_levelfilter_from_str() {
@@ -1247,13 +1294,13 @@ mod tests {
     #[test]
     #[cfg(feature = "std")]
     fn test_error_trait() {
-        use std::error::Error;
         use super::SetLoggerError;
+        use std::error::Error;
         let e = SetLoggerError(());
         assert_eq!(
             e.description(),
             "attempted to set a logger after the logging system \
-                     was already initialized"
+             was already initialized"
         );
     }
 
@@ -1321,7 +1368,7 @@ mod tests {
 
     #[test]
     fn test_record_complete_builder() {
-        use super::{Record, Level};
+        use super::{Level, Record};
         let target = "myApp";
         let record_test = Record::builder()
             .module_path(Some("foo"))
