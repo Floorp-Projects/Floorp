@@ -170,7 +170,6 @@ private:
    */
   void UnregisterFromHistory();
 
-  already_AddRefed<nsIURI> GetURIToMutate();
   void SetHrefAttribute(nsIURI *aURI);
 
   void GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,

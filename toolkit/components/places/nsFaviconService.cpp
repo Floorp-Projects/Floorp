@@ -264,7 +264,10 @@ nsFaviconService::GetDefaultFavicon(nsIURI** _retval)
                             NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return mDefaultIcon->Clone(_retval);
+
+  nsCOMPtr<nsIURI> uri = mDefaultIcon;
+  uri.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
