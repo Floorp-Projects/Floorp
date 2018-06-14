@@ -37,7 +37,6 @@ const {
   EVENT_DEFACTION_CHANGE,
   EVENT_DESCRIPTION_CHANGE,
   EVENT_DOCUMENT_ATTRIBUTES_CHANGED,
-  EVENT_HELP_CHANGE,
   EVENT_HIDE,
   EVENT_NAME_CHANGE,
   EVENT_OBJECT_ATTRIBUTE_CHANGED,
@@ -234,13 +233,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return this.rawAccessible.description;
   },
 
-  get help() {
-    if (this.isDefunct) {
-      return null;
-    }
-    return this.rawAccessible.help;
-  },
-
   get keyboardShortcut() {
     if (this.isDefunct) {
       return null;
@@ -366,7 +358,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       name: this.name,
       value: this.value,
       description: this.description,
-      help: this.help,
       keyboardShortcut: this.keyboardShortcut,
       childCount: this.childCount,
       domNodeType: this.domNodeType,
@@ -647,11 +638,6 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       case EVENT_DESCRIPTION_CHANGE:
         if (accessible) {
           events.emit(accessible, "description-change", rawAccessible.description);
-        }
-        break;
-      case EVENT_HELP_CHANGE:
-        if (accessible) {
-          events.emit(accessible, "help-change", rawAccessible.help);
         }
         break;
       case EVENT_REORDER:
