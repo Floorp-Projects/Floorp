@@ -666,9 +666,7 @@ class OutOfLineTestObject : public OutOfLineCodeBase<CodeGenerator>
 
   public:
     OutOfLineTestObject()
-#ifdef DEBUG
       : ifEmulatesUndefined_(nullptr), ifDoesntEmulateUndefined_(nullptr)
-#endif
     { }
 
     void accept(CodeGenerator* codegen) final {
@@ -3425,12 +3423,12 @@ CodeGenerator::visitStoreSlotT(LStoreSlotT* lir)
     if (valueType == MIRType::ObjectOrNull) {
         masm.storeObjectOrNull(ToRegister(lir->value()), dest);
     } else {
-        ConstantOrRegister value;
+        mozilla::Maybe<ConstantOrRegister> value;
         if (lir->value()->isConstant())
-            value = ConstantOrRegister(lir->value()->toConstant()->toJSValue());
+            value.emplace(ConstantOrRegister(lir->value()->toConstant()->toJSValue()));
         else
-            value = TypedOrValueRegister(valueType, ToAnyRegister(lir->value()));
-        masm.storeUnboxedValue(value, valueType, dest, lir->mir()->slotType());
+            value.emplace(TypedOrValueRegister(valueType, ToAnyRegister(lir->value())));
+        masm.storeUnboxedValue(value.ref(), valueType, dest, lir->mir()->slotType());
     }
 }
 
@@ -3628,13 +3626,13 @@ CodeGenerator::visitSetPropertyPolymorphicT(LSetPropertyPolymorphicT* ins)
     Register temp1 = ToRegister(ins->temp1());
     Register temp2 = ToRegister(ins->temp2());
 
-    ConstantOrRegister value;
+    mozilla::Maybe<ConstantOrRegister> value;
     if (ins->mir()->value()->isConstant())
-        value = ConstantOrRegister(ins->mir()->value()->toConstant()->toJSValue());
+        value.emplace(ConstantOrRegister(ins->mir()->value()->toConstant()->toJSValue()));
     else
-        value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(ins->value()));
+        value.emplace(TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(ins->value())));
 
-    emitSetPropertyPolymorphic(ins, obj, temp1, temp2, value);
+    emitSetPropertyPolymorphic(ins, obj, temp1, temp2, value.ref());
 }
 
 void
@@ -9388,7 +9386,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     LInstruction* ins = ool->ins();
     const LAllocation* index;
     MIRType valueType;
-    ConstantOrRegister value;
+    mozilla::Maybe<ConstantOrRegister> value;
     Register spectreTemp;
 
     if (ins->isStoreElementHoleV()) {
@@ -9397,7 +9395,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         elements = ToRegister(store->elements());
         index = store->index();
         valueType = store->mir()->value()->type();
-        value = TypedOrValueRegister(ToValue(store, LStoreElementHoleV::Value));
+        value.emplace(TypedOrValueRegister(ToValue(store, LStoreElementHoleV::Value)));
         spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     } else if (ins->isFallibleStoreElementV()) {
         LFallibleStoreElementV* store = ins->toFallibleStoreElementV();
@@ -9405,7 +9403,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         elements = ToRegister(store->elements());
         index = store->index();
         valueType = store->mir()->value()->type();
-        value = TypedOrValueRegister(ToValue(store, LFallibleStoreElementV::Value));
+        value.emplace(TypedOrValueRegister(ToValue(store, LFallibleStoreElementV::Value)));
         spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     } else if (ins->isStoreElementHoleT()) {
         LStoreElementHoleT* store = ins->toStoreElementHoleT();
@@ -9414,9 +9412,9 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         index = store->index();
         valueType = store->mir()->value()->type();
         if (store->value()->isConstant())
-            value = ConstantOrRegister(store->value()->toConstant()->toJSValue());
+            value.emplace(ConstantOrRegister(store->value()->toConstant()->toJSValue()));
         else
-            value = TypedOrValueRegister(valueType, ToAnyRegister(store->value()));
+            value.emplace(TypedOrValueRegister(valueType, ToAnyRegister(store->value())));
         spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     } else { // ins->isFallibleStoreElementT()
         LFallibleStoreElementT* store = ins->toFallibleStoreElementT();
@@ -9425,9 +9423,9 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         index = store->index();
         valueType = store->mir()->value()->type();
         if (store->value()->isConstant())
-            value = ConstantOrRegister(store->value()->toConstant()->toJSValue());
+            value.emplace(ConstantOrRegister(store->value()->toConstant()->toJSValue()));
         else
-            value = TypedOrValueRegister(valueType, ToAnyRegister(store->value()));
+            value.emplace(TypedOrValueRegister(valueType, ToAnyRegister(store->value())));
         spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     }
 
@@ -9488,7 +9486,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     saveLive(ins);
 
     pushArg(Imm32(ool->strict()));
-    pushArg(value);
+    pushArg(value.ref());
     if (index->isConstant())
         pushArg(Imm32(ToInt32(index)));
     else
@@ -9737,13 +9735,13 @@ CodeGenerator::visitArrayPushT(LArrayPushT* lir)
     Register obj = ToRegister(lir->object());
     Register elementsTemp = ToRegister(lir->temp());
     Register length = ToRegister(lir->output());
-    ConstantOrRegister value;
+    mozilla::Maybe<ConstantOrRegister> value;
     if (lir->value()->isConstant())
-        value = ConstantOrRegister(lir->value()->toConstant()->toJSValue());
+        value.emplace(ConstantOrRegister(lir->value()->toConstant()->toJSValue()));
     else
-        value = TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value()));
+        value.emplace(TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value())));
     Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
-    emitArrayPush(lir, obj, value, elementsTemp, length, spectreTemp);
+    emitArrayPush(lir, obj, value.ref(), elementsTemp, length, spectreTemp);
 }
 
 typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
@@ -11719,30 +11717,30 @@ CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir)
     // Add inlined code for loading arguments from where they are allocated.
     for (size_t i = 0, e = array->numElements(); i < e; i++) {
         MDefinition* elem = array->getElement(i);
-        ConstantOrRegister input;
+        mozilla::Maybe<ConstantOrRegister> input;
 
         jumpTable->addCodeEntry(masm);
         Register typeReg = Register::Invalid();
         const LAllocation* a = lir->getOperand(1 + BOX_PIECES * i);
         if (a->isBogus()) {
             if (elem->type() == MIRType::Null) {
-                input = NullValue();
+                input.emplace(NullValue());
             } else if (elem->type() == MIRType::Undefined) {
-                input = UndefinedValue();
+                input.emplace(UndefinedValue());
             } else if (elem->isConstant() && elem->isEmittedAtUses()) {
-                input = elem->toConstant()->toJSValue();
+                input.emplace(elem->toConstant()->toJSValue());
             } else {
                 MOZ_CRASH("Unsupported element constant allocation.");
             }
         } else if (a->isMemory()) {
             if (elem->type() == MIRType::Double) {
                 masm.loadDouble(ToAddress(a), tempD);
-                input = TypedOrValueRegister(elem->type(), AnyRegister(tempD));
+                input.emplace(TypedOrValueRegister(elem->type(), AnyRegister(tempD)));
             } else if (elem->type() == MIRType::Value) {
                 typeReg = temp0;
                 masm.loadPtr(ToAddress(a), temp0);
 #ifdef JS_PUNBOX64
-                input = TypedOrValueRegister(ValueOperand(temp0));
+                input.emplace(TypedOrValueRegister(ValueOperand(temp0)));
 #endif
             } else {
                 typeReg = temp0;
@@ -11753,24 +11751,23 @@ CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir)
                     masm.loadPtr(ToAddress(a), temp0);
                 else
                     MOZ_CRASH("Unsupported load size");
-                input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+                input.emplace(TypedOrValueRegister(elem->type(), AnyRegister(typeReg)));
             }
         } else if (a->isGeneralReg()) {
             typeReg = ToRegister(a);
-            input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
 #ifdef JS_PUNBOX64
             if (elem->type() != MIRType::Value)
-                input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+                input.emplace(TypedOrValueRegister(elem->type(), AnyRegister(typeReg)));
             else
-                input = TypedOrValueRegister(ValueOperand(typeReg));
+                input.emplace(TypedOrValueRegister(ValueOperand(typeReg)));
 #else
             if (elem->type() != MIRType::Value)
-                input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+                input.emplace(TypedOrValueRegister(elem->type(), AnyRegister(typeReg)));
 #endif
         } else if (a->isFloatReg()) {
-            input = TypedOrValueRegister(elem->type(), AnyRegister(ToFloatRegister(a)));
+            input.emplace(TypedOrValueRegister(elem->type(), AnyRegister(ToFloatRegister(a))));
         } else if (a->isConstantValue()) {
-            input = a->toConstant()->toJSValue();
+            input.emplace(a->toConstant()->toJSValue());
         } else {
             MOZ_CRASH("Unsupported element allocation.");
         }
@@ -11784,9 +11781,9 @@ CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir)
             MOZ_ASSERT(typeReg != Register::Invalid());
             if (a1->isMemory()) {
                 masm.loadPtr(ToAddress(a1), temp1);
-                input = TypedOrValueRegister(ValueOperand(typeReg, temp1));
+                input.emplace(TypedOrValueRegister(ValueOperand(typeReg, temp1)));
             } else if (a1->isGeneralReg()) {
-                input = TypedOrValueRegister(ValueOperand(typeReg, ToRegister(a1)));
+                input.emplace(TypedOrValueRegister(ValueOperand(typeReg, ToRegister(a1))));
             } else {
                 MOZ_CRASH("Unsupported Value allocation.");
             }
@@ -11794,7 +11791,7 @@ CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir)
             MOZ_ASSERT(lir->getOperand(1 + BOX_PIECES * i + 1)->isBogus());
         }
 #endif
-        masm.moveValue(input, out);
+        masm.moveValue(input.ref(), out);
 
         // For the last entry, fall-through.
         if (i + 1 < e)

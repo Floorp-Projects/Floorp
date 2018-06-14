@@ -454,7 +454,9 @@ struct IonTrackedTypeWithAddendum
 
     explicit IonTrackedTypeWithAddendum(TypeSet::Type type)
       : type(type),
-        hasAddendum(HasNothing)
+        hasAddendum(HasNothing),
+        script(nullptr),
+        offset(0)
     { }
 
     IonTrackedTypeWithAddendum(TypeSet::Type type, JSScript* script, uint32_t offset)
