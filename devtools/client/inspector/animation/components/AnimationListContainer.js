@@ -6,11 +6,20 @@
 
 const { createFactory, PureComponent } =
   require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const AnimationList = createFactory(require("./AnimationList"));
-const AnimationListHeader = createFactory(require("./AnimationListHeader"));
+const CurrentTimeScrubberController =
+  createFactory(require("./CurrentTimeScrubberController"));
+const ProgressInspectionPanel = createFactory(require("./ProgressInspectionPanel"));
+
+const { findOptimalTimeInterval } = require("../utils/utils");
+
+// The minimum spacing between 2 time graduation headers in the timeline (px).
+const TIME_GRADUATION_MIN_SPACING = 40;
 
 class AnimationListContainer extends PureComponent {
   static get propTypes() {
@@ -32,6 +41,44 @@ class AnimationListContainer extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      // tick labels and lines on the progress inspection panel
+      ticks: [],
+    };
+  }
+
+  componentDidMount() {
+    this.updateState(this.props);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.updateState(nextProps);
+  }
+
+  updateState(props) {
+    const { timeScale } = props;
+    const tickLinesEl = ReactDOM.findDOMNode(this).querySelector(".tick-lines");
+    const width = tickLinesEl.offsetWidth;
+    const animationDuration = timeScale.getDuration();
+    const minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
+    const intervalLength = findOptimalTimeInterval(minTimeInterval);
+    const intervalWidth = intervalLength * width / animationDuration;
+    const tickCount = width / intervalWidth;
+
+    const ticks = [];
+
+    for (let i = 0; i <= tickCount; i++) {
+      const position = i * intervalWidth * 100 / width;
+      const label = timeScale.formatTime(timeScale.distanceToRelativeTime(position));
+      ticks.push({ position, label });
+    }
+
+    this.setState({ ticks });
+  }
+
   render() {
     const {
       addAnimationsCurrentTimeListener,
@@ -49,36 +96,48 @@ class AnimationListContainer extends PureComponent {
       simulateAnimation,
       timeScale,
     } = this.props;
+    const { ticks } = this.state;
 
     return dom.div(
       {
         className: "animation-list-container"
       },
-      AnimationListHeader(
+      ProgressInspectionPanel(
         {
-          addAnimationsCurrentTimeListener,
-          removeAnimationsCurrentTimeListener,
-          setAnimationsCurrentTime,
-          timeScale,
-        }
-      ),
-      AnimationList(
-        {
-          animations,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          getNodeFromActor,
-          onHideBoxModelHighlighter,
-          onShowBoxModelHighlighterForNode,
-          selectAnimation,
-          setHighlightedNode,
-          setSelectedNode,
-          simulateAnimation,
-          timeScale,
+          indicator: CurrentTimeScrubberController(
+            {
+              addAnimationsCurrentTimeListener,
+              removeAnimationsCurrentTimeListener,
+              setAnimationsCurrentTime,
+              timeScale,
+            }
+          ),
+          list: AnimationList(
+            {
+              animations,
+              emitEventForTest,
+              getAnimatedPropertyMap,
+              getNodeFromActor,
+              onHideBoxModelHighlighter,
+              onShowBoxModelHighlighterForNode,
+              selectAnimation,
+              setHighlightedNode,
+              setSelectedNode,
+              simulateAnimation,
+              timeScale,
+            }
+          ),
+          ticks,
         }
       )
     );
   }
 }
 
-module.exports = AnimationListContainer;
+const mapStateToProps = state => {
+  return {
+    sidebarWidth: state.animations.sidebarSize ? state.animations.sidebarSize.width : 0
+  };
+};
+
+module.exports = connect(mapStateToProps)(AnimationListContainer);
