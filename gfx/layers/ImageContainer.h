@@ -559,6 +559,10 @@ public:
 
   const gfx::IntSize& GetScaleHint() const { return mScaleHint; }
 
+  void SetTransformHint(const gfx::Matrix& aTransformHint) { mTransformHint = aTransformHint; }
+
+  const gfx::Matrix& GetTransformHint() const { return mTransformHint; }
+
   void SetImageFactory(ImageFactory *aFactory)
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -680,6 +684,8 @@ private:
   RefPtr<ImageFactory> mImageFactory;
 
   gfx::IntSize mScaleHint;
+
+  gfx::Matrix mTransformHint;
 
   RefPtr<BufferRecycleBin> mRecycleBin;
 

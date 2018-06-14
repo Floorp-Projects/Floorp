@@ -127,7 +127,8 @@ public:
  *  default constructor
  */
 nsParser::nsParser()
-  : mCharset(WINDOWS_1252_ENCODING)
+  : mParserContext(nullptr)
+  , mCharset(WINDOWS_1252_ENCODING)
 {
   Initialize(true);
 }

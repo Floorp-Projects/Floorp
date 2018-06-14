@@ -191,7 +191,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     JSAutoRealm ar(cx, global);
 
     // If requested, initialize the standard classes on the global.
-    if (initStandardClasses && ! JS_InitStandardClasses(cx, global))
+    if (initStandardClasses && !JS::InitRealmStandardClasses(cx))
         return NS_ERROR_FAILURE;
 
     // Make a proto.
@@ -627,13 +627,9 @@ XPCWrappedNative::Init(nsIXPCScriptable* aScriptable)
                jsclazz->getResolve() &&
                jsclazz->hasFinalize(), "bad class");
 
-    // XXXbz JS_GetObjectPrototype wants an object, even though it then asserts
-    // that this object is same-compartment with cx, which means it could just
-    // use the cx global...
-    RootedObject global(cx, CurrentGlobalOrNull(cx));
     RootedObject protoJSObject(cx, HasProto() ?
                                    GetProto()->GetJSProtoObject() :
-                                   JS_GetObjectPrototype(cx, global));
+                                   JS::GetRealmObjectPrototype(cx));
     if (!protoJSObject) {
         return false;
     }

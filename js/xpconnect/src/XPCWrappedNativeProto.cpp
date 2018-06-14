@@ -55,8 +55,7 @@ XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable)
     AutoJSContext cx;
     mScriptable = scriptable;
 
-    JS::RootedObject global(cx, mScope->GetGlobalJSObject());
-    JS::RootedObject proto(cx, JS_GetObjectPrototype(cx, global));
+    JS::RootedObject proto(cx, JS::GetRealmObjectPrototype(cx));
     mJSProtoObject = JS_NewObjectWithUniqueType(cx, js::Jsvalify(&XPC_WN_Proto_JSClass),
                                                 proto);
 

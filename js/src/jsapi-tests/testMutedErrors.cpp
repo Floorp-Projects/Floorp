@@ -47,7 +47,7 @@ eval(const char* asciiChars, bool mutedErrors, JS::MutableHandleValue rval)
 						   JS::FireOnNewGlobalHook, globalOptions));
     CHECK(global);
     JSAutoRealm ar(cx, global);
-    CHECK(JS_InitStandardClasses(cx, global));
+    CHECK(JS::InitRealmStandardClasses(cx));
 
 
     JS::CompileOptions options(cx);

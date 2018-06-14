@@ -3062,8 +3062,7 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     }
   }
 
-  if (aInitStandardClasses &&
-      !JS_InitStandardClasses(aCx, aGlobal)) {
+  if (aInitStandardClasses && !JS::InitRealmStandardClasses(aCx)) {
     NS_WARNING("Failed to init standard classes");
     return false;
   }
