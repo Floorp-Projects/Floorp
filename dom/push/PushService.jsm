@@ -32,6 +32,9 @@ const CONNECTION_PROTOCOLS = (function() {
 XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
                                    "@mozilla.org/push/Notifier;1",
                                    "nsIPushNotifier");
+XPCOMUtils.defineLazyServiceGetter(this, "eTLDService",
+                                   "@mozilla.org/network/effective-tld-service;1",
+                                   "nsIEffectiveTLDService");
 
 var EXPORTED_SYMBOLS = ["PushService"];
 
@@ -83,33 +86,6 @@ function errorWithResult(message, result = Cr.NS_ERROR_FAILURE) {
   let error = new Error(message);
   error.result = result;
   return error;
-}
-
-/**
- * Copied from ForgetAboutSite.jsm.
- *
- * Returns true if the string passed in is part of the root domain of the
- * current string.  For example, if this is "www.mozilla.org", and we pass in
- * "mozilla.org", this will return true.  It would return false the other way
- * around.
- */
-function hasRootDomain(str, aDomain)
-{
-  let index = str.indexOf(aDomain);
-  // If aDomain is not found, we know we do not have it as a root domain.
-  if (index == -1)
-    return false;
-
-  // If the strings are the same, we obviously have a match.
-  if (str == aDomain)
-    return true;
-
-  // Otherwise, we have aDomain as our root domain iff the index of aDomain is
-  // aDomain.length subtracted from our length and (since we do not have an
-  // exact match) the character before the index is a dot or slash.
-  let prevChar = str[index - 1];
-  return (index == (str.length - aDomain.length)) &&
-         (prevChar == "." || prevChar == "/");
 }
 
 /**
@@ -1134,7 +1110,7 @@ var PushService = {
       .then(_ => {
         return this._dropRegistrationsIf(record =>
           info.domain == "*" ||
-          (record.uri && hasRootDomain(record.uri.prePath, info.domain))
+          (record.uri && eTLDService.hasRootDomain(record.uri.prePath, info.domain))
         );
       })
       .catch(e => {
