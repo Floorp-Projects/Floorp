@@ -41,7 +41,7 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  * is inherited from ParentProcessTargetActor (which inherits most of its implementation
  * from BrowsingContextTargetActor).
  *
- * WebExtensionTargetActor is created by a WebExtensionParentActor counterpart, when its
+ * WebExtensionTargetActor is created by a WebExtensionActor counterpart, when its
  * parent actor's `connect` method has been called (on the listAddons RDP package),
  * it runs in the same process that the extension is running into (which can be the main
  * process if the extension is running in non-oop mode, or the child extension process

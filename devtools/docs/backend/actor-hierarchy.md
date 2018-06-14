@@ -65,7 +65,7 @@ RootActor (root.js)
    |       whichever process holds the content. FrameTargetActorProxy
    |       communicates with this via the frame's message manager.
    |       Extends the abstract class BrowsingContextTargetActor.
-   |       Returned by "connect" on FrameTargetActorProxy.
+   |       Returned by "connect" server method on FrameTargetActorProxy.
    |
    |-- WorkerTargetActor (worker.js)
    |   Targets a worker (applies to various kinds like web worker, service
@@ -99,10 +99,20 @@ RootActor (root.js)
    |   Targets a legacy (non-WebExtension) add-on.
    |   Returned by "listAddons" request.
    |
-   \-- WebExtensionTargetActor (webextension.js)
-       Targets a WebExtension add-on.
-       Extends ParentProcessTargetActor.
+   \-- WebExtensionActor (addon/webextension.js)
+       Represents a WebExtension add-on in the parent process. This gives some
+       metadata about the add-on and watches for uninstall events. This uses a
+       proxy to access the actual WebExtension in the WebExtension process via
+       the message manager.
        Returned by "listAddons" request.
+       |
+       \-- WebExtensionTargetActor (targets/webextension.js)
+           Targets a WebExtension add-on. This runs in the WebExtension process.
+           The client issues an additional "connect" request to
+           WebExtensionActor to get this actor, which is different from the
+           approach used for frame target actors.
+           Extends ParentProcessTargetActor.
+           Returned by "connect" request to WebExtensionActor.
 ```
 
 ## Target Actors

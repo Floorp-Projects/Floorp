@@ -4,19 +4,27 @@
 
 "use strict";
 
+/*
+ * Represents a WebExtension add-on in the parent process. This gives some metadata about
+ * the add-on and watches for uninstall events. This uses a proxy to access the
+ * WebExtension in the WebExtension process via the message manager.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const {DebuggerServer} = require("devtools/server/main");
 const protocol = require("devtools/shared/protocol");
-const {webExtensionSpec} = require("devtools/shared/specs/addon/webextension-parent");
+const {webExtensionSpec} = require("devtools/shared/specs/addon/webextension");
 
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
 
 /**
  * Creates the actor that represents the addon in the parent process, which connects
- * itself to a WebExtensionTargetActor counterpart which is created in the
- * extension process (or in the main process if the WebExtensions OOP mode is disabled).
+ * itself to a WebExtensionTargetActor counterpart which is created in the extension
+ * process (or in the main process if the WebExtensions OOP mode is disabled).
  *
- * The WebExtensionParentActor subscribes itself as an AddonListener on the AddonManager
+ * The WebExtensionActor subscribes itself as an AddonListener on the AddonManager
  * and forwards this events to child actor (e.g. on addon reload or when the addon is
  * uninstalled completely) and connects to the child extension process using a `browser`
  * element provided by the extension internals (it is not related to any single extension,
@@ -30,7 +38,7 @@ loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionPa
  * @param {AddonWrapper} addon
  *        The target addon.
  */
-const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
+const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
   initialize(conn, addon) {
     this.conn = conn;
     this.addon = addon;
@@ -46,9 +54,9 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
     this.addon = null;
     this._childFormPromise = null;
 
-    if (this._destroyProxyChildActor) {
-      this._destroyProxyChildActor();
-      delete this._destroyProxyChildActor;
+    if (this._destroyProxy) {
+      this._destroyProxy();
+      delete this._destroyProxy;
     }
   },
 
@@ -86,7 +94,7 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       return this._childFormPromise;
     }
 
-    const proxy = new ProxyChildActor(this.conn, this);
+    const proxy = new WebExtensionTargetActorProxy(this.conn, this);
     this._childFormPromise = proxy.connect().then(form => {
       // Merge into the child actor form, some addon metadata
       // (e.g. the addon name shown in the addon debugger window title).
@@ -98,18 +106,18 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
         isOOP: proxy.isOOP,
       });
     });
-    this._destroyProxyChildActor = () => proxy.destroy();
+    this._destroyProxy = () => proxy.destroy();
 
     return this._childFormPromise;
   },
 
-  // ProxyChildActor callbacks.
+  // WebExtensionTargetActorProxy callbacks.
 
-  onProxyChildActorDestroy() {
+  onProxyDestroy() {
     // Invalidate the cached child actor and form Promise
     // if the child actor exits.
     this._childFormPromise = null;
-    delete this._destroyProxyChildActor;
+    delete this._destroyProxy;
   },
 
   // AddonManagerListener callbacks.
@@ -132,9 +140,9 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
   },
 });
 
-exports.WebExtensionParentActor = WebExtensionParentActor;
+exports.WebExtensionActor = WebExtensionActor;
 
-function ProxyChildActor(connection, parentActor) {
+function WebExtensionTargetActorProxy(connection, parentActor) {
   this._conn = connection;
   this._parentActor = parentActor;
   this.addonId = parentActor.id;
@@ -146,7 +154,7 @@ function ProxyChildActor(connection, parentActor) {
   this._childActorID = null;
 }
 
-ProxyChildActor.prototype = {
+WebExtensionTargetActorProxy.prototype = {
   /**
    * Connect the webextension child actor.
    */
@@ -194,7 +202,7 @@ ProxyChildActor.prototype = {
     }
 
     if (this._parentActor) {
-      this._parentActor.onProxyChildActorDestroy();
+      this._parentActor.onProxyDestroy();
     }
 
     this._parentActor = null;
