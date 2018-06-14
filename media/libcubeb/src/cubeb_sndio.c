@@ -51,17 +51,33 @@ struct cubeb_stream {
   uint64_t swpos;                 /* number of frames produced/consumed */
   cubeb_data_callback data_cb;    /* cb to preapare data */
   cubeb_state_callback state_cb;  /* cb to notify about state changes */
+  float volume;			  /* current volume */
 };
 
 static void
-float_to_s16(void *ptr, long nsamp)
+s16_setvol(void *ptr, long nsamp, float volume)
+{
+  int16_t *dst = ptr;
+  int32_t mult = volume * 32768;
+  int32_t s;
+
+  while (nsamp-- > 0) {
+    s = *dst;
+    s = (s * mult) >> 15;
+    *(dst++) = s;
+  }
+}
+
+static void
+float_to_s16(void *ptr, long nsamp, float volume)
 {
   int16_t *dst = ptr;
   float *src = ptr;
+  float mult = volume * 32768;
   int s;
 
   while (nsamp-- > 0) {
-    s = lrintf(*(src++) * 32768);
+    s = lrintf(*(src++) * mult);
     if (s < -32768)
       s = -32768;
     else if (s > 32767)
@@ -169,8 +185,12 @@ sndio_mainloop(void *arg)
       if (prime > 0)
         prime--;
 
-      if ((s->mode & SIO_PLAY) && s->conv)
-          float_to_s16(s->pbuf, nfr * s->pchan);
+      if (s->mode & SIO_PLAY) {
+        if (s->conv)
+          float_to_s16(s->pbuf, nfr * s->pchan, s->volume);
+        else
+          s16_setvol(s->pbuf, nfr * s->pchan, s->volume);
+      }
 
       if (s->mode & SIO_REC)
         rstart = 0;
@@ -372,6 +392,7 @@ sndio_stream_init(cubeb * context,
     if (s->rbuf == NULL)
       goto err;
   }
+  s->volume = 1.;
   *stream = s;
   DPR("sndio_stream_init() end, ok\n");
   (void)context;
@@ -476,7 +497,11 @@ sndio_stream_set_volume(cubeb_stream *s, float volume)
 {
   DPR("sndio_stream_set_volume(%f)\n", volume);
   pthread_mutex_lock(&s->mtx);
-  sio_setvol(s->hdl, SIO_MAXVOL * volume);
+  if (volume < 0.)
+    volume = 0.;
+  else if (volume > 1.0)
+    volume = 1.;
+  s->volume = volume;
   pthread_mutex_unlock(&s->mtx);
   return CUBEB_OK;
 }
