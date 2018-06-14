@@ -5,7 +5,11 @@
 from argparse import ArgumentParser
 import json
 import os
-import urlparse
+
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
 from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
