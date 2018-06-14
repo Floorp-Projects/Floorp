@@ -136,6 +136,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #if defined(XP_DARWIN) || defined (XP_WIN)
     , mContentsScaleFactor(1.0)
 #endif
+    , mCSSZoomFactor(0.0)
     , mPostingKeyEvents(0)
     , mPostingKeyEventsOutdated(0)
     , mDrawingModel(kDefaultDrawingModel)
@@ -160,6 +161,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mShColorSpace(nullptr)
     , mShContext(nullptr)
     , mCGLayer(nullptr)
+    , mCARefreshTimer(0)
     , mCurrentEvent(nullptr)
 #endif
     , mLayersRendering(false)
