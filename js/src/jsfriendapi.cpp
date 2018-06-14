@@ -533,11 +533,9 @@ js::GetStaticPrototype(JSObject* obj)
 }
 
 JS_FRIEND_API(bool)
-js::GetOriginalEval(JSContext* cx, HandleObject scope, MutableHandleObject eval)
+js::GetRealmOriginalEval(JSContext* cx, MutableHandleObject eval)
 {
-    assertSameCompartment(cx, scope);
-    Rooted<GlobalObject*> global(cx, &scope->global());
-    return GlobalObject::getOrCreateEval(cx, global, eval);
+    return GlobalObject::getOrCreateEval(cx, cx->global(), eval);
 }
 
 JS_FRIEND_API(void)
