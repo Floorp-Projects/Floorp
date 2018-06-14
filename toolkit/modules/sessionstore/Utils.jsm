@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
 XPCOMUtils.defineLazyServiceGetter(this, "ssu",
                                    "@mozilla.org/browser/sessionstore/utils;1",
                                    "nsISessionStoreUtils");
+XPCOMUtils.defineLazyServiceGetter(this, "eTLDService",
+                                   "@mozilla.org/network/effective-tld-service;1",
+                                   "nsIEffectiveTLDService");
+
 XPCOMUtils.defineLazyGetter(this, "SERIALIZED_SYSTEMPRINCIPAL", function() {
   return Utils.serializePrincipal(Services.scriptSecurityManager.getSystemPrincipal());
 });
@@ -89,16 +93,7 @@ var Utils = Object.freeze({
       return false;
     }
 
-    let index = host.indexOf(domain);
-    if (index == -1)
-      return false;
-
-    if (host == domain)
-      return true;
-
-    let prevChar = host[index - 1];
-    return (index == (host.length - domain.length)) &&
-           (prevChar == "." || prevChar == "/");
+   return eTLDService.hasRootDomain(host, domain);
   },
 
   shallowCopy(obj) {
