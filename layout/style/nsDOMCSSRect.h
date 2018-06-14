@@ -14,7 +14,7 @@
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRect final : public RefCounted<nsDOMCSSRect>
+class nsDOMCSSRect final : public mozilla::RefCounted<nsDOMCSSRect>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(nsDOMCSSRect);

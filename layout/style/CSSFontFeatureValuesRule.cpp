@@ -10,6 +10,70 @@
 namespace mozilla {
 namespace dom {
 
+CSSFontFeatureValuesRule::CSSFontFeatureValuesRule(
+  RefPtr<RawServoFontFeatureValuesRule> aRawRule,
+  uint32_t aLine, uint32_t aColumn)
+  : Rule(aLine, aColumn)
+  , mRawRule(std::move(aRawRule))
+{
+}
+
+size_t
+CSSFontFeatureValuesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // TODO Implement this!
+  return aMallocSizeOf(this);
+}
+
+#ifdef DEBUG
+void
+CSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
+{
+  nsAutoCString str;
+  for (int32_t i = 0; i < aIndent; i++) {
+    str.AppendLiteral("  ");
+  }
+  Servo_FontFeatureValuesRule_Debug(mRawRule, &str);
+  fprintf_stderr(out, "%s\n", str.get());
+}
+#endif
+
+/* CSSRule implementation */
+
+void
+CSSFontFeatureValuesRule::GetCssText(nsAString& aCssText) const
+{
+  Servo_FontFeatureValuesRule_GetCssText(mRawRule, &aCssText);
+}
+
+/* CSSFontFeatureValuesRule implementation */
+
+void
+CSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
+{
+  Servo_FontFeatureValuesRule_GetFontFamily(mRawRule, &aFamilyListStr);
+}
+
+void
+CSSFontFeatureValuesRule::GetValueText(nsAString& aValueText)
+{
+  Servo_FontFeatureValuesRule_GetValueText(mRawRule, &aValueText);
+}
+
+void
+CSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
+                                        ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+CSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
+                                       ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 // If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
 // implementation.
 
@@ -21,7 +85,7 @@ CSSFontFeatureValuesRule::IsCCLeaf() const
 
 /* virtual */ JSObject*
 CSSFontFeatureValuesRule::WrapObject(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto)
+                                     JS::Handle<JSObject*> aGivenProto)
 {
   return CSSFontFeatureValuesRuleBinding::Wrap(aCx, this, aGivenProto);
 }

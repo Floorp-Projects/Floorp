@@ -542,7 +542,7 @@ linux64-asan/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-6
+        - linux64-clang
         - linux64-gcc
         - linux64-rust
         - linux64-sccache
@@ -573,7 +573,7 @@ linux64-asan-fuzzing/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-6
+        - linux64-clang
         - linux64-gcc
         - linux64-rust
         - linux64-sccache
@@ -607,7 +607,7 @@ linux64-asan-reporter-nightly/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-6
+        - linux64-clang
         - linux64-gcc
         - linux64-rust
         - linux64-sccache
@@ -637,7 +637,7 @@ linux64-asan/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-6
+        - linux64-clang
         - linux64-gcc
         - linux64-rust
         - linux64-sccache
@@ -668,7 +668,7 @@ linux64-lto/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-6
+        - linux64-clang
         - linux64-gcc
         - linux64-rust
         - linux64-sccache
@@ -699,7 +699,7 @@ linux64-lto/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-6
+        - linux64-clang
         - linux64-gcc
         - linux64-rust
         - linux64-sccache
@@ -920,7 +920,7 @@ linux64-ccov/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-4
+        - linux64-clang
         - linux64-rust
         - linux64-gcc
 
@@ -949,7 +949,7 @@ linux64-ccov/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-4
+        - linux64-clang
         - linux64-rust
         - linux64-gcc
 

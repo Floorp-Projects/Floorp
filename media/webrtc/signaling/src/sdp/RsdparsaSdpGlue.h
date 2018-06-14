@@ -24,6 +24,7 @@ typedef UniquePtr<RustSdpSession, FreeRustSdpSession> RsdparsaSessionHandle;
 std::string convertStringView(StringView str);
 std::vector<std::string> convertStringVec(StringVec* vec);
 sdp::AddrType convertAddressType(RustSdpAddrType addr);
+std::vector<uint8_t> convertU8Vec(U8Vec* vec);
 
 }
 

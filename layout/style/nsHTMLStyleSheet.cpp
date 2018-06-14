@@ -23,6 +23,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 
 using namespace mozilla;

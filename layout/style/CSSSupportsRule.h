@@ -8,22 +8,41 @@
 #define mozilla_dom_CSSSupportsRule_h
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/ServoBindingTypes.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSSupportsRule : public css::ConditionRule
 {
-protected:
-  using ConditionRule::ConditionRule;
-  virtual ~CSSSupportsRule() {}
-
 public:
+  CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
+                  uint32_t aLine, uint32_t aColumn);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  RawServoSupportsRule* Raw() const { return mRawRule; }
+
   // WebIDL interface
   uint16_t Type() const override { return CSSRuleBinding::SUPPORTS_RULE; }
+  void GetCssText(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const override;
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+private:
+  ~CSSSupportsRule() = default;
+
+  RefPtr<RawServoSupportsRule> mRawRule;
 };
 
 } // namespace dom

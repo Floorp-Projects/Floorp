@@ -27,27 +27,6 @@ linux64-clang-3.9:
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-4:
-    description: "Clang 4 toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(clang4)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
-    worker:
-        max-run-time: 7200
-    run:
-        using: toolchain-script
-        script: build-clang-4-linux.sh
-        resources:
-            - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-4-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-gcc-4.9
-
 linux64-clang-5:
     description: "Clang 5 toolchain build"
     treeherder:
@@ -65,7 +44,6 @@ linux64-clang-5:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-5-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
@@ -87,6 +65,7 @@ linux64-clang-6:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-6-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
@@ -110,6 +89,7 @@ linux64-clang-6-macosx-cross:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-6-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.xz
         tooltool-downloads: internal
     toolchains:
@@ -297,7 +277,7 @@ linux64-cctools-port:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cctools.tar.xz
     toolchains:
-        - linux64-clang-3.9
+        - linux64-clang-6
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
@@ -317,7 +297,7 @@ linux64-hfsplus:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:
-        - linux64-clang-3.9
+        - linux64-clang-6
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"

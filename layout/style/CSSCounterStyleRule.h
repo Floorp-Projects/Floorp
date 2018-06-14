@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ServoCounterStyleRule_h
-#define mozilla_ServoCounterStyleRule_h
+#ifndef mozilla_CSSCounterStyleRule_h
+#define mozilla_CSSCounterStyleRule_h
 
 #include "mozilla/css/Rule.h"
 #include "mozilla/ServoBindingTypes.h"
@@ -13,20 +13,21 @@
 struct RawServoCounterStyleRule;
 
 namespace mozilla {
+namespace dom {
 
-class ServoCounterStyleRule final : public css::Rule
+class CSSCounterStyleRule final : public css::Rule
 {
 public:
-  ServoCounterStyleRule(already_AddRefed<RawServoCounterStyleRule> aRawRule,
-                        uint32_t aLine, uint32_t aColumn)
+  CSSCounterStyleRule(already_AddRefed<RawServoCounterStyleRule> aRawRule,
+                      uint32_t aLine, uint32_t aColumn)
     : mozilla::css::Rule(aLine, aColumn)
     , mRawRule(std::move(aRawRule))
   {
   }
 
 private:
-  ServoCounterStyleRule(const ServoCounterStyleRule& aCopy) = delete;
-  ~ServoCounterStyleRule() = default;
+  CSSCounterStyleRule(const CSSCounterStyleRule& aCopy) = delete;
+  ~CSSCounterStyleRule() = default;
 
 public:
   bool IsCCLeaf() const final;
@@ -54,6 +55,7 @@ private:
   RefPtr<RawServoCounterStyleRule> mRawRule;
 };
 
+} // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_ServoCounterStyleRule_h
+#endif // mozilla_CSSCounterStyleRule_h

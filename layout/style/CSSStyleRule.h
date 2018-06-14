@@ -4,10 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* representation of CSSStyleRule for stylo */
-
-#ifndef mozilla_ServoStyleRule_h
-#define mozilla_ServoStyleRule_h
+#ifndef mozilla_CSSStyleRule_h
+#define mozilla_CSSStyleRule_h
 
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/ServoBindingTypes.h"
@@ -17,14 +15,13 @@
 
 namespace mozilla {
 
+class DeclarationBlock;
+
 namespace dom {
 class DocGroup;
-} // namespace dom
+class CSSStyleRule;
 
-class DeclarationBlock;
-class ServoStyleRule;
-
-class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
+class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -41,31 +38,31 @@ protected:
 
 private:
   // For accessing the constructor.
-  friend class ServoStyleRule;
+  friend class CSSStyleRule;
 
-  explicit ServoStyleRuleDeclaration(
+  explicit CSSStyleRuleDeclaration(
     already_AddRefed<RawServoDeclarationBlock> aDecls);
-  ~ServoStyleRuleDeclaration();
+  ~CSSStyleRuleDeclaration();
 
-  inline ServoStyleRule* Rule();
-  inline const ServoStyleRule* Rule() const;
+  inline CSSStyleRule* Rule();
+  inline const CSSStyleRule* Rule() const;
 
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class ServoStyleRule final : public BindingStyleRule
-                           , public SupportsWeakPtr<ServoStyleRule>
+class CSSStyleRule final : public BindingStyleRule
+                           , public SupportsWeakPtr<CSSStyleRule>
 {
 public:
-  ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
+  CSSStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
                  uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSStyleRule,
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ServoStyleRule)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(CSSStyleRule)
 
   uint32_t GetSelectorCount() override;
   nsresult GetSelectorText(uint32_t aSelectorIndex,
@@ -94,29 +91,30 @@ public:
 #endif
 
 private:
-  ~ServoStyleRule() {}
+  ~CSSStyleRule() {}
 
   // For computing the offset of mDecls.
-  friend class ServoStyleRuleDeclaration;
+  friend class CSSStyleRuleDeclaration;
 
   RefPtr<RawServoStyleRule> mRawRule;
-  ServoStyleRuleDeclaration mDecls;
+  CSSStyleRuleDeclaration mDecls;
 };
 
-ServoStyleRule*
-ServoStyleRuleDeclaration::Rule()
+CSSStyleRule*
+CSSStyleRuleDeclaration::Rule()
 {
-  return reinterpret_cast<ServoStyleRule*>(
-    reinterpret_cast<uint8_t*>(this) - offsetof(ServoStyleRule, mDecls));
+  return reinterpret_cast<CSSStyleRule*>(
+    reinterpret_cast<uint8_t*>(this) - offsetof(CSSStyleRule, mDecls));
 }
 
-const ServoStyleRule*
-ServoStyleRuleDeclaration::Rule() const
+const CSSStyleRule*
+CSSStyleRuleDeclaration::Rule() const
 {
-  return reinterpret_cast<const ServoStyleRule*>(
-    reinterpret_cast<const uint8_t*>(this) - offsetof(ServoStyleRule, mDecls));
+  return reinterpret_cast<const CSSStyleRule*>(
+    reinterpret_cast<const uint8_t*>(this) - offsetof(CSSStyleRule, mDecls));
 }
 
+} // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_ServoStyleRule_h
+#endif // mozilla_CSSStyleRule_h

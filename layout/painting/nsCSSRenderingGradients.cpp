@@ -569,7 +569,8 @@ GetSpecifiedGradientPosition(const nsStyleCoord& aCoord,
 }
 
 static nsTArray<ColorStop>
-ComputeColorStops(const nsStyleGradient& aGradient,
+ComputeColorStops(ComputedStyle* aComputedStyle,
+                  const nsStyleGradient& aGradient,
                   int32_t aAppUnitsPerPixel,
                   gfxFloat aLineLength)
 {
@@ -607,8 +608,9 @@ ComputeColorStops(const nsStyleGradient& aGradient,
       if (firstUnsetPosition < 0) {
         firstUnsetPosition = i;
       }
+      auto stopColor = stop.mColor.CalcColor(aComputedStyle);
       stops.AppendElement(ColorStop(0, stop.mIsInterpolationHint,
-                                    Color::FromABGR(stop.mColor)));
+                                    Color::FromABGR(stopColor)));
       continue;
     }
 
@@ -620,8 +622,9 @@ ComputeColorStops(const nsStyleGradient& aGradient,
         : stops[i - 1].mPosition;
       position = std::max(position, previousPosition);
     }
+    auto stopColor = stop.mColor.CalcColor(aComputedStyle);
     stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
-                                  Color::FromABGR(stop.mColor)));
+                                  Color::FromABGR(stopColor)));
     if (firstUnsetPosition > 0) {
       // Interpolate positions for all stops that didn't have a specified position
       double p = stops[firstUnsetPosition - 1].mPosition;
@@ -639,8 +642,9 @@ ComputeColorStops(const nsStyleGradient& aGradient,
 
 nsCSSGradientRenderer
 nsCSSGradientRenderer::Create(nsPresContext* aPresContext,
-                             nsStyleGradient* aGradient,
-                             const nsSize& aIntrinsicSize)
+                              ComputedStyle* aComputedStyle,
+                              nsStyleGradient* aGradient,
+                              const nsSize& aIntrinsicSize)
 {
   nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
   gfxSize srcSize = gfxSize(gfxFloat(aIntrinsicSize.width)/appUnitsPerDevPixel,
@@ -666,7 +670,7 @@ nsCSSGradientRenderer::Create(nsPresContext* aPresContext,
 
   // Build color stop array and compute stop positions
   nsTArray<ColorStop> stops =
-    ComputeColorStops(*aGradient, appUnitsPerDevPixel, lineLength);
+    ComputeColorStops(aComputedStyle, *aGradient, appUnitsPerDevPixel, lineLength);
 
   ResolveMidpoints(stops);
 

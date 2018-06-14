@@ -268,7 +268,7 @@ const RECOMMENDED_PREFS = new Map([
 const isRemote = Services.appinfo.processType ==
     Services.appinfo.PROCESS_TYPE_CONTENT;
 
-class MarionetteMainProcess {
+class MarionetteParentProcess {
   constructor() {
     this.server = null;
 
@@ -308,7 +308,7 @@ class MarionetteMainProcess {
         return this.running;
 
       default:
-        log.warn("Unknown IPC message to main process: " + name);
+        log.warn("Unknown IPC message to parent process: " + name);
         return null;
     }
   }
@@ -319,7 +319,7 @@ class MarionetteMainProcess {
     switch (topic) {
       case "nsPref:changed":
         if (this.enabled) {
-          this.init();
+          this.init(false);
         } else {
           this.uninit();
         }
@@ -413,7 +413,7 @@ class MarionetteMainProcess {
     }, {once: true});
   }
 
-  init() {
+  init(quit = true) {
     if (this.running || !this.enabled || !this.finalUIStartup) {
       log.debug(`Init aborted (running=${this.running}, ` +
                 `enabled=${this.enabled}, finalUIStartup=${this.finalUIStartup})`);
@@ -448,7 +448,9 @@ class MarionetteMainProcess {
       } catch (e) {
         log.fatal("Remote protocol server failed to start", e);
         this.uninit();
-        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        if (quit) {
+          Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        }
         return;
       }
 
@@ -485,7 +487,7 @@ class MarionetteContentProcess {
   get running() {
     let reply = Services.cpmm.sendSyncMessage("Marionette:IsRunning");
     if (reply.length == 0) {
-      log.warn("No reply from main process");
+      log.warn("No reply from parent process");
       return false;
     }
     return reply[0];
@@ -508,7 +510,7 @@ const MarionetteFactory = {
       if (isRemote) {
         this.instance_ = new MarionetteContentProcess();
       } else {
-        this.instance_ = new MarionetteMainProcess();
+        this.instance_ = new MarionetteParentProcess();
       }
     }
 

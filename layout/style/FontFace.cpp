@@ -7,6 +7,7 @@
 #include "mozilla/dom/FontFace.h"
 
 #include <algorithm>
+#include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Promise.h"
@@ -15,7 +16,6 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSParser.h"
-#include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StaticPrefs.h"

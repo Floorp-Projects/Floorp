@@ -271,7 +271,10 @@ private:
           std::string Backing;
           llvm::raw_string_ostream Stream(Backing);
           const TemplateArgumentList &TemplateArgs = Spec->getTemplateArgs();
-#if CLANG_VERSION_MAJOR > 3 ||                                                 \
+#if CLANG_VERSION_MAJOR > 5
+          printTemplateArgumentList(
+              Stream, TemplateArgs.asArray(), PrintingPolicy(CI.getLangOpts()));
+#elif CLANG_VERSION_MAJOR > 3 ||                                                 \
     (CLANG_VERSION_MAJOR == 3 && CLANG_VERSION_MINOR >= 9)
           TemplateSpecializationType::PrintTemplateArgumentList(
               Stream, TemplateArgs.asArray(), PrintingPolicy(CI.getLangOpts()));
@@ -360,7 +363,8 @@ private:
         return std::string("V_") + mangleLocation(Decl->getLocation()) +
                std::string("_") + hash(Decl->getName());
       }
-    } else if (isa<TagDecl>(Decl) || isa<TypedefNameDecl>(Decl)) {
+    } else if (isa<TagDecl>(Decl) || isa<TypedefNameDecl>(Decl) ||
+               isa<ObjCInterfaceDecl>(Decl)) {
       if (!Decl->getIdentifier()) {
         // Anonymous.
         return std::string("T_") + mangleLocation(Decl->getLocation());
@@ -374,6 +378,10 @@ private:
       }
 
       return std::string("NS_") + mangleQualifiedName(getQualifiedName(Decl));
+    } else if (const ObjCIvarDecl *D2 = dyn_cast<ObjCIvarDecl>(Decl)) {
+      const ObjCInterfaceDecl *Iface = D2->getContainingInterface();
+      return std::string("F_<") + getMangledName(Ctx, Iface) + ">_" +
+             D2->getNameAsString();
     } else if (const FieldDecl *D2 = dyn_cast<FieldDecl>(Decl)) {
       const RecordDecl *Record = D2->getParent();
       return std::string("F_<") + getMangledName(Ctx, Record) + ">_" +

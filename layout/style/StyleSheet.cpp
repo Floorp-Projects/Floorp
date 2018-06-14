@@ -15,6 +15,7 @@
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/ShadowRootBinding.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs.h"
@@ -24,6 +25,8 @@
 #include "NullPrincipal.h"
 
 namespace mozilla {
+
+using namespace dom;
 
 StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode,
                        CORSMode aCORSMode,
