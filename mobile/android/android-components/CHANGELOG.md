@@ -1,3 +1,17 @@
+# 0.10
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.41
+  * Kotlin coroutines 0.22.5
+  * GeckoView Nightly
+    * date: 2018.05.16
+    * version: 62.0.20180516100458
+    * revision: dedd25bfd2794eaba95225361f82c701e49c9339
+
+* **browser-session**: Added Custom Tabs configuration to session. Added new functionality that allows attaching a lifecycle owner to session observers so that observer can automatically be unregistered when the associated lifecycle ends.
+* **service-telemetry**: Updated createdTimestamp and createdDate fields for mobile-metrics ping
+
 # 0.9
 
 * Compiled against:
