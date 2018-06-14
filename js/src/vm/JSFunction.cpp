@@ -1750,7 +1750,7 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
 {
     // Steps 1-5.
     // Block this call if security callbacks forbid it.
-    Rooted<GlobalObject*> global(cx, &args.callee().global());
+    Handle<GlobalObject*> global = cx->global();
     if (!GlobalObject::isRuntimeCodeGenEnabled(cx, global)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_FUNCTION);
         return false;
