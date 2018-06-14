@@ -277,7 +277,7 @@ public:
     };
 
     virtual LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) = 0;
-    virtual nsresult GetHostRecord(const char *host,
+    virtual nsresult GetHostRecord(const nsACString &host,
                                    uint16_t flags, uint16_t af, bool pb,
                                    const nsCString &originSuffix,
                                    nsHostRecord **result)
@@ -329,7 +329,7 @@ public:
      * host lookup cannot be canceled (cancelation can be layered above this by
      * having the callback implementation return without doing anything).
      */
-    nsresult ResolveHost(const char                      *hostname,
+    nsresult ResolveHost(const nsACString &hostname,
                          const mozilla::OriginAttributes &aOriginAttributes,
                          uint16_t                         flags,
                          uint16_t                         af,
@@ -341,7 +341,7 @@ public:
      * should correspond to the parameters passed to ResolveHost.  this function
      * executes the callback if the callback is still pending with the given status.
      */
-    void DetachCallback(const char                      *hostname,
+    void DetachCallback(const nsACString &hostname,
                         const mozilla::OriginAttributes &aOriginAttributes,
                         uint16_t                         flags,
                         uint16_t                         af,
@@ -355,7 +355,7 @@ public:
      * passed to ResolveHost.  If this is the last callback associated with the
      * host record, it is removed from any request queues it might be on.
      */
-    void CancelAsyncRequest(const char                      *host,
+    void CancelAsyncRequest(const nsACString &host,
                             const mozilla::OriginAttributes &aOriginAttributes,
                             uint16_t                         flags,
                             uint16_t                         af,
@@ -390,7 +390,7 @@ public:
     void FlushCache();
 
     LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
-    nsresult GetHostRecord(const char *host,
+    nsresult GetHostRecord(const nsACString &host,
                            uint16_t flags, uint16_t af, bool pb,
                            const nsCString &originSuffix,
                            nsHostRecord **result) override;
@@ -425,7 +425,7 @@ private:
      * Starts a new lookup in the background for entries that are in the grace
      * period with a failed connect or all cached entries are negative.
      */
-    nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const char *host);
+    nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const nsACString &host);
 
     static void ThreadFunc(void *);
 

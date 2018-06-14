@@ -394,7 +394,7 @@ TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec)
 
   RefPtr<nsHostRecord> hostRecord;
   nsresult rv;
-  rv = mHostResolver->GetHostRecord(mHost.get(),
+  rv = mHostResolver->GetHostRecord(mHost,
                                     pushedRec->flags, pushedRec->af,
                                     pushedRec->pb,
                                     pushedRec->originSuffix,
