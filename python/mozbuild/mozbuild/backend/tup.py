@@ -259,6 +259,8 @@ class TupBackend(CommonBackend):
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
+        self._shlibs = '$(MOZ_OBJ_ROOT)/<shlibs>'
+
     def _get_mozconfig_env(self, config):
         env = {}
         loader = MozconfigLoader(config.topsrcdir)
@@ -383,13 +385,15 @@ class TupBackend(CommonBackend):
             inputs=inputs,
             extra_inputs=extra_inputs,
             outputs=[shlib.lib_name],
+            extra_outputs=[self._shlibs],
             display='LINK %o'
         )
         backend_file.symlink_rule(mozpath.join(backend_file.objdir,
                                                shlib.lib_name),
                                   output=mozpath.join(self.environment.topobjdir,
                                                       shlib.install_target,
-                                                      shlib.lib_name))
+                                                      shlib.lib_name),
+                                  output_group=self._shlibs)
 
     def _gen_programs(self, backend_file):
         for p in backend_file.programs:
@@ -401,7 +405,10 @@ class TupBackend(CommonBackend):
         static_libs = self._lib_paths(backend_file.objdir, static_libs)
         shared_libs = self._lib_paths(backend_file.objdir, shared_libs)
 
-        inputs = objs + static_libs + shared_libs
+        # Linking some programs will access libraries installed to dist/bin,
+        # so depend on the installed libraries here. This can be made more
+        # accurate once we start building libraries in their final locations.
+        inputs = objs + static_libs + shared_libs + [self._shlibs]
 
         list_file_name = '%s.list' % prog.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
@@ -847,6 +854,11 @@ class TupBackend(CommonBackend):
                 extra_outputs = [self._installed_files] if obj.required_for_compile else []
                 full_inputs += [self._early_generated_files]
 
+            extra_inputs = []
+            if any(f in obj.outputs for f in ('dependentlibs.list',
+                                              'dependendentlibs.list.gtest')):
+                extra_inputs += [self._shlibs]
+
             if len(outputs) > 3:
                 display_outputs = ', '.join(outputs[0:3]) + ', ...'
             else:
@@ -860,6 +872,7 @@ class TupBackend(CommonBackend):
                 display=display,
                 cmd=cmd,
                 inputs=full_inputs,
+                extra_inputs=extra_inputs,
                 outputs=outputs,
                 extra_outputs=extra_outputs,
                 check_unchanged=True,
@@ -947,18 +960,14 @@ class TupBackend(CommonBackend):
                         # so do not attempt to install it.
                         continue
 
-                    # We're not generating files in these directories yet, so
-                    # don't attempt to install files generated from them.
-                    if f.context.relobjdir not in ('toolkit/library',
-                                                   'js/src/shell'):
-                        output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
-                                              f.target_basename)
-                        gen_backend_file = self._get_backend_file(f.context.relobjdir)
-                        if gen_backend_file.requires_delay([f]):
-                            gen_backend_file.delayed_installed_files.append((f.full_path, output, output_group))
-                        else:
-                            gen_backend_file.symlink_rule(f.full_path, output=output,
-                                                          output_group=output_group)
+                    output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
+                                          f.target_basename)
+                    gen_backend_file = self._get_backend_file(f.context.relobjdir)
+                    if gen_backend_file.requires_delay([f]):
+                        gen_backend_file.delayed_installed_files.append((f.full_path, output, output_group))
+                    else:
+                        gen_backend_file.symlink_rule(f.full_path, output=output,
+                                                      output_group=output_group)
 
 
     def _process_final_target_pp_files(self, obj, backend_file):
