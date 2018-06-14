@@ -3029,7 +3029,7 @@ CASE(JSOP_STRICTEVAL)
                   "eval and stricteval must be the same size");
 
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
-    if (REGS.fp()->environmentChain()->global().valueIsEval(args.calleev())) {
+    if (cx->global()->valueIsEval(args.calleev())) {
         if (!DirectEval(cx, args.get(0), args.rval()))
             goto error;
     } else {
