@@ -111,6 +111,8 @@ public:
   nsIEventTarget*
   EventTarget();
 
+  bool BudgetThrottlingEnabled(bool aIsBackground) const;
+
   static const uint32_t InvalidFiringId;
 
 private:
@@ -148,8 +150,6 @@ private:
 
   void UpdateBudget(const TimeStamp& aNow,
                     const TimeDuration& aDuration = TimeDuration());
-
-  bool BudgetThrottlingEnabled(bool aIsBackground) const;
 
 private:
   struct Timeouts {

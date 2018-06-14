@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -23,6 +24,8 @@ namespace dom {
 
 static StaticRefPtr<TabGroup> sChromeTabGroup;
 
+LinkedList<TabGroup> TabGroup::sTabGroups;
+
 TabGroup::TabGroup(bool aIsChrome)
  : mLastWindowLeft(false)
  , mThrottledQueuesInitialized(false)
@@ -31,6 +34,8 @@ TabGroup::TabGroup(bool aIsChrome)
  , mIsChrome(aIsChrome)
  , mForegroundCount(0)
 {
+  sTabGroups.insertBack(this);
+
   CreateEventTargets(/* aNeedValidation = */ !aIsChrome);
 
   // Do not throttle runnables from chrome windows.  In theory we should
@@ -321,6 +326,34 @@ TabGroup::Count(bool aActiveOnly) const
   }
 
   return count;
+}
+
+/*static*/ bool
+TabGroup::HasOnlyThrottableTabs()
+{
+  for (TabGroup* tabGroup = sTabGroups.getFirst(); tabGroup;
+       tabGroup =
+         static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
+    for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
+      DocGroup* docGroup = iter.Get()->mDocGroup;
+      for (auto* documentInDocGroup : *docGroup) {
+        if (documentInDocGroup->IsCurrentActiveDocument()) {
+          nsPIDOMWindowInner* win =
+            documentInDocGroup->GetInnerWindow();
+          if (win && win->IsCurrentInnerWindow()) {
+            nsPIDOMWindowOuter* outer = win->GetOuterWindow();
+            if (outer) {
+              TimeoutManager& tm = win->TimeoutManager();
+              if (!tm.BudgetThrottlingEnabled(outer->IsBackground())) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return true;
 }
 
 } // namespace dom
