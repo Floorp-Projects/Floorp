@@ -2992,9 +2992,14 @@ class CloneBufferObject : public NativeObject {
         }
         auto iter = data->Start();
         data->ReadBytes(iter, buffer.get(), size);
-        JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, buffer.release());
-        if (!arrayBuffer)
+
+        auto* rawBuffer = buffer.release();
+        JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, rawBuffer);
+        if (!arrayBuffer) {
+            js_free(rawBuffer);
             return false;
+        }
+
         args.rval().setObject(*arrayBuffer);
         return true;
     }
