@@ -431,6 +431,10 @@ class JSObject : public js::gc::Cell
 
     inline js::GlobalObject& global() const;
 
+    // Cross-compartment wrappers are not associated with a single realm/global,
+    // so this method asserts the object is not a CCW.
+    inline js::GlobalObject& nonCCWGlobal() const;
+
     // In some rare cases the global object's compartment's global may not be
     // the same global object. For this reason, we need to take extra care when
     // tracing.

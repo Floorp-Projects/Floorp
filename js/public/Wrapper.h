@@ -143,7 +143,7 @@ class JS_FRIEND_API(Wrapper) : public ForwardingProxyHandler
 
     static JSObject* Renew(JSObject* existing, JSObject* obj, const Wrapper* handler);
 
-    static const Wrapper* wrapperHandler(JSObject* wrapper);
+    static const Wrapper* wrapperHandler(const JSObject* wrapper);
 
     static JSObject* wrappedObject(JSObject* wrapper);
 
@@ -335,7 +335,7 @@ extern JSObject*
 TransparentObjectWrapper(JSContext* cx, HandleObject existing, HandleObject obj);
 
 inline bool
-IsWrapper(JSObject* obj)
+IsWrapper(const JSObject* obj)
 {
     return IsProxy(obj) && GetProxyHandler(obj)->family() == &Wrapper::family;
 }
