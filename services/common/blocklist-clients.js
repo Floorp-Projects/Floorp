@@ -235,4 +235,12 @@ function initialize() {
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_SIGNER),
   });
   PinningBlocklistClient.on("sync", updatePinningList);
+
+  return {
+    OneCRLBlocklistClient,
+    AddonBlocklistClient,
+    PluginBlocklistClient,
+    GfxBlocklistClient,
+    PinningBlocklistClient
+  };
 }
