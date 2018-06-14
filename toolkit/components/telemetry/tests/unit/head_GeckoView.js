@@ -59,3 +59,21 @@ async function waitForHistogramSnapshotData(aHistogramName, aProcessName, aKeyed
            && (aHistogramName in data[aProcessName]);
   });
 }
+
+/**
+ * This function waits until the desired scalar is reported into the
+ * snapshot of the relevant process.
+ * @param aScalarName - The name of the scalar to look for.
+ * @param aProcessName - The name of the process to look in.
+ * @param aKeyed - Whether or not to look in keyed snapshots.
+ */
+async function waitForScalarSnapshotData(aScalarName, aProcessName, aKeyed) {
+  await ContentTaskUtils.waitForCondition(() => {
+    const data = aKeyed
+      ? Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false)
+      : Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+
+    return (aProcessName in data)
+           && (aScalarName in data[aProcessName]);
+  });
+}
