@@ -14,7 +14,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
-#include "nsCSSScanner.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
