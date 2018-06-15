@@ -286,6 +286,28 @@ class Firefox(Browser):
         return m.group(1)
 
 
+class Fennec(Browser):
+    """Fennec-specific interface."""
+
+    product = "fennec"
+    requirements = "requirements_firefox.txt"
+
+    def install(self, dest=None):
+        raise NotImplementedError
+
+    def find_binary(self, venv_path=None):
+        raise NotImplementedError
+
+    def find_webdriver(self):
+        raise NotImplementedError
+
+    def install_webdriver(self, dest=None):
+        raise NotImplementedError
+
+    def version(self, binary=None):
+        return None
+
+
 class Chrome(Browser):
     """Chrome-specific interface.
 
