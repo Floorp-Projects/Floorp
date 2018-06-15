@@ -74,10 +74,7 @@ XULContentSinkImpl::ContextStack::~ContextStack()
 nsresult
 XULContentSinkImpl::ContextStack::Push(nsXULPrototypeNode* aNode, State aState)
 {
-    Entry* entry = new Entry;
-    entry->mNode  = aNode;
-    entry->mState = aState;
-    entry->mNext  = mTop;
+    Entry* entry = new Entry(aNode, aState, mTop);
 
     mTop = entry;
 
