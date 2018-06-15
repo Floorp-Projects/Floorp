@@ -185,7 +185,7 @@ InterceptedHttpChannel::FollowSyntheticRedirect()
 
   // make sure non-ASCII characters in the location header are escaped.
   nsAutoCString locationBuf;
-  if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII | esc_Spaces, locationBuf)) {
+  if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII, locationBuf)) {
     location = locationBuf;
   }
 
