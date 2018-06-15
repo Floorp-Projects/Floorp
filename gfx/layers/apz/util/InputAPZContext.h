@@ -13,40 +13,56 @@
 namespace mozilla {
 namespace layers {
 
-// InputAPZContext is used to communicate the ScrollableLayerGuid,
-// input block ID, APZ response from nsIWidget to RenderFrameParent.
-// It is conceptually attached to any WidgetInputEvent
-// that has been processed by APZ directly from a widget.
+// InputAPZContext is used to communicate various pieces of information
+// around the codebase without having to plumb it through lots of functions
+// and codepaths. Conceptually it is attached to a WidgetInputEvent that is
+// relevant to APZ.
+//
+// There are two types of information bits propagated using this class. One
+// type is propagated "downwards" (from a process entry point like nsBaseWidget
+// or TabChild) into deeper code that is run during complicated operations
+// like event dispatch. The other type is information that is propagated
+// "upwards", from the deeper code back to the entry point.
 class MOZ_STACK_CLASS InputAPZContext
 {
 private:
+  // State that is propagated downwards from InputAPZContext creation into
+  // "deeper" code.
   static ScrollableLayerGuid sGuid;
   static uint64_t sBlockId;
   static nsEventStatus sApzResponse;
-  static bool sRoutedToChildProcess;
   static bool sPendingLayerization;
 
+  // State that is set in deeper code and propagated upwards.
+  static bool sRoutedToChildProcess;
+
 public:
+  // Functions to access downwards-propagated data
   static ScrollableLayerGuid GetTargetLayerGuid();
   static uint64_t GetInputBlockId();
   static nsEventStatus GetApzResponse();
-  static void SetRoutedToChildProcess();
-  static void SetPendingLayerization();
+  static bool HavePendingLayerization();
 
+  // Functions to access upwards-propagated data
+  static bool WasRoutedToChildProcess();
+
+  // Constructor sets the data to be propagated downwards
   InputAPZContext(const ScrollableLayerGuid& aGuid,
                   const uint64_t& aBlockId,
-                  const nsEventStatus& aApzResponse);
+                  const nsEventStatus& aApzResponse,
+                  bool aPendingLayerization = false);
   ~InputAPZContext();
 
-  static bool WasRoutedToChildProcess();
-  static bool HavePendingLayerization();
+  // Functions to set data to be propagated upwards
+  static void SetRoutedToChildProcess();
 
 private:
   ScrollableLayerGuid mOldGuid;
   uint64_t mOldBlockId;
   nsEventStatus mOldApzResponse;
-  bool mOldRoutedToChildProcess;
   bool mOldPendingLayerization;
+
+  bool mOldRoutedToChildProcess;
 };
 
 } // namespace layers
