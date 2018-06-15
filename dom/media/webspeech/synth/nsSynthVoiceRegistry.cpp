@@ -118,7 +118,8 @@ public:
     , mText(aText)
     , mVolume(aVolume)
     , mRate(aRate)
-    , mPitch(aPitch) {}
+    , mPitch(aPitch)
+    , mIsLocal(false) {}
 
   NS_INLINE_DECL_REFCOUNTING(GlobalQueueItem)
 

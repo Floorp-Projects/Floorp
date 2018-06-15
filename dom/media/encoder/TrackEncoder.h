@@ -223,6 +223,7 @@ public:
     , mChannels(0)
     , mSamplingRate(0)
     , mAudioBitrate(0)
+    , mDirectConnected(false)
   {}
 
   /**

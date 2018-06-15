@@ -24,6 +24,7 @@ public:
     , mOffset(-1)
     , mTimestamp(-1)
     , mDuration(-1)
+    , mTrack(0)
     , mIsKeyframe(false) {}
 
   bool Init(nestegg_packet* aPacket, int64_t aOffset, unsigned aTrack, bool aIsKeyframe)

@@ -32,7 +32,8 @@ OpusParser::OpusParser():
 #endif
   mChannelMapping(0),
   mStreams(0),
-  mCoupledStreams(0)
+  mCoupledStreams(0),
+  mPrevPacketGranulepos(0)
 { }
 
 bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
