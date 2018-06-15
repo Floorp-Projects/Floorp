@@ -206,7 +206,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   LayersId layersId = wr::AsLayersId(aPipelineId);
   // Check to see if this child process has access to this layer tree.
   if (!LayerTreeOwnerTracker::Get()->IsMapped(layersId, OtherPid())) {
-    NS_ERROR("Unexpected layers id in AllocPAPZCTreeManagerParent; dropping message...");
+    NS_ERROR("Unexpected layers id in AllocPWebRenderBridgeParent; dropping message...");
     return nullptr;
   }
 
