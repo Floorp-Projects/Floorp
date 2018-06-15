@@ -155,8 +155,8 @@ public:
 
 //==== NSISTATEFULFRAME
 
-  UniquePtr<PresState> SaveState() override;
-  NS_IMETHOD RestoreState(PresState* aState) override;
+  mozilla::UniquePtr<mozilla::PresState> SaveState() override;
+  NS_IMETHOD RestoreState(mozilla::PresState* aState) override;
 
 //=== END NSISTATEFULFRAME
 
