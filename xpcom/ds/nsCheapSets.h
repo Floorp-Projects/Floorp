@@ -27,7 +27,11 @@ public:
   typedef typename EntryType::KeyType KeyType;
   typedef nsCheapSetOperator (*Enumerator)(EntryType* aEntry, void* userArg);
 
-  nsCheapSet() : mState(ZERO) {}
+  nsCheapSet()
+    : mState(ZERO)
+  {
+    mUnion.table = nullptr;
+  }
   ~nsCheapSet() { Clear(); }
 
   /**
