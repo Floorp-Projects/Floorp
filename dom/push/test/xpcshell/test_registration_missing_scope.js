@@ -20,6 +20,7 @@ add_task(async function test_registration_missing_scope() {
   });
   await rejects(
     PushService.registration({ scope: '', originAttributes: '' }),
+    /Invalid page record/,
     'Record missing page and manifest URLs'
   );
 });

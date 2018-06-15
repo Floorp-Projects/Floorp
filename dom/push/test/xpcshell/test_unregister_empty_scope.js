@@ -33,6 +33,7 @@ add_task(async function test_unregister_empty_scope() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Invalid page record/,
     'Expected error for empty endpoint'
   );
 });

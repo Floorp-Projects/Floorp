@@ -42,6 +42,7 @@ add_task(async function test_pushSubscriptionNoConnection() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for not being able to establish connecion.'
   );
 
@@ -81,6 +82,7 @@ add_task(async function test_pushSubscriptionMissingLocation() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for the missing location header.'
   );
 
@@ -107,6 +109,7 @@ add_task(async function test_pushSubscriptionMissingLink() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for the missing link header.'
   );
 
@@ -133,6 +136,7 @@ add_task(async function test_pushSubscriptionMissingLink1() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for the missing push endpoint.'
   );
 
@@ -159,6 +163,7 @@ add_task(async function test_pushSubscriptionLocationBogus() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for the bogus location'
   );
 
@@ -185,6 +190,7 @@ add_task(async function test_pushSubscriptionNot2xxCode() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for not 201 responce code.'
   );
 
