@@ -114,6 +114,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, enum SpdyVersio
   , mLastReadEpoch(PR_IntervalNow())
   , mPingSentEpoch(0)
   , mPreviousUsed(false)
+  , mAggregatedHeaderSize(0)
   , mWaitingForSettingsAck(false)
   , mGoAwayOnPush(false)
   , mUseH2Deps(false)

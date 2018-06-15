@@ -556,7 +556,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
   , mShutdownContext(nullptr)
   , mShutdownRequired(false)
   , mIsMainThread(aMainThread)
-  , mLastUnlabeledRunnable(TimeStamp::Now())
   , mCanInvokeJS(false)
   , mCurrentEvent(nullptr)
   , mCurrentEventStart(TimeStamp::Now())
@@ -1015,37 +1014,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-      Maybe<Telemetry::AutoTimer<Telemetry::MAIN_THREAD_RUNNABLE_MS>> timer;
-      Maybe<Telemetry::AutoTimer<Telemetry::IDLE_RUNNABLE_BUDGET_OVERUSE_MS>> idleTimer;
-
-      nsAutoCString name;
-      if ((MAIN_THREAD == mIsMainThread) || mNextIdleDeadline) {
-        bool labeled = GetLabeledRunnableName(event, name, priority);
-
-        if (MAIN_THREAD == mIsMainThread) {
-          timer.emplace(name);
-
-          // High-priority runnables are ignored here since they'll run right away
-          // even with the cooperative scheduler.
-          if (!labeled && (priority == EventPriority::Normal ||
-                           priority == EventPriority::Idle)) {
-            TimeStamp now = TimeStamp::Now();
-            double diff = (now - mLastUnlabeledRunnable).ToMilliseconds();
-            Telemetry::Accumulate(Telemetry::TIME_BETWEEN_UNLABELED_RUNNABLES_MS, diff);
-            mLastUnlabeledRunnable = now;
-          }
-        }
-
-        if (mNextIdleDeadline) {
-          // If we construct the AutoTimer with the deadline, then we'll
-          // compute TimeStamp::Now() - mNextIdleDeadline when
-          // accumulating telemetry.  If that is positive we've
-          // overdrawn our idle budget, if it's negative it will go in
-          // the 0 bucket of the histogram.
-          idleTimer.emplace(name, mNextIdleDeadline);
-        }
-      }
-
       // If we're on the main thread, we want to record our current runnable's
       // name in a static so that BHR can record it.
       Array<char, kRunnableNameBufSize> restoreRunnableName;
@@ -1057,6 +1025,9 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
         }
       });
       if (MAIN_THREAD == mIsMainThread) {
+        nsAutoCString name;
+        GetLabeledRunnableName(event, name, priority);
+
         MOZ_ASSERT(NS_IsMainThread());
         restoreRunnableName = sMainThreadRunnableName;
 
