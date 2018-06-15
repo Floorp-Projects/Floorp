@@ -45,8 +45,10 @@ public:
   RefPtr<ServiceWorkerRegistrationListPromise>
   GetRegistrations(const ClientInfo& aClientInfo) const override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  GetReady(const ClientInfo& aClientInfo) const override;
+  void
+  GetReady(const ClientInfo& aClientInfo,
+           ServiceWorkerRegistrationCallback&& aSuccessCB,
+           ServiceWorkerFailureCallback&& aFailureCB) const override;
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerContainerImpl, override)
 };
