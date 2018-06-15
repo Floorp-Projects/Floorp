@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.575';
-var pdfjsBuild = '2030d171';
+var pdfjsVersion = '2.0.581';
+var pdfjsBuild = '790e2124';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(6);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
@@ -4228,7 +4228,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.575',
+    apiVersion: '2.0.581',
     source: {
       data: source.data,
       url: source.url,
@@ -5562,8 +5562,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.575';
-  exports.build = build = '2030d171';
+  exports.version = version = '2.0.581';
+  exports.build = build = '790e2124';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
