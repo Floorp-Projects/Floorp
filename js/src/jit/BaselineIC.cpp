@@ -2730,7 +2730,7 @@ ICCallStubCompiler::pushArrayArguments(MacroAssembler& masm, Address arrayVal,
     // no holes.
     Register startReg = regs.takeAny();
     Register endReg = regs.takeAny();
-    masm.extractObject(arrayVal, startReg);
+    masm.unboxObject(arrayVal, startReg);
     masm.loadPtr(Address(startReg, NativeObject::offsetOfElements()), startReg);
     masm.load32(Address(startReg, ObjectElements::offsetOfInitializedLength()), endReg);
     masm.alignJitStackBasedOnNArgs(endReg);
@@ -3546,7 +3546,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
     EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
 
     // Reload argc from length of array.
-    masm.extractObject(arrayVal, argcReg);
+    masm.unboxObject(arrayVal, argcReg);
     masm.loadPtr(Address(argcReg, NativeObject::offsetOfElements()), argcReg);
     masm.load32(Address(argcReg, ObjectElements::offsetOfInitializedLength()), argcReg);
 
