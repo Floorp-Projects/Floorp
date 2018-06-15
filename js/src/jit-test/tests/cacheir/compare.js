@@ -1,16 +1,193 @@
-function warmup(fun, input, expected) {
-    assertEq(input.length, expected.length);
-    for (var i = 0; i < 30; i++) {
-        for (var j = 0; j < input.length; j++) {
-            lhs = input[j][0];
-            rhs = input[j][1];
-            assertEq(fun(lhs,rhs), expected[j]);
+setJitCompilerOption('ion.forceinlineCaches', 1);
+
+function warmup(fun, input_array) {
+    for (var index = 0; index < input_array.length; index++) {
+        input = input_array[index];
+        input_lhs = input[0];
+        input_rhs = input[1];
+        output    = input[2];
+        for (var i = 0; i < 30; i++) {
+            var str = "";
+            var y = fun(input_lhs, input_rhs);
+            if (y != output) {
+                str = "Computed: "+y+ ", expected: "+ output + " ( " + fun + " lhs: "+ input_lhs + " rhs: " + input_rhs +")";
+            }
+            assertEq(str, "");
         }
     }
 }
 
-var strictCompare = function(a,b) { return a === b; }
-warmup(strictCompare, [[1,1], [3,3], [3,strictCompare],[strictCompare, {}], [3.2, 1],
-                       [0, -0]],
-                       [true, true,  false, false, false,
-                       true]);
+
+// Int32 + Int32
+var Int32Int32Fun_GT1 = (a, b) => { return a > b; }
+warmup(Int32Int32Fun_GT1, [[1,2, false], [1,1, false], [3,4, false], [4294967295, 2, true],
+                           [NaN, 2, false], [-1000, NaN, false], [NaN, NaN, false], [10, undefined, false]]);
+
+var Int32Int32Fun_GTE1 = (a, b) => { return a >= b; }
+warmup(Int32Int32Fun_GTE1, [[1,2, false], [1,1, true], [3,4, false], [4294967295, 2, true],
+                            [NaN, 2, false], [-1000, NaN, false], [NaN, NaN, false], [10, undefined, false]]);
+
+var Int32Int32Fun_LT1 = (a, b) => { return a < b; }
+warmup(Int32Int32Fun_LT1, [[1,2, true], [1,1, false], [3,4, true], [4294967295, 2, false],
+                           [NaN, 2, false],[-1000, NaN, false], [NaN, NaN, false], [10, undefined, false]]);
+
+var Int32Int32Fun_LTE1 = (a, b) => { return a <= b; }
+warmup(Int32Int32Fun_LTE1, [[1,2, true], [1,1, true], [3,4, true], [4294967295, 2, false],
+                            [NaN, 2, false], [-1000, NaN, false], [NaN, NaN, false], [10, undefined, false]]);
+
+var Int32Int32Fun_EQ1 = (a, b) => { return a == b; }
+warmup(Int32Int32Fun_EQ1, [[1,2, false], [1,1, true], [3,4, false], [4294967295, 2, false],
+                            [NaN, 2, false], [-1000, NaN, false], [undefined, null, true],
+                            ['0', 0, true], [new String('0'), 0, true], [10, undefined, false]]);
+
+var Int32Int32Fun_EQ2 = (a, b) => { return a == b; }
+warmup(Int32Int32Fun_EQ2, [[1, NaN, false], [1, undefined, false], [1, null, false]]);
+
+var Int32Int32Fun_EQ3 = (a, b) => { return a == b; }
+warmup(Int32Int32Fun_EQ3, [[{a: 1}, NaN, false], [{a: 1}, undefined, false], [{a: 1}, null, false]]);
+
+var Int32Int32Fun_EQ4 = (a, b) => { return a == b; }
+warmup(Int32Int32Fun_EQ4, [[undefined, undefined, true], [null, null, true], [null, undefined, true], [undefined, null, true]]);
+
+
+var Int32Int32Fun_NEQ1 = (a, b) => { return a != b; }
+warmup(Int32Int32Fun_NEQ1, [[1,2, true], [1,1, false], [3,4, true], [4294967295, 2, true],
+                            [NaN, 2, true], [-1000, NaN, true], [undefined, null, false],
+                            ['0', 0, false], [new String('0'), 0, false], [10, undefined, true]]);
+
+var Int32Int32Fun_NEQ2 = (a, b) => { return a != b; }
+warmup(Int32Int32Fun_NEQ2, [[1, NaN, true], [1, undefined, true], [1, null, true]]);
+
+var Int32Int32Fun_NEQ3 = (a, b) => { return a != b; }
+warmup(Int32Int32Fun_NEQ3, [[{a: 1}, NaN, true], [{a: 1}, undefined, true], [{a: 1}, null, true]]);
+
+var Int32Int32Fun_NEQ4 = (a, b) => { return a != b; }
+warmup(Int32Int32Fun_NEQ4, [[undefined, undefined, false], [null, null, false], [null, undefined, false], [undefined, null, false]]);
+
+var Int32Int32Fun_SEQ1 = (a, b) => { return a === b; }
+warmup(Int32Int32Fun_SEQ1, [[1,2, false], [1,1, true], [3,4, false], [4294967295, 2, false],
+                            [NaN, 2, false], [-1000, NaN, false], [undefined, null, false],
+                            ['0', 0, false], [new String('0'), 0, false], [10, undefined, false]]);
+
+var Int32Int32Fun_SEQ2 = (a, b) => { return a === b; }
+warmup(Int32Int32Fun_SEQ2, [[1, NaN, false], [1, undefined, false], [1, null, false]]);
+
+var Int32Int32Fun_SEQ3 = (a, b) => { return a === b; }
+warmup(Int32Int32Fun_SEQ3, [[{a: 1}, NaN, false], [{a: 1}, undefined, false], [{a: 1}, null, false]]);
+
+var Int32Int32Fun_SEQ4 = (a, b) => { return a === b; }
+warmup(Int32Int32Fun_SEQ4, [[undefined, undefined, true], [null, null, true], [null, undefined, false], [undefined, null, false] ]);
+
+var Int32Int32Fun_SEQ5 = (a, b) => { return a === b; }
+warmup(Int32Int32Fun_SEQ5, [[1, true, false], [1, false, false], [false, 1, false], [true, 0, false], [true, true, true]]);
+
+var Int32Int32Fun_SNEQ1 = (a, b) => { return a !== b; }
+warmup(Int32Int32Fun_SNEQ1, [[1,2, true], [1,1, false], [3,4, true], [4294967295, 2, true],
+                            [NaN, 2, true], [-1000, NaN, true], [undefined, null, true],
+                            ['0', 0, true], [new String('0'), 0, true], [10, undefined, true]]);
+
+var Int32Int32Fun_SNEQ2 = (a, b) => { return a !== b; }
+warmup(Int32Int32Fun_SNEQ2, [[1, NaN, true], [1, undefined, true], [1, null, true]]);
+
+var Int32Int32Fun_SNEQ3 = (a, b) => { return a !== b; }
+warmup(Int32Int32Fun_SNEQ3, [[{a: 1}, NaN, true], [{a: 1}, undefined, true], [{a: 1}, null, true]]);
+
+var Int32Int32Fun_SNEQ4 = (a, b) => { return a !== b; }
+warmup(Int32Int32Fun_SNEQ4, [[undefined, undefined, false], [null, null, false], [null, undefined, true], [undefined, null, true] ]);
+
+var Int32Int32Fun_SNEQ5 = (a, b) => { return a !== b; }
+warmup(Int32Int32Fun_SNEQ5, [[1, true, true], [1, false, true], [false, 1, true], [true, 0, true]]);
+
+
+// Number Number
+var NumberNumberFun_GT1 = (a, b) => { return a > b; }
+warmup(NumberNumberFun_GT1, [[1,2, false], [1.3, 2, false], [1, 2.6, false], [1.2,2.2, false],
+                             [1,1, false], [3,4, false], [4294967295, 2, true],
+                             [NaN, 2, false], [-1000, NaN, false], [NaN, NaN, false], [10.2, undefined, false]]);
+
+var NumberNumberFun_GTE1 = (a, b) => { return a >= b; }
+warmup(NumberNumberFun_GTE1, [[1,2, false], [1.3, 2, false], [1, 2.6, false], [1.2,2.2, false],
+                             [1,1, true], [3,4, false], [4294967295, 2, true],
+                              [NaN, 2, false], [-1000, NaN, false], [NaN, NaN, false], [10.2, undefined, false]]);
+
+var NumberNumberFun_LT1 = (a, b) => { return a < b; }
+warmup(NumberNumberFun_LT1, [[1,2, true], [1.3, 2, true], [1, 2.6, true], [1.2,2.2, true],
+                             [1,1, false], [3,4, true], [4294967295, 2, false],
+                             [NaN, 2, false],[-1000, NaN, false], [NaN, NaN, false, [10.2, undefined, false]]]);
+
+var NumberNumberFun_LTE1 = (a, b) => { return a <= b; }
+warmup(NumberNumberFun_LTE1, [[1,2, true], [1.3, 2, true], [1, 2.6, true], [1.2,2.2, true],
+                              [1,1, true], [3,4, true], [4294967295, 2, false],
+                              [NaN, 2, false], [-1000, NaN, false], [NaN, NaN, false], [10.2, undefined, false]]);
+
+var NumberNumberFun_EQ1 = (a, b) => { return a == b; }
+warmup(NumberNumberFun_EQ1, [[1,2, false], [1.3, 2, false], [1, 2.6, false], [1.2,2.2, false],
+                             [1,1, true], [3,4, false], [4294967295, 2, false],
+                              [NaN, 2, false], [-1000, NaN, false], [undefined, null, true],
+                            ['0', 0, true], [new String('0'), 0, true], [10.2, undefined, false]]);
+
+var NumberNumberFun_NEQ1 = (a, b) => { return a != b; }
+warmup(NumberNumberFun_NEQ1, [[1,2, true], [1.3, 2, true], [1, 2.6, true], [1.2,2.2, true],
+                              [1,1, false], [3,4, true], [4294967295, 2, true],
+                              [NaN, 2, true], [-1000, NaN, true], [undefined, null, false],
+                            ['0', 0, false], [new String('0'), 0, false], [10.2, undefined, true]]);
+
+var NumberNumberFun_SEQ1 = (a, b) => { return a === b; }
+warmup(NumberNumberFun_SEQ1, [[1,2, false], [1.3, 2, false], [1, 2.6, false], [1.2,2.2, false],
+                             [1,1, true], [3,4, false], [4294967295, 2, false],
+                              [NaN, 2, false], [-1000, NaN, false], [undefined, null, false],
+                            ['0', 0, false], [new String('0'), 0, false], [10.2, undefined, false]]);
+
+var NumberNumberFun_SNEQ1 = (a, b) => { return a !== b; }
+warmup(NumberNumberFun_SNEQ1, [[1,2, true], [1.3, 2, true], [1, 2.6, true], [1.2,2.2, true],
+                               [1,1, false], [3,4, true], [4294967295, 2, true],
+                               [NaN, 2, true], [-1000, NaN, true], [undefined, null, true],
+                               ['0', 0, true], [new String('0'), 0, true], [10.2, undefined, true]]);
+
+// Boolean + Int32
+var BooleanFun_GT1 = (a, b) => { return a > b; }
+warmup(BooleanFun_GT1, [[1,2, false], [true, 2, false], [1,1, false], [true,true, false], [3,4, false], ]);
+
+var BooleanFun_GTE1 = (a, b) => { return a >= b; }
+warmup(BooleanFun_GTE1, [[1,2, false], [true, 2, false], [1,1, true], [true,true, true], [3,4, false]]);
+
+var BooleanFun_LT1 = (a, b) => { return a < b; }
+warmup(BooleanFun_LT1, [[1,2, true], [true, 2, true], [1,1, false], [true,true, false], [3,4, true]]);
+
+var BooleanFun_LTE1 = (a, b) => { return a <= b; }
+warmup(BooleanFun_LTE1, [[1,2, true], [true, 2, true], [1,1, true], [true,true, true], [3,4, true]]);
+
+var BooleanFun_EQ1 = (a, b) => { return a == b; }
+warmup(BooleanFun_EQ1, [[1,2, false], [true, 2, false], [1,1, true], [true,true, true], [3,4, false],
+               ['0', 0, true], [new String('0'), 0, true], [10, undefined, false]]);
+
+var BooleanFun_NEQ1 = (a, b) => { return a != b; }
+warmup(BooleanFun_NEQ1, [[1,2, true], [true, 2, true], [1,1, false], [true,true, false], [3,4, true],
+             ['0', 0, false], [new String('0'), 0, false], [10, undefined, true]]);
+
+var BooleanFun_SEQ1 = (a, b) => { return a === b; }
+warmup(BooleanFun_SEQ1, [[1,2, false], [true, 2, false], [1,1, true], [true,true, true], [3,4, false]]);
+
+var BooleanFun_SNEQ1 = (a, b) => { return a !== b; }
+warmup(BooleanFun_SNEQ1, [[1,2, true], [true, 2, true], [1,1, false], [true,true, false], [3,4, true]]);
+
+// Undefined / Null equality.
+var UndefNull_EQ1 = (a, b) => { return a == b; }
+warmup(UndefNull_EQ1, [[undefined, null, true], [undefined, undefined, true], [null, undefined, true],
+                        [null, null, true], [{a: 10}, undefined, false], [{a: 10}, null, false]]);
+
+var UndefNull_NEQ1 = (a, b) => { return a != b; }
+warmup(UndefNull_NEQ1, [[undefined, null, false], [undefined, undefined, false], [null, undefined, false],
+                         [null, null, false],  [{a: 10}, undefined, true], [{a: 10}, null, true]]);
+
+var UndefNull_SEQ1 = (a, b) => { return a === b; }
+warmup(UndefNull_SEQ1, [[undefined, null, false], [undefined, undefined, true], [null, undefined, false],
+                         [null, null, true],  [{a: 10}, undefined, false], [{a: 10}, null, false]]);
+
+var UndefNull_SNEQ1 = (a, b) => { return a !== b; }
+warmup(UndefNull_SNEQ1, [[undefined, null, true], [undefined, undefined, false], [null, undefined, true],
+                          [null, null, false],  [{a: 10}, undefined, true], [{a: 10}, null, true]]);
+
+var typeDifference = function(a,b) { return a === b; }
+warmup(typeDifference, [[1,1, true], [3,3, true], [3, typeDifference, false],[typeDifference, {}, false],
+                        [3.2, 1, false], [0, -0, true]]);
