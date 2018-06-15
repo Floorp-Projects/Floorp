@@ -36,9 +36,11 @@ public:
            ServiceWorkerRegistrationCallback&& aSuccessCB,
            ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
+  void
   GetRegistration(const ClientInfo& aClientInfo,
-                  const nsACString& aURL) const override;
+                  const nsACString& aURL,
+                  ServiceWorkerRegistrationCallback&& aSuccessCB,
+                  ServiceWorkerFailureCallback&& aFailureCB) const override;
 
   RefPtr<ServiceWorkerRegistrationListPromise>
   GetRegistrations(const ClientInfo& aClientInfo) const override;
