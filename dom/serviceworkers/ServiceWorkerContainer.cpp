@@ -412,13 +412,9 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
   }
 
   RefPtr<ServiceWorkerContainer> self = this;
-  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationListPromise>> holder =
-    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationListPromise>(global);
 
-  mInner->GetRegistrations(clientInfo.ref())->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [self, outer, holder] (const nsTArray<ServiceWorkerRegistrationDescriptor>& aDescList) {
-      holder->Complete();
+  mInner->GetRegistrations(clientInfo.ref(),
+    [self, outer] (const nsTArray<ServiceWorkerRegistrationDescriptor>& aDescList) {
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
       if (rv.Failed()) {
@@ -434,10 +430,9 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
         }
       }
       outer->MaybeResolve(regList);
-    }, [self, outer, holder] (const CopyableErrorResult& aRv) {
-      holder->Complete();
-      outer->MaybeReject(CopyableErrorResult(aRv));
-    })->Track(*holder);
+    }, [self, outer] (ErrorResult& aRv) {
+      outer->MaybeReject(aRv);
+    });
 
   return outer.forget();
 }

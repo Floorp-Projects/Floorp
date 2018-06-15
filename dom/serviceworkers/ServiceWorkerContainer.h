@@ -46,8 +46,10 @@ public:
                     ServiceWorkerRegistrationCallback&& aSuccessCB,
                     ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationListPromise>
-    GetRegistrations(const ClientInfo& aClientInfo) const = 0;
+    virtual void
+    GetRegistrations(const ClientInfo& aClientInfo,
+                     ServiceWorkerRegistrationListCallback&& aSuccessCB,
+                     ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
     virtual void
     GetReady(const ClientInfo& aClientInfo,
