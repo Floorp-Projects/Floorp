@@ -1384,7 +1384,7 @@ static const unsigned VALIDATION_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 //
 // ModuleValidator is marked as rooted in the rooting analysis.  Don't add
 // non-JSAtom pointers, or this will break!
-class MOZ_STACK_CLASS ModuleValidator
+class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 {
   public:
     class Func

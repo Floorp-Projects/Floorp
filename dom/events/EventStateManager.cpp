@@ -234,6 +234,8 @@ EventStateManager::EventStateManager()
   , mCurrentTarget(nullptr)
     // init d&d gesture state machine variables
   , mGestureDownPoint(0,0)
+  , mGestureModifiers(0)
+  , mGestureDownButtons(0)
   , mPresContext(nullptr)
   , mLClickCount(0)
   , mMClickCount(0)

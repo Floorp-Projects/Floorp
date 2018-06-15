@@ -208,6 +208,9 @@ NewEmptyScopeData(JSContext* cx, uint32_t length = 0)
     return UniquePtr<typename ConcreteScope::Data>(data);
 }
 
+static constexpr size_t HasAtomMask = 1;
+static constexpr size_t HasAtomShift = 1;
+
 static XDRResult
 XDRBindingName(XDRState<XDR_ENCODE>* xdr, BindingName* bindingName)
 {
@@ -216,7 +219,9 @@ XDRBindingName(XDRState<XDR_ENCODE>* xdr, BindingName* bindingName)
     RootedAtom atom(cx, bindingName->name());
     bool hasAtom = !!atom;
 
-    uint8_t u8 = uint8_t(hasAtom << 1) | uint8_t(bindingName->closedOver());
+    uint8_t flags = bindingName->flagsForXDR();
+    MOZ_ASSERT(((flags << HasAtomShift) >> HasAtomShift) == flags);
+    uint8_t u8 = (flags << HasAtomShift) | uint8_t(hasAtom);
     MOZ_TRY(xdr->codeUint8(&u8));
 
     if (hasAtom)
@@ -233,14 +238,13 @@ XDRBindingName(XDRState<XDR_DECODE>* xdr, BindingName* bindingName)
     uint8_t u8;
     MOZ_TRY(xdr->codeUint8(&u8));
 
-    bool closedOver = u8 & 1;
-    bool hasAtom = u8 >> 1;
-
+    bool hasAtom = u8 & HasAtomMask;
     RootedAtom atom(cx);
     if (hasAtom)
         MOZ_TRY(XDRAtom(xdr, &atom));
 
-    *bindingName = BindingName(atom, closedOver);
+    uint8_t flags = u8 >> HasAtomShift;
+    *bindingName = BindingName::fromXDR(atom, flags);
 
     return Ok();
 }
