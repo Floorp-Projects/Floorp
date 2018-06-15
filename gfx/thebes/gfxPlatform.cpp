@@ -616,6 +616,9 @@ WebRenderDebugPrefChangeCallback(const char* aPrefName, void*)
   GFX_WEBRENDER_DEBUG(".disable-batching",   1 << 5)
   GFX_WEBRENDER_DEBUG(".epochs",             1 << 6)
   GFX_WEBRENDER_DEBUG(".compact-profiler",   1 << 7)
+  GFX_WEBRENDER_DEBUG(".echo-driver-messages", 1 << 8)
+  GFX_WEBRENDER_DEBUG(".new-frame-indicator", 1 << 9)
+  GFX_WEBRENDER_DEBUG(".new-scene-indicator", 1 << 10)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags);
