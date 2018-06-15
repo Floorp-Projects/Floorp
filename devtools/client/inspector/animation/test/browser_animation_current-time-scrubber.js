@@ -15,7 +15,7 @@ add_task(async function() {
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking scrubber controller existence");
-  const controllerEl = panel.querySelector(".current-time-scrubber-controller");
+  const controllerEl = panel.querySelector(".current-time-scrubber-area");
   ok(controllerEl, "scrubber controller should exist");
 
   info("Checking scrubber existence");

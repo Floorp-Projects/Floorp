@@ -11,7 +11,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const IndicationBar = createFactory(require("./IndicationBar"));
 
-class CurrentTimeScrubberController extends PureComponent {
+class CurrentTimeScrubber extends PureComponent {
   static get propTypes() {
     return {
       addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
@@ -125,7 +125,7 @@ class CurrentTimeScrubberController extends PureComponent {
 
     return dom.div(
       {
-        className: "current-time-scrubber-controller",
+        className: "current-time-scrubber-area",
       },
       IndicationBar(
         {
@@ -137,4 +137,4 @@ class CurrentTimeScrubberController extends PureComponent {
   }
 }
 
-module.exports = CurrentTimeScrubberController;
+module.exports = CurrentTimeScrubber;
