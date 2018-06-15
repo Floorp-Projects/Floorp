@@ -6,7 +6,7 @@ use api::{
     YUV_COLOR_SPACES, YUV_FORMATS,
     YuvColorSpace, YuvFormat,
 };
-use batch::{BatchKey, BatchKind, BrushBatchKind, TransformBatchKind};
+use batch::{BatchKey, BatchKind, BrushBatchKind};
 use device::{Device, Program, ShaderError};
 use euclid::{Transform3D};
 use glyph_rasterizer::GlyphFormat;
@@ -16,7 +16,6 @@ use renderer::{
     BlendMode, ImageBufferKind, RendererError, RendererOptions,
     TextureSampler, VertexArrayKind,
 };
-use util::TransformedRectKind;
 
 use gleam::gl::GlType;
 use time::precise_time_ns;
@@ -262,7 +261,6 @@ impl BrushShader {
 
 pub struct TextShader {
     simple: LazilyCompiledShader,
-    transform: LazilyCompiledShader,
     glyph_transform: LazilyCompiledShader,
 }
 
@@ -281,17 +279,6 @@ impl TextShader {
             precache,
         )?;
 
-        let mut transform_features = features.to_vec();
-        transform_features.push("TRANSFORM");
-
-        let transform = LazilyCompiledShader::new(
-            ShaderKind::Text,
-            name,
-            &transform_features,
-            device,
-            precache,
-        )?;
-
         let mut glyph_transform_features = features.to_vec();
         glyph_transform_features.push("GLYPH_TRANSFORM");
 
@@ -303,22 +290,18 @@ impl TextShader {
             precache,
         )?;
 
-        Ok(TextShader { simple, transform, glyph_transform })
+        Ok(TextShader { simple, glyph_transform })
     }
 
     pub fn get(
         &mut self,
         glyph_format: GlyphFormat,
-        transform_kind: TransformedRectKind,
     ) -> &mut LazilyCompiledShader {
         match glyph_format {
             GlyphFormat::Alpha |
             GlyphFormat::Subpixel |
             GlyphFormat::Bitmap |
-            GlyphFormat::ColorBitmap => match transform_kind {
-                TransformedRectKind::AxisAligned => &mut self.simple,
-                TransformedRectKind::Complex => &mut self.transform,
-            }
+            GlyphFormat::ColorBitmap => &mut self.simple,
             GlyphFormat::TransformedAlpha |
             GlyphFormat::TransformedSubpixel => &mut self.glyph_transform,
         }
@@ -326,7 +309,6 @@ impl TextShader {
 
     fn deinit(self, device: &mut Device) {
         self.simple.deinit(device);
-        self.transform.deinit(device);
         self.glyph_transform.deinit(device);
     }
 }
@@ -726,20 +708,12 @@ impl Shaders {
                 };
                 brush_shader.get(key.blend_mode)
             }
-            BatchKind::Transformable(transform_kind, batch_kind) => {
-                match batch_kind {
-                    TransformBatchKind::TextRun(glyph_format) => {
-                        let text_shader = match key.blend_mode {
-                            BlendMode::SubpixelDualSource => {
-                                &mut self.ps_text_run_dual_source
-                            }
-                            _ => {
-                                &mut self.ps_text_run
-                            }
-                        };
-                        return text_shader.get(glyph_format, transform_kind);
-                    }
-                }
+            BatchKind::TextRun(glyph_format) => {
+                let text_shader = match key.blend_mode {
+                    BlendMode::SubpixelDualSource => &mut self.ps_text_run_dual_source,
+                    _ => &mut self.ps_text_run,
+                };
+                text_shader.get(glyph_format)
             }
         }
     }

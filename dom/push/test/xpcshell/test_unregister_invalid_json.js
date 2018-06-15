@@ -67,6 +67,7 @@ add_task(async function test_unregister_invalid_json() {
       scope: 'https://example.edu/page/1',
       originAttributes: '',
     }),
+    /Request timed out/,
     'Expected error for first invalid JSON response'
   );
 
@@ -80,6 +81,7 @@ add_task(async function test_unregister_invalid_json() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Request timed out/,
     'Expected error for second invalid JSON response'
   );
 

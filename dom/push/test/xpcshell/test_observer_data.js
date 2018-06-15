@@ -36,6 +36,7 @@ add_task(async function test_empty_notifyWithData() {
   let data = (await notifyPromise).subject.QueryInterface(
     Ci.nsIPushMessage).data;
   throws(_ => data.json(),
+    /InvalidStateError/,
     'Should throw an error when parsing an empty string as JSON');
   strictEqual(data.text(), '', 'Should return an empty string');
   deepEqual(data.binary(), [], 'Should return an empty array');

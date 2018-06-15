@@ -96,25 +96,9 @@ add_task(async function test() {
 
   // XXXtodo: test history sortings (visit count, visit date)
   // XXXtodo: test different item types once folderId and bookmarkId are merged.
-  // XXXtodo: test sortingAnnotation functionality with non-bookmark nodes
-
-  info("Sort by annotation desc");
-  let ids = await PlacesUtils.promiseManyItemIds([guid1, guid3]);
-  PlacesUtils.annotations.setItemAnnotation(ids.get(guid1), "testAnno", "a", 0, 0);
-  PlacesUtils.annotations.setItemAnnotation(ids.get(guid3), "testAnno", "b", 0, 0);
-  result.sortingAnnotation = "testAnno";
-  result.sortingMode = NHQO.SORT_BY_ANNOTATION_DESCENDING;
-
-  // guid1 precedes guid2 per title-descending fallback
-  checkOrder(guid3, guid1, guid2);
 
   // XXXtodo:  test dateAdded sort
   // XXXtodo:  test lastModified sort
-
-  // test live update
-  info("Annotation liveupdate");
-  PlacesUtils.annotations.setItemAnnotation(ids.get(guid1), "testAnno", "c", 0, 0);
-  checkOrder(guid1, guid3, guid2);
 
   // Add a visit, then check frecency ordering.
 

@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EditorSpellCheck.h"   // for NS_EDITORSPELLCHECK_CID, etc
+#include "mozilla/HTMLEditorController.h" // for HTMLEditorController, etc
 #include "mozilla/Module.h"             // for Module, Module::CIDEntry, etc
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsComposeTxtSrvFilter.h"      // for nsComposeTxtSrvFilter, etc
-#include "nsComposerController.h"       // for nsComposerController, etc
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS
 #include "nsEditingSession.h"           // for NS_EDITINGSESSION_CID, etc
 #include "nsError.h"                    // for NS_ERROR_NO_AGGREGATION, etc
@@ -156,7 +156,7 @@ nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsComposerController::RegisterHTMLEditorCommands(commandTable);
+  rv = mozilla::HTMLEditorController::RegisterHTMLEditorCommands(commandTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // we don't know here whether we're being created as an instance,
@@ -176,7 +176,8 @@ nsHTMLEditorDocStateCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsComposerController::RegisterEditorDocStateCommands(commandTable);
+  rv = mozilla::HTMLEditorController::RegisterEditorDocStateCommands(
+                                        commandTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // we don't know here whether we're being created as an instance,

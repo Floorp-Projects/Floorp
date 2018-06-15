@@ -16,7 +16,7 @@ use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::{channel};
 use api::DebugCommand;
 use api::channel::PayloadReceiverHelperMethods;
-use batch::{BatchKind, BatchTextures, BrushBatchKind, TransformBatchKind};
+use batch::{BatchKind, BatchTextures, BrushBatchKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
@@ -114,7 +114,7 @@ const GPU_TAG_BRUSH_MIXBLEND: GpuProfileTag = GpuProfileTag {
 };
 const GPU_TAG_BRUSH_BLEND: GpuProfileTag = GpuProfileTag {
     label: "B_Blend",
-    color: debug_colors::LIGHTBLUE,
+    color: debug_colors::ORANGE,
 };
 const GPU_TAG_BRUSH_IMAGE: GpuProfileTag = GpuProfileTag {
     label: "B_Image",
@@ -170,21 +170,6 @@ const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
     color: debug_colors::BLACK,
 };
 
-impl TransformBatchKind {
-    #[cfg(feature = "debugger")]
-    fn debug_name(&self) -> &'static str {
-        match *self {
-            TransformBatchKind::TextRun(..) => "TextRun",
-        }
-    }
-
-    fn sampler_tag(&self) -> GpuProfileTag {
-        match *self {
-            TransformBatchKind::TextRun(..) => GPU_TAG_PRIM_TEXT_RUN,
-        }
-    }
-}
-
 impl BatchKind {
     #[cfg(feature = "debugger")]
     fn debug_name(&self) -> &'static str {
@@ -201,7 +186,7 @@ impl BatchKind {
                     BrushBatchKind::LinearGradient => "Brush (LinearGradient)",
                 }
             }
-            BatchKind::Transformable(_, batch_kind) => batch_kind.debug_name(),
+            BatchKind::TextRun(_) => "TextRun",
         }
     }
 
@@ -219,7 +204,7 @@ impl BatchKind {
                     BrushBatchKind::LinearGradient => GPU_TAG_BRUSH_LINEAR_GRADIENT,
                 }
             }
-            BatchKind::Transformable(_, batch_kind) => batch_kind.sampler_tag(),
+            BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
         }
     }
 }

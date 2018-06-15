@@ -19,16 +19,14 @@
  */
 
 // Two properties of nsINavHistoryResult control the sort of the tree:
-// sortingMode and sortingAnnotation.  sortingMode's value is one of the
-// nsINavHistoryQueryOptions.SORT_BY_* constants.  sortingAnnotation is the
-// annotation used to sort for SORT_BY_ANNOTATION_* mode.
+// sortingMode.  sortingMode's value is one of the
+// nsINavHistoryQueryOptions.SORT_BY_* constants.
 //
 // This lookup table maps the possible values of anonid's of the treecols to
 // objects that represent the treecols' correct state after the user sorts the
 // previously unsorted tree by selecting a column from the Views > Sort menu.
 // sortingMode is constructed from the key and dir properties (i.e.,
-// SORT_BY_<key>_<dir>) and sortingAnnotation is checked against anno.  anno
-// may be undefined if key is not "ANNOTATION".
+// SORT_BY_<key>_<dir>).
 const SORT_LOOKUP_TABLE = {
   title:        { key: "TITLE",        dir: "ASCENDING"  },
   tags:         { key: "TAGS",         dir: "ASCENDING"  },
@@ -37,9 +35,6 @@ const SORT_LOOKUP_TABLE = {
   visitCount:   { key: "VISITCOUNT",   dir: "DESCENDING" },
   dateAdded:    { key: "DATEADDED",    dir: "DESCENDING" },
   lastModified: { key: "LASTMODIFIED", dir: "DESCENDING" },
-  description:  { key:  "ANNOTATION",
-                  dir:  "ASCENDING",
-                  anno: "bookmarkProperties/description" }
 };
 
 // This is the column that's sorted if one is not specified and the tree is
@@ -55,17 +50,14 @@ var prevSortDir = null;
 var prevSortKey = null;
 
 /**
- * Ensures that the sort of aTree is aSortingMode and aSortingAnno.
+ * Ensures that the sort of aTree is aSortingMode
  *
  * @param aTree
  *        the tree to check
  * @param aSortingMode
  *        one of the Ci.nsINavHistoryQueryOptions.SORT_BY_* constants
- * @param aSortingAnno
- *        checked only if sorting mode is one of the
- *        Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_* constants
  */
-function checkSort(aTree, aSortingMode, aSortingAnno) {
+function checkSort(aTree, aSortingMode) {
   // The placeContent tree's sort is determined by the nsINavHistoryResult it
   // stores.  Get it and check that the sort is what the caller expects.
   let res = aTree.result;
@@ -75,14 +67,6 @@ function checkSort(aTree, aSortingMode, aSortingAnno) {
   // Check sortingMode.
   is(res.sortingMode, aSortingMode,
      "column should now have sortingMode " + aSortingMode);
-
-  // Check sortingAnnotation, but only if sortingMode is ANNOTATION.
-  if ([Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING,
-       Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING].
-      includes(aSortingMode)) {
-    is(res.sortingAnnotation, aSortingAnno,
-       "column should now have sorting annotation " + aSortingAnno);
-  }
 }
 
 /**
@@ -190,11 +174,10 @@ function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
       "SORT_BY_" + SORT_LOOKUP_TABLE[colId].key + "_" +
       (aUnsortFirst ? SORT_LOOKUP_TABLE[colId].dir : prevSortDir);
     let expectedSortMode = Ci.nsINavHistoryQueryOptions[sortStr];
-    let expectedAnno = SORT_LOOKUP_TABLE[colId].anno || "";
 
     // Test sorting by only a column.
     setSort(aOrganizerWin, aPlaceContentTree, aUnsortFirst, false, col);
-    checkSort(aPlaceContentTree, expectedSortMode, expectedAnno);
+    checkSort(aPlaceContentTree, expectedSortMode);
 
     // Test sorting by both a column and a direction.
     ["ascending", "descending"].forEach(function(dir) {
@@ -202,7 +185,7 @@ function testSortByColAndDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
         "SORT_BY_" + SORT_LOOKUP_TABLE[colId].key + "_" + dir.toUpperCase();
       expectedSortMode = Ci.nsINavHistoryQueryOptions[sortStr];
       setSort(aOrganizerWin, aPlaceContentTree, aUnsortFirst, false, col, dir);
-      checkSort(aPlaceContentTree, expectedSortMode, expectedAnno);
+      checkSort(aPlaceContentTree, expectedSortMode);
     });
   }
 }

@@ -82,41 +82,42 @@ subcommands:
               required: true
               index: 1
     - show:
-        about: show frame(s) described by YAML
+        about: show frame(s) described by YAML, binary recording, or capture
+        aliases: ['load', 'replay']
         args:
           - queue:
               short: q
               long: queue
-              help: How many frames to submit to WR ahead of time (default 1)
+              help: How many frames to submit to WR ahead of time (default 1) (YAML only)
               takes_value: true
           - include:
               long: include
-              help: Include the given element type. Can be specified multiple times. (rect/image/text/glyphs/border)
+              help: Include the given element type. Can be specified multiple times. (rect/image/text/glyphs/border) (YAML only)
               multiple: true
               takes_value: true
           - list-resources:
               long: list-resources
-              help: List the resources used by this YAML file
+              help: List the resources used by this render (YAML only)
           - watch:
               short: w
               long: watch
-              help: Watch the given YAML file, reloading whenever it changes
-          - INPUT:
-              help: The input YAML file
-              required: true
-              index: 1
-    - replay:
-        about: replay binary recording
-        args:
+              help: Watch the given file, reloading whenever it changes (YAML only)
           - api:
               long: api
-              help: Reissue Api messages for each frame
+              help: Reissue Api messages for each frame (binary recording only)
           - skip-uploads:
               long: skip-uploads
               help: Skip re-uploads while reissuing Api messages (BROKEN)
           - play:
               long: play
-              help: Play entire recording through, then quit (useful with --save)
+              help: Play entire recording through, then quit (useful with --save) (binary recording only)
+          - INPUT:
+              help: The input YAML, binary recording, or capture directory
+              required: true
+              index: 1
+    - replay:
+        about: replay binary recording
+        args:
           - INPUT:
               help: The input binary file or directory
               required: true
@@ -153,11 +154,3 @@ subcommands:
               help: second benchmark file to compare
               required: true
               index: 2
-    - load:
-        about: load a capture
-        args:
-          - path:
-              help: directory containing the capture
-              takes_value: true
-              required: true
-              index: 1

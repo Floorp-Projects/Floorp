@@ -116,6 +116,7 @@ impl GlyphRasterizer {
         &mut self,
         glyph_key: &GlyphKey,
         font: &FontInstance,
+        scale: f32,
         cached_glyph_info: CachedGlyphInfo,
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
@@ -127,7 +128,7 @@ impl GlyphRasterizer {
         let mut pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
         let render_task_cache_key = cached_glyph_info.render_task_cache_key;
         let (glyph_origin, glyph_size) = (cached_glyph_info.origin, render_task_cache_key.size);
-        let user_data = [glyph_origin.x as f32, (glyph_origin.y - glyph_size.height) as f32, 1.0];
+        let user_data = [glyph_origin.x as f32, (glyph_origin.y - glyph_size.height) as f32, scale];
         let handle = try!(render_task_cache.request_render_task(render_task_cache_key,
                                                                 texture_cache,
                                                                 gpu_cache,
@@ -138,6 +139,7 @@ impl GlyphRasterizer {
             // TODO(pcwalton): Non-subpixel font render mode.
             request_render_task_from_pathfinder(glyph_key,
                                                 font,
+                                                scale,
                                                 &glyph_origin,
                                                 &glyph_size,
                                                 &mut *pathfinder_font_context,
@@ -163,6 +165,9 @@ impl GlyphRasterizer {
 
         let glyph_key_cache = glyph_cache.get_glyph_key_cache_for_font_mut(font.clone());
 
+        let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let scale = font.oversized_scale_factor(x_scale, y_scale) as f32;
+
         // select glyphs that have not been requested yet.
         for glyph_key in glyph_keys {
             let mut cached_glyph_info = None;
@@ -184,7 +189,7 @@ impl GlyphRasterizer {
 
                 let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
                     font_key: font.font_key.clone(),
-                    size: font.size,
+                    size: font.size.scale_by(scale.recip()),
                 };
 
                 // TODO: pathfinder will need to support 2D subpixel offset
@@ -216,6 +221,7 @@ impl GlyphRasterizer {
                 Some(glyph_info) => {
                     match self.request_glyph_from_pathfinder_if_necessary(glyph_key,
                                                                           &font,
+                                                                          scale,
                                                                           glyph_info.clone(),
                                                                           texture_cache,
                                                                           gpu_cache,
@@ -259,6 +265,7 @@ fn compute_embolden_amount(ppem: f32) -> TypedVector2D<f32, DevicePixel> {
 
 fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
                                        font: &FontInstance,
+                                       scale: f32,
                                        glyph_origin: &DeviceIntPoint,
                                        glyph_size: &DeviceIntSize,
                                        font_context: &mut PathfinderFontContext,
@@ -266,9 +273,10 @@ fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
                                        render_tasks: &mut RenderTaskTree,
                                        render_passes: &mut SpecialRenderPasses)
                                        -> Result<RenderTaskId, ()> {
+    let size = font.size.scale_by(scale.recip());
     let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
         font_key: font.font_key.clone(),
-        size: font.size,
+        size,
     };
 
     // TODO: pathfinder will need to support 2D subpixel offset
@@ -291,7 +299,7 @@ fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
     // smoothing" is unchecked in System Preferences.
 
     let subpixel_offset = TypedPoint2D::new(glyph_subpixel_offset as f32, 0.0);
-    let embolden_amount = compute_embolden_amount(font.size.to_f32_px());
+    let embolden_amount = compute_embolden_amount(size.to_f32_px());
 
     let location = RenderTaskLocation::Dynamic(None, Some(*glyph_size));
     let glyph_render_task = RenderTask::new_glyph(location,

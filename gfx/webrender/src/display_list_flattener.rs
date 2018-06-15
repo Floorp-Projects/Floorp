@@ -13,7 +13,6 @@ use api::{LineOrientation, LineStyle, LocalClip, NinePatchBorderSource, Pipeline
 use api::{PropertyBinding, ReferenceFrame, RepeatMode, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{TransformStyle, YuvColorSpace, YuvData};
-use app_units::Au;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore};
 use clip_scroll_node::{ClipScrollNode, NodeType, StickyFrameInfo};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, ClipScrollTree};
@@ -1886,16 +1885,6 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Trivial early out checks
             if font_instance.size.0 <= 0 {
-                return;
-            }
-
-            // Sanity check - anything with glyphs bigger than this
-            // is probably going to consume too much memory to render
-            // efficiently anyway. This is specifically to work around
-            // the font_advance.html reftest, which creates a very large
-            // font as a crash test - the rendering is also ignored
-            // by the azure renderer.
-            if font_instance.size >= Au::from_px(4096) {
                 return;
             }
 

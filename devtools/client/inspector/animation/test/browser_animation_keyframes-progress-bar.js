@@ -9,7 +9,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // * progress bar position after changing playback rate
 // * progress bar position when select another animation
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 const TEST_DATA = [
   {
