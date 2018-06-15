@@ -6,7 +6,6 @@
 #ifndef TelemetryScalar_h__
 #define TelemetryScalar_h__
 
-#include "nsTArray.h"
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/TelemetryProcessEnums.h"
 

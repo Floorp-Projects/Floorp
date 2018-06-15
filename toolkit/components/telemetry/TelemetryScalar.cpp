@@ -1120,13 +1120,11 @@ internal_CanRecordForScalarID(const StaticMutexAutoLock& lock,
  * @param lock Instance of a lock locking gTelemetryHistogramMutex
  * @param aId The scalar identifier.
  * @param aKeyed Are we attempting to write a keyed scalar?
- * @param aForce Whether to allow recording even if the probe is not allowed on the current process.
- *        This must only be true for GeckoView persistence and recorded actions.
  * @return ScalarResult::Ok if we can record, an error code otherwise.
  */
 ScalarResult
 internal_CanRecordScalar(const StaticMutexAutoLock& lock, const ScalarKey& aId,
-                         bool aKeyed, bool aForce = false)
+                         bool aKeyed)
 {
   // Make sure that we have a keyed scalar if we are trying to change one.
   if (internal_IsKeyedScalar(lock, aId) != aKeyed) {
@@ -1140,7 +1138,7 @@ internal_CanRecordScalar(const StaticMutexAutoLock& lock, const ScalarKey& aId,
   }
 
   // Can we record in this process?
-  if (!aForce && !internal_CanRecordProcess(lock, aId)) {
+  if (!internal_CanRecordProcess(lock, aId)) {
     return ScalarResult::CannotRecordInProcess;
   }
 
@@ -1429,7 +1427,7 @@ internal_UpdateScalar(const StaticMutexAutoLock& lock, const nsACString& aName,
            ScalarResult::NotInitialized : ScalarResult::UnknownScalar;
   }
 
-  ScalarResult sr = internal_CanRecordScalar(lock, uniqueId, false, aForce);
+  ScalarResult sr = internal_CanRecordScalar(lock, uniqueId, false);
   if (sr != ScalarResult::Ok) {
     if (sr == ScalarResult::CannotRecordDataset) {
       return ScalarResult::Ok;
@@ -1607,7 +1605,7 @@ internal_UpdateKeyedScalar(const StaticMutexAutoLock& lock,
            ScalarResult::NotInitialized : ScalarResult::UnknownScalar;
   }
 
-  ScalarResult sr = internal_CanRecordScalar(lock, uniqueId, true, aForce);
+  ScalarResult sr = internal_CanRecordScalar(lock, uniqueId, true);
   if (sr != ScalarResult::Ok) {
     if (sr == ScalarResult::CannotRecordDataset) {
       return ScalarResult::Ok;
