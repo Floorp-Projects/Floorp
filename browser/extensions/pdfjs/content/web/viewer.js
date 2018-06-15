@@ -669,9 +669,6 @@ let PDFViewerApplication = {
   get supportsFullscreen() {
     let support;
     support = document.fullscreenEnabled === true || document.mozFullScreenEnabled === true;
-    if (support && _app_options.AppOptions.get('disableFullscreen') === true) {
-      support = false;
-    }
     return (0, _pdfjsLib.shadow)(this, 'supportsFullscreen', support);
   },
   get supportsIntegratedFind() {
@@ -3175,10 +3172,6 @@ const defaultOptions = {
   },
   defaultZoomValue: {
     value: '',
-    kind: OptionKind.VIEWER
-  },
-  disableFullscreen: {
-    value: _viewer_compatibility.viewerCompatibilityParams.disableFullscreen || false,
     kind: OptionKind.VIEWER
   },
   disableHistory: {

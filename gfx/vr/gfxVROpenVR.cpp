@@ -431,6 +431,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplay
                                        uint32_t aNumButtons, uint32_t aNumTriggers,
                                        uint32_t aNumAxes, const nsCString& aId)
   : VRControllerHost(VRDeviceType::OpenVR, aHand, aDisplayID)
+  , mTrackedIndex(0)
   , mVibrateThread(nullptr)
   , mIsVibrateStopped(false)
 {

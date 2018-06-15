@@ -236,7 +236,8 @@ namespace mozilla {
 RTCStatsQuery::RTCStatsQuery(bool internal) :
   failed(false),
   internalStats(internal),
-  grabAllLevels(false) {
+  grabAllLevels(false),
+  now(0.0) {
 }
 
 RTCStatsQuery::~RTCStatsQuery() {
@@ -339,6 +340,9 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mActiveOnWindow(false)
   , mPacketDumpEnabled(false)
   , mPacketDumpFlagsMutex("Packet dump flags mutex")
+  , listenPort(0)
+  , connectPort(0)
+  , connectStr(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
   auto log = RLogConnector::CreateInstance();

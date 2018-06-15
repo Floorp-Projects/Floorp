@@ -307,6 +307,11 @@ DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
                                              nsIEventTarget *aTarget)
   : NeckoTargetHolder(aTarget)
   , mLock("netwerk::sctp::DataChannelConnection")
+  , mSendInterleaved(false)
+  , mPpidFragmentation(false)
+  , mMaxMessageSizeSet(false)
+  , mMaxMessageSize(0)
+  , mAllocateEven(false)
 {
   mCurrentStream = 0;
   mState = CLOSED;
