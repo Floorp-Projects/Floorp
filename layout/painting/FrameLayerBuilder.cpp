@@ -533,6 +533,7 @@ public:
   PaintedLayerData() :
     mAnimatedGeometryRoot(nullptr),
     mASR(nullptr),
+    mClipChain(nullptr),
     mReferenceFrame(nullptr),
     mLayer(nullptr),
     mSolidColor(NS_RGBA(0, 0, 0, 0)),
@@ -1637,7 +1638,8 @@ public:
     mAnimatedGeometryRootPosition(0, 0),
     mLastItemCount(0),
     mContainerLayerFrame(nullptr),
-    mHasExplicitLastPaintOffset(false) {}
+    mHasExplicitLastPaintOffset(false),
+    mDisabledAlpha(false) {}
 
   NS_INLINE_DECL_REFCOUNTING(PaintedDisplayItemLayerUserData);
 
@@ -1725,6 +1727,7 @@ protected:
 
 FrameLayerBuilder::FrameLayerBuilder()
   : mRetainingManager(nullptr)
+  , mDisplayListBuilder(nullptr)
   , mContainingPaintedLayer(nullptr)
   , mInactiveLayerClip(nullptr)
   , mInvalidateAllLayers(false)
