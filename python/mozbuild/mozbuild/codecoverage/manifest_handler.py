@@ -3,11 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from collections import defaultdict
-
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
+import urlparse
 
 from mozpack.chrome.manifest import (
     Manifest,
