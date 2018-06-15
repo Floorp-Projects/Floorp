@@ -38,13 +38,6 @@ const OPAQUE_TASK_ADDRESS: RenderTaskAddress = RenderTaskAddress(0x7fff);
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum TransformBatchKind {
-    TextRun(GlyphFormat),
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum BrushBatchKind {
     Solid,
     Image(ImageBufferKind),
@@ -64,7 +57,7 @@ pub enum BrushBatchKind {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum BatchKind {
     SplitComposite,
-    Transformable(TransformedRectKind, TransformBatchKind),
+    TextRun(GlyphFormat),
     Brush(BrushBatchKind),
 }
 
@@ -1101,7 +1094,7 @@ impl AlphaBatchBuilder {
 
                 let font = text_cpu.get_font(
                     ctx.device_pixel_scale,
-                    Some(scroll_node.transform),
+                    scroll_node.transform,
                 );
                 let subpx_dir = font.get_subpx_dir();
 
@@ -1131,10 +1124,7 @@ impl AlphaBatchBuilder {
                             ],
                         };
 
-                        let kind = BatchKind::Transformable(
-                            transform_kind,
-                            TransformBatchKind::TextRun(glyph_format),
-                        );
+                        let kind = BatchKind::TextRun(glyph_format);
 
                         let (blend_mode, color_mode) = match glyph_format {
                             GlyphFormat::Subpixel |
