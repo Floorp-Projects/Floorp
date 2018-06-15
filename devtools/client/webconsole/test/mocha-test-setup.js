@@ -24,10 +24,15 @@ pref("devtools.webconsole.inputHistoryCount", 50);
 pref("devtools.webconsole.persistlog", false);
 pref("devtools.webconsole.timestampMessages", false);
 pref("devtools.webconsole.sidebarToggle", true);
+pref("devtools.webconsole.jsterm.codeMirror", false);
 
 global.loader = {
   lazyServiceGetter: () => {},
-  lazyRequireGetter: () => {}
+  lazyRequireGetter: (context, name, path) => {
+    if (path === "devtools/shared/async-storage") {
+      global[name] = require("devtools/client/webconsole/test/fixtures/async-storage");
+    }
+  }
 };
 
 // Point to vendored-in files and mocks when needed.
