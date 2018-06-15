@@ -77,6 +77,7 @@ add_task(async function test_register_rollback() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /universe has imploded/,
     'Expected error for unregister database failure'
   );
 

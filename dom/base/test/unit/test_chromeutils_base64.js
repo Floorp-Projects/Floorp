@@ -75,9 +75,11 @@ function testDecode(input, decoded) {
 
   if (paddedValue.length > input.length) {
     throws(_ => ChromeUtils.base64URLDecode(paddedValue, { padding: "reject" }),
+           /NS_ERROR_ILLEGAL_VALUE/,
            paddedValue + " with padding rejected should throw");
 
     throws(_ => ChromeUtils.base64URLDecode(input, { padding: "require" }),
+           /NS_ERROR_ILLEGAL_VALUE/,
            input + " with padding required should throw");
 
     buffer = ChromeUtils.base64URLDecode(paddedValue, { padding: "require" });
@@ -91,6 +93,7 @@ function test_base64URLDecode() {
   throws(_ => ChromeUtils.base64URLDecode("", {}), /TypeError/,
          "Decoding should require the padding option");
   throws(_ => ChromeUtils.base64URLDecode("", { padding: "chocolate" }),
+         /TypeError/,
          "Decoding should throw for invalid padding policy");
 
   for (let {decoded, encoded} of binaryTests) {
