@@ -4084,7 +4084,7 @@ nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
     // no point in placing the line.
     if (!aState.mReflowStatus.IsInlineBreakBefore()) {
       if (!PlaceLine(aState, aLineLayout, aLine, aFloatStateBeforeLine,
-                     aFloatAvailableSpace, aAvailableSpaceBSize,
+                     aFloatAvailableSpace.mRect, aAvailableSpaceBSize,
                      aKeepReflowGoing)) {
         lineReflowStatus = LineReflowStatus::RedoMoreFloats;
         // PlaceLine already called GetAvailableSpaceForBSize for us.
@@ -4474,7 +4474,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
                         nsLineLayout& aLineLayout,
                         LineIterator aLine,
                         nsFloatManager::SavedState *aFloatStateBeforeLine,
-                        nsFlowAreaRect& aFlowArea,
+                        LogicalRect& aFloatAvailableSpace,
                         nscoord& aAvailableSpaceBSize,
                         bool* aKeepReflowGoing)
 {
@@ -4541,31 +4541,31 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
     // Prepare data for redoing the line.
     aState.mLineBSize = Some(aLine->BSize());
 
-    // Since we want to redo the line, we update aFlowArea by using the
-    // aFloatStateBeforeLine, which is the float manager's state before the
-    // line is placed.
-    LogicalRect oldFloatAvailableSpace(aFlowArea.mRect);
-    aFlowArea = aState.GetFloatAvailableSpaceForBSize(aLine->BStart(),
-                                                      aAvailableSpaceBSize,
-                                                      aFloatStateBeforeLine);
-
-    NS_ASSERTION(aFlowArea.mRect.BStart(wm) ==
+    // Since we want to redo the line, we update aFloatAvailableSpace by
+    // using the aFloatStateBeforeLine, which is the float manager's state
+    // before the line is placed.
+    LogicalRect oldFloatAvailableSpace(aFloatAvailableSpace);
+    aFloatAvailableSpace =
+      aState.GetFloatAvailableSpaceForBSize(aLine->BStart(),
+                                            aAvailableSpaceBSize,
+                                            aFloatStateBeforeLine).mRect;
+    NS_ASSERTION(aFloatAvailableSpace.BStart(wm) ==
                  oldFloatAvailableSpace.BStart(wm), "yikes");
     // Restore the BSize to the position of the next band.
-    aFlowArea.mRect.BSize(wm) = oldFloatAvailableSpace.BSize(wm);
+    aFloatAvailableSpace.BSize(wm) = oldFloatAvailableSpace.BSize(wm);
 
     // Enforce both IStart() and IEnd() never move outwards to prevent
     // infinite grow-shrink loops.
     const nscoord iStartDiff =
-      aFlowArea.mRect.IStart(wm) - oldFloatAvailableSpace.IStart(wm);
+      aFloatAvailableSpace.IStart(wm) - oldFloatAvailableSpace.IStart(wm);
     const nscoord iEndDiff =
-      aFlowArea.mRect.IEnd(wm) - oldFloatAvailableSpace.IEnd(wm);
+      aFloatAvailableSpace.IEnd(wm) - oldFloatAvailableSpace.IEnd(wm);
     if (iStartDiff < 0) {
-      aFlowArea.mRect.IStart(wm) -= iStartDiff;
-      aFlowArea.mRect.ISize(wm) += iStartDiff;
+      aFloatAvailableSpace.IStart(wm) -= iStartDiff;
+      aFloatAvailableSpace.ISize(wm) += iStartDiff;
     }
     if (iEndDiff > 0) {
-      aFlowArea.mRect.ISize(wm) -= iEndDiff;
+      aFloatAvailableSpace.ISize(wm) -= iEndDiff;
     }
 
     return false;
