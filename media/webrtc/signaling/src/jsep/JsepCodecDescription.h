@@ -236,6 +236,9 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         mTmmbrEnabled(false),
         mRembEnabled(false),
         mFECEnabled(false),
+        mREDPayloadType(0),
+        mULPFECPayloadType(0),
+        mProfileLevelId(0),
         mPacketizationMode(0)
   {
     // Add supported rtcp-fb types
@@ -763,7 +766,8 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
         mLocalPort(localPort),
         mLocalMaxMessageSize(localMaxMessageSize),
         mRemotePort(0),
-        mRemoteMaxMessageSize(0)
+        mRemoteMaxMessageSize(0),
+        mRemoteMMSSet(false)
   {
   }
 
