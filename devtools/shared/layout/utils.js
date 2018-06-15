@@ -558,7 +558,7 @@ function isXBLAnonymous(node) {
   }
 
   // Shadow nodes also show up in getAnonymousNodes, so return false.
-  if (parent.shadowRoot && parent.shadowRoot.contains(node)) {
+  if (parent.openOrClosedShadowRoot && parent.openOrClosedShadowRoot.contains(node)) {
     return false;
   }
 
@@ -582,7 +582,7 @@ function isShadowAnonymous(node) {
 
   // If there is a shadowRoot and this is part of it then this
   // is not native anonymous
-  return parent.shadowRoot && parent.shadowRoot.contains(node);
+  return parent.openOrClosedShadowRoot && parent.openOrClosedShadowRoot.contains(node);
 }
 exports.isShadowAnonymous = isShadowAnonymous;
 

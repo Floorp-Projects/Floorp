@@ -87,12 +87,14 @@ function parseTree(inputString) {
       }
     }
 
+    const path = (parent.path ? parent.path + " " : "") + nodeString;
+
     const node = {
       node: nodeString,
       children: [],
       parent,
       level,
-      path: parent.path + " " + nodeString
+      path
     };
 
     parent.children.push(node);
