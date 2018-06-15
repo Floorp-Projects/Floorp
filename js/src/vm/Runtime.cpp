@@ -256,7 +256,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
 void
 JSRuntime::destroyRuntime()
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
     MOZ_ASSERT(childRuntimeCount == 0);
     MOZ_ASSERT(initialized_);
 
@@ -727,7 +727,7 @@ JSRuntime::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPt
 {
     MOZ_ASSERT_IF(allocFunc != AllocFunction::Realloc, !reallocPtr);
 
-    if (JS::CurrentThreadIsHeapBusy())
+    if (JS::RuntimeHeapIsBusy())
         return nullptr;
 
     if (!oom::IsSimulatedOOMAllocation()) {
@@ -778,7 +778,7 @@ JSRuntime::activeGCInAtomsZone()
 bool
 JSRuntime::createAtomsAddedWhileSweepingTable()
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
     MOZ_ASSERT(!atomsAddedWhileSweeping_);
 
     atomsAddedWhileSweeping_ = js_new<AtomSet>();
@@ -796,7 +796,7 @@ JSRuntime::createAtomsAddedWhileSweepingTable()
 void
 JSRuntime::destroyAtomsAddedWhileSweepingTable()
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
     MOZ_ASSERT(atomsAddedWhileSweeping_);
 
     js_delete(atomsAddedWhileSweeping_.ref());

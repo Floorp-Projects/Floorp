@@ -200,7 +200,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
     }
 
     void trace(JSTracer* trc) override {
-        MOZ_ASSERT_IF(JS::CurrentThreadIsHeapBusy(), isInList());
+        MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), isInList());
 
         TraceNullableEdge(trc, &memberOf, "WeakMap owner");
 
