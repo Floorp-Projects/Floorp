@@ -159,6 +159,8 @@ impl<'a> From<&'a LayoutToWorldTransform> for FontTransform {
     }
 }
 
+pub const FONT_SIZE_LIMIT: f64 = 1024.0;
+
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -268,6 +270,23 @@ impl FontInstance {
             (bold_offset * x_scale).max(1.0).round() as usize
         } else {
             0
+        }
+    }
+
+    pub fn oversized_scale_factor(&self, x_scale: f64, y_scale: f64) -> f64 {
+        // If the scaled size is over the limit, then it will need to
+        // be scaled up from the size limit to the scaled size.
+        // However, this should only occur when the font isn't using any
+        // features that would tie it to device space, like transforms,
+        // subpixel AA, or subpixel positioning.
+        let max_size = self.size.to_f64_px() * x_scale.max(y_scale);
+        if max_size > FONT_SIZE_LIMIT &&
+           self.transform.is_identity() &&
+           self.render_mode != FontRenderMode::Subpixel &&
+           !self.use_subpixel_position() {
+            max_size / FONT_SIZE_LIMIT
+        } else {
+            1.0
         }
     }
 }

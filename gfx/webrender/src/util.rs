@@ -20,6 +20,7 @@ pub trait MatrixHelpers<Src, Dst> {
     fn preserves_2d_axis_alignment(&self) -> bool;
     fn has_perspective_component(&self) -> bool;
     fn has_2d_inverse(&self) -> bool;
+    fn exceeds_2d_scale(&self, limit: f64) -> bool;
     fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
     fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src>;
     fn transform_kind(&self) -> TransformedRectKind;
@@ -66,6 +67,14 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
 
     fn has_2d_inverse(&self) -> bool {
         self.m11 * self.m22 - self.m12 * self.m21 != 0.0
+    }
+
+    // Check if the matrix post-scaling on either the X or Y axes could cause geometry
+    // transformed by this matrix to have scaling exceeding the supplied limit.
+    fn exceeds_2d_scale(&self, limit: f64) -> bool {
+        let limit2 = (limit * limit) as f32;
+        self.m11 * self.m11 + self.m12 * self.m12 > limit2 ||
+        self.m21 * self.m21 + self.m22 * self.m22 > limit2
     }
 
     fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>> {
