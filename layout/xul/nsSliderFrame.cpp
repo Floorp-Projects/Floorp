@@ -1113,7 +1113,9 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
     return;
   }
 
-  nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
+  if (!nsLayoutUtils::HasDisplayPort(scrollableContent)) {
+    return;
+  }
 
   nsIPresShell* shell = PresShell();
   uint64_t inputblockId = InputAPZContext::GetInputBlockId();
@@ -1123,10 +1125,6 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
                                  float(AppUnitsPerCSSPixel())),
                                isHorizontal ? ScrollDirection::eHorizontal :
                                               ScrollDirection::eVertical);
-
-  if (!nsLayoutUtils::HasDisplayPort(scrollableContent)) {
-    return;
-  }
 
   // It's important to set this before calling nsIWidget::StartAsyncScrollbarDrag(),
   // because in some configurations, that can call AsyncScrollbarDragRejected()
