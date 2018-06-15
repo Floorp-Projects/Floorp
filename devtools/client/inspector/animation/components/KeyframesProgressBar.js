@@ -108,7 +108,7 @@ class KeyframesProgressBar extends PureComponent {
 
     return dom.div(
       {
-        className: "keyframes-progress-bar-area",
+        className: "keyframes-progress-bar-area devtools-toolbar",
       },
       dom.div(
         {
