@@ -10,5 +10,6 @@
     "startup.homepage_override_url": "",
     "startup.homepage_welcome_url": "",
     "browser.startup.homepage": "about:blank",
-    "browser.newtabpage.enabled": false
+    "browser.newtabpage.enabled": false,
+    "security.sandbox.content.level": 0
 }
