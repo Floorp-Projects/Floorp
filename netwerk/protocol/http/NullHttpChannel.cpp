@@ -15,6 +15,8 @@ NS_IMPL_ISUPPORTS(NullHttpChannel, nsINullChannel,
                   nsIHttpChannel, nsITimedChannel)
 
 NullHttpChannel::NullHttpChannel()
+  : mAllRedirectsSameOrigin(false)
+  , mAllRedirectsPassTimingAllowCheck(false)
 {
   mChannelCreationTime = PR_Now();
   mChannelCreationTimestamp = TimeStamp::Now();
@@ -22,6 +24,8 @@ NullHttpChannel::NullHttpChannel()
 }
 
 NullHttpChannel::NullHttpChannel(nsIHttpChannel * chan)
+  : mAllRedirectsSameOrigin(false)
+  , mAllRedirectsPassTimingAllowCheck(false)
 {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   ssm->GetChannelURIPrincipal(chan, getter_AddRefs(mResourcePrincipal));

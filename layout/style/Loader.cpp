@@ -978,9 +978,12 @@ Loader::CreateSheet(nsIURI* aURI,
       // Make sure it hasn't been forced to have a unique inner;
       // that is an indication that its rules have been exposed to
       // CSSOM and so we can't use it.
-      if (sheet->HasForcedUniqueInner()) {
+      //
+      // Similarly, if the sheet doesn't have the right parsing mode just bail.
+      if (sheet->HasForcedUniqueInner() ||
+          sheet->ParsingMode() != aParsingMode) {
         LOG(("  Not cloning completed sheet %p because it has a "
-             "forced unique inner",
+             "forced unique inner or the wrong parsing mode",
              sheet.get()));
         sheet = nullptr;
         fromCompleteSheets = false;

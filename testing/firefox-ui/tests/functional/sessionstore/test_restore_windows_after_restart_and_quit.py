@@ -10,9 +10,15 @@ sys.path.append(os.path.dirname(__file__))
 from session_store_test_case import SessionStoreTestCase
 
 
-class TestSessionStoreEnabled(SessionStoreTestCase):
-    def setUp(self):
-        super(TestSessionStoreEnabled, self).setUp(startup_page=3)
+class TestSessionStoreEnabledAllWindows(SessionStoreTestCase):
+
+    def setUp(self, include_private=True):
+        """ Setup for the test, enabling session restore.
+
+        :param include_private: Whether to open private windows.
+        """
+        super(TestSessionStoreEnabledAllWindows, self).setUp(
+            include_private=include_private, startup_page=3)
 
     def test_with_variety(self):
         """ Test opening and restoring both standard and private windows.
@@ -38,7 +44,14 @@ class TestSessionStoreEnabled(SessionStoreTestCase):
                          """.format(self.test_windows, current_windows_set))
 
 
+class TestSessionStoreEnabledNoPrivateWindows(TestSessionStoreEnabledAllWindows):
+
+    def setUp(self):
+        super(TestSessionStoreEnabledNoPrivateWindows, self).setUp(include_private=False)
+
+
 class TestSessionStoreDisabled(SessionStoreTestCase):
+
     def test_no_restore_with_quit(self):
         current_windows_set = self.convert_open_windows_to_set()
         self.assertEqual(current_windows_set, self.all_windows,

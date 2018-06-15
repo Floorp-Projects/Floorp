@@ -108,6 +108,7 @@ public:
   explicit TRR(AHostResolver *aResolver, bool aPB)
     : mozilla::Runnable("TRR")
     , mHostResolver(aResolver)
+    , mType(TRRTYPE_A)
     , mBodySize(0)
     , mFailed(false)
     , mPB(aPB)

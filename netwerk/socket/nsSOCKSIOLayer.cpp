@@ -231,6 +231,7 @@ nsSOCKSSocketInfo::nsSOCKSSocketInfo()
     , mDataLength(0)
     , mReadOffset(0)
     , mAmountToRead(0)
+    , mLookupStatus(NS_ERROR_NOT_INITIALIZED)
     , mFD(nullptr)
     , mVersion(-1)
     , mDestinationFamily(AF_INET)
@@ -238,6 +239,24 @@ nsSOCKSSocketInfo::nsSOCKSSocketInfo()
     , mTlsFlags(0)
     , mTimeout(PR_INTERVAL_NO_TIMEOUT)
 {
+    this->mInternalProxyAddr.inet.family = 0;
+    this->mInternalProxyAddr.inet6.family = 0;
+    this->mInternalProxyAddr.inet6.port = 0;
+    this->mInternalProxyAddr.inet6.flowinfo = 0;
+    this->mInternalProxyAddr.inet6.scope_id = 0;
+    this->mInternalProxyAddr.local.family = 0;
+    this->mExternalProxyAddr.inet.family = 0;
+    this->mExternalProxyAddr.inet6.family = 0;
+    this->mExternalProxyAddr.inet6.port = 0;
+    this->mExternalProxyAddr.inet6.flowinfo = 0;
+    this->mExternalProxyAddr.inet6.scope_id = 0;
+    this->mExternalProxyAddr.local.family = 0;
+    this->mDestinationAddr.inet.family = 0;
+    this->mDestinationAddr.inet6.family = 0;
+    this->mDestinationAddr.inet6.port = 0;
+    this->mDestinationAddr.inet6.flowinfo = 0;
+    this->mDestinationAddr.inet6.scope_id = 0;
+    this->mDestinationAddr.local.family = 0;
     mData = new uint8_t[BUFFER_SIZE];
 
     mInternalProxyAddr.raw.family = AF_INET;

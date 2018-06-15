@@ -1215,7 +1215,7 @@ JS_GetGlobalForObject(JSContext* cx, JSObject* obj)
 {
     AssertHeapIsIdle();
     assertSameCompartment(cx, obj);
-    return &obj->global();
+    return &obj->deprecatedGlobal();
 }
 
 extern JS_PUBLIC_API(bool)

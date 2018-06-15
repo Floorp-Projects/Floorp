@@ -787,6 +787,28 @@ public:
     , mResetDeflater(false)
     , mMessageDeflated(false)
   {
+    this->mDeflater.next_in = nullptr;
+    this->mDeflater.avail_in = 0;
+    this->mDeflater.total_in = 0;
+    this->mDeflater.next_out = nullptr;
+    this->mDeflater.avail_out = 0;
+    this->mDeflater.total_out = 0;
+    this->mDeflater.msg = nullptr;
+    this->mDeflater.state = nullptr;
+    this->mDeflater.data_type = 0;
+    this->mDeflater.adler = 0;
+    this->mDeflater.reserved = 0;
+    this->mInflater.next_in = nullptr;
+    this->mInflater.avail_in = 0;
+    this->mInflater.total_in = 0;
+    this->mInflater.next_out = nullptr;
+    this->mInflater.avail_out = 0;
+    this->mInflater.total_out = 0;
+    this->mInflater.msg = nullptr;
+    this->mInflater.state = nullptr;
+    this->mInflater.data_type = 0;
+    this->mInflater.adler = 0;
+    this->mInflater.reserved = 0;
     MOZ_COUNT_CTOR(PMCECompression);
 
     mDeflater.zalloc = mInflater.zalloc = Z_NULL;
@@ -1158,6 +1180,7 @@ WebSocketChannel::WebSocketChannel() :
   mOpenTimeout(20000),
   mConnecting(NOT_CONNECTING),
   mMaxConcurrentConnections(200),
+  mInnerWindowID(0),
   mGotUpgradeOK(0),
   mRecvdHttpUpgradeTransport(0),
   mAutoFollowRedirects(0),
@@ -1184,6 +1207,8 @@ WebSocketChannel::WebSocketChannel() :
   mBufferSize(kIncomingBufferInitialSize),
   mCurrentOut(nullptr),
   mCurrentOutSent(0),
+  mHdrOutToSend(0),
+  mHdrOut(nullptr),
   mDynamicOutputSize(0),
   mDynamicOutput(nullptr),
   mPrivateBrowsing(false),

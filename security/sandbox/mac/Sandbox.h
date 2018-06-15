@@ -40,8 +40,14 @@ typedef struct _MacSandboxPluginInfo {
 
 typedef struct _MacSandboxInfo {
   _MacSandboxInfo()
-    : type(MacSandboxType_Default), level(0), hasFilePrivileges(false),
-      shouldLog(true) {}
+    : type(MacSandboxType_Default)
+    , level(0)
+    , hasFilePrivileges(false)
+    , hasSandboxedProfile(false)
+    , hasAudio(false)
+    , shouldLog(true)
+  {
+  }
   _MacSandboxInfo(const struct _MacSandboxInfo& other) = default;
 
   MacSandboxType type;
