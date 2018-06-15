@@ -23,12 +23,15 @@ from mach.decorators import (
 from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
 
 
+def is_firefox_or_android(cls):
+    """Must have Firefox build or Android build."""
+    return conditions.is_firefox(cls) or conditions.is_android(cls)
+
+
 class WebPlatformTestsRunnerSetup(MozbuildObject):
     default_log_type = "mach"
 
-    def kwargs_firefox(self, kwargs):
-        from wptrunner import wptcommandline
-
+    def kwargs_common(self, kwargs):
         build_path = os.path.join(self.topobjdir, 'build')
         if build_path not in sys.path:
             sys.path.append(build_path)
@@ -36,14 +39,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
 
-        if kwargs["binary"] is None:
-            kwargs["binary"] = self.get_binary_path()
-
         if kwargs["prefs_root"] is None:
             kwargs["prefs_root"] = os.path.join(self.topobjdir, '_tests', 'web-platform', "prefs")
-
-        if kwargs["certutil_binary"] is None:
-            kwargs["certutil_binary"] = self.get_binary_path('certutil')
 
         if kwargs["stackfix_dir"] is None:
             kwargs["stackfix_dir"] = self.bindir
@@ -64,6 +61,18 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
                 kwargs["host_cert_path"] = os.path.join(here, "certs", "web-platform.test.pem")
 
         kwargs["capture_stdio"] = True
+
+        return kwargs
+
+    def kwargs_firefox(self, kwargs):
+        from wptrunner import wptcommandline
+        kwargs = self.kwargs_common(kwargs)
+
+        if kwargs["binary"] is None:
+            kwargs["binary"] = self.get_binary_path()
+
+        if kwargs["certutil_binary"] is None:
+            kwargs["certutil_binary"] = self.get_binary_path('certutil')
 
         if kwargs["webdriver_binary"] is None:
             kwargs["webdriver_binary"] = self.get_binary_path("geckodriver", validate_exists=False)
@@ -119,7 +128,6 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
                 dest.write(src.read())
 
 
-
 class WebPlatformTestsUpdater(MozbuildObject):
     """Update web platform tests."""
     def run_update(self, **kwargs):
@@ -131,8 +139,6 @@ class WebPlatformTestsUpdater(MozbuildObject):
         if kwargs["product"] is None:
             kwargs["product"] = "firefox"
 
-
-
         kwargs = updatecommandline.check_args(kwargs)
         logger = update.setup_logging(kwargs, {"mach": sys.stdout})
 
@@ -143,6 +149,7 @@ class WebPlatformTestsUpdater(MozbuildObject):
             import traceback
             traceback.print_exc()
 #            pdb.post_mortem()
+
 
 class WebPlatformTestsReduce(WebPlatformTestsRunner):
 
@@ -160,6 +167,7 @@ class WebPlatformTestsReduce(WebPlatformTestsRunner):
 
         for item in tests:
             logger.info(item.id)
+
 
 class WebPlatformTestsCreator(MozbuildObject):
     template_prefix = """<!doctype html>
@@ -220,7 +228,6 @@ testing/web-platform/mozilla/tests for Gecko-only tests""" % path)
 testing/web-platform/tests for tests that may be shared
             testing/web-platform/mozilla/tests for Gecko-only tests""" % ref_path)
             return 1
-
 
         if os.path.exists(path) and not kwargs["overwrite"]:
             print("Test path already exists, pass --overwrite to replace")
@@ -304,9 +311,11 @@ def create_parser_update():
     from update import updatecommandline
     return updatecommandline.create_parser()
 
+
 def create_parser_reduce():
     from wptrunner import wptcommandline
     return wptcommandline.create_parser_reduce()
+
 
 def create_parser_create():
     import argparse
@@ -345,11 +354,15 @@ class MachCommands(MachCommandBase):
 
     @Command("web-platform-tests",
              category="testing",
-             conditions=[conditions.is_firefox],
+             conditions=[is_firefox_or_android],
              parser=create_parser_wpt)
     def run_web_platform_tests(self, **params):
         self.setup()
-
+        if conditions.is_android(self) and params["product"] != "fennec":
+            if params["product"] is None:
+                params["product"] = "fennec"
+            else:
+                raise ValueError("Must specify --product=fennec in Android environment.")
         if "test_objects" in params:
             for item in params["test_objects"]:
                 params["include"].append(item["name"])
@@ -361,7 +374,7 @@ class MachCommands(MachCommandBase):
 
     @Command("wpt",
              category="testing",
-             conditions=[conditions.is_firefox],
+             conditions=[is_firefox_or_android],
              parser=create_parser_wpt)
     def run_wpt(self, **params):
         return self.run_web_platform_tests(**params)
