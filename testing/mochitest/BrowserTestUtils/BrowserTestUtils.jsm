@@ -218,6 +218,54 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Checks if a DOM element is hidden.
+   *
+   * @param {Element} element
+   *        The element which is to be checked.
+   *
+   * @return {boolean}
+   */
+  is_hidden(element) {
+    var style = element.ownerGlobal.getComputedStyle(element);
+    if (style.display == "none")
+      return true;
+    if (style.visibility != "visible")
+      return true;
+    if (style.display == "-moz-popup")
+      return ["hiding", "closed"].includes(element.state);
+
+    // Hiding a parent element will hide all its children
+    if (element.parentNode != element.ownerDocument)
+      return BrowserTestUtils.is_hidden(element.parentNode);
+
+    return false;
+  },
+
+  /**
+   * Checks if a DOM element is visible.
+   *
+   * @param {Element} element
+   *        The element which is to be checked.
+   *
+   * @return {boolean}
+   */
+  is_visible(element) {
+    var style = element.ownerGlobal.getComputedStyle(element);
+    if (style.display == "none")
+      return false;
+    if (style.visibility != "visible")
+      return false;
+    if (style.display == "-moz-popup" && element.state != "open")
+      return false;
+
+    // Hiding a parent element will hide all its children
+    if (element.parentNode != element.ownerDocument)
+      return BrowserTestUtils.is_visible(element.parentNode);
+
+    return true;
+  },
+
+  /**
    * Switches to a tab and resolves when it is ready.
    *
    * @param {tabbrowser} tabbrowser

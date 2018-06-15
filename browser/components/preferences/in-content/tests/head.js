@@ -5,28 +5,14 @@ ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
 
 const kDefaultWait = 2000;
 
-function is_hidden(aElement) {
-  var style = aElement.ownerGlobal.getComputedStyle(aElement);
-  if (style.display == "none")
-    return true;
-  if (style.visibility != "visible")
-    return true;
-
-  // Hiding a parent element will hide all its children
-  if (aElement.parentNode != aElement.ownerDocument)
-    return is_hidden(aElement.parentNode);
-
-  return false;
-}
-
 function is_element_visible(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null, when checking visibility");
-  ok(!is_hidden(aElement), aMsg);
+  ok(!BrowserTestUtils.is_hidden(aElement), aMsg);
 }
 
 function is_element_hidden(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null, when checking visibility");
-  ok(is_hidden(aElement), aMsg);
+  ok(BrowserTestUtils.is_hidden(aElement), aMsg);
 }
 
 function open_preferences(aCallback) {
