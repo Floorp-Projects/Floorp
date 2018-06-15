@@ -34,16 +34,10 @@ using mozilla::dom::Element;
 using mozilla::ErrorResult;
 
 //prototype
-nsresult GetListState(mozilla::HTMLEditor* aHTMLEditor,
-                      bool* aMixed,
-                      nsAString& aLocalName);
-nsresult RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
-                           const nsAString& aProp);
-nsresult RemoveTextProperty(mozilla::HTMLEditor* aHTMLEditor,
-                            const nsAString& aProp);
-nsresult SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
-                         const nsAString& aProp);
-
+static nsresult
+GetListState(mozilla::HTMLEditor* aHTMLEditor,
+             bool* aMixed,
+             nsAString& aLocalName);
 
 //defines
 #define STATE_ENABLED  "state_enabled"
@@ -253,30 +247,40 @@ nsStyleUpdatingCommand::ToggleState(mozilla::HTMLEditor* aHTMLEditor)
   if (doTagRemoval) {
     // Also remove equivalent properties (bug 317093)
     if (mTagName == nsGkAtoms::b) {
-      rv = RemoveTextProperty(aHTMLEditor, NS_LITERAL_STRING("strong"));
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::strong, nullptr);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else if (mTagName == nsGkAtoms::i) {
-      rv = RemoveTextProperty(aHTMLEditor, NS_LITERAL_STRING("em"));
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::em, nullptr);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else if (mTagName == nsGkAtoms::strike) {
-      rv = RemoveTextProperty(aHTMLEditor, NS_LITERAL_STRING("s"));
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::s, nullptr);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
-    rv = RemoveTextProperty(aHTMLEditor, nsDependentAtomString(mTagName));
-  } else {
-    // Superscript and Subscript styles are mutually exclusive
-    aHTMLEditor->BeginTransaction();
-
-    nsDependentAtomString tagName(mTagName);
-    if (mTagName == nsGkAtoms::sub || mTagName == nsGkAtoms::sup) {
-      rv = RemoveTextProperty(aHTMLEditor, tagName);
+    rv = aHTMLEditor->RemoveInlineProperty(mTagName, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
-    if (NS_SUCCEEDED(rv))
-      rv = SetTextProperty(aHTMLEditor, tagName);
-
-    aHTMLEditor->EndTransaction();
+    return rv;
   }
+
+  // Superscript and Subscript styles are mutually exclusive
+  aHTMLEditor->BeginTransaction();
+
+  if (mTagName == nsGkAtoms::sub || mTagName == nsGkAtoms::sup) {
+    rv = aHTMLEditor->RemoveInlineProperty(mTagName, nullptr);
+  }
+  if (NS_SUCCEEDED(rv)) {
+    rv = aHTMLEditor->SetInlineProperty(mTagName, nullptr, EmptyString());
+  }
+
+  aHTMLEditor->EndTransaction();
 
   return rv;
 }
@@ -1541,7 +1545,7 @@ nsInsertTagCommand::GetCommandStateParams(const char *aCommandName,
 //HELPER METHODS
 /****************************/
 
-nsresult
+static nsresult
 GetListState(mozilla::HTMLEditor* aHTMLEditor,
              bool* aMixed,
              nsAString& aLocalName)
@@ -1568,48 +1572,4 @@ GetListState(mozilla::HTMLEditor* aHTMLEditor,
     aLocalName.AssignLiteral("dl");
   }
   return NS_OK;
-}
-
-nsresult
-RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
-                  const nsAString& aProp)
-{
-  MOZ_ASSERT(aHTMLEditor);
-
-  /// XXX Hack alert! Look in nsIEditProperty.h for this
-  RefPtr<nsAtom> styleAtom = NS_Atomize(aProp);
-  NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
-
-  return aHTMLEditor->RemoveInlineProperty(styleAtom, nullptr);
-}
-
-
-// the name of the attribute here should be the contents of the appropriate
-// tag, e.g. 'b' for bold, 'i' for italics.
-nsresult
-RemoveTextProperty(mozilla::HTMLEditor* aHTMLEditor,
-                   const nsAString& aProp)
-{
-  MOZ_ASSERT(aHTMLEditor);
-
-  if (aProp.LowerCaseEqualsLiteral("all")) {
-    return aHTMLEditor->RemoveAllInlineProperties();
-  }
-
-  return RemoveOneProperty(aHTMLEditor, aProp);
-}
-
-// the name of the attribute here should be the contents of the appropriate
-// tag, e.g. 'b' for bold, 'i' for italics.
-nsresult
-SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
-                const nsAString& aProp)
-{
-  MOZ_ASSERT(aHTMLEditor);
-
-  /// XXX Hack alert! Look in nsIEditProperty.h for this
-  RefPtr<nsAtom> styleAtom = NS_Atomize(aProp);
-  NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
-
-  return aHTMLEditor->SetInlineProperty(styleAtom, nullptr, EmptyString());
 }
