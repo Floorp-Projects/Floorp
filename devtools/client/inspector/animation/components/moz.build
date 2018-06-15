@@ -21,7 +21,7 @@ DevToolsModules(
     'AnimationToolbar.js',
     'App.js',
     'CurrentTimeLabel.js',
-    'CurrentTimeScrubberController.js',
+    'CurrentTimeScrubber.js',
     'IndicationBar.js',
     'KeyframesProgressBar.js',
     'NoAnimationPanel.js',

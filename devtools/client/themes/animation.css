@@ -99,12 +99,12 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 /* Current Time Scrubber */
-.current-time-scrubber-controller {
+.current-time-scrubber-area {
   grid-column: 2 / 3;
   z-index: 2;
 }
 
-.current-time-scrubber-controller::before {
+.current-time-scrubber-area::before {
   content: "";
   cursor: col-resize;
   height: var(--devtools-toolbar-height);
