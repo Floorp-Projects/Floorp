@@ -23,6 +23,7 @@ using namespace mozilla;
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, dom::Element* aElement)
   : mContent(aElement),
     mColumns(aColumns),
+    mIndex(0),
     mPrevious(nullptr)
 {
   NS_ASSERTION(aElement &&
