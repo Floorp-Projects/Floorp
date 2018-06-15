@@ -2175,6 +2175,8 @@ class MediaPipelineReceiveVideo::PipelineListener
 public:
   explicit PipelineListener(dom::MediaStreamTrack* aTrack)
     : GenericReceiveListener(aTrack)
+    , mWidth(0)
+    , mHeight(0)
     , mImageContainer(
         LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS))
     , mMutex("Video PipelineListener")
