@@ -481,6 +481,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Number of zones which may be operated on by helper threads.
     mozilla::Atomic<size_t> numActiveHelperThreadZones;
 
+    // Any GC activity affecting the heap.
+    mozilla::Atomic<JS::HeapState> heapState_;
+
     friend class js::AutoLockForExclusiveAccess;
     friend class js::AutoLockScriptData;
 
@@ -507,6 +510,10 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         return scriptDataLock.ownedByCurrentThread();
     }
 #endif
+
+    JS::HeapState heapState() const {
+        return heapState_;
+    }
 
     // How many realms there are across all zones. This number includes
     // off-thread context realms, so it isn't necessarily equal to the

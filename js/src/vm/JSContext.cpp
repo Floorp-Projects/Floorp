@@ -1242,7 +1242,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #endif
     autoFlushICache_(nullptr),
     dtoaState(nullptr),
-    heapState(JS::HeapState::Idle),
     suppressGC(0),
 #ifdef DEBUG
     ionCompiling(false),

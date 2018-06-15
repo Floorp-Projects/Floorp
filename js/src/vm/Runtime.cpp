@@ -132,6 +132,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     activeThreadHasScriptDataAccess(false),
 #endif
     numActiveHelperThreadZones(0),
+    heapState_(JS::HeapState::Idle),
     numRealms(0),
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
