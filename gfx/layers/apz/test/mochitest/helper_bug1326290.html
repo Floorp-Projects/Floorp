@@ -22,37 +22,20 @@
 
 function* test(testDriver) {
   var scrollableDiv = document.getElementById('scrollable');
-  var boundingClientRect = scrollableDiv.getBoundingClientRect();
-  var verticalScrollbarWidth = boundingClientRect.width - scrollableDiv.clientWidth;
-  if (verticalScrollbarWidth == 0) {
+  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
+
+  var scrolled = yield* dragVerticalScrollbar(scrollableDiv, testDriver);
+  if (!scrolled) {
     ok(true, "No scrollbar, can't do this test");
     return;
   }
-  var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
-  var mouseX = scrollableDiv.clientWidth + (verticalScrollbarWidth / 2);
-  var mouseY = upArrowHeight + 5; // start dragging somewhere in the thumb
-
-  scrollableDiv.addEventListener('scroll', () => setTimeout(testDriver, 0), {once: true});
-
-  dump("Starting drag at " + mouseX + ", " + mouseY + " from top-left of scrollableDiv\n");
-
-  // Move the mouse to the scrollbar thumb and drag it down
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
-  // mouse down
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseDownEventMsg(), testDriver);
-  // drag vertically by 20px, in 5px increments
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY + 5, nativeMouseMoveEventMsg(), testDriver);
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY + 10, nativeMouseMoveEventMsg(), testDriver);
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY + 15, nativeMouseMoveEventMsg(), testDriver);
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY + 20, nativeMouseMoveEventMsg(), testDriver);
-  // and release
-  yield synthesizeNativeMouseEvent(scrollableDiv, mouseX, mouseY + 20, nativeMouseUpEventMsg());
 
   // the events above might be stuck in APZ input queue for a bit until the
   // layer is activated, so we wait here until the scroll event listener is
-  // triggered. We do this by not passing testDriver to the mouse-up synth
-  // function above.
+  // triggered.
+  yield;
 
+  // Flush everything just to be safe
   yield flushApzRepaints(testDriver);
 
   // After dragging the scrollbar 20px on a 200px-high scrollable div, we should
