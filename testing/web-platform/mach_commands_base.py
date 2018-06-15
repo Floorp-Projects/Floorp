@@ -7,7 +7,7 @@ import sys
 
 def create_parser_wpt():
     from wptrunner import wptcommandline
-    return wptcommandline.create_parser(["firefox", "chrome", "edge", "servo"])
+    return wptcommandline.create_parser(["fennec", "firefox", "chrome", "edge", "servo"])
 
 
 class WebPlatformTestsRunner(object):
@@ -20,6 +20,9 @@ class WebPlatformTestsRunner(object):
         from wptrunner import wptrunner
         if kwargs["product"] in ["firefox", None]:
             kwargs = self.setup.kwargs_firefox(kwargs)
+        elif kwargs["product"] == "fennec":
+            from wptrunner import wptcommandline
+            kwargs = wptcommandline.check_args(self.setup.kwargs_common(kwargs))
         elif kwargs["product"] in ("chrome", "edge", "servo"):
             kwargs = self.setup.kwargs_wptrun(kwargs)
         else:
