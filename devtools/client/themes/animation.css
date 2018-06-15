@@ -114,33 +114,21 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   width: calc(100% + 1px);
 }
 
-.current-time-scrubber {
+.indication-bar.current-time-scrubber {
   cursor: col-resize;
-  height: 100%;
   margin-left: -6px;
   pointer-events: auto;
-  position: absolute;
   width: 12px;
 }
 
-.current-time-scrubber::before {
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid var(--scrubber-color);
-  content: "";
-  position: absolute;
-  top: 0;
-  width: 0;
+.indication-bar.current-time-scrubber::before {
+  border-top-color: var(--scrubber-color);
+  left: 0;
 }
 
-.current-time-scrubber::after {
-  border-left: 1px solid var(--scrubber-color);
-  content: "";
-  height: 100%;
+.indication-bar.current-time-scrubber::after {
+  border-left-color: var(--scrubber-color);
   left: 5px;
-  position: absolute;
-  top: 0;
-  width: 0;
 }
 
 /* Animation Item */
