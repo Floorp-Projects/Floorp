@@ -36,6 +36,8 @@ nsPrintSettings::nsPrintSettings() :
   mPrintReversed(false),
   mPrintInColor(true),
   mOrientation(kPortraitOrientation),
+  mResolution(0),
+  mDuplex(0),
   mNumCopies(1),
   mPrintToFile(false),
   mOutputFormat(kOutputFormatNative),
