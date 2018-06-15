@@ -251,18 +251,12 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<DOMMozPromiseRequestHolder<GenericPromise>> holder =
-    new DOMMozPromiseRequestHolder<GenericPromise>(global);
-
-  mInner->Unregister()->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [outer, holder] (bool aSuccess) {
-      holder->Complete();
+  mInner->Unregister(
+    [outer] (bool aSuccess) {
       outer->MaybeResolve(aSuccess);
-    }, [outer, holder] (nsresult aRv) {
-      holder->Complete();
+    }, [outer] (ErrorResult& aRv) {
       outer->MaybeReject(aRv);
-    })->Track(*holder);
+    });
 
   return outer.forget();
 }
