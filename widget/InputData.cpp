@@ -66,6 +66,9 @@ SingleTouchData::SingleTouchData(int32_t aIdentifier,
 }
 
 SingleTouchData::SingleTouchData()
+  : mIdentifier(0)
+  , mRotationAngle(0.0)
+  , mForce(0.0)
 {
 }
 
@@ -91,6 +94,7 @@ MultiTouchInput::MultiTouchInput(MultiTouchType aType, uint32_t aTime,
 
 MultiTouchInput::MultiTouchInput()
   : InputData(MULTITOUCH_INPUT)
+  , mType(MULTITOUCH_START)
   , mHandledByAPZ(false)
 {
 }
@@ -491,6 +495,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
 PanGestureInput::PanGestureInput()
   : InputData(PANGESTURE_INPUT)
+  , mType(PANGESTURE_MAYSTART)
   , mLineOrPageDeltaX(0)
   , mLineOrPageDeltaY(0)
   , mUserDeltaMultiplierX(1.0)
@@ -591,6 +596,7 @@ PanGestureInput::UserMultipliedLocalPanDisplacement() const
 
 PinchGestureInput::PinchGestureInput()
   : InputData(PINCHGESTURE_INPUT)
+  , mType(PINCHGESTURE_START)
 {
 }
 
@@ -640,6 +646,7 @@ PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransfo
 
 TapGestureInput::TapGestureInput()
   : InputData(TAPGESTURE_INPUT)
+  , mType(TAPGESTURE_LONG)
 {
 }
 
@@ -676,7 +683,11 @@ TapGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform
 
 ScrollWheelInput::ScrollWheelInput()
   : InputData(SCROLLWHEEL_INPUT)
+  , mDeltaType(SCROLLDELTA_LINE)
+  , mScrollMode(SCROLLMODE_INSTANT)
   , mHandledByAPZ(false)
+  , mDeltaX(0.0)
+  , mDeltaY(0.0)
   , mLineOrPageDeltaX(0)
   , mLineOrPageDeltaY(0)
   , mScrollSeriesNumber(0)
@@ -862,6 +873,7 @@ KeyboardInput::KeyboardInput(const WidgetKeyboardEvent& aEvent)
 
 KeyboardInput::KeyboardInput()
   : InputData(KEYBOARD_INPUT)
+  , mType(KEY_DOWN)
   , mKeyCode(0)
   , mCharCode(0)
   , mHandledByAPZ(false)
