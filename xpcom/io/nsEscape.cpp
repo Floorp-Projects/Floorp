@@ -319,7 +319,6 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
   bool ignoreAscii = !!(aFlags & esc_OnlyNonASCII);
   bool writing = !!(aFlags & esc_AlwaysCopy);
   bool colon = !!(aFlags & esc_Colon);
-  bool spaces = !!(aFlags & esc_Spaces);
 
   auto src = reinterpret_cast<const unsigned_char_type*>(aPart);
 
@@ -357,12 +356,12 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
     // And, we should escape the '|' character when it occurs after any
     // non-ASCII character as it may be aPart of a multi-byte character.
     //
-    // 0x20..0x7e are the valid ASCII characters.
+    // 0x20..0x7e are the valid ASCII characters. We also escape spaces
+    // (0x20) since they are not legal in URLs.
     if ((dontNeedEscape(c, aFlags) || (c == HEX_ESCAPE && !forced)
          || (c > 0x7f && ignoreNonAscii)
-         || (c >= 0x20 && c < 0x7f && ignoreAscii))
+         || (c > 0x20 && c < 0x7f && ignoreAscii))
         && !(c == ':' && colon)
-        && !(c == ' ' && spaces)
         && !(previousIsNonASCII && c == '|' && !ignoreNonAscii)) {
       if (writing) {
         tempBuffer[tempBufferPos++] = c;
