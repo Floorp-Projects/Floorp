@@ -25,6 +25,12 @@ typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult, fal
 typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, CopyableErrorResult, false>
         ServiceWorkerRegistrationListPromise;
 
+typedef std::function<void (const ServiceWorkerRegistrationDescriptor&)>
+        ServiceWorkerRegistrationCallback;
+
+typedef std::function<void (ErrorResult&)>
+        ServiceWorkerFailureCallback;
+
 bool
 ServiceWorkerParentInterceptEnabled();
 
