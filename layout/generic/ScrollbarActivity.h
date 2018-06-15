@@ -20,6 +20,7 @@ class nsITimer;
 namespace mozilla {
 
 namespace dom {
+class Element;
 class EventTarget;
 } // namespace dom
 
