@@ -375,7 +375,7 @@ js::UncheckedUnwrapWithoutExpose(JSObject* wrapped)
 JS_FRIEND_API(JSObject*)
 js::UncheckedUnwrap(JSObject* wrapped, bool stopAtWindowProxy, unsigned* flagsp)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(wrapped->runtimeFromAnyThread()));
 
     unsigned flags = 0;
@@ -407,7 +407,7 @@ js::CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy)
 JS_FRIEND_API(JSObject*)
 js::UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(obj->runtimeFromAnyThread()));
 
     if (!obj->is<WrapperObject>() ||

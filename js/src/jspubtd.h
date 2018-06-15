@@ -118,43 +118,43 @@ enum class HeapState {
 };
 
 JS_PUBLIC_API(HeapState)
-CurrentThreadHeapState();
+RuntimeHeapState();
 
 static inline bool
-CurrentThreadIsHeapBusy()
+RuntimeHeapIsBusy()
 {
-    return CurrentThreadHeapState() != HeapState::Idle;
+    return RuntimeHeapState() != HeapState::Idle;
 }
 
 static inline bool
-CurrentThreadIsHeapTracing()
+RuntimeHeapIsTracing()
 {
-    return CurrentThreadHeapState() == HeapState::Tracing;
+    return RuntimeHeapState() == HeapState::Tracing;
 }
 
 static inline bool
-CurrentThreadIsHeapMajorCollecting()
+RuntimeHeapIsMajorCollecting()
 {
-    return CurrentThreadHeapState() == HeapState::MajorCollecting;
+    return RuntimeHeapState() == HeapState::MajorCollecting;
 }
 
 static inline bool
-CurrentThreadIsHeapMinorCollecting()
+RuntimeHeapIsMinorCollecting()
 {
-    return CurrentThreadHeapState() == HeapState::MinorCollecting;
+    return RuntimeHeapState() == HeapState::MinorCollecting;
 }
 
 static inline bool
-CurrentThreadIsHeapCollecting()
+RuntimeHeapIsCollecting()
 {
-    HeapState state = CurrentThreadHeapState();
+    HeapState state = RuntimeHeapState();
     return state == HeapState::MajorCollecting || state == HeapState::MinorCollecting;
 }
 
 static inline bool
-CurrentThreadIsHeapCycleCollecting()
+RuntimeHeapIsCycleCollecting()
 {
-    return CurrentThreadHeapState() == HeapState::CycleCollecting;
+    return RuntimeHeapState() == HeapState::CycleCollecting;
 }
 
 // Decorates the Unlinking phase of CycleCollection so that accidental use

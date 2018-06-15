@@ -1734,7 +1734,7 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
 void
 GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
     AutoUnlockGC unlock(lock);
     AutoStopVerifyingBarriers pauseVerification(rt, false);
     marker.setMaxCapacity(limit);
@@ -3330,7 +3330,7 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
         return false;
 
     /* GC is already running. */
-    if (JS::CurrentThreadIsHeapCollecting())
+    if (JS::RuntimeHeapIsCollecting())
         return false;
 
     JS::PrepareForFullGC(rt->mainContextFromOwnThread());
@@ -3347,7 +3347,7 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock)
         return;
     }
 
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
     size_t usedBytes = zone->usage.gcBytes();
     size_t thresholdBytes = zone->threshold.gcTriggerBytes();
@@ -3394,7 +3394,7 @@ GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason, size_t used, s
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     /* GC is already running. */
-    if (JS::CurrentThreadIsHeapBusy())
+    if (JS::RuntimeHeapIsBusy())
         return false;
 
 #ifdef JS_GC_ZEAL
@@ -3454,7 +3454,7 @@ GCRuntime::triggerFullGCForAtoms(JSContext* cx)
 {
     MOZ_ASSERT(fullGCForAtomsRequested_);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
     MOZ_ASSERT(cx->canCollectAtoms());
     fullGCForAtomsRequested_ = false;
     MOZ_RELEASE_ASSERT(triggerGC(JS::gcreason::DELAYED_ATOMS_GC));
@@ -3705,7 +3705,7 @@ GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones)
 void
 GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     AutoLockGC lock(rt);
     blocksToFreeAfterSweeping.ref().transferUnusedFrom(lifo);
 }
@@ -3713,7 +3713,7 @@ GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo)
 void
 GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     AutoLockGC lock(rt);
     blocksToFreeAfterSweeping.ref().transferFrom(lifo);
 }
@@ -5893,7 +5893,7 @@ GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoTraceSession& sessio
     /*
      * Sweep phase.
      *
-     * Finalize as we sweep, outside of lock but with CurrentThreadIsHeapBusy()
+     * Finalize as we sweep, outside of lock but with RuntimeHeapIsBusy()
      * true so that any attempt to allocate a GC-thing from a finalizer will
      * fail, rather than nest badly and leave the unmarked newborn to be swept.
      */
@@ -6893,12 +6893,12 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
 
 AutoTraceSession::~AutoTraceSession()
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     runtime->heapState_ = prevState;
 }
 
 JS_PUBLIC_API(JS::HeapState)
-JS::CurrentThreadHeapState()
+JS::RuntimeHeapState()
 {
     return TlsContext.get()->runtime()->heapState();
 }
@@ -7638,7 +7638,7 @@ GCRuntime::checkCanCallAPI()
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
-    MOZ_RELEASE_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_RELEASE_ASSERT(!JS::RuntimeHeapIsBusy());
 
     MOZ_ASSERT(rt->mainContextFromOwnThread()->isAllocAllowed());
 }
@@ -7895,7 +7895,7 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock)
 void
 GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
 
     MOZ_ASSERT_IF(reason == JS::gcreason::EVICT_NURSERY,
                   !rt->mainContextFromOwnThread()->suppressGC);
@@ -8294,7 +8294,7 @@ GCRuntime::runDebugGC()
 void
 GCRuntime::setFullCompartmentChecks(bool enabled)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
     fullCompartmentChecks = enabled;
 }
 
@@ -8314,7 +8314,7 @@ GCRuntime::notifyRootsRemoved()
 bool
 GCRuntime::selectForMarking(JSObject* object)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
     return selectedForMarking.ref().append(object);
 }
 
@@ -8327,7 +8327,7 @@ GCRuntime::clearSelectedForMarking()
 void
 GCRuntime::setDeterministic(bool enabled)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
     deterministicOnly = enabled;
 }
 #endif
@@ -8502,20 +8502,20 @@ JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSRuntime* rt)
   : runtime_(rt)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
     runtime_->heapState_ = HeapState::CycleCollecting;
 }
 
 JS::AutoEnterCycleCollection::~AutoEnterCycleCollection()
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapCycleCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsCycleCollecting());
     runtime_->heapState_ = HeapState::Idle;
 }
 
 JS::AutoAssertGCCallback::AutoAssertGCCallback()
   : AutoSuppressGCAnalysis()
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
 }
 
 #endif // DEBUG
@@ -8810,7 +8810,7 @@ JS::IsIncrementalGCInProgress(JSRuntime* rt)
 JS_PUBLIC_API(bool)
 JS::IsIncrementalBarrierNeeded(JSContext* cx)
 {
-    if (JS::CurrentThreadIsHeapBusy())
+    if (JS::RuntimeHeapIsBusy())
         return false;
 
     auto state = cx->runtime()->gc.state();
@@ -8823,7 +8823,7 @@ JS::IncrementalPreWriteBarrier(JSObject* obj)
     if (!obj)
         return;
 
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
     JSObject::writeBarrierPre(obj);
 }
 
@@ -8837,7 +8837,7 @@ JS::IncrementalReadBarrier(GCCellPtr thing)
     if (!thing)
         return;
 
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
     DispatchTyped(IncrementalReadBarrierFunctor(), thing);
 }
 
@@ -9205,7 +9205,7 @@ js::gc::detail::CellIsNotGray(const Cell* cell)
 
     // TODO: I'd like to AssertHeapIsIdle() here, but this ends up getting
     // called during GC and while iterating the heap for memory reporting.
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
     auto tc = &cell->asTenured();
     if (!detail::CellIsMarkedGray(tc))

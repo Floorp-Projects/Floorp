@@ -226,7 +226,7 @@ class Zone : public JS::shadow::Zone,
 
     bool hasMarkedRealms();
 
-    void scheduleGC() { MOZ_ASSERT(!CurrentThreadIsHeapBusy()); gcScheduled_ = true; }
+    void scheduleGC() { MOZ_ASSERT(!RuntimeHeapIsBusy()); gcScheduled_ = true; }
     void unscheduleGC() { gcScheduled_ = false; }
     bool isGCScheduled() { return gcScheduled_; }
 
@@ -238,7 +238,7 @@ class Zone : public JS::shadow::Zone,
     bool canCollect();
 
     void changeGCState(GCState prev, GCState next) {
-        MOZ_ASSERT(CurrentThreadIsHeapBusy());
+        MOZ_ASSERT(RuntimeHeapIsBusy());
         MOZ_ASSERT(gcState() == prev);
         MOZ_ASSERT_IF(next != NoGC, canCollect());
         gcState_ = next;
@@ -250,7 +250,7 @@ class Zone : public JS::shadow::Zone,
     }
 
     bool isCollectingFromAnyThread() const {
-        if (CurrentThreadIsHeapCollecting())
+        if (RuntimeHeapIsCollecting())
             return gcState_ != NoGC;
         else
             return needsIncrementalBarrier();
@@ -260,7 +260,7 @@ class Zone : public JS::shadow::Zone,
     // tracer.
     bool requireGCTracer() const {
         JSRuntime* rt = runtimeFromAnyThread();
-        return CurrentThreadIsHeapMajorCollecting() && !rt->gc.isHeapCompacting() && gcState_ != NoGC;
+        return RuntimeHeapIsMajorCollecting() && !rt->gc.isHeapCompacting() && gcState_ != NoGC;
     }
 
     bool shouldMarkInZone() const {

@@ -1149,7 +1149,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
         return true;
     }
 
-    if (JS::CurrentThreadIsHeapBusy() || !cx->isAllocAllowed()) {
+    if (JS::RuntimeHeapIsBusy() || !cx->isAllocAllowed()) {
         UniqueChars source = JS_smprintf("<value>");
         if (!source) {
             ReportOutOfMemory(cx);
