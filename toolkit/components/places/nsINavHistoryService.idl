@@ -575,12 +575,6 @@ interface nsINavHistoryResult : nsISupports
   attribute unsigned short sortingMode;
 
   /**
-   * The annotation to use in SORT_BY_ANNOTATION_* sorting modes, set this
-   * before setting the sortingMode attribute.
-   */
-  attribute AUTF8String sortingAnnotation;
-
-  /**
    * Whether or not notifications on result changes are suppressed.
    * Initially set to false.
    *
@@ -1004,8 +998,6 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_LASTMODIFIED_DESCENDING = 14;
   const unsigned short SORT_BY_TAGS_ASCENDING = 17;
   const unsigned short SORT_BY_TAGS_DESCENDING = 18;
-  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 19;
-  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 20;
   const unsigned short SORT_BY_FRECENCY_ASCENDING = 21;
   const unsigned short SORT_BY_FRECENCY_DESCENDING = 22;
 
@@ -1083,11 +1075,6 @@ interface nsINavHistoryQueryOptions : nsISupports
    * mode is one of SORT_BY_*
    */
   attribute unsigned short sortingMode;
-
-  /**
-   * The annotation to use in SORT_BY_ANNOTATION_* sorting modes.
-   */
-  attribute AUTF8String sortingAnnotation;
 
   /**
    * Sets the result type. One of RESULT_TYPE_* which includes how URIs are
