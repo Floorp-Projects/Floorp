@@ -13,7 +13,9 @@ body {
   width: 400px;
   grid-gap: 10px;
   grid-template-columns: 100px 1fr 1fr 100px;
-  background-color: #f00;
+}
+.oh {
+  overflow: hidden;
 }
 .box {
   background-color: #444;
@@ -27,25 +29,51 @@ body {
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
-  var wrapper = document.getElementById("wrapper");
-  var boxA = document.getElementById("boxA");
+  // Test 1: elements styled with display:grid
+  let idsWithGrid = [
+    "gridDiv",
+    "gridFieldset",
+    "gridButton",
+    "gridDivOh",
+    "gridFieldsetOh",
+    "gridButtonOh",
+  ];
 
-  // test function existence
-  is(typeof(wrapper.getGridFragments), "function",
-    "getGridFragments function exists."
-  );
+  for (let id of idsWithGrid) {
+    let wrapper = document.getElementById(id);
 
-  // test that display:grid elements have grids and display:block elements don't
-  is(boxA.getGridFragments().length, 0, "No grid on display:block styled objects.");
-  is(wrapper.getGridFragments().length, 1,
-    "One grid on an un-fragmented display:grid styled object."
-  );
+    // test function existence
+    is(typeof(wrapper.getGridFragments), "function",
+      id + ": getGridFragments function exists."
+    );
 
-  if (wrapper.getGridFragments().length == 1) {
-    var grid = wrapper.getGridFragments()[0];
+    // test that wrapper has one grid
+    let gridFragments = wrapper.getGridFragments();
+    is(gridFragments.length, 1,
+      id + ": one grid on an un-fragmented display:grid styled element."
+    );
 
-    isnot(typeof(grid.cols), "undefined", "Grid.cols property exists.");
-    isnot(typeof(grid.rows), "undefined", "Grid.rows property exists.");
+    // test that the grid has cols and rows properties
+    if (gridFragments.length > 0) {
+      let grid = gridFragments[0];
+      isnot(typeof(grid.cols), "undefined", id + ": Grid.cols property exists.");
+      isnot(typeof(grid.rows), "undefined", id + ": Grid.rows property exists.");
+    }
+  }
+
+  // Test 2: elements styled without display:grid
+  let idsWithoutGrid = [
+    "boxA"
+  ];
+
+  for (let id of idsWithoutGrid) {
+    let wrapper = document.getElementById(id);
+
+    // test that wrapper has no grid
+    let gridFragments = wrapper.getGridFragments();
+    is(gridFragments.length, 0,
+      id + ": no grid on element."
+    );
   }
 
   SimpleTest.finish();
@@ -54,16 +82,33 @@ function runTests() {
 </head>
 <body onLoad="runTests();">
 
-  <div id="wrapper" class="wrapper">
-    <div id="boxA" class="box a">A</div>
-    <div class="box b">B</div>
-    <div class="box c">C</div>
-    <div class="box d">D</div>
-    <div class="box e">E</div>
-    <div class="box f">F</div>
-    <div class="box g">G</div>
-    <div class="box h">H</div>
+  <div id="gridDiv" class="wrapper">
+    <div id="boxA" class="box">A</div>
   </div>
+
+  <fieldset id="gridFieldset" class="wrapper">
+  <legend>a fieldset</legend>
+  <label for="name">name</label>
+  <input id="name">
+  </fieldset>
+
+  <button id="gridButton" class="wrapper">
+  <span style="grid-row:2">test</span>
+  </button>
+
+  <div id="gridDivOh" class="wrapper oh">
+    <div id="boxAOh" class="box">A</div>
+  </div>
+
+  <fieldset id="gridFieldsetOh" class="wrapper oh">
+  <legend>a fieldset</legend>
+  <label for="nameOh">name</label>
+  <input id="nameOh">
+  </fieldset>
+
+  <button id="gridButtonOh" class="wrapper oh">
+  <span style="grid-row:2">test</span>
+  </button>
 
 </body>
 </html>
