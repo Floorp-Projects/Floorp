@@ -123,6 +123,7 @@ private:
           : nsInputStreamWrapper(desc, off)
           , mReadBuffer(nullptr)
           , mReadBufferLen(0)
+          , mZstream{}
           , mStreamInitialized(false)
           , mStreamEnded(false)
          {
@@ -203,6 +204,7 @@ private:
           : nsOutputStreamWrapper(desc, off)
           , mWriteBuffer(nullptr)
           , mWriteBufferLen(0)
+          , mZstream{}
           , mStreamInitialized(false)
           , mStreamEnded(false)
           , mUncompressedCount(0)

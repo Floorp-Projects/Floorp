@@ -43,6 +43,8 @@ public:
                        const char16_t *user,
                        const char16_t *password)
         : mUser(nullptr)
+        , mPass{ nullptr }
+        , mDomain{ nullptr }
     {
         DebugOnly<nsresult> rv = Set(domain, user, password);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -106,6 +108,8 @@ private:
         : mRoot(nullptr)
         , mTail(nullptr)
         , mRealm(nullptr)
+        , mCreds{ nullptr }
+        , mChallenge{ nullptr }
     {
         DebugOnly<nsresult> rv = Set(path, realm, creds, challenge, ident, metadata);
         MOZ_ASSERT(NS_SUCCEEDED(rv));

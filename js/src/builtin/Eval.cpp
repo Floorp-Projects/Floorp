@@ -222,8 +222,7 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
     MOZ_ASSERT_IF(evalType == INDIRECT_EVAL, IsGlobalLexicalEnvironment(env));
     AssertInnerizedEnvironmentChain(cx, *env);
 
-    Rooted<GlobalObject*> envGlobal(cx, &env->global());
-    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, envGlobal)) {
+    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, cx->global())) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }
@@ -325,8 +324,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
 {
     AssertInnerizedEnvironmentChain(cx, *env);
 
-    Rooted<GlobalObject*> envGlobal(cx, &env->global());
-    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, envGlobal)) {
+    if (!GlobalObject::isRuntimeCodeGenEnabled(cx, cx->global())) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
     }
@@ -401,8 +399,7 @@ js::IndirectEval(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Rooted<GlobalObject*> global(cx, &args.callee().global());
-    RootedObject globalLexical(cx, &global->lexicalEnvironment());
+    RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
 
     // Note we'll just pass |undefined| here, then return it directly (or throw
     // if runtime codegen is disabled), if no argument is provided.

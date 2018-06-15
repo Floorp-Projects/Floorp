@@ -12914,17 +12914,6 @@
     "description": "The time duration from tab's media was blocked to unblocked. Now we record from 1 to 90 seconds, but the record by milliseconds, so the bucket is like [1000ms, 2000ms], [2000ms, 3000ms], e.t.c.",
     "releaseChannelCollection": "opt-out"
   },
-  "MAIN_THREAD_RUNNABLE_MS": {
-    "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["wmccloskey@mozilla.com", "farre@mozilla.com"],
-    "expires_in_version": "70",
-    "kind": "exponential",
-    "keyed": true,
-    "high": 10000,
-    "n_buckets": 10,
-    "bug_numbers": [1331804],
-    "description": "The time a given main thread runnable took to run (in milliseconds). The key comes from the runnables nsINamed::name value."
-  },
   "MOZ_CHUNKED_ARRAYBUFFER_IN_XHR": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["amarchesini@mozilla.com"],
@@ -13262,16 +13251,6 @@
     "bug_numbers": [1345540],
     "description": "Time (ms) for the APZ handled wheel event spent in handlers."
   },
-  "TIME_BETWEEN_UNLABELED_RUNNABLES_MS": {
-    "record_in_processes": ["content"],
-    "alert_emails": ["wmccloskey@mozilla.com", "farre@mozilla.com"],
-    "expires_in_version": "70",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 30,
-    "bug_numbers": [1351021],
-    "description": "Every time we run an unlabeled runnable, this histogram records the time (in ms) since the last unlabeled runnable ran."
-  },
   "VFC_INVALIDATE_LOCK_WAIT_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["jwwang@mozilla.com"],
@@ -13360,17 +13339,6 @@
     "n_buckets": 40,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend processing sync IPC messages in the receiving process, keyed by message name. Note: only messages that take over 500 microseconds are included in this probe."
-  },
-  "IDLE_RUNNABLE_BUDGET_OVERUSE_MS": {
-    "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "70",
-    "kind": "exponential",
-    "keyed": true,
-    "high": 10000,
-    "n_buckets": 10,
-    "bug_numbers": [1292600],
-    "description": "The time a given runnable exceeds its budget as set in nsIRunnable::SetDeadline (in milliseconds). The key comes from the runnables nsINamed::name value."
   },
   "WEBEXT_BACKGROUND_PAGE_LOAD_MS": {
     "record_in_processes": ["main"],

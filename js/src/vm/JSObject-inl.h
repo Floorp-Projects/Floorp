@@ -391,8 +391,16 @@ SetNewObjectMetadata(JSContext* cx, T* obj)
 } // namespace js
 
 inline js::GlobalObject&
-JSObject::global() const
+JSObject::deprecatedGlobal() const
 {
+    return *realm()->unsafeUnbarrieredMaybeGlobal();
+}
+
+inline js::GlobalObject&
+JSObject::nonCCWGlobal() const
+{
+    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(this));
+
     /*
      * The global is read-barriered so that it is kept live by access through
      * the Realm. When accessed through a JSObject, however, the global will be

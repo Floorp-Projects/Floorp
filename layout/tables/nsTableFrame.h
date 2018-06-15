@@ -34,8 +34,6 @@ class StackingContextHelper;
 }
 } // namespace mozilla
 
-using namespace mozilla;
-
 struct BCPropertyData;
 
 static inline bool

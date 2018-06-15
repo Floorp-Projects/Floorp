@@ -75,6 +75,7 @@ nsFtpState::nsFtpState()
     , mState(FTP_INIT)
     , mNextState(FTP_S_USER)
     , mKeepRunning(true)
+    , mResponseCode(0)
     , mReceivedControlData(false)
     , mTryingCachedControl(false)
     , mRETRFailed(false)
@@ -94,6 +95,8 @@ nsFtpState::nsFtpState()
     , mControlStatus(NS_OK)
     , mDeferredCallbackPending(false)
 {
+    this->mServerAddress.raw.family = 0;
+    this->mServerAddress.inet = {};
     LOG_INFO(("FTP:(%p) nsFtpState created", this));
 
     // make sure handler stays around

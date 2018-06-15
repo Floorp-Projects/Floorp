@@ -2021,7 +2021,7 @@ Shape::dumpSubtree(int level, js::GenericPrinter& out) const
 #endif
 
 static bool
-IsOriginalProto(GlobalObject* global, JSProtoKey key, JSObject& proto)
+IsOriginalProto(GlobalObject* global, JSProtoKey key, NativeObject& proto)
 {
     if (global->getPrototype(key) != ObjectValue(proto))
         return false;
@@ -2051,9 +2051,9 @@ IsOriginalProto(GlobalObject* global, JSProtoKey key, JSObject& proto)
 static JSProtoKey
 GetInitialShapeProtoKey(TaggedProto proto, JSContext* cx)
 {
-    if (proto.isObject() && proto.toObject()->hasStaticPrototype()) {
+    if (proto.isObject() && proto.toObject()->isNative()) {
         GlobalObject* global = cx->global();
-        JSObject& obj = *proto.toObject();
+        NativeObject& obj = proto.toObject()->as<NativeObject>();
         MOZ_ASSERT(global == &obj.global());
 
         if (IsOriginalProto(global, JSProto_Object, obj))
