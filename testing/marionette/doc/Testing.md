@@ -83,7 +83,7 @@ Prerequisites:
     which means you have the AVD you need.
 
 When running tests on Fennec, you can have Marionette runner take care of
-starting Fennec on the emulator, as shown below.
+starting Fennec and an emulator, as shown below.
 
 	% ./mach marionette test --emulator --app fennec
     --avd-home /path/to/.mozbuild/android-device/avd
@@ -93,7 +93,12 @@ starting Fennec on the emulator, as shown below.
 For Fennec tests, if the appropriate `emulator` command is in your `PATH`, you may omit the `--emulator-binary` argument.  See `./mach marionette test -h`
 for additional options.
 
-To connect to Fennec in an already running emulator or on a device, you will need to enable Marionette manually by setting the browser preference 
+Alternately, you can start an emulator yourself and have the Marionette runner
+start Fennec for you:
+
+    % ./mach marionette test --emulator --app='fennec' --address=localhost:2828 --disable-e10s
+
+To connect to an already-running Fennec in an already running emulator or on a device, you will need to enable Marionette manually by setting the browser preference 
 `marionette.enabled` set to true in the Fennec profile.
 
 Make sure port 2828 is forwarded:
