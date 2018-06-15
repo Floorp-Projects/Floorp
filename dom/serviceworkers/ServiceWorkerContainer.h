@@ -49,8 +49,10 @@ public:
     virtual RefPtr<ServiceWorkerRegistrationListPromise>
     GetRegistrations(const ClientInfo& aClientInfo) const = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
-    GetReady(const ClientInfo& aClientInfo) const = 0;
+    virtual void
+    GetReady(const ClientInfo& aClientInfo,
+             ServiceWorkerRegistrationCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };

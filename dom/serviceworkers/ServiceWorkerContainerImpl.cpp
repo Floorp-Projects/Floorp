@@ -117,16 +117,37 @@ ServiceWorkerContainerImpl::GetRegistrations(const ClientInfo& aClientInfo) cons
   return swm->GetRegistrations(aClientInfo);
 }
 
-RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerContainerImpl::GetReady(const ClientInfo& aClientInfo) const
+void
+ServiceWorkerContainerImpl::GetReady(const ClientInfo& aClientInfo,
+                                     ServiceWorkerRegistrationCallback&& aSuccessCB,
+                                     ServiceWorkerFailureCallback&& aFailureCB) const
 {
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (NS_WARN_IF(!swm)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                                             __func__);
+  MOZ_DIAGNOSTIC_ASSERT(mOuter);
+
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  if (NS_WARN_IF(!global)) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
   }
 
-  return swm->WhenReady(aClientInfo);
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (NS_WARN_IF(!swm)) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  auto holder =
+    MakeRefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>>(global);
+
+  swm->WhenReady(aClientInfo)->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [successCB = std::move(aSuccessCB), holder] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      holder->Complete();
+      successCB(aDescriptor);
+    }, [failureCB = std::move(aFailureCB), holder] (const CopyableErrorResult& aResult) {
+      holder->Complete();
+      failureCB(CopyableErrorResult(aResult));
+    })->Track(*holder);
 }
 
 } // namespace dom
