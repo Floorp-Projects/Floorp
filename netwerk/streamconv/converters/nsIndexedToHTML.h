@@ -27,7 +27,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIDIRINDEXLISTENER
 
-    nsIndexedToHTML() = default;
+    nsIndexedToHTML();
 
     nsresult Init(nsIStreamListener *aListener);
 

@@ -419,6 +419,9 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
     mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
     mRequestApproved(false),
     mHasBeenCrossSite(false),
+#ifdef DEBUG
+    mInited(false),
+#endif
     mMutex("nsCORSListenerProxy")
 {
 }

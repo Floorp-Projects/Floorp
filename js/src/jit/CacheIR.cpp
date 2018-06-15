@@ -1111,7 +1111,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     // Take the unwrapped object's global, and wrap in a
     // this-compartment wrapper. This is what will be stored in the IC
     // keep the compartment alive.
-    RootedObject wrappedTargetGlobal(cx_, &unwrapped->global());
+    RootedObject wrappedTargetGlobal(cx_, &unwrapped->deprecatedGlobal());
     if (!cx_->compartment()->wrap(cx_, &wrappedTargetGlobal))
         return false;
 

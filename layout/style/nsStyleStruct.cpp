@@ -2289,6 +2289,7 @@ CachedBorderImageData::GetSubImage(uint8_t aIndex)
 
 nsStyleImage::nsStyleImage()
   : mType(eStyleImageType_Null)
+  , mImage(nullptr)
   , mCropRect(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleImage);

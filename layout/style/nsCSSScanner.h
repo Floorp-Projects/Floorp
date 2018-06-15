@@ -163,7 +163,16 @@ struct nsCSSToken {
 class nsCSSScannerPosition {
   friend class nsCSSScanner;
 public:
-  nsCSSScannerPosition() : mInitialized(false) { }
+  nsCSSScannerPosition()
+    : mOffset(0)
+    , mLineNumber(0)
+    , mLineOffset(0)
+    , mTokenLineNumber(0)
+    , mTokenLineOffset(0)
+    , mTokenOffset(0)
+    , mInitialized(false)
+  {
+  }
 
   uint32_t LineNumber() {
     MOZ_ASSERT(mInitialized);

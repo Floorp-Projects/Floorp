@@ -872,7 +872,15 @@ struct nsCSSShadowItem
   bool mHasColor; // Whether mColor should be used
   bool mInset;
 
-  nsCSSShadowItem() : mHasColor(false) {
+  nsCSSShadowItem()
+    : mXOffset(0)
+    , mYOffset(0)
+    , mRadius(0)
+    , mSpread(0)
+    , mColor(NS_RGB(0, 0, 0))
+    , mHasColor(false)
+    , mInset(false)
+  {
     MOZ_COUNT_CTOR(nsCSSShadowItem);
   }
   ~nsCSSShadowItem() {

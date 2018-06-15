@@ -11,6 +11,7 @@ from session_store_test_case import SessionStoreTestCase
 
 
 class TestSessionStoreWindowsShutdown(SessionStoreTestCase):
+
     def setUp(self):
         super(TestSessionStoreWindowsShutdown, self).setUp(startup_page=3, no_auto_updates=False)
 

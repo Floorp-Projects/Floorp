@@ -675,7 +675,7 @@ JS_FRIEND_API(bool)
 IsFunctionObject(JSObject* obj);
 
 JS_FRIEND_API(bool)
-IsCrossCompartmentWrapper(JSObject* obj);
+IsCrossCompartmentWrapper(const JSObject* obj);
 
 static MOZ_ALWAYS_INLINE JS::Compartment*
 GetObjectCompartment(JSObject* obj)
@@ -743,8 +743,7 @@ extern JS_FRIEND_API(JSObject*)
 GetStaticPrototype(JSObject* obj);
 
 JS_FRIEND_API(bool)
-GetOriginalEval(JSContext* cx, JS::HandleObject scope,
-                JS::MutableHandleObject eval);
+GetRealmOriginalEval(JSContext* cx, JS::MutableHandleObject eval);
 
 inline void*
 GetObjectPrivate(JSObject* obj)

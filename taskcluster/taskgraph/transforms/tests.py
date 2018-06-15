@@ -431,13 +431,9 @@ def set_defaults(config, tests):
         test.setdefault('max-run-time', 3600)
         test.setdefault('reboot', False)
         test.setdefault('virtualization', 'virtual')
-        test.setdefault('run-on-projects', 'built-projects')
-        test.setdefault('chunks', 1)
-        test.setdefault('instance-size', 'default')
         test.setdefault('loopback-audio', False)
         test.setdefault('loopback-video', False)
         test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
-        test.setdefault('max-run-time', 3600)
         test.setdefault('checkout', False)
 
         test['mozharness'].setdefault('extra-options', [])

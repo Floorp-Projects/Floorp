@@ -5178,7 +5178,7 @@ ObjectGlobal(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    obj = ToWindowProxyIfWindow(&obj->global());
+    obj = ToWindowProxyIfWindow(&obj->nonCCWGlobal());
 
     args.rval().setObject(*obj);
     return true;
