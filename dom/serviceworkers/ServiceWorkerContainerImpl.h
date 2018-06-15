@@ -15,16 +15,26 @@ namespace dom {
 // Lightweight serviceWorker APIs collection.
 class ServiceWorkerContainerImpl final : public ServiceWorkerContainer::Inner
 {
-  ~ServiceWorkerContainerImpl() = default;
+  ServiceWorkerContainer* mOuter;
+
+  ~ServiceWorkerContainerImpl();
 
 public:
-  ServiceWorkerContainerImpl() = default;
+  ServiceWorkerContainerImpl();
 
-  RefPtr<ServiceWorkerRegistrationPromise>
+  void
+  AddContainer(ServiceWorkerContainer* aOuter) override;
+
+  void
+  RemoveContainer(ServiceWorkerContainer* aOuter) override;
+
+  void
   Register(const ClientInfo& aClientInfo,
            const nsACString& aScopeURL,
            const nsACString& aScriptURL,
-           ServiceWorkerUpdateViaCache aUpdateViaCache) const override;
+           ServiceWorkerUpdateViaCache aUpdateViaCache,
+           ServiceWorkerRegistrationCallback&& aSuccessCB,
+           ServiceWorkerFailureCallback&& aFailureCB) const override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
   GetRegistration(const ClientInfo& aClientInfo,
