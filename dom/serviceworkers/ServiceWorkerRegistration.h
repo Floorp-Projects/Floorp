@@ -44,8 +44,9 @@ public:
     virtual void
     ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
-    Update() = 0;
+    virtual void
+    Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+           ServiceWorkerFailureCallback&& aFailureCB) = 0;
 
     virtual RefPtr<GenericPromise>
     Unregister() = 0;

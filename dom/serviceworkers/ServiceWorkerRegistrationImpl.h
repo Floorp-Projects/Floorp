@@ -42,8 +42,9 @@ public:
   void
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  Update() override;
+  void
+  Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+         ServiceWorkerFailureCallback&& aFailureCB) override;
 
   RefPtr<GenericPromise>
   Unregister() override;
@@ -109,8 +110,9 @@ public:
   void
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  Update() override;
+  void
+  Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+         ServiceWorkerFailureCallback&& aFailureCB) override;
 
   RefPtr<GenericPromise>
   Unregister() override;
