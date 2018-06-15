@@ -158,7 +158,7 @@ add_task(async function popup_mousedown_no_client_cert_dialog_until_navigate_tes
   is(value, test.completeValue, "The second item has the url we visited.");
 
   let listitem = await waitForAutocompleteResultAt(1);
-  Assert.ok(is_visible(listitem), "The node is there.");
+  Assert.ok(BrowserTestUtils.is_visible(listitem), "The node is there.");
 
   expectingChooseCertificate = false;
   EventUtils.synthesizeMouseAtCenter(listitem, {type: "mousedown"}, window);
