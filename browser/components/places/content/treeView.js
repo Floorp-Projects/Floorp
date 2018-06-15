@@ -1646,7 +1646,6 @@ PlacesTreeView.prototype = {
 
     let oldSort = this._result.sortingMode;
     let newSort;
-    let newSortingAnnotation = "";
     const NHQO = Ci.nsINavHistoryQueryOptions;
     switch (this._getColumnType(aColumn)) {
       case this.COLUMN_TYPE_TITLE:
@@ -1721,7 +1720,6 @@ PlacesTreeView.prototype = {
       default:
         throw Cr.NS_ERROR_INVALID_ARG;
     }
-    this._result.sortingAnnotation = newSortingAnnotation;
     this._result.sortingMode = newSort;
   },
 
