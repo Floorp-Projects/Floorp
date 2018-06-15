@@ -11,7 +11,6 @@ let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
 });
 
@@ -114,7 +113,6 @@ TabListComponent.prototype = {
 
   onOpenTab(url, where, params) {
     this._window.openTrustedLinkIn(url, where, params);
-    BrowserUITelemetry.countSyncedTabEvent("open", "sidebar");
   },
 
   onOpenTabs(urls, where) {
@@ -132,7 +130,6 @@ TabListComponent.prototype = {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
-    BrowserUITelemetry.countSyncedTabEvent("openmultiple", "sidebar");
   },
 
   onCopyTabLocation(url) {

@@ -250,8 +250,7 @@ pub fn start<T, U>(address: SocketAddr,
 
     let api = WebDriverHttpApi::new(extension_routes);
     let http_handler = HttpHandler::new(api, msg_send);
-    let mut server = try!(Server::http(address));
-    server.keep_alive(None);
+    let server = try!(Server::http(address));
 
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
     try!(builder.spawn(move || {

@@ -35,11 +35,6 @@ add_task(async function init() {
 });
 
 add_task(async function telemetry() {
-  await doTest();
-  checkTelemetry("other-" + TEST_ENGINE_NAME);
-});
-
-async function doTest() {
   // Open the popup.
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");
@@ -85,21 +80,4 @@ async function doTest() {
 
   // Move the cursor out of the panel area to avoid messing with other tests.
   await EventUtils.synthesizeNativeMouseMove(searchbar);
-}
-
-function checkTelemetry(expectedEngineName) {
-  let propertyPath = [
-    "countableEvents",
-    "__DEFAULT__",
-    "search-oneoff",
-    expectedEngineName + ".oneoff-context-searchbar",
-    "unknown",
-    "tab-background",
-  ];
-  let telem = BrowserUITelemetry.getToolbarMeasures();
-  for (let prop of propertyPath) {
-    Assert.ok(prop in telem, "Property " + prop + " should be in the telemetry");
-    telem = telem[prop];
-  }
-  Assert.equal(telem, 1, "Click count");
-}
+});

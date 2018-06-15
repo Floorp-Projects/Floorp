@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# NB: IF YOU ADD ITEMS TO THIS FILE, PLEASE UPDATE THE WHITELIST IN
-# BrowserUITelemetry.jsm. SEE BUG 991757 FOR DETAILS.
-
       <menugroup id="context-navigation">
         <menuitem id="context-back"
                   class="menuitem-iconic"

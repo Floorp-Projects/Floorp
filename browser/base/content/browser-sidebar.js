@@ -393,7 +393,6 @@ var SidebarUI = {
       }
 
       this._fireFocusedEvent();
-      BrowserUITelemetry.countSidebarEvent(commandID, "show");
     });
   },
 
@@ -422,10 +421,6 @@ var SidebarUI = {
       if (!sidebarBroadcaster) {
         reject(new Error("Invalid sidebar broadcaster specified: " + commandID));
         return;
-      }
-
-      if (this.isOpen && commandID != this.currentID) {
-        BrowserUITelemetry.countSidebarEvent(this.currentID, "hide");
       }
 
       let broadcasters = document.querySelectorAll("broadcaster[group=sidebar]");
@@ -535,7 +530,6 @@ var SidebarUI = {
     if (triggerNode) {
       updateToggleControlLabel(triggerNode);
     }
-    BrowserUITelemetry.countSidebarEvent(commandID, "hide");
   },
 };
 

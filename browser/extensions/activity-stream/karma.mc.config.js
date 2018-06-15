@@ -104,14 +104,16 @@ module.exports = function(config) {
           },
           {
             test: /\.js$/,
-            exclude: [/node_modules/, /test/],
+            exclude: [/node_modules\/(?!(fluent|fluent-react)\/).*/, /test/],
             use: [{
               loader: "babel-loader",
               options: {
                 plugins: [
                   ["transform-async-to-module-method", {module: "co-task", method: "async"}],
                   "transform-es2015-modules-commonjs",
-                  ["transform-object-rest-spread", {"useBuiltIns": true}]
+                  ["transform-object-rest-spread", {"useBuiltIns": true}],
+                  ["transform-async-to-generator"],
+                  ["transform-async-generator-functions"]
                 ]
               }
             }]

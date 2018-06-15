@@ -10,8 +10,7 @@
 // devtools.
 // It contains various common helper functions.
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC}
-  = Components;
+const { Constructor: CC } = Components;
 
 function scopedCuImport(path) {
   const scope = {};

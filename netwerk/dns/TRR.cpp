@@ -394,7 +394,7 @@ TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec)
 
   RefPtr<nsHostRecord> hostRecord;
   nsresult rv;
-  rv = mHostResolver->GetHostRecord(mHost.get(),
+  rv = mHostResolver->GetHostRecord(mHost,
                                     pushedRec->flags, pushedRec->af,
                                     pushedRec->pb,
                                     pushedRec->originSuffix,
@@ -824,7 +824,7 @@ nsresult
 TRR::ReturnData()
 {
   // create and populate an AddrInfo instance to pass on
-  nsAutoPtr<AddrInfo> ai(new AddrInfo(mHost.get(), mType));
+  nsAutoPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
   DOHaddr *item;
   uint32_t ttl = AddrInfo::NO_TTL_DATA;
   while ((item = static_cast<DOHaddr*>(mDNS.mAddresses.popFirst()))) {
@@ -857,7 +857,7 @@ TRR::FailData()
   }
   // create and populate an TRR AddrInfo instance to pass on to signal that
   // this comes from TRR
-  AddrInfo *ai = new AddrInfo(mHost.get(), mType);
+  AddrInfo *ai = new AddrInfo(mHost, mType);
 
   (void)mHostResolver->CompleteLookup(mRec, NS_ERROR_FAILURE, ai, mPB);
   mHostResolver = nullptr;

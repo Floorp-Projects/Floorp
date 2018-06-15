@@ -95,8 +95,6 @@ jobs:
     symbol: I(pg)
   google-play-strings:
     symbol: I(gps)
-  funsize-balrog-submitter:
-    symbol: I(fbs)
   update-verify:
     symbol: I(uv)
   diffoscope:

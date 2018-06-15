@@ -79,6 +79,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.LocaleList;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
@@ -1920,13 +1921,7 @@ public class GeckoAppShell
         return Integer.parseInt(prop);
     }
 
-    @WrapForJNI
-    public static String getDefaultLocale() {
-        final Locale locale = Locale.getDefault();
-        if (Build.VERSION.SDK_INT >= 21) {
-            return locale.toLanguageTag();
-        }
-
+    private static String getLanguageTag(final Locale locale) {
         final StringBuilder out = new StringBuilder(locale.getLanguage());
         final String country = locale.getCountry();
         final String variant = locale.getVariant();
@@ -1938,5 +1933,27 @@ public class GeckoAppShell
         }
         // e.g. "en", "en-US", or "en-US-POSIX".
         return out.toString();
+    }
+
+    @WrapForJNI
+    public static String[] getDefaultLocales() {
+        // XXX We may have to convert some language codes such as "id" vs "in".
+        if (Build.VERSION.SDK_INT >= 24) {
+            final LocaleList localeList = LocaleList.getDefault();
+            String[] locales = new String[localeList.size()];
+            for (int i = 0; i < localeList.size(); i++) {
+                locales[i] = localeList.get(i).toLanguageTag();
+            }
+            return locales;
+        }
+        String[] locales = new String[1];
+        final Locale locale = Locale.getDefault();
+        if (Build.VERSION.SDK_INT >= 21) {
+            locales[0] = locale.toLanguageTag();
+            return locales;
+        }
+
+        locales[0] = getLanguageTag(locale);
+        return locales;
     }
 }

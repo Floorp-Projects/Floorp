@@ -8,6 +8,7 @@
 #define DNS_h_
 
 #include "nscore.h"
+#include "nsString.h"
 #include "prio.h"
 #include "prnetdb.h"
 #include "plstr.h"
@@ -133,16 +134,16 @@ public:
 
 class AddrInfo {
 public:
-  // Creates an AddrInfo object. It calls the AddrInfo(const char*, const char*)
-  // to initialize the host and the cname.
-  explicit AddrInfo(const char *host, const PRAddrInfo *prAddrInfo, bool disableIPv4,
-                    bool filterNameCollision, const char *cname);
+  // Creates an AddrInfo object.
+  explicit AddrInfo(const nsACString& host, const PRAddrInfo *prAddrInfo,
+           bool disableIPv4, bool filterNameCollision,
+           const nsACString& cname);
 
   // Creates a basic AddrInfo object (initialize only the host, cname and TRR type).
-  explicit AddrInfo(const char *host, const char *cname, unsigned int TRRType);
+  explicit AddrInfo(const nsACString& host, const nsACString& cname, unsigned int TRRType);
 
   // Creates a basic AddrInfo object (initialize only the host and TRR status).
-  explicit AddrInfo(const char *host, unsigned int TRRType);
+  explicit AddrInfo(const nsACString& host, unsigned int TRRType);
   ~AddrInfo();
 
   explicit AddrInfo(const AddrInfo *src); // copy
@@ -151,8 +152,8 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  char *mHostName;
-  char *mCanonicalName;
+  nsCString mHostName;
+  nsCString mCanonicalName;
   uint32_t ttl;
   static const uint32_t NO_TTL_DATA = (uint32_t) -1;
 
@@ -160,7 +161,6 @@ public:
   unsigned int IsTRR() { return mFromTRR; }
 private:
   unsigned int mFromTRR;
-  void Init(const char *host, const char *cname);
 };
 
 // Copies the contents of a PRNetAddr to a NetAddr.

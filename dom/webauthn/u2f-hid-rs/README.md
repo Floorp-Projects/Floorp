@@ -5,7 +5,7 @@
 
 This is a cross-platform library for interacting with U2F Security Key-type devices via Rust.
 
-* **Supported Platforms**: Windows, Linux, and Mac OS X.
+* **Supported Platforms**: Windows, Linux, FreeBSD, and macOS.
 * **Supported HID Transports**: USB.
 * **Supported Protocols**: [FIDO U2F over USB](https://fidoalliance.org/specs/fido-u2f-v1.1-id-20160915/fido-u2f-raw-message-formats-v1.1-id-20160915.html).
 
