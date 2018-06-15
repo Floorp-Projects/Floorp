@@ -12,7 +12,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
   PanelView: "resource:///modules/PanelMultiView.jsm",
   RecentlyClosedTabsAndWindowsMenuUtils: "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
@@ -747,7 +746,6 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
         } else {
           CustomizableUI.hidePanelForNode(item);
         }
-        BrowserUITelemetry.countSyncedTabEvent("open", "toolbarbutton-subview");
       });
       return item;
     },
@@ -804,7 +802,6 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
     forgetButtonCalled(aEvent) {
       let doc = aEvent.target.ownerDocument;
       let group = doc.getElementById("PanelUI-panic-timeSpan");
-      BrowserUITelemetry.countPanicEvent(group.selectedItem.id);
       let itemsToClear = [
         "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads", "offlineApps"
       ];

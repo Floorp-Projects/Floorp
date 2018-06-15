@@ -45,7 +45,7 @@ export class SimpleSnippet extends React.PureComponent {
     return (<SnippetBase {...props} className={className}>
       <img src={safeURI(props.content.icon) || DEFAULT_ICON_PATH} className="icon" />
       <div>
-        {this.renderTitleIcon()} {this.renderTitle()} <p className="body">{props.content.text}</p> {hasLink ? this.renderButton("ASRouterAnchor") : null}
+        {this.renderTitleIcon()} {this.renderTitle()} <p className="body">{props.richText || props.content.text}</p> {hasLink ? this.renderButton("ASRouterAnchor") : null}
       </div>
       {hasButton ? <div>{this.renderButton()}</div> : null}
     </SnippetBase>);

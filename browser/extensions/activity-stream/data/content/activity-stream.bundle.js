@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 23);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -425,6 +425,24 @@ module.exports = ReactRedux;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = safeURI;
+function safeURI(url) {
+  if (!url) {
+    return "";
+  }
+  const { protocol } = new URL(url);
+  const isAllowed = ["http:", "https:", "data:", "resource:", "chrome:"].includes(protocol);
+  if (!isAllowed) {
+    console.warn(`The protocol ${protocol} is not allowed for template URLs.`); // eslint-disable-line no-console
+  }
+  return isAllowed ? url : "";
+}
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 const TOP_SITES_SOURCE = "TOP_SITES";
 /* harmony export (immutable) */ __webpack_exports__["d"] = TOP_SITES_SOURCE;
 
@@ -441,7 +459,7 @@ const MIN_CORNER_FAVICON_SIZE = 16;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -881,20 +899,26 @@ function Theme(prevState = INITIAL_STATE.Theme, action) {
 var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, Theme };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_init_store__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_ImpressionsWrapper_ImpressionsWrapper__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__templates_OnboardingMessage_OnboardingMessage__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_dom__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_dom__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__templates_SimpleSnippet_SimpleSnippet__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_fluent_react__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_lib_init_store__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_ImpressionsWrapper_ImpressionsWrapper__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_fluent__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__templates_OnboardingMessage_OnboardingMessage__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_react_dom__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__template_utils__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__templates_SimpleSnippet_SimpleSnippet__ = __webpack_require__(29);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+
+
 
 
 
@@ -942,7 +966,7 @@ const ASRouterUtils = {
   },
   sendTelemetry(ping) {
     const payload = __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].ASRouterUserEvent(ping);
-    global.sendAsyncMessage(__WEBPACK_IMPORTED_MODULE_1_content_src_lib_init_store__["a" /* OUTGOING_MESSAGE_NAME */], payload);
+    global.sendAsyncMessage(__WEBPACK_IMPORTED_MODULE_2_content_src_lib_init_store__["a" /* OUTGOING_MESSAGE_NAME */], payload);
   }
 };
 /* harmony export (immutable) */ __webpack_exports__["b"] = ASRouterUtils;
@@ -953,7 +977,53 @@ function shouldSendImpressionOnUpdate(nextProps, prevProps) {
   return nextProps.message.id && (!prevProps.message || prevProps.message.id !== nextProps.message.id);
 }
 
-class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComponent {
+function generateMessages(content) {
+  const cx = new __WEBPACK_IMPORTED_MODULE_4_fluent__["b" /* MessageContext */]("en-US");
+  cx.addMessages(`RichTextSnippet = ${content}`);
+  return [cx];
+}
+
+// Elements allowed in snippet content
+const ALLOWED_TAGS = {
+  b: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("b", null),
+  i: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("i", null),
+  u: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("u", null),
+  strong: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("strong", null),
+  em: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("em", null),
+  br: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("br", null)
+};
+
+/**
+ * Transform an object (tag name: {url}) into (tag name: anchor) where the url
+ * is used as href, in order to render links inside a Fluent.Localized component.
+ */
+function convertLinks(links) {
+  if (links) {
+    return Object.keys(links).reduce((acc, linkTag) => {
+      acc[linkTag] = __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("a", { href: Object(__WEBPACK_IMPORTED_MODULE_8__template_utils__["a" /* safeURI */])(links[linkTag].url) });
+      return acc;
+    }, {});
+  }
+
+  return null;
+}
+
+/**
+ * Message wrapper used to sanitize markup and render HTML.
+ */
+function RichText(props) {
+  return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+    __WEBPACK_IMPORTED_MODULE_1_fluent_react__["b" /* Localized */],
+    _extends({ id: "RichTextSnippet" }, ALLOWED_TAGS, convertLinks(props.links)),
+    __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+      "span",
+      null,
+      props.text
+    )
+  );
+}
+
+class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onMessageFromParent = this.onMessageFromParent.bind(this);
@@ -1020,8 +1090,8 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.Pu
   }
 
   renderSnippets() {
-    return __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
-      __WEBPACK_IMPORTED_MODULE_2__components_ImpressionsWrapper_ImpressionsWrapper__["a" /* ImpressionsWrapper */],
+    return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_3__components_ImpressionsWrapper_ImpressionsWrapper__["a" /* ImpressionsWrapper */],
       {
         id: "NEWTAB_FOOTER_BAR",
         message: this.state.message,
@@ -1029,16 +1099,21 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.Pu
         shouldSendImpressionOnUpdate: shouldSendImpressionOnUpdate
         // This helps with testing
         , document: this.props.document },
-      __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_6__templates_SimpleSnippet_SimpleSnippet__["a" /* SimpleSnippet */], _extends({}, this.state.message, {
-        UISurface: "NEWTAB_FOOTER_BAR",
-        getNextMessage: ASRouterUtils.getNextMessage,
-        onBlock: this.onBlockById(this.state.message.id),
-        sendUserActionTelemetry: this.sendUserActionTelemetry }))
+      __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_1_fluent_react__["a" /* LocalizationProvider */],
+        { messages: generateMessages(this.state.message.content.text) },
+        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9__templates_SimpleSnippet_SimpleSnippet__["a" /* SimpleSnippet */], _extends({}, this.state.message, {
+          richText: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(RichText, { text: this.state.message.content.text, links: this.state.message.content.links }),
+          UISurface: "NEWTAB_FOOTER_BAR",
+          getNextMessage: ASRouterUtils.getNextMessage,
+          onBlock: this.onBlockById(this.state.message.id),
+          sendUserActionTelemetry: this.sendUserActionTelemetry }))
+      )
     );
   }
 
   renderOnboarding() {
-    return __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3__templates_OnboardingMessage_OnboardingMessage__["a" /* OnboardingMessage */], _extends({}, this.state.bundle, {
+    return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_5__templates_OnboardingMessage_OnboardingMessage__["a" /* OnboardingMessage */], _extends({}, this.state.bundle, {
       UISurface: "NEWTAB_OVERLAY",
       onAction: ASRouterUtils.executeAction,
       onDoneButton: this.clearBundle(this.state.bundle.bundle),
@@ -1070,11 +1145,11 @@ class ASRouterContent {
 
   _mount() {
     this.containerElement = global.document.getElementById("snippets-container");
-    __WEBPACK_IMPORTED_MODULE_5_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(ASRouterUISurface, null), this.containerElement);
+    __WEBPACK_IMPORTED_MODULE_7_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(ASRouterUISurface, null), this.containerElement);
   }
 
   _unmount() {
-    __WEBPACK_IMPORTED_MODULE_5_react_dom___default.a.unmountComponentAtNode(this.containerElement);
+    __WEBPACK_IMPORTED_MODULE_7_react_dom___default.a.unmountComponentAtNode(this.containerElement);
   }
 
   init() {
@@ -1094,13 +1169,2126 @@ class ASRouterContent {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 8 */
+/* 9 */
+/***/ (function(module, exports) {
+
+module.exports = PropTypes;
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// CONCATENATED MODULE: ./node_modules/fluent/src/parser.js
+/*  eslint no-magic-numbers: [0]  */
+
+const MAX_PLACEABLES = 100;
+
+const entryIdentifierRe = /-?[a-zA-Z][a-zA-Z0-9_-]*/y;
+const identifierRe = /[a-zA-Z][a-zA-Z0-9_-]*/y;
+const functionIdentifierRe = /^[A-Z][A-Z_?-]*$/;
+
+/**
+ * The `Parser` class is responsible for parsing FTL resources.
+ *
+ * It's only public method is `getResource(source)` which takes an FTL string
+ * and returns a two element Array with an Object of entries generated from the
+ * source as the first element and an array of SyntaxError objects as the
+ * second.
+ *
+ * This parser is optimized for runtime performance.
+ *
+ * There is an equivalent of this parser in syntax/parser which is
+ * generating full AST which is useful for FTL tools.
+ */
+class RuntimeParser {
+  /**
+   * Parse FTL code into entries formattable by the MessageContext.
+   *
+   * Given a string of FTL syntax, return a map of entries that can be passed
+   * to MessageContext.format and a list of errors encountered during parsing.
+   *
+   * @param {String} string
+   * @returns {Array<Object, Array>}
+   */
+  getResource(string) {
+    this._source = string;
+    this._index = 0;
+    this._length = string.length;
+    this.entries = {};
+
+    const errors = [];
+
+    this.skipWS();
+    while (this._index < this._length) {
+      try {
+        this.getEntry();
+      } catch (e) {
+        if (e instanceof SyntaxError) {
+          errors.push(e);
+
+          this.skipToNextEntryStart();
+        } else {
+          throw e;
+        }
+      }
+      this.skipWS();
+    }
+
+    return [this.entries, errors];
+  }
+
+  /**
+   * Parse the source string from the current index as an FTL entry
+   * and add it to object's entries property.
+   *
+   * @private
+   */
+  getEntry() {
+    // The index here should either be at the beginning of the file
+    // or right after new line.
+    if (this._index !== 0 && this._source[this._index - 1] !== "\n") {
+      throw this.error(`Expected an entry to start
+        at the beginning of the file or on a new line.`);
+    }
+
+    const ch = this._source[this._index];
+
+    // We don't care about comments or sections at runtime
+    if (ch === "/" || ch === "#" && [" ", "#", "\n"].includes(this._source[this._index + 1])) {
+      this.skipComment();
+      return;
+    }
+
+    if (ch === "[") {
+      this.skipSection();
+      return;
+    }
+
+    this.getMessage();
+  }
+
+  /**
+   * Skip the section entry from the current index.
+   *
+   * @private
+   */
+  skipSection() {
+    this._index += 1;
+    if (this._source[this._index] !== "[") {
+      throw this.error('Expected "[[" to open a section');
+    }
+
+    this._index += 1;
+
+    this.skipInlineWS();
+    this.getVariantName();
+    this.skipInlineWS();
+
+    if (this._source[this._index] !== "]" || this._source[this._index + 1] !== "]") {
+      throw this.error('Expected "]]" to close a section');
+    }
+
+    this._index += 2;
+  }
+
+  /**
+   * Parse the source string from the current index as an FTL message
+   * and add it to the entries property on the Parser.
+   *
+   * @private
+   */
+  getMessage() {
+    const id = this.getEntryIdentifier();
+
+    this.skipInlineWS();
+
+    if (this._source[this._index] === "=") {
+      this._index++;
+    }
+
+    this.skipInlineWS();
+
+    const val = this.getPattern();
+
+    if (id.startsWith("-") && val === null) {
+      throw this.error("Expected term to have a value");
+    }
+
+    let attrs = null;
+
+    if (this._source[this._index] === " ") {
+      const lineStart = this._index;
+      this.skipInlineWS();
+
+      if (this._source[this._index] === ".") {
+        this._index = lineStart;
+        attrs = this.getAttributes();
+      }
+    }
+
+    if (attrs === null && typeof val === "string") {
+      this.entries[id] = val;
+    } else {
+      if (val === null && attrs === null) {
+        throw this.error("Expected message to have a value or attributes");
+      }
+
+      this.entries[id] = {};
+
+      if (val !== null) {
+        this.entries[id].val = val;
+      }
+
+      if (attrs !== null) {
+        this.entries[id].attrs = attrs;
+      }
+    }
+  }
+
+  /**
+   * Skip whitespace.
+   *
+   * @private
+   */
+  skipWS() {
+    let ch = this._source[this._index];
+    while (ch === " " || ch === "\n" || ch === "\t" || ch === "\r") {
+      ch = this._source[++this._index];
+    }
+  }
+
+  /**
+   * Skip inline whitespace (space and \t).
+   *
+   * @private
+   */
+  skipInlineWS() {
+    let ch = this._source[this._index];
+    while (ch === " " || ch === "\t") {
+      ch = this._source[++this._index];
+    }
+  }
+
+  /**
+   * Skip blank lines.
+   *
+   * @private
+   */
+  skipBlankLines() {
+    while (true) {
+      const ptr = this._index;
+
+      this.skipInlineWS();
+
+      if (this._source[this._index] === "\n") {
+        this._index += 1;
+      } else {
+        this._index = ptr;
+        break;
+      }
+    }
+  }
+
+  /**
+   * Get identifier using the provided regex.
+   *
+   * By default this will get identifiers of public messages, attributes and
+   * external arguments (without the $).
+   *
+   * @returns {String}
+   * @private
+   */
+  getIdentifier(re = identifierRe) {
+    re.lastIndex = this._index;
+    const result = re.exec(this._source);
+
+    if (result === null) {
+      this._index += 1;
+      throw this.error(`Expected an identifier [${re.toString()}]`);
+    }
+
+    this._index = re.lastIndex;
+    return result[0];
+  }
+
+  /**
+   * Get identifier of a Message or a Term (staring with a dash).
+   *
+   * @returns {String}
+   * @private
+   */
+  getEntryIdentifier() {
+    return this.getIdentifier(entryIdentifierRe);
+  }
+
+  /**
+   * Get Variant name.
+   *
+   * @returns {Object}
+   * @private
+   */
+  getVariantName() {
+    let name = "";
+
+    const start = this._index;
+    let cc = this._source.charCodeAt(this._index);
+
+    if (cc >= 97 && cc <= 122 || // a-z
+    cc >= 65 && cc <= 90 || // A-Z
+    cc === 95 || cc === 32) {
+      // _ <space>
+      cc = this._source.charCodeAt(++this._index);
+    } else {
+      throw this.error("Expected a keyword (starting with [a-zA-Z_])");
+    }
+
+    while (cc >= 97 && cc <= 122 || // a-z
+    cc >= 65 && cc <= 90 || // A-Z
+    cc >= 48 && cc <= 57 || // 0-9
+    cc === 95 || cc === 45 || cc === 32) {
+      // _- <space>
+      cc = this._source.charCodeAt(++this._index);
+    }
+
+    // If we encountered the end of name, we want to test if the last
+    // collected character is a space.
+    // If it is, we will backtrack to the last non-space character because
+    // the keyword cannot end with a space character.
+    while (this._source.charCodeAt(this._index - 1) === 32) {
+      this._index--;
+    }
+
+    name += this._source.slice(start, this._index);
+
+    return { type: "varname", name };
+  }
+
+  /**
+   * Get simple string argument enclosed in `"`.
+   *
+   * @returns {String}
+   * @private
+   */
+  getString() {
+    const start = this._index + 1;
+
+    while (++this._index < this._length) {
+      const ch = this._source[this._index];
+
+      if (ch === '"') {
+        break;
+      }
+
+      if (ch === "\n") {
+        throw this.error("Unterminated string expression");
+      }
+    }
+
+    return this._source.substring(start, this._index++);
+  }
+
+  /**
+   * Parses a Message pattern.
+   * Message Pattern may be a simple string or an array of strings
+   * and placeable expressions.
+   *
+   * @returns {String|Array}
+   * @private
+   */
+  getPattern() {
+    // We're going to first try to see if the pattern is simple.
+    // If it is we can just look for the end of the line and read the string.
+    //
+    // Then, if either the line contains a placeable opening `{` or the
+    // next line starts an indentation, we switch to complex pattern.
+    const start = this._index;
+    let eol = this._source.indexOf("\n", this._index);
+
+    if (eol === -1) {
+      eol = this._length;
+    }
+
+    const firstLineContent = start !== eol ? this._source.slice(start, eol) : null;
+
+    if (firstLineContent && firstLineContent.includes("{")) {
+      return this.getComplexPattern();
+    }
+
+    this._index = eol + 1;
+
+    this.skipBlankLines();
+
+    if (this._source[this._index] !== " ") {
+      // No indentation means we're done with this message. Callers should check
+      // if the return value here is null. It may be OK for messages, but not OK
+      // for terms, attributes and variants.
+      return firstLineContent;
+    }
+
+    const lineStart = this._index;
+
+    this.skipInlineWS();
+
+    if (this._source[this._index] === ".") {
+      // The pattern is followed by an attribute. Rewind _index to the first
+      // column of the current line as expected by getAttributes.
+      this._index = lineStart;
+      return firstLineContent;
+    }
+
+    if (firstLineContent) {
+      // It's a multiline pattern which started on the same line as the
+      // identifier. Reparse the whole pattern to make sure we get all of it.
+      this._index = start;
+    }
+
+    return this.getComplexPattern();
+  }
+
+  /**
+   * Parses a complex Message pattern.
+   * This function is called by getPattern when the message is multiline,
+   * or contains escape chars or placeables.
+   * It does full parsing of complex patterns.
+   *
+   * @returns {Array}
+   * @private
+   */
+  /* eslint-disable complexity */
+  getComplexPattern() {
+    let buffer = "";
+    const content = [];
+    let placeables = 0;
+
+    let ch = this._source[this._index];
+
+    while (this._index < this._length) {
+      // This block handles multi-line strings combining strings separated
+      // by new line.
+      if (ch === "\n") {
+        this._index++;
+
+        // We want to capture the start and end pointers
+        // around blank lines and add them to the buffer
+        // but only if the blank lines are in the middle
+        // of the string.
+        const blankLinesStart = this._index;
+        this.skipBlankLines();
+        const blankLinesEnd = this._index;
+
+        if (this._source[this._index] !== " ") {
+          break;
+        }
+        this.skipInlineWS();
+
+        if (this._source[this._index] === "}" || this._source[this._index] === "[" || this._source[this._index] === "*" || this._source[this._index] === ".") {
+          this._index = blankLinesEnd;
+          break;
+        }
+
+        buffer += this._source.substring(blankLinesStart, blankLinesEnd);
+
+        if (buffer.length || content.length) {
+          buffer += "\n";
+        }
+        ch = this._source[this._index];
+        continue;
+      } else if (ch === "\\") {
+        const ch2 = this._source[this._index + 1];
+        if (ch2 === '"' || ch2 === "{" || ch2 === "\\") {
+          ch = ch2;
+          this._index++;
+        }
+      } else if (ch === "{") {
+        // Push the buffer to content array right before placeable
+        if (buffer.length) {
+          content.push(buffer);
+        }
+        if (placeables > MAX_PLACEABLES - 1) {
+          throw this.error(`Too many placeables, maximum allowed is ${MAX_PLACEABLES}`);
+        }
+        buffer = "";
+        content.push(this.getPlaceable());
+
+        this._index++;
+
+        ch = this._source[this._index];
+        placeables++;
+        continue;
+      }
+
+      if (ch) {
+        buffer += ch;
+      }
+      this._index++;
+      ch = this._source[this._index];
+    }
+
+    if (content.length === 0) {
+      return buffer.length ? buffer : null;
+    }
+
+    if (buffer.length) {
+      content.push(buffer);
+    }
+
+    return content;
+  }
+  /* eslint-enable complexity */
+
+  /**
+   * Parses a single placeable in a Message pattern and returns its
+   * expression.
+   *
+   * @returns {Object}
+   * @private
+   */
+  getPlaceable() {
+    const start = ++this._index;
+
+    this.skipWS();
+
+    if (this._source[this._index] === "*" || this._source[this._index] === "[" && this._source[this._index + 1] !== "]") {
+      const variants = this.getVariants();
+
+      return {
+        type: "sel",
+        exp: null,
+        vars: variants[0],
+        def: variants[1]
+      };
+    }
+
+    // Rewind the index and only support in-line white-space now.
+    this._index = start;
+    this.skipInlineWS();
+
+    const selector = this.getSelectorExpression();
+
+    this.skipWS();
+
+    const ch = this._source[this._index];
+
+    if (ch === "}") {
+      if (selector.type === "attr" && selector.id.name.startsWith("-")) {
+        throw this.error("Attributes of private messages cannot be interpolated.");
+      }
+
+      return selector;
+    }
+
+    if (ch !== "-" || this._source[this._index + 1] !== ">") {
+      throw this.error('Expected "}" or "->"');
+    }
+
+    if (selector.type === "ref") {
+      throw this.error("Message references cannot be used as selectors.");
+    }
+
+    if (selector.type === "var") {
+      throw this.error("Variants cannot be used as selectors.");
+    }
+
+    if (selector.type === "attr" && !selector.id.name.startsWith("-")) {
+      throw this.error("Attributes of public messages cannot be used as selectors.");
+    }
+
+    this._index += 2; // ->
+
+    this.skipInlineWS();
+
+    if (this._source[this._index] !== "\n") {
+      throw this.error("Variants should be listed in a new line");
+    }
+
+    this.skipWS();
+
+    const variants = this.getVariants();
+
+    if (variants[0].length === 0) {
+      throw this.error("Expected members for the select expression");
+    }
+
+    return {
+      type: "sel",
+      exp: selector,
+      vars: variants[0],
+      def: variants[1]
+    };
+  }
+
+  /**
+   * Parses a selector expression.
+   *
+   * @returns {Object}
+   * @private
+   */
+  getSelectorExpression() {
+    const literal = this.getLiteral();
+
+    if (literal.type !== "ref") {
+      return literal;
+    }
+
+    if (this._source[this._index] === ".") {
+      this._index++;
+
+      const name = this.getIdentifier();
+      this._index++;
+      return {
+        type: "attr",
+        id: literal,
+        name
+      };
+    }
+
+    if (this._source[this._index] === "[") {
+      this._index++;
+
+      const key = this.getVariantKey();
+      this._index++;
+      return {
+        type: "var",
+        id: literal,
+        key
+      };
+    }
+
+    if (this._source[this._index] === "(") {
+      this._index++;
+      const args = this.getCallArgs();
+
+      if (!functionIdentifierRe.test(literal.name)) {
+        throw this.error("Function names must be all upper-case");
+      }
+
+      this._index++;
+
+      literal.type = "fun";
+
+      return {
+        type: "call",
+        fun: literal,
+        args
+      };
+    }
+
+    return literal;
+  }
+
+  /**
+   * Parses call arguments for a CallExpression.
+   *
+   * @returns {Array}
+   * @private
+   */
+  getCallArgs() {
+    const args = [];
+
+    while (this._index < this._length) {
+      this.skipInlineWS();
+
+      if (this._source[this._index] === ")") {
+        return args;
+      }
+
+      const exp = this.getSelectorExpression();
+
+      // MessageReference in this place may be an entity reference, like:
+      // `call(foo)`, or, if it's followed by `:` it will be a key-value pair.
+      if (exp.type !== "ref") {
+        args.push(exp);
+      } else {
+        this.skipInlineWS();
+
+        if (this._source[this._index] === ":") {
+          this._index++;
+          this.skipInlineWS();
+
+          const val = this.getSelectorExpression();
+
+          // If the expression returned as a value of the argument
+          // is not a quote delimited string or number, throw.
+          //
+          // We don't have to check here if the pattern is quote delimited
+          // because that's the only type of string allowed in expressions.
+          if (typeof val === "string" || Array.isArray(val) || val.type === "num") {
+            args.push({
+              type: "narg",
+              name: exp.name,
+              val
+            });
+          } else {
+            this._index = this._source.lastIndexOf(":", this._index) + 1;
+            throw this.error("Expected string in quotes, number.");
+          }
+        } else {
+          args.push(exp);
+        }
+      }
+
+      this.skipInlineWS();
+
+      if (this._source[this._index] === ")") {
+        break;
+      } else if (this._source[this._index] === ",") {
+        this._index++;
+      } else {
+        throw this.error('Expected "," or ")"');
+      }
+    }
+
+    return args;
+  }
+
+  /**
+   * Parses an FTL Number.
+   *
+   * @returns {Object}
+   * @private
+   */
+  getNumber() {
+    let num = "";
+    let cc = this._source.charCodeAt(this._index);
+
+    // The number literal may start with negative sign `-`.
+    if (cc === 45) {
+      num += "-";
+      cc = this._source.charCodeAt(++this._index);
+    }
+
+    // next, we expect at least one digit
+    if (cc < 48 || cc > 57) {
+      throw this.error(`Unknown literal "${num}"`);
+    }
+
+    // followed by potentially more digits
+    while (cc >= 48 && cc <= 57) {
+      num += this._source[this._index++];
+      cc = this._source.charCodeAt(this._index);
+    }
+
+    // followed by an optional decimal separator `.`
+    if (cc === 46) {
+      num += this._source[this._index++];
+      cc = this._source.charCodeAt(this._index);
+
+      // followed by at least one digit
+      if (cc < 48 || cc > 57) {
+        throw this.error(`Unknown literal "${num}"`);
+      }
+
+      // and optionally more digits
+      while (cc >= 48 && cc <= 57) {
+        num += this._source[this._index++];
+        cc = this._source.charCodeAt(this._index);
+      }
+    }
+
+    return {
+      type: "num",
+      val: num
+    };
+  }
+
+  /**
+   * Parses a list of Message attributes.
+   *
+   * @returns {Object}
+   * @private
+   */
+  getAttributes() {
+    const attrs = {};
+
+    while (this._index < this._length) {
+      if (this._source[this._index] !== " ") {
+        break;
+      }
+      this.skipInlineWS();
+
+      if (this._source[this._index] !== ".") {
+        break;
+      }
+      this._index++;
+
+      const key = this.getIdentifier();
+
+      this.skipInlineWS();
+
+      if (this._source[this._index] !== "=") {
+        throw this.error('Expected "="');
+      }
+      this._index++;
+
+      this.skipInlineWS();
+
+      const val = this.getPattern();
+
+      if (val === null) {
+        throw this.error("Expected attribute to have a value");
+      }
+
+      if (typeof val === "string") {
+        attrs[key] = val;
+      } else {
+        attrs[key] = {
+          val
+        };
+      }
+
+      this.skipBlankLines();
+    }
+
+    return attrs;
+  }
+
+  /**
+   * Parses a list of Selector variants.
+   *
+   * @returns {Array}
+   * @private
+   */
+  getVariants() {
+    const variants = [];
+    let index = 0;
+    let defaultIndex;
+
+    while (this._index < this._length) {
+      const ch = this._source[this._index];
+
+      if ((ch !== "[" || this._source[this._index + 1] === "[") && ch !== "*") {
+        break;
+      }
+      if (ch === "*") {
+        this._index++;
+        defaultIndex = index;
+      }
+
+      if (this._source[this._index] !== "[") {
+        throw this.error('Expected "["');
+      }
+
+      this._index++;
+
+      const key = this.getVariantKey();
+
+      this.skipInlineWS();
+
+      const val = this.getPattern();
+
+      if (val === null) {
+        throw this.error("Expected variant to have a value");
+      }
+
+      variants[index++] = { key, val };
+
+      this.skipWS();
+    }
+
+    return [variants, defaultIndex];
+  }
+
+  /**
+   * Parses a Variant key.
+   *
+   * @returns {String}
+   * @private
+   */
+  getVariantKey() {
+    // VariantKey may be a Keyword or Number
+
+    const cc = this._source.charCodeAt(this._index);
+    let literal;
+
+    if (cc >= 48 && cc <= 57 || cc === 45) {
+      literal = this.getNumber();
+    } else {
+      literal = this.getVariantName();
+    }
+
+    if (this._source[this._index] !== "]") {
+      throw this.error('Expected "]"');
+    }
+
+    this._index++;
+    return literal;
+  }
+
+  /**
+   * Parses an FTL literal.
+   *
+   * @returns {Object}
+   * @private
+   */
+  getLiteral() {
+    const cc0 = this._source.charCodeAt(this._index);
+
+    if (cc0 === 36) {
+      // $
+      this._index++;
+      return {
+        type: "ext",
+        name: this.getIdentifier()
+      };
+    }
+
+    const cc1 = cc0 === 45 // -
+    // Peek at the next character after the dash.
+    ? this._source.charCodeAt(this._index + 1)
+    // Or keep using the character at the current index.
+    : cc0;
+
+    if (cc1 >= 97 && cc1 <= 122 || // a-z
+    cc1 >= 65 && cc1 <= 90) {
+      // A-Z
+      return {
+        type: "ref",
+        name: this.getEntryIdentifier()
+      };
+    }
+
+    if (cc1 >= 48 && cc1 <= 57) {
+      // 0-9
+      return this.getNumber();
+    }
+
+    if (cc0 === 34) {
+      // "
+      return this.getString();
+    }
+
+    throw this.error("Expected literal");
+  }
+
+  /**
+   * Skips an FTL comment.
+   *
+   * @private
+   */
+  skipComment() {
+    // At runtime, we don't care about comments so we just have
+    // to parse them properly and skip their content.
+    let eol = this._source.indexOf("\n", this._index);
+
+    while (eol !== -1 && (this._source[eol + 1] === "/" && this._source[eol + 2] === "/" || this._source[eol + 1] === "#" && [" ", "#"].includes(this._source[eol + 2]))) {
+      this._index = eol + 3;
+
+      eol = this._source.indexOf("\n", this._index);
+
+      if (eol === -1) {
+        break;
+      }
+    }
+
+    if (eol === -1) {
+      this._index = this._length;
+    } else {
+      this._index = eol + 1;
+    }
+  }
+
+  /**
+   * Creates a new SyntaxError object with a given message.
+   *
+   * @param {String} message
+   * @returns {Object}
+   * @private
+   */
+  error(message) {
+    return new SyntaxError(message);
+  }
+
+  /**
+   * Skips to the beginning of a next entry after the current position.
+   * This is used to mark the boundary of junk entry in case of error,
+   * and recover from the returned position.
+   *
+   * @private
+   */
+  skipToNextEntryStart() {
+    let start = this._index;
+
+    while (true) {
+      if (start === 0 || this._source[start - 1] === "\n") {
+        const cc = this._source.charCodeAt(start);
+
+        if (cc >= 97 && cc <= 122 || // a-z
+        cc >= 65 && cc <= 90 || // A-Z
+        cc === 47 || cc === 91) {
+          // /[
+          this._index = start;
+          return;
+        }
+      }
+
+      start = this._source.indexOf("\n", start);
+
+      if (start === -1) {
+        this._index = this._length;
+        return;
+      }
+      start++;
+    }
+  }
+}
+
+/**
+ * Parses an FTL string using RuntimeParser and returns the generated
+ * object with entries and a list of errors.
+ *
+ * @param {String} string
+ * @returns {Array<Object, Array>}
+ */
+function parse(string) {
+  const parser = new RuntimeParser();
+  return parser.getResource(string);
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/types.js
+/* global Intl */
+
+/**
+ * The `FluentType` class is the base of Fluent's type system.
+ *
+ * Fluent types wrap JavaScript values and store additional configuration for
+ * them, which can then be used in the `toString` method together with a proper
+ * `Intl` formatter.
+ */
+class FluentType {
+
+  /**
+   * Create an `FluentType` instance.
+   *
+   * @param   {Any}    value - JavaScript value to wrap.
+   * @param   {Object} opts  - Configuration.
+   * @returns {FluentType}
+   */
+  constructor(value, opts) {
+    this.value = value;
+    this.opts = opts;
+  }
+
+  /**
+   * Unwrap the raw value stored by this `FluentType`.
+   *
+   * @returns {Any}
+   */
+  valueOf() {
+    return this.value;
+  }
+
+  /**
+   * Format this instance of `FluentType` to a string.
+   *
+   * Formatted values are suitable for use outside of the `MessageContext`.
+   * This method can use `Intl` formatters memoized by the `MessageContext`
+   * instance passed as an argument.
+   *
+   * @param   {MessageContext} [ctx]
+   * @returns {string}
+   */
+  toString() {
+    throw new Error("Subclasses of FluentType must implement toString.");
+  }
+}
+
+class FluentNone extends FluentType {
+  toString() {
+    return this.value || "???";
+  }
+}
+
+class FluentNumber extends FluentType {
+  constructor(value, opts) {
+    super(parseFloat(value), opts);
+  }
+
+  toString(ctx) {
+    try {
+      const nf = ctx._memoizeIntlObject(Intl.NumberFormat, this.opts);
+      return nf.format(this.value);
+    } catch (e) {
+      // XXX Report the error.
+      return this.value;
+    }
+  }
+
+  /**
+   * Compare the object with another instance of a FluentType.
+   *
+   * @param   {MessageContext} ctx
+   * @param   {FluentType}     other
+   * @returns {bool}
+   */
+  match(ctx, other) {
+    if (other instanceof FluentNumber) {
+      return this.value === other.value;
+    }
+    return false;
+  }
+}
+
+class FluentDateTime extends FluentType {
+  constructor(value, opts) {
+    super(new Date(value), opts);
+  }
+
+  toString(ctx) {
+    try {
+      const dtf = ctx._memoizeIntlObject(Intl.DateTimeFormat, this.opts);
+      return dtf.format(this.value);
+    } catch (e) {
+      // XXX Report the error.
+      return this.value;
+    }
+  }
+}
+
+class FluentSymbol extends FluentType {
+  toString() {
+    return this.value;
+  }
+
+  /**
+   * Compare the object with another instance of a FluentType.
+   *
+   * @param   {MessageContext} ctx
+   * @param   {FluentType}     other
+   * @returns {bool}
+   */
+  match(ctx, other) {
+    if (other instanceof FluentSymbol) {
+      return this.value === other.value;
+    } else if (typeof other === "string") {
+      return this.value === other;
+    } else if (other instanceof FluentNumber) {
+      const pr = ctx._memoizeIntlObject(Intl.PluralRules, other.opts);
+      return this.value === pr.select(other.value);
+    }
+    return false;
+  }
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/builtins.js
+/**
+ * @overview
+ *
+ * The FTL resolver ships with a number of functions built-in.
+ *
+ * Each function take two arguments:
+ *   - args - an array of positional args
+ *   - opts - an object of key-value args
+ *
+ * Arguments to functions are guaranteed to already be instances of
+ * `FluentType`.  Functions must return `FluentType` objects as well.
+ */
+
+
+
+/* harmony default export */ var builtins = ({
+  "NUMBER": ([arg], opts) => new FluentNumber(arg.valueOf(), merge(arg.opts, opts)),
+  "DATETIME": ([arg], opts) => new FluentDateTime(arg.valueOf(), merge(arg.opts, opts))
+});
+
+function merge(argopts, opts) {
+  return Object.assign({}, argopts, values(opts));
+}
+
+function values(opts) {
+  const unwrapped = {};
+  for (const [name, opt] of Object.entries(opts)) {
+    unwrapped[name] = opt.valueOf();
+  }
+  return unwrapped;
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/resolver.js
+/**
+ * @overview
+ *
+ * The role of the Fluent resolver is to format a translation object to an
+ * instance of `FluentType` or an array of instances.
+ *
+ * Translations can contain references to other messages or external arguments,
+ * conditional logic in form of select expressions, traits which describe their
+ * grammatical features, and can use Fluent builtins which make use of the
+ * `Intl` formatters to format numbers, dates, lists and more into the
+ * context's language.  See the documentation of the Fluent syntax for more
+ * information.
+ *
+ * In case of errors the resolver will try to salvage as much of the
+ * translation as possible.  In rare situations where the resolver didn't know
+ * how to recover from an error it will return an instance of `FluentNone`.
+ *
+ * `MessageReference`, `VariantExpression`, `AttributeExpression` and
+ * `SelectExpression` resolve to raw Runtime Entries objects and the result of
+ * the resolution needs to be passed into `Type` to get their real value.
+ * This is useful for composing expressions.  Consider:
+ *
+ *     brand-name[nominative]
+ *
+ * which is a `VariantExpression` with properties `id: MessageReference` and
+ * `key: Keyword`.  If `MessageReference` was resolved eagerly, it would
+ * instantly resolve to the value of the `brand-name` message.  Instead, we
+ * want to get the message object and look for its `nominative` variant.
+ *
+ * All other expressions (except for `FunctionReference` which is only used in
+ * `CallExpression`) resolve to an instance of `FluentType`.  The caller should
+ * use the `toString` method to convert the instance to a native value.
+ *
+ *
+ * All functions in this file pass around a special object called `env`.
+ * This object stores a set of elements used by all resolve functions:
+ *
+ *  * {MessageContext} ctx
+ *      context for which the given resolution is happening
+ *  * {Object} args
+ *      list of developer provided arguments that can be used
+ *  * {Array} errors
+ *      list of errors collected while resolving
+ *  * {WeakSet} dirty
+ *      Set of patterns already encountered during this resolution.
+ *      This is used to prevent cyclic resolutions.
+ */
+
+
+
+
+// Prevent expansion of too long placeables.
+const MAX_PLACEABLE_LENGTH = 2500;
+
+// Unicode bidi isolation characters.
+const FSI = "\u2068";
+const PDI = "\u2069";
+
+/**
+ * Helper for choosing the default value from a set of members.
+ *
+ * Used in SelectExpressions and Type.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} members
+ *    Hash map of variants from which the default value is to be selected.
+ * @param   {Number} def
+ *    The index of the default variant.
+ * @returns {FluentType}
+ * @private
+ */
+function DefaultMember(env, members, def) {
+  if (members[def]) {
+    return members[def];
+  }
+
+  const { errors } = env;
+  errors.push(new RangeError("No default"));
+  return new FluentNone();
+}
+
+/**
+ * Resolve a reference to another message.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} id
+ *    The identifier of the message to be resolved.
+ * @param   {String} id.name
+ *    The name of the identifier.
+ * @returns {FluentType}
+ * @private
+ */
+function MessageReference(env, { name }) {
+  const { ctx, errors } = env;
+  const message = name.startsWith("-") ? ctx._terms.get(name) : ctx._messages.get(name);
+
+  if (!message) {
+    const err = name.startsWith("-") ? new ReferenceError(`Unknown term: ${name}`) : new ReferenceError(`Unknown message: ${name}`);
+    errors.push(err);
+    return new FluentNone(name);
+  }
+
+  return message;
+}
+
+/**
+ * Resolve a variant expression to the variant object.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {Object} expr.id
+ *    An Identifier of a message for which the variant is resolved.
+ * @param   {Object} expr.id.name
+ *    Name a message for which the variant is resolved.
+ * @param   {Object} expr.key
+ *    Variant key to be resolved.
+ * @returns {FluentType}
+ * @private
+ */
+function VariantExpression(env, { id, key }) {
+  const message = MessageReference(env, id);
+  if (message instanceof FluentNone) {
+    return message;
+  }
+
+  const { ctx, errors } = env;
+  const keyword = Type(env, key);
+
+  function isVariantList(node) {
+    return Array.isArray(node) && node[0].type === "sel" && node[0].exp === null;
+  }
+
+  if (isVariantList(message.val)) {
+    // Match the specified key against keys of each variant, in order.
+    for (const variant of message.val[0].vars) {
+      const variantKey = Type(env, variant.key);
+      if (keyword.match(ctx, variantKey)) {
+        return variant;
+      }
+    }
+  }
+
+  errors.push(new ReferenceError(`Unknown variant: ${keyword.toString(ctx)}`));
+  return Type(env, message);
+}
+
+/**
+ * Resolve an attribute expression to the attribute object.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.id
+ *    An ID of a message for which the attribute is resolved.
+ * @param   {String} expr.name
+ *    Name of the attribute to be resolved.
+ * @returns {FluentType}
+ * @private
+ */
+function AttributeExpression(env, { id, name }) {
+  const message = MessageReference(env, id);
+  if (message instanceof FluentNone) {
+    return message;
+  }
+
+  if (message.attrs) {
+    // Match the specified name against keys of each attribute.
+    for (const attrName in message.attrs) {
+      if (name === attrName) {
+        return message.attrs[name];
+      }
+    }
+  }
+
+  const { errors } = env;
+  errors.push(new ReferenceError(`Unknown attribute: ${name}`));
+  return Type(env, message);
+}
+
+/**
+ * Resolve a select expression to the member object.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.exp
+ *    Selector expression
+ * @param   {Array} expr.vars
+ *    List of variants for the select expression.
+ * @param   {Number} expr.def
+ *    Index of the default variant.
+ * @returns {FluentType}
+ * @private
+ */
+function SelectExpression(env, { exp, vars, def }) {
+  if (exp === null) {
+    return DefaultMember(env, vars, def);
+  }
+
+  const selector = Type(env, exp);
+  if (selector instanceof FluentNone) {
+    return DefaultMember(env, vars, def);
+  }
+
+  // Match the selector against keys of each variant, in order.
+  for (const variant of vars) {
+    const key = Type(env, variant.key);
+    const keyCanMatch = key instanceof FluentNumber || key instanceof FluentSymbol;
+
+    if (!keyCanMatch) {
+      continue;
+    }
+
+    const { ctx } = env;
+
+    if (key.match(ctx, selector)) {
+      return variant;
+    }
+  }
+
+  return DefaultMember(env, vars, def);
+}
+
+/**
+ * Resolve expression to a Fluent type.
+ *
+ * JavaScript strings are a special case.  Since they natively have the
+ * `toString` method they can be used as if they were a Fluent type without
+ * paying the cost of creating a instance of one.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression object to be resolved into a Fluent type.
+ * @returns {FluentType}
+ * @private
+ */
+function Type(env, expr) {
+  // A fast-path for strings which are the most common case, and for
+  // `FluentNone` which doesn't require any additional logic.
+  if (typeof expr === "string" || expr instanceof FluentNone) {
+    return expr;
+  }
+
+  // The Runtime AST (Entries) encodes patterns (complex strings with
+  // placeables) as Arrays.
+  if (Array.isArray(expr)) {
+    return Pattern(env, expr);
+  }
+
+  switch (expr.type) {
+    case "varname":
+      return new FluentSymbol(expr.name);
+    case "num":
+      return new FluentNumber(expr.val);
+    case "ext":
+      return ExternalArgument(env, expr);
+    case "fun":
+      return FunctionReference(env, expr);
+    case "call":
+      return CallExpression(env, expr);
+    case "ref":
+      {
+        const message = MessageReference(env, expr);
+        return Type(env, message);
+      }
+    case "attr":
+      {
+        const attr = AttributeExpression(env, expr);
+        return Type(env, attr);
+      }
+    case "var":
+      {
+        const variant = VariantExpression(env, expr);
+        return Type(env, variant);
+      }
+    case "sel":
+      {
+        const member = SelectExpression(env, expr);
+        return Type(env, member);
+      }
+    case undefined:
+      {
+        // If it's a node with a value, resolve the value.
+        if (expr.val !== null && expr.val !== undefined) {
+          return Type(env, expr.val);
+        }
+
+        const { errors } = env;
+        errors.push(new RangeError("No value"));
+        return new FluentNone();
+      }
+    default:
+      return new FluentNone();
+  }
+}
+
+/**
+ * Resolve a reference to an external argument.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.name
+ *    Name of an argument to be returned.
+ * @returns {FluentType}
+ * @private
+ */
+function ExternalArgument(env, { name }) {
+  const { args, errors } = env;
+
+  if (!args || !args.hasOwnProperty(name)) {
+    errors.push(new ReferenceError(`Unknown external: ${name}`));
+    return new FluentNone(name);
+  }
+
+  const arg = args[name];
+
+  // Return early if the argument already is an instance of FluentType.
+  if (arg instanceof FluentType) {
+    return arg;
+  }
+
+  // Convert the argument to a Fluent type.
+  switch (typeof arg) {
+    case "string":
+      return arg;
+    case "number":
+      return new FluentNumber(arg);
+    case "object":
+      if (arg instanceof Date) {
+        return new FluentDateTime(arg);
+      }
+    default:
+      errors.push(new TypeError(`Unsupported external type: ${name}, ${typeof arg}`));
+      return new FluentNone(name);
+  }
+}
+
+/**
+ * Resolve a reference to a function.
+ *
+ * @param   {Object}  env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {String} expr.name
+ *    Name of the function to be returned.
+ * @returns {Function}
+ * @private
+ */
+function FunctionReference(env, { name }) {
+  // Some functions are built-in.  Others may be provided by the runtime via
+  // the `MessageContext` constructor.
+  const { ctx: { _functions }, errors } = env;
+  const func = _functions[name] || builtins[name];
+
+  if (!func) {
+    errors.push(new ReferenceError(`Unknown function: ${name}()`));
+    return new FluentNone(`${name}()`);
+  }
+
+  if (typeof func !== "function") {
+    errors.push(new TypeError(`Function ${name}() is not callable`));
+    return new FluentNone(`${name}()`);
+  }
+
+  return func;
+}
+
+/**
+ * Resolve a call to a Function with positional and key-value arguments.
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Object} expr
+ *    An expression to be resolved.
+ * @param   {Object} expr.fun
+ *    FTL Function object.
+ * @param   {Array} expr.args
+ *    FTL Function argument list.
+ * @returns {FluentType}
+ * @private
+ */
+function CallExpression(env, { fun, args }) {
+  const callee = FunctionReference(env, fun);
+
+  if (callee instanceof FluentNone) {
+    return callee;
+  }
+
+  const posargs = [];
+  const keyargs = {};
+
+  for (const arg of args) {
+    if (arg.type === "narg") {
+      keyargs[arg.name] = Type(env, arg.val);
+    } else {
+      posargs.push(Type(env, arg));
+    }
+  }
+
+  try {
+    return callee(posargs, keyargs);
+  } catch (e) {
+    // XXX Report errors.
+    return new FluentNone();
+  }
+}
+
+/**
+ * Resolve a pattern (a complex string with placeables).
+ *
+ * @param   {Object} env
+ *    Resolver environment object.
+ * @param   {Array} ptn
+ *    Array of pattern elements.
+ * @returns {Array}
+ * @private
+ */
+function Pattern(env, ptn) {
+  const { ctx, dirty, errors } = env;
+
+  if (dirty.has(ptn)) {
+    errors.push(new RangeError("Cyclic reference"));
+    return new FluentNone();
+  }
+
+  // Tag the pattern as dirty for the purpose of the current resolution.
+  dirty.add(ptn);
+  const result = [];
+
+  // Wrap interpolations with Directional Isolate Formatting characters
+  // only when the pattern has more than one element.
+  const useIsolating = ctx._useIsolating && ptn.length > 1;
+
+  for (const elem of ptn) {
+    if (typeof elem === "string") {
+      result.push(elem);
+      continue;
+    }
+
+    const part = Type(env, elem).toString(ctx);
+
+    if (useIsolating) {
+      result.push(FSI);
+    }
+
+    if (part.length > MAX_PLACEABLE_LENGTH) {
+      errors.push(new RangeError("Too many characters in placeable " + `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`));
+      result.push(part.slice(MAX_PLACEABLE_LENGTH));
+    } else {
+      result.push(part);
+    }
+
+    if (useIsolating) {
+      result.push(PDI);
+    }
+  }
+
+  dirty.delete(ptn);
+  return result.join("");
+}
+
+/**
+ * Format a translation into a string.
+ *
+ * @param   {MessageContext} ctx
+ *    A MessageContext instance which will be used to resolve the
+ *    contextual information of the message.
+ * @param   {Object}         args
+ *    List of arguments provided by the developer which can be accessed
+ *    from the message.
+ * @param   {Object}         message
+ *    An object with the Message to be resolved.
+ * @param   {Array}          errors
+ *    An error array that any encountered errors will be appended to.
+ * @returns {FluentType}
+ */
+function resolve(ctx, args, message, errors = []) {
+  const env = {
+    ctx, args, errors, dirty: new WeakSet()
+  };
+  return Type(env, message).toString(ctx);
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/context.js
+
+
+
+/**
+ * Message contexts are single-language stores of translations.  They are
+ * responsible for parsing translation resources in the Fluent syntax and can
+ * format translation units (entities) to strings.
+ *
+ * Always use `MessageContext.format` to retrieve translation units from
+ * a context.  Translations can contain references to other entities or
+ * external arguments, conditional logic in form of select expressions, traits
+ * which describe their grammatical features, and can use Fluent builtins which
+ * make use of the `Intl` formatters to format numbers, dates, lists and more
+ * into the context's language.  See the documentation of the Fluent syntax for
+ * more information.
+ */
+class context_MessageContext {
+
+  /**
+   * Create an instance of `MessageContext`.
+   *
+   * The `locales` argument is used to instantiate `Intl` formatters used by
+   * translations.  The `options` object can be used to configure the context.
+   *
+   * Examples:
+   *
+   *     const ctx = new MessageContext(locales);
+   *
+   *     const ctx = new MessageContext(locales, { useIsolating: false });
+   *
+   *     const ctx = new MessageContext(locales, {
+   *       useIsolating: true,
+   *       functions: {
+   *         NODE_ENV: () => process.env.NODE_ENV
+   *       }
+   *     });
+   *
+   * Available options:
+   *
+   *   - `functions` - an object of additional functions available to
+   *                   translations as builtins.
+   *
+   *   - `useIsolating` - boolean specifying whether to use Unicode isolation
+   *                    marks (FSI, PDI) for bidi interpolations.
+   *
+   * @param   {string|Array<string>} locales - Locale or locales of the context
+   * @param   {Object} [options]
+   * @returns {MessageContext}
+   */
+  constructor(locales, { functions = {}, useIsolating = true } = {}) {
+    this.locales = Array.isArray(locales) ? locales : [locales];
+
+    this._terms = new Map();
+    this._messages = new Map();
+    this._functions = functions;
+    this._useIsolating = useIsolating;
+    this._intls = new WeakMap();
+  }
+
+  /*
+   * Return an iterator over public `[id, message]` pairs.
+   *
+   * @returns {Iterator}
+   */
+  get messages() {
+    return this._messages[Symbol.iterator]();
+  }
+
+  /*
+   * Check if a message is present in the context.
+   *
+   * @param {string} id - The identifier of the message to check.
+   * @returns {bool}
+   */
+  hasMessage(id) {
+    return this._messages.has(id);
+  }
+
+  /*
+   * Return the internal representation of a message.
+   *
+   * The internal representation should only be used as an argument to
+   * `MessageContext.format`.
+   *
+   * @param {string} id - The identifier of the message to check.
+   * @returns {Any}
+   */
+  getMessage(id) {
+    return this._messages.get(id);
+  }
+
+  /**
+   * Add a translation resource to the context.
+   *
+   * The translation resource must use the Fluent syntax.  It will be parsed by
+   * the context and each translation unit (message) will be available in the
+   * context by its identifier.
+   *
+   *     ctx.addMessages('foo = Foo');
+   *     ctx.getMessage('foo');
+   *
+   *     // Returns a raw representation of the 'foo' message.
+   *
+   * Parsed entities should be formatted with the `format` method in case they
+   * contain logic (references, select expressions etc.).
+   *
+   * @param   {string} source - Text resource with translations.
+   * @returns {Array<Error>}
+   */
+  addMessages(source) {
+    const [entries, errors] = parse(source);
+    for (const id in entries) {
+      if (id.startsWith("-")) {
+        // Identifiers starting with a dash (-) define terms. Terms are private
+        // and cannot be retrieved from MessageContext.
+        if (this._terms.has(id)) {
+          errors.push(`Attempt to override an existing term: "${id}"`);
+          continue;
+        }
+        this._terms.set(id, entries[id]);
+      } else {
+        if (this._messages.has(id)) {
+          errors.push(`Attempt to override an existing message: "${id}"`);
+          continue;
+        }
+        this._messages.set(id, entries[id]);
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Format a message to a string or null.
+   *
+   * Format a raw `message` from the context into a string (or a null if it has
+   * a null value).  `args` will be used to resolve references to external
+   * arguments inside of the translation.
+   *
+   * In case of errors `format` will try to salvage as much of the translation
+   * as possible and will still return a string.  For performance reasons, the
+   * encountered errors are not returned but instead are appended to the
+   * `errors` array passed as the third argument.
+   *
+   *     const errors = [];
+   *     ctx.addMessages('hello = Hello, { $name }!');
+   *     const hello = ctx.getMessage('hello');
+   *     ctx.format(hello, { name: 'Jane' }, errors);
+   *
+   *     // Returns 'Hello, Jane!' and `errors` is empty.
+   *
+   *     ctx.format(hello, undefined, errors);
+   *
+   *     // Returns 'Hello, name!' and `errors` is now:
+   *
+   *     [<ReferenceError: Unknown external: name>]
+   *
+   * @param   {Object | string}    message
+   * @param   {Object | undefined} args
+   * @param   {Array}              errors
+   * @returns {?string}
+   */
+  format(message, args, errors) {
+    // optimize entities which are simple strings with no attributes
+    if (typeof message === "string") {
+      return message;
+    }
+
+    // optimize simple-string entities with attributes
+    if (typeof message.val === "string") {
+      return message.val;
+    }
+
+    // optimize entities with null values
+    if (message.val === undefined) {
+      return null;
+    }
+
+    return resolve(this, args, message, errors);
+  }
+
+  _memoizeIntlObject(ctor, opts) {
+    const cache = this._intls.get(ctor) || {};
+    const id = JSON.stringify(opts);
+
+    if (!cache[id]) {
+      cache[id] = new ctor(this.locales, opts);
+      this._intls.set(ctor, cache);
+    }
+
+    return cache[id];
+  }
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/cached_iterable.js
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+/*
+ * CachedIterable caches the elements yielded by an iterable.
+ *
+ * It can be used to iterate over an iterable many times without depleting the
+ * iterable.
+ */
+class CachedIterable {
+  /**
+   * Create an `CachedIterable` instance.
+   *
+   * @param {Iterable} iterable
+   * @returns {CachedIterable}
+   */
+  constructor(iterable) {
+    if (Symbol.asyncIterator in Object(iterable)) {
+      this.iterator = iterable[Symbol.asyncIterator]();
+    } else if (Symbol.iterator in Object(iterable)) {
+      this.iterator = iterable[Symbol.iterator]();
+    } else {
+      throw new TypeError("Argument must implement the iteration protocol.");
+    }
+
+    this.seen = [];
+  }
+
+  [Symbol.iterator]() {
+    const { seen, iterator } = this;
+    let cur = 0;
+
+    return {
+      next() {
+        if (seen.length <= cur) {
+          seen.push(iterator.next());
+        }
+        return seen[cur++];
+      }
+    };
+  }
+
+  [Symbol.asyncIterator]() {
+    const { seen, iterator } = this;
+    let cur = 0;
+
+    return {
+      next() {
+        return _asyncToGenerator(function* () {
+          if (seen.length <= cur) {
+            seen.push((yield iterator.next()));
+          }
+          return seen[cur++];
+        })();
+      }
+    };
+  }
+
+  /**
+   * This method allows user to consume the next element from the iterator
+   * into the cache.
+   */
+  touchNext() {
+    const { seen, iterator } = this;
+    if (seen.length === 0 || seen[seen.length - 1].done === false) {
+      seen.push(iterator.next());
+    }
+  }
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/fallback.js
+function _asyncIterator(iterable) { if (typeof Symbol === "function") { if (Symbol.asyncIterator) { var method = iterable[Symbol.asyncIterator]; if (method != null) return method.call(iterable); } if (Symbol.iterator) { return iterable[Symbol.iterator](); } } throw new TypeError("Object is not async iterable"); }
+
+function fallback__asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+/*
+ * @overview
+ *
+ * Functions for managing ordered sequences of MessageContexts.
+ *
+ * An ordered iterable of MessageContext instances can represent the current
+ * negotiated fallback chain of languages.  This iterable can be used to find
+ * the best existing translation for a given identifier.
+ *
+ * The mapContext* methods can be used to find the first MessageContext in the
+ * given iterable which contains the translation with the given identifier.  If
+ * the iterable is ordered according to the result of a language negotiation
+ * the returned MessageContext contains the best available translation.
+ *
+ * A simple function which formats translations based on the identifier might
+ * be implemented as follows:
+ *
+ *     formatString(id, args) {
+ *         const ctx = mapContextSync(contexts, id);
+ *
+ *         if (ctx === null) {
+ *             return id;
+ *         }
+ *
+ *         const msg = ctx.getMessage(id);
+ *         return ctx.format(msg, args);
+ *     }
+ *
+ * In order to pass an iterator to mapContext*, wrap it in CachedIterable.
+ * This allows multiple calls to mapContext* without advancing and eventually
+ * depleting the iterator.
+ *
+ *     function *generateMessages() {
+ *         // Some lazy logic for yielding MessageContexts.
+ *         yield *[ctx1, ctx2];
+ *     }
+ *
+ *     const contexts = new CachedIterable(generateMessages());
+ *     const ctx = mapContextSync(contexts, id);
+ *
+ */
+
+/*
+ * Synchronously map an identifier or an array of identifiers to the best
+ * `MessageContext` instance(s).
+ *
+ * @param {Iterable} iterable
+ * @param {string|Array<string>} ids
+ * @returns {MessageContext|Array<MessageContext>}
+ */
+function mapContextSync(iterable, ids) {
+  if (!Array.isArray(ids)) {
+    return getContextForId(iterable, ids);
+  }
+
+  return ids.map(id => getContextForId(iterable, id));
+}
+
+/*
+ * Find the best `MessageContext` with the translation for `id`.
+ */
+function getContextForId(iterable, id) {
+  for (const context of iterable) {
+    if (context.hasMessage(id)) {
+      return context;
+    }
+  }
+
+  return null;
+}
+
+/*
+ * Asynchronously map an identifier or an array of identifiers to the best
+ * `MessageContext` instance(s).
+ *
+ * @param {AsyncIterable} iterable
+ * @param {string|Array<string>} ids
+ * @returns {Promise<MessageContext|Array<MessageContext>>}
+ */
+let mapContextAsync = (() => {
+  var _ref = fallback__asyncToGenerator(function* (iterable, ids) {
+    if (!Array.isArray(ids)) {
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = _asyncIterator(iterable), _step, _value; _step = yield _iterator.next(), _iteratorNormalCompletion = _step.done, _value = yield _step.value, !_iteratorNormalCompletion; _iteratorNormalCompletion = true) {
+          const context = _value;
+
+          if (context.hasMessage(ids)) {
+            return context;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            yield _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+
+    let remainingCount = ids.length;
+    const foundContexts = new Array(remainingCount).fill(null);
+
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = _asyncIterator(iterable), _step2, _value2; _step2 = yield _iterator2.next(), _iteratorNormalCompletion2 = _step2.done, _value2 = yield _step2.value, !_iteratorNormalCompletion2; _iteratorNormalCompletion2 = true) {
+        const context = _value2;
+
+        // XXX Switch to const [index, id] of id.entries() when we move to Babel 7.
+        // See https://github.com/babel/babel/issues/5880.
+        for (let index = 0; index < ids.length; index++) {
+          const id = ids[index];
+          if (!foundContexts[index] && context.hasMessage(id)) {
+            foundContexts[index] = context;
+            remainingCount--;
+          }
+
+          // Return early when all ids have been mapped to contexts.
+          if (remainingCount === 0) {
+            return foundContexts;
+          }
+        }
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          yield _iterator2.return();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+
+    return foundContexts;
+  });
+
+  return function mapContextAsync(_x, _x2) {
+    return _ref.apply(this, arguments);
+  };
+})();
+// CONCATENATED MODULE: ./node_modules/fluent/src/util.js
+function nonBlank(line) {
+  return !/^\s*$/.test(line);
+}
+
+function countIndent(line) {
+  const [indent] = line.match(/^\s*/);
+  return indent.length;
+}
+
+/**
+ * Template literal tag for dedenting FTL code.
+ *
+ * Strip the common indent of non-blank lines. Remove blank lines.
+ *
+ * @param {Array<string>} strings
+ */
+function ftl(strings) {
+  const [code] = strings;
+  const lines = code.split("\n").filter(nonBlank);
+  const indents = lines.map(countIndent);
+  const common = Math.min(...indents);
+  const indent = new RegExp(`^\\s{${common}}`);
+
+  return lines.map(line => line.replace(indent, "")).join("\n");
+}
+// CONCATENATED MODULE: ./node_modules/fluent/src/index.js
+/* unused concated harmony import _parse */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return parse; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "b", function() { return context_MessageContext; });
+/* unused concated harmony import MessageArgument */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return FluentType; });
+/* unused concated harmony import MessageNumberArgument */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return FluentNumber; });
+/* unused concated harmony import MessageDateTimeArgument */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return FluentDateTime; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "a", function() { return CachedIterable; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "c", function() { return mapContextSync; });
+/* unused concated harmony import mapContextAsync */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return mapContextAsync; });
+/* unused concated harmony import ftl */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return ftl; });
+/*
+ * @module fluent
+ * @overview
+ *
+ * `fluent` is a JavaScript implementation of Project Fluent, a localization
+ * framework designed to unleash the expressive power of the natural language.
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+
+/***/ }),
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["b"] = initStore;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_redux__);
 /* eslint-env mozilla/frame-script */
 
@@ -1252,13 +3440,13 @@ function initStore(reducers, initialState) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 9 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 10 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1346,7 +3534,7 @@ class ErrorBoundary extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureCo
 ErrorBoundary.defaultProps = { FallbackComponent: ErrorBoundaryFallback };
 
 /***/ }),
-/* 11 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1569,17 +3757,17 @@ const LinkMenuOptions = {
 
 
 /***/ }),
-/* 12 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_redux__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_intl__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react__);
 
@@ -1644,7 +3832,7 @@ const LinkMenu = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connect"])(ge
 
 
 /***/ }),
-/* 13 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1744,18 +3932,75 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 14 */
+/* 17 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global) {/**
+ * List of helper functions for screenshot-based images.
+ *
+ * There are two kinds of images:
+ * 1. Remote Image: This is the image from the main process and it refers to
+ *    the image in the React props. This can either be an object with the `data`
+ *    and `path` properties, if it is a blob, or a string, if it is a normal image.
+ * 2. Local Image: This is the image object in the content process and it refers
+ *    to the image *object* in the React component's state. All local image
+ *    objects have the `url` property, and an additional property `path`, if they
+ *    are blobs.
+ */
+const ScreenshotUtils = {
+  isBlob(isLocal, image) {
+    return !!(image && image.path && (!isLocal && image.data || isLocal && image.url));
+  },
+
+  // This should always be called with a remote image and not a local image.
+  createLocalImageObject(remoteImage) {
+    if (!remoteImage) {
+      return null;
+    }
+    if (this.isBlob(false, remoteImage)) {
+      return { url: global.URL.createObjectURL(remoteImage.data), path: remoteImage.path };
+    }
+    return { url: remoteImage };
+  },
+
+  // Revokes the object URL of the image if the local image is a blob.
+  // This should always be called with a local image and not a remote image.
+  maybeRevokeBlobObjectURL(localImage) {
+    if (this.isBlob(true, localImage)) {
+      global.URL.revokeObjectURL(localImage.url);
+    }
+  },
+
+  // Checks if remoteImage and localImage are the same.
+  isRemoteImageLocal(localImage, remoteImage) {
+    // Both remoteImage and localImage are present.
+    if (remoteImage && localImage) {
+      return this.isBlob(false, remoteImage) ? localImage.path === remoteImage.path : localImage.url === remoteImage;
+    }
+
+    // This will only handle the remaining three possible outcomes.
+    // (i.e. everything except when both image and localImage are present)
+    return !remoteImage && !localImage;
+  }
+};
+/* harmony export (immutable) */ __webpack_exports__["a"] = ScreenshotUtils;
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
+
+/***/ }),
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(35);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_section_menu_options__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_section_menu_options__ = __webpack_require__(19);
 
 
 
@@ -2006,7 +4251,7 @@ const CollapsibleSection = Object(__WEBPACK_IMPORTED_MODULE_0_react_intl__["inje
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 15 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2089,12 +4334,12 @@ const SectionMenuOptions = {
 
 
 /***/ }),
-/* 16 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
 
@@ -2263,7 +4508,7 @@ class ComponentPerfTimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.C
 
 
 /***/ }),
-/* 17 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2397,19 +4642,21 @@ _PerfService.prototype = {
 var perfService = new _PerfService();
 
 /***/ }),
-/* 18 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_LinkMenu_LinkMenu__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_LinkMenu_LinkMenu__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_common_Reducers_jsm__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_screenshot_utils__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_common_Reducers_jsm__ = __webpack_require__(7);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 
 
 
@@ -2421,6 +4668,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 class TopSiteLink extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComponent {
   constructor(props) {
     super(props);
+    this.state = { screenshotImage: null };
     this.onDragEvent = this.onDragEvent.bind(this);
   }
 
@@ -2465,6 +4713,54 @@ class TopSiteLink extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComp
     }
   }
 
+  /**
+   * Helper to obtain the next state based on nextProps and prevState.
+   *
+   * NOTE: Rename this method to getDerivedStateFromProps when we update React
+   *       to >= 16.3. We will need to update tests as well. We cannot rename this
+   *       method to getDerivedStateFromProps now because there is a mismatch in
+   *       the React version that we are using for both testing and production.
+   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
+   *
+   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
+   */
+  static getNextStateFromProps(nextProps, prevState) {
+    const { screenshot } = nextProps.link;
+    const imageInState = __WEBPACK_IMPORTED_MODULE_5_content_src_lib_screenshot_utils__["a" /* ScreenshotUtils */].isRemoteImageLocal(prevState.screenshotImage, screenshot);
+    if (imageInState) {
+      return null;
+    }
+
+    // Since image was updated, attempt to revoke old image blob URL, if it exists.
+    __WEBPACK_IMPORTED_MODULE_5_content_src_lib_screenshot_utils__["a" /* ScreenshotUtils */].maybeRevokeBlobObjectURL(prevState.screenshotImage);
+
+    return { screenshotImage: __WEBPACK_IMPORTED_MODULE_5_content_src_lib_screenshot_utils__["a" /* ScreenshotUtils */].createLocalImageObject(screenshot) };
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillMount() {
+    const nextState = TopSiteLink.getNextStateFromProps(this.props, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillReceiveProps(nextProps) {
+    const nextState = TopSiteLink.getNextStateFromProps(nextProps, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  componentWillUnmount() {
+    __WEBPACK_IMPORTED_MODULE_5_content_src_lib_screenshot_utils__["a" /* ScreenshotUtils */].maybeRevokeBlobObjectURL(this.state.screenshotImage);
+  }
+
   render() {
     const { children, className, defaultStyle, isDraggable, link, onClick, title } = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}`;
@@ -2475,6 +4771,7 @@ class TopSiteLink extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComp
     let showSmallFavicon = false;
     let smallFaviconStyle;
     let smallFaviconFallback;
+    let hasScreenshotImage = this.state.screenshotImage && this.state.screenshotImage.url;
     if (defaultStyle) {
       // force no styles (letter fallback) even if the link has imagery
       smallFaviconFallback = false;
@@ -2483,7 +4780,7 @@ class TopSiteLink extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComp
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
         backgroundColor: link.backgroundColor,
-        backgroundImage: `url(${link.screenshot})`
+        backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : "none"
       };
     } else if (tippyTopIcon || faviconSize >= __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["b" /* MIN_RICH_FAVICON_SIZE */]) {
       // styles and class names for top sites with rich icons
@@ -2494,14 +4791,14 @@ class TopSiteLink extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComp
       };
     } else {
       // styles and class names for top sites with screenshot + small icon in top left corner
-      imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
-      imageStyle = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
+      imageClassName = `screenshot${hasScreenshotImage ? " active" : ""}`;
+      imageStyle = { backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : "none" };
 
       // only show a favicon in top left if it's greater than 16x16
       if (faviconSize >= __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["a" /* MIN_CORNER_FAVICON_SIZE */]) {
         showSmallFavicon = true;
         smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
-      } else if (link.screenshot) {
+      } else if (hasScreenshotImage) {
         // Don't show a small favicon if there is no screenshot, because that
         // would result in two fallback icons
         showSmallFavicon = true;
@@ -2759,7 +5056,7 @@ class _TopSiteList extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureCom
   _getTopSites() {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
-    topSites.length = this.props.TopSitesRows * __WEBPACK_IMPORTED_MODULE_5_common_Reducers_jsm__["a" /* TOP_SITES_MAX_SITES_PER_ROW */];
+    topSites.length = this.props.TopSitesRows * __WEBPACK_IMPORTED_MODULE_6_common_Reducers_jsm__["a" /* TOP_SITES_MAX_SITES_PER_ROW */];
     return topSites;
   }
 
@@ -2858,23 +5155,23 @@ const TopSiteList = Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["injectIntl"
 
 
 /***/ }),
-/* 19 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(40);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_react_dom__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm__ = __webpack_require__(7);
 
 
 
@@ -2910,13 +5207,15 @@ Object(__WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__["a" /* addSnippets
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 20 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["a"] = addSnippetsSubscriber;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_asrouter_asrouter_content__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_asrouter_asrouter_content__ = __webpack_require__(8);
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
 const DATABASE_NAME = "snippets_db";
 const DATABASE_VERSION = 1;
 const SNIPPETS_OBJECTSTORE_NAME = "snippets";
@@ -2972,16 +5271,20 @@ class SnippetsMap extends Map {
    * @return {Promise}      Resolves when the id has been written to indexedDB,
    *                        or immediately if the snippetMap is not connected
    */
-  async blockSnippetById(id) {
-    if (!id) {
-      return;
-    }
-    const { blockList } = this;
-    if (!blockList.includes(id)) {
-      blockList.push(id);
-      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].SNIPPETS_BLOCKLIST_UPDATED, data: id }));
-      await this.set("blockList", blockList);
-    }
+  blockSnippetById(id) {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      if (!id) {
+        return;
+      }
+      const { blockList } = _this;
+      if (!blockList.includes(id)) {
+        blockList.push(id);
+        _this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].SNIPPETS_BLOCKLIST_UPDATED, data: id }));
+        yield _this.set("blockList", blockList);
+      }
+    })();
   }
 
   disableOnboarding() {
@@ -3023,15 +5326,19 @@ class SnippetsMap extends Map {
    *
    * @return {type}  description
    */
-  async connect() {
-    // Open the connection
-    const db = await this._openDB();
+  connect() {
+    var _this2 = this;
 
-    // Restore any existing values
-    await this._restoreFromDb(db);
+    return _asyncToGenerator(function* () {
+      // Open the connection
+      const db = yield _this2._openDB();
 
-    // Attach a reference to the db
-    this._db = db;
+      // Restore any existing values
+      yield _this2._restoreFromDb(db);
+
+      // Attach a reference to the db
+      _this2._db = db;
+    })();
   }
 
   /**
@@ -3139,33 +5446,37 @@ class SnippetsProvider {
     return global.gSnippetsMap;
   }
 
-  async _refreshSnippets() {
-    // Check if the cached version of of the snippets in snippetsMap. If it's too
-    // old, blow away the entire snippetsMap.
-    const cachedVersion = this.snippetsMap.get("snippets-cached-version");
+  _refreshSnippets() {
+    var _this3 = this;
 
-    if (cachedVersion !== this.appData.version) {
-      this.snippetsMap.clear();
-    }
+    return _asyncToGenerator(function* () {
+      // Check if the cached version of of the snippets in snippetsMap. If it's too
+      // old, blow away the entire snippetsMap.
+      const cachedVersion = _this3.snippetsMap.get("snippets-cached-version");
 
-    // Has enough time passed for us to require an update?
-    const lastUpdate = this.snippetsMap.get("snippets-last-update");
-    const needsUpdate = !(lastUpdate >= 0) || Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS;
-
-    if (needsUpdate && this.appData.snippetsURL) {
-      this.snippetsMap.set("snippets-last-update", Date.now());
-      try {
-        const response = await fetch(this.appData.snippetsURL);
-        if (response.status === 200) {
-          const payload = await response.text();
-
-          this.snippetsMap.set("snippets", payload);
-          this.snippetsMap.set("snippets-cached-version", this.appData.version);
-        }
-      } catch (e) {
-        console.error(e); // eslint-disable-line no-console
+      if (cachedVersion !== _this3.appData.version) {
+        _this3.snippetsMap.clear();
       }
-    }
+
+      // Has enough time passed for us to require an update?
+      const lastUpdate = _this3.snippetsMap.get("snippets-last-update");
+      const needsUpdate = !(lastUpdate >= 0) || Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS;
+
+      if (needsUpdate && _this3.appData.snippetsURL) {
+        _this3.snippetsMap.set("snippets-last-update", Date.now());
+        try {
+          const response = yield fetch(_this3.appData.snippetsURL);
+          if (response.status === 200) {
+            const payload = yield response.text();
+
+            _this3.snippetsMap.set("snippets", payload);
+            _this3.snippetsMap.set("snippets-cached-version", _this3.appData.version);
+          }
+        } catch (e) {
+          console.error(e); // eslint-disable-line no-console
+        }
+      }
+    })();
   }
 
   _noSnippetFallback() {
@@ -3228,51 +5539,55 @@ class SnippetsProvider {
    * @param  {str} options.elementId  The id of the element in which to inject snippets
    * @param  {bool} options.connect  Should gSnippetsMap connect to indexedDB?
    */
-  async init(options) {
-    Object.assign(this, {
-      appData: {},
-      elementId: "snippets",
-      connect: true
-    }, options);
+  init(options) {
+    var _this4 = this;
 
-    // Add listener so we know when snippets are blocked on other pages
-    if (global.addMessageListener) {
-      global.addMessageListener("ActivityStream:MainToContent", this._onAction);
-    }
+    return _asyncToGenerator(function* () {
+      Object.assign(_this4, {
+        appData: {},
+        elementId: "snippets",
+        connect: true
+      }, options);
 
-    // TODO: Requires enabling indexedDB on newtab
-    // Restore the snippets map from indexedDB
-    if (this.connect) {
+      // Add listener so we know when snippets are blocked on other pages
+      if (global.addMessageListener) {
+        global.addMessageListener("ActivityStream:MainToContent", _this4._onAction);
+      }
+
+      // TODO: Requires enabling indexedDB on newtab
+      // Restore the snippets map from indexedDB
+      if (_this4.connect) {
+        try {
+          yield _this4.snippetsMap.connect();
+        } catch (e) {
+          console.error(e); // eslint-disable-line no-console
+        }
+      }
+
+      // Cache app data values so they can be accessible from gSnippetsMap
+      for (const key of Object.keys(_this4.appData)) {
+        if (key === "blockList") {
+          _this4.snippetsMap.set("blockList", _this4.appData[key]);
+        } else {
+          _this4.snippetsMap.set(`appData.${key}`, _this4.appData[key]);
+        }
+      }
+
+      // Refresh snippets, if enough time has passed.
+      yield _this4._refreshSnippets();
+
+      // Try showing remote snippets, falling back to defaults if necessary.
       try {
-        await this.snippetsMap.connect();
+        _this4._showRemoteSnippets();
       } catch (e) {
-        console.error(e); // eslint-disable-line no-console
+        _this4._noSnippetFallback(e);
       }
-    }
 
-    // Cache app data values so they can be accessible from gSnippetsMap
-    for (const key of Object.keys(this.appData)) {
-      if (key === "blockList") {
-        this.snippetsMap.set("blockList", this.appData[key]);
-      } else {
-        this.snippetsMap.set(`appData.${key}`, this.appData[key]);
-      }
-    }
+      window.dispatchEvent(new Event(SNIPPETS_ENABLED_EVENT));
 
-    // Refresh snippets, if enough time has passed.
-    await this._refreshSnippets();
-
-    // Try showing remote snippets, falling back to defaults if necessary.
-    try {
-      this._showRemoteSnippets();
-    } catch (e) {
-      this._noSnippetFallback(e);
-    }
-
-    window.dispatchEvent(new Event(SNIPPETS_ENABLED_EVENT));
-
-    this._forceOnboardingVisibility(true);
-    this.initialized = true;
+      _this4._forceOnboardingVisibility(true);
+      _this4.initialized = true;
+    })();
   }
 
   uninit() {
@@ -3301,7 +5616,7 @@ function addSnippetsSubscriber(store) {
 
   let initializing = false;
 
-  store.subscribe(async () => {
+  store.subscribe(_asyncToGenerator(function* () {
     const state = store.getState();
     // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
     // state.Snippets.initialized             Is the snippets data initialized?
@@ -3312,7 +5627,7 @@ function addSnippetsSubscriber(store) {
     // Don't call init multiple times
     !initializing && location.href !== "about:welcome") {
       initializing = true;
-      await snippets.init({ appData: state.Snippets });
+      yield snippets.init({ appData: state.Snippets });
       initializing = false;
     } else if ((state.Prefs.values["feeds.snippets"] === false || state.Prefs.values.disableSnippets === true) && snippets.initialized) {
       snippets.uninit();
@@ -3325,7 +5640,7 @@ function addSnippetsSubscriber(store) {
     } else if ((!state.Prefs.values.asrouterExperimentEnabled || !state.Prefs.values["feeds.snippets"]) && asrouterContent.initialized) {
       asrouterContent.uninit();
     }
-  });
+  }));
 
   // These values are returned for testing purposes
   return { snippets, asrouterContent };
@@ -3333,13 +5648,532 @@ function addSnippetsSubscriber(store) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 21 */
+/* 25 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXTERNAL MODULE: external "React"
+var external__React_ = __webpack_require__(0);
+var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
+
+// EXTERNAL MODULE: external "PropTypes"
+var external__PropTypes_ = __webpack_require__(9);
+var external__PropTypes__default = /*#__PURE__*/__webpack_require__.n(external__PropTypes_);
+
+// EXTERNAL MODULE: ./node_modules/fluent/src/index.js + 8 modules
+var src = __webpack_require__(10);
+
+// CONCATENATED MODULE: ./node_modules/fluent-react/src/localization.js
+
+
+/*
+ * `ReactLocalization` handles translation formatting and fallback.
+ *
+ * The current negotiated fallback chain of languages is stored in the
+ * `ReactLocalization` instance in form of an iterable of `MessageContext`
+ * instances.  This iterable is used to find the best existing translation for
+ * a given identifier.
+ *
+ * `Localized` components must subscribe to the changes of the
+ * `ReactLocalization`'s fallback chain.  When the fallback chain changes (the
+ * `messages` iterable is set anew), all subscribed compontent must relocalize.
+ *
+ * The `ReactLocalization` class instances are exposed to `Localized` elements
+ * via the `LocalizationProvider` component.
+ */
+class localization_ReactLocalization {
+  constructor(messages) {
+    this.contexts = new src["a" /* CachedIterable */](messages);
+    this.subs = new Set();
+  }
+
+  /*
+   * Subscribe a `Localized` component to changes of `messages`.
+   */
+  subscribe(comp) {
+    this.subs.add(comp);
+  }
+
+  /*
+   * Unsubscribe a `Localized` component from `messages` changes.
+   */
+  unsubscribe(comp) {
+    this.subs.delete(comp);
+  }
+
+  /*
+   * Set a new `messages` iterable and trigger the retranslation.
+   */
+  setMessages(messages) {
+    this.contexts = new src["a" /* CachedIterable */](messages);
+
+    // Update all subscribed Localized components.
+    this.subs.forEach(comp => comp.relocalize());
+  }
+
+  getMessageContext(id) {
+    return Object(src["c" /* mapContextSync */])(this.contexts, id);
+  }
+
+  formatCompound(mcx, msg, args) {
+    const value = mcx.format(msg, args);
+
+    if (msg.attrs) {
+      var attrs = {};
+      for (const name of Object.keys(msg.attrs)) {
+        attrs[name] = mcx.format(msg.attrs[name], args);
+      }
+    }
+
+    return { value, attrs };
+  }
+
+  /*
+   * Find a translation by `id` and format it to a string using `args`.
+   */
+  getString(id, args, fallback) {
+    const mcx = this.getMessageContext(id);
+
+    if (mcx === null) {
+      return fallback || id;
+    }
+
+    const msg = mcx.getMessage(id);
+    return mcx.format(msg, args);
+  }
+}
+
+function isReactLocalization(props, propName) {
+  const prop = props[propName];
+
+  if (prop instanceof localization_ReactLocalization) {
+    return null;
+  }
+
+  return new Error(`The ${propName} context field must be an instance of ReactLocalization.`);
+}
+// CONCATENATED MODULE: ./node_modules/fluent-react/src/provider.js
+
+
+
+
+
+/*
+ * The Provider component for the `ReactLocalization` class.
+ *
+ * Exposes a `ReactLocalization` instance to all descendants via React's
+ * context feature.  It makes translations available to all localizable
+ * elements in the descendant's render tree without the need to pass them
+ * explicitly.
+ *
+ *     <LocalizationProvider messages={…}>
+ *         …
+ *     </LocalizationProvider>
+ *
+ * The `LocalizationProvider` component takes one prop: `messages`.  It should
+ * be an iterable of `MessageContext` instances in order of the user's
+ * preferred languages.  The `MessageContext` instances will be used by
+ * `ReactLocalization` to format translations.  If a translation is missing in
+ * one instance, `ReactLocalization` will fall back to the next one.
+ */
+class provider_LocalizationProvider extends external__React_["Component"] {
+  constructor(props) {
+    super(props);
+    const { messages } = props;
+
+    if (messages === undefined) {
+      throw new Error("LocalizationProvider must receive the messages prop.");
+    }
+
+    if (!messages[Symbol.iterator]) {
+      throw new Error("The messages prop must be an iterable.");
+    }
+
+    this.l10n = new localization_ReactLocalization(messages);
+  }
+
+  getChildContext() {
+    return {
+      l10n: this.l10n
+    };
+  }
+
+  componentWillReceiveProps(next) {
+    const { messages } = next;
+
+    if (messages !== this.props.messages) {
+      this.l10n.setMessages(messages);
+    }
+  }
+
+  render() {
+    return external__React_["Children"].only(this.props.children);
+  }
+}
+
+provider_LocalizationProvider.childContextTypes = {
+  l10n: isReactLocalization
+};
+
+provider_LocalizationProvider.propTypes = {
+  children: external__PropTypes__default.a.element.isRequired,
+  messages: isIterable
+};
+
+function isIterable(props, propName, componentName) {
+  const prop = props[propName];
+
+  if (Symbol.iterator in Object(prop)) {
+    return null;
+  }
+
+  return new Error(`The ${propName} prop supplied to ${componentName} must be an iterable.`);
+}
+// CONCATENATED MODULE: ./node_modules/fluent-react/src/with_localization.js
+
+
+
+
+function withLocalization(Inner) {
+  class WithLocalization extends external__React_["Component"] {
+    componentDidMount() {
+      const { l10n } = this.context;
+
+      if (l10n) {
+        l10n.subscribe(this);
+      }
+    }
+
+    componentWillUnmount() {
+      const { l10n } = this.context;
+
+      if (l10n) {
+        l10n.unsubscribe(this);
+      }
+    }
+
+    /*
+     * Rerender this component in a new language.
+     */
+    relocalize() {
+      // When the `ReactLocalization`'s fallback chain changes, update the
+      // component.
+      this.forceUpdate();
+    }
+
+    /*
+     * Find a translation by `id` and format it to a string using `args`.
+     */
+    getString(id, args, fallback) {
+      const { l10n } = this.context;
+
+      if (!l10n) {
+        return fallback || id;
+      }
+
+      return l10n.getString(id, args, fallback);
+    }
+
+    render() {
+      return Object(external__React_["createElement"])(Inner, Object.assign(
+      // getString needs to be re-bound on updates to trigger a re-render
+      { getString: (...args) => this.getString(...args) }, this.props));
+    }
+  }
+
+  WithLocalization.displayName = `WithLocalization(${displayName(Inner)})`;
+
+  WithLocalization.contextTypes = {
+    l10n: isReactLocalization
+  };
+
+  return WithLocalization;
+}
+
+function displayName(component) {
+  return component.displayName || component.name || "Component";
+}
+// CONCATENATED MODULE: ./node_modules/fluent-react/src/markup.js
+/* eslint-env browser */
+
+const TEMPLATE = document.createElement("template");
+
+function parseMarkup(str) {
+  TEMPLATE.innerHTML = str;
+  return TEMPLATE.content;
+}
+// CONCATENATED MODULE: ./node_modules/fluent-react/vendor/omittedCloseTags.js
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in this directory.
+ */
+
+// For HTML, certain tags should omit their close tag. We keep a whitelist for
+// those special-case tags.
+
+var omittedCloseTags = {
+  area: true,
+  base: true,
+  br: true,
+  col: true,
+  embed: true,
+  hr: true,
+  img: true,
+  input: true,
+  keygen: true,
+  link: true,
+  meta: true,
+  param: true,
+  source: true,
+  track: true,
+  wbr: true
+  // NOTE: menuitem's close tag should be omitted, but that causes problems.
+};
+
+/* harmony default export */ var vendor_omittedCloseTags = (omittedCloseTags);
+// CONCATENATED MODULE: ./node_modules/fluent-react/vendor/voidElementTags.js
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in this directory.
+ */
+
+
+
+// For HTML, certain tags cannot have children. This has the same purpose as
+// `omittedCloseTags` except that `menuitem` should still have its closing tag.
+
+var voidElementTags = Object.assign({
+  menuitem: true
+}, vendor_omittedCloseTags);
+
+/* harmony default export */ var vendor_voidElementTags = (voidElementTags);
+// CONCATENATED MODULE: ./node_modules/fluent-react/src/localized.js
+
+
+
+
+
+
+
+// Match the opening angle bracket (<) in HTML tags, and HTML entities like
+// &amp;, &#0038;, &#x0026;.
+const reMarkup = /<|&#?\w+;/;
+
+/*
+ * Prepare props passed to `Localized` for formatting.
+ */
+function toArguments(props) {
+  const args = {};
+  const elems = {};
+
+  for (const [propname, propval] of Object.entries(props)) {
+    if (propname.startsWith("$")) {
+      const name = propname.substr(1);
+      args[name] = propval;
+    } else if (Object(external__React_["isValidElement"])(propval)) {
+      // We'll try to match localNames of elements found in the translation with
+      // names of elements passed as props. localNames are always lowercase.
+      const name = propname.toLowerCase();
+      elems[name] = propval;
+    }
+  }
+
+  return [args, elems];
+}
+
+/*
+ * The `Localized` class renders its child with translated props and children.
+ *
+ *     <Localized id="hello-world">
+ *         <p>{'Hello, world!'}</p>
+ *     </Localized>
+ *
+ * The `id` prop should be the unique identifier of the translation.  Any
+ * attributes found in the translation will be applied to the wrapped element.
+ *
+ * Arguments to the translation can be passed as `$`-prefixed props on
+ * `Localized`.
+ *
+ *     <Localized id="hello-world" $username={name}>
+ *         <p>{'Hello, { $username }!'}</p>
+ *     </Localized>
+ *
+ *  It's recommended that the contents of the wrapped component be a string
+ *  expression.  The string will be used as the ultimate fallback if no
+ *  translation is available.  It also makes it easy to grep for strings in the
+ *  source code.
+ */
+class localized_Localized extends external__React_["Component"] {
+  componentDidMount() {
+    const { l10n } = this.context;
+
+    if (l10n) {
+      l10n.subscribe(this);
+    }
+  }
+
+  componentWillUnmount() {
+    const { l10n } = this.context;
+
+    if (l10n) {
+      l10n.unsubscribe(this);
+    }
+  }
+
+  /*
+   * Rerender this component in a new language.
+   */
+  relocalize() {
+    // When the `ReactLocalization`'s fallback chain changes, update the
+    // component.
+    this.forceUpdate();
+  }
+
+  render() {
+    const { l10n } = this.context;
+    const { id, attrs, children } = this.props;
+    const elem = external__React_["Children"].only(children);
+
+    if (!l10n) {
+      // Use the wrapped component as fallback.
+      return elem;
+    }
+
+    const mcx = l10n.getMessageContext(id);
+
+    if (mcx === null) {
+      // Use the wrapped component as fallback.
+      return elem;
+    }
+
+    const msg = mcx.getMessage(id);
+    const [args, elems] = toArguments(this.props);
+    const {
+      value: messageValue,
+      attrs: messageAttrs
+    } = l10n.formatCompound(mcx, msg, args);
+
+    // The default is to forbid all message attributes. If the attrs prop exists
+    // on the Localized instance, only set message attributes which have been
+    // explicitly allowed by the developer.
+    if (attrs && messageAttrs) {
+      var localizedProps = {};
+
+      for (const [name, value] of Object.entries(messageAttrs)) {
+        if (attrs[name]) {
+          localizedProps[name] = value;
+        }
+      }
+    }
+
+    // If the wrapped component is a known void element, explicitly dismiss the
+    // message value and do not pass it to cloneElement in order to avoid the
+    // "void element tags must neither have `children` nor use
+    // `dangerouslySetInnerHTML`" error.
+    if (elem.type in vendor_voidElementTags) {
+      return Object(external__React_["cloneElement"])(elem, localizedProps);
+    }
+
+    // If the message has a null value, we're only interested in its attributes.
+    // Do not pass the null value to cloneElement as it would nuke all children
+    // of the wrapped component.
+    if (messageValue === null) {
+      return Object(external__React_["cloneElement"])(elem, localizedProps);
+    }
+
+    // If the message value doesn't contain any markup nor any HTML entities,
+    // insert it as the only child of the wrapped component.
+    if (!reMarkup.test(messageValue)) {
+      return Object(external__React_["cloneElement"])(elem, localizedProps, messageValue);
+    }
+
+    // If the message contains markup, parse it and try to match the children
+    // found in the translation with the props passed to this Localized.
+    const translationNodes = Array.from(parseMarkup(messageValue).childNodes);
+    const translatedChildren = translationNodes.map(childNode => {
+      if (childNode.nodeType === childNode.TEXT_NODE) {
+        return childNode.textContent;
+      }
+
+      // If the child is not expected just take its textContent.
+      if (!elems.hasOwnProperty(childNode.localName)) {
+        return childNode.textContent;
+      }
+
+      const sourceChild = elems[childNode.localName];
+
+      // If the element passed as a prop to <Localized> is a known void element,
+      // explicitly dismiss any textContent which might have accidentally been
+      // defined in the translation to prevent the "void element tags must not
+      // have children" error.
+      if (sourceChild.type in vendor_voidElementTags) {
+        return sourceChild;
+      }
+
+      // TODO Protect contents of elements wrapped in <Localized>
+      // https://github.com/projectfluent/fluent.js/issues/184
+      // TODO  Control localizable attributes on elements passed as props
+      // https://github.com/projectfluent/fluent.js/issues/185
+      return Object(external__React_["cloneElement"])(sourceChild, null, childNode.textContent);
+    });
+
+    return Object(external__React_["cloneElement"])(elem, localizedProps, ...translatedChildren);
+  }
+}
+
+localized_Localized.contextTypes = {
+  l10n: isReactLocalization
+};
+
+localized_Localized.propTypes = {
+  children: external__PropTypes__default.a.element.isRequired
+};
+// CONCATENATED MODULE: ./node_modules/fluent-react/src/index.js
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "a", function() { return provider_LocalizationProvider; });
+/* unused concated harmony import withLocalization */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return withLocalization; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "b", function() { return localized_Localized; });
+/* unused concated harmony import ReactLocalization */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return localization_ReactLocalization; });
+/* unused concated harmony import isReactLocalization */
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, false, function() { return isReactLocalization; });
+/*
+ * @module fluent-react
+ * @overview
+ *
+
+ * `fluent-react` provides React bindings for Fluent.  It takes advantage of
+ * React's Components system and the virtual DOM.  Translations are exposed to
+ * components via the provider pattern.
+ *
+ *     <LocalizationProvider messages={…}>
+ *         <Localized id="hello-world">
+ *             <p>{'Hello, world!'}</p>
+ *         </Localized>
+ *     </LocalizationProvider>
+ *
+ * Consult the documentation of the `LocalizationProvider` and the `Localized`
+ * components for more information.
+ */
+
+
+
+
+
+
+/***/ }),
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 22 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3414,7 +6248,7 @@ ImpressionsWrapper.defaultProps = {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 23 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3553,7 +6387,7 @@ class OnboardingMessage_OnboardingMessage extends external__React__default.a.Pur
 
 
 /***/ }),
-/* 24 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3562,18 +6396,9 @@ class OnboardingMessage_OnboardingMessage extends external__React__default.a.Pur
 var external__React_ = __webpack_require__(0);
 var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
-// CONCATENATED MODULE: ./content-src/asrouter/template-utils.js
-function safeURI(url) {
-  if (!url) {
-    return "";
-  }
-  const { protocol } = new URL(url);
-  const isAllowed = ["http:", "https:", "data:", "resource:", "chrome:"].includes(protocol);
-  if (!isAllowed) {
-    console.warn(`The protocol ${protocol} is not allowed for template URLs.`); // eslint-disable-line no-console
-  }
-  return isAllowed ? url : "";
-}
+// EXTERNAL MODULE: ./content-src/asrouter/template-utils.js
+var template_utils = __webpack_require__(5);
+
 // CONCATENATED MODULE: ./content-src/asrouter/components/Button/Button.jsx
 
 
@@ -3596,7 +6421,7 @@ const Button = props => {
 
   return external__React__default.a.createElement(
     "a",
-    { href: safeURI(props.url),
+    { href: Object(template_utils["a" /* safeURI */])(props.url),
       onClick: props.onClick,
       className: props.className || "ASRouterButton",
       style: style },
@@ -3664,7 +6489,7 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
   }
 
   renderTitleIcon() {
-    const titleIcon = safeURI(this.props.content.title_icon);
+    const titleIcon = Object(template_utils["a" /* safeURI */])(this.props.content.title_icon);
     return titleIcon ? external__React__default.a.createElement("span", { className: "titleIcon", style: { backgroundImage: `url("${titleIcon}")` } }) : null;
   }
 
@@ -3690,7 +6515,7 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
     return external__React__default.a.createElement(
       SnippetBase_SnippetBase,
       _extends({}, props, { className: className }),
-      external__React__default.a.createElement("img", { src: safeURI(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
+      external__React__default.a.createElement("img", { src: Object(template_utils["a" /* safeURI */])(props.content.icon) || DEFAULT_ICON_PATH, className: "icon" }),
       external__React__default.a.createElement(
         "div",
         null,
@@ -3701,7 +6526,7 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
         external__React__default.a.createElement(
           "p",
           { className: "body" },
-          props.content.text
+          props.richText || props.content.text
         ),
         " ",
         hasLink ? this.renderButton("ASRouterAnchor") : null
@@ -3718,25 +6543,25 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
 
 
 /***/ }),
-/* 25 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ASRouterAdmin_ASRouterAdmin__ = __webpack_require__(26);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_ConfirmDialog_ConfirmDialog__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ASRouterAdmin_ASRouterAdmin__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_ConfirmDialog_ConfirmDialog__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react_redux__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_content_src_components_ManualMigration_ManualMigration__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_content_src_components_ManualMigration_ManualMigration__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_content_src_components_StartupOverlay_StartupOverlay__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_content_src_components_StartupOverlay_StartupOverlay__ = __webpack_require__(43);
 
 
 
@@ -3900,11 +6725,11 @@ const Base = Object(__WEBPACK_IMPORTED_MODULE_4_react_redux__["connect"])(state 
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 26 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
 
@@ -4086,7 +6911,7 @@ class ASRouterAdmin extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureCo
 
 
 /***/ }),
-/* 27 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4199,7 +7024,7 @@ const ConfirmDialog = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connect"
 
 
 /***/ }),
-/* 28 */
+/* 33 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4275,7 +7100,7 @@ const ManualMigration = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connec
 
 
 /***/ }),
-/* 29 */
+/* 34 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4377,7 +7202,7 @@ var PrerenderData = new _PrerenderData({
 });
 
 /***/ }),
-/* 30 */
+/* 35 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4386,7 +7211,7 @@ var PrerenderData = new _PrerenderData({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_redux__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react__);
 /* globals ContentSearchUIController */
@@ -4496,7 +7321,7 @@ const Search = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])()(Ob
 
 
 /***/ }),
-/* 31 */
+/* 36 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4506,22 +7331,22 @@ const Search = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])()(Ob
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 32 */
+/* 37 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(33);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(41);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -4794,370 +7619,15 @@ const Sections = Object(__WEBPACK_IMPORTED_MODULE_5_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 33 */
+/* 38 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_redux__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_intl__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_LinkMenu_LinkMenu__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
 
+// EXTERNAL MODULE: ./common/Actions.jsm
+var Actions = __webpack_require__(1);
 
-
-
-
-
-
-
-// Keep track of pending image loads to only request once
-const gImageLoading = new Map();
-
-/**
- * Card component.
- * Cards are found within a Section component and contain information about a link such
- * as preview image, page title, page description, and some context about if the page
- * was visited, bookmarked, trending etc...
- * Each Section can make an unordered list of Cards which will create one instane of
- * this class. Each card will then get a context menu which reflects the actions that
- * can be done on this Card.
- */
-class _Card extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      activeCard: null,
-      imageLoaded: false,
-      showContextMenu: false,
-      cardImage: null
-    };
-    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
-    this.onMenuUpdate = this.onMenuUpdate.bind(this);
-    this.onLinkClick = this.onLinkClick.bind(this);
-  }
-
-  /**
-   * Helper to conditionally load an image and update state when it loads.
-   */
-  async maybeLoadImage() {
-    // No need to load if it's already loaded or no image
-    const { cardImage } = this.state;
-    if (!cardImage) {
-      return;
-    }
-
-    const imageUrl = cardImage.url;
-    if (!this.state.imageLoaded) {
-      // Initialize a promise to share a load across multiple card updates
-      if (!gImageLoading.has(imageUrl)) {
-        const loaderPromise = new Promise((resolve, reject) => {
-          const loader = new Image();
-          loader.addEventListener("load", resolve);
-          loader.addEventListener("error", reject);
-          loader.src = imageUrl;
-        });
-
-        // Save and remove the promise only while it's pending
-        gImageLoading.set(imageUrl, loaderPromise);
-        loaderPromise.catch(ex => ex).then(() => gImageLoading.delete(imageUrl)).catch();
-      }
-
-      // Wait for the image whether just started loading or reused promise
-      await gImageLoading.get(imageUrl);
-
-      // Only update state if we're still waiting to load the original image
-      if (_Card.isImageInState(this.state, this.props.link.image) && !this.state.imageLoaded) {
-        this.setState({ imageLoaded: true });
-      }
-    }
-  }
-
-  /**
-   * Checks if `.image` property on link object is a local image with blob data.
-   * This function only works for props since state has `.url` and not `.data`.
-   *
-   * @param {obj|string} image
-   * @returns {bool} true if image is a local image object, otherwise false
-   *                 (otherwise, image will be a URL as a string)
-   */
-  static isLocalImageObject(image) {
-    return image && image.data && image.path;
-  }
-
-  /**
-   * Helper to obtain the next state based on nextProps and prevState.
-   *
-   * NOTE: Rename this method to getDerivedStateFromProps when we update React
-   *       to >= 16.3. We will need to update tests as well. We cannot rename this
-   *       method to getDerivedStateFromProps now because there is a mismatch in
-   *       the React version that we are using for both testing and production.
-   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
-   *
-   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
-   */
-  static getNextStateFromProps(nextProps, prevState) {
-    const { image } = nextProps.link;
-    const imageInState = _Card.isImageInState(prevState, image);
-    let nextState = null;
-
-    // Image is updating.
-    if (!imageInState && nextProps.link) {
-      nextState = { imageLoaded: false };
-    }
-
-    if (imageInState) {
-      return nextState;
-    }
-
-    nextState = nextState || {};
-
-    // Since image was updated, attempt to revoke old image blob URL, if it exists.
-    _Card.maybeRevokeImageBlob(prevState);
-
-    if (!image) {
-      nextState.cardImage = null;
-    } else if (_Card.isLocalImageObject(image)) {
-      nextState.cardImage = { url: global.URL.createObjectURL(image.data), path: image.path };
-    } else {
-      nextState.cardImage = { url: image };
-    }
-
-    return nextState;
-  }
-
-  /**
-   * Helper to conditionally revoke the previous card image if it is a blob.
-   */
-  static maybeRevokeImageBlob(prevState) {
-    if (prevState.cardImage && prevState.cardImage.path) {
-      global.URL.revokeObjectURL(prevState.cardImage.url);
-    }
-  }
-
-  /**
-   * Helper to check if an image is already in state.
-   */
-  static isImageInState(state, image) {
-    const { cardImage } = state;
-
-    // Both image and cardImage are present.
-    if (image && cardImage) {
-      return _Card.isLocalImageObject(image) ? cardImage.path === image.path : cardImage.url === image;
-    }
-
-    // This will only handle the remaining three possible outcomes.
-    // (i.e. everything except when both image and cardImage are present)
-    return !image && !cardImage;
-  }
-
-  onMenuButtonClick(event) {
-    event.preventDefault();
-    this.setState({
-      activeCard: this.props.index,
-      showContextMenu: true
-    });
-  }
-
-  /**
-   * Report to telemetry additional information about the item.
-   */
-  _getTelemetryInfo() {
-    // Filter out "history" type for being the default
-    if (this.props.link.type !== "history") {
-      return { value: { card_type: this.props.link.type } };
-    }
-
-    return null;
-  }
-
-  onLinkClick(event) {
-    event.preventDefault();
-    if (this.props.link.type === "download") {
-      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].OnlyToMain({
-        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].SHOW_DOWNLOAD_FILE,
-        data: this.props.link
-      }));
-    } else {
-      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
-      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].OnlyToMain({
-        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].OPEN_LINK,
-        data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
-      }));
-    }
-    if (this.props.isWebExtension) {
-      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].WebExtEvent(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].WEBEXT_CLICK, {
-        source: this.props.eventSource,
-        url: this.props.link.url,
-        action_position: this.props.index
-      }));
-    } else {
-      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].UserEvent(Object.assign({
-        event: "CLICK",
-        source: this.props.eventSource,
-        action_position: this.props.index
-      }, this._getTelemetryInfo())));
-
-      if (this.props.shouldSendImpressionStats) {
-        this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].ImpressionStats({
-          source: this.props.eventSource,
-          click: 0,
-          tiles: [{ id: this.props.link.guid, pos: this.props.index }]
-        }));
-      }
-    }
-  }
-
-  onMenuUpdate(showContextMenu) {
-    this.setState({ showContextMenu });
-  }
-
-  componentDidMount() {
-    this.maybeLoadImage();
-  }
-
-  componentDidUpdate() {
-    this.maybeLoadImage();
-  }
-
-  // NOTE: Remove this function when we update React to >= 16.3 since React will
-  //       call getDerivedStateFromProps automatically. We will also need to
-  //       rename getNextStateFromProps to getDerivedStateFromProps.
-  componentWillMount() {
-    const nextState = _Card.getNextStateFromProps(this.props, this.state);
-    if (nextState) {
-      this.setState(nextState);
-    }
-  }
-
-  // NOTE: Remove this function when we update React to >= 16.3 since React will
-  //       call getDerivedStateFromProps automatically. We will also need to
-  //       rename getNextStateFromProps to getDerivedStateFromProps.
-  componentWillReceiveProps(nextProps) {
-    const nextState = _Card.getNextStateFromProps(nextProps, this.state);
-    if (nextState) {
-      this.setState(nextState);
-    }
-  }
-
-  componentWillUnmount() {
-    _Card.maybeRevokeImageBlob(this.state);
-  }
-
-  render() {
-    const { index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
-    const { props } = this;
-    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
-    // Display "now" as "trending" until we have new strings #3402
-    const { icon, intlID } = __WEBPACK_IMPORTED_MODULE_1__types__["a" /* cardContextTypes */][link.type === "now" ? "trending" : link.type] || {};
-    const hasImage = this.state.cardImage || link.hasImage;
-    const imageStyle = { backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none" };
-    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
-
-    return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-      "li",
-      { className: outerClassName },
-      __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-        "a",
-        { href: link.type === "pocket" ? link.open_url : link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
-        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-          "div",
-          { className: "card" },
-          __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-            "div",
-            { className: "card-preview-image-outer" },
-            hasImage && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
-          ),
-          __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-            "div",
-            { className: "card-details" },
-            link.type === "download" && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-              "div",
-              { className: "card-host-name alternate" },
-              __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3_react_intl__["FormattedMessage"], { id: Object(__WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__["a" /* GetPlatformString */])(this.props.platform) })
-            ),
-            link.hostname && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-              "div",
-              { className: "card-host-name" },
-              link.hostname.slice(0, 100),
-              link.type === "download" && `  \u2014 ${link.description}`
-            ),
-            __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-              "div",
-              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ") },
-              __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-                "h4",
-                { className: "card-title", dir: "auto" },
-                link.title
-              ),
-              __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-                "p",
-                { className: "card-description", dir: "auto" },
-                link.description
-              )
-            ),
-            __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-              "div",
-              { className: "card-context" },
-              icon && !link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
-              link.icon && link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("span", { className: "card-context-icon icon", style: { backgroundImage: `url('${link.icon}')` } }),
-              intlID && !link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-                "div",
-                { className: "card-context-label" },
-                __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3_react_intl__["FormattedMessage"], { id: intlID, defaultMessage: "Visited" })
-              ),
-              link.context && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-                "div",
-                { className: "card-context-label" },
-                link.context
-              )
-            )
-          )
-        )
-      ),
-      !props.placeholder && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-        "button",
-        { className: "context-menu-button icon",
-          onClick: this.onMenuButtonClick },
-        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
-          "span",
-          { className: "sr-only" },
-          `Open context menu for ${link.title}`
-        )
-      ),
-      isContextMenuOpen && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_5_content_src_components_LinkMenu_LinkMenu__["a" /* LinkMenu */], {
-        dispatch: dispatch,
-        index: index,
-        source: eventSource,
-        onUpdate: this.onMenuUpdate,
-        options: link.contextMenuOptions || contextMenuOptions,
-        site: link,
-        siteInfo: this._getTelemetryInfo(),
-        shouldSendImpressionStats: shouldSendImpressionStats })
-    );
-  }
-}
-/* unused harmony export _Card */
-
-_Card.defaultProps = { link: {} };
-const Card = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])(state => ({ platform: state.Prefs.values.platform }))(_Card);
-/* harmony export (immutable) */ __webpack_exports__["a"] = Card;
-
-const PlaceholderCard = props => __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(Card, { placeholder: true, className: props.className });
-/* harmony export (immutable) */ __webpack_exports__["b"] = PlaceholderCard;
-
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
-
-/***/ }),
-/* 34 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
+// CONCATENATED MODULE: ./content-src/components/Card/types.js
 const cardContextTypes = {
   history: {
     intlID: "type_label_visited",
@@ -5184,21 +7654,351 @@ const cardContextTypes = {
     icon: "download"
   }
 };
-/* harmony export (immutable) */ __webpack_exports__["a"] = cardContextTypes;
+// EXTERNAL MODULE: external "ReactRedux"
+var external__ReactRedux_ = __webpack_require__(4);
+var external__ReactRedux__default = /*#__PURE__*/__webpack_require__.n(external__ReactRedux_);
+
+// EXTERNAL MODULE: external "ReactIntl"
+var external__ReactIntl_ = __webpack_require__(2);
+var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__ReactIntl_);
+
+// EXTERNAL MODULE: ./content-src/lib/link-menu-options.js
+var link_menu_options = __webpack_require__(14);
+
+// EXTERNAL MODULE: ./content-src/components/LinkMenu/LinkMenu.jsx
+var LinkMenu = __webpack_require__(15);
+
+// EXTERNAL MODULE: external "React"
+var external__React_ = __webpack_require__(0);
+var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
+
+// EXTERNAL MODULE: ./content-src/lib/screenshot-utils.js
+var screenshot_utils = __webpack_require__(17);
+
+// CONCATENATED MODULE: ./content-src/components/Card/Card.jsx
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+
+
+
+
+
+
+
+
+
+// Keep track of pending image loads to only request once
+const gImageLoading = new Map();
+
+/**
+ * Card component.
+ * Cards are found within a Section component and contain information about a link such
+ * as preview image, page title, page description, and some context about if the page
+ * was visited, bookmarked, trending etc...
+ * Each Section can make an unordered list of Cards which will create one instane of
+ * this class. Each card will then get a context menu which reflects the actions that
+ * can be done on this Card.
+ */
+class Card__Card extends external__React__default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeCard: null,
+      imageLoaded: false,
+      showContextMenu: false,
+      cardImage: null
+    };
+    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
+    this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  /**
+   * Helper to conditionally load an image and update state when it loads.
+   */
+  maybeLoadImage() {
+    var _this = this;
+
+    return _asyncToGenerator(function* () {
+      // No need to load if it's already loaded or no image
+      const { cardImage } = _this.state;
+      if (!cardImage) {
+        return;
+      }
+
+      const imageUrl = cardImage.url;
+      if (!_this.state.imageLoaded) {
+        // Initialize a promise to share a load across multiple card updates
+        if (!gImageLoading.has(imageUrl)) {
+          const loaderPromise = new Promise(function (resolve, reject) {
+            const loader = new Image();
+            loader.addEventListener("load", resolve);
+            loader.addEventListener("error", reject);
+            loader.src = imageUrl;
+          });
+
+          // Save and remove the promise only while it's pending
+          gImageLoading.set(imageUrl, loaderPromise);
+          loaderPromise.catch(function (ex) {
+            return ex;
+          }).then(function () {
+            return gImageLoading.delete(imageUrl);
+          }).catch();
+        }
+
+        // Wait for the image whether just started loading or reused promise
+        yield gImageLoading.get(imageUrl);
+
+        // Only update state if we're still waiting to load the original image
+        if (screenshot_utils["a" /* ScreenshotUtils */].isRemoteImageLocal(_this.state.cardImage, _this.props.link.image) && !_this.state.imageLoaded) {
+          _this.setState({ imageLoaded: true });
+        }
+      }
+    })();
+  }
+
+  /**
+   * Helper to obtain the next state based on nextProps and prevState.
+   *
+   * NOTE: Rename this method to getDerivedStateFromProps when we update React
+   *       to >= 16.3. We will need to update tests as well. We cannot rename this
+   *       method to getDerivedStateFromProps now because there is a mismatch in
+   *       the React version that we are using for both testing and production.
+   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
+   *
+   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
+   */
+  static getNextStateFromProps(nextProps, prevState) {
+    const { image } = nextProps.link;
+    const imageInState = screenshot_utils["a" /* ScreenshotUtils */].isRemoteImageLocal(prevState.cardImage, image);
+    let nextState = null;
+
+    // Image is updating.
+    if (!imageInState && nextProps.link) {
+      nextState = { imageLoaded: false };
+    }
+
+    if (imageInState) {
+      return nextState;
+    }
+
+    // Since image was updated, attempt to revoke old image blob URL, if it exists.
+    screenshot_utils["a" /* ScreenshotUtils */].maybeRevokeBlobObjectURL(prevState.cardImage);
+
+    nextState = nextState || {};
+    nextState.cardImage = screenshot_utils["a" /* ScreenshotUtils */].createLocalImageObject(image);
+
+    return nextState;
+  }
+
+  onMenuButtonClick(event) {
+    event.preventDefault();
+    this.setState({
+      activeCard: this.props.index,
+      showContextMenu: true
+    });
+  }
+
+  /**
+   * Report to telemetry additional information about the item.
+   */
+  _getTelemetryInfo() {
+    // Filter out "history" type for being the default
+    if (this.props.link.type !== "history") {
+      return { value: { card_type: this.props.link.type } };
+    }
+
+    return null;
+  }
+
+  onLinkClick(event) {
+    event.preventDefault();
+    if (this.props.link.type === "download") {
+      this.props.dispatch(Actions["b" /* actionCreators */].OnlyToMain({
+        type: Actions["c" /* actionTypes */].SHOW_DOWNLOAD_FILE,
+        data: this.props.link
+      }));
+    } else {
+      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
+      this.props.dispatch(Actions["b" /* actionCreators */].OnlyToMain({
+        type: Actions["c" /* actionTypes */].OPEN_LINK,
+        data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
+      }));
+    }
+    if (this.props.isWebExtension) {
+      this.props.dispatch(Actions["b" /* actionCreators */].WebExtEvent(Actions["c" /* actionTypes */].WEBEXT_CLICK, {
+        source: this.props.eventSource,
+        url: this.props.link.url,
+        action_position: this.props.index
+      }));
+    } else {
+      this.props.dispatch(Actions["b" /* actionCreators */].UserEvent(Object.assign({
+        event: "CLICK",
+        source: this.props.eventSource,
+        action_position: this.props.index
+      }, this._getTelemetryInfo())));
+
+      if (this.props.shouldSendImpressionStats) {
+        this.props.dispatch(Actions["b" /* actionCreators */].ImpressionStats({
+          source: this.props.eventSource,
+          click: 0,
+          tiles: [{ id: this.props.link.guid, pos: this.props.index }]
+        }));
+      }
+    }
+  }
+
+  onMenuUpdate(showContextMenu) {
+    this.setState({ showContextMenu });
+  }
+
+  componentDidMount() {
+    this.maybeLoadImage();
+  }
+
+  componentDidUpdate() {
+    this.maybeLoadImage();
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillMount() {
+    const nextState = Card__Card.getNextStateFromProps(this.props, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillReceiveProps(nextProps) {
+    const nextState = Card__Card.getNextStateFromProps(nextProps, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  componentWillUnmount() {
+    screenshot_utils["a" /* ScreenshotUtils */].maybeRevokeBlobObjectURL(this.state.cardImage);
+  }
+
+  render() {
+    const { index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
+    const { props } = this;
+    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
+    // Display "now" as "trending" until we have new strings #3402
+    const { icon, intlID } = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
+    const hasImage = this.state.cardImage || link.hasImage;
+    const imageStyle = { backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none" };
+    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
+
+    return external__React__default.a.createElement(
+      "li",
+      { className: outerClassName },
+      external__React__default.a.createElement(
+        "a",
+        { href: link.type === "pocket" ? link.open_url : link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
+        external__React__default.a.createElement(
+          "div",
+          { className: "card" },
+          external__React__default.a.createElement(
+            "div",
+            { className: "card-preview-image-outer" },
+            hasImage && external__React__default.a.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
+          ),
+          external__React__default.a.createElement(
+            "div",
+            { className: "card-details" },
+            link.type === "download" && external__React__default.a.createElement(
+              "div",
+              { className: "card-host-name alternate" },
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: Object(link_menu_options["a" /* GetPlatformString */])(this.props.platform) })
+            ),
+            link.hostname && external__React__default.a.createElement(
+              "div",
+              { className: "card-host-name" },
+              link.hostname.slice(0, 100),
+              link.type === "download" && `  \u2014 ${link.description}`
+            ),
+            external__React__default.a.createElement(
+              "div",
+              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ") },
+              external__React__default.a.createElement(
+                "h4",
+                { className: "card-title", dir: "auto" },
+                link.title
+              ),
+              external__React__default.a.createElement(
+                "p",
+                { className: "card-description", dir: "auto" },
+                link.description
+              )
+            ),
+            external__React__default.a.createElement(
+              "div",
+              { className: "card-context" },
+              icon && !link.context && external__React__default.a.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
+              link.icon && link.context && external__React__default.a.createElement("span", { className: "card-context-icon icon", style: { backgroundImage: `url('${link.icon}')` } }),
+              intlID && !link.context && external__React__default.a.createElement(
+                "div",
+                { className: "card-context-label" },
+                external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: intlID, defaultMessage: "Visited" })
+              ),
+              link.context && external__React__default.a.createElement(
+                "div",
+                { className: "card-context-label" },
+                link.context
+              )
+            )
+          )
+        )
+      ),
+      !props.placeholder && external__React__default.a.createElement(
+        "button",
+        { className: "context-menu-button icon",
+          onClick: this.onMenuButtonClick },
+        external__React__default.a.createElement(
+          "span",
+          { className: "sr-only" },
+          `Open context menu for ${link.title}`
+        )
+      ),
+      isContextMenuOpen && external__React__default.a.createElement(LinkMenu["a" /* LinkMenu */], {
+        dispatch: dispatch,
+        index: index,
+        source: eventSource,
+        onUpdate: this.onMenuUpdate,
+        options: link.contextMenuOptions || contextMenuOptions,
+        site: link,
+        siteInfo: this._getTelemetryInfo(),
+        shouldSendImpressionStats: shouldSendImpressionStats })
+    );
+  }
+}
+/* unused harmony export _Card */
+
+Card__Card.defaultProps = { link: {} };
+const Card = Object(external__ReactRedux_["connect"])(state => ({ platform: state.Prefs.values.platform }))(Card__Card);
+/* harmony export (immutable) */ __webpack_exports__["a"] = Card;
+
+const PlaceholderCard = props => external__React__default.a.createElement(Card, { placeholder: true, className: props.className });
+/* harmony export (immutable) */ __webpack_exports__["b"] = PlaceholderCard;
 
 
 /***/ }),
-/* 35 */
+/* 39 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_section_menu_options__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_section_menu_options__ = __webpack_require__(19);
 
 
 
@@ -5261,7 +8061,7 @@ const SectionMenu = Object(__WEBPACK_IMPORTED_MODULE_2_react_intl__["injectIntl"
 
 
 /***/ }),
-/* 36 */
+/* 40 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5317,23 +8117,23 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 
 
 /***/ }),
-/* 37 */
+/* 41 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_Reducers_jsm__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(38);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__TopSite__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_Reducers_jsm__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__TopSite__ = __webpack_require__(22);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -5494,7 +8294,7 @@ const TopSites = Object(__WEBPACK_IMPORTED_MODULE_4_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 38 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5511,7 +8311,7 @@ var external__React_ = __webpack_require__(0);
 var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
 // EXTERNAL MODULE: ./content-src/components/TopSites/TopSitesConstants.js
-var TopSitesConstants = __webpack_require__(5);
+var TopSitesConstants = __webpack_require__(6);
 
 // CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteFormInput.jsx
 
@@ -5589,7 +8389,7 @@ TopSiteFormInput_TopSiteFormInput.defaultProps = {
   validationError: false
 };
 // EXTERNAL MODULE: ./content-src/components/TopSites/TopSite.jsx
-var TopSite = __webpack_require__(18);
+var TopSite = __webpack_require__(22);
 
 // CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteForm.jsx
 
@@ -5864,7 +8664,7 @@ TopSiteForm_TopSiteForm.defaultProps = {
 };
 
 /***/ }),
-/* 39 */
+/* 43 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6019,12 +8819,12 @@ const StartupOverlay = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect
 
 
 /***/ }),
-/* 40 */
+/* 44 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(21);
 
 
 

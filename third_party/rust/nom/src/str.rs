@@ -21,15 +21,32 @@
 macro_rules! tag_s (
   ($i:expr, $tag: expr) => (
     {
-      let res: $crate::IResult<_,_> = if $tag.len() > $i.len() {
-        $crate::IResult::Incomplete($crate::Needed::Size($tag.len()))
-      //} else if &$i[0..$tag.len()] == $tag {
-      } else if ($i).starts_with($tag) {
-        $crate::IResult::Done(&$i[$tag.len()..], &$i[0..$tag.len()])
-      } else {
-        $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::TagStr, $i))
-      };
-      res
+      tag!($i, $tag)
+    }
+  );
+);
+
+/// `tag_no_case_s!(&str) => &str -> IResult<&str, &str>`
+/// declares a case-insensitive string as a suite to recognize
+///
+/// consumes the recognized characters
+///
+/// ```
+/// # #[macro_use] extern crate nom;
+/// # use nom::IResult::{self,Done};
+/// # fn main() {
+///  fn test(input: &str) -> IResult<&str, &str> {
+///    tag_no_case_s!(input, "ABcd")
+///  }
+///  let r = test("aBCdefgh");
+///  assert_eq!(r, Done("efgh", "aBCd"));
+/// # }
+/// ```
+#[macro_export]
+macro_rules! tag_no_case_s (
+  ($i:expr, $tag: expr) => (
+    {
+      tag_no_case!($i, $tag)
     }
   );
 );
@@ -47,28 +64,19 @@ macro_rules! tag_s (
 ///  let a = "abcdefgh";
 ///
 ///  assert_eq!(take5(a), Done("fgh", "abcde"));
+///
+///  let b = "12345";
+///
+///  assert_eq!(take5(b), Done("", "12345"));
 /// # }
 /// ```
 #[macro_export]
 macro_rules! take_s (
   ($i:expr, $count:expr) => (
     {
+      let input = $i;
       let cnt = $count as usize;
-      let res: $crate::IResult<_,_> = if $i.chars().count() < cnt {
-        $crate::IResult::Incomplete($crate::Needed::Size(cnt))
-      } else {
-        let mut offset = $i.len();
-        let mut count = 0;
-        for (o, _) in $i.char_indices() {
-          if count == cnt {
-            offset = o;
-            break;
-          }
-          count += 1;
-        }
-        $crate::IResult::Done(&$i[offset..], &$i[..offset])
-      };
-      res
+      take!(input, cnt)
     }
   );
 );
@@ -91,22 +99,7 @@ macro_rules! take_s (
 macro_rules! is_not_s (
   ($input:expr, $arr:expr) => (
     {
-      use std::collections::HashSet;
-      let set: HashSet<char> = $arr.chars().collect();
-      let mut offset = $input.len();
-      for (o, c) in $input.char_indices() {
-        if set.contains(&c) {
-          offset = o;
-          break;
-        }
-      }
-      if offset == 0 {
-        $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::IsAStr,$input))
-      } else if offset < $input.len() {
-        $crate::IResult::Done(&$input[offset..], &$input[..offset])
-      } else {
-        $crate::IResult::Done("", $input)
-      }
+      is_not!($input, $arr)
     }
   );
 );
@@ -131,22 +124,7 @@ macro_rules! is_not_s (
 macro_rules! is_a_s (
   ($input:expr, $arr:expr) => (
     {
-      use std::collections::HashSet;
-      let set: HashSet<char> = $arr.chars().collect();
-      let mut offset = $input.len();
-      for (o, c) in $input.char_indices() {
-        if !set.contains(&c) {
-          offset = o;
-          break;
-        }
-      }
-      if offset == 0 {
-        $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::IsAStr,$input))
-      } else if offset < $input.len() {
-        $crate::IResult::Done(&$input[offset..], &$input[..offset])
-      } else {
-        $crate::IResult::Done("", $input)
-      }
+      is_a!($input, $arr)
     }
   );
 );
@@ -173,18 +151,7 @@ macro_rules! is_a_s (
 macro_rules! take_while_s (
   ($input:expr, $submac:ident!( $($args:tt)* )) => (
     {
-      let mut offset = $input.len();
-      for (o, c) in $input.char_indices() {
-        if !$submac!(c, $($args)*) {
-          offset = o;
-          break;
-        }
-      }
-      if offset < $input.len() {
-        $crate::IResult::Done(&$input[offset..], &$input[..offset])
-      } else {
-        $crate::IResult::Done("", $input)
-      }
+      take_while!($input, $submac!($($args)*))
     }
   );
   ($input:expr, $f:expr) => (
@@ -211,22 +178,7 @@ macro_rules! take_while_s (
 #[macro_export]
 macro_rules! take_while1_s (
   ($input:expr, $submac:ident!( $($args:tt)* )) => (
-    {
-      let mut offset = $input.len();
-      for (o, c) in $input.char_indices() {
-        if !$submac!(c, $($args)*) {
-          offset = o;
-          break;
-        }
-      }
-      if offset == 0 {
-        $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::TakeWhile1Str,$input))
-      } else if offset < $input.len() {
-        $crate::IResult::Done(&$input[offset..], &$input[..offset])
-      } else {
-        $crate::IResult::Done("", $input)
-      }
-    }
+    take_while1!($input, $submac!($($args)*))
   );
   ($input:expr, $f:expr) => (
     take_while1_s!($input, call!($f));
@@ -234,31 +186,35 @@ macro_rules! take_while1_s (
 );
 
 
-/// `take_till_s!(&str -> bool) => &str -> IResult<&str, &str>`
+/// `take_till_s!(char -> bool) => &str -> IResult<&str, &str>`
 /// returns the longest list of characters until the provided function succeeds
 ///
 /// The argument is either a function `char -> bool` or a macro returning a `bool
 #[macro_export]
 macro_rules! take_till_s (
   ($input:expr, $submac:ident!( $($args:tt)* )) => (
-
     {
-      let mut offset = $input.len();
-      for (o, c) in $input.char_indices() {
-        if $submac!(c, $($args)*) {
-            offset = o;
-            break;
-        }
-      }
-      if offset < $input.len() {
-        $crate::IResult::Done(&$input[offset..], &$input[..offset])
-      } else {
-        $crate::IResult::Done("", $input)
-      }
+      take_till!($input, $submac!($($args)*))
     }
   );
   ($input:expr, $f:expr) => (
     take_till_s!($input, call!($f));
+  );
+);
+
+/// `take_till1_s!(char -> bool) => &str -> IResult<&str, &str>`
+/// returns the longest non empty list of characters until the provided function succeeds
+///
+/// The argument is either a function `char -> bool` or a macro returning a `bool
+#[macro_export]
+macro_rules! take_till1_s (
+  ($input:expr, $submac:ident!( $($args:tt)* )) => (
+    {
+      take_till1!($input, $submac!($($args)*))
+    }
+  );
+  ($input:expr, $f:expr) => (
+    take_till1_s!($input, call!($f));
   );
 );
 
@@ -268,42 +224,7 @@ macro_rules! take_till_s (
 macro_rules! take_until_and_consume_s (
   ($input:expr, $substr:expr) => (
     {
-      #[inline(always)]
-      fn shift_window_and_cmp(window: & mut ::std::vec::Vec<char>, c: char, substr_vec: & ::std::vec::Vec<char>) -> bool {
-        window.push(c);
-        if window.len() > substr_vec.len() {
-          window.remove(0);
-        }
-        window == substr_vec
-      }
-      let res: $crate::IResult<_, _> = if $substr.len() > $input.len() {
-        $crate::IResult::Incomplete($crate::Needed::Size($substr.len()))
-      } else {
-        let substr_vec: ::std::vec::Vec<char> = $substr.chars().collect();
-        let mut window: ::std::vec::Vec<char> = vec![];
-        let mut offset = $input.len();
-        let mut parsed = false;
-        for (o, c) in $input.char_indices() {
-            if parsed {
-                // The easiest way to get the byte offset of the char after the found string
-                offset = o;
-                break;
-            }
-            if shift_window_and_cmp(& mut window, c, &substr_vec) {
-                parsed = true;
-            }
-        }
-        if parsed {
-          if offset < $input.len() {
-            $crate::IResult::Done(&$input[offset..], &$input[..offset])
-          } else {
-            $crate::IResult::Done("", $input)
-          }
-        } else {
-          $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::TakeUntilAndConsumeStr,$input))
-        }
-      };
-      res
+      take_until_and_consume!($input, $substr)
     }
   );
 );
@@ -314,39 +235,7 @@ macro_rules! take_until_and_consume_s (
 macro_rules! take_until_s (
   ($input:expr, $substr:expr) => (
     {
-      #[inline(always)]
-      fn shift_window_and_cmp(window: & mut Vec<char>, c: char, substr_vec: &Vec<char>) -> bool {
-        window.push(c);
-        if window.len() > substr_vec.len() {
-          window.remove(0);
-        }
-        window == substr_vec
-      }
-      let res: $crate::IResult<&str, &str> = if $substr.len() > $input.len() {
-        $crate::IResult::Incomplete($crate::Needed::Size($substr.len()))
-      } else {
-        let substr_vec: Vec<char> = $substr.chars().collect();
-        let mut window: Vec<char> = vec![];
-        let mut offset = $input.len();
-        let mut parsed = false;
-        for (o, c) in $input.char_indices() {
-            if shift_window_and_cmp(& mut window, c, &substr_vec) {
-                parsed = true;
-                window.pop();
-                let window_len: usize = window.iter()
-                    .map(|x| x.len_utf8())
-                    .fold(0, |x, y| x + y);
-                offset = o - window_len;
-                break;
-            }
-        }
-        if parsed {
-          $crate::IResult::Done(&$input[offset..], &$input[..offset])
-        } else {
-          $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::TakeUntilStr,$input))
-        }
-      };
-      res
+      take_until!($input, $substr)
     }
   );
 );
@@ -451,8 +340,8 @@ mod test {
         }
     }
 
-  use internal::IResult::{Done, Error};
-  use internal::Err::Position;
+  use internal::IResult::{Done, Error, Incomplete};
+  use internal::Needed;
   use util::ErrorKind;
 
   pub fn is_alphabetic(c:char) -> bool {
@@ -480,10 +369,10 @@ mod test {
     let c = "abcd123";
     let d = "123";
 
-    assert_eq!(f(&a[..]), Error(Position(ErrorKind::TakeWhile1Str, &""[..])));
+    assert_eq!(f(&a[..]), Incomplete(Needed::Size(1)));
     assert_eq!(f(&b[..]), Done(&a[..], &b[..]));
     assert_eq!(f(&c[..]), Done(&"123"[..], &b[..]));
-    assert_eq!(f(&d[..]), Error(Position(ErrorKind::TakeWhile1Str, &d[..])));
+    assert_eq!(f(&d[..]), Error(error_position!(ErrorKind::TakeWhile1, &d[..])));
   }
 
   #[test]
@@ -557,16 +446,16 @@ mod test {
   fn take_until_and_consume_s_succeed() {
     const INPUT: &'static str = "βèƒôřèÂßÇáƒƭèř";
     const FIND: &'static str = "ÂßÇ";
-    const CONSUMED: &'static str = "βèƒôřèÂßÇ";
+    const OUTPUT: &'static str = "βèƒôřè";
     const LEFTOVER: &'static str = "áƒƭèř";
 
     match take_until_and_consume_s!(INPUT, FIND) {
       IResult::Done(extra, output) => {
         assert!(extra == LEFTOVER, "Parser `take_until_and_consume_s`\
                     consumed leftover input. Leftover `{}`.", extra);
-        assert!(output == CONSUMED, "Parser `take_until_and_consume_s`\
-                    doens't return the string it consumed on success. Expected `{}`, got `{}`.",
-                    CONSUMED, output);
+        assert!(output == OUTPUT, "Parser `take_until_and_consume_s`\
+                    doens't return the string it selected on success. Expected `{}`, got `{}`.",
+                    OUTPUT, output);
       }
       other => panic!("Parser `take_until_and_consume_s` didn't succeed when it should have. \
                              Got `{:?}`.", other),
@@ -731,4 +620,39 @@ mod test {
                              Got `{:?}`.", other),
         };
     }
+
+    #[test]
+  #[cfg(feature = "std")]
+    fn recognize_is_a_s() {
+    let a = "aabbab";
+    let b = "ababcd";
+
+    named!(f <&str,&str>, recognize!(many1!(alt!( tag_s!("a") | tag_s!("b") ))));
+
+    assert_eq!(f(&a[..]), Done(&a[6..], &a[..]));
+    assert_eq!(f(&b[..]), Done(&b[4..], &b[..4]));
+
+    }
+
+    #[test]
+    fn utf8_indexing() {
+      named!(dot(&str) -> &str,
+        tag_s!(".")
+      );
+
+      dot("點");
+    }
+
+  #[test]
+  fn case_insensitive() {
+    named!(test<&str,&str>, tag_no_case!("ABcd"));
+    assert_eq!(test("aBCdefgh"), Done("efgh", "aBCd"));
+    assert_eq!(test("abcdefgh"), Done("efgh", "abcd"));
+    assert_eq!(test("ABCDefgh"), Done("efgh", "ABCD"));
+
+    named!(test2<&str,&str>, tag_no_case!("ABcd"));
+    assert_eq!(test2("aBCdefgh"), Done("efgh", "aBCd"));
+    assert_eq!(test2("abcdefgh"), Done("efgh", "abcd"));
+    assert_eq!(test2("ABCDefgh"), Done("efgh", "ABCD"));
+  }
 }

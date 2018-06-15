@@ -10,6 +10,12 @@ glob:**/*.md
 glob:**/*.js
 glob:**/*.jsm
 
+# Potential included images. We don't glob all paths in order to avoid importing
+# images unrelated to documentation (like branding or test images)
+glob:**/docs/**.jpg
+glob:**/docs/**.png
+glob:**/docs/**.svg
+
 # Python API docs.
 glob:**/*.py
 

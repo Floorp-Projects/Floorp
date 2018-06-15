@@ -9,7 +9,6 @@
 
 import os
 import pprint
-import sys
 
 from mozharness.base.config import parse_config_file
 

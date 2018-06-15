@@ -38,16 +38,13 @@ function mountCardWithProps(props) {
 
 describe("<Card>", () => {
   let globals;
-  let sandbox;
   let wrapper;
   beforeEach(() => {
     globals = new GlobalOverrider();
-    sandbox = sinon.sandbox.create();
     wrapper = mountCardWithProps(DEFAULT_PROPS);
   });
   afterEach(() => {
     DEFAULT_PROPS.dispatch.reset();
-    sandbox.restore();
     globals.restore();
   });
   it("should render a Card component", () => assert.ok(wrapper.exists()));
@@ -147,14 +144,17 @@ describe("<Card>", () => {
     assert.equal(DEFAULT_PROPS.dispatch.firstCall.args[0].type, at.OPEN_LINK);
   });
   describe("card image display", () => {
-    const DEFAULT_BLOB_URL = "blob:testBlobUrl";
+    const DEFAULT_BLOB_URL = "blob://test";
     let url;
     beforeEach(() => {
-      url = {createObjectURL: sandbox.stub().returns(DEFAULT_BLOB_URL), revokeObjectURL: sandbox.spy()};
+      url = {
+        createObjectURL: globals.sandbox.stub().returns(DEFAULT_BLOB_URL),
+        revokeObjectURL: globals.sandbox.spy()
+      };
       globals.set("URL", url);
     });
     afterEach(() => {
-      sandbox.restore();
+      globals.restore();
     });
     it("should display a regular image correctly and not call revokeObjectURL when unmounted", () => {
       wrapper = shallow(<Card {...DEFAULT_PROPS} />);
@@ -242,30 +242,6 @@ describe("<Card>", () => {
 
       assert.notCalled(url.createObjectURL);
       assert.notCalled(url.revokeObjectURL);
-    });
-  });
-  describe("static isImageInState", () => {
-    it("should return true if both image and cardImage are not present", () => {
-      assert.isTrue(Card.isImageInState({cardImage: null}, null));
-    });
-    it("should return false if image is present and cardImage is not present", () => {
-      assert.isFalse(Card.isImageInState({cardImage: null}, {}));
-    });
-    it("should return false if image is not present and cardImage is present", () => {
-      assert.isFalse(Card.isImageInState({cardImage: {}}, null));
-    });
-    it("should return true if both image and cardImage are equal blobs", () => {
-      const blob = new Blob([0]);
-      assert.isTrue(Card.isImageInState({cardImage: {path: "/hello", data: blob}}, {path: "/hello", data: blob}));
-    });
-    it("should return false if both image and cardImage are different blobs", () => {
-      assert.isFalse(Card.isImageInState({cardImage: {path: "/different", data: new Blob([0])}}, {path: "/hello", data: new Blob([0])}));
-    });
-    it("should return true if both image and cardImage are equal images", () => {
-      assert.isTrue(Card.isImageInState({cardImage: {url: "test url"}}, "test url"));
-    });
-    it("should return false if both image and cardImage are different images", () => {
-      assert.isFalse(Card.isImageInState({cardImage: {url: "test url 1"}}, "test url 2"));
     });
   });
   describe("image loading", () => {

@@ -247,6 +247,10 @@ var gIdentityHandler = {
     event.stopPropagation();
   },
 
+  openPermissionPreferences() {
+    openPreferences("privacy-permissions", { origin: "identityPopup-permissions-PreferencesButton" });
+  },
+
   /**
    * Handler for mouseclicks on the "More Information" button in the
    * "identity-popup" panel.

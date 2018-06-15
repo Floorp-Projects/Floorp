@@ -17,9 +17,16 @@ module.exports = {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules/,
+        exclude: /node_modules\/(?!(fluent|fluent-react)\/).*/,
         loader: "babel-loader",
-        options: {presets: ["react"], plugins: [["transform-object-rest-spread", {"useBuiltIns": true}]]}
+        options: {
+          presets: ["react"],
+          plugins: [
+            ["transform-async-to-generator"],
+            ["transform-async-generator-functions"],
+            ["transform-object-rest-spread", {"useBuiltIns": true}]
+          ]
+        }
       },
       {
         test: /\.jsm$/,

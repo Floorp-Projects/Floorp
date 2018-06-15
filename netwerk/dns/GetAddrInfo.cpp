@@ -196,9 +196,9 @@ _GetMinTTLForRequestType_Windows(DnsapiInfo * dnsapi, const char* aHost,
 }
 
 static MOZ_ALWAYS_INLINE nsresult
-_GetTTLData_Windows(const char* aHost, uint32_t* aResult, uint16_t aAddressFamily)
+_GetTTLData_Windows(const nsACString& aHost, uint32_t* aResult, uint16_t aAddressFamily)
 {
-  MOZ_ASSERT(aHost);
+  MOZ_ASSERT(!aHost.IsEmpty());
   MOZ_ASSERT(aResult);
   if (aAddressFamily != PR_AF_UNSPEC &&
       aAddressFamily != PR_AF_INET &&
@@ -222,10 +222,10 @@ _GetTTLData_Windows(const char* aHost, uint32_t* aResult, uint16_t aAddressFamil
   // and/or AAAA requests, based on the address family requested.
   unsigned int ttl = (unsigned int)-1;
   if (aAddressFamily == PR_AF_UNSPEC || aAddressFamily == PR_AF_INET) {
-    _GetMinTTLForRequestType_Windows(dnsapi, aHost, DNS_TYPE_A, &ttl);
+    _GetMinTTLForRequestType_Windows(dnsapi, aHost.BeginReading(), DNS_TYPE_A, &ttl);
   }
   if (aAddressFamily == PR_AF_UNSPEC || aAddressFamily == PR_AF_INET6) {
-    _GetMinTTLForRequestType_Windows(dnsapi, aHost, DNS_TYPE_AAAA, &ttl);
+    _GetMinTTLForRequestType_Windows(dnsapi, aHost.BeginReading(), DNS_TYPE_AAAA, &ttl);
   }
 
   {
@@ -249,10 +249,10 @@ _GetTTLData_Windows(const char* aHost, uint32_t* aResult, uint16_t aAddressFamil
 ////////////////////////////////////
 
 static MOZ_ALWAYS_INLINE nsresult
-_GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
+_GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
                       uint16_t aFlags, AddrInfo** aAddrInfo)
 {
-  MOZ_ASSERT(aCanonHost);
+  MOZ_ASSERT(!aCanonHost.IsEmpty());
   MOZ_ASSERT(aAddrInfo);
 
   // We accept the same aFlags that nsHostResolver::ResolveHost accepts, but we
@@ -270,15 +270,15 @@ _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
     aAddressFamily = PR_AF_UNSPEC;
   }
 
-  PRAddrInfo* prai = PR_GetAddrInfoByName(aCanonHost, aAddressFamily, prFlags);
+  PRAddrInfo* prai = PR_GetAddrInfoByName(aCanonHost.BeginReading(), aAddressFamily, prFlags);
 
   if (!prai) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  const char* canonName = nullptr;
+  nsAutoCString canonName;
   if (aFlags & nsHostResolver::RES_CANON_NAME) {
-    canonName = PR_GetCanonNameFromAddrInfo(prai);
+    canonName.Assign(PR_GetCanonNameFromAddrInfo(prai));
   }
 
   bool filterNameCollision = !(aFlags & nsHostResolver::RES_ALLOW_NAME_COLLISION);
@@ -320,10 +320,10 @@ GetAddrInfoShutdown() {
 }
 
 nsresult
-GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
+GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily, uint16_t aFlags,
             AddrInfo** aAddrInfo, bool aGetTtl)
 {
-  if (NS_WARN_IF(!aHost) || NS_WARN_IF(!aAddrInfo)) {
+  if (NS_WARN_IF(aHost.IsEmpty()) || NS_WARN_IF(!aAddrInfo)) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -334,35 +334,36 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
   }
 #endif
 
+  nsAutoCString host(aHost);
   if (gNativeIsLocalhost) {
     // pretend we use the given host but use IPv4 localhost instead!
-    aHost = "localhost";
+    host = NS_LITERAL_CSTRING("localhost");
     aAddressFamily = PR_AF_INET;
   }
 
   *aAddrInfo = nullptr;
-  nsresult rv = _GetAddrInfo_Portable(aHost, aAddressFamily, aFlags,
+  nsresult rv = _GetAddrInfo_Portable(host, aAddressFamily, aFlags,
                                       aAddrInfo);
 
 #ifdef DNSQUERY_AVAILABLE
   if (aGetTtl && NS_SUCCEEDED(rv)) {
     // Figure out the canonical name, or if that fails, just use the host name
     // we have.
-    const char *name = nullptr;
-    if (*aAddrInfo != nullptr && (*aAddrInfo)->mCanonicalName) {
+    nsAutoCString name;
+    if (*aAddrInfo != nullptr && !(*aAddrInfo)->mCanonicalName.IsEmpty()) {
       name = (*aAddrInfo)->mCanonicalName;
     } else {
-      name = aHost;
+      name = host;
     }
 
-    LOG("Getting TTL for %s (cname = %s).", aHost, name);
+    LOG("Getting TTL for %s (cname = %s).", host.get(), name.get());
     uint32_t ttl = 0;
     nsresult ttlRv = _GetTTLData_Windows(name, &ttl, aAddressFamily);
     if (NS_SUCCEEDED(ttlRv)) {
       (*aAddrInfo)->ttl = ttl;
-      LOG("Got TTL %u for %s (name = %s).", ttl, aHost, name);
+      LOG("Got TTL %u for %s (name = %s).", ttl, host.get(), name.get());
     } else {
-      LOG_WARNING("Could not get TTL for %s (cname = %s).", aHost, name);
+      LOG_WARNING("Could not get TTL for %s (cname = %s).", host.get(), name.get());
     }
   }
 #endif

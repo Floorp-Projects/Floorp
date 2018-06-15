@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm");
-
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
@@ -107,7 +105,6 @@ add_task(async function searchSuggestionKeyboard() {
 async function compareCounts(clickCallback) {
   // Search events triggered by clicks (not the Return key in the urlbar) are
   // recorded in three places:
-  // * BrowserUITelemetry
   // * Telemetry histogram named "SEARCH_COUNTS"
   // * FHR
 
@@ -115,16 +112,6 @@ async function compareCounts(clickCallback) {
   let engineID = "org.mozilla.testsearchsuggestions";
 
   // First, get the current counts.
-
-  // BrowserUITelemetry
-  let uiTelemCount = 0;
-  let bucket = BrowserUITelemetry.currentBucket;
-  let events = BrowserUITelemetry.getToolbarMeasures().countableEvents;
-  if (events[bucket] &&
-      events[bucket].search &&
-      events[bucket].search.urlbar) {
-    uiTelemCount = events[bucket].search.urlbar;
-  }
 
   // telemetry histogram SEARCH_COUNTS
   let histogramCount = 0;
@@ -150,16 +137,6 @@ async function compareCounts(clickCallback) {
   await clickCallback();
 
   // Now get the new counts and compare them to the old.
-
-  // BrowserUITelemetry
-  events = BrowserUITelemetry.getToolbarMeasures().countableEvents;
-  Assert.ok(bucket in events, "bucket should be recorded");
-  events = events[bucket];
-  Assert.ok("search" in events, "search should be recorded");
-  events = events.search;
-  Assert.ok("urlbar" in events, "urlbar should be recorded");
-  Assert.equal(events.urlbar, uiTelemCount + 1,
-               "clicked suggestion should be recorded");
 
   // telemetry histogram SEARCH_COUNTS
   histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");

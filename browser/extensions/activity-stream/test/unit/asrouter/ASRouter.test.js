@@ -348,6 +348,13 @@ describe("ASRouter", () => {
 
       assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: testMessage});
     });
+
+    it("should broadcast CLEAR_ALL if provided id did not resolve to a message", async () => {
+      const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: -1}});
+      await Router.onMessage(msg);
+
+      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_ALL"});
+    });
   });
 
   describe("#onMessage: Onboarding actions", () => {

@@ -8,11 +8,13 @@ import {
 } from "./TopSitesConstants";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
+import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
 import {TOP_SITES_MAX_SITES_PER_ROW} from "common/Reducers.jsm";
 
 export class TopSiteLink extends React.PureComponent {
   constructor(props) {
     super(props);
+    this.state = {screenshotImage: null};
     this.onDragEvent = this.onDragEvent.bind(this);
   }
 
@@ -57,6 +59,54 @@ export class TopSiteLink extends React.PureComponent {
     }
   }
 
+  /**
+   * Helper to obtain the next state based on nextProps and prevState.
+   *
+   * NOTE: Rename this method to getDerivedStateFromProps when we update React
+   *       to >= 16.3. We will need to update tests as well. We cannot rename this
+   *       method to getDerivedStateFromProps now because there is a mismatch in
+   *       the React version that we are using for both testing and production.
+   *       (i.e. react-test-render => "16.3.2", react => "16.2.0").
+   *
+   * See https://github.com/airbnb/enzyme/blob/master/packages/enzyme-adapter-react-16/package.json#L43.
+   */
+  static getNextStateFromProps(nextProps, prevState) {
+    const {screenshot} = nextProps.link;
+    const imageInState = ScreenshotUtils.isRemoteImageLocal(prevState.screenshotImage, screenshot);
+    if (imageInState) {
+      return null;
+    }
+
+    // Since image was updated, attempt to revoke old image blob URL, if it exists.
+    ScreenshotUtils.maybeRevokeBlobObjectURL(prevState.screenshotImage);
+
+    return {screenshotImage: ScreenshotUtils.createLocalImageObject(screenshot)};
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillMount() {
+    const nextState = TopSiteLink.getNextStateFromProps(this.props, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  // NOTE: Remove this function when we update React to >= 16.3 since React will
+  //       call getDerivedStateFromProps automatically. We will also need to
+  //       rename getNextStateFromProps to getDerivedStateFromProps.
+  componentWillReceiveProps(nextProps) {
+    const nextState = TopSiteLink.getNextStateFromProps(nextProps, this.state);
+    if (nextState) {
+      this.setState(nextState);
+    }
+  }
+
+  componentWillUnmount() {
+    ScreenshotUtils.maybeRevokeBlobObjectURL(this.state.screenshotImage);
+  }
+
   render() {
     const {children, className, defaultStyle, isDraggable, link, onClick, title} = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}`;
@@ -67,6 +117,7 @@ export class TopSiteLink extends React.PureComponent {
     let showSmallFavicon = false;
     let smallFaviconStyle;
     let smallFaviconFallback;
+    let hasScreenshotImage = this.state.screenshotImage && this.state.screenshotImage.url;
     if (defaultStyle) { // force no styles (letter fallback) even if the link has imagery
       smallFaviconFallback = false;
     } else if (link.customScreenshotURL) {
@@ -74,7 +125,7 @@ export class TopSiteLink extends React.PureComponent {
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
         backgroundColor: link.backgroundColor,
-        backgroundImage: `url(${link.screenshot})`
+        backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : "none"
       };
     } else if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
       // styles and class names for top sites with rich icons
@@ -85,14 +136,14 @@ export class TopSiteLink extends React.PureComponent {
       };
     } else {
       // styles and class names for top sites with screenshot + small icon in top left corner
-      imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
-      imageStyle = {backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none"};
+      imageClassName = `screenshot${hasScreenshotImage ? " active" : ""}`;
+      imageStyle = {backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : "none"};
 
       // only show a favicon in top left if it's greater than 16x16
       if (faviconSize >= MIN_CORNER_FAVICON_SIZE) {
         showSmallFavicon = true;
         smallFaviconStyle = {backgroundImage:  `url(${link.favicon})`};
-      } else if (link.screenshot) {
+      } else if (hasScreenshotImage) {
         // Don't show a small favicon if there is no screenshot, because that
         // would result in two fallback icons
         showSmallFavicon = true;

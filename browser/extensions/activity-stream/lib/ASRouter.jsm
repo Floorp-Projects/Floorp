@@ -254,12 +254,8 @@ class _ASRouter {
     return state.messages.filter(item => !state.blockList.includes(item.id));
   }
 
-  async sendNextMessage(target) {
+  _sendMessageToTarget(message, target) {
     let bundledMessages;
-    const msgs = this._getUnblockedMessages();
-    let message = await ASRouterTargeting.findMatchingMessage(msgs);
-    await this.setState({lastMessageId: message ? message.id : null});
-
     // If this message needs to be bundled with other messages of the same template, find them and bundle them together
     if (message && message.bundled) {
       bundledMessages = this._getBundledMessages(message);
@@ -275,18 +271,19 @@ class _ASRouter {
     }
   }
 
+  async sendNextMessage(target) {
+    const msgs = this._getUnblockedMessages();
+    let message = await ASRouterTargeting.findMatchingMessage(msgs);
+    await this.setState({lastMessageId: message ? message.id : null});
+
+    this._sendMessageToTarget(message, target);
+  }
+
   async setMessageById(id) {
     await this.setState({lastMessageId: id});
     const newMessage = this.getMessageById(id);
-    if (newMessage) {
-      // If this message needs to be bundled with other messages of the same template, find them and bundle them together
-      if (newMessage.bundled) {
-        let bundledMessages = this._getBundledMessages(newMessage);
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: bundledMessages});
-      } else {
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: newMessage});
-      }
-    }
+
+    this._sendMessageToTarget(newMessage, this.messageChannel);
   }
 
   async blockById(idOrIds) {

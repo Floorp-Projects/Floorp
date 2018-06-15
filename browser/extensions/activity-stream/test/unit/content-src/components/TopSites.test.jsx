@@ -26,6 +26,8 @@ const DEFAULT_PROPS = {
   perfSvc
 };
 
+const DEFAULT_BLOB_URL = "blob://test";
+
 describe("<TopSites>", () => {
   let sandbox;
 
@@ -302,10 +304,19 @@ describe("<TopSites>", () => {
 });
 
 describe("<TopSiteLink>", () => {
+  let globals;
   let link;
+  let url;
   beforeEach(() => {
+    globals = new GlobalOverrider();
+    url = {
+      createObjectURL: globals.sandbox.stub().returns(DEFAULT_BLOB_URL),
+      revokeObjectURL: globals.sandbox.spy()
+    };
+    globals.set("URL", url);
     link = {url: "https://foo.com", screenshot: "foo.jpg", hostname: "foo"};
   });
+  afterEach(() => globals.restore());
   it("should add the right url", () => {
     link.url = "https://www.foobar.org";
     const wrapper = shallow(<TopSiteLink link={link} />);
@@ -342,11 +353,20 @@ describe("<TopSiteLink>", () => {
     const wrapper = shallow(<TopSiteLink link={link} title={"foo"} />);
     assert.equal(wrapper.find(".tile").prop("data-fallback"), "f");
   });
-  it("should render a screenshot with the .active class, if it is provided", () => {
+  it("should render a normal image screenshot with the .active class, if it is provided", () => {
     const wrapper = shallow(<TopSiteLink link={link} />);
     const screenshotEl = wrapper.find(".screenshot");
 
     assert.propertyVal(screenshotEl.props().style, "backgroundImage", "url(foo.jpg)");
+    assert.isTrue(screenshotEl.hasClass("active"));
+  });
+  it("should render a blob image screenshot with the .active class, if it is provided", () => {
+    link.screenshot = {path: "/test_path", data: new Blob([0])};
+
+    const wrapper = shallow(<TopSiteLink link={link} />);
+    const screenshotEl = wrapper.find(".screenshot");
+
+    assert.propertyVal(screenshotEl.props().style, "backgroundImage", `url(${DEFAULT_BLOB_URL})`);
     assert.isTrue(screenshotEl.hasClass("active"));
   });
   it("should render a small icon with fallback letter with the screenshot if the icon is smaller than 16x16", () => {
