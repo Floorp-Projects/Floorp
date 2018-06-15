@@ -77,6 +77,7 @@ ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal,
   : DOMEventTargetHelper(aGlobal)
   , mInner(aInner)
 {
+  mInner->AddContainer(this);
   Maybe<ServiceWorkerDescriptor> controller = aGlobal->GetController();
   if (controller.isSome()) {
     mControllerWorker = aGlobal->GetOrCreateServiceWorker(controller.ref());
@@ -85,6 +86,7 @@ ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal,
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
+  mInner->RemoveContainer(this);
 }
 
 void
@@ -358,14 +360,10 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   }
 
   RefPtr<ServiceWorkerContainer> self = this;
-  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
-    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
 
-  mInner->Register(clientInfo.ref(), cleanedScopeURL, cleanedScriptURL,
-                   aOptions.mUpdateViaCache)->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [self, outer, holder] (const ServiceWorkerRegistrationDescriptor& aDesc) {
-      holder->Complete();
+  mInner->Register(
+    clientInfo.ref(), cleanedScopeURL, cleanedScriptURL, aOptions.mUpdateViaCache,
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDesc) {
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
       if (rv.Failed()) {
@@ -375,10 +373,9 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       RefPtr<ServiceWorkerRegistration> reg =
         global->GetOrCreateServiceWorkerRegistration(aDesc);
       outer->MaybeResolve(reg);
-    }, [self, outer, holder] (const CopyableErrorResult& aRv) {
-      holder->Complete();
-      outer->MaybeReject(CopyableErrorResult(aRv));
-    })->Track(*holder);
+    }, [outer] (ErrorResult& aRv) {
+      outer->MaybeReject(aRv);
+    });
 
   return outer.forget();
 }
@@ -415,13 +412,9 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
   }
 
   RefPtr<ServiceWorkerContainer> self = this;
-  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationListPromise>> holder =
-    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationListPromise>(global);
 
-  mInner->GetRegistrations(clientInfo.ref())->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [self, outer, holder] (const nsTArray<ServiceWorkerRegistrationDescriptor>& aDescList) {
-      holder->Complete();
+  mInner->GetRegistrations(clientInfo.ref(),
+    [self, outer] (const nsTArray<ServiceWorkerRegistrationDescriptor>& aDescList) {
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
       if (rv.Failed()) {
@@ -437,10 +430,9 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
         }
       }
       outer->MaybeResolve(regList);
-    }, [self, outer, holder] (const CopyableErrorResult& aRv) {
-      holder->Complete();
-      outer->MaybeReject(CopyableErrorResult(aRv));
-    })->Track(*holder);
+    }, [self, outer] (ErrorResult& aRv) {
+      outer->MaybeReject(aRv);
+    });
 
   return outer.forget();
 }
@@ -488,13 +480,9 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
   }
 
   RefPtr<ServiceWorkerContainer> self = this;
-  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
-    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
 
-  mInner->GetRegistration(clientInfo.ref(), spec)->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [self, outer, holder] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-      holder->Complete();
+  mInner->GetRegistration(clientInfo.ref(), spec,
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
       if (rv.Failed()) {
@@ -504,16 +492,16 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
       RefPtr<ServiceWorkerRegistration> reg =
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       outer->MaybeResolve(reg);
-    }, [self, outer, holder] (const CopyableErrorResult& aRv) {
-      holder->Complete();
-      ErrorResult rv;
-      Unused << self->GetGlobalIfValid(rv);
-      if (!rv.Failed() && !aRv.Failed()) {
-        outer->MaybeResolveWithUndefined();
-        return;
+    }, [self, outer] (ErrorResult& aRv) {
+      if (!aRv.Failed()) {
+        Unused << self->GetGlobalIfValid(aRv);
+        if (!aRv.Failed()) {
+          outer->MaybeResolveWithUndefined();
+          return;
+        }
       }
-      outer->MaybeReject(CopyableErrorResult(aRv));
-    })->Track(*holder);
+      outer->MaybeReject(aRv);
+    });
 
   return outer.forget();
 }
@@ -544,13 +532,9 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
 
   RefPtr<ServiceWorkerContainer> self = this;
   RefPtr<Promise> outer = mReadyPromise;
-  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
-    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
 
-  mInner->GetReady(clientInfo.ref())->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [self, outer, holder] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-      holder->Complete();
+  mInner->GetReady(clientInfo.ref(),
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
       if (rv.Failed()) {
@@ -561,10 +545,9 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       NS_ENSURE_TRUE_VOID(reg);
       outer->MaybeResolve(reg);
-    }, [self, outer, holder] (const CopyableErrorResult& aRv) {
-      holder->Complete();
-      outer->MaybeReject(CopyableErrorResult(aRv));
-    })->Track(*holder);
+    }, [self, outer] (ErrorResult& aRv) {
+      outer->MaybeReject(aRv);
+    });
 
   return mReadyPromise;
 }

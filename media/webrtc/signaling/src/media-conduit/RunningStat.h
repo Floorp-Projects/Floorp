@@ -12,7 +12,14 @@ namespace mozilla {
 class RunningStat
 {
 public:
-  RunningStat() : mN(0) {}
+  RunningStat()
+    : mN(0)
+    , mOldM(0.0)
+    , mNewM(0.0)
+    , mOldS(0.0)
+    , mNewS(0.0)
+  {
+  }
 
   void Clear()
   {
