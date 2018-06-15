@@ -4,7 +4,7 @@
 
 // A CSS Lexer.  This file is a bit unusual -- it is a more or less
 // direct translation of layout/style/nsCSSScanner.cpp and
-// layout/style/CSSLexer.cpp into JS.  This implements the
+// layout/style/CSSLexer.cpp into JS.  This implemented the
 // CSSLexer.webidl interface, and the intent is to try to keep it in
 // sync with changes to the platform CSS lexer.  Due to this goal,
 // this file violates some naming conventions and consequently locally
@@ -374,21 +374,54 @@ function Scanner(buffer) {
 
 Scanner.prototype = {
   /**
-   * @see CSSLexer.lineNumber
+   * The line number of the most recently returned token.  Line
+   * numbers are 0-based.
    */
   get lineNumber() {
     return this.mTokenLineNumber - 1;
   },
 
   /**
-   * @see CSSLexer.columnNumber
+   * The column number of the most recently returned token.  Column
+   * numbers are 0-based.
    */
   get columnNumber() {
     return this.mTokenOffset - this.mTokenLineOffset;
   },
 
   /**
-   * @see CSSLexer.performEOFFixup
+   * When EOF is reached, the last token might be unterminated in some
+   * ways.  This method takes an input string and appends the needed
+   * terminators.  In particular:
+   *
+   * 1. If EOF occurs mid-string, this will append the correct quote.
+   * 2. If EOF occurs in a url token, this will append the close paren.
+   * 3. If EOF occurs in a comment this will append the comment closer.
+   *
+   * A trailing backslash might also have been present in the input
+   * string.  This is handled in different ways, depending on the
+   * context and arguments.
+   *
+   * If preserveBackslash is true, then the existing backslash at the
+   * end of inputString is preserved, and a new backslash is appended.
+   * That is, the input |\| is transformed to |\\|, and the
+   * input |'\| is transformed to |'\\'|.
+   *
+   * Otherwise, preserveBackslash is false:
+   * If the backslash appears in a string context, then the trailing
+   * backslash is dropped from inputString.  That is, |"\| is
+   * transformed to |""|.
+   * If the backslash appears outside of a string context, then
+   * U+FFFD is appended.  That is, |\| is transformed to a string
+   * with two characters: backslash followed by U+FFFD.
+   *
+   * Passing false for preserveBackslash makes the result conform to
+   * the CSS Syntax specification.  However, passing true may give
+   * somewhat more intuitive behavior.
+   *
+   * @param inputString the input string
+   * @param preserveBackslash how to handle trailing backslashes
+   * @return the input string with the termination characters appended
    */
   performEOFFixup: function(aInputString, aPreserveBackslash) {
     let result = aInputString;
@@ -416,7 +449,52 @@ Scanner.prototype = {
   },
 
   /**
-   * @see CSSLexer.nextToken
+   * Return the next token, or null at EOF.
+   *
+   * The token object is described by the following WebIDL definition:
+   *
+   * dictionary CSSToken {
+   *   // The token type.
+   *   CSSTokenType tokenType = "whitespace";
+   *
+   *   // Offset of the first character of the token.
+   *   unsigned long startOffset = 0;
+   *   // Offset of the character after the final character of the token.
+   *   // This is chosen so that the offsets can be passed to |substring|
+   *   // to yield the exact contents of the token.
+   *   unsigned long endOffset = 0;
+   *
+   *   // If the token is a number, percentage, or dimension, this holds
+   *   // the value.  This is not present for other token types.
+   *   double number;
+   *   // If the token is a number, percentage, or dimension, this is true
+   *   // iff the number had an explicit sign.  This is not present for
+   *   // other token types.
+   *   boolean hasSign;
+   *   // If the token is a number, percentage, or dimension, this is true
+   *   // iff the number was specified as an integer.  This is not present
+   *   // for other token types.
+   *   boolean isInteger;
+   *
+   *   // Text associated with the token.  This is not present for all
+   *   // token types.  In particular it is:
+   *   //
+   *   // Token type    Meaning
+   *   // ===============================
+   *   //    ident      The identifier.
+   *   //    function   The function name.  Note that the "(" is part
+   *   //               of the token but is not present in |text|.
+   *   //    at         The word.
+   *   //    id         The word.
+   *   //    hash       The word.
+   *   //    dimension  The dimension.
+   *   //    string     The string contents after escape processing.
+   *   //    bad_string Ditto.
+   *   //    url        The URL after escape processing.
+   *   //    bad_url    Ditto.
+   *   //    symbol     The symbol text.
+   *   DOMString text;
+   * };
    */
   nextToken: function() {
     const token = {};
@@ -1245,8 +1323,7 @@ Scanner.prototype = {
 };
 
 /**
- * Create and return a new CSS lexer, conforming to the @see CSSLexer
- * webidl interface.
+ * Create and return a new CSS lexer.
  *
  * @param {String} input the CSS text to lex
  * @return {CSSLexer} the new lexer

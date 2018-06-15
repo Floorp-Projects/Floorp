@@ -20,6 +20,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsThemeConstants.h"
 
 #include "nsDOMCSSRect.h"
 #include "nsDOMCSSRGBColor.h"
