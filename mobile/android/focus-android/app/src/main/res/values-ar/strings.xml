@@ -188,4 +188,16 @@
   <string name="security_popup_security_verified">تثبّت منها: %1$s</string>
   <string name="site_security_icon_content_description">أمن الموقع</string>
   <string name="preference_autocomplete_duplicate_url_error">المسار موجود بالفعل</string>
+  <string name="find_in_page">ابحث في الصفحة</string>
+  <string name="find_in_page_input">ابحث في الصفحة</string>
+  <string name="find_in_page_result">‏%1$d/‏%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d من أصل %2$d</string>
+  <string name="accessibility_next_result">ابحث عن النتيجة التالية</string>
+  <string name="accessibility_previous_result">ابحث عن النتيجة السابقة</string>
+  <string name="accessibility_dismiss_find_in_page">أخفِ لوحة البحث في الصفحة</string>
+  <string name="http_auth_dialog_title">الاستيثاق مطلوب</string>
+  <string name="http_auth_dialog_username">اسم المستخدم</string>
+  <string name="http_auth_dialog_password">كلمة السر</string>
+  <string name="preference_performance_request_desktop_site">اطلب موقع سطح المكتب</string>
+  <string name="custom_tab_copy_url_action">نُسِخَ المسار</string>
 </resources>

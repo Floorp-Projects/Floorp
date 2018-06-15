@@ -42,7 +42,7 @@
   <string name="preference_state_off">გამორთული</string>
   <string name="preference_subitem_autocomplete">URL თვითშევსება</string>
   <string name="preference_switch_autocomplete">თვითშევსება</string>
-  <string name="preference_category_autocomplete_preinstalled">ნაგულისხმევი URL ჩამონათვალი</string>
+  <string name="preference_category_autocomplete_preinstalled">ნაგულისხმევი URL-ების ჩამონათვალი</string>
   <string name="preference_autocomplete_preinstalled_summary">ჩართეთ და %1$s თავად დაასრულებს 450-ზე მეტ ცნობილ URL ბმულს, მისამართების ველში აკრეფისას.</string>
   <string name="preference_category_autocomplete_custom_urls">საკუთარი URL-ები</string>
   <string name="preference_autocomplete_subitem_customlist">საკუთარი URL მისამართები</string>
@@ -58,7 +58,7 @@
   <string name="preference_autocomplete_add_hint">ჩასვით ან შეიყვანეთ URL</string>
   <string name="preference_autocomplete_add_example2">მაგალითად: mozilla.org</string>
   <string name="preference_autocomplete_add_example">მაგალითად: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">ახალი საკუთარი URL დაემატა.</string>
+  <string name="preference_autocomplete_add_confirmation">ახალი URL დაემატა.</string>
   <string name="preference_autocomplete_menu_remove">წაშლა</string>
   <string name="preference_autocomplete_action_remove_content_description">წაშლა</string>
   <string name="preference_autocomplete_add_error">გადაამოწმეთ შეყვანილი URL.</string>
@@ -91,13 +91,13 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla აღრიცხავს მხოლოდ იმ მონაცემებს, რაც საჭიროა %1$s-ის გასაუმჯობესებლად.</string>
   <string name="preference_privacy_notice">პირადი მონაცემების დაცვა</string>
   <string name="preference_about">%1$s-ის შესახებ</string>
-  <string name="preference_search_installed_search_engines">დაყენებული საძიებო სისტემები</string>
+  <string name="preference_search_installed_search_engines">დაყენებული საძიებოები</string>
   <string name="preference_search_restore">ნაგულისხმევი საძიებო სისტემების აღდგენა</string>
   <string name="preference_search_add2">+ სხვა საძიებო სისტემის დამატება</string>
-  <string name="preference_search_remove_title">საძიებო სისტემების ამოშლა</string>
+  <string name="preference_search_remove_title">საძიებოს ამოშლა</string>
   <string name="preference_search_remove">მოცილება</string>
-  <string name="action_option_add_search_engine">საძიებო სისტემის დამატება</string>
-  <string name="search_add_manually_name_hint">საძიებო სისტემის სახელი</string>
+  <string name="action_option_add_search_engine">საძიებოს დამატება</string>
+  <string name="search_add_manually_name_hint">საძიებოს დასახელება</string>
   <string name="search_add_manually_string">საძიებო ფრაზა</string>
   <string name="search_add_manually_save">შენახვა</string>
   <string name="search_add_manually_example">მაგალითად: example.com/search/?q=%s</string>
@@ -146,7 +146,7 @@
   <string name="error_unsupportedprotocol_title">მისამართი გაუგებარია</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4304;&#4315; &#4305;&#4315;&#4323;&#4314;&#4312;&#4321; &#4306;&#4304;&#4321;&#4304;&#4334;&#4321;&#4316;&#4308;&#4314;&#4304;&#4307;, &#4328;&#4308;&#4321;&#4304;&#4331;&#4314;&#4317;&#4304; &#4321;&#4334;&#4309;&#4304; &#4318;&#4320;&#4317;&#4306;&#4320;&#4304;&#4315;&#4312;&#4321; &#4307;&#4304;&#4327;&#4308;&#4316;&#4308;&#4305;&#4304; &#4312;&#4327;&#4317;&#4321; &#4321;&#4304;&#4333;&#4312;&#4320;&#4317;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">უსაფრთხო დაკავშირება ვერ მოხერხდა</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4308;&#4321; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304; &#4321;&#4304;&#4312;&#4322;&#4312;&#4321; &#4306;&#4304;&#4323;&#4315;&#4304;&#4320;&#4311;&#4304;&#4317;&#4305;&#4312;&#4321; &#4305;&#4320;&#4304;&#4314;&#4312; &#4312;&#4327;&#4317;&#4321;, &#4304;&#4316;\n&#4321;&#4334;&#4309;&#4304; &#4321;&#4304;&#4312;&#4322;&#4304;&#4307; &#4306;&#4304;&#4321;&#4304;&#4326;&#4308;&#4305;&#4312;&#4321; &#4315;&#4330;&#4307;&#4308;&#4314;&#4317;&#4305;&#4304;&#4321; &#4336;&#4325;&#4317;&#4316;&#4307;&#4308;&#4321; &#4304;&#4307;&#4306;&#4312;&#4314;&#4312;.</li>"\n  "<li>&#4311;&#4323; &#4304;&#4315; &#4321;&#4304;&#4312;&#4322;&#4321; &#4315;&#4304;&#4316;&#4304;&#4315;&#4307;&#4308; &#4332;&#4304;&#4320;&#4315;&#4304;&#4322;&#4308;&#4305;&#4312;&#4311; &#4323;&#4313;&#4304;&#4309;&#4328;&#4312;&#4320;&#4307;&#4308;&#4305;&#4317;&#4307;&#4312;&#4311;, &#4334;&#4304;&#4320;&#4309;&#4308;&#4310;&#4312; &#4328;&#4308;&#4321;&#4304;&#4331;&#4314;&#4317;&#4304;\n&#4307;&#4320;&#4317;&#4308;&#4305;&#4312;&#4311;&#4312; &#4312;&#4327;&#4317;&#4321; &#4307;&#4304; &#4315;&#4317;&#4306;&#4309;&#4312;&#4304;&#4316;&#4308;&#4305;&#4312;&#4311; &#4328;&#4308;&#4306;&#4312;&#4331;&#4314;&#4312;&#4304;&#4311; &#4313;&#4309;&#4314;&#4304;&#4309; &#4321;&#4330;&#4304;&#4307;&#4317;&#4311;.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4308;&#4321; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304;, &#4321;&#4304;&#4312;&#4322;&#4312;&#4321; &#4306;&#4304;&#4323;&#4315;&#4304;&#4320;&#4311;&#4304;&#4317;&#4305;&#4312;&#4321; &#4305;&#4320;&#4304;&#4314;&#4312; &#4312;&#4327;&#4317;&#4321; &#4304;&#4316;\n&#4321;&#4334;&#4309;&#4304; &#4321;&#4304;&#4312;&#4322;&#4304;&#4307; &#4306;&#4304;&#4321;&#4304;&#4326;&#4308;&#4305;&#4312;&#4321; &#4315;&#4330;&#4307;&#4308;&#4314;&#4317;&#4305;&#4304;&#4321; &#4336;&#4325;&#4317;&#4316;&#4307;&#4308;&#4321; &#4304;&#4307;&#4306;&#4312;&#4314;&#4312;.</li>"\n  "<li>&#4311;&#4323; &#4304;&#4315; &#4321;&#4304;&#4312;&#4322;&#4321; &#4315;&#4304;&#4316;&#4304;&#4315;&#4307;&#4308; &#4332;&#4304;&#4320;&#4315;&#4304;&#4322;&#4308;&#4305;&#4312;&#4311; &#4323;&#4313;&#4304;&#4309;&#4328;&#4312;&#4320;&#4307;&#4308;&#4305;&#4317;&#4307;&#4312;&#4311;, &#4334;&#4304;&#4320;&#4309;&#4308;&#4310;&#4312; &#4328;&#4308;&#4321;&#4304;&#4331;&#4314;&#4317;&#4304;\n&#4307;&#4320;&#4317;&#4308;&#4305;&#4312;&#4311;&#4312; &#4312;&#4327;&#4317;&#4321; &#4307;&#4304; &#4315;&#4317;&#4306;&#4309;&#4312;&#4304;&#4316;&#4308;&#4305;&#4312;&#4311; &#4328;&#4308;&#4306;&#4312;&#4331;&#4314;&#4312;&#4304;&#4311; &#4313;&#4309;&#4314;&#4304;&#4309; &#4321;&#4330;&#4304;&#4307;&#4317;&#4311;.</li>\n</ul>]]></string>
   <string name="error_generic_title">უი</string>
   <string name="error_generic_message">ამ გვერდის ჩატვირთვა, რატომღაც ვერ მოხერხდა.</string>
   <string name="contextmenu_link_share">ბმულის გაზიარება</string>
@@ -176,7 +176,7 @@
   <string name="tabs_tray_action_erase">ისტორიის გასუფთავება</string>
   <string name="download_firefox">ჩამოტვირთეთ Firefox</string>
   <string name="your_rights_content1">%1$s არის უფასო და ღია წყაროს მქონე პროგრამა, შექმნილი Mozilla-სა და სხვა მოხალისეების მიერ.</string>
-  <string name="your_rights_content2"><![CDATA["%1$s ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ლიცენზიით და სხვა ღია წყაროს ლიცენზიებით."]]></string>
+  <string name="your_rights_content2"><![CDATA["%1$s ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" და სხვა ღია წყაროს ლიცენზიებით."]]></string>
   <string name="your_rights_content3"><![CDATA["თქვენ არ გეძლევათ რამე სახის უფლება ან ლიცენზია, Mozilla ფონდის სავაჭრო ნიშნებსა და სხვა საკუთრებაზე, მათ შორის დასახელებებზე Mozilla, Firefox, ან %1$s-ის სხვა სახელებსა და ლოგოებზე. დამატებითი ინფორმაცია შეგიძლიათ იხილოთ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#4304;&#4325;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["%1$s-ის დამატებითი პირველწყარო კოდი ვრცელდება სხვადასხვა უფასო და ღია წყაროს მქონე "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#4314;&#4312;&#4330;&#4308;&#4316;&#4310;&#4312;&#4308;&#4305;&#4312;&#4311;</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s ასევე იყენებს შეზღუდვის სიებს, რომლის მომწოდებელია Disconnect Inc. როგორც ცალკეული და დამოუკიდებელი ნამუშევრები, ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" ლიცენზიით და ხელმისაწვდომია "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#4304;&#4315; &#4305;&#4315;&#4323;&#4314;&#4310;&#4308;</a>.]]></string>

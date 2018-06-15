@@ -6,7 +6,9 @@
   <string name="urlbar_hint">Chuka as moj la aaq\'ku\' ka\'t b\'ii</string>
   <string name="teaser">.</string>
   <string name="feedback_erase">Sojsamal ve\'t unq\'a vee\' uve\' chukel kan.</string>
+  <string name="search_hint">Chuka %1$s</string>
   <string name="menu_share">Q\'ajsab\'en…</string>
+  <string name="menu_report_site_issue">La aalb\'en asoj ni yan u vaa\'</string>
   <string name="menu_open_with_default_browser2">La jaj tu %1$s</string>
   <string name="menu_open_with_a_browser2">La jaj tu…</string>
   <string name="menu_add_to_home_screen">La aaq\' tu vivatze\' uve\' ti xe\'teb\'al</string>
@@ -19,11 +21,21 @@
   <string name="menu_custom_tab_branding">A\' u %1$s kat cheesan</string>
   <string name="share_dialog_title">La jatxb\'en tuk\'</string>
   <string name="notification_erase_text">Sojsa kaajayil unq\'a vee\' chukel ve\'te\'</string>
+  <string name="notification_action_open">Jaja</string>
   <string name="notification_action_erase_and_open">Tzaasa\'m tuk\' oypisa\'m</string>
   <string name="shortcut_erase_short_label">Sojsa</string>
   <string name="shortcut_erase_long_label">Sotzsaj tachul unq\'a vee pich\'umal vete\'</string>
   <string name="text_selection_search_action">Chuk stuul sajunal</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">U %1$s ni taq\' see uva\' axh la yikun.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"B\'anb\'e uva\' axh kuxh la xaansan:\n  "<ul>"\n    "<li>Chuka as tuk\' kuxh u aplicacione\' la xaan kat axh</li>"\n    "<li>Maj ivatz unq\'a chukunaale\' (moj a\'kuxh unq\'a vee\' la k\'ule\' uve\' nasa\')</li>"\n    "<li>Sojsaj ti\' eesat unq\'a vee\' uva\' chukel tuk\' ixaansal</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">U %1$s kat cheesal ta\'n u Mozilla. Tan u qiitz\'abale\' a\'e\' uva\' la qaq\' internet uva\' b\'a\'n as jajle\'l kuxhtu\'.<br/>\n<a href="%2$s">La kuchus ka\'te</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Ye\'xhib\'il unka\'te la ootzin as tii tatine\'</string>
+  <string name="preference_privacy_and_security_summary">Ka\'taj Kam ti\' atiisata\', cookies as tachul</string>
+  <string name="preference_search_summary">La aaq\'kan tetz kuxhtu\', ankuxhe\' la tz\'ajsan</string>
+  <string name="preference_mozilla_summary">Tokeb\'al %1$s, lochb\'al</string>
+  <string name="preference_category_tracking_protection">Iyak\'insal iyikule\'</string>
+  <string name="preference_category_web_content">Tuuleb\'al u web</string>
+  <string name="preference_category_switching_apps">Ijalpul teq\'ol tetz</string>
+  <string name="preference_category_general">Kaajayil</string>
+  <string name="preference_category_data_collection_use">Imolpu tachul as ib\'anb\'ele\'</string>
   <string name="preference_category_search">Chukb\'al</string>
   <string name="preference_search_engine_default">B\'ek\'</string>
   <string name="preference_state_on">Oypisa\'m</string>
@@ -32,14 +44,19 @@
   <string name="preference_switch_autocomplete">Ankuxhe\' la tz\'ajsan</string>
   <string name="preference_category_autocomplete_preinstalled">Tachul URL uva\' b\'anel ve\'t kan tuche\'</string>
   <string name="preference_autocomplete_preinstalled_summary">Laaoke aq\'al uva\' ankuxh u %1$s la tz\'ajsan uma\'l 450 URLs uva\' nimal chit ootzimal tu laab\'al tetze\' kat la b\'en kat axh.</string>
+  <string name="preference_category_autocomplete_custom_urls">Ankuxh axh la b\'anon tu u URLs</string>
   <string name="preference_autocomplete_subitem_customlist">Unq\'a URLs b\'anel ve\'t tuche\'</string>
   <string name="preference_autocomplete_action_add">+ Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
   <string name="preference_autocomplete_title_add">Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
+  <string name="custom_autocomplete_quick_add">Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>
+  <string name="preference_category_cookies">Cookies as tachul tu tatinb\'ale\'</string>
+  <string name="preference_category_data_choices">Ka\'taj tatin tachul</string>
   <string name="preference_autocomplete_title_remove">Sojsa unq\'a URLs uve\' b\'anel ve\'t tuche\'</string>
   <string name="preference_autocomplete_learn_more">Chus nimate</string>
   <string name="preference_autocomplete_custom_summary">Okso\'ke as saji kam la tulb\'e itz\'ajsat je\' tib u URLs uve\' b\'anel ve\'t tuche\'.</string>
   <string name="preference_autocomplete_add_title">URL uva\' a\'n la ookso\'k</string>
   <string name="preference_autocomplete_add_hint">Aq\'o\'ke\' moj okso\'k u URL</string>
+  <string name="preference_autocomplete_add_example2">K\'uchuvatz: mozilla.org</string>
   <string name="preference_autocomplete_add_example">K\'uchuvatz: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Ak\' URL uva\' b\'anel ve\'t tuche\' at ve\'t ok.</string>
   <string name="preference_autocomplete_menu_remove">Sojsa</string>
@@ -51,15 +68,22 @@
   <string name="preference_privacy_block_ads">Maj ivatz unq\'a tiinsan tetz unq\'a vee\' ni tal tziile\'</string>
   <string name="preference_privacy_block_ads_summary">At jununil unq\'a vee\' ni taltziile\' uve\' ni tiinsan unq\'a kame\' uve\' napich\'u\', kuxh ye\'xh kam nalaae\'</string>
   <string name="preference_privacy_block_analytics">Maj ivatz unq\'a tiinsab\' tetze\' uve\' ni pich\'un</string>
+  <string name="preference_privacy_block_analytics_summary">Ni b\'anb\'ele\' ti\' imolpe\', ipich\'ule\', isajil aq\'on Kam ikaape\' as iyikule\'</string>
   <string name="preference_privacy_block_social">Maj ivatz unq\'a tiinsan tetz tenam</string>
   <string name="preference_privacy_block_social_summary">Atje\' stiib\'a tulaj ti\'aj unq\'a vee\' aq\' al uva\' la tiinsal uve\' kat apich\'u as la ik\'uch unq\'a lak\'b\'ale\' ti\' ijatxpe\'</string>
   <string name="preference_privacy_block_content">Maj ivatz unq\'a tiinsan tetze\' tetz ka\'taj yol</string>
   <string name="preference_privacy_block_content_summary2">Asoj la ooypisa la ib\'ane\' uva\' vale\'n kuxh la ib\'an ka\'t unq\'a ivatze\'</string>
+  <string name="preference_privacy_category_cookies">Maj ivatz unq\'a cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ye\'le</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Maj ivatz unq\'a cookies tetz va\'len xaaol</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Kanoj</string>
   <string name="preference_privacy_secure_mode">Ye\'xh kam na\'l</string>
   <string name="preference_privacy_stealth_summary">Muj ivatz unq\'a web tul uva\' ni jalpu unq\'a aplicaciones</string>
   <string name="preference_category_performance">Taq\'onve\'</string>
   <string name="preference_performance_block_webfonts">Maj ivatz unq\'a itzaaeb\'al web</string>
   <string name="preference_performance_block_webfonts_summary">La ib\'ane\' uva\' la sojsa unq\'a texhlale\' moj unq\'a vatzib\'ale\' q\'a</string>
+  <string name="preference_performance_block_javascript">Bloquear JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Oora kuxh tuk ijaj unq\'a vee\' jajel kan s-a\'n, ta\'ne tan la ib\'ane\' uva\' la q\'amaxi</string>
   <string name="preference_default_browser2">Palsa pal va navegador tu %1$s</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Aq\'ven unq\'a vee\' uve\' b\'anb\'emal ve\'t s-a\'n</string>
@@ -123,5 +147,26 @@
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Kamal nisa\' uva\' la b\'anb\'e uma\'t kam uva\' la jajon.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Ye\' kat oleb\'i ti\' ijajat ti jikil</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>U vaa\' ni teq\'otzan uma\'l va\'lexh ti\' uva\' ye\' jik b\'anel tuche\' moj a\'e\' q\'a ni jalpun u tatinb\'ale\'.</li>"\n  "<li>Asoj acha\'vik kuxh ooktza\' b\'axa, as kamal cheel kuxh ye\' nisa\' ijaj tib\' la ka\'pu xamtel.</li>\n</ul>]]></string>
+  <string name="error_generic_message">At uma\'l Kam ni pale\' as ti\'kole\' uve\' ye\' ni jaje\'.</string>
+  <string name="contextmenu_link_share">La jatxb\'en u vaa\'</string>
+  <string name="contextmenu_link_copy">La eeq\'o tzan ivatz u vaa\'</string>
+  <string name="contextmenu_image_share">La jatx u vatzib\'ale\'</string>
+  <string name="contextmenu_image_copy">La eeq\'o tzan ivatz u vee\' katil lejel kat u vatzib\'ale\'</string>
+  <string name="contextmenu_image_save">La kol u vatzib\'ale\'</string>
+  <string name="contextmenu_open_in_new_tab">La jaj u vaa\' tu uma\'t tilpe\'</string>
+  <string name="contextmenu_image_warning"><![CDATA["Jank\'al unq\'a vatzib\'ale\' uve\' kolel as uve\' jatxel b\'en "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ye\'xh kam la sotzi</b>" tul uve\' la sotzsaj unq\'a vee\' chukel tu %1$se\'."]]></string>
+  <string name="firstrun_defaultbrowser_title">B\'an ooksat uyak\'il u eetze\'</string>
+  <string name="firstrun_defaultbrowser_text2">Eq\'o u tiinsab\' tetze\' tu uma\'t tanul. Maj ivatz unq\'a altziinaj kame\' as ka\'taj kam uve\' ye\' ni eq\'on ku\'tzan u vee\' nasa\' apich\'uta\'.</string>
+  <string name="firstrun_search_title">Achukune\', uve\' nasa\'</string>
+  <string name="firstrun_search_text">Umaj kam nachuke\' uva\' va\'len? Txaa uma\'t ch\'ich\' tetz chuku\'m uva\' nib\'anax kat tuch.</string>
+  <string name="firstrun_shortcut_title">Aq\'kan unq\'a kame\' vatz va ch\'ich\'e\' uva\' palchit itxakone\' see</string>
+  <string name="firstrun_shortcut_text">Q\'aaven oorimal tu unq\'a kame\' uve\' aamachit a achukat tu %1$se\'. Txaa \"oksaloj ok ti xe\'teb\'al\" vatz u %1$se\'.</string>
+  <string name="firstrun_privacy_title">Chaansa see uva\' axh kuxh la ilon</string>
+  <string name="firstrun_privacy_text">A\'vet kan u %1$se\' uva\' a\'chite\' la tiinsan vete\' as b\'anb\'e unq\'a vi b\'a\'nil u tiinsab\' tetze\' tul uva\' la jaje\' tu ka\'ta\'j aplicación.</string>
+  <string name="firstrun_close_button">Palyin stuul!</string>
+  <string name="firstrun_skip_button">Ye\' ookeb\'al sti\'</string>
+  <string name="firstrun_next_button">Uma\'te\'</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_action_add">Aq\'okej</string>
+  <string name="dialog_addtohomescreen_action_cancel">Ya\'sa</string>
 </resources>

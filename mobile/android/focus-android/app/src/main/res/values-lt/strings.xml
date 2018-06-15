@@ -101,4 +101,32 @@
   <string name="search_add_manually_string">Paieškos eilutės struktūra</string>
   <string name="search_add_manually_save">Įrašyti</string>
   <string name="search_add_manually_example">Pvz.: example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">Pridėta nauja ieškyklė.</string>
+  <string name="search_add_error_empty_name">Įveskite ieškyklės pavadinimą</string>
+  <string name="search_add_error_duplicate_name">Jau yra įdiegta ieškyklė su tokiu pavadinimu.</string>
+  <string name="search_add_error_empty_search">Įveskite paieškos eilutę</string>
+  <string name="search_add_error_format">Pasitikrinkite, ar paieškos eilutė atitinka formatą iš pavyzdžio</string>
+  <string name="content_description_clear_input">Išvalyti įvestį</string>
+  <string name="content_description_dismiss_input">Paslėpti</string>
+  <string name="content_description_erase">Valyti naršymo žurnalą</string>
+  <string name="content_description_tab_counter">Atverta kortelių: %1$s</string>
+  <string name="content_description_lock">Saugus ryšys</string>
+  <string name="accessibility_announcement_loading">Įkeliama</string>
+  <string name="accessibility_announcement_loading_finished">Svetainė įkelta</string>
+  <string name="content_description_menu">Daugiau parinkčių</string>
+  <string name="content_description_forward">Eiti pirmyn</string>
+  <string name="content_description_reload">Įkelti svetainę iš naujo</string>
+  <string name="content_description_back">Grįžti atgal</string>
+  <string name="content_description_stop">Nebeįkėlinėti svetainės</string>
+  <string name="content_description_customtab_exit">Grįžti į ankstesnę programą</string>
+  <string name="content_description_blocking_switch">Blokuokite stebėjimo elementus</string>
+  <string name="your_rights">Jūsų teisės</string>
+  <string name="external_app_prompt_title">Atverti saitą kitoje programoje</string>
+  <string name="external_app_prompt">Galite palikti „%1$s“, norėdami atverti šį saitą su „%2$s“.</string>
+  <string name="external_app_prompt_no_app_title">Suraskite programą, kuri gali atverti saitą</string>
+  <string name="external_app_prompt_no_app">Nė viena iš jūsų įrenginyje esančių programų negali atverti šio saito. Galite palikti „%1$s“, norėdami ieškoti tinkamos programos per „%2$s“.</string>
+  <string name="external_multiple_apps_matched_exit">Baigti privatųjį naršymą?</string>
+  <string name="download_snackbar_finished">%1$s atsiųstas</string>
+  <string name="download_snackbar_open">Atverti</string>
+  <string name="download_dialog_warning"><![CDATA["Atsiųsti failai "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebus pa&#353;alinti</b>" jums išvalius „%1$s“ naršymo žurnalą."]]></string>
 </resources>

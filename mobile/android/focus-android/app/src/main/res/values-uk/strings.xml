@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Безпека сайту</string>
   <string name="preference_autocomplete_duplicate_url_error">URL вже наявний</string>
   <string name="find_in_page">Знайти на сторінці</string>
+  <string name="find_in_page_input">Знайти на сторінці</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d з %2$d</string>
+  <string name="accessibility_next_result">Знайти наступний результат</string>
+  <string name="accessibility_previous_result">Знайти попередній результат</string>
+  <string name="accessibility_dismiss_find_in_page">Прибрати пошук на сторінці</string>
   <string name="http_auth_dialog_title">Потрібна автентифікація</string>
   <string name="http_auth_dialog_username">Користувач</string>
   <string name="http_auth_dialog_password">Пароль</string>

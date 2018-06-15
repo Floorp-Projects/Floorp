@@ -29,9 +29,11 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Zasebnost in varnost</string>
   <string name="preference_privacy_and_security_summary">Sledenje, piškotki, podatkovne možnosti</string>
+  <string name="preference_search_summary">Nastavi kot privzeto, samodejno dopolni</string>
   <string name="preference_mozilla_summary">O %1$su, pomoč</string>
   <string name="preference_category_tracking_protection">Zaščita pred sledenjem</string>
   <string name="preference_category_web_content">Spletna vsebina</string>
+  <string name="preference_category_switching_apps">Preklapljanje aplikacij</string>
   <string name="preference_category_general">Splošno</string>
   <string name="preference_category_data_collection_use">Zbiranje in uporaba podatkov</string>
   <string name="preference_category_search">Iskanje</string>
@@ -188,6 +190,11 @@
   <string name="preference_autocomplete_duplicate_url_error">URL že obstaja</string>
   <string name="find_in_page">Najdi na strani</string>
   <string name="find_in_page_input">Najdi na strani</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d od %2$d</string>
+  <string name="accessibility_next_result">Najdi naslednji zadetek</string>
+  <string name="accessibility_previous_result">Najdi prejšnji zadetek</string>
+  <string name="accessibility_dismiss_find_in_page">Končaj iskanje na strani</string>
   <string name="http_auth_dialog_title">Zahtevana je overitev</string>
   <string name="http_auth_dialog_username">Uporabniško ime</string>
   <string name="http_auth_dialog_password">Geslo</string>

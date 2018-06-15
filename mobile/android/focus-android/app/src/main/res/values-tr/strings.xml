@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Site güvenliği</string>
   <string name="preference_autocomplete_duplicate_url_error">Adres zaten mevcut</string>
   <string name="find_in_page">Sayfada bul</string>
+  <string name="find_in_page_input">Sayfada bul</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%2$d sonuçtan %1$d. sonuç</string>
+  <string name="accessibility_next_result">Sonraki sonucu bul</string>
+  <string name="accessibility_previous_result">Önceki sonucu bul</string>
+  <string name="accessibility_dismiss_find_in_page">Sayfa bulmayı kapat</string>
   <string name="http_auth_dialog_title">Kimlik doğrulama gerekli</string>
   <string name="http_auth_dialog_username">Kullanıcı adı</string>
   <string name="http_auth_dialog_password">Parola</string>

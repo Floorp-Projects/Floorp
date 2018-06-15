@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Seguretat del site</string>
   <string name="preference_autocomplete_duplicate_url_error">L’adreça existís ja</string>
   <string name="find_in_page">Recercar dins la pagina</string>
+  <string name="find_in_page_input">Recercar dins la pagina</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d demest %2$d</string>
+  <string name="accessibility_next_result">Trobar lo resultat seguent</string>
+  <string name="accessibility_previous_result">Trobar lo resultat precedent</string>
+  <string name="accessibility_dismiss_find_in_page">Quitar la recèrca dins la pagina</string>
   <string name="http_auth_dialog_title">Autentificacion requesida</string>
   <string name="http_auth_dialog_username">Nom d’utilizaire</string>
   <string name="http_auth_dialog_password">Senhal</string>

@@ -8,6 +8,9 @@
   <string name="feedback_erase">మీ విహారణ చరిత్ర తుడిచివెయ్యబడింది.</string>
   <string name="search_hint">%1$s కొరకు వెతకండి</string>
   <string name="menu_share">పంచుకోండి…</string>
+  <string name="menu_report_site_issue">సైటు సమస్యను నివేదించండి</string>
+  <string name="menu_open_with_default_browser2">%1$s లో తెరువు</string>
+  <string name="menu_open_with_a_browser2">తెరచు చోటు…</string>
   <string name="menu_add_to_home_screen">ముంగిలి తెరకు చేర్చు</string>
   <string name="menu_whats_new">కొత్తది ఏమిటి</string>
   <string name="menu_settings">అమరికలు</string>
@@ -15,6 +18,7 @@
   <string name="menu_help">సహాయం</string>
   <string name="menu_rights">మీ హక్కులు</string>
   <string name="menu_trackers_blocked_title">నిరోధించిన ట్రాకర్లు</string>
+  <string name="menu_custom_tab_branding">వీరిచే %1$s</string>
   <string name="share_dialog_title">దీనిద్వారా పంచుకోండి</string>
   <string name="notification_erase_text">విహరణ చరిత్రను తుడిచివేయి</string>
   <string name="notification_action_open">తెరువు</string>
@@ -23,14 +27,32 @@
   <string name="shortcut_erase_long_label">విహరణ చరిత్రను తుడిచివేయి</string>
   <string name="text_selection_search_action">అంతరంగికంగా వెతుకు</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#3114;&#3095;&#3149;&#3095;&#3134;&#3122;&#3112;&#3137; &#3118;&#3136; &#3098;&#3143;&#3108;&#3137;&#3122;&#3149;&#3122;&#3147; &#3114;&#3142;&#3105;&#3137;&#3108;&#3137;&#3074;&#3110;&#3135;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#3110;&#3136;&#3112;&#3149;&#3112;&#3135; &#3077;&#3074;&#3108;&#3120;&#3074;&#3095;&#3135;&#3093; &#3125;&#3135;&#3129;&#3120;&#3135;&#3107;&#3135;&#3095;&#3134; &#3125;&#3134;&#3105;&#3137;&#3093;&#3147;&#3074;&#3105;&#3135;:\n  "<ul>"\n    "<li>&#3112;&#3143;&#3120;&#3137;&#3095;&#3134; &#3119;&#3134;&#3114;&#3149; &#3122;&#3147;&#3112;&#3143; &#3125;&#3142;&#3108;&#3093;&#3074;&#3105;&#3135;, &#3125;&#3135;&#3129;&#3120;&#3135;&#3074;&#3098;&#3074;&#3105;&#3135;</li>"\n    "<li>&#3103;&#3149;&#3120;&#3134;&#3093;&#3120;&#3149;&#3122;&#3112;&#3137; &#3112;&#3135;&#3120;&#3147;&#3111;&#3135;&#3074;&#3098;&#3137;&#3093;&#3147;&#3074;&#3105;&#3135; (&#3122;&#3143;&#3110;&#3134; &#3103;&#3149;&#3120;&#3134;&#3093;&#3120;&#3149;&#3122;&#3112;&#3137; &#3077;&#3112;&#3137;&#3118;&#3108;&#3135;&#3074;&#3098;&#3105;&#3134;&#3112;&#3135;&#3093;&#3135; &#3077;&#3118;&#3120;&#3135;&#3093;&#3122;&#3122;&#3147; &#3118;&#3134;&#3120;&#3149;&#3098;&#3137;&#3093;&#3147;&#3074;&#3105;&#3135;)</li>"\n    "<li>&#3093;&#3137;&#3093;&#3136;&#3122;&#3112;&#3137; &#3077;&#3122;&#3134;&#3095;&#3143; &#3125;&#3142;&#3108;&#3137;&#3093;&#3137;&#3105;&#3137;, &#3125;&#3135;&#3129;&#3120;&#3107; &#3098;&#3120;&#3135;&#3108;&#3149;&#3120;&#3122;&#3112;&#3137; &#3108;&#3137;&#3105;&#3135;&#3098;&#3135;&#3125;&#3143;&#3128;&#3137;&#3093;&#3147;&#3074;&#3105;&#3135;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#3112;&#3135; Mozilla &#3108;&#3119;&#3134;&#3120;&#3137;&#3098;&#3143;&#3128;&#3135;&#3074;&#3110;&#3135;. &#3078;&#3120;&#3147;&#3095;&#3149;&#3119;&#3093;&#3120;&#3118;&#3142;&#3158;&#3112;, &#3128;&#3149;&#3125;&#3143;&#3098;&#3149;&#3099;&#3134; &#3100;&#3134;&#3122;&#3134;&#3112;&#3149;&#3112;&#3135; &#3114;&#3149;&#3120;&#3147;&#3108;&#3149;&#3128;&#3129;&#3135;&#3074;&#3098;&#3105;&#3074; &#3118;&#3134; &#3078;&#3126;&#3119;&#3074;.<br/>\n<a href="%2$s">&#3079;&#3074;&#3093;&#3134; &#3108;&#3142;&#3122;&#3137;&#3128;&#3137;&#3093;&#3147;&#3074;&#3105;&#3135;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">గోప్యత మరియు భద్రతా</string>
+  <string name="preference_privacy_and_security_summary">ట్రాకింగ్, కుక్కీలు, డేటా ఎంపికలు</string>
+  <string name="preference_category_tracking_protection">ట్రాకింగ్ సంరక్షణ</string>
+  <string name="preference_category_web_content">వెబ్ కంటెంట్</string>
+  <string name="preference_category_switching_apps">అనువర్తనాలు మార్చడం</string>
+  <string name="preference_category_general">సాధారణం</string>
+  <string name="preference_category_data_collection_use">డేటా సేకరణ మరియు ఉపయోగం</string>
   <string name="preference_category_search">వెతుకు</string>
   <string name="preference_search_engine_default">అప్రమేయం</string>
   <string name="preference_state_on">చేతనం</string>
   <string name="preference_state_off">అచేతనం</string>
   <string name="preference_subitem_autocomplete">URL స్వయంపూర్తి</string>
   <string name="preference_switch_autocomplete">స్వయంపూర్తి</string>
+  <string name="preference_category_autocomplete_preinstalled">అప్రమేయ URL జాబితా</string>
+  <string name="preference_category_autocomplete_custom_urls">ఇష్టానుసారం URLలు</string>
   <string name="preference_autocomplete_subitem_customlist">ఇష్టానుసారం URLs</string>
+  <string name="preference_autocomplete_action_add">+ఇష్టానుసారమైన URLను జోడించండి</string>
+  <string name="preference_autocomplete_title_add">ఇష్టానుసారమైన URLను జోడించండి</string>
+  <string name="custom_autocomplete_quick_add">ఇష్టానుసారమైన URLను జోడించండి</string>
+  <string name="preference_category_cookies">కుకీలు మరియు సైటు డేటా</string>
+  <string name="preference_category_data_choices">దత్తాంశం ఎంపికలు</string>
+  <string name="preference_autocomplete_title_remove">ఇష్టానుసారమైన URLs ను నిర్మూలించండి</string>
   <string name="preference_autocomplete_learn_more">ఇంకా తెలుసుకోండి</string>
+  <string name="preference_autocomplete_add_title">జోడించుటకు URL</string>
+  <string name="preference_autocomplete_add_hint">URL అతికించండి లేదా ఇవ్వండి</string>
+  <string name="preference_autocomplete_add_example2">ఉదాహరణ: mozilla.org</string>
   <string name="preference_autocomplete_add_example">ఉదాహరణ: example.com</string>
   <string name="preference_autocomplete_menu_remove">తీసివేయి</string>
   <string name="preference_autocomplete_action_remove_content_description">తీసివేయి</string>
@@ -57,11 +79,21 @@
   <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
   <string name="preference_privacy_notice">గోప్యతా విధానం</string>
   <string name="preference_about">%1$s గురించి</string>
+  <string name="preference_search_installed_search_engines">స్థాపిత శోధన యంత్రాలు</string>
+  <string name="preference_search_restore">అప్రమేయ శోధన యంత్రాలను పునరుద్ధరించు</string>
   <string name="preference_search_add2">+ మరొక సెర్చింజనును చేర్చు</string>
+  <string name="preference_search_remove_title">శోధన యంత్రమును తొలగించు</string>
   <string name="preference_search_remove">తీసివేయి</string>
   <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
   <string name="search_add_manually_name_hint">సెర్చింజను పేరు</string>
+  <string name="search_add_manually_string">ఉపయోగించడానికి శోధన వాక్యము</string>
   <string name="search_add_manually_save">భద్రపరచు</string>
+  <string name="search_add_manually_example">ఉదాహరణ: example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">క్రొత్త శోధనాయంత్రం చేర్చబడినది.</string>
+  <string name="search_add_error_empty_name">శోధన యంత్రం పేరును నమోదు చెయ్యండి</string>
+  <string name="search_add_error_duplicate_name">ఒక్త నిక్షిప్తం చేయబడిన శోధన యంత్రం అదే పేరుతో ఉంది.</string>
+  <string name="search_add_error_empty_search">శోధన వాక్యమును నమోదు చేయండి</string>
+  <string name="search_add_error_format">శోధన వాక్యము ఉదాహరణ ఆకృతిలో ఉందో లేదో చూడండి</string>
   <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>
   <string name="content_description_dismiss_input">విస్మరించు</string>
   <string name="content_description_erase">విహరణ చరిత్రను తుడిచేయి</string>
@@ -114,6 +146,8 @@
   <string name="contextmenu_image_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు సేవ్ చేయబడిన మరియు పంచిన చిత్రాలు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
   <string name="firstrun_search_title">మీ శోధన, మీ మార్గం</string>
+  <string name="firstrun_search_text">విభిన్నమైన వాటి కోసం శోధిస్తున్నారా? అమరికాలలో మరొక అప్రమేయ శోధన యంత్రంను ఎంచుకోండి.</string>
+  <string name="firstrun_shortcut_title">మీ ముంగిలి తెరలో సత్వరమార్గాలను జోడించండి</string>
   <string name="firstrun_privacy_title">ఆంతరంగికతను అలవాటు చేసుకోండి</string>
   <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
   <string name="firstrun_skip_button">దాటు</string>
@@ -121,6 +155,7 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
   <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
+  <string name="dialog_addtohomescreen_tracking_protection">సత్వరమార్గం ట్రాకింగ్ రక్షణ అచేతనపరిచి తెరవబడుతుంది</string>
   <string name="notification_browsing_session_channel_name">అంతరంగిక విహరణ సెషను</string>
   <string name="tabs_tray_action_erase">విహరణ చరిత్రను తుడిచివేయి</string>
   <string name="download_firefox">Firefoxను దింపుకోండి</string>
@@ -129,6 +164,17 @@
   <string name="gv_prompt_clear">తుడిచివేయి</string>
   <string name="security_popup_secure_connection">సురక్షిత అనుసంధానం</string>
   <string name="security_popup_insecure_connection">అరక్షిత అనుసంధానం</string>
+  <string name="security_popup_security_verified">దీనిచేత నిర్ధారించబడింది: %1$s</string>
   <string name="site_security_icon_content_description">సైటు భద్రత</string>
   <string name="preference_autocomplete_duplicate_url_error">చిరునామా ఇప్పటికే ఉంది</string>
+  <string name="find_in_page">పేజీలో వెతకండి</string>
+  <string name="find_in_page_input">పేజీలో వెతకండి</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_next_result">తదుపరి ఫలితాన్ని కనుగొనండి</string>
+  <string name="accessibility_previous_result">మునుపటి ఫలితాన్ని కనుగొనండి</string>
+  <string name="http_auth_dialog_title">ప్రమాణీకరణ అవసరం</string>
+  <string name="http_auth_dialog_username">వాడుకరి పేరు</string>
+  <string name="http_auth_dialog_password">సంకేతపదం</string>
+  <string name="preference_performance_request_desktop_site">డెస్క్‌టాప్ సైటును అభ్యర్థించు</string>
+  <string name="custom_tab_copy_url_action">URL కాపీ అయ్యింది</string>
 </resources>

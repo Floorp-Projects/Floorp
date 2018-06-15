@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Seguridad del sitio</string>
   <string name="preference_autocomplete_duplicate_url_error">La URL ya existe</string>
   <string name="find_in_page">Buscar en la página</string>
+  <string name="find_in_page_input">Buscar en la página</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
+  <string name="accessibility_next_result">Próximo resultado</string>
+  <string name="accessibility_previous_result">Resultado anterior</string>
+  <string name="accessibility_dismiss_find_in_page">Cerrar la búsqueda</string>
   <string name="http_auth_dialog_title">Se necesita autenticación</string>
   <string name="http_auth_dialog_username">Nombre de usuario</string>
   <string name="http_auth_dialog_password">Contraseña</string>

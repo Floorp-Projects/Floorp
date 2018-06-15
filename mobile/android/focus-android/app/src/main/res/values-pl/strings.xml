@@ -107,7 +107,7 @@
   <string name="search_add_error_empty_search">Wpisz ciąg wyszukiwania</string>
   <string name="search_add_error_format">Upewnij się, że ciąg wyszukiwania zgadza się z formatem przykładu</string>
   <string name="content_description_clear_input">Usuń tekst</string>
-  <string name="content_description_dismiss_input">Odrzuć</string>
+  <string name="content_description_dismiss_input">Zamknij</string>
   <string name="content_description_erase">Usuń historię przeglądania</string>
   <string name="content_description_tab_counter">Otwarte karty: %1$s</string>
   <string name="content_description_lock">Zabezpieczone połączenie</string>
@@ -161,7 +161,7 @@
   <string name="firstrun_search_title">Wyszukuj po swojemu</string>
   <string name="firstrun_search_text">Szukasz czegoś innego? Wybierz inną domyślną wyszukiwarkę w ustawieniach.</string>
   <string name="firstrun_shortcut_title">Dodawaj skróty do ekranu głównego</string>
-  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w programie %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu %1$s.</string>
+  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w programie %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu.</string>
   <string name="firstrun_privacy_title">Prywatność na co dzień</string>
   <string name="firstrun_privacy_text">Ustaw %1$s jako domyślną przeglądarkę i korzystaj z zalet przeglądania prywatnego podczas otwierania stron z innych aplikacji.</string>
   <string name="firstrun_close_button">OK!</string>
@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Bezpieczeństwo strony</string>
   <string name="preference_autocomplete_duplicate_url_error">Adres już istnieje</string>
   <string name="find_in_page">Znajdź na stronie</string>
+  <string name="find_in_page_input">Znajdź na stronie</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d z %2$d</string>
+  <string name="accessibility_next_result">Znajdź następny wynik</string>
+  <string name="accessibility_previous_result">Znajdź poprzedni wynik</string>
+  <string name="accessibility_dismiss_find_in_page">Zamknij wyszukiwanie na stronie</string>
   <string name="http_auth_dialog_title">Podaj nazwę użytkownika i hasło</string>
   <string name="http_auth_dialog_username">Nazwa użytkownika</string>
   <string name="http_auth_dialog_password">Hasło</string>

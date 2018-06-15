@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Webhely biztonsága</string>
   <string name="preference_autocomplete_duplicate_url_error">Az URL már létezik</string>
   <string name="find_in_page">Keresés az oldalon</string>
+  <string name="find_in_page_input">Keresés az oldalon</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d ennyiből: %2$d</string>
+  <string name="accessibility_next_result">Következő találat</string>
+  <string name="accessibility_previous_result">Előző találat</string>
+  <string name="accessibility_dismiss_find_in_page">Kereső elrejtése</string>
   <string name="http_auth_dialog_title">Hitelesítés szükséges</string>
   <string name="http_auth_dialog_username">Felhasználónév</string>
   <string name="http_auth_dialog_password">Jelszó</string>

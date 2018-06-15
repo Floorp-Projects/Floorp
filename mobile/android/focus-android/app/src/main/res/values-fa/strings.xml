@@ -189,8 +189,15 @@
   <string name="site_security_icon_content_description">امنیت پایگاه اینترنتی</string>
   <string name="preference_autocomplete_duplicate_url_error">نشانی قبلاً وجود دارد</string>
   <string name="find_in_page">یافتن در صفحه</string>
+  <string name="find_in_page_input">پیدا کردن در صفحه</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d از %2$d</string>
+  <string name="accessibility_next_result">پیدا کردن نتیجه بعدی</string>
+  <string name="accessibility_previous_result">پیدا کردن نتیجه قبلی</string>
+  <string name="accessibility_dismiss_find_in_page">رد کردن پیدا کردن در این صفحه</string>
   <string name="http_auth_dialog_title">تایید هویت لازم است</string>
   <string name="http_auth_dialog_username">نام کاربری</string>
   <string name="http_auth_dialog_password">گذرواژه</string>
   <string name="preference_performance_request_desktop_site">درخواست نسخه رومیزی پایگاه</string>
+  <string name="custom_tab_copy_url_action">برداشتURL</string>
 </resources>

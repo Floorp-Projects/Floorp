@@ -30,6 +30,7 @@
   <string name="preference_privacy_and_security_header">Tietosuoja ja turvallisuus</string>
   <string name="preference_privacy_and_security_summary">Seuranta, evästeet, kerätyt tiedot</string>
   <string name="preference_search_summary">Aseta oletus, automaattinen täydennys</string>
+  <string name="preference_mozilla_summary">Tietoja %1$sesta, ohje</string>
   <string name="preference_category_tracking_protection">Seurannan suojaus</string>
   <string name="preference_category_web_content">Verkkosisältö</string>
   <string name="preference_category_switching_apps">Sovellusten vaihto</string>
@@ -188,6 +189,11 @@
   <string name="site_security_icon_content_description">Sivuston tietoturva</string>
   <string name="preference_autocomplete_duplicate_url_error">Osoite on jo olemassa</string>
   <string name="find_in_page">Etsi sivulta</string>
+  <string name="find_in_page_input">Etsi sivulta</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_next_result">Etsi seuraava tulos</string>
+  <string name="accessibility_previous_result">Etsi edellinen tulos</string>
+  <string name="accessibility_dismiss_find_in_page">Sulje sivulta etsiminen</string>
   <string name="http_auth_dialog_title">Varmentaminen vaadittu</string>
   <string name="http_auth_dialog_username">Käyttäjätunnus</string>
   <string name="http_auth_dialog_password">Salasana</string>

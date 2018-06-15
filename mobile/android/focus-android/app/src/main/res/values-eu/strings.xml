@@ -189,8 +189,15 @@
   <string name="site_security_icon_content_description">Gunearen segurtasuna</string>
   <string name="preference_autocomplete_duplicate_url_error">URLa badago lehendik ere</string>
   <string name="find_in_page">Bilatu orrian</string>
+  <string name="find_in_page_input">Bilatu orrian</string>
+  <string name="find_in_page_result">%2$d/%1$d</string>
+  <string name="accessibility_find_in_page_result">%2$d(e)tik %1$d</string>
+  <string name="accessibility_next_result">Bilatu hurrengo emaitza</string>
+  <string name="accessibility_previous_result">Bilatu aurreko emaitza</string>
+  <string name="accessibility_dismiss_find_in_page">Baztertu orrian bilatzea</string>
   <string name="http_auth_dialog_title">Autentifikazioa beharrezkoa</string>
   <string name="http_auth_dialog_username">Erabiltzaile-izena</string>
   <string name="http_auth_dialog_password">Pasahitza</string>
   <string name="preference_performance_request_desktop_site">Mahaigaineko gunea</string>
+  <string name="custom_tab_copy_url_action">URLa kopiatu da</string>
 </resources>

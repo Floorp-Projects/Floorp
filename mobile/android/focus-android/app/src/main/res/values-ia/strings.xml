@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Securitate del sito</string>
   <string name="preference_autocomplete_duplicate_url_error">Le URL existe ja</string>
   <string name="find_in_page">Trovar in le pagina</string>
+  <string name="find_in_page_input">Trovar in le pagina</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
+  <string name="accessibility_next_result">Trovar le resultato successive</string>
+  <string name="accessibility_previous_result">Trovar le resultato previe</string>
+  <string name="accessibility_dismiss_find_in_page">Dimitter le recerca in le pagina</string>
   <string name="http_auth_dialog_title">Authentication necessari</string>
   <string name="http_auth_dialog_username">Nomine de usator</string>
   <string name="http_auth_dialog_password">Contrasigno</string>

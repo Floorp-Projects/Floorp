@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Sayt Təhlükəsizliyi</string>
   <string name="preference_autocomplete_duplicate_url_error">URL artıq mövcuddur</string>
   <string name="find_in_page">Səhifədə Tap</string>
+  <string name="find_in_page_input">Səhifədə tap</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%2$d nəticədən %1$d dənəsi</string>
+  <string name="accessibility_next_result">Sonrakı nəticəni tap</string>
+  <string name="accessibility_previous_result">Əvvəlki nəticəni tap</string>
+  <string name="accessibility_dismiss_find_in_page">Səhifədə axtarışı qapat</string>
   <string name="http_auth_dialog_title">Təsdiqləmə tələb edilir</string>
   <string name="http_auth_dialog_username">İstifadəçi adı</string>
   <string name="http_auth_dialog_password">Parol</string>

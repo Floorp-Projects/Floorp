@@ -8,6 +8,9 @@
   <string name="feedback_erase">Gisij ganare\' nej nuguan\' garajsunt nga gaché nunt.</string>
   <string name="search_hint">Nana\'uì\' %1$s</string>
   <string name="menu_share">Ga\'ninj gan\'an riña duguî\'t</string>
+  <string name="menu_report_site_issue">Natà’ sa ‘iaj sun a’nan’ riña sitiô na</string>
+  <string name="menu_open_with_default_browser2">Na\'nïn ngà %1$s</string>
+  <string name="menu_open_with_a_browser2">Na\'nïn…</string>
   <string name="menu_add_to_home_screen">Na\'nïn riña pantayâ nìko</string>
   <string name="menu_whats_new">Nuin si hua nanj</string>
   <string name="menu_settings">Nagi\'iaj</string>
@@ -15,6 +18,7 @@
   <string name="menu_help">Sa ruguñu\'unj un</string>
   <string name="menu_rights">Nej sa tna\'uej rayi\'ît</string>
   <string name="menu_trackers_blocked_title">Gi\'iaj blokeandô Trackers</string>
+  <string name="menu_custom_tab_branding">Rugujñu\'unj %1$s</string>
   <string name="share_dialog_title">Ga\'nïnj gan\'an ngà</string>
   <string name="notification_erase_text">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
   <string name="notification_action_open">Na\'nïn</string>
@@ -23,6 +27,12 @@
   <string name="shortcut_erase_long_label">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
   <string name="text_selection_search_action">Nana\'uì\' riña hua huìi</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s narikij kontrol ri&#241;at.</p>" "<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"garasun da\' gache nu hu&#236;t: "<ul>" "<li>Nana\'u&#236;\' ni gache nunt ne\' hu&#224;\'t ng&#224; app</li>" "<li>Narr&#224;n ri&#241;a blokeador (si nitaj ni guij nagi\'iaj da\' ga\'ue ga\'n&#239;nt gi\'iaj sun man)</li>" "<li>nadure\' da\' nar&#232;\' cookies danj nanj nej nuguan\' gachr&#251;nt nga gach&#233; nunt</li>" "</ul>" "</p>" "<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s Sa giri Mozilla huin.  Chrej nik&#242;\' &#241;&#251;nj huin sisi ga ni\'n&#239;nj ni dugumin internet s&#242;\'."<br/>" "<a href="%2$s">Gini\'in doj rayi\'&#238; nuguan\' na</a></p>]]></string>
+  <string name="preference_privacy_and_security_summary">Nana\'ui\', cookies, ganahuij datos</string>
+  <string name="preference_mozilla_summary">Rayi\'î %1$s, rugujñu\'unj</string>
+  <string name="preference_category_tracking_protection">Sa narrán riña sa naga\'nàj a</string>
+  <string name="preference_category_web_content">Sa nu riña web</string>
+  <string name="preference_category_switching_apps">Naduno\' aplikasion</string>
+  <string name="preference_category_general">Da\'ua nguéj</string>
   <string name="preference_category_search">Nana\'uì\'</string>
   <string name="preference_search_engine_default">Ngà hua niñanj</string>
   <string name="preference_state_on">On</string>
@@ -31,14 +41,18 @@
   <string name="preference_switch_autocomplete">Nuta\' ma\'ān ma</string>
   <string name="preference_category_autocomplete_preinstalled">Dadànj hua nian lista URL</string>
   <string name="preference_autocomplete_preinstalled_summary">Nachrun %1$s da\' nuta\' ma\'ān ma 450 URLs sa nià\' dojruhua guìi ni\'iaj ni.</string>
+  <string name="preference_category_autocomplete_custom_urls">Nagi\'iaj mu\'ù nej URL</string>
   <string name="preference_autocomplete_subitem_customlist">Nagi\'iaj mu\'ù nej URL</string>
   <string name="preference_autocomplete_action_add">+ Nùto\' sa nagi\'iaj ma\'ān URL</string>
   <string name="preference_autocomplete_title_add">Nùto\' sa nagi\'iaj ma\'ān URL</string>
+  <string name="custom_autocomplete_quick_add">Nùto\' sa nagi\'iaj ma\'ān URL</string>
+  <string name="preference_category_data_choices">Ganahui nej datos</string>
   <string name="preference_autocomplete_title_remove">Nadure\' sa nagi\'iaj ma\'ān URL</string>
   <string name="preference_autocomplete_learn_more">Gahuin chrūn doj</string>
   <string name="preference_autocomplete_custom_summary">Noto\' sa nagi\'iaj ma\'ān daran\' URL.</string>
   <string name="preference_autocomplete_add_title">URL nuto\'</string>
   <string name="preference_autocomplete_add_hint">Gàchru\' URL</string>
+  <string name="preference_autocomplete_add_example2">Nagi\'io\': mozilla.org</string>
   <string name="preference_autocomplete_add_example">Dànaj gachrunt: example.com</string>
   <string name="preference_autocomplete_add_confirmation">URL naka doj nga nata\'</string>
   <string name="preference_autocomplete_menu_remove">Guxūn</string>
@@ -55,11 +69,14 @@
   <string name="preference_privacy_block_social_summary">Hua ni\'inj riña sitiô na da\' gini\'in si so\' àtuj ni digàn botûn da\' duyi\'ngo\'</string>
   <string name="preference_privacy_block_content">Si gâ\'nïnt a\'ngô nej sa ni\'iaj sa \'iát</string>
   <string name="preference_privacy_block_content_summary2">Si ganachunt man, ni gahuin ni si gi\'iaj sun hue\'e da\'aj pagina</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Si ga\'ue</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ga\'ue</string>
   <string name="preference_privacy_secure_mode">Dugumî sa achrûnt</string>
   <string name="preference_privacy_stealth_summary">Nagi\'iaj huì nej pâjina si ruhuât garasunt a\'ngô app</string>
   <string name="preference_category_performance">suun</string>
   <string name="preference_performance_block_webfonts">Nará riña nej yi\'nïn\' web</string>
   <string name="preference_performance_block_webfonts_summary">Ga\'ue narugui\'ìj riña a\'ngô ikono</string>
+  <string name="preference_performance_block_javascript">Garun\' riña JavaScript</string>
   <string name="preference_default_browser2">Nagi\'iaj %1$s da\' garasun yitïnjt</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Ga\'nïnj nej datô arâj sunt</string>
@@ -156,4 +173,16 @@
   <string name="your_rights_content3"><![CDATA["Nitāj si â’nïnj fundación Mozilla ganè’ nej rasuun nīka nī ngà ‘ngō yiko’ li, dàj rû’ si yugui nej %1$s asi da’nga’ nīka, Firefox. Ga’ue narì’t doj nuguan’ a’min rayi’î "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hi&#363;j nan</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["‘Ngō da’nga’ ga’ue natà’ guendâ %1$s nū man ngà a’ngô licencia huā chre "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">n&#299; codig&#244; hu&#257; n&#238;&#8217;n&#239;nj &#239;n</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s arâj sunj nej nuguan’ narikî Disconnect,Inc. dàj rû’ nej sun huā ninïïn "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" GNU &#8216;iaj Licencia Yum&#224;n&#8217; v3"</a>", nī nunj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hi&#363;j nan</a>.]]></string>
+  <string name="gv_prompt_username_hint">Si yugui re\'</string>
+  <string name="gv_prompt_password_hint">Da\'nga\' huìi</string>
+  <string name="gv_prompt_clear">Na\'nïn\'</string>
+  <string name="security_popup_secure_connection">Conexión yitinj in</string>
+  <string name="security_popup_insecure_connection">Conexión nitaj si gua yitinj</string>
+  <string name="security_popup_security_verified">Ngà ganatsij sa gu\'nàj: %1$s</string>
+  <string name="site_security_icon_content_description">Sa dugumi\'</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL sa gayi\'i sesión</string>
+  <string name="find_in_page">Nana\'ui riñan ñanj</string>
+  <string name="find_in_page_input">Nana\'ui\' riñan ñanj</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d si\'iaj %2$d</string>
 </resources>
