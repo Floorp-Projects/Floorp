@@ -23,6 +23,7 @@ DevToolsModules(
     'CurrentTimeLabel.js',
     'CurrentTimeScrubber.js',
     'CurrentTimeScrubberController.js',
+    'IndicationBar.js',
     'KeyframesProgressBar.js',
     'NoAnimationPanel.js',
     'PauseResumeButton.js',
