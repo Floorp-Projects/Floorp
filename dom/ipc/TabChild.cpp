@@ -1727,10 +1727,7 @@ TabChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
                                                         aInputBlockId);
   }
 
-  InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eIgnore);
-  if (pendingLayerization) {
-    InputAPZContext::SetPendingLayerization();
-  }
+  InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eIgnore, pendingLayerization);
 
   WidgetMouseEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
