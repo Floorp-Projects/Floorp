@@ -1,51 +1,39 @@
 /// Character level parsers
 
-use internal::{IResult,Needed,Err};
-use util::ErrorKind;
+use internal::{IResult,Needed};
+use traits::{AsChar,InputIter,InputLength,Slice};
+use std::ops::RangeFrom;
 
 /// matches one of the provided characters
+///
+/// # Example
+/// ```
+/// # #[macro_use] extern crate nom;
+/// # use nom::IResult;
+/// # fn main() {
+/// named!(simple<char>, one_of!(&b"abc"[..]));
+/// assert_eq!(simple(b"a123"), IResult::Done(&b"123"[..], 'a'));
+///
+/// named!(a_or_b<&str, char>, one_of!("ab汉"));
+/// assert_eq!(a_or_b("汉jiosfe"), IResult::Done("jiosfe", '汉'));
+/// # }
+/// ```
 #[macro_export]
 macro_rules! one_of (
   ($i:expr, $inp: expr) => (
     {
-      if $i.is_empty() {
-        $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1))
-      } else {
-        #[inline(always)]
-        fn as_bytes<T: $crate::AsBytes>(b: &T) -> &[u8] {
-          b.as_bytes()
-        }
+      use $crate::Slice;
+      use $crate::AsChar;
+      use $crate::FindToken;
+      use $crate::InputIter;
 
-        let expected = $inp;
-        let bytes = as_bytes(&expected);
-        one_of_bytes!($i, bytes)
-      }
-    }
-  );
-);
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! one_of_bytes (
-  ($i:expr, $bytes: expr) => (
-    {
-      if $i.is_empty() {
-        $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1))
-      } else {
-        let mut found = false;
-
-        for &i in $bytes {
-          if i == $i[0] {
-            found = true;
-            break;
-          }
-        }
-
-        if found {
-          $crate::IResult::Done(&$i[1..], $i[0] as char)
-        } else {
-          $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::OneOf, $i))
-        }
+      match ($i).iter_elements().next().map(|c| {
+        (c, c.find_token($inp))
+      }) {
+        None             => $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1)),
+        Some((_, false)) => $crate::IResult::Error(error_position!($crate::ErrorKind::OneOf, $i)),
+        //the unwrap should be safe here
+        Some((c, true))  => $crate::IResult::Done($i.slice(c.len()..), $i.iter_elements().next().unwrap().as_char())
       }
     }
   );
@@ -56,44 +44,18 @@ macro_rules! one_of_bytes (
 macro_rules! none_of (
   ($i:expr, $inp: expr) => (
     {
-      if $i.is_empty() {
-        $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1))
-      } else {
-        #[inline(always)]
-        fn as_bytes<T: $crate::AsBytes>(b: &T) -> &[u8] {
-          b.as_bytes()
-        }
+      use $crate::Slice;
+      use $crate::AsChar;
+      use $crate::FindToken;
+      use $crate::InputIter;
 
-        let expected = $inp;
-        let bytes = as_bytes(&expected);
-        none_of_bytes!($i, bytes)
-      }
-    }
-  );
-);
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! none_of_bytes (
-  ($i:expr, $bytes: expr) => (
-    {
-      if $i.is_empty() {
-        $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1))
-      } else {
-        let mut found = false;
-
-        for &i in $bytes {
-          if i == $i[0] {
-            found = true;
-            break;
-          }
-        }
-
-        if !found {
-          $crate::IResult::Done(&$i[1..], $i[0] as char)
-        } else {
-          $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::NoneOf, $i))
-        }
+      match ($i).iter_elements().next().map(|c| {
+        (c, !c.find_token($inp))
+      }) {
+        None             => $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1)),
+        Some((_, false)) => $crate::IResult::Error(error_position!($crate::ErrorKind::NoneOf, $i)),
+        //the unwrap should be safe here
+        Some((c, true))  => $crate::IResult::Done($i.slice(c.len()..), $i.iter_elements().next().unwrap().as_char())
       }
     }
   );
@@ -104,49 +66,39 @@ macro_rules! none_of_bytes (
 macro_rules! char (
   ($i:expr, $c: expr) => (
     {
-      if $i.is_empty() {
-        let res: $crate::IResult<&[u8], char> = $crate::IResult::Incomplete($crate::Needed::Size(1));
-        res
-      } else {
-        if $i[0] == $c as u8 {
-          $crate::IResult::Done(&$i[1..], $i[0] as char)
-        } else {
-          $crate::IResult::Error($crate::Err::Position($crate::ErrorKind::Char, $i))
-        }
+      use $crate::Slice;
+      use $crate::AsChar;
+      use $crate::InputIter;
+
+      match ($i).iter_elements().next().map(|c| {
+        (c, c.as_char() == $c)
+      }) {
+        None             => $crate::IResult::Incomplete::<_, _>($crate::Needed::Size(1)),
+        Some((_, false)) => $crate::IResult::Error(error_position!($crate::ErrorKind::Char, $i)),
+        //the unwrap should be safe here
+        Some((c, true))  => $crate::IResult::Done($i.slice(c.len()..), $i.iter_elements().next().unwrap().as_char())
       }
     }
   );
 );
 
-named!(pub newline<char>, char!('\n'));
+named!(#[doc="Matches a newline character '\\n'"], pub newline<char>, char!('\n'));
 
-pub fn crlf(input:&[u8]) -> IResult<&[u8], char> {
-  if input.len() < 2 {
-    IResult::Incomplete(Needed::Size(2))
-  } else {
-    if &input[0..2] == &b"\r\n"[..] {
-      IResult::Done(&input[2..], '\n')
-    } else {
-      IResult::Error(Err::Position(ErrorKind::CrLf, input))
-    }
-  }
-}
+named!(#[doc="Matches a tab character '\\t'"], pub tab<char>, char!('\t'));
 
-named!(pub eol<char>, alt!(crlf | newline));
-named!(pub tab<char>, char!('\t'));
-
-pub fn anychar(input:&[u8]) -> IResult<&[u8], char> {
-  if input.is_empty() {
+pub fn anychar<T>(input: T) -> IResult<T, char> where
+  T: InputIter+InputLength+Slice<RangeFrom<usize>>,
+  <T as InputIter>::Item: AsChar {
+  if input.input_len() == 0 {
     IResult::Incomplete(Needed::Size(1))
   } else {
-    IResult::Done(&input[1..], input[0] as char)
+    IResult::Done(input.slice(1..), input.iter_elements().next().expect("slice should contain at least one element").as_char())
   }
 }
 
 #[cfg(test)]
 mod tests {
   use internal::IResult::*;
-  use internal::Err::*;
   use util::ErrorKind;
 
   #[test]
@@ -157,7 +109,13 @@ mod tests {
     assert_eq!(f(a), Done(&b"bcd"[..], 'a'));
 
     let b = &b"cde"[..];
-    assert_eq!(f(b), Error(Position(ErrorKind::OneOf, b)));
+    assert_eq!(f(b), Error(error_position!(ErrorKind::OneOf, b)));
+
+    named!(utf8(&str) -> char,
+      one_of!("+\u{FF0B}"));
+
+    assert!(utf8("+").is_done());
+    assert!(utf8("\u{FF0B}").is_done());
   }
 
   #[test]
@@ -165,7 +123,7 @@ mod tests {
     named!(f<char>, none_of!("ab"));
 
     let a = &b"abcd"[..];
-    assert_eq!(f(a), Error(Position(ErrorKind::NoneOf, a)));
+    assert_eq!(f(a), Error(error_position!(ErrorKind::NoneOf, a)));
 
     let b = &b"cde"[..];
     assert_eq!(f(b), Done(&b"de"[..], 'c'));
@@ -176,9 +134,10 @@ mod tests {
     named!(f<char>, char!('c'));
 
     let a = &b"abcd"[..];
-    assert_eq!(f(a), Error(Position(ErrorKind::Char, a)));
+    assert_eq!(f(a), Error(error_position!(ErrorKind::Char, a)));
 
     let b = &b"cde"[..];
     assert_eq!(f(b), Done(&b"de"[..], 'c'));
   }
+
 }

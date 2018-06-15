@@ -31,6 +31,7 @@ flake8:
         - testing/mozbase
         - testing/mozharness/configs
         - testing/mozharness/mozfile
+        - testing/mozharness/mozharness/mozilla/l10n/locales.py
         - testing/mozharness/mozharness/mozilla/mar.py
         - testing/mozharness/mozharness/mozilla/testing/
         - testing/mozharness/mozinfo

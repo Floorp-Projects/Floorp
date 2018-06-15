@@ -165,9 +165,7 @@ impl StateMachine {
             // Aggregate distinct transports from all given credentials.
             let transports = key_handles
                 .iter()
-                .fold(::AuthenticatorTransports::empty(), |t, k| {
-                    t | k.transports
-                });
+                .fold(::AuthenticatorTransports::empty(), |t, k| t | k.transports);
 
             // We currently only support USB. If the RP specifies transports
             // and doesn't include USB it's probably lying.

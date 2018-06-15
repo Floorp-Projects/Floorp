@@ -1,19 +1,27 @@
-use internal::{IResult,Err};
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "verbose-errors")]
+use internal::IResult;
+
+#[cfg(feature = "verbose-errors")]
+use verbose_errors::Err;
+
+#[cfg(feature = "std")]
 use std::collections::HashMap;
 
-#[cfg(feature = "core")]
+#[cfg(not(feature = "std"))]
 use std::prelude::v1::*;
+
 use std::vec::Vec;
 use std::string::ToString;
 
 /// useful functions to calculate the offset between slices and show a hexdump of a slice
-#[cfg(not(feature = "core"))]
-pub trait HexDisplay {
+pub trait Offset {
   /// offset between the first byte of self and the first byte of the argument
-  fn offset(&self, second:&[u8]) -> usize;// OFFSET SHOULD GO TO ITS OWN TRAIT
+  fn offset(&self, second:&Self) -> usize;
+}
 
+#[cfg(feature = "std")]
+pub trait HexDisplay {
   /// Converts the value of `self` to a hex dump, returning the owned
   /// string.
   fn to_hex(&self, chunk_size: usize) -> String;
@@ -23,130 +31,28 @@ pub trait HexDisplay {
   fn to_hex_from(&self, chunk_size: usize, from: usize) -> String;
 }
 
-pub trait InputLength {
-  #[inline]
-  fn input_len(&self) -> usize;
-}
-
-impl<'a, T> InputLength for &'a[T] {
-  #[inline]
-  fn input_len(&self) -> usize {
-    self.len()
-  }
-}
-
-impl<'a> InputLength for &'a str {
-  #[inline]
-  fn input_len(&self) -> usize {
-    self.len()
-  }
-}
-
-impl<'a> InputLength for (&'a [u8], usize) {
-  #[inline]
-  fn input_len(&self) -> usize {
-    //println!("bit input length for ({:?}, {}):", self.0, self.1);
-    let res = self.0.len() * 8 - self.1;
-    //println!("-> {}", res);
-    res
-  }
-}
-
-use std::iter::Enumerate;
-#[cfg(not(feature = "core"))]
-use std::str::CharIndices;
-
-pub trait AsChar {
-    #[inline]
-    fn as_char(self)     -> char;
-    #[inline]
-    fn is_alpha(self)    -> bool;
-    #[inline]
-    fn is_alphanum(self) -> bool;
-    #[inline]
-    fn is_0_to_9(self)   -> bool;
-    #[inline]
-    fn is_hex_digit(self) -> bool;
-    #[inline]
-    fn is_oct_digit(self) -> bool;
-}
-
-impl<'a> AsChar for &'a u8 {
-    #[inline]
-    fn as_char(self)     -> char { *self as char }
-    #[inline]
-    fn is_alpha(self)    -> bool {
-      (*self >= 0x41 && *self <= 0x5A) || (*self >= 0x61 && *self <= 0x7A)
-    }
-    #[inline]
-    fn is_alphanum(self) -> bool { self.is_alpha() || self.is_0_to_9() }
-    #[inline]
-    fn is_0_to_9(self)   -> bool {
-      *self >= 0x30 && *self <= 0x39
-    }
-    #[inline]
-    fn is_hex_digit(self) -> bool {
-      (*self >= 0x30 && *self <= 0x39) ||
-      (*self >= 0x41 && *self <= 0x46) ||
-      (*self >= 0x61 && *self <= 0x66)
-    }
-    #[inline]
-    fn is_oct_digit(self)   -> bool {
-      *self >= 0x30 && *self <= 0x37
-    }
-}
-
-impl AsChar for char {
-    #[inline]
-    fn as_char(self)     -> char { self }
-    #[inline]
-    fn is_alpha(self)    -> bool { self.is_alphabetic() }
-    #[inline]
-    fn is_alphanum(self) -> bool { self.is_alpha() || self.is_0_to_9() }
-    #[inline]
-    fn is_0_to_9(self)   -> bool { self.is_digit(10) }
-    #[inline]
-    fn is_hex_digit(self) -> bool { self.is_digit(16) }
-    #[inline]
-    fn is_oct_digit(self) -> bool { self.is_digit(8) }
-}
-
-pub trait IterIndices {
-    type Item: AsChar;
-    type Iter : Iterator<Item=(usize, Self::Item)>;
-    fn iter_indices(self) -> Self::Iter;
-}
-
-impl<'a> IterIndices for &'a [u8] {
-    type Item = &'a u8;
-    type Iter = Enumerate<::std::slice::Iter<'a, u8>>;
-    #[inline]
-    fn iter_indices(self) -> Enumerate<::std::slice::Iter<'a, u8>> {
-        self.iter().enumerate()
-    }
-}
-
-#[cfg(not(feature = "core"))]
-impl<'a> IterIndices for &'a str {
-    type Item = char;
-    type Iter = CharIndices<'a>;
-    #[inline]
-    fn iter_indices(self) -> CharIndices<'a> {
-        self.char_indices()
-    }
-}
-
 static CHARS: &'static[u8] = b"0123456789abcdef";
 
-#[cfg(not(feature = "core"))]
-impl HexDisplay for [u8] {
+impl Offset for [u8] {
   fn offset(&self, second:&[u8]) -> usize {
     let fst = self.as_ptr();
     let snd = second.as_ptr();
 
     snd as usize - fst as usize
   }
+}
 
+impl Offset for str {
+    fn offset(&self, second: &Self) -> usize {
+      let fst = self.as_ptr();
+      let snd = second.as_ptr();
+
+      snd as usize - fst as usize
+    }
+}
+
+#[cfg(feature = "std")]
+impl HexDisplay for [u8] {
   #[allow(unused_variables)]
   fn to_hex(&self, chunk_size: usize) -> String {
     self.to_hex_from(chunk_size, 0)
@@ -241,7 +147,7 @@ macro_rules! dbg (
 ///
 /// It also displays the input in hexdump format
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate nom;
 /// # fn main() {
 ///    named!(f, dbg_dmp!( tag!( "abcd" ) ) );
@@ -278,32 +184,44 @@ macro_rules! dbg_dmp (
   );
 );
 
+#[cfg(feature = "verbose-errors")]
 pub fn error_to_list<P,E:Clone>(e:&Err<P,E>) -> Vec<ErrorKind<E>> {
   let mut v:Vec<ErrorKind<E>> = Vec::new();
-  let mut err = e;
-  loop {
-    match *err {
-      Err::Code(ref i) | Err::Position(ref i,_)                  => {
+  match e {
+     &Err::Code(ref i) | &Err::Position(ref i,_) => {
         v.push(i.clone());
         return v;
-      },
-      Err::Node(ref i, ref next) | Err::NodePosition(ref i, _, ref next) => {
-        v.push(i.clone());
-        err = &*next;
-      }
-    }
+     },
+     &Err::Node(ref i, ref next) | &Err::NodePosition(ref i, _, ref next) => {
+       //v.push(i.clone());
+       for error in next.iter() {
+         if let &Err::Code(ref i2) = error {
+           v.push(i2.clone());
+         }
+         if let &Err::Position(ref i2,_) = error {
+           v.push(i2.clone());
+         }
+       }
+       v.push(i.clone());
+       v.reverse()
+     }
   }
+
+  v
 }
 
+#[cfg(feature = "verbose-errors")]
 pub fn compare_error_paths<P,E:Clone+PartialEq>(e1:&Err<P,E>, e2:&Err<P,E>) -> bool {
   error_to_list(e1) == error_to_list(e2)
 }
 
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
+#[cfg(feature = "verbose-errors")]
 use std::hash::Hash;
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
+#[cfg(feature = "verbose-errors")]
 pub fn add_error_pattern<'a,I,O,E: Clone+Hash+Eq>(h: &mut HashMap<Vec<ErrorKind<E>>, &'a str>, res: IResult<I,O,E>, message: &'a str) -> bool {
   if let IResult::Error(e) = res {
     h.insert(error_to_list(&e), message);
@@ -320,32 +238,33 @@ pub fn slice_to_offsets(input: &[u8], s: &[u8]) -> (usize, usize) {
   (off1, off2)
 }
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
+#[cfg(feature = "verbose-errors")]
 pub fn prepare_errors<O,E: Clone>(input: &[u8], res: IResult<&[u8],O,E>) -> Option<Vec<(ErrorKind<E>, usize, usize)> > {
   if let IResult::Error(e) = res {
     let mut v:Vec<(ErrorKind<E>, usize, usize)> = Vec::new();
-    let mut err = e.clone();
-    loop {
-      match err {
-        Err::Position(i,s)            => {
-          let (o1, o2) = slice_to_offsets(input, s);
+
+    match e {
+       Err::Code(_) => {},
+       Err::Position(i, p) => {
+         let (o1, o2) = slice_to_offsets(input, p);
           v.push((i, o1, o2));
-          //println!("v is: {:?}", v);
-          break;
-        },
-        Err::NodePosition(i, s, next) => {
-          let (o1, o2) = slice_to_offsets(input, s);
-          v.push((i, o1, o2));
-          err = *next;
-        },
-        Err::Node(_, next)            => {
-          err = *next;
-        },
-        Err::Code(_)                  => {
-          break;
-        }
-      }
+       },
+       Err::Node(_, _) => {},
+       Err::NodePosition(i, p, next) => {
+         //v.push(i.clone());
+         for error in next.iter() {
+           if let &Err::Position(ref i2, ref p2) = error {
+              let (o1, o2) = slice_to_offsets(input, p2);
+             v.push((i2.clone(), o1, o2));
+           }
+         }
+        let (o1, o2) = slice_to_offsets(input, p);
+         v.push((i, o1, o2));
+         v.reverse()
+       }
     }
+
     v.sort_by(|a, b| a.1.cmp(&b.1));
     Some(v)
   } else {
@@ -353,7 +272,8 @@ pub fn prepare_errors<O,E: Clone>(input: &[u8], res: IResult<&[u8],O,E>) -> Opti
   }
 }
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
+#[cfg(feature = "verbose-errors")]
 pub fn print_error<O,E:Clone>(input: &[u8], res: IResult<&[u8],O,E>) {
   if let Some(v) = prepare_errors(input, res) {
     let colors = generate_colors(&v);
@@ -365,7 +285,8 @@ pub fn print_error<O,E:Clone>(input: &[u8], res: IResult<&[u8],O,E>) {
   }
 }
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
+#[cfg(feature = "verbose-errors")]
 pub fn generate_colors<E>(v: &[(ErrorKind<E>, usize, usize)]) -> HashMap<u32, u8> {
   let mut h: HashMap<u32, u8> = HashMap::new();
   let mut color = 0;
@@ -417,7 +338,7 @@ pub fn write_color(v: &mut Vec<u8>, color: u8) {
   v.push('m' as u8);
 }
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
 pub fn print_codes(colors: HashMap<u32, u8>, names: HashMap<u32, &str>) -> String {
   let mut v = Vec::new();
   for (code, &color) in &colors {
@@ -439,7 +360,8 @@ pub fn print_codes(colors: HashMap<u32, u8>, names: HashMap<u32, &str>) -> Strin
   String::from_utf8_lossy(&v[..]).into_owned()
 }
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
+#[cfg(feature = "verbose-errors")]
 pub fn print_offsets<E>(input: &[u8], from: usize, offsets: &[(ErrorKind<E>, usize, usize)]) -> String {
   let mut v = Vec::with_capacity(input.len() * 3);
   let mut i = from;
@@ -599,6 +521,7 @@ pub enum ErrorKind<E=u32> {
   SeparatedNonEmptyList,
   Many0,
   Many1,
+  ManyTill,
   Count,
   TakeUntilAndConsume,
   TakeUntil,
@@ -642,7 +565,10 @@ pub enum ErrorKind<E=u32> {
   ManyMN,
   TakeUntilAndConsumeStr,
   TakeUntilStr,
-  Not
+  Not,
+  Permutation,
+  Verify,
+  TakeTill1,
 }
 
 pub fn error_to_u32<E>(e: &ErrorKind<E>) -> u32 {
@@ -702,6 +628,10 @@ pub fn error_to_u32<E>(e: &ErrorKind<E>) -> u32 {
     ErrorKind::OctDigit                  => 61,
     ErrorKind::Many0                     => 62,
     ErrorKind::Not                       => 63,
+    ErrorKind::Permutation               => 64,
+    ErrorKind::ManyTill                  => 65,
+    ErrorKind::Verify                    => 66,
+    ErrorKind::TakeTill1                 => 67,
   }
 }
 
@@ -763,7 +693,46 @@ pub fn error_to_u32<E>(e: &ErrorKind<E>) -> u32 {
         ErrorKind::TakeUntilStr              => "Take until on strings",
         ErrorKind::OctDigit                  => "Octal digit",
         ErrorKind::Not                       => "Negation",
+        ErrorKind::Permutation               => "Permutation",
+        ErrorKind::ManyTill                  => "ManyTill",
+        ErrorKind::Verify                    => "predicate verification",
+        ErrorKind::TakeTill1                 => "TakeTill1",
       }
 
     }
+    /// Convert Err into an ErrorKind.
+    ///
+    /// This allows application code to use ErrorKind and stay independent from the `verbose-errors` features activation.
+    pub fn into_error_kind(self) -> ErrorKind<E> {
+      self
+    }
   }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_offset_u8() {
+      let s = b"abcd123";
+      let a = &s[..];
+      let b = &a[2..];
+      let c = &a[..4];
+      let d = &a[3..5];
+      assert_eq!(a.offset(b), 2);
+      assert_eq!(a.offset(c), 0);
+      assert_eq!(a.offset(d), 3);
+    }
+
+    #[test]
+    fn test_offset_str() {
+      let s = "abcřèÂßÇd123";
+      let a = &s[..];
+      let b = &a[7..];
+      let c = &a[..5];
+      let d = &a[5..9];
+      assert_eq!(a.offset(b), 7);
+      assert_eq!(a.offset(c), 0);
+      assert_eq!(a.offset(d), 5);
+    }
+}

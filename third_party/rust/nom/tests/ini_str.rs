@@ -1,4 +1,3 @@
-
 #[macro_use]
 extern crate nom;
 
@@ -36,40 +35,35 @@ fn right_bracket(c:char) -> bool {
 }
 
 named!(category     <&str, &str>,
-  chain!(
-          tag_s!("[")                 ~
-    name: take_till_s!(right_bracket) ~
-          tag_s!("]")                 ~
-          space_or_line_ending?       ,
-    ||{ name }
+  do_parse!(
+          tag_s!("[")                 >>
+    name: take_till_s!(right_bracket) >>
+          tag_s!("]")                 >>
+          opt!(space_or_line_ending)  >>
+    (name)
   )
 );
 
 named!(key_value    <&str,(&str,&str)>,
-  chain!(
-    key: alphanumeric                            ~
-         space?                                  ~
-         tag_s!("=")                             ~
-         space?                                  ~
-    val: take_till_s!(is_line_ending_or_comment) ~
-         space?                                  ~
-         pair!(tag_s!(";"), not_line_ending)?    ~
-         space_or_line_ending?                   ,
-    ||{(key, val)}
+  do_parse!(
+    key: alphanumeric                              >>
+         opt!(space)                               >>
+         tag_s!("=")                               >>
+         opt!(space)                               >>
+    val: take_till_s!(is_line_ending_or_comment)   >>
+         opt!(space)                               >>
+         opt!(pair!(tag_s!(";"), not_line_ending)) >>
+         opt!(space_or_line_ending)                >>
+    (key, val)
   )
 );
 
 named!(keys_and_values_aggregator<&str, Vec<(&str,&str)> >, many0!(key_value));
 
 fn keys_and_values(input:&str) -> IResult<&str, HashMap<&str, &str> > {
-  let mut h: HashMap<&str, &str> = HashMap::new();
-
   match keys_and_values_aggregator(input) {
     IResult::Done(i,tuple_vec) => {
-      for &(k,v) in &tuple_vec {
-        h.insert(k, v);
-      }
-      IResult::Done(i, h)
+      IResult::Done(i, tuple_vec.into_iter().collect())
     },
     IResult::Incomplete(a)     => IResult::Incomplete(a),
     IResult::Error(a)          => IResult::Error(a)
@@ -84,14 +78,9 @@ named!(category_and_keys<&str,(&str,HashMap<&str,&str>)>,
 named!(categories_aggregator<&str, Vec<(&str, HashMap<&str,&str>)> >, many0!(category_and_keys));
 
 fn categories(input: &str) -> IResult<&str, HashMap<&str, HashMap<&str, &str> > > {
-  let mut h: HashMap<&str, HashMap<&str, &str>> = HashMap::new();
-
   match categories_aggregator(input) {
     IResult::Done(i,tuple_vec) => {
-      for &(k,ref v) in &tuple_vec {
-        h.insert(k, v.clone());
-      }
-      IResult::Done(i, h)
+      IResult::Done(i, tuple_vec.into_iter().collect())
     },
     IResult::Incomplete(a)     => IResult::Incomplete(a),
     IResult::Error(a)          => IResult::Error(a)

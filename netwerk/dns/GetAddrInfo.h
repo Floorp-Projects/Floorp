@@ -37,7 +37,7 @@ class AddrInfo;
  *     answers..
  */
 nsresult
-GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
+GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily, uint16_t aFlags,
             AddrInfo** aAddrInfo, bool aGetTtl);
 
 /**

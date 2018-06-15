@@ -6,16 +6,18 @@
 //! but the macros system makes no promises.
 //!
 
-#[cfg(feature = "core")]
+#[cfg(not(feature = "std"))]
 use std::prelude::v1::*;
 use std::boxed::Box;
 
 use std::fmt::Debug;
 use internal::*;
 use internal::IResult::*;
-use internal::Err::*;
-use util::{ErrorKind,IterIndices,AsChar,InputLength};
+use util::ErrorKind;
+use traits::{AsChar,InputLength,InputIter};
 use std::mem::transmute;
+use std::ops::{Range,RangeFrom,RangeTo};
+use traits::{Compare,CompareResult,Slice};
 
 #[inline]
 pub fn tag_cl<'a,'b>(rec:&'a[u8]) ->  Box<Fn(&'b[u8]) -> IResult<&'b[u8], &'b[u8]> + 'a> {
@@ -23,12 +25,12 @@ pub fn tag_cl<'a,'b>(rec:&'a[u8]) ->  Box<Fn(&'b[u8]) -> IResult<&'b[u8], &'b[u8
     if i.len() >= rec.len() && &i[0..rec.len()] == rec {
       Done(&i[rec.len()..], &i[0..rec.len()])
     } else {
-      Error(Position(ErrorKind::TagClosure, i))
+      Error(error_position!(ErrorKind::TagClosure, i))
     }
   })
 }
 
-#[cfg(not(feature = "core"))]
+#[cfg(feature = "std")]
 #[inline]
 pub fn print<T: Debug>(input: T) -> IResult<T, ()> {
   println!("{:?}", input);
@@ -40,38 +42,89 @@ pub fn begin(input: &[u8]) -> IResult<(), &[u8]> {
   Done((), input)
 }
 
+pub fn crlf<T>(input:T) -> IResult<T,T> where
+  T:Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+  T: InputIter,
+  T: Compare<&'static str> {
+    match input.compare("\r\n") {
+      //FIXME: is this the right index?
+      CompareResult::Ok         => {
+        IResult::Done(input.slice(2..), input.slice(0..2))
+      },
+      CompareResult::Incomplete => IResult::Incomplete(Needed::Size(2)),
+      CompareResult::Error      => IResult::Error(error_position!(ErrorKind::CrLf, input))
+    }
+}
+
 // FIXME: when rust-lang/rust#17436 is fixed, macros will be able to export
 // public methods
-//pub is_not!(line_ending b"\r\n")
-pub fn not_line_ending(input:&[u8]) -> IResult<&[u8], &[u8]> {
-  for (idx, item) in input.iter().enumerate() {
-    for &i in b"\r\n".iter() {
-      if *item == i {
-        return Done(&input[idx..], &input[0..idx])
+pub fn not_line_ending<T>(input:T) -> IResult<T,T> where
+    T:Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    T: Compare<&'static str>,
+    <T as InputIter>::Item: AsChar {
+      match input.iter_elements().position(|item| {
+        let c = item.as_char();
+        c == '\r' || c == '\n'
+      }) {
+        None        => Done(input.slice(input.input_len()..), input),
+        Some(index) => {
+          let mut it = input.iter_elements();
+          let nth    = it.nth(index).unwrap().as_char();
+          if nth == '\r' {
+            let sliced = input.slice(index..);
+            let comp   = sliced.compare("\r\n");
+            match comp {
+              //FIXME: calculate the right index
+              CompareResult::Incomplete => Incomplete(Needed::Unknown),
+              CompareResult::Error      => Error(error_position!(ErrorKind::Tag, input)),
+              CompareResult::Ok         => Done(input.slice(index..), input.slice(..index))
+            }
+          } else {
+            Done(input.slice(index..), input.slice(..index))
+          }
+        }
       }
+}
+
+/// Recognizes an end of line (both '\n' and '\r\n')
+pub fn line_ending<T>(input:T) -> IResult<T, T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    T: Compare<&'static str> {
+
+  match input.compare("\n") {
+    CompareResult::Ok         => Done(input.slice(1..), input.slice(0..1)),
+    CompareResult::Incomplete => Incomplete(Needed::Size(1)),
+    CompareResult::Error      => match input.compare("\r\n") {
+      //FIXME: is this the right index?
+      CompareResult::Ok         => Done(input.slice(2..), input.slice(0..2)),
+      CompareResult::Incomplete => Incomplete(Needed::Size(2)),
+      CompareResult::Error      => Error(error_position!(ErrorKind::CrLf, input))
     }
   }
-  Done(&input[input.len()..], input)
 }
 
-named!(tag_ln, tag!("\n"));
-
-/// Recognizes a line feed
-#[inline]
-pub fn line_ending(input:&[u8]) -> IResult<&[u8], &[u8]> {
-  tag_ln(input)
+pub fn eol<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    T: Compare<&'static str> {
+  line_ending(input)
 }
 
+/// Tests if byte is ASCII alphabetic: A-Z, a-z
 #[inline]
 pub fn is_alphabetic(chr:u8) -> bool {
   (chr >= 0x41 && chr <= 0x5A) || (chr >= 0x61 && chr <= 0x7A)
 }
 
+/// Tests if byte is ASCII digit: 0-9
 #[inline]
 pub fn is_digit(chr: u8) -> bool {
   chr >= 0x30 && chr <= 0x39
 }
 
+/// Tests if byte is ASCII hex digit: 0-9, A-F, a-f
 #[inline]
 pub fn is_hex_digit(chr: u8) -> bool {
   (chr >= 0x30 && chr <= 0x39) ||
@@ -79,16 +132,19 @@ pub fn is_hex_digit(chr: u8) -> bool {
   (chr >= 0x61 && chr <= 0x66)
 }
 
+/// Tests if byte is ASCII octal digit: 0-7
 #[inline]
 pub fn is_oct_digit(chr: u8) -> bool {
   chr >= 0x30 && chr <= 0x37
 }
 
+/// Tests if byte is ASCII alphanumeric: A-Z, a-z, 0-9
 #[inline]
 pub fn is_alphanumeric(chr: u8) -> bool {
   is_alphabetic(chr) || is_digit(chr)
 }
 
+/// Tests if byte is ASCII space or tab
 #[inline]
 pub fn is_space(chr:u8) -> bool {
   chr == ' ' as u8 || chr == '\t' as u8
@@ -101,154 +157,160 @@ pub fn is_space(chr:u8) -> bool {
 //pub filter!(oct_digit is_oct_digit)
 //pub filter!(alphanumeric is_alphanumeric)
 
-use std::ops::{Index,Range,RangeFrom};
-/// Recognizes lowercase and uppercase alphabetic characters: a-zA-Z
-pub fn alpha<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more lowercase and uppercase alphabetic characters: a-zA-Z
+pub fn alpha<T>(input:T) -> IResult<T, T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::Alpha, input))
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
     if ! item.is_alpha() {
       if idx == 0 {
-        return Error(Position(ErrorKind::Alpha, input))
+        return Error(error_position!(ErrorKind::Alpha, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
-/// Recognizes numerical characters: 0-9
-pub fn digit<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more numerical characters: 0-9
+pub fn digit<T>(input:T) -> IResult<T, T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::Digit, input))
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
-    if ! item.is_0_to_9() {
+    if ! item.is_dec_digit() {
       if idx == 0 {
-        return Error(Position(ErrorKind::Digit, input))
+        return Error(error_position!(ErrorKind::Digit, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
-/// Recognizes hexadecimal numerical characters: 0-9, A-F, a-f
-pub fn hex_digit<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more hexadecimal numerical characters: 0-9, A-F, a-f
+pub fn hex_digit<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::HexDigit, input))
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
     if ! item.is_hex_digit() {
       if idx == 0 {
-        return Error(Position(ErrorKind::HexDigit, input))
+        return Error(error_position!(ErrorKind::HexDigit, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
-/// Recognizes octal characters: 0-7
-pub fn oct_digit<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more octal characters: 0-7
+pub fn oct_digit<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::OctDigit, input))
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
     if ! item.is_oct_digit() {
       if idx == 0 {
-        return Error(Position(ErrorKind::OctDigit, input))
+        return Error(error_position!(ErrorKind::OctDigit, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
-/// Recognizes numerical and alphabetic characters: 0-9a-zA-Z
-pub fn alphanumeric<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more numerical and alphabetic characters: 0-9a-zA-Z
+pub fn alphanumeric<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::AlphaNumeric, input));
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
     if ! item.is_alphanum() {
       if idx == 0 {
-        return Error(Position(ErrorKind::AlphaNumeric, input))
+        return Error(error_position!(ErrorKind::AlphaNumeric, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
-/// Recognizes spaces and tabs
-pub fn space<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more spaces and tabs
+pub fn space<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::Space, input));
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
     let chr = item.as_char();
     if ! (chr == ' ' || chr == '\t')  {
       if idx == 0 {
-        return Error(Position(ErrorKind::Space, input))
+        return Error(error_position!(ErrorKind::Space, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
-/// Recognizes spaces, tabs, carriage returns and line feeds
-pub fn multispace<'a, T: ?Sized>(input:&'a T) -> IResult<&'a T, &'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: IterIndices+InputLength {
+/// Recognizes one or more spaces, tabs, carriage returns and line feeds
+pub fn multispace<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputIter+InputLength,
+    <T as InputIter>::Item: AsChar {
   let input_length = input.input_len();
   if input_length == 0 {
-    return Error(Position(ErrorKind::MultiSpace, input));
+    return Incomplete(Needed::Unknown);
   }
 
   for (idx, item) in input.iter_indices() {
     let chr = item.as_char();
     if ! (chr == ' ' || chr == '\t' || chr == '\r' || chr == '\n')  {
       if idx == 0 {
-        return Error(Position(ErrorKind::MultiSpace, input))
+        return Error(error_position!(ErrorKind::MultiSpace, input))
       } else {
-        return Done(&input[idx..], &input[0..idx])
+        return Done(input.slice(idx..), input.slice(0..idx))
       }
     }
   }
-  Done(&input[input_length..], input)
+  Done(input.slice(input_length..), input)
 }
 
 pub fn sized_buffer(input:&[u8]) -> IResult<&[u8], &[u8]> {
@@ -262,20 +324,6 @@ pub fn sized_buffer(input:&[u8]) -> IResult<&[u8], &[u8]> {
     Done(&input[len+1..], &input[1..len+1])
   } else {
     Incomplete(Needed::Size(1 + len))
-  }
-}
-
-pub fn length_value(input:&[u8]) -> IResult<&[u8], &[u8]> {
-  let input_len = input.len();
-  if input_len == 0 {
-    return Error(Position(ErrorKind::LengthValueFn, input))
-  }
-
-  let len = input[0] as usize;
-  if input_len - 1 >= len {
-    IResult::Done(&input[len+1..], &input[1..len+1])
-  } else {
-    IResult::Incomplete(Needed::Size(1+len))
   }
 }
 
@@ -297,6 +345,17 @@ pub fn be_u16(i: &[u8]) -> IResult<&[u8], u16> {
   } else {
     let res = ((i[0] as u16) << 8) + i[1] as u16;
     Done(&i[2..], res)
+  }
+}
+
+/// Recognizes big endian unsigned 3 byte integer
+#[inline]
+pub fn be_u24(i: &[u8]) -> IResult<&[u8], u32> {
+  if i.len() < 3 {
+    Incomplete(Needed::Size(3))
+  } else {
+    let res = ((i[0] as u32) << 16) + ((i[1] as u32) << 8) + (i[2] as u32);
+    Done(&i[3..], res)
   }
 }
 
@@ -335,6 +394,13 @@ pub fn be_i16(i:&[u8]) -> IResult<&[u8], i16> {
   map!(i, be_u16, | x | { x as i16 })
 }
 
+/// Recognizes big endian signed 3 bytes integer
+#[inline]
+pub fn be_i24(i: &[u8]) -> IResult<&[u8], i32> {
+  // Same as the unsigned version but we need to sign-extend manually here
+  map!(i, be_u24, | x | if x & 0x80_00_00 != 0 { (x | 0xff_00_00_00) as i32 } else { x as i32 })
+}
+
 /// Recognizes big endian signed 4 bytes integer
 #[inline]
 pub fn be_i32(i:&[u8]) -> IResult<&[u8], i32> {
@@ -365,6 +431,17 @@ pub fn le_u16(i: &[u8]) -> IResult<&[u8], u16> {
   } else {
     let res = ((i[1] as u16) << 8) + i[0] as u16;
     Done(&i[2..], res)
+  }
+}
+
+/// Recognizes little endian unsigned 3 byte integer
+#[inline]
+pub fn le_u24(i: &[u8]) -> IResult<&[u8], u32> {
+  if i.len() < 3 {
+    Incomplete(Needed::Size(3))
+  } else {
+    let res = (i[0] as u32) + ((i[1] as u32) << 8) + ((i[2] as u32) << 16);
+    Done(&i[3..], res)
   }
 }
 
@@ -403,6 +480,13 @@ pub fn le_i16(i:&[u8]) -> IResult<&[u8], i16> {
   map!(i, le_u16, | x | { x as i16 })
 }
 
+/// Recognizes little endian signed 3 bytes integer
+#[inline]
+pub fn le_i24(i: &[u8]) -> IResult<&[u8], i32> {
+  // Same as the unsigned version but we need to sign-extend manually here
+  map!(i, le_u24, | x | if x & 0x80_00_00 != 0 { (x | 0xff_00_00_00) as i32 } else { x as i32 })
+}
+
 /// Recognizes little endian signed 4 bytes integer
 #[inline]
 pub fn le_i32(i:&[u8]) -> IResult<&[u8], i32> {
@@ -415,31 +499,38 @@ pub fn le_i64(i:&[u8]) -> IResult<&[u8], i64> {
   map!(i, le_u64, | x | { x as i64 })
 }
 
-/// if parameter is true, parse a big endian u16 integer,
+/// Configurable endianness
+#[derive(Debug,PartialEq,Eq,Clone,Copy)]
+pub enum Endianness {
+  Big,
+  Little,
+}
+
+/// if the parameter is nom::Endianness::Big, parse a big endian u16 integer,
 /// otherwise a little endian u16 integer
 #[macro_export]
-macro_rules! u16 ( ($i:expr, $e:expr) => ( {if $e { $crate::be_u16($i) } else { $crate::le_u16($i) } } ););
-/// if parameter is true, parse a big endian u32 integer,
+macro_rules! u16 ( ($i:expr, $e:expr) => ( {if $crate::Endianness::Big == $e { $crate::be_u16($i) } else { $crate::le_u16($i) } } ););
+/// if the parameter is nom::Endianness::Big, parse a big endian u32 integer,
 /// otherwise a little endian u32 integer
 #[macro_export]
-macro_rules! u32 ( ($i:expr, $e:expr) => ( {if $e { $crate::be_u32($i) } else { $crate::le_u32($i) } } ););
-/// if parameter is true, parse a big endian u64 integer,
+macro_rules! u32 ( ($i:expr, $e:expr) => ( {if $crate::Endianness::Big == $e { $crate::be_u32($i) } else { $crate::le_u32($i) } } ););
+/// if the parameter is nom::Endianness::Big, parse a big endian u64 integer,
 /// otherwise a little endian u64 integer
 #[macro_export]
-macro_rules! u64 ( ($i:expr, $e:expr) => ( {if $e { $crate::be_u64($i) } else { $crate::le_u64($i) } } ););
+macro_rules! u64 ( ($i:expr, $e:expr) => ( {if $crate::Endianness::Big == $e { $crate::be_u64($i) } else { $crate::le_u64($i) } } ););
 
-/// if parameter is true, parse a big endian i16 integer,
+/// if the parameter is nom::Endianness::Big, parse a big endian i16 integer,
 /// otherwise a little endian i16 integer
 #[macro_export]
-macro_rules! i16 ( ($i:expr, $e:expr) => ( {if $e { $crate::be_i16($i) } else { $crate::le_i16($i) } } ););
-/// if parameter is true, parse a big endian i32 integer,
+macro_rules! i16 ( ($i:expr, $e:expr) => ( {if $crate::Endianness::Big == $e { $crate::be_i16($i) } else { $crate::le_i16($i) } } ););
+/// if the parameter is nom::Endianness::Big, parse a big endian i32 integer,
 /// otherwise a little endian i32 integer
 #[macro_export]
-macro_rules! i32 ( ($i:expr, $e:expr) => ( {if $e { $crate::be_i32($i) } else { $crate::le_i32($i) } } ););
-/// if parameter is true, parse a big endian i64 integer,
+macro_rules! i32 ( ($i:expr, $e:expr) => ( {if $crate::Endianness::Big == $e { $crate::be_i32($i) } else { $crate::le_i32($i) } } ););
+/// if the parameter is nom::Endianness::Big, parse a big endian i64 integer,
 /// otherwise a little endian i64 integer
 #[macro_export]
-macro_rules! i64 ( ($i:expr, $e:expr) => ( {if $e { $crate::be_i64($i) } else { $crate::le_i64($i) } } ););
+macro_rules! i64 ( ($i:expr, $e:expr) => ( {if $crate::Endianness::Big == $e { $crate::be_i64($i) } else { $crate::le_i64($i) } } ););
 
 /// Recognizes big endian 4 bytes floating point number
 #[inline]
@@ -500,7 +591,7 @@ pub fn le_f64(input: &[u8]) -> IResult<&[u8], f64> {
 /// Recognizes a hex-encoded integer
 #[inline]
 pub fn hex_u32(input: &[u8]) -> IResult<&[u8], u32> {
-  match is_a!(input, &b"0123456789abcdef"[..]) {
+  match is_a!(input, &b"0123456789abcdefABCDEF"[..]) {
     Error(e)    => Error(e),
     Incomplete(e) => Incomplete(e),
     Done(i,o) => {
@@ -524,30 +615,15 @@ pub fn hex_u32(input: &[u8]) -> IResult<&[u8], u32> {
   }
 }
 
-/// Recognizes empty input buffers
-///
-/// useful to verify that the previous parsers used all of the input
-#[inline]
-//pub fn eof(input:&[u8]) -> IResult<&[u8], &[u8]> {
-pub fn eof<'a, T:?Sized>(input: &'a T) -> IResult<&'a T,&'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: InputLength {
-  if input.input_len() == 0 {
-      Done(input, input)
-  } else {
-      Error(Position(ErrorKind::Eof, input))
-  }
-}
-
 /// Recognizes non empty buffers
 #[inline]
-pub fn non_empty<'a, T:?Sized>(input: &'a T) -> IResult<&'a T,&'a T> where
-    T:Index<Range<usize>, Output=T>+Index<RangeFrom<usize>, Output=T>,
-    &'a T: InputLength {
+pub fn non_empty<T>(input:T) -> IResult<T,T> where
+    T: Slice<Range<usize>>+Slice<RangeFrom<usize>>+Slice<RangeTo<usize>>,
+    T: InputLength {
   if input.input_len() == 0 {
-    Error(Position(ErrorKind::NonEmpty, input))
+    Error(error_position!(ErrorKind::NonEmpty, input))
   } else {
-    Done(&input[input.input_len()..], input)
+    Done(input.slice(input.input_len()..), input)
   }
 }
 
@@ -563,12 +639,102 @@ pub fn rest_s(input: &str) -> IResult<&str, &str> {
     IResult::Done(&input[input.len()..], input)
 }
 
+/// Recognizes floating point number in a byte string and returns a f32
+#[cfg(feature = "std")]
+pub fn float(input: &[u8]) -> IResult<&[u8],f32> {
+  flat_map!(input,
+    recognize!(
+      tuple!(
+        opt!(alt!(tag!("+") | tag!("-"))),
+        alt!(
+          delimited!(digit, tag!("."), opt!(digit))
+          | delimited!(opt!(digit), tag!("."), digit)
+        ),
+        opt!(complete!(tuple!(
+          alt!(tag!("e") | tag!("E")),
+          opt!(alt!(tag!("+") | tag!("-"))),
+          digit
+          )
+        ))
+      )
+    ),
+    parse_to!(f32)
+  )
+}
+
+/// Recognizes floating point number in a string and returns a f32
+#[cfg(feature = "std")]
+pub fn float_s(input: &str) -> IResult<&str,f32> {
+  flat_map!(input,
+    recognize!(
+      tuple!(
+        opt!(alt!(tag!("+") | tag!("-"))),
+        alt!(
+          delimited!(digit, tag!("."), opt!(digit))
+          | delimited!(opt!(digit), tag!("."), digit)
+        ),
+        opt!(complete!(tuple!(
+          alt!(tag!("e") | tag!("E")),
+          opt!(alt!(tag!("+") | tag!("-"))),
+          digit
+          )
+        ))
+      )
+    ),
+    parse_to!(f32)
+  )
+}
+
+/// Recognizes floating point number in a byte string and returns a f64
+#[cfg(feature = "std")]
+pub fn double(input: &[u8]) -> IResult<&[u8],f64> {
+  flat_map!(input,
+    recognize!(
+      tuple!(
+        opt!(alt!(tag!("+") | tag!("-"))),
+        alt!(
+          delimited!(digit, tag!("."), opt!(digit))
+          | delimited!(opt!(digit), tag!("."), digit)
+        ),
+        opt!(complete!(tuple!(
+          alt!(tag!("e") | tag!("E")),
+          opt!(alt!(tag!("+") | tag!("-"))),
+          digit
+          )
+        ))
+      )
+    ),
+    parse_to!(f64)
+  )
+}
+
+/// Recognizes floating point number in a string and returns a f64
+#[cfg(feature = "std")]
+pub fn double_s(input: &str) -> IResult<&str,f64> {
+  flat_map!(input,
+    recognize!(
+      tuple!(
+        opt!(alt!(tag!("+") | tag!("-"))),
+        alt!(
+          delimited!(digit, tag!("."), opt!(digit))
+          | delimited!(opt!(digit), tag!("."), digit)
+        ),
+        opt!(complete!(tuple!(
+          alt!(tag!("e") | tag!("E")),
+          opt!(alt!(tag!("+") | tag!("-"))),
+          digit
+          )
+        ))
+      )
+    ),
+    parse_to!(f64)
+  )
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
   use internal::{Needed,IResult};
-  use internal::IResult::*;
-  use internal::Err::*;
   use util::ErrorKind;
 
   #[test]
@@ -578,7 +744,7 @@ mod tests {
     assert_eq!(r, Done(&b"abcdefgh"[..], &b"abcd"[..]));
 
     let r2 = x(&b"abcefgh"[..]);
-    assert_eq!(r2, Error(Position(ErrorKind::TagClosure, &b"abcefgh"[..])));
+    assert_eq!(r2, Error(error_position!(ErrorKind::TagClosure, &b"abcefgh"[..])));
   }
 
   #[test]
@@ -590,22 +756,22 @@ mod tests {
     let d: &[u8] = "azé12".as_bytes();
     let e: &[u8] = b" ";
     assert_eq!(alpha(a), Done(empty, a));
-    assert_eq!(alpha(b), Error(Position(ErrorKind::Alpha,b)));
+    assert_eq!(alpha(b), Error(error_position!(ErrorKind::Alpha,b)));
     assert_eq!(alpha(c), Done(&c[1..], &b"a"[..]));
     assert_eq!(alpha(d), Done("é12".as_bytes(), &b"az"[..]));
-    assert_eq!(digit(a), Error(Position(ErrorKind::Digit,a)));
+    assert_eq!(digit(a), Error(error_position!(ErrorKind::Digit,a)));
     assert_eq!(digit(b), Done(empty, b));
-    assert_eq!(digit(c), Error(Position(ErrorKind::Digit,c)));
-    assert_eq!(digit(d), Error(Position(ErrorKind::Digit,d)));
+    assert_eq!(digit(c), Error(error_position!(ErrorKind::Digit,c)));
+    assert_eq!(digit(d), Error(error_position!(ErrorKind::Digit,d)));
     assert_eq!(hex_digit(a), Done(empty, a));
     assert_eq!(hex_digit(b), Done(empty, b));
     assert_eq!(hex_digit(c), Done(empty, c));
     assert_eq!(hex_digit(d), Done("zé12".as_bytes(), &b"a"[..]));
-    assert_eq!(hex_digit(e), Error(Position(ErrorKind::HexDigit,e)));
-    assert_eq!(oct_digit(a), Error(Position(ErrorKind::OctDigit,a)));
+    assert_eq!(hex_digit(e), Error(error_position!(ErrorKind::HexDigit,e)));
+    assert_eq!(oct_digit(a), Error(error_position!(ErrorKind::OctDigit,a)));
     assert_eq!(oct_digit(b), Done(empty, b));
-    assert_eq!(oct_digit(c), Error(Position(ErrorKind::OctDigit,c)));
-    assert_eq!(oct_digit(d), Error(Position(ErrorKind::OctDigit,d)));
+    assert_eq!(oct_digit(c), Error(error_position!(ErrorKind::OctDigit,c)));
+    assert_eq!(oct_digit(d), Error(error_position!(ErrorKind::OctDigit,d)));
     assert_eq!(alphanumeric(a), Done(empty, a));
     assert_eq!(fix_error!(b,(), alphanumeric), Done(empty, b));
     assert_eq!(alphanumeric(c), Done(empty, c));
@@ -622,22 +788,22 @@ mod tests {
     let d     = "azé12";
     let e     = " ";
     assert_eq!(alpha(a), Done(empty, a));
-    assert_eq!(alpha(b), Error(Position(ErrorKind::Alpha,b)));
+    assert_eq!(alpha(b), Error(error_position!(ErrorKind::Alpha,b)));
     assert_eq!(alpha(c), Done(&c[1..], &"a"[..]));
     assert_eq!(alpha(d), Done("12", &"azé"[..]));
-    assert_eq!(digit(a), Error(Position(ErrorKind::Digit,a)));
+    assert_eq!(digit(a), Error(error_position!(ErrorKind::Digit,a)));
     assert_eq!(digit(b), Done(empty, b));
-    assert_eq!(digit(c), Error(Position(ErrorKind::Digit,c)));
-    assert_eq!(digit(d), Error(Position(ErrorKind::Digit,d)));
+    assert_eq!(digit(c), Error(error_position!(ErrorKind::Digit,c)));
+    assert_eq!(digit(d), Error(error_position!(ErrorKind::Digit,d)));
     assert_eq!(hex_digit(a), Done(empty, a));
     assert_eq!(hex_digit(b), Done(empty, b));
     assert_eq!(hex_digit(c), Done(empty, c));
     assert_eq!(hex_digit(d), Done("zé12", &"a"[..]));
-    assert_eq!(hex_digit(e), Error(Position(ErrorKind::HexDigit,e)));
-    assert_eq!(oct_digit(a), Error(Position(ErrorKind::OctDigit,a)));
+    assert_eq!(hex_digit(e), Error(error_position!(ErrorKind::HexDigit,e)));
+    assert_eq!(oct_digit(a), Error(error_position!(ErrorKind::OctDigit,a)));
     assert_eq!(oct_digit(b), Done(empty, b));
-    assert_eq!(oct_digit(c), Error(Position(ErrorKind::OctDigit,c)));
-    assert_eq!(oct_digit(d), Error(Position(ErrorKind::OctDigit,d)));
+    assert_eq!(oct_digit(c), Error(error_position!(ErrorKind::OctDigit,c)));
+    assert_eq!(oct_digit(d), Error(error_position!(ErrorKind::OctDigit,d)));
     assert_eq!(alphanumeric(a), Done(empty, a));
     assert_eq!(fix_error!(b,(), alphanumeric), Done(empty, b));
     assert_eq!(alphanumeric(c), Done(empty, c));
@@ -645,7 +811,7 @@ mod tests {
     assert_eq!(space(e), Done(&""[..], &" "[..]));
   }
 
-  use util::HexDisplay;
+  use util::Offset;
   #[test]
   fn offset() {
     let a = &b"abcd"[..];
@@ -686,18 +852,48 @@ mod tests {
   }
 
   #[test]
-  fn is_not() {
+  fn is_not_line_ending_bytes() {
     let a: &[u8] = b"ab12cd\nefgh";
     assert_eq!(not_line_ending(a), Done(&b"\nefgh"[..], &b"ab12cd"[..]));
 
     let b: &[u8] = b"ab12cd\nefgh\nijkl";
     assert_eq!(not_line_ending(b), Done(&b"\nefgh\nijkl"[..], &b"ab12cd"[..]));
 
-    let c: &[u8] = b"ab12cd";
-    assert_eq!(not_line_ending(c), Done(&b""[..], c));
+    let c: &[u8] = b"ab12cd\r\nefgh\nijkl";
+    assert_eq!(not_line_ending(c), Done(&b"\r\nefgh\nijkl"[..], &b"ab12cd"[..]));
+
+    let d: &[u8] = b"ab12cd";
+    assert_eq!(not_line_ending(d), Done(&b""[..], d));
   }
 
   #[test]
+  fn is_not_line_ending_str() {
+    /*
+    let a: &str = "ab12cd\nefgh";
+    assert_eq!(not_line_ending(a), Done(&"\nefgh"[..], &"ab12cd"[..]));
+
+    let b: &str = "ab12cd\nefgh\nijkl";
+    assert_eq!(not_line_ending(b), Done(&"\nefgh\nijkl"[..], &"ab12cd"[..]));
+
+    let c: &str = "ab12cd\r\nefgh\nijkl";
+    assert_eq!(not_line_ending(c), Done(&"\r\nefgh\nijkl"[..], &"ab12cd"[..]));
+
+    let d = "βèƒôřè\nÂßÇáƒƭèř";
+    assert_eq!(not_line_ending(d), Done(&"\nÂßÇáƒƭèř"[..], &"βèƒôřè"[..]));
+
+    let e = "βèƒôřè\r\nÂßÇáƒƭèř";
+    assert_eq!(not_line_ending(e), Done(&"\r\nÂßÇáƒƭèř"[..], &"βèƒôřè"[..]));
+    */
+
+    let f = "βèƒôřè\rÂßÇáƒƭèř";
+    assert_eq!(not_line_ending(f), Error(error_position!(ErrorKind::Tag,f)));
+
+    let g: &str = "ab12cd";
+    assert_eq!(not_line_ending(g), Done("", g));
+  }
+
+  #[test]
+  #[cfg(feature = "std")]
   fn buffer_with_size() {
     let i:Vec<u8> = vec![7,8];
     let o:Vec<u8> = vec![4,5,6];
@@ -717,26 +913,6 @@ mod tests {
   }*/
 
   #[test]
-  fn length_value_test() {
-    let i1 = vec![7,8];
-    let o1 = vec![4, 5, 6];
-    let arr1:[u8; 6usize] = [3, 4, 5, 6, 7, 8];
-    let res1 = length_value(&arr1);
-    assert_eq!(Done(&i1[..], &o1[..]), res1);
-
-    let i2:Vec<u8> = vec![4,5,6,7,8];
-    let o2: &[u8] = b"";
-    let arr2:[u8; 6usize] = [0, 4, 5, 6, 7, 8];
-    let res2 = length_value(&arr2);
-    assert_eq!(Done(&i2[..], o2), res2);
-
-    let arr3:[u8; 7usize] = [8, 4, 5, 6, 7, 8, 9];
-    let res3 = length_value(&arr3);
-    //FIXME: should be incomplete
-    assert_eq!(Incomplete(Needed::Size(9)), res3);
-  }
-
-  #[test]
   fn i8_tests() {
     assert_eq!(be_i8(&[0x00]), Done(&b""[..], 0));
     assert_eq!(be_i8(&[0x7f]), Done(&b""[..], 127));
@@ -750,6 +926,20 @@ mod tests {
     assert_eq!(be_i16(&[0x7f, 0xff]), Done(&b""[..], 32767_i16));
     assert_eq!(be_i16(&[0xff, 0xff]), Done(&b""[..], -1));
     assert_eq!(be_i16(&[0x80, 0x00]), Done(&b""[..], -32768_i16));
+  }
+
+  #[test]
+  fn u24_tests() {
+    assert_eq!(be_u24(&[0x00, 0x00, 0x00]), Done(&b""[..], 0));
+    assert_eq!(be_u24(&[0x00, 0xFF, 0xFF]), Done(&b""[..], 65535_u32));
+    assert_eq!(be_u24(&[0x12, 0x34, 0x56]), Done(&b""[..], 1193046_u32));
+  }
+
+  #[test]
+  fn i24_tests() {
+    assert_eq!(be_i24(&[0xFF, 0xFF, 0xFF]), Done(&b""[..], -1_i32));
+    assert_eq!(be_i24(&[0xFF, 0x00, 0x00]), Done(&b""[..], -65536_i32));
+    assert_eq!(be_i24(&[0xED, 0xCB, 0xAA]), Done(&b""[..], -1193046_i32));
   }
 
   #[test]
@@ -782,6 +972,20 @@ mod tests {
     assert_eq!(le_i16(&[0xff, 0x7f]), Done(&b""[..], 32767_i16));
     assert_eq!(le_i16(&[0xff, 0xff]), Done(&b""[..], -1));
     assert_eq!(le_i16(&[0x00, 0x80]), Done(&b""[..], -32768_i16));
+  }
+
+  #[test]
+  fn le_u24_tests() {
+    assert_eq!(le_u24(&[0x00, 0x00, 0x00]), Done(&b""[..], 0));
+    assert_eq!(le_u24(&[0xFF, 0xFF, 0x00]), Done(&b""[..], 65535_u32));
+    assert_eq!(le_u24(&[0x56, 0x34, 0x12]), Done(&b""[..], 1193046_u32));
+  }
+
+  #[test]
+  fn le_i24_tests() {
+    assert_eq!(le_i24(&[0xFF, 0xFF, 0xFF]), Done(&b""[..], -1_i32));
+    assert_eq!(le_i24(&[0x00, 0x00, 0xFF]), Done(&b""[..], -65536_i32));
+    assert_eq!(le_i24(&[0xAA, 0xCB, 0xED]), Done(&b""[..], -1193046_i32));
   }
 
   #[test]
@@ -830,6 +1034,7 @@ mod tests {
     assert_eq!(hex_u32(&b"ff"[..]), Done(&b""[..], 255));
     assert_eq!(hex_u32(&b"1be2"[..]), Done(&b""[..], 7138));
     assert_eq!(hex_u32(&b"c5a31be2"[..]), Done(&b""[..], 3315801058));
+    assert_eq!(hex_u32(&b"C5A31be2"[..]), Done(&b""[..], 3315801058));
     assert_eq!(hex_u32(&b"00c5a31be2"[..]), Done(&b"e2"[..], 12952347));
     assert_eq!(hex_u32(&b"c5a31be201"[..]), Done(&b"01"[..], 3315801058));
     assert_eq!(hex_u32(&b"ffffffff"[..]), Done(&b""[..], 4294967295));
@@ -840,49 +1045,51 @@ mod tests {
     fn end_of_input() {
         let not_over = &b"Hello, world!"[..];
         let is_over = &b""[..];
+        named!(eof_test, eof!());
 
-        let res_not_over = eof(not_over);
-        assert_eq!(res_not_over, Error(Position(ErrorKind::Eof, not_over)));
+        let res_not_over = eof_test(not_over);
+        assert_eq!(res_not_over, Error(error_position!(ErrorKind::Eof, not_over)));
 
-        let res_over = eof(is_over);
+        let res_over = eof_test(is_over);
         assert_eq!(res_over, Done(is_over, is_over));
     }
 
   #[test]
   fn configurable_endianness() {
-    named!(be_tst16<u16>, u16!(true));
-    named!(le_tst16<u16>, u16!(false));
+    named!(be_tst16<u16>, u16!(Endianness::Big));
+    named!(le_tst16<u16>, u16!(Endianness::Little));
     assert_eq!(be_tst16(&[0x80, 0x00]), Done(&b""[..], 32768_u16));
     assert_eq!(le_tst16(&[0x80, 0x00]), Done(&b""[..], 128_u16));
 
-    named!(be_tst32<u32>, u32!(true));
-    named!(le_tst32<u32>, u32!(false));
+    named!(be_tst32<u32>, u32!(Endianness::Big));
+    named!(le_tst32<u32>, u32!(Endianness::Little));
     assert_eq!(be_tst32(&[0x12, 0x00, 0x60, 0x00]), Done(&b""[..], 302014464_u32));
     assert_eq!(le_tst32(&[0x12, 0x00, 0x60, 0x00]), Done(&b""[..], 6291474_u32));
 
-    named!(be_tst64<u64>, u64!(true));
-    named!(le_tst64<u64>, u64!(false));
+    named!(be_tst64<u64>, u64!(Endianness::Big));
+    named!(le_tst64<u64>, u64!(Endianness::Little));
     assert_eq!(be_tst64(&[0x12, 0x00, 0x60, 0x00, 0x12, 0x00, 0x80, 0x00]), Done(&b""[..], 1297142246100992000_u64));
     assert_eq!(le_tst64(&[0x12, 0x00, 0x60, 0x00, 0x12, 0x00, 0x80, 0x00]), Done(&b""[..], 36028874334666770_u64));
 
-    named!(be_tsti16<i16>, i16!(true));
-    named!(le_tsti16<i16>, i16!(false));
+    named!(be_tsti16<i16>, i16!(Endianness::Big));
+    named!(le_tsti16<i16>, i16!(Endianness::Little));
     assert_eq!(be_tsti16(&[0x00, 0x80]), Done(&b""[..], 128_i16));
     assert_eq!(le_tsti16(&[0x00, 0x80]), Done(&b""[..], -32768_i16));
 
-    named!(be_tsti32<i32>, i32!(true));
-    named!(le_tsti32<i32>, i32!(false));
+    named!(be_tsti32<i32>, i32!(Endianness::Big));
+    named!(le_tsti32<i32>, i32!(Endianness::Little));
     assert_eq!(be_tsti32(&[0x00, 0x12, 0x60, 0x00]), Done(&b""[..], 1204224_i32));
     assert_eq!(le_tsti32(&[0x00, 0x12, 0x60, 0x00]), Done(&b""[..], 6296064_i32));
 
-    named!(be_tsti64<i64>, i64!(true));
-    named!(le_tsti64<i64>, i64!(false));
+    named!(be_tsti64<i64>, i64!(Endianness::Big));
+    named!(le_tsti64<i64>, i64!(Endianness::Little));
     assert_eq!(be_tsti64(&[0x00, 0xFF, 0x60, 0x00, 0x12, 0x00, 0x80, 0x00]), Done(&b""[..], 71881672479506432_i64));
     assert_eq!(le_tsti64(&[0x00, 0xFF, 0x60, 0x00, 0x12, 0x00, 0x80, 0x00]), Done(&b""[..], 36028874334732032_i64));
 
   }
 
   #[test]
+  #[cfg(feature = "std")]
   fn manual_configurable_endianness_test() {
     let x = 1;
     let int_parse: Box<Fn(&[u8]) -> IResult<&[u8], u16> > = if x == 2 {
@@ -907,10 +1114,10 @@ mod tests {
     assert_eq!(hex_digit(i), Done(empty, i));
 
     let i = &b"g"[..];
-    assert_eq!(hex_digit(i), Error(Position(ErrorKind::HexDigit,i)));
+    assert_eq!(hex_digit(i), Error(error_position!(ErrorKind::HexDigit,i)));
 
     let i = &b"G"[..];
-    assert_eq!(hex_digit(i), Error(Position(ErrorKind::HexDigit,i)));
+    assert_eq!(hex_digit(i), Error(error_position!(ErrorKind::HexDigit,i)));
 
     assert!(is_hex_digit(b'0'));
     assert!(is_hex_digit(b'9'));
@@ -934,7 +1141,7 @@ mod tests {
     assert_eq!(oct_digit(i), Done(empty, i));
 
     let i = &b"8"[..];
-    assert_eq!(oct_digit(i), Error(Position(ErrorKind::OctDigit,i)));
+    assert_eq!(oct_digit(i), Error(error_position!(ErrorKind::OctDigit,i)));
 
     assert!(is_oct_digit(b'0'));
     assert!(is_oct_digit(b'7'));
@@ -946,5 +1153,73 @@ mod tests {
     assert!(!is_oct_digit(b':'));
     assert!(!is_oct_digit(b'@'));
     assert!(!is_oct_digit(b'\x60'));
+  }
+
+  #[test]
+  fn full_line_windows() {
+    named!(take_full_line<(&[u8], &[u8])>, tuple!(not_line_ending, line_ending));
+    let input = b"abc\r\n";
+    let output = take_full_line(input);
+    assert_eq!(output, Done(&b""[..], (&b"abc"[..], &b"\r\n"[..])));
+  }
+
+  #[test]
+  fn full_line_unix() {
+    named!(take_full_line<(&[u8], &[u8])>, tuple!(not_line_ending, line_ending));
+    let input = b"abc\n";
+    let output = take_full_line(input);
+    assert_eq!(output, Done(&b""[..], (&b"abc"[..], &b"\n"[..])));
+  }
+
+  #[test]
+  fn check_windows_lineending() {
+    let input = b"\r\n";
+    let output = line_ending(&input[..]);
+    assert_eq!(output, Done(&b""[..], &b"\r\n"[..]));
+  }
+
+  #[test]
+  fn check_unix_lineending() {
+    let input = b"\n";
+    let output = line_ending(&input[..]);
+    assert_eq!(output, Done(&b""[..], &b"\n"[..]));
+  }
+
+  #[test]
+  fn cr_lf() {
+    assert_eq!(crlf(&b"\r\na"[..]), Done(&b"a"[..], &b"\r\n"[..]));
+    assert_eq!(crlf(&b"\r"[..]),    Incomplete(Needed::Size(2)));
+    assert_eq!(crlf(&b"\ra"[..]),   Error(error_position!(ErrorKind::CrLf, &b"\ra"[..])));
+
+    assert_eq!(crlf("\r\na"), Done("a", "\r\n"));
+    assert_eq!(crlf("\r"),    Incomplete(Needed::Size(2)));
+    assert_eq!(crlf("\ra"),   Error(error_position!(ErrorKind::CrLf, "\ra")));
+  }
+
+  #[test]
+  fn end_of_line() {
+    assert_eq!(eol(&b"\na"[..]),   Done(&b"a"[..], &b"\n"[..]));
+    assert_eq!(eol(&b"\r\na"[..]), Done(&b"a"[..], &b"\r\n"[..]));
+    assert_eq!(eol(&b"\r"[..]),    Incomplete(Needed::Size(2)));
+    assert_eq!(eol(&b"\ra"[..]),   Error(error_position!(ErrorKind::CrLf, &b"\ra"[..])));
+
+    assert_eq!(eol("\na"),   Done("a", "\n"));
+    assert_eq!(eol("\r\na"), Done("a", "\r\n"));
+    assert_eq!(eol("\r"),    Incomplete(Needed::Size(2)));
+    assert_eq!(eol("\ra"),   Error(error_position!(ErrorKind::CrLf, "\ra")));
+  }
+
+  #[test]
+  #[cfg(feature = "std")]
+  fn float_test() {
+    assert_eq!(float(&b"+3.14"[..]),   Done(&b""[..], 3.14));
+    assert_eq!(float_s(&"3.14"[..]),   Done(&""[..], 3.14));
+    assert_eq!(double(&b"3.14"[..]),   Done(&b""[..], 3.14));
+    assert_eq!(double_s(&"3.14"[..]),   Done(&""[..], 3.14));
+
+    assert_eq!(float(&b"-1.234E-12"[..]),   Done(&b""[..], -1.234E-12));
+    assert_eq!(float_s(&"-1.234E-12"[..]),   Done(&""[..], -1.234E-12));
+    assert_eq!(double(&b"-1.234E-12"[..]),   Done(&b""[..], -1.234E-12));
+    assert_eq!(double_s(&"-1.234E-12"[..]),   Done(&""[..], -1.234E-12));
   }
 }

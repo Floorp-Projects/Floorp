@@ -247,6 +247,12 @@ void profiler_shutdown();
 //   "aInterval" the sampling interval, measured in millseconds.
 //   "aFeatures" is the feature set. Features unsupported by this
 //               platform/configuration are ignored.
+//   "aFilters" is the list of thread filters. Threads that do not match any
+//              of the filters are not profiled. A filter matches a thread if
+//              (a) the thread name contains the filter as a case-insensitive
+//                  substring, or
+//              (b) the filter is of the form "pid:<n>" where n is the process
+//                  id of the process that the thread is running in.
 void profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                     const char** aFilters, uint32_t aFilterCount);
 

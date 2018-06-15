@@ -27,6 +27,7 @@ protected:
 
 private:
   static bool sNewTabPageEnabled;
+  static bool sNewCertErrorPageEnabled;
 };
 
 } // namespace browser

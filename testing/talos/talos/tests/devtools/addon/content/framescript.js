@@ -1,25 +1,12 @@
 (function() {
-  const PREFIX = "damp@mozilla.org:";
+  const MESSAGE = "damp@mozilla.org:html-loaded";
 
-  addEventListener(PREFIX + "chrome-exec-event", function(e) {
-    if (content.document.documentURI.indexOf("chrome://damp/content/damp.html")) {
-      // Can have url fragment. Backward compatible version of !str.startsWidth("prefix")
-      throw new Error("Cannot be used outside of DAMP's launch page");
+  addEventListener("load", function onload(e) {
+    if (e.target.documentURI.indexOf("chrome://damp/content/damp.html")) {
+      return;
     }
+    removeEventListener("load", onload);
 
-    // eslint-disable-next-line mozilla/avoid-Date-timing
-    var uniqueMessageId = PREFIX + content.document.documentURI + Date.now() + Math.random();
-
-    addMessageListener(PREFIX + "chrome-exec-reply", function done(reply) {
-      if (reply.data.id == uniqueMessageId) {
-        removeMessageListener(PREFIX + "chrome-exec-reply", done);
-        e.detail.doneCallback(reply.data.result);
-      }
-    });
-
-    sendAsyncMessage(PREFIX + "chrome-exec-message", {
-      command: e.detail.command,
-      id: uniqueMessageId
-    });
-  }, false);
+    sendAsyncMessage(MESSAGE);
+  }, true);
 })();

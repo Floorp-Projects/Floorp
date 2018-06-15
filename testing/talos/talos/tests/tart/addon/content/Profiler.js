@@ -5,7 +5,6 @@
 // - NOTE: This file is duplicated verbatim at:
 //         - talos/scripts/Profiler.js
 //         - talos/pageloader/chrome/Profiler.js
-//         - talos/tests/devtools/addon/content/Profiler.js
 //         - talos/tests/tart/addon/content/Profiler.js
 //         - talos/startup_test/tresize/addon/content/Profiler.js
 //

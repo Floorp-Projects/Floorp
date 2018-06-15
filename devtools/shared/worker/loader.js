@@ -449,12 +449,7 @@ var {
 } = (function() {
   // Main thread
   if (typeof Components === "object") {
-    const {
-      Constructor: CC,
-      classes: Cc,
-      interfaces: Ci,
-      utils: Cu
-    } = Components;
+    const { Constructor: CC } = Components;
 
     const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
 

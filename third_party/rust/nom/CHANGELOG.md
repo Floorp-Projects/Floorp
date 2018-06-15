@@ -4,6 +4,267 @@
 
 ### Changed
 
+## 3.2.1 - 2017-10-27
+
+### Thanks
+
+- @ordian for `alt_complete` fixes
+- @friedm for documentation fixes
+- @kali for improving error management
+
+### Fixed
+
+- there were cases where `alt_complete` could return `Incomplete`
+
+### Added
+
+- an `into_error_kind` method can be used to transform any error to a common value. This helps when the library is included multiple times as dependency with different feature sets
+
+
+## 3.2.0 - 2017-07-24
+
+### Thanks
+
+- @jedireza for documentation fixes
+- @gmorenz for the `bytes` combinator
+- @meh for character combinator fixes for UTF-8
+- @jethrogb for avoiding move issues in `separated_list`
+
+### Changed
+
+- new layout for the main page of documentation
+- `anychar` can now work on any input type
+- `length_bytes` is now an alias for `length_data`
+
+### Fixed
+
+- `one_of`, `none_of` and `char` will now index correctly UTF-8 characters
+- the `compiler_error` macro is now correctly exported
+
+
+### Added
+
+- the `bytes` combinator transforms a bit stream back to a byte slice for child parsers
+
+## 3.1.0 - 2017-06-16
+
+### Thanks
+
+- @sdroege: implementing be_i24 and le_i24
+- @Hywan: integrating faster substring search using memchr
+- @nizox: fixing type issues in bit stream parsing
+- @grissiom: documentation fixes
+- @doomrobo: implementing separated_list_complete and separated_nonempty_list_complete
+- @CWood1: fixing memchr integration in no_std
+- @lu_zero: integrating the compiler_error crate
+- @dtolnay: helping debug a type inference issue in map
+
+### Changed
+
+- memchr is used for substring search if possible
+- if building on nightly, some common syntax errors will display a specific error message. If building no stable, display the documentation to activate those messages
+- `count` no longer preallocates its vector
+
+### Fixed
+
+- better type inference in alt_complete
+- `alt` should now work with whitespace parsing
+- `map` should not make type inference errors anymore
+
+### Added
+
+- be_i24 and le_i24, parsing big endian and little endian signed 24 bit integers
+- `separated_list_complete` and `separated_nonempty_list_complete` will treat incomplete from sub parsers as error
+
+## 3.0.0 - 2017-05-12
+
+### Thanks
+
+- Chris Pick for some `Incomplete` related refactors
+- @drbgn for documentation fixes
+- @valarauca for adding `be_u24`
+- @ithinuel for usability fixes
+- @evuez for README readability fixes and improvements to `IResult`
+- @s3bk for allowing non-`Copy` types as input
+- @keruspe for documentation fixes
+- @0xd34d10cc for trait fixes on `InputIter`
+- @sdleffler for lifetime shenanigans on `named_args`
+- @chengsun for type inference fixes in `alt`
+- @iBelieve for adding str to no_std
+- @Hywan for simplifying code in input traits
+- @azerupi for extensive documentation of `alt` and `alt_complete`
+
+### Breaking Changes
+
+- `escaped`, `separated_list` and `separated_nonempty_list` can now return `Incomplete` when necessary
+- `InputIter` does not require `AsChar` on its `Item` type anymore
+- the `core` feature that was putting nom in `no_std` mode has been removed. There is now a `std` feature, activated by default. If it is not activated, nom is in `no_std`
+- in `verbose-errors` mode, the error list is now stored in a `Vec` instead of a box based linked list
+- `chain!` has finally been removed
+
+### Changed
+
+- `Endianness` now implements `Debug`, `PartialEq`, `Eq`, `Clone` and `Copy`
+- custom input types can now be cloned if they're not `Copy`
+- the infamous 'Cannot infer type for E' error should happen less often now
+- `str` is now available in `no_std` mode
+
+### Fixed
+
+- `FileProducer` will be marked as `Eof` on full buffer
+- `named_args!` now has lifetimes that cannot conflict with the lifetimes from other arguments
+
+### Added
+
+- `be_u24`: big endian 24 bit unsigned integer parsing
+- `IResult` now has a `unwrap_or` method
+
+
+## 2.2.1 - 2017-04-03
+
+### Thanks
+
+- @Victor-Savu for formatting fixes in the README
+- @chifflier for detecting and fixing integer overflows
+- @utkarshkukreti for some performance improvements in benchmarks
+
+### Changed
+
+- when calculating how much data is needed in `IResult::Incomplete`, the addition could overflow (it is stored as a usize). This would apparently not result in any security vulnerability on release code
+
+## 2.2.0 - 2017-03-20
+
+### Thanks
+
+- @seppo0010 for fixing `named_args`
+- @keruspe for implementing or() on `IResult`, adding the option of default cases in `switch!`, adding support for `cargo-travis`
+- @timlyo for documentation fixes
+- @JayKickliter for extending `hex_u32`
+- @1011X for fixing regex integration
+- @Kerollmops for actually marking `chain!` as deprecated
+- @joliss for documentation fixes
+- @utkarshkukreti for tests refactoring and performance improvement
+- @tmccombs for documentation fixes
+
+### Added
+
+- `IResult` gets an `or()` method
+- `take_until1`, `take_until_and_consume1`, `take_till1!` and `take_till1_s!` require at least 1 character
+
+### Changed
+
+- `hex_u32` accepts uppercase digits as well
+- the character based combinators leverage the input traits
+- the whitespace parsers now work on &str and other types
+- `take_while1` returns `Incomplete` on empty input
+- `switch!` can now take a default case
+
+### Fixed
+
+- `named_args!` now imports `IResult` directly
+- the upgrade to regex 0.2 broke the regex combinators, they work now
+
+## 2.1.0 - 2017-01-27
+
+### Thanks
+
+- @nickbabcock for documentation fixes
+- @derekdreery for documentation fixes
+- @DirkyJerky for documentation fixes
+- @saschagrunert for documentation fixes
+- @lucab for documentation fixes
+- @hyone for documentation fixes
+- @tstorch for factoring `Slice`
+- @shepmaster for adding crate categories
+- @antoyo for adding `named_args!`
+
+### Added
+
+- `verify!` uses a first parser, then applies a function to check that its result satisfies some conditions
+- `named_args!` creates a parser function that can accept other arguments along with the input
+- `parse_to!` will use the `parse` method from `FromStr` to parse a value. It will automatically translate the input to a string if necessary
+- `float`, `float_s`, `double`, `double_s` can recognize floating point numbers in text
+
+### Changed
+
+- `escaped!` will now return `Incomplete` if needed
+- `permutation!` supports up to 20 child parsers
+
+## 2.0.1 - 2016-12-10
+
+Bugfix release
+
+*Warning*: there is a small breaking change, `add_error!` is renamed to `add_return_error!`. This was planned for the 2.0 release but was forgotten. This is a small change in a feature that not many people use, for a release that is not yet widely in use, so there will be no 3.0 release for that change.
+
+### Thanks
+
+- @nickbabcock for catching and fixing the `add_error!` mixup
+- @lucab for documentation fixes
+- @jtdowney for noticing that `tag_no_case!` was not working at all for byte slices
+
+### Fixed
+
+- `add_error!` has been renamed to `add_return_error!`
+- the `not!` combinator now accepts functions
+- `tag_no_case!` is now working as accepted (before, it accepted everything)
+
+
+## 2.0 - 2016-11-25
+
+The 2.0 release is one of the biggest yet. It was a good opportunity to clean up some badly named combinators and fix invalid behaviours.
+
+Since this version introduces a few breaking changes, an [upgrade documentation](https://github.com/Geal/nom/blob/master/doc/upgrading_to_nom_2.md) is available, detailing the steps to fix the most common migration issues. After testing on a set of 30 crates, most of them will build directly, a large part will just need to activate the "verbose-errors" compilation feature. The remaining fixes are documented.
+
+This version also adds a lot of interesting features, like the permutation combinator or whitespace separated formats support.
+
+### Thanks
+
+- @lu-zero for license help
+- @adamgreig for type inference fixes
+- @keruspe for documentation and example fixes, for the `IResult => Result` conversion work, making `AsChar`'s method more consistent, and adding `many_till!`
+- @jdeeny for implementing `Offset` on `&str`
+- @vickenty for documentation fixes and his refactoring of `length_value!` and `length_bytes!`
+- @overdrivenpotato for refactoring some combinators
+- @taralx for documentation fixes
+- @keeperofdakeys for fixing eol behaviour, writing documentation and adding `named_attr!`
+- @jturner314 for writing documentation
+- @bozaro for fixing compilation errors
+- @uniphil for adding a `crates.io` badge
+- @badboy for documentation fixes
+- @jugglerchris for fixing `take_s!`
+- @AndyShiue for implementing `Error` and `Display` on `ErrorKind` and detecting incorrect UTF-8 string indexing
+
+### Added
+
+- the "simple" error management system does not accumulates errors when backtracking. This is a big perf gain, and is activated by default in nom 2.0
+- nom can now work on any type that implement the traits defined in `src/traits.rs`: `InputLength`, `InputIter`, `InputTake`, `Compare`, `FindToken`, `FindSubstring`, `Slice`
+- the documentation from Github's wiki has been moved to the `doc/` directory. They are markdown files that you can build with [cargo-external-doc](https://crates.io/crates/cargo-external-doc)
+- whitespace separated format support: with the `ws!` combinator, you can automatically introduce whitespace parsers between all parsers and combinators
+- the `permutation!` combinator applies its child parsers in any order, as long as they all succeed once, and return a tuple of the results
+- `do_parse!` is a simpler alternative to `chain!`, which is now deprecated
+- you can now transform an `IResult` in a `std::result::Result`
+- `length_data!` parses a length, and returns a subslice of that length
+- `tag_no_case!` provides case independent comparison. It works nicely, without any allocation, for ASCII strings, but for UTF-8 strings, it defaults to an unsatisfying (and incorrect) comparison by lowercasing both strings
+- `named_attr!` creates functions like `named!` but can add attributes like documentation
+- `many_till!` applies repeatedly its first child parser until the second succeeds
+
+### Changed
+
+- the "verbose" error management that was available in previous versions is now activated by the "verbose-errors" compilation feature
+- code reorganization: most of the parsers were moved in separate files to make the source easier to navigate
+- most of the combinators are now independent from the input type
+- the `eof` function was replaced with the `eof!` macro
+- `error!` and `add_error!` were replaced with `return_error!` and `add_return_error!` to fix the name conflict with the log crate
+- the `offset()` method is now in the `Offset` trait
+- `length_value!` has been renamed to `length_count!`. The new `length_value!` selects a slice and applies the second parser once on that slice
+- `AsChar::is_0_to_9` is now `AsChar::is_dec_digit`
+- the combinators with configurable endianness now take an enum instead of a boolean as parameter
+
+### Fixed
+- the `count!`, `count_fixed!` and `length_*!` combinator calculate incomplete data needs correctly
+- `eol`, `line_ending` and `not_line_ending` now have a consistent behaviour that works correctly with incomplete data
+- `take_s!` didn't correctly handle the case when the slice is exactly the right length
+
 ## 1.2.4 - 2016-07-20
 
 ### Thanks
@@ -29,14 +290,14 @@
 - `take_bits!` is now more precise
 - `many1` inccorectly used the `len` function instead of `input_len`
 - the INI parser is simpler
-- `recognize!` had an early `return` taht is removed now
+- `recognize!` had an early `return` that is removed now
 
 ## 1.2.3 - 2016-05-10
 
 ### Thanks
 - @lu-zero for the contribution guidelines
 - @GuillaumeGomez for fixes on `length_bytes` and some documentation
-- @Hywan for ducomentation and test fixes
+- @Hywan for documentation and test fixes
 - @Xirdus for correct trait import issues
 - @mspiegel for the new AST example
 - @cholcombe973 for adding the `cond_with_error!` combinator
@@ -63,7 +324,7 @@
 ## 1.2.2 - 2016-03-09
 
 ### Thanks
-- @conradev for fixing take_until_s!`
+- @conradev for fixing `take_until_s!`
 - @GuillaumeGomez for some documentation fixes
 - @frewsxcv for some documentation fixes
 - @tstorch for some test refactorings
@@ -121,7 +382,7 @@
 - there were type inference issues in a few combinators. They will now be easier to compile
 - `peek!` compilation with bare functions
 - `&str` parsers were splitting data at the byte level, not at the char level, which can result in inconsistencies in parsing UTF-8 characters. They now use character indexes
-- some method implementations were missing on `ÌResult<I,O,E>` (with specified error type instead of implicit)
+- some method implementations were missing on `IResult<I,O,E>` (with specified error type instead of implicit)
 
 ## 1.1.0 - 2016-01-01
 
@@ -137,11 +398,11 @@ There are also a few performance improvements and documentation fixes.
 - @meh for fixing `Option` and `Vec` imports
 - @hoodie for a documentation fix
 - @joelself for some documentation fixes
-- @vberger for his traits magic making `nom functions more generic
+- @vberger for his traits magic making nom functions more generic
 
 ### Added
 
-- string related parsers: `tag_s!`, `take_s!`, `is_a_s!`, `is_not_s!`, `take_while_s!`, `take_while1_s!`, `take_till_s!
+- string related parsers: `tag_s!`, `take_s!`, `is_a_s!`, `is_not_s!`, `take_while_s!`, `take_while1_s!`, `take_till_s!`
 - `value!` is a combinator that always returns the same value. If a child parser is passed as second argument, that value is returned when the child parser succeeds
 
 ### Changed
@@ -521,8 +782,17 @@ Considering the number of changes since the last release, this version can conta
 
 ## Compare code
 
-* [unreleased]: https://github.com/Geal/nom/compare/1.2.4...HEAD
-* [1.2.3]: https://github.com/Geal/nom/compare/1.2.3...1.2.4
+* [unreleased]: https://github.com/Geal/nom/compare/3.2.1...HEAD
+* [3.2.1]: https://github.com/Geal/nom/compare/3.2.0...3.2.1
+* [3.2.0]: https://github.com/Geal/nom/compare/3.1.0...3.2.0
+* [3.1.0]: https://github.com/Geal/nom/compare/3.0.0...3.1.0
+* [3.0.0]: https://github.com/Geal/nom/compare/2.2.1...3.0.0
+* [2.2.1]: https://github.com/Geal/nom/compare/2.2.0...2.2.1
+* [2.2.0]: https://github.com/Geal/nom/compare/2.1.0...2.2.0
+* [2.1.0]: https://github.com/Geal/nom/compare/2.0.1...2.1.0
+* [2.0.1]: https://github.com/Geal/nom/compare/2.0.0...2.0.1
+* [2.0.0]: https://github.com/Geal/nom/compare/1.2.4...2.0.0
+* [1.2.4]: https://github.com/Geal/nom/compare/1.2.3...1.2.4
 * [1.2.3]: https://github.com/Geal/nom/compare/1.2.2...1.2.3
 * [1.2.2]: https://github.com/Geal/nom/compare/1.2.1...1.2.2
 * [1.2.1]: https://github.com/Geal/nom/compare/1.2.0...1.2.1

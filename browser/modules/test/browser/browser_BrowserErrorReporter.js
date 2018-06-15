@@ -115,6 +115,7 @@ add_task(async function testInitPastMessages() {
     fetch: fetchSpy,
     registerListener: noop,
     unregisterListener: noop,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
   });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
@@ -143,6 +144,7 @@ add_task(async function testEnabledPrefWatcher() {
     unregisterListener() {
       listening = false;
     },
+    now: BrowserErrorReporter.getAppBuildIdDate(),
   });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, false],
@@ -160,7 +162,10 @@ add_task(async function testEnabledPrefWatcher() {
 
 add_task(async function testNonErrorLogs() {
   const fetchSpy = sinon.spy();
-  const reporter = new BrowserErrorReporter({fetch: fetchSpy});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -199,7 +204,10 @@ add_task(async function testNonErrorLogs() {
 
 add_task(async function testSampling() {
   const fetchSpy = sinon.spy();
-  const reporter = new BrowserErrorReporter({fetch: fetchSpy});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -256,7 +264,10 @@ add_task(async function testSampling() {
 
 add_task(async function testNameMessage() {
   const fetchSpy = sinon.spy();
-  const reporter = new BrowserErrorReporter({fetch: fetchSpy});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -305,9 +316,34 @@ add_task(async function testNameMessage() {
   );
 });
 
+add_task(async function testRecentBuild() {
+  // Create date that is guaranteed to be a month newer than the build date.
+  const nowDate = BrowserErrorReporter.getAppBuildIdDate();
+  nowDate.setMonth(nowDate.getMonth() + 1);
+
+  const fetchSpy = sinon.spy();
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    now: nowDate,
+  });
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_ENABLED, true],
+    [PREF_SAMPLE_RATE, "1.0"],
+  ]});
+
+  await reporter.handleMessage(createScriptError({message: "Is error"}));
+  ok(
+    !fetchPassedError(fetchSpy, "Is error"),
+    "Reporter does not collect errors from builds older than a week.",
+  );
+});
+
 add_task(async function testFetchArguments() {
   const fetchSpy = sinon.spy();
-  const reporter = new BrowserErrorReporter({fetch: fetchSpy});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -405,7 +441,11 @@ add_task(async function testAddonIDMangle() {
   const fetchSpy = sinon.spy();
   // Passing false here disables category checks on errors, which would
   // otherwise block errors directly from extensions.
-  const reporter = new BrowserErrorReporter({fetch: fetchSpy, chromeOnly: false});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    chromeOnly: false,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -447,7 +487,11 @@ add_task(async function testExtensionTag() {
   const fetchSpy = sinon.spy();
   // Passing false here disables category checks on errors, which would
   // otherwise block errors directly from extensions.
-  const reporter = new BrowserErrorReporter({fetch: fetchSpy, chromeOnly: false});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchSpy,
+    chromeOnly: false,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -488,7 +532,10 @@ add_task(async function testExtensionTag() {
 
 add_task(async function testScalars() {
   const fetchStub = sinon.stub();
-  const reporter = new BrowserErrorReporter({fetch: fetchStub});
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchStub,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],
@@ -574,7 +621,10 @@ add_task(async function testScalars() {
 
 add_task(async function testCollectedFilenameScalar() {
   const fetchStub = sinon.stub();
-  const reporter = new BrowserErrorReporter(fetchStub);
+  const reporter = new BrowserErrorReporter({
+    fetch: fetchStub,
+    now: BrowserErrorReporter.getAppBuildIdDate(),
+  });
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_ENABLED, true],
     [PREF_SAMPLE_RATE, "1.0"],

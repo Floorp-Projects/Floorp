@@ -9,8 +9,7 @@
 
 this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require", "unload"];
 
-const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu,
-        results: Cr, manager: Cm } = Components;
+const { Constructor: CC, manager: Cm } = Components;
 const systemPrincipal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});

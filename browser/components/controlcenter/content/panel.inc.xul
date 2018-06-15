@@ -108,9 +108,15 @@
       <hbox class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
         <vbox id="identity-popup-permissions-content" flex="1">
-          <label id="identity-popup-permissions-headline"
-                 class="identity-popup-headline"
-                 value="&identity.permissions;"/>
+          <hbox class="identity-popup-preferences-button-container">
+            <label id="identity-popup-permissions-headline"
+                   class="identity-popup-headline"
+                   value="&identity.permissions;"/>
+            <toolbarbutton id="identity-popup-permission-preferences-button"
+                           class="identity-popup-preferences-button subviewbutton"
+                           tooltiptext="&identity.permissionsPreferences.tooltip;"
+                           oncommand="gIdentityHandler.openPermissionPreferences();" />
+          </hbox>
           <vbox id="identity-popup-permission-list"/>
           <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
           <description id="identity-popup-permission-empty-hint">&identity.permissionsEmpty;</description>
