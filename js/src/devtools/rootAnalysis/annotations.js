@@ -322,19 +322,10 @@ function extraRootedGCThings()
 function extraRootedPointers()
 {
     return [
-        'ModuleValidator',
-        'JSErrorResult',
-        'WrappableJSErrorResult',
-
         // These are not actually rooted, but are only used in the context of
         // AutoKeepAtoms.
         'js::frontend::TokenStream',
         'js::frontend::TokenStreamAnyChars',
-
-        'mozilla::ErrorResult',
-        'mozilla::IgnoredErrorResult',
-        'mozilla::IgnoreErrors',
-        'mozilla::dom::binding_detail::FastErrorResult',
     ];
 }
 
