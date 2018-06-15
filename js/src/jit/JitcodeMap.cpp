@@ -740,7 +740,7 @@ JitcodeGlobalTable::traceForMinorGC(JSTracer* trc)
     // Trace only entries that can directly contain nursery pointers.
 
     MOZ_ASSERT(trc->runtime()->geckoProfiler().enabled());
-    MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
 
     JSContext* cx = trc->runtime()->mainContextFromOwnThread();
     AutoSuppressProfilerSampling suppressSampling(cx);
@@ -790,7 +790,7 @@ JitcodeGlobalTable::markIteratively(GCMarker* marker)
     // The approach above obviates the need for read barriers. The assumption
     // above is checked in JitcodeGlobalTable::lookupForSampler.
 
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
 
     AutoSuppressProfilerSampling suppressSampling(TlsContext.get());
 

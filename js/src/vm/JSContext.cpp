@@ -1549,7 +1549,7 @@ JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext* cxArg)
   : cx(cxArg->helperThread() ? nullptr : cxArg)
 {
     if (cx) {
-        MOZ_ASSERT(cx->requestDepth || JS::CurrentThreadIsHeapBusy());
+        MOZ_ASSERT(cx->requestDepth || JS::RuntimeHeapIsBusy());
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
         cx->checkRequestDepth++;
     }
