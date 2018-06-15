@@ -600,6 +600,32 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   transform: translateX(calc(-100% + 0.5px));
 }
 
+/* Indication Bar */
+.indication-bar {
+  height: 100%;
+  position: absolute;
+}
+
+.indication-bar::before {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid;
+  content: "";
+  left: -5px;
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
+.indication-bar::after {
+  border-left: 1px solid;
+  content: "";
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;
