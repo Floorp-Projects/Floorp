@@ -3272,7 +3272,7 @@ DisableTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 static bool
 DumpObject(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -5832,7 +5832,7 @@ gc::ZealModeHelpText),
 "  paths in each of those arrays is bounded by |maxNumPaths|. Each element in a\n"
 "  path is of the form |{ predecessor, edge }|."),
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,
 "dumpObject()",
 "  Dump an internal representation of an object."),

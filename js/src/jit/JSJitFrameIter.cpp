@@ -305,7 +305,7 @@ JSJitFrameIter::dumpBaseline() const
     fprintf(stderr, " JS Baseline frame\n");
     if (isFunctionFrame()) {
         fprintf(stderr, "  callee fun: ");
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
         DumpObject(callee());
 #else
         fprintf(stderr, "?\n");
@@ -331,7 +331,7 @@ JSJitFrameIter::dumpBaseline() const
 
     for (unsigned i = 0; i < frame->numValueSlots(); i++) {
         fprintf(stderr, "  slot %u: ", i);
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
         Value* v = frame->valueSlot(i);
         DumpValue(*v);
 #else
