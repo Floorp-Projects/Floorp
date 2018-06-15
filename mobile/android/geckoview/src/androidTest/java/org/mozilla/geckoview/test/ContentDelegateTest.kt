@@ -9,6 +9,8 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -118,5 +120,39 @@ class ContentDelegateTest : BaseSessionTest() {
                 }
             })
         }
+    }
+
+    @WithDevToolsAPI
+    @WithDisplay(width = 400, height = 400)
+    @Test fun saveAndRestoreState() {
+        val startUri = createTestUrl(SAVE_STATE_PATH)
+        mainSession.loadUri(startUri)
+        sessionRule.waitForPageStop()
+
+        mainSession.evaluateJS("$('#name').value = 'the name'; window.scrollBy(0, 100);")
+
+        val state = sessionRule.waitForResult(mainSession.saveState())
+        assertThat("State should not be null", state, notNullValue())
+
+        mainSession.loadUri("about:blank")
+        sessionRule.waitForPageStop()
+
+        mainSession.restoreState(state)
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled
+            override fun onLocationChange(session: GeckoSession, url: String) {
+                assertThat("URI should match", url, equalTo(startUri))
+            }
+        })
+
+        assertThat("'name' field should match",
+                mainSession.evaluateJS("$('#name').value").toString(),
+                equalTo("the name"))
+
+        assertThat("Scroll position should match",
+                mainSession.evaluateJS("window.scrollY") as Double,
+                closeTo(100.0, .5))
     }
 }
