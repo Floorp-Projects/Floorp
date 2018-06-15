@@ -34,6 +34,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val INVALID_URI = "http://www.test.invalid/"
         const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html"
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
+        const val SAVE_STATE_PATH = "/assets/www/saveState.html"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
         const val TRACKERS_PATH = "/assets/www/trackers.html"
     }
@@ -64,8 +65,11 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     val GeckoSession.isRemote
         get() = this.settings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS)
 
+    fun createTestUrl(path: String) =
+            GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/")
+
     fun GeckoSession.loadTestPath(path: String) =
-            this.loadUri(GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/"))
+            this.loadUri(createTestUrl(path))
 
     inline fun GeckoSession.toParcel(lambda: (Parcel) -> Unit) {
         val parcel = Parcel.obtain()
@@ -83,6 +87,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
             parcel.recycle()
         }
     }
+
 
     fun GeckoSession.open() =
             sessionRule.openSession(this)
