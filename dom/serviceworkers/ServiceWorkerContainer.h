@@ -26,11 +26,19 @@ public:
   class Inner
   {
   public:
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    virtual void
+    AddContainer(ServiceWorkerContainer* aOuter) = 0;
+
+    virtual void
+    RemoveContainer(ServiceWorkerContainer* aOuter) = 0;
+
+    virtual void
     Register(const ClientInfo& aClientInfo,
              const nsACString& aScopeURL,
              const nsACString& aScriptURL,
-             ServiceWorkerUpdateViaCache aUpdateViaCache) const = 0;
+             ServiceWorkerUpdateViaCache aUpdateViaCache,
+             ServiceWorkerRegistrationCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
     GetRegistration(const ClientInfo& aClientInfo,
