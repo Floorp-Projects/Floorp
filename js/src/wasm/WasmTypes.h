@@ -653,6 +653,7 @@ class Val
 
     ValType type() const { return type_; }
     bool isSimd() const { return IsSimdType(type()); }
+    static constexpr size_t sizeofLargestValue() { return sizeof(u); }
 
     uint32_t i32() const { MOZ_ASSERT(type_ == ValType::I32); return u.i32_; }
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
@@ -1993,7 +1994,7 @@ static const unsigned PageSize = 64 * 1024;
 // catch the overflow. MaxMemoryAccessSize is a conservative approximation of
 // the maximum guard space needed to catch all unaligned overflows.
 
-static const unsigned MaxMemoryAccessSize = sizeof(Val);
+static const unsigned MaxMemoryAccessSize = Val::sizeofLargestValue();
 
 #ifdef WASM_HUGE_MEMORY
 

@@ -40,6 +40,7 @@ RenderThread::RenderThread(base::Thread* aThread)
 
 RenderThread::~RenderThread()
 {
+  MOZ_ASSERT(mRenderTexturesDeferred.empty());
   delete mThread;
 }
 
@@ -507,9 +508,10 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
     // it. So, no one will access the invalid buffer in RenderTextureHost.
     RefPtr<RenderTextureHost> texture;
     mRenderTextures.Remove(aExternalImageId, getter_AddRefs(texture));
-    Loop()->PostTask(NewRunnableMethod<RefPtr<RenderTextureHost>>(
+    mRenderTexturesDeferred.emplace_back(std::move(texture));
+    Loop()->PostTask(NewRunnableMethod(
       "RenderThread::DeferredRenderTextureHostDestroy",
-      this, &RenderThread::DeferredRenderTextureHostDestroy, std::move(texture)
+      this, &RenderThread::DeferredRenderTextureHostDestroy
     ));
   } else {
     mRenderTextures.Remove(aExternalImageId);
@@ -527,9 +529,10 @@ RenderThread::UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId)
 }
 
 void
-RenderThread::DeferredRenderTextureHostDestroy(RefPtr<RenderTextureHost>)
+RenderThread::DeferredRenderTextureHostDestroy()
 {
-  // Do nothing. Just decrease the ref-count of RenderTextureHost.
+  MutexAutoLock lock(mRenderTextureMapLock);
+  mRenderTexturesDeferred.clear();
 }
 
 RenderTextureHost*
@@ -562,8 +565,12 @@ RenderThread::HandleDeviceReset(const char* aWhere)
     gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
   }
 
-  for (auto iter = mRenderTextures.Iter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->ClearCachedResources();
+  {
+    MutexAutoLock lock(mRenderTextureMapLock);
+    mRenderTexturesDeferred.clear();
+    for (auto iter = mRenderTextures.Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->ClearCachedResources();
+    }
   }
 
   mHandlingDeviceReset = true;

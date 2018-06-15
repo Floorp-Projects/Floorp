@@ -20,6 +20,8 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/SynchronousTask.h"
 
+#include <list>
+
 namespace mozilla {
 namespace wr {
 
@@ -175,7 +177,7 @@ public:
 private:
   explicit RenderThread(base::Thread* aThread);
 
-  void DeferredRenderTextureHostDestroy(RefPtr<RenderTextureHost> aTexture);
+  void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
   void ProgramCacheTask();
 
@@ -199,6 +201,10 @@ private:
 
   Mutex mRenderTextureMapLock;
   nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;
+  // Used to remove all RenderTextureHost that are going to be removed by
+  // a deferred callback and remove them right away without waiting for the callback.
+  // On device reset we have to remove all GL related resources right away.
+  std::list<RefPtr<RenderTextureHost>> mRenderTexturesDeferred;
   bool mHasShutdown;
 
   bool mHandlingDeviceReset;
