@@ -339,11 +339,6 @@ const queryOptionSwitches = [
     desc:    "nsINavHistoryQueryOptions.sortingMode",
     matches(aOptions1, aOptions2) {
       if (aOptions1.sortingMode === aOptions2.sortingMode) {
-        switch (aOptions1.sortingMode) {
-          case aOptions1.SORT_BY_ANNOTATION_ASCENDING:
-          case aOptions1.SORT_BY_ANNOTATION_DESCENDING:
-            return aOptions1.sortingAnnotation === aOptions2.sortingAnnotation;
-        }
         return true;
       }
       return false;
@@ -352,10 +347,6 @@ const queryOptionSwitches = [
       function(aQuery, aQueryOptions) {
         aQueryOptions.sortingMode = aQueryOptions.SORT_BY_DATE_ASCENDING;
       },
-      function(aQuery, aQueryOptions) {
-        aQueryOptions.sortingMode = aQueryOptions.SORT_BY_ANNOTATION_ASCENDING;
-        aQueryOptions.sortingAnnotation = "bookmarks/toolbarFolder";
-      }
     ]
   },
   // resultType

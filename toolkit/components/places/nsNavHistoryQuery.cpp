@@ -87,7 +87,6 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_URI "uri"
 #define QUERYKEY_GROUP "group"
 #define QUERYKEY_SORT "sort"
-#define QUERYKEY_SORTING_ANNOTATION "sortingAnnotation"
 #define QUERYKEY_RESULT_TYPE "type"
 #define QUERYKEY_EXCLUDE_ITEMS "excludeItems"
 #define QUERYKEY_EXCLUDE_QUERIES "excludeQueries"
@@ -307,19 +306,6 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
     AppendAmpersandIfNonempty(queryString);
     queryString += NS_LITERAL_CSTRING(QUERYKEY_SORT "=");
     AppendInt16(queryString, options->SortingMode());
-    if (options->SortingMode() == nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING ||
-        options->SortingMode() == nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_ASCENDING) {
-      // sortingAnnotation
-      nsAutoCString sortingAnnotation;
-      if (NS_SUCCEEDED(options->GetSortingAnnotation(sortingAnnotation))) {
-        nsCString escaped;
-        if (!NS_Escape(sortingAnnotation, escaped, url_XAlphas))
-          return NS_ERROR_OUT_OF_MEMORY;
-        AppendAmpersandIfNonempty(queryString);
-        queryString += NS_LITERAL_CSTRING(QUERYKEY_SORTING_ANNOTATION "=");
-        queryString.Append(escaped);
-      }
-    }
   }
 
   // result type
@@ -514,12 +500,6 @@ nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SORT)) {
       SetOptionsKeyUint16(kvp.value, aOptions,
                           &nsINavHistoryQueryOptions::SetSortingMode);
-    // sorting annotation
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_SORTING_ANNOTATION)) {
-      nsCString sortingAnnotation = kvp.value;
-      NS_UnescapeURL(sortingAnnotation);
-      rv = aOptions->SetSortingAnnotation(sortingAnnotation);
-      NS_ENSURE_SUCCESS(rv, rv);
     // result type
     } else if (kvp.key.EqualsLiteral(QUERYKEY_RESULT_TYPE)) {
       SetOptionsKeyUint16(kvp.value, aOptions,
@@ -1076,7 +1056,6 @@ nsNavHistoryQueryOptions::nsNavHistoryQueryOptions()
 
 nsNavHistoryQueryOptions::nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other)
 : mSort(other.mSort)
-, mSortingAnnotation(other.mSortingAnnotation)
 , mResultType(other.mResultType)
 , mExcludeItems(other.mExcludeItems)
 , mExcludeQueries(other.mExcludeQueries)
@@ -1102,19 +1081,6 @@ nsNavHistoryQueryOptions::SetSortingMode(uint16_t aMode)
   if (aMode > SORT_BY_FRECENCY_DESCENDING)
     return NS_ERROR_INVALID_ARG;
   mSort = aMode;
-  return NS_OK;
-}
-
-// sortingAnnotation
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetSortingAnnotation(nsACString& _result) {
-  _result.Assign(mSortingAnnotation);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetSortingAnnotation(const nsACString& aSortingAnnotation) {
-  mSortingAnnotation.Assign(aSortingAnnotation);
   return NS_OK;
 }
 
