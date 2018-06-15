@@ -1718,16 +1718,14 @@ TabChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
   // actually go through the APZ code and so their mHandledByAPZ flag is false.
   // Since thos events didn't go through APZ, we don't need to send
   // notifications for them.
-  bool pendingLayerization = false;
+  UniquePtr<DisplayportSetListener> postLayerization;
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<nsIDocument> document(GetDocument());
-    pendingLayerization =
-      APZCCallbackHelper::SendSetTargetAPZCNotification(mPuppetWidget, document,
-                                                        aEvent, aGuid,
-                                                        aInputBlockId);
+    postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
+        mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
   }
 
-  InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eIgnore, pendingLayerization);
+  InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eIgnore, postLayerization != nullptr);
 
   WidgetMouseEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
@@ -1737,6 +1735,15 @@ TabChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
 
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessMouseEvent(aEvent, aGuid, aInputBlockId);
+  }
+
+  // Do this after the DispatchWidgetEventViaAPZ call above, so that if the
+  // mouse event triggered a post-refresh AsyncDragMetrics message to be sent
+  // to APZ (from scrollbar dragging in nsSliderFrame), then that will reach
+  // APZ before the SetTargetAPZC message. This ensures the drag input block
+  // gets the drag metrics before handling the input events.
+  if (postLayerization && postLayerization->Register()) {
+    Unused << postLayerization.release();
   }
 }
 
@@ -1818,8 +1825,12 @@ TabChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
   WidgetWheelEvent localEvent(aEvent);
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<nsIDocument> document(GetDocument());
-    APZCCallbackHelper::SendSetTargetAPZCNotification(
-      mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
+    UniquePtr<DisplayportSetListener> postLayerization =
+        APZCCallbackHelper::SendSetTargetAPZCNotification(
+            mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
+    if (postLayerization && postLayerization->Register()) {
+      Unused << postLayerization.release();
+    }
   }
 
   localEvent.mWidget = mPuppetWidget;
@@ -1894,9 +1905,12 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
         mPuppetWidget, document, localEvent, aInputBlockId,
         mSetAllowedTouchBehaviorCallback);
     }
-    APZCCallbackHelper::SendSetTargetAPZCNotification(mPuppetWidget, document,
-                                                      localEvent, aGuid,
-                                                      aInputBlockId);
+    UniquePtr<DisplayportSetListener> postLayerization =
+        APZCCallbackHelper::SendSetTargetAPZCNotification(
+            mPuppetWidget, document, localEvent, aGuid, aInputBlockId);
+    if (postLayerization && postLayerization->Register()) {
+      Unused << postLayerization.release();
+    }
   }
 
   // Dispatch event to content (potentially a long-running operation)
