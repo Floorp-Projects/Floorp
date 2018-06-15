@@ -130,6 +130,25 @@ class BindingName
               (isTopLevelFunction? TopLevelFunctionFlag : 0x0))
     { }
 
+  private:
+    // For fromXDR.
+    BindingName(JSAtom* name, uint8_t flags)
+      : bits_(uintptr_t(name) | flags)
+    {
+        static_assert(FlagMask < alignof(JSAtom),
+                      "Flags should fit into unused bits of JSAtom pointer");
+        MOZ_ASSERT((flags & FlagMask) == flags);
+    }
+
+  public:
+    static BindingName fromXDR(JSAtom* name, uint8_t flags) {
+        return BindingName(name, flags);
+    }
+
+    uint8_t flagsForXDR() const {
+        return static_cast<uint8_t>(bits_ & FlagMask);
+    }
+
     JSAtom* name() const {
         return reinterpret_cast<JSAtom*>(bits_ & ~FlagMask);
     }
