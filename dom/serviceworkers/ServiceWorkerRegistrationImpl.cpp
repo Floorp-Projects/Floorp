@@ -523,22 +523,40 @@ public:
 
 } // namespace
 
-RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerRegistrationMainThread::Update()
+void
+ServiceWorkerRegistrationMainThread::Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                                            ServiceWorkerFailureCallback&& aFailureCB)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mOuter);
 
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  if (!global) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
   nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
   if (!principal) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
   }
 
   RefPtr<MainThreadUpdateCallback> cb = new MainThreadUpdateCallback();
   UpdateInternal(principal, NS_ConvertUTF16toUTF8(mScope), cb);
 
-  return cb->Promise();
+  auto holder =
+    MakeRefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>>(global);
+
+  cb->Promise()->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [successCB = std::move(aSuccessCB), holder] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      holder->Complete();
+      successCB(aDescriptor);
+    }, [failureCB = std::move(aFailureCB), holder] (const CopyableErrorResult& aRv) {
+      holder->Complete();
+      failureCB(CopyableErrorResult(aRv));
+    })->Track(*holder);
 }
 
 RefPtr<GenericPromise>
@@ -712,52 +730,68 @@ ServiceWorkerRegistrationWorkerThread::ClearServiceWorkerRegistration(ServiceWor
   mOuter = nullptr;
 }
 
-RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerRegistrationWorkerThread::Update()
+void
+ServiceWorkerRegistrationWorkerThread::Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                                              ServiceWorkerFailureCallback&& aFailureCB)
 {
   if (NS_WARN_IF(!mWorkerRef->GetPrivate())) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
   }
 
   RefPtr<StrongWorkerRef> workerRef =
     StrongWorkerRef::Create(mWorkerRef->GetPrivate(),
                             "ServiceWorkerRegistration::Update");
   if (NS_WARN_IF(!workerRef)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  nsIGlobalObject* global = workerRef->Private()->GlobalScope();
+  if (NS_WARN_IF(!global)) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  // Eventually we need to support all workers, but for right now this
+  // code assumes we're on a service worker global as self.registration.
+  if (NS_WARN_IF(!workerRef->Private()->IsServiceWorker())) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
   }
 
   // Avoid infinite update loops by ignoring update() calls during top
   // level script evaluation.  See:
   // https://github.com/slightlyoff/ServiceWorker/issues/800
   if (workerRef->Private()->IsLoadingWorkerScript()) {
-    return ServiceWorkerRegistrationPromise::CreateAndResolve(mDescriptor,
-                                                              __func__);
+    aSuccessCB(mDescriptor);
+    return;
   }
 
-  // Eventually we need to support all workers, but for right now this
-  // code assumes we're on a service worker global as self.registration.
-  if (NS_WARN_IF(!workerRef->Private()->IsServiceWorker())) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
-  }
+  auto promise = MakeRefPtr<ServiceWorkerRegistrationPromise::Private>(__func__);
+  auto holder =
+    MakeRefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>>(global);
 
-  RefPtr<ServiceWorkerRegistrationPromise::Private> outer =
-    new ServiceWorkerRegistrationPromise::Private(__func__);
+  promise->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [successCB = std::move(aSuccessCB), holder] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      holder->Complete();
+      successCB(aDescriptor);
+    }, [failureCB = std::move(aFailureCB), holder] (const CopyableErrorResult& aRv) {
+      holder->Complete();
+      failureCB(CopyableErrorResult(aRv));
+    })->Track(*holder);
 
   RefPtr<SWRUpdateRunnable> r =
     new SWRUpdateRunnable(workerRef,
-                          outer,
+                          promise,
                           workerRef->Private()->GetServiceWorkerDescriptor());
 
   nsresult rv = workerRef->Private()->DispatchToMainThread(r.forget());
   if (NS_FAILED(rv)) {
-    outer->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
-    return outer.forget();
+    promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    return;
   }
-
-  return outer.forget();
 }
 
 RefPtr<GenericPromise>
