@@ -43,7 +43,7 @@ async function assertNotDecrypts(test, headers) {
   let publicKey = ChromeUtils.base64URLDecode(test.publicKey, REJECT_PADDING);
   let promise = PushCrypto.decrypt(test.privateKey, publicKey, authSecret,
                                    headers, data);
-  await rejects(promise, test.desc);
+  await rejects(promise, test.expected, test.desc);
 }
 
 add_task(async function test_crypto_getCryptoParamsFromHeaders() {
@@ -130,11 +130,13 @@ add_task(async function test_crypto_getCryptoParamsFromHeaders() {
       crypto_key: 'keyid=v2; dh=VA6wmY1IpiE',
       encryption: 'keyid=v2; salt=F0Im7RtGgNY',
     },
+    exception: /Missing Encryption-Key header/,
   }, {
     desc: 'Invalid encoding',
     headers: {
       encoding: 'nonexistent',
     },
+    exception: /Missing encryption header/,
   }, {
     desc: 'Invalid record size',
     headers: {
@@ -142,6 +144,7 @@ add_task(async function test_crypto_getCryptoParamsFromHeaders() {
       crypto_key: 'dh=pbmv1QkcEDY',
       encryption: 'dh=Esao8aTBfIk;rs=bad',
     },
+    exception: /Invalid salt parameter/,
   }, {
     desc: 'aesgcm with Encryption-Key',
     headers: {
@@ -149,9 +152,10 @@ add_task(async function test_crypto_getCryptoParamsFromHeaders() {
       encryption_key: 'dh=FplK5KkvUF0',
       encryption: 'salt=p6YHhFF3BQY',
     },
+    exception: /Missing Crypto-Key header/,
   }];
   for (let test of shouldThrow) {
-    throws(() => getCryptoParamsFromHeaders(test.headers), test.desc);
+    throws(() => getCryptoParamsFromHeaders(test.headers), test.exception, test.desc);
   }
 });
 
@@ -247,6 +251,7 @@ add_task(async function test_aes128gcm_err() {
     },
     publicKey: 'BNupkcohU0Pza90-hXyv3j0Yv1fxg1soM7rUFPCIQWIFGslqCyRJADfQfPUo5OGOEAoaZOt0R0hUS_HiINq6zyw',
     authSecret: 'NHG7mEgeAlM785VCvPPbpA',
+    expected: /Truncated header/,
   }, {
     // The sender key should be 65 bytes; this header contains an invalid key
     // that's only 1 byte.
@@ -262,6 +267,7 @@ add_task(async function test_aes128gcm_err() {
     },
     publicKey: 'BKMl2ZCExA3gznIqBCxEjZSjJpFyHKeePPdF54xpiGGUsCzqGSJBdnlanU27sgc68szW-m8KTHxJaFVr5QKjuoE',
     authSecret: 'XDHg2W2aE5iZrAlp01n3QA',
+    expected: /Invalid sender public key/,
   }, {
     // The message is encrypted with only the first 12 bytes of the 16-byte
     // auth secret, so the derived decryption key and nonce won't match.
@@ -277,6 +283,7 @@ add_task(async function test_aes128gcm_err() {
     },
     publicKey: 'BP3QQSioXAWJbX-B_hGL3LiHufPB_0GDrcTIJNEoYHMA6Yay37WmEOWvQ-QIoAcwWE-T49_d_ERzfV8I-y1viRY',
     authSecret: 'NVo4zW2b7xWZDi0zCNvWAA',
+    expected: /Bad encryption/,
   }, {
     // Multiple records; the first has padding delimiter = 2, but should be 1.
     desc: 'Early final record',
@@ -291,6 +298,7 @@ add_task(async function test_aes128gcm_err() {
     },
     publicKey: 'BMlcZSDa0R6Pahv4AxpAwqTuEEXBkDvgah36f4KczrLeAkga5r0EdhIbEsVTLQsjF4gHfvoGg6W_4NYjObJRyzU',
     authSecret: 'QMJB_eQmnuHm1yVZLZgnGA',
+    expected: /Padding is wrong!/,
   }];
   for (let test of expectedFailures) {
     await assertNotDecrypts(test, { encoding: 'aes128gcm' });
@@ -371,6 +379,7 @@ add_task(async function test_aesgcm_err() {
       encryption: 'salt=c6JQl9eJ0VvwrUVCQDxY7Q',
       encoding: 'aesgcm',
     },
+    expected: /Bad encryption/,
   }, {
     // The plaintext is "O hai". The ciphertext is exactly `rs + 16` bytes,
     // but we didn't include the empty trailing block that aesgcm requires for
@@ -392,6 +401,7 @@ add_task(async function test_aesgcm_err() {
       encryption: 'salt=xKWvs_jWWeg4KOsot_uBhA; rs=7',
       encoding: 'aesgcm',
     },
+    expected: /Encrypted data truncated/,
   }, {
     // The last block is only 1 byte, but valid blocks must be at least 2 bytes.
     desc: 'Pad size > last block length',
@@ -411,6 +421,7 @@ add_task(async function test_aesgcm_err() {
       encryption: 'salt=ot8hzbwOo6CYe6ZhdlwKtg; rs=6',
       encoding: 'aesgcm',
     },
+    expected: /Decoded array is too short/,
   }, {
     // The last block is 3 bytes (2 bytes for the pad length; 1 byte of data),
     // but claims its pad length is 2.
@@ -431,6 +442,7 @@ add_task(async function test_aesgcm_err() {
       encryption: 'salt=z7QJ6UR89SiFRkd4RsC4Vg; rs=6',
       encoding: 'aesgcm',
     },
+    expected: /Padding is wrong/,
   }, {
     // The first block has no padding, but claims its pad length is 1.
     desc: 'Non-zero padding',
@@ -450,6 +462,7 @@ add_task(async function test_aesgcm_err() {
       encryption: 'salt=SbkGHONbQBBsBcj9dLyIUw; rs=6',
       encoding: 'aesgcm',
     },
+    expected: /Padding is wrong/,
   }, {
     // The first record is 22 bytes: 2 bytes for the pad length, 4 bytes of
     // data, and a 16-byte auth tag. The second "record" is missing the pad
@@ -471,6 +484,7 @@ add_task(async function test_aesgcm_err() {
       encryption: 'salt=QClh48OlvGpSjZ0Mg0e8rg; rs=6',
       encoding: 'aesgcm',
     },
+    expected: /Decoded array is too short/,
   }];
   for (let test of expectedFailures) {
     await assertNotDecrypts(test, test.headers);
@@ -509,6 +523,7 @@ add_task(async function test_aesgcm128_err() {
       encryption: 'salt=aGBpoKklLtrLcAUCcCr7JQ',
       encoding: 'aesgcm128',
     },
+    expected: /Missing Encryption-Key header/,
   }, {
     // The first byte of each record must be the pad length.
     desc: 'Missing padding',
@@ -520,6 +535,7 @@ add_task(async function test_aesgcm128_err() {
       encryption: 'salt=Czx2i18rar8XWOXAVDnUuw',
       encoding: 'aesgcm128',
     },
+    expected: /Missing Encryption-Key header/,
   }, {
     desc: 'Truncated input',
     data: 'AlDjj6NvT5HGyrHbT8M5D6XBFSra6xrWS9B2ROaCIjwSu3RyZ1iyuv0',
@@ -530,6 +546,7 @@ add_task(async function test_aesgcm128_err() {
       encryption: 'salt=c6JQl9eJ0VvwrUVCQDxY7Q; rs=25',
       encoding: 'aesgcm128',
     },
+    expected: /Missing Encryption-Key header/,
   }, {
     desc: 'Padding length > rs',
     data: 'Ct_h1g7O55e6GvuhmpjLsGnv8Rmwvxgw8iDESNKGxk_8E99iHKDzdV8wJPyHA-6b2E6kzuVa5UWiQ7s4Zms1xzJ4FKgoxvBObXkc_r_d4mnb-j245z3AcvRmcYGk5_HZ0ci26SfhAN3lCgxGzTHS4nuHBRkGwOb4Tj4SFyBRlLoTh2jyVK2jYugNjH9tTrGOBg7lP5lajLTQlxOi91-RYZSfFhsLX3LrAkXuRoN7G1CdiI7Y3_eTgbPIPabDcLCnGzmFBTvoJSaQF17huMl_UnWoCj2WovA4BwK_TvWSbdgElNnQ4CbArJ1h9OqhDOphVu5GUGr94iitXRQR-fqKPMad0ULLjKQWZOnjuIdV1RYEZ873r62Yyd31HoveJcSDb1T8l_QK2zVF8V4k0xmK9hGuC0rF5YJPYPHgl5__usknzxMBnRrfV5_MOL5uPZwUEFsu',
@@ -540,6 +557,7 @@ add_task(async function test_aesgcm128_err() {
       encryption: 'salt=NQVTKhB0rpL7ZzKkotTGlA; rs=1',
       encoding: 'aesgcm128',
     },
+    expected: /Missing Encryption-Key header/,
   }];
   for (let test of expectedFailures) {
     await assertNotDecrypts(test, test.headers);

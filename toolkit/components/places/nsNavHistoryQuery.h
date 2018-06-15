@@ -139,7 +139,6 @@ private:
   //  * Add to the deserialization code (see nsNavHistory::QueryStringToQueries)
   //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQueryFolder function if applicable
   uint16_t mSort;
-  nsCString mSortingAnnotation;
   uint16_t mResultType;
   bool mExcludeItems;
   bool mExcludeQueries;

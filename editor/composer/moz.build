@@ -16,9 +16,6 @@ XPIDL_MODULE = 'composer'
 
 UNIFIED_SOURCES += [
     'ComposerCommandsUpdater.cpp',
-    'nsComposerCommands.cpp',
-    'nsComposerController.cpp',
-    'nsComposerDocumentCommands.cpp',
     'nsComposerRegistration.cpp',
     'nsEditingSession.cpp',
 ]

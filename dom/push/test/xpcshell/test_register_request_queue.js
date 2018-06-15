@@ -53,8 +53,8 @@ add_task(async function test_register_request_queue() {
   });
 
   await Promise.all([
-    rejects(firstRegister, 'Should time out the first request'),
-    rejects(secondRegister, 'Should time out the second request')
+    rejects(firstRegister, /Registration error/, 'Should time out the first request'),
+    rejects(secondRegister, /Registration error/, 'Should time out the second request')
   ]);
 
   await helloPromise;

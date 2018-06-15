@@ -37,6 +37,7 @@ add_task(async function test_startup_error() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Push service not active/,
     'Should not register if startup failed'
   );
 
@@ -66,6 +67,7 @@ add_task(async function test_startup_error() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Push service not active/,
     'Should not return registration if connection failed'
   );
 });

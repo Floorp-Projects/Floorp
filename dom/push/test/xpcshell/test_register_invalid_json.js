@@ -50,6 +50,7 @@ add_task(async function test_register_invalid_json() {
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
+    /Registration error/,
     'Expected error for invalid JSON response'
   );
 

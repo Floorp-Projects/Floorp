@@ -385,8 +385,9 @@ impl FontContext {
 
     #[cfg(not(feature = "pathfinder"))]
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
-        let (.., y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let size = (font.size.to_f64_px() * y_scale) as f32;
+        let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let scale = font.oversized_scale_factor(x_scale, y_scale);
+        let size = (font.size.to_f64_px() * y_scale / scale) as f32;
         let bitmaps = is_bitmap_font(font);
         let (mut shape, (x_offset, y_offset)) = if bitmaps {
             (FontTransform::identity(), (0.0, 0.0))
@@ -451,7 +452,7 @@ impl FontContext {
             top: -bounds.top as f32,
             width,
             height,
-            scale: if bitmaps { y_scale.recip() as f32 } else { 1.0 },
+            scale: (if bitmaps { scale / y_scale } else { scale }) as f32,
             format: if bitmaps { GlyphFormat::Bitmap } else { font.get_glyph_format() },
             bytes: bgra_pixels,
         })

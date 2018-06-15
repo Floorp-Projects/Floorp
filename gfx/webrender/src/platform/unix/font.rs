@@ -236,7 +236,7 @@ impl FontContext {
         }
     }
 
-    fn load_glyph(&self, font: &FontInstance, glyph: &GlyphKey) -> Option<FT_GlyphSlot> {
+    fn load_glyph(&self, font: &FontInstance, glyph: &GlyphKey) -> Option<(FT_GlyphSlot, f32)> {
         debug_assert!(self.faces.contains_key(&font.font_key));
         let face = self.faces.get(&font.font_key).unwrap();
 
@@ -283,13 +283,14 @@ impl FontContext {
         load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let scale = font.oversized_scale_factor(x_scale, y_scale);
         let req_size = font.size.to_f64_px();
         let face_flags = unsafe { (*face.face).face_flags };
         let mut result = if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
                             (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0 &&
                             (load_flags & FT_LOAD_NO_BITMAP) == 0 {
             unsafe { FT_Set_Transform(face.face, ptr::null_mut(), ptr::null_mut()) };
-            self.choose_bitmap_size(face.face, req_size * y_scale)
+            self.choose_bitmap_size(face.face, req_size * y_scale / scale)
         } else {
             let mut shape = font.transform.invert_scale(x_scale, y_scale);
             if font.flags.contains(FontInstanceFlags::FLIP_X) {
@@ -314,8 +315,8 @@ impl FontContext {
                 FT_Set_Transform(face.face, &mut ft_shape, ptr::null_mut());
                 FT_Set_Char_Size(
                     face.face,
-                    (req_size * x_scale * 64.0 + 0.5) as FT_F26Dot6,
-                    (req_size * y_scale * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * x_scale / scale * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * y_scale / scale * 64.0 + 0.5) as FT_F26Dot6,
                     0,
                     0,
                 )
@@ -336,8 +337,11 @@ impl FontContext {
 
             let format = unsafe { (*slot).format };
             match format {
-                FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE |
-                FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => Some(slot),
+                FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
+                    let y_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
+                    Some((slot, req_size as f32 / y_size as f32))
+                }
+                FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some((slot, scale as f32)),
                 _ => {
                     error!("Unsupported format");
                     debug!("format={:?}", format);
@@ -414,67 +418,71 @@ impl FontContext {
         slot: FT_GlyphSlot,
         font: &FontInstance,
         glyph: &GlyphKey,
-        transform_bitmaps: bool,
+        use_transform: Option<f32>,
     ) -> Option<GlyphDimensions> {
-        let metrics = unsafe { &(*slot).metrics };
-
-        let mut advance = metrics.horiAdvance as f32 / 64.0;
-        match unsafe { (*slot).format } {
+        let format = unsafe { (*slot).format };
+        let (mut left, mut top, mut width, mut height) = match format {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
-                let mut left = unsafe { (*slot).bitmap_left };
-                let mut top = unsafe { (*slot).bitmap_top };
-                let mut width = unsafe { (*slot).bitmap.width };
-                let mut height = unsafe { (*slot).bitmap.rows };
-                if transform_bitmaps {
-                    let y_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
-                    let scale = font.size.to_f32_px() / y_size as f32;
-                    let x0 = left as f32 * scale;
-                    let x1 = width as f32 * scale + x0;
-                    let y1 = top as f32 * scale;
-                    let y0 = y1 - height as f32 * scale;
-                    left = x0.round() as i32;
-                    top = y1.round() as i32;
-                    width = (x1.ceil() - x0.floor()) as u32;
-                    height = (y1.ceil() - y0.floor()) as u32;
-                    advance *= scale;
-                    if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-                        let (skew_min, skew_max) = get_skew_bounds(top - height as i32, top);
-                        left += skew_min as i32;
-                        width += (skew_max - skew_min) as u32;
-                    }
-                    if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
-                        mem::swap(&mut width, &mut height);
-                        mem::swap(&mut left, &mut top);
-                        left -= width as i32;
-                        top += height as i32;
-                    }
-                    if font.flags.contains(FontInstanceFlags::FLIP_X) {
-                        left = -(left + width as i32);
-                    }
-                    if font.flags.contains(FontInstanceFlags::FLIP_Y) {
-                        top = -(top - height as i32);
-                    }
-                }
-                Some(GlyphDimensions {
-                    left,
-                    top,
-                    width,
-                    height,
-                    advance,
-                })
+                unsafe { (
+                    (*slot).bitmap_left,
+                    (*slot).bitmap_top,
+                    (*slot).bitmap.width,
+                    (*slot).bitmap.rows,
+                ) }
             }
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
                 let cbox = self.get_bounding_box(slot, font, glyph);
-                Some(GlyphDimensions {
-                    left: (cbox.xMin >> 6) as i32,
-                    top: (cbox.yMax >> 6) as i32,
-                    width: ((cbox.xMax - cbox.xMin) >> 6) as u32,
-                    height: ((cbox.yMax - cbox.yMin) >> 6) as u32,
-                    advance,
-                })
+                (
+                    (cbox.xMin >> 6) as i32,
+                    (cbox.yMax >> 6) as i32,
+                    ((cbox.xMax - cbox.xMin) >> 6) as u32,
+                    ((cbox.yMax - cbox.yMin) >> 6) as u32,
+                )
             }
-            _ => None,
+            _ => return None,
+        };
+        let mut advance = unsafe { (*slot).metrics.horiAdvance as f32 / 64.0 };
+        if let Some(scale) = use_transform {
+            if scale != 1.0 {
+                let x0 = left as f32 * scale;
+                let x1 = width as f32 * scale + x0;
+                let y1 = top as f32 * scale;
+                let y0 = y1 - height as f32 * scale;
+                left = x0.round() as i32;
+                top = y1.round() as i32;
+                width = (x1.ceil() - x0.floor()) as u32;
+                height = (y1.ceil() - y0.floor()) as u32;
+                advance *= scale;
+            }
+            // An outline glyph's cbox would have already been transformed inside FT_Load_Glyph,
+            // so only handle bitmap glyphs which are not handled by FT_Load_Glyph.
+            if format == FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP {
+                if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+                    let (skew_min, skew_max) = get_skew_bounds(top - height as i32, top);
+                    left += skew_min as i32;
+                    width += (skew_max - skew_min) as u32;
+                }
+                if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                    mem::swap(&mut width, &mut height);
+                    mem::swap(&mut left, &mut top);
+                    left -= width as i32;
+                    top += height as i32;
+                }
+                if font.flags.contains(FontInstanceFlags::FLIP_X) {
+                    left = -(left + width as i32);
+                }
+                if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+                    top = -(top - height as i32);
+                }
+            }
         }
+        Some(GlyphDimensions {
+            left,
+            top,
+            width,
+            height,
+            advance,
+        })
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
@@ -495,7 +503,7 @@ impl FontContext {
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
         let slot = self.load_glyph(font, key);
-        slot.and_then(|slot| self.get_glyph_dimensions_impl(slot, font, key, true))
+        slot.and_then(|(slot, scale)| self.get_glyph_dimensions_impl(slot, font, key, Some(scale)))
     }
 
     fn choose_bitmap_size(&self, face: FT_Face, requested_size: f64) -> FT_Error {
@@ -592,13 +600,15 @@ impl FontContext {
 
     #[cfg(not(feature = "pathfinder"))]
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
-        let slot = match self.load_glyph(font, key) {
-            Some(slot) => slot,
+        let (slot, scale) = match self.load_glyph(font, key) {
+            Some(val) => val,
             None => return GlyphRasterResult::LoadFailed,
         };
 
         // Get dimensions of the glyph, to see if we need to rasterize it.
-        let dimensions = match self.get_glyph_dimensions_impl(slot, font, key, false) {
+        // Don't apply scaling to the dimensions, as the glyph cache needs to know the actual
+        // footprint of the glyph.
+        let dimensions = match self.get_glyph_dimensions_impl(slot, font, key, None) {
             Some(val) => val,
             None => return GlyphRasterResult::LoadFailed,
         };
@@ -610,12 +620,8 @@ impl FontContext {
         }
 
         let format = unsafe { (*slot).format };
-        let mut scale = 1.0;
         match format {
-            FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
-                let y_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
-                scale = font.size.to_f32_px() / y_size as f32;
-            }
+            FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {}
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
                 if !self.rasterize_glyph_outline(slot, font, key) {
                     return GlyphRasterResult::LoadFailed;
