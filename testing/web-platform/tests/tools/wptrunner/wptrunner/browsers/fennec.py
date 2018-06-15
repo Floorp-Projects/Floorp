@@ -1,31 +1,19 @@
-import json
 import os
-import platform
 import signal
-import subprocess
 import sys
 import tempfile
 import traceback
 
-import mozinfo
 import moznetwork
-import mozleak
 from mozprocess import ProcessHandler
-from mozprofile import FirefoxProfile, Preferences
+from mozprofile import FirefoxProfile
 from mozrunner import FennecEmulatorRunner
-from mozrunner.utils import get_stack_fixer_function
-from mozcrash import mozcrash
 
 from serve.serve import make_hosts_file
 
 from .base import (get_free_port,
-                   Browser,
-                   ExecutorBrowser,
-                   require_arg,
                    cmd_arg,
                    browser_command)
-from ..executors import executor_kwargs as base_executor_kwargs
-from ..executors.executormarionette import MarionetteTestharnessExecutor
 from .firefox import (get_timeout_multiplier,
                       update_properties,
                       executor_kwargs,
