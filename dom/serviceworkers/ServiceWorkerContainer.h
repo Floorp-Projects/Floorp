@@ -26,21 +26,35 @@ public:
   class Inner
   {
   public:
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    virtual void
+    AddContainer(ServiceWorkerContainer* aOuter) = 0;
+
+    virtual void
+    RemoveContainer(ServiceWorkerContainer* aOuter) = 0;
+
+    virtual void
     Register(const ClientInfo& aClientInfo,
              const nsACString& aScopeURL,
              const nsACString& aScriptURL,
-             ServiceWorkerUpdateViaCache aUpdateViaCache) const = 0;
+             ServiceWorkerUpdateViaCache aUpdateViaCache,
+             ServiceWorkerRegistrationCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    virtual void
     GetRegistration(const ClientInfo& aClientInfo,
-                    const nsACString& aURL) const = 0;
+                    const nsACString& aURL,
+                    ServiceWorkerRegistrationCallback&& aSuccessCB,
+                    ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationListPromise>
-    GetRegistrations(const ClientInfo& aClientInfo) const = 0;
+    virtual void
+    GetRegistrations(const ClientInfo& aClientInfo,
+                     ServiceWorkerRegistrationListCallback&& aSuccessCB,
+                     ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
-    GetReady(const ClientInfo& aClientInfo) const = 0;
+    virtual void
+    GetReady(const ClientInfo& aClientInfo,
+             ServiceWorkerRegistrationCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };

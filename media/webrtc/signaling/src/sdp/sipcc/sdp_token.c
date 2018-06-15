@@ -1162,15 +1162,11 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, uint16_t level, const char *ptr)
     }
     port_ptr = port;
     for (i=0; i < SDP_MAX_PORT_PARAMS; i++) {
-        if (sdp_getchoosetok(port_ptr, &port_ptr, "/ \t", &result) == TRUE) {
-            num[i] = SDP_CHOOSE_PARAM;
-        } else {
-            num[i] = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
-                                       "/ \t", &result);
-            if (result != SDP_SUCCESS) {
-                break;
-            }
-        }
+          num[i] = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
+                                     "/ \t", &result);
+          if (result != SDP_SUCCESS) {
+              break;
+          }
         num_port_params++;
     }
 
@@ -1401,8 +1397,6 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, uint16_t level, const char *ptr)
                 return (SDP_INVALID_PARAMETER);
             }
             mca_p->sctp_fmt = SDP_SCTP_MEDIA_FMT_WEBRTC_DATACHANNEL;
-        } else if (sdp_getchoosetok(port_ptr, &port_ptr, "/ \t", &result)) {
-            sctp_port = SDP_CHOOSE_PARAM;
         } else {
             sctp_port = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
                                            "/ \t", &result);

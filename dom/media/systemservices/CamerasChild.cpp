@@ -728,7 +728,11 @@ CamerasChild::CamerasChild()
     mIPCIsAlive(true),
     mRequestMutex("mozilla::cameras::CamerasChild::mRequestMutex"),
     mReplyMonitor("mozilla::cameras::CamerasChild::mReplyMonitor"),
-    mZero(0)
+    mReceivedReply(false),
+    mReplySuccess(false),
+    mZero(0),
+    mReplyInteger(0),
+    mReplyScary(false)
 {
   LOG(("CamerasChild: %p", this));
 

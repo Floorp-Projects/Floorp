@@ -111,6 +111,8 @@ static StatementClassInfo sStatementClassInfo;
 Statement::Statement()
 : StorageBaseStatementInternal()
 , mDBStatement(nullptr)
+, mParamCount(0)
+, mResultColumnCount(0)
 , mColumnNames()
 , mExecuting(false)
 {
