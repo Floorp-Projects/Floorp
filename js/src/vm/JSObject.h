@@ -536,7 +536,7 @@ class JSObject : public js::gc::Cell
         return *static_cast<const T*>(this);
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dump(js::GenericPrinter& fp) const;
     void dump() const;
 #endif
