@@ -77,7 +77,10 @@ static int gFrameTreeLockCount = 0;
 struct InlineBackgroundData
 {
   InlineBackgroundData()
-      : mFrame(nullptr), mLineContainer(nullptr)
+      : mFrame(nullptr), mLineContainer(nullptr),
+        mContinuationPoint(0), mUnbrokenMeasure(0), 
+        mLineContinuationPoint(0), mPIStartBorderData{},
+        mBidiEnabled(false), mVertical(false)
   {
   }
 
