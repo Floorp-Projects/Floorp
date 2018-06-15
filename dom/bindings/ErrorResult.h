@@ -566,7 +566,7 @@ private:
   // reference, not by value.
   TErrorResult(const TErrorResult&) = delete;
   void operator=(const TErrorResult&) = delete;
-};
+} JS_HAZ_ROOTED;
 
 struct JustAssertCleanupPolicy {
   static const bool assertHandled = true;
@@ -838,7 +838,7 @@ private:
   // to SuppressException (one from us, one from the ErrorResult destructor
   // after asserting).
   binding_danger::TErrorResult<binding_danger::JustSuppressCleanupPolicy> mInner;
-};
+} JS_HAZ_ROOTED;
 
 /******************************************************************************
  ** Macros for checking results

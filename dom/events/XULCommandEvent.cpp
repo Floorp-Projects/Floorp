@@ -16,6 +16,7 @@ XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
   : UIEvent(aOwner, aPresContext,
             aEvent ? aEvent :
                      new WidgetInputEvent(false, eVoidEvent, nullptr))
+  , mInputSource(0)
 {
   if (aEvent) {
     mEventIsInternal = false;
