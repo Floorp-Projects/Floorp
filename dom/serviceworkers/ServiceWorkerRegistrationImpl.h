@@ -46,8 +46,9 @@ public:
   Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
          ServiceWorkerFailureCallback&& aFailureCB) override;
 
-  RefPtr<GenericPromise>
-  Unregister() override;
+  void
+  Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) override;
 
   // ServiceWorkerRegistrationListener
   void
@@ -114,8 +115,9 @@ public:
   Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
          ServiceWorkerFailureCallback&& aFailureCB) override;
 
-  RefPtr<GenericPromise>
-  Unregister() override;
+  void
+  Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) override;
 
   void
   UpdateFound();

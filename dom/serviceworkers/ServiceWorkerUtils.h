@@ -31,6 +31,9 @@ typedef std::function<void (const ServiceWorkerRegistrationDescriptor&)>
 typedef std::function<void (const nsTArray<ServiceWorkerRegistrationDescriptor>&)>
         ServiceWorkerRegistrationListCallback;
 
+typedef std::function<void (bool)>
+        ServiceWorkerBoolCallback;
+
 typedef std::function<void (ErrorResult&)>
         ServiceWorkerFailureCallback;
 
