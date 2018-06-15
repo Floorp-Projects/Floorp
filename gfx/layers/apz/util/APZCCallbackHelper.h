@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/APZUtils.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsRefreshDriver.h"
 
 #include <functional>
 
@@ -27,6 +28,25 @@ namespace layers {
 
 typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
         SetAllowedTouchBehaviorCallback;
+
+/* Refer to documentation on SendSetTargetAPZCNotification for this class */
+class DisplayportSetListener : public nsAPostRefreshObserver
+{
+public:
+  DisplayportSetListener(nsIWidget* aWidget,
+                         nsIPresShell* aPresShell,
+                         const uint64_t& aInputBlockId,
+                         const nsTArray<ScrollableLayerGuid>& aTargets);
+  virtual ~DisplayportSetListener();
+  bool Register();
+  void DidRefresh() override;
+
+private:
+  RefPtr<nsIWidget> mWidget;
+  RefPtr<nsIPresShell> mPresShell;
+  uint64_t mInputBlockId;
+  nsTArray<ScrollableLayerGuid> mTargets;
+};
 
 /* This class contains some helper methods that facilitate implementing the
    GeckoContentController callback interface required by the AsyncPanZoomController.
@@ -136,20 +156,24 @@ public:
      * which scrollable frames they target. If any of these frames don't have
      * a displayport, set one.
      *
-     * If any displayports need to be set, the actual notification to APZ is
-     * sent to the compositor, which will then post a message back to APZ's
-     * controller thread. Otherwise, the provided widget's SetConfirmedTargetAPZC
-     * method is invoked immediately.
+     * If any displayports need to be set, this function returns a heap-allocated
+     * object. The caller is responsible for calling Register() on that object,
+     * and release()'ing the UniquePtr if that Register() call returns true.
+     * The object registers itself as a post-refresh observer on the presShell
+     * and ensures that notifications get sent to APZ correctly after the
+     * refresh.
      *
-     * Returns true if any displayports need to be set. (A caller may be
-     * interested to know this, because they may need to delay certain actions
-     * until after the displayport comes into effect.)
+     * Having the caller manage this object is desirable in case they want to
+     * (a) know about the fact that a displayport needs to be set, and
+     * (b) register a post-refresh observer of their own that will run in
+     *     a defined ordering relative to the APZ messages.
      */
-    static bool SendSetTargetAPZCNotification(nsIWidget* aWidget,
-                                              nsIDocument* aDocument,
-                                              const WidgetGUIEvent& aEvent,
-                                              const ScrollableLayerGuid& aGuid,
-                                              uint64_t aInputBlockId);
+    static UniquePtr<DisplayportSetListener> SendSetTargetAPZCNotification(
+            nsIWidget* aWidget,
+            nsIDocument* aDocument,
+            const WidgetGUIEvent& aEvent,
+            const ScrollableLayerGuid& aGuid,
+            uint64_t aInputBlockId);
 
     /* Figure out the allowed touch behaviors of each touch point in |aEvent|
      * and send that information to the provided callback. */
