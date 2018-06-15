@@ -15,26 +15,42 @@ namespace dom {
 // Lightweight serviceWorker APIs collection.
 class ServiceWorkerContainerImpl final : public ServiceWorkerContainer::Inner
 {
-  ~ServiceWorkerContainerImpl() = default;
+  ServiceWorkerContainer* mOuter;
+
+  ~ServiceWorkerContainerImpl();
 
 public:
-  ServiceWorkerContainerImpl() = default;
+  ServiceWorkerContainerImpl();
 
-  RefPtr<ServiceWorkerRegistrationPromise>
+  void
+  AddContainer(ServiceWorkerContainer* aOuter) override;
+
+  void
+  RemoveContainer(ServiceWorkerContainer* aOuter) override;
+
+  void
   Register(const ClientInfo& aClientInfo,
            const nsACString& aScopeURL,
            const nsACString& aScriptURL,
-           ServiceWorkerUpdateViaCache aUpdateViaCache) const override;
+           ServiceWorkerUpdateViaCache aUpdateViaCache,
+           ServiceWorkerRegistrationCallback&& aSuccessCB,
+           ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
+  void
   GetRegistration(const ClientInfo& aClientInfo,
-                  const nsACString& aURL) const override;
+                  const nsACString& aURL,
+                  ServiceWorkerRegistrationCallback&& aSuccessCB,
+                  ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  RefPtr<ServiceWorkerRegistrationListPromise>
-  GetRegistrations(const ClientInfo& aClientInfo) const override;
+  void
+  GetRegistrations(const ClientInfo& aClientInfo,
+                   ServiceWorkerRegistrationListCallback&& aSuccessCB,
+                   ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  GetReady(const ClientInfo& aClientInfo) const override;
+  void
+  GetReady(const ClientInfo& aClientInfo,
+           ServiceWorkerRegistrationCallback&& aSuccessCB,
+           ServiceWorkerFailureCallback&& aFailureCB) const override;
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerContainerImpl, override)
 };

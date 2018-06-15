@@ -19,10 +19,14 @@
 #include "mozilla/ipc/Faulty.h"
 #include "mozilla/TypeTraits.h"
 #include "nsNetCID.h"
+#include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
+#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 #include "nsLocalFile.h"
+#include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
@@ -758,10 +762,23 @@ Faulty::IsMessageNameBlacklisted(const char *aMessageName) {
   static nsTArray<nsCString> sMessageBlacklist;
 
   if (!sFileLoaded && mBlacklistPath) {
-    if (ReadFile(mBlacklistPath, sMessageBlacklist) != NS_OK) {
-      return false;
-    }
-    sFileLoaded = true;
+    /* Run ReadFile() on the main thread to prevent
+       MOZ_ASSERT(NS_IsMainThread()) in nsStandardURL via nsNetStartup(). */
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "Fuzzer::ReadBlacklistOnMainThread",
+      [&]() {
+        if (Faulty::ReadFile(mBlacklistPath, sMessageBlacklist) != NS_OK) {
+          sFileLoaded = false;
+        } else {
+          sFileLoaded = true;
+        }
+      }
+    );
+    NS_DispatchToMainThread(r.forget(), NS_DISPATCH_SYNC);
+  }
+
+  if (!sFileLoaded) {
+    return false;
   }
 
   if (sMessageBlacklist.Length() == 0) {

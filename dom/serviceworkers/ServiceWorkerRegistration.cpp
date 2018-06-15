@@ -213,13 +213,9 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
   }
 
   RefPtr<ServiceWorkerRegistration> self = this;
-  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
-    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
 
-  mInner->Update()->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [outer, self, holder](const ServiceWorkerRegistrationDescriptor& aDesc) {
-      holder->Complete();
+  mInner->Update(
+    [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
       nsIGlobalObject* global = self->GetParentObject();
       MOZ_DIAGNOSTIC_ASSERT(global);
       RefPtr<ServiceWorkerRegistration> ref =
@@ -229,10 +225,9 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
         return;
       }
       outer->MaybeResolve(ref);
-    }, [outer, holder] (const CopyableErrorResult& aRv) {
-      holder->Complete();
-      outer->MaybeReject(CopyableErrorResult(aRv));
-    })->Track(*holder);
+    }, [outer] (ErrorResult& aRv) {
+      outer->MaybeReject(aRv);
+    });
 
   return outer.forget();
 }
@@ -256,18 +251,12 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<DOMMozPromiseRequestHolder<GenericPromise>> holder =
-    new DOMMozPromiseRequestHolder<GenericPromise>(global);
-
-  mInner->Unregister()->Then(
-    global->EventTargetFor(TaskCategory::Other), __func__,
-    [outer, holder] (bool aSuccess) {
-      holder->Complete();
+  mInner->Unregister(
+    [outer] (bool aSuccess) {
       outer->MaybeResolve(aSuccess);
-    }, [outer, holder] (nsresult aRv) {
-      holder->Complete();
+    }, [outer] (ErrorResult& aRv) {
       outer->MaybeReject(aRv);
-    })->Track(*holder);
+    });
 
   return outer.forget();
 }

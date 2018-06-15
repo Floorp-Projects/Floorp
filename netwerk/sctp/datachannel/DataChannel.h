@@ -67,7 +67,12 @@ public:
   const uint8_t *GetData() { return (const uint8_t *)(mData + mPos); };
 
 protected:
-  OutgoingMsg() = default;; // Use this for inheritance only
+  OutgoingMsg() // Use this for inheritance only
+    : mLength(0)
+    , mData(nullptr)
+    , mInfo(nullptr)
+    , mPos(0)
+  {};
   size_t mLength;
   const uint8_t *mData;
   struct sctp_sendv_spa *mInfo;
@@ -382,6 +387,7 @@ public:
     , mPrPolicy(policy)
     , mPrValue(value)
     , mFlags(flags)
+    , mId(0)
     , mIsRecvBinary(false)
     , mBufferedThreshold(0) // default from spec
     , mMainThreadEventTarget(connection->GetNeckoTarget())

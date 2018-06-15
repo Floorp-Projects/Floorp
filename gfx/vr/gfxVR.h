@@ -106,7 +106,8 @@ struct VRDisplayInfo
 struct VRSubmitFrameResultInfo
 {
   VRSubmitFrameResultInfo()
-   : mFrameNum(0),
+   : mFormat(SurfaceFormat::UNKNOWN),
+     mFrameNum(0),
      mWidth(0),
      mHeight(0)
   {}

@@ -240,6 +240,7 @@ VideoEngine::GenerateId() {
 }
 
 VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig):
+  mId(0),
   mCaptureDevInfo(aConfig->Get<webrtc::CaptureDeviceInfo>()),
   mDeviceInfo(nullptr),
   mConfig(std::move(aConfig))
