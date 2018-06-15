@@ -8,6 +8,9 @@ package org.mozilla.geckoview.test.rule;
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.GeckoResponse;
+import org.mozilla.geckoview.GeckoResult;
+import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
+import org.mozilla.geckoview.GeckoResult.OnValueListener;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
@@ -2279,5 +2282,56 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                                                       @NonNull final T impl) {
         addExternalDelegateDuringNextWait(JvmClassMappingKt.getJavaClass(delegate),
                                           register, unregister, impl);
+    }
+
+    /**
+     * This waits for the given result and returns it's value. If
+     * the result failed with an exception, it is rethrown.
+     *
+     * @param result A {@link GeckoResult} instance.
+     * @param <T> The type of the value held by the {@link GeckoResult}
+     * @return The value of the completed {@link GeckoResult}.
+     */
+    public <T> T waitForResult(@NonNull GeckoResult<T> result) {
+        final ResultHolder<T> holder = new ResultHolder<>(result);
+
+        try {
+            beforeWait();
+            while (!holder.isComplete) {
+                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
+            }
+        } finally {
+            afterWait(mCallRecords.size());
+        }
+
+        if (holder.error != null) {
+            throw unwrapRuntimeException(holder.error);
+        }
+
+        return holder.value;
+    }
+
+    private static class ResultHolder<T> {
+        public T value;
+        public Throwable error;
+        public boolean isComplete;
+
+        public ResultHolder(GeckoResult<T> result) {
+            result.then(new OnValueListener<T, Void>() {
+                @Override
+                public GeckoResult<Void> onValue(T value) {
+                    ResultHolder.this.value = value;
+                    isComplete = true;
+                    return null;
+                }
+            }, new OnExceptionListener<Void>() {
+                @Override
+                public GeckoResult<Void> onException(Throwable error) {
+                    ResultHolder.this.error = error;
+                    isComplete = true;
+                    return null;
+                }
+            });
+        }
     }
 }
