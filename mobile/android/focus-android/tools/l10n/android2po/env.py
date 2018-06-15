@@ -149,13 +149,13 @@ MISSING_LOCALES = {
     'ay': {
         'name': 'Aymara',
         'local_name': 'Aimara',
-        'plural_rule': 'gn',
+        'plural_rule': 'de',
         'team': 'anp <LL@li.org>\n'
     },
     'quc': {
         'name': 'K\'iche\'',
         'local_name': 'K\'iche\'',
-        'plural_rule': 'gn',
+        'plural_rule': 'de',
         'team': 'anp <LL@li.org>\n'
     }
 }
