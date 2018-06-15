@@ -42,8 +42,10 @@ public:
                   ServiceWorkerRegistrationCallback&& aSuccessCB,
                   ServiceWorkerFailureCallback&& aFailureCB) const override;
 
-  RefPtr<ServiceWorkerRegistrationListPromise>
-  GetRegistrations(const ClientInfo& aClientInfo) const override;
+  void
+  GetRegistrations(const ClientInfo& aClientInfo,
+                   ServiceWorkerRegistrationListCallback&& aSuccessCB,
+                   ServiceWorkerFailureCallback&& aFailureCB) const override;
 
   void
   GetReady(const ClientInfo& aClientInfo,

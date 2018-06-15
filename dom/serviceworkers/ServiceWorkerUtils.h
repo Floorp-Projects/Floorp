@@ -28,6 +28,9 @@ typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, CopyableErrorR
 typedef std::function<void (const ServiceWorkerRegistrationDescriptor&)>
         ServiceWorkerRegistrationCallback;
 
+typedef std::function<void (const nsTArray<ServiceWorkerRegistrationDescriptor>&)>
+        ServiceWorkerRegistrationListCallback;
+
 typedef std::function<void (ErrorResult&)>
         ServiceWorkerFailureCallback;
 
