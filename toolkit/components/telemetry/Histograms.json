@@ -7419,6 +7419,18 @@
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_EXPIRED_KEYED": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "4",
+    "kind": "linear",
+    "keyed": true,
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1468809],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "TELEMETRY_TEST_CONTENT_PROCESS": {
     "record_in_processes": ["content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],

@@ -455,6 +455,23 @@ add_task(async function test_expired_histogram() {
   Assert.equal(parentHgrams[test_expired_id], undefined);
 });
 
+add_task(async function test_keyed_expired_histogram() {
+  var test_expired_id = "TELEMETRY_TEST_EXPIRED_KEYED";
+  var dummy = Telemetry.getKeyedHistogramById(test_expired_id);
+  dummy.add("someKey", 1);
+
+  const histograms = Telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                       false /* clear */);
+  for (let process of ["parent", "content", "gpu", "extension"]) {
+    if (!(process in histograms)) {
+      info("Nothing present for process " + process);
+      continue;
+    }
+    Assert.ok(!(test_expired_id in histograms[process]),
+              "The expired keyed histogram must not be reported");
+  }
+});
+
 add_task(async function test_keyed_histogram() {
   // Check that invalid names get rejected.
 
