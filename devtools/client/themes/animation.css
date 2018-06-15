@@ -356,29 +356,12 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   z-index: 2;
 }
 
-.keyframes-progress-bar {
-  height: 100%;
-  position: absolute;
+.indication-bar.keyframes-progress-bar::before {
+  border-top-color: var(--progress-bar-color);
 }
 
-.keyframes-progress-bar::before {
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid var(--progress-bar-color);
-  content: "";
-  left: -5px;
-  position: absolute;
-  top: 0;
-  width: 0;
-}
-
-.keyframes-progress-bar::after {
-  border-left: 1px solid var(--progress-bar-color);
-  content: "";
-  height: 100%;
-  position: absolute;
-  top: 0;
-  width: 0;
+.indication-bar.keyframes-progress-bar::after {
+  border-left-color: var(--progress-bar-color);
 }
 
 /* Animated Property Item */
