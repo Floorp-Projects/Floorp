@@ -703,13 +703,15 @@ InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const RefPtr<AsyncPan
 }
 
 void
-InputQueue::ConfirmDragBlock(uint64_t aInputBlockId, const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                   const AsyncDragMetrics& aDragMetrics)
+InputQueue::ConfirmDragBlock(uint64_t aInputBlockId,
+                             const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                             const AsyncDragMetrics& aDragMetrics)
 {
   APZThreadUtils::AssertOnControllerThread();
 
-  INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s\n",
-    aInputBlockId, aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "");
+  INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s dragtarget=%" PRIu64 "\n",
+    aInputBlockId, aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "",
+    aDragMetrics.mViewId);
   bool success = false;
   InputData* firstInput = nullptr;
   InputBlockState* inputBlock = FindBlockForId(aInputBlockId, &firstInput);
