@@ -74,6 +74,8 @@ nsAsyncStreamCopier::nsAsyncStreamCopier()
     , mChunkSize(nsIOService::gDefaultSegmentSize)
     , mStatus(NS_OK)
     , mIsPending(false)
+    , mCloseSource{ false }
+    , mCloseSink{ false }
     , mShouldSniffBuffering(false)
 {
     LOG(("Creating nsAsyncStreamCopier @%p\n", this));

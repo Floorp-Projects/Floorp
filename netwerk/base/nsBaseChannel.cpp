@@ -59,6 +59,7 @@ nsBaseChannel::nsBaseChannel()
   , mAllowThreadRetargeting(true)
   , mWaitingOnAsyncRedirect(false)
   , mOpenRedirectChannel(false)
+  , mRedirectFlags{ 0 }
   , mStatus(NS_OK)
   , mContentDispositionHint(UINT32_MAX)
   , mContentLength(-1)

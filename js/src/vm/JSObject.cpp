@@ -2199,7 +2199,7 @@ js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
 static bool
 IsStandardPrototype(JSObject* obj, JSProtoKey key)
 {
-    Value v = obj->global().getPrototype(key);
+    Value v = obj->nonCCWGlobal().getPrototype(key);
     return v.isObject() && obj == &v.toObject();
 }
 
@@ -2241,7 +2241,7 @@ JS::IdentifyStandardConstructor(JSObject* obj)
     if (!obj->is<JSFunction>() || !(obj->as<JSFunction>().flags() & JSFunction::NATIVE_CTOR))
         return JSProto_Null;
 
-    GlobalObject& global = obj->global();
+    GlobalObject& global = obj->as<JSFunction>().global();
     for (size_t k = 0; k < JSProto_LIMIT; ++k) {
         JSProtoKey key = static_cast<JSProtoKey>(k);
         if (global.getConstructor(key) == ObjectValue(*obj))
@@ -3559,9 +3559,14 @@ void
 JSObject::dump(js::GenericPrinter& out) const
 {
     const JSObject* obj = this;
-    JSObject* globalObj = &global();
     out.printf("object %p\n", obj);
-    out.printf("  global %p [%s]\n", globalObj, globalObj->getClass()->name);
+
+    if (IsCrossCompartmentWrapper(this)) {
+        out.printf("  compartment %p\n", compartment());
+    } else {
+        JSObject* globalObj = &nonCCWGlobal();
+        out.printf("  global %p [%s]\n", globalObj, globalObj->getClass()->name);
+    }
 
     const Class* clasp = obj->getClass();
     out.printf("  class %p %s\n", clasp, clasp->name);

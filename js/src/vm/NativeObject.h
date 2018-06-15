@@ -1472,6 +1472,10 @@ class NativeObject : public ShapedObject
     void sweepDictionaryListPointer();
     void updateDictionaryListPointerAfterMinorGC(NativeObject* old);
 
+    // Native objects are never wrappers, so a native object always has a realm
+    // and global.
+    inline js::GlobalObject& global() const;
+
     /* JIT Accessors */
     static size_t offsetOfElements() { return offsetof(NativeObject, elements_); }
     static size_t offsetOfFixedElements() {

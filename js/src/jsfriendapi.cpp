@@ -385,7 +385,7 @@ js::IsFunctionObject(JSObject* obj)
 JS_FRIEND_API(JSObject*)
 js::GetGlobalForObjectCrossCompartment(JSObject* obj)
 {
-    return &obj->global();
+    return &obj->deprecatedGlobal();
 }
 
 JS_FRIEND_API(JSObject*)
@@ -533,11 +533,9 @@ js::GetStaticPrototype(JSObject* obj)
 }
 
 JS_FRIEND_API(bool)
-js::GetOriginalEval(JSContext* cx, HandleObject scope, MutableHandleObject eval)
+js::GetRealmOriginalEval(JSContext* cx, MutableHandleObject eval)
 {
-    assertSameCompartment(cx, scope);
-    Rooted<GlobalObject*> global(cx, &scope->global());
-    return GlobalObject::getOrCreateEval(cx, global, eval);
+    return GlobalObject::getOrCreateEval(cx, cx->global(), eval);
 }
 
 JS_FRIEND_API(void)
@@ -1505,7 +1503,7 @@ JS_FRIEND_API(JSObject*)
 js::ToWindowIfWindowProxy(JSObject* obj)
 {
     if (IsWindowProxy(obj))
-        return &obj->global();
+        return &obj->nonCCWGlobal();
     return obj;
 }
 

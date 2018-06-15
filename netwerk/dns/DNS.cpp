@@ -284,6 +284,8 @@ NetAddr::operator < (const NetAddr& other) const
 
 NetAddrElement::NetAddrElement(const PRNetAddr *prNetAddr)
 {
+  this->mAddress.raw.family = 0;
+  this->mAddress.inet = {};
   PRNetAddrToNetAddr(prNetAddr, &mAddress);
 }
 

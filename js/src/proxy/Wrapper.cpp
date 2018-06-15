@@ -330,7 +330,7 @@ Wrapper::Renew(JSObject* existing, JSObject* obj, const Wrapper* handler)
 }
 
 const Wrapper*
-Wrapper::wrapperHandler(JSObject* wrapper)
+Wrapper::wrapperHandler(const JSObject* wrapper)
 {
     MOZ_ASSERT(wrapper->is<WrapperObject>());
     return static_cast<const Wrapper*>(wrapper->as<ProxyObject>().handler());
