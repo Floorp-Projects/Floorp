@@ -355,65 +355,22 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 /* Animated Property List Container */
 .animated-property-list-container {
-  display: flex;
   flex: 1;
-  flex-direction: column;
-  overflow-y: auto;
-  position: relative;
-}
-
-/* Animated Property List Header */
-.animated-property-list-header {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) calc(100% - var(--sidebar-width) - var(--graph-right-offset)) var(--graph-right-offset);
-  line-height: var(--devtools-toolbar-height);
-  min-height: 100%;
-  padding: 0;
-  pointer-events: none;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.animated-property-list-header .devtools-toolbar {
-  position: absolute;
-  width: 100%;
-}
-
-/* Keyframes Progress Tick List */
-.keyframes-progress-tick-list {
-  grid-column: 2 / 3;
-  height: 100%;
-  position: absolute;
-  width: 100%;
-}
-
-.keyframes-progress-tick-item {
-  position: absolute;
-}
-
-.keyframes-progress-tick-item.left {
-  border-left: var(--tick-line-style);
-}
-
-.keyframes-progress-tick-item.right {
-  border-right: var(--tick-line-style);
+  overflow: hidden;
+  -moz-user-select: none;
 }
 
 /* Keyframes Progress Bar */
 .keyframes-progress-bar-area {
   background: none;
   grid-column: 2 / 3;
-  padding: 0;
-  height: 100%;
-  position: absolute;
-  width: 100%;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .keyframes-progress-bar {
   height: 100%;
   position: absolute;
-  z-index: 1;
 }
 
 .keyframes-progress-bar::before {
@@ -436,41 +393,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   width: 0;
 }
 
-/* Animated Property List */
-.animated-property-list-background {
-  border-left: var(--tick-line-style);
-  border-right: var(--tick-line-style);
-  bottom: 0;
-  left: var(--sidebar-width);
-  min-height: 100%;
-  position: sticky;
-  top: 0;
-  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
-}
-
-.animated-property-list-background span {
-  border-left: var(--tick-line-style);
-  height: 100%;
-  left: 50%;
-  position: absolute;
-}
-
-.animated-property-list {
-  flex: 1;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: var(--devtools-toolbar-height);
-  width: 100%;
-}
-
 /* Animated Property Item */
-.animated-property-item {
-  display: flex;
-  height: var(--graph-height);
-}
-
 .animated-property-item:nth-child(2n+1) {
   background-color: var(--animation-even-background-color);
 }
@@ -483,10 +406,9 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .animated-property-name {
   align-items: center;
   display: flex;
-  height: 100%;
+  height: var(--graph-height);
   justify-content: flex-end;
   padding-right: 10px;
-  width: var(--sidebar-width);
 }
 
 .animated-property-name.compositor span {
@@ -525,10 +447,10 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 /* Keyframes Graph */
 .keyframes-graph {
-  padding-top: 3px;
-  height: 100%;
+  grid-column: 2 / 3;
+  height: var(--graph-height);
+  padding-top: 5px;
   position: relative;
-  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 .keyframes-graph-path {
@@ -670,6 +592,12 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   border-left: var(--tick-line-style);
   height: 100%;
   position: absolute;
+}
+
+.animated-property-list-container .tick-label:last-child {
+  border-left: none;
+  border-right: var(--tick-line-style);
+  transform: translateX(calc(-100% + 0.5px));
 }
 
 /* No Animation Panel */
