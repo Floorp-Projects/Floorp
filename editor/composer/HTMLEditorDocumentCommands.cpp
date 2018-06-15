@@ -5,10 +5,10 @@
 
 
 #include "mozilla/HTMLEditor.h"         // for HTMLEditor
+#include "mozilla/HTMLEditorCommands.h" // for SetDocumentOptionsCommand, etc
 #include "mozilla/TextEditor.h"         // for TextEditor
 #include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
 #include "nsCRT.h"                      // for nsCRT
-#include "nsComposerCommands.h"         // for nsSetDocumentOptionsCommand, etc
 #include "nsDebug.h"                    // for NS_ENSURE_ARG_POINTER, etc
 #include "nsError.h"                    // for NS_ERROR_INVALID_ARG, etc
 #include "nsICommandParams.h"           // for nsICommandParams
@@ -25,8 +25,6 @@
 #include "nsPresContext.h"              // for nsPresContext
 #include "nscore.h"                     // for NS_IMETHODIMP, nsresult, etc
 
-using namespace mozilla;
-
 class nsISupports;
 
 //defines
@@ -35,11 +33,12 @@ class nsISupports;
 #define STATE_ATTRIBUTE "state_attribute"
 #define STATE_DATA "state_data"
 
+namespace mozilla {
 
 NS_IMETHODIMP
-nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
-                                              nsISupports *refCon,
-                                              bool *outCmdEnabled)
+SetDocumentOptionsCommand::IsCommandEnabled(const char* aCommandName,
+                                            nsISupports* refCon,
+                                            bool* outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
@@ -54,16 +53,16 @@ nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
 }
 
 NS_IMETHODIMP
-nsSetDocumentOptionsCommand::DoCommand(const char *aCommandName,
-                                       nsISupports *refCon)
+SetDocumentOptionsCommand::DoCommand(const char* aCommandName,
+                                     nsISupports* refCon)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
-                                             nsICommandParams *aParams,
-                                             nsISupports *refCon)
+SetDocumentOptionsCommand::DoCommandParams(const char* aCommandName,
+                                           nsICommandParams* aParams,
+                                           nsISupports* refCon)
 {
   NS_ENSURE_ARG_POINTER(aParams);
 
@@ -80,7 +79,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   }
 
   int32_t animationMode;
-  rv = aParams->GetLongValue("imageAnimation", &animationMode);
+  nsresult rv = aParams->GetLongValue("imageAnimation", &animationMode);
   if (NS_SUCCEEDED(rv)) {
     // for possible values of animation mode, see:
     // http://lxr.mozilla.org/seamonkey/source/image/public/imgIContainer.idl
@@ -101,9 +100,9 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
 }
 
 NS_IMETHODIMP
-nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
-                                                   nsICommandParams *aParams,
-                                                   nsISupports *refCon)
+SetDocumentOptionsCommand::GetCommandStateParams(const char* aCommandName,
+                                                 nsICommandParams* aParams,
+                                                 nsISupports* refCon)
 {
   NS_ENSURE_ARG_POINTER(aParams);
   NS_ENSURE_ARG_POINTER(refCon);
@@ -163,9 +162,9 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
  */
 
 NS_IMETHODIMP
-nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
-                                            nsISupports *refCon,
-                                            bool *outCmdEnabled)
+SetDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
+                                          nsISupports* refCon,
+                                          bool* outCmdEnabled)
 {
   // These commands are always enabled
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
@@ -174,16 +173,16 @@ nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
 }
 
 NS_IMETHODIMP
-nsSetDocumentStateCommand::DoCommand(const char *aCommandName,
-                                     nsISupports *refCon)
+SetDocumentStateCommand::DoCommand(const char* aCommandName,
+                                   nsISupports* refCon)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
-                                           nsICommandParams *aParams,
-                                           nsISupports *refCon)
+SetDocumentStateCommand::DoCommandParams(const char* aCommandName,
+                                         nsICommandParams* aParams,
+                                         nsISupports* refCon)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   if (NS_WARN_IF(!editor)) {
@@ -315,9 +314,9 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
 }
 
 NS_IMETHODIMP
-nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
-                                                 nsICommandParams *aParams,
-                                                 nsISupports *refCon)
+SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
+                                               nsICommandParams* aParams,
+                                               nsISupports* refCon)
 {
   NS_ENSURE_ARG_POINTER(aParams);
   NS_ENSURE_ARG_POINTER(refCon);
@@ -466,9 +465,9 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
  */
 
 NS_IMETHODIMP
-nsDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
-                                         nsISupports *refCon,
-                                         bool *outCmdEnabled)
+DocumentStateCommand::IsCommandEnabled(const char* aCommandName,
+                                       nsISupports* refCon,
+                                       bool* outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   // Always return false to discourage callers from using DoCommand()
@@ -477,24 +476,24 @@ nsDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
 }
 
 NS_IMETHODIMP
-nsDocumentStateCommand::DoCommand(const char *aCommandName,
-                                  nsISupports *refCon)
+DocumentStateCommand::DoCommand(const char* aCommandName,
+                                nsISupports* refCon)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsDocumentStateCommand::DoCommandParams(const char *aCommandName,
-                                        nsICommandParams *aParams,
-                                        nsISupports *refCon)
+DocumentStateCommand::DoCommandParams(const char* aCommandName,
+                                      nsICommandParams* aParams,
+                                      nsISupports* refCon)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
-                                              nsICommandParams *aParams,
-                                              nsISupports *refCon)
+DocumentStateCommand::GetCommandStateParams(const char* aCommandName,
+                                            nsICommandParams* aParams,
+                                            nsISupports* refCon)
 {
   NS_ENSURE_ARG_POINTER(aParams);
   NS_ENSURE_ARG_POINTER(aCommandName);
@@ -545,3 +544,5 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+} // namespace mozilla
