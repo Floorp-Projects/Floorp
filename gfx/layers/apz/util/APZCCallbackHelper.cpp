@@ -722,70 +722,55 @@ SendLayersDependentApzcTargetConfirmation(nsIPresShell* aShell, uint64_t aInputB
   shadow->SendSetConfirmedTargetAPZC(aInputBlockId, aTargets);
 }
 
-class DisplayportSetListener : public nsAPostRefreshObserver {
-public:
-  DisplayportSetListener(nsIPresShell* aPresShell,
-                         const uint64_t& aInputBlockId,
-                         const nsTArray<ScrollableLayerGuid>& aTargets)
-    : mPresShell(aPresShell)
-    , mInputBlockId(aInputBlockId)
-    , mTargets(aTargets)
-  {
-  }
-
-  virtual ~DisplayportSetListener()
-  {
-  }
-
-  void DidRefresh() override {
-    if (!mPresShell) {
-      MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
-      return;
-    }
-
-    APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
-    SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId, std::move(mTargets));
-
-    if (!mPresShell->RemovePostRefreshObserver(this)) {
-      MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
-      // Graceful handling, just in case...
-      mPresShell = nullptr;
-      return;
-    }
-
-    delete this;
-  }
-
-private:
-  RefPtr<nsIPresShell> mPresShell;
-  uint64_t mInputBlockId;
-  nsTArray<ScrollableLayerGuid> mTargets;
-};
-
-// Sends a SetTarget notification for APZC, given one or more previous
-// calls to PrepareForAPZCSetTargetNotification().
-static void
-SendSetTargetAPZCNotificationHelper(nsIWidget* aWidget,
-                                    nsIPresShell* aShell,
-                                    const uint64_t& aInputBlockId,
-                                    const nsTArray<ScrollableLayerGuid>& aTargets,
-                                    bool aWaitForRefresh)
+DisplayportSetListener::DisplayportSetListener(nsIWidget* aWidget,
+                                               nsIPresShell* aPresShell,
+                                               const uint64_t& aInputBlockId,
+                                               const nsTArray<ScrollableLayerGuid>& aTargets)
+  : mWidget(aWidget)
+  , mPresShell(aPresShell)
+  , mInputBlockId(aInputBlockId)
+  , mTargets(aTargets)
 {
-  bool waitForRefresh = aWaitForRefresh;
-  if (waitForRefresh) {
-    APZCCH_LOG("At least one target got a new displayport, need to wait for refresh\n");
-    waitForRefresh = aShell->AddPostRefreshObserver(
-      new DisplayportSetListener(aShell, aInputBlockId, std::move(aTargets)));
-  }
-  if (!waitForRefresh) {
-    APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
-    aWidget->SetConfirmedTargetAPZC(aInputBlockId, aTargets);
-  } else {
-    APZCCH_LOG("Successfully registered post-refresh observer\n");
-  }
+}
+
+DisplayportSetListener:: ~DisplayportSetListener()
+{
 }
 
 bool
+DisplayportSetListener::Register()
+{
+  if (mPresShell->AddPostRefreshObserver(this)) {
+    APZCCH_LOG("Successfully registered post-refresh observer\n");
+    return true;
+  }
+  // In case of failure just send the notification right away
+  APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
+  mWidget->SetConfirmedTargetAPZC(mInputBlockId, mTargets);
+  return false;
+}
+
+void
+DisplayportSetListener::DidRefresh() {
+  if (!mPresShell) {
+    MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
+    return;
+  }
+
+  APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
+  SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId, std::move(mTargets));
+
+  if (!mPresShell->RemovePostRefreshObserver(this)) {
+    MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
+    // Graceful handling, just in case...
+    mPresShell = nullptr;
+    return;
+  }
+
+  delete this;
+}
+
+UniquePtr<DisplayportSetListener>
 APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                                   nsIDocument* aDocument,
                                                   const WidgetGUIEvent& aEvent,
@@ -793,7 +778,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                                   uint64_t aInputBlockId)
 {
   if (!aWidget || !aDocument) {
-    return false;
+    return nullptr;
   }
   if (aInputBlockId == sLastTargetAPZCNotificationInputBlock) {
     // We have already confirmed the target APZC for a previous event of this
@@ -802,7 +787,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
     // race the original confirmation (which needs to go through a layers
     // transaction).
     APZCCH_LOG("Not resending target APZC confirmation for input block %" PRIu64 "\n", aInputBlockId);
-    return false;
+    return nullptr;
   }
   sLastTargetAPZCNotificationInputBlock = aInputBlockId;
   if (nsIPresShell* shell = aDocument->GetShell()) {
@@ -827,18 +812,16 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
       // TODO: Do other types of events need to be handled?
 
       if (!targets.IsEmpty()) {
-        SendSetTargetAPZCNotificationHelper(
-          aWidget,
-          shell,
-          aInputBlockId,
-          std::move(targets),
-          waitForRefresh);
+        if (waitForRefresh) {
+          APZCCH_LOG("At least one target got a new displayport, need to wait for refresh\n");
+          return MakeUnique<DisplayportSetListener>(aWidget, shell, aInputBlockId, std::move(targets));
+        }
+        APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
+        aWidget->SetConfirmedTargetAPZC(aInputBlockId, targets);
       }
-
-      return waitForRefresh;
     }
   }
-  return false;
+  return nullptr;
 }
 
 void
