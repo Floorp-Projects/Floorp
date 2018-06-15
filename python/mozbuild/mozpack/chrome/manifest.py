@@ -6,7 +6,12 @@ from __future__ import absolute_import
 
 import re
 import os
-from urlparse import urlparse
+
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
+
 import mozpack.path as mozpath
 from mozpack.chrome.flags import Flags
 from mozpack.errors import errors
