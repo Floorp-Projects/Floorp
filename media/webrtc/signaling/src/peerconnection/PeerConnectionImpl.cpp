@@ -79,6 +79,7 @@
 #include "nsNetUtil.h"
 #include "nsIURLParser.h"
 #include "NullPrincipal.h"
+#include "js/GCAnnotations.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
@@ -155,7 +156,7 @@ public:
   {
     SuppressException();
   }
-};
+} JS_HAZ_ROOTED;
 
 // The WrapRunnable() macros copy passed-in args and passes them to the function
 // later on the other thread. ErrorResult cannot be passed like this because it
@@ -184,7 +185,7 @@ public:
 private:
   mozilla::UniquePtr<JSErrorResult> mRv;
   bool isCopy;
-};
+} JS_HAZ_ROOTED;
 
 }
 

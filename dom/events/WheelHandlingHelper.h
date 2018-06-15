@@ -280,6 +280,10 @@ public:
    */
   explicit WheelDeltaHorizontalizer(WidgetWheelEvent& aWheelEvent)
     : mWheelEvent(aWheelEvent)
+    , mOldDeltaX(0.0)
+    , mOldDeltaZ(0.0)
+    , mOldOverflowDeltaX(0.0)
+    , mOldLineOrPageDeltaX(0)
     , mHorizontalized(false)
   {
   }

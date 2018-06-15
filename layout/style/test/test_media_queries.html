@@ -792,6 +792,9 @@ function run() {
   should_not_apply("not all and (-moz-is-glyph:0)");
   should_not_apply("only all and (-moz-is-glyph:1)");
 
+  // Resource documents (UA-only).
+  query_should_not_be_parseable("(-moz-is-resource-document)");
+
   // Parsing tests
   // bug 454227
   should_apply_unbalanced("(orientation");
