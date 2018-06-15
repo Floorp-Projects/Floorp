@@ -8,33 +8,30 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-/**
- * This component is intended to show the tick line as the background.
- */
-class TickLines extends PureComponent {
+class KeyframesProgressTickItem extends PureComponent {
   static get propTypes() {
     return {
-      ticks: PropTypes.array.isRequired,
+      direction: PropTypes.string.isRequired,
+      position: PropTypes.number.isRequired,
+      progressTickLabel: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    const { ticks } = this.props;
+    const {
+      direction,
+      position,
+      progressTickLabel,
+    } = this.props;
 
     return dom.div(
       {
-        className: "tick-lines"
+        className: `keyframes-progress-tick-item ${ direction }`,
+        style: { [direction]: `${ position }%` }
       },
-      ticks.map(tick =>
-        dom.div(
-          {
-            className: "tick-line",
-            style: { left: `${ tick.position }%` }
-          }
-        )
-      )
+      progressTickLabel
     );
   }
 }
 
-module.exports = TickLines;
+module.exports = KeyframesProgressTickItem;

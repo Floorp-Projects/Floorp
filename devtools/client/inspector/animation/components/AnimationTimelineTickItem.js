@@ -8,34 +8,25 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-/**
- * This component is intended to show tick labels on the header.
- */
-class TickLabels extends PureComponent {
+class AnimationTimeTickItem extends PureComponent {
   static get propTypes() {
     return {
-      ticks: PropTypes.array.isRequired,
+      position: PropTypes.number.isRequired,
+      timeTickLabel: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    const { ticks } = this.props;
+    const { position, timeTickLabel } = this.props;
 
     return dom.div(
       {
-        className: "tick-labels"
+        className: "animation-timeline-tick-item",
+        style: { left: `${ position }%` }
       },
-      ticks.map(tick =>
-        dom.div(
-          {
-            className: "tick-label",
-            style: { left: `${ tick.position }%` },
-          },
-          tick.label
-        )
-      )
+      timeTickLabel
     );
   }
 }
 
-module.exports = TickLabels;
+module.exports = AnimationTimeTickItem;

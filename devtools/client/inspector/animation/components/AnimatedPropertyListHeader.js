@@ -8,20 +8,16 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const AnimatedPropertyList = createFactory(require("./AnimatedPropertyList"));
-const AnimatedPropertyListHeader = createFactory(require("./AnimatedPropertyListHeader"));
+const KeyframesProgressBar = createFactory(require("./KeyframesProgressBar"));
+const KeyframesProgressTickList = createFactory(require("./KeyframesProgressTickList"));
 
-class AnimatedPropertyListContainer extends PureComponent {
+class AnimatedPropertyListHeader extends PureComponent {
   static get propTypes() {
     return {
       addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animation: PropTypes.object.isRequired,
-      emitEventForTest: PropTypes.func.isRequired,
-      getAnimatedPropertyMap: PropTypes.func.isRequired,
       getAnimationsCurrentTime: PropTypes.func.isRequired,
-      getComputedStyle: PropTypes.func.isRequired,
       removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
-      simulateAnimation: PropTypes.func.isRequired,
       simulateAnimationForKeyframesProgressBar: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
@@ -31,21 +27,23 @@ class AnimatedPropertyListContainer extends PureComponent {
     const {
       addAnimationsCurrentTimeListener,
       animation,
-      emitEventForTest,
-      getAnimatedPropertyMap,
       getAnimationsCurrentTime,
-      getComputedStyle,
       removeAnimationsCurrentTimeListener,
-      simulateAnimation,
       simulateAnimationForKeyframesProgressBar,
       timeScale,
     } = this.props;
 
     return dom.div(
       {
-        className: `animated-property-list-container ${ animation.state.type }`
+        className: "animated-property-list-header"
       },
-      AnimatedPropertyListHeader(
+      dom.div(
+        {
+          className: "devtools-toolbar"
+        }
+      ),
+      KeyframesProgressTickList(),
+      KeyframesProgressBar(
         {
           addAnimationsCurrentTimeListener,
           animation,
@@ -54,24 +52,9 @@ class AnimatedPropertyListContainer extends PureComponent {
           simulateAnimationForKeyframesProgressBar,
           timeScale,
         }
-      ),
-      dom.div(
-        {
-          className: "animated-property-list-background",
-        },
-        dom.span()
-      ),
-      AnimatedPropertyList(
-        {
-          animation,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          getComputedStyle,
-          simulateAnimation,
-        }
       )
     );
   }
 }
 
-module.exports = AnimatedPropertyListContainer;
+module.exports = AnimatedPropertyListHeader;
