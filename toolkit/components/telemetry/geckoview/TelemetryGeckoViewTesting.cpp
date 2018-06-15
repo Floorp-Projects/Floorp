@@ -4,7 +4,6 @@
 
 #include "TelemetryGeckoViewTesting.h"
 #include "TelemetryGeckoViewPersistence.h"
-#include "TelemetryScalar.h"
 
 namespace TelemetryGeckoViewTesting {
   // This is defined in TelemetryGeckoViewPersistence.cpp
@@ -40,12 +39,5 @@ NS_IMETHODIMP
 TelemetryGeckoViewTestingImpl::ForcePersist(JSContext*)
 {
   TelemetryGeckoViewTesting::TestDispatchPersist();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TelemetryGeckoViewTestingImpl::DeserializationStarted(JSContext*)
-{
-  TelemetryScalar::DeserializationStarted();
   return NS_OK;
 }

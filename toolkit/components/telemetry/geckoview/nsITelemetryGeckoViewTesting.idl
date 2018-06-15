@@ -32,13 +32,4 @@ interface nsITelemetryGeckoViewTesting : nsISupports
    */
   [implicit_jscontext]
   void forcePersist();
-
-  /**
-   * The following method maps to the function with the same name from TelemetryScalar.cpp.
-   *
-   * It marks deserialization as in progress.
-   * After this, all scalar operations are recorded into the pending operations list.
-   */
-  [implicit_jscontext]
-  void deserializationStarted();
 };
