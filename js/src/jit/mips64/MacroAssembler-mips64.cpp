@@ -2158,7 +2158,7 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
     Label done;
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
 
-    extractObject(value, SecondScratchReg);
+    unboxObject(value, SecondScratchReg);
     orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
     branch32(cond, Address(SecondScratchReg, gc::ChunkLocationOffsetFromLastByte),
              Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
