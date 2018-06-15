@@ -3341,13 +3341,13 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
 void
 GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
-
     if (!CurrentThreadCanAccessRuntime(rt)) {
         // Zones in use by a helper thread can't be collected.
         MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
         return;
     }
+
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
 
     size_t usedBytes = zone->usage.gcBytes();
     size_t thresholdBytes = zone->threshold.gcTriggerBytes();
@@ -6876,10 +6876,11 @@ HeapStateToLabel(JS::HeapState heapState)
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : runtime(rt),
-    prevState(rt->mainContextFromOwnThread()->heapState),
+    prevState(rt->heapState_),
     profilingStackFrame(rt->mainContextFromOwnThread(), HeapStateToLabel(heapState),
                         ProfilingStackFrame::Category::GCCC)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     MOZ_ASSERT(prevState == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery().isEmpty());
@@ -6887,19 +6888,19 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
     // Session always begins with lock held, see comment in class definition.
     maybeLock.emplace(rt);
 
-    rt->mainContextFromOwnThread()->heapState = heapState;
+    rt->heapState_ = heapState;
 }
 
 AutoTraceSession::~AutoTraceSession()
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
-    runtime->mainContextFromOwnThread()->heapState = prevState;
+    runtime->heapState_ = prevState;
 }
 
 JS_PUBLIC_API(JS::HeapState)
 JS::CurrentThreadHeapState()
 {
-    return TlsContext.get()->heapState;
+    return TlsContext.get()->runtime()->heapState();
 }
 
 GCRuntime::IncrementalResult
@@ -8498,15 +8499,17 @@ AutoAssertNoNurseryAlloc::~AutoAssertNoNurseryAlloc()
 }
 
 JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSRuntime* rt)
+  : runtime_(rt)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
-    TlsContext.get()->heapState = HeapState::CycleCollecting;
+    runtime_->heapState_ = HeapState::CycleCollecting;
 }
 
 JS::AutoEnterCycleCollection::~AutoEnterCycleCollection()
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapCycleCollecting());
-    TlsContext.get()->heapState = HeapState::Idle;
+    runtime_->heapState_ = HeapState::Idle;
 }
 
 JS::AutoAssertGCCallback::AutoAssertGCCallback()
@@ -9197,12 +9200,12 @@ js::gc::detail::CellIsNotGray(const Cell* cell)
     // of cells that will be marked black by the next GC slice in an incremental
     // GC. For performance reasons we don't do this in CellIsMarkedGrayIfKnown.
 
+    if (!CanCheckGrayBits(cell))
+        return true;
+
     // TODO: I'd like to AssertHeapIsIdle() here, but this ends up getting
     // called during GC and while iterating the heap for memory reporting.
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
-
-    if (!CanCheckGrayBits(cell))
-        return true;
 
     auto tc = &cell->asTenured();
     if (!detail::CellIsMarkedGray(tc))
