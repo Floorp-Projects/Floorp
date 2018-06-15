@@ -73,7 +73,9 @@ nsXPConnect::nsXPConnect()
 {
     XPCJSContext::InitTLS();
 
+#ifdef MOZ_GECKO_PROFILER
     JS::SetProfilingThreadCallbacks(profiler_register_thread, profiler_unregister_thread);
+#endif
 
     XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext(nullptr);
     if (!xpccx) {
