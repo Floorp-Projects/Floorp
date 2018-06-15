@@ -36,14 +36,15 @@ def set_defaults(config, jobs):
 @transforms.add
 def stub_installer(config, jobs):
     for job in jobs:
+        resolve_keyed_by(
+            job, 'stub-installer', item_name=job['name'], project=config.params['project']
+        )
         job.setdefault('attributes', {})
         if job.get('stub-installer'):
-            resolve_keyed_by(
-                job, 'stub-installer', item_name=job['name'], project=config.params['project']
-            )
             job['attributes']['stub-installer'] = job['stub-installer']
-            del job['stub-installer']
             job['worker']['env'].update({"USE_STUB_INSTALLER": "1"})
+        if 'stub-installer' in job:
+            del job['stub-installer']
         yield job
 
 
