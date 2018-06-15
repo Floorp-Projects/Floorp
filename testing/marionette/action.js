@@ -6,6 +6,8 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 ChromeUtils.import("chrome://marionette/content/assert.js");
 const {element} = ChromeUtils.import("chrome://marionette/content/element.js", {});
 const {
@@ -1216,7 +1218,12 @@ function dispatchPointerDown(a, inputState, window) {
       case action.PointerType.Mouse:
         let mouseEvent = new action.Mouse("mousedown", a.button);
         mouseEvent.update(inputState);
-        if (event.DoubleClickTracker.isClicked()) {
+        if (mouseEvent.ctrlKey) {
+          if (Services.appinfo.OS !== "WINNT") {
+            mouseEvent.button = 2;
+            event.DoubleClickTracker.resetClick();
+          }
+        } else if (event.DoubleClickTracker.isClicked()) {
           mouseEvent = Object.assign({},
               mouseEvent, {clickCount: 2});
         }
@@ -1225,7 +1232,8 @@ function dispatchPointerDown(a, inputState, window) {
             inputState.y,
             mouseEvent,
             window);
-        if (event.MouseButton.isSecondary(a.button)) {
+        if (event.MouseButton.isSecondary(a.button) ||
+            mouseEvent.ctrlKey && Services.appinfo.OS !== "WINNT") {
           let contextMenuEvent = Object.assign({},
               mouseEvent, {type: "contextmenu"});
           event.synthesizeMouseAtPoint(

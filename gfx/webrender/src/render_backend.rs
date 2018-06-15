@@ -719,9 +719,14 @@ impl RenderBackend {
                         render,
                         result_tx,
                     } => {
+                        let mut ops = DocumentOps::nop();
                         if let Some(doc) = self.documents.get_mut(&document_id) {
                             if let Some(mut built_scene) = built_scene.take() {
                                 doc.new_async_scene_ready(built_scene);
+                                // After applying the new scene we need to
+                                // rebuild the hit-tester, so we trigger a render
+                                // step.
+                                ops = DocumentOps::render();
                             }
                             if let Some(tx) = result_tx {
                                 let (resume_tx, resume_rx) = channel();
@@ -750,13 +755,13 @@ impl RenderBackend {
                             use_scene_builder_thread: false,
                         };
 
-                        if !transaction_msg.is_empty() {
+                        if !transaction_msg.is_empty() || ops.render {
                             self.update_document(
                                 document_id,
                                 transaction_msg,
                                 &mut frame_counter,
                                 &mut profile_counters,
-                                DocumentOps::render(),
+                                ops,
                             );
                         }
                     },

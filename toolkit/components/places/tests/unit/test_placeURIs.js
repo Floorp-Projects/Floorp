@@ -13,15 +13,4 @@ function run_test() {
   query.setParents([PlacesUtils.bookmarks.rootGuid], 1);
   Assert.equal(PlacesUtils.history.queryToQueryString(query, options),
                `place:parent=${PlacesUtils.bookmarks.rootGuid}`);
-
-  // Bug 378828
-  options.sortingAnnotation = "test anno";
-  options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING;
-  var placeURI =
-    `place:parent=${PlacesUtils.bookmarks.rootGuid}&sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING}&sortingAnnotation=test%20anno`;
-  Assert.equal(PlacesUtils.history.queryToQueryString(query, options), placeURI);
-  options = {};
-  PlacesUtils.history.queryStringToQuery(placeURI, {}, options);
-  Assert.equal(options.value.sortingAnnotation, "test anno");
-  Assert.equal(options.value.sortingMode, Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING);
 }

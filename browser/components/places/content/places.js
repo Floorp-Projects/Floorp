@@ -1156,13 +1156,11 @@ var ViewMenu = {
     }
 
     // This maps the possible values of columnId (i.e., anonid's of treecols in
-    // placeContent) to the default sortingMode and sortingAnnotation values for
-    // each column.
+    // placeContent) to the default sortingMode for each column.
     //   key:  Sort key in the name of one of the
     //         nsINavHistoryQueryOptions.SORT_BY_* constants
     //   dir:  Default sort direction to use if none has been specified
-    //   anno: The annotation to sort by, if key is "ANNOTATION"
-    var colLookupTable = {
+    const colLookupTable = {
       title:        { key: "TITLE",        dir: "ascending"  },
       tags:         { key: "TAGS",         dir: "ascending"  },
       url:          { key: "URI",          dir: "ascending"  },
@@ -1182,7 +1180,6 @@ var ViewMenu = {
     aDirection = (aDirection || colLookupTable[columnId].dir).toUpperCase();
 
     var sortConst = "SORT_BY_" + colLookupTable[columnId].key + "_" + aDirection;
-    result.sortingAnnotation = colLookupTable[columnId].anno || "";
     result.sortingMode = Ci.nsINavHistoryQueryOptions[sortConst];
   }
 };

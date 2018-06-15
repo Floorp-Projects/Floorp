@@ -125,7 +125,8 @@ class MachCommands(MachCommandBase):
         elif subsuite:
             filters.append(mpf.subsuite(subsuite))
 
-        tests = mp.active_tests(filters=filters, disabled=False, **mozinfo.info)
+        python = 3 if three else 2
+        tests = mp.active_tests(filters=filters, disabled=False, python=python, **mozinfo.info)
 
         if not tests:
             submsg = "for subsuite '{}' ".format(subsuite) if subsuite else ""

@@ -9,7 +9,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const AnimatedPropertyList = createFactory(require("./AnimatedPropertyList"));
-const AnimatedPropertyListHeader = createFactory(require("./AnimatedPropertyListHeader"));
+const KeyframesProgressBar = createFactory(require("./KeyframesProgressBar"));
+const ProgressInspectionPanel = createFactory(require("./ProgressInspectionPanel"));
+
+const { getFormatStr } = require("../utils/l10n");
 
 class AnimatedPropertyListContainer extends PureComponent {
   static get propTypes() {
@@ -45,29 +48,31 @@ class AnimatedPropertyListContainer extends PureComponent {
       {
         className: `animated-property-list-container ${ animation.state.type }`
       },
-      AnimatedPropertyListHeader(
+      ProgressInspectionPanel(
         {
-          addAnimationsCurrentTimeListener,
-          animation,
-          getAnimationsCurrentTime,
-          removeAnimationsCurrentTimeListener,
-          simulateAnimationForKeyframesProgressBar,
-          timeScale,
-        }
-      ),
-      dom.div(
-        {
-          className: "animated-property-list-background",
-        },
-        dom.span()
-      ),
-      AnimatedPropertyList(
-        {
-          animation,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          getComputedStyle,
-          simulateAnimation,
+          indicator: KeyframesProgressBar(
+            {
+              addAnimationsCurrentTimeListener,
+              animation,
+              getAnimationsCurrentTime,
+              removeAnimationsCurrentTimeListener,
+              simulateAnimationForKeyframesProgressBar,
+              timeScale,
+            }
+          ),
+          list: AnimatedPropertyList(
+            {
+              animation,
+              emitEventForTest,
+              getAnimatedPropertyMap,
+              getComputedStyle,
+              simulateAnimation,
+            }
+          ),
+          ticks: [0, 50, 100].map(position => {
+            const label = getFormatStr("detail.propertiesHeader.percentage", position);
+            return { position, label };
+          })
         }
       )
     );

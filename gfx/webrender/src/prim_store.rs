@@ -17,7 +17,7 @@ use clip::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipSo
 use clip::{ClipSourcesHandle, ClipWorkItem};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::PrimitiveRunContext;
-use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
+use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::{BrushFlags, ClipChainRectIndex};
@@ -773,19 +773,22 @@ impl TextRunPrimitiveCpu {
     pub fn get_font(
         &self,
         device_pixel_scale: DevicePixelScale,
-        transform: Option<LayoutToWorldTransform>,
+        transform: LayoutToWorldTransform,
     ) -> FontInstance {
         let mut font = self.font.clone();
         font.size = font.size.scale_by(device_pixel_scale.0);
-        if let Some(transform) = transform {
-            if transform.has_perspective_component() ||
-               !transform.has_2d_inverse() ||
-               self.glyph_raster_space != GlyphRasterSpace::Screen {
-                font.disable_subpixel_aa();
-                font.disable_subpixel_position();
-            } else {
-                font.transform = FontTransform::from(&transform).quantize();
-            }
+        // Only support transforms that can be coerced to simple 2D transforms.
+        if transform.has_perspective_component() ||
+           !transform.has_2d_inverse() ||
+           // Font sizes larger than the limit need to be scaled, thus can't use subpixels.
+           transform.exceeds_2d_scale(FONT_SIZE_LIMIT / font.size.to_f64_px()) ||
+           // Otherwise, ensure the font is rasterized in screen-space.
+           self.glyph_raster_space != GlyphRasterSpace::Screen {
+            font.disable_subpixel_aa();
+            font.disable_subpixel_position();
+        } else {
+            // Quantize the transform to minimize thrashing of the glyph cache.
+            font.transform = FontTransform::from(&transform).quantize();
         }
         font
     }
@@ -793,7 +796,7 @@ impl TextRunPrimitiveCpu {
     fn prepare_for_render(
         &mut self,
         device_pixel_scale: DevicePixelScale,
-        transform: Option<LayoutToWorldTransform>,
+        transform: LayoutToWorldTransform,
         allow_subpixel_aa: bool,
         display_list: &BuiltDisplayList,
         frame_building_state: &mut FrameBuildingState,
@@ -1490,7 +1493,7 @@ impl PrimitiveStore {
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
                 // The transform only makes sense for screen space rasterization
-                let transform = Some(prim_run_context.scroll_node.world_content_transform.into());
+                let transform = prim_run_context.scroll_node.world_content_transform.into();
                 text.prepare_for_render(
                     frame_context.device_pixel_scale,
                     transform,

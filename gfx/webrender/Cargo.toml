@@ -63,10 +63,6 @@ optional = true
 
 [dev-dependencies]
 mozangle = "0.1"
-env_logger = "0.5"
-rand = "0.3"                # for the benchmarks
-glutin = "0.15"             # for the example apps
-winit = "0.13"              # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.4", default-features = false }

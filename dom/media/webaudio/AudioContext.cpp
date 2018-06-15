@@ -931,8 +931,7 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
 
   // Resolve all pending promises once the audio context has been allowed to
   // start.
-  if (mAudioContextState == AudioContextState::Suspended &&
-      aNewState == AudioContextState::Running) {
+  if (aNewState == AudioContextState::Running) {
     for (const auto& p : mPendingResumePromises) {
       p->MaybeResolveWithUndefined();
     }
