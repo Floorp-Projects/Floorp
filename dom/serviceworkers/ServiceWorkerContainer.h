@@ -40,9 +40,11 @@ public:
              ServiceWorkerRegistrationCallback&& aSuccessCB,
              ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    virtual void
     GetRegistration(const ClientInfo& aClientInfo,
-                    const nsACString& aURL) const = 0;
+                    const nsACString& aURL,
+                    ServiceWorkerRegistrationCallback&& aSuccessCB,
+                    ServiceWorkerFailureCallback&& aFailureCB) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationListPromise>
     GetRegistrations(const ClientInfo& aClientInfo) const = 0;
