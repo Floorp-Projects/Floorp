@@ -37,8 +37,8 @@ ChunkedJSONWriteFunc::Write(const char* aStr)
   mChunkLengths.back() += len;
 }
 
-mozilla::UniquePtr<char[]>
-ChunkedJSONWriteFunc::CopyData() const
+size_t
+ChunkedJSONWriteFunc::GetTotalLength() const
 {
   MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
   size_t totalLen = 1;
@@ -46,14 +46,31 @@ ChunkedJSONWriteFunc::CopyData() const
     MOZ_ASSERT(strlen(mChunkList[i].get()) == mChunkLengths[i]);
     totalLen += mChunkLengths[i];
   }
-  mozilla::UniquePtr<char[]> c = mozilla::MakeUnique<char[]>(totalLen);
-  char* ptr = c.get();
+  return totalLen;
+}
+
+void
+ChunkedJSONWriteFunc::CopyDataIntoLazilyAllocatedBuffer(
+  const std::function<char*(size_t)> aAllocator) const
+{
+  size_t totalLen = GetTotalLength();
+  char* ptr = aAllocator(totalLen);
   for (size_t i = 0; i < mChunkList.length(); i++) {
     size_t len = mChunkLengths[i];
     memcpy(ptr, mChunkList[i].get(), len);
     ptr += len;
   }
   *ptr = '\0';
+}
+
+mozilla::UniquePtr<char[]>
+ChunkedJSONWriteFunc::CopyData() const
+{
+  mozilla::UniquePtr<char[]> c;
+  CopyDataIntoLazilyAllocatedBuffer([&](size_t allocationSize) {
+    c = mozilla::MakeUnique<char[]>(allocationSize);
+    return c.get();
+  });
   return c;
 }
 
