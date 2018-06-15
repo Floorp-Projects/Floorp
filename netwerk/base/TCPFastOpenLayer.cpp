@@ -58,7 +58,17 @@ public:
     : mState(WAITING_FOR_CONNECT)
     , mFirstPacketBufLen(0)
     , mCondition(0)
-  {}
+  {
+    this->mAddr.raw.family = 0;
+    this->mAddr.inet.family = 0;
+    this->mAddr.inet.port = 0;
+    this->mAddr.inet.ip = 0;
+    this->mAddr.ipv6.family = 0;
+    this->mAddr.ipv6.port = 0;
+    this->mAddr.ipv6.flowinfo = 0;
+    this->mAddr.ipv6.scope_id = 0;
+    this->mAddr.local.family = 0;
+  }
 
   enum {
     CONNECTED,

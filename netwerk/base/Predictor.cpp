@@ -262,6 +262,9 @@ NS_IMPL_ISUPPORTS(Predictor,
 
 Predictor::Predictor()
   :mInitialized(false)
+  ,mCleanedUp(false)
+  ,mStartupTime(0)
+  ,mLastStartupTime(0)
   ,mStartupCount(1)
 {
   MOZ_ASSERT(!sSelf, "multiple Predictor instances!");

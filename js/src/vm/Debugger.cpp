@@ -3951,8 +3951,8 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
 
     /* Add the initial debuggees, if any. */
     for (unsigned i = 0; i < args.length(); i++) {
-        Rooted<GlobalObject*>
-            debuggee(cx, &args[i].toObject().as<ProxyObject>().private_().toObject().global());
+        JSObject& wrappedObj = args[i].toObject().as<ProxyObject>().private_().toObject();
+        Rooted<GlobalObject*> debuggee(cx, &wrappedObj.deprecatedGlobal());
         if (!debugger->addDebuggeeGlobal(cx, debuggee))
             return false;
     }
@@ -9960,7 +9960,7 @@ DebuggerObject::getGlobal(JSContext* cx, HandleDebuggerObject object,
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    RootedObject global(cx, &referent->global());
+    RootedObject global(cx, &referent->deprecatedGlobal());
     return dbg->wrapDebuggeeObject(cx, global, result);
 }
 
@@ -10821,7 +10821,7 @@ DebuggerEnvironment_checkThis(JSContext* cx, const CallArgs& args, const char* f
      */
     if (requireDebuggee) {
         Rooted<Env*> env(cx, static_cast<Env*>(nthisobj->getPrivate()));
-        if (!Debugger::fromChildJSObject(nthisobj)->observesGlobal(&env->global())) {
+        if (!Debugger::fromChildJSObject(nthisobj)->observesGlobal(&env->nonCCWGlobal())) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_DEBUGGEE,
                                       "Debugger.Environment", "environment");
             return nullptr;
@@ -11171,7 +11171,7 @@ DebuggerEnvironment::isDebuggee() const
     MOZ_ASSERT(referent());
     MOZ_ASSERT(!referent()->is<EnvironmentObject>());
 
-    return owner()->observesGlobal(&referent()->global());
+    return owner()->observesGlobal(&referent()->nonCCWGlobal());
 }
 
 bool

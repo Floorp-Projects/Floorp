@@ -19,7 +19,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHTTPAUTHMANAGER
 
-  nsHttpAuthManager() = default;
+  nsHttpAuthManager();
   MOZ_MUST_USE nsresult Init();
 
 protected:

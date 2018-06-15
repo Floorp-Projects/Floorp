@@ -1438,7 +1438,7 @@ XrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper, HandleObject
             found = true;
         } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_EVAL)) {
             RootedObject eval(cx);
-            if (!js::GetOriginalEval(cx, target, &eval))
+            if (!js::GetRealmOriginalEval(cx, &eval))
                 return false;
             desc.value().set(ObjectValue(*eval));
             found = true;

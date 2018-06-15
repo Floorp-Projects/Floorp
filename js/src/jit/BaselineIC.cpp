@@ -2350,9 +2350,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
         if (!ConstructFromStack(cx, callArgs))
             return false;
         res.set(callArgs.rval());
-    } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
-               frame->environmentChain()->global().valueIsEval(callee))
-    {
+    } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) && cx->global()->valueIsEval(callee)) {
         if (!DirectEval(cx, callArgs.get(0), res))
             return false;
     } else {

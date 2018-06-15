@@ -257,7 +257,8 @@ nsFileUploadContentStream::OnCopyComplete()
 //-----------------------------------------------------------------------------
 
 nsFileChannel::nsFileChannel(nsIURI *uri)
-  : mFileURI(uri)
+  : mUploadLength(0)
+  , mFileURI(uri)
 {
 }
 
