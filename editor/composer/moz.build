@@ -16,15 +16,16 @@ XPIDL_MODULE = 'composer'
 
 UNIFIED_SOURCES += [
     'ComposerCommandsUpdater.cpp',
+    'HTMLEditorCommands.cpp',
     'HTMLEditorController.cpp',
-    'nsComposerCommands.cpp',
-    'nsComposerDocumentCommands.cpp',
+    'HTMLEditorDocumentCommands.cpp',
     'nsComposerRegistration.cpp',
     'nsEditingSession.cpp',
 ]
 
 EXPORTS.mozilla += [
     'ComposerCommandsUpdater.h',
+    'HTMLEditorCommands.h',
     'HTMLEditorController.h',
 ]
 
