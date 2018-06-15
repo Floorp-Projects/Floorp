@@ -673,6 +673,64 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background-color: var(--fill-color-scriptanimation);
 }
 
+/* Common Components */
+/* Progress Inspection Panel */
+.progress-inspection-panel {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.progress-inspection-panel > .header {
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.progress-inspection-panel > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.progress-inspection-panel > div,
+.progress-inspection-panel > ul > li {
+  display: grid;
+  grid-template-columns:
+    var(--sidebar-width) calc(100% - var(--sidebar-width) - var(--graph-right-offset)) var(--graph-right-offset);
+}
+
+/* Tick Lines */
+.tick-lines {
+  grid-column: 2 / 3;
+  position: relative;
+}
+
+.tick-line {
+  position: absolute;
+}
+
+.tick-line::before {
+  border-left: var(--tick-line-style);
+  content: "";
+  height: 100vh;
+  position: fixed;
+}
+
+/* Tick Labels */
+.tick-labels {
+  grid-column: 2 / 3;
+  height: 100%;
+  position: relative;
+}
+
+.tick-label {
+  border-left: var(--tick-line-style);
+  height: 100%;
+  position: absolute;
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;
