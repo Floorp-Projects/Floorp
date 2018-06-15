@@ -43,7 +43,8 @@ public:
         mSessionId(0),
         mSessionVersion(0),
         mUuidGen(std::move(uuidgen)),
-        mSdpHelper(&mLastError)
+        mSdpHelper(&mLastError),
+        mRunRustParser(false)
   {
   }
 
