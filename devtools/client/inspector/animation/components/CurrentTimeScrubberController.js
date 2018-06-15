@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
-const CurrentTimeScrubber = createFactory(require("./CurrentTimeScrubber"));
+const IndicationBar = createFactory(require("./IndicationBar"));
 
 class CurrentTimeScrubberController extends PureComponent {
   static get propTypes() {
@@ -32,8 +32,8 @@ class CurrentTimeScrubberController extends PureComponent {
     this.onMouseUp = this.onMouseUp.bind(this);
 
     this.state = {
-      // offset of the position for the scrubber
-      offset: 0,
+      // position for the scrubber
+      position: 0,
     };
 
     addAnimationsCurrentTimeListener(this.onCurrentTimeUpdated);
@@ -52,10 +52,8 @@ class CurrentTimeScrubberController extends PureComponent {
   onCurrentTimeUpdated(currentTime) {
     const { timeScale } = this.props;
 
-    const thisEl = ReactDOM.findDOMNode(this);
-    const offset =
-      thisEl ? currentTime / timeScale.getDuration() * thisEl.clientWidth : 0;
-    this.setState({ offset });
+    const position = currentTime / timeScale.getDuration();
+    this.setState({ position });
   }
 
   onMouseDown(event) {
@@ -123,15 +121,16 @@ class CurrentTimeScrubberController extends PureComponent {
   }
 
   render() {
-    const { offset } = this.state;
+    const { position } = this.state;
 
     return dom.div(
       {
         className: "current-time-scrubber-controller",
       },
-      CurrentTimeScrubber(
+      IndicationBar(
         {
-          offset,
+          className: "current-time-scrubber",
+          position,
         }
       )
     );
