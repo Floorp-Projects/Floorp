@@ -17,29 +17,43 @@ skip-if(Android&&AndroidVersion=='22') HTTP load 795892-1.html # bug 1358718
 load 844563.html
 load 846612.html
 load 852838.html
+skip-if = (verify && debug && (os == 'linux'))
 load 865537-1.html
 load 868504.html
+skip-if = (verify && debug && (os == 'linux'))
 load 874869.html
+skip-if = (verify && debug && (os == 'linux'))
 load 874915.html
+skip-if = (verify && debug && (os == 'linux'))
 load 874934.html
+skip-if = (verify && debug && (os == 'linux'))
 load 874952.html
+skip-if = (verify && debug && (os == 'linux'))
 load 875144.html
+skip-if = (verify && debug && (os == 'linux'))
 load 875596.html
+skip-if = (verify && debug && (os == 'linux'))
 load 875911.html
 load 876024-1.html
 load 876024-2.html
+skip-if = (verify && debug && (os == 'linux'))
 load 876118.html
+skip-if = (verify && debug && (os == 'linux'))
 load 876207.html
 load 876215.html
 load 876249.html
+skip-if = (verify && debug && (os == 'linux'))
 load 876252.html
+skip-if = (verify && debug && (os == 'linux'))
 load 876834.html
 load 877527.html
 load 877820.html
 load 878014.html
 load 878328.html
 load 878407.html
+skip-if = (verify && debug && (os == 'linux'))
 load 878478.html
+skip-if = (verify && debug && (os == 'linux'))
 load 880129.html
 load 880202.html
 load 880342-1.html
@@ -47,11 +61,13 @@ load 880342-2.html
 load 880384.html
 load 880404.html
 load 880724.html
+skip-if = (verify && debug && (os == 'linux'))
 load 881775.html
 load 882549.html
 load 882956.html
 load 884459.html
 load 889042.html
+skip-if = (verify && debug && (os == 'linux'))
 load 894104.html
 load 907986-1.html
 load 907986-2.html
@@ -59,31 +75,47 @@ load 907986-3.html
 load 907986-4.html
 load 910171-1.html
 load 920987.html
+skip-if = (verify && debug && (os == 'linux'))
 load 925619-1.html
 load 925619-2.html
 load 926619.html
+skip-if = (verify && debug && (os == 'linux'))
 load 933151.html
+skip-if = (verify && debug && (os == 'linux'))
 load 933156.html
+skip-if = (verify && debug && (os == 'linux'))
 load 944851.html
 load 952756.html
+skip-if = (verify && debug && (os == 'linux'))
 load 966636.html
+skip-if = (verify && debug && (os == 'linux'))
 load 986901.html
+skip-if = (verify && debug && (os == 'linux'))
 load 990794.html
+skip-if = (verify && debug && (os == 'linux'))
 load 995289.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1012609.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1015662.html
 load 1020205.html
+skip-if = (verify && debug && (os == 'linux'))
 skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load 1041466.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1045650.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1080986.html
 skip-if(Android&&AndroidVersion=='21') load 1180881.html # bug 1409365
 load 1197935.html
 load 1122218.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1127188.html
 load 1157994.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1158427.html
 load 1185176.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1185192.html
 load 1257700.html
 load 1267263.html
@@ -91,7 +123,9 @@ load 1270303.html
 load 1304948.html
 load 1319486.html
 load 1368490.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1291702.html
+skip-if = (verify && debug && (os == 'linux'))
 load 1378826.html
 load 1384248.html
 load 1389304.html
@@ -100,13 +134,18 @@ load 1411322.html
 load disconnect-wrong-destination.html
 load analyser-channels-1.html
 load audiocontext-double-suspend.html
+skip-if = (verify && debug && (os == 'linux'))
 load buffer-source-duration-1.html
 load buffer-source-ended-1.html
+skip-if = (verify && debug && (os == 'linux'))
 load buffer-source-resampling-start-1.html
 load buffer-source-slow-resampling-1.html
 load doppler-1.html
+skip-if = (verify && debug && (os == 'linux'))
 HTTP load media-element-source-seek-1.html
+skip-if = (verify && debug && (os == 'linux'))
 load offline-buffer-source-ended-1.html
+skip-if = (verify && debug && (os == 'linux'))
 load oscillator-ended-1.html
 load oscillator-ended-2.html
 skip-if(Android&&AndroidVersion=='22') load video-replay-after-audio-end.html # bug 1315125, bug 1358876
