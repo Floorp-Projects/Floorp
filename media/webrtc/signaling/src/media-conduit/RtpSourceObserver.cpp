@@ -19,6 +19,7 @@ RtpSourceObserver::RtpSourceEntry::ToLinearAudioLevel() const
 }
 
 RtpSourceObserver::RtpSourceObserver() :
+  mMaxJitterWindow(0),
   mLevelGuard("RtpSourceObserver::mLevelGuard") {}
 
 void

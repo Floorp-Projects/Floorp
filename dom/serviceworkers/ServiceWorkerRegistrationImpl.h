@@ -42,11 +42,13 @@ public:
   void
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  Update() override;
+  void
+  Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+         ServiceWorkerFailureCallback&& aFailureCB) override;
 
-  RefPtr<GenericPromise>
-  Unregister() override;
+  void
+  Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) override;
 
   // ServiceWorkerRegistrationListener
   void
@@ -109,11 +111,13 @@ public:
   void
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  Update() override;
+  void
+  Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+         ServiceWorkerFailureCallback&& aFailureCB) override;
 
-  RefPtr<GenericPromise>
-  Unregister() override;
+  void
+  Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
+             ServiceWorkerFailureCallback&& aFailureCB) override;
 
   void
   UpdateFound();
