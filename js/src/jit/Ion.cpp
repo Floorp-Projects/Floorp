@@ -584,7 +584,7 @@ jit::LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame)
 /* static */ void
 JitRuntime::Trace(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
 
     // Shared stubs are allocated in the atoms zone, so do not iterate
     // them after the atoms heap after it has been "finished."
@@ -778,7 +778,7 @@ JitCode::traceChildren(JSTracer* trc)
     }
     if (dataRelocTableBytes_) {
         // If we're moving objects, we need writable JIT code.
-        bool movingObjects = JS::CurrentThreadIsHeapMinorCollecting() || zone()->isGCCompacting();
+        bool movingObjects = JS::RuntimeHeapIsMinorCollecting() || zone()->isGCCompacting();
         MaybeAutoWritableJitCode awjc(this, movingObjects ? Reprotect : DontReprotect);
 
         uint8_t* start = code_ + dataRelocTableOffset();

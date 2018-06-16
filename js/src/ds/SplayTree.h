@@ -82,7 +82,7 @@ class SplayTree
             return false;
         Node* last = lookup(v);
         splay(last);
-        checkCoherency(root, nullptr);
+        checkCoherency();
         if (C::compare(v, last->item) == 0) {
             *res = last->item;
             return true;
@@ -112,7 +112,7 @@ class SplayTree
         element->parent = last;
 
         splay(element);
-        checkCoherency(root, nullptr);
+        checkCoherency();
         return true;
     }
 
@@ -157,7 +157,7 @@ class SplayTree
         root->item = swap->item;
         freeNode(swap);
 
-        checkCoherency(root, nullptr);
+        checkCoherency();
     }
 
     template <class Op>
@@ -276,29 +276,76 @@ class SplayTree
         forEachInner<Op>(op, node->right);
     }
 
-    Node* checkCoherency(Node* node, Node* minimum)
+    void checkCoherency() const
     {
 #ifdef DEBUG
         if (!enableCheckCoherency)
-            return nullptr;
-        if (!node) {
-            MOZ_ASSERT(!root);
-            return nullptr;
+            return;
+        if (!root)
+            return;
+        MOZ_ASSERT(root->parent == nullptr);
+        const Node* node = root;
+        const Node* minimum = nullptr;
+        MOZ_ASSERT_IF(node->left, node->left->parent == node);
+        MOZ_ASSERT_IF(node->right, node->right->parent == node);
+
+
+        // This is doing a depth-first search and check that the values are
+        // ordered properly.
+        while (true) {
+            // Go to the left-most child.
+            while (node->left) {
+                MOZ_ASSERT_IF(node->left, node->left->parent == node);
+                MOZ_ASSERT_IF(node->right, node->right->parent == node);
+                node = node->left;
+            }
+
+            MOZ_ASSERT_IF(minimum, C::compare(minimum->item, node->item) < 0);
+            minimum = node;
+
+            if (node->right) {
+                // Go once to the right and try again.
+                MOZ_ASSERT_IF(node->left, node->left->parent == node);
+                MOZ_ASSERT_IF(node->right, node->right->parent == node);
+                node = node->right;
+            } else {
+                // We reached a leaf node, move to the first branch to the right of
+                // our current left-most sub-tree.
+                MOZ_ASSERT(!node->left && !node->right);
+                const Node* prev = nullptr;
+
+                // Visit the parent node, to find the right branch which we have
+                // not visited yet. Either we are coming back from the right
+                // branch, or we are coming back from the left branch with no
+                // right branch to visit.
+                while (node->parent) {
+                    prev = node;
+                    node = node->parent;
+
+                    // If we came back from the left branch, visit the value.
+                    if (node->left == prev) {
+                        MOZ_ASSERT_IF(minimum, C::compare(minimum->item, node->item) < 0);
+                        minimum = node;
+                    }
+
+                    if (node->right != prev && node->right != nullptr)
+                        break;
+                }
+
+                if (!node->parent) {
+                    MOZ_ASSERT(node == root);
+                    // We reached the root node either because we came back from
+                    // the right hand side, or because the root node had a
+                    // single child.
+                    if (node->right == prev || node->right == nullptr)
+                        return;
+                }
+
+                // Go to the right node which we have not visited yet.
+                MOZ_ASSERT(node->right != prev && node->right != nullptr);
+                node = node->right;
+            }
         }
-        MOZ_ASSERT_IF(!node->parent, node == root);
-        MOZ_ASSERT_IF(minimum, C::compare(minimum->item, node->item) < 0);
-        if (node->left) {
-            MOZ_ASSERT(node->left->parent == node);
-            Node* leftMaximum = checkCoherency(node->left, minimum);
-            MOZ_ASSERT(C::compare(leftMaximum->item, node->item) < 0);
-        }
-        if (node->right) {
-            MOZ_ASSERT(node->right->parent == node);
-            return checkCoherency(node->right, node);
-        }
-        return node;
-#else
-        return nullptr;
 #endif
     }
 };

@@ -74,7 +74,7 @@ struct GCManagedDeletePolicy
     void operator()(const T* constPtr) {
         if (constPtr) {
             auto ptr = const_cast<T*>(constPtr);
-            if (JS::CurrentThreadIsHeapCollecting()) {
+            if (JS::RuntimeHeapIsCollecting()) {
                 MOZ_ASSERT(js::CurrentThreadIsGCSweeping());
                 // Do not attempt to clear out storebuffer edges.
             } else {
