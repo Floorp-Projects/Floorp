@@ -213,6 +213,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsUnicodeProperties.h"
 #include "nsTextFragment.h"
 #include "nsAttrValue.h"
@@ -222,6 +223,7 @@
 namespace mozilla {
 
 using mozilla::dom::Element;
+using mozilla::dom::ShadowRoot;
 
 /**
  * Returns true if aElement is one of the elements whose text content should not
@@ -276,6 +278,8 @@ GetDirectionFromChar(uint32_t ch)
   }
 }
 
+// FIXME(bug 1100912): Should ShadowRoot children affect the host if it's
+// dir=auto? Probably not at least in closed mode.
 inline static bool
 NodeAffectsDirAutoAncestor(nsINode* aTextNode)
 {
@@ -625,49 +629,67 @@ RecomputeDirectionality(Element* aElement, bool aNotify)
   MOZ_ASSERT(!aElement->HasDirAuto(),
              "RecomputeDirectionality called with dir=auto");
 
-  Directionality dir = eDir_LTR;
-
   if (aElement->HasValidDir()) {
-    dir = aElement->GetDirectionality();
-  } else {
-    Element* parent = aElement->GetParentElement();
-    if (parent) {
-      // If the element doesn't have an explicit dir attribute with a valid
-      // value, the directionality is the same as the parent element (but
-      // don't propagate the parent directionality if it isn't set yet).
-      Directionality parentDir = parent->GetDirectionality();
+    return aElement->GetDirectionality();
+  }
+
+  Directionality dir = eDir_LTR;
+  if (nsINode* parent = aElement->GetParentNode()) {
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(parent)) {
+      parent = shadow->GetHost();
+    }
+
+    if (parent && parent->IsElement()) {
+      // If the node doesn't have an explicit dir attribute with a valid value,
+      // the directionality is the same as the parent element (but don't propagate
+      // the parent directionality if it isn't set yet).
+      Directionality parentDir = parent->AsElement()->GetDirectionality();
       if (parentDir != eDir_NotSet) {
         dir = parentDir;
       }
-    } else {
-      // If there is no parent element and no dir attribute, the directionality
-      // is LTR.
-      dir = eDir_LTR;
     }
-
-    aElement->SetDirectionality(dir, aNotify);
   }
+
+  aElement->SetDirectionality(dir, aNotify);
   return dir;
 }
 
-void
-SetDirectionalityOnDescendants(Element* aElement, Directionality aDir,
-                               bool aNotify)
+static void
+SetDirectionalityOnDescendantsInternal(nsINode* aNode,
+                                       Directionality aDir,
+                                       bool aNotify)
 {
-  for (nsIContent* child = aElement->GetFirstChild(); child; ) {
+  if (Element* element = Element::FromNode(aNode)) {
+    if (ShadowRoot* shadow = element->GetShadowRoot()) {
+      SetDirectionalityOnDescendantsInternal(shadow, aDir, aNotify);
+    }
+  }
+
+  for (nsIContent* child = aNode->GetFirstChild(); child; ) {
     if (!child->IsElement()) {
-      child = child->GetNextNode(aElement);
+      child = child->GetNextNode(aNode);
       continue;
     }
 
     Element* element = child->AsElement();
     if (element->HasValidDir() || element->HasDirAuto()) {
-      child = child->GetNextNonChildNode(aElement);
+      child = child->GetNextNonChildNode(aNode);
       continue;
     }
+    if (ShadowRoot* shadow = element->GetShadowRoot()) {
+      SetDirectionalityOnDescendantsInternal(shadow, aDir, aNotify);
+    }
     element->SetDirectionality(aDir, aNotify);
-    child = child->GetNextNode(aElement);
+    child = child->GetNextNode(aNode);
   }
+}
+
+// We want the public version of this only to acc
+void
+SetDirectionalityOnDescendants(Element* aElement, Directionality aDir,
+                               bool aNotify)
+{
+  return SetDirectionalityOnDescendantsInternal(aElement, aDir, aNotify);
 }
 
 /**
