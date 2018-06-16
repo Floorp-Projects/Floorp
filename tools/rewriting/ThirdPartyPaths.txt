@@ -3,6 +3,8 @@ browser/extensions/mortar/ppapi/
 db/sqlite3/src/
 devtools/client/sourceeditor/codemirror/
 devtools/client/sourceeditor/tern/
+devtools/shared/heapsnapshot/CoreDump.pb.cc
+devtools/shared/heapsnapshot/CoreDump.pb.h
 editor/libeditor/tests/browserscope/lib/richtext/
 editor/libeditor/tests/browserscope/lib/richtext2/
 extensions/spellcheck/hunspell/src/
