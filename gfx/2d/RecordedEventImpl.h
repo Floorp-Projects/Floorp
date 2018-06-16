@@ -95,7 +95,8 @@ private:
 class RecordedDrawTargetDestruction : public RecordedEventDerived<RecordedDrawTargetDestruction> {
 public:
   MOZ_IMPLICIT RecordedDrawTargetDestruction(ReferencePtr aRefPtr)
-    : RecordedEventDerived(DRAWTARGETDESTRUCTION), mRefPtr(aRefPtr)
+    : RecordedEventDerived(DRAWTARGETDESTRUCTION), mRefPtr(aRefPtr),
+      mBackendType(BackendType::NONE)
   {}
 
   virtual bool PlayEvent(Translator *aTranslator) const override;
@@ -181,7 +182,8 @@ private:
 class RecordedFillRect : public RecordedDrawingEvent<RecordedFillRect> {
 public:
   RecordedFillRect(DrawTarget *aDT, const Rect &aRect, const Pattern &aPattern, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(FILLRECT, aDT), mRect(aRect), mOptions(aOptions)
+    : RecordedDrawingEvent(FILLRECT, aDT), mRect(aRect),
+      mPattern(), mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -210,7 +212,8 @@ public:
   RecordedStrokeRect(DrawTarget *aDT, const Rect &aRect, const Pattern &aPattern,
                      const StrokeOptions &aStrokeOptions, const DrawOptions &aOptions)
     : RecordedDrawingEvent(STROKERECT, aDT), mRect(aRect),
-      mStrokeOptions(aStrokeOptions), mOptions(aOptions)
+      mPattern(), mStrokeOptions(aStrokeOptions),
+      mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -241,7 +244,7 @@ public:
                      const Pattern &aPattern, const StrokeOptions &aStrokeOptions,
                      const DrawOptions &aOptions)
     : RecordedDrawingEvent(STROKELINE, aDT), mBegin(aBegin), mEnd(aEnd),
-      mStrokeOptions(aStrokeOptions), mOptions(aOptions)
+      mPattern(), mStrokeOptions(aStrokeOptions), mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -270,7 +273,8 @@ private:
 class RecordedFill : public RecordedDrawingEvent<RecordedFill> {
 public:
   RecordedFill(DrawTarget *aDT, ReferencePtr aPath, const Pattern &aPattern, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(FILL, aDT), mPath(aPath), mOptions(aOptions)
+    : RecordedDrawingEvent(FILL, aDT), mPath(aPath),
+      mPattern(), mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -297,7 +301,8 @@ class RecordedFillGlyphs : public RecordedDrawingEvent<RecordedFillGlyphs> {
 public:
   RecordedFillGlyphs(DrawTarget *aDT, ReferencePtr aScaledFont, const Pattern &aPattern, const DrawOptions &aOptions,
                      const Glyph *aGlyphs, uint32_t aNumGlyphs)
-    : RecordedDrawingEvent(FILLGLYPHS, aDT), mScaledFont(aScaledFont), mOptions(aOptions)
+    : RecordedDrawingEvent(FILLGLYPHS, aDT), mScaledFont(aScaledFont),
+      mPattern(), mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
     mNumGlyphs = aNumGlyphs;
@@ -329,7 +334,7 @@ private:
 class RecordedMask : public RecordedDrawingEvent<RecordedMask> {
 public:
   RecordedMask(DrawTarget *aDT, const Pattern &aSource, const Pattern &aMask, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(MASK, aDT), mOptions(aOptions)
+    : RecordedDrawingEvent(MASK, aDT), mSource(), mMask(), mOptions(aOptions)
   {
     StorePattern(mSource, aSource);
     StorePattern(mMask, aMask);
@@ -357,7 +362,7 @@ class RecordedStroke : public RecordedDrawingEvent<RecordedStroke> {
 public:
   RecordedStroke(DrawTarget *aDT, ReferencePtr aPath, const Pattern &aPattern,
                      const StrokeOptions &aStrokeOptions, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(STROKE, aDT), mPath(aPath),
+    : RecordedDrawingEvent(STROKE, aDT), mPath(aPath), mPattern(),
       mStrokeOptions(aStrokeOptions), mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
@@ -1008,6 +1013,7 @@ public:
     : RecordedEventDerived(FONTDATA)
     , mType(aUnscaledFont->GetType())
     , mData(nullptr)
+    , mFontDetails()
   {
     mGetFontFileDataSucceeded = aUnscaledFont->GetFontFileData(&FontDataProc, this) && mData;
   }
@@ -1269,8 +1275,8 @@ class RecordedMaskSurface : public RecordedDrawingEvent<RecordedMaskSurface> {
 public:
   RecordedMaskSurface(DrawTarget *aDT, const Pattern &aPattern, ReferencePtr aRefMask,
                       const Point &aOffset, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(MASKSURFACE, aDT), mRefMask(aRefMask), mOffset(aOffset)
-    , mOptions(aOptions)
+    : RecordedDrawingEvent(MASKSURFACE, aDT), mPattern(), mRefMask(aRefMask),
+      mOffset(aOffset), mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }

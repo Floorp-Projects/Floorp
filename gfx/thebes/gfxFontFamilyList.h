@@ -282,6 +282,7 @@ public:
 
     explicit FontFamilyList(nsTArray<FontFamilyName>&& aNames)
         : mFontlist(MakeNotNull<SharedFontList*>(std::move(aNames)))
+        , mDefaultFontType(eFamily_none)
     {
     }
 

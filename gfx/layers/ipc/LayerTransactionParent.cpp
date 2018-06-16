@@ -61,6 +61,7 @@ LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
   , mPendingTransaction{0}
   , mDestroyed(false)
   , mIPCOpen(false)
+  , mUpdateHitTestingTree(false)
 {
   MOZ_ASSERT(mId.IsValid());
 }

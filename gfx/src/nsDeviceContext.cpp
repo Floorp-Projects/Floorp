@@ -47,7 +47,7 @@ using mozilla::widget::ScreenManager;
 class nsFontCache final : public nsIObserver
 {
 public:
-    nsFontCache() {}
+    nsFontCache(): mContext(nullptr) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER

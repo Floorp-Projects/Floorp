@@ -171,7 +171,9 @@ TexturedLayerMLGPU::AssignBigImage(FrameBuilder* aBuilder,
 
 TempImageLayerMLGPU::TempImageLayerMLGPU(LayerManagerMLGPU* aManager)
  : ImageLayer(aManager, static_cast<HostLayer*>(this)),
-   TexturedLayerMLGPU(aManager)
+   TexturedLayerMLGPU(aManager),
+   mFilter(gfx::SamplingFilter::GOOD),
+   mIsOpaque(false)
 {
 }
 

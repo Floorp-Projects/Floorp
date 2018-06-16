@@ -384,7 +384,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mCheckedForOpszAxis(false),
       mTrakTable(nullptr),
       mTrakValues(nullptr),
-      mTrakSizeTable(nullptr)
+      mTrakSizeTable(nullptr),
+      mNumTrakSizes(0)
 {
     mWeightRange = aWeight;
 }
@@ -411,7 +412,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mCheckedForOpszAxis(false),
       mTrakTable(nullptr),
       mTrakValues(nullptr),
-      mTrakSizeTable(nullptr)
+      mTrakSizeTable(nullptr),
+      mNumTrakSizes(0)
 {
     mFontRef = aFontRef;
     mFontRefInitialized = true;

@@ -632,7 +632,8 @@ class DrawTargetAutoDisableSubpixelAntialiasing {
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
-    DrawTargetAutoDisableSubpixelAntialiasing(DrawTarget *aDT, bool aDisable)
+    DrawTargetAutoDisableSubpixelAntialiasing(DrawTarget* aDT, bool aDisable) :
+      mSubpixelAntialiasingEnabled(false)
     {
         if (aDisable) {
             mDT = aDT;
