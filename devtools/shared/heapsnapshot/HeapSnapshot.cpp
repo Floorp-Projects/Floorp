@@ -1359,7 +1359,9 @@ public:
   HeapSnapshotHandler(CoreDumpWriter& writer,
                       JS::CompartmentSet* compartments)
     : writer(writer),
-      compartments(compartments)
+      compartments(compartments),
+      nodeCount(0),
+      edgeCount(0)
   { }
 
   // JS::ubi::BreadthFirst handler interface.
