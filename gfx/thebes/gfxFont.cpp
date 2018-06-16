@@ -821,6 +821,7 @@ gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
     mAntialiasOption(anAAOption),
     mIsValid(true),
     mApplySyntheticBold(false),
+    mKerningEnabled(false),
     mMathInitialized(false)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS

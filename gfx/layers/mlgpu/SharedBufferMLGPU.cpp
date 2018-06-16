@@ -20,6 +20,7 @@ SharedBufferMLGPU::SharedBufferMLGPU(MLGDevice* aDevice, MLGBufferType aType, si
    mCanUseOffsetAllocation(true),
    mCurrentPosition(0),
    mMaxSize(0),
+   mMap(),
    mMapped(false),
    mBytesUsedThisFrame(0),
    mNumSmallFrames(0)
@@ -193,7 +194,9 @@ VertexBufferSection::Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aNumVert
 }
 
 ConstantBufferSection::ConstantBufferSection()
- : mOffset(-1)
+ : mOffset(-1),
+   mNumBytes(0),
+   mNumItems(0)
 {}
 
 void

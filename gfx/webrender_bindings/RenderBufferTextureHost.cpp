@@ -16,6 +16,10 @@ RenderBufferTextureHost::RenderBufferTextureHost(uint8_t* aBuffer,
                                                  const layers::BufferDescriptor& aDescriptor)
   : mBuffer(aBuffer)
   , mDescriptor(aDescriptor)
+  , mMap()
+  , mYMap()
+  , mCbMap()
+  , mCrMap()
   , mLocked(false)
 {
   MOZ_COUNT_CTOR_INHERITED(RenderBufferTextureHost, RenderTextureHost);

@@ -487,7 +487,8 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
 }
 
 gfxPlatform::gfxPlatform()
-  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
+  : mHasVariationFontSupport(false)
+  , mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
   , mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo)
   , mTilesInfoCollector(this, &gfxPlatform::GetTilesSupportInfo)
   , mCompositorBackend(layers::LayersBackend::LAYERS_NONE)

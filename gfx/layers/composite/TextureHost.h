@@ -935,7 +935,10 @@ public:
   explicit CompositingRenderTarget(const gfx::IntPoint& aOrigin)
     : mClearOnBind(false)
     , mOrigin(aOrigin)
+    , mZNear(0)
+    , mZFar(0)
     , mHasComplexProjection(false)
+    , mEnableDepthBuffer(false)
   {}
   virtual ~CompositingRenderTarget() {}
 
