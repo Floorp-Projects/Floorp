@@ -4990,6 +4990,7 @@ CompareIRGenerator::trackAttached(const char* name)
     if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
         sp.valueProperty("lhs", lhsVal_);
         sp.valueProperty("rhs", rhsVal_);
+        sp.opcodeProperty("op", op_);
     }
 #endif
 }
