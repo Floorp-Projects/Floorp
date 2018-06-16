@@ -144,12 +144,12 @@ IsMarkingTrace(JSTracer* trc)
     // Determine whether tracing is happening during normal marking.  We need to
     // test all the following conditions, since:
     //
-    //   1. During TraceRuntime, CurrentThreadIsHeapBusy() is true, but the
+    //   1. During TraceRuntime, RuntimeHeapIsBusy() is true, but the
     //      tracer might not be a marking tracer.
     //   2. When a write barrier executes, IsMarkingTracer is true, but
-    //      CurrentThreadIsHeapBusy() will be false.
+    //      RuntimeHeapIsBusy() will be false.
 
-    return JS::CurrentThreadIsHeapCollecting() && trc->isMarkingTracer();
+    return JS::RuntimeHeapIsCollecting() && trc->isMarkingTracer();
 }
 
 void

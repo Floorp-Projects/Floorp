@@ -444,9 +444,6 @@ struct JSContext : public JS::RootingContext,
     // State used by util/DoubleToString.cpp.
     js::ThreadData<DtoaState*> dtoaState;
 
-    // Any GC activity occurring on this thread.
-    js::ThreadData<JS::HeapState> heapState;
-
     /*
      * When this flag is non-zero, any attempt to GC will be skipped. It is used
      * to suppress GC when reporting an OOM (see ReportOutOfMemory) and in

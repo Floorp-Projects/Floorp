@@ -24,7 +24,7 @@ bool
 RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(shadowZone->runtimeFromMainThread()));
-    return JS::CurrentThreadIsHeapMajorCollecting();
+    return JS::RuntimeHeapIsMajorCollecting();
 }
 
 #ifdef DEBUG

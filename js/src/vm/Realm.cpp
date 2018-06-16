@@ -282,7 +282,7 @@ Realm::traceGlobal(JSTracer* trc)
     savedStacks_.trace(trc);
 
     // Atoms are always tenured.
-    if (!JS::CurrentThreadIsHeapMinorCollecting())
+    if (!JS::RuntimeHeapIsMinorCollecting())
         varNames_.trace(trc);
 }
 
@@ -308,7 +308,7 @@ Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMa
                   "on-stack object pending metadata");
     }
 
-    if (!JS::CurrentThreadIsHeapMinorCollecting()) {
+    if (!JS::RuntimeHeapIsMinorCollecting()) {
         // The global is never nursery allocated, so we don't need to
         // trace it when doing a minor collection.
         //
@@ -343,7 +343,7 @@ Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMa
     // keys of the map to hold the JSScript alive.
     if (scriptCountsMap &&
         trc->runtime()->profilingScripts &&
-        !JS::CurrentThreadIsHeapMinorCollecting())
+        !JS::RuntimeHeapIsMinorCollecting())
     {
         MOZ_ASSERT_IF(!trc->runtime()->isBeingDestroyed(), collectCoverage());
         for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront()) {

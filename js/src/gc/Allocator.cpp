@@ -284,7 +284,7 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
     MOZ_ASSERT_IF(!cx->zone()->isAtomsZone(),
                   kind != AllocKind::ATOM &&
                   kind != AllocKind::FAT_INLINE_ATOM);
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
     MOZ_ASSERT(cx->isAllocAllowed());
 #endif
 
@@ -380,7 +380,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind)
     // It should not be possible to allocate on the main thread while we are
     // inside a GC.
     Zone *zone = cx->zone();
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy(), "allocating while under GC");
+    MOZ_ASSERT(!JS::RuntimeHeapIsBusy(), "allocating while under GC");
 
     return cx->arenas()->allocateFromArena(zone, thingKind, ShouldCheckThresholds::CheckThresholds);
 }
@@ -405,8 +405,8 @@ GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind)
 
     zone->arenas.checkEmptyFreeList(thingKind);
     mozilla::DebugOnly<JSRuntime*> rt = zone->runtimeFromMainThread();
-    MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
-    MOZ_ASSERT_IF(!JS::CurrentThreadIsHeapMinorCollecting(), !rt->gc.isBackgroundSweeping());
+    MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
+    MOZ_ASSERT_IF(!JS::RuntimeHeapIsMinorCollecting(), !rt->gc.isBackgroundSweeping());
 
     return zone->arenas.allocateFromArena(zone, thingKind, ShouldCheckThresholds::DontCheckThresholds);
 }

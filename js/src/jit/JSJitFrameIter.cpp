@@ -409,7 +409,7 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
     if (!TlsContext.get()->isProfilerSamplingEnabled())
         return true;
 
-    if (JS::CurrentThreadIsHeapMinorCollecting())
+    if (JS::RuntimeHeapIsMinorCollecting())
         return true;
 
     JitRuntime* jitrt = rt->jitRuntime();
