@@ -121,7 +121,12 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(Element* aHandlerElement, XBLReserv
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding)
   : mHandlerText(nullptr),
     mLineNumber(0),
+    mPhase(0),
+    mType(0),
+    mMisc(0),
     mReserved(XBLReservedKey_False),
+    mKeyMask(0),
+    mDetail(0),
     mNextHandler(nullptr),
     mPrototypeBinding(aBinding)
 {

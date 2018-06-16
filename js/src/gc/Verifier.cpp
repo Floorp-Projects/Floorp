@@ -718,7 +718,7 @@ CheckGrayMarkingTracer::check(AutoTraceSession& session)
 JS_FRIEND_API(bool)
 js::CheckGrayMarkingState(JSRuntime* rt)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
     MOZ_ASSERT(!rt->gc.isIncrementalGCInProgress());
     if (!rt->gc.areGrayBitsValid())
         return true;

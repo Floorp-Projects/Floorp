@@ -118,6 +118,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
   mBindToUntrustedContent(false),
   mSimpleScopeChain(false),
   mResources(nullptr),
+  mXBLDocInfoWeak(nullptr),
   mBaseNameSpaceID(kNameSpaceID_None)
 {
   MOZ_COUNT_CTOR(nsXBLPrototypeBinding);
