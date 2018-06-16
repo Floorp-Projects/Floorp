@@ -9408,6 +9408,10 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
+    "-webkit-appearance",
+    "layout.css.webkit-appearance.enabled"
+  ],
+  [
     "-webkit-backface-visibility",
     "layout.css.prefixes.webkit"
   ],

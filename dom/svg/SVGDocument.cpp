@@ -108,11 +108,16 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     // pulls in from the category manager. That keeps memory use of
     // SVG-as-an-image down.
     //
-    // We do this before adding UASheet() etc. below because
-    // EnsureOnDemandBuiltInUASheet prepends, and B2G/Fennec's
-    // content.css must come after UASheet() etc.
+    // We do this before adding the other sheets below because
+    // EnsureOnDemandBuiltInUASheet prepends, and B2G/Fennec's/GeckoView's
+    // content.css must come after those UASheet() etc.
+    //
+    // FIXME(emilio, bug 1468133): We may already have loaded some of the other
+    // on-demand built-in UA sheets, including svg.css, so this looks somewhat
+    // bogus... Also, this should probably just use the stylesheet service which
+    // also has the right sheets cached and parsed here...
     nsCOMPtr<nsICategoryManager> catMan =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
     if (catMan) {
       nsCOMPtr<nsISimpleEnumerator> sheets;
       catMan->EnumerateCategory("agent-style-sheets", getter_AddRefs(sheets));
