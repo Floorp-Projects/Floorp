@@ -424,6 +424,12 @@ public:
   {
     mNotification->ReleaseObject();
   }
+
+  void
+  Cancel() override
+  {
+    mNotification->ReleaseObject();
+  }
 };
 
 // Create one whenever you require ownership of the notification. Use with
