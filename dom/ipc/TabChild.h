@@ -831,7 +831,6 @@ private:
   layers::LayersId mLayersId;
   int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;
-  nscolor mLastBackgroundColor;
   Maybe<bool> mLayersConnected;
   bool mDidFakeShow;
   bool mNotified;

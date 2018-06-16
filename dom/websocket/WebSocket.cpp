@@ -98,6 +98,7 @@ public:
   , mDisconnectingOrDisconnected(false)
   , mCloseEventWasClean(false)
   , mCloseEventCode(nsIWebSocketChannel::CLOSE_ABNORMAL)
+  , mPort(0)
   , mScriptLine(0)
   , mScriptColumn(0)
   , mInnerWindowID(0)

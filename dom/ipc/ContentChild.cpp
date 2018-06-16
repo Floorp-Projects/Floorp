@@ -546,6 +546,7 @@ ContentChild::ContentChild()
  , mMainChromeTid(0)
  , mMsaaID(0)
 #endif
+ , mIsForBrowser(false)
  , mIsAlive(true)
  , mShuttingDown(false)
 {
