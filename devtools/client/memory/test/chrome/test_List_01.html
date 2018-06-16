@@ -15,59 +15,58 @@ Test to verify the delete button calls the onDelete handler for an item
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
-          try {
-            const container = document.getElementById("container");
+          "use strict";
+          window.onload = async function() {
+            try {
+              const container = document.getElementById("container");
 
-            let deletedSnapshots = [];
+              const deletedSnapshots = [];
 
-            let snapshots = [ TEST_SNAPSHOT, TEST_SNAPSHOT, TEST_SNAPSHOT ]
-              .map((snapshot, index) => immutableUpdate(snapshot, {
-                index: snapshot.index + index
-              }));
+              const snapshots = [ TEST_SNAPSHOT, TEST_SNAPSHOT, TEST_SNAPSHOT ]
+                .map((snapshot, index) => immutableUpdate(snapshot, {
+                  index: snapshot.index + index
+                }));
 
-            await renderComponent(
-              List({
-                itemComponent: SnapshotListItem,
-                onClick: noop,
-                onDelete: (item) => deletedSnapshots.push(item),
-                items: snapshots
-              }),
-              container
-            );
+              await renderComponent(
+                List({
+                  itemComponent: SnapshotListItem,
+                  onClick: noop,
+                  onDelete: (item) => deletedSnapshots.push(item),
+                  items: snapshots
+                }),
+                container
+              );
 
-            let deleteButtons = container.querySelectorAll('.delete');
+              const deleteButtons = container.querySelectorAll(".delete");
 
-            is(container.querySelectorAll('.snapshot-list-item').length, 3,
-              "There are 3 list items\n");
-            is(deletedSnapshots.length, 0,
-              "Not snapshots have been deleted\n");
+              is(container.querySelectorAll(".snapshot-list-item").length, 3,
+                "There are 3 list items\n");
+              is(deletedSnapshots.length, 0,
+                "Not snapshots have been deleted\n");
 
-            deleteButtons[1].click();
+              deleteButtons[1].click();
 
-            is(deletedSnapshots.length, 1, "One snapshot was deleted\n");
-            is(deletedSnapshots[0], snapshots[1],
-              "Deleted snapshot was added to the deleted list\n");
+              is(deletedSnapshots.length, 1, "One snapshot was deleted\n");
+              is(deletedSnapshots[0], snapshots[1],
+                "Deleted snapshot was added to the deleted list\n");
 
-            deleteButtons[0].click();
+              deleteButtons[0].click();
 
-            is(deletedSnapshots.length, 2, "Two snapshots were deleted\n");
-            is(deletedSnapshots[1], snapshots[0],
-              "Deleted snapshot was added to the deleted list\n");
+              is(deletedSnapshots.length, 2, "Two snapshots were deleted\n");
+              is(deletedSnapshots[1], snapshots[0],
+                "Deleted snapshot was added to the deleted list\n");
 
-            deleteButtons[2].click();
+              deleteButtons[2].click();
 
-            is(deletedSnapshots.length, 3, "Three snapshots were deleted\n");
-            is(deletedSnapshots[2], snapshots[2],
-              "Deleted snapshot was added to the deleted list\n");
-
-
-          } catch(e) {
-            ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
-          } finally {
-            SimpleTest.finish();
-          }
-         };
+              is(deletedSnapshots.length, 3, "Three snapshots were deleted\n");
+              is(deletedSnapshots[2], snapshots[2],
+                "Deleted snapshot was added to the deleted list\n");
+            } catch (e) {
+              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+            } finally {
+              SimpleTest.finish();
+            }
+          };
         </script>
     </pre>
 </body>

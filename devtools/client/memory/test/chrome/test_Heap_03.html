@@ -15,11 +15,12 @@ but not in other dominator tree states.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              const container = document.getElementById("container");
 
-             for (let state of [dominatorTreeState.COMPUTING, dominatorTreeState.FETCHING]) {
+             for (const state of [dominatorTreeState.COMPUTING, dominatorTreeState.FETCHING]) {
                await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                  view: { state: viewState.DOMINATOR_TREE, },
                  snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
@@ -35,13 +36,17 @@ but not in other dominator tree states.
                   `Should show a throbber for state = ${state}`);
              }
 
-             for (let state of [dominatorTreeState.LOADED, dominatorTreeState.INCREMENTAL_FETCHING]) {
+             for (
+              const state of [
+               dominatorTreeState.LOADED, dominatorTreeState.INCREMENTAL_FETCHING
+              ]) {
                await renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
                  view: { state: viewState.DOMINATOR_TREE, },
                  snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
                    dominatorTree: immutableUpdate(TEST_HEAP_PROPS.snapshot.dominatorTree, {
                      state,
-                     activeFetchRequestCount: state === dominatorTreeState.INCREMENTAL_FETCHING ? 1 : undefined,
+                     activeFetchRequestCount:
+                      state === dominatorTreeState.INCREMENTAL_FETCHING ? 1 : undefined,
                    }),
                  }),
                })), container);
@@ -62,7 +67,7 @@ but not in other dominator tree states.
 
              ok(!container.querySelector(".devtools-throbber"),
                 `Should not show a throbber for ERROR state`);
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();
