@@ -1,5 +1,8 @@
 /* This code is mostly copied from chrome/test/unit/head_crtestutils.js */
 
+// This file assumes chrome-harness.js is loaded in the global scope.
+/* import-globals-from ../../../../testing/mochitest/chrome-harness.js */
+
 const NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
 const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
 
