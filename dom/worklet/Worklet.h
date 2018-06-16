@@ -30,7 +30,7 @@ enum class CallerType : uint32_t;
 class WorkletLoadInfo
 {
 public:
-  WorkletLoadInfo();
+  WorkletLoadInfo(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   ~WorkletLoadInfo();
 
   uint64_t OuterWindowID() const { return mOuterWindowID; }

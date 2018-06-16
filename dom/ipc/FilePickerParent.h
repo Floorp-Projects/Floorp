@@ -26,6 +26,7 @@ class FilePickerParent : public PFilePickerParent
                    const int16_t& aMode)
   : mTitle(aTitle)
   , mMode(aMode)
+  , mResult(nsIFilePicker::returnOK)
   {}
 
   virtual ~FilePickerParent();

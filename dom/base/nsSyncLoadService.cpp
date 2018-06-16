@@ -39,7 +39,11 @@ class nsSyncLoader : public nsIStreamListener,
                      public nsSupportsWeakReference
 {
 public:
-    nsSyncLoader() : mLoading(false) {}
+    nsSyncLoader()
+      : mLoading(false)
+      , mAsyncLoadStatus(NS_ERROR_NOT_INITIALIZED)
+    {
+    }
 
     NS_DECL_ISUPPORTS
 
