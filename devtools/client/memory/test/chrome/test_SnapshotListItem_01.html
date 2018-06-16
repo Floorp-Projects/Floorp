@@ -16,37 +16,37 @@ path.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
-          try {
-            const container = document.getElementById("container");
+          "use strict";
+          window.onload = async function() {
+            try {
+              const container = document.getElementById("container");
 
-            await renderComponent(
-              SnapshotListItem(TEST_SNAPSHOT_LIST_ITEM_PROPS),
-              container
-            );
+              await renderComponent(
+                SnapshotListItem(TEST_SNAPSHOT_LIST_ITEM_PROPS),
+                container
+              );
 
-            ok(container.querySelector('.delete'),
-               "Should have delete button when there is a path");
+              ok(container.querySelector(".delete"),
+                 "Should have delete button when there is a path");
 
-            const pathlessProps = immutableUpdate(
-                TEST_SNAPSHOT_LIST_ITEM_PROPS,
-                {item: immutableUpdate(TEST_SNAPSHOT, {path: null})}
-            );
+              const pathlessProps = immutableUpdate(
+                  TEST_SNAPSHOT_LIST_ITEM_PROPS,
+                  {item: immutableUpdate(TEST_SNAPSHOT, {path: null})}
+              );
 
-            await renderComponent(
-              SnapshotListItem(pathlessProps),
-              container
-            );
+              await renderComponent(
+                SnapshotListItem(pathlessProps),
+                container
+              );
 
-            ok(!container.querySelector('.delete'),
-               "No delete button should be found if there is no path\n");
-
-          } catch(e) {
-            ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
-          } finally {
-            SimpleTest.finish();
-          }
-         };
+              ok(!container.querySelector(".delete"),
+                 "No delete button should be found if there is no path\n");
+            } catch (e) {
+              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+            } finally {
+              SimpleTest.finish();
+            }
+          };
         </script>
     </pre>
 </body>

@@ -16,7 +16,8 @@ Test that children pointers show up at the correct times.
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              const container = document.getElementById("container");
 
@@ -52,8 +53,7 @@ Test that children pointers show up at the correct times.
 
              ok(container.querySelector(".children-pointer"),
                 "Do show children pointer when non-inverted and have children");
-
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();

@@ -16,7 +16,8 @@ Test that we don't display `JS::ubi::RootList` for the root, and instead show "G
     <pre id="test">
         <script src="head.js" type="application/javascript"></script>
         <script type="application/javascript">
-         window.onload = async function () {
+         "use strict";
+         window.onload = async function() {
            try {
              const container = document.getElementById("container");
 
@@ -33,7 +34,7 @@ Test that we don't display `JS::ubi::RootList` for the root, and instead show "G
                 "Should not display `JS::ubi::RootList`");
              ok(container.textContent.includes("GC Roots"),
                 "Should display `GC Roots` instead");
-           } catch(e) {
+           } catch (e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
              SimpleTest.finish();
