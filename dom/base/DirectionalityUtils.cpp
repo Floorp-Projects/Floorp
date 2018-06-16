@@ -371,7 +371,7 @@ GetDirectionFromText(const nsTextFragment* aFrag,
  * @return the text node containing the character that determined the direction
  */
 static nsTextNode*
-WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
+WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify,
                                     nsINode* aChangedNode = nullptr)
 {
   MOZ_ASSERT(aElement, "Must have an element");
@@ -782,8 +782,9 @@ WalkDescendantsClearAncestorDirAuto(Element* aElement)
   }
 }
 
-void SetAncestorDirectionIfAuto(nsTextNode* aTextNode, Directionality aDir,
-                                bool aNotify = true)
+void
+SetAncestorDirectionIfAuto(nsTextNode* aTextNode, Directionality aDir,
+                           bool aNotify = true)
 {
   MOZ_ASSERT(aTextNode->NodeType() == nsINode::TEXT_NODE,
              "Must be a text node");
@@ -996,7 +997,7 @@ OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
 }
 
 void
-SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent)
+SetDirOnBind(Element* aElement, nsIContent* aParent)
 {
   // Set the AncestorHasDirAuto flag, unless this element shouldn't affect
   // ancestors that have dir=auto
@@ -1034,7 +1035,8 @@ SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent)
   }
 }
 
-void ResetDir(mozilla::dom::Element* aElement)
+void
+ResetDir(Element* aElement)
 {
   if (aElement->HasDirAutoSet()) {
     nsTextNode* setByNode =
