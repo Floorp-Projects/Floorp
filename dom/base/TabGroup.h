@@ -46,7 +46,8 @@ class TabChild;
 class DocGroup;
 class TabChild;
 
-class TabGroup final : public SchedulerGroup
+class TabGroup final : public SchedulerGroup,
+                       public LinkedListElement<TabGroup>
 {
 private:
   class HashEntry : public nsCStringHashKey
@@ -146,6 +147,16 @@ public:
     return mNumOfIndexedDBDatabases;
   }
 
+  static LinkedList<TabGroup>* GetTabGroupList()
+  {
+    return sTabGroups;
+  }
+
+  // This returns true if all the window objects in all the TabGroups are
+  // either inactive (for example in bfcache) or are in background tabs which
+  // can be throttled.
+  static bool HasOnlyThrottableTabs();
+
 private:
   virtual AbstractThread*
   AbstractMainThreadForImpl(TaskCategory aCategory) override;
@@ -167,6 +178,8 @@ private:
   DocGroupMap mDocGroups;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
   uint32_t mForegroundCount;
+
+  static LinkedList<TabGroup>* sTabGroups;
 };
 
 } // namespace dom
