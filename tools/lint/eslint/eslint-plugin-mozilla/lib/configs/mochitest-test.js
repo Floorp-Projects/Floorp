@@ -3,41 +3,24 @@
 
 module.exports = {
   "env": {
-    "browser": true,
-    "mozilla/simpletest": true
+    "browser": true
   },
 
   // All globals made available in the test environment.
   "globals": {
-    // `$` is defined in SimpleTest.js
-    "$": false,
-    "Assert": false,
-    "EventUtils": false,
-    "SpecialPowers": false,
-    "addLoadEvent": false,
-    "add_task": false,
-    "executeSoon": false,
-    "export_assertions": false,
-    "finish": false,
-    "gTestPath": false,
-    "getRootDirectory": false,
-    "getTestFilePath": false,
-    "info": false,
-    "is": false,
-    "isDeeply": false,
-    "isnot": false,
-    "netscape": false,
-    "ok": false,
-    "promise": false,
-    "registerCleanupFunction": false,
-    "requestLongerTimeout": false,
-    "todo": false,
-    "todo_is": false,
-    "todo_isnot": false,
-    "waitForClipboard": false,
-    "waitForExplicitFinish": false,
-    "waitForFocus": false
+    // SpecialPowers is injected into the window object via SimpleTest.js
+    "SpecialPowers": false
   },
+
+  "overrides": [{
+    "env": {
+      // Ideally we wouldn't be using the simpletest env here, but our uses of
+      // js files mean we pick up everything from the global scope, which could
+      // be any one of a number of html files. So we just allow the basics...
+      "mozilla/simpletest": true
+    },
+    "files": ["*.js"]
+  }],
 
   "plugins": [
     "mozilla"
