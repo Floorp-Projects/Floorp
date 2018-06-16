@@ -16,7 +16,14 @@
 class nsSMILKeySpline
 {
 public:
-  nsSMILKeySpline() { /* caller must call Init later */ }
+  nsSMILKeySpline()
+    : mX1(0)
+    , mY1(0)
+    , mX2(0)
+    , mY2(0)
+  { 
+    /* caller must call Init later */\
+  }
 
   /**
    * Creates a new key spline control point description.
@@ -26,6 +33,10 @@ public:
    */
   nsSMILKeySpline(double aX1, double aY1,
                   double aX2, double aY2)
+    : mX1(0)
+    , mY1(0)
+    , mX2(0)
+    , mY2(0)
   {
     Init(aX1, aY1, aX2, aY2);
   }

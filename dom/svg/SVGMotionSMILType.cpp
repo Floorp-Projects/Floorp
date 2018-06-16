@@ -64,7 +64,10 @@ struct MotionSegment
   // Default constructor just locks us into being a Translation, and leaves
   // other fields uninitialized (since client is presumably about to set them)
   MotionSegment()
-    : mSegmentType(eSegmentType_Translation)
+    : mRotateType(eRotateType_Auto),
+      mRotateAngle(0.0),
+      mSegmentType(eSegmentType_Translation),
+      mU{}
   { }
 
   // Constructor for a translation
