@@ -3,12 +3,12 @@
 extern crate serde;
 use self::serde::ser::{Serialize, Serializer};
 use self::serde::de::{Deserialize, DeserializeSeed, Deserializer, Visitor, EnumAccess,
-                      VariantAccess, Error};
+                      Unexpected, VariantAccess, Error};
 
 use {Level, LevelFilter, LOG_LEVEL_NAMES};
 
 use std::fmt;
-use std::str::FromStr;
+use std::str::{self, FromStr};
 
 // The Deserialize impls are handwritten to be case insensitive using FromStr.
 
@@ -47,6 +47,16 @@ impl<'de> Deserialize<'de> for Level {
             {
                 // Case insensitive.
                 FromStr::from_str(s).map_err(|_| Error::unknown_variant(s, &LOG_LEVEL_NAMES[1..]))
+            }
+
+            fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                let variant = str::from_utf8(value)
+                    .map_err(|_| Error::invalid_value(Unexpected::Bytes(value), &self))?;
+
+                self.visit_str(variant)
             }
         }
 
@@ -122,6 +132,16 @@ impl<'de> Deserialize<'de> for LevelFilter {
                 // Case insensitive.
                 FromStr::from_str(s).map_err(|_| Error::unknown_variant(s, &LOG_LEVEL_NAMES))
             }
+
+            fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                let variant = str::from_utf8(value)
+                    .map_err(|_| Error::invalid_value(Unexpected::Bytes(value), &self))?;
+
+                self.visit_str(variant)
+            }
         }
 
         impl<'de> DeserializeSeed<'de> for LevelFilterIdentifier {
@@ -162,7 +182,7 @@ impl<'de> Deserialize<'de> for LevelFilter {
 #[cfg(test)]
 mod tests {
     extern crate serde_test;
-    use self::serde_test::{Token, assert_tokens, assert_de_tokens, assert_de_tokens_error};
+    use self::serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
 
     use {Level, LevelFilter};
 
@@ -173,11 +193,29 @@ mod tests {
         }
     }
 
+    fn level_bytes_tokens(variant: &'static [u8]) -> [Token; 3] {
+        [
+            Token::Enum { name: "Level" },
+            Token::Bytes(variant),
+            Token::Unit,
+        ]
+    }
+
     fn level_filter_token(variant: &'static str) -> Token {
         Token::UnitVariant {
             name: "LevelFilter",
             variant: variant,
         }
+    }
+
+    fn level_filter_bytes_tokens(variant: &'static [u8]) -> [Token; 3] {
+        [
+            Token::Enum {
+                name: "LevelFilter",
+            },
+            Token::Bytes(variant),
+            Token::Unit,
+        ]
     }
 
     #[test]
@@ -207,6 +245,21 @@ mod tests {
 
         for &(s, expected) in &cases {
             assert_de_tokens(&s, &expected);
+        }
+    }
+
+    #[test]
+    fn test_level_de_bytes() {
+        let cases = [
+            (Level::Error, level_bytes_tokens(b"ERROR")),
+            (Level::Warn, level_bytes_tokens(b"WARN")),
+            (Level::Info, level_bytes_tokens(b"INFO")),
+            (Level::Debug, level_bytes_tokens(b"DEBUG")),
+            (Level::Trace, level_bytes_tokens(b"TRACE")),
+        ];
+
+        for &(value, tokens) in &cases {
+            assert_de_tokens(&value, &tokens);
         }
     }
 
@@ -246,6 +299,22 @@ mod tests {
 
         for &(s, expected) in &cases {
             assert_de_tokens(&s, &expected);
+        }
+    }
+
+    #[test]
+    fn test_level_filter_de_bytes() {
+        let cases = [
+            (LevelFilter::Off, level_filter_bytes_tokens(b"OFF")),
+            (LevelFilter::Error, level_filter_bytes_tokens(b"ERROR")),
+            (LevelFilter::Warn, level_filter_bytes_tokens(b"WARN")),
+            (LevelFilter::Info, level_filter_bytes_tokens(b"INFO")),
+            (LevelFilter::Debug, level_filter_bytes_tokens(b"DEBUG")),
+            (LevelFilter::Trace, level_filter_bytes_tokens(b"TRACE")),
+        ];
+
+        for &(value, tokens) in &cases {
+            assert_de_tokens(&value, &tokens);
         }
     }
 

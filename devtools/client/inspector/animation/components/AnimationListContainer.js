@@ -12,8 +12,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const AnimationList = createFactory(require("./AnimationList"));
-const CurrentTimeScrubberController =
-  createFactory(require("./CurrentTimeScrubberController"));
+const CurrentTimeScrubber = createFactory(require("./CurrentTimeScrubber"));
 const ProgressInspectionPanel = createFactory(require("./ProgressInspectionPanel"));
 
 const { findOptimalTimeInterval } = require("../utils/utils");
@@ -104,7 +103,7 @@ class AnimationListContainer extends PureComponent {
       },
       ProgressInspectionPanel(
         {
-          indicator: CurrentTimeScrubberController(
+          indicator: CurrentTimeScrubber(
             {
               addAnimationsCurrentTimeListener,
               removeAnimationsCurrentTimeListener,

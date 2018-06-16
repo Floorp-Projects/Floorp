@@ -221,6 +221,11 @@ fn main() {
 
 ## Changelog
 
+### 0.5.1
+
+* Reexport `HKEY` ([#15](https://github.com/gentoo90/winreg-rs/issues/15)).
+* Add `raw_handle` method ([#18](https://github.com/gentoo90/winreg-rs/pull/18)).
+
 ### 0.5.0
 
 * Breaking change: `open_subkey` now opens a key with readonly permissions.
@@ -228,16 +233,16 @@ Use `create_subkey` or `open_subkey_with_flags` to open with read-write permissi
 * Breaking change: features `transactions` and `serialization-serde` are now disabled by default.
 * Breaking change: serialization now uses `serde` instead of `rustc-serialize`.
 * `winreg` updated to `0.3`.
-* Documentation fixes (#14)
+* Documentation fixes ([#14](https://github.com/gentoo90/winreg-rs/pull/14))
 
 ### 0.4.0
 
 * Make transactions and serialization otional features
-* Update dependensies + minor fixes (#12)
+* Update dependensies + minor fixes ([#12](https://github.com/gentoo90/winreg-rs/pull/12))
 
 ### 0.3.5
 
-* Implement `FromRegValue` for `OsString` and `ToRegValue` for `OsStr` (#8)
+* Implement `FromRegValue` for `OsString` and `ToRegValue` for `OsStr` ([#8](https://github.com/gentoo90/winreg-rs/issues/8))
 * Minor fixes
 
 ### 0.3.4
@@ -246,11 +251,11 @@ Use `create_subkey` or `open_subkey_with_flags` to open with read-write permissi
 * Now checked with [rust-clippy](https://github.com/Manishearth/rust-clippy)
     * no more `unwrap`s
     * replaced `to_string` with `to_owned`
-* Fix: reading strings longer than 2048 characters (#6)
+* Fix: reading strings longer than 2048 characters ([#6](https://github.com/gentoo90/winreg-rs/pull/6))
 
 ### 0.3.3
 
-* Fix: now able to read values longer than 2048 bytes (#3)
+* Fix: now able to read values longer than 2048 bytes ([#3](https://github.com/gentoo90/winreg-rs/pull/3))
 
 ### 0.3.2
 

@@ -15,12 +15,15 @@
 #include "mozilla/ReflowInput.h"
 #include "mozilla/ShapeUtils.h"
 #include "nsBlockFrame.h"
+#include "nsDeviceContext.h"
 #include "nsError.h"
 #include "nsImageRenderer.h"
 #include "nsIPresShell.h"
 #include "nsMemory.h"
 
 using namespace mozilla;
+using namespace mozilla::image;
+using namespace mozilla::gfx;
 
 int32_t nsFloatManager::sCachedFloatManagerCount = 0;
 void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];

@@ -579,6 +579,30 @@ var Policies = {
     }
   },
 
+  "Permissions": {
+    onBeforeUIStartup(manager, param) {
+      if (param.Camera) {
+        addAllowDenyPermissions("camera", param.Camera.Allow, param.Camera.Block);
+        setDefaultPermission("camera", param.Camera);
+      }
+
+      if (param.Microphone) {
+        addAllowDenyPermissions("microphone", param.Microphone.Allow, param.Microphone.Block);
+        setDefaultPermission("microphone", param.Microphone);
+      }
+
+      if (param.Location) {
+        addAllowDenyPermissions("geo", param.Location.Allow, param.Location.Block);
+        setDefaultPermission("geo", param.Location);
+      }
+
+      if (param.Notifications) {
+        addAllowDenyPermissions("desktop-notification", param.Notifications.Allow, param.Notifications.Block);
+        setDefaultPermission("desktop-notification", param.Notifications);
+      }
+    }
+  },
+
   "PopupBlocking": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, null);
@@ -646,6 +670,23 @@ var Policies = {
     },
     onAllWindowsRestored(manager, param) {
       Services.search.init(() => {
+        if (param.Remove) {
+          // Only rerun if the list of engine names has changed.
+          runOncePerModification("removeSearchEngines",
+                                 JSON.stringify(param.Remove),
+                                 () => {
+            for (let engineName of param.Remove) {
+              let engine = Services.search.getEngineByName(engineName);
+              if (engine) {
+                try {
+                  Services.search.removeEngine(engine);
+                } catch (ex) {
+                  log.error("Unable to remove the search engine", ex);
+                }
+              }
+            }
+          });
+        }
         if (param.Add) {
           // Only rerun if the list of engine names has changed.
           let engineNameList = param.Add.map(engine => engine.Name);
@@ -766,6 +807,34 @@ function setDefaultPref(prefName, prefValue) {
     case "string":
       defaults.setStringPref(prefName, prefValue);
       break;
+  }
+}
+
+/**
+ * setDefaultPermission
+ *
+ * Helper function to set preferences appropriately for the policy
+ *
+ * @param {string} policyName
+ *        The name of the policy to set
+ * @param {object} policyParam
+ *        The object containing param for the policy
+ */
+function setDefaultPermission(policyName, policyParam) {
+  if ("BlockNewRequests" in policyParam) {
+    let prefName = "permissions.default." + policyName;
+
+    if (policyParam.BlockNewRequests) {
+      if (policyParam.Locked) {
+        setAndLockPref(prefName, 2);
+      } else {
+        setDefaultPref(prefName, 2);
+      }
+    } else if (policyParam.Locked) {
+      setAndLockPref(prefName, 0);
+    } else {
+      setDefaultPref(prefName, 0);
+    }
   }
 }
 

@@ -18,7 +18,7 @@
 class nsITimer;
 class nsSliderFrame;
 
-nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle);
 
 class nsSliderMediator final : public nsIDOMEventListener
 {

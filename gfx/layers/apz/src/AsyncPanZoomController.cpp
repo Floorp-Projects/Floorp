@@ -995,6 +995,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   }
 
   if (aEvent.mType == MouseInput::MouseType::MOUSE_UP) {
+    APZC_LOG("%p ending drag\n", this);
     SetState(NOTHING);
     ScrollSnap();
     return nsEventStatus_eConsumeNoDefault;
@@ -1003,14 +1004,17 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   HitTestingTreeNodeAutoLock node;
   GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics, node);
   if (!node) {
+    APZC_LOG("%p unable to find scrollthumb node with viewid %" PRIu64 "\n", this, aDragMetrics.mViewId);
     return nsEventStatus_eConsumeNoDefault;
   }
 
   if (aEvent.mType == MouseInput::MouseType::MOUSE_DOWN) {
+    APZC_LOG("%p starting scrollbar drag\n", this);
     SetState(SCROLLBAR_DRAG);
   }
 
   if (aEvent.mType != MouseInput::MouseType::MOUSE_MOVE) {
+    APZC_LOG("%p discarding event of type %d\n", this, aEvent.mType);
     return nsEventStatus_eConsumeNoDefault;
   }
 
@@ -1035,6 +1039,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     // offscreen and its visible region is therefore empty.
     if (thumbWidth > 0 && thumbWidth * snapMultiplier < distance) {
       isMouseAwayFromThumb = true;
+      APZC_LOG("%p determined mouse is away from thumb, will snap\n", this);
     }
   }
 
@@ -1051,6 +1056,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   maxThumbPos -= scrollbarData.mThumbLength;
 
   float scrollPercent = thumbPosition / maxThumbPos;
+  APZC_LOG("%p scrollbar dragged to %f percent\n", this, scrollPercent);
 
   CSSCoord minScrollPosition =
     GetAxisStart(direction, mFrameMetrics.GetScrollableRect().TopLeft());
@@ -1068,6 +1074,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   } else {
     scrollOffset.y = scrollPosition;
   }
+  APZC_LOG("%p set scroll offset to %s from scrollbar drag\n", this, Stringify(scrollOffset).c_str());
   mFrameMetrics.SetScrollOffset(scrollOffset);
   ScheduleCompositeAndMaybeRepaint();
   UpdateSharedCompositorFrameMetrics();

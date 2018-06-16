@@ -64,6 +64,7 @@ extern crate std;
 extern crate quickcheck;
 
 pub use grapheme::{Graphemes, GraphemeIndices};
+pub use grapheme::{GraphemeCursor, GraphemeIncomplete};
 pub use tables::UNICODE_VERSION;
 pub use word::{UWordBounds, UWordBoundIndices, UnicodeWords};
 

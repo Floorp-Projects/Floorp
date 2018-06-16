@@ -25,7 +25,7 @@ impl System {
     }
 }
 
-pub const DEFAULT_VERSION: u8 = 20;
+pub const DEFAULT_VERSION: u8 = 46;
 
 /// Structure representing a ZIP file.
 #[derive(Debug)]
@@ -61,6 +61,34 @@ pub struct ZipFileData
     pub external_attributes: u32,
 }
 
+impl ZipFileData {
+    pub fn file_name_sanitized(&self) -> ::std::path::PathBuf {
+        let no_null_filename = match self.file_name.find('\0') {
+            Some(index) => &self.file_name[0..index],
+            None => &self.file_name,
+        };
+
+        ::std::path::Path::new(no_null_filename)
+            .components()
+            .filter(|component| match *component {
+                ::std::path::Component::Normal(..) => true,
+                _ => false,
+            })
+            .fold(::std::path::PathBuf::new(), |mut path, ref cur| {
+                path.push(cur.as_os_str());
+                path
+            })
+    }
+
+    pub fn version_needed(&self) -> u16 {
+        match self.compression_method {
+            #[cfg(feature = "bzip2")]
+            ::compression::CompressionMethod::Bzip2 => 46,
+            _ => 20,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     #[test]
@@ -70,5 +98,28 @@ mod test {
         assert_eq!(System::Unix as u16, 3u16);
         assert_eq!(System::from_u8(0), System::Dos);
         assert_eq!(System::from_u8(3), System::Unix);
+    }
+
+    #[test]
+    fn sanitize() {
+        use super::*;
+        let file_name = "/path/../../../../etc/./passwd\0/etc/shadow".to_string();
+        let data = ZipFileData {
+            system: System::Dos,
+            version_made_by: 0,
+            encrypted: false,
+            compression_method: ::compression::CompressionMethod::Stored,
+            last_modified_time: time::empty_tm(),
+            crc32: 0,
+            compressed_size: 0,
+            uncompressed_size: 0,
+            file_name: file_name.clone(),
+            file_name_raw: file_name.into_bytes(),
+            file_comment: String::new(),
+            header_start: 0,
+            data_start: 0,
+            external_attributes: 0,
+        };
+        assert_eq!(data.file_name_sanitized(), ::std::path::PathBuf::from("path/etc/passwd"));
     }
 }
