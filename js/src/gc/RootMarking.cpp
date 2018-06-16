@@ -389,7 +389,7 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     HelperThreadState().trace(trc, session);
 
     // Trace the embedding's black and gray roots.
-    if (!JS::CurrentThreadIsHeapMinorCollecting()) {
+    if (!JS::RuntimeHeapIsMinorCollecting()) {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_EMBEDDING);
 
         /*
@@ -528,7 +528,7 @@ template <typename T>
 inline void
 BufferGrayRootsTracer::bufferRoot(T* thing)
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     MOZ_ASSERT(thing);
     // Check if |thing| is corrupt by calling a method that touches the heap.
     MOZ_ASSERT(thing->getTraceKind() <= JS::TraceKind::Null);

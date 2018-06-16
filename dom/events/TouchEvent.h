@@ -128,6 +128,7 @@ public:
                       TouchList* aTargetTouches,
                       TouchList* aChangedTouches);
 
+  static bool PlatformSupportsTouch();
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
   static bool PrefEnabled(nsIDocShell* aDocShell);
 

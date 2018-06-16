@@ -130,7 +130,7 @@ class ArenaCellIterImpl
         firstThingOffset = Arena::firstThingOffset(kind);
         thingSize = Arena::thingSize(kind);
         traceKind = MapAllocToTraceKind(kind);
-        needsBarrier = mayNeedBarrier && !JS::CurrentThreadIsHeapCollecting();
+        needsBarrier = mayNeedBarrier && !JS::RuntimeHeapIsCollecting();
         reset(arena);
     }
 
@@ -188,7 +188,7 @@ class ArenaCellIter : public ArenaCellIterImpl
     explicit ArenaCellIter(Arena* arena)
       : ArenaCellIterImpl(arena, CellIterMayNeedBarrier)
     {
-        MOZ_ASSERT(JS::CurrentThreadIsHeapTracing());
+        MOZ_ASSERT(JS::RuntimeHeapIsTracing());
     }
 };
 
@@ -217,7 +217,7 @@ class ZoneCellIter<TenuredCell> {
 
         // If called from outside a GC, ensure that the heap is in a state
         // that allows us to iterate.
-        if (!JS::CurrentThreadIsHeapBusy()) {
+        if (!JS::RuntimeHeapIsBusy()) {
             // Assert that no GCs can occur while a ZoneCellIter is live.
             nogc.emplace();
         }

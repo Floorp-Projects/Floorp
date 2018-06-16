@@ -4145,7 +4145,7 @@ TypeNewScript::trace(JSTracer* trc)
 /* static */ void
 TypeNewScript::writeBarrierPre(TypeNewScript* newScript)
 {
-    if (JS::CurrentThreadIsHeapCollecting())
+    if (JS::RuntimeHeapIsCollecting())
         return;
 
     JS::Zone* zone = newScript->function()->zoneFromAnyThread();
@@ -4185,7 +4185,7 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
     checkMagic();
 
     // ConstraintTypeSets only hold strong references during minor collections.
-    MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
 
     unsigned objectCount = baseObjectCount();
     if (objectCount >= 2) {
@@ -4263,7 +4263,7 @@ AssertGCStateForSweep(Zone* zone)
 
     // IsAboutToBeFinalized doesn't work right on tenured objects when called
     // during a minor collection.
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
 }
 
 void
