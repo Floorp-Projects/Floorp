@@ -96,6 +96,7 @@ AsyncReadbackBufferOGL::AsyncReadbackBufferOGL(GLContext* aGL,
                                                const IntSize& aSize)
   : AsyncReadbackBuffer(aSize)
   , mGL(aGL)
+  , mBufferHandle(0)
 {
   size_t bufferByteCount = mSize.width * mSize.height * 4;
   mGL->fGenBuffers(1, &mBufferHandle);
@@ -180,6 +181,10 @@ CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
   : Compositor(aWidget, aParent)
   , mWidgetSize(-1, -1)
   , mSurfaceSize(aSurfaceWidth, aSurfaceHeight)
+  , mFBOTextureTarget(0)
+  , mWindowRenderTarget(nullptr)
+  , mQuadVBO(0)
+  , mTriangleVBO(0)
   , mHasBGRA(0)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mFrameInProgress(false)

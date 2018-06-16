@@ -51,6 +51,7 @@ public:
                  bool aLoadFaceNames,
                  bool aLoadCmaps) :
         mCanceled(false),
+        mLoadStats(),
         mLoadOtherNames(aLoadOtherNames),
         mLoadFaceNames(aLoadFaceNames),
         mLoadCmaps(aLoadCmaps)
