@@ -4,25 +4,74 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-Unreleased
-----------
+0.21.0 (2018-06-15)
+-------------------
 
-Note that with geckodriver 'next' the following versions are recommended:
-- Firefox 57.0 (and greater)
-- Selenium 3.11 (and greater)
+Note that with this release of geckodriver the minimum recommended
+Firefox and Selenium versions have changed:
+
+  - Firefox 57 (and greater)
+  - Selenium 3.11 (and greater)
 
 ### Added
 
-- Support for the new chrome element identifier in Marionette.
+- Support for the chrome element identifier from Firefox.
+
+- The `unhandledPromptBehavior` capability now accepts `accept and
+  notify`, `dismiss and notify`, and `ignore` options.
+
+  Note that the unhandled prompt handler is not fully supported in
+  Firefox at the time of writing.
 
 ### Changed
 
-- Updated mapping of all supported commands to the new prefixed commands
-  in Marionette, whereby all WebDriver specific commands make use of the
-  `WebDriver:` prefix.
+- Firefox will now be started with the `-foreground` and `-no-remote`
+  flags if they have not already been specified by the user in
+  `moz:firefoxOptions`.
 
-- Overhaul of Firefox preferences. Already deprecated preferences in Firefox
-  versions earlier than 57 got removed.
+  `-foreground` will ensure the application window gets focus when
+  Firefox is started, and `-no-remote` will prevent remote commands
+  to this instance of Firefox and also ensure we always start a new
+  instance.
+
+- WebDriver commands that do not have a return value now correctly
+  return `{value: null}` instead of an empty dictionary.
+
+- The HTTP server now accepts `Keep-Alive` connections.
+
+- Firefox remote protocol command mappings updated.
+
+  All Marionette commands changed to make use of the `WebDriver:`
+  prefixes introduced with Firefox 56.
+
+- Overhaul of Firefox preferences.
+
+  Already deprecated preferences in Firefox versions earlier than
+  57 got removed.
+
+- [webdriver crate] upgraded to 0.36.0.
+
+### Fixed
+
+- Force use of IPv4 network stack.
+
+  On certain system configurations, where `localhost` resolves to
+  an IPv6 address, geckodriver would attempt to connect to Firefox
+  on the wrong IP stack, causing the connection attempt to time out
+  after 60 seconds.  We now ensure that geckodriver uses IPv4
+  consistently to both connect to Firefox and for allocating a free
+  port.
+
+- geckodriver failed to locate the correct Firefox binary if it was
+  found under a _firefox_ or _firefox-bin_ directory, depending on
+  the system, because it thought the parent directory was the
+  executable.
+
+- On Unix systems (macOS, Linux), geckodriver falsely reported
+  non-executable files as valid binaries.
+
+- When stdout and stderr is redirected by geckodriver, a bug prevented
+  the redirections from taking effect.
 
 
 0.20.1 (2018-04-06)

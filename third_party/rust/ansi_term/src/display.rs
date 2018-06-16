@@ -9,9 +9,9 @@ use style::{Style, Colour};
 use write::AnyWrite;
 
 
-/// An ANSIGenericString includes a generic string type and a Style to
-/// display that string.  ANSIString and ANSIByteString are aliases for
-/// this type on str and [u8], respectively.
+/// An `ANSIGenericString` includes a generic string type and a `Style` to
+/// display that string.  `ANSIString` and `ANSIByteString` are aliases for
+/// this type on `str` and `[u8]`, respectively.
 #[derive(PartialEq, Debug)]
 pub struct ANSIGenericString<'a, S: 'a + ToOwned + ?Sized>
 where <S as ToOwned>::Owned: fmt::Debug {
@@ -20,7 +20,7 @@ where <S as ToOwned>::Owned: fmt::Debug {
 }
 
 
-/// Cloning an ANSIGenericString will clone its underlying string.
+/// Cloning an `ANSIGenericString` will clone its underlying string.
 ///
 /// ### Examples
 ///
@@ -35,7 +35,7 @@ impl<'a, S: 'a + ToOwned + ?Sized> Clone for ANSIGenericString<'a, S>
 where <S as ToOwned>::Owned: fmt::Debug {
     fn clone(&self) -> ANSIGenericString<'a, S> {
         ANSIGenericString {
-            style: self.style.clone(),
+            style: self.style,
             string: self.string.clone(),
         }
     }
@@ -64,7 +64,7 @@ where <S as ToOwned>::Owned: fmt::Debug {
 
 
 
-/// An ANSI String is a string coupled with the Style to display it
+/// An ANSI String is a string coupled with the `Style` to display it
 /// in a terminal.
 ///
 /// Although not technically a string itself, it can be turned into
@@ -88,8 +88,8 @@ where <S as ToOwned>::Owned: fmt::Debug {
 /// ```
 pub type ANSIString<'a> = ANSIGenericString<'a, str>;
 
-/// An ANSIByteString represents a formatted series of bytes.  Use
-/// ANSIByteString when styling text with an unknown encoding.
+/// An `ANSIByteString` represents a formatted series of bytes.  Use
+/// `ANSIByteString` when styling text with an unknown encoding.
 pub type ANSIByteString<'a> = ANSIGenericString<'a, [u8]>;
 
 impl<'a, I, S: 'a + ToOwned + ?Sized> From<I> for ANSIGenericString<'a, S>
@@ -123,7 +123,7 @@ pub struct ANSIGenericStrings<'a, S: 'a + ToOwned + ?Sized>
 /// minimum of control characters.
 pub type ANSIStrings<'a> = ANSIGenericStrings<'a, str>;
 
-/// A function to construct an ANSIStrings instance.
+/// A function to construct an `ANSIStrings` instance.
 #[allow(non_snake_case)]
 pub fn ANSIStrings<'a>(arg: &'a [ANSIString<'a>]) -> ANSIStrings<'a> {
     ANSIGenericStrings(arg)
@@ -133,7 +133,7 @@ pub fn ANSIStrings<'a>(arg: &'a [ANSIString<'a>]) -> ANSIStrings<'a> {
 /// written with a minimum of control characters.
 pub type ANSIByteStrings<'a> = ANSIGenericStrings<'a, [u8]>;
 
-/// A function to construct an ANSIByteStrings instance.
+/// A function to construct an `ANSIByteStrings` instance.
 #[allow(non_snake_case)]
 pub fn ANSIByteStrings<'a>(arg: &'a [ANSIByteString<'a>]) -> ANSIByteStrings<'a> {
     ANSIGenericStrings(arg)
@@ -187,8 +187,8 @@ impl<'a> fmt::Display for ANSIString<'a> {
 }
 
 impl<'a> ANSIByteString<'a> {
-    /// Write an ANSIByteString to an io::Write.  This writes the escape
-    /// sequences for the associated Style around the bytes.
+    /// Write an `ANSIByteString` to an `io::Write`.  This writes the escape
+    /// sequences for the associated `Style` around the bytes.
     pub fn write_to<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
         let w: &mut io::Write = w;
         self.write_to_any(w)
@@ -215,8 +215,8 @@ impl<'a> fmt::Display for ANSIStrings<'a> {
 }
 
 impl<'a> ANSIByteStrings<'a> {
-    /// Write ANSIByteStrings to an io::Write.  This writes the minimal
-    /// escape sequences for the associated Styles around each set of
+    /// Write `ANSIByteStrings` to an `io::Write`.  This writes the minimal
+    /// escape sequences for the associated `Style`s around each set of
     /// bytes.
     pub fn write_to<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
         let w: &mut io::Write = w;

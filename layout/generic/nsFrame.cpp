@@ -23,6 +23,7 @@
 #include "mozilla/Sprintf.h"
 
 #include "nsCOMPtr.h"
+#include "nsFlexContainerFrame.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPluginFrame.h"
@@ -108,6 +109,7 @@
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/layers/WebRenderUserData.h"
 #include "nsPrintfCString.h"
 #include "ActiveLayerTracker.h"
 

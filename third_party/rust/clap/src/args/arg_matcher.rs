@@ -21,11 +21,67 @@ impl<'a> Default for ArgMatcher<'a> {
 impl<'a> ArgMatcher<'a> {
     pub fn new() -> Self { ArgMatcher::default() }
 
+    pub fn process_arg_overrides<'b>(&mut self, a: Option<&AnyArg<'a, 'b>>, overrides: &mut Vec<(&'b str, &'a str)>, required: &mut Vec<&'a str>, check_all: bool) {
+        debugln!("ArgMatcher::process_arg_overrides:{:?};", a.map_or(None, |a| Some(a.name())));
+        if let Some(aa) = a {
+            let mut self_done = false;
+            if let Some(a_overrides) = aa.overrides() {
+                for overr in a_overrides {
+                    debugln!("ArgMatcher::process_arg_overrides:iter:{};", overr);
+                    if overr == &aa.name() {
+                        self_done = true;
+                        self.handle_self_overrides(a);
+                    } else if self.is_present(overr) {
+                        debugln!("ArgMatcher::process_arg_overrides:iter:{}: removing from matches;", overr);
+                        self.remove(overr);
+                        for i in (0 .. required.len()).rev() {
+                            if &required[i] == overr {
+                                debugln!("ArgMatcher::process_arg_overrides:iter:{}: removing required;", overr);
+                                required.swap_remove(i);
+                                break;
+                            }
+                        }
+                        overrides.push((overr, aa.name()));
+                    } else {
+                        overrides.push((overr, aa.name()));
+                    }
+                }
+            }
+            if check_all && !self_done {
+                self.handle_self_overrides(a);
+            }
+        }
+    }
+
+    pub fn handle_self_overrides<'b>(&mut self, a: Option<&AnyArg<'a, 'b>>) {
+        debugln!("ArgMatcher::handle_self_overrides:{:?};", a.map_or(None, |a| Some(a.name())));
+        if let Some(aa) = a {
+            if !aa.has_switch() || aa.is_set(ArgSettings::Multiple) {
+                // positional args can't override self or else we would never advance to the next
+
+                // Also flags with --multiple set are ignored otherwise we could never have more
+                // than one
+                return;
+            }
+            if let Some(ma) = self.get_mut(aa.name()) {
+                if ma.vals.len() > 1 {
+                    // swap_remove(0) would be O(1) but does not preserve order, which
+                    // we need
+                    ma.vals.remove(0);
+                    ma.occurs = 1;
+                } else if !aa.takes_value() && ma.occurs > 1 {
+                    ma.occurs = 1;
+                }
+            }
+        }
+    }
+
+    pub fn is_present(&self, name: &str) -> bool {
+        self.0.is_present(name)
+    }
+
     pub fn propagate_globals(&mut self, global_arg_vec: &[&'a str]) {
-        debugln!(
-            "ArgMatcher::get_global_values: global_arg_vec={:?}",
-            global_arg_vec
-        );
+        debugln!( "ArgMatcher::get_global_values: global_arg_vec={:?}", global_arg_vec );
         let mut vals_map = HashMap::new();
         self.fill_in_global_values(global_arg_vec, &mut vals_map);
     }
@@ -116,10 +172,19 @@ impl<'a> ArgMatcher<'a> {
     pub fn add_val_to(&mut self, arg: &'a str, val: &OsStr) {
         let ma = self.entry(arg).or_insert(MatchedArg {
             occurs: 0,
+            indices: Vec::with_capacity(1),
             vals: Vec::with_capacity(1),
         });
-        // let len = ma.vals.len() + 1;
         ma.vals.push(val.to_owned());
+    }
+
+    pub fn add_index_to(&mut self, arg: &'a str, idx: usize) {
+        let ma = self.entry(arg).or_insert(MatchedArg {
+            occurs: 0,
+            indices: Vec::with_capacity(1),
+            vals: Vec::new(),
+        });
+        ma.indices.push(idx);
     }
 
     pub fn needs_more_vals<'b, A>(&self, o: &A) -> bool

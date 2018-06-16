@@ -7,21 +7,25 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(
-    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
-ChromeUtils.defineModuleGetter(this, "Log",
-    "resource://gre/modules/Log.jsm");
 const {
   EnvironmentPrefs,
   MarionettePrefs,
 } = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
-ChromeUtils.defineModuleGetter(this, "Preferences",
-    "resource://gre/modules/Preferences.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  TCPListener: "chrome://marionette/content/server.js",
+});
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let log = Log.repository.getLogger("Marionette");
   log.addAppender(new Log.DumpAppender());
   return log;
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 
 const NOTIFY_RUNNING = "remote-active";
 
@@ -441,10 +445,8 @@ class MarionetteParentProcess {
       }
 
       try {
-        const {TCPListener} = ChromeUtils.import("chrome://marionette/content/server.js", {});
-        let listener = new TCPListener(MarionettePrefs.port);
-        listener.start();
-        this.server = listener;
+        this.server = new TCPListener(MarionettePrefs.port);
+        this.server.start();
       } catch (e) {
         log.fatal("Remote protocol server failed to start", e);
         this.uninit();

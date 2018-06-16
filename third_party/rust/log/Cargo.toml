@@ -12,7 +12,7 @@
 
 [package]
 name = "log"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["The Rust Project Developers"]
 description = "A lightweight logging facade for Rust\n"
 homepage = "https://github.com/rust-lang/log"

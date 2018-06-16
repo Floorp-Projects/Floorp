@@ -33,33 +33,34 @@ the [Testing :: GeckoDriver] component.
 Supported clients
 =================
 
-[Selenium] users must update to [version 3.5] or later to
+[Selenium] users must update to [version 3.11] or later to
 use geckodriver.  Other clients that follow the [W3C WebDriver
 specification] are also supported.
 
-[version 3.5]: https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.5.0
+[version 3.11]: https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.11.0
 [W3C WebDriver specification]: https://w3c.github.io/webdriver/webdriver-spec.html
 
 
 Supported Firefoxen
 ===================
 
-geckodriver is not yet feature complete.  This means that it does not
-yet offer full conformance with the [WebDriver] standard or complete
-compatibility with [Selenium].  You can track the [implementation
-status] of the latest [Firefox Nightly](http://whattrainisitnow.com/)
-on [MDN].  We also keep track of known [Selenium], [remote protocol],
-and [specification] problems in our [issue tracker].
+geckodriver is not yet feature complete.  This means that it does
+not yet offer full conformance with the [WebDriver] standard or
+complete compatibility with [Selenium].  You can track the
+[implementation status] of the latest [Firefox Nightly] on MDN.  We
+also keep track of known [Selenium], [remote protocol], and
+[specification] problems in our [issue tracker].
 
-Support is best in Firefox 57 and greater, although generally the more
-recent the Firefox version, the better the experience as they have more
-bug fixes and features.  Some features will only be available in the
-most recent Firefox versions, and we strongly advise using the latest
-[Firefox Nightly] with geckodriver.  Since Windows XP support in Firefox
-was dropped with Firefox 53, we do not support this platform.
+Support is best in Firefox 57 and greater, although generally the
+more recent the Firefox version, the better the experience as they
+have more bug fixes and features.  Some features will only be
+available in the most recent Firefox versions, and we strongly
+advise using the latest [Firefox Nightly] with geckodriver.  Since
+Windows XP support in Firefox was dropped with Firefox 53, we do
+not support this platform.
 
-[implementation status]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status
-[MDN]: https://developer.mozilla.org/
+[implementation status]: https://bugzilla.mozilla.org/showdependencytree.cgi?id=721859&hide_resolved=1
+[Firefox Nightly]: https://whattrainisitnow.com/
 [selenium]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium
 [remote protocol]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette
 [specification]: https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec
@@ -87,8 +88,8 @@ geckodriver supports a number of [capabilities]:
  <tr>
   <td><code>acceptInsecureCerts</code>
   <td>boolean
-  <td>Boolean initially set to false,
-   indicating the session will not implicitly trust untrusted
+  <td>false
+  <td>Indicates the session will not implicitly trust untrusted
    or self-signed TLS certificates on navigation.
   <td>
  </tr>
@@ -96,6 +97,7 @@ geckodriver supports a number of [capabilities]:
  <tr>
   <td><code>pageLoadStrategy</code>
   <td>string
+  <td>`normal`
   <td>Defines the page load strategy
    to use for the duration of the session.
    Setting a page load strategy will cause navigation
@@ -203,8 +205,9 @@ Firefox capabilities
 
 geckodriver has a few capabilities that are specific to Firefox.
 
-moz:firefoxOptions
-------------------
+
+`moz:firefoxOptions`
+--------------------
 
 A dictionary used to define options which control how Firefox gets started
 and run. It may contain any of the following fields:
@@ -281,8 +284,9 @@ and run. It may contain any of the following fields:
  </tr>
 </table>
 
-moz:useNonSpecCompliantPointerOrigin
-------------------------------------
+
+`moz:useNonSpecCompliantPointerOrigin`
+--------------------------------------
 
 A boolean value to indicate how the pointer origin for an action command
 will be calculated.
@@ -298,8 +302,9 @@ for this capability.
 Please note that this capability exists only temporarily, and that it will be
 removed once all Selenium bindings can handle the new behavior.
 
-moz:webdriverClick
-------------------
+
+`moz:webdriverClick`
+--------------------
 
 A boolean value to indicate which kind of interactability checks to run
 when performing a click or sending keys to an elements. For Firefoxen prior to
@@ -321,6 +326,7 @@ for this capability.
 
 Please note that this capability exists only temporarily, and that it will be
 removed once the interactability checks have been stabilized.
+
 
 `log` object
 ------------

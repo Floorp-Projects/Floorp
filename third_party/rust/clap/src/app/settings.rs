@@ -46,6 +46,7 @@ bitflags! {
         const VALID_ARG_FOUND      = 1 << 37;
         const INFER_SUBCOMMANDS    = 1 << 38;
         const CONTAINS_LAST        = 1 << 39;
+        const ARGS_OVERRIDE_SELF   = 1 << 40;
     }
 }
 
@@ -75,6 +76,7 @@ impl AppFlags {
     impl_settings! { AppSettings,
         ArgRequiredElseHelp => Flags::A_REQUIRED_ELSE_HELP,
         ArgsNegateSubcommands => Flags::ARGS_NEGATE_SCS,
+        AllArgsOverrideSelf => Flags::ARGS_OVERRIDE_SELF,
         AllowExternalSubcommands => Flags::ALLOW_UNK_SC,
         AllowInvalidUtf8 => Flags::UTF8_NONE,
         AllowLeadingHyphen => Flags::LEADING_HYPHEN,
@@ -165,6 +167,13 @@ pub enum AppSettings {
     /// [`ArgMatches::lossy_values_of`]: ./struct.ArgMatches.html#method.lossy_values_of
     AllowInvalidUtf8,
 
+    /// Essentially sets [`Arg::overrides_with("itself")`] for all arguments.
+    ///
+    /// **WARNING:** Positional arguments cannot override themselves (or we would never be able
+    /// to advance to the next positional). This setting ignores positional arguments.
+    /// [`Arg::overrides_with("itself")`]: ./struct.Arg.html#method.overrides_with
+    AllArgsOverrideSelf,
+
     /// Specifies that leading hyphens are allowed in argument *values*, such as negative numbers
     /// like `-10`. (which would otherwise be parsed as another flag or option)
     ///
@@ -212,7 +221,9 @@ pub enum AppSettings {
     /// [`AllowLeadingHyphen`]: ./enum.AppSettings.html#variant.AllowLeadingHyphen
     AllowNegativeNumbers,
 
-    /// Allows one to implement a CLI where the second to last positional argument is optional, but
+    /// Allows one to implement two styles of CLIs where positionals can be used out of order.
+    ///
+    /// The first example is a CLI where the second to last positional argument is optional, but
     /// the final positional argument is required. Such as `$ prog [optional] <required>` where one
     /// of the two following usages is allowed:
     ///
@@ -221,10 +232,45 @@ pub enum AppSettings {
     ///
     /// This would otherwise not be allowed. This is useful when `[optional]` has a default value.
     ///
-    /// **Note:** In addition to using this setting, the second positional argument *must* be
-    /// [required]
+    /// **Note:** when using this style of "missing positionals" the final positional *must* be
+    /// [required] if `--` will not be used to skip to the final positional argument.
+    ///
+    /// **Note:** This style also only allows a single positional argument to be "skipped" without
+    /// the use of `--`. To skip more than one, see the second example.
+    ///
+    /// The second example is when one wants to skip multiple optional positional arguments, and use
+    /// of the `--` operator is OK (but not required if all arguments will be specified anyways).
+    ///
+    /// For example, imagine a CLI which has three positional arguments `[foo] [bar] [baz]...` where
+    /// `baz` accepts multiple values (similar to man `ARGS...` style training arguments).
+    ///
+    /// With this setting the following invocations are posisble:
+    ///
+    /// * `$ prog foo bar baz1 baz2 baz3`
+    /// * `$ prog foo -- baz1 baz2 baz3`
+    /// * `$ prog -- baz1 baz2 baz3`
     ///
     /// # Examples
+    ///
+    /// Style number one from above:
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg, AppSettings};
+    /// // Assume there is an external subcommand named "subcmd"
+    /// let m = App::new("myprog")
+    ///     .setting(AppSettings::AllowMissingPositional)
+    ///     .arg(Arg::with_name("arg1"))
+    ///     .arg(Arg::with_name("arg2")
+    ///         .required(true))
+    ///     .get_matches_from(vec![
+    ///         "prog", "other"
+    ///     ]);
+    ///
+    /// assert_eq!(m.value_of("arg1"), None);
+    /// assert_eq!(m.value_of("arg2"), Some("other"));
+    /// ```
+    ///
+    /// Now the same example, but using a default value for the first optional positional argument
     ///
     /// ```rust
     /// # use clap::{App, Arg, AppSettings};
@@ -236,11 +282,48 @@ pub enum AppSettings {
     ///     .arg(Arg::with_name("arg2")
     ///         .required(true))
     ///     .get_matches_from(vec![
-    ///         "myprog", "other"
+    ///         "prog", "other"
     ///     ]);
     ///
     /// assert_eq!(m.value_of("arg1"), Some("something"));
     /// assert_eq!(m.value_of("arg2"), Some("other"));
+    /// ```
+    /// Style number two from above:
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg, AppSettings};
+    /// // Assume there is an external subcommand named "subcmd"
+    /// let m = App::new("myprog")
+    ///     .setting(AppSettings::AllowMissingPositional)
+    ///     .arg(Arg::with_name("foo"))
+    ///     .arg(Arg::with_name("bar"))
+    ///     .arg(Arg::with_name("baz").multiple(true))
+    ///     .get_matches_from(vec![
+    ///         "prog", "foo", "bar", "baz1", "baz2", "baz3"
+    ///     ]);
+    ///
+    /// assert_eq!(m.value_of("foo"), Some("foo"));
+    /// assert_eq!(m.value_of("bar"), Some("bar"));
+    /// assert_eq!(m.values_of("baz").unwrap().collect::<Vec<_>>(), &["baz1", "baz2", "baz3"]);
+    /// ```
+    ///
+    /// Now nofice if we don't specifiy `foo` or `baz` but use the `--` operator.
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg, AppSettings};
+    /// // Assume there is an external subcommand named "subcmd"
+    /// let m = App::new("myprog")
+    ///     .setting(AppSettings::AllowMissingPositional)
+    ///     .arg(Arg::with_name("foo"))
+    ///     .arg(Arg::with_name("bar"))
+    ///     .arg(Arg::with_name("baz").multiple(true))
+    ///     .get_matches_from(vec![
+    ///         "prog", "--", "baz1", "baz2", "baz3"
+    ///     ]);
+    ///
+    /// assert_eq!(m.value_of("foo"), None);
+    /// assert_eq!(m.value_of("bar"), None);
+    /// assert_eq!(m.values_of("baz").unwrap().collect::<Vec<_>>(), &["baz1", "baz2", "baz3"]);
     /// ```
     /// [required]: ./struct.Arg.html#method.required
     AllowMissingPositional,
@@ -496,7 +579,7 @@ pub enum AppSettings {
     DeriveDisplayOrder,
 
     /// Specifies to use the version of the current command for all child [`SubCommand`]s.
-    /// (Defaults to `false`; subcommands have independant version strings from their parents.)
+    /// (Defaults to `false`; subcommands have independent version strings from their parents.)
     ///
     /// **NOTE:** The version for the current command **and** this setting must be set **prior** to
     /// adding any child subcommands
@@ -544,7 +627,7 @@ pub enum AppSettings {
     /// designing CLIs which allow inferred subcommands and have potential positional/free
     /// arguments whose values could start with the same characters as subcommands. If this is the
     /// case, it's recommended to use settings such as [`AppSeettings::ArgsNegateSubcommands`] in
-    /// conjuction with this setting.
+    /// conjunction with this setting.
     ///
     /// # Examples
     ///

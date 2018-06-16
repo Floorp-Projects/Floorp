@@ -29,7 +29,7 @@ log = "0.4"
 #[macro_use]
 extern crate log;
 
-pub fn shave_the_yak(yak: &Yak) {
+pub fn shave_the_yak(yak: &mut Yak) {
     trace!("Commencing yak shaving");
 
     loop {
@@ -65,6 +65,7 @@ There are many available implementations to chose from, here are some of the mos
 * Adaptors for other facilities:
     * [`syslog`](https://docs.rs/syslog/*/syslog/)
     * [`slog-stdlog`](https://docs.rs/slog-stdlog/*/slog_stdlog/)
+    * [`android_log`](https://docs.rs/android_log/*/android_log/)
 
 Executables should choose a logger implementation and initialize it early in the
 runtime of the program. Logger implementations will typically include a

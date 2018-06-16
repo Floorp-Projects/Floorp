@@ -12,7 +12,7 @@
 
 [package]
 name = "zip"
-version = "0.3.1"
+version = "0.3.3"
 authors = ["Mathijs van de Nes <git@mathijs.vd-nes.nl>"]
 description = "Library to support the reading and writing of zip files.\n"
 documentation = "http://mvdnes.github.io/rust-docs/zip-rs/zip/index.html"

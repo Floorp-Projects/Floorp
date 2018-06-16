@@ -13,6 +13,7 @@
 #include "gfxTextRun.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsPresContext.h"
+#include "nsStyleStruct.h"
 
 class nsTransformedTextRun;
 

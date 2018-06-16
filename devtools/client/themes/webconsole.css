@@ -598,12 +598,15 @@ a.learn-more-link.webconsole-learn-more-link {
 
 /* On OSX the cursor turns into a window-resizing cursor at the edges of the
  * window, so bring the end of the close button in. */
-:root[platform="mac"] .split-console-close-button-wrapper {
+:root[platform="mac"] .split-console-close-button-wrapper,
+:root[platform="mac"] .webconsole-sidebar-toolbar {
   padding-inline-end: 3px;
 }
 
 #split-console-close-button {
   margin-inline-end: 0;
+  height: 100%;
+  margin: 0;
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {
@@ -1095,6 +1098,7 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
   min-height: var(--primary-toolbar-height);
   display: flex;
   justify-content: end;
+  padding: 0;
 }
 
 .sidebar-contents {
@@ -1105,7 +1109,6 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 .webconsole-sidebar-toolbar .sidebar-close-button {
   padding: 4px 0;
   margin: 0;
-  margin-inline-end: -3px;
 }
 
 .sidebar-close-button::before {
