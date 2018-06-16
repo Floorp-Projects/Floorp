@@ -705,7 +705,7 @@ protected:
                  nsLineLayout& aLineLayout,
                  LineIterator aLine,
                  nsFloatManager::SavedState* aFloatStateBeforeLine,
-                 mozilla::LogicalRect& aFloatAvailableSpace, //in-out
+                 nsFlowAreaRect& aFlowArea, // in-out
                  nscoord& aAvailableSpaceBSize, // in-out
                  bool* aKeepReflowGoing);
 

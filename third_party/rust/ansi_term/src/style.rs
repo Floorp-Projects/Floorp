@@ -40,52 +40,52 @@ impl Style {
         Style::default()
     }
 
-    /// Returns a Style with the bold property set.
+    /// Returns a `Style` with the bold property set.
     pub fn bold(&self) -> Style {
         Style { is_bold: true, .. *self }
     }
 
-    /// Returns a Style with the dimmed property set.
+    /// Returns a `Style` with the dimmed property set.
     pub fn dimmed(&self) -> Style {
         Style { is_dimmed: true, .. *self }
     }
 
-    /// Returns a Style with the italic property set.
+    /// Returns a `Style` with the italic property set.
     pub fn italic(&self) -> Style {
         Style { is_italic: true, .. *self }
     }
 
-    /// Returns a Style with the underline property set.
+    /// Returns a `Style` with the underline property set.
     pub fn underline(&self) -> Style {
         Style { is_underline: true, .. *self }
     }
 
-    /// Returns a Style with the blink property set.
+    /// Returns a `Style` with the blink property set.
     pub fn blink(&self) -> Style {
         Style { is_blink: true, .. *self }
     }
 
-    /// Returns a Style with the reverse property set.
+    /// Returns a `Style` with the reverse property set.
     pub fn reverse(&self) -> Style {
         Style { is_reverse: true, .. *self }
     }
 
-    /// Returns a Style with the hidden property set.
+    /// Returns a `Style` with the hidden property set.
     pub fn hidden(&self) -> Style {
         Style { is_hidden: true, .. *self }
     }
 
-    /// Returns a Style with the hidden property set.
+    /// Returns a `Style` with the hidden property set.
     pub fn strikethrough(&self) -> Style {
         Style { is_strikethrough: true, .. *self }
     }
 
-    /// Returns a Style with the foreground colour property set.
+    /// Returns a `Style` with the foreground colour property set.
     pub fn fg(&self, foreground: Colour) -> Style {
         Style { foreground: Some(foreground), .. *self }
     }
 
-    /// Returns a Style with the background colour property set.
+    /// Returns a `Style` with the background colour property set.
     pub fn on(&self, background: Colour) -> Style {
         Style { background: Some(background), .. *self }
     }
@@ -132,7 +132,7 @@ impl Default for Style {
 /// to either the foreground or background colour.
 ///
 /// These use the standard numeric sequences.
-/// See http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+/// See <http://invisible-island.net/xterm/ctlseqs/ctlseqs.html>
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Colour {
 
@@ -180,6 +180,7 @@ pub enum Colour {
     /// - Colours 232 to 255 are shades of grey from black to white.
     ///
     /// It might make more sense to look at a [colour chart][cc].
+    ///
     /// [cc]: https://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg
     Fixed(u8),
 
@@ -189,52 +190,52 @@ pub enum Colour {
 
 
 impl Colour {
-    /// Return a Style with the foreground colour set to this colour.
+    /// Return a `Style` with the foreground colour set to this colour.
     pub fn normal(self) -> Style {
         Style { foreground: Some(self), .. Style::default() }
     }
 
-    /// Returns a Style with the bold property set.
+    /// Returns a `Style` with the bold property set.
     pub fn bold(self) -> Style {
         Style { foreground: Some(self), is_bold: true, .. Style::default() }
     }
 
-    /// Returns a Style with the dimmed property set.
+    /// Returns a `Style` with the dimmed property set.
     pub fn dimmed(self) -> Style {
         Style { foreground: Some(self), is_dimmed: true, .. Style::default() }
     }
 
-    /// Returns a Style with the italic property set.
+    /// Returns a `Style` with the italic property set.
     pub fn italic(self) -> Style {
         Style { foreground: Some(self), is_italic: true, .. Style::default() }
     }
 
-    /// Returns a Style with the underline property set.
+    /// Returns a `Style` with the underline property set.
     pub fn underline(self) -> Style {
         Style { foreground: Some(self), is_underline: true, .. Style::default() }
     }
 
-    /// Returns a Style with the blink property set.
+    /// Returns a `Style` with the blink property set.
     pub fn blink(self) -> Style {
         Style { foreground: Some(self), is_blink: true, .. Style::default() }
     }
 
-    /// Returns a Style with the reverse property set.
+    /// Returns a `Style` with the reverse property set.
     pub fn reverse(self) -> Style {
         Style { foreground: Some(self), is_reverse: true, .. Style::default() }
     }
 
-    /// Returns a Style with the hidden property set.
+    /// Returns a `Style` with the hidden property set.
     pub fn hidden(self) -> Style {
         Style { foreground: Some(self), is_hidden: true, .. Style::default() }
     }
 
-    /// Returns a Style with the strikethrough property set.
+    /// Returns a `Style` with the strikethrough property set.
     pub fn strikethrough(self) -> Style {
         Style { foreground: Some(self), is_strikethrough: true, .. Style::default() }
     }
 
-    /// Returns a Style with the background colour property set.
+    /// Returns a `Style` with the background colour property set.
     pub fn on(self, background: Colour) -> Style {
         Style { foreground: Some(self), background: Some(background), .. Style::default() }
     }

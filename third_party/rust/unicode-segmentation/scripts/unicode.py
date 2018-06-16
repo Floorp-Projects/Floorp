@@ -330,21 +330,13 @@ pub const UNICODE_VERSION: (u64, u64, u64) = (%s, %s, %s);
         grapheme_cats = load_properties("auxiliary/GraphemeBreakProperty.txt", [])
 
         # Control
-        #  Note 1:
+        #  Note:
         # This category also includes Cs (surrogate codepoints), but Rust's `char`s are
         # Unicode Scalar Values only, and surrogates are thus invalid `char`s.
         # Thus, we have to remove Cs from the Control category
-        #  Note 2:
-        # 0x0a and 0x0d (CR and LF) are not in the Control category for Graphemes.
-        # However, the Graphemes iterator treats these as a special case, so they
-        # should be included in grapheme_cats["Control"] for our implementation.
         grapheme_cats["Control"] = group_cat(list(
-            (set(ungroup_cat(grapheme_cats["Control"]))
-             | set(ungroup_cat(grapheme_cats["CR"]))
-             | set(ungroup_cat(grapheme_cats["LF"])))
+            set(ungroup_cat(grapheme_cats["Control"]))
             - set(ungroup_cat([surrogate_codepoints]))))
-        del(grapheme_cats["CR"])
-        del(grapheme_cats["LF"])
 
         grapheme_table = []
         for cat in grapheme_cats:

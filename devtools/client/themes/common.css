@@ -267,8 +267,6 @@ checkbox:-moz-focusring {
 .devtools-button:-moz-focusring,
 .devtools-tab:-moz-focusring {
   outline:none;
-  padding-inline-end: 0;
-  padding-inline-start: 0;
 }
 
 /* Toolbar buttons */
@@ -374,6 +372,8 @@ checkbox:-moz-focusring {
   background-color: var(--theme-toolbar-hover);
 }
 
+/* Selectable button which is unchecked. */
+
 .devtools-button:not(:empty):not(:disabled):not(.checked):hover,
 .devtools-toolbarbutton[label]:not(:-moz-any([checked=true],[disabled])):hover,
 .devtools-button:empty:not(:disabled):-moz-any(:hover:active,.checked),
@@ -387,12 +387,26 @@ checkbox:-moz-focusring {
   background-color: var(--theme-selection-background-hover);
 }
 
+.devtools-button:not(:empty):not(.checked):not(:disabled):focus,
+.devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled]))[label]:focus {
+  background-color: var(--toolbarbutton-focus-background);
+  color: var(--toolbarbutton-focus-color);
+}
+
+/* Selectable button which is checked. */
+
 .devtools-toolbarbutton:not([disabled])[label][checked=true],
 .devtools-toolbarbutton:not([disabled])[label][open],
 .devtools-button:not(:empty).checked {
   background: var(--toolbarbutton-checked-background);
   border-color: var(--toolbarbutton-checked-border-color);
   color: var(--toolbarbutton-checked-color);
+}
+
+.devtools-toolbarbutton:not([disabled])[label][checked=true]:focus,
+.devtools-toolbarbutton:not([disabled])[label][open]:focus,
+.devtools-button:not(:empty).checked:focus {
+  background-color: var(--toolbarbutton-checked-focus-background);
 }
 
 /* Icons */
