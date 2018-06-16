@@ -1242,7 +1242,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #endif
     autoFlushICache_(nullptr),
     dtoaState(nullptr),
-    heapState(JS::HeapState::Idle),
     suppressGC(0),
 #ifdef DEBUG
     ionCompiling(false),
@@ -1550,7 +1549,7 @@ JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext* cxArg)
   : cx(cxArg->helperThread() ? nullptr : cxArg)
 {
     if (cx) {
-        MOZ_ASSERT(cx->requestDepth || JS::CurrentThreadIsHeapBusy());
+        MOZ_ASSERT(cx->requestDepth || JS::RuntimeHeapIsBusy());
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
         cx->checkRequestDepth++;
     }

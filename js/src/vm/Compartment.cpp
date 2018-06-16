@@ -385,7 +385,7 @@ Compartment::wrap(JSContext* cx, MutableHandle<GCVector<Value>> vec)
 void
 Compartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
     MOZ_ASSERT(!zone()->isCollectingFromAnyThread() || trc->runtime()->gc.isHeapCompacting());
 
     for (NonStringWrapperEnum e(this); !e.empty(); e.popFront()) {
@@ -406,7 +406,7 @@ Compartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
 {
     gcstats::AutoPhase ap(trc->runtime()->gc.stats(), gcstats::PhaseKind::MARK_CCWS);
-    MOZ_ASSERT(JS::CurrentThreadIsHeapMajorCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
     for (CompartmentsIter c(trc->runtime()); !c.done(); c.next()) {
         if (!c->zone()->isCollecting())
             c->traceOutgoingCrossCompartmentWrappers(trc);

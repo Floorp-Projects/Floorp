@@ -1340,7 +1340,7 @@ TraceJitActivations(JSContext* cx, JSTracer* trc)
 void
 UpdateJitActivationsForMinorGC(JSRuntime* rt)
 {
-    MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
+    MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
     JSContext* cx = rt->mainContextFromOwnThread();
     for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {

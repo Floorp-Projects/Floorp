@@ -1591,9 +1591,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock)
     {
         AutoUnlockHelperThreadState parallelSection(lock);
         TimeStamp timeStart = TimeStamp::Now();
-        TlsContext.get()->heapState = JS::HeapState::MajorCollecting;
         runTask();
-        TlsContext.get()->heapState = JS::HeapState::Idle;
         duration_ = TimeSince(timeStart);
     }
 

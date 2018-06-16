@@ -69,7 +69,8 @@ nsXBLResourceLoader::nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
  mLastResource(nullptr),
  mLoadingResources(false),
  mInLoadResourcesFunc(false),
- mPendingSheets(0)
+ mPendingSheets(0),
+ mBoundDocument(nullptr)
 {
 }
 

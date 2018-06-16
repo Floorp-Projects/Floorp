@@ -268,7 +268,7 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
      * thread during compacting GC and reading the contents of the thing by
      * IsThingPoisoned would be racy in this case.
      */
-    MOZ_ASSERT_IF(JS::CurrentThreadIsHeapBusy() &&
+    MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy() &&
                   !zone->isGCCompacting() &&
                   !rt->gc.isBackgroundSweeping(),
                   !IsThingPoisoned(thing) || !InFreeList(thing->asTenured().arena(), thing));
@@ -2575,7 +2575,7 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
 Zone*
 GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
     Zone* targetZone = target->asTenured().zone();
 
@@ -3214,7 +3214,7 @@ CheckIsMarkedThing(T* thingp)
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
                   CurrentThreadCanAccessRuntime(rt) ||
                   CurrentThreadCanAccessZone((*thingp)->zoneFromAnyThread()) ||
-                  (JS::CurrentThreadIsHeapCollecting() && rt->gc.state() == State::Sweep));
+                  (JS::RuntimeHeapIsCollecting() && rt->gc.state() == State::Sweep));
 #endif
 }
 
@@ -3299,7 +3299,7 @@ js::gc::IsAboutToBeFinalizedInternal(T** thingp)
         return false;
 
     if (IsInsideNursery(thing)) {
-        return JS::CurrentThreadIsHeapMinorCollecting() &&
+        return JS::RuntimeHeapIsMinorCollecting() &&
                !Nursery::getForwardedPointer(reinterpret_cast<Cell**>(thingp));
     }
 
@@ -3514,8 +3514,8 @@ UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing)
 JS_FRIEND_API(bool)
 JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing)
 {
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
-    MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
+    MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
     JSRuntime* rt = thing.asCell()->runtimeFromMainThread();
     gcstats::AutoPhase outerPhase(rt->gc.stats(), gcstats::PhaseKind::BARRIER);
