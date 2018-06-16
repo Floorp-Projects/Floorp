@@ -71,7 +71,11 @@ private:
     virtual ~NodeIterator();
 
     struct NodePointer {
-        NodePointer() : mNode(nullptr) {}
+        NodePointer()
+          : mNode(nullptr)
+          , mBeforeNode(false)
+        {
+        }
         NodePointer(nsINode *aNode, bool aBeforeNode);
 
         typedef bool (NodePointer::*MoveToMethodType)(nsINode*);

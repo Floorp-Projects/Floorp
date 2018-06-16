@@ -56,8 +56,10 @@ Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Performance> performance =
-    new PerformanceMainThread(aWindow, aDOMTiming, aChannel);
-  performance->mSystemPrincipal = nsContentUtils::IsSystemPrincipal(aPrincipal);
+    new PerformanceMainThread(aWindow,
+                              aDOMTiming,
+                              aChannel,
+                              nsContentUtils::IsSystemPrincipal(aPrincipal));
   return performance.forget();
 }
 
@@ -68,21 +70,22 @@ Performance::CreateForWorker(WorkerPrivate* aWorkerPrivate)
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<Performance> performance = new PerformanceWorker(aWorkerPrivate);
-  performance->mSystemPrincipal = aWorkerPrivate->UsesSystemPrincipal();
   return performance.forget();
 }
 
-Performance::Performance()
+Performance::Performance(bool aSystemPrincipal)
   : mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
   , mPendingNotificationObserversTask(false)
+  , mSystemPrincipal(aSystemPrincipal)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
-Performance::Performance(nsPIDOMWindowInner* aWindow)
+Performance::Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal)
   : DOMEventTargetHelper(aWindow)
   , mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
   , mPendingNotificationObserversTask(false)
+  , mSystemPrincipal(aSystemPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }

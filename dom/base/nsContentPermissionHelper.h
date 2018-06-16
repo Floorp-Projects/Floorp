@@ -126,10 +126,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
-  nsContentPermissionRequestProxy();
+  explicit nsContentPermissionRequestProxy(ContentPermissionRequestParent* parent);
 
-  nsresult Init(const nsTArray<mozilla::dom::PermissionRequest>& requests,
-                ContentPermissionRequestParent* parent);
+  nsresult Init(const nsTArray<mozilla::dom::PermissionRequest>& requests);
 
   void OnParentDestroyed();
 

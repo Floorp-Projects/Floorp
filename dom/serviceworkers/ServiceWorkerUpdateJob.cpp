@@ -208,6 +208,7 @@ ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
   : ServiceWorkerJob(aType, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
   , mUpdateViaCache(aUpdateViaCache)
+  , mOnFailure(serviceWorkerScriptCache::OnFailure::DoNothing)
 {
 }
 

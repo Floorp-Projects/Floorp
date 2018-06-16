@@ -575,11 +575,11 @@ public:
       mString == aKey->mString;
   }
 
-#ifdef DEBUG
   enum ContentListType {
     eNodeList,
     eHTMLCollection
   };
+#ifdef DEBUG
   ContentListType mType;
 #endif
 
@@ -588,8 +588,12 @@ protected:
                                    nsContentListMatchFunc aFunc,
                                    nsContentListDestroyFunc aDestroyFunc,
                                    nsFuncStringContentListDataAllocator aDataAllocator,
-                                   const nsAString& aString) :
+                                   const nsAString& aString,
+                                   mozilla::DebugOnly<ContentListType> aType) :
     nsContentList(aRootNode, aFunc, aDestroyFunc, nullptr),
+#ifdef DEBUG
+    mType(aType),
+#endif
     mString(aString)
   {
     mData = (*aDataAllocator)(aRootNode, &mString);
@@ -614,11 +618,8 @@ public:
                                    nsFuncStringContentListDataAllocator aDataAllocator,
                                    const nsAString& aString)
     : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
-                                       aDataAllocator, aString)
+                                       aDataAllocator, aString, eNodeList)
   {
-#ifdef DEBUG
-    mType = eNodeList;
-#endif
   }
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -640,11 +641,8 @@ public:
                                       nsFuncStringContentListDataAllocator aDataAllocator,
                                       const nsAString& aString)
     : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
-                                       aDataAllocator, aString)
+                                       aDataAllocator, aString, eHTMLCollection)
   {
-#ifdef DEBUG
-    mType = eHTMLCollection;
-#endif
   }
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;

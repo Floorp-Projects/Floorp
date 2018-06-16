@@ -26,6 +26,7 @@ GridLine::GridLine(GridLines *aParent)
   , mBreadth(0.0)
   , mType(GridDeclaration::Implicit)
   , mNumber(0)
+  , mNegativeNumber(0)
 {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridLines");
 }

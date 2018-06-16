@@ -339,6 +339,7 @@ FetchDriver::FetchDriver(InternalRequest* aRequest,
   , mPerformanceStorage(aPerformanceStorage)
   , mNeedToObserveOnDataAvailable(false)
   , mIsTrackingFetch(aIsTrackingFetch)
+  , mOnStopRequestCalled(false)
 #ifdef DEBUG
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)

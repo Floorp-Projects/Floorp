@@ -196,8 +196,9 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(MessagePort, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MessagePort, DOMEventTargetHelper)
 
-MessagePort::MessagePort(nsIGlobalObject* aGlobal)
+MessagePort::MessagePort(nsIGlobalObject* aGlobal, State aState)
   : DOMEventTargetHelper(aGlobal)
+  , mState(aState)
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
   , mHasBeenTransferredOrClosed(false)
@@ -221,9 +222,9 @@ MessagePort::Create(nsIGlobalObject* aGlobal, const nsID& aUUID,
 {
   MOZ_ASSERT(aGlobal);
 
-  RefPtr<MessagePort> mp = new MessagePort(aGlobal);
+  RefPtr<MessagePort> mp = new MessagePort(aGlobal, eStateUnshippedEntangled);
   mp->Initialize(aUUID, aDestinationUUID, 1 /* 0 is an invalid sequence ID */,
-                 false /* Neutered */, eStateUnshippedEntangled, aRv);
+                 false /* Neutered */, aRv);
   return mp.forget();
 }
 
@@ -234,10 +235,9 @@ MessagePort::Create(nsIGlobalObject* aGlobal,
 {
   MOZ_ASSERT(aGlobal);
 
-  RefPtr<MessagePort> mp = new MessagePort(aGlobal);
+  RefPtr<MessagePort> mp = new MessagePort(aGlobal, eStateEntangling);
   mp->Initialize(aIdentifier.uuid(), aIdentifier.destinationUuid(),
-                 aIdentifier.sequenceId(), aIdentifier.neutered(),
-                 eStateEntangling, aRv);
+                 aIdentifier.sequenceId(), aIdentifier.neutered(), aRv);
   return mp.forget();
 }
 
@@ -254,14 +254,12 @@ void
 MessagePort::Initialize(const nsID& aUUID,
                         const nsID& aDestinationUUID,
                         uint32_t aSequenceID, bool mNeutered,
-                        State aState, ErrorResult& aRv)
+                        ErrorResult& aRv)
 {
   MOZ_ASSERT(mIdentifier);
   mIdentifier->uuid() = aUUID;
   mIdentifier->destinationUuid() = aDestinationUUID;
   mIdentifier->sequenceId() = aSequenceID;
-
-  mState = aState;
 
   if (mNeutered) {
     // If this port is neutered we don't want to keep it alive artificially nor

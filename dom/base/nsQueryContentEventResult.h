@@ -19,12 +19,11 @@ class nsIWidget;
 class nsQueryContentEventResult final : public nsIQueryContentEventResult
 {
 public:
-  nsQueryContentEventResult();
+  explicit nsQueryContentEventResult(mozilla::WidgetQueryContentEvent& aEvent);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUERYCONTENTEVENTRESULT
 
-  void SetEventResult(nsIWidget* aWidget,
-                      mozilla::WidgetQueryContentEvent& aEvent);
+  void SetEventResult(nsIWidget* aWidget);
 
 protected:
   ~nsQueryContentEventResult();

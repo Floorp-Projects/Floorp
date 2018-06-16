@@ -19,7 +19,8 @@ class PerformanceMainThread final : public Performance
 public:
   PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                         nsDOMNavigationTiming* aDOMTiming,
-                        nsITimedChannel* aChannel);
+                        nsITimedChannel* aChannel,
+                        bool aPrincipal);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PerformanceMainThread,
