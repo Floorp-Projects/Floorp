@@ -130,6 +130,7 @@ nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(uint8_t aItems,
                       const uint8_t ** aCyrillicClass,
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
+	     , mResult(nullptr)
 {
 }
 
