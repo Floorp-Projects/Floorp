@@ -116,8 +116,7 @@ AdvanceToActiveCallLinear(JSContext* cx, NonBuiltinScriptFrameIter& iter, Handle
 void
 js::ThrowTypeErrorBehavior(JSContext* cx)
 {
-    JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                     JSMSG_THROW_TYPE_ERROR);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_THROW_TYPE_ERROR);
 }
 
 static bool
@@ -311,8 +310,7 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
         MOZ_ASSERT(!callerFun->isBuiltin(), "non-builtin iterator returned a builtin?");
 
         if (callerFun->strict()) {
-            JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                              JSMSG_CALLER_IS_STRICT);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CALLER_IS_STRICT);
             return false;
         }
     }
@@ -380,8 +378,7 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(!callerFun->isBuiltin(), "non-builtin iterator returned a builtin?");
 
     if (callerFun->strict()) {
-        JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                          JSMSG_CALLER_IS_STRICT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CALLER_IS_STRICT);
         return false;
     }
 

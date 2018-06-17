@@ -274,9 +274,8 @@ ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id)
         return false;
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, val, nullptr, "not an identifier",
-                              nullptr);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, val, nullptr,
+                         "not an identifier");
         return false;
     }
     return true;
@@ -522,13 +521,11 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
         }
 
         if (obj->is<GlobalObject>()) {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
-                                  isWrapper, isWindowProxy);
+            ReportValueError(cx, JSMSG_DEBUG_WRAPPER_IN_WAY, JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                             isWrapper, isWindowProxy);
         } else {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
-                                  "a global object", nullptr);
+            ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                             "a global object");
         }
         return false;
     }
@@ -5361,9 +5358,8 @@ DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
         return nullptr;
 
     if (!GetScriptReferent(thisobj).is<ReferentT>()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                              JSDVG_SEARCH_STACK, args.thisv(), nullptr,
-                              refname, nullptr);
+        ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, args.thisv(), nullptr,
+                         refname);
         return nullptr;
     }
 
@@ -7007,9 +7003,8 @@ DebuggerSource_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
         return nullptr;
 
     if (!GetSourceReferent(thisobj).is<ReferentT>()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                              JSDVG_SEARCH_STACK, args.thisv(), nullptr,
-                              refname, nullptr);
+        ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, args.thisv(), nullptr,
+                         refname);
         return nullptr;
     }
 
@@ -7092,9 +7087,8 @@ DebuggerSource_getBinary(JSContext* cx, unsigned argc, Value* vp)
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get binary)", args, obj, referent);
 
     if (!referent.is<WasmInstanceObject*>()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                              JSDVG_SEARCH_STACK, args.thisv(), nullptr,
-                              "a wasm source", nullptr);
+        ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, args.thisv(), nullptr,
+                         "a wasm source");
         return false;
     }
 
@@ -8097,9 +8091,8 @@ DebuggerFrame::requireScriptReferent(JSContext* cx, HandleDebuggerFrame frame)
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
     if (!referent.hasScript()) {
         RootedValue frameobj(cx, ObjectValue(*frame));
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                              JSDVG_SEARCH_STACK, frameobj, nullptr,
-                              "a script frame", nullptr);
+        ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, frameobj, nullptr,
+                         "a script frame");
         return false;
     }
     return true;
@@ -10707,13 +10700,11 @@ DebuggerObject::requireGlobal(JSContext* cx, HandleDebuggerObject object)
 
         RootedValue dbgobj(cx, ObjectValue(*object));
         if (referent->is<GlobalObject>()) {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
-                                  isWrapper, isWindowProxy);
+            ReportValueError(cx, JSMSG_DEBUG_WRAPPER_IN_WAY, JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                             isWrapper, isWindowProxy);
         } else {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
-                                  "a global object", nullptr);
+            ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                             "a global object");
         }
         return false;
     }

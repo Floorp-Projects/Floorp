@@ -7093,7 +7093,7 @@ JSErrorNotes::copy(JSContext* cx)
     }
 
     for (auto&& note : *this) {
-        js::UniquePtr<JSErrorNotes::Note> copied(CopyErrorNote(cx, note.get()));
+        UniquePtr<JSErrorNotes::Note> copied = CopyErrorNote(cx, note.get());
         if (!copied)
             return nullptr;
 

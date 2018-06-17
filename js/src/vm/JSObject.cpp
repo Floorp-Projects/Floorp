@@ -2624,33 +2624,6 @@ js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result)
     return true;
 }
 
-/* static */ bool
-JSObject::reportReadOnly(JSContext* cx, jsid id, unsigned report)
-{
-    RootedValue val(cx, IdToValue(id));
-    return ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
-                                 JSDVG_IGNORE_STACK, val, nullptr,
-                                 nullptr, nullptr);
-}
-
-/* static */ bool
-JSObject::reportNotConfigurable(JSContext* cx, jsid id, unsigned report)
-{
-    RootedValue val(cx, IdToValue(id));
-    return ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
-                                 JSDVG_IGNORE_STACK, val, nullptr,
-                                 nullptr, nullptr);
-}
-
-/* static */ bool
-JSObject::reportNotExtensible(JSContext* cx, HandleObject obj, unsigned report)
-{
-    RootedValue val(cx, ObjectValue(*obj));
-    return ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                                 JSDVG_IGNORE_STACK, val, nullptr,
-                                 nullptr, nullptr);
-}
-
 bool
 js::GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
                            MutableHandleObject protop)
@@ -3086,10 +3059,10 @@ ReportCantConvert(JSContext* cx, unsigned errorNumber, HandleObject obj, JSType 
     }
 
     RootedValue val(cx, ObjectValue(*obj));
-    ReportValueError2(cx, errorNumber, JSDVG_SEARCH_STACK, val, str,
-                      hint == JSTYPE_UNDEFINED
-                      ? "primitive type"
-                      : hint == JSTYPE_STRING ? "string" : "number");
+    ReportValueError(cx, errorNumber, JSDVG_SEARCH_STACK, val, str,
+                     hint == JSTYPE_UNDEFINED
+                     ? "primitive type"
+                     : hint == JSTYPE_STRING ? "string" : "number");
     return false;
 }
 
@@ -3273,7 +3246,7 @@ js::PrimitiveToObject(JSContext* cx, const Value& v)
 
 /*
  * Invokes the ES5 ToObject algorithm on vp, returning the result. If vp might
- * already be an object, use ToObject. reportCantConvert controls how null and
+ * already be an object, use ToObject. reportScanStack controls how null and
  * undefined errors are reported.
  *
  * Callers must handle the already-object case.
@@ -3286,7 +3259,7 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
 
     if (val.isNullOrUndefined()) {
         if (reportScanStack) {
-            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, nullptr);
+            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val);
         } else {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
                                       val.isNull() ? "null" : "undefined", "object");
