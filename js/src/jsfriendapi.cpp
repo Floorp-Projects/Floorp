@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TimeStamp.h"
 
 #include <stdint.h>
 
@@ -418,7 +419,7 @@ js::AssertSameCompartment(JSObject* objA, JSObject* objB)
 JS_FRIEND_API(void)
 js::NotifyAnimationActivity(JSObject* obj)
 {
-    int64_t timeNow = PRMJ_Now();
+    auto timeNow = mozilla::TimeStamp::Now();
     obj->realm()->lastAnimationTime = timeNow;
     obj->runtimeFromMainThread()->lastAnimationTime = timeNow;
 }

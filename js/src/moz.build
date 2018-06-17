@@ -223,6 +223,7 @@ UNIFIED_SOURCES += [
     'gc/Nursery.cpp',
     'gc/PublicIterators.cpp',
     'gc/RootMarking.cpp',
+    'gc/SliceBudget.cpp',
     'gc/Statistics.cpp',
     'gc/Tracer.cpp',
     'gc/Verifier.cpp',
