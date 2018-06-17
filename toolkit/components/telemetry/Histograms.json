@@ -13439,7 +13439,7 @@
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a set via storage.local using the JSONFile backend."
   },
-    "WEBEXT_STORAGE_LOCAL_IDB_GET_MS": {
+  "WEBEXT_STORAGE_LOCAL_IDB_GET_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
     "bug_numbers": [1465120],
@@ -13460,6 +13460,16 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a set via storage.local using the IndexedDB backend."
+  },
+  "WEBEXT_STORAGE_LOCAL_IDB_MIGRATE_RESULT_COUNT": {
+    "record_in_processes": ["main"],
+    "bug_numbers": [1465129],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "expires_in_version": "67",
+    "kind": "categorical",
+    "labels": ["success", "failure"],
+    "releaseChannelCollection": "opt-out",
+    "description": "The number of times a storage.local backend data migration has been completed and results in one of the categories."
   },
   "EXTENSION_UPDATE_TYPE": {
     "record_in_processes": ["main"],
