@@ -190,7 +190,10 @@ public:
   float GetStrokeOpacity() const override { return mStrokeOpacity; }
 
   struct Paint {
-    Paint() : mPaintType(eStyleSVGPaintType_None) {}
+    Paint()
+      : mPaintDefinition{}
+      , mPaintType(eStyleSVGPaintType_None)
+    {}
 
     void SetPaintServer(nsIFrame* aFrame,
                         const gfxMatrix& aContextMatrix,

@@ -14,6 +14,7 @@
 #include "mozilla/Sprintf.h"
 
 #include <string.h>
+#include <utility>
 
 #include "jsapi.h"
 #include "jsnum.h"
@@ -23,6 +24,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
+#include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/ErrorObject.h"
@@ -267,7 +269,7 @@ CopyExtraData(JSContext* cx, uint8_t** cursor, JSErrorNotes::Note* copy, JSError
 }
 
 template <typename T>
-static T*
+static UniquePtr<T>
 CopyErrorHelper(JSContext* cx, T* report)
 {
     /*
@@ -298,7 +300,7 @@ CopyErrorHelper(JSContext* cx, T* report)
     if (!cursor)
         return nullptr;
 
-    T* copy = new (cursor) T();
+    UniquePtr<T> copy(new (cursor) T());
     cursor += sizeof(T);
 
     if (report->message()) {
@@ -313,13 +315,10 @@ CopyErrorHelper(JSContext* cx, T* report)
         cursor += filenameSize;
     }
 
-    if (!CopyExtraData(cx, &cursor, copy, report)) {
-        /* js_delete calls destructor for T and js_free for pod_calloc. */
-        js_delete(copy);
+    if (!CopyExtraData(cx, &cursor, copy.get(), report))
         return nullptr;
-    }
 
-    MOZ_ASSERT(cursor == (uint8_t*)copy + mallocSize);
+    MOZ_ASSERT(cursor == (uint8_t*)copy.get() + mallocSize);
 
     /* Copy non-pointer members. */
     copy->lineno = report->lineno;
@@ -329,13 +328,13 @@ CopyErrorHelper(JSContext* cx, T* report)
     return copy;
 }
 
-JSErrorNotes::Note*
+UniquePtr<JSErrorNotes::Note>
 js::CopyErrorNote(JSContext* cx, JSErrorNotes::Note* note)
 {
     return CopyErrorHelper(cx, note);
 }
 
-JSErrorReport*
+UniquePtr<JSErrorReport>
 js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
 {
     return CopyErrorHelper(cx, report);
@@ -686,12 +685,12 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     if (!CaptureStack(cx, &stack))
         return;
 
-    js::ScopedJSFreePtr<JSErrorReport> report(CopyErrorReport(cx, reportp));
+    UniquePtr<JSErrorReport> report = CopyErrorReport(cx, reportp);
     if (!report)
         return;
 
-    RootedObject errObject(cx, ErrorObject::create(cx, exnType, stack, fileName,
-                                                   lineNumber, columnNumber, &report, messageStr));
+    RootedObject errObject(cx, ErrorObject::create(cx, exnType, stack, fileName, lineNumber,
+                                                   columnNumber, std::move(report), messageStr));
     if (!errObject)
         return;
 
@@ -990,7 +989,7 @@ ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap)
 JSObject*
 js::CopyErrorObject(JSContext* cx, Handle<ErrorObject*> err)
 {
-    js::ScopedJSFreePtr<JSErrorReport> copyReport;
+    UniquePtr<JSErrorReport> copyReport;
     if (JSErrorReport* errorReport = err->getErrorReport()) {
         copyReport = CopyErrorReport(cx, errorReport);
         if (!copyReport)
@@ -1012,7 +1011,7 @@ js::CopyErrorObject(JSContext* cx, Handle<ErrorObject*> err)
 
     // Create the Error object.
     return ErrorObject::create(cx, errorType, stack, fileName,
-                               lineNumber, columnNumber, &copyReport, message);
+                               lineNumber, columnNumber, std::move(copyReport), message);
 }
 
 JS_PUBLIC_API(bool)
@@ -1023,13 +1022,15 @@ JS::CreateError(JSContext* cx, JSExnType type, HandleObject stack, HandleString 
     assertSameCompartment(cx, stack, fileName, message);
     AssertObjectIsSavedFrameOrWrapper(cx, stack);
 
-    js::ScopedJSFreePtr<JSErrorReport> rep;
-    if (report)
+    js::UniquePtr<JSErrorReport> rep;
+    if (report) {
         rep = CopyErrorReport(cx, report);
+        if (!rep)
+            return false;
+    }
 
-    RootedObject obj(cx,
-        js::ErrorObject::create(cx, type, stack, fileName,
-                                lineNumber, columnNumber, &rep, message));
+    JSObject* obj = js::ErrorObject::create(cx, type, stack, fileName, lineNumber, columnNumber,
+                                            std::move(rep), message);
     if (!obj)
         return false;
 

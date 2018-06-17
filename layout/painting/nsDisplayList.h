@@ -323,6 +323,9 @@ struct ActiveScrolledRoot {
 
 private:
   ActiveScrolledRoot()
+    : mScrollableFrame(nullptr)
+    , mDepth(0)
+    , mRetained(false)
   {
   }
 

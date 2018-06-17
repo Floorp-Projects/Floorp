@@ -2906,8 +2906,8 @@ VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg)
 
     if (nameMissing) {
         RootedValue value(cx, IdToValue(id));
-        return ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
-                                     JSDVG_IGNORE_STACK, value, nullptr, nullptr, nullptr);
+        ReportValueError(cx, JSMSG_NO_SUCH_SELF_HOSTED_PROP, JSDVG_IGNORE_STACK, value, nullptr);
+        return false;
     }
 #endif // DEBUG
 
