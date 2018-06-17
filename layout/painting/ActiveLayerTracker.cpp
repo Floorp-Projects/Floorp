@@ -458,11 +458,7 @@ ActiveLayerTracker::IsStyleAnimated(nsDisplayListBuilder* aBuilder,
   if (aProperty == eCSSProperty_transform && aFrame->Combines3DTransformWithAncestors()) {
     return IsStyleAnimated(aBuilder, aFrame->GetParent(), aProperty);
   }
-  if (aBuilder) {
-    return nsLayoutUtils::HasEffectiveAnimation(aFrame, aProperty);
-  } else {
-    return nsLayoutUtils::MayHaveEffectiveAnimation(aFrame, aProperty);
-  }
+  return nsLayoutUtils::HasEffectiveAnimation(aFrame, aProperty);
 }
 
 /* static */ bool

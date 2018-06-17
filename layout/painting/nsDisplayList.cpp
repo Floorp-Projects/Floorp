@@ -6309,12 +6309,6 @@ nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFr
   return false;
 }
 
-/* static */ bool
-nsDisplayOpacity::MayNeedActiveLayer(nsIFrame* aFrame)
-{
-  return ActiveLayerTracker::IsStyleMaybeAnimated(aFrame, eCSSProperty_opacity);
-}
-
 void
 nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
                              float aOpacity,
