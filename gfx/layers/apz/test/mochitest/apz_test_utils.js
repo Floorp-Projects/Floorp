@@ -273,6 +273,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     }
 
     advanceSubtestExecution();
+  }).catch(function(e) {
+    SimpleTest.ok(false, "Error occurred while running subtests: " + e);
   });
 }
 
