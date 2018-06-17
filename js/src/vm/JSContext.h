@@ -1015,8 +1015,8 @@ ReportIsNotDefined(JSContext* cx, HandleId id);
 /*
  * Report an attempt to access the property of a null or undefined value (v).
  */
-extern bool
-ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v, HandleString fallback);
+extern void
+ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v);
 
 extern void
 ReportMissingArg(JSContext* cx, js::HandleValue v, unsigned arg);
@@ -1031,17 +1031,12 @@ ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNumber,
                       int spindex, HandleValue v, HandleString fallback,
                       const char* arg1, const char* arg2);
 
-#define ReportValueError(cx,errorNumber,spindex,v,fallback)                   \
-    ((void)ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,             \
-                                    spindex, v, fallback, nullptr, nullptr))
-
-#define ReportValueError2(cx,errorNumber,spindex,v,fallback,arg1)             \
-    ((void)ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,             \
-                                    spindex, v, fallback, arg1, nullptr))
-
-#define ReportValueError3(cx,errorNumber,spindex,v,fallback,arg1,arg2)        \
-    ((void)ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,             \
-                                    spindex, v, fallback, arg1, arg2))
+inline void
+ReportValueError(JSContext* cx, const unsigned errorNumber, int spindex, HandleValue v,
+                 HandleString fallback, const char* arg1 = nullptr, const char* arg2 = nullptr)
+{
+    ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber, spindex, v, fallback, arg1, arg2);
+}
 
 JSObject*
 CreateErrorNotesArray(JSContext* cx, JSErrorReport* report);

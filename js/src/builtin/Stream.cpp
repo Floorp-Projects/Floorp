@@ -270,17 +270,15 @@ PromiseRejectedWithPendingError(JSContext* cx) {
     return PromiseObject::unforgeableReject(cx, exn);
 }
 
-static bool
-ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType,
-                   HandleValue arg)
+static void
+ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType, HandleValue arg)
 {
     UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, nullptr);
     if (!bytes)
-        return false;
+        return;
 
-    return JS_ReportErrorFlagsAndNumberLatin1(cx, JSREPORT_ERROR, GetErrorMessage,
-                                              nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                                              funName, expectedType, bytes.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, funName,
+                               expectedType, bytes.get());
 }
 
 static MOZ_MUST_USE bool
@@ -307,8 +305,8 @@ static MOZ_MUST_USE bool
 RejectNonGenericMethod(JSContext* cx, const CallArgs& args,
                        const char* className, const char* methodName)
 {
-    ReportValueError3(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
-                      nullptr, className, methodName);
+    ReportValueError(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
+                     nullptr, className, methodName);
 
     return ReturnPromiseRejectedWithPendingError(cx, args);
 }
@@ -803,8 +801,8 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStream(this) is false, return a promise rejected
     //         with a TypeError exception.
     if (!Is<ReadableStream>(args.thisv())) {
-        ReportValueError3(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
-                          nullptr, "cancel", "");
+        ReportValueError(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
+                         nullptr, "cancel", "");
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 

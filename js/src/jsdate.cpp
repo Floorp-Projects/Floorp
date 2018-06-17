@@ -2654,8 +2654,7 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 5. */
     if (!IsCallable(toISO)) {
-        JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, js::GetErrorMessage, nullptr,
-                                          JSMSG_BAD_TOISOSTRING_PROP);
+        JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr, JSMSG_BAD_TOISOSTRING_PROP);
         return false;
     }
 
