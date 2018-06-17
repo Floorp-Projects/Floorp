@@ -14,15 +14,16 @@
 #include "jsapi.h"
 #include "NamespaceImports.h"
 
+#include "js/UniquePtr.h"
 #include "vm/JSContext.h"
 
 namespace js {
 class ErrorObject;
 
-JSErrorNotes::Note*
+UniquePtr<JSErrorNotes::Note>
 CopyErrorNote(JSContext* cx, JSErrorNotes::Note* note);
 
-JSErrorReport*
+UniquePtr<JSErrorReport>
 CopyErrorReport(JSContext* cx, JSErrorReport* report);
 
 JSString*

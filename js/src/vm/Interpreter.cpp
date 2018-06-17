@@ -994,7 +994,7 @@ js::CheckClassHeritageOperation(JSContext* cx, HandleValue heritage)
         return false;
     }
 
-    ReportValueError2(cx, JSMSG_BAD_HERITAGE, -1, heritage, nullptr, "not an object or null");
+    ReportValueError(cx, JSMSG_BAD_HERITAGE, -1, heritage, nullptr, "not an object or null");
     return false;
 }
 
