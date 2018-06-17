@@ -387,9 +387,9 @@ class GCSchedulingTunables
      * JSGC_HIGH_FREQUENCY_TIME_LIMIT
      *
      * We enter high-frequency mode if we GC a twice within this many
-     * microseconds. This value is stored directly in microseconds.
+     * microseconds.
      */
-    MainThreadData<uint64_t> highFrequencyThresholdUsec_;
+    MainThreadData<mozilla::TimeDuration> highFrequencyThresholdUsec_;
 
     /*
      * JSGC_HIGH_FREQUENCY_LOW_LIMIT
@@ -448,7 +448,7 @@ class GCSchedulingTunables
     double allocThresholdFactorAvoidInterrupt() const { return allocThresholdFactorAvoidInterrupt_; }
     size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
     bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
-    uint64_t highFrequencyThresholdUsec() const { return highFrequencyThresholdUsec_; }
+    const mozilla::TimeDuration &highFrequencyThresholdUsec() const { return highFrequencyThresholdUsec_; }
     uint64_t highFrequencyLowLimitBytes() const { return highFrequencyLowLimitBytes_; }
     uint64_t highFrequencyHighLimitBytes() const { return highFrequencyHighLimitBytes_; }
     double highFrequencyHeapGrowthMax() const { return highFrequencyHeapGrowthMax_; }
@@ -493,10 +493,10 @@ class GCSchedulingState
 
     bool inHighFrequencyGCMode() const { return inHighFrequencyGCMode_; }
 
-    void updateHighFrequencyMode(uint64_t lastGCTime, uint64_t currentTime,
+    void updateHighFrequencyMode(const mozilla::TimeStamp &lastGCTime, const mozilla::TimeStamp &currentTime,
                                  const GCSchedulingTunables& tunables) {
         inHighFrequencyGCMode_ =
-            tunables.isDynamicHeapGrowthEnabled() && lastGCTime &&
+            tunables.isDynamicHeapGrowthEnabled() && !lastGCTime.IsNull() &&
             lastGCTime + tunables.highFrequencyThresholdUsec() > currentTime;
     }
 };
