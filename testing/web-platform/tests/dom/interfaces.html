@@ -19,8 +19,8 @@ element.setAttribute("bar", "baz");
 var idlArray = new IdlArray();
 
 function doTest([html, dom]) {
-  idlArray.add_dependency_idls(html);
   idlArray.add_idls(dom);
+  idlArray.add_dependency_idls(html);
   idlArray.add_objects({
     EventTarget: ['new EventTarget()'],
     Event: ['document.createEvent("Event")', 'new Event("foo")'],
