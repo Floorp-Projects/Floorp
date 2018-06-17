@@ -43,7 +43,9 @@ class SVGAnimatedNumberList
   friend class DOMSVGNumberList;
 
 public:
-  SVGAnimatedNumberList() {}
+  SVGAnimatedNumberList()
+    : mIsBaseSet(false)
+  {}
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGNumberList wrapper
