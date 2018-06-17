@@ -2439,10 +2439,12 @@ CharIterator::CharIterator(SVGTextFrame* aSVGTextFrame,
     mFrameForTrimCheck(nullptr),
     mTrimmedOffset(0),
     mTrimmedLength(0),
+    mTextRun(nullptr),
     mTextElementCharIndex(0),
     mGlyphStartTextElementCharIndex(0),
-    mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor)
-  , mPostReflow(aPostReflow)
+    mGlyphUndisplayedCharacters(0),
+    mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor),
+    mPostReflow(aPostReflow)
 {
   if (!AtEnd()) {
     mSkipCharsIterator = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
@@ -2772,7 +2774,8 @@ public:
       mContext(aContext),
       mFrame(aFrame),
       mCanvasTM(aCanvasTM),
-      mImgParams(aImgParams)
+      mImgParams(aImgParams),
+      mColor(0)
   {
   }
 

@@ -1423,8 +1423,7 @@ js::ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut)
         UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, range).c_str());
         if (!utf8)
             return false;
-        JS_ReportErrorFlagsAndNumberUTF8(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                         JSMSG_BAD_REGEXP_FLAG, utf8.get());
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_BAD_REGEXP_FLAG, utf8.get());
         return false;
     }
 

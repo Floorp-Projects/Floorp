@@ -1707,18 +1707,8 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         return result.succeed();
     }
 
-    // Non-standard hack: Allow redefining non-configurable properties if
-    // JSPROP_REDEFINE_NONCONFIGURABLE is set _and_ the object is a non-DOM
-    // global. The idea is that a DOM object can never have such a thing on
-    // its proto chain directly on the web, so we should be OK optimizing
-    // access to accessors found on such an object. Bug 1105518 contemplates
-    // removing this hack.
-    bool skipRedefineChecks = (desc.attributes() & JSPROP_REDEFINE_NONCONFIGURABLE) &&
-                              obj->is<GlobalObject>() &&
-                              !obj->getClass()->isDOMClass();
-
     // Step 4.
-    if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks) {
+    if (!IsConfigurable(shapeAttrs)) {
         if (desc.hasConfigurable() && desc.configurable())
             return result.fail(JSMSG_CANT_REDEFINE_PROP);
         if (desc.hasEnumerable() && desc.enumerable() != IsEnumerable(shapeAttrs))
@@ -1753,7 +1743,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         }
     } else if (desc.isDataDescriptor() != IsDataDescriptor(shapeAttrs)) {
         // Step 6.
-        if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks)
+        if (!IsConfigurable(shapeAttrs))
             return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
         // Fill in desc fields with default values (steps 6.b.i and 6.c.i).
@@ -1763,7 +1753,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         bool frozen = !IsConfigurable(shapeAttrs) && !IsWritable(shapeAttrs);
 
         // Step 7.a.i.1.
-        if (frozen && desc.hasWritable() && desc.writable() && !skipRedefineChecks)
+        if (frozen && desc.hasWritable() && desc.writable())
             return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
         if (frozen || !desc.hasValue()) {
@@ -1780,13 +1770,13 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                 MOZ_ASSERT(!cx->helperThread());
                 if (!SameValue(cx, desc.value(), currentValue, &same))
                     return false;
-                if (!same && !skipRedefineChecks)
+                if (!same)
                     return result.fail(JSMSG_CANT_REDEFINE_PROP);
             }
         }
 
         // Step 7.a.i.3.
-        if (frozen && !skipRedefineChecks)
+        if (frozen)
             return result.succeed();
 
         // Fill in desc.[[Writable]].
@@ -1802,8 +1792,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         if (desc.hasSetterObject()) {
             // Step 8.a.i.
             if (!IsConfigurable(shapeAttrs) &&
-                desc.setterObject() != prop.shape()->setterObject() &&
-                !skipRedefineChecks)
+                desc.setterObject() != prop.shape()->setterObject())
             {
                 return result.fail(JSMSG_CANT_REDEFINE_PROP);
             }
@@ -1814,8 +1803,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         if (desc.hasGetterObject()) {
             // Step 8.a.ii.
             if (!IsConfigurable(shapeAttrs) &&
-                desc.getterObject() != prop.shape()->getterObject() &&
-                !skipRedefineChecks)
+                desc.getterObject() != prop.shape()->getterObject())
             {
                 return result.fail(JSMSG_CANT_REDEFINE_PROP);
             }
