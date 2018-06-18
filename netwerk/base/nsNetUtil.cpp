@@ -1520,7 +1520,7 @@ NS_NewBufferedInputStream(nsIInputStream** aResult,
 
 namespace {
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 8192
 
 class BufferWriter final : public Runnable
                          , public nsIInputStreamCallback
@@ -1678,64 +1678,63 @@ private:
 
         MonitorAutoLock lock(mMonitor);
 
-        if (mCompleted) {
-            return NS_OK;
-        }
-
-        if (mCount == 0) {
-            OperationCompleted(lock, NS_OK);
-            return NS_OK;
-        }
-
-        if (mCount == -1 && !MaybeExpandBufferSize()) {
-            OperationCompleted(lock, NS_ERROR_OUT_OF_MEMORY);
-            return NS_OK;
-        }
-
-        uint64_t offset = mWrittenData;
-        uint64_t length = mCount == -1 ? BUFFER_SIZE : mCount;
-
-        // Let's try to read it directly.
-        uint32_t writtenData;
-        nsresult rv = mAsyncInputStream->ReadSegments(NS_CopySegmentToBuffer,
-                                                     static_cast<char*>(mBuffer) + offset,
-                                                     length, &writtenData);
-
-        // Operation completed.
-        if (NS_SUCCEEDED(rv) && writtenData == 0) {
-            OperationCompleted(lock, NS_OK);
-            return NS_OK;
-        }
-
-        // If we succeeded, let's try to read again.
-        if (NS_SUCCEEDED(rv)) {
-            mWrittenData += writtenData;
-            if (mCount != -1) {
-                MOZ_ASSERT(mCount >= writtenData);
-                mCount -= writtenData;
+        while (true) {
+            if (mCompleted) {
+                return NS_OK;
             }
 
-            nsCOMPtr<nsIRunnable> runnable = this;
-            rv = mTaskQueue->Dispatch(runnable.forget());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-                OperationCompleted(lock, rv);
+            if (mCount == 0) {
+                OperationCompleted(lock, NS_OK);
+                return NS_OK;
             }
 
+            if (mCount == -1 && !MaybeExpandBufferSize()) {
+                OperationCompleted(lock, NS_ERROR_OUT_OF_MEMORY);
+                return NS_OK;
+            }
+
+            uint64_t offset = mWrittenData;
+            uint64_t length = mCount == -1 ? BUFFER_SIZE : mCount;
+
+            // Let's try to read it directly.
+            uint32_t writtenData;
+            nsresult rv = mAsyncInputStream->ReadSegments(NS_CopySegmentToBuffer,
+                                                         static_cast<char*>(mBuffer) + offset,
+                                                         length, &writtenData);
+
+            // Operation completed.
+            if (NS_SUCCEEDED(rv) && writtenData == 0) {
+                OperationCompleted(lock, NS_OK);
+                return NS_OK;
+            }
+
+            // If we succeeded, let's try to read again.
+            if (NS_SUCCEEDED(rv)) {
+                mWrittenData += writtenData;
+                if (mCount != -1) {
+                    MOZ_ASSERT(mCount >= writtenData);
+                    mCount -= writtenData;
+                }
+
+                continue;
+            }
+
+            // Async wait...
+            if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+                rv = mAsyncInputStream->AsyncWait(this, 0, length, mTaskQueue);
+                if (NS_WARN_IF(NS_FAILED(rv))) {
+                    OperationCompleted(lock, rv);
+                }
+                return NS_OK;
+            }
+
+            // Error.
+            OperationCompleted(lock, rv);
             return NS_OK;
         }
 
-        // Async wait...
-        if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-            rv = mAsyncInputStream->AsyncWait(this, 0, length, mTaskQueue);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-                OperationCompleted(lock, rv);
-            }
-            return NS_OK;
-        }
-
-        // Error.
-        OperationCompleted(lock, rv);
-        return NS_OK;
+        MOZ_ASSERT_UNREACHABLE("We should not be here");
+        return NS_ERROR_FAILURE;
     }
 
     NS_IMETHOD
