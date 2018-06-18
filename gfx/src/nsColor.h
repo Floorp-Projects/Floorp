@@ -100,10 +100,6 @@ bool NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResult);
 // otherwise return false.
 bool NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);
 
-// Returns an array of all possible color names, and sets
-// *aSizeArray to the size of that array. Do NOT call |free()| on this array.
-const char * const * NS_AllColorNames(size_t *aSizeArray);
-
 // function to convert from HSL color space to RGB color space
 // the float parameters are all expected to be in the range 0-1
 nscolor NS_HSL2RGB(float h, float s, float l);
