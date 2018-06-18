@@ -157,7 +157,7 @@ load 1229972.html
 load 1242811.html
 load 1242822.html
 load 1248222.html
-skip-if(webrender) load 1278305.html   # skip because of bug 1435896
+load 1278305.html
 load 1308394.html
 load 1317403-1.html # bug 1331533
 load 1325159-1.html
