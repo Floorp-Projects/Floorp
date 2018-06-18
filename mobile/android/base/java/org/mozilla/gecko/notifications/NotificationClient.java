@@ -5,22 +5,23 @@
 
 package org.mozilla.gecko.notifications;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.util.Log;
 
 import java.util.HashMap;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoActivityMonitor;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
@@ -298,23 +299,13 @@ public final class NotificationClient implements NotificationListener {
         return false;
     }
 
-    @SuppressLint("NewApi")
-    private void setForegroundNotificationLocked(@NonNull final String name,
-                                                 @NonNull final Notification notification) {
+    private void setForegroundNotificationLocked(final String name,
+                                                 final Notification notification) {
         mForegroundNotification = name;
 
         final Intent intent = new Intent(mContext, NotificationService.class);
         intent.putExtra(NotificationService.EXTRA_NOTIFICATION, notification);
-        if (AppConstants.Versions.preO) {
-            mContext.startService(intent);
-        } else {
-            mContext.startForegroundService(intent);
-        }
-    }
-
-    private void removeForegroundNotificationLocked() {
-        mForegroundNotification = null;
-        mContext.stopService(new Intent(mContext, NotificationService.class));
+        mContext.startService(intent);
     }
 
     private void updateForegroundNotificationLocked(final String oldName) {
@@ -337,6 +328,6 @@ public final class NotificationClient implements NotificationListener {
             }
         }
 
-        removeForegroundNotificationLocked();
+        setForegroundNotificationLocked(null, null);
     }
 }
