@@ -24,6 +24,7 @@ from voluptuous import Any, Required, Optional
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
+    'buildhub.json',
     "target.common.tests.zip",
     "target.cppunittest.tests.zip",
     "target.crashreporter-symbols.zip",
@@ -69,6 +70,7 @@ _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
+    "en-US/buildhub.json",
     "en-US/target.common.tests.zip",
     "en-US/target.cppunittest.tests.zip",
     "en-US/target.crashreporter-symbols.zip",
@@ -92,6 +94,7 @@ _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI = [
+    "buildhub.json",
     "target.json",
     "target.mozinfo.json",
     "target.test_packages.json",
