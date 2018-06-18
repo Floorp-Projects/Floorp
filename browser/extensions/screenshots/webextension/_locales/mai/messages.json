@@ -1,0 +1,181 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "स्क्रीनशॉट लिअ"
+  },
+  "myShotsLink": {
+    "message": "हमर शॉट"
+  },
+  "screenshotInstructions": {
+    "message": "क्षेत्र चुनब लेल पेज पर घीँचू अथवा क्लिक करू. कैंसिल करए लेल ESC दाबू."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "सहेजू"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "विजिबल सहेजू"
+  },
+  "saveScreenshotFullPage": {
+    "message": "पूरा पेज सहजू"
+  },
+  "cancelScreenshot": {
+    "message": "कैंसिल करू"
+  },
+  "downloadScreenshot": {
+    "message": "डाउनलोड करू"
+  },
+  "downloadOnlyNotice": {
+    "message": "अहाँ तत्कालिक रूप सँ केवल-डाउनलोड-मोड मे छी. "
+  },
+  "downloadOnlyDetails": {
+    "message": "एहन स्थिति मे फ़ायरफॉक्स स्क्रीनशॉट ऑटोमेटिक रूप सँ केवल-डाउनलोड-मोड मे बदैल जाएत."
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "निजी ब्रॉउजिंग विंडो मे."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "तेसर-पक्ष कुकीज़ अक्षम अछि."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“कभी इतिहास याद नहि राखू“ सक्षम अछि."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "अहाँ Firefox ESR क उपयोग क रहल छी."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "अपडेट अक्षम कएल गेल."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "लिंक नकल बनैलक"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "अहाँक शॉट क लिंक क्लिपबोर्ड पर नकल कएल गेल. साटबाक लेल $META_KEY$ दाबू.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "कॉपी करू"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "शॉट कॉपी कएल गेल"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "अहाँक शॉट क्लिपबोर्ड पर नकल कएल गेल. साटबाक लेल $META_KEY$ दाबू.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "ई छवि केँ $PIXELS$px छोट बनाएल गेल.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "कार्यरत नहि अछि."
+  },
+  "requestErrorDetails": {
+    "message": "माफ करू! हम अहाँक शॉट नहि सहेज सकलहुँ. कृपया बाद मे फेन प्रयास करू."
+  },
+  "connectionErrorTitle": {
+    "message": "हम अहाँक स्क्रीनशॉट सँ नहि जुड़ि सकब."
+  },
+  "connectionErrorDetails": {
+    "message": "कृपया अपन इंटरनेट कनेक्शन जाँचू. जँ अहाँ अपन इंटरनेट सँ जुड़ै मे सक्षम छी,  Firefox स्क्रीनशॉट सेवा मे कोनो अस्थायी समस्या भ सकैत अछि. "
+  },
+  "loginErrorDetails": {
+    "message": "हम अहाँक स्क्रीनशॉट नहि सहेज सकलहुँ Firefox स्क्रीनशॉट सेवा मे कोनो समस्या अछि. कृपया बाद मे फिनु कोसिस करू.  "
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ई पेजक स्क्रीनशॉट नहि लिअ सकलहुँ."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "ई एकटा मान्य वेब पेज नहि अछि, तँ अहाँ एकर स्क्रीनशॉट नहि लिअ सकैत छी."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "अहाँ एकटा Firefox स्क्रीनशॉट पेजक शॉट नहि लिअ सकैत छी!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "अहाँक चयन बड छोट अछि"
+  },
+  "privateWindowErrorTitle": {
+    "message": "निजी ब्राउज़िंग मोड मे स्क्रीनशॉट निष्क्रिय कए देल गेल अछि"
+  },
+  "privateWindowErrorDetails": {
+    "message": "असुविधा खातिर क्षमा करू. भविष्य संस्करण कलेल हमसभ एहि फीचर पर काज क रहल छी."
+  },
+  "genericErrorTitle": {
+    "message": "ओह! Firefox स्क्रीनशॉट बिगड़ गेल."
+  },
+  "genericErrorDetails": {
+    "message": "अखन कथि भेल हम सुनिश्चित नहि छी. फिनु प्रयास अथवा आन पेजक भिन्न शॉट लिअ चाहैत छी?"
+  },
+  "tourBodyIntro": {
+    "message": "Firefox छोड़ने बिनु स्क्रीनशॉट लिअ, सहेजू, आओर साझा करू."
+  },
+  "tourHeaderPageAction": {
+    "message": "सहेजबाक एकटा नवीन तरीका"
+  },
+  "tourBodyPageAction": {
+    "message": "जखन अहाँ एकटा शॉट लिअ चाहैत छी एड्रेसबार मे पेज एक्शन मेनू केँ पसारू."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "जे अहाँ चाहैत छी कैप्चर करू"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "पेजक एकटा हिस्सा खातिर सिर्फ क्लिक आओर ड्रैग करू. अहाँ अपन चयनक हाइलाइट सेहो क सकैत छी."
+  },
+  "tourHeaderFullPage": {
+    "message": "विंडोज़ या संपूर्ण पेज केँ कैद करू"
+  },
+  "tourBodyFullPage": {
+    "message": "विंडो मे देखाइ दिए बला क्षेत्र या पूरा पेज केँ कैप्चर करए लेल उप्पर मे दायाँ तरफ बला बटन क चयन करू."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "जेहन अहाँ एकरा चाहैत छी"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "आसानी सँ शेयर करए अथवा ओकरा अपन कंप्यूटर पर डाउनलोड करए कलेल अपन क्रॉप कएल शॉट केँ वेब पर सहेजू. अहाँ द्वारा लेल गेल सभ शॉट केँ खोजब लेल अहाँ हमर शॉट्स सेहो पर क्लिक क सकैत छी."
+  },
+  "tourSkip": {
+    "message": "छोड़ू"
+  },
+  "tourNext": {
+    "message": "अगिला स्लाइड"
+  },
+  "tourPrevious": {
+    "message": "पछिला स्लाइड"
+  },
+  "tourDone": {
+    "message": "भ गेल"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox स्क्रीनशॉट्स क उपयोग कएक, अहाँ हमर $TERMSANDPRIVACYNOTICETERMSLINK$ आओर $TERMSANDPRIVACYNOTICEPRIVACYLINK$ सँ सहमत छी.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "शर्त"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "गोपनीयता सूचना"
+  },
+  "libraryLabel": {
+    "message": "स्क्रीनशॉट"
+  }
+}
