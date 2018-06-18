@@ -128,6 +128,7 @@ AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
   : mResource(aResource)
   , mStream(new ResourceStream(aResource))
+  , mIsSeekable(false)
 {
   DDLINKCHILD("resource", aResource);
   DDLINKCHILD("stream", mStream.get());

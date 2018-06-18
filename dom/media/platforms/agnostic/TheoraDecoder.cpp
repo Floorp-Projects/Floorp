@@ -47,6 +47,8 @@ TheoraDecoder::TheoraDecoder(const CreateDecoderParams& aParams)
   : mImageAllocator(aParams.mKnowsCompositor)
   , mImageContainer(aParams.mImageContainer)
   , mTaskQueue(aParams.mTaskQueue)
+  , mTheoraInfo{}
+  , mTheoraComment{}
   , mTheoraSetupInfo(nullptr)
   , mTheoraDecoderContext(nullptr)
   , mPacketCount(0)

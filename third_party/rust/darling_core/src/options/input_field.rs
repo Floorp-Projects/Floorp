@@ -61,7 +61,7 @@ impl InputField {
     }
 
     pub fn from_field(f: &syn::Field, parent: Option<&Core>) -> Result<Self> {
-        let ident = f.ident.clone().unwrap_or(syn::Ident::from("__unnamed"));
+        let ident = f.ident.clone().unwrap_or(syn::Ident::new("__unnamed", ::proc_macro2::Span::call_site()));
         let ty = f.ty.clone();
         let base = Self::new(ident, ty).parse_attributes(&f.attrs)?;
 

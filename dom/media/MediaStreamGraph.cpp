@@ -3600,6 +3600,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
                                            TrackRate aSampleRate,
                                            AbstractThread* aMainThread)
   : MediaStreamGraph(aSampleRate)
+  , mFirstCycleBreaker(0)
   , mPortCount(0)
   , mInputWanted(false)
   , mInputDeviceID(-1)
