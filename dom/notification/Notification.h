@@ -331,9 +331,6 @@ protected:
   void ShowInternal(UniquePtr<NotificationRef>&& aRef);
   void CloseInternal(UniquePtr<NotificationRef>&& aRef);
 
-  static NotificationPermission GetPermissionInternal(nsISupports* aGlobal,
-                                                      ErrorResult& rv);
-
   static const nsString DirectionToString(NotificationDirection aDirection)
   {
     switch (aDirection) {
