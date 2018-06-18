@@ -178,10 +178,12 @@ function initPage() {
   }
   if (showCaptivePortalUI) {
     initPageCaptivePortal();
+    updateContainerPosition();
     return;
   }
   if (gIsCertError) {
     initPageCertError();
+    updateContainerPosition();
     return;
   }
   addAutofocus("errorTryAgain");
@@ -293,6 +295,12 @@ function initPage() {
       span.textContent = document.location.hostname;
     }
   }
+  updateContainerPosition();
+}
+
+function updateContainerPosition() {
+  let textContainer = document.getElementById("text-container");
+  textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
 }
 
 function initPageCaptivePortal() {
