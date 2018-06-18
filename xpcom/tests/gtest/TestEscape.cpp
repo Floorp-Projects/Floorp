@@ -133,3 +133,19 @@ TEST(Escape, nsAppendEscapedHTML)
   }
 }
 
+TEST(Escape, EscapeSpaces)
+{
+  // Tests the fallible version of NS_EscapeURL works as expected when no
+  // escaping is necessary.
+  nsCString toEscape("data:\x0D\x0A spa ces\xC4\x9F");
+  nsCString escaped;
+  nsresult rv = NS_EscapeURL(toEscape, esc_OnlyNonASCII, escaped, fallible);
+  EXPECT_EQ(rv, NS_OK);
+  // Only non-ASCII and C0
+  EXPECT_STREQ(escaped.BeginReading(), "data:%0D%0A spa ces%C4%9F");
+
+  escaped.Truncate();
+  rv = NS_EscapeURL(toEscape, esc_OnlyNonASCII | esc_Spaces, escaped, fallible);
+  EXPECT_EQ(rv, NS_OK);
+  EXPECT_STREQ(escaped.BeginReading(), "data:%0D%0A%20spa%20ces%C4%9F");
+}
