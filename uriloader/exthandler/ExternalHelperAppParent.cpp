@@ -40,7 +40,10 @@ NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent,
 ExternalHelperAppParent::ExternalHelperAppParent(
     const OptionalURIParams& uri,
     const int64_t& aContentLength,
-    const bool& aWasFileChannel)
+    const bool& aWasFileChannel,
+    const nsCString& aContentDispositionHeader,
+    const uint32_t& aContentDispositionHint,
+    const nsString& aContentDispositionFilename)
   : mURI(DeserializeURI(uri))
   , mPending(false)
 #ifdef DEBUG
@@ -52,6 +55,17 @@ ExternalHelperAppParent::ExternalHelperAppParent(
   , mContentLength(aContentLength)
   , mWasFileChannel(aWasFileChannel)
 {
+  mContentDispositionHeader = aContentDispositionHeader;
+  if (!mContentDispositionHeader.IsEmpty()) {
+    NS_GetFilenameFromDisposition(mContentDispositionFilename,
+                                  mContentDispositionHeader,
+                                  mURI);
+    mContentDisposition =
+      NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
+  } else {
+    mContentDisposition = aContentDispositionHint;
+    mContentDispositionFilename = aContentDispositionFilename;
+  }
 }
 
 already_AddRefed<nsIInterfaceRequestor>
@@ -81,9 +95,6 @@ UpdateContentContext(nsIStreamListener* aListener, PBrowserParent* aBrowser)
 void
 ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
-                              const nsCString& aContentDispositionHeader,
-                              const uint32_t& aContentDispositionHint,
-                              const nsString& aContentDispositionFilename,
                               const bool& aForceSave,
                               const OptionalURIParams& aReferrer,
                               PBrowserParent* aBrowser)
@@ -95,19 +106,6 @@ ExternalHelperAppParent::Init(ContentParent *parent,
   nsCOMPtr<nsIURI> referrer = DeserializeURI(aReferrer);
   if (referrer)
     SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
-
-  mContentDispositionHeader = aContentDispositionHeader;
-  if (!mContentDispositionHeader.IsEmpty()) {  
-    NS_GetFilenameFromDisposition(mContentDispositionFilename, 
-                                  mContentDispositionHeader, 
-                                  mURI);
-    mContentDisposition = 
-      NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
-  }
-  else {
-    mContentDisposition = aContentDispositionHint;
-    mContentDispositionFilename = aContentDispositionFilename;
-  }
 
   nsCOMPtr<nsIInterfaceRequestor> window;
   if (aBrowser) {
