@@ -11,8 +11,8 @@ const ServerSocket = CC(
     "nsIServerSocket",
     "initSpecialConnection");
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
 const {GeckoDriver} = ChromeUtils.import("chrome://marionette/content/driver.js", {});
@@ -26,10 +26,11 @@ const {
   Message,
   Response,
 } = ChromeUtils.import("chrome://marionette/content/message.js", {});
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", {});
 
-const logger = Log.repository.getLogger("Marionette");
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 const {KeepWhenOffline, LoopbackOnly} = Ci.nsIServerSocket;
 
