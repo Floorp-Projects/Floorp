@@ -4081,9 +4081,9 @@ nsIDocument::GetRootElementInternal() const
 
   // Loop backwards because any non-elements, such as doctypes and PIs
   // are likely to appear before the root element.
-  uint32_t i;
-  for (i = mChildren.ChildCount(); i > 0; --i) {
-    if (Element* element = Element::FromNode(mChildren.ChildAt(i - 1))) {
+  for (nsIContent* child = GetLastChild(); child;
+       child = child->GetPreviousSibling()) {
+    if (Element* element = Element::FromNode(child)) {
       const_cast<nsIDocument*>(this)->mCachedRootElement = element;
       return element;
     }
@@ -8131,10 +8131,18 @@ nsDocument::Destroy()
 
   bool oldVal = mInUnlinkOrDeletion;
   mInUnlinkOrDeletion = true;
-  uint32_t i, count = mChildren.ChildCount();
-  for (i = 0; i < count; ++i) {
-    mChildren.ChildAt(i)->DestroyContent();
+
+#ifdef DEBUG
+  uint32_t oldChildCount = GetChildCount();
+#endif
+
+  for (nsIContent* child = GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    child->DestroyContent();
+    MOZ_ASSERT(child->GetParentNode() == this);
   }
+  MOZ_ASSERT(oldChildCount == GetChildCount());
+
   mInUnlinkOrDeletion = oldVal;
 
   mLayoutHistoryState = nullptr;
@@ -8154,9 +8162,9 @@ nsDocument::RemovedFromDocShell()
   mRemovedFromDocShell = true;
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
-  uint32_t i, count = mChildren.ChildCount();
-  for (i = 0; i < count; ++i) {
-    mChildren.ChildAt(i)->SaveSubtreeState();
+  for (nsIContent* child = GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    child->SaveSubtreeState();
   }
 }
 
