@@ -159,3 +159,11 @@ task ktlint(type: JavaExec, group: "verification") {
     main = "com.github.shyiko.ktlint.Main"
     args "components/**/*.kt"
 }
+
+task printModules {
+    doLast {
+        subprojects.each { p ->
+            println "mobule: " + p.path
+        }
+    }
+}
