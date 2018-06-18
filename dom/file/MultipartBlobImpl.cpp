@@ -59,6 +59,18 @@ MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
 {
   *aStream = nullptr;
 
+  uint32_t length = mBlobImpls.Length();
+  if (length == 0) {
+    aRv = NS_NewCStringInputStream(aStream, EmptyCString());
+    return;
+  }
+
+  if (length == 1) {
+    BlobImpl* blobImpl = mBlobImpls.ElementAt(0);
+    blobImpl->CreateInputStream(aStream, aRv);
+    return;
+  }
+
   nsCOMPtr<nsIMultiplexInputStream> stream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   if (NS_WARN_IF(!stream)) {
@@ -67,7 +79,7 @@ MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
   }
 
   uint32_t i;
-  for (i = 0; i < mBlobImpls.Length(); i++) {
+  for (i = 0; i < length; i++) {
     nsCOMPtr<nsIInputStream> scratchStream;
     BlobImpl* blobImpl = mBlobImpls.ElementAt(i).get();
 
