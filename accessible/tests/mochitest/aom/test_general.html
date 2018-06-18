@@ -107,7 +107,7 @@
     is(anode, node.accessibleNode, "an AccessibleNode is properly cached");
 
     // Adopting node to another document doesn't change .accessibleNode
-    anotherDoc = document.implementation.createDocument("", "", null);
+    let anotherDoc = document.implementation.createDocument("", "", null);
     let adopted_node = anotherDoc.adoptNode(node);
     is(anode, adopted_node.accessibleNode, "adopting node to another document doesn't change node.accessibleNode");
 
