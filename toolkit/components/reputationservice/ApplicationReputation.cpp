@@ -418,6 +418,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".adp", // MS Access
     ".apk", // Android package
     ".app", // Executable application
+    ".applescript",
     ".application", // MS ClickOnce
     ".appref-ms", // MS ClickOnce
     //".arc",
@@ -552,6 +553,8 @@ static const char* const kBinaryFileExtensions[] = {
     //".ntfs", // 7z
     ".ocx", // ActiveX
     ".ops", // MS Office
+    ".osas", // AppleScript
+    ".osax", // AppleScript
     //".out", // Linux binary
     //".paf", // PortableApps package
     //".paq8f",
@@ -626,9 +629,12 @@ static const char* const kBinaryFileExtensions[] = {
     //".rtf", // MS Office
     //".run", // Linux shell
     ".scf", // Windows shell
+    ".scpt", // AppleScript
+    ".scptd", // AppleScript
     ".scr", // Windows
     ".sct", // Windows shell
     ".search-ms", // Windows
+    ".seplugin", // AppleScript
     ".sh", // Linux shell
     ".shar", // Linux shell
     ".shb", // Windows
@@ -750,6 +756,7 @@ PendingLookup::GetDownloadType(const nsACString& aFilename) {
   } else if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".apk"))) {
     return ClientDownloadRequest::ANDROID_APK;
   } else if (StringEndsWith(aFilename, NS_LITERAL_CSTRING(".app")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".applescript")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".cdr")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dart")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".dc42")) ||
@@ -762,7 +769,12 @@ PendingLookup::GetDownloadType(const nsACString& aFilename) {
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".iso")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".mpkg")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".ndif")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".osas")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".osax")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".pkg")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".scpt")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".scptd")) ||
+             StringEndsWith(aFilename, NS_LITERAL_CSTRING(".seplugin")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".smi")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".sparsebundle")) ||
              StringEndsWith(aFilename, NS_LITERAL_CSTRING(".sparseimage")) ||
