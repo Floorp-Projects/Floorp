@@ -101,6 +101,7 @@ def make_task_description(config, jobs):
         if not build_platform:
             raise Exception("Cannot find build platform!")
 
+        label = dep_job.label.replace("repackage-signing-l10n", "beetmover-")
         label = dep_job.label.replace("repackage-signing-", "beetmover-")
         label = label.replace("repackage-", "beetmover-")
         label = label.replace("chunking-dummy-", "beetmover-")

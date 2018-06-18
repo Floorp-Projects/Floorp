@@ -438,6 +438,11 @@ repackage-signing
 Repackage-signing take the repackaged installers (windows) and update packaging (with
 the signed internal bits) and signs them.
 
+repackage-signing-l10n
+----------------------
+Repackage-signing take the repackaged installers (windows) and update packaging (with
+the signed internal bits) and signs them for localized versions.
+
 repo-update
 -----------
 Repo-Update tasks are tasks that perform some action on the project repo itself,
