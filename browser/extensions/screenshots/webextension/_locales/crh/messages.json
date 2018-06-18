@@ -1,0 +1,44 @@
+{
+  "addonDescription": {
+    "message": "Ağ'dan tüyremeler ve ekran körüntilerini al ve olarnı muvaqqat yaki payidar olaraq saqla."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Bir Ekran Körüntisini Al"
+  },
+  "myShotsLink": {
+    "message": "Körüntilerim"
+  },
+  "screenshotInstructions": {
+    "message": "Bir mıntaqanı saylamaq içün saifede süyrekleñiz yaki çertiñiz. Vazgeçmek içün ESC basıñız."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Saqla"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Körünirni saqla"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Tam saifeni saqla"
+  },
+  "cancelScreenshot": {
+    "message": "Vazgeç"
+  },
+  "downloadScreenshot": {
+    "message": "Endir"
+  },
+  "tourDone": {
+    "message": "Tamam"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Şartlar"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Hususiyat Tebliği"
+  },
+  "libraryLabel": {
+    "message": "Ekran Körüntileri"
+  }
+}
