@@ -273,7 +273,7 @@ private:
 
   RefPtr<mozilla::safebrowsing::Classifier> mClassifier;
   // The class that actually parses the update chunks.
-  nsAutoPtr<ProtocolParser> mProtocolParser;
+  mozilla::UniquePtr<ProtocolParser> mProtocolParser;
 
   // Directory where to store the SB databases.
   nsCOMPtr<nsIFile> mCacheDir;
