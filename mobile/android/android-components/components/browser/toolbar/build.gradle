@@ -31,7 +31,7 @@ dependencies {
 
     implementation project(':browser-menu')
 
-    implementation project(':ui-autocomplete')
+    api project(':ui-autocomplete')
     implementation project(':ui-icons')
     implementation project(':ui-progress')
 

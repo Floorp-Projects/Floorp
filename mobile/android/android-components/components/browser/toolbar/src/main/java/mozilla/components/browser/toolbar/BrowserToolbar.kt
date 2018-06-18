@@ -17,6 +17,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.dp
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.ktx.android.view.isVisible
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**
  * A customizable toolbar for browsers.
@@ -96,6 +97,13 @@ class BrowserToolbar @JvmOverloads constructor(
             displayToolbar.urlView.hint = value
             editToolbar.urlView.hint = value
         }
+
+    /**
+     * Sets autocomplete filter to be used in edit mode.
+     */
+    fun setAutocompleteFilter(filter: (String, InlineAutocompleteEditText?) -> Unit) {
+        editToolbar.urlView.setOnFilterListener(filter)
+    }
 
     /**
      * Sets the padding to be applied to the URL text (in display mode).

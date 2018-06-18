@@ -14,6 +14,7 @@ import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
@@ -22,13 +23,18 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */
 class ToolbarActivity : AppCompatActivity() {
+    private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        autoCompleteProvider.initialize(this)
 
         setContentView(R.layout.activity_toolbar)
 
@@ -43,6 +49,14 @@ class ToolbarActivity : AppCompatActivity() {
 
         recyclerView.adapter = ConfigurationAdapter(configuration)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+
+        toolbar.setAutocompleteFilter { value, view ->
+            view?.let {
+                val result = autoCompleteProvider.autocomplete(value)
+                view.onAutocomplete(
+                        InlineAutocompleteEditText.AutocompleteResult(result.text, result.source, result.size, { result.url }))
+            }
+        }
     }
 
     /**

@@ -36,6 +36,7 @@ kotlin {
 dependencies {
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
+    implementation project(':browser-domains')
 
     implementation project(':ui-colors')
     implementation project(':ui-icons')
