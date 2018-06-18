@@ -314,6 +314,8 @@ var PushServiceWebSocket = {
 
     this._mainPushService = mainPushService;
     this._serverURI = serverURI;
+    // Filled in at connect() time
+    this._broadcastListeners = null;
 
     // Override the default WebSocket factory function. The returned object
     // must be null or satisfy the nsIWebSocketChannel interface. Used by
@@ -512,8 +514,9 @@ var PushServiceWebSocket = {
     }
   },
 
-  connect: function(records) {
-    console.debug("connect()");
+  connect: function(records, broadcastListeners) {
+    console.debug("connect()", broadcastListeners);
+    this._broadcastListeners = broadcastListeners;
     this._beginWSSetup();
   },
 
@@ -565,6 +568,13 @@ var PushServiceWebSocket = {
       this._UAID = reply.uaid;
       this._currentState = STATE_READY;
       prefs.observe("userAgentID", this);
+
+      // Handle broadcasts received in response to the "hello" message.
+      if (reply.broadcasts) {
+        // The reply isn't technically a broadcast message, but it has
+        // the shape of a broadcast message (it has a broadcasts field).
+        this._mainPushService.receivedBroadcastMessage(reply);
+      }
 
       this._dataEnabled = !!reply.use_webpush;
       if (this._dataEnabled) {
@@ -745,6 +755,10 @@ var PushServiceWebSocket = {
         this._receivedUpdate(update.channelID, version);
       }
     }
+  },
+
+  _handleBroadcastReply: function(reply) {
+    this._mainPushService.receivedBroadcastMessage(reply);
   },
 
   reportDeliveryError(messageID, reason) {
@@ -945,6 +959,7 @@ var PushServiceWebSocket = {
 
     let data = {
       messageType: "hello",
+      broadcasts: this._broadcastListeners,
       use_webpush: true,
     };
 
@@ -1013,7 +1028,7 @@ var PushServiceWebSocket = {
 
     // A whitelist of protocol handlers. Add to these if new messages are added
     // in the protocol.
-    let handlers = ["Hello", "Register", "Unregister", "Notification"];
+    let handlers = ["Hello", "Register", "Unregister", "Notification", "Broadcast"];
 
     // Build up the handler name to call from messageType.
     // e.g. messageType == "register" -> _handleRegisterReply.
@@ -1111,6 +1126,17 @@ var PushServiceWebSocket = {
       this._requestTimeoutTimer.cancel();
     }
     return request;
+  },
+
+  sendSubscribeBroadcast(serviceId, version) {
+    let data = {
+      messageType: "broadcast_subscribe",
+      broadcasts: {
+        [serviceId]: version
+      },
+    };
+
+    this._queueRequest(data);
   },
 };
 
