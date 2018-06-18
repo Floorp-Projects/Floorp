@@ -25,6 +25,8 @@ using namespace gfx;
 RemoteVideoDecoder::RemoteVideoDecoder()
   : mActor(new VideoDecoderChild())
   , mDescription("RemoteVideoDecoder")
+  , mIsHardwareAccelerated(false)
+  , mConversion(MediaDataDecoder::ConversionRequired::kNeedNone)
 {
 }
 

@@ -28,6 +28,7 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig,
   , mFileStreamError(false)
   , mTaskQueue(aTaskQueue)
   , mConverter(nullptr)
+  , mOutputFormat()
   , mStream(nullptr)
   , mParsedFramesForAACMagicCookie(0)
   , mErrored(false)

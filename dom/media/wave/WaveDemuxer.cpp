@@ -77,10 +77,12 @@ WAVTrackDemuxer::WAVTrackDemuxer(MediaResource* aSource)
   , mFirstChunkOffset(0)
   , mNumParsedChunks(0)
   , mChunkIndex(0)
+  , mDataLength(0)
   , mTotalChunkLen(0)
   , mSamplesPerChunk(0)
   , mSamplesPerSecond(0)
   , mChannels(0)
+  , mSampleFormat(0)
 {
   DDLINKCHILD("source", aSource);
   Reset();
