@@ -37,6 +37,11 @@ public:
     return mData.Length();
   }
 
+  size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override
+  {
+    return GetAllocationSize();
+  }
+
 private:
   StringBlobImpl(const nsACString& aData, const nsAString& aContentType);
 

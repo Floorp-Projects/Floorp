@@ -2263,9 +2263,9 @@ class NotifyGCEndRunnable : public Runnable
   nsString mMessage;
 
 public:
-  explicit NotifyGCEndRunnable(const nsString& aMessage)
+  explicit NotifyGCEndRunnable(nsString&& aMessage)
     : mozilla::Runnable("NotifyGCEndRunnable")
-    , mMessage(aMessage)
+    , mMessage(std::move(aMessage))
   {
   }
 
@@ -2323,7 +2323,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
             Telemetry::CanRecordExtended()) {
           nsString json;
           json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
-          RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+          RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(std::move(json));
           SystemGroup::Dispatch(TaskCategory::GarbageCollection, notify.forget());
         }
       }

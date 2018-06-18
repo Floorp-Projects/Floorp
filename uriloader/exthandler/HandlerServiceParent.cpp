@@ -36,6 +36,7 @@ NS_IMPL_ISUPPORTS(ProxyHandlerInfo, nsIHandlerInfo)
 
 ProxyHandlerInfo::ProxyHandlerInfo(const HandlerInfo& aHandlerInfo)
   : mHandlerInfo(aHandlerInfo),
+    mPrefAction(nsIHandlerInfo::alwaysAsk),
     mPossibleApps(do_CreateInstance(NS_ARRAY_CONTRACTID))
 {
   for (auto& happ : aHandlerInfo.possibleApplicationHandlers()) {
