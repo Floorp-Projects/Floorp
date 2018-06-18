@@ -182,7 +182,10 @@ MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
 
     if (data.IsBlob()) {
       RefPtr<Blob> blob = data.GetAsBlob().get();
-      blobSet.AppendBlobImpl(blob->Impl());
+      aRv = blobSet.AppendBlobImpl(blob->Impl());
+      if (aRv.Failed()) {
+        return;
+      }
     }
 
     else if (data.IsUSVString()) {
@@ -383,7 +386,11 @@ MultipartBlobImpl::InitializeChromeFile(nsIFile* aFile,
   }
 
   BlobSet blobSet;
-  blobSet.AppendBlobImpl(static_cast<File*>(blob.get())->Impl());
+  rv = blobSet.AppendBlobImpl(static_cast<File*>(blob.get())->Impl());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   mBlobImpls = blobSet.GetBlobImpls();
 
   SetLengthAndModifiedDate(error);
@@ -412,9 +419,30 @@ MultipartBlobImpl::MayBeClonedToOtherThreads() const
 
 size_t MultipartBlobImpl::GetAllocationSize() const
 {
+  FallibleTArray<BlobImpl*> visitedBlobs;
+
+  // We want to report the unique blob allocation, avoiding duplicated blobs in
+  // the multipart blob tree.
   size_t total = 0;
   for (uint32_t i = 0; i < mBlobImpls.Length(); ++i) {
-    total += mBlobImpls[i]->GetAllocationSize();
+    total += mBlobImpls[i]->GetAllocationSize(visitedBlobs);
+  }
+
+  return total;
+}
+
+size_t MultipartBlobImpl::GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobs) const
+{
+  FallibleTArray<BlobImpl*> visitedBlobs;
+
+  size_t total = 0;
+  for (BlobImpl* blobImpl : mBlobImpls) {
+    if (!aVisitedBlobs.Contains(blobImpl)) {
+      if (NS_WARN_IF(!aVisitedBlobs.AppendElement(blobImpl, fallible))) {
+        return 0;
+      }
+      total += blobImpl->GetAllocationSize(aVisitedBlobs);
+    }
   }
 
   return total;

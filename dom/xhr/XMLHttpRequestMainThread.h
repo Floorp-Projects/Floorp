@@ -61,7 +61,6 @@ class nsIJSID;
 namespace mozilla {
 namespace dom {
 
-class BlobSet;
 class DOMString;
 class XMLHttpRequestUpload;
 struct OriginAttributesDictionary;
