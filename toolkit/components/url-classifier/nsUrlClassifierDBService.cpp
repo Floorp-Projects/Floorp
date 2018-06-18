@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayUtils.h"
@@ -460,10 +459,11 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
     }
   }
 
-  mProtocolParser = (useProtobuf ? static_cast<ProtocolParser*>(new (fallible)
-                                     ProtocolParserProtobuf())
-                                 : static_cast<ProtocolParser*>(new (fallible)
-                                     ProtocolParserV2()));
+  if (useProtobuf) {
+    mProtocolParser.reset(new (fallible) ProtocolParserProtobuf());
+  } else {
+    mProtocolParser.reset(new (fallible) ProtocolParserV2());
+  }
   if (!mProtocolParser) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -875,10 +875,12 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(const ConstCacheResultArray& aR
       }
     }
     if (activeTable) {
-      nsAutoPtr<ProtocolParser> pParse;
-      pParse = result->Ver() == CacheResult::V2 ?
-                 static_cast<ProtocolParser*>(new ProtocolParserV2()) :
-                 static_cast<ProtocolParser*>(new ProtocolParserProtobuf());
+      UniquePtr<ProtocolParser> pParse;
+      if (result->Ver() == CacheResult::V2) {
+        pParse.reset(new ProtocolParserV2());
+      } else {
+        pParse.reset(new ProtocolParserProtobuf());
+      }
 
       RefPtr<TableUpdate> tu = pParse->GetTableUpdate(result->table);
 
