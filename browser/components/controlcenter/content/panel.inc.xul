@@ -57,15 +57,13 @@
             class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden extension">
         <vbox id="tracking-protection-content" flex="1">
-          <hbox class="identity-popup-preferences-button-container">
+          <hbox>
             <label id="tracking-protection-label-on"
                    class="identity-popup-headline"
-                   crop="end"
-                   value="&trackingProtection.on;" />
+                   flex="1">&trackingProtection.on;</label>
             <label id="tracking-protection-label-off"
                    class="identity-popup-headline"
-                   crop="end"
-                   value="&trackingProtection.off;" />
+                   flex="1">&trackingProtection.off;</label>
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
                            tooltiptext="&trackingProtection.tooltip;"
@@ -112,9 +110,10 @@
       <hbox class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
         <vbox id="identity-popup-permissions-content" flex="1">
-          <hbox class="identity-popup-preferences-button-container">
+          <hbox>
             <label id="identity-popup-permissions-headline"
                    class="identity-popup-headline"
+                   flex="1"
                    value="&identity.permissions;"/>
             <toolbarbutton id="identity-popup-permission-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
