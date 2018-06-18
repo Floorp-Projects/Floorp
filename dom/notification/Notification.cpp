@@ -511,6 +511,22 @@ public:
     MOZ_ASSERT(Initialized());
     return mNotification;
   }
+
+  nsIPrincipal*
+  GetPrincipal()
+  {
+    MOZ_ASSERT(Initialized());
+    AssertIsOnMainThread();
+
+    if (mNotification->mWorkerPrivate) {
+      return mNotification->mWorkerPrivate->GetPrincipal();
+    }
+
+    nsCOMPtr<nsIScriptObjectPrincipal> sop =
+      do_QueryInterface(mNotification->GetOwner());
+    NS_ENSURE_TRUE(sop, nullptr);
+    return sop->GetPrincipal();
+  }
 };
 
 class NotificationTask : public Runnable
@@ -1612,12 +1628,9 @@ Notification::ShowInternal(UniquePtr<NotificationRef>&& aRef)
     do_GetService(NS_ALERTSERVICE_CONTRACTID);
 
   ErrorResult result;
-  NotificationPermission permission = NotificationPermission::Denied;
-  if (mWorkerPrivate) {
-    permission = GetPermissionInternal(mWorkerPrivate->GetPrincipal(), result);
-  } else {
-    permission = GetPermissionInternal(GetOwner(), result);
-  }
+  NotificationPermission permission =
+    GetPermissionInternal(ownership->GetPrincipal(), result);
+
   // We rely on GetPermissionInternal returning Denied on all failure codepaths.
   MOZ_ASSERT_IF(result.Failed(), permission == NotificationPermission::Denied);
   result.SuppressException();
@@ -1790,33 +1803,26 @@ NotificationPermission
 Notification::GetPermission(nsIGlobalObject* aGlobal, ErrorResult& aRv)
 {
   if (NS_IsMainThread()) {
-    return GetPermissionInternal(aGlobal, aRv);
-  } else {
-    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    RefPtr<GetPermissionRunnable> r =
-      new GetPermissionRunnable(worker);
-    r->Dispatch(Terminating, aRv);
-    if (aRv.Failed()) {
+    // Get principal from global to check permission for notifications.
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
+    if (!sop) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
       return NotificationPermission::Denied;
     }
 
-    return r->GetPermission();
+    nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+    return GetPermissionInternal(principal, aRv);
   }
-}
 
-/* static */ NotificationPermission
-Notification::GetPermissionInternal(nsISupports* aGlobal, ErrorResult& aRv)
-{
-  // Get principal from global to check permission for notifications.
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
-  if (!sop) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  RefPtr<GetPermissionRunnable> r = new GetPermissionRunnable(worker);
+  r->Dispatch(Terminating, aRv);
+  if (aRv.Failed()) {
     return NotificationPermission::Denied;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-  return GetPermissionInternal(principal, aRv);
+  return r->GetPermission();
 }
 
 /* static */ NotificationPermission
