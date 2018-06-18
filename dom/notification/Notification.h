@@ -148,6 +148,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Notification, DOMEventTargetHelper)
   NS_DECL_NSIOBSERVER
+  NS_DECL_OWNINGTHREAD
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
   // Returns if Notification.get() is allowed for the current global.
@@ -284,7 +285,7 @@ public:
 
   void AssertIsOnTargetThread() const
   {
-    MOZ_ASSERT(IsTargetThread());
+    NS_ASSERT_OWNINGTHREAD(Notification);
   }
 
   // Initialized on the worker thread, never unset, and always used in
@@ -442,11 +443,6 @@ private:
 
   void
   SetAlertName();
-
-  bool IsTargetThread() const
-  {
-    return NS_IsMainThread() == !mWorkerPrivate;
-  }
 
   bool RegisterWorkerHolder();
   void UnregisterWorkerHolder();
