@@ -683,4 +683,10 @@ function AddTestItem(aTest, aFilter) {
     else
         aTest.identifier = url1.spec;
     g.urls.push(aTest);
+    // Periodically log progress to avoid no-output timeout on slow platforms.
+    // No-output timeouts during manifest parsing have been a problem for
+    // jsreftests on Android/debug. Any logging resets the no-output timer,
+    // even debug logging which is normally not displayed.
+    if ((g.urls.length % 5000) == 0)
+        g.logger.debug(g.urls.length + " tests found...");
 }

@@ -83,12 +83,12 @@ public:
     }
 
     ExternalHelperAppParent(const OptionalURIParams& uri, const int64_t& contentLength,
-                            const bool& wasFileChannel);
+                            const bool& wasFileChannel,
+                            const nsCString& aContentDispositionHeader,
+                            const uint32_t& aContentDispositionHint,
+                            const nsString& aContentDispositionFilename);
     void Init(ContentParent *parent,
               const nsCString& aMimeContentType,
-              const nsCString& aContentDisposition,
-              const uint32_t& aContentDispositionHint,
-              const nsString& aContentDispositionFilename,
               const bool& aForceSave,
               const OptionalURIParams& aReferrer,
               PBrowserParent* aBrowser);
