@@ -31,7 +31,7 @@ private:
 
 extern LazyLogModule sAndroidDecoderModuleLog;
 
-const char*
+const nsCString
 TranslateMimeType(const nsACString& aMimeType);
 
 } // namespace mozilla
