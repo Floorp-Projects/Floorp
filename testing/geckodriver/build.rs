@@ -32,7 +32,7 @@ fn main() {
 }
 
 fn commit_hash() -> Option<String> {
-    exec(&"hg", &["log", "-r.", "-T '{node|short}'"]).or_else(
+    exec(&"hg", &["log", "-r.", "-T{node|short}"]).or_else(
         || {
             exec(&"git", &["rev-parse", "HEAD"]).and_then(hg2git_sha)
         },
@@ -40,7 +40,7 @@ fn commit_hash() -> Option<String> {
 }
 
 fn commit_date() -> Option<String> {
-    exec(&"hg", &["log", "-r.", "-T '{date|isodate}'"]).or_else(|| {
+    exec(&"hg", &["log", "-r.", "-T{date|isodate}"]).or_else(|| {
         exec(
             &"git",
             &["log", "-1", "--date=short", "--pretty=format:%cd"],
