@@ -12,22 +12,22 @@
 
 [package]
 name = "darling"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Ted Driggs <ted.driggs@outlook.com>"]
 description = "A proc-macro library for reading attributes into structs when\nimplementing custom derives.\n"
-documentation = "https://docs.rs/darling/0.3.0"
+documentation = "https://docs.rs/darling/0.4.0"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/TedDriggs/darling"
 [dependencies.darling_core]
-version = "=0.3.0"
+version = "=0.4.0"
 
 [dependencies.darling_macro]
-version = "=0.3.0"
+version = "=0.4.0"
 [dev-dependencies.quote]
-version = "0.4"
+version = "0.5"
 
 [dev-dependencies.syn]
-version = "0.12.10"
+version = "0.13"
 [badges.travis-ci]
 repository = "TedDriggs/darling"

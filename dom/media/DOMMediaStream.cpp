@@ -427,7 +427,7 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
     mTracksPendingRemoval(0), mTrackSourceGetter(aTrackSourceGetter),
     mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)),
     mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false),
-    mActive(false), mSetInactiveOnFinish(false)
+    mActive(false), mSetInactiveOnFinish(false), mCORSMode(CORS_NONE)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =

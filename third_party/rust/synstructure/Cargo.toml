@@ -12,7 +12,7 @@
 
 [package]
 name = "synstructure"
-version = "0.7.0"
+version = "0.8.1"
 authors = ["Nika Layzell <nika@thelayzells.com>"]
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 description = "Helper methods and macros for custom derives"
@@ -22,13 +22,13 @@ keywords = ["syn", "macros", "derive", "expand_substructure", "enum"]
 license = "MIT"
 repository = "https://github.com/mystor/synstructure"
 [dependencies.proc-macro2]
-version = "0.2.1"
+version = "0.3"
 
 [dependencies.quote]
-version = "0.4.2"
+version = "0.5"
 
 [dependencies.syn]
-version = "0.12"
+version = "0.13"
 features = ["visit", "extra-traits"]
 
 [dependencies.unicode-xid]
