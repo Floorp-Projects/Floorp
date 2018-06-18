@@ -1431,7 +1431,8 @@ AuthCertificate(CertVerifier& certVerifier,
   }
 
   if (pinningTelemetryInfo.accumulateResult) {
-    Telemetry::Accumulate(pinningTelemetryInfo.certPinningResultHistogram,
+    MOZ_ASSERT(pinningTelemetryInfo.certPinningResultHistogram.isSome());
+    Telemetry::Accumulate(pinningTelemetryInfo.certPinningResultHistogram.value(),
                           pinningTelemetryInfo.certPinningResultBucket);
   }
 
