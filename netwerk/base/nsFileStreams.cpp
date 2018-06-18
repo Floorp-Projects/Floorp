@@ -272,7 +272,7 @@ nsFileStreamBase::Write(const char *buf, uint32_t count, uint32_t *result)
 nsresult
 nsFileStreamBase::WriteFrom(nsIInputStream *inStr, uint32_t count, uint32_t *_retval)
 {
-    NS_NOTREACHED("WriteFrom (see source comment)");
+    MOZ_ASSERT_UNREACHABLE("WriteFrom (see source comment)");
     return NS_ERROR_NOT_IMPLEMENTED;
     // File streams intentionally do not support this method.
     // If you need something like this, then you should wrap

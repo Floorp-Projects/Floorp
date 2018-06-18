@@ -170,7 +170,7 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow,
     currentURI = parentURI;
   } while (1);
 
-  NS_NOTREACHED("should've returned");
+  MOZ_ASSERT_UNREACHABLE("should've returned");
   return NS_ERROR_UNEXPECTED;
 }
 

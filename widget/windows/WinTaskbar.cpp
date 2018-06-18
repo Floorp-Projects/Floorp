@@ -155,14 +155,16 @@ DefaultController::RequestPreview(nsITaskbarPreviewCallback *aCallback) {
 
 NS_IMETHODIMP
 DefaultController::OnClose(void) {
-  NS_NOTREACHED("OnClose should not be called for TaskbarWindowPreviews");
+  MOZ_ASSERT_UNREACHABLE("OnClose should not be called for "
+                         "TaskbarWindowPreviews");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DefaultController::OnActivate(bool *rAcceptActivation) {
   *rAcceptActivation = true;
-  NS_NOTREACHED("OnActivate should not be called for TaskbarWindowPreviews");
+  MOZ_ASSERT_UNREACHABLE("OnActivate should not be called for "
+                         "TaskbarWindowPreviews");
   return NS_OK;
 }
 
@@ -446,4 +448,3 @@ WinTaskbar::PrepareFullScreenHWND(void *aHWND, bool aFullScreen) {
 
 } // namespace widget
 } // namespace mozilla
-

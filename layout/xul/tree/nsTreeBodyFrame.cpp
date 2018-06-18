@@ -254,7 +254,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
       nscoord desiredWidth, currentWidth;
       nsresult rv = GetCellWidth(row, col, rc, desiredWidth, currentWidth);
       if (NS_FAILED(rv)) {
-        NS_NOTREACHED("invalid column");
+        MOZ_ASSERT_UNREACHABLE("invalid column");
         continue;
       }
       rowWidth += desiredWidth;
@@ -1612,7 +1612,7 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, int32_t* aRow,
                                    mRowHeight,
                                    &cellRect);
     if (NS_FAILED(rv)) {
-      NS_NOTREACHED("column has no frame");
+      MOZ_ASSERT_UNREACHABLE("column has no frame");
       continue;
     }
 
@@ -3033,7 +3033,7 @@ nsTreeBodyFrame::PaintRow(int32_t               aRowIndex,
       nsRect cellRect;
       rv = primaryCol->GetRect(this, rowRect.y, rowRect.height, &cellRect);
       if (NS_FAILED(rv)) {
-        NS_NOTREACHED("primary column is invalid");
+        MOZ_ASSERT_UNREACHABLE("primary column is invalid");
         return result;
       }
 
@@ -3058,7 +3058,8 @@ nsTreeBodyFrame::PaintRow(int32_t               aRowIndex,
         if (NS_SUCCEEDED(rv)) {
           currX = (prevColRect.x - mHorzPosition) + prevColRect.width + aPt.x;
         } else {
-          NS_NOTREACHED("The column before the primary column is invalid");
+          MOZ_ASSERT_UNREACHABLE("The column before the primary column is "
+                                 "invalid");
           currX = rowRect.x;
         }
       } else {

@@ -538,7 +538,7 @@ private:
         break;
 
       default:
-        NS_NOTREACHED("unknown writing mode!");
+        MOZ_ASSERT_UNREACHABLE("unknown writing mode!");
         mWritingMode = 0;
         break;
     }

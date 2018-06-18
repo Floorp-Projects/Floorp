@@ -76,7 +76,8 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
                 WriteParam(aMsg, aParam.event.data.text.text);
                 break;
             default:
-                NS_NOTREACHED("Attempted to serialize unknown event type.");
+                MOZ_ASSERT_UNREACHABLE("Attempted to serialize unknown event "
+                                       "type.");
                 return;
         }
         aMsg->WriteDouble(aParam.contentsScaleFactor);
@@ -173,7 +174,8 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
                 }
                 break;
             default:
-                NS_NOTREACHED("Attempted to de-serialize unknown event type.");
+                MOZ_ASSERT_UNREACHABLE("Attempted to de-serialize unknown "
+                                       "event type.");
                 return false;
         }
         if (!aMsg->ReadDouble(aIter, &aResult->contentsScaleFactor)) {

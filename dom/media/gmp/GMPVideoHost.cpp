@@ -40,7 +40,7 @@ GMPVideoHostImpl::CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFram
       *aFrame = new GMPVideoEncodedFrameImpl(this);
       return GMPNoErr;
     default:
-      NS_NOTREACHED("Unknown frame format!");
+      MOZ_ASSERT_UNREACHABLE("Unknown frame format!");
   }
 
   return GMPGenericErr;

@@ -78,7 +78,7 @@ class nsCookieEntry : public nsCookieKey
     {
       // if we end up here, things will break. nsTHashtable shouldn't
       // allow this, since we set ALLOW_MEMMOVE to true.
-      NS_NOTREACHED("nsCookieEntry copy constructor is forbidden!");
+      MOZ_ASSERT_UNREACHABLE("nsCookieEntry copy constructor is forbidden!");
     }
 
     ~nsCookieEntry() = default;

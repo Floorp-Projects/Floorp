@@ -72,7 +72,7 @@ private:
       if (event) {
         rv = event->OnInputStreamReady(nullptr);
         if (NS_FAILED(rv)) {
-          NS_NOTREACHED("leaking stream event");
+          MOZ_ASSERT_UNREACHABLE("leaking stream event");
           nsISupports* sup = event;
           NS_ADDREF(sup);
         }
@@ -163,7 +163,7 @@ private:
       if (event) {
         rv = event->OnOutputStreamReady(nullptr);
         if (NS_FAILED(rv)) {
-          NS_NOTREACHED("leaking stream event");
+          MOZ_ASSERT_UNREACHABLE("leaking stream event");
           nsISupports* sup = event;
           NS_ADDREF(sup);
         }

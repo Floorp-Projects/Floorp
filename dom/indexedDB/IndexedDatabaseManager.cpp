@@ -1131,13 +1131,13 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
       sLowDiskSpaceMode = false;
     }
     else {
-      NS_NOTREACHED("Unknown data value!");
+      MOZ_ASSERT_UNREACHABLE("Unknown data value!");
     }
 
     return NS_OK;
   }
 
-   NS_NOTREACHED("Unknown topic!");
+   MOZ_ASSERT_UNREACHABLE("Unknown topic!");
    return NS_ERROR_UNEXPECTED;
 }
 

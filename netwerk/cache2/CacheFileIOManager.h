@@ -165,7 +165,7 @@ public:
     }
     HandleHashKey(const HandleHashKey& aOther)
     {
-      NS_NOTREACHED("HandleHashKey copy constructor is forbidden!");
+      MOZ_ASSERT_UNREACHABLE("HandleHashKey copy constructor is forbidden!");
     }
     ~HandleHashKey()
     {

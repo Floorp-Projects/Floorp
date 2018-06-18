@@ -65,7 +65,7 @@ public:
 
       case TYPE_MAX:
       default:
-        NS_NOTREACHED("Bad id value!");
+        MOZ_ASSERT_UNREACHABLE("Bad id value!");
         return NS_ERROR_UNEXPECTED;
     }
 

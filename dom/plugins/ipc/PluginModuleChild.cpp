@@ -1136,7 +1136,7 @@ _getvalue(NPP aNPP,
         }
     }
 
-    NS_NOTREACHED("Shouldn't get here!");
+    MOZ_ASSERT_UNREACHABLE("Shouldn't get here!");
     return NPERR_GENERIC_ERROR;
 }
 
@@ -1842,7 +1842,7 @@ PluginModuleChild::AnswerModuleSupportsAsyncRender(bool* aResult)
     *aResult = gChromeInstance->mAsyncRenderSupport;
     return IPC_OK();
 #else
-    NS_NOTREACHED("Shouldn't get here!");
+    MOZ_ASSERT_UNREACHABLE("Shouldn't get here!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }

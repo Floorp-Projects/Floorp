@@ -403,7 +403,7 @@ protected:
     } else if (mPendingState == PendingState::PausePending) {
       PauseAt(aReadyTime);
     } else {
-      NS_NOTREACHED("Can't finish pending if we're not in a pending state");
+      MOZ_ASSERT_UNREACHABLE("Can't finish pending if we're not in a pending state");
     }
   }
   void ApplyPendingPlaybackRate()

@@ -165,7 +165,7 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
         break;
 #endif
     default:
-        NS_NOTREACHED("Unexpected surface format");
+        MOZ_ASSERT_UNREACHABLE("Unexpected surface format");
         return NS_ERROR_INVALID_ARG;  
     }
 

@@ -44,7 +44,7 @@ Token*
 txExprLexer::nextToken()
 {
   if (!mCurrentItem) {
-    NS_NOTREACHED("nextToken called on uninitialized lexer");
+    MOZ_ASSERT_UNREACHABLE("nextToken called on uninitialized lexer");
     return nullptr;
   }
 

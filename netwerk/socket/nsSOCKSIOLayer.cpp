@@ -337,7 +337,7 @@ public:
       } else if (aAddr->raw.family == AF_INET6) {
           return Write(aAddr->inet6.ip.u8);
       }
-      NS_NOTREACHED("Unknown address family");
+      MOZ_ASSERT_UNREACHABLE("Unknown address family");
       return *this;
   }
 

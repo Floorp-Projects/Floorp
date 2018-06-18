@@ -155,7 +155,7 @@ void nsProfileLock::FatalSignalHandler(int signo
         oldact = &SIGTERM_oldact;
         break;
       default:
-        NS_NOTREACHED("bad signo");
+        MOZ_ASSERT_UNREACHABLE("bad signo");
         break;
     }
 

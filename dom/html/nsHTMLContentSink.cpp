@@ -84,7 +84,7 @@ nsGenericHTMLElement*
 NS_NewHTMLNOTUSEDElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                          FromParser aFromParser)
 {
-  NS_NOTREACHED("The element ctor should never be called");
+  MOZ_ASSERT_UNREACHABLE("The element ctor should never be called");
   return nullptr;
 }
 

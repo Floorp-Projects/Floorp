@@ -1852,7 +1852,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
 
     beginAfter = tempEnd->Time();
   }
-  NS_NOTREACHED("Hmm... we really shouldn't be here");
+  MOZ_ASSERT_UNREACHABLE("Hmm... we really shouldn't be here");
 
   return false;
 }

@@ -106,7 +106,7 @@ mozilla::plugins::ConvertToVariant(const Variant& aRemoteVariant,
     }
 
     default:
-      NS_NOTREACHED("Shouldn't get here!");
+      MOZ_ASSERT_UNREACHABLE("Shouldn't get here!");
       return false;
   }
 
@@ -158,7 +158,7 @@ mozilla::plugins::ConvertToRemoteVariant(const NPVariant& aVariant,
     aRemoteVariant = actor;
   }
   else {
-    NS_NOTREACHED("Shouldn't get here!");
+    MOZ_ASSERT_UNREACHABLE("Shouldn't get here!");
     return false;
   }
 

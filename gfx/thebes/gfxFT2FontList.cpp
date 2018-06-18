@@ -952,7 +952,7 @@ WillShutdownObserver::Observe(nsISupports *aSubject,
     if (!nsCRT::strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
         mFontList->WillShutdown();
     } else {
-        NS_NOTREACHED("unexpected notification topic");
+        MOZ_ASSERT_UNREACHABLE("unexpected notification topic");
     }
     return NS_OK;
 }

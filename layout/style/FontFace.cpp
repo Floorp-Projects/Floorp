@@ -147,7 +147,7 @@ LoadStateToStatus(gfxUserFontEntry::UserFontLoadState aLoadState)
     case gfxUserFontEntry::UserFontLoadState::STATUS_FAILED:
       return FontFaceLoadStatus::Error;
   }
-  NS_NOTREACHED("invalid aLoadState value");
+  MOZ_ASSERT_UNREACHABLE("invalid aLoadState value");
   return FontFaceLoadStatus::Error;
 }
 

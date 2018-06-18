@@ -2104,7 +2104,7 @@ FragmentOrElement::TextLength() const
 {
   // We can remove this assertion if it turns out to be useful to be able
   // to depend on this returning 0
-  NS_NOTREACHED("called FragmentOrElement::TextLength");
+  MOZ_ASSERT_UNREACHABLE("called FragmentOrElement::TextLength");
 
   return 0;
 }

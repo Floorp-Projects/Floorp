@@ -116,7 +116,7 @@ nsInputStreamTransport::OpenOutputStream(uint32_t flags,
                                          nsIOutputStream **result)
 {
     // this transport only supports reading!
-    NS_NOTREACHED("nsInputStreamTransport::OpenOutputStream");
+    MOZ_ASSERT_UNREACHABLE("nsInputStreamTransport::OpenOutputStream");
     return NS_ERROR_UNEXPECTED;
 }
 

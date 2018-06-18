@@ -52,7 +52,7 @@ public:
           mBuffer(nullptr),
           mOutputStreamIsOpen(false)
     {
-        NS_NOTREACHED("oops");
+        MOZ_ASSERT_UNREACHABLE("oops");
     }
 
 private:

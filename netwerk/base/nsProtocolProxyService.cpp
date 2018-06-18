@@ -2451,7 +2451,7 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
     nsProxyInfo *head = nullptr;
     CallQueryInterface(*list, &head);
     if (!head) {
-        NS_NOTREACHED("nsIProxyInfo must QI to nsProxyInfo");
+        MOZ_ASSERT_UNREACHABLE("nsIProxyInfo must QI to nsProxyInfo");
         return;
     }
     NS_RELEASE(*list);

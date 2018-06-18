@@ -256,7 +256,7 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
       }
     }
   } else {
-    NS_NOTREACHED("Bad format type");
+    MOZ_ASSERT_UNREACHABLE("Bad format type");
     return NS_ERROR_INVALID_ARG;
   }
 
