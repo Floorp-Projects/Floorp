@@ -635,6 +635,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".sct", // Windows shell
     ".search-ms", // Windows
     ".seplugin", // AppleScript
+    ".settingcontent-ms", // Windows settings
     ".sh", // Linux shell
     ".shar", // Linux shell
     ".shb", // Windows
