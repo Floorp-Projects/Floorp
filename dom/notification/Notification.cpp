@@ -1286,36 +1286,6 @@ NS_IMPL_ISUPPORTS(ServiceWorkerNotificationObserver, nsIObserver)
 
 // For ServiceWorkers.
 bool
-Notification::DispatchNotificationClickEvent()
-{
-  MOZ_ASSERT(mWorkerPrivate);
-  MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  NotificationEventInit options;
-  options.mNotification = this;
-
-  ErrorResult result;
-  RefPtr<EventTarget> target = mWorkerPrivate->GlobalScope();
-  RefPtr<NotificationEvent> event =
-    NotificationEvent::Constructor(target,
-                                   NS_LITERAL_STRING("notificationclick"),
-                                   options,
-                                   result);
-  if (NS_WARN_IF(result.Failed())) {
-    return false;
-  }
-
-  event->SetTrusted(true);
-  WantsPopupControlCheck popupControlCheck(event);
-  target->DispatchEvent(*event);
-  // We always return false since in case of dispatching on the serviceworker,
-  // there is no well defined window to focus. The script may use the
-  // Client.focus() API if it wishes.
-  return false;
-}
-
-bool
 Notification::DispatchClickEvent()
 {
   AssertIsOnTargetThread();
