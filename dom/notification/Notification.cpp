@@ -493,6 +493,95 @@ public:
     return sop->GetPrincipal();
   }
 
+  nsresult
+  ResolveIconAndSoundURL(nsString& aIconUrl, nsString& aSoundUrl)
+  {
+    AssertIsOnMainThread();
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIURI> baseUri;
+
+    // XXXnsm If I understand correctly, the character encoding for resolving
+    // URIs in new specs is dictated by the URL spec, which states that unless
+    // the URL parser is passed an override encoding, the charset to be used is
+    // UTF-8. The new Notification icon/sound specification just says to use the
+    // Fetch API, where the Request constructor defers to URL parsing specifying
+    // the API base URL and no override encoding. So we've to use UTF-8 on
+    // workers, but for backwards compat keeping it document charset on main
+    // thread.
+    auto encoding = UTF_8_ENCODING;
+
+    if (mNotification->mWorkerPrivate) {
+      baseUri = mNotification->mWorkerPrivate->GetBaseURI();
+    } else {
+      nsIDocument* doc =
+        mNotification->GetOwner() ? mNotification->GetOwner()->GetExtantDoc() : nullptr;
+      if (doc) {
+        baseUri = doc->GetBaseURI();
+        encoding = doc->GetDocumentCharacterSet();
+      } else {
+        NS_WARNING("No document found for main thread notification!");
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    if (baseUri) {
+      if (aIconUrl.Length() > 0) {
+        nsCOMPtr<nsIURI> srcUri;
+        rv = NS_NewURI(getter_AddRefs(srcUri), aIconUrl, encoding, baseUri);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString src;
+          srcUri->GetSpec(src);
+          aIconUrl = NS_ConvertUTF8toUTF16(src);
+        }
+      }
+      if (mNotification->Behavior().mSoundFile.Length() > 0) {
+        nsCOMPtr<nsIURI> srcUri;
+        rv = NS_NewURI(getter_AddRefs(srcUri),
+                       mNotification->Behavior().mSoundFile, encoding, baseUri);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString src;
+          srcUri->GetSpec(src);
+          aSoundUrl = NS_ConvertUTF8toUTF16(src);
+        }
+      }
+    }
+
+    return rv;
+  }
+
+  bool
+  IsInPrivateBrowsing()
+  {
+    AssertIsOnMainThread();
+
+    nsCOMPtr<nsIDocument> doc;
+
+    if (mNotification->mWorkerPrivate) {
+      doc = mNotification->mWorkerPrivate->GetDocument();
+    } else if (mNotification->GetOwner()) {
+      doc = mNotification->GetOwner()->GetExtantDoc();
+    }
+
+    if (doc) {
+      nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
+      return loadContext && loadContext->UsePrivateBrowsing();
+    }
+
+    if (mNotification->mWorkerPrivate) {
+      // Not all workers may have a document, but with Bug 1107516 fixed, they
+      // should all have a loadcontext.
+      nsCOMPtr<nsILoadGroup> loadGroup = mNotification->mWorkerPrivate->GetLoadGroup();
+      nsCOMPtr<nsILoadContext> loadContext;
+      NS_QueryNotificationCallbacks(nullptr, loadGroup, NS_GET_IID(nsILoadContext),
+                                    getter_AddRefs(loadContext));
+      return loadContext && loadContext->UsePrivateBrowsing();
+    }
+
+    //XXXnsm Should this default to true?
+    return false;
+  }
+
 private:
   explicit NotificationRef(Notification* aNotification)
     : mNotification(aNotification)
@@ -1563,38 +1652,6 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-bool
-Notification::IsInPrivateBrowsing()
-{
-  AssertIsOnMainThread();
-
-  nsIDocument* doc = nullptr;
-
-  if (mWorkerPrivate) {
-    doc = mWorkerPrivate->GetDocument();
-  } else if (GetOwner()) {
-    doc = GetOwner()->GetExtantDoc();
-  }
-
-  if (doc) {
-    nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
-    return loadContext && loadContext->UsePrivateBrowsing();
-  }
-
-  if (mWorkerPrivate) {
-    // Not all workers may have a document, but with Bug 1107516 fixed, they
-    // should all have a loadcontext.
-    nsCOMPtr<nsILoadGroup> loadGroup = mWorkerPrivate->GetLoadGroup();
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(nullptr, loadGroup, NS_GET_IID(nsILoadContext),
-                                  getter_AddRefs(loadContext));
-    return loadContext && loadContext->UsePrivateBrowsing();
-  }
-
-  //XXXnsm Should this default to true?
-  return false;
-}
-
 namespace {
   struct StringWriteFunc : public JSONWriteFunc
   {
@@ -1652,7 +1709,7 @@ Notification::ShowInternal(already_AddRefed<NotificationRef> aRef)
 
   nsAutoString iconUrl;
   nsAutoString soundUrl;
-  ResolveIconAndSoundURL(iconUrl, soundUrl);
+  ownership->ResolveIconAndSoundURL(iconUrl, soundUrl);
 
   bool isPersistent = false;
   nsCOMPtr<nsIObserver> observer;
@@ -1693,14 +1750,14 @@ Notification::ShowInternal(already_AddRefed<NotificationRef> aRef)
   MOZ_ASSERT(observer);
   nsCOMPtr<nsIObserver> alertObserver = new NotificationObserver(observer,
                                                                  GetPrincipal(),
-                                                                 IsInPrivateBrowsing());
+                                                                 ownership->IsInPrivateBrowsing());
 
 
   // In the case of IPC, the parent process uses the cookie to map to
   // nsIObserver. Thus the cookie must be unique to differentiate observers.
   nsString uniqueCookie = NS_LITERAL_STRING("notification:");
   uniqueCookie.AppendInt(sCount++);
-  bool inPrivateBrowsing = IsInPrivateBrowsing();
+  bool inPrivateBrowsing = ownership->IsInPrivateBrowsing();
 
   bool requireInteraction = mRequireInteraction;
   if (!DOMPrefs::NotificationRIEnabled()) {
@@ -1887,61 +1944,6 @@ Notification::TestPermission(nsIPrincipal* aPrincipal)
   default:
     return NotificationPermission::Default;
   }
-}
-
-nsresult
-Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
-{
-  AssertIsOnMainThread();
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIURI> baseUri;
-
-  // XXXnsm If I understand correctly, the character encoding for resolving
-  // URIs in new specs is dictated by the URL spec, which states that unless
-  // the URL parser is passed an override encoding, the charset to be used is
-  // UTF-8. The new Notification icon/sound specification just says to use the
-  // Fetch API, where the Request constructor defers to URL parsing specifying
-  // the API base URL and no override encoding. So we've to use UTF-8 on
-  // workers, but for backwards compat keeping it document charset on main
-  // thread.
-  auto encoding = UTF_8_ENCODING;
-
-  if (mWorkerPrivate) {
-    baseUri = mWorkerPrivate->GetBaseURI();
-  } else {
-    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
-    if (doc) {
-      baseUri = doc->GetBaseURI();
-      encoding = doc->GetDocumentCharacterSet();
-    } else {
-      NS_WARNING("No document found for main thread notification!");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  if (baseUri) {
-    if (mIconUrl.Length() > 0) {
-      nsCOMPtr<nsIURI> srcUri;
-      rv = NS_NewURI(getter_AddRefs(srcUri), mIconUrl, encoding, baseUri);
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString src;
-        srcUri->GetSpec(src);
-        iconUrl = NS_ConvertUTF8toUTF16(src);
-      }
-    }
-    if (mBehavior.mSoundFile.Length() > 0) {
-      nsCOMPtr<nsIURI> srcUri;
-      rv = NS_NewURI(getter_AddRefs(srcUri), mBehavior.mSoundFile, encoding, baseUri);
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString src;
-        srcUri->GetSpec(src);
-        soundUrl = NS_ConvertUTF8toUTF16(src);
-      }
-    }
-  }
-
-  return rv;
 }
 
 already_AddRefed<Promise>

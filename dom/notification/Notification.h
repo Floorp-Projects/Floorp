@@ -313,6 +313,12 @@ public:
   static nsresult OpenSettings(nsIPrincipal* aPrincipal);
 
   nsresult DispatchToMainThread(already_AddRefed<nsIRunnable>&& aRunnable);
+
+  const NotificationBehavior& Behavior() const
+  {
+    return mBehavior;
+  }
+
 protected:
   Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                const nsAString& aTitle, const nsAString& aBody,
@@ -327,7 +333,6 @@ protected:
                                                        const NotificationOptions& aOptions);
 
   nsresult Init();
-  bool IsInPrivateBrowsing();
   void ShowInternal(already_AddRefed<NotificationRef> aRef);
   void CloseInternal(already_AddRefed<NotificationRef> aRef);
 
