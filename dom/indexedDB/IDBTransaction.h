@@ -31,6 +31,7 @@ class IDBDatabase;
 class IDBObjectStore;
 class IDBOpenDBRequest;
 class IDBRequest;
+class StrongWorkerRef;
 
 namespace indexedDB {
 class BackgroundCursorChild;
@@ -80,7 +81,7 @@ private:
   nsTArray<nsString> mObjectStoreNames;
   nsTArray<RefPtr<IDBObjectStore>> mObjectStores;
   nsTArray<RefPtr<IDBObjectStore>> mDeletedObjectStores;
-  nsAutoPtr<WorkerHolder> mWorkerHolder;
+  RefPtr<StrongWorkerRef> mWorkerRef;
 
   // Tagged with mMode. If mMode is VERSION_CHANGE then mBackgroundActor will be
   // a BackgroundVersionChangeTransactionChild. Otherwise it will be a
