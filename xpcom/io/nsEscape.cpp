@@ -319,6 +319,7 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
   bool ignoreAscii = !!(aFlags & esc_OnlyNonASCII);
   bool writing = !!(aFlags & esc_AlwaysCopy);
   bool colon = !!(aFlags & esc_Colon);
+  bool spaces = !!(aFlags & esc_Spaces);
 
   auto src = reinterpret_cast<const unsigned_char_type*>(aPart);
 
@@ -361,6 +362,7 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
          || (c > 0x7f && ignoreNonAscii)
          || (c >= 0x20 && c < 0x7f && ignoreAscii))
         && !(c == ':' && colon)
+        && !(c == ' ' && spaces)
         && !(previousIsNonASCII && c == '|' && !ignoreNonAscii)) {
       if (writing) {
         tempBuffer[tempBufferPos++] = c;
