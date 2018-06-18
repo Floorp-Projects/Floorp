@@ -427,7 +427,7 @@ private:
      */
     nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const nsACString &host);
 
-    static void ThreadFunc(void *);
+    void ThreadFunc();
 
     enum {
         METHOD_HIT = 1,
