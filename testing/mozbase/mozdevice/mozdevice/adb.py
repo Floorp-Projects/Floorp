@@ -1978,27 +1978,31 @@ class ADBDevice(ADBCommand):
                  * ADBError
         """
         adb_process = None
+        max_attempts = 2
         try:
-            adb_process = self.shell("ps", timeout=timeout)
-            if adb_process.timedout:
-                raise ADBTimeoutError("%s" % adb_process)
-            elif adb_process.exitcode:
-                raise ADBProcessError(adb_process)
-            # first line is the headers
-            header = adb_process.stdout_file.readline()
-            pid_i = -1
-            user_i = -1
-            els = header.split()
-            for i in range(len(els)):
-                item = els[i].lower()
-                if item == 'user':
-                    user_i = i
-                elif item == 'pid':
-                    pid_i = i
-            if user_i == -1 or pid_i == -1:
+            for attempt in range(1, max_attempts + 1):
+                adb_process = self.shell("ps", timeout=timeout)
+                if adb_process.timedout:
+                    raise ADBTimeoutError("%s" % adb_process)
+                elif adb_process.exitcode:
+                    raise ADBProcessError(adb_process)
+                # first line is the headers
+                header = adb_process.stdout_file.readline()
+                pid_i = -1
+                user_i = -1
+                els = header.split()
+                for i in range(len(els)):
+                    item = els[i].lower()
+                    if item == 'user':
+                        user_i = i
+                    elif item == 'pid':
+                        pid_i = i
+                if user_i != -1 and pid_i != -1:
+                    break
                 self._logger.error('get_process_list: %s' % header)
-                raise ADBError('get_process_list: Unknown format: %s: %s' % (
-                    header, adb_process))
+                if attempt >= max_attempts:
+                    raise ADBError('get_process_list: Unknown format: %s: %s' % (
+                        header, adb_process))
             ret = []
             line = adb_process.stdout_file.readline()
             while line:
