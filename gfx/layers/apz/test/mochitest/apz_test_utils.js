@@ -194,6 +194,10 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     var testIndex = -1;
     var w = null;
 
+    // If the "apz.subtest" pref has been set, only a single subtest whose name matches
+    // the pref's value (if any) will be run.
+    var onlyOneSubtest = SpecialPowers.getCharPref("apz.subtest", /* default = */ "");
+
     function advanceSubtestExecution() {
       var test = aSubtests[testIndex];
       if (w) {
@@ -226,6 +230,13 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       }
 
       test = aSubtests[testIndex];
+
+      if (onlyOneSubtest && onlyOneSubtest != test.file) {
+        SimpleTest.ok(true, "Skipping " + test.file + " because only " + onlyOneSubtest + " is being run");
+        setTimeout(function() { advanceSubtestExecution(); }, 0);
+        return;
+      }
+
       if (typeof test.dp_suppression != 'undefined') {
         // Normally during a test, the displayport will get suppressed during page
         // load, and unsuppressed at a non-deterministic time during the test. The
@@ -273,6 +284,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     }
 
     advanceSubtestExecution();
+  }).catch(function(e) {
+    SimpleTest.ok(false, "Error occurred while running subtests: " + e);
   });
 }
 
