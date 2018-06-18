@@ -61,6 +61,7 @@ AutoTracer::AutoTracer(AsyncLogger& aLogger,
                        uint64_t aSampleRate)
   : mLogger(aLogger)
   , mLocation(aLocation)
+  , mComment(nullptr)
   , mEventType(aEventType)
   , mPID(aPID)
   , mTID(aTID)
