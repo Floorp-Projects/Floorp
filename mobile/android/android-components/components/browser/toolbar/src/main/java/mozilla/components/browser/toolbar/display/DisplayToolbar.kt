@@ -83,6 +83,8 @@ internal class DisplayToolbar(
         isHorizontalFadingEdgeEnabled = true
 
         setSingleLine(true)
+        isClickable = true
+        isFocusable = true
 
         setOnClickListener {
             if (onUrlClicked()) {
