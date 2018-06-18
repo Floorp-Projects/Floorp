@@ -687,6 +687,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
 }
 
 Tkhd::Tkhd(Box& aBox)
+  : mTrackId(0)
 {
   mValid = Parse(aBox).isOk();
   if (!mValid) {
@@ -727,6 +728,10 @@ Tkhd::Parse(Box& aBox)
 }
 
 Mvhd::Mvhd(Box& aBox)
+  : mCreationTime(0)
+  , mModificationTime(0)
+  , mTimescale(0)
+  , mDuration(0)
 {
   mValid = Parse(aBox).isOk();
   if (!mValid) {
@@ -769,6 +774,12 @@ Mdhd::Mdhd(Box& aBox)
 }
 
 Trex::Trex(Box& aBox)
+  : mFlags(0)
+  , mTrackId(0)
+  , mDefaultSampleDescriptionIndex(0)
+  , mDefaultSampleDuration(0)
+  , mDefaultSampleSize(0)
+  , mDefaultSampleFlags(0)
 {
   mValid = Parse(aBox).isOk();
   if (!mValid) {
@@ -793,6 +804,7 @@ Trex::Parse(Box& aBox)
 
 Tfhd::Tfhd(Box& aBox, Trex& aTrex)
   : Trex(aTrex)
+  , mBaseDataOffset(0)
 {
   mValid = Parse(aBox).isOk();
   if (!mValid) {
@@ -832,6 +844,7 @@ Tfhd::Parse(Box& aBox)
 }
 
 Tfdt::Tfdt(Box& aBox)
+  : mBaseMediaDecodeTime(0)
 {
   mValid = Parse(aBox).isOk();
   if (!mValid) {
@@ -999,6 +1012,7 @@ Saio::Parse(Box& aBox)
 }
 
 Sbgp::Sbgp(Box& aBox)
+  : mGroupingTypeParam(0)
 {
   mValid = Parse(aBox).isOk();
   if (!mValid) {

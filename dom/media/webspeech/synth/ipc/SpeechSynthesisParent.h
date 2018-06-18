@@ -80,7 +80,11 @@ class SpeechTaskParent : public nsSpeechTask
   friend class SpeechSynthesisRequestParent;
 public:
   SpeechTaskParent(float aVolume, const nsAString& aUtterance, bool aIsChrome)
-    : nsSpeechTask(aVolume, aUtterance, aIsChrome) {}
+    : nsSpeechTask(aVolume
+    , aUtterance, aIsChrome)
+    , mActor(nullptr)
+    {
+    }
 
   nsresult DispatchStartImpl(const nsAString& aUri) override;
 
