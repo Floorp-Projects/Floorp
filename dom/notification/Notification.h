@@ -295,15 +295,6 @@ public:
   // Main thread only.
   WorkerNotificationObserver* mObserver;
 
-  // The NotificationTask calls ShowInternal()/CloseInternal() on the
-  // Notification. At this point the task has ownership of the Notification. It
-  // passes this on to the Notification itself via mTempRef so that
-  // ShowInternal()/CloseInternal() may pass it along appropriately (or release
-  // it).
-  //
-  // Main thread only.
-  UniquePtr<NotificationRef> mTempRef;
-
   // Returns true if addref succeeded.
   bool AddRefObject();
   void ReleaseObject();
@@ -337,8 +328,8 @@ protected:
 
   nsresult Init();
   bool IsInPrivateBrowsing();
-  void ShowInternal();
-  void CloseInternal();
+  void ShowInternal(UniquePtr<NotificationRef>&& aRef);
+  void CloseInternal(UniquePtr<NotificationRef>&& aRef);
 
   static NotificationPermission GetPermissionInternal(nsISupports* aGlobal,
                                                       ErrorResult& rv);

@@ -882,15 +882,11 @@ NotificationTask::Run()
 {
   AssertIsOnMainThread();
 
-  // Get a pointer to notification before the notification takes ownership of
-  // the ref (it owns itself temporarily, with ShowInternal() and
-  // CloseInternal() passing on the ownership appropriately.)
   Notification* notif = mNotificationRef->GetNotification();
-  notif->mTempRef.swap(mNotificationRef);
   if (mAction == eShow) {
-    notif->ShowInternal();
+    notif->ShowInternal(std::move(mNotificationRef));
   } else if (mAction == eClose) {
-    notif->CloseInternal();
+    notif->CloseInternal(std::move(mNotificationRef));
   } else {
     MOZ_CRASH("Invalid action");
   }
@@ -1170,7 +1166,6 @@ Notification::~Notification()
   mozilla::DropJSObjects(this);
   AssertIsOnTargetThread();
   MOZ_ASSERT(!mWorkerHolder);
-  MOZ_ASSERT(!mTempRef);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Notification)
@@ -1596,18 +1591,16 @@ namespace {
 }
 
 void
-Notification::ShowInternal()
+Notification::ShowInternal(UniquePtr<NotificationRef>&& aRef)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mTempRef, "Notification should take ownership of itself before"
-                       "calling ShowInternal!");
+
   // A notification can only have one observer and one call to ShowInternal.
   MOZ_ASSERT(!mObserver);
 
   // Transfer ownership to local scope so we can either release it at the end
   // of this function or transfer it to the observer.
-  UniquePtr<NotificationRef> ownership;
-  mozilla::Swap(ownership, mTempRef);
+  UniquePtr<NotificationRef> ownership = std::move(aRef);
   MOZ_ASSERT(ownership->GetNotification() == this);
 
   nsresult rv = PersistNotification();
@@ -2200,14 +2193,12 @@ Notification::Close()
 }
 
 void
-Notification::CloseInternal()
+Notification::CloseInternal(UniquePtr<NotificationRef>&& aRef)
 {
   AssertIsOnMainThread();
-  // Transfer ownership (if any) to local scope so we can release it at the end
-  // of this function. This is relevant when the call is from
-  // NotificationTask::Run().
-  UniquePtr<NotificationRef> ownership;
-  mozilla::Swap(ownership, mTempRef);
+
+  // aRef can be null.
+  UniquePtr<NotificationRef> ownership = std::move(aRef);
 
   SetAlertName();
   UnpersistNotification();
@@ -2382,7 +2373,7 @@ class CloseNotificationRunnable final
       mNotification->mObserver = nullptr;
       mHadObserver = true;
     }
-    mNotification->CloseInternal();
+    mNotification->CloseInternal(nullptr);
     return true;
   }
 
@@ -2693,7 +2684,7 @@ Notification::Observe(nsISupports* aSubject, const char* aTopic,
         obs->RemoveObserver(this, DOM_WINDOW_FROZEN_TOPIC);
       }
 
-      CloseInternal();
+      CloseInternal(nullptr);
     }
   }
 
