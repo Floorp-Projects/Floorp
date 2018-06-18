@@ -19,8 +19,6 @@ const PushService = Cc["@mozilla.org/push/Service;1"]
 add_task(async function() {
   info("Turn on workers via mochitest http.");
   await enableServiceWorkerDebugging();
-  // Enable the push service.
-  await pushPref("dom.push.connection.enabled", true);
 
   info("Mock the push service");
   PushService.service = {

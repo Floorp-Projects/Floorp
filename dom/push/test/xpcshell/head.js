@@ -12,6 +12,8 @@ ChromeUtils.import('resource://gre/modules/ObjectUtils.jsm');
 
 ChromeUtils.defineModuleGetter(this, 'PlacesTestUtils',
                                'resource://testing-common/PlacesTestUtils.jsm');
+ChromeUtils.defineModuleGetter(this, 'pushBroadcastService',
+                               'resource://gre/modules/PushBroadcastService.jsm', {});
 XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
                                    '@mozilla.org/push/Service;1', 'nsIPushService');
 
@@ -185,6 +187,7 @@ function MockWebSocket(originalURI, handlers = {}) {
   this._onUnregister = handlers.onUnregister;
   this._onACK = handlers.onACK;
   this._onPing = handlers.onPing;
+  this._onBroadcastSubscribe = handlers.onBroadcastSubscribe;
 }
 
 MockWebSocket.prototype = {
@@ -255,6 +258,13 @@ MockWebSocket.prototype = {
         // Echo ping packets.
         this.serverSendMsg('{}');
       }
+      break;
+
+    case 'broadcast_subscribe':
+      if (typeof this._onBroadcastSubscribe != 'function') {
+        throw new Error('Unexpected broadcast_subscribe');
+      }
+      this._onBroadcastSubscribe(request);
       break;
 
     default:

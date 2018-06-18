@@ -7,6 +7,7 @@ const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 function run_test() {
   do_get_profile();
+  setPrefs();
   run_next_test();
 }
 
