@@ -328,8 +328,8 @@ protected:
 
   nsresult Init();
   bool IsInPrivateBrowsing();
-  void ShowInternal(UniquePtr<NotificationRef>&& aRef);
-  void CloseInternal(UniquePtr<NotificationRef>&& aRef);
+  void ShowInternal(already_AddRefed<NotificationRef> aRef);
+  void CloseInternal(already_AddRefed<NotificationRef> aRef);
 
   static const nsString DirectionToString(NotificationDirection aDirection)
   {

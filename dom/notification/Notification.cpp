@@ -435,12 +435,12 @@ public:
 
 // Create one whenever you require ownership of the notification. Use with
 // UniquePtr<>. See Notification.h for details.
-class NotificationRef final {
+class NotificationRef final
+{
   friend class WorkerNotificationObserver;
 
 private:
   Notification* mNotification;
-  bool mInited;
 
   // Only useful for workers.
   void
@@ -450,33 +450,59 @@ private:
   }
 
 public:
-  explicit NotificationRef(Notification* aNotification)
-    : mNotification(aNotification)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NotificationRef)
+
+  static already_AddRefed<NotificationRef>
+  Create(Notification* aNotification)
   {
-    MOZ_ASSERT(mNotification);
-    if (mNotification->mWorkerPrivate) {
-      mNotification->mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(aNotification);
+    if (aNotification->mWorkerPrivate) {
+      aNotification->mWorkerPrivate->AssertIsOnWorkerThread();
     } else {
       AssertIsOnMainThread();
     }
 
-    mInited = mNotification->AddRefObject();
+    RefPtr<NotificationRef> ref = new NotificationRef(aNotification);
+    if (NS_WARN_IF(!aNotification->AddRefObject())) {
+      return nullptr;
+    }
+
+    return ref.forget();
   }
 
-  // This is only required because Gecko runs script in a worker's onclose
-  // handler (non-standard, Bug 790919) where calls to HoldWorker() will
-  // fail. Due to non-standardness and added complications if we decide to
-  // support this, attempts to create a Notification in onclose just throw
-  // exceptions.
-  bool
-  Initialized()
+  // XXXnsm, is it worth having some sort of WeakPtr like wrapper instead of
+  // a rawptr that the NotificationRef can invalidate?
+  Notification*
+  GetNotification()
   {
-    return mInited;
+    return mNotification;
+  }
+
+  nsIPrincipal*
+  GetPrincipal()
+  {
+    AssertIsOnMainThread();
+
+    if (mNotification->mWorkerPrivate) {
+      return mNotification->mWorkerPrivate->GetPrincipal();
+    }
+
+    nsCOMPtr<nsIScriptObjectPrincipal> sop =
+      do_QueryInterface(mNotification->GetOwner());
+    NS_ENSURE_TRUE(sop, nullptr);
+    return sop->GetPrincipal();
+  }
+
+private:
+  explicit NotificationRef(Notification* aNotification)
+    : mNotification(aNotification)
+  {
+    MOZ_ASSERT(mNotification);
   }
 
   ~NotificationRef()
   {
-    if (Initialized() && mNotification) {
+    if (mNotification) {
       Notification* notification = mNotification;
       mNotification = nullptr;
       if (notification->mWorkerPrivate && NS_IsMainThread()) {
@@ -502,31 +528,6 @@ public:
       }
     }
   }
-
-  // XXXnsm, is it worth having some sort of WeakPtr like wrapper instead of
-  // a rawptr that the NotificationRef can invalidate?
-  Notification*
-  GetNotification()
-  {
-    MOZ_ASSERT(Initialized());
-    return mNotification;
-  }
-
-  nsIPrincipal*
-  GetPrincipal()
-  {
-    MOZ_ASSERT(Initialized());
-    AssertIsOnMainThread();
-
-    if (mNotification->mWorkerPrivate) {
-      return mNotification->mWorkerPrivate->GetPrincipal();
-    }
-
-    nsCOMPtr<nsIScriptObjectPrincipal> sop =
-      do_QueryInterface(mNotification->GetOwner());
-    NS_ENSURE_TRUE(sop, nullptr);
-    return sop->GetPrincipal();
-  }
 };
 
 class NotificationTask : public Runnable
@@ -537,7 +538,7 @@ public:
     eClose
   };
 
-  NotificationTask(const char* aName, UniquePtr<NotificationRef> aRef,
+  NotificationTask(const char* aName, already_AddRefed<NotificationRef> aRef,
                    NotificationAction aAction)
     : Runnable(aName)
     , mNotificationRef(std::move(aRef)), mAction(aAction)
@@ -548,7 +549,7 @@ public:
 protected:
   virtual ~NotificationTask() {}
 
-  UniquePtr<NotificationRef> mNotificationRef;
+  RefPtr<NotificationRef> mNotificationRef;
   NotificationAction mAction;
 };
 
@@ -874,12 +875,13 @@ NS_IMPL_ISUPPORTS(NotificationObserver, nsIObserver)
 class MainThreadNotificationObserver : public nsIObserver
 {
 public:
-  UniquePtr<NotificationRef> mNotificationRef;
+  RefPtr<NotificationRef> mNotificationRef;
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  explicit MainThreadNotificationObserver(UniquePtr<NotificationRef> aRef)
-    : mNotificationRef(std::move(aRef))
+  explicit MainThreadNotificationObserver(NotificationRef* aRef)
+    : mNotificationRef(aRef)
   {
     AssertIsOnMainThread();
   }
@@ -900,9 +902,9 @@ NotificationTask::Run()
 
   Notification* notif = mNotificationRef->GetNotification();
   if (mAction == eShow) {
-    notif->ShowInternal(std::move(mNotificationRef));
+    notif->ShowInternal(mNotificationRef.forget());
   } else if (mAction == eClose) {
-    notif->CloseInternal(std::move(mNotificationRef));
+    notif->CloseInternal(mNotificationRef.forget());
   } else {
     MOZ_CRASH("Invalid action");
   }
@@ -1224,8 +1226,8 @@ public:
                                        MainThreadNotificationObserver)
   NS_DECL_NSIOBSERVER
 
-  explicit WorkerNotificationObserver(UniquePtr<NotificationRef> aRef)
-    : MainThreadNotificationObserver(std::move(aRef))
+  explicit WorkerNotificationObserver(NotificationRef* aRef)
+    : MainThreadNotificationObserver(aRef)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mNotificationRef->GetNotification()->mWorkerPrivate);
@@ -1607,7 +1609,7 @@ namespace {
 }
 
 void
-Notification::ShowInternal(UniquePtr<NotificationRef>&& aRef)
+Notification::ShowInternal(already_AddRefed<NotificationRef> aRef)
 {
   AssertIsOnMainThread();
 
@@ -1616,7 +1618,7 @@ Notification::ShowInternal(UniquePtr<NotificationRef>&& aRef)
 
   // Transfer ownership to local scope so we can either release it at the end
   // of this function or transfer it to the observer.
-  UniquePtr<NotificationRef> ownership = std::move(aRef);
+  RefPtr<NotificationRef> ownership = std::move(aRef);
   MOZ_ASSERT(ownership->GetNotification() == this);
 
   nsresult rv = PersistNotification();
@@ -1661,10 +1663,10 @@ Notification::ShowInternal(UniquePtr<NotificationRef>&& aRef)
       MOZ_ASSERT(!mWorkerPrivate->IsServiceWorker());
       // Keep a pointer so that the feature can tell the observer not to release
       // the notification.
-      mObserver = new WorkerNotificationObserver(std::move(ownership));
+      mObserver = new WorkerNotificationObserver(ownership);
       observer = mObserver;
     } else {
-      observer = new MainThreadNotificationObserver(std::move(ownership));
+      observer = new MainThreadNotificationObserver(ownership);
     }
   } else {
     isPersistent = true;
@@ -2181,13 +2183,13 @@ void
 Notification::Close()
 {
   AssertIsOnTargetThread();
-  auto ref = MakeUnique<NotificationRef>(this);
-  if (!ref->Initialized()) {
+  RefPtr<NotificationRef> ref = NotificationRef::Create(this);
+  if (NS_WARN_IF(!ref)) {
     return;
   }
 
   nsCOMPtr<nsIRunnable> closeNotificationTask =
-    new NotificationTask("Notification::Close", std::move(ref),
+    new NotificationTask("Notification::Close", ref.forget(),
                          NotificationTask::eClose);
   nsresult rv = DispatchToMainThread(closeNotificationTask.forget());
 
@@ -2199,12 +2201,12 @@ Notification::Close()
 }
 
 void
-Notification::CloseInternal(UniquePtr<NotificationRef>&& aRef)
+Notification::CloseInternal(already_AddRefed<NotificationRef> aRef)
 {
   AssertIsOnMainThread();
 
   // aRef can be null.
-  UniquePtr<NotificationRef> ownership = std::move(aRef);
+  RefPtr<NotificationRef> ownership = std::move(aRef);
 
   SetAlertName();
   UnpersistNotification();
@@ -2625,15 +2627,15 @@ Notification::CreateAndShow(JSContext* aCx,
 
   notification->SetScope(aScope);
 
-  auto ref = MakeUnique<NotificationRef>(notification);
-  if (NS_WARN_IF(!ref->Initialized())) {
+  RefPtr<NotificationRef> ref = NotificationRef::Create(notification);
+  if (NS_WARN_IF(!ref)) {
     aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
     return nullptr;
   }
 
   // Queue a task to show the notification.
   nsCOMPtr<nsIRunnable> showNotificationTask =
-    new NotificationTask("Notification::CreateAndShow", std::move(ref),
+    new NotificationTask("Notification::CreateAndShow", ref.forget(),
                          NotificationTask::eShow);
 
   nsresult rv =
