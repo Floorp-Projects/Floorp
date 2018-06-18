@@ -317,7 +317,7 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
                                          getter_AddRefs(pAsyncOp)))) {
     pAsyncOp->SetAsyncMode(VARIANT_TRUE);
   } else {
-    NS_NOTREACHED("When did our data object stop being async");
+    MOZ_ASSERT_UNREACHABLE("When did our data object stop being async");
   }
 
   // Call the native D&D method

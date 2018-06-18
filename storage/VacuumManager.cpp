@@ -261,7 +261,7 @@ Vacuumer::HandleError(mozIStorageError *aError)
 NS_IMETHODIMP
 Vacuumer::HandleResult(mozIStorageResultSet *aResultSet)
 {
-  NS_NOTREACHED("Got a resultset from a vacuum?");
+  MOZ_ASSERT_UNREACHABLE("Got a resultset from a vacuum?");
   return NS_OK;
 }
 

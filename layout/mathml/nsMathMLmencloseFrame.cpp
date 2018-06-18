@@ -858,7 +858,8 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
       return;
     }
     default:
-      NS_NOTREACHED("This notation can not be drawn using nsDisplayNotation");
+      MOZ_ASSERT_UNREACHABLE("This notation can not be drawn using "
+                             "nsDisplayNotation");
   }
 }
 

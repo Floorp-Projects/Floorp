@@ -8167,7 +8167,8 @@ nsDocument::UnblockOnload(bool aFireSync)
   }
 
   if (mOnloadBlockCount == 0 && mAsyncOnloadBlockCount == 0) {
-    NS_NOTREACHED("More UnblockOnload() calls than BlockOnload() calls; dropping call");
+    MOZ_ASSERT_UNREACHABLE("More UnblockOnload() calls than BlockOnload() "
+                           "calls; dropping call");
     return;
   }
 

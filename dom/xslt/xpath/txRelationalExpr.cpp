@@ -136,7 +136,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         }
         default:
         {
-            NS_NOTREACHED("We should have caught all cases");
+            MOZ_ASSERT_UNREACHABLE("We should have caught all cases");
         }
     }
 

@@ -125,7 +125,7 @@ public:
           mPanningModelFunction = &PannerNodeEngine::HRTFPanningFunction;
           break;
         default:
-          NS_NOTREACHED("We should never see the alternate names here");
+          MOZ_ASSERT_UNREACHABLE("We should never see alternate names here");
           break;
       }
       break;
@@ -141,7 +141,7 @@ public:
           mDistanceModelFunction = &PannerNodeEngine::ExponentialGainFunction;
           break;
         default:
-          NS_NOTREACHED("We should never see the alternate names here");
+          MOZ_ASSERT_UNREACHABLE("We should never see alternate names here");
           break;
       }
       break;

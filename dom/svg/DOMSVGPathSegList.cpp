@@ -126,7 +126,8 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
   // mean that - assuming we aren't reading bad memory - we would likely end up
   // decoding command types from argument floats when looking in our
   // SVGPathData's data array! Either way, we'll likely then go down
-  // NS_NOTREACHED code paths, or end up reading/setting more bad memory!!
+  // MOZ_ASSERT_UNREACHABLE code paths, or end up reading/setting more bad
+  // memory!!
 
   // The only time that our other DOM list type implementations remove items is
   // if those items become surplus items due to an attribute change or SMIL

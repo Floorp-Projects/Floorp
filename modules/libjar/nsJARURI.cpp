@@ -107,7 +107,7 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
 NS_IMETHODIMP
 nsJARURI::Read(nsIObjectInputStream *aStream)
 {
-    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

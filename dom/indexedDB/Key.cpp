@@ -392,7 +392,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
     aVal.setObject(*binary);
   }
   else {
-    NS_NOTREACHED("Unknown key type!");
+    MOZ_ASSERT_UNREACHABLE("Unknown key type!");
   }
 
   return NS_OK;

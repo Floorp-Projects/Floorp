@@ -33,7 +33,7 @@ nsTableWrapperFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid) {
-    NS_NOTREACHED("no inner table");
+    MOZ_ASSERT_UNREACHABLE("no inner table");
     return nsContainerFrame::GetLogicalBaseline(aWritingMode);
   }
 
@@ -671,7 +671,7 @@ nsTableWrapperFrame::GetCaptionOrigin(uint32_t             aCaptionSide,
       aOrigin.B(aWM) = aInnerMargin.BStart(aWM) + aCaptionMargin.BStart(aWM);
       break;
     default:
-      NS_NOTREACHED("Unknown caption alignment type");
+      MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
       break;
   }
   return NS_OK;
@@ -763,7 +763,7 @@ nsTableWrapperFrame::GetInnerOrigin(uint32_t             aCaptionSide,
                        aCaptionMargin.BStartEnd(aWM);
       break;
     default:
-      NS_NOTREACHED("Unknown caption alignment type");
+      MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
       break;
   }
   return NS_OK;

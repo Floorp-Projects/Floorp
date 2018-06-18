@@ -501,7 +501,7 @@ mozSpellChecker::SetupDoc(int32_t *outBlockOffset)
         // There is no text block (TB) in or before the selection (S).
         case TextServicesDocument::BlockSelectionStatus::eBlockNotFound:
         default:
-          NS_NOTREACHED("Shouldn't ever get this status");
+          MOZ_ASSERT_UNREACHABLE("Shouldn't ever get this status");
       }
     }
     // Failed to get last sel block. Just start at beginning

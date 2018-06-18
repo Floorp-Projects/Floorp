@@ -9839,7 +9839,8 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
         float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
         nsCSSShadowArray* shadows = filter.GetDropShadow();
         if (!shadows || shadows->Length() != 1) {
-          NS_NOTREACHED("Exactly one drop shadow should have been parsed.");
+          MOZ_ASSERT_UNREACHABLE("Exactly one drop shadow should have been "
+                                 "parsed.");
           return false;
         }
 

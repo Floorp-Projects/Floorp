@@ -48,7 +48,8 @@ PresentationChild::ActorDestroy(ActorDestroyReason aWhy)
 PPresentationRequestChild*
 PresentationChild::AllocPPresentationRequestChild(const PresentationIPCRequest& aRequest)
 {
-  NS_NOTREACHED("We should never be manually allocating PPresentationRequestChild actors");
+  MOZ_ASSERT_UNREACHABLE("We should never be manually allocating "
+                         "PPresentationRequestChild actors");
   return nullptr;
 }
 

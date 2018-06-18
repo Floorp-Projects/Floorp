@@ -780,7 +780,7 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
             NodeBinding::DOCUMENT_POSITION_FOLLOWING;
         }
       }
-      NS_NOTREACHED("neither attribute in the element");
+      MOZ_ASSERT_UNREACHABLE("neither attribute in the element");
       return NodeBinding::DOCUMENT_POSITION_DISCONNECTED;
     }
 

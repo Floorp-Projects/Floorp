@@ -376,7 +376,7 @@ DOMSVGPathSeg::CreateFor(DOMSVGPathSegList *aList,
   case PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
     return new DOMSVGPathSegCurvetoQuadraticSmoothRel(aList, aListIndex, aIsAnimValItem);
   default:
-    NS_NOTREACHED("Invalid path segment type");
+    MOZ_ASSERT_UNREACHABLE("Invalid path segment type");
     return nullptr;
   }
 }

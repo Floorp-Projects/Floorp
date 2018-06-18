@@ -90,24 +90,24 @@ public:
   // nsIContentIterator
   virtual nsresult Init(nsINode* aRoot) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(nsRange* aRange) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(const RawRangeBoundary& aStart,
                         const RawRangeBoundary& aEnd) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   // Not a range because one of the endpoints may be anonymous.

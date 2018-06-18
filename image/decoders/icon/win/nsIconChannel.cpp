@@ -738,7 +738,7 @@ nsIconChannel::GetContentLength(int64_t* aContentLength)
 NS_IMETHODIMP
 nsIconChannel::SetContentLength(int64_t aContentLength)
 {
-  NS_NOTREACHED("nsIconChannel::SetContentLength");
+  MOZ_ASSERT_UNREACHABLE("nsIconChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

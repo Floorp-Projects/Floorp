@@ -191,7 +191,7 @@ TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
       --colIdx;
       continue;
     }
-    NS_NOTREACHED("huh?");
+    MOZ_ASSERT_UNREACHABLE("huh?");
     return;
   }
 

@@ -2963,7 +2963,7 @@ nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase *)
         mThrottleMaxTime = TimeDuration::FromMilliseconds(value);
         break;
     default:
-        NS_NOTREACHED("unexpected parameter name");
+        MOZ_ASSERT_UNREACHABLE("unexpected parameter name");
     }
 }
 

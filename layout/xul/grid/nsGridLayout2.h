@@ -37,7 +37,7 @@ public:
   virtual nsGridLayout2* CastToGridLayout() override { return this; }
   virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr) override;
   virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) override {
-    NS_NOTREACHED("Should not be called"); return nullptr;
+    MOZ_ASSERT_UNREACHABLE("Should not be called"); return nullptr;
   }
   virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;

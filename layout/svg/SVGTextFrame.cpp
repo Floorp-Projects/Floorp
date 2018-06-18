@@ -362,7 +362,7 @@ GetBaselinePosition(nsTextFrame* aFrame,
       return (metrics.mAscent + metrics.mDescent) / 2.0;
   }
 
-  NS_NOTREACHED("unexpected dominant-baseline value");
+  MOZ_ASSERT_UNREACHABLE("unexpected dominant-baseline value");
   return aFrame->GetLogicalBaseline(writingMode);
 }
 
@@ -1476,8 +1476,8 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
     NS_ASSERTION(mNodeCharIndex == 0, "incorrect tracking of undisplayed "
                                       "characters in text nodes");
     if (!mNodeIterator.Current()) {
-      NS_NOTREACHED("incorrect tracking of correspondence between text frames "
-                    "and text nodes");
+      MOZ_ASSERT_UNREACHABLE("incorrect tracking of correspondence between "
+                             "text frames and text nodes");
     } else {
       // Each whole nsTextNode we find before we get to the text node for the
       // first text frame must be undisplayed.
@@ -4885,7 +4885,7 @@ ShiftAnchoredChunk(nsTArray<CharPosition>& aCharPositions,
       shift -= aVisIEndEdge;
       break;
     default:
-      NS_NOTREACHED("unexpected value for aAnchorSide");
+      MOZ_ASSERT_UNREACHABLE("unexpected value for aAnchorSide");
   }
 
   if (shift != 0.0) {

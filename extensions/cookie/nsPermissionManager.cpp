@@ -3117,7 +3117,7 @@ nsPermissionManager::UpdateDB(OperationType aOp,
 
   default:
     {
-      NS_NOTREACHED("need a valid operation in UpdateDB()!");
+      MOZ_ASSERT_UNREACHABLE("need a valid operation in UpdateDB()!");
       rv = NS_ERROR_UNEXPECTED;
       break;
     }

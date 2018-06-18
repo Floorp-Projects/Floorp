@@ -1999,7 +1999,7 @@ PluginInstanceParent::RecvSetNetscapeWindowAsParent(const NativeWindowHandle& ch
 
     return IPC_OK();
 #else
-    NS_NOTREACHED("PluginInstanceParent::RecvSetNetscapeWindowAsParent not implemented!");
+    MOZ_ASSERT_UNREACHABLE("RecvSetNetscapeWindowAsParent not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }
@@ -2033,7 +2033,7 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
     PluginInstanceParent* self = reinterpret_cast<PluginInstanceParent*>(
         ::GetPropW(hWnd, kPluginInstanceParentProperty));
     if (!self) {
-        NS_NOTREACHED("PluginInstanceParent::PluginWindowHookProc null this ptr!");
+        MOZ_ASSERT_UNREACHABLE("PluginInstanceParent::PluginWindowHookProc null this ptr!");
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
@@ -2051,7 +2051,7 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
     }
 
     if (self->mPluginWndProc == PluginWindowHookProc) {
-      NS_NOTREACHED(
+      MOZ_ASSERT_UNREACHABLE(
         "PluginWindowHookProc invoking mPluginWndProc w/"
         "mPluginWndProc == PluginWindowHookProc????");
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -2230,7 +2230,7 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
     }
     return IPC_OK();
 #else
-    NS_NOTREACHED("PluginInstanceParent::AnswerPluginFocusChange not implemented!");
+    MOZ_ASSERT_UNREACHABLE("AnswerPluginFocusChange not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }

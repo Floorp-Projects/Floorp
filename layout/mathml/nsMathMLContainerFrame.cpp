@@ -1347,7 +1347,7 @@ GetInterFrameSpacingFor(int32_t         aScriptLevel,
     childFrame = childFrame->GetNextSibling();
   }
 
-  NS_NOTREACHED("child not in the childlist of its parent");
+  MOZ_ASSERT_UNREACHABLE("child not in the childlist of its parent");
   return 0;
 }
 

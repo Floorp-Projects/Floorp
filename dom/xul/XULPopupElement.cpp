@@ -213,7 +213,7 @@ XULPopupElement::GetState(nsString& aState)
       case ePopupClosed:
         break;
       default:
-        NS_NOTREACHED("Bad popup state");
+        MOZ_ASSERT_UNREACHABLE("Bad popup state");
         break;
     }
   }
