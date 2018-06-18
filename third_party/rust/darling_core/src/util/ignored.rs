@@ -6,7 +6,7 @@ use {FromMetaItem, FromDeriveInput, FromField, FromVariant, Result};
 ///
 /// All meta-items, fields, and variants will be successfully read into
 /// the `Ignored` struct, with all properties discarded.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Ignored;
 
 impl FromMetaItem for Ignored {

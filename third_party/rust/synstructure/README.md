@@ -1,6 +1,9 @@
 # synstructure
 
-[![Documentation](https://docs.rs/synstructure/badge.svg)](https://docs.rs/synstructure) [![Build Status](https://travis-ci.org/mystor/synstructure.svg?branch=master)](https://travis-ci.org/mystor/synstructure)
+[![Latest Version](https://img.shields.io/crates/v/synstructure.svg)](https://crates.io/crates/synstructure)
+[![Documentation](https://docs.rs/synstructure/badge.svg)](https://docs.rs/synstructure)
+[![Build Status](https://travis-ci.org/mystor/synstructure.svg?branch=master)](https://travis-ci.org/mystor/synstructure)
+[![Rustc Version 1.15+](https://img.shields.io/badge/rustc-1.15+-lightgray.svg)](https://blog.rust-lang.org/2017/02/02/Rust-1.15.html)
 
 > NOTE: What follows is an exerpt from the module level documentation. For full
 > details read the docs on [docs.rs](https://docs.rs/synstructure/)

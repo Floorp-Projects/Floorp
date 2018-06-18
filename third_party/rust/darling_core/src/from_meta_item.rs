@@ -192,7 +192,7 @@ impl FromMetaItem for isize {
 
 impl FromMetaItem for syn::Ident {
     fn from_string(value: &str) -> Result<Self> {
-        Ok(syn::Ident::from(value))
+        Ok(syn::Ident::new(value, ::proc_macro2::Span::call_site()))
     }
 }
 
