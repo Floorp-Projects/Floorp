@@ -1067,7 +1067,7 @@ ExtractBytesFromData(const OwningArrayBufferViewOrArrayBufferOrUSVString& aDataI
   if (aDataInit.IsUSVString()) {
     return ExtractBytesFromUSVString(aDataInit.GetAsUSVString(), aBytes);
   }
-  NS_NOTREACHED("Unexpected push message data");
+  MOZ_ASSERT_UNREACHABLE("Unexpected push message data");
   return NS_ERROR_FAILURE;
 }
 }

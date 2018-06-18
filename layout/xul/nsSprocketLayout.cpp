@@ -301,7 +301,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
       // If for some reason, our lists are not the same length, we guard
       // by bailing out of the loop.
       if (childBoxSize == nullptr) {
-        NS_NOTREACHED("Lists not the same length.");
+        MOZ_ASSERT_UNREACHABLE("Lists not the same length.");
         break;
       }
 

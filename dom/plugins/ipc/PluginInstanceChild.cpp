@@ -304,7 +304,8 @@ PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
             break;
 
         default:
-            NS_NOTREACHED("Don't know what to do with this value type!");
+            MOZ_ASSERT_UNREACHABLE("Don't know what to do with this value "
+                                   "type!");
     }
 
 #ifdef DEBUG
@@ -520,14 +521,15 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         *static_cast<double*>(aValue) = mCSSZoomFactor;
         return NPERR_NO_ERROR;
     }
+
 #ifdef DEBUG
     case NPNVjavascriptEnabledBool:
     case NPNVasdEnabledBool:
     case NPNVisOfflineBool:
     case NPNVSupportsXEmbedBool:
     case NPNVSupportsWindowless:
-        NS_NOTREACHED("NPNVariable should be handled in PluginModuleChild.");
-        MOZ_FALLTHROUGH;
+        MOZ_FALLTHROUGH_ASSERT("NPNVariable should be handled in "
+                               "PluginModuleChild.");
 #endif
 
     default:
@@ -1124,7 +1126,7 @@ PluginInstanceChild::AnswerCreateChildPluginWindow(NativeWindowHandle* aChildPlu
     *aChildPluginWindow = mPluginWindowHWND;
     return IPC_OK();
 #else
-    NS_NOTREACHED("PluginInstanceChild::CreateChildPluginWindow not implemented!");
+    MOZ_ASSERT_UNREACHABLE("CreateChildPluginWindow not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }
@@ -1137,7 +1139,7 @@ PluginInstanceChild::RecvCreateChildPopupSurrogate(const NativeWindowHandle& aNe
     CreateWinlessPopupSurrogate();
     return IPC_OK();
 #else
-    NS_NOTREACHED("PluginInstanceChild::CreateChildPluginWindow not implemented!");
+    MOZ_ASSERT_UNREACHABLE("CreateChildPluginWindow not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }
@@ -1223,7 +1225,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
       break;
 
       default:
-          NS_NOTREACHED("Bad plugin window type.");
+          MOZ_ASSERT_UNREACHABLE("Bad plugin window type.");
           return IPC_FAIL_NO_REASON(this);
       break;
     }
@@ -1506,7 +1508,7 @@ PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
         GetProp(hWnd, kPluginInstanceChildProperty));
     if (!self) {
-        NS_NOTREACHED("Badness!");
+        MOZ_ASSERT_UNREACHABLE("Badness!");
         return 0;
     }
 
@@ -2296,7 +2298,7 @@ PluginInstanceChild::WinlessHiddenFlashWndProc(HWND hWnd,
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
         GetProp(hWnd, kFlashThrottleProperty));
     if (!self) {
-        NS_NOTREACHED("Badness!");
+        MOZ_ASSERT_UNREACHABLE("Badness!");
         return 0;
     }
 
@@ -2330,7 +2332,7 @@ PluginInstanceChild::EnumThreadWindowsCallback(HWND hWnd,
 {
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(aParam);
     if (!self) {
-        NS_NOTREACHED("Enum befuddled!");
+        MOZ_ASSERT_UNREACHABLE("Enum befuddled!");
         return FALSE;
     }
 
@@ -2454,7 +2456,7 @@ PluginInstanceChild::AnswerSetPluginFocus()
     ::SetFocus(mPluginWindowHWND);
     return IPC_OK();
 #else
-    NS_NOTREACHED("PluginInstanceChild::AnswerSetPluginFocus not implemented!");
+    MOZ_ASSERT_UNREACHABLE("AnswerSetPluginFocus not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }
@@ -2474,7 +2476,7 @@ PluginInstanceChild::AnswerUpdateWindow()
     }
     return IPC_OK();
 #else
-    NS_NOTREACHED("PluginInstanceChild::AnswerUpdateWindow not implemented!");
+    MOZ_ASSERT_UNREACHABLE("AnswerUpdateWindow not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
 }

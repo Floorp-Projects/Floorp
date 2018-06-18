@@ -662,7 +662,7 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
       break;
     }
     default:
-      NS_NOTREACHED("Unexpected consume body type");
+      MOZ_ASSERT_UNREACHABLE("Unexpected consume body type");
   }
 
   error.WouldReportJSException();

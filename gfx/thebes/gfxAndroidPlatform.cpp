@@ -281,7 +281,7 @@ gfxAndroidPlatform::FontHintingEnabled()
     // Currently, we don't have any other targets, but if/when we do,
     // decide how to handle them here.
 
-    NS_NOTREACHED("oops, what platform is this?");
+    MOZ_ASSERT_UNREACHABLE("oops, what platform is this?");
     return gfxPlatform::FontHintingEnabled();
 }
 
@@ -297,7 +297,7 @@ gfxAndroidPlatform::RequiresLinearZoom()
     return true;
 #endif
 
-    NS_NOTREACHED("oops, what platform is this?");
+    MOZ_ASSERT_UNREACHABLE("oops, what platform is this?");
     return gfxPlatform::RequiresLinearZoom();
 }
 

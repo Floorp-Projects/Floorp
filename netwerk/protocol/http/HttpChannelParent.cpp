@@ -162,7 +162,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
     return ConnectChannel(cArgs.registrarId(), cArgs.shouldIntercept());
   }
   default:
-    NS_NOTREACHED("unknown open type");
+    MOZ_ASSERT_UNREACHABLE("unknown open type");
     return false;
   }
 }

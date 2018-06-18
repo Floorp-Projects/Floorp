@@ -62,7 +62,8 @@ LSPAnnotationGatherer::Run()
   if (SOCKET_ERROR != WSCEnumProtocols(nullptr, nullptr, &size, &err) ||
       err != WSAENOBUFS) {
     // Er, what?
-    NS_NOTREACHED("WSCEnumProtocols suceeded when it should have failed ...");
+    MOZ_ASSERT_UNREACHABLE("WSCEnumProtocols succeeded when it should have "
+                           "failed");
     return NS_ERROR_FAILURE;
   }
 

@@ -127,7 +127,7 @@ const nsStaticAtom* const nsDirectoryService::sAtoms =
 NS_IMETHODIMP
 nsDirectoryService::Init()
 {
-  NS_NOTREACHED("nsDirectoryService::Init() for internal use only!");
+  MOZ_ASSERT_UNREACHABLE("nsDirectoryService::Init() for internal use only!");
   return NS_OK;
 }
 

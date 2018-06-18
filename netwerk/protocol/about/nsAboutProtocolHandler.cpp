@@ -362,7 +362,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSimpleNestedURI)
 NS_IMETHODIMP
 nsNestedAboutURI::Read(nsIObjectInputStream *aStream)
 {
-    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -934,7 +934,7 @@ static float VerticalAlignFactor(nsIFrame *aFrame)
       return 1.0f;
 
     default:
-      NS_NOTREACHED("invalid vertical-align");
+      MOZ_ASSERT_UNREACHABLE("invalid vertical-align");
       return 0.5f;
   }
 }

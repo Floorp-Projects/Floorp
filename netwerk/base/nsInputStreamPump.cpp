@@ -437,7 +437,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             break;
         default:
             nextState = 0;
-            NS_NOTREACHED("Unknown enum value.");
+            MOZ_ASSERT_UNREACHABLE("Unknown enum value.");
             return NS_ERROR_UNEXPECTED;
         }
 
@@ -578,7 +578,7 @@ nsInputStreamPump::OnStateTransfer()
         int64_t offsetBefore;
         nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
         if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
-            NS_NOTREACHED("Tell failed on readable stream");
+            MOZ_ASSERT_UNREACHABLE("Tell failed on readable stream");
             offsetBefore = 0;
         }
 

@@ -142,8 +142,8 @@ EffectSet::GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType)
       return nsGkAtoms::animationEffectsForAfterProperty;
 
     default:
-      NS_NOTREACHED("Should not try to get animation effects for a pseudo "
-                    "other that :before or :after");
+      MOZ_ASSERT_UNREACHABLE("Should not try to get animation effects for "
+                             "a pseudo other that :before or :after");
       return nullptr;
   }
 }

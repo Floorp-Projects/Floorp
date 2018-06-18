@@ -506,7 +506,8 @@ protected:
     // The caller will be responsible for ownership of the data.
     virtual nsresult CopyFontTable(uint32_t aTableTag,
                                    nsTArray<uint8_t>& aBuffer) {
-        NS_NOTREACHED("forgot to override either GetFontTable or CopyFontTable?");
+        MOZ_ASSERT_UNREACHABLE("forgot to override either GetFontTable or "
+                               "CopyFontTable?");
         return NS_ERROR_FAILURE;
     }
 

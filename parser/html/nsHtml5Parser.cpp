@@ -134,7 +134,7 @@ nsHtml5Parser::GetStreamListener()
 NS_IMETHODIMP
 nsHtml5Parser::ContinueInterruptedParsing()
 {
-  NS_NOTREACHED("Don't call. For interface compat only.");
+  MOZ_ASSERT_UNREACHABLE("Don't call. For interface compat only.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -544,21 +544,21 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 NS_IMETHODIMP
 nsHtml5Parser::BuildModel()
 {
-  NS_NOTREACHED("Don't call this!");
+  MOZ_ASSERT_UNREACHABLE("Don't call this!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHtml5Parser::CancelParsingEvents()
 {
-  NS_NOTREACHED("Don't call this!");
+  MOZ_ASSERT_UNREACHABLE("Don't call this!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
 nsHtml5Parser::Reset()
 {
-  NS_NOTREACHED("Don't call this!");
+  MOZ_ASSERT_UNREACHABLE("Don't call this!");
 }
 
 bool

@@ -389,7 +389,7 @@ nsStyleBorder::GetImageOutset() const
         value = coord.GetFactorValue() * mComputedBorder.Side(s);
         break;
       default:
-        NS_NOTREACHED("unexpected CSS unit for image outset");
+        MOZ_ASSERT_UNREACHABLE("unexpected CSS unit for image outset");
         value = 0;
         break;
     }
@@ -989,7 +989,7 @@ StyleBasicShape::GetShapeTypeName() const
     case StyleBasicShapeType::Inset:
       return eCSSKeyword_inset;
   }
-  NS_NOTREACHED("unexpected type");
+  MOZ_ASSERT_UNREACHABLE("unexpected type");
   return eCSSKeyword_UNKNOWN;
 }
 
@@ -2438,7 +2438,7 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, int32_t aPercentScale)
       pixelValue = aCoord.GetFactorValue();
       break;
     default:
-      NS_NOTREACHED("unexpected unit for image crop rect");
+      MOZ_ASSERT_UNREACHABLE("unexpected unit for image crop rect");
       return 0;
   }
   MOZ_ASSERT(pixelValue >= 0, "we ensured non-negative while parsing");
@@ -2585,7 +2585,7 @@ nsStyleImage::IsComplete() const
              (status & imgIRequest::STATUS_FRAME_COMPLETE);
     }
     default:
-      NS_NOTREACHED("unexpected image type");
+      MOZ_ASSERT_UNREACHABLE("unexpected image type");
       return false;
   }
 }
@@ -2611,7 +2611,7 @@ nsStyleImage::IsLoaded() const
              (status & imgIRequest::STATUS_LOAD_COMPLETE);
     }
     default:
-      NS_NOTREACHED("unexpected image type");
+      MOZ_ASSERT_UNREACHABLE("unexpected image type");
       return false;
   }
 }
@@ -3059,7 +3059,7 @@ nsStyleImageLayers::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImag
              !(hasHeight && mWidthType == eLengthPercentage);
     }
   } else {
-    NS_NOTREACHED("missed an enum value");
+    MOZ_ASSERT_UNREACHABLE("missed an enum value");
   }
 
   // Passed the gauntlet: no dependency.

@@ -311,7 +311,7 @@ MultipartImage::Notify(int32_t aType, const nsIntRect* aRect /* = nullptr*/)
   } else if (aType == imgINotificationObserver::HAS_TRANSPARENCY) {
     mTracker->SyncNotifyProgress(FLAG_HAS_TRANSPARENCY);
   } else {
-    NS_NOTREACHED("Notification list should be exhaustive");
+    MOZ_ASSERT_UNREACHABLE("Notification list should be exhaustive");
   }
 }
 

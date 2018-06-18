@@ -1125,8 +1125,8 @@ CompositorBridgeParent::RecvRemotePluginsReady()
   }
   return IPC_OK();
 #else
-  NS_NOTREACHED("CompositorBridgeParent::RecvRemotePluginsReady calls "
-                "unexpected on this platform.");
+  MOZ_ASSERT_UNREACHABLE("CompositorBridgeParent::RecvRemotePluginsReady calls "
+                         "unexpected on this platform.");
   return IPC_FAIL_NO_REASON(this);
 #endif
 }

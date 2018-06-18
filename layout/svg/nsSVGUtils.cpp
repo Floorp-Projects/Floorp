@@ -308,7 +308,7 @@ nsSVGUtils::ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength)
                    aRect.Width(), aRect.Height()));
     break;
   default:
-    NS_NOTREACHED("unexpected ctx type");
+    MOZ_ASSERT_UNREACHABLE("unexpected ctx type");
     axis = 0.0f;
     break;
   }
@@ -1646,7 +1646,8 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
     }
     break;
   default:
-    NS_NOTREACHED("Unknown object opacity inheritance type for SVG glyph");
+    MOZ_ASSERT_UNREACHABLE("Unknown object opacity inheritance type for SVG "
+                           "glyph");
   }
   return opacity;
 }

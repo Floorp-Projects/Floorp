@@ -3270,7 +3270,7 @@ Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor)
 
   default:
     // switch not in sync with the optimization switch earlier in this function
-    NS_NOTREACHED("switch statements not in sync");
+    MOZ_ASSERT_UNREACHABLE("switch statements not in sync");
   }
 }
 
@@ -3384,7 +3384,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
 
   default:
     // switch not in sync with the optimization switch earlier in this function
-    NS_NOTREACHED("switch statements not in sync");
+    MOZ_ASSERT_UNREACHABLE("switch statements not in sync");
     return NS_ERROR_UNEXPECTED;
   }
 

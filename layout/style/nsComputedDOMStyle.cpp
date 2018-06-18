@@ -1420,7 +1420,7 @@ nsComputedDOMStyle::DoGetContent()
         break;
       case eStyleContentType_AltContent:
       default:
-        NS_NOTREACHED("unexpected type");
+        MOZ_ASSERT_UNREACHABLE("unexpected type");
         break;
     }
     valueList->AppendCSSValue(val.forget());
@@ -2381,7 +2381,7 @@ AppendCSSGradientToBoxPosition(const nsStyleGradient* aGradient,
   } else if (xValue == 1.0f) {
     aString.AppendLiteral("right");
   } else if (xValue != 0.5f) { // do not write "center" keyword
-    NS_NOTREACHED("invalid box position");
+    MOZ_ASSERT_UNREACHABLE("invalid box position");
   }
 
   if (xValue != 0.5f && yValue != 0.5f) {
@@ -2395,7 +2395,7 @@ AppendCSSGradientToBoxPosition(const nsStyleGradient* aGradient,
   } else if (yValue == 1.0f) {
     aString.AppendLiteral("bottom");
   } else if (yValue != 0.5f) { // do not write "center" keyword
-    NS_NOTREACHED("invalid box position");
+    MOZ_ASSERT_UNREACHABLE("invalid box position");
   }
 
 
@@ -2618,7 +2618,7 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
       SetValueToURLValue(aStyleImage.GetURLValue(), aValue);
       break;
     default:
-      NS_NOTREACHED("unexpected image type");
+      MOZ_ASSERT_UNREACHABLE("unexpected image type");
       break;
   }
 }
@@ -6530,7 +6530,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
       break;
     }
     default:
-      NS_NOTREACHED("unexpected type");
+      MOZ_ASSERT_UNREACHABLE("unexpected type");
   }
   shapeFunctionString.Append(')');
   RefPtr<nsROCSSPrimitiveValue> functionValue = new nsROCSSPrimitiveValue;

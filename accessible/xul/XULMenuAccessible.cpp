@@ -529,7 +529,7 @@ XULMenupopupAccessible::ContainerWidget() const
     menuPopupFrame = static_cast<nsMenuPopupFrame*>(menuParent);
   }
 
-  NS_NOTREACHED("Shouldn't be a real case.");
+  MOZ_ASSERT_UNREACHABLE("Shouldn't be a real case.");
   return nullptr;
 }
 

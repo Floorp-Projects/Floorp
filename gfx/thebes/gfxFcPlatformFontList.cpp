@@ -1845,7 +1845,7 @@ gfxFcPlatformFontList::GetFontList(nsAtom *aLangGroup,
              aGenericFamily.LowerCaseEqualsLiteral("fantasy"))
         serif = sansSerif = true;
     else
-        NS_NOTREACHED("unexpected CSS generic font family");
+        MOZ_ASSERT_UNREACHABLE("unexpected CSS generic font family");
 
     // The first in the list becomes the default in
     // FontBuilder.readFontSelection() if the preference-selected font is not

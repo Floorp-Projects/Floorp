@@ -320,7 +320,7 @@ nsAccUtils::ConvertToScreenCoords(int32_t aX, int32_t aY,
     }
 
     default:
-      NS_NOTREACHED("invalid coord type!");
+      MOZ_ASSERT_UNREACHABLE("invalid coord type!");
   }
 
   return coords;
@@ -352,7 +352,7 @@ nsAccUtils::ConvertScreenCoordsTo(int32_t *aX, int32_t *aY,
     }
 
     default:
-    NS_NOTREACHED("invalid coord type!");
+      MOZ_ASSERT_UNREACHABLE("invalid coord type!");
   }
 }
 

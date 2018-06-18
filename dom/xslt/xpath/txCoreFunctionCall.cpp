@@ -713,7 +713,7 @@ txCoreFunctionCall::isSensitiveTo(ContextSensitivity aContext)
         }
     }
 
-    NS_NOTREACHED("how'd we get here?");
+    MOZ_ASSERT_UNREACHABLE("how'd we get here?");
     return true;
 }
 

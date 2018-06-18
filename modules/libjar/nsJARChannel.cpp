@@ -931,7 +931,7 @@ nsJARChannel::Open(nsIInputStream **stream)
 
     // If mJarFile was not set by LookupFile, we can't open a channel.
     if (!mJarFile) {
-        NS_NOTREACHED("only file-backed jars are supported");
+        MOZ_ASSERT_UNREACHABLE("only file-backed jars are supported");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 

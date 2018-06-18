@@ -166,7 +166,7 @@ SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) cons
     case SVGLengthBinding::SVG_LENGTHTYPE_EXS:
       return SVGContentUtils::GetFontXHeight(const_cast<nsSVGElement*>(aElement));
     default:
-      NS_NOTREACHED("Unknown unit type");
+      MOZ_ASSERT_UNREACHABLE("Unknown unit type");
       return std::numeric_limits<float>::quiet_NaN();
   }
 }
@@ -210,7 +210,8 @@ GetUnitString(nsAString& unit, uint16_t unitType)
     }
     return;
   }
-  NS_NOTREACHED("Unknown unit type"); // Someone's using an SVGLength with an invalid unit?
+  MOZ_ASSERT_UNREACHABLE("Unknown unit type! Someone's using an SVGLength "
+                         "with an invalid unit?");
 }
 
 static uint16_t

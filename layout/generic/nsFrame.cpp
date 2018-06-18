@@ -1696,7 +1696,7 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
         aRadii[i] = 0;
       }
     } else {
-      NS_NOTREACHED("ComputeBorderRadii: bad unit");
+      MOZ_ASSERT_UNREACHABLE("ComputeBorderRadii: bad unit");
       aRadii[i] = 0;
     }
   }
@@ -6507,7 +6507,7 @@ nsIFrame::IsContentDisabled() const
 nsresult
 nsFrame::CharacterDataChanged(const CharacterDataChangeInfo&)
 {
-  NS_NOTREACHED("should only be called for text frames");
+  MOZ_ASSERT_UNREACHABLE("should only be called for text frames");
   return NS_OK;
 }
 
@@ -9084,7 +9084,7 @@ nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const
     offset += f->GetPosition();
   }
 
-  NS_NOTREACHED("No view on any parent?  How did that happen?");
+  MOZ_ASSERT_UNREACHABLE("No view on any parent?  How did that happen?");
   return nullptr;
 }
 
@@ -9092,8 +9092,8 @@ nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const
 /* virtual */ void
 nsFrame::ChildIsDirty(nsIFrame* aChild)
 {
-  NS_NOTREACHED("should never be called on a frame that doesn't inherit from "
-                "nsContainerFrame");
+  MOZ_ASSERT_UNREACHABLE("should never be called on a frame that doesn't "
+                         "inherit from nsContainerFrame");
 }
 
 
@@ -9903,7 +9903,7 @@ nsFrame::DoGetParentComputedStyle(nsIFrame** aProviderFrame) const
   // reached from the first-in-flow.
   nsPlaceholderFrame* placeholder = FirstInFlow()->GetPlaceholderFrame();
   if (!placeholder) {
-    NS_NOTREACHED("no placeholder frame for out-of-flow frame");
+    MOZ_ASSERT_UNREACHABLE("no placeholder frame for out-of-flow frame");
     *aProviderFrame = GetCorrectedParent(this);
     return *aProviderFrame ? (*aProviderFrame)->Style() : nullptr;
   }
@@ -10030,7 +10030,7 @@ ConvertSVGDominantBaselineToVerticalAlign(uint8_t aDominantBaseline)
     // css3-linebox now defines.
     return NS_STYLE_VERTICAL_ALIGN_BASELINE;
   default:
-    NS_NOTREACHED("unexpected aDominantBaseline value");
+    MOZ_ASSERT_UNREACHABLE("unexpected aDominantBaseline value");
     return NS_STYLE_VERTICAL_ALIGN_BASELINE;
   }
 }

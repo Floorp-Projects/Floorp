@@ -61,7 +61,7 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
     mFormsSheet = nullptr;
   }
   else {
-    NS_NOTREACHED("Unexpected observer topic.");
+    MOZ_ASSERT_UNREACHABLE("Unexpected observer topic.");
   }
   return NS_OK;
 }

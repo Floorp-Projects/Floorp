@@ -49,7 +49,7 @@ nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
       if (frame->IsTableWrapperFrame())
         return frame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
     }
-    NS_NOTREACHED("mtable wrapper without the real table frame");
+    MOZ_ASSERT_UNREACHABLE("mtable wrapper without the real table frame");
   }
 
   return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
