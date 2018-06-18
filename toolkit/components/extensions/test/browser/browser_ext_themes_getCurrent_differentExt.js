@@ -29,6 +29,9 @@ add_task(async function test_getcurrent() {
         });
       });
     },
+    manifest: {
+      permissions: ["theme"],
+    },
   });
 
   await extension.startup();
