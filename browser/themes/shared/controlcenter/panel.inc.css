@@ -135,11 +135,6 @@
 
 /* PREFERENCES BUTTON */
 
-.identity-popup-preferences-button-container {
-  display: flex;
-  justify-content: space-between;
-}
-
 .identity-popup-preferences-button {
   list-style-image: url(chrome://browser/skin/settings.svg);
   padding: 5px 8px !important;
