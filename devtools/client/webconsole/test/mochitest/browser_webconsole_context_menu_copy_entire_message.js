@@ -17,7 +17,7 @@ const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
 const TEST_URI = `data:text/html;charset=utf-8,<script>
   window.logStuff = function () {
-    console.log("simple text message");
+    console.log("simple " +  "text message");
     function wrapper() {
       console.trace();
     }
@@ -49,7 +49,7 @@ add_task(async function() {
 
   info("Check copied text for simple log message");
   let lines = clipboardText.split("\n");
-  ok(lines.length, 2, "There are 2 lines in the copied text");
+  is(lines.length, 2, "There are 2 lines in the copied text");
   is(lines[1], "", "The last line is an empty new line");
   ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
     "Log line has the right format:\n" + lines[0]);
@@ -61,7 +61,7 @@ add_task(async function() {
 
   info("Check copied text for stack trace message");
   lines = clipboardText.split("\n");
-  ok(lines.length, 4, "There are 4 lines in the copied text");
+  is(lines.length, 4, "There are 4 lines in the copied text");
   is(lines[3], "", "The last line is an empty new line");
   ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
     "Log line has the right format:\n" + lines[0]);
@@ -81,7 +81,7 @@ add_task(async function() {
 
   info("Check copied text for simple log message");
   lines = clipboardText.split("\n");
-  ok(lines.length, 2, "There are 2 lines in the copied text");
+  is(lines.length, 2, "There are 2 lines in the copied text");
   is(lines[1], "", "The last line is an empty new line");
   ok(LOG_FORMAT_WITHOUT_TIMESTAMP.test(lines[0]),
     "Log line has the right format:\n" + lines[0]);
@@ -93,7 +93,7 @@ add_task(async function() {
 
   info("Check copied text for stack trace message");
   lines = clipboardText.split("\n");
-  ok(lines.length, 4, "There are 4 lines in the copied text");
+  is(lines.length, 4, "There are 4 lines in the copied text");
   is(lines[3], "", "The last line is an empty new line");
   ok(LOG_FORMAT_WITHOUT_TIMESTAMP.test(lines[0]),
     "Log line has the right format:\n" + lines[0]);
