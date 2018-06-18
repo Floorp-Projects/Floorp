@@ -14,4 +14,6 @@ export TUP=${TOOLTOOL_DIR}/tup/tup
 
 ac_add_options --enable-build-backends=Tup
 ac_add_options --disable-js-shell
-ac_add_options --upload-tup-db
+# To enable the option to upload the tup database, uncomment the line below
+# ac_add_options --upload-tup-db
+
