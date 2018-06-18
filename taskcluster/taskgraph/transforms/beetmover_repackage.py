@@ -40,6 +40,7 @@ _WINDOWS_BUILD_PLATFORMS = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
+    "buildhub.json",
     "target.common.tests.zip",
     "target.cppunittest.tests.zip",
     "target.crashreporter-symbols.zip",
