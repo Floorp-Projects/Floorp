@@ -1957,8 +1957,8 @@ Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
     return;
   }
 
-  NS_ASSERTION(mParent,
-               "Called on accessible unbound from tree. Result can be wrong.");
+  MOZ_ASSERT(mParent,
+             "Called on accessible unbound from tree. Result can be wrong.");
 
   if (frame->IsBrFrame()) {
     aText += kForcedNewLineChar;
