@@ -1256,6 +1256,9 @@ MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
   : DOMEventTargetHelper(aOwnerWindow)
   , mAudioNodeOutput(0)
   , mState(RecordingState::Inactive)
+  , mAudioBitsPerSecond(0)
+  , mVideoBitsPerSecond(0)
+  , mBitsPerSecond(0)
 {
   MOZ_ASSERT(aOwnerWindow);
   mDOMStream = &aSourceMediaStream;
@@ -1269,6 +1272,9 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
   : DOMEventTargetHelper(aOwnerWindow)
   , mAudioNodeOutput(aSrcOutput)
   , mState(RecordingState::Inactive)
+  , mAudioBitsPerSecond(0)
+  , mVideoBitsPerSecond(0)
+  , mBitsPerSecond(0)
 {
   MOZ_ASSERT(aOwnerWindow);
 

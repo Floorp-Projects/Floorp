@@ -26,6 +26,7 @@ LazyLogModule gMP4MetadataLog("MP4Metadata");
 
 IndiceWrapper::IndiceWrapper(Mp4parseByteData& aIndice)
 {
+  mIndice.data = nullptr;
   mIndice.length = aIndice.length;
   mIndice.indices = aIndice.indices;
 }

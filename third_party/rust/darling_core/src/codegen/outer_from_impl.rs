@@ -37,6 +37,7 @@ fn compute_impl_bounds(bound: Path, mut generics: Generics) -> Generics {
     }
 
     let added_bound = TypeParamBound::Trait(TraitBound {
+            paren_token: None,
             modifier: TraitBoundModifier::None,
             lifetimes: None,
             path: bound,
