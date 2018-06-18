@@ -41,6 +41,8 @@ function pprint(ss, ...values) {
       return prettyElement(val);
     } else if (["[object Window]", "[object ChromeWindow]"].includes(proto)) {
       return prettyWindowGlobal(val);
+    } else if (proto == "[object Attr]") {
+      return prettyAttr(val);
     }
     return prettyObject(val);
   }
@@ -61,6 +63,10 @@ function pprint(ss, ...values) {
   function prettyWindowGlobal(win) {
     let proto = Object.prototype.toString.call(win);
     return `[${proto.substring(1, proto.length - 1)} ${win.location}]`;
+  }
+
+  function prettyAttr(obj) {
+    return `[object Attr ${obj.name}="${obj.value}"]`;
   }
 
   function prettyObject(obj) {
