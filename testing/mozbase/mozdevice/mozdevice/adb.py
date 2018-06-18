@@ -639,6 +639,13 @@ class ADBDevice(ADBCommand):
                 self._chmod_R = True
         self._logger.info("Native chmod -R support: %s" % self._chmod_R)
 
+        try:
+            cleared = self.shell_bool('logcat -P ""', timeout=timeout)
+        except ADBError:
+            cleared = False
+        if not cleared:
+            self._logger.info("Unable to turn off logcat chatty")
+
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
     def _get_device_serial(self, device):
