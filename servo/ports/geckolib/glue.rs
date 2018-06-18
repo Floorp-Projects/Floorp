@@ -167,14 +167,14 @@ use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
 
 trait ClosureHelper {
-    fn invoke(&self, decls: &PropertyDeclarationBlock);
+    fn invoke(&self);
 }
 
 impl ClosureHelper for DeclarationBlockMutationClosure {
     #[inline]
-    fn invoke(&self, decls: &PropertyDeclarationBlock) {
+    fn invoke(&self) {
         if let Some(function) = self.function.as_ref() {
-            unsafe { function(decls, self.data) };
+            unsafe { function(self.data) };
         }
     }
 }
@@ -1603,7 +1603,9 @@ pub extern "C" fn Servo_StyleSheet_GetSourceURL(
 }
 
 fn read_locked_arc<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
-    where Locked<T>: HasArcFFI, F: FnOnce(&T) -> R
+where
+    Locked<T>: HasArcFFI,
+    F: FnOnce(&T) -> R,
 {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -3412,15 +3414,6 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetCssText(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_UnlockedDeclarationBlock_GetCssText(
-    declarations: *const structs::RawServoUnlockedDeclarationBlock,
-    result: *mut nsAString,
-) {
-    (*declarations).to_css(&mut *result).unwrap()
-}
-
-
-#[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
     declarations: RawServoDeclarationBlockBorrowed,
     property_id: nsCSSPropertyID, buffer: *mut nsAString,
@@ -3567,9 +3560,10 @@ fn set_property(
         return false;
     }
 
+    before_change_closure.invoke();
+
     let importance = if is_important { Importance::Important } else { Importance::Normal };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        before_change_closure.invoke(&*decls);
         decls.extend(
             source_declarations.drain(),
             importance,
@@ -3647,11 +3641,22 @@ fn remove_property(
     property_id: PropertyId,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
+    let first_declaration =
+        read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
+            decls.first_declaration_to_remove(&property_id)
+        });
+
+    let first_declaration = match first_declaration {
+        Some(i) => i,
+        None => return false,
+    };
+
+    before_change_closure.invoke();
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        decls.remove_property(&property_id, |decls| {
-            before_change_closure.invoke(decls)
-        })
-    })
+        decls.remove_property(&property_id, first_declaration)
+    });
+
+    true
 }
 
 #[no_mangle]

@@ -83,19 +83,12 @@ typedef nsTArray<nsCSSPropertyID> RawGeckoCSSPropertyIDList;
 typedef mozilla::gfx::Float RawGeckoGfxMatrix4x4[16];
 typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
 
-// A struct which to be used as an opaque pointer to a DeclarationBlock that has
-// been read.
-//
-// This is effectively a *const PropertyDeclarationBlock in Rust.
-struct RawServoUnlockedDeclarationBlock;
-
 // A callback that can be sent via FFI which will be invoked _right before_
 // being mutated, and at most once.
 struct DeclarationBlockMutationClosure
 {
-  // The callback function, first argument is the unlocked servo declaration
-  // block, second is `data`.
-  void (*function)(const RawServoUnlockedDeclarationBlock*, void*) = nullptr;
+  // The callback function. The argument is `data`.
+  void (*function)(void*) = nullptr;
   void* data = nullptr;
 };
 
