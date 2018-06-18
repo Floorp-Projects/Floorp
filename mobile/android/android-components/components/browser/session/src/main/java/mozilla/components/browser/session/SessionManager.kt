@@ -38,9 +38,15 @@ class SessionManager(
         }
 
     /**
-     * Gets all sessions.
+     * Returns a list of active sessions and filters out sessions used for CustomTabs.
      */
     val sessions: List<Session>
+        get() = synchronized(values) { values.filter { !it.isCustomTabSession() } }
+
+    /**
+     * Returns a list of all active sessions.
+     */
+    val all: List<Session>
         get() = synchronized(values) { values.toList() }
 
     /**

@@ -32,6 +32,9 @@ class SessionUseCasesTest {
     fun testLoadUrl() {
         useCases.loadUrl.invoke("http://mozilla.org")
         verify(selectedEngineSession).loadUrl("http://mozilla.org")
+
+        useCases.loadUrl.invoke("http://getpocket.com", selectedSession)
+        verify(selectedEngineSession).loadUrl("http://getpocket.com")
     }
 
     @Test

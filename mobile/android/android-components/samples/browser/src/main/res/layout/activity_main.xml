@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".BrowserActivity">
 
     <mozilla.components.browser.toolbar.BrowserToolbar
         android:id="@+id/toolbar"

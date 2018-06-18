@@ -12,15 +12,14 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.support.utils.SafeIntent
+import org.mozilla.samples.browser.ext.components
 
-class MainActivity : AppCompatActivity() {
-    private var sessionFeature: SessionFeature? = null
-    private var toolbarFeature: ToolbarFeature? = null
-
-    private val components by lazy {
-        Components(applicationContext)
-    }
+open class BrowserActivity : AppCompatActivity() {
+    private lateinit var sessionFeature: SessionFeature
+    private lateinit var toolbarFeature: ToolbarFeature
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,40 +27,42 @@ class MainActivity : AppCompatActivity() {
 
         toolbar.setMenuBuilder(components.menuBuilder)
 
+        val sessionId = SafeIntent(intent).getStringExtra(SessionIntentProcessor.ACTIVE_SESSION_ID)
+
         sessionFeature = SessionFeature(
             components.sessionManager,
             components.sessionUseCases,
             engineView,
-            components.sessionStorage)
+            components.sessionStorage,
+            sessionId)
 
         toolbarFeature = ToolbarFeature(
             toolbar,
             components.sessionManager,
             components.sessionUseCases.loadUrl,
-            components.defaultSearchUseCase)
-
-        components.sessionIntentProcessor.process(intent)
+            components.defaultSearchUseCase,
+            sessionId)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
 
-        sessionFeature?.start()
-        toolbarFeature?.start()
+        sessionFeature.start()
+        toolbarFeature.start()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
 
-        sessionFeature?.stop()
-        toolbarFeature?.stop()
+        sessionFeature.stop()
+        toolbarFeature.stop()
     }
 
     override fun onBackPressed() {
-        if (toolbarFeature?.handleBackPressed() == true)
+        if (toolbarFeature.handleBackPressed())
             return
 
-        if (sessionFeature?.handleBackPressed() == true)
+        if (sessionFeature.handleBackPressed())
             return
 
         super.onBackPressed()

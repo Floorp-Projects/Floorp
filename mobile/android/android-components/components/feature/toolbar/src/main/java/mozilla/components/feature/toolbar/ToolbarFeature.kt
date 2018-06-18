@@ -21,9 +21,10 @@ class ToolbarFeature(
     val toolbar: Toolbar,
     sessionManager: SessionManager,
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
-    searchUseCase: SearchUseCase? = null
+    searchUseCase: SearchUseCase? = null,
+    sessionId: String? = null
 ) {
-    private val presenter = ToolbarPresenter(toolbar, sessionManager)
+    private val presenter = ToolbarPresenter(toolbar, sessionManager, sessionId)
     private val interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
 
     /**

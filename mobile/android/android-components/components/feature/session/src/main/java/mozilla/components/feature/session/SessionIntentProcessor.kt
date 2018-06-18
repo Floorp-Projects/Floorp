@@ -6,6 +6,10 @@ package mozilla.components.feature.session
 
 import android.content.Intent
 import android.text.TextUtils
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.support.utils.SafeIntent
 
 typealias IntentHandler = (Intent) -> Boolean
 
@@ -14,17 +18,31 @@ typealias IntentHandler = (Intent) -> Boolean
  */
 class SessionIntentProcessor(
     private val sessionUseCases: SessionUseCases,
+    private val sessionManager: SessionManager,
     useDefaultHandlers: Boolean = true
 ) {
     private val defaultActionViewHandler = { intent: Intent ->
-        val url = intent.dataString
-        if (TextUtils.isEmpty(url)) {
-            false
-        } else {
-            // TODO switch to loadUrlInNewTab
-            // https://github.com/mozilla-mobile/android-components/issues/136
-            sessionUseCases.loadUrl.invoke(url)
-            true
+        val safeIntent = SafeIntent(intent)
+        val url = safeIntent.dataString ?: ""
+
+        when {
+            TextUtils.isEmpty(url) -> false
+
+            CustomTabConfig.isCustomTabIntent(safeIntent) -> {
+                val session = Session(url).apply {
+                    this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent)
+                }
+                sessionManager.add(session)
+                sessionUseCases.loadUrl.invoke(url, session)
+                intent.putExtra(ACTIVE_SESSION_ID, session.id)
+                true
+            }
+
+            else -> {
+                // TODO support loadUrlInNewTab: https://github.com/mozilla-mobile/android-components/issues/136
+                sessionUseCases.loadUrl.invoke(url)
+                true
+            }
         }
     }
 
@@ -62,5 +80,9 @@ class SessionIntentProcessor(
      */
     fun unregisterHandler(action: String) {
         handlers.remove(action)
+    }
+
+    companion object {
+        public const val ACTIVE_SESSION_ID = "activeSessionId"
     }
 }

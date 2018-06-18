@@ -7,6 +7,7 @@ package mozilla.components.browser.session.storage
 import android.util.AtomicFile
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import org.json.JSONException
@@ -70,6 +71,35 @@ class DefaultSessionStorageTest {
         val restoredEngineSession = restoredSessionManager.sessions.first().engineSessionHolder.engineSession
         assertNotNull(restoredEngineSession)
         verify(restoredEngineSession)!!.restoreState(engineSessionState.filter { it.key != "k3" })
+    }
+
+    @Test
+    fun testPersistIgnoresCustomTabSessions() {
+        val session = Session("http://mozilla.org")
+        session.customTabConfig = mock(CustomTabConfig::class.java)
+        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+
+        val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
+
+        val engine = mock(Engine::class.java)
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+
+        val sessionManager = SessionManager(engine)
+        sessionManager.add(session, true, engineSession)
+
+        // Persist current sessions
+        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
+        val persisted = storage.persist(sessionManager)
+        assertTrue(persisted)
+
+        // Restore session using a fresh SessionManager
+        val restoredSessionManager = SessionManager(engine)
+        val restored = storage.restore(engine, restoredSessionManager)
+        assertTrue(restored)
+
+        // Nothing to restore as CustomTab sessions should not be persisted
+        assertEquals(0, restoredSessionManager.sessions.size)
     }
 
     @Test

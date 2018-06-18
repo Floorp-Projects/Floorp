@@ -18,12 +18,14 @@ class SessionUseCases(
         private val sessionManager: SessionManager
     ) {
         /**
-         * Loads the provided URL using the currently selected session.
+         * Loads the provided URL using the provided session (or the currently
+         * selected session if none is provided).
          *
          * @param url url to load.
+         * @param session the session for which the URL should be loaded.
          */
-        fun invoke(url: String) {
-            sessionManager.getOrCreateEngineSession().loadUrl(url)
+        fun invoke(url: String, session: Session = sessionManager.selectedSession) {
+            sessionManager.getOrCreateEngineSession(session).loadUrl(url)
         }
     }
 

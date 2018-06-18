@@ -84,7 +84,6 @@ class DefaultSessionStorage(
                     val jsonSession = jsonRoot.getJSONObject(it)
                     val session = deserializeSession(it, jsonSession.getJSONObject(SESSION_KEY))
                     val engineSession = deserializeEngineSession(engine, jsonSession.getJSONObject(ENGINE_SESSION_KEY))
-
                     sessionManager.add(session, engineSession = engineSession)
                 }
 
@@ -110,12 +109,12 @@ class DefaultSessionStorage(
             json.put(VERSION_KEY, VERSION)
             json.put(SELECTED_SESSION_KEY, sessionManager.selectedSession.id)
 
-            sessionManager.sessions.forEach({ session ->
+            sessionManager.sessions.forEach { session ->
                 val sessionJson = JSONObject()
                 sessionJson.put(SESSION_KEY, serializeSession(session))
                 sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(sessionManager.getEngineSession(session)))
                 json.put(session.id, sessionJson)
-            })
+            }
 
             file = getFile()
             outputStream = file.startWrite()

@@ -15,9 +15,10 @@ class SessionFeature(
     private val sessionManager: SessionManager,
     private val sessionUseCases: SessionUseCases,
     engineView: EngineView,
-    private val sessionStorage: SessionStorage? = null
+    private val sessionStorage: SessionStorage? = null,
+    sessionId: String? = null
 ) {
-    internal val presenter = EngineViewPresenter(sessionManager, engineView)
+    internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
 
     /**
      * Start feature: App is in the foreground.

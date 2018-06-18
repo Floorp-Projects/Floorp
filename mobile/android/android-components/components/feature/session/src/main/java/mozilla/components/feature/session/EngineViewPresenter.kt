@@ -13,14 +13,16 @@ import mozilla.components.concept.engine.EngineView
  */
 class EngineViewPresenter(
     private val sessionManager: SessionManager,
-    private val engineView: EngineView
+    private val engineView: EngineView,
+    private val sessionId: String? = null
 ) : SessionManager.Observer {
 
     /**
      * Start presenter and display data in view.
      */
     fun start() {
-        renderSession(sessionManager.selectedSession)
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) } ?: sessionManager.selectedSession
+        renderSession(session)
 
         sessionManager.register(this)
     }

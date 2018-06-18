@@ -14,19 +14,23 @@ import mozilla.components.browser.session.SessionManager
  */
 class ToolbarPresenter(
     private val toolbar: Toolbar,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val sessionId: String? = null
 ) : SessionManager.Observer, Session.Observer {
-    var session: Session = sessionManager.selectedSession
+    lateinit var activeSession: Session
 
     /**
      * Start presenter: Display data in toolbar.
      */
     fun start() {
-        session = sessionManager.selectedSession
+        activeSession = sessionId?.let {
+            sessionManager.findSessionById(sessionId)
+        } ?: run {
+            sessionManager.register(this)
+            sessionManager.selectedSession
+        }
 
-        sessionManager.register(this)
-        session.register(this)
-
+        activeSession.register(this)
         initializeView()
     }
 
@@ -35,41 +39,40 @@ class ToolbarPresenter(
      */
     fun stop() {
         sessionManager.unregister(this)
-        session.unregister(this)
+        activeSession.unregister(this)
     }
 
     /**
      * A new session has been selected: Update toolbar to display data of new session.
      */
     override fun onSessionSelected(session: Session) {
-        this.session.unregister(this)
+        activeSession.unregister(this)
 
-        this.session = session
+        activeSession = session
         session.register(this)
 
         initializeView()
     }
 
     private fun initializeView() {
-        toolbar.url = session.url
+        toolbar.url = activeSession.url
+
+        activeSession.customTabConfig?.toolbarColor?.let {
+            toolbar.asView().setBackgroundColor(it)
+        }
+        // TODO Apply remaining configurations: https://github.com/mozilla-mobile/android-components/issues/306
     }
 
     override fun onUrlChanged() {
-        toolbar.url = session.url
-        toolbar.setSearchTerms(session.searchTerms)
+        toolbar.url = activeSession.url
+        toolbar.setSearchTerms(activeSession.searchTerms)
     }
 
     override fun onProgress() {
-        toolbar.displayProgress(session.progress)
+        toolbar.displayProgress(activeSession.progress)
     }
 
     override fun onSearch() {
-        toolbar.setSearchTerms(session.searchTerms)
+        toolbar.setSearchTerms(activeSession.searchTerms)
     }
-
-    override fun onLoadingStateChanged() { }
-
-    override fun onNavigationStateChanged() { /* TODO */ }
-
-    override fun onSecurityChanged() { /* TODO */ }
 }

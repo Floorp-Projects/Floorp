@@ -71,6 +71,11 @@ interface Toolbar {
     fun addNavigationAction(action: Action)
 
     /**
+     * Casts this toolbar to an Android View object.
+     */
+    fun asView(): View = this as View
+
+    /**
      * Generic interface for actions to be added to the toolbar.
      */
     interface Action {

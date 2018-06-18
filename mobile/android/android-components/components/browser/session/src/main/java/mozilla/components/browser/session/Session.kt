@@ -106,6 +106,11 @@ class Session(
     }
 
     /**
+     * Returns whether or not this session is used for a Custom Tab.
+     */
+    fun isCustomTabSession() = customTabConfig != null
+
+    /**
      * Helper method to notify observers.
      */
     private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) {

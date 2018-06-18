@@ -23,10 +23,10 @@ import mozilla.components.feature.session.SessionUseCases
  * Helper class for lazily instantiating components needed by the application.
  */
 class Components(private val applicationContext: Context) {
+    // Engine
     val engine: Engine by lazy { EngineProvider.createEngine(applicationContext) }
 
     // Session
-
     val sessionStorage by lazy { DefaultSessionStorage(applicationContext) }
 
     val sessionManager by lazy {
@@ -41,7 +41,7 @@ class Components(private val applicationContext: Context) {
     }
 
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
-    val sessionIntentProcessor by lazy { SessionIntentProcessor(sessionUseCases) }
+    val sessionIntentProcessor by lazy { SessionIntentProcessor(sessionUseCases, sessionManager) }
 
     // Search
     private val searchEngineManager by lazy {
