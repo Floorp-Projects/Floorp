@@ -102,6 +102,11 @@ public:
     return 0;
   }
 
+  size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override
+  {
+    return GetAllocationSize();
+  }
+
   virtual uint64_t GetSerialNumber() const override { return mSerialNumber; }
 
   virtual already_AddRefed<BlobImpl>

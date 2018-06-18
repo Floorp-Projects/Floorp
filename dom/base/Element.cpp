@@ -1994,16 +1994,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   if (aDeep) {
-    // Do the kids. Don't call GetChildCount() here since that'll force
-    // XUL to generate template children, which there is no need for since
-    // all we're going to do is unbind them anyway.
-    uint32_t i, n = mAttrsAndChildren.ChildCount();
-
-    for (i = 0; i < n; ++i) {
+    for (nsIContent* child = GetFirstChild(); child;
+         child = child->GetNextSibling()) {
       // Note that we pass false for aNullParent here, since we don't want
       // the kids to forget us.  We _do_ want them to forget their binding
       // parent, though, since this only walks non-anonymous kids.
-      mAttrsAndChildren.ChildAt(i)->UnbindFromTree(true, false);
+      child->UnbindFromTree(true, false);
     }
   }
 

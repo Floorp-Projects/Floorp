@@ -13,7 +13,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/File.h"

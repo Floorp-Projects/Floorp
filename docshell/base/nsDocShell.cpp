@@ -387,6 +387,9 @@ nsDocShell::nsDocShell()
   , mHasLoadedNonBlankURI(false)
   , mBlankTiming(false)
 {
+  mHistoryID.m0 = 0;
+  mHistoryID.m1 = 0;
+  mHistoryID.m2 = 0;
   AssertOriginAttributesMatchPrivateBrowsing();
 
   nsContentUtils::GenerateUUIDInPlace(mHistoryID);

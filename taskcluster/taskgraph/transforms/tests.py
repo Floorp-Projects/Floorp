@@ -595,6 +595,7 @@ def set_tier(config, tests):
                                          'windows10-64-pgo/opt',
                                          'windows10-64-devedition/opt',
                                          'windows10-64-nightly/opt',
+                                         'windows10-64-asan/opt',
                                          'macosx64/opt',
                                          'macosx64/debug',
                                          'macosx64-nightly/opt',
