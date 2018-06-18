@@ -6,27 +6,24 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
    - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.beetmover_repackage_l10n:transforms
-   - taskgraph.transforms.beetmover_repackage:transforms
+   - taskgraph.transforms.repackage_signing:transforms
+   - taskgraph.transforms.repackage_routes:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - repackage-signing
-   - repackage-signing-l10n
-   - partials-signing
+   - repackage-l10n
 
 only-for-build-platforms:
    - linux-nightly/opt
-   - linux64-nightly/opt
-   - macosx64-nightly/opt
-   - win32-nightly/opt
-   - win64-nightly/opt
    - linux-devedition-nightly/opt
+   - linux64-nightly/opt
    - linux64-devedition-nightly/opt
-   - macosx64-devedition-nightly/opt
-   - win32-devedition-nightly/opt
-   - win64-devedition-nightly/opt
    - linux64-asan-reporter-nightly/opt
-
-job-template:
-   shipping-phase: promote
+   - macosx64-nightly/opt
+   - macosx64-devedition-nightly/opt
+   - win32-nightly/opt
+   - win32-devedition-nightly/opt
+   - win32/opt
+   - win64-nightly/opt
+   - win64-devedition-nightly/opt
+   - win64/opt
