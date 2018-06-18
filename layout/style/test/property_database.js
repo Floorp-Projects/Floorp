@@ -1186,7 +1186,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0s", "0ms" ],
-    other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s"],
+    other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s", "calc(1s + 2ms)" ],
     invalid_values: [ "0", "0px" ]
   },
   "animation-direction": {
@@ -1202,7 +1202,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0s", "0ms" ],
-    other_values: [ "1s", "250ms", "1s, 250ms, 2.3s"],
+    other_values: [ "1s", "250ms", "1s, 250ms, 2.3s", "calc(1s + 2ms)" ],
     invalid_values: [ "0", "0px", "-1ms", "-2s" ]
   },
   "animation-fill-mode": {
@@ -1218,7 +1218,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "1" ],
-    other_values: [ "infinite", "0", "0.5", "7.75", "-0.0", "1, 2, 3", "infinite, 2", "1, infinite" ],
+    other_values: [ "infinite", "0", "0.5", "7.75", "-0.0", "1, 2, 3", "infinite, 2", "1, infinite", "calc(1 + 2.0)" ],
     // negatives forbidden per
     // http://lists.w3.org/Archives/Public/www-style/2011Mar/0355.html
     invalid_values: [ "none", "-1", "-0.5", "-1, infinite", "infinite, -3" ]
@@ -1244,7 +1244,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "ease" ],
-    other_values: [ "cubic-bezier(0.25, 0.1, 0.25, 1.0)", "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)" ],
+    other_values: [ "cubic-bezier(0.25, 0.1, 0.25, 1.0)", "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)", "steps(calc(2 + 1))" ],
     invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)", "steps(2, step-end)", "steps(0)", "steps(-2)", "steps(0, step-end, 1)" ]
   },
   "-moz-appearance": {

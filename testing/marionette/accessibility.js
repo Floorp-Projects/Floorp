@@ -6,12 +6,11 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 
-const logger = Log.repository.getLogger("Marionette");
+const {ElementNotAccessibleError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 
-const {ElementNotAccessibleError} =
-    ChromeUtils.import("chrome://marionette/content/error.js", {});
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 XPCOMUtils.defineLazyGetter(this, "service", () => {
   try {
