@@ -357,7 +357,7 @@ Accessible::VisibilityState() const
       if (deckFrame->GetContent()->IsXULElement(nsGkAtoms::tabpanels))
         return states::OFFSCREEN;
 
-      NS_NOTREACHED("Children of not selected deck panel are not accessible.");
+      MOZ_ASSERT_UNREACHABLE("Children of not selected deck panel are not accessible.");
       return states::INVISIBLE;
     }
 
