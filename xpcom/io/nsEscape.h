@@ -93,7 +93,8 @@ enum EscapeMask {
                                     * ascii octets (<= 0x7F) to be skipped when unescaping */
   esc_AlwaysCopy     = 1u << 13, /* copy input to result buf even if escaping is unnecessary */
   esc_Colon          = 1u << 14, /* forces escape of colon */
-  esc_SkipControl    = 1u << 15  /* skips C0 and DEL from unescaping */
+  esc_SkipControl    = 1u << 15, /* skips C0 and DEL from unescaping */
+  esc_Spaces         = 1u << 16  /* forces escape of spaces */
 };
 
 /**

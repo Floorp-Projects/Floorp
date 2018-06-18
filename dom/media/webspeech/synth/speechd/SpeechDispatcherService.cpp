@@ -393,7 +393,7 @@ SpeechDispatcherService::Setup()
 
       uri.AssignLiteral(URI_PREFIX);
       nsAutoCString name;
-      NS_EscapeURL(list[i]->name, -1, esc_OnlyNonASCII | esc_AlwaysCopy, name);
+      NS_EscapeURL(list[i]->name, -1, esc_OnlyNonASCII | esc_Spaces | esc_AlwaysCopy, name);
       uri.Append(NS_ConvertUTF8toUTF16(name));;
       uri.AppendLiteral("?");
 

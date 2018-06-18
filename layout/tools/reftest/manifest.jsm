@@ -667,9 +667,9 @@ function AddTestItem(aTest, aFilter) {
     var globalFilter = aFilter[0];
     var manifestFilter = aFilter[1];
     var invertManifest = aFilter[2];
-    if ((globalFilter && !globalFilter.test(url1.spec)) ||
-        (manifestFilter &&
-         !(invertManifest ^ manifestFilter.test(url1.spec))))
+    if (globalFilter && !globalFilter.test(url1.spec))
+        return;
+    if (manifestFilter && !(invertManifest ^ manifestFilter.test(url1.spec)))
         return;
     if (g.focusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
         !aTest.needsFocus)
