@@ -23,5 +23,5 @@ this.callBackground = function callBackground(funcName, ...args) {
       throw exc;
     }
   });
-}
+};
 null;

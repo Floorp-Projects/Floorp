@@ -6,7 +6,7 @@ this.thumbnailGenerator = (function () {let exports={}; // This is used in addon
 // Resize down 1/2 at a time produces better image quality.
 // Not quite as good as using a third-party filter (which will be
 // slower), but good enough.
-const maxResizeScaleFactor = 0.5
+const maxResizeScaleFactor = 0.5;
 
 // The shot will be scaled or cropped down to 210px on x, and cropped or
 // scaled down to a maximum of 280px on y.
@@ -49,7 +49,7 @@ function getThumbnailDimensions(imageWidth, imageHeight) {
     height: thumbnailImageHeight,
     scaledX,
     scaledY
-  }
+  };
 }
 
 /**
@@ -108,7 +108,7 @@ function createThumbnail(dataUrl, imageWidth, imageHeight, urlOrBlob) {
             resolve(blob);
           });
         } else {
-          resolve(thumbnailCanvas.toDataURL("image/png"))
+          resolve(thumbnailCanvas.toDataURL("image/png"));
         }
         return;
       }
@@ -116,7 +116,7 @@ function createThumbnail(dataUrl, imageWidth, imageHeight, urlOrBlob) {
       srcWidth = destWidth;
       srcHeight = destHeight;
       thumbnailImage.src = thumbnailCanvas.toDataURL();
-    }
+    };
     thumbnailImage.src = dataUrl;
   });
 }
