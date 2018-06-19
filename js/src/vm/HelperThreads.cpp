@@ -2099,9 +2099,12 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
     currentTask.emplace(HelperThreadState().parseWorklist(locked).popCopy());
     ParseTask* task = parseTask();
 
+    JSRuntime* runtime = task->parseGlobal->runtimeFromAnyThread();
+    runtime->incOffThreadParsesRunning();
+
     {
         AutoUnlockHelperThreadState unlock(locked);
-        AutoSetContextRuntime ascr(task->parseGlobal->runtimeFromAnyThread());
+        AutoSetContextRuntime ascr(runtime);
 
         JSContext* cx = TlsContext.get();
 
@@ -2124,6 +2127,8 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
     // FinishOffThreadScript will need to be called on the script to
     // migrate it into the correct compartment.
     HelperThreadState().parseFinishedList(locked).insertBack(task);
+
+    runtime->decOffThreadParsesRunning();
 
     currentTask.reset();
 
@@ -2267,7 +2272,7 @@ js::StartOffThreadPromiseHelperTask(PromiseHelperTask* task)
 }
 
 void
-GlobalHelperThreadState::trace(JSTracer* trc, gc::AutoTraceSession& session)
+GlobalHelperThreadState::trace(JSTracer* trc)
 {
     AutoLockHelperThreadState lock;
     for (auto builder : ionWorklist(lock))
