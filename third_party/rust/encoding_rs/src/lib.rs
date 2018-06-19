@@ -8,7 +8,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown, inline_always, new_ret_no_self))]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.0")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.1")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -220,18 +220,20 @@
 //! multiplication operations.
 //!
 //! Additionally, performance is a non-goal for the ASCII-incompatible
-//! ISO-2022-JP and UTF-16 encodings, which are rarely used on the Web. For
-//! clarity, this means that performance is a non-goal for UTF-16 as used on
-//! the wire as an interchange encoding (UTF-16 on the `[u8]` side of the API).
-//! Good performance for UTF-16 used as an in-RAM Unicode representation
-//! (UTF-16 the `[u16]` side of the API) is a goal.
+//! ISO-2022-JP encoding, which are rarely used on the Web. Instead of
+//! performance, the decoder for ISO-2022-JP optimizes for ease/clarity
+//! of implementation.
 //!
 //! Despite the focus on the Web, encoding_rs may well be useful for decoding
 //! email, although you'll need to implement UTF-7 decoding and label handling
 //! by other means. (Due to the Web focus, patches to add UTF-7 are unwelcome
 //! in encoding_rs itself.) Also, despite the browser focus, the hope is that
 //! non-browser applications that wish to consume Web content or submit Web
-//! forms in a Web-compatible way will find encoding_rs useful.
+//! forms in a Web-compatible way will find encoding_rs useful. While
+//! encoding_rs does not try to match Windows behavior, many of the encodings
+//! are close enough to legacy encodings implemented by Windows that
+//! applications that need to consume data in legacy Windows encodins may
+//! find encoding_rs useful.
 //!
 //! # Streaming & Non-Streaming; Rust & C/C++
 //!
