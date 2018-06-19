@@ -1706,7 +1706,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     throw new RuntimeException(e);
                 }
                 final AssertCalled ac = getAssertCalled(callbackMethod, callback);
-                if (ac != null && ac.value()) {
+                if (ac != null && ac.value() && ac.count() != 0) {
                     methodCalls.add(new MethodCall(session, method,
                                                    ac, /* target */ null));
                 }
