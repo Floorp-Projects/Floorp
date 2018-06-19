@@ -6,6 +6,7 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/Move.h"
 #include "nsComponentManagerUtils.h"
+#include "nsComposeTxtSrvFilter.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -16,13 +17,12 @@
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
-#include "nsITextServicesFilter.h"
 #include "nsRange.h"
 
 using namespace mozilla;
 
 //------------------------------------------------------------
-nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFilter) :
+nsFilteredContentIterator::nsFilteredContentIterator(nsComposeTxtSrvFilter* aFilter) :
   mFilter(aFilter),
   mDidSkip(false),
   mIsOutOfRange(false),
