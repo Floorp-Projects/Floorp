@@ -2968,7 +2968,7 @@ GCRuntime::updateZonePointersToRelocatedCells(Zone* zone)
  * Update runtime-wide pointers to relocated cells.
  */
 void
-GCRuntime::updateRuntimePointersToRelocatedCells(AutoTraceSession& session)
+GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session)
 {
     MOZ_ASSERT(!rt->isBeingDestroyed());
 
@@ -4383,7 +4383,7 @@ BufferGrayRoots(GCParallelTask* task)
 }
 
 bool
-GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session)
+GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoGCSession& session)
 {
 #ifdef DEBUG
     if (fullCompartmentChecks)
@@ -4663,7 +4663,7 @@ class js::gc::MarkingValidator
   public:
     explicit MarkingValidator(GCRuntime* gc);
     ~MarkingValidator();
-    void nonIncrementalMark(AutoTraceSession& session);
+    void nonIncrementalMark(AutoGCSession& session);
     void validate();
 
   private:
@@ -4689,7 +4689,7 @@ js::gc::MarkingValidator::~MarkingValidator()
 }
 
 void
-js::gc::MarkingValidator::nonIncrementalMark(AutoTraceSession& session)
+js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
 {
     /*
      * Perform a non-incremental mark for all collecting zones and record
@@ -4905,7 +4905,7 @@ js::gc::MarkingValidator::validate()
 #endif // JS_GC_ZEAL
 
 void
-GCRuntime::computeNonIncrementalMarkingForValidation(AutoTraceSession& session)
+GCRuntime::computeNonIncrementalMarkingForValidation(AutoGCSession& session)
 {
 #ifdef JS_GC_ZEAL
     MOZ_ASSERT(!markingValidator);
@@ -5881,7 +5881,7 @@ GCRuntime::endSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 }
 
 void
-GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoTraceSession& session)
+GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoGCSession& session)
 {
     /*
      * Sweep phase.
@@ -6756,7 +6756,7 @@ GCRuntime::beginCompactPhase()
 
 IncrementalProgress
 GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
-                        AutoTraceSession& session)
+                        AutoGCSession& session)
 {
     assertBackgroundSweepingFinished();
     MOZ_ASSERT(startedCompacting);
@@ -6867,7 +6867,7 @@ HeapStateToLabel(JS::HeapState heapState)
 }
 
 /* Start a new heap session. */
-AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
+AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
   : runtime(rt),
     prevState(rt->heapState_),
     profilingStackFrame(rt->mainContextFromOwnThread(), HeapStateToLabel(heapState),
@@ -6878,14 +6878,10 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery().isEmpty());
 
-    // If we are not performing a collection, take the exclusive access lock.
-    if (heapState == JS::HeapState::Tracing)
-        maybeLock.emplace(rt);
-
     rt->heapState_ = heapState;
 }
 
-AutoTraceSession::~AutoTraceSession()
+AutoHeapSession::~AutoHeapSession()
 {
     MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     runtime->heapState_ = prevState;
@@ -6898,7 +6894,7 @@ JS::RuntimeHeapState()
 }
 
 GCRuntime::IncrementalResult
-GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoTraceSession& session)
+GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
 {
     MOZ_ASSERT(reason != gc::AbortReason::None);
 
@@ -7090,7 +7086,7 @@ ShouldCleanUpEverything(JS::gcreason::Reason reason, JSGCInvocationKind gckind)
 
 void
 GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
-                                   AutoTraceSession& session)
+                                   AutoGCSession& session)
 {
     AutoDisableBarriers disableBarriers(rt);
 
@@ -7319,7 +7315,7 @@ CheckZoneIsScheduled(Zone* zone, JS::gcreason::Reason reason, const char* trigge
 
 GCRuntime::IncrementalResult
 GCRuntime::budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason reason,
-                               SliceBudget& budget, AutoTraceSession& session)
+                               SliceBudget& budget, AutoGCSession& session)
 {
     if (nonincrementalByAPI) {
         stats().nonincremental(gc::AbortReason::NonIncrementalRequested);
@@ -7486,7 +7482,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
 
     minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
 
-    AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
+    AutoGCSession session(rt, JS::HeapState::MajorCollecting);
 
     majorGCTriggerReason = JS::gcreason::NO_REASON;
 
@@ -7964,11 +7960,6 @@ js::gc::FinishGC(JSContext* cx)
 
     cx->nursery().waitBackgroundFreeEnd();
 }
-
-AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx)
-  : finishGC(cx),
-    session(cx->runtime())
-{}
 
 Realm*
 js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& options)

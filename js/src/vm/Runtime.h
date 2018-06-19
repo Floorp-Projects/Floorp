@@ -61,6 +61,10 @@ class EnterDebuggeeNoExecute;
 class TraceLoggerThread;
 #endif
 
+namespace gc {
+class AutoHeapSession;
+}
+
 } // namespace js
 
 struct DtoaState;
@@ -958,7 +962,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
     // For inherited heap state accessors.
-    friend class js::gc::AutoTraceSession;
+    friend class js::gc::AutoHeapSession;
     friend class JS::AutoEnterCycleCollection;
 
   private:
