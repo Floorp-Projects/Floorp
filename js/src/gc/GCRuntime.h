@@ -10,7 +10,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TimeStamp.h"
 
 #include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
@@ -568,7 +567,7 @@ class GCRuntime
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
     bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
                                    AutoLockForExclusiveAccess& lock);
-    bool shouldPreserveJITCode(JS::Realm* realm, const mozilla::TimeStamp &currentTime,
+    bool shouldPreserveJITCode(JS::Realm* realm, int64_t currentTime,
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& session);
     void traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
@@ -716,7 +715,7 @@ class GCRuntime
 
   private:
     UnprotectedData<bool> chunkAllocationSinceLastGC;
-    MainThreadData<mozilla::TimeStamp> lastGCTime;
+    MainThreadData<int64_t> lastGCTime;
 
     /*
      * JSGC_MODE
