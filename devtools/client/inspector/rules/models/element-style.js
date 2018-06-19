@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,19 +16,19 @@ const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
  *   Keeps track of which properties are overridden.
  *   Maintains a list of Rule objects for a given element.
  *
- * @param {Element} element
- *        The element whose style we are viewing.
- * @param {CssRuleView} ruleView
- *        The instance of the rule-view panel.
- * @param {Object} store
- *        The ElementStyle can use this object to store metadata
- *        that might outlast the rule view, particularly the current
- *        set of disabled properties.
- * @param {PageStyleFront} pageStyle
- *        Front for the page style actor that will be providing
- *        the style information.
- * @param {Boolean} showUserAgentStyles
- *        Should user agent styles be inspected?
+ * @param  {Element} element
+ *         The element whose style we are viewing.
+ * @param  {CssRuleView} ruleView
+ *         The instance of the rule-view panel.
+ * @param  {Object} store
+ *         The ElementStyle can use this object to store metadata
+ *         that might outlast the rule view, particularly the current
+ *         set of disabled properties.
+ * @param  {PageStyleFront} pageStyle
+ *         Front for the page style actor that will be providing
+ *         the style information.
+ * @param  {Boolean} showUserAgentStyles
+ *         Should user agent styles be inspected?
  */
 function ElementStyle(element, ruleView, store, pageStyle,
     showUserAgentStyles) {
@@ -104,7 +102,7 @@ ElementStyle.prototype = {
       }
 
       // Store the current list of rules (if any) during the population
-      // process.  They will be reused if possible.
+      // process. They will be reused if possible.
       const existingRules = this.rules;
 
       this.rules = [];
@@ -142,7 +140,7 @@ ElementStyle.prototype = {
    * Get the font families in use by the element.
    *
    * Returns a promise that will be resolved to a list of CSS family
-   * names.  The list might have duplicates.
+   * names. The list might have duplicates.
    */
   getUsedFontFamilies: function() {
     return new Promise((resolve, reject) => {
@@ -168,14 +166,14 @@ ElementStyle.prototype = {
   },
 
   /**
-   * Add a rule if it's one we care about.  Filters out duplicates and
+   * Add a rule if it's one we care about. Filters out duplicates and
    * inherited styles with no inherited properties.
    *
-   * @param {Object} options
-   *        Options for creating the Rule, see the Rule constructor.
-   * @param {Array} existingRules
-   *        Rules to reuse if possible.  If a rule is reused, then it
-   *        it will be deleted from this array.
+   * @param  {Object} options
+   *         Options for creating the Rule, see the Rule constructor.
+   * @param  {Array} existingRules
+   *         Rules to reuse if possible. If a rule is reused, then it
+   *         it will be deleted from this array.
    * @return {Boolean} true if we added the rule.
    */
   _maybeAddRule: function(options, existingRules) {
@@ -233,9 +231,9 @@ ElementStyle.prototype = {
    * Mark the properties listed in this.rules for a given pseudo element
    * with an overridden flag if an earlier property overrides it.
    *
-   * @param {String} pseudo
-   *        Which pseudo element to flag as overridden.
-   *        Empty string or undefined will default to no pseudo element.
+   * @param  {String} pseudo
+   *         Which pseudo element to flag as overridden.
+   *         Empty string or undefined will default to no pseudo element.
    */
   markOverridden: function(pseudo = "") {
     // Gather all the text properties applied by these rules, ordered
@@ -263,7 +261,7 @@ ElementStyle.prototype = {
       computedProps = computedProps.concat(textProp.computed);
     }
 
-    // Walk over the computed properties.  As we see a property name
+    // Walk over the computed properties. As we see a property name
     // for the first time, mark that property's name as taken by this
     // property.
     //
@@ -292,13 +290,14 @@ ElementStyle.prototype = {
         computedProp.overridden = true;
         continue;
       }
+
       let overridden;
       if (earlier &&
           computedProp.priority === "important" &&
           earlier.priority !== "important" &&
           (earlier.textProp.rule.inherited ||
            !computedProp.textProp.rule.inherited)) {
-        // New property is higher priority.  Mark the earlier property
+        // New property is higher priority. Mark the earlier property
         // overridden (which will reverse its dirty state).
         earlier._overriddenDirty = !earlier._overriddenDirty;
         earlier.overridden = true;
@@ -310,6 +309,7 @@ ElementStyle.prototype = {
       computedProp._overriddenDirty =
         (!!computedProp.overridden !== overridden);
       computedProp.overridden = overridden;
+
       if (!computedProp.overridden && computedProp.textProp.enabled) {
         taken[computedProp.name] = computedProp;
 
@@ -320,8 +320,8 @@ ElementStyle.prototype = {
     }
 
     // For each TextProperty, mark it overridden if all of its
-    // computed properties are marked overridden.  Update the text
-    // property's associated editor, if any.  This will clear the
+    // computed properties are marked overridden. Update the text
+    // property's associated editor, if any. This will clear the
     // _overriddenDirty state on all computed properties.
     for (const textProp of textProps) {
       // _updatePropertyOverridden will return true if the
@@ -334,21 +334,23 @@ ElementStyle.prototype = {
 
   /**
    * Mark a given TextProperty as overridden or not depending on the
-   * state of its computed properties.  Clears the _overriddenDirty state
+   * state of its computed properties. Clears the _overriddenDirty state
    * on all computed properties.
    *
-   * @param {TextProperty} prop
-   *        The text property to update.
+   * @param  {TextProperty} prop
+   *         The text property to update.
    * @return {Boolean} true if the TextProperty's overridden state (or any of
    *         its computed properties overridden state) changed.
    */
   _updatePropertyOverridden: function(prop) {
     let overridden = true;
     let dirty = false;
+
     for (const computedProp of prop.computed) {
       if (!computedProp.overridden) {
         overridden = false;
       }
+
       dirty = computedProp._overriddenDirty || dirty;
       delete computedProp._overriddenDirty;
     }
