@@ -1254,6 +1254,8 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
         case NOTIFY_IME_OF_FOCUS: {
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
 
+            mIMEFocusCount++;
+
             RefPtr<GeckoEditableSupport> self(this);
             RefPtr<TextEventDispatcher> dispatcher = aTextEventDispatcher;
 
@@ -1264,7 +1266,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                 nsCOMPtr<nsIWidget> widget = dispatcher->GetWidget();
 
                 --mIMEMaskEventsCount;
-                if (mIMEMaskEventsCount || !widget || widget->Destroyed()) {
+                if (!mIMEFocusCount || !widget || widget->Destroyed()) {
                     return;
                 }
 
@@ -1300,10 +1302,16 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
         case NOTIFY_IME_OF_BLUR: {
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
 
-            if (!mIMEMaskEventsCount) {
-                mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
-                OnRemovedFrom(mDispatcher);
-            }
+            mIMEFocusCount--;
+            MOZ_ASSERT(mIMEFocusCount >= 0);
+
+            RefPtr<GeckoEditableSupport> self(this);
+            nsAppShell::PostEvent([this, self] {
+                if (!mIMEFocusCount) {
+                    mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
+                    OnRemovedFrom(mDispatcher);
+                }
+            });
 
             // Mask events because we lost focus. Unmask on the next focus.
             mIMEMaskEventsCount++;
