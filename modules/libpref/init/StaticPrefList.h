@@ -105,6 +105,12 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  "dom.performance.enable_scheduler_timing",
+  dom_performance_enable_scheduler_timing,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Full-screen prefs
 //---------------------------------------------------------------------------
