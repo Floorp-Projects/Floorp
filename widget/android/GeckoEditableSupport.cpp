@@ -1399,29 +1399,25 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
         return;
     }
 
-    if (mIMEUpdatingContext) {
-        return;
-    }
-    mIMEUpdatingContext = true;
-
-    RefPtr<GeckoEditableSupport> self(this);
     const bool inPrivateBrowsing = mInputContext.mInPrivateBrowsing;
-    const bool isUserAction = aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
+    const bool isUserAction =
+            aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
     const int32_t flags =
             (inPrivateBrowsing ? EditableListener::IME_FLAG_PRIVATE_BROWSING : 0) |
             (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0);
 
-    nsAppShell::PostEvent([this, self, flags] {
+    // Post an event to keep calls in order relative to NotifyIME.
+    nsAppShell::PostEvent([this, self = RefPtr<GeckoEditableSupport>(this),
+                           flags, context = mInputContext] {
         nsCOMPtr<nsIWidget> widget = GetWidget();
 
-        mIMEUpdatingContext = false;
         if (!widget || widget->Destroyed()) {
             return;
         }
-        mEditable->NotifyIMEContext(mInputContext.mIMEState.mEnabled,
-                                    mInputContext.mHTMLInputType,
-                                    mInputContext.mHTMLInputInputmode,
-                                    mInputContext.mActionHint,
+        mEditable->NotifyIMEContext(context.mIMEState.mEnabled,
+                                    context.mHTMLInputType,
+                                    context.mHTMLInputInputmode,
+                                    context.mActionHint,
                                     flags);
     });
 }
