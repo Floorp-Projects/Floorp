@@ -51,8 +51,10 @@ var PageStyleHandler = {
       return;
     }
 
-    let {docShell} = win.document;
-    this.sendStyleSheetInfo(docShell.tabChild.messageManager);
+    let mm = win.document.docShell
+                .QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIContentFrameMessageManager);
+    this.sendStyleSheetInfo(mm);
   },
 
   _stylesheetSwitchAll(frameset, title) {

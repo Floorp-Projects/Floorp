@@ -609,8 +609,16 @@ def config_status_deps(build_env, build_project):
     topsrcdir = build_env.topsrcdir
     topobjdir = build_env.topobjdir
 
-    return list(__sandbox__._all_paths) + [
-        os.path.join(topsrcdir, build_project, 'confvars.sh'),
+    if not build_env.topobjdir.endswith('js/src'):
+        extra_deps = [
+            os.path.join(topsrcdir, build_project, 'confvars.sh'),
+            os.path.join(topobjdir, '.mozconfig.json'),
+        ]
+    else:
+        # mozconfig changes may impact js configure.
+        extra_deps = [os.path.join(topobjdir[:-7], '.mozconfig.json')]
+
+    return list(__sandbox__._all_paths) + extra_deps + [
         os.path.join(topsrcdir, 'configure'),
         os.path.join(topsrcdir, 'js', 'src', 'configure'),
         os.path.join(topsrcdir, 'configure.in'),
@@ -622,7 +630,6 @@ def config_status_deps(build_env, build_project):
         os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'),
         os.path.join(topsrcdir, 'python', 'mozbuild', 'mozbuild', 'virtualenv.py'),
         os.path.join(topsrcdir, 'testing', 'mozbase', 'packages.txt'),
-        os.path.join(topobjdir, '.mozconfig.json'),
         os.path.join(topsrcdir, 'aclocal.m4'),
         os.path.join(topsrcdir, 'old-configure.in'),
         os.path.join(topsrcdir, 'js', 'src', 'aclocal.m4'),

@@ -44,9 +44,9 @@ class ShapesInContextEditor {
     // Commit triggers expensive DOM changes in TextPropertyEditor.update()
     // so we debounce it.
     this.commit = debounce(this.commit, 200, this);
-    this.onChangesApplied = this.onChangesApplied.bind(this);
     this.onHighlighterEvent = this.onHighlighterEvent.bind(this);
     this.onNodeFrontChanged = this.onNodeFrontChanged.bind(this);
+    this.onShapeValueUpdated = this.onShapeValueUpdated.bind(this);
     this.onRuleViewChanged = this.onRuleViewChanged.bind(this);
 
     this.highlighter.on("highlighter-event", this.onHighlighterEvent);
@@ -111,6 +111,7 @@ class ShapesInContextEditor {
 
     this.inspector.selection.on("detached-front", this.onNodeFrontChanged);
     this.inspector.selection.on("new-node-front", this.onNodeFrontChanged);
+    this.ruleView.on("property-value-updated", this.onShapeValueUpdated);
     this.highlighterTargetNode = node;
     this.mode = options.mode;
     this.emit("show", { node, options });
@@ -135,6 +136,7 @@ class ShapesInContextEditor {
     this.emit("hide", { node: this.highlighterTargetNode });
     this.inspector.selection.off("detached-front", this.onNodeFrontChanged);
     this.inspector.selection.off("new-node-front", this.onNodeFrontChanged);
+    this.ruleView.off("property-value-updated", this.onShapeValueUpdated);
     this.highlighterTargetNode = null;
   }
 
@@ -147,7 +149,9 @@ class ShapesInContextEditor {
   findSwatch() {
     const valueSpan = this.textProperty.editor.valueSpan;
     this.swatch = valueSpan.querySelector(".ruleview-shapeswatch");
-    this.swatch.classList.add("active");
+    if (this.swatch) {
+      this.swatch.classList.add("active");
+    }
   }
 
   /**
@@ -205,14 +209,11 @@ class ShapesInContextEditor {
   *         - {String} type: the event type ("shape-hover-on" or "shape-hover-on").
   */
   onShapeHover(data) {
-    if (!this.textProperty) {
-      return;
-    }
-
-    const shapeValueEl = this.swatch.nextSibling;
+    const shapeValueEl = this.swatch && this.swatch.nextSibling;
     if (!shapeValueEl) {
       return;
     }
+
     const pointSelector = ".ruleview-shape-point";
     // First, unmark all highlighted coordinate nodes from Rule view
     for (const node of shapeValueEl.querySelectorAll(`${pointSelector}.active`)) {
@@ -240,6 +241,19 @@ class ShapesInContextEditor {
     for (const node of shapeValueEl.querySelectorAll(selector)) {
       node.classList.add("active");
     }
+  }
+
+  /**
+  * Handler for "property-value-updated" event triggered by the Rule view.
+  * Called after the shape value has been written to the element's style and the Rule
+  * view updated. Emits an event on HighlightersOverlay that is expected by
+  * tests in order to check if the shape value has been correctly applied.
+  */
+  onShapeValueUpdated() {
+    // When TextPropertyEditor updates, it replaces the previous swatch DOM node.
+    // Find and store the new one.
+    this.findSwatch();
+    this.inspector.highlighters.emit("shapes-highlighter-changes-applied");
   }
 
   /**
@@ -271,21 +285,8 @@ class ShapesInContextEditor {
     if (!this.textProperty) {
       return;
     }
-    this.ruleView.once("ruleview-changed", this.onChangesApplied);
-    this.textProperty.setValue(value);
-  }
 
-  /**
-  * Handler for "ruleview-changed" event triggered by the Rule view.
-  * Called once after the shape value has been written to the element's style and Rule
-  * view updated. Triggers an event on the HighlightersOverlay that is expected by
-  * tests in order to check if the shape value has been correctly applied.
-  */
-  onChangesApplied() {
-    // When TextPropertyEditor updates it thrashes the previous swatch DOM node. Find and
-    // store the new swatch node.
-    this.findSwatch();
-    this.inspector.highlighters.emit("shapes-highlighter-changes-applied");
+    this.textProperty.setValue(value);
   }
 
   destroy() {

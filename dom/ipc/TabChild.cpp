@@ -3439,6 +3439,7 @@ TabChild::AllocPPaymentRequestChild()
 bool
 TabChild::DeallocPPaymentRequestChild(PPaymentRequestChild* actor)
 {
+  delete actor;
   return true;
 }
 
