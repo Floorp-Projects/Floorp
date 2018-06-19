@@ -1209,22 +1209,37 @@ import android.view.inputmethod.EditorInfo;
 
         switch (type) {
             case SessionTextInput.EditableListener.NOTIFY_IME_OF_FOCUS:
+                if (mFocusedChild != null) {
+                    // Already focused, so blur first.
+                    icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR,
+                                   /* toggleSoftInput */ false);
+                }
+
                 mFocusedChild = child;
                 mNeedSync = false;
                 mText.syncShadowText(/* listener */ null);
 
-                // Do not reset mIMEState here; see comments in notifyIMEContext
-                if (mIMEState != SessionTextInput.EditableListener.IME_STATE_DISABLED) {
-                    icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS);
+                // Most of the time notifyIMEContext comes _before_ notifyIME, but sometimes it
+                // comes _after_ notifyIME. In that case, the state is disabled here, and
+                // notifyIMEContext is responsible for calling restartInput.
+                if (mIMEState == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+                    mIMEState = SessionTextInput.EditableListener.IME_STATE_UNKNOWN;
+                } else {
+                    icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS,
+                                   /* toggleSoftInput */ true);
                 }
                 break;
 
             case SessionTextInput.EditableListener.NOTIFY_IME_OF_BLUR:
-                mFocusedChild = null;
+                if (mFocusedChild != null) {
+                    mFocusedChild = null;
+                    icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR,
+                                   /* toggleSoftInput */ true);
+                }
                 break;
 
             case SessionTextInput.EditableListener.NOTIFY_IME_OPEN_VKB:
-                toggleSoftInput(/* force */ true);
+                toggleSoftInput(/* force */ true, mIMEState);
                 return; // Don't notify listener.
 
             case SessionTextInput.EditableListener.NOTIFY_IME_TO_COMMIT_COMPOSITION: {
@@ -1244,7 +1259,8 @@ import android.view.inputmethod.EditorInfo;
                     }
                 }
                 // No longer have composition; perform reset.
-                icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
+                icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE,
+                               /* toggleSoftInput */ false);
                 return; // Don't notify listener.
             }
 
@@ -1311,24 +1327,26 @@ import android.view.inputmethod.EditorInfo;
             mListener.notifyIMEContext(state, typeHint, modeHint, actionHint, flags);
         }
 
-        // On focus, the notifyIMEContext call comes *before* the
-        // notifyIME(NOTIFY_IME_OF_FOCUS) call, but we need to call restartInput during
-        // notifyIME, so we skip restartInput here. On blur, the notifyIMEContext call
-        // comes *after* the notifyIME(NOTIFY_IME_OF_BLUR) call, and we need to call
-        // restartInput here.
-
-        // In either case, there is nothing to do here if we were disabled before.
-        if (oldState == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED ||
+                mFocusedChild == null) {
             return;
         }
-        if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
-            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_BLUR);
-        } else if (mFocusedChild != null) {
-            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
+
+        // We changed state while focused. If the old state is unknown, it means this
+        // notifyIMEContext call came _after_ the notifyIME call, so we need to call
+        // restartInput(FOCUS) here (see comment in icNotifyIME). Otherwise, this change
+        // counts as a content change.
+        if (oldState == SessionTextInput.EditableListener.IME_STATE_UNKNOWN) {
+            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_FOCUS,
+                           /* toggleSoftInput */ true);
+        } else if (oldState != SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+            icRestartInput(GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE,
+                           /* toggleSoftInput */ false);
         }
     }
 
-    private void icRestartInput(@GeckoSession.TextInputDelegate.RestartReason final int reason) {
+    private void icRestartInput(@GeckoSession.TextInputDelegate.RestartReason final int reason,
+                                final boolean toggleSoftInput) {
         if (DEBUG) {
             assertOnIcThread();
         }
@@ -1336,13 +1354,28 @@ import android.view.inputmethod.EditorInfo;
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                mSoftInputReentrancyGuard.incrementAndGet();
+                if (DEBUG) {
+                    Log.d(LOGTAG, "restartInput(" + reason + ", " + toggleSoftInput + ')');
+                }
+                if (toggleSoftInput) {
+                    mSoftInputReentrancyGuard.incrementAndGet();
+                }
                 mSession.getTextInput().getDelegate().restartInput(mSession, reason);
 
+                if (!toggleSoftInput) {
+                    return;
+                }
                 postToInputConnection(new Runnable() {
                     @Override
                     public void run() {
-                        toggleSoftInput(/* force */ false);
+                        int state = mIMEState;
+                        if (reason == GeckoSession.TextInputDelegate.RESTART_REASON_BLUR &&
+                                    mFocusedChild == null) {
+                            // On blur, notifyIMEContext() is called after notifyIME(). Therefore,
+                            // mIMEState is not up-to-date here and we need to override it.
+                            state = SessionTextInput.EditableListener.IME_STATE_DISABLED;
+                        }
+                        toggleSoftInput(/* force */ false, state);
                     }
                 });
             }
@@ -1362,7 +1395,7 @@ import android.view.inputmethod.EditorInfo;
 
         if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
             outAttrs.inputType = InputType.TYPE_NULL;
-            toggleSoftInput(/* force */ false);
+            toggleSoftInput(/* force */ false, state);
             return;
         }
 
@@ -1431,12 +1464,14 @@ import android.view.inputmethod.EditorInfo;
             outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
         }
 
-        toggleSoftInput(/* force */ false);
+        toggleSoftInput(/* force */ false, state);
     }
 
-    /* package */ void toggleSoftInput(final boolean force) {
+    /* package */ void toggleSoftInput(final boolean force, final int state) {
+        if (DEBUG) {
+            Log.d(LOGTAG, "toggleSoftInput");
+        }
         // Can be called from UI or IC thread.
-        final int state = mIMEState;
         final int flags = mIMEFlags;
 
         // There are three paths that toggleSoftInput() can be called:
@@ -1472,11 +1507,21 @@ import android.view.inputmethod.EditorInfo;
                         SessionTextInput.EditableListener.IME_FLAG_USER_ACTION) != 0);
 
                 if (!force && (isReentrant || !isFocused || !isUserAction)) {
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "toggleSoftInput: no-op, reentrant=" + isReentrant +
+                                ", focused=" + isFocused + ", user=" + isUserAction);
+                    }
                     return;
                 }
                 if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "hideSoftInput");
+                    }
                     mSession.getTextInput().getDelegate().hideSoftInput(mSession);
                     return;
+                }
+                if (DEBUG) {
+                    Log.d(LOGTAG, "showSoftInput");
                 }
                 mSession.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
                 mSession.getTextInput().getDelegate().showSoftInput(mSession);
