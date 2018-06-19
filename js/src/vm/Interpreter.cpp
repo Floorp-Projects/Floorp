@@ -4520,7 +4520,10 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
         if (!DefineDataProperty(cx, parent, name, rval, attrs))
             return false;
 
-        return parent->is<GlobalObject>() ? parent->realm()->addToVarNames(cx, name) : true;
+        if (parent->is<GlobalObject>())
+            return parent->as<GlobalObject>().realm()->addToVarNames(cx, name);
+
+        return true;
     }
 
     /*
@@ -4546,7 +4549,7 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
 
         // Careful: the presence of a shape, even one appearing to derive from
         // a variable declaration, doesn't mean it's in [[VarNames]].
-        if (!parent->realm()->addToVarNames(cx, name))
+        if (!parent->as<GlobalObject>().realm()->addToVarNames(cx, name))
             return false;
     }
 
@@ -4770,7 +4773,7 @@ js::DeleteNameOperation(JSContext* cx, HandlePropertyName name, HandleObject sco
     if (status) {
         // Deleting a name from the global object removes it from [[VarNames]].
         if (pobj == scope && scope->is<GlobalObject>())
-            scope->realm()->removeFromVarNames(name);
+            scope->as<GlobalObject>().realm()->removeFromVarNames(name);
     }
 
     return true;

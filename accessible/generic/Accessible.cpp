@@ -357,7 +357,7 @@ Accessible::VisibilityState() const
       if (deckFrame->GetContent()->IsXULElement(nsGkAtoms::tabpanels))
         return states::OFFSCREEN;
 
-      NS_NOTREACHED("Children of not selected deck panel are not accessible.");
+      MOZ_ASSERT_UNREACHABLE("Children of not selected deck panel are not accessible.");
       return states::INVISIBLE;
     }
 
@@ -1957,8 +1957,8 @@ Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
     return;
   }
 
-  NS_ASSERTION(mParent,
-               "Called on accessible unbound from tree. Result can be wrong.");
+  MOZ_ASSERT(mParent,
+             "Called on accessible unbound from tree. Result can be wrong.");
 
   if (frame->IsBrFrame()) {
     aText += kForcedNewLineChar;
