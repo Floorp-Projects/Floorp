@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+  <meta charset="utf-8">
   <script type="text/javascript">
 
   var myWorker;
   function init() {
    myWorker = new Worker('ping_worker.js');
-   myWorker.postMessage("ping");
+   for (let i = 0; i++; i < 10) myWorker.postMessage("ping");
   }
 
   </script>

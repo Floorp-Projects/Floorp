@@ -100,6 +100,9 @@ private:
 
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
+
+  void
+  IncrementDispatchCounter();
 };
 
 } // namespace dom
