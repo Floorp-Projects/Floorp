@@ -20,6 +20,7 @@ namespace dom {
 
 class EventHandlerNonNull;
 class PaymentAddress;
+class PaymentRequestChild;
 class PaymentResponse;
 
 class PaymentRequest final : public DOMEventTargetHelper
@@ -135,8 +136,9 @@ public:
   void GetShippingOption(nsAString& aRetVal) const;
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
-  nsresult UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails);
-  void AbortUpdate(nsresult aRv);
+  nsresult UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
+                         bool aDeferredShow);
+  void AbortUpdate(nsresult aRv, bool aDeferredShow);
 
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
   Nullable<PaymentShippingType> GetShippingType() const;
@@ -153,6 +155,16 @@ public:
 
   IMPL_EVENT_HANDLER(shippingaddresschange);
   IMPL_EVENT_HANDLER(shippingoptionchange);
+
+  void SetIPC(PaymentRequestChild* aChild)
+  {
+    mIPC = aChild;
+  }
+
+  PaymentRequestChild* GetIPC()
+  {
+    return mIPC;
+  }
 
 protected:
   ~PaymentRequest();
@@ -191,6 +203,11 @@ protected:
   // Whether shipping was requested. This models [[options]].requestShipping,
   // but we don't actually store the full [[options]] internal slot.
   bool mRequestShipping;
+
+  // True if the user passed a promise to show, causing us to defer telling the
+  // front end about it.
+  bool mDeferredShow;
+
   // The error is set in AbortUpdate(). The value is NS_OK by default.
   nsresult mUpdateError;
 
@@ -200,6 +217,8 @@ protected:
     eInteractive,
     eClosed
   } mState;
+
+  PaymentRequestChild* mIPC;
 };
 
 } // namespace dom

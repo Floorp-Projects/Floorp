@@ -359,8 +359,8 @@ def find_common_attrs(config_attributes):
             common_value = reference.get(k)
             if common_value:
                 if isinstance(input_value, list):
-                    input_value = set(input_value)
-                    reference[k] = [i for i in common_value if i in input_value]
+                    reference[k] = [i for i in common_value
+                                    if input_value.count(i) == common_value.count(i)]
                 elif isinstance(input_value, dict):
                     reference[k] = {key: value for key, value in common_value.items()
                                     if key in input_value and value == input_value[key]}
@@ -381,8 +381,8 @@ def find_common_attrs(config_attributes):
             common_value = reference.get(k)
             if common_value:
                 if isinstance(input_value, list):
-                    common_value = set(common_value)
-                    input_attrs[k] = [i for i in input_value if i not in common_value]
+                    input_attrs[k] = [i for i in input_value
+                                      if common_value.count(i) != input_value.count(i)]
                 elif isinstance(input_value, dict):
                     input_attrs[k] = {key: value for key, value in input_value.items()
                                       if key not in common_value}
@@ -439,7 +439,10 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
             # for every configuration, then factor by other potentially useful
             # combinations.
             for attrs in ((),
-                          ('MOZ_DEBUG',), ('OS_TARGET',), ('MOZ_DEBUG', 'OS_TARGET',),
+                          ('MOZ_DEBUG',), ('OS_TARGET',), ('CPU_ARCH',),
+                          ('MOZ_DEBUG', 'OS_TARGET',),
+                          ('OS_TARGET', 'CPU_ARCH'),
+                          ('OS_TARGET', 'CPU_ARCH', 'MOZ_DEBUG'),
                           ('MOZ_DEBUG', 'OS_TARGET', 'CPU_ARCH', 'HOST_CPU_ARCH')):
                 conditions = set()
                 for args in all_args:
@@ -476,7 +479,7 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
                 cond = tuple(((k, dict(args).get(k)) for k in attrs))
                 conditions.add(cond)
 
-            for cond in conditions:
+            for cond in sorted(conditions):
                 common_dirs = None
                 for args, dir_set in dirs_by_config.items():
                     if all(dict(args).get(k) == v for k, v in cond):

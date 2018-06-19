@@ -3823,7 +3823,8 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   if (aFlags & PaintFrameFlags::PAINT_COMPRESSED) {
     flags |= nsDisplayList::PAINT_COMPRESSED;
   }
-  if (updateState == PartialUpdateResult::NoChange) {
+  if (updateState == PartialUpdateResult::NoChange &&
+      !aRenderingContext) {
     flags |= nsDisplayList::PAINT_IDENTICAL_DISPLAY_LIST;
   }
 
