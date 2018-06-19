@@ -255,7 +255,8 @@ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 };
 
-class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler
+class KeepAliveHandler final : public WorkerHolder
+                             , public ExtendableEvent::ExtensionsHandler
                              , public PromiseNativeHandler
 {
   // This class manages lifetime extensions added by calling WaitUntil()
@@ -264,8 +265,9 @@ class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler
   // which releases the token and prevents further extensions. By doing this,
   // we give other pending microtasks a chance to continue adding extensions.
 
-  RefPtr<StrongWorkerRef> mWorkerRef;
   nsMainThreadPtrHandle<KeepAliveToken> mKeepAliveToken;
+  WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
+  bool mWorkerHolderAdded;
 
   // We start holding a self reference when the first extension promise is
   // added. As far as I can tell, the only case where this is useful is when
@@ -289,32 +291,26 @@ public:
 
   explicit KeepAliveHandler(const nsMainThreadPtrHandle<KeepAliveToken>& aKeepAliveToken,
                             ExtendableEventCallback* aCallback)
-    : mKeepAliveToken(aKeepAliveToken)
+    : WorkerHolder("KeepAliveHolder")
+    , mKeepAliveToken(aKeepAliveToken)
+    , mWorkerPrivate(GetCurrentThreadWorkerPrivate())
+    , mWorkerHolderAdded(false)
     , mCallback(aCallback)
     , mPendingPromisesCount(0)
     , mRejected(false)
   {
     MOZ_ASSERT(mKeepAliveToken);
+    MOZ_ASSERT(mWorkerPrivate);
   }
 
   bool
-  Init()
+  UseWorkerHolder()
   {
-    MOZ_ASSERT(IsCurrentThreadRunningWorker());
-
-    RefPtr<KeepAliveHandler> self = this;
-    mWorkerRef =
-      StrongWorkerRef::Create(GetCurrentThreadWorkerPrivate(),
-                              "KeepAliveHandler",
-                              [self]() {
-        self->MaybeCleanup();
-      });
-
-    if (NS_WARN_IF(!mWorkerRef)) {
-      return false;
-    }
-
-    return true;
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(!mWorkerHolderAdded);
+    mWorkerHolderAdded = HoldWorker(mWorkerPrivate, Terminating);
+    return mWorkerHolderAdded;
   }
 
   bool
@@ -347,10 +343,24 @@ public:
     RemovePromise(Rejected);
   }
 
+  bool
+  Notify(WorkerStatus aStatus) override
+  {
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    if (aStatus < Terminating) {
+      return true;
+    }
+
+    MaybeCleanup();
+    return true;
+  }
+
   void
   MaybeDone()
   {
-    MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
 
     if (mPendingPromisesCount || !mKeepAliveToken) {
       return;
@@ -371,13 +381,15 @@ private:
   void
   MaybeCleanup()
   {
-    MOZ_ASSERT(IsCurrentThreadRunningWorker());
-
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
     if (!mKeepAliveToken) {
       return;
     }
+    if (mWorkerHolderAdded) {
+      ReleaseWorker();
+    }
 
-    mWorkerRef = nullptr;
     mKeepAliveToken = nullptr;
     mSelfRef = nullptr;
   }
@@ -397,7 +409,8 @@ private:
   void
   RemovePromise(ExtendableEventResult aResult)
   {
-    MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_DIAGNOSTIC_ASSERT(mPendingPromisesCount > 0);
 
     // Note: mSelfRef and mKeepAliveToken can be nullptr here
@@ -483,7 +496,7 @@ public:
 
     RefPtr<KeepAliveHandler> keepAliveHandler =
       new KeepAliveHandler(mKeepAliveToken, aCallback);
-    if (NS_WARN_IF(!keepAliveHandler->Init())) {
+    if (NS_WARN_IF(!keepAliveHandler->UseWorkerHolder())) {
       return NS_ERROR_FAILURE;
     }
 
