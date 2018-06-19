@@ -303,7 +303,7 @@ namespace TuningDefaults {
     static const bool DynamicHeapGrowthEnabled = false;
 
     /* JSGC_HIGH_FREQUENCY_TIME_LIMIT */
-    static const auto HighFrequencyThresholdUsec = mozilla::TimeDuration::FromMicroseconds(1000000);
+    static const uint64_t HighFrequencyThresholdUsec = 1000000;
 
     /* JSGC_HIGH_FREQUENCY_LOW_LIMIT */
     static const uint64_t HighFrequencyLowLimitBytes = 100 * 1024 * 1024;
@@ -343,8 +343,6 @@ namespace TuningDefaults {
         Nursery::NurseryChunkUsableSize / 4;
 
 }}} // namespace js::gc::TuningDefaults
-
-static const auto ONE_SECOND = mozilla::TimeDuration::FromSeconds(1);
 
 /*
  * We start to incremental collection for a zone when a proportion of its
@@ -955,7 +953,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
     chunkAllocationSinceLastGC(false),
-    lastGCTime(mozilla::TimeStamp::Now()),
+    lastGCTime(PRMJ_Now()),
     mode(TuningDefaults::Mode),
     numActiveZoneIters(0),
     cleanUpEverything(false),
@@ -1416,7 +1414,7 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
         gcMaxNurseryBytes_ = value;
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        highFrequencyThresholdUsec_ = mozilla::TimeDuration::FromMilliseconds(value);
+        highFrequencyThresholdUsec_ = value * PRMJ_USEC_PER_MSEC;
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT: {
         uint64_t newLimit = (uint64_t)value * 1024 * 1024;
@@ -1700,7 +1698,7 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
       case JSGC_MARK_STACK_LIMIT:
         return marker.maxCapacity();
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        return tunables.highFrequencyThresholdUsec().ToMilliseconds();
+        return tunables.highFrequencyThresholdUsec() / PRMJ_USEC_PER_MSEC;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
         return tunables.highFrequencyLowLimitBytes() / 1024 / 1024;
       case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
@@ -2144,7 +2142,7 @@ GCRuntime::shouldCompact()
         return true;
     }
 
-    return !isIncremental || rt->lastAnimationTime.ref() + ONE_SECOND < mozilla::TimeStamp::Now();
+    return !isIncremental || rt->lastAnimationTime + PRMJ_USEC_PER_SEC < PRMJ_Now();
 }
 
 bool
@@ -3260,7 +3258,7 @@ SliceBudget::SliceBudget(TimeBudget time)
         makeUnlimited();
     } else {
         // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
-        deadline = mozilla::TimeStamp::Now() + mozilla::TimeDuration::FromMilliseconds(time.budget);
+        deadline = PRMJ_Now() + time.budget * PRMJ_USEC_PER_MSEC;
         counter = CounterReset;
     }
 }
@@ -3271,7 +3269,7 @@ SliceBudget::SliceBudget(WorkBudget work)
     if (work.budget < 0) {
         makeUnlimited();
     } else {
-        deadline = mozilla::TimeStamp();
+        deadline = 0;
         counter = work.budget;
     }
 }
@@ -3290,7 +3288,7 @@ SliceBudget::describe(char* buffer, size_t maxlen) const
 bool
 SliceBudget::checkOverBudget()
 {
-    bool over = mozilla::TimeStamp::Now() >= deadline;
+    bool over = PRMJ_Now() >= deadline;
     if (!over)
         counter = CounterReset;
     return over;
@@ -4092,10 +4090,9 @@ GCRuntime::purgeRuntime()
 }
 
 bool
-GCRuntime::shouldPreserveJITCode(Realm* realm, const mozilla::TimeStamp &currentTime,
+GCRuntime::shouldPreserveJITCode(Realm* realm, int64_t currentTime,
                                  JS::gcreason::Reason reason, bool canAllocateMoreCode)
 {
-
     if (cleanUpEverything)
         return false;
     if (!canAllocateMoreCode)
@@ -4105,7 +4102,7 @@ GCRuntime::shouldPreserveJITCode(Realm* realm, const mozilla::TimeStamp &current
         return true;
     if (realm->preserveJitCode())
         return true;
-    if (realm->lastAnimationTime.ref() + ONE_SECOND >= currentTime)
+    if (realm->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
     if (reason == JS::gcreason::DEBUG_GC)
         return true;
@@ -4281,7 +4278,7 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     *isFullOut = true;
     bool any = false;
 
-    auto currentTime = mozilla::TimeStamp::Now();
+    int64_t currentTime = PRMJ_Now();
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         /* Set up which zones will be collected. */
@@ -6836,7 +6833,7 @@ GCRuntime::finishCollection()
     marker.stop();
     clearBufferedGrayRoots();
 
-    auto currentTime = mozilla::TimeStamp::Now();
+    uint64_t currentTime = PRMJ_Now();
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
