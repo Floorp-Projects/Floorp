@@ -234,6 +234,8 @@ class Actions(object):
 
 
 class Window(object):
+    identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f"
+
     def __init__(self, session):
         self.session = session
 
@@ -283,6 +285,23 @@ class Window(object):
     @command
     def fullscreen(self):
         return self.session.send_session_command("POST", "window/fullscreen")
+
+    @classmethod
+    def from_json(cls, json, session):
+        uuid = json[Window.identifier]
+        return cls(uuid, session)
+
+
+class Frame(object):
+    identifier = "frame-075b-4da1-b6ba-e579c2d3230a"
+
+    def __init__(self, session):
+        self.session = session
+
+    @classmethod
+    def from_json(cls, json, session):
+        uuid = json[Frame.identifier]
+        return cls(uuid, session)
 
 
 class Find(object):
