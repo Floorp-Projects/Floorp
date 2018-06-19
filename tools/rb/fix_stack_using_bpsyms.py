@@ -45,7 +45,8 @@ class SymbolFile:
                 line = line.rstrip()
                 # https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/symbol_files.md
                 if line.startswith("FUNC "):
-                    # FUNC <address> <size> <stack_param_size> <name>
+                    # FUNC [<multiple>] <address> <size> <stack_param_size> <name>
+                    line = line.replace("FUNC m ", "FUNC ")  # Ignore the multiple marker
                     bits = line.split(None, 4)
                     if len(bits) < 5:
                         bits.append('unnamed_function')
@@ -55,7 +56,8 @@ class SymbolFile:
                     addrs.append(rva)
                     lastFuncName = name
                 elif line.startswith("PUBLIC "):
-                    # PUBLIC <address> <stack_param_size> <name>
+                    # PUBLIC [<multiple>] <address> <stack_param_size> <name>
+                    line = line.replace("PUBLIC m ", "PUBLIC ")  # Ignore the multiple marker
                     (junk, rva, ss, name) = line.split(None, 3)
                     rva = int(rva, 16)
                     funcs[rva] = name

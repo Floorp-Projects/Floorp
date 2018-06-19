@@ -55,12 +55,19 @@ StackFrameSymbolizer::StackFrameSymbolizer(
 
 StackFrameSymbolizer::SymbolizerResult StackFrameSymbolizer::FillSourceLineInfo(
     const CodeModules* modules,
+    const CodeModules* unloaded_modules,
     const SystemInfo* system_info,
     StackFrame* frame) {
   assert(frame);
 
-  if (!modules) return kError;
-  const CodeModule* module = modules->GetModuleForAddress(frame->instruction);
+  const CodeModule* module = NULL;
+  if (modules) {
+    module = modules->GetModuleForAddress(frame->instruction);
+  }
+  if (!module && unloaded_modules) {
+    module = unloaded_modules->GetModuleForAddress(frame->instruction);
+  }
+
   if (!module) return kError;
   frame->module = module;
 

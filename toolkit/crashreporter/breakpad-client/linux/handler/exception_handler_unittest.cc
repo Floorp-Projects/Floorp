@@ -27,6 +27,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <pthread.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <signal.h>
@@ -257,6 +258,66 @@ TEST(ExceptionHandlerTest, ChildCrashWithFD) {
   ASSERT_NO_FATAL_FAILURE(ChildCrash(true));
 }
 
+#if !defined(__ANDROID_API__) || __ANDROID_API__ >= __ANDROID_API_N__
+static void* SleepFunction(void* unused) {
+  while (true) usleep(1000000);
+  return NULL;
+}
+
+static void* CrashFunction(void* b_ptr) {
+  pthread_barrier_t* b = reinterpret_cast<pthread_barrier_t*>(b_ptr);
+  pthread_barrier_wait(b);
+  DoNullPointerDereference();
+  return NULL;
+}
+
+// Tests that concurrent crashes do not enter a loop by alternately triggering
+// the signal handler.
+TEST(ExceptionHandlerTest, ParallelChildCrashesDontHang) {
+  AutoTempDir temp_dir;
+  const pid_t child = fork();
+  if (child == 0) {
+    google_breakpad::scoped_ptr<ExceptionHandler> handler(
+      new ExceptionHandler(MinidumpDescriptor(temp_dir.path()), NULL, NULL,
+                            NULL, true, -1));
+
+    // We start a number of threads to make sure handling the signal takes
+    // enough time for the second thread to enter the signal handler.
+    int num_sleep_threads = 100;
+    google_breakpad::scoped_array<pthread_t> sleep_threads(
+        new pthread_t[num_sleep_threads]);
+    for (int i = 0; i < num_sleep_threads; ++i) {
+      ASSERT_EQ(0, pthread_create(&sleep_threads[i], NULL, SleepFunction,
+                                  NULL));
+    }
+
+    int num_crash_threads = 2;
+    google_breakpad::scoped_array<pthread_t> crash_threads(
+        new pthread_t[num_crash_threads]);
+    // Barrier to synchronize crashing both threads at the same time.
+    pthread_barrier_t b;
+    ASSERT_EQ(0, pthread_barrier_init(&b, NULL, num_crash_threads + 1));
+    for (int i = 0; i < num_crash_threads; ++i) {
+      ASSERT_EQ(0, pthread_create(&crash_threads[i], NULL, CrashFunction, &b));
+    }
+    pthread_barrier_wait(&b);
+    for (int i = 0; i < num_crash_threads; ++i) {
+      ASSERT_EQ(0, pthread_join(crash_threads[i], NULL));
+    }
+  }
+
+  // Wait a while until the child should have crashed.
+  usleep(1000000);
+  // Kill the child if it is still running.
+  kill(child, SIGKILL);
+
+  // If the child process terminated by itself, it will have returned SIGSEGV.
+  // If however it got stuck in a loop, it will have been killed by the
+  // SIGKILL.
+  ASSERT_NO_FATAL_FAILURE(WaitForProcessToTerminate(child, SIGSEGV));
+}
+#endif  // !defined(__ANDROID_API__) || __ANDROID_API__ >= __ANDROID_API_N__
+
 static bool DoneCallbackReturnFalse(const MinidumpDescriptor& descriptor,
                                     void* context,
                                     bool succeeded) {
@@ -463,6 +524,29 @@ TEST(ExceptionHandlerTest, StackedHandlersUnhandledToBottom) {
     CrashWithCallbacks(NULL, DoneCallbackReturnFalse, temp_dir.path());
   }
   ASSERT_NO_FATAL_FAILURE(WaitForProcessToTerminate(child, SIGKILL));
+}
+
+namespace {
+const int kSimpleFirstChanceReturnStatus = 42;
+bool SimpleFirstChanceHandler(int, void*, void*) {
+  _exit(kSimpleFirstChanceReturnStatus);
+}
+}
+
+TEST(ExceptionHandlerTest, FirstChanceHandlerRuns) {
+  AutoTempDir temp_dir;
+
+  const pid_t child = fork();
+  if (child == 0) {
+    ExceptionHandler handler(
+        MinidumpDescriptor(temp_dir.path()), NULL, NULL, NULL, true, -1);
+    google_breakpad::SetFirstChanceExceptionHandler(SimpleFirstChanceHandler);
+    DoNullPointerDereference();
+  }
+  int status;
+  ASSERT_NE(HANDLE_EINTR(waitpid(child, &status, 0)), -1);
+  ASSERT_TRUE(WIFEXITED(status));
+  ASSERT_EQ(kSimpleFirstChanceReturnStatus, WEXITSTATUS(status));
 }
 
 #endif  // !ADDRESS_SANITIZER

@@ -111,6 +111,7 @@ namespace {
 enum Architecture {
   kArch_i386 = 0,
   kArch_x86_64,
+  kArch_x86_64h,
   kArch_arm,
   kArch_arm64,
   kArch_ppc,
@@ -134,6 +135,13 @@ const NXArchInfo kKnownArchitectures[] = {
     CPU_SUBTYPE_X86_64_ALL,
     NX_LittleEndian,
     "Intel x86-64"
+  },
+  {
+    "x86_64h",
+    CPU_TYPE_X86_64,
+    CPU_SUBTYPE_X86_64_H,
+    NX_LittleEndian,
+    "Intel x86-64h Haswell"
   },
   {
     "arm",
@@ -189,23 +197,35 @@ const NXArchInfo *NXGetArchInfoFromName(const char *name) {
 
 const NXArchInfo *NXGetArchInfoFromCpuType(cpu_type_t cputype,
                                            cpu_subtype_t cpusubtype) {
+  const NXArchInfo *candidate = NULL;
   for (int arch = 0; arch < kNumArchitectures; ++arch) {
     if (kKnownArchitectures[arch].cputype == cputype) {
-      return &kKnownArchitectures[arch];
+      if (kKnownArchitectures[arch].cpusubtype == cpusubtype) {
+        return &kKnownArchitectures[arch];
+      }
+      if (!candidate) {
+        candidate = &kKnownArchitectures[arch];
+      }
     }
   }
-  return NULL;
+  return candidate;
 }
 
 struct fat_arch *NXFindBestFatArch(cpu_type_t cputype,
                                    cpu_subtype_t cpusubtype,
                                    struct fat_arch *fat_archs,
                                    uint32_t nfat_archs) {
+  struct fat_arch *candidate = NULL;
   for (uint32_t f = 0; f < nfat_archs; ++f) {
     if (fat_archs[f].cputype == cputype) {
-      return &fat_archs[f];
+      if (fat_archs[f].cpusubtype == cpusubtype) {
+        return &fat_archs[f];
+      }
+      if (!candidate) {
+        candidate = &fat_archs[f];
+      }
     }
   }
-  return NULL;
+  return candidate;
 }
 #endif  // !__APPLE__

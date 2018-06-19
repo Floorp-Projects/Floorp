@@ -39,7 +39,7 @@
 
 namespace google_breakpad {
 
-// Wraps platform-dependent implementations of accessors to ucontext structs.
+// Wraps platform-dependent implementations of accessors to ucontext_t structs.
 struct UContextReader {
   static uintptr_t GetStackPointer(const ucontext_t* uc);
 

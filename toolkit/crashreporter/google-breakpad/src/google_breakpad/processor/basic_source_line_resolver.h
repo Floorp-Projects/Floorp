@@ -95,12 +95,14 @@ class SymbolParseHelper {
                         char **filename);  // out
 
   // Parses a |function_line| declaration.  Returns true on success.
-  // Format:  FUNC <address> <size> <stack_param_size> <name>.
+  // Format:  FUNC [<multiple>] <address> <size> <stack_param_size> <name>.
   // Notice, that this method modifies the input |function_line| which is why it
-  // can't be const.  On success, <address>, <size>, <stack_param_size>, and
-  // <name> are stored in |*address|, |*size|, |*stack_param_size|, and |*name|.
-  // No allocation is done, |*name| simply points inside |function_line|.
+  // can't be const.  On success, the presence of <multiple>, <address>, <size>,
+  // <stack_param_size>, and <name> are stored in |*is_multiple|, |*address|,
+  // |*size|, |*stack_param_size|, and |*name|.  No allocation is done, |*name|
+  // simply points inside |function_line|.
   static bool ParseFunction(char *function_line,     // in
+                            bool *is_multiple,       // out
                             uint64_t *address,       // out
                             uint64_t *size,          // out
                             long *stack_param_size,  // out
@@ -119,12 +121,14 @@ class SymbolParseHelper {
                         long *source_file);  // out
 
   // Parses a |public_line| declaration.  Returns true on success.
-  // Format:  PUBLIC <address> <stack_param_size> <name>
+  // Format:  PUBLIC [<multiple>] <address> <stack_param_size> <name>
   // Notice, that this method modifies the input |function_line| which is why
-  // it can't be const.  On success, <address>, <stack_param_size>, <name>
-  // are stored in |*address|, |*stack_param_size|, and |*name|.
-  // No allocation is done, |*name| simply points inside |public_line|.
+  // it can't be const.  On success, the presence of <multiple>, <address>,
+  // <stack_param_size>, <name> are stored in |*is_multiple|, |*address|,
+  // |*stack_param_size|, and |*name|.  No allocation is done, |*name| simply
+  // points inside |public_line|.
   static bool ParsePublicSymbol(char *public_line,       // in
+                                bool *is_multiple,       // out
                                 uint64_t *address,       // out
                                 long *stack_param_size,  // out
                                 char **name);            // out

@@ -19,8 +19,8 @@
 #include <vector>
 
 #include "common/dwarf/types.h"
+#include "common/using_std_string.h"
 
-using std::string;
 using std::vector;
 using std::pair;
 
