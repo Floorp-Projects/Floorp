@@ -37,6 +37,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 
 import java.util.concurrent.CountDownLatch;
 
+import io.sentry.Sentry;
 import kotlin.text.Charsets;
 
 /**
@@ -305,6 +306,7 @@ public class WebViewProvider {
                 @Override
                 public void onCrash(GeckoSession session) {
                     Log.i(TAG, "Crashed, opening new session");
+                    Sentry.capture("GeckoSession crashed, opening new session");
                     geckoSession.close();
                     geckoSession = createGeckoSession();
                     setGeckoSession();
