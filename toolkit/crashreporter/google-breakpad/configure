@@ -626,6 +626,10 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+TESTS_AS_ROOT_FALSE
+TESTS_AS_ROOT_TRUE
+RUST_DEMANGLE_LIBS
+RUST_DEMANGLE_CFLAGS
 SELFTEST_FALSE
 SELFTEST_TRUE
 GTEST_LIBS
@@ -646,6 +650,7 @@ ANDROID_HOST_FALSE
 ANDROID_HOST_TRUE
 LINUX_HOST_FALSE
 LINUX_HOST_TRUE
+WARN_CXXFLAGS
 HAVE_CXX11
 PTHREAD_CFLAGS
 PTHREAD_LIBS
@@ -653,8 +658,6 @@ PTHREAD_CC
 ax_pthread_config
 EGREP
 GREP
-GCC_FALSE
-GCC_TRUE
 RANLIB
 am__fastdepCXX_FALSE
 am__fastdepCXX_TRUE
@@ -775,6 +778,8 @@ enable_processor
 enable_tools
 enable_system_test_libs
 enable_selftest
+with_rust_demangle
+with_tests_as_root
 '
       ac_precious_vars='build_alias
 host_alias
@@ -795,7 +800,9 @@ GMOCK_CFLAGS
 GMOCK_LIBS
 GTEST_CONFIG
 GTEST_CFLAGS
-GTEST_LIBS'
+GTEST_LIBS
+RUST_DEMANGLE_CFLAGS
+RUST_DEMANGLE_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1433,6 +1440,17 @@ Optional Features:
   --enable-selftest       Run extra tests with "make check" (may conflict with
                           optimizations) (default is no)
 
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-rust-demangle=/path/to/rust-demangle-capi
+                          Link against the rust-demangle library to demangle
+                          Rust language symbols during symbol dumping (default
+                          is no) Pass the path to the crate root.
+  --with-tests-as-root    Run the tests as root. Use this on platforms like
+                          travis-ci.org that require root privileges to use
+                          ptrace (default is no)
+
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -1456,6 +1474,10 @@ Some influential environment variables:
   GTEST_CFLAGS
               Compiler flags for gtest
   GTEST_LIBS  Linker flags for gtest
+  RUST_DEMANGLE_CFLAGS
+              Compiler flags for rust-demangle
+  RUST_DEMANGLE_LIBS
+              Linker flags for rust-demangle
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -1859,6 +1881,73 @@ $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_c_check_header_compile
+
+# ac_fn_c_check_func LINENO FUNC VAR
+# ----------------------------------
+# Tests whether FUNC exists, setting the cache variable VAR accordingly
+ac_fn_c_check_func ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+$as_echo_n "checking for $2... " >&6; }
+if eval \${$3+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+/* Define $2 to an innocuous variant, in case <limits.h> declares $2.
+   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
+#define $2 innocuous_$2
+
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $2 (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+
+#undef $2
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char $2 ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined __stub_$2 || defined __stub___$2
+choke me
+#endif
+
+int
+main ()
+{
+return $2 ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  eval "$3=yes"
+else
+  eval "$3=no"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+eval ac_res=\$$3
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+
+} # ac_fn_c_check_func
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -5720,14 +5809,6 @@ else
   RANLIB="$ac_cv_prog_RANLIB"
 fi
 
- if test "$GCC" = yes; then
-  GCC_TRUE=
-  GCC_FALSE='#'
-else
-  GCC_TRUE='#'
-  GCC_FALSE=
-fi
-   # let the Makefile know if we're gcc
 
 # Check whether --enable-m32 was given.
 if test "${enable_m32+set}" = set; then :
@@ -6192,104 +6273,6 @@ rm -rf conftest*
 
 fi
 
-# ===========================================================================
-#           http://www.nongnu.org/autoconf-archive/ax_pthread.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_PTHREAD([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
-#
-# DESCRIPTION
-#
-#   This macro figures out how to build C programs using POSIX threads. It
-#   sets the PTHREAD_LIBS output variable to the threads library and linker
-#   flags, and the PTHREAD_CFLAGS output variable to any special C compiler
-#   flags that are needed. (The user can also force certain compiler
-#   flags/libs to be tested by setting these environment variables.)
-#
-#   Also sets PTHREAD_CC to any special C compiler that is needed for
-#   multi-threaded programs (defaults to the value of CC otherwise). (This
-#   is necessary on AIX to use the special cc_r compiler alias.)
-#
-#   NOTE: You are assumed to not only compile your program with these flags,
-#   but also link it with them as well. e.g. you should link with
-#   $PTHREAD_CC $CFLAGS $PTHREAD_CFLAGS $LDFLAGS ... $PTHREAD_LIBS $LIBS
-#
-#   If you are only building threads programs, you may wish to use these
-#   variables in your default LIBS, CFLAGS, and CC:
-#
-#     LIBS="$PTHREAD_LIBS $LIBS"
-#     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-#     CC="$PTHREAD_CC"
-#
-#   In addition, if the PTHREAD_CREATE_JOINABLE thread-attribute constant
-#   has a nonstandard name, defines PTHREAD_CREATE_JOINABLE to that name
-#   (e.g. PTHREAD_CREATE_UNDETACHED on AIX).
-#
-#   ACTION-IF-FOUND is a list of shell commands to run if a threads library
-#   is found, and ACTION-IF-NOT-FOUND is a list of commands to run it if it
-#   is not found. If ACTION-IF-FOUND is not specified, the default action
-#   will define HAVE_PTHREAD.
-#
-#   Please let the authors know if this macro fails on any platform, or if
-#   you have any other suggestions or comments. This macro was based on work
-#   by SGJ on autoconf scripts for FFTW (http://www.fftw.org/) (with help
-#   from M. Frigo), as well as ac_pthread and hb_pthread macros posted by
-#   Alejandro Forero Cuervo to the autoconf macro repository. We are also
-#   grateful for the helpful feedback of numerous users.
-#
-# LICENSE
-#
-#   Copyright (c) 2008 Steven G. Johnson <stevenj@alum.mit.edu>
-#
-#   This program is free software: you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation, either version 3 of the License, or (at your
-#   option) any later version.
-#
-#   This program is distributed in the hope that it will be useful, but
-#   WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-#   Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License along
-#   with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-#   As a special exception, the respective Autoconf Macro's copyright owner
-#   gives unlimited permission to copy, distribute and modify the configure
-#   scripts that are the output of Autoconf when processing the Macro. You
-#   need not follow the terms of the GNU General Public License when using
-#   or distributing such scripts, even though portions of the text of the
-#   Macro appear in them. The GNU General Public License (GPL) does govern
-#   all other use of the material that constitutes the Autoconf Macro.
-#
-#   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Archive. When you make and distribute a
-#   modified version of the Autoconf Macro, you may extend this special
-#   exception to the GPL to apply to your modified version as well.
-
-#serial 6
-
-# This is what autoupdate's m4 run will expand.  It fires
-# the warning (with _au_warn_XXX), outputs it into the
-# updated configure.ac (with AC_DIAGNOSE), and then outputs
-# the replacement expansion.
-
-
-# This is an auxiliary macro that is also run when
-# autoupdate runs m4.  It simply calls m4_warning, but
-# we need a wrapper so that each warning is emitted only
-# once.  We break the quoting in m4_warning's argument in
-# order to expand this macro's arguments, not AU_DEFUN's.
-
-
-# Finally, this is the expansion that is picked up by
-# autoconf.  It tells the user to run autoupdate, and
-# then outputs the replacement expansion.  We do not care
-# about autoupdate's warning because that contains
-# information on what to do *after* running autoupdate.
-
 
 
 
@@ -6662,79 +6645,30 @@ fi
 done
 
 
-for ac_header in a.out.h
+for ac_header in a.out.h sys/random.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "a.out.h" "ac_cv_header_a_out_h" "$ac_includes_default"
-if test "x$ac_cv_header_a_out_h" = xyes; then :
+  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_A_OUT_H 1
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
 
 fi
 
 done
 
+for ac_func in arc4random getrandom
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
 
-# ===========================================================================
-#   http://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_CXX_COMPILE_STDCXX(VERSION, [ext|noext], [mandatory|optional])
-#
-# DESCRIPTION
-#
-#   Check for baseline language coverage in the compiler for the specified
-#   version of the C++ standard.  If necessary, add switches to CXXFLAGS to
-#   enable support.  VERSION may be '11' (for the C++11 standard) or '14'
-#   (for the C++14 standard).
-#
-#   The second argument, if specified, indicates whether you insist on an
-#   extended mode (e.g. -std=gnu++11) or a strict conformance mode (e.g.
-#   -std=c++11).  If neither is specified, you get whatever works, with
-#   preference for an extended mode.
-#
-#   The third argument, if specified 'mandatory' or if left unspecified,
-#   indicates that baseline support for the specified C++ standard is
-#   required and that the macro should error out if no mode with that
-#   support is found.  If specified 'optional', then configuration proceeds
-#   regardless, after defining HAVE_CXX${VERSION} if and only if a
-#   supporting mode is found.
-#
-# LICENSE
-#
-#   Copyright (c) 2008 Benjamin Kosnik <bkoz@redhat.com>
-#   Copyright (c) 2012 Zack Weinberg <zackw@panix.com>
-#   Copyright (c) 2013 Roy Stogner <roystgnr@ices.utexas.edu>
-#   Copyright (c) 2014, 2015 Google Inc.; contributed by Alexey Sokolov <sokolov@google.com>
-#   Copyright (c) 2015 Paul Norman <penorman@mac.com>
-#   Copyright (c) 2015 Moritz Klammler <moritz@klammler.eu>
-#
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved.  This file is offered as-is, without any
-#   warranty.
-
-#serial 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+fi
+done
 
 
 
@@ -7397,6 +7331,176 @@ $as_echo "#define HAVE_CXX11 1" >>confdefs.h
   fi
 
 
+WARN_CXXFLAGS=
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C++ compiler accepts -Werror=unknown-warning-option" >&5
+$as_echo_n "checking whether C++ compiler accepts -Werror=unknown-warning-option... " >&6; }
+if ${ax_cv_check_cxxflags___Werror_unknown_warning_option+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CXXFLAGS
+  CXXFLAGS="$CXXFLAGS  -Werror=unknown-warning-option"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ax_cv_check_cxxflags___Werror_unknown_warning_option=yes
+else
+  ax_cv_check_cxxflags___Werror_unknown_warning_option=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CXXFLAGS=$ax_check_save_flags
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cxxflags___Werror_unknown_warning_option" >&5
+$as_echo "$ax_cv_check_cxxflags___Werror_unknown_warning_option" >&6; }
+if test "x$ax_cv_check_cxxflags___Werror_unknown_warning_option" = xyes; then :
+
+  ax_compiler_flags_test="-Werror=unknown-warning-option"
+
+else
+
+  ax_compiler_flags_test=""
+
+fi
+
+
+
+
+
+for flag in    -Wmissing-braces   -Wnon-virtual-dtor   -Woverloaded-virtual   -Wreorder   -Wsign-compare   -Wunused-local-typedefs   -Wunused-variable   -Wvla ; do
+  as_CACHEVAR=`$as_echo "ax_cv_check_cxxflags_${ax_compiler_flags_test}_$flag" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C++ compiler accepts $flag" >&5
+$as_echo_n "checking whether C++ compiler accepts $flag... " >&6; }
+if eval \${$as_CACHEVAR+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+  ax_check_save_flags=$CXXFLAGS
+  CXXFLAGS="$CXXFLAGS ${ax_compiler_flags_test} $flag"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  eval "$as_CACHEVAR=yes"
+else
+  eval "$as_CACHEVAR=no"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CXXFLAGS=$ax_check_save_flags
+fi
+eval ac_res=\$$as_CACHEVAR
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_CACHEVAR"\" = x"yes"; then :
+
+if ${WARN_CXXFLAGS+:} false; then :
+
+  case " $WARN_CXXFLAGS " in #(
+  *" $flag "*) :
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: : WARN_CXXFLAGS already contains \$flag"; } >&5
+  (: WARN_CXXFLAGS already contains $flag) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } ;; #(
+  *) :
+
+     as_fn_append WARN_CXXFLAGS " $flag"
+     { { $as_echo "$as_me:${as_lineno-$LINENO}: : WARN_CXXFLAGS=\"\$WARN_CXXFLAGS\""; } >&5
+  (: WARN_CXXFLAGS="$WARN_CXXFLAGS") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }
+     ;;
+esac
+
+else
+
+  WARN_CXXFLAGS=$flag
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: : WARN_CXXFLAGS=\"\$WARN_CXXFLAGS\""; } >&5
+  (: WARN_CXXFLAGS="$WARN_CXXFLAGS") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }
+
+fi
+
+else
+  :
+fi
+
+done
+
+as_fn_append WARN_CXXFLAGS " -Werror"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for O_CLOEXEC defined in fcntl.h" >&5
+$as_echo_n "checking for O_CLOEXEC defined in fcntl.h... " >&6; }
+if ${ac_cv_defined_O_CLOEXEC_fcntl_h+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <fcntl.h>
+int
+main ()
+{
+
+  #ifdef O_CLOEXEC
+  int ok;
+  #else
+  choke me
+  #endif
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_defined_O_CLOEXEC_fcntl_h=yes
+else
+  ac_cv_defined_O_CLOEXEC_fcntl_h=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_defined_O_CLOEXEC_fcntl_h" >&5
+$as_echo "$ac_cv_defined_O_CLOEXEC_fcntl_h" >&6; }
+if test $ac_cv_defined_O_CLOEXEC_fcntl_h != "no"; then :
+
+else
+
+$as_echo "#define O_CLOEXEC 0" >>confdefs.h
+
+fi
+
 # Only build Linux client libs when compiling for Linux
 case $host in
   *-*-linux* | *-android* )
@@ -7747,6 +7851,58 @@ else
 fi
 
 
+
+# Check whether --with-rust-demangle was given.
+if test "${with_rust_demangle+set}" = set; then :
+  withval=$with_rust_demangle; case "${withval}" in
+               yes)
+                 as_fn_error $? "You must pass the path to the rust-demangle-capi crate for --with-rust-demangle" "$LINENO" 5
+                 ;;
+               no)
+                 rust_demangle=false
+                 ;;
+               *)
+                 if ! test -f "${withval}/Cargo.toml"; then
+                   as_fn_error $? "You must pass the path to the rust-demangle-capi crate for --with-rust-demangle" "$LINENO" 5
+                 fi
+                 RUST_DEMANGLE_CFLAGS="-DHAVE_RUST_DEMANGLE -I${withval}/target/include"
+                 RUST_DEMANGLE_LIBS="-L${withval}/target/release -lrust_demangle -lpthread -ldl"
+                 ;;
+             esac
+else
+  rust_demangle=false
+fi
+
+
+
+
+
+# Check whether --with-tests-as-root was given.
+if test "${with_tests_as_root+set}" = set; then :
+  withval=$with_tests_as_root; case "${withval}" in
+               yes)
+                 tests_as_root=true
+                 ;;
+               no)
+                 tests_as_root=false
+                 ;;
+               *)
+                 as_fn_error $? "--with-tests-as-root can only be \"yes\" or \"no\"" "$LINENO" 5
+                 ;;
+             esac
+else
+  tests_as_root=false
+fi
+
+ if test x$tests_as_root = xtrue; then
+  TESTS_AS_ROOT_TRUE=
+  TESTS_AS_ROOT_FALSE='#'
+else
+  TESTS_AS_ROOT_TRUE='#'
+  TESTS_AS_ROOT_FALSE=
+fi
+
+
 ac_config_files="$ac_config_files breakpad.pc breakpad-client.pc Makefile"
 
 
@@ -7898,10 +8054,6 @@ if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${GCC_TRUE}" && test -z "${GCC_FALSE}"; then
-  as_fn_error $? "conditional \"GCC\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${LINUX_HOST_TRUE}" && test -z "${LINUX_HOST_FALSE}"; then
   as_fn_error $? "conditional \"LINUX_HOST\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -7928,6 +8080,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${SELFTEST_TRUE}" && test -z "${SELFTEST_FALSE}"; then
   as_fn_error $? "conditional \"SELFTEST\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${TESTS_AS_ROOT_TRUE}" && test -z "${TESTS_AS_ROOT_FALSE}"; then
+  as_fn_error $? "conditional \"TESTS_AS_ROOT\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

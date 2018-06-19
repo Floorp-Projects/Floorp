@@ -60,10 +60,15 @@ namespace google_breakpad {
 
 const int Stackwalker::kRASearchWords = 40;
 
-uint32_t Stackwalker::max_frames_ = 1024;
+// This default is just a sanity check: a large enough value
+// that allow capturing unbounded recursion traces, yet provide a
+// guardrail against stack walking bugs. The stack walking invariants
+// guarantee that the unwinding process is strictly monotonic and
+// practically bounded by the size of the stack memory range.
+uint32_t Stackwalker::max_frames_ = 1 << 20;  // 1M
 bool Stackwalker::max_frames_set_ = false;
 
-uint32_t Stackwalker::max_frames_scanned_ = 1024;
+uint32_t Stackwalker::max_frames_scanned_ = 1 << 14;  // 16k
 
 Stackwalker::Stackwalker(const SystemInfo* system_info,
                          MemoryRegion* memory,
@@ -72,6 +77,7 @@ Stackwalker::Stackwalker(const SystemInfo* system_info,
     : system_info_(system_info),
       memory_(memory),
       modules_(modules),
+      unloaded_modules_(NULL),
       frame_symbolizer_(frame_symbolizer) {
   assert(frame_symbolizer_);
 }
@@ -134,8 +140,9 @@ bool Stackwalker::Walk(
 
     // Resolve the module information, if a module map was provided.
     StackFrameSymbolizer::SymbolizerResult symbolizer_result =
-        frame_symbolizer_->FillSourceLineInfo(modules_, system_info_,
-                                             frame.get());
+        frame_symbolizer_->FillSourceLineInfo(modules_, unloaded_modules_,
+                                              system_info_,
+                                              frame.get());
     switch (symbolizer_result) {
       case StackFrameSymbolizer::kInterrupt:
         BPLOG(INFO) << "Stack walk is interrupted.";
@@ -186,13 +193,13 @@ bool Stackwalker::Walk(
   return true;
 }
 
-
 // static
 Stackwalker* Stackwalker::StackwalkerForCPU(
     const SystemInfo* system_info,
     DumpContext* context,
     MemoryRegion* memory,
     const CodeModules* modules,
+    const CodeModules* unloaded_modules,
     StackFrameSymbolizer* frame_symbolizer) {
   if (!context) {
     BPLOG(ERROR) << "Can't choose a stackwalker implementation without context";
@@ -232,7 +239,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                              context->GetContextSPARC(),
                                              memory, modules, frame_symbolizer);
       break;
- 
+
     case MD_CONTEXT_MIPS:
     case MD_CONTEXT_MIPS64:
       cpu_stackwalker = new StackwalkerMIPS(system_info,
@@ -251,7 +258,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                            frame_symbolizer);
       break;
     }
-    
+
     case MD_CONTEXT_ARM64:
       cpu_stackwalker = new StackwalkerARM64(system_info,
                                              context->GetContextARM64(),
@@ -263,14 +270,44 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
   BPLOG_IF(ERROR, !cpu_stackwalker) << "Unknown CPU type " << HexString(cpu) <<
                                        ", can't choose a stackwalker "
                                        "implementation";
+  if (cpu_stackwalker) {
+    cpu_stackwalker->unloaded_modules_ = unloaded_modules;
+  }
   return cpu_stackwalker;
 }
 
-bool Stackwalker::InstructionAddressSeemsValid(uint64_t address) {
+// CONSIDER: check stack alignment?
+bool Stackwalker::TerminateWalk(uint64_t caller_ip,
+                                uint64_t caller_sp,
+                                uint64_t callee_sp,
+                                bool first_unwind) const {
+  // Treat an instruction address less than 4k as end-of-stack.
+  // (using InstructionAddressSeemsValid() here is very tempting,
+  // but we need to handle JITted code)
+  if (caller_ip < (1 << 12)) {
+    return true;
+  }
+
+  // NOTE: The stack address range is implicitly checked
+  //   when the stack memory is accessed.
+
+  // The stack pointer should monotonically increase. For first unwind
+  // we allow caller_sp == callee_sp to account for architectures where
+  // the return address is stored in a register (so it's possible to have
+  // leaf functions which don't move the stack pointer)
+  if (first_unwind ? (caller_sp < callee_sp) : (caller_sp <= callee_sp)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool Stackwalker::InstructionAddressSeemsValid(uint64_t address) const {
   StackFrame frame;
   frame.instruction = address;
   StackFrameSymbolizer::SymbolizerResult symbolizer_result =
-      frame_symbolizer_->FillSourceLineInfo(modules_, system_info_, &frame);
+      frame_symbolizer_->FillSourceLineInfo(modules_, unloaded_modules_,
+                                            system_info_, &frame);
 
   if (!frame.module) {
     // not inside any loaded module

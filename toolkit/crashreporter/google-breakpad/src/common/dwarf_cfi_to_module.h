@@ -181,7 +181,7 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
 
   // The names of the return address and canonical frame address. Putting
   // these here instead of using string literals allows us to share their
-  // texts in reference-counted std::string implementations (all the
+  // texts in reference-counted string implementations (all the
   // popular ones). Many, many rules cite these strings.
   string cfa_name_, ra_name_;
 
@@ -189,7 +189,7 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   // our data structures, insert it into this set, and then use the string
   // from the set.
   //
-  // Because std::string uses reference counting internally, simply using
+  // Because string uses reference counting internally, simply using
   // strings from this set, even if passed by value, assigned, or held
   // directly in structures and containers (map<string, ...>, for example),
   // causes those strings to share a single instance of each distinct piece

@@ -38,6 +38,10 @@
 // TODO(primiano): remove these changes after Chromium has stably rolled to
 // an NDK with the appropriate fixes. https://crbug.com/358831
 
+// With traditional headers, <sys/user.h> forgot to do this. Unified headers get
+// it right.
+#include <sys/types.h>
+
 #include_next <sys/user.h>
 
 #include <android/api-level.h>

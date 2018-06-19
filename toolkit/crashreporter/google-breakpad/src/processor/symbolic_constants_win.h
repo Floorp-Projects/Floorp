@@ -38,12 +38,13 @@
 
 #include <string>
 
+#include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
 /* Converts a NTSTATUS code to a reason string. */
-std::string NTStatusToString(uint32_t ntstatus);
+string NTStatusToString(uint32_t ntstatus);
 
 }  // namespace google_breakpad
 

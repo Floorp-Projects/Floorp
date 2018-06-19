@@ -194,8 +194,8 @@ class ExceptionHandler {
     ucontext_t context;
 #if !defined(__ARM_EABI__) && !defined(__mips__)
     // #ifdef this out because FP state is not part of user ABI for Linux ARM.
-    // In case of MIPS Linux FP state is already part of struct
-    // ucontext so 'float_state' is not required.
+    // In case of MIPS Linux FP state is already part of ucontext_t so
+    // 'float_state' is not required.
     fpstate_t float_state;
 #endif
   };
@@ -262,7 +262,7 @@ class ExceptionHandler {
   // can do this. We create a pipe which we can use to block the
   // cloned process after creating it, until we have explicitly enabled
   // ptrace. This is used to store the file descriptors for the pipe
-  int fdes[2];
+  int fdes[2] = {-1, -1};
 
   // Callers can add extra info about mappings for cases where the
   // dumper code cannot extract enough information from /proc/<pid>/maps.
@@ -272,6 +272,10 @@ class ExceptionHandler {
   // the dump.
   AppMemoryList app_memory_list_;
 };
+
+
+typedef bool (*FirstChanceHandler)(int, void*, void*);
+void SetFirstChanceExceptionHandler(FirstChanceHandler callback);
 
 }  // namespace google_breakpad
 

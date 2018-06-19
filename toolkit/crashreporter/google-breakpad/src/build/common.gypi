@@ -894,7 +894,7 @@
         ],
         'msvs_cygwin_dirs': ['<(DEPTH)/third_party/cygwin'],
         'msvs_disabled_warnings': [
-          4100, 4127, 4396, 4503, 4512, 4819, 4995, 4702
+          4091, 4100, 4127, 4366, 4396, 4503, 4512, 4819, 4995, 4702
         ],
         'msvs_settings': {
           'VCCLCompilerTool': {

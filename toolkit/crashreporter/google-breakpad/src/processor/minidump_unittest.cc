@@ -56,6 +56,8 @@ using google_breakpad::MinidumpMemoryRegion;
 using google_breakpad::MinidumpModule;
 using google_breakpad::MinidumpModuleList;
 using google_breakpad::MinidumpSystemInfo;
+using google_breakpad::MinidumpUnloadedModule;
+using google_breakpad::MinidumpUnloadedModuleList;
 using google_breakpad::MinidumpThread;
 using google_breakpad::MinidumpThreadList;
 using google_breakpad::SynthMinidump::Context;
@@ -63,6 +65,7 @@ using google_breakpad::SynthMinidump::Dump;
 using google_breakpad::SynthMinidump::Exception;
 using google_breakpad::SynthMinidump::Memory;
 using google_breakpad::SynthMinidump::Module;
+using google_breakpad::SynthMinidump::UnloadedModule;
 using google_breakpad::SynthMinidump::Section;
 using google_breakpad::SynthMinidump::Stream;
 using google_breakpad::SynthMinidump::String;
@@ -392,6 +395,61 @@ TEST(Dump, ThreadMissingContext) {
 
   MinidumpContext* md_context = md_thread->GetContext();
   ASSERT_EQ(reinterpret_cast<MinidumpContext*>(NULL), md_context);
+}
+
+TEST(Dump, OneUnloadedModule) {
+  Dump dump(0, kBigEndian);
+  String module_name(dump, "unloaded module");
+
+  String csd_version(dump, "Windows 9000");
+  SystemInfo system_info(dump, SystemInfo::windows_x86, csd_version);
+
+  UnloadedModule unloaded_module(
+      dump,
+      0xa90206ca83eb2852ULL,
+      0xada542bd,
+      module_name,
+      0x34571371,
+      0xb1054d2a);
+
+  dump.Add(&unloaded_module);
+  dump.Add(&module_name);
+  dump.Add(&system_info);
+  dump.Add(&csd_version);
+  dump.Finish();
+
+  string contents;
+  ASSERT_TRUE(dump.GetContents(&contents));
+  istringstream minidump_stream(contents);
+  Minidump minidump(minidump_stream);
+  ASSERT_TRUE(minidump.Read());
+  ASSERT_EQ(2U, minidump.GetDirectoryEntryCount());
+
+  const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(1);
+  ASSERT_TRUE(dir != NULL);
+  EXPECT_EQ((uint32_t) MD_UNLOADED_MODULE_LIST_STREAM, dir->stream_type);
+
+  MinidumpUnloadedModuleList *md_unloaded_module_list =
+      minidump.GetUnloadedModuleList();
+  ASSERT_TRUE(md_unloaded_module_list != NULL);
+  ASSERT_EQ(1U, md_unloaded_module_list->module_count());
+
+  const MinidumpUnloadedModule *md_unloaded_module =
+      md_unloaded_module_list->GetModuleAtIndex(0);
+  ASSERT_TRUE(md_unloaded_module != NULL);
+  ASSERT_EQ(0xa90206ca83eb2852ULL, md_unloaded_module->base_address());
+  ASSERT_EQ(0xada542bd, md_unloaded_module->size());
+  ASSERT_EQ("unloaded module", md_unloaded_module->code_file());
+  ASSERT_EQ("", md_unloaded_module->debug_file());
+  // time_date_stamp and size_of_image concatenated
+  ASSERT_EQ("B1054D2Aada542bd", md_unloaded_module->code_identifier());
+  ASSERT_EQ("", md_unloaded_module->debug_identifier());
+
+  const MDRawUnloadedModule *md_raw_unloaded_module =
+      md_unloaded_module->module();
+  ASSERT_TRUE(md_raw_unloaded_module != NULL);
+  ASSERT_EQ(0xb1054d2aU, md_raw_unloaded_module->time_date_stamp);
+  ASSERT_EQ(0x34571371U, md_raw_unloaded_module->checksum);
 }
 
 static const MDVSFixedFileInfo fixed_file_info = {
@@ -813,6 +871,32 @@ TEST(Dump, BigDump) {
   dump.Add(&module3_name);
   dump.Add(&module3);
 
+  // Unloaded modules!
+  uint64_t umodule1_base = 0xeb77da57b5d4cbdaULL;
+  uint32_t umodule1_size = 0x83cd5a37;
+  String umodule1_name(dump, "unloaded module one");
+  UnloadedModule unloaded_module1(dump, umodule1_base, umodule1_size,
+                                  umodule1_name);
+  dump.Add(&umodule1_name);
+  dump.Add(&unloaded_module1);
+
+  uint64_t umodule2_base = 0xeb77da57b5d4cbdaULL;
+  uint32_t umodule2_size = 0x83cd5a37;
+  String umodule2_name(dump, "unloaded module two");
+  UnloadedModule unloaded_module2(dump, umodule2_base, umodule2_size,
+                                  umodule2_name);
+  dump.Add(&umodule2_name);
+  dump.Add(&unloaded_module2);
+
+  uint64_t umodule3_base = 0xeb77da5839a20000ULL;
+  uint32_t umodule3_size = 0x83cd5a37;
+  String umodule3_name(dump, "unloaded module three");
+  UnloadedModule unloaded_module3(dump, umodule3_base, umodule3_size,
+                                  umodule3_name);
+  dump.Add(&umodule3_name);
+  dump.Add(&unloaded_module3);
+
+
   // Add one more memory region, on top of the five stacks.
   Memory memory5(dump, 0x61979e828040e564ULL);
   memory5.Append("contents of memory 5");
@@ -825,7 +909,7 @@ TEST(Dump, BigDump) {
   istringstream minidump_stream(contents);
   Minidump minidump(minidump_stream);
   ASSERT_TRUE(minidump.Read());
-  ASSERT_EQ(4U, minidump.GetDirectoryEntryCount());
+  ASSERT_EQ(5U, minidump.GetDirectoryEntryCount());
 
   // Check the threads.
   MinidumpThreadList *thread_list = minidump.GetThreadList();
@@ -882,6 +966,29 @@ TEST(Dump, BigDump) {
             md_module_list->GetModuleAtIndex(1)->base_address());
   EXPECT_EQ(0x95fc1544da321b6cULL,
             md_module_list->GetModuleAtIndex(2)->base_address());
+
+  // Check unloaded modules
+  MinidumpUnloadedModuleList *md_unloaded_module_list =
+      minidump.GetUnloadedModuleList();
+  ASSERT_TRUE(md_unloaded_module_list != NULL);
+  ASSERT_EQ(3U, md_unloaded_module_list->module_count());
+  EXPECT_EQ(umodule1_base,
+            md_unloaded_module_list->GetModuleAtIndex(0)->base_address());
+  EXPECT_EQ(umodule2_base,
+            md_unloaded_module_list->GetModuleAtIndex(1)->base_address());
+  EXPECT_EQ(umodule3_base,
+            md_unloaded_module_list->GetModuleAtIndex(2)->base_address());
+
+  const MinidumpUnloadedModule *umodule =
+      md_unloaded_module_list->GetModuleForAddress(
+          umodule1_base + umodule1_size / 2);
+  EXPECT_EQ(umodule1_base, umodule->base_address());
+
+  umodule = md_unloaded_module_list->GetModuleAtSequence(0);
+  EXPECT_EQ(umodule1_base, umodule->base_address());
+
+  EXPECT_EQ(NULL, md_unloaded_module_list->GetMainModule());
+
 }
 
 TEST(Dump, OneMemoryInfo) {

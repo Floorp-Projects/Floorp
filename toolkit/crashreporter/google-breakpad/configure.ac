@@ -28,7 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.64)
 
 AC_INIT(breakpad, 0.1, google-breakpad-dev@googlegroups.com)
 dnl Sanity check: the argument is just a file that should exist.
@@ -48,7 +48,6 @@ AM_PROG_CC_C_O
 AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_RANLIB
-AM_CONDITIONAL(GCC, test "$GCC" = yes)   # let the Makefile know if we're gcc
 
 dnl This must come before all the feature tests below.
 AC_ARG_ENABLE(m32,
@@ -72,12 +71,39 @@ AC_ARG_ENABLE(m32,
 
 AC_HEADER_STDC
 AC_SYS_LARGEFILE
-m4_include(m4/ax_pthread.m4)
 AX_PTHREAD
-AC_CHECK_HEADERS([a.out.h])
+AC_CHECK_HEADERS([a.out.h sys/random.h])
+AC_CHECK_FUNCS([arc4random getrandom])
 
-m4_include(m4/ax_cxx_compile_stdcxx.m4)
 AX_CXX_COMPILE_STDCXX(11, noext, mandatory)
+
+dnl Test supported warning flags.
+WARN_CXXFLAGS=
+dnl This warning flag is used by clang.  Its default behavior is to warn when
+dnl given an unknown flag rather than error out.
+AC_LANG_PUSH([C++])
+AX_CHECK_COMPILE_FLAG([-Werror=unknown-warning-option],[
+  ax_compiler_flags_test="-Werror=unknown-warning-option"
+],[
+  ax_compiler_flags_test=""
+])
+AX_APPEND_COMPILE_FLAGS(m4_flatten([
+  -Wmissing-braces
+  -Wnon-virtual-dtor
+  -Woverloaded-virtual
+  -Wreorder
+  -Wsign-compare
+  -Wunused-local-typedefs
+  -Wunused-variable
+  -Wvla
+]), [WARN_CXXFLAGS], [${ax_compiler_flags_test}])
+AS_VAR_APPEND([WARN_CXXFLAGS], " -Werror")
+AC_LANG_POP([C++])
+AC_SUBST([WARN_CXXFLAGS])
+
+dnl Test support for O_CLOEXEC
+AX_CHECK_DEFINE([fcntl.h], [O_CLOEXEC], [],
+                [AC_DEFINE([O_CLOEXEC], [0], [Fallback definition for old systems])])
 
 # Only build Linux client libs when compiling for Linux
 case $host in
@@ -194,6 +220,50 @@ AC_ARG_ENABLE(selftest,
                esac],
               [selftest=false])
 AM_CONDITIONAL(SELFTEST, test x$selftest = xtrue)
+
+AC_ARG_WITH(rust-demangle,
+            AS_HELP_STRING([--with-rust-demangle=/path/to/rust-demangle-capi],
+                             [Link against the rust-demangle library]
+                             [to demangle Rust language symbols during]
+                             [symbol dumping (default is no)]
+                             [Pass the path to the crate root.]),
+            [case "${withval}" in
+               yes)
+                 AC_MSG_ERROR(You must pass the path to the rust-demangle-capi crate for --with-rust-demangle)
+                 ;;
+               no)
+                 rust_demangle=false
+                 ;;
+               *)
+                 if ! test -f "${withval}/Cargo.toml"; then
+                   AC_MSG_ERROR(You must pass the path to the rust-demangle-capi crate for --with-rust-demangle)
+                 fi
+                 RUST_DEMANGLE_CFLAGS="-DHAVE_RUST_DEMANGLE -I${withval}/target/include"
+                 RUST_DEMANGLE_LIBS="-L${withval}/target/release -lrust_demangle -lpthread -ldl"
+                 ;;
+             esac],
+            [rust_demangle=false])
+AC_ARG_VAR([RUST_DEMANGLE_CFLAGS], [Compiler flags for rust-demangle])
+AC_ARG_VAR([RUST_DEMANGLE_LIBS], [Linker flags for rust-demangle])
+
+AC_ARG_WITH(tests-as-root,
+            AS_HELP_STRING([--with-tests-as-root],
+                           [Run the tests as root. Use this on platforms]
+                           [like travis-ci.org that require root privileges]
+                           [to use ptrace (default is no)]),
+            [case "${withval}" in
+               yes)
+                 tests_as_root=true
+                 ;;
+               no)
+                 tests_as_root=false
+                 ;;
+               *)
+                 AC_MSG_ERROR(--with-tests-as-root can only be "yes" or "no")
+                 ;;
+             esac],
+            [tests_as_root=false])
+AM_CONDITIONAL(TESTS_AS_ROOT, test x$tests_as_root = xtrue)
 
 AC_CONFIG_FILES(m4_flatten([
   breakpad.pc

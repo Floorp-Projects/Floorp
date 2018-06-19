@@ -41,7 +41,7 @@ using namespace google_breakpad;
 
 TEST(LinuxCoreDumperTest, GetMappingAbsolutePath) {
   const LinuxCoreDumper dumper(getpid(), "core", "/tmp", "/mnt/root");
-  const MappingInfo mapping = { 0, 0, 0, false, "/usr/lib/libc.so" };
+  const MappingInfo mapping = {0, 0, {0, 0}, 0, false, "/usr/lib/libc.so"};
 
   char path[PATH_MAX];
   dumper.GetMappingAbsolutePath(mapping, path);

@@ -1227,6 +1227,14 @@ class CallFrameInfo::Reporter {
   // there is not a CIE.
   virtual void BadCIEId(uint64 offset, uint64 cie_offset);
 
+  // The FDE at OFFSET refers to a CIE with an address size we don't know how
+  // to handle.
+  virtual void UnexpectedAddressSize(uint64 offset, uint8_t address_size);
+
+  // The FDE at OFFSET refers to a CIE with an segment descriptor size we
+  // don't know how to handle.
+  virtual void UnexpectedSegmentSize(uint64 offset, uint8_t segment_size);
+
   // The FDE at OFFSET refers to a CIE with version number VERSION,
   // which we don't recognize. We cannot parse DWARF CFI if it uses
   // a version number we don't recognize.

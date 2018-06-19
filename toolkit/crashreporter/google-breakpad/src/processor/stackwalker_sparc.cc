@@ -111,6 +111,14 @@ StackFrame* StackwalkerSPARC::GetCallerFrame(const CallStack* stack,
     return NULL;
   }
 
+  // Should we terminate the stack walk? (end-of-stack or broken invariant)
+  if (TerminateWalk(instruction,
+                    stack_pointer,
+                    last_frame->context.g_r[14],
+                    stack->frames()->size() == 1)) {
+    return NULL;
+  }
+
   StackFrameSPARC* frame = new StackFrameSPARC();
 
   frame->context = last_frame->context;

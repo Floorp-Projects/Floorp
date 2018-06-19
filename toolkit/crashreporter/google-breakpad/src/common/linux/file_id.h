@@ -38,6 +38,7 @@
 
 #include "common/linux/guid_creator.h"
 #include "common/memory_allocator.h"
+#include "common/using_std_string.h"
 
 namespace google_breakpad {
 
@@ -70,16 +71,16 @@ class FileID {
   // Convert the |identifier| data to a string.  The string will
   // be formatted as a UUID in all uppercase without dashes.
   // (e.g., 22F065BBFC9C49F780FE26A7CEBD7BCE).
-  static std::string ConvertIdentifierToUUIDString(
+  static string ConvertIdentifierToUUIDString(
       const wasteful_vector<uint8_t>& identifier);
 
   // Convert the entire |identifier| data to a hex string.
-  static std::string ConvertIdentifierToString(
+  static string ConvertIdentifierToString(
       const wasteful_vector<uint8_t>& identifier);
 
  private:
   // Storage for the path specified
-  std::string path_;
+  string path_;
 };
 
 }  // namespace google_breakpad

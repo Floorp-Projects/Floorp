@@ -176,8 +176,8 @@
       ],
       'dependencies': [
         'processor',
-        '../build/testing.gypi:gmock',
-        '../build/testing.gypi:gtest',
+        '../build/testing.gyp:gmock',
+        '../build/testing.gyp:gtest',
       ],
     },
   ],

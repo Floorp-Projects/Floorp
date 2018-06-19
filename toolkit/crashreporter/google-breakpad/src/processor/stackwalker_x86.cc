@@ -200,13 +200,15 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
     }
   }
 
-  // Set up the dictionary for the PostfixEvaluator.  %ebp and %esp are used
-  // in each program string, and their previous values are known, so set them
-  // here.
+  // Set up the dictionary for the PostfixEvaluator.  %ebp, %esp, and sometimes
+  // %ebx are used in program strings, and their previous values are known, so
+  // set them here.
   PostfixEvaluator<uint32_t>::DictionaryType dictionary;
   // Provide the current register values.
   dictionary["$ebp"] = last_frame->context.ebp;
   dictionary["$esp"] = last_frame->context.esp;
+  if (last_frame->context_validity & StackFrameX86::CONTEXT_VALID_EBX)
+    dictionary["$ebx"] = last_frame->context.ebx;
   // Provide constants from the debug info for last_frame and its callee.
   // .cbCalleeParams is a Breakpad extension that allows us to use the
   // PostfixEvaluator engine when certain types of debugging information
@@ -330,11 +332,19 @@ StackFrameX86* StackwalkerX86::GetCallerByWindowsFrameInfo(
     // evaluation.  The stack will not be examined to locate a saved
     // %ebp value, because these frames do not save (or use) %ebp.
     //
+    // We also propagate %ebx through, as it is commonly unmodifed after
+    // calling simple forwarding functions in ntdll (that are this non-EBP
+    // using type). It's not clear that this is always correct, but it is
+    // important for some functions to get a correct walk.
+    //
     // %eip_new = *(%esp_old + callee_params + saved_regs + locals)
     // %esp_new = %esp_old + callee_params + saved_regs + locals + 4
     // %ebp_new = %ebp_old
+    // %ebx_new = %ebx_old  // If available.
     program_string = "$eip .raSearchStart ^ = "
-        "$esp .raSearchStart 4 + =";
+                     "$esp .raSearchStart 4 + =";
+    if (last_frame->context_validity & StackFrameX86::CONTEXT_VALID_EBX)
+      program_string += " $ebx $ebx =";
     recover_ebp = false;
   }
 
@@ -649,15 +659,13 @@ StackFrame* StackwalkerX86::GetCallerFrame(const CallStack* stack,
   if (!new_frame.get())
     return NULL;
 
-  // Treat an instruction address of 0 as end-of-stack.
-  if (new_frame->context.eip == 0)
+  // Should we terminate the stack walk? (end-of-stack or broken invariant)
+  if (TerminateWalk(new_frame->context.eip,
+                    new_frame->context.esp,
+                    last_frame->context.esp,
+                    frames.size() == 1)) {
     return NULL;
-
-  // If the new stack pointer is at a lower address than the old, then
-  // that's clearly incorrect. Treat this as end-of-stack to enforce
-  // progress and avoid infinite loops.
-  if (new_frame->context.esp <= last_frame->context.esp)
-    return NULL;
+  }
 
   // new_frame->context.eip is the return address, which is the instruction
   // after the CALL that caused us to arrive at the callee. Set
