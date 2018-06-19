@@ -199,9 +199,66 @@ class SixSpeed(Benchmark):
         self.suite['value'] = bench_total
 
 
+class AsmJSApps(Benchmark):
+    name = 'asmjsapps'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'asmjs-apps')
+    units = 'ms'
+
+    @property
+    def command(self):
+        if not self.args:
+            self.args = []
+        full_args = ['bash', 'harness.sh', self.shell + " " + " ".join(self.args)]
+        return full_args
+
+    def reset(self):
+        super(AsmJSApps, self).reset()
+
+        # Scores are of the form:
+        # {<bench_name>: {<score_name>: [<values>]}}
+        self.scores = defaultdict(lambda: defaultdict(list))
+
+    def process_results(self, output):
+        total = 0.0
+        tests = []
+        for line in output.splitlines():
+            m = re.search("(.+) - (\d+(\.\d+)?)", line)
+            if not m:
+                continue
+            name = m.group(1)
+            score = m.group(2)
+            total += float(score)
+            tests.append({ 'name': name, 'time': score })
+        tests.append({ 'name': '__total__', 'time': total })
+        return tests
+
+    def process_line(self, output):
+        m = re.search("(.+) - (\d+(\.\d+)?)", output)
+        if not m:
+            return
+        subtest = m.group(1)
+        score = m.group(2)
+        if subtest not in self.scores[self.name]:
+            self.scores[self.name][subtest] = []
+        self.scores[self.name][subtest].append(int(score))
+
+
+    def collect_results(self):
+        bench_total = 0
+        # NOTE: for this benchmark we run the test once, so we have a single value array
+        for bench, scores in self.scores.items():
+            for score, values in scores.items():
+                test_name = "{}-{}".format(self.name, score)
+                total = sum(values) / len(values)
+                self.suite['subtests'].append({'name': test_name, 'value': total})
+                bench_total += int(sum(values))
+        self.suite['value'] = bench_total
+
+
 all_benchmarks = {
     'ares6': Ares6,
     'six-speed': SixSpeed,
+    'asmjs-apps': AsmJSApps,
 }
 
 

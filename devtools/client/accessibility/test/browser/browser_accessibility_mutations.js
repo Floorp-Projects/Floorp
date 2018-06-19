@@ -50,7 +50,6 @@ const tests = [{
       actions: [],
       value: "",
       description: "",
-      help: "",
       keyboardShortcut: "",
       childCount: 1,
       indexInParent: 1,
