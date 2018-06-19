@@ -12,11 +12,12 @@
 namespace mozilla {
 namespace dom {
 
+class PaymentRequest;
+
 class PaymentRequestChild final : public PPaymentRequestChild
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaymentRequestChild);
 public:
-  PaymentRequestChild();
+  explicit PaymentRequestChild(PaymentRequest* aRequest);
 
   void MaybeDelete();
 
@@ -40,8 +41,8 @@ private:
   ~PaymentRequestChild() = default;
 
   bool SendRequestPayment(const IPCPaymentActionRequest& aAction);
-
-  bool mActorAlive;
+  void DetachFromRequest();
+  PaymentRequest* MOZ_NON_OWNING_REF mRequest;
 };
 
 } // end of namespace dom

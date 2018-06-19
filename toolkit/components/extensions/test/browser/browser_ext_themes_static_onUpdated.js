@@ -27,9 +27,6 @@ add_task(async function test_on_updated() {
         browser.test.sendMessage("theme-updated", updateInfo);
       });
     },
-    manifest: {
-      permissions: ["theme"],
-    },
   });
 
   await extension.startup();
