@@ -13,7 +13,9 @@ import mozilla.components.support.utils.observer.ObserverRegistry
  *
  * In browsers usually a session corresponds to a tab.
  */
-abstract class EngineSession : Observable<EngineSession.Observer> by registry {
+abstract class EngineSession(
+    private val delegate: Observable<EngineSession.Observer> = ObserverRegistry()
+) : Observable<EngineSession.Observer> by delegate {
     /**
      * Interface to be implemented by classes that want to observe this engine session.
      */
@@ -67,7 +69,5 @@ abstract class EngineSession : Observable<EngineSession.Observer> by registry {
      * this session.
      */
     @CallSuper
-    fun close() = registry.unregisterObservers()
+    fun close() = delegate.unregisterObservers()
 }
-
-val registry = ObserverRegistry<EngineSession.Observer>()

@@ -16,8 +16,9 @@ import kotlin.properties.Delegates
  */
 class Session(
     initialUrl: String,
-    val id: String = UUID.randomUUID().toString()
-) : Observable<Session.Observer> by registry {
+    val id: String = UUID.randomUUID().toString(),
+    delegate: Observable<Session.Observer> = ObserverRegistry()
+) : Observable<Session.Observer> by delegate {
     /**
      * Holder for keeping a reference to an engine session and its observer to update this session
      * object.
@@ -126,5 +127,3 @@ class Session(
         return id.hashCode()
     }
 }
-
-private val registry = ObserverRegistry<Session.Observer>()

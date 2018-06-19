@@ -8,6 +8,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -93,6 +94,22 @@ class EngineSessionTest {
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `registered observers are instance specific`() {
+        val session = spy(DummyEngineSession())
+        val otherSession = spy(DummyEngineSession())
+
+        val observer = mock(EngineSession.Observer::class.java)
+        session.register(observer)
+
+        otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        verify(observer, never()).onLocationChange("https://www.mozilla.org")
+
+        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
         verifyNoMoreInteractions(observer)
     }
 }
