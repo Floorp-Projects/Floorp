@@ -410,18 +410,6 @@ JSObject::nonCCWGlobal() const
     return *realm()->unsafeUnbarrieredMaybeGlobal();
 }
 
-inline js::GlobalObject*
-JSObject::globalForTracing(JSTracer*) const
-{
-    return realm()->unsafeUnbarrieredMaybeGlobal();
-}
-
-inline bool
-JSObject::isOwnGlobal(JSTracer* trc) const
-{
-    return globalForTracing(trc) == this;
-}
-
 inline bool
 JSObject::hasAllFlags(js::BaseShape::Flag flags) const
 {

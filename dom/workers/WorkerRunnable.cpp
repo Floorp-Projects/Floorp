@@ -650,31 +650,31 @@ WorkerSameThreadRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
   }
 }
 
-WorkerProxyToMainThreadRunnable::WorkerProxyToMainThreadRunnable(
-  WorkerPrivate* aWorkerPrivate)
+WorkerProxyToMainThreadRunnable::WorkerProxyToMainThreadRunnable()
   : mozilla::Runnable("dom::WorkerProxyToMainThreadRunnable")
-  , mWorkerPrivate(aWorkerPrivate)
-{
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
-}
-
-WorkerProxyToMainThreadRunnable::~WorkerProxyToMainThreadRunnable()
 {}
 
-bool
-WorkerProxyToMainThreadRunnable::Dispatch()
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
+WorkerProxyToMainThreadRunnable::~WorkerProxyToMainThreadRunnable() = default;
 
-  if (NS_WARN_IF(!HoldWorker())) {
-    RunBackOnWorkerThreadForCleanup();
+bool
+WorkerProxyToMainThreadRunnable::Dispatch(WorkerPrivate* aWorkerPrivate)
+{
+  MOZ_ASSERT(aWorkerPrivate);
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
+  RefPtr<StrongWorkerRef> workerRef =
+    StrongWorkerRef::Create(aWorkerPrivate, "WorkerProxyToMainThreadRunnable");
+  if (NS_WARN_IF(!workerRef)) {
+    RunBackOnWorkerThreadForCleanup(aWorkerPrivate);
     return false;
   }
 
-  if (NS_WARN_IF(NS_FAILED(mWorkerPrivate->DispatchToMainThread(this)))) {
+  MOZ_ASSERT(!mWorkerRef);
+  mWorkerRef = new ThreadSafeWorkerRef(workerRef);
+
+  if (NS_WARN_IF(NS_FAILED(aWorkerPrivate->DispatchToMainThread(this)))) {
     ReleaseWorker();
-    RunBackOnWorkerThreadForCleanup();
+    RunBackOnWorkerThreadForCleanup(aWorkerPrivate);
     return false;
   }
 
@@ -685,7 +685,7 @@ NS_IMETHODIMP
 WorkerProxyToMainThreadRunnable::Run()
 {
   AssertIsOnMainThread();
-  RunOnMainThread();
+  RunOnMainThread(mWorkerRef->Private());
   PostDispatchOnMainThread();
   return NS_OK;
 }
@@ -722,7 +722,7 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
       aWorkerPrivate->AssertIsOnWorkerThread();
 
       if (mRunnable) {
-        mRunnable->RunBackOnWorkerThreadForCleanup();
+        mRunnable->RunBackOnWorkerThreadForCleanup(aWorkerPrivate);
 
         // Let's release the worker thread.
         mRunnable->ReleaseWorker();
@@ -738,46 +738,14 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
   };
 
   RefPtr<WorkerControlRunnable> runnable =
-    new ReleaseRunnable(mWorkerPrivate, this);
+    new ReleaseRunnable(mWorkerRef->Private(), this);
   Unused << NS_WARN_IF(!runnable->Dispatch());
-}
-
-bool
-WorkerProxyToMainThreadRunnable::HoldWorker()
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mWorkerHolder);
-
-  class SimpleWorkerHolder final : public WorkerHolder
-  {
-  public:
-    SimpleWorkerHolder()
-      : WorkerHolder("WorkerProxyToMainThreadRunnable::SimpleWorkerHolder")
-    {}
-
-    bool Notify(WorkerStatus aStatus) override
-    {
-      // We don't care about the notification. We just want to keep the
-      // mWorkerPrivate alive.
-      return true;
-    }
-  };
-
-  UniquePtr<WorkerHolder> workerHolder(new SimpleWorkerHolder());
-  if (NS_WARN_IF(!workerHolder->HoldWorker(mWorkerPrivate, Canceling))) {
-    return false;
-  }
-
-  mWorkerHolder = std::move(workerHolder);
-  return true;
 }
 
 void
 WorkerProxyToMainThreadRunnable::ReleaseWorker()
 {
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerHolder);
-  mWorkerHolder = nullptr;
+  mWorkerRef = nullptr;
 }
 
 } // dom namespace

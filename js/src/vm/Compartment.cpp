@@ -131,14 +131,22 @@ CopyStringPure(JSContext* cx, JSString* str)
         if (!str->asRope().copyLatin1CharsZ(cx, copiedChars))
             return nullptr;
 
-        return NewString<CanGC>(cx, copiedChars.forget(), len);
+        auto* rawCopiedChars = copiedChars.forget();
+        auto* result = NewString<CanGC>(cx, rawCopiedChars, len);
+        if (!result)
+            js_free(rawCopiedChars);
+        return result;
     }
 
     ScopedJSFreePtr<char16_t> copiedChars;
     if (!str->asRope().copyTwoByteCharsZ(cx, copiedChars))
         return nullptr;
 
-    return NewStringDontDeflate<CanGC>(cx, copiedChars.forget(), len);
+    auto* rawCopiedChars = copiedChars.forget();
+    auto* result = NewStringDontDeflate<CanGC>(cx, rawCopiedChars, len);
+    if (!result)
+        js_free(rawCopiedChars);
+    return result;
 }
 
 bool

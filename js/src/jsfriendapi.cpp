@@ -418,8 +418,10 @@ js::AssertSameCompartment(JSObject* objA, JSObject* objB)
 JS_FRIEND_API(void)
 js::NotifyAnimationActivity(JSObject* obj)
 {
+    MOZ_ASSERT(obj->is<GlobalObject>());
+
     int64_t timeNow = PRMJ_Now();
-    obj->realm()->lastAnimationTime = timeNow;
+    obj->as<GlobalObject>().realm()->lastAnimationTime = timeNow;
     obj->runtimeFromMainThread()->lastAnimationTime = timeNow;
 }
 
@@ -1552,7 +1554,7 @@ JS_FRIEND_API(void)
 js::SetRealmValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp)
 {
     MOZ_ASSERT(global->is<GlobalObject>());
-    global->realm()->setValidAccessPtr(accessp);
+    global->as<GlobalObject>().realm()->setValidAccessPtr(accessp);
 }
 
 JS_FRIEND_API(bool)
