@@ -179,6 +179,13 @@ nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
     return NS_OK;
   }
 
+  // Allow the system principal to load everything. This is meant to
+  // temporarily fix downloads and pdf.js.
+  nsIPrincipal* triggeringPrincipal = loadInfo->TriggeringPrincipal();
+  if (nsContentUtils::IsSystemPrincipal(triggeringPrincipal)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -192,7 +199,6 @@ nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
   }
 
   // Allow loading FTP subresources in FTP documents, like XML.
-  nsIPrincipal* triggeringPrincipal = loadInfo->TriggeringPrincipal();
   nsCOMPtr<nsIURI> triggeringURI;
   triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
   if (triggeringURI && nsContentUtils::SchemeIs(triggeringURI, "ftp")) {
