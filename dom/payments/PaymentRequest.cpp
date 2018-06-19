@@ -1057,7 +1057,9 @@ PaymentRequest::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 PaymentRequest::~PaymentRequest()
 {
   if (mIPC) {
-    mIPC->MaybeDelete();
+    // If we're being destroyed, the PaymentRequestManager isn't holding any
+    // references to us and we can't be waiting for any replies.
+    mIPC->MaybeDelete(false);
   }
 }
 

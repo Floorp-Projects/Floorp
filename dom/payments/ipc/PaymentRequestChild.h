@@ -19,7 +19,7 @@ class PaymentRequestChild final : public PPaymentRequestChild
 public:
   explicit PaymentRequestChild(PaymentRequest* aRequest);
 
-  void MaybeDelete();
+  void MaybeDelete(bool aCanBeInManager);
 
   nsresult RequestPayment(const IPCPaymentActionRequest& aAction);
 
@@ -41,7 +41,7 @@ private:
   ~PaymentRequestChild() = default;
 
   bool SendRequestPayment(const IPCPaymentActionRequest& aAction);
-  void DetachFromRequest();
+  void DetachFromRequest(bool aCanBeInManager);
   PaymentRequest* MOZ_NON_OWNING_REF mRequest;
 };
 
