@@ -2493,7 +2493,12 @@ PlacesUtils.keywords = {
           FROM moz_places h
           JOIN moz_keywords k ON k.place_id = h.id
           GROUP BY h.id
-          HAVING h.foreign_count = COUNT(*)`);
+          HAVING h.foreign_count = count(*) +
+            (SELECT count(*)
+             FROM moz_bookmarks b
+             JOIN moz_bookmarks p ON b.parent = p.id
+             WHERE p.parent = :tags_root AND b.fk = h.id)
+          `, { tags_root: PlacesUtils.tagsFolderId });
         for (let row of rows) {
           placeInfosToRemove.push({
             placeId: row.getResultByName("id"),

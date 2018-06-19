@@ -85,7 +85,8 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-textbox[focused="true"] {
-  box-shadow: var(--focus-ring-box-shadow);
+  box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
+              0 0 0 1px var(--toolbar-field-focus-border-color);
 }
 
 .findbar-textbox:-moz-locale-dir(rtl) {

@@ -13,15 +13,6 @@ module.exports = {
     "require": true,
   },
   "overrides": [{
-    // XXX Bug 1230193. We're still working on enabling no-undef for these test
-    // directories.
-    "files": [
-      "server/tests/mochitest/**",
-    ],
-    "rules": {
-      "no-undef": "off",
-    }
-  }, {
     "files": [
       "client/framework/**",
     ],

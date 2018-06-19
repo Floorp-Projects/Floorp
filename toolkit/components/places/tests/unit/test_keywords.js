@@ -491,3 +491,33 @@ add_task(async function test_bookmarkURLChange() {
   Assert.equal((await foreign_count("http://example1.com/")), fc1); // -1 bookmark -1 keyword
   Assert.equal((await foreign_count("http://example2.com/")), fc2 + 2); // +1 bookmark +1 keyword
 });
+
+add_task(async function test_tagDoesntPreventKeywordRemoval() {
+  await check_keyword(false, "http://example.com/", "example");
+  let fc = await foreign_count("http://example.com/");
+
+  let httpBookmark = await PlacesUtils.bookmarks.insert({
+      url: "http://example.com/",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
+  });
+  Assert.equal((await foreign_count("http://example.com/")), fc + 1); // +1 bookmark
+
+  PlacesUtils.tagging.tagURI(uri("http://example.com/"), ["example_tag"]);
+  Assert.equal((await foreign_count("http://example.com/")), fc + 2); // +1 bookmark +1 tag
+
+  await PlacesUtils.keywords.insert({ keyword: "example", url: "http://example.com/" });
+  Assert.equal((await foreign_count("http://example.com/")), fc + 3); // +1 bookmark +1 tag +1 keyword
+
+  await check_keyword(true, "http://example.com/", "example");
+
+  await PlacesUtils.bookmarks.remove(httpBookmark);
+
+  await TestUtils.waitForCondition(
+      async () => !(await PlacesUtils.bookmarks.fetch({ url: "http://example.com/"})),
+      "Wait for bookmark to be removed");
+
+  await check_keyword(false, "http://example.com/", "example");
+  Assert.equal((await foreign_count("http://example.com/")), fc); // bookmark, keyword, and tag should all have been removed
+
+  await check_no_orphans();
+});
