@@ -1732,6 +1732,25 @@ browser.errors:
     record_in_processes:
       - 'main'
 
+widget:
+  ime_name_on_windows:
+    bug_numbers:
+      - 1215818
+    description: >
+      Locale ID and name of IME which was selected by users on Windows.  This
+      does NOT collect legacy IMM-IME names since we cannot get readable names
+      and we do not support IMM-IME so aggressively because IME vendors
+      should've already released TIP for TSF for supporting Windows 8 or later
+      completely.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains memory reporter counters.
 memoryreporter:
   max_ghost_windows:
