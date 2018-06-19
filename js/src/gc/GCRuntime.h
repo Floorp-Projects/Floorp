@@ -26,6 +26,7 @@
 
 namespace js {
 
+class AutoAccessAtomsZone;
 class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
@@ -565,15 +566,13 @@ class GCRuntime
     void pushZealSelectedObjects();
     void purgeRuntime();
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
-    bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
-                                   AutoLockForExclusiveAccess& lock);
+    bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut);
     bool shouldPreserveJITCode(JS::Realm* realm, int64_t currentTime,
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& session);
-    void traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+    void traceRuntimeAtoms(JSTracer* trc, const AutoAccessAtomsZone& atomsAccess);
     void traceKeptAtoms(JSTracer* trc);
-    void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
-                            AutoTraceSession& session);
+    void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
     void maybeDoCycleCollection();
     void markCompartments();
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
