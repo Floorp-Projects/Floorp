@@ -429,6 +429,7 @@ UnregisterSensorObserver(SensorType aSensor, ISensorObserver *aObserver) {
   AssertMainThread();
 
   if (!gSensorObservers) {
+    HAL_ERR("Un-registering a sensor when none have been registered");
     return;
   }
 
