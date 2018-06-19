@@ -4262,8 +4262,7 @@ ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
 }
 
 bool
-GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
-                                     AutoLockForExclusiveAccess& lock)
+GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut)
 {
 #ifdef DEBUG
     /* Assert that zone state is as we expect */
@@ -4355,7 +4354,7 @@ PurgeShapeTablesForShrinkingGC(JSRuntime* rt)
 {
     gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::PURGE_SHAPE_TABLES);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (zone->keepShapeTables() || zone->isSelfHostingZone())
+        if (!CanRelocateZone(zone) || zone->keepShapeTables())
             continue;
         for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next())
             baseShape->maybePurgeTable();
@@ -4386,19 +4385,17 @@ BufferGrayRoots(GCParallelTask* task)
 bool
 GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session)
 {
-    MOZ_ASSERT(session.maybeLock.isSome());
-
 #ifdef DEBUG
     if (fullCompartmentChecks)
         checkForCompartmentMismatches();
 #endif
 
-    if (!prepareZonesForCollection(reason, &isFull.ref(), session.lock()))
+    if (!prepareZonesForCollection(reason, &isFull.ref()))
         return false;
 
-    /* If we're not collecting the atoms zone we can release the lock now. */
-    if (!atomsZone->isCollecting())
-        session.maybeLock.reset();
+    /* * Check it's safe to access the atoms zone if we are collecting it. */
+    if (atomsZone->isCollecting())
+        session.maybeCheckAtomsAccess.emplace(rt);
 
     /*
      * In an incremental GC, clear the area free lists to ensure that subsequent
@@ -6881,8 +6878,9 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery().isEmpty());
 
-    // Session always begins with lock held, see comment in class definition.
-    maybeLock.emplace(rt);
+    // If we are not performing a collection, take the exclusive access lock.
+    if (heapState == JS::HeapState::Tracing)
+        maybeLock.emplace(rt);
 
     rt->heapState_ = heapState;
 }
@@ -7094,13 +7092,6 @@ void
 GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
                                    AutoTraceSession& session)
 {
-    /*
-     * Drop the exclusive access lock if we are in an incremental collection
-     * that does not touch the atoms zone.
-     */
-    if (isIncrementalGCInProgress() && !atomsZone->isCollecting())
-        session.maybeLock.reset();
-
     AutoDisableBarriers disableBarriers(rt);
 
     bool destroyingRuntime = (reason == JS::gcreason::DESTROY_RUNTIME);
@@ -7528,8 +7519,9 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
     }
 
     // We don't allow off-thread parsing to start while we're doing an
-    // incremental GC.
-    MOZ_ASSERT_IF(rt->activeGCInAtomsZone(), !rt->hasHelperThreadZones());
+    // incremental GC of the atoms zone.
+    if (rt->activeGCInAtomsZone())
+        session.maybeCheckAtomsAccess.emplace(rt);
 
     auto result = budgetIncrementalGC(nonincrementalByAPI, reason, budget, session);
 
@@ -7974,10 +7966,9 @@ js::gc::FinishGC(JSContext* cx)
 }
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx)
-{
-    js::gc::FinishGC(cx);
-    session_.emplace(cx->runtime());
-}
+  : finishGC(cx),
+    session(cx->runtime())
+{}
 
 Realm*
 js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& options)
