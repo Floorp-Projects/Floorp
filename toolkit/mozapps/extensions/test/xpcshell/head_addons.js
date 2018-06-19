@@ -206,6 +206,14 @@ const BOOTSTRAP_MONITOR_BOOTSTRAP_JS = `
   ChromeUtils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);
 `;
 
+
+const EMPTY_BOOTSTRAP_JS = `
+  function startup() {}
+  function shutdown() {}
+  function install() {}
+  function uninstall() {}
+`;
+
 // Listens to messages from bootstrap.js telling us what add-ons were started
 // and stopped etc. and performs some sanity checks that only installed add-ons
 // are started etc.
