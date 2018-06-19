@@ -176,7 +176,7 @@ bool HandleTraceData::CollectHandleData(
   stream_data->Reserved = 0;
   std::copy(operations_.begin(),
             operations_.end(),
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(_LIBCPP_STD_VER)
             stdext::checked_array_iterator<AVRF_HANDLE_OPERATION*>(
                 reinterpret_cast<AVRF_HANDLE_OPERATION*>(stream_data + 1),
                 operations_.size())
@@ -271,12 +271,14 @@ MinidumpGenerator::MinidumpGenerator(
       dump_type_(dump_type),
       is_client_pointers_(is_client_pointers),
       dump_path_(dump_path),
+      uuid_generated_(false),
       dump_file_(INVALID_HANDLE_VALUE),
       full_dump_file_(INVALID_HANDLE_VALUE),
       dump_file_is_internal_(false),
       full_dump_file_is_internal_(false),
       additional_streams_(NULL),
       callback_info_(NULL) {
+  uuid_ = {0};
   InitializeCriticalSection(&module_load_sync_);
   InitializeCriticalSection(&get_proc_address_sync_);
 }
@@ -562,15 +564,17 @@ MinidumpGenerator::UuidCreateType MinidumpGenerator::GetCreateUuid() {
 }
 
 bool MinidumpGenerator::GenerateDumpFilePath(wstring* file_path) {
-  UUID id = {0};
+  if (!uuid_generated_) {
+    UuidCreateType create_uuid = GetCreateUuid();
+    if (!create_uuid) {
+      return false;
+    }
 
-  UuidCreateType create_uuid = GetCreateUuid();
-  if (!create_uuid) {
-    return false;
+    create_uuid(&uuid_);
+    uuid_generated_ = true;
   }
 
-  create_uuid(&id);
-  wstring id_str = GUIDString::GUIDToWString(&id);
+  wstring id_str = GUIDString::GUIDToWString(&uuid_);
 
   *file_path = dump_path_ + TEXT("\\") + id_str + TEXT(".dmp");
   return true;

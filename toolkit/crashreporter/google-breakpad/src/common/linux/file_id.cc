@@ -61,10 +61,11 @@ FileID::FileID(const char* path) : path_(path) {}
 // These functions are also used inside the crashed process, so be safe
 // and use the syscall/libc wrappers instead of direct syscalls or libc.
 
-template<typename ElfClass>
 static bool ElfClassBuildIDNoteIdentifier(const void *section, size_t length,
                                           wasteful_vector<uint8_t>& identifier) {
-  typedef typename ElfClass::Nhdr Nhdr;
+  static_assert(sizeof(ElfClass32::Nhdr) == sizeof(ElfClass64::Nhdr),
+                "Elf32_Nhdr and Elf64_Nhdr should be the same");
+  typedef typename ElfClass32::Nhdr Nhdr;
 
   const void* section_end = reinterpret_cast<const char*>(section) + length;
   const Nhdr* note_header = reinterpret_cast<const Nhdr*>(section);
@@ -94,24 +95,22 @@ static bool ElfClassBuildIDNoteIdentifier(const void *section, size_t length,
 // and copy it into |identifier|.
 static bool FindElfBuildIDNote(const void* elf_mapped_base,
                                wasteful_vector<uint8_t>& identifier) {
-  void* note_section;
-  size_t note_size;
-  int elfclass;
-  if ((!FindElfSegment(elf_mapped_base, PT_NOTE,
-                       (const void**)&note_section, &note_size, &elfclass) ||
-      note_size == 0)  &&
-      (!FindElfSection(elf_mapped_base, ".note.gnu.build-id", SHT_NOTE,
-                       (const void**)&note_section, &note_size, &elfclass) ||
-      note_size == 0)) {
-    return false;
+  PageAllocator allocator;
+  // lld normally creates 2 PT_NOTEs, gold normally creates 1.
+  auto_wasteful_vector<ElfSegment, 2> segs(&allocator);
+  if (FindElfSegments(elf_mapped_base, PT_NOTE, &segs)) {
+    for (ElfSegment& seg : segs) {
+      if (ElfClassBuildIDNoteIdentifier(seg.start, seg.size, identifier)) {
+        return true;
+      }
+    }
   }
 
-  if (elfclass == ELFCLASS32) {
-    return ElfClassBuildIDNoteIdentifier<ElfClass32>(note_section, note_size,
-                                                     identifier);
-  } else if (elfclass == ELFCLASS64) {
-    return ElfClassBuildIDNoteIdentifier<ElfClass64>(note_section, note_size,
-                                                     identifier);
+  void* note_section;
+  size_t note_size;
+  if (FindElfSection(elf_mapped_base, ".note.gnu.build-id", SHT_NOTE,
+                     (const void**)&note_section, &note_size)) {
+    return ElfClassBuildIDNoteIdentifier(note_section, note_size, identifier);
   }
 
   return false;
@@ -126,7 +125,7 @@ static bool HashElfTextSection(const void* elf_mapped_base,
   void* text_section;
   size_t text_size;
   if (!FindElfSection(elf_mapped_base, ".text", SHT_PROGBITS,
-                      (const void**)&text_section, &text_size, NULL) ||
+                      (const void**)&text_section, &text_size) ||
       text_size == 0) {
     return false;
   }

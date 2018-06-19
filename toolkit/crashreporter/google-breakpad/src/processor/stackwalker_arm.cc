@@ -267,17 +267,13 @@ StackFrame* StackwalkerARM::GetCallerFrame(const CallStack* stack,
   if (!frame.get())
     return NULL;
 
-
-  // An instruction address of zero marks the end of the stack.
-  if (frame->context.iregs[MD_CONTEXT_ARM_REG_PC] == 0)
+  // Should we terminate the stack walk? (end-of-stack or broken invariant)
+  if (TerminateWalk(frame->context.iregs[MD_CONTEXT_ARM_REG_PC],
+                    frame->context.iregs[MD_CONTEXT_ARM_REG_SP],
+                    last_frame->context.iregs[MD_CONTEXT_ARM_REG_SP],
+                    frames.size() == 1)) {
     return NULL;
-
-  // If the new stack pointer is at a lower address than the old, then
-  // that's clearly incorrect. Treat this as end-of-stack to enforce
-  // progress and avoid infinite loops.
-  if (frame->context.iregs[MD_CONTEXT_ARM_REG_SP]
-      < last_frame->context.iregs[MD_CONTEXT_ARM_REG_SP])
-    return NULL;
+  }
 
   // The new frame's context's PC is the return address, which is one
   // instruction past the instruction that caused us to arrive at the

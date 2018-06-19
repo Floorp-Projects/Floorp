@@ -32,14 +32,17 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <string>
 #include <vector>
 
+#include "common/path_helper.h"
 #include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
+#include "google_breakpad/processor/microdump.h"
 #include "google_breakpad/processor/microdump_processor.h"
 #include "google_breakpad/processor/process_state.h"
 #include "google_breakpad/processor/stack_frame_symbolizer.h"
@@ -50,7 +53,16 @@
 
 namespace {
 
+struct Options {
+  bool machine_readable;
+  bool output_stack_contents;
+
+  string microdump_file;
+  std::vector<string> symbol_paths;
+};
+
 using google_breakpad::BasicSourceLineResolver;
+using google_breakpad::Microdump;
 using google_breakpad::MicrodumpProcessor;
 using google_breakpad::ProcessResult;
 using google_breakpad::ProcessState;
@@ -58,43 +70,47 @@ using google_breakpad::scoped_ptr;
 using google_breakpad::SimpleSymbolSupplier;
 using google_breakpad::StackFrameSymbolizer;
 
-// Processes |microdump_file| using MicrodumpProcessor. |symbol_path|, if
-// non-empty, is the base directory of a symbol storage area, laid out in
-// the format required by SimpleSymbolSupplier.  If such a storage area
-// is specified, it is made available for use by the MicrodumpProcessor.
+// Processes |options.microdump_file| using
+// MicrodumpProcessor. |options.symbol_path|, if non-empty, is the
+// base directory of a symbol storage area, laid out in the format
+// required by SimpleSymbolSupplier.  If such a storage area is
+// specified, it is made available for use by the MicrodumpProcessor.
 //
 // Returns the value of MicrodumpProcessor::Process. If processing succeeds,
 // prints identifying OS and CPU information from the microdump, crash
 // information and call stacks for the crashing thread.
 // All information is printed to stdout.
-int PrintMicrodumpProcess(const char* microdump_file,
-                          const std::vector<string>& symbol_paths,
-                          bool machine_readable) {
-  std::ifstream file_stream(microdump_file);
+int PrintMicrodumpProcess(const Options& options) {
+  std::ifstream file_stream(options.microdump_file);
   std::vector<char> bytes;
   file_stream.seekg(0, std::ios_base::end);
   bytes.resize(file_stream.tellg());
+  if (bytes.empty()) {
+    BPLOG(ERROR) << "Microdump is empty.";
+    return 1;
+  }
   file_stream.seekg(0, std::ios_base::beg);
   file_stream.read(&bytes[0], bytes.size());
   string microdump_content(&bytes[0], bytes.size());
 
   scoped_ptr<SimpleSymbolSupplier> symbol_supplier;
-  if (!symbol_paths.empty()) {
-    symbol_supplier.reset(new SimpleSymbolSupplier(symbol_paths));
+  if (!options.symbol_paths.empty()) {
+    symbol_supplier.reset(new SimpleSymbolSupplier(options.symbol_paths));
   }
 
   BasicSourceLineResolver resolver;
   StackFrameSymbolizer frame_symbolizer(symbol_supplier.get(), &resolver);
   ProcessState process_state;
   MicrodumpProcessor microdump_processor(&frame_symbolizer);
-  ProcessResult res = microdump_processor.Process(microdump_content,
+  Microdump microdump(microdump_content);
+  ProcessResult res = microdump_processor.Process(&microdump,
                                                   &process_state);
 
   if (res == google_breakpad::PROCESS_OK) {
-    if (machine_readable) {
+    if (options.machine_readable) {
       PrintProcessStateMachineReadable(process_state);
     } else {
-      PrintProcessState(process_state, false, &resolver);
+      PrintProcessState(process_state, options.output_stack_contents, &resolver);
     }
     return 0;
   }
@@ -103,49 +119,63 @@ int PrintMicrodumpProcess(const char* microdump_file,
   return 1;
 }
 
-void usage(const char *program_name) {
-  fprintf(stderr, "usage: %s [-m] <microdump-file> [symbol-path ...]\n"
-          "    -m : Output in machine-readable format\n",
-          program_name);
-}
-
 }  // namespace
 
-int main(int argc, char** argv) {
-  BPLOG_INIT(&argc, &argv);
+static void Usage(int argc, const char *argv[], bool error) {
+  fprintf(error ? stderr : stdout,
+          "Usage: %s [options] <microdump-file> [symbol-path ...]\n"
+          "\n"
+          "Output a stack trace for the provided microdump\n"
+          "\n"
+          "Options:\n"
+          "\n"
+          "  -m         Output in machine-readable format\n"
+          "  -s         Output stack contents\n",
+          google_breakpad::BaseName(argv[0]).c_str());
+}
 
-  if (argc < 2) {
-    usage(argv[0]);
-    return 1;
-  }
+static void SetupOptions(int argc, const char *argv[], Options* options) {
+  int ch;
 
-  const char* microdump_file;
-  bool machine_readable;
-  int symbol_path_arg;
+  options->machine_readable = false;
+  options->output_stack_contents = false;
 
-  if (strcmp(argv[1], "-m") == 0) {
-    if (argc < 3) {
-      usage(argv[0]);
-      return 1;
+  while ((ch = getopt(argc, (char * const *)argv, "hms")) != -1) {
+    switch (ch) {
+      case 'h':
+        Usage(argc, argv, false);
+        exit(0);
+        break;
+
+      case 'm':
+        options->machine_readable = true;
+        break;
+      case 's':
+        options->output_stack_contents = true;
+        break;
+
+      case '?':
+        Usage(argc, argv, true);
+        exit(1);
+        break;
     }
-
-    machine_readable = true;
-    microdump_file = argv[2];
-    symbol_path_arg = 3;
-  } else {
-    machine_readable = false;
-    microdump_file = argv[1];
-    symbol_path_arg = 2;
   }
 
-  // extra arguments are symbol paths
-  std::vector<string> symbol_paths;
-  if (argc > symbol_path_arg) {
-    for (int argi = symbol_path_arg; argi < argc; ++argi)
-      symbol_paths.push_back(argv[argi]);
+  if ((argc - optind) == 0) {
+    fprintf(stderr, "%s: Missing microdump file\n", argv[0]);
+    Usage(argc, argv, true);
+    exit(1);
   }
 
-  return PrintMicrodumpProcess(microdump_file,
-                               symbol_paths,
-                               machine_readable);
+  options->microdump_file = argv[optind];
+
+  for (int argi = optind + 1; argi < argc; ++argi)
+    options->symbol_paths.push_back(argv[argi]);
+}
+
+int main(int argc, const char* argv[]) {
+  Options options;
+  SetupOptions(argc, argv, &options);
+
+  return PrintMicrodumpProcess(options);
 }

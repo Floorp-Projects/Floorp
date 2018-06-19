@@ -690,7 +690,8 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
     // frame 1
     .Mark(&frame1_sp)
     .Append(32, 0)                      // body of frame1
-    .Mark(&frame1_rbp);                 // end of stack
+    .Mark(&frame1_rbp)                  // end of stack
+    .D64(0);
   RegionFromSection();
 
   raw_context.rip = 0x00007400c0000200ULL;
