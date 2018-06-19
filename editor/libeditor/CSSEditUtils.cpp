@@ -556,11 +556,8 @@ CSSEditUtils::GetComputedStyle(Element* aElement)
   nsIDocument* doc = aElement->GetComposedDoc();
   NS_ENSURE_TRUE(doc, nullptr);
 
-  nsIPresShell* presShell = doc->GetShell();
-  NS_ENSURE_TRUE(presShell, nullptr);
-
   RefPtr<nsComputedDOMStyle> style =
-    NS_NewComputedDOMStyle(aElement, EmptyString(), presShell);
+    NS_NewComputedDOMStyle(aElement, EmptyString(), doc);
 
   return style.forget();
 }

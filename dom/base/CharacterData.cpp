@@ -634,19 +634,6 @@ CharacterData::InsertChildBefore(nsIContent* aKid,
   return NS_OK;
 }
 
-nsresult
-CharacterData::InsertChildAt_Deprecated(nsIContent* aKid,
-                                        uint32_t aIndex,
-                                        bool aNotify)
-{
-  return NS_OK;
-}
-
-void
-CharacterData::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
-{
-}
-
 void
 CharacterData::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {

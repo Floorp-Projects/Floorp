@@ -255,14 +255,14 @@ TracePinnedAtoms(JSTracer* trc, const AtomSet& atoms)
 }
 
 void
-js::TraceAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+js::TraceAtoms(JSTracer* trc, const AutoAccessAtomsZone& access)
 {
     JSRuntime* rt = trc->runtime();
 
     if (rt->atomsAreFinished())
         return;
 
-    TracePinnedAtoms(trc, rt->atoms(lock));
+    TracePinnedAtoms(trc, rt->atoms(access));
     if (rt->atomsAddedWhileSweeping())
         TracePinnedAtoms(trc, *rt->atomsAddedWhileSweeping());
 }
