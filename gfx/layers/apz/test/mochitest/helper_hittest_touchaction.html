@@ -1,0 +1,311 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Testing APZ hit-test with touch-action boxes</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+.taBox {
+    width: 20px;
+    height: 20px;
+    background-color: green;
+    display: inline-block;
+}
+.taBox > div {
+    /* make sure this doesn't obscure the center of the enclosing taBox */
+    width: 5px;
+    height: 5px;
+    background-color: blue;
+}
+
+.taBigBox {
+    width: 150px;
+    height: 150px;
+    background-color: green;
+    display: inline-block;
+}
+.taBigBox > div {
+    width: 40px;
+    height: 40px;
+    overflow: auto;
+}
+.taBigBox > div > div {
+    width: 100px;
+    height: 100px;
+}
+  </style>
+</head>
+<body>
+<!-- Create a bunch of divs for hit-testing. Some of the divs also
+    contain nested divs to test inheritance/combination of touch-action
+    properties. This is not an exhaustive list of all the possible
+    combinations but it's assorted enough to provide good coverage. -->
+ <div id="taNone" class="taBox" style="touch-action: none">
+  <div id="taInnerNonePanX" style="touch-action: pan-x"></div>
+  <div id="taInnerNoneManip" style="touch-action: manipulation"></div>
+ </div>
+ <div id="taPanX" class="taBox" style="touch-action: pan-x">
+  <div id="taInnerPanXY" style="touch-action: pan-y"></div>
+  <div id="taInnerPanXManip" style="touch-action: manipulation"></div>
+ </div>
+ <div id="taPanY" class="taBox" style="touch-action: pan-y">
+  <div id="taInnerPanYX" style="touch-action: pan-x"></div>
+  <div id="taInnerPanYY" style="touch-action: pan-y"></div>
+ </div>
+ <div id="taPanXY" class="taBox" style="touch-action: pan-x pan-y">
+  <div id="taInnerPanXYNone" style="touch-action: none"></div>
+ </div>
+ <div id="taManip" class="taBox" style="touch-action: manipulation">
+  <div id="taInnerManipPanX" style="touch-action: pan-x"></div>
+  <div id="taInnerManipNone" style="touch-action: none"></div>
+  <div id="taInnerManipListener" ontouchstart="return false;"></div>
+ </div>
+ <div id="taListener" class="taBox" ontouchstart="return false;">
+  <div id="taInnerListenerPanX" style="touch-action: pan-x"></div>
+ </div>
+
+ <br/>
+
+ <!-- More divs for hit-testing. These comprise one big outer div with
+     a touch-action property, then inside is a scrollable div, possibly with
+     a touch-action of its own, and inside that is another div to make the
+     scrollable div scrollable. Note that the touch-action for an element
+     includes the restrictions from all ancestor elements up to and including
+     the element that has the default action for that touch-action property.
+     Panning actions therefore get inherited from the nearest scrollframe
+     downwards, while zooming actions get inherited from the root content
+     element (because that's the only one that has zooming as the default action)
+     downwards. In effect, any pan restrictions on the outer div should not
+     apply to the inner div, but zooming restrictions should. Also, the
+     touch-action on the scrollable div itself should apply to user interaction
+     inside the scrollable div. -->
+ <div id="taOuterPanX" class="taBigBox" style="touch-action: pan-x">
+  <div id="taScrollerPanY" style="touch-action: pan-y">
+   <div></div>
+  </div>
+  <div id="taScroller">
+   <div style="touch-action: pan-y"></div>
+  </div>
+  <div id="taScroller2">
+   <div></div>
+  </div>
+ </div>
+ <div id="taOuterManipulation" class="taBigBox" style="touch-action: manipulation">
+  <div id="taScrollerPanX" style="touch-action: pan-x">
+   <div></div>
+  </div>
+  <div id="taScroller3">
+   <div></div>
+  </div>
+ </div>
+</body>
+<script type="application/javascript">
+
+var config = getHitTestConfig();
+
+function* test(testDriver) {
+  for (var scroller of document.querySelectorAll('.taBigBox > div')) {
+    // layerize all the scrollable divs
+    config.utils.setDisplayPortForElement(0, 0, 100, 100, scroller, 1);
+  }
+  yield waitForApzFlushedRepaints(testDriver);
+
+  var scrollId = config.utils.getViewId(document.scrollingElement);
+
+  checkHitResult(
+      hitTest(centerOf('taNone')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: none");
+  checkHitResult(
+      hitTest(centerOf('taInnerNonePanX')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-x inside touch-action: none");
+  checkHitResult(
+      hitTest(centerOf('taInnerNoneManip')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: manipulation inside touch-action: none");
+
+  checkHitResult(
+      hitTest(centerOf('taPanX')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-x");
+  checkHitResult(
+      hitTest(centerOf('taInnerPanXY')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-y inside touch-action: pan-x");
+  checkHitResult(
+      hitTest(centerOf('taInnerPanXManip')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: manipulation inside touch-action: pan-x");
+
+  checkHitResult(
+      hitTest(centerOf('taPanY')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-y");
+  checkHitResult(
+      hitTest(centerOf('taInnerPanYX')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-x inside touch-action: pan-y");
+  checkHitResult(
+      hitTest(centerOf('taInnerPanYY')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-y inside touch-action: pan-y");
+
+  checkHitResult(
+      hitTest(centerOf('taPanXY')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-x pan-y");
+  checkHitResult(
+      hitTest(centerOf('taInnerPanXYNone')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: none inside touch-action: pan-x pan-y");
+
+  checkHitResult(
+      hitTest(centerOf('taManip')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: manipulation");
+  checkHitResult(
+      hitTest(centerOf('taInnerManipPanX')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-x inside touch-action: manipulation");
+  checkHitResult(
+      hitTest(centerOf('taInnerManipNone')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: none inside touch-action: manipulation");
+  checkHitResult(
+      hitTest(centerOf('taInnerManipListener')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.DISPATCH_TO_CONTENT |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "div with touch listener inside touch-action: manipulation");
+
+  checkHitResult(
+      hitTest(centerOf('taListener')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.DISPATCH_TO_CONTENT,
+      scrollId,
+      "div with touch listener");
+  checkHitResult(
+      hitTest(centerOf('taInnerListenerPanX')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.DISPATCH_TO_CONTENT |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      scrollId,
+      "touch-action: pan-x inside div with touch listener");
+
+  checkHitResult(
+      hitTest(centerOf('taScrollerPanY')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      config.utils.getViewId(document.getElementById('taScrollerPanY')),
+      "touch-action: pan-y on scroller");
+  checkHitResult(
+      hitTest(centerOf('taScroller')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_X_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      config.utils.getViewId(document.getElementById('taScroller')),
+      "touch-action: pan-y on div inside scroller");
+  checkHitResult(
+      hitTest(centerOf('taScroller2')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      config.utils.getViewId(document.getElementById('taScroller2')),
+      "zooming restrictions from pan-x outside scroller get inherited in");
+
+  checkHitResult(
+      hitTest(centerOf('taScrollerPanX')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.PAN_Y_DISABLED |
+      APZHitResultFlags.PINCH_ZOOM_DISABLED |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      config.utils.getViewId(document.getElementById('taScrollerPanX')),
+      "touch-action: pan-x on scroller inside manipulation");
+  checkHitResult(
+      hitTest(centerOf('taScroller3')),
+      APZHitResultFlags.VISIBLE |
+      APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
+      config.utils.getViewId(document.getElementById('taScroller3')),
+      "touch-action: manipulation outside scroller gets inherited in");
+}
+
+if (!config.isWebRender) {
+  ok(true, "This test is WebRender-only because we get a bunch of dispatch-to-content regions without it and the test isn't very interesting.");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+    .then(runContinuation(test))
+    .then(subtestDone);
+}
+
+</script>
+</html>
