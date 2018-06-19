@@ -77,7 +77,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||skiaContent,9,47
 == ctm-1.html ctm-1-ref.html
 
 == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html
-== 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
+skip-if(verify&&/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
 
 != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted
 
