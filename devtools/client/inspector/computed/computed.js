@@ -1478,11 +1478,8 @@ ComputedViewTool.prototype = {
     const isInactive = !this.isSidebarActive() &&
                      this.inspector.selection.nodeFront;
     if (isInactive) {
-      this.inspector.reflowTracker.untrackReflows(this, this.refresh);
       return;
     }
-
-    this.inspector.reflowTracker.trackReflows(this, this.refresh);
 
     this.computedView.setPageStyle(this.inspector.pageStyle);
 
@@ -1515,7 +1512,6 @@ ComputedViewTool.prototype = {
   },
 
   destroy: function() {
-    this.inspector.reflowTracker.untrackReflows(this, this.refresh);
     this.inspector.styleChangeTracker.off("style-changed", this.refresh);
     this.inspector.sidebar.off("computedview-selected", this.refresh);
     this.inspector.selection.off("pseudoclass", this.refresh);
