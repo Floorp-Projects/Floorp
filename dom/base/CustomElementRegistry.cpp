@@ -981,7 +981,7 @@ CustomElementRegistry::SetElementCreationCallback(const nsAString& aName,
   return;
 }
 
-void
+static void
 TryUpgrade(nsINode& aNode)
 {
   Element* element = aNode.IsElement() ? aNode.AsElement() : nullptr;
