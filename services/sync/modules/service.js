@@ -1394,6 +1394,10 @@ Sync11Service.prototype = {
   recordTelemetryEvent(object, method, value, extra = undefined) {
     Svc.Obs.notify("weave:telemetry:event", { object, method, value, extra });
   },
+
+  recordTelemetryHistogram(histId) {
+    Svc.Obs.notify("weave:telemetry:histogram", { histId });
+  },
 };
 
 var Service = new Sync11Service();
