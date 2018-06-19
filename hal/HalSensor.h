@@ -18,7 +18,6 @@ namespace hal {
  * If you add or change any here, do the same in GeckoHalDefines.java.
  */
 enum SensorType {
-  SENSOR_UNKNOWN = -1,
   SENSOR_ORIENTATION = 0,
   SENSOR_ACCELERATION = 1,
   SENSOR_PROXIMITY = 2,
@@ -63,7 +62,7 @@ namespace IPC {
   struct ParamTraits<mozilla::hal::SensorType>:
     public ContiguousEnumSerializer<
              mozilla::hal::SensorType,
-             mozilla::hal::SENSOR_UNKNOWN,
+             mozilla::hal::SENSOR_ORIENTATION,
              mozilla::hal::NUM_SENSOR_TYPE> {
   };
 
