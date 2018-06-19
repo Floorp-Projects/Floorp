@@ -50,56 +50,67 @@ class MOZ_RAII AutoCheckCanAccessAtomsDuringGC
 #endif
 };
 
-class MOZ_RAII AutoTraceSession
+// Abstract base class for exclusive heap access for tracing or GC.
+class MOZ_RAII AutoHeapSession
 {
   public:
-    explicit AutoTraceSession(JSRuntime* rt, JS::HeapState state = JS::HeapState::Tracing);
-    ~AutoTraceSession();
+    ~AutoHeapSession();
 
-    // Constructing an AutoTraceSession takes the exclusive access lock unless
-    // the session is being used for GC.
-    mozilla::Maybe<AutoLockForExclusiveAccess> maybeLock;
+  protected:
+    AutoHeapSession(JSRuntime* rt, JS::HeapState state);
 
-    // During a GC we can check that it's not possible for anything else to be
-    // using the atoms zone.
-    mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
+  private:
+    AutoHeapSession(const AutoHeapSession&) = delete;
+    void operator=(const AutoHeapSession&) = delete;
 
-    AutoLockForExclusiveAccess& lock() {
-        return maybeLock.ref();
-    }
+    JSRuntime* runtime;
+    JS::HeapState prevState;
+    AutoGeckoProfilerEntry profilingStackFrame;
+};
+
+class MOZ_RAII AutoGCSession : public AutoHeapSession
+{
+  public:
+    explicit AutoGCSession(JSRuntime* rt, JS::HeapState state)
+      : AutoHeapSession(rt, state)
+    {}
 
     AutoCheckCanAccessAtomsDuringGC& checkAtomsAccess() {
         return maybeCheckAtomsAccess.ref();
     }
 
-  protected:
-    JSRuntime* runtime;
-
-  private:
-    AutoTraceSession(const AutoTraceSession&) = delete;
-    void operator=(const AutoTraceSession&) = delete;
-
-    JS::HeapState prevState;
-    AutoGeckoProfilerEntry profilingStackFrame;
+    // During a GC we can check that it's not possible for anything else to be
+    // using the atoms zone.
+    mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
 };
 
-/*
- * This class should be used by any code that needs to exclusive access to the
- * heap in order to trace through it.
- */
-struct MOZ_RAII AutoPrepareForTracing
+class MOZ_RAII AutoTraceSession : public AutoLockForExclusiveAccess,
+                                  public AutoHeapSession
 {
-    struct AutoFinishGC
-    {
-        explicit AutoFinishGC(JSContext* cx) {
-            FinishGC(cx);
-        }
-    };
+  public:
+    explicit AutoTraceSession(JSRuntime* rt)
+      : AutoLockForExclusiveAccess(rt),
+        AutoHeapSession(rt, JS::HeapState::Tracing)
+    {}
+};
 
-    AutoFinishGC finishGC;
-    AutoTraceSession session;
+struct MOZ_RAII AutoFinishGC
+{
+    explicit AutoFinishGC(JSContext* cx) {
+        FinishGC(cx);
+    }
+};
 
-    explicit AutoPrepareForTracing(JSContext* cx);
+// This class should be used by any code that needs to exclusive access to the
+// heap in order to trace through it.
+class MOZ_RAII AutoPrepareForTracing : private AutoFinishGC,
+                                       public AutoTraceSession
+{
+  public:
+    explicit AutoPrepareForTracing(JSContext* cx)
+      : AutoFinishGC(cx),
+        AutoTraceSession(cx->runtime())
+    {}
 };
 
 AbortReason
