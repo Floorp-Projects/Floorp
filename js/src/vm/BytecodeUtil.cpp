@@ -2187,10 +2187,9 @@ DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
     if (!ed.getOutput(&result))
         return false;
 
-    if (!sp->put(result))
-        return false;
-
-    return true;
+    bool ok = sp->put(result);
+    js_free(result);
+    return ok;
 }
 #endif /* DEBUG */
 
