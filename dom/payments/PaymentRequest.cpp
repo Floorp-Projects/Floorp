@@ -649,11 +649,12 @@ PaymentRequest::CanMakePayment(ErrorResult& aRv)
   }
 
   if (mResultPromise) {
+    // XXX This doesn't match the spec but does match Chromium.
     aRv.Throw(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   ErrorResult result;
   RefPtr<Promise> promise = Promise::Create(global, result);
   if (result.Failed()) {
@@ -662,10 +663,7 @@ PaymentRequest::CanMakePayment(ErrorResult& aRv)
   }
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+  MOZ_ASSERT(manager);
   nsresult rv = manager->CanMakePayment(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_FAILURE);
@@ -687,27 +685,28 @@ already_AddRefed<Promise>
 PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
                      ErrorResult& aRv)
 {
-  if (mState != eCreated) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
   if (!EventStateManager::IsHandlingUserInput()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(global, result);
-  if (result.Failed()) {
-    mState = eClosed;
-    aRv.Throw(NS_ERROR_FAILURE);
+  nsIGlobalObject* global = GetOwnerGlobal();
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
+  MOZ_ASSERT(win);
+  nsIDocument* doc = win->GetExtantDoc();
+  if (!doc || !doc->IsCurrentActiveDocument()) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
     return nullptr;
   }
 
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
+  if (mState != eCreated) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(global, result);
+  if (result.Failed()) {
     mState = eClosed;
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -719,6 +718,8 @@ PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
     mDeferredShow = true;
   }
 
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
   nsresult rv = manager->ShowPayment(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (rv == NS_ERROR_ABORT) {
@@ -794,11 +795,11 @@ PaymentRequest::Abort(ErrorResult& aRv)
   }
 
   if (mAbortPromise) {
-    aRv.Throw(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  nsIGlobalObject* global = GetOwnerGlobal();
   ErrorResult result;
   RefPtr<Promise> promise = Promise::Create(global, result);
   if (result.Failed()) {
@@ -807,12 +808,8 @@ PaymentRequest::Abort(ErrorResult& aRv)
   }
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  if (NS_WARN_IF(!manager)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  // It's possible for to call this between show and its promise resolving.
+  MOZ_ASSERT(manager);
+  // It's possible to be called between show and its promise resolving.
   nsresult rv = manager->AbortPayment(this, mDeferredShow);
   mDeferredShow = false;
   if (NS_WARN_IF(NS_FAILED(rv))) {
