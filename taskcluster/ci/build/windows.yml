@@ -36,12 +36,6 @@ win32/opt:
         platform: windows2012-32/opt
         symbol: B
         tier: 1
-    stub-installer:
-        # Beta and release use a stub-requiring update channel
-        by-project:
-            default: false
-            mozilla-beta: true
-            mozilla-release: true
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
