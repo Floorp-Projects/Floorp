@@ -698,16 +698,16 @@ let PDFViewerApplication = {
       onOpenWithData(data) {
         PDFViewerApplication.open(data);
       },
-      onOpenWithURL(url, length, originalURL) {
+      onOpenWithURL(url, length, originalUrl) {
         let file = url,
             args = null;
         if (length !== undefined) {
           args = { length };
         }
-        if (originalURL !== undefined) {
+        if (originalUrl !== undefined) {
           file = {
-            file: url,
-            originalURL
+            url,
+            originalUrl
           };
         }
         PDFViewerApplication.open(file, args);
@@ -722,7 +722,7 @@ let PDFViewerApplication = {
       }
     });
   },
-  setTitleUsingUrl(url) {
+  setTitleUsingUrl(url = '') {
     this.url = url;
     this.baseUrl = url.split('#')[0];
     let title = (0, _ui_utils.getPDFFileNameFromURL)(url, '');
