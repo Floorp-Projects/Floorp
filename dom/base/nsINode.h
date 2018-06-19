@@ -822,29 +822,6 @@ public:
                                      bool aNotify) = 0;
 
   /**
-   * Insert a content node at a particular index.  This method handles calling
-   * BindToTree on the child appropriately.
-   *
-   * @param aKid the content to insert
-   * @param aIndex the index it is being inserted at (the index it will have
-   *        after it is inserted)
-   * @param aNotify whether to notify the document (current document for
-   *        nsIContent, and |this| for nsIDocument) that the insert has
-   *        occurred
-   *
-   * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
-   * than one element node as a child of a document.  Doing this will also
-   * assert -- you shouldn't be doing it!  Check with
-   * nsIDocument::GetRootElement() first if you're not sure.  Apart from this
-   * one constraint, this doesn't do any checking on whether aKid is a valid
-   * child of |this|.
-   *
-   * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
-   */
-  virtual nsresult InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
-                                            bool aNotify) = 0;
-
-  /**
    * Append a content node to the end of the child list.  This method handles
    * calling BindToTree on the child appropriately.
    *
@@ -864,24 +841,8 @@ public:
    */
   nsresult AppendChildTo(nsIContent* aKid, bool aNotify)
   {
-    return InsertChildAt_Deprecated(aKid, GetChildCount(), aNotify);
+    return InsertChildBefore(aKid, nullptr, aNotify);
   }
-
-  /**
-   * NOTE: this function is going to be removed soon (hopefully!) Don't use it
-   * in new code.
-   *
-   * Remove a child from this node.  This method handles calling UnbindFromTree
-   * on the child appropriately.
-   *
-   * @param aIndex the index of the child to remove
-   * @param aNotify whether to notify the document (current document for
-   *        nsIContent, and |this| for nsIDocument) that the remove has
-   *        occurred
-   *
-   * Note: If there is no child at aIndex, this method will simply do nothing.
-   */
-  virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) = 0;
 
   /**
    * Remove a child from this node.  This method handles calling UnbindFromTree

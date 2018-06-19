@@ -1225,27 +1225,6 @@ FragmentOrElement::InsertChildBefore(nsIContent* aKid,
   return doInsertChildAt(aKid, index, aNotify, mAttrsAndChildren);
 }
 
-nsresult
-FragmentOrElement::InsertChildAt_Deprecated(nsIContent* aKid,
-                                            uint32_t aIndex,
-                                            bool aNotify)
-{
-  MOZ_ASSERT(aKid, "null ptr");
-
-  return doInsertChildAt(aKid, aIndex, aNotify, mAttrsAndChildren);
-}
-
-void
-FragmentOrElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
-{
-  nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
-  NS_ASSERTION(oldKid == GetChildAt_Deprecated(aIndex), "Unexpected child in RemoveChildAt_Deprecated");
-
-  if (oldKid) {
-    doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
-  }
-}
-
 void
 FragmentOrElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {

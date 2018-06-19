@@ -50,10 +50,6 @@ const accessibleSpec = generateActorSpec({
       type: "attributesChange",
       attributes: Arg(0, "json")
     },
-    "help-change": {
-      type: "helpChange",
-      help: Arg(0, "string")
-    },
     "shortcut-change": {
       type: "shortcutChange",
       shortcut: Arg(0, "string")

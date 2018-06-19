@@ -26,6 +26,7 @@
 
 namespace js {
 
+class AutoAccessAtomsZone;
 class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
@@ -37,6 +38,7 @@ using BlackGrayEdgeVector = Vector<TenuredCell*, 0, SystemAllocPolicy>;
 using ZoneVector = Vector<JS::Zone*, 4, SystemAllocPolicy>;
 
 class AutoCallGCCallbacks;
+class AutoGCSession;
 class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
@@ -264,7 +266,7 @@ class GCRuntime
         MarkRuntime
     };
     void traceRuntime(JSTracer* trc, AutoTraceSession& session);
-    void traceRuntimeForMinorGC(JSTracer* trc, AutoTraceSession& session);
+    void traceRuntimeForMinorGC(JSTracer* trc, AutoGCSession& session);
 
     void purgeRuntimeForMinorGC();
 
@@ -540,8 +542,8 @@ class GCRuntime
     void requestMajorGC(JS::gcreason::Reason reason);
     SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
     IncrementalResult budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason reason,
-                                          SliceBudget& budget, AutoTraceSession& session);
-    IncrementalResult resetIncrementalGC(AbortReason reason, AutoTraceSession& session);
+                                          SliceBudget& budget, AutoGCSession& session);
+    IncrementalResult resetIncrementalGC(AbortReason reason, AutoGCSession& session);
 
     // Assert if the system state is such that we should never
     // receive a request to do GC work.
@@ -557,23 +559,21 @@ class GCRuntime
                                            JS::gcreason::Reason reason);
     bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
-                                 AutoTraceSession& session);
+                                 AutoGCSession& session);
 
     friend class AutoCallGCCallbacks;
     void maybeCallGCCallback(JSGCStatus status);
 
     void pushZealSelectedObjects();
     void purgeRuntime();
-    MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
-    bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut,
-                                   AutoLockForExclusiveAccess& lock);
+    MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoGCSession& session);
+    bool prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOut);
     bool shouldPreserveJITCode(JS::Realm* realm, int64_t currentTime,
                                JS::gcreason::Reason reason, bool canAllocateMoreCode);
-    void traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& session);
-    void traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+    void traceRuntimeForMajorGC(JSTracer* trc, AutoGCSession& session);
+    void traceRuntimeAtoms(JSTracer* trc, const AutoAccessAtomsZone& atomsAccess);
     void traceKeptAtoms(JSTracer* trc);
-    void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
-                            AutoTraceSession& session);
+    void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
     void maybeDoCycleCollection();
     void markCompartments();
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase);
@@ -585,7 +585,7 @@ class GCRuntime
     void markAllWeakReferences(gcstats::PhaseKind phase);
     void markAllGrayReferences(gcstats::PhaseKind phase);
 
-    void beginSweepPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
+    void beginSweepPhase(JS::gcreason::Reason reason, AutoGCSession& session);
     void groupZonesForSweeping(JS::gcreason::Reason reason);
     MOZ_MUST_USE bool findInterZoneEdges();
     void getNextSweepGroup();
@@ -618,7 +618,7 @@ class GCRuntime
     bool shouldCompact();
     void beginCompactPhase();
     IncrementalProgress compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
-                                     AutoTraceSession& session);
+                                     AutoGCSession& session);
     void endCompactPhase();
     void sweepTypesAfterCompacting(Zone* zone);
     void sweepZoneAfterCompacting(Zone* zone);
@@ -628,14 +628,14 @@ class GCRuntime
     void updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount);
     void updateAllCellPointers(MovingTracer* trc, Zone* zone);
     void updateZonePointersToRelocatedCells(Zone* zone);
-    void updateRuntimePointersToRelocatedCells(AutoTraceSession& session);
+    void updateRuntimePointersToRelocatedCells(AutoGCSession& session);
     void protectAndHoldArenas(Arena* arenaList);
     void unprotectHeldRelocatedArenas();
     void releaseRelocatedArenas(Arena* arenaList);
     void releaseRelocatedArenasWithoutUnlocking(Arena* arenaList, const AutoLockGC& lock);
     void finishCollection();
 
-    void computeNonIncrementalMarkingForValidation(AutoTraceSession& session);
+    void computeNonIncrementalMarkingForValidation(AutoGCSession& session);
     void validateIncrementalMarking();
     void finishMarkingValidation();
 
@@ -992,7 +992,6 @@ class GCRuntime
 
     friend class js::GCHelperState;
     friend class MarkingValidator;
-    friend class AutoTraceSession;
     friend class AutoEnterIteration;
 };
 

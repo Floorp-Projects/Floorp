@@ -14,6 +14,7 @@
 
 namespace js {
 
+class AutoAccessAtomsZone;
 class WeakMapBase;
 
 static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
@@ -281,7 +282,7 @@ class GCMarker : public JSTracer
     void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                               const AutoLockForExclusiveAccess& lock) const;
+                               const AutoAccessAtomsZone& access) const;
 
 #ifdef DEBUG
 

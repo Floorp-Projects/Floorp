@@ -2896,6 +2896,7 @@ GenerateLcovInfo(JSContext* cx, JS::Realm* realm, GenericPrinter& out)
     {
         js::gc::AutoPrepareForTracing apft(cx);
     }
+
     Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {

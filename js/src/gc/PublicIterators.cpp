@@ -51,7 +51,7 @@ js::IterateHeapUnbarriered(JSContext* cx, void* data,
                            IterateArenaCallback arenaCallback,
                            IterateCellCallback cellCallback)
 {
-    AutoPrepareForTracing prop(cx);
+    AutoPrepareForTracing prep(cx);
 
     for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
         (*zoneCallback)(cx->runtime(), data, zone);
@@ -67,7 +67,7 @@ js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
                                   IterateArenaCallback arenaCallback,
                                   IterateCellCallback cellCallback)
 {
-    AutoPrepareForTracing prop(cx);
+    AutoPrepareForTracing prep(cx);
 
     (*zoneCallback)(cx->runtime(), data, zone);
     IterateRealmsArenasCellsUnbarriered(cx, zone, data,

@@ -548,9 +548,6 @@ public:
 
   nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
                              bool aNotify) override;
-  nsresult InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
-                                    bool aNotify) override;
-  void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) final;
   void RemoveChildNode(nsIContent* aKid, bool aNotify) final;
   nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo,
                  nsINode **aResult,
