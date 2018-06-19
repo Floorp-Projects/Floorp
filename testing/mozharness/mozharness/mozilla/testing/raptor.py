@@ -71,6 +71,12 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
           "default": None,
           "help": "extra options to raptor"
           }],
+        [["--enable-webrender"], {
+            "action": "store_true",
+            "dest": "enable_webrender",
+            "default": False,
+            "help": "Tries to enable the WebRender compositor.",
+        }],
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):
@@ -375,6 +381,12 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
             env['PYTHONPATH'] = self.raptor_path + os.pathsep + env['PYTHONPATH']
         else:
             env['PYTHONPATH'] = self.raptor_path
+
+        # if running in production on a quantum_render build
+        if self.config['enable_webrender']:
+            self.info("webrender is enabled so setting MOZ_WEBRENDER=1 and MOZ_ACCELERATED=1")
+            env['MOZ_WEBRENDER'] = '1'
+            env['MOZ_ACCELERATED'] = '1'
 
         # mitmproxy needs path to mozharness when installing the cert, and tooltool
         env['SCRIPTSPATH'] = scripts_path

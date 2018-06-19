@@ -4,13 +4,16 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   error,
   TimeoutError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
+
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 this.EXPORTED_SYMBOLS = [
   /* exported PollPromise, TimedPromise */
@@ -20,8 +23,6 @@ this.EXPORTED_SYMBOLS = [
   /* exported MessageManagerDestroyedPromise */
   "MessageManagerDestroyedPromise",
 ];
-
-const logger = Log.repository.getLogger("Marionette");
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 

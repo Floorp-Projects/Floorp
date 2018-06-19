@@ -10,6 +10,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerHolder.h"
 #include "mozilla/UniquePtr.h"
+#include <functional>
 
 namespace mozilla {
 namespace dom {

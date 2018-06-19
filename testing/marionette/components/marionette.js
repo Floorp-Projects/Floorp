@@ -13,16 +13,12 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "resource://gre/modules/Log.jsm",
+  Log: "chrome://marionette/content/log.js",
   Preferences: "resource://gre/modules/Preferences.jsm",
   TCPListener: "chrome://marionette/content/server.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let log = Log.repository.getLogger("Marionette");
-  log.addAppender(new Log.DumpAppender());
-  return log;
-});
+XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
@@ -283,9 +279,6 @@ class MarionetteParentProcess {
     // indicates that all pending window checks have been completed
     // and that we are ready to start the Marionette server
     this.finalUIStartup = false;
-
-    log.level = MarionettePrefs.logLevel;
-    Services.ppmm.initialProcessData["Marionette:Log"] = {level: log.level};
 
     this.enabled = env.exists(ENV_ENABLED);
     this.alteredPrefs = new Set();

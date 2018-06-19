@@ -2466,10 +2466,12 @@ ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
                 return false;
 
             size_t length = strlen(inlineFrame.label.get());
-            auto label = reinterpret_cast<Latin1Char*>(inlineFrame.label.release());
+            auto* label = reinterpret_cast<Latin1Char*>(inlineFrame.label.release());
             frameLabel = NewString<CanGC>(cx, label, length);
-            if (!frameLabel)
+            if (!frameLabel) {
+                js_free(label);
                 return false;
+            }
 
             if (!JS_DefineProperty(cx, inlineFrameInfo, "label", frameLabel, propAttrs))
                 return false;
@@ -2992,9 +2994,14 @@ class CloneBufferObject : public NativeObject {
         }
         auto iter = data->Start();
         data->ReadBytes(iter, buffer.get(), size);
-        JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, buffer.release());
-        if (!arrayBuffer)
+
+        auto* rawBuffer = buffer.release();
+        JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, rawBuffer);
+        if (!arrayBuffer) {
+            js_free(rawBuffer);
             return false;
+        }
+
         args.rval().setObject(*arrayBuffer);
         return true;
     }

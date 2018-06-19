@@ -82,8 +82,6 @@ class nsDocumentOpenInfo final : public nsIStreamListener
                                , public nsIThreadRetargetableStreamListener
 {
 public:
-  // Needed for nsCOMPtr to work right... Don't call this!
-  nsDocumentOpenInfo();
 
   // Real constructor
   // aFlags is a combination of the flags on nsIURILoader
@@ -185,11 +183,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
 NS_INTERFACE_MAP_END
-
-nsDocumentOpenInfo::nsDocumentOpenInfo()
-{
-  NS_NOTREACHED("This should never be called\n");
-}
 
 nsDocumentOpenInfo::nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
                                        uint32_t aFlags,

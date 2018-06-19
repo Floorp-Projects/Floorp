@@ -72,4 +72,5 @@ jobs:
       bouncer-products: ['complete-mar-candidates', 'partial-mar-candidates']
       shipping-product: firefox
       treeherder:
+         symbol: Rel(BncSub-RC)
          platform: firefox-release/opt

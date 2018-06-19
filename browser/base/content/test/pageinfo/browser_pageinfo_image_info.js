@@ -22,9 +22,8 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  let uriToWaitFor = URI.replace(/ /g, "%20");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
-                                 uriToWaitFor).then(function() {
+                                 URI).then(function() {
     var doc = gBrowser.contentDocumentAsCPOW;
     var testImg = doc.getElementById("test-image");
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,

@@ -62,7 +62,7 @@ add_task(async function test_formdata() {
  * before doing so.
  */
 add_task(async function test_url_check() {
-  const URL = "data:text/html;charset=utf-8,<input%20id=input>";
+  const URL = "data:text/html;charset=utf-8,<input id=input>";
   const VALUE = "value-" + Math.random();
 
   // Create a tab with an iframe containing an input field.
@@ -104,7 +104,7 @@ add_task(async function test_nested() {
   const FORM_DATA = {
     children: [{
       xpath: {"/xhtml:html/xhtml:body/xhtml:input": "m"},
-      url: "data:text/html;charset=utf-8,<input%20autofocus=true>"
+      url: "data:text/html;charset=utf-8,<input autofocus=true>"
     }]
   };
 

@@ -1,0 +1,9 @@
+[
+    {
+        "filename": "mitmproxy-2.0.2-linux.tar.gz",
+        "size": 48997542,
+        "digest": "b032e04b8763206a19f80b78062efa59dc901ad32fd8d6cf2d20e22744711352da61e75d93a0d93d645179153534f72a154f73432837db415c9b0cd9d981f012",
+        "algorithm": "sha512",
+        "unpack": true
+    }
+]

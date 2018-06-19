@@ -11,7 +11,6 @@ const winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
 
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -39,12 +38,15 @@ const {ContentEventObserverService} = ChromeUtils.import("chrome://marionette/co
 const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 ChromeUtils.import("chrome://marionette/content/interaction.js");
 ChromeUtils.import("chrome://marionette/content/legacyaction.js");
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 ChromeUtils.import("chrome://marionette/content/navigate.js");
 ChromeUtils.import("chrome://marionette/content/proxy.js");
 ChromeUtils.import("chrome://marionette/content/session.js");
 
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(outerWindowID));
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
+let {outerWindowID} = winUtil;
 let curContainer = {frame: content, shadowRoot: null};
 
 // Listen for click event to indicate one click has happened, so actions
@@ -77,15 +79,6 @@ let legacyactions = new legacyaction.Chain();
 
 // last touch for each fingerId
 let multiLast = {};
-
-// TODO: Log.jsm is not e10s compatible (see https://bugzil.la/1411513),
-// query the parent process for the current log level
-const logger = Log.repository.getLogger("Marionette");
-if (logger.ownAppenders.length == 0) {
-  let log = Services.cpmm.initialProcessData["Marionette:Log"];
-  logger.level = log.level;
-  logger.addAppender(new Log.DumpAppender());
-}
 
 // sandbox storage and name of the current sandbox
 const sandboxes = new Sandboxes(() => curContainer.frame);
@@ -445,8 +438,7 @@ const loadListener = {
  * an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  let {outerWindowID} = winUtil;
-  logger.debug(`Register listener.js for window ${outerWindowID}`);
+  logger.debug("Frame script loaded");
 
   sandboxes.clear();
   curContainer = {
@@ -463,6 +455,7 @@ function registerSelf() {
   }
 
   if (reply[0].outerWindowID === outerWindowID) {
+    logger.debug("Frame script registered");
     startListeners();
     sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
@@ -1589,7 +1582,7 @@ function flushRendering() {
         // Flush pending restyles and reflows for this window
         root.getBoundingClientRect();
       } catch (e) {
-        logger.warning(`flushWindow failed: ${e}`);
+        logger.error("flushWindow failed", e);
       }
     }
 
@@ -1605,7 +1598,8 @@ function flushRendering() {
 
   if (anyPendingPaintsGeneratedInDescendants &&
       !windowUtils.isMozAfterPaintPending) {
-    logger.error("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
+    logger.error("Descendant frame generated a MozAfterPaint event, " +
+        "but the root document doesn't have one!");
   }
 
   logger.debug(`flushRendering ${windowUtils.isMozAfterPaintPending}`);
@@ -1618,7 +1612,6 @@ async function reftestWait(url, remote) {
 
   let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
-
 
   let reftestWait = false;
 

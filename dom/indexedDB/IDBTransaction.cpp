@@ -15,9 +15,10 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ScopeExit.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
@@ -34,40 +35,6 @@ namespace dom {
 
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::ipc;
-
-class IDBTransaction::WorkerHolder final : public mozilla::dom::WorkerHolder
-{
-  WorkerPrivate* mWorkerPrivate;
-
-  // The IDBTransaction owns this object so we only need a weak reference back
-  // to it.
-  IDBTransaction* mTransaction;
-
-public:
-  WorkerHolder(WorkerPrivate* aWorkerPrivate, IDBTransaction* aTransaction)
-    : mozilla::dom::WorkerHolder("IDBTransaction::WorkerHolder")
-    , mWorkerPrivate(aWorkerPrivate)
-    , mTransaction(aTransaction)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    MOZ_ASSERT(aTransaction);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-    aTransaction->AssertIsOnOwningThread();
-
-    MOZ_COUNT_CTOR(IDBTransaction::WorkerHolder);
-  }
-
-  ~WorkerHolder()
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    MOZ_COUNT_DTOR(IDBTransaction::WorkerHolder);
-  }
-
-private:
-  virtual bool
-  Notify(WorkerStatus aStatus) override;
-};
 
 IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
                                const nsTArray<nsString>& aObjectStoreNames,
@@ -231,9 +198,17 @@ IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    nsAutoPtr<WorkerHolder> workerHolder(
-      new WorkerHolder(workerPrivate, transaction));
-    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate, Canceling))) {
+    RefPtr<StrongWorkerRef> workerRef =
+      StrongWorkerRef::Create(workerPrivate, "IDBTransaction",
+                              [transaction]() {
+        transaction->AssertIsOnOwningThread();
+        if (!transaction->IsCommittingOrDone()) {
+          IDB_REPORT_INTERNAL_ERR();
+          transaction->AbortInternal(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+                                     nullptr);
+        }
+      });
+    if (NS_WARN_IF(!workerRef)) {
       // Silence the destructor assertion if we never made this object live.
 #ifdef DEBUG
       MOZ_ASSERT(!transaction->mSentCommitOrAbort);
@@ -242,7 +217,7 @@ IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
       return nullptr;
     }
 
-    transaction->mWorkerHolder = std::move(workerHolder);
+    transaction->mWorkerRef = std::move(workerRef);
   }
 
   nsCOMPtr<nsIRunnable> runnable = do_QueryObject(transaction);
@@ -820,8 +795,10 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
   mFiredCompleteOrAbort = true;
 #endif
 
-  // Make sure we drop the WorkerHolder when this function completes.
-  nsAutoPtr<WorkerHolder> workerHolder = std::move(mWorkerHolder);
+  // Make sure we drop the WorkerRef when this function completes.
+  auto scopeExit = MakeScopeExit([&] {
+    mWorkerRef = nullptr;
+  });
 
   RefPtr<Event> event;
   if (NS_SUCCEEDED(aResult)) {
@@ -1068,28 +1045,6 @@ IDBTransaction::Run()
   }
 
   return NS_OK;
-}
-
-bool
-IDBTransaction::
-WorkerHolder::Notify(WorkerStatus aStatus)
-{
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(aStatus > Running);
-
-  if (mTransaction && aStatus > Terminating) {
-    mTransaction->AssertIsOnOwningThread();
-
-    RefPtr<IDBTransaction> transaction = std::move(mTransaction);
-
-    if (!transaction->IsCommittingOrDone()) {
-      IDB_REPORT_INTERNAL_ERR();
-      transaction->AbortInternal(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, nullptr);
-    }
-  }
-
-  return true;
 }
 
 } // namespace dom

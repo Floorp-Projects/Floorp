@@ -24,6 +24,7 @@
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
@@ -1527,10 +1528,14 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
 }
 
 XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
-: WorkerHolder("XMLHttpRequestWorker"), mWorkerPrivate(aWorkerPrivate),
-  mResponseType(XMLHttpRequestResponseType::Text), mTimeout(0),
-  mRooted(false), mBackgroundRequest(false), mWithCredentials(false),
-  mCanceled(false), mMozAnon(false), mMozSystem(false)
+  : mWorkerPrivate(aWorkerPrivate)
+  , mResponseType(XMLHttpRequestResponseType::Text)
+  , mTimeout(0)
+  , mBackgroundRequest(false)
+  , mWithCredentials(false)
+  , mCanceled(false)
+  , mMozAnon(false)
+  , mMozSystem(false)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1543,7 +1548,7 @@ XMLHttpRequestWorker::~XMLHttpRequestWorker()
 
   ReleaseProxy(XHRIsGoingAway);
 
-  MOZ_ASSERT(!mRooted);
+  MOZ_ASSERT(!mWorkerRef);
 
   mozilla::DropJSObjects(this);
 }
@@ -1638,18 +1643,25 @@ XMLHttpRequestWorker::MaybePin(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (mRooted) {
+  if (mWorkerRef) {
     return;
   }
 
-  if (!HoldWorker(mWorkerPrivate, Canceling)) {
+  RefPtr<XMLHttpRequestWorker> self = this;
+  mWorkerRef =
+    StrongWorkerRef::Create(mWorkerPrivate, "XMLHttpRequestWorker",
+                            [self]() {
+      if (!self->mCanceled) {
+        self->mCanceled = true;
+        self->ReleaseProxy(WorkerIsGoingAway);
+      }
+    });
+  if (NS_WARN_IF(!mWorkerRef)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   NS_ADDREF_THIS();
-
-  mRooted = true;
 }
 
 void
@@ -1760,11 +1772,8 @@ XMLHttpRequestWorker::Unpin()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  MOZ_ASSERT(mRooted, "Mismatched calls to Unpin!");
-
-  ReleaseWorker();
-
-  mRooted = false;
+  MOZ_ASSERT(mWorkerRef, "Mismatched calls to Unpin!");
+  mWorkerRef = nullptr;
 
   NS_RELEASE_THIS();
 }
@@ -1814,7 +1823,7 @@ XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
   if (aRv.Failed()) {
     // Dispatch() may have spun the event loop and we may have already unrooted.
     // If so we don't want autoUnpin to try again.
-    if (!mRooted) {
+    if (!mWorkerRef) {
       autoUnpin.Clear();
     }
     return;
@@ -1839,19 +1848,6 @@ XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
   if (!succeeded && !aRv.Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
-}
-
-bool
-XMLHttpRequestWorker::Notify(WorkerStatus aStatus)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (aStatus >= Canceling && !mCanceled) {
-    mCanceled = true;
-    ReleaseProxy(WorkerIsGoingAway);
-  }
-
-  return true;
 }
 
 void

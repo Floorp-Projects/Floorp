@@ -6936,6 +6936,19 @@ nsDisplaySubDocument::RemoveFrame(nsIFrame* aFrame)
   nsDisplayItem::RemoveFrame(aFrame);
 }
 
+void
+nsDisplaySubDocument::Disown()
+{
+  if (mFrame) {
+    mFrame->RemoveDisplayItem(this);
+    mFrame = nullptr;
+  }
+  if (mSubDocFrame) {
+    mSubDocFrame->RemoveDisplayItem(this);
+    mSubDocFrame = nullptr;
+  }
+}
+
 UniquePtr<ScrollMetadata>
 nsDisplaySubDocument::ComputeScrollMetadata(LayerManager* aLayerManager,
                                             const ContainerLayerParameters& aContainerParameters)

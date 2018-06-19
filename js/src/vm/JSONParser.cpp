@@ -726,8 +726,10 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
                     if (!elements)
                         return false;
                 }
-                if (!stack.append(elements))
+                if (!stack.append(elements)) {
+                    js_delete(elements);
                     return false;
+                }
 
                 token = advance();
                 if (token == ArrayClose) {
@@ -748,8 +750,10 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
                     if (!properties)
                         return false;
                 }
-                if (!stack.append(properties))
+                if (!stack.append(properties)) {
+                    js_delete(properties);
                     return false;
+                }
 
                 token = advanceAfterObjectOpen();
                 if (token == ObjectClose) {

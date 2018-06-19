@@ -52,6 +52,7 @@ public:
   virtual void GetType(nsAString& aType) = 0;
 
   virtual size_t GetAllocationSize() const = 0;
+  virtual size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const  = 0;
 
   /**
    * An effectively-unique serial number identifying this instance of FileImpl.

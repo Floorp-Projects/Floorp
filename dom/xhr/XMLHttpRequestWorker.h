@@ -10,18 +10,17 @@
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestString.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/WorkerHolder.h"
 
 namespace mozilla {
 namespace dom {
 
 class Proxy;
-class SendRunnable;
 class DOMString;
+class SendRunnable;
+class StrongWorkerRef;
 class WorkerPrivate;
 
-class XMLHttpRequestWorker final : public XMLHttpRequest,
-                                   public WorkerHolder
+class XMLHttpRequestWorker final : public XMLHttpRequest
 {
 public:
   struct StateData
@@ -49,13 +48,13 @@ public:
 private:
   RefPtr<XMLHttpRequestUpload> mUpload;
   WorkerPrivate* mWorkerPrivate;
+  RefPtr<StrongWorkerRef> mWorkerRef;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
   StateData mStateData;
 
   uint32_t mTimeout;
 
-  bool mRooted;
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
@@ -76,9 +75,6 @@ public:
 
   void
   Unpin();
-
-  bool
-  Notify(WorkerStatus aStatus) override;
 
   virtual uint16_t
   ReadyState() const override
@@ -266,7 +262,7 @@ public:
   bool
   SendInProgress() const
   {
-    return mRooted;
+    return !!mWorkerRef;
   }
 
 private:

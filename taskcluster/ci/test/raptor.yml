@@ -32,6 +32,7 @@ raptor-firefox-tp6:
     run-on-projects:
         by-test-platform:
             macosx.*: ['try', 'mozilla-central']
+            linux64.*: ['try', 'mozilla-central']
             default: ['try']
     max-run-time: 1200
     mozharness:

@@ -20,16 +20,16 @@ class BlobImpl;
 class BlobSet final
 {
 public:
-  nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
+  MOZ_MUST_USE nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
 
-  nsresult AppendString(const nsAString& aString, bool nativeEOL);
+  MOZ_MUST_USE nsresult AppendString(const nsAString& aString, bool nativeEOL);
 
-  nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
+  MOZ_MUST_USE nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
 
-  nsTArray<RefPtr<BlobImpl>>& GetBlobImpls() { return mBlobImpls; }
+  FallibleTArray<RefPtr<BlobImpl>>& GetBlobImpls() { return mBlobImpls; }
 
 private:
-  nsTArray<RefPtr<BlobImpl>> mBlobImpls;
+  FallibleTArray<RefPtr<BlobImpl>> mBlobImpls;
 };
 
 } // namespace dom

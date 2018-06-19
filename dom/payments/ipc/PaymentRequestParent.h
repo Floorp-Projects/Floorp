@@ -35,7 +35,7 @@ private:
                                uint32_t aActionType,
                                nsIPaymentActionRequest** aAction);
 
-  bool mActorAlived;
+  bool mActorAlive;
   uint64_t mTabId;
 };
 

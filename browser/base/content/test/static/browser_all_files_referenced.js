@@ -169,9 +169,6 @@ whitelist = new Set(whitelist.filter(item =>
 ).map(item => item.file));
 
 const ignorableWhitelist = new Set([
-  // The communicator.css file is kept for add-on backward compat.
-  "chrome://communicator/skin/communicator.css",
-
   // These 2 files are unreferenced only when building without the crash
   // reporter (eg. Linux x64 asan builds on treeherder)
   "chrome://global/locale/crashes.dtd",

@@ -24,6 +24,7 @@ marionette.jar:
   content/l10n.js (l10n.js)
   content/legacyaction.js (legacyaction.js)
   content/listener.js (listener.js)
+  content/log.js (log.js)
   content/message.js (message.js)
   content/modal.js (modal.js)
   content/navigate.js (navigate.js)

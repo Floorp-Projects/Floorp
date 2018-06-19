@@ -601,6 +601,13 @@ function remoteSettingsFunction() {
   const mainBucket = Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET);
   const defaultSigner = Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_SIGNER);
 
+  /**
+   * RemoteSettings constructor.
+   *
+   * @param {String} collectionName The remote settings identifier
+   * @param {Object} options Advanced options
+   * @returns {RemoteSettingsClient} An instance of a Remote Settings client.
+   */
   const remoteSettings = function(collectionName, options) {
     // Get or instantiate a remote settings client.
     const rsOptions = {
@@ -617,8 +624,55 @@ function remoteSettingsFunction() {
     return _clients.get(key);
   };
 
-  // This is called by the ping mechanism.
-  // returns a promise that rejects if something goes wrong
+  Object.defineProperty(remoteSettings, "pollingEndpoint", {
+    get() {
+      const kintoServer = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
+      const changesPath = Services.prefs.getCharPref(PREF_SETTINGS_CHANGES_PATH);
+      return kintoServer + changesPath;
+    }
+  });
+
+  /**
+   * Internal helper to retrieve existing instances of clients or new instances
+   * with default options if possible, or `null` if bucket/collection are unknown.
+   */
+  async function _client(bucketName, collectionName) {
+    // Check if a client was registered for this bucket/collection. Potentially
+    // with some specific options like signer, filter function etc.
+    const key = `${bucketName}/${collectionName}`;
+    const client = _clients.get(key);
+    if (client) {
+      // If the bucket name was changed manually on the client instance and does not
+      // match, don't return it.
+      if (client.bucketName == bucketName) {
+        return client;
+      }
+
+    // There was no client registered for this bucket/collection, but it's the main bucket,
+    // therefore we can instantiate a client with the default options.
+    // So if we have a local database or if we ship a JSON dump, then it means that
+    // this client is known but it was not registered yet (eg. calling module not "imported" yet).
+    } else if (bucketName == mainBucket) {
+      const [dbExists, localDump] = await Promise.all([
+        databaseExists(bucketName, collectionName),
+        hasLocalDump(bucketName, collectionName)
+      ]);
+      if (dbExists || localDump) {
+        return new RemoteSettingsClient(collectionName, { bucketName, signerName: defaultSigner });
+      }
+    }
+    // Else, we cannot return a client insttance because we are not able to synchronize data in specific buckets.
+    // Mainly because we cannot guess which `signerName` has to be used for example.
+    // And we don't want to synchronize data for collections in the main bucket that are
+    // completely unknown (ie. no database and no JSON dump).
+    return null;
+  }
+
+  /**
+   * Main polling method, called by the ping mechanism.
+   *
+   * @returns {Promise} or throws error if something goes wrong.
+   */
   remoteSettings.pollChanges = async () => {
     // Check if the server backoff time is elapsed.
     if (Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {
@@ -634,10 +688,6 @@ function remoteSettingsFunction() {
       }
     }
 
-    // Right now, we only use the collection name and the last modified info
-    const kintoBase = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-    const changesEndpoint = kintoBase + Services.prefs.getCharPref(PREF_SETTINGS_CHANGES_PATH);
-
     let lastEtag;
     if (Services.prefs.prefHasUserValue(PREF_SETTINGS_LAST_ETAG)) {
       lastEtag = Services.prefs.getCharPref(PREF_SETTINGS_LAST_ETAG);
@@ -645,7 +695,7 @@ function remoteSettingsFunction() {
 
     let pollResult;
     try {
-      pollResult = await fetchLatestChanges(changesEndpoint, lastEtag);
+      pollResult = await fetchLatestChanges(remoteSettings.pollingEndpoint, lastEtag);
     } catch (e) {
       // Report polling error to Uptake Telemetry.
       let report;
@@ -682,44 +732,21 @@ function remoteSettingsFunction() {
     Services.prefs.setIntPref(PREF_SETTINGS_LAST_UPDATE, serverTimeMillis / 1000);
 
     const loadDump = Services.prefs.getBoolPref(PREF_SETTINGS_LOAD_DUMP, true);
+
     // Iterate through the collections version info and initiate a synchronization
     // on the related remote settings client.
     let firstError;
     for (const change of changes) {
-      const {bucket: bucketName, collection, last_modified: lastModified} = change;
-      const key = `${bucketName}/${collection}`;
+      const { bucket, collection, last_modified } = change;
 
-      let client;
-      // Check if a client was registered for this bucket/collection. Potentially
-      // with some specific options like bucket, signer, etc.
-      if (_clients.has(key)) {
-        client = _clients.get(key);
-        // If the bucket name was changed manually on the client instance and does not
-        // match, it should be skipped.
-        if (client.bucketName != bucketName) {
-          continue;
-        }
-
-      // There was no client registered for this bucket/collection, but it's the main bucket,
-      // therefore we can instantiate a client with the default options.
-      // So if we have a local database or if we ship a JSON dump, then it means that
-      // this client is known but it was not registered yet (eg. calling module not "imported" yet).
-      } else if (bucketName == mainBucket && (await databaseExists(bucketName, collection) ||
-                                              await hasLocalDump(bucketName, collection))) {
-        client = new RemoteSettingsClient(collection, {bucketName, signerName: defaultSigner});
-
-      // We are not able to synchronize data for clients in specific buckets since we cannot
-      // guess which `signerName` has to be used for example.
-      // And we don't want to synchronize data for collections in the main bucket that are
-      // completely unknown (ie. no database and no JSON dump).
-      } else {
+      const client = await _client(bucket, collection);
+      if (!client) {
         continue;
       }
-
       // Start synchronization! It will be a no-op if the specified `lastModified` equals
       // the one in the local database.
       try {
-        await client.maybeSync(lastModified, serverTimeMillis, {loadDump});
+        await client.maybeSync(last_modified, serverTimeMillis, {loadDump});
       } catch (e) {
         if (!firstError) {
           firstError = e;
@@ -740,6 +767,43 @@ function remoteSettingsFunction() {
     Services.obs.notifyObservers(null, "remote-settings-changes-polled");
   };
 
+  /**
+   * Returns an object with polling status information and the list of
+   * known remote settings collections.
+   */
+  remoteSettings.inspect = async () => {
+    const { changes, currentEtag: serverTimestamp } = await fetchLatestChanges(remoteSettings.pollingEndpoint);
+
+    const collections = await Promise.all(changes.map(async (change) => {
+      const { bucket, collection, last_modified: serverTimestamp } = change;
+      const client = await _client(bucket, collection);
+      if (!client) {
+        return null;
+      }
+      const kintoCol = await client.openCollection();
+      const localTimestamp = await kintoCol.db.getLastModified();
+      const lastCheck = Services.prefs.getIntPref(client.lastCheckTimePref, 0);
+      return {
+        bucket,
+        collection,
+        localTimestamp,
+        serverTimestamp,
+        lastCheck,
+        signerName: client.signerName
+      };
+    }));
+
+    return {
+      serverURL: Services.prefs.getCharPref(PREF_SETTINGS_SERVER),
+      serverTimestamp,
+      localTimestamp: Services.prefs.getCharPref(PREF_SETTINGS_LAST_ETAG, null),
+      lastCheck: Services.prefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
+      mainBucket,
+      defaultSigner,
+      collections: collections.filter(c => !!c)
+    };
+  };
+
 
   const broadcastID = "remote-settings/monitor_changes";
   // When we start on a new profile there will be no ETag stored.
@@ -752,8 +816,7 @@ function remoteSettingsFunction() {
     moduleURI: __URI__,
     symbolName: "remoteSettingsBroadcastHandler",
   };
-  pushBroadcastService.addListener(broadcastID, currentVersion,
-                                   moduleInfo);
+  pushBroadcastService.addListener(broadcastID, currentVersion, moduleInfo);
 
   return remoteSettings;
 }

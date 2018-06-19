@@ -6,6 +6,7 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
@@ -85,10 +86,12 @@ function run_test() {
     }
   }
   const configPath = "/v1/";
+  const monitorChangesPath = "/v1/buckets/monitor/collections/changes/records";
   const addonsRecordsPath  = "/v1/buckets/blocklists/collections/addons/records";
   const gfxRecordsPath     = "/v1/buckets/blocklists/collections/gfx/records";
   const pluginsRecordsPath = "/v1/buckets/blocklists/collections/plugins/records";
   server.registerPathHandler(configPath, handleResponse);
+  server.registerPathHandler(monitorChangesPath, handleResponse);
   server.registerPathHandler(addonsRecordsPath, handleResponse);
   server.registerPathHandler(gfxRecordsPath, handleResponse);
   server.registerPathHandler(pluginsRecordsPath, handleResponse);
@@ -290,6 +293,46 @@ add_task(async function test_entries_are_filtered_when_jexl_filter_expression_is
 });
 add_task(clear_state);
 
+add_task(async function test_inspect_with_blocklist_clients() {
+  const rsSigner = "remote-settings.content-signature.mozilla.org";
+  const {
+    serverTimestamp,
+    localTimestamp,
+    lastCheck,
+    collections
+  } = await RemoteSettings.inspect();
+
+  equal(serverTimestamp, '"3000"');
+  equal(localTimestamp, null); // not yet synchronized.
+  equal(lastCheck, 0); // not yet synchronized.
+
+  const defaults = {
+    bucket: "blocklists",
+    localTimestamp: null,
+    lastCheck: 0,
+    signerName: rsSigner,
+  };
+  equal(collections.length, 3);
+  deepEqual(collections[0], { ...defaults, collection: "gfx", serverTimestamp: 3000 });
+  deepEqual(collections[1], { ...defaults, collection: "addons", serverTimestamp: 2900 });
+  deepEqual(collections[2], { ...defaults, collection: "plugins", serverTimestamp: 2800 });
+
+  // Now synchronize, and check that values were updated.
+  Services.prefs.setBoolPref("services.settings.load_dump", false);
+  const currentTime = Math.floor(Date.now() / 1000);
+  await RemoteSettings.pollChanges();
+
+  const inspected = await RemoteSettings.inspect();
+
+  equal(inspected.localTimestamp, '"3000"');
+  ok(inspected.lastCheck >= currentTime, `last check ${inspected.lastCheck}`);
+  for (const c of inspected.collections) {
+    equal(c.localTimestamp, 3000);
+    ok(c.lastCheck >= currentTime, `${c.collectionName} last check ${c.lastCheck}`);
+  }
+});
+add_task(clear_state);
+
 
 // get a response for a given request from sample data
 function getSampleResponse(req, port) {
@@ -322,6 +365,45 @@ function getSampleResponse(req, port) {
         "version": "1.5.1",
         "commit": "cbc6f58",
         "hello": "kinto"
+      })
+    },
+    "GET:/v1/buckets/monitor/collections/changes/records": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        `Date: ${new Date().toUTCString()}`,
+        "Etag: \"3000\""
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": JSON.stringify({
+        "data": [{
+          "id": "4676f0c7-9757-4796-a0e8-b40a5a37a9c9",
+          "bucket": "blocklists",
+          "collection": "gfx",
+          "last_modified": 3000
+        }, {
+          "id": "36b2ebab-d691-4796-b36b-f7a06df38b26",
+          "bucket": "blocklists",
+          "collection": "addons",
+          "last_modified": 2900
+        }, {
+          "id": "42aea14b-4b35-4308-94d9-8562412a2fef",
+          "bucket": "blocklists",
+          "collection": "plugins",
+          "last_modified": 2800
+        }, {
+          "id": "50f4ef31-7788-4be8-b073-114440be4d8d",
+          "bucket": "main",
+          "collection": "passwords",
+          "last_modified": 2700
+        }, {
+          "id": "d2f08123-b815-4bbf-a0b7-a948a65ecafa",
+          "bucket": "pinning-preview",
+          "collection": "pins",
+          "last_modified": 2600
+        }]
       })
     },
     "GET:/v1/buckets/blocklists/collections/addons/records?_sort=-last_modified": {
