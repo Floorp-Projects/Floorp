@@ -19,6 +19,7 @@ web-platform-tests:
     treeherder-symbol: W(wpt)
     chunks:
         by-test-platform:
+            linux.*/debug: 18
             macosx64/opt: 5
             macosx64/debug: 10
             windows10-64-ccov/debug: 15
