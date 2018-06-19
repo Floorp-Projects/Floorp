@@ -9884,11 +9884,11 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
     }
   }
 
-  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
-  RefPtr<nsAtom> typeAtom;
+  nsAtom* tagAtom = nodeInfo->NameAtom();
+  nsAtom* typeAtom = nullptr;
   bool isCustomElement = isCustomElementName || aIsAtom;
   if (isCustomElement) {
-    typeAtom = isCustomElementName ? tagAtom.get() : aIsAtom;
+    typeAtom = isCustomElementName ? tagAtom : aIsAtom;
   }
 
   MOZ_ASSERT_IF(aDefinition, isCustomElement);
