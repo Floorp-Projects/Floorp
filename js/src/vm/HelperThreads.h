@@ -311,7 +311,7 @@ class GlobalHelperThreadState
 
     void mergeParseTaskRealm(JSContext* cx, ParseTask* parseTask, JS::Realm* dest);
 
-    void trace(JSTracer* trc, js::gc::AutoTraceSession& session);
+    void trace(JSTracer* trc);
 
     JSScript* finishScriptParseTask(JSContext* cx, JS::OffThreadToken* token);
     JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);

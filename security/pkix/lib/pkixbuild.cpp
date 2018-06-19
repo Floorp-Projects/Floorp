@@ -61,6 +61,7 @@ public:
     , stapledOCSPResponse(aStapledOCSPResponse)
     , subCACount(aSubCACount)
     , deferredSubjectError(aDeferredSubjectError)
+    , subjectSignaturePublicKeyAlg(der::PublicKeyAlgorithm::Uninitialized)
     , result(Result::FATAL_ERROR_LIBRARY_FAILURE)
     , resultWasSet(false)
     , buildForwardCallBudget(aBuildForwardCallBudget)

@@ -61,12 +61,12 @@ JS::Zone::Zone(JSRuntime* rt)
     data(this, nullptr),
     isSystem(this, false),
 #ifdef DEBUG
-    gcLastSweepGroupIndex(this, 0),
+    gcLastSweepGroupIndex(0),
 #endif
     jitZone_(this, nullptr),
     gcScheduled_(false),
     gcScheduledSaved_(false),
-    gcPreserveCode_(this, false),
+    gcPreserveCode_(false),
     keepShapeTables_(this, false),
     listNext_(NotOnList)
 {
