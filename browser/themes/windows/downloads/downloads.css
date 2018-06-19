@@ -28,8 +28,12 @@
 }
 
 @media (-moz-windows-default-theme) {
-  @item@[verdict="Malware"] {
+  @item@[verdict="Malware"]:not(:hover) {
     color: #aa1b08;
+  }
+
+  :root[lwt-popup-brighttext] @item@[verdict="Malware"]:not(:hover) {
+    color: #ff0039;
   }
 
   /* Use unified color for the progressbar on default theme */

@@ -216,14 +216,6 @@ bool NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
   return false;
 }
 
-// Returns kColorNames, an array of all possible color names, and sets
-// *aSizeArray to the size of that array. Do NOT call free() on this array.
-const char * const * NS_AllColorNames(size_t *aSizeArray)
-{
-  *aSizeArray = ArrayLength(kColorNames);
-  return kColorNames;
-}
-
 // Macro to blend two colors
 //
 // equivalent to target = (bg*(255-fgalpha) + fg*fgalpha)/255

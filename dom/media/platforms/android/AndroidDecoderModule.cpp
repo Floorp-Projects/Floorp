@@ -32,15 +32,17 @@ namespace mozilla {
 
 mozilla::LazyLogModule sAndroidDecoderModuleLog("AndroidDecoderModule");
 
-const char*
+const nsCString
 TranslateMimeType(const nsACString& aMimeType)
 {
   if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)) {
-    return "video/x-vnd.on2.vp8";
+    static NS_NAMED_LITERAL_CSTRING(vp8, "video/x-vnd.on2.vp8");
+    return vp8;
   } else if (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)) {
-    return "video/x-vnd.on2.vp9";
+    static NS_NAMED_LITERAL_CSTRING(vp9, "video/x-vnd.on2.vp9");
+    return vp9;
   }
-  return PromiseFlatCString(aMimeType).get();
+  return nsCString(aMimeType);
 }
 
 static bool
@@ -111,7 +113,7 @@ AndroidDecoderModule::SupportsMimeType(
   }
 
   return java::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
-    nsCString(TranslateMimeType(aMimeType)));
+    TranslateMimeType(aMimeType));
 }
 
 already_AddRefed<MediaDataDecoder>

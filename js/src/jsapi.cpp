@@ -1866,7 +1866,8 @@ JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals
 JS_PUBLIC_API(void)
 JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
 {
-    MOZ_ASSERT(global->is<GlobalObject>());
+    GlobalObject* globalObj = &global->as<GlobalObject>();
+    Realm* globalRealm = globalObj->realm();
 
     // Off thread parsing and compilation tasks create a dummy global which is
     // then merged back into the host realm. Since it used to be a global, it
@@ -1876,14 +1877,14 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
     // Similarly, if we GC when creating the global, we may not have set that
     // global's realm's global pointer yet. In this case, the realm will not yet
     // contain anything that needs to be traced.
-    if (!global->isOwnGlobal(trc))
+    if (globalRealm->unsafeUnbarrieredMaybeGlobal() != globalObj)
         return;
 
     // Trace the realm for any GC things that should only stick around if we
     // know the global is live.
-    global->realm()->traceGlobal(trc);
+    globalRealm->traceGlobal(trc);
 
-    if (JSTraceOp trace = global->realm()->creationOptions().getTrace())
+    if (JSTraceOp trace = globalRealm->creationOptions().getTrace())
         trace(trc, global);
 }
 
@@ -4387,7 +4388,8 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
 
     cx->clearPendingException();
 
-    char16_t* chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get();
+    UniquePtr<char16_t> chars
+        { JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get() };
     if (!chars)
         return true;
 
@@ -4406,7 +4408,7 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
         return false;
 
     frontend::Parser<frontend::FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(),
-                                                                  options, chars, length,
+                                                                  options, chars.get(), length,
                                                                   /* foldConstants = */ true,
                                                                   usedNames, nullptr, nullptr,
                                                                   sourceObject,
@@ -4423,7 +4425,6 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
     }
     JS::SetWarningReporter(cx, older);
 
-    js_free(chars);
     return result;
 }
 

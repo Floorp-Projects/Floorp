@@ -64,22 +64,22 @@ job-defaults:
          by-project:
             birch:
                by-platform:
-                  linux*: "57.0"
-                  linux64*: "57.0"
-                  macosx64*: "57.0"
-                  win32*: "56.0"
-                  win64*: "56.0"
+                  linux-.*: "57.0"
+                  linux64-.*: "57.0"
+                  macosx64-.*: "57.0"
+                  win32-.*: "56.0"
+                  win64-.*: "56.0"
                   default: null
             jamun: "56.0b3"
             maple: "56.0b3"
             mozilla-beta: "56.0b3"
             mozilla-release:
                by-platform:
-                  linux*: "57.0"
-                  linux64*: "57.0"
-                  macosx64*: "57.0"
-                  win32*: "56.0"
-                  win64*: "56.0"
+                  linux-.*: "57.0"
+                  linux64-.*: "57.0"
+                  macosx64-.*: "57.0"
+                  win32-.*: "56.0"
+                  win64-.*: "56.0"
                   default: null
             mozilla-esr52:
                by-platform:

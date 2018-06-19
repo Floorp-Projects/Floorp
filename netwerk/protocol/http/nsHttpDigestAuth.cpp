@@ -112,7 +112,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
           // instead of regenerating it here.
           //
           nsAutoCString buf;
-          rv = NS_EscapeURL(path, esc_OnlyNonASCII, buf, mozilla::fallible);
+          rv = NS_EscapeURL(path, esc_OnlyNonASCII | esc_Spaces, buf, mozilla::fallible);
           if (NS_SUCCEEDED(rv)) {
             path = buf;
           }

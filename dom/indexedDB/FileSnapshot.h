@@ -114,6 +114,12 @@ private:
     return mBlobImpl->GetAllocationSize();
   }
 
+  size_t
+  GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobs) const override
+  {
+    return mBlobImpl->GetAllocationSize(aVisitedBlobs);
+  }
+
   virtual uint64_t
   GetSerialNumber() const override
   {

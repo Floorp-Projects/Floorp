@@ -634,7 +634,7 @@ PaymentRequest::PaymentRequest(const uint64_t aTabId,
                                nsIArray* aPaymentMethods,
                                nsIPaymentDetails* aPaymentDetails,
                                nsIPaymentOptions* aPaymentOptions,
-			       const nsAString& aShippingOption)
+                               const nsAString& aShippingOption)
   : mTabId(aTabId)
   , mRequestId(aRequestId)
   , mTopLevelPrincipal(aTopLevelPrincipal)

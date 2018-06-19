@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace dom {
 
+class ThreadSafeWorkerRef;
+
 typedef ArrayBufferViewOrArrayBuffer CryptoOperationData;
 typedef ArrayBufferViewOrArrayBuffer KeyData;
 
@@ -187,10 +189,8 @@ private:
   NS_IMETHOD Run() final;
   nsresult Cancel() final;
 
-  class InternalWorkerHolder;
-
   nsCOMPtr<nsISerialEventTarget> mOriginalEventTarget;
-  RefPtr<InternalWorkerHolder> mWorkerHolder;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   nsresult mRv;
 };
 

@@ -29,9 +29,7 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
   memcpy((char*)data, aData, aLength);
 
   RefPtr<BlobImpl> blobImpl = new MemoryBlobImpl(data, aLength, EmptyString());
-  mBlobImpls.AppendElement(blobImpl);
-
-  return NS_OK;
+  return AppendBlobImpl(blobImpl);
 }
 
 nsresult
@@ -61,7 +59,9 @@ nsresult
 BlobSet::AppendBlobImpl(BlobImpl* aBlobImpl)
 {
   NS_ENSURE_ARG_POINTER(aBlobImpl);
-  mBlobImpls.AppendElement(aBlobImpl);
+  if (NS_WARN_IF(!mBlobImpls.AppendElement(aBlobImpl, fallible))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   return NS_OK;
 }
 

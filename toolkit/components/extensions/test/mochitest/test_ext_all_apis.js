@@ -93,6 +93,8 @@ let expectedBackgroundApis = [
   "runtime.openOptionsPage",
   "runtime.reload",
   "runtime.setUninstallURL",
+  "theme.getCurrent",
+  "theme.onUpdated",
   "types.LevelOfControl",
   "types.SettingScope",
 ];

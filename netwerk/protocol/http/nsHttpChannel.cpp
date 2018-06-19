@@ -992,7 +992,7 @@ nsHttpChannel::SetupTransaction()
     }
 
     // path may contain UTF-8 characters, so ensure that they're escaped.
-    if (NS_EscapeURL(path.get(), path.Length(), esc_OnlyNonASCII, buf)) {
+    if (NS_EscapeURL(path.get(), path.Length(), esc_OnlyNonASCII | esc_Spaces, buf)) {
         requestURI = &buf;
     } else {
         requestURI = &path;
@@ -5503,7 +5503,7 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
 
     // make sure non-ASCII characters in the location header are escaped.
     nsAutoCString locationBuf;
-    if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII, locationBuf))
+    if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII | esc_Spaces, locationBuf))
         location = locationBuf;
 
     mRedirectType = redirectType;

@@ -4,7 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -13,6 +12,7 @@ const {
   WebDriverError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
 ChromeUtils.import("chrome://marionette/content/evaluate.js");
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 ChromeUtils.import("chrome://marionette/content/modal.js");
 const {
   MessageManagerDestroyedPromise,
@@ -20,10 +20,9 @@ const {
 
 this.EXPORTED_SYMBOLS = ["proxy"];
 
+XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 XPCOMUtils.defineLazyServiceGetter(
     this, "uuidgen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
-
-const log = Log.repository.getLogger("Marionette");
 
 // Proxy handler that traps requests to get a property.  Will prioritise
 // properties that exist on the object's own prototype.

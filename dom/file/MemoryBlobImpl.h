@@ -58,6 +58,11 @@ public:
     return mLength;
   }
 
+  size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override
+  {
+    return GetAllocationSize();
+  }
+
   class DataOwner final : public mozilla::LinkedListElement<DataOwner>
   {
   public:

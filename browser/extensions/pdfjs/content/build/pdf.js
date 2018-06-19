@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.581';
-var pdfjsBuild = '790e2124';
+var pdfjsVersion = '2.0.602';
+var pdfjsBuild = '3b07147d';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(6);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
@@ -4228,7 +4228,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.581',
+    apiVersion: '2.0.602',
     source: {
       data: source.data,
       url: source.url,
@@ -5129,6 +5129,8 @@ var WorkerTransport = function WorkerTransportClosure() {
             var font = new _font_loader.FontFaceObject(exportedData, {
               isEvalSupported: params.isEvalSupported,
               disableFontFace: params.disableFontFace,
+              ignoreErrors: params.ignoreErrors,
+              onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
               fontRegistry
             });
             var fontReady = fontObjs => {
@@ -5212,15 +5214,7 @@ var WorkerTransport = function WorkerTransportClosure() {
           }
         }
       }, this);
-      messageHandler.on('UnsupportedFeature', function (data) {
-        if (this.destroyed) {
-          return;
-        }
-        let loadingTask = this.loadingTask;
-        if (loadingTask.onUnsupportedFeature) {
-          loadingTask.onUnsupportedFeature(data.featureId);
-        }
-      }, this);
+      messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
       messageHandler.on('JpegDecode', function (data) {
         if (this.destroyed) {
           return Promise.reject(new Error('Worker was destroyed'));
@@ -5277,6 +5271,15 @@ var WorkerTransport = function WorkerTransportClosure() {
         }
         return this.CMapReaderFactory.fetch({ name: data.name });
       }, this);
+    },
+    _onUnsupportedFeature({ featureId }) {
+      if (this.destroyed) {
+        return;
+      }
+      let loadingTask = this.loadingTask;
+      if (loadingTask.onUnsupportedFeature) {
+        loadingTask.onUnsupportedFeature(featureId);
+      }
     },
     getData: function WorkerTransport_getData() {
       return this.messageHandler.sendWithPromise('GetData', null);
@@ -5536,34 +5539,38 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
     },
     _scheduleNext: function InternalRenderTask__scheduleNext() {
       if (this.useRequestAnimationFrame && typeof window !== 'undefined') {
-        window.requestAnimationFrame(this._nextBound);
+        window.requestAnimationFrame(() => {
+          this._nextBound().catch(this.callback);
+        });
       } else {
         Promise.resolve().then(this._nextBound).catch(this.callback);
       }
     },
     _next: function InternalRenderTask__next() {
-      if (this.cancelled) {
-        return;
-      }
-      this.operatorListIdx = this.gfx.executeOperatorList(this.operatorList, this.operatorListIdx, this._continueBound, this.stepper);
-      if (this.operatorListIdx === this.operatorList.argsArray.length) {
-        this.running = false;
-        if (this.operatorList.lastChunk) {
-          this.gfx.endDrawing();
-          if (this._canvas) {
-            canvasInRendering.delete(this._canvas);
-          }
-          this.callback();
+      return new Promise(() => {
+        if (this.cancelled) {
+          return;
         }
-      }
+        this.operatorListIdx = this.gfx.executeOperatorList(this.operatorList, this.operatorListIdx, this._continueBound, this.stepper);
+        if (this.operatorListIdx === this.operatorList.argsArray.length) {
+          this.running = false;
+          if (this.operatorList.lastChunk) {
+            this.gfx.endDrawing();
+            if (this._canvas) {
+              canvasInRendering.delete(this._canvas);
+            }
+            this.callback();
+          }
+        }
+      });
     }
   };
   return InternalRenderTask;
 }();
 var version, build;
 {
-  exports.version = version = '2.0.581';
-  exports.build = build = '790e2124';
+  exports.version = version = '2.0.602';
+  exports.build = build = '3b07147d';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -5940,13 +5947,15 @@ var IsEvalSupportedCached = {
   }
 };
 var FontFaceObject = function FontFaceObjectClosure() {
-  function FontFaceObject(translatedData, { isEvalSupported = true, disableFontFace = false, fontRegistry = null }) {
+  function FontFaceObject(translatedData, { isEvalSupported = true, disableFontFace = false, ignoreErrors = false, onUnsupportedFeature = null, fontRegistry = null }) {
     this.compiledGlyphs = Object.create(null);
     for (var i in translatedData) {
       this[i] = translatedData[i];
     }
     this.isEvalSupported = isEvalSupported !== false;
     this.disableFontFace = disableFontFace === true;
+    this.ignoreErrors = ignoreErrors === true;
+    this._onUnsupportedFeature = onUnsupportedFeature;
     this.fontRegistry = fontRegistry;
   }
   FontFaceObject.prototype = {
@@ -5966,36 +5975,46 @@ var FontFaceObject = function FontFaceObjectClosure() {
       }
       return rule;
     },
-    getPathGenerator: function FontFaceObject_getPathGenerator(objs, character) {
-      if (!(character in this.compiledGlyphs)) {
-        var cmds = objs.get(this.loadedName + '_path_' + character);
-        var current, i, len;
-        if (this.isEvalSupported && IsEvalSupportedCached.value) {
-          var args,
-              js = '';
-          for (i = 0, len = cmds.length; i < len; i++) {
-            current = cmds[i];
-            if (current.args !== undefined) {
-              args = current.args.join(',');
-            } else {
-              args = '';
-            }
-            js += 'c.' + current.cmd + '(' + args + ');\n';
-          }
-          this.compiledGlyphs[character] = new Function('c', 'size', js);
-        } else {
-          this.compiledGlyphs[character] = function (c, size) {
-            for (i = 0, len = cmds.length; i < len; i++) {
-              current = cmds[i];
-              if (current.cmd === 'scale') {
-                current.args = [size, -size];
-              }
-              c[current.cmd].apply(c, current.args);
-            }
-          };
-        }
+    getPathGenerator(objs, character) {
+      if (this.compiledGlyphs[character] !== undefined) {
+        return this.compiledGlyphs[character];
       }
-      return this.compiledGlyphs[character];
+      let cmds, current;
+      try {
+        cmds = objs.get(this.loadedName + '_path_' + character);
+      } catch (ex) {
+        if (!this.ignoreErrors) {
+          throw ex;
+        }
+        if (this._onUnsupportedFeature) {
+          this._onUnsupportedFeature({ featureId: _util.UNSUPPORTED_FEATURES.font });
+        }
+        (0, _util.warn)(`getPathGenerator - ignoring character: "${ex}".`);
+        return this.compiledGlyphs[character] = function (c, size) {};
+      }
+      if (this.isEvalSupported && IsEvalSupportedCached.value) {
+        let args,
+            js = '';
+        for (let i = 0, ii = cmds.length; i < ii; i++) {
+          current = cmds[i];
+          if (current.args !== undefined) {
+            args = current.args.join(',');
+          } else {
+            args = '';
+          }
+          js += 'c.' + current.cmd + '(' + args + ');\n';
+        }
+        return this.compiledGlyphs[character] = new Function('c', 'size', js);
+      }
+      return this.compiledGlyphs[character] = function (c, size) {
+        for (let i = 0, ii = cmds.length; i < ii; i++) {
+          current = cmds[i];
+          if (current.cmd === 'scale') {
+            current.args = [size, -size];
+          }
+          c[current.cmd].apply(c, current.args);
+        }
+      };
     }
   };
   return FontFaceObject;

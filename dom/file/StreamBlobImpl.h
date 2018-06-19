@@ -79,6 +79,11 @@ public:
 
   size_t GetAllocationSize() const override;
 
+  size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override
+  {
+    return GetAllocationSize();
+  }
+
 private:
   StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
                  const nsAString& aContentType,

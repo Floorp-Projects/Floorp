@@ -4,11 +4,13 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
+
+XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
-
-const log = Log.repository.getLogger("Marionette");
 
 const MAX_STRING_LENGTH = 250;
 
