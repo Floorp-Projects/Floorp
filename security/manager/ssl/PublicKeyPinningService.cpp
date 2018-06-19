@@ -305,7 +305,7 @@ CheckPinsForHostname(const RefPtr<nsNSSCertList>& certList, const char* hostname
             enforceTestModeResult ? 1 : 0;
       }
       pinningTelemetryInfo->accumulateResult = true;
-      pinningTelemetryInfo->certPinningResultHistogram = Some(histogram);
+      pinningTelemetryInfo->certPinningResultHistogram = histogram;
     }
 
     // We only collect per-CA pinning statistics upon failures.

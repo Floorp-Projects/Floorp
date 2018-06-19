@@ -457,7 +457,7 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
 // only supports v1.
-enum class Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3, Uninitialized = 255 };
+enum class Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
 
 // X.509 Certificate and OCSP ResponseData both use
 // "[0] EXPLICIT Version DEFAULT v1". Although an explicit encoding of v1 is
@@ -522,7 +522,6 @@ enum class PublicKeyAlgorithm
 {
   RSA_PKCS1,
   ECDSA,
-  Uninitialized
 };
 
 Result SignatureAlgorithmIdentifierValue(
