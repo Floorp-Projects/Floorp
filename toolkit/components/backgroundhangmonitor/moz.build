@@ -11,11 +11,9 @@
 # BHR disabled for Release builds because of bug 965392.
 # BHR disabled for debug builds because of bug 979069.
 # BHR disabled for TSan builds because of bug 1121216.
-# BHR disabled for ASan builds because of bug 1445441.
 if CONFIG['NIGHTLY_BUILD'] and \
    not CONFIG['MOZ_DEBUG'] and \
-   not CONFIG['MOZ_TSAN'] and \
-   not CONFIG['MOZ_ASAN']:
+   not CONFIG['MOZ_TSAN']:
     DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
 
     EXTRA_COMPONENTS += [
