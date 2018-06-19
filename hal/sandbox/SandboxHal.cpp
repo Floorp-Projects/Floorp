@@ -16,6 +16,7 @@
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/fallback/FallbackScreenConfiguration.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/Observer.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
@@ -232,9 +233,8 @@ public:
     hal::UnregisterBatteryObserver(this);
     hal::UnregisterNetworkObserver(this);
     hal::UnregisterScreenConfigurationObserver(this);
-    for (int32_t sensor = SENSOR_UNKNOWN + 1;
-         sensor < NUM_SENSOR_TYPE; ++sensor) {
-      hal::UnregisterSensorObserver(SensorType(sensor), this);
+    for (auto sensor : MakeEnumeratedRange(NUM_SENSOR_TYPE)) {
+      hal::UnregisterSensorObserver(sensor, this);
     }
     hal::UnregisterWakeLockObserver(this);
   }
