@@ -91,14 +91,18 @@ findbar[noanim] {
 .findbar-find-next {
   margin-inline-start: 0;
   -moz-appearance: none;
-  background: linear-gradient(rgba(255,255,255,.3), rgba(255,255,255,.1));
-  background-clip: padding-box;
+  background: rgba(255,255,255,.2);
   border: 1px solid ThreeDShadow;
   padding: 2px 5px;
   line-height: 1em;
   -moz-context-properties: fill;
   fill: currentColor;
   color: inherit;
+}
+
+.findbar-find-previous:not([disabled]):hover,
+.findbar-find-next:not([disabled]):hover {
+  background: rgba(190,190,190,.2);
 }
 
 .findbar-find-previous:not([disabled]):hover:active,
