@@ -17,6 +17,7 @@ clang_checkers:
     publish: !!bool yes
   - name: clang-analyzer-security.insecureAPI.getpw
     publish: !!bool yes
+  # We don't add clang-analyzer-security.insecureAPI.gets here; it's deprecated.
   - name: clang-analyzer-security.insecureAPI.mkstemp
     publish: !!bool yes
   - name: clang-analyzer-security.insecureAPI.mktemp
@@ -72,8 +73,13 @@ clang_checkers:
     publish: !!bool no
   - name: mozilla-*
     publish: !!bool yes
+  - name: performance-faster-string-find
+    publish: !!bool yes
   - name: performance-for-range-copy
     publish: !!bool yes
+  # Only available from clang tidy 6.0. We are currently using 5.0
+  # - name: performance-implicit-conversion-in-loop
+  #   publish: !!bool yes
   - name: performance-inefficient-string-concatenation
     publish: !!bool yes
   - name: performance-inefficient-vector-operation
