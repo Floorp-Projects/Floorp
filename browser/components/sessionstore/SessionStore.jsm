@@ -2030,11 +2030,25 @@ var SessionStoreInternal = {
     this._crashedBrowsers.delete(browser.permanentKey);
     aTab.removeAttribute("crashed");
 
+    let {userTypedValue = "", userTypedClear = 0} = browser;
+
+    let cacheState = TabStateCache.get(browser);
+    if (cacheState === undefined && userTypedValue) {
+      // Discard was likely called before state can be cached.  Update
+      // the persistent tab state cache with browser information so a
+      // restore will be successful.  This information is necessary for
+      // restoreTabContent in ContentRestore.jsm to work properly.
+      TabStateCache.update(browser, {
+        userTypedValue,
+        userTypedClear: 1,
+      });
+    }
+
     TAB_LAZY_STATES.set(aTab, {
       url: browser.currentURI.spec,
       title: aTab.label,
-      userTypedValue: browser.userTypedValue || "",
-      userTypedClear: browser.userTypedClear || 0
+      userTypedValue,
+      userTypedClear,
     });
   },
 
