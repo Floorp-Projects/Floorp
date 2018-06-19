@@ -3557,7 +3557,7 @@ PreliminaryObjectArray::sweep()
             // the realm's global is dead, we don't do anything as the group's
             // Class is not going to change in that case.
             JSObject* obj = *ptr;
-            GlobalObject* global = obj->realm()->unsafeUnbarrieredMaybeGlobal();
+            GlobalObject* global = obj->as<NativeObject>().realm()->unsafeUnbarrieredMaybeGlobal();
             if (global && !obj->isSingleton()) {
                 JSObject* objectProto = global->maybeGetPrototype(JSProto_Object);
                 obj->setGroup(objectProto->groupRaw());

@@ -1475,6 +1475,7 @@ class NativeObject : public ShapedObject
     // Native objects are never wrappers, so a native object always has a realm
     // and global.
     inline js::GlobalObject& global() const;
+    JS::Realm* realm() const { return JSObject::realm(); }
 
     /* JIT Accessors */
     static size_t offsetOfElements() { return offsetof(NativeObject, elements_); }
