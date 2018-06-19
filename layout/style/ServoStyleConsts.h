@@ -78,6 +78,8 @@ enum class StyleAppearance : uint8_t {
   Meterbar,
   // The meter bar's meter indicator.
   Meterchunk,
+  // The dropdown button(s) that open up a dropdown list.
+  MozMenulistButton,
   // For HTML's <input type=number>
   NumberInput,
   // A horizontal progress bar.
