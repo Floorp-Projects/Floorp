@@ -436,20 +436,6 @@ class JSObject : public js::gc::Cell
     // so this method asserts the object is not a CCW.
     inline js::GlobalObject& nonCCWGlobal() const;
 
-    // In some rare cases the global object's compartment's global may not be
-    // the same global object. For this reason, we need to take extra care when
-    // tracing.
-    //
-    // These cases are:
-    //  1) The off-thread parsing task uses a dummy global since it cannot
-    //     share with the actual global being used concurrently on the active
-    //     thread.
-    //  2) A GC may occur when creating the GlobalObject, in which case the
-    //     compartment global pointer may not yet be set. In this case there is
-    //     nothing interesting to trace in the compartment.
-    inline bool isOwnGlobal(JSTracer*) const;
-    inline js::GlobalObject* globalForTracing(JSTracer*) const;
-
     /*
      * ES5 meta-object properties and operations.
      */

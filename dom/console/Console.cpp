@@ -667,8 +667,7 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable
 {
 public:
   explicit ConsoleWorkerRunnable(Console* aConsole)
-    : WorkerProxyToMainThreadRunnable(GetCurrentThreadWorkerPrivate())
-    , mConsole(aConsole)
+    : mConsole(aConsole)
   {}
 
   ~ConsoleWorkerRunnable() override = default;
@@ -676,14 +675,15 @@ public:
   bool
   Dispatch(JSContext* aCx)
   {
-    mWorkerPrivate->AssertIsOnWorkerThread();
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
 
     if (NS_WARN_IF(!PreDispatch(aCx))) {
-      RunBackOnWorkerThreadForCleanup();
+      RunBackOnWorkerThreadForCleanup(workerPrivate);
       return false;
     }
 
-    if (NS_WARN_IF(!WorkerProxyToMainThreadRunnable::Dispatch())) {
+    if (NS_WARN_IF(!WorkerProxyToMainThreadRunnable::Dispatch(workerPrivate))) {
       // RunBackOnWorkerThreadForCleanup() will be called by
       // WorkerProxyToMainThreadRunnable::Dispatch().
       return false;
@@ -694,27 +694,29 @@ public:
 
 protected:
   void
-  RunOnMainThread() override
+  RunOnMainThread(WorkerPrivate* aWorkerPrivate) override
   {
+    MOZ_ASSERT(aWorkerPrivate);
     AssertIsOnMainThread();
 
     // Walk up to our containing page
-    WorkerPrivate* wp = mWorkerPrivate;
+    WorkerPrivate* wp = aWorkerPrivate;
     while (wp->GetParent()) {
       wp = wp->GetParent();
     }
 
     nsPIDOMWindowInner* window = wp->GetWindow();
     if (!window) {
-      RunWindowless();
+      RunWindowless(aWorkerPrivate);
     } else {
-      RunWithWindow(window);
+      RunWithWindow(aWorkerPrivate, window);
     }
   }
 
   void
-  RunWithWindow(nsPIDOMWindowInner* aWindow)
+  RunWithWindow(WorkerPrivate* aWorkerPrivate, nsPIDOMWindowInner* aWindow)
   {
+    MOZ_ASSERT(aWorkerPrivate);
     AssertIsOnMainThread();
 
     AutoJSAPI jsapi;
@@ -730,15 +732,16 @@ protected:
       return;
     }
 
-    RunConsole(jsapi.cx(), outerWindow, aWindow);
+    RunConsole(jsapi.cx(), aWorkerPrivate, outerWindow, aWindow);
   }
 
   void
-  RunWindowless()
+  RunWindowless(WorkerPrivate* aWorkerPrivate)
   {
+    MOZ_ASSERT(aWorkerPrivate);
     AssertIsOnMainThread();
 
-    WorkerPrivate* wp = mWorkerPrivate;
+    WorkerPrivate* wp = aWorkerPrivate;
     while (wp->GetParent()) {
       wp = wp->GetParent();
     }
@@ -761,13 +764,14 @@ protected:
 
     JSAutoRealm ar(cx, global);
 
-    RunConsole(cx, nullptr, nullptr);
+    RunConsole(cx, aWorkerPrivate, nullptr, nullptr);
   }
 
   void
-  RunBackOnWorkerThreadForCleanup() override
+  RunBackOnWorkerThreadForCleanup(WorkerPrivate* aWorkerPrivate) override
   {
-    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
     ReleaseData();
     mConsole = nullptr;
   }
@@ -778,7 +782,8 @@ protected:
 
   // This method is called in the main-thread.
   virtual void
-  RunConsole(JSContext* aCx, nsPIDOMWindowOuter* aOuterWindow,
+  RunConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+             nsPIDOMWindowOuter* aOuterWindow,
              nsPIDOMWindowInner* aInnerWindow) = 0;
 
   // This method is called in the owning thread of the Console object.
@@ -802,7 +807,6 @@ public:
     , mCallData(aCallData)
   {
     MOZ_ASSERT(aCallData);
-    mWorkerPrivate->AssertIsOnWorkerThread();
     mCallData->AssertIsOnOwningThread();
 
     // Marking this CallData as in use.
@@ -822,9 +826,11 @@ private:
   }
 
   void
-  RunConsole(JSContext* aCx, nsPIDOMWindowOuter* aOuterWindow,
+  RunConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+             nsPIDOMWindowOuter* aOuterWindow,
              nsPIDOMWindowInner* aInnerWindow) override
   {
+    MOZ_ASSERT(aWorkerPrivate);
     AssertIsOnMainThread();
 
     // The windows have to run in parallel.
@@ -840,13 +846,13 @@ private:
 
       nsString id = frame.mFilename;
       nsString innerID;
-      if (mWorkerPrivate->IsSharedWorker()) {
+      if (aWorkerPrivate->IsSharedWorker()) {
         innerID = NS_LITERAL_STRING("SharedWorker");
-      } else if (mWorkerPrivate->IsServiceWorker()) {
+      } else if (aWorkerPrivate->IsServiceWorker()) {
         innerID = NS_LITERAL_STRING("ServiceWorker");
         // Use scope as ID so the webconsole can decide if the message should
         // show up per tab
-        CopyASCIItoUTF16(mWorkerPrivate->ServiceWorkerScope(), id);
+        CopyASCIItoUTF16(aWorkerPrivate->ServiceWorkerScope(), id);
       } else {
         innerID = NS_LITERAL_STRING("Worker");
       }
@@ -961,7 +967,8 @@ private:
   }
 
   void
-  RunConsole(JSContext* aCx, nsPIDOMWindowOuter* aOuterWindow,
+  RunConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+             nsPIDOMWindowOuter* aOuterWindow,
              nsPIDOMWindowInner* aInnerWindow) override
   {
     AssertIsOnMainThread();
