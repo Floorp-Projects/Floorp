@@ -27,7 +27,7 @@ UNPACK_CMD="tar jxf"
 CLOSED_TREE=false
 DONTBUILD=false
 APPROVAL=false
-HG_SSH_USER='ffxbld'
+COMMIT_AUTHOR='ffxbld@mozilla.com'
 REPODIR=''
 APP_DIR=''
 APP_ID=''
@@ -401,7 +401,7 @@ function push_repo {
   # Clean up older review requests
   # Turn  Needs Review D624: No bug, Automated HSTS ...
   # into D624
-  for diff in $($ARC list | grep "Needs Review" | grep -E "Automated HSTS|Automated HPKP|Automated blocklist" | awk 'match($0, /D[0-9]+[^: ]/) { print substr($0, RSTART, RLENGTH)  }')
+  for diff in $($ARC list | grep "Needs Review" | grep -E "${BRANCH} repo-update" | awk 'match($0, /D[0-9]+[^: ]/) { print substr($0, RSTART, RLENGTH)  }')
   do
     echo "Removing old request $diff"
     # There is no 'arc abandon', see bug 1452082
@@ -597,7 +597,7 @@ if [ ${APPROVAL} == true ]; then
 fi
 
 
-if ${HG} -R "${REPODIR}" commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
+if ${HG} -R "${REPODIR}" commit -u "${COMMIT_AUTHOR}" -m "${COMMIT_MESSAGE}"
 then
   push_repo
 fi
