@@ -11,6 +11,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
@@ -20,6 +21,8 @@ ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
                                "resource://gre/modules/LoginManagerContent.jsm");
 ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
                                "resource://gre/modules/InsecurePasswordUtils.jsm");
+
+
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("nsLoginManager");
@@ -199,9 +202,11 @@ LoginManager.prototype = {
     clearAndGetHistogram("PWMGR_BLOCKLIST_NUM_SITES").add(
       this.getAllDisabledHosts({}).length
     );
+    Weave.Service.recordTelemetryHistogram("PWMGR_BLOCKLIST_NUM_SITES");
     clearAndGetHistogram("PWMGR_NUM_SAVED_PASSWORDS").add(
       this.countLogins("", "", "")
     );
+    Weave.Service.recordTelemetryHistogram("PWMGR_NUM_SAVED_PASSWORDS");
     clearAndGetHistogram("PWMGR_NUM_HTTPAUTH_PASSWORDS").add(
       this.countLogins("", null, "")
     );
@@ -209,6 +214,7 @@ LoginManager.prototype = {
     // This is a boolean histogram, and not a flag, because we don't want to
     // record any value if _gatherTelemetry is not called.
     clearAndGetHistogram("PWMGR_SAVING_ENABLED").add(this._remember);
+    Weave.Service.recordTelemetryHistogram("PWMGR_SAVING_ENABLED");
 
     // Don't try to get logins if MP is enabled, since we don't want to show a MP prompt.
     if (!this.isLoggedIn) {
@@ -219,6 +225,7 @@ LoginManager.prototype = {
 
     let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
     let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
+    Weave.Service.recordTelemetryHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
 
     let hostnameCount = new Map();
     for (let login of logins) {
@@ -237,6 +244,7 @@ LoginManager.prototype = {
     }
 
     let passwordsCountHistogram = clearAndGetHistogram("PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
+    Weave.Service.recordTelemetryHistogram("PWMGR_NUM_PASSWORDS_PER_HOSTNAME");
     for (let count of hostnameCount.values()) {
       passwordsCountHistogram.add(count);
     }
