@@ -11,15 +11,9 @@ platforms:
 clang_checkers:
   - name: -*
     publish: !!bool no
-  - name: misc-forward-declaration-namespace
-    # Name with clang tidy 6.0. We are currently using 5.0
-    # - name: bugprone-forward-declaration-namespace
-    publish: !!bool yes
   - name: clang-analyzer-deadcode.DeadStores
     publish: !!bool yes
   - name: clang-analyzer-security.FloatLoopCounter
-    publish: !!bool yes
-  - name: clang-analyzer-security.insecureAPI.UncheckedReturn
     publish: !!bool yes
   - name: clang-analyzer-security.insecureAPI.getpw
     publish: !!bool yes
@@ -31,11 +25,17 @@ clang_checkers:
     publish: !!bool no
   - name: clang-analyzer-security.insecureAPI.strcpy
     publish: !!bool no
+  - name: clang-analyzer-security.insecureAPI.UncheckedReturn
+    publish: !!bool yes
   - name: clang-analyzer-security.insecureAPI.vfork
     publish: !!bool yes
   - name: misc-argument-comment
     publish: !!bool yes
   - name: misc-assert-side-effect
+    publish: !!bool yes
+  - name: misc-forward-declaration-namespace
+    # Name with clang tidy 6.0. We are currently using 5.0
+    # - name: bugprone-forward-declaration-namespace
     publish: !!bool yes
   - name: misc-suspicious-missing-comma
     publish: !!bool yes
@@ -55,6 +55,11 @@ clang_checkers:
   - name: modernize-redundant-void-arg
     publish: !!bool no
   - name: modernize-shrink-to-fit
+    publish: !!bool yes
+  - name: modernize-use-auto
+    # Controversial, see bug 1371052.
+    publish: !!bool no
+  - name: modernize-use-bool-literals
     publish: !!bool yes
   - name: modernize-use-equals-default
     publish: !!bool yes
@@ -94,11 +99,6 @@ clang_checkers:
   - name: readability-redundant-string-init
     publish: !!bool yes
   - name: readability-uniqueptr-delete-release
-    publish: !!bool yes
-  - name: modernize-use-auto
-    # Controversial, see bug 1371052.
-    publish: !!bool no
-  - name: modernize-use-bool-literals
     publish: !!bool yes
 # Only available from clang tidy 6.0. We are currently using 5.0
 # - name: readability-static-accessed-through-instance
