@@ -5,6 +5,7 @@
 
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 const Telemetry = Services.telemetry;
@@ -58,4 +59,8 @@ async function waitForHistogramSnapshotData(aHistogramName, aProcessName, aKeyed
     return (aProcessName in data)
            && (aHistogramName in data[aProcessName]);
   });
+}
+
+if (runningInParent) {
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
 }
