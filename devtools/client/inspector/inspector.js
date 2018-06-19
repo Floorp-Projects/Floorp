@@ -37,6 +37,8 @@ loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
+loader.lazyImporter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
+
 const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
@@ -46,6 +48,9 @@ loader.lazyGetter(this, "TOOLBOX_L10N", function() {
 
 // Sidebar dimensions
 const INITIAL_SIDEBAR_SIZE = 350;
+
+// How long we wait to debounce resize events
+const LAZY_RESIZE_INTERVAL_MS = 200;
 
 // If the toolbox's width is smaller than the given amount of pixels, the sidebar
 // automatically switches from 'landscape/horizontal' to 'portrait/vertical' mode.
@@ -582,18 +587,26 @@ Inspector.prototype = {
     this.sidebar.off("destroy", this.onSidebarHidden);
   },
 
+  _onLazyPanelResize: async function() {
+    // Use window.top because promiseDocumentFlushed() in a subframe doesn't
+    // work, see https://bugzilla.mozilla.org/show_bug.cgi?id=1441173
+    const useLandscapeMode = await window.top.promiseDocumentFlushed(() => {
+      return this.useLandscapeMode();
+    });
+    this.splitBox.setState({ vert: useLandscapeMode });
+    this.emit("inspector-resize");
+  },
+
   /**
    * If Toolbox width is less than 600 px, the splitter changes its mode
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function() {
-    window.cancelIdleCallback(this._resizeTimerId);
-    this._resizeTimerId = window.requestIdleCallback(() => {
-      this.splitBox.setState({
-        vert: this.useLandscapeMode(),
-      });
-      this.emit("inspector-resize");
-    });
+    if (!this._lazyResizeHandler) {
+      this._lazyResizeHandler = new DeferredTask(this._onLazyPanelResize.bind(this),
+                                                 LAZY_RESIZE_INTERVAL_MS, 0);
+    }
+    this._lazyResizeHandler.arm();
   },
 
   getSidebarSize: function() {
