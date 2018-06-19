@@ -968,9 +968,20 @@ bool CrashGenerationServer::GenerateDump(const ClientInfo& client,
     dump_generator.SetCallback(&callback);
   }
 
- if (!dump_generator.GenerateDumpFile(dump_path)) {
+  if (!dump_generator.GenerateDumpFile(dump_path)) {
     return false;
   }
+
+  // If the client requests a full memory dump, we will write a normal mini
+  // dump and a full memory dump. Both dump files use the same uuid as file
+  // name prefix.
+  if (client.dump_type() & MiniDumpWithFullMemory) {
+    std::wstring full_dump_path;
+    if (!dump_generator.GenerateFullDumpFile(&full_dump_path)) {
+      return false;
+    }
+  }
+
   return dump_generator.WriteMinidump();
 }
 

@@ -62,14 +62,16 @@ class BasicCodeModule : public CodeModule {
         code_identifier_(that->code_identifier()),
         debug_file_(that->debug_file()),
         debug_identifier_(that->debug_identifier()),
-        version_(that->version()) {}
+        version_(that->version()),
+        is_unloaded_(that->is_unloaded()) {}
 
   BasicCodeModule(uint64_t base_address, uint64_t size,
                   const string &code_file,
                   const string &code_identifier,
                   const string &debug_file,
                   const string &debug_identifier,
-                  const string &version)
+                  const string &version,
+                  const bool is_unloaded = false)
       : base_address_(base_address),
         size_(size),
         shrink_down_delta_(0),
@@ -77,7 +79,8 @@ class BasicCodeModule : public CodeModule {
         code_identifier_(code_identifier),
         debug_file_(debug_file),
         debug_identifier_(debug_identifier),
-        version_(version)
+        version_(version),
+        is_unloaded_(is_unloaded)
     {}
   virtual ~BasicCodeModule() {}
 
@@ -95,6 +98,7 @@ class BasicCodeModule : public CodeModule {
   virtual string debug_identifier() const { return debug_identifier_; }
   virtual string version() const { return version_; }
   virtual CodeModule* Copy() const { return new BasicCodeModule(this); }
+  virtual bool is_unloaded() const { return is_unloaded_; }
 
  private:
   uint64_t base_address_;
@@ -105,6 +109,7 @@ class BasicCodeModule : public CodeModule {
   string debug_file_;
   string debug_identifier_;
   string version_;
+  bool is_unloaded_;
 
   // Disallow copy constructor and assignment operator.
   BasicCodeModule(const BasicCodeModule &that);

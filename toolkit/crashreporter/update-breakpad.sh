@@ -26,6 +26,7 @@ lss_rev=$(cd $breakpad_repo; git show ${rev}:DEPS | python -c "import sys; exec 
 # remove some extraneous bits
 # We've forked src/client toolkit/crashreporter/breakpad-client.
 rm -rf \
+  ${crashreporter_dir}/google-breakpad/appveyor.yml \
   ${crashreporter_dir}/google-breakpad/docs/ \
   ${crashreporter_dir}/google-breakpad/autotools/ \
   ${crashreporter_dir}/google-breakpad/m4/ \

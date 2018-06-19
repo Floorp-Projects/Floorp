@@ -147,23 +147,6 @@ StackFrameAMD64* StackwalkerAMD64::GetCallerByCFIFrameInfo(
   return frame.release();
 }
 
-bool StackwalkerAMD64::IsEndOfStack(uint64_t caller_rip, uint64_t caller_rsp,
-                                    uint64_t callee_rsp) {
-  // Treat an instruction address of 0 as end-of-stack.
-  if (caller_rip == 0) {
-    return true;
-  }
-
-  // If the new stack pointer is at a lower address than the old, then
-  // that's clearly incorrect. Treat this as end-of-stack to enforce
-  // progress and avoid infinite loops.
-  if (caller_rsp < callee_rsp) {
-    return true;
-  }
-
-  return false;
-}
-
 // Returns true if `ptr` is not in x86-64 canonical form.
 // https://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details
 static bool is_non_canonical(uint64_t ptr) {
@@ -173,7 +156,6 @@ static bool is_non_canonical(uint64_t ptr) {
 StackFrameAMD64* StackwalkerAMD64::GetCallerByFramePointerRecovery(
     const vector<StackFrame*>& frames) {
   StackFrameAMD64* last_frame = static_cast<StackFrameAMD64*>(frames.back());
-  uint64_t last_rsp = last_frame->context.rsp;
   uint64_t last_rbp = last_frame->context.rbp;
 
   // Assume the presence of a frame pointer. This is not mandated by the
@@ -208,10 +190,14 @@ StackFrameAMD64* StackwalkerAMD64::GetCallerByFramePointerRecovery(
       return NULL;
     }
 
-    // Simple sanity check that the stack is growing downwards as expected.
-    if (IsEndOfStack(caller_rip, caller_rsp, last_rsp) ||
-        caller_rbp < last_rbp) {
-      // Reached end-of-stack or stack is not growing downwards.
+    // Check that rbp is within the right frame
+    if (caller_rsp <= last_rbp || caller_rbp < caller_rsp) {
+      return NULL;
+    }
+
+    // Sanity check that resulting rbp is still inside stack memory.
+    uint64_t unused;
+    if (!memory_->GetMemoryAtAddress(caller_rbp, &unused)) {
       return NULL;
     }
 
@@ -321,9 +307,9 @@ StackFrame* StackwalkerAMD64::GetCallerFrame(const CallStack* stack,
     new_frame->context.rbp = static_cast<uint32_t>(new_frame->context.rbp);
   }
 
-  if (IsEndOfStack(new_frame->context.rip, new_frame->context.rsp,
-                   last_frame->context.rsp)) {
-    // Reached end-of-stack.
+  // Should we terminate the stack walk? (end-of-stack or broken invariant)
+  if (TerminateWalk(new_frame->context.rip, new_frame->context.rsp,
+                    last_frame->context.rsp, frames.size() == 1)) {
     return NULL;
   }
 
