@@ -772,7 +772,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         }
     }
 
-    mozilla::Maybe<AutoTraceSession> session;
+    mozilla::Maybe<AutoGCSession> session;
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (shouldPretenure && zone->allocNurseryStrings && zone->tenuredStrings >= 30 * 1000) {
             if (!session.isSome())
@@ -846,7 +846,7 @@ void
 js::Nursery::doCollection(JS::gcreason::Reason reason, TenureCountCache& tenureCounts)
 {
     JSRuntime* rt = runtime();
-    AutoTraceSession session(rt, JS::HeapState::MinorCollecting);
+    AutoGCSession session(rt, JS::HeapState::MinorCollecting);
     AutoSetThreadIsPerformingGC performingGC;
     AutoStopVerifyingBarriers av(rt, false);
     AutoDisableProxyCheck disableStrictProxyChecking;

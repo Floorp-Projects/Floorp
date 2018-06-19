@@ -228,7 +228,9 @@ AnonymousContent::GetComputedStylePropertyValue(const nsAString& aElementId,
   }
 
   RefPtr<nsComputedDOMStyle> cs =
-    new nsComputedDOMStyle(element, NS_LITERAL_STRING(""), shell,
+    new nsComputedDOMStyle(element,
+                           NS_LITERAL_STRING(""),
+                           element->OwnerDoc(),
                            nsComputedDOMStyle::eAll);
   aRv = cs->GetPropertyValue(aPropertyName, aResult);
 }

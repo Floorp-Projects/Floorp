@@ -37,7 +37,6 @@ const {
   EVENT_DEFACTION_CHANGE,
   EVENT_DESCRIPTION_CHANGE,
   EVENT_DOCUMENT_ATTRIBUTES_CHANGED,
-  EVENT_HELP_CHANGE,
   EVENT_HIDE,
   EVENT_NAME_CHANGE,
   EVENT_OBJECT_ATTRIBUTE_CHANGED,
@@ -234,18 +233,16 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return this.rawAccessible.description;
   },
 
-  get help() {
-    if (this.isDefunct) {
-      return null;
-    }
-    return this.rawAccessible.help;
-  },
-
   get keyboardShortcut() {
     if (this.isDefunct) {
       return null;
     }
-    return this.rawAccessible.keyboardShortcut;
+    // Gecko accessibility exposes two key bindings: Accessible::AccessKey and
+    // Accessible::KeyboardShortcut. The former is used for accesskey, where the latter
+    // is used for global shortcuts defined by XUL menu items, etc. Here - do what the
+    // Windows implementation does: try AccessKey first, and if that's empty, use
+    // KeyboardShortcut.
+    return this.rawAccessible.accessKey || this.rawAccessible.keyboardShortcut;
   },
 
   get childCount() {
@@ -361,7 +358,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       name: this.name,
       value: this.value,
       description: this.description,
-      help: this.help,
       keyboardShortcut: this.keyboardShortcut,
       childCount: this.childCount,
       domNodeType: this.domNodeType,
@@ -644,11 +640,6 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
           events.emit(accessible, "description-change", rawAccessible.description);
         }
         break;
-      case EVENT_HELP_CHANGE:
-        if (accessible) {
-          events.emit(accessible, "help-change", rawAccessible.help);
-        }
-        break;
       case EVENT_REORDER:
         if (accessible) {
           accessible.children().forEach(child =>
@@ -684,9 +675,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
           events.emit(accessible, "attributes-change", accessible.attributes);
         }
         break;
+      // EVENT_ACCELERATOR_CHANGE is currently not fired by gecko accessibility.
       case EVENT_ACCELERATOR_CHANGE:
         if (accessible) {
-          events.emit(accessible, "shortcut-change", rawAccessible.keyboardShortcut);
+          events.emit(accessible, "shortcut-change", accessible.keyboardShortcut);
         }
         break;
       default:

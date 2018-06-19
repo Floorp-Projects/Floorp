@@ -552,7 +552,7 @@ RenderThread::ProgramCacheTask()
 }
 
 void
-RenderThread::HandleDeviceReset(const char* aWhere)
+RenderThread::HandleDeviceReset(const char* aWhere, bool aNotify)
 {
   MOZ_ASSERT(IsInRenderThread());
 
@@ -560,9 +560,11 @@ RenderThread::HandleDeviceReset(const char* aWhere)
     return;
   }
 
-  gfxCriticalNote << "GFX: RenderThread detected a device reset in " << aWhere;
-  if (XRE_IsGPUProcess()) {
-    gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+  if (aNotify) {
+    gfxCriticalNote << "GFX: RenderThread detected a device reset in " << aWhere;
+    if (XRE_IsGPUProcess()) {
+      gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+    }
   }
 
   {
@@ -582,6 +584,21 @@ RenderThread::IsHandlingDeviceReset()
 {
   MOZ_ASSERT(IsInRenderThread());
   return mHandlingDeviceReset;
+}
+
+void
+RenderThread::SimulateDeviceReset()
+{
+  if (!IsInRenderThread()) {
+    Loop()->PostTask(NewRunnableMethod(
+      "RenderThread::SimulateDeviceReset",
+      this, &RenderThread::SimulateDeviceReset
+      ));
+  } else {
+    // When this function is called GPUProcessManager::SimulateDeviceReset() already
+    // triggers destroying all CompositorSessions before re-creating them.
+    HandleDeviceReset("SimulateDeviceReset", /* aNotify */ false);
+  }
 }
 
 WebRenderProgramCache*

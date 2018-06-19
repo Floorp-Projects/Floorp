@@ -4109,46 +4109,6 @@ nsIDocument::InsertChildBefore(nsIContent* aKid,
   return doInsertChildAt(aKid, index, aNotify, mChildren);
 }
 
-nsresult
-nsIDocument::InsertChildAt_Deprecated(nsIContent* aKid,
-                                      uint32_t aIndex,
-                                      bool aNotify)
-{
-  if (aKid->IsElement() && GetRootElement()) {
-    NS_WARNING("Inserting root element when we already have one");
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  return doInsertChildAt(aKid, aIndex, aNotify, mChildren);
-}
-
-void
-nsIDocument::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
-{
-  nsCOMPtr<nsIContent> oldKid = GetChildAt_Deprecated(aIndex);
-  if (!oldKid) {
-    return;
-  }
-
-  if (oldKid->IsElement()) {
-    // Destroy the link map up front before we mess with the child list.
-    DestroyElementMaps();
-  }
-
-  // Preemptively clear mCachedRootElement, since we may be about to remove it
-  // from our child list, and we don't want to return this maybe-obsolete value
-  // from any GetRootElement() calls that happen inside of doRemoveChildAt().
-  // (NOTE: for this to be useful, doRemoveChildAt() must NOT trigger any
-  // GetRootElement() calls until after it's removed the child from mChildren.
-  // Any call before that point would restore this soon-to-be-obsolete cached
-  // answer, and our clearing here would be fruitless.)
-  mCachedRootElement = nullptr;
-  doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
-  MOZ_ASSERT(mCachedRootElement != oldKid,
-             "Stale pointer in mCachedRootElement, after we tried to clear it "
-             "(maybe somebody called GetRootElement() too early?)");
-}
-
 void
 nsIDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {
