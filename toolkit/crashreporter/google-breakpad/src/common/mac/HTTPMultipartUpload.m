@@ -49,13 +49,13 @@ static NSString *PercentEncodeNSString(NSString *key) {
 
 // As -[NSURLConnection sendSynchronousRequest:returningResponse:error:] has
 // been deprecated with iOS 9.0 / OS X 10.11 SDKs, this function re-implements
-// it using -[NSURLSession dataTaskWithRequest:completionHandler:] when using
-// those SDKs.
+// it using -[NSURLSession dataTaskWithRequest:completionHandler:] which is
+// available on iOS 7+.
 static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
                                            NSURLResponse **out_response,
                                            NSError **out_error) {
-#if (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && defined(__IPHONE_9_0) &&     \
-     __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_9_0) ||                      \
+#if (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && defined(__IPHONE_7_0) &&     \
+     __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_7_0) ||                      \
     (defined(MAC_OS_X_VERSION_MIN_REQUIRED) &&                                 \
      defined(MAC_OS_X_VERSION_10_11) &&                                        \
      MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_11)
@@ -223,9 +223,7 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
 
   // Add any files to the message
   NSArray *fileNames = [files_ allKeys];
-  count = [fileNames count];
-  for (NSInteger i = 0; i < count; ++i) {
-    NSString *name = [fileNames objectAtIndex:i];
+  for (NSString *name in fileNames) {
     id fileOrData = [files_ objectForKey:name];
     NSData *fileData;
 

@@ -30,8 +30,7 @@
 
 #include "common/windows/omap.h"
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "breakpad_googletest_includes.h"
 
 namespace google_breakpad {
 

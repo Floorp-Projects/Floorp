@@ -50,6 +50,7 @@
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/memory_mapped_file.h"
 #include "common/linux/safe_readlink.h"
+#include "google_breakpad/common/minidump_exception_linux.h"
 #include "third_party/lss/linux_syscall_support.h"
 
 #if defined(__ANDROID__)
@@ -85,9 +86,14 @@ inline static bool IsMappedFileOpenUnsafe(
 
 namespace google_breakpad {
 
-#if defined(__CHROMEOS__)
-
 namespace {
+
+bool MappingContainsAddress(const MappingInfo& mapping, uintptr_t address) {
+  return mapping.system_mapping_info.start_addr <= address &&
+         address < mapping.system_mapping_info.end_addr;
+}
+
+#if defined(__CHROMEOS__)
 
 // Recover memory mappings before writing dump on ChromeOS
 //
@@ -225,20 +231,21 @@ void CrOSPostProcessMappings(wasteful_vector<MappingInfo*>& mappings) {
       l = m + 1;
   }
 
-  // Try to merge segments into the first.
-  if (next < mappings.size()) {
-    TryRecoverMappings(mappings[0], mappings[next]);
-    if (next - 1 > 0)
-      TryRecoverMappings(mappings[next - 1], mappings[0], mappings[next]);
-  }
+  // Shows the range that contains the entry point is
+  // [first_start_addr, first_end_addr)
+  size_t first_start_addr = mappings[0]->start_addr;
+  size_t first_end_addr = mappings[0]->start_addr + mappings[0]->size;
+
+  // Put the out-of-order segment in order.
+  std::rotate(mappings.begin(), mappings.begin() + 1, mappings.begin() + next);
 
   // Iterate through normal, sorted cases.
   // Normal case 1.
-  for (size_t i = 1; i < mappings.size() - 1; i++)
+  for (size_t i = 0; i < mappings.size() - 1; i++)
     TryRecoverMappings(mappings[i], mappings[i + 1]);
 
   // Normal case 2.
-  for (size_t i = 1; i < mappings.size() - 2; i++)
+  for (size_t i = 0; i < mappings.size() - 2; i++)
     TryRecoverMappings(mappings[i], mappings[i + 1], mappings[i + 2]);
 
   // Collect merged (size == 0) segments.
@@ -247,10 +254,27 @@ void CrOSPostProcessMappings(wasteful_vector<MappingInfo*>& mappings) {
     if (mappings[e]->size > 0)
       mappings[f++] = mappings[e];
   mappings.resize(f);
+
+  // The entry point is in the first mapping. We want to find the location
+  // of the entry point after merging segment. To do this, we want to find
+  // the mapping that covers the first mapping from the original mapping list.
+  // If the mapping is not in the beginning, we move it to the begining via
+  // a right rotate by using reverse iterators.
+  for (l = 0; l < mappings.size(); l++) {
+    if (mappings[l]->start_addr <= first_start_addr
+        && (mappings[l]->start_addr + mappings[l]->size >= first_end_addr))
+      break;
+  }
+  if (l > 0) {
+    r = mappings.size();
+    std::rotate(mappings.rbegin() + r - l - 1, mappings.rbegin() + r - l,
+                mappings.rend());
+  }
 }
 
-}  // namespace
 #endif  // __CHROMEOS__
+
+}  // namespace
 
 // All interesting auvx entry types are below AT_SYSINFO_EHDR
 #define AT_MAX AT_SYSINFO_EHDR
@@ -260,6 +284,7 @@ LinuxDumper::LinuxDumper(pid_t pid, const char* root_prefix)
       root_prefix_(root_prefix),
       crash_address_(0),
       crash_signal_(0),
+      crash_signal_code_(0),
       crash_thread_(pid),
       threads_(&allocator_, 8),
       mappings_(&allocator_),
@@ -331,6 +356,83 @@ LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
   return success;
 }
 
+void LinuxDumper::SetCrashInfoFromSigInfo(const siginfo_t& siginfo) {
+  set_crash_address(reinterpret_cast<uintptr_t>(siginfo.si_addr));
+  set_crash_signal(siginfo.si_signo);
+  set_crash_signal_code(siginfo.si_code);
+}
+
+const char* LinuxDumper::GetCrashSignalString() const {
+  switch (static_cast<unsigned int>(crash_signal_)) {
+    case MD_EXCEPTION_CODE_LIN_SIGHUP:
+      return "SIGHUP";
+    case MD_EXCEPTION_CODE_LIN_SIGINT:
+      return "SIGINT";
+    case MD_EXCEPTION_CODE_LIN_SIGQUIT:
+      return "SIGQUIT";
+    case MD_EXCEPTION_CODE_LIN_SIGILL:
+      return "SIGILL";
+    case MD_EXCEPTION_CODE_LIN_SIGTRAP:
+      return "SIGTRAP";
+    case MD_EXCEPTION_CODE_LIN_SIGABRT:
+      return "SIGABRT";
+    case MD_EXCEPTION_CODE_LIN_SIGBUS:
+      return "SIGBUS";
+    case MD_EXCEPTION_CODE_LIN_SIGFPE:
+      return "SIGFPE";
+    case MD_EXCEPTION_CODE_LIN_SIGKILL:
+      return "SIGKILL";
+    case MD_EXCEPTION_CODE_LIN_SIGUSR1:
+      return "SIGUSR1";
+    case MD_EXCEPTION_CODE_LIN_SIGSEGV:
+      return "SIGSEGV";
+    case MD_EXCEPTION_CODE_LIN_SIGUSR2:
+      return "SIGUSR2";
+    case MD_EXCEPTION_CODE_LIN_SIGPIPE:
+      return "SIGPIPE";
+    case MD_EXCEPTION_CODE_LIN_SIGALRM:
+      return "SIGALRM";
+    case MD_EXCEPTION_CODE_LIN_SIGTERM:
+      return "SIGTERM";
+    case MD_EXCEPTION_CODE_LIN_SIGSTKFLT:
+      return "SIGSTKFLT";
+    case MD_EXCEPTION_CODE_LIN_SIGCHLD:
+      return "SIGCHLD";
+    case MD_EXCEPTION_CODE_LIN_SIGCONT:
+      return "SIGCONT";
+    case MD_EXCEPTION_CODE_LIN_SIGSTOP:
+      return "SIGSTOP";
+    case MD_EXCEPTION_CODE_LIN_SIGTSTP:
+      return "SIGTSTP";
+    case MD_EXCEPTION_CODE_LIN_SIGTTIN:
+      return "SIGTTIN";
+    case MD_EXCEPTION_CODE_LIN_SIGTTOU:
+      return "SIGTTOU";
+    case MD_EXCEPTION_CODE_LIN_SIGURG:
+      return "SIGURG";
+    case MD_EXCEPTION_CODE_LIN_SIGXCPU:
+      return "SIGXCPU";
+    case MD_EXCEPTION_CODE_LIN_SIGXFSZ:
+      return "SIGXFSZ";
+    case MD_EXCEPTION_CODE_LIN_SIGVTALRM:
+      return "SIGVTALRM";
+    case MD_EXCEPTION_CODE_LIN_SIGPROF:
+      return "SIGPROF";
+    case MD_EXCEPTION_CODE_LIN_SIGWINCH:
+      return "SIGWINCH";
+    case MD_EXCEPTION_CODE_LIN_SIGIO:
+      return "SIGIO";
+    case MD_EXCEPTION_CODE_LIN_SIGPWR:
+      return "SIGPWR";
+    case MD_EXCEPTION_CODE_LIN_SIGSYS:
+      return "SIGSYS";
+    case MD_EXCEPTION_CODE_LIN_DUMP_REQUESTED:
+      return "DUMP_REQUESTED";
+    default:
+      return "UNKNOWN";
+  }
+}
+
 bool LinuxDumper::GetMappingAbsolutePath(const MappingInfo& mapping,
                                          char path[PATH_MAX]) const {
   return my_strlcpy(path, root_prefix_, PATH_MAX) < PATH_MAX &&
@@ -347,17 +449,16 @@ bool ElfFileSoNameFromMappedFile(
 
   const void* segment_start;
   size_t segment_size;
-  int elf_class;
-  if (!FindElfSection(elf_base, ".dynamic", SHT_DYNAMIC,
-                      &segment_start, &segment_size, &elf_class)) {
+  if (!FindElfSection(elf_base, ".dynamic", SHT_DYNAMIC, &segment_start,
+                      &segment_size)) {
     // No dynamic section
     return false;
   }
 
   const void* dynstr_start;
   size_t dynstr_size;
-  if (!FindElfSection(elf_base, ".dynstr", SHT_STRTAB,
-                      &dynstr_start, &dynstr_size, &elf_class)) {
+  if (!FindElfSection(elf_base, ".dynstr", SHT_STRTAB, &dynstr_start,
+                      &dynstr_size)) {
     // No dynstr section
     return false;
   }
@@ -546,7 +647,10 @@ bool LinuxDumper::EnumerateMappings() {
             }
           }
           MappingInfo* const module = new(allocator_) MappingInfo;
+          mappings_.push_back(module);
           my_memset(module, 0, sizeof(MappingInfo));
+          module->system_mapping_info.start_addr = start_addr;
+          module->system_mapping_info.end_addr = end_addr;
           module->start_addr = start_addr;
           module->size = end_addr - start_addr;
           module->offset = offset;
@@ -556,29 +660,30 @@ bool LinuxDumper::EnumerateMappings() {
             if (l < sizeof(module->name))
               my_memcpy(module->name, name, l);
           }
-          // If this is the entry-point mapping, and it's not already the
-          // first one, then we need to make it be first.  This is because
-          // the minidump format assumes the first module is the one that
-          // corresponds to the main executable (as codified in
-          // processor/minidump.cc:MinidumpModuleList::GetMainModule()).
-          if (entry_point_loc &&
-              (entry_point_loc >=
-                  reinterpret_cast<void*>(module->start_addr)) &&
-              (entry_point_loc <
-                  reinterpret_cast<void*>(module->start_addr+module->size)) &&
-              !mappings_.empty()) {
-            // push the module onto the front of the list.
-            mappings_.resize(mappings_.size() + 1);
-            for (size_t idx = mappings_.size() - 1; idx > 0; idx--)
-              mappings_[idx] = mappings_[idx - 1];
-            mappings_[0] = module;
-          } else {
-            mappings_.push_back(module);
-          }
         }
       }
     }
     line_reader->PopLine(line_len);
+  }
+
+  if (entry_point_loc) {
+    for (size_t i = 0; i < mappings_.size(); ++i) {
+      MappingInfo* module = mappings_[i];
+
+      // If this module contains the entry-point, and it's not already the first
+      // one, then we need to make it be first.  This is because the minidump
+      // format assumes the first module is the one that corresponds to the main
+      // executable (as codified in
+      // processor/minidump.cc:MinidumpModuleList::GetMainModule()).
+      if ((entry_point_loc >= reinterpret_cast<void*>(module->start_addr)) &&
+          (entry_point_loc <
+           reinterpret_cast<void*>(module->start_addr + module->size))) {
+        for (size_t j = i; j > 0; j--)
+          mappings_[j] = mappings_[j - 1];
+        mappings_[0] = module;
+        break;
+      }
+    }
   }
 
   sys_close(fd);
@@ -720,6 +825,126 @@ bool LinuxDumper::GetStackInfo(const void** stack, size_t* stack_len,
   return true;
 }
 
+void LinuxDumper::SanitizeStackCopy(uint8_t* stack_copy, size_t stack_len,
+                                    uintptr_t stack_pointer,
+                                    uintptr_t sp_offset) {
+  // We optimize the search for containing mappings in three ways:
+  // 1) We expect that pointers into the stack mapping will be common, so
+  //    we cache that address range.
+  // 2) The last referenced mapping is a reasonable predictor for the next
+  //    referenced mapping, so we test that first.
+  // 3) We precompute a bitfield based upon bits 32:32-n of the start and
+  //    stop addresses, and use that to short circuit any values that can
+  //    not be pointers. (n=11)
+  const uintptr_t defaced =
+#if defined(__LP64__)
+      0x0defaced0defaced;
+#else
+      0x0defaced;
+#endif
+  // the bitfield length is 2^test_bits long.
+  const unsigned int test_bits = 11;
+  // byte length of the corresponding array.
+  const unsigned int array_size = 1 << (test_bits - 3);
+  const unsigned int array_mask = array_size - 1;
+  // The amount to right shift pointers by. This captures the top bits
+  // on 32 bit architectures. On 64 bit architectures this would be
+  // uninformative so we take the same range of bits.
+  const unsigned int shift = 32 - 11;
+  const MappingInfo* last_hit_mapping = nullptr;
+  const MappingInfo* hit_mapping = nullptr;
+  const MappingInfo* stack_mapping = FindMappingNoBias(stack_pointer);
+  // The magnitude below which integers are considered to be to be
+  // 'small', and not constitute a PII risk. These are included to
+  // avoid eliding useful register values.
+  const ssize_t small_int_magnitude = 4096;
+
+  char could_hit_mapping[array_size];
+  my_memset(could_hit_mapping, 0, array_size);
+
+  // Initialize the bitfield such that if the (pointer >> shift)'th
+  // bit, modulo the bitfield size, is not set then there does not
+  // exist a mapping in mappings_ that would contain that pointer.
+  for (size_t i = 0; i < mappings_.size(); ++i) {
+    if (!mappings_[i]->exec) continue;
+    // For each mapping, work out the (unmodulo'ed) range of bits to
+    // set.
+    uintptr_t start = mappings_[i]->start_addr;
+    uintptr_t end = start + mappings_[i]->size;
+    start >>= shift;
+    end >>= shift;
+    for (size_t bit = start; bit <= end; ++bit) {
+      // Set each bit in the range, applying the modulus.
+      could_hit_mapping[(bit >> 3) & array_mask] |= 1 << (bit & 7);
+    }
+  }
+
+  // Zero memory that is below the current stack pointer.
+  const uintptr_t offset =
+      (sp_offset + sizeof(uintptr_t) - 1) & ~(sizeof(uintptr_t) - 1);
+  if (offset) {
+    my_memset(stack_copy, 0, offset);
+  }
+
+  // Apply sanitization to each complete pointer-aligned word in the
+  // stack.
+  uint8_t* sp;
+  for (sp = stack_copy + offset;
+       sp <= stack_copy + stack_len - sizeof(uintptr_t);
+       sp += sizeof(uintptr_t)) {
+    uintptr_t addr;
+    my_memcpy(&addr, sp, sizeof(uintptr_t));
+    if (static_cast<intptr_t>(addr) <= small_int_magnitude &&
+        static_cast<intptr_t>(addr) >= -small_int_magnitude) {
+      continue;
+    }
+    if (stack_mapping && MappingContainsAddress(*stack_mapping, addr)) {
+      continue;
+    }
+    if (last_hit_mapping && MappingContainsAddress(*last_hit_mapping, addr)) {
+      continue;
+    }
+    uintptr_t test = addr >> shift;
+    if (could_hit_mapping[(test >> 3) & array_mask] & (1 << (test & 7)) &&
+        (hit_mapping = FindMappingNoBias(addr)) != nullptr &&
+        hit_mapping->exec) {
+      last_hit_mapping = hit_mapping;
+      continue;
+    }
+    my_memcpy(sp, &defaced, sizeof(uintptr_t));
+  }
+  // Zero any partial word at the top of the stack, if alignment is
+  // such that that is required.
+  if (sp < stack_copy + stack_len) {
+    my_memset(sp, 0, stack_copy + stack_len - sp);
+  }
+}
+
+bool LinuxDumper::StackHasPointerToMapping(const uint8_t* stack_copy,
+                                           size_t stack_len,
+                                           uintptr_t sp_offset,
+                                           const MappingInfo& mapping) {
+  // Loop over all stack words that would have been on the stack in
+  // the target process (i.e. are word aligned, and at addresses >=
+  // the stack pointer).  Regardless of the alignment of |stack_copy|,
+  // the memory starting at |stack_copy| + |offset| represents an
+  // aligned word in the target process.
+  const uintptr_t low_addr = mapping.system_mapping_info.start_addr;
+  const uintptr_t high_addr = mapping.system_mapping_info.end_addr;
+  const uintptr_t offset =
+      (sp_offset + sizeof(uintptr_t) - 1) & ~(sizeof(uintptr_t) - 1);
+
+  for (const uint8_t* sp = stack_copy + offset;
+       sp <= stack_copy + stack_len - sizeof(uintptr_t);
+       sp += sizeof(uintptr_t)) {
+    uintptr_t addr;
+    my_memcpy(&addr, sp, sizeof(uintptr_t));
+    if (low_addr <= addr && addr <= high_addr)
+      return true;
+  }
+  return false;
+}
+
 // Find the mapping which the given memory address falls in.
 const MappingInfo* LinuxDumper::FindMapping(const void* address) const {
   const uintptr_t addr = (uintptr_t) address;
@@ -730,6 +955,19 @@ const MappingInfo* LinuxDumper::FindMapping(const void* address) const {
       return mappings_[i];
   }
 
+  return NULL;
+}
+
+// Find the mapping which the given memory address falls in. Uses the
+// unadjusted mapping address range from the kernel, rather than the
+// biased range.
+const MappingInfo* LinuxDumper::FindMappingNoBias(uintptr_t address) const {
+  for (size_t i = 0; i < mappings_.size(); ++i) {
+    if (address >= mappings_[i]->system_mapping_info.start_addr &&
+        address < mappings_[i]->system_mapping_info.end_addr) {
+      return mappings_[i];
+    }
+  }
   return NULL;
 }
 

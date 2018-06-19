@@ -228,6 +228,7 @@ typedef integer_t	cpu_threadtype_t;
 #define CPU_SUBTYPE_X86_ALL		((cpu_subtype_t)3)
 #define CPU_SUBTYPE_X86_64_ALL		((cpu_subtype_t)3)
 #define CPU_SUBTYPE_X86_ARCH1		((cpu_subtype_t)4)
+#define CPU_SUBTYPE_X86_64_H		((cpu_subtype_t)8)	/* Haswell feature subset */
 
 
 #define CPU_THREADTYPE_INTEL_HTT	((cpu_threadtype_t) 1)

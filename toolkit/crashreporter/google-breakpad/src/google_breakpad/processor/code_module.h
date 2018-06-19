@@ -94,6 +94,9 @@ class CodeModule {
   // should always reflect the original values (reported in the minidump).
   virtual uint64_t shrink_down_delta() const = 0;
   virtual void SetShrinkDownDelta(uint64_t shrink_down_delta) = 0;
+
+  // Whether the module was unloaded from memory.
+  virtual bool is_unloaded() const = 0;
 };
 
 }  // namespace google_breakpad

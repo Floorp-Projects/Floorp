@@ -68,7 +68,7 @@
 		F93A887F0E8B4C8C0026AF89 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FE0BEF947200920385 /* macho_utilities.cc */; };
 		F93A88800E8B4C8C0026AF89 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FA0BEF947200920385 /* file_id.cc */; };
 		F93A88860E8B4C9A0026AF89 /* dwarftests.mm in Sources */ = {isa = PBXBuildFile; fileRef = F9721F310E8B07E800D7E813 /* dwarftests.mm */; };
-		F93A88870E8B4C9A0026AF89 /* dump_syms.mm in Sources */ = {isa = PBXBuildFile; fileRef = F9721F390E8B0D0D00D7E813 /* dump_syms.mm */; };
+		F93A88870E8B4C9A0026AF89 /* dump_syms.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F390E8B0D0D00D7E813 /* dump_syms.cc */; };
 		F93A88880E8B4C9A0026AF89 /* bytereader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F760E8B0DC700D7E813 /* bytereader.cc */; };
 		F93A88890E8B4C9A0026AF89 /* dwarf2reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */; };
 		F93A888A0E8B4C9A0026AF89 /* functioninfo.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F780E8B0DC700D7E813 /* functioninfo.cc */; };
@@ -151,7 +151,7 @@
 		F9721F300E8B07E800D7E813 /* dwarftests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dwarftests.h; sourceTree = "<group>"; };
 		F9721F310E8B07E800D7E813 /* dwarftests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = dwarftests.mm; sourceTree = "<group>"; };
 		F9721F380E8B0CFC00D7E813 /* dump_syms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dump_syms.h; path = ../../../common/mac/dump_syms.h; sourceTree = SOURCE_ROOT; };
-		F9721F390E8B0D0D00D7E813 /* dump_syms.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = dump_syms.mm; path = ../../../common/mac/dump_syms.mm; sourceTree = SOURCE_ROOT; };
+		F9721F390E8B0D0D00D7E813 /* dump_syms.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = dump_syms.cc; path = ../../../common/mac/dump_syms.cc; sourceTree = SOURCE_ROOT; };
 		F9721F6B0E8B0D7000D7E813 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F9721F760E8B0DC700D7E813 /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
 		F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
@@ -240,7 +240,7 @@
 				F9721F760E8B0DC700D7E813 /* bytereader.cc */,
 				F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */,
 				F9721F780E8B0DC700D7E813 /* functioninfo.cc */,
-				F9721F390E8B0D0D00D7E813 /* dump_syms.mm */,
+				F9721F390E8B0D0D00D7E813 /* dump_syms.cc */,
 				F9721F380E8B0CFC00D7E813 /* dump_syms.h */,
 				F917C4F70E03265A00F86017 /* breakpad_exc_server.c */,
 				F917C4F80E03265A00F86017 /* breakpad_exc_server.h */,
@@ -597,7 +597,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F93A88860E8B4C9A0026AF89 /* dwarftests.mm in Sources */,
-				F93A88870E8B4C9A0026AF89 /* dump_syms.mm in Sources */,
+				F93A88870E8B4C9A0026AF89 /* dump_syms.cc in Sources */,
 				F93A88880E8B4C9A0026AF89 /* bytereader.cc in Sources */,
 				F93A88890E8B4C9A0026AF89 /* dwarf2reader.cc in Sources */,
 				F93A888A0E8B4C9A0026AF89 /* functioninfo.cc in Sources */,

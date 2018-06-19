@@ -57,9 +57,9 @@ void UTF8ToUTF16(const char *in, vector<uint16_t> *out) {
 
 int UTF8ToUTF16Char(const char *in, int in_length, uint16_t out[2]) {
   const UTF8 *source_ptr = reinterpret_cast<const UTF8 *>(in);
-  const UTF8 *source_end_ptr = source_ptr + sizeof(char);
+  const UTF8 *source_end_ptr = source_ptr + 1;
   uint16_t *target_ptr = out;
-  uint16_t *target_end_ptr = target_ptr + 2 * sizeof(uint16_t);
+  uint16_t *target_end_ptr = target_ptr + 2;
   out[0] = out[1] = 0;
 
   // Process one character at a time
@@ -103,7 +103,7 @@ void UTF32ToUTF16Char(wchar_t in, uint16_t out[2]) {
   const UTF32 *source_ptr = reinterpret_cast<const UTF32 *>(&in);
   const UTF32 *source_end_ptr = source_ptr + 1;
   uint16_t *target_ptr = out;
-  uint16_t *target_end_ptr = target_ptr + 2 * sizeof(uint16_t);
+  uint16_t *target_end_ptr = target_ptr + 2;
   out[0] = out[1] = 0;
   ConversionResult result = ConvertUTF32toUTF16(&source_ptr, source_end_ptr,
                                                 &target_ptr, target_end_ptr,
