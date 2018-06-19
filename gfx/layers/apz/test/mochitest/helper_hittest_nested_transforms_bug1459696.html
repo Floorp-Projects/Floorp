@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing with nested inactive transforms (bug 1459696)</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    .pane {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+    }
+    .left {
+        left: 0;
+        right: 66vw;
+        overflow: auto;
+    }
+    .content {
+        width: 100%;
+        height: 200%;
+        background-image: linear-gradient(blue, green);
+    }
+    .right {
+        left: 34vw;
+        right: 0;
+    }
+    .list {
+        overflow: hidden;
+        transform: translate3d(0, 0, 0);
+        height: 100%;
+    }
+    .track {
+        height: 100%;
+        width: 2000px;
+        transform: translate3d(-856px, 0px, 0px);
+    }
+    .slide {
+        float: left;
+        height: 100%;
+        width: 856px;
+        background-image: linear-gradient(red, yellow);
+    }
+    </style>
+</head>
+<body>
+  <div class="left pane" id="left-pane">
+      <div class="content"></div>
+  </div>
+  <div class="right pane">
+      <div class="list">
+          <div class="track">
+              <div class="slide"></div>
+              <div class="slide"></div>
+          </div>
+      </div>
+  </div>
+</body>
+<script type="application/javascript">
+
+function* test(testDriver) {
+  var utils = getHitTestConfig().utils;
+
+  var leftPane = document.getElementById("left-pane");
+
+  checkHitResult(
+    hitTest(centerOf(leftPane)),
+    APZHitResultFlags.VISIBLE,
+    utils.getViewId(leftPane),
+    "left pane was successfully hit");
+
+  subtestDone();
+}
+
+waitUntilApzStable().then(runContinuation(test));
+
+</script>
+</html>
