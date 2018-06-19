@@ -1188,10 +1188,10 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
     }
 
 #ifdef DEBUG_ANDROID_IME
-    const NS_ConvertUTF16toUTF8 data(event.mData);
+    const NS_ConvertUTF16toUTF8 data(string);
     const char* text = data.get();
     ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%u",
-            text, event.mData.Length(), event.mRanges->Length());
+            text, string.Length(), mIMERanges->Length());
 #endif // DEBUG_ANDROID_IME
 
     if (NS_WARN_IF(NS_FAILED(BeginInputTransaction(mDispatcher)))) {
