@@ -18,6 +18,7 @@
 #include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "nsAString.h"                  // for nsAString::IsEmpty, etc
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
+#include "nsComposeTxtSrvFilter.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsDependentSubstring.h"       // for Substring
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
@@ -694,7 +695,7 @@ EditorSpellCheck::UninitSpellChecker()
 NS_IMETHODIMP
 EditorSpellCheck::SetFilter(nsITextServicesFilter *aFilter)
 {
-  mTxtSrvFilter = aFilter;
+  mTxtSrvFilter = reinterpret_cast<nsComposeTxtSrvFilter*>(aFilter);
   return NS_OK;
 }
 
