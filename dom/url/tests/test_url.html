@@ -479,7 +479,7 @@
     // we don't implement a spec-compliant parser yet.
     // make sure we are bug compatible with existing implementations.
     url = new URL("data:text/html,<a href=\"http://example.org/?q\">Link</a>");
-    is(url.href, "data:text/html,<a%20href=\"http://example.org/?q\">Link</a>");
+    is(url.href, "data:text/html,<a href=\"http://example.org/?q\">Link</a>");
   </script>
 
   <script>

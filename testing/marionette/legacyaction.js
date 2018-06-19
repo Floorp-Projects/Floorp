@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   element,
@@ -11,13 +11,14 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/element.js", {});
 ChromeUtils.import("chrome://marionette/content/evaluate.js");
 ChromeUtils.import("chrome://marionette/content/event.js");
+const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
+
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms
 
 this.EXPORTED_SYMBOLS = ["legacyaction"];
-
-const logger = Log.repository.getLogger("Marionette");
 
 /** @namespace */
 this.legacyaction = this.action = {};

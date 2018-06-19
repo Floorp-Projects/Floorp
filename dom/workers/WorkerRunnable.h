@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_workerrunnable_h__
 
 #include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerHolder.h"
+#include "mozilla/dom/WorkerRef.h"
 
 #include "nsICancelableRunnable.h"
 
@@ -431,30 +431,28 @@ private:
 class WorkerProxyToMainThreadRunnable : public Runnable
 {
 protected:
-  explicit WorkerProxyToMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
+  WorkerProxyToMainThreadRunnable();
 
   virtual ~WorkerProxyToMainThreadRunnable();
 
   // First this method is called on the main-thread.
-  virtual void RunOnMainThread() = 0;
+  virtual void RunOnMainThread(WorkerPrivate* aWorkerPrivate) = 0;
 
   // After this second method is called on the worker-thread.
-  virtual void RunBackOnWorkerThreadForCleanup() = 0;
+  virtual void
+  RunBackOnWorkerThreadForCleanup(WorkerPrivate* aWorkerPrivate) = 0;
 
 public:
-  bool Dispatch();
+  bool Dispatch(WorkerPrivate* aWorkerPrivate);
 
 private:
   NS_IMETHOD Run() override;
 
   void PostDispatchOnMainThread();
 
-  bool HoldWorker();
   void ReleaseWorker();
 
-protected:
-  WorkerPrivate* mWorkerPrivate;
-  UniquePtr<WorkerHolder> mWorkerHolder;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
 };
 
 // This runnable is used to stop a sync loop and it's meant to be used on the

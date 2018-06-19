@@ -20,9 +20,9 @@
 #ifndef mozilla_SegmentedVector_h
 #define mozilla_SegmentedVector_h
 
-#include "mozilla/Alignment.h"
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Array.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -57,6 +57,17 @@ class SegmentedVector : private AllocPolicy
   struct SegmentImpl
     : public mozilla::LinkedListElement<SegmentImpl<SegmentCapacity>>
   {
+  private:
+    uint32_t mLength;
+    alignas(T) MOZ_INIT_OUTSIDE_CTOR unsigned char mData[sizeof(T) * SegmentCapacity];
+
+    // Some versions of GCC treat it as a -Wstrict-aliasing violation (ergo a
+    // -Werror compile error) to reinterpret_cast<> |mData| to |T*|, even
+    // through |void*|.  Placing the latter cast in these separate functions
+    // breaks the chain such that affected GCC versions no longer warn/error.
+    void* RawData() { return mData; }
+
+  public:
     SegmentImpl() : mLength(0) {}
 
     ~SegmentImpl()
@@ -68,7 +79,7 @@ class SegmentedVector : private AllocPolicy
 
     uint32_t Length() const { return mLength; }
 
-    T* Elems() { return reinterpret_cast<T*>(&mStorage.mBuf); }
+    T* Elems() { return reinterpret_cast<T*>(RawData()); }
 
     T& operator[](size_t aIndex)
     {
@@ -98,18 +109,6 @@ class SegmentedVector : private AllocPolicy
       (*this)[mLength - 1].~T();
       mLength--;
     }
-
-    uint32_t mLength;
-
-    // The union ensures that the elements are appropriately aligned.
-    union Storage
-    {
-      char mBuf[sizeof(T) * SegmentCapacity];
-      mozilla::AlignedElem<MOZ_ALIGNOF(T)> mAlign;
-    } mStorage;
-
-    static_assert(MOZ_ALIGNOF(T) == MOZ_ALIGNOF(Storage),
-                  "SegmentedVector provides incorrect alignment");
   };
 
   // See how many we elements we can fit in a segment of IdealSegmentSize. If

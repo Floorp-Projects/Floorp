@@ -750,9 +750,10 @@ template void
 PostWriteElementBarrier<IndexInBounds::Maybe>(JSRuntime* rt, JSObject* obj, int32_t index);
 
 void
-PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj)
+PostGlobalWriteBarrier(JSRuntime* rt, GlobalObject* obj)
 {
-    MOZ_ASSERT(obj->is<GlobalObject>());
+    MOZ_ASSERT(obj->JSObject::is<GlobalObject>());
+
     if (!obj->realm()->globalWriteBarriered) {
         PostWriteBarrier(rt, obj);
         obj->realm()->globalWriteBarriered = 1;

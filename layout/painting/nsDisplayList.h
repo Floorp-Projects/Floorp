@@ -5630,6 +5630,8 @@ public:
 
   virtual void RemoveFrame(nsIFrame* aFrame) override;
 
+  void Disown();
+
 protected:
   ViewID mScrollParentId;
   bool mForceDispatchToContentRegion;

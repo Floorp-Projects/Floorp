@@ -87,11 +87,6 @@ if CONFIG["OS_TARGET"] == "DragonFly":
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
 
-    CXXFLAGS += [
-        "-msse2",
-        "-msse2"
-    ]
-
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_POSIX"] = True
@@ -111,20 +106,12 @@ if CONFIG["OS_TARGET"] == "Linux":
 
 if CONFIG["OS_TARGET"] == "NetBSD":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
-
-    CXXFLAGS += [
-        "-msse2"
-    ]
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -183,5 +170,44 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-msse2",
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-msse2",
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-msse2",
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
 
 Library("audio_processing_sse2_gn")

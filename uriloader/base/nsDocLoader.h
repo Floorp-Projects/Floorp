@@ -212,8 +212,9 @@ protected:
         // Weak mRequest is ok; we'll be told if it decides to go away.
         nsIRequest * const mRequest;
 
-        explicit nsStatusInfo(nsIRequest* aRequest) :
-            mRequest(aRequest)
+        explicit nsStatusInfo(nsIRequest* aRequest)
+            : mStatusCode(NS_ERROR_NOT_INITIALIZED)
+            , mRequest(aRequest)
         {
             MOZ_COUNT_CTOR(nsStatusInfo);
         }

@@ -374,9 +374,6 @@ function ReadTests() {
             });
         } else if (manifests) {
             // Parse reftest manifests
-            // XXX There is a race condition in the manifest parsing code which
-            // sometimes shows up on Android jsreftests (bug 1416125). It seems
-            // adding/removing log statements can change its frequency.
             logger.debug("Reading " + manifests.length + " manifests");
             manifests = JSON.parse(manifests);
             g.urlsFilterRegex = manifests[null];

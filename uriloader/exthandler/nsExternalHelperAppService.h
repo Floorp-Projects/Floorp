@@ -473,12 +473,7 @@ protected:
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 
   /**
-   * Keep request alive in case when helper non-modal dialog shown.
-   * Thus in OnStopRequest the mRequest will not be set to null (it will be set to null further).
-   */
-  bool mKeepRequestAlive;
 
-  /**
    * The request that's being loaded. Initialized in OnStartRequest.
    * Nulled out in OnStopRequest or once we know what we're doing
    * with the data, whichever happens later.
