@@ -99,12 +99,6 @@ PaymentRequestChild::MaybeDelete(bool aCanBeInManager)
   }
 }
 
-bool
-PaymentRequestChild::SendRequestPayment(const IPCPaymentActionRequest& aAction)
-{
-  return PPaymentRequestChild::SendRequestPayment(aAction);
-}
-
 void
 PaymentRequestChild::DetachFromRequest(bool aCanBeInManager)
 {

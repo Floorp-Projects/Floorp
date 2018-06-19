@@ -40,8 +40,8 @@ protected:
 private:
   ~PaymentRequestChild() = default;
 
-  bool SendRequestPayment(const IPCPaymentActionRequest& aAction);
   void DetachFromRequest(bool aCanBeInManager);
+
   PaymentRequest* MOZ_NON_OWNING_REF mRequest;
 };
 
