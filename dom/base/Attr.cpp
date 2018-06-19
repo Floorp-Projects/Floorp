@@ -289,18 +289,6 @@ Attr::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-Attr::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
-                               bool aNotify)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-Attr::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
-{
-}
-
 void
 Attr::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {
