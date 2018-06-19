@@ -979,7 +979,8 @@ TEST_F(GetCallerFrame, WindowsFPOUnchangedEBP) {
     EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame1->trust);
     ASSERT_EQ((StackFrameX86::CONTEXT_VALID_EIP
                | StackFrameX86::CONTEXT_VALID_ESP
-               | StackFrameX86::CONTEXT_VALID_EBP),
+               | StackFrameX86::CONTEXT_VALID_EBP
+               | StackFrameX86::CONTEXT_VALID_EBX),
               frame1->context_validity);
     EXPECT_EQ(0x40009b5bU, frame1->instruction + 1);
     EXPECT_EQ(0x40009b5bU, frame1->context.eip);
@@ -1071,6 +1072,141 @@ TEST_F(GetCallerFrame, WindowsFPOUsedEBP) {
     EXPECT_EQ(&module1, frame1->module);
     EXPECT_EQ("", frame1->function_name);
     EXPECT_EQ(NULL, frame1->windows_frame_info);
+  }
+}
+
+// This is a regression test for FPO code that references the initial value of
+// EBX.
+TEST_F(GetCallerFrame, WindowsFPOReferencesEBX) {
+  MockCodeModule ntdll(0x776e0000, 0x142000, "ntdll", "ntdllver");
+  MockCodeModule kernel32(0x77250000, 0xd5000, "kernel32", "kernel32ver");
+  MockCodeModule chrome_child(0x5a710000, 0x2b7c000, "chrome_child",
+                              "chrome_childver");
+  MockCodeModules modules;
+  modules.Add(&ntdll);
+  modules.Add(&kernel32);
+  modules.Add(&chrome_child);
+  SetModuleSymbols(&ntdll,
+                   "PUBLIC 46bf4 0 KiFastSystemCallRet\n"
+                   "STACK WIN 0 46bf4 1 0 0 0 0 0 0 0 0\n"
+
+                   "PUBLIC 46550 10 NtWaitForKeyedEvent\n"
+                   "STACK WIN 0 46550 f 0 0 10 0 0 0 0 0\n"
+
+                   "PUBLIC 4965 10 RtlSleepConditionVariableSRW\n"
+
+                   "STACK WIN 4 4965 23 23 0 10 8 38 0 1 $T0 $ebx = "
+                   "$eip $T0 4 + ^ = $ebx $T0 ^ = $esp $T0 8 + = "
+                   "$ebp $ebp ^ = $L $ebp = $P $T0 8 + .cbParams + =\n"
+
+                   "STACK WIN 4 4988 e3 0 0 10 8 38 0 1 $T0 $ebx = "
+                   "$eip $T0 4 + ^ = $ebx $T0 ^ = $esp $T0 8 + = "
+                   "$ebp $ebp ^ = $L $ebp = $P $T0 8 + .cbParams + =\n"
+
+                   "STACK WIN 4 4b2e b 0 0 10 8 38 0 1 $T0 $ebx = "
+                   "$eip $T0 4 + ^ = $ebx $T0 ^ = $esp $T0 8 + = "
+                   "$ebp $ebp ^ = $L $ebp = $P $T0 8 + .cbParams + =\n");
+
+  SetModuleSymbols(&kernel32,
+                   "PUBLIC 3217a 10 SleepConditionVariableSRW\n"
+                   "STACK WIN 4 3217a 40 8 0 10 0 8 0 1 $T0 $ebp = $eip $T0 4 "
+                   "+ ^ = $ebp $T0 ^ = $esp $T0 8 + = $L $T0 .cbSavedRegs - = "
+                   "$P $T0 8 + .cbParams + =\n");
+
+  SetModuleSymbols(&chrome_child,
+                   "FUNC 4f4851 20 0 base::ConditionVariable::TimedWait\n");
+
+  stack_section.start() = 0x0026c048;
+  stack_section
+      .D32(0x7772655c)
+      .D32(0x776e4a3f)
+      .D32(0x00000000)
+      .D32(0x0026c070)
+      .D32(0x00000000)
+      .D32(0x00000000)
+      .D32(0x00000001)
+      .D32(0x0026c168)
+      .D32(0x00000000)
+      .D32(0x00000000)
+      .D32(0x00000000)
+      .D32(0x0026c070)
+      .D32(0x00000000)
+      .D32(0x00000000)
+      .D32(0x00000000)
+      .D32(0x0026c164)
+      .D32(0x00be0000)
+      .D32(0x0026fc60)
+      .D32(0x0026c164)
+      .D32(0x00000000)
+      .D32(0xfffffffe)
+      .D32(0x00000000)
+      .D32(0x0026c0d0)
+      .D32(0x7728219e)
+      .D32(0x000003e8)
+      .D32(0x00000000)
+      .D32(0x7728219e)
+      .D32(0x0026c168)
+      .D32(0x0026c164)
+      .D32(0x00000000)
+      .D32(0x00000000)
+      .D32(0x0026c168)
+      .D32(0x000003e8)
+      .D32(0x000003e8)
+      .D32(0x0026c0ec)
+      .D32(0x5ac0486c)
+      .D32(0x0026c168)
+      .D32(0x0026c108)
+      .D32(0x5ac0484c)
+      .D32(0x0026c100)
+      .D32(0x0026c160);
+
+  RegionFromSection();
+  raw_context.eip = 0x77726bf4; // in ntdll!KiFastSystemCallRet
+  raw_context.esp = stack_section.start().Value();
+  raw_context.ebp = 0x26c0a0;
+  raw_context.ebx = 0x26c0ac;
+
+  StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
+  StackwalkerX86 walker(&system_info, &raw_context, &stack_region, &modules,
+                        &frame_symbolizer);
+  vector<const CodeModule *> modules_without_symbols;
+  vector<const CodeModule *> modules_with_corrupt_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols,
+                          &modules_with_corrupt_symbols));
+  ASSERT_EQ(0U, modules_without_symbols.size());
+  ASSERT_EQ(0U, modules_with_corrupt_symbols.size());
+  frames = call_stack.frames();
+
+  ASSERT_EQ(5U, frames->size());
+  {
+    const StackFrameX86 &frame = *static_cast<StackFrameX86 *>(frames->at(0));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CONTEXT, frame.trust);
+    EXPECT_EQ(0x77726bf4U, frame.context.eip);
+    EXPECT_EQ("KiFastSystemCallRet", frame.function_name);
+  }
+  {
+    const StackFrameX86 &frame = *static_cast<StackFrameX86 *>(frames->at(1));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame.trust);
+    EXPECT_EQ(0x7772655cU, frame.context.eip);
+    EXPECT_EQ("NtWaitForKeyedEvent", frame.function_name);
+  }
+  {
+    const StackFrameX86 &frame = *static_cast<StackFrameX86 *>(frames->at(2));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame.trust);
+    EXPECT_EQ(0x776e4a3fU, frame.context.eip);
+    EXPECT_EQ("RtlSleepConditionVariableSRW", frame.function_name);
+  }
+  {
+    const StackFrameX86 &frame = *static_cast<StackFrameX86 *>(frames->at(3));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame.trust);
+    EXPECT_EQ(0x7728219eU, frame.context.eip);
+    EXPECT_EQ("SleepConditionVariableSRW", frame.function_name);
+  }
+  {
+    const StackFrameX86 &frame = *static_cast<StackFrameX86 *>(frames->at(4));
+    EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame.trust);
+    EXPECT_EQ(0x5ac0486cU, frame.context.eip);
+    EXPECT_EQ("base::ConditionVariable::TimedWait", frame.function_name);
   }
 }
 
@@ -1205,7 +1341,8 @@ TEST_F(GetCallerFrame, WindowsFPOSystemCall) {
     EXPECT_EQ(StackFrame::FRAME_TRUST_CFI, frame1->trust);
     ASSERT_EQ((StackFrameX86::CONTEXT_VALID_EIP
                | StackFrameX86::CONTEXT_VALID_ESP
-               | StackFrameX86::CONTEXT_VALID_EBP),
+               | StackFrameX86::CONTEXT_VALID_EBP
+               | StackFrameX86::CONTEXT_VALID_EBX),
               frame1->context_validity);
     EXPECT_EQ(0x75fa0a91U, frame1->instruction + 1);
     EXPECT_EQ(0x75fa0a91U, frame1->context.eip);

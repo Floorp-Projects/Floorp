@@ -42,6 +42,7 @@
 #include "breakpad_googletest_includes.h"
 #include "client/mac/handler/minidump_generator.h"
 #include "client/mac/tests/spawn_child_process.h"
+#include "common/linux/ignore_ret.h"
 #include "common/mac/MachIPC.h"
 #include "common/tests/auto_tempdir.h"
 #include "google_breakpad/processor/minidump.h"
@@ -190,7 +191,7 @@ TEST_F(MinidumpGeneratorTest, OutOfProcess) {
 
   // Unblock child process
   uint8_t data = 1;
-  (void)write(fds[1], &data, 1);
+  IGNORE_RET(write(fds[1], &data, 1));
 
   // Child process should have exited with a zero status.
   int ret;

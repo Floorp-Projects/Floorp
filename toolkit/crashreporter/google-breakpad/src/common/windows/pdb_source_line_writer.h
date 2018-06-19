@@ -138,11 +138,12 @@ class PDBSourceLineWriter {
   bool PrintLines(IDiaEnumLineNumbers *lines);
 
   // Outputs a function address and name, followed by its source line list.
-  // block can be the same object as function, or it can be a reference
-  // to a code block that is lexically part of this function, but
-  // resides at a separate address.
-  // Returns true on success.
-  bool PrintFunction(IDiaSymbol *function, IDiaSymbol *block);
+  // block can be the same object as function, or it can be a reference to a
+  // code block that is lexically part of this function, but resides at a
+  // separate address. If has_multiple_symbols is true, this function's
+  // instructions correspond to multiple symbols. Returns true on success.
+  bool PrintFunction(IDiaSymbol *function, IDiaSymbol *block,
+                     bool has_multiple_symbols);
 
   // Outputs all functions as described above.  Returns true on success.
   bool PrintFunctions();
@@ -167,8 +168,10 @@ class PDBSourceLineWriter {
 
   // Outputs a single public symbol address and name, if the symbol corresponds
   // to a code address.  Returns true on success.  If symbol is does not
-  // correspond to code, returns true without outputting anything.
-  bool PrintCodePublicSymbol(IDiaSymbol *symbol);
+  // correspond to code, returns true without outputting anything. If
+  // has_multiple_symbols is true, the symbol corresponds to a code address and
+  // the instructions correspond to multiple symbols.
+  bool PrintCodePublicSymbol(IDiaSymbol *symbol, bool has_multiple_symbols);
 
   // Outputs a line identifying the PDB file that is being dumped, along with
   // its uuid and age.

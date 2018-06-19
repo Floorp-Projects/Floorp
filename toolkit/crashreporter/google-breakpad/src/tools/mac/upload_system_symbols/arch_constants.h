@@ -59,3 +59,4 @@ const char* GetNXArchInfoName(cpu_type_t cpu_type, cpu_subtype_t cpu_subtype) {
 const uint32_t kMachHeaderFtypeDylib = MH_DYLIB;
 const uint32_t kMachHeaderFtypeBundle = MH_BUNDLE;
 const uint32_t kMachHeaderFtypeExe = MH_EXECUTE;
+const uint32_t kMachHeaderFtypeDylinker = MH_DYLINKER;

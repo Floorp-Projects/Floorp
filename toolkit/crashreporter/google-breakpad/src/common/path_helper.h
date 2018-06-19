@@ -1,4 +1,4 @@
-// Copyright (c) 2013, Google Inc.
+// Copyright 2017, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,15 +27,18 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GOOGLE_BREAKPAD_ANDROID_INCLUDE_SGIDEFS_H
-#define GOOGLE_BREAKPAD_ANDROID_INCLUDE_SGIDEFS_H
+#ifndef GOOGLE_BREAKPAD_COMMON_PATH_HELPER_H
+#define GOOGLE_BREAKPAD_COMMON_PATH_HELPER_H
 
-#ifdef __mips__
+#include <string>
 
-// Android doesn't contain sgidefs.h, but does have <asm/sgidefs.h> which
-// contains what we need.
-#include <asm/sgidefs.h>
+#include "common/using_std_string.h"
 
-#endif  // __mips__
+namespace google_breakpad {
 
-#endif  // GOOGLE_BREAKPAD_ANDROID_INCLUDE_SGIDEFS_H
+string BaseName(const string& path);
+string DirName(const string& path);
+
+}  // namespace google_breakpad
+
+#endif  // GOOGLE_BREAKPAD_COMMON_PATH_HELPER_H

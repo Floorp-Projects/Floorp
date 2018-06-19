@@ -34,7 +34,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <libgen.h>
 #include <mach-o/arch.h>
 #include <sys/mman.h>
 #include <stdint.h>
@@ -49,6 +48,7 @@
 #include "common/byte_cursor.h"
 #include "common/mac/arch_utilities.h"
 #include "common/mac/macho_reader.h"
+#include "common/path_helper.h"
 
 using google_breakpad::ByteBuffer;
 using std::ostringstream;
@@ -85,7 +85,7 @@ class DumpSection: public mach_o::Reader::SectionHandler {
            section.contents.Size());
     return true;
   }
-         
+
  private:
   int index_;
 };
@@ -191,7 +191,7 @@ void DumpFile(const char *filename) {
 }  // namespace
 
 int main(int argc, char **argv) {
-  program_name = basename(argv[0]);
+  program_name = google_breakpad::BaseName(argv[0]);
   if (argc == 1) {
     fprintf(stderr, "Usage: %s FILE ...\n"
             "Dump the contents of the Mach-O or fat binary files "

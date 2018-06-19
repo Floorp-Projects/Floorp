@@ -525,9 +525,6 @@ struct CFIFixture: public StackwalkerMIPSFixture {
 
                      // The calling function.
                      "FUNC 5000 1000 0 epictetus\n"
-                     // Initially, nothing has been pushed on the stack,
-                     // and the return address is still in the $ra register.
-                     "STACK CFI INIT 5000 1000 .cfa: $sp .ra: $ra\n"
                      // Mark it as end of stack.
                      "STACK CFI INIT 5000 8 .cfa: $sp 0 + .ra: $ra\n"
 

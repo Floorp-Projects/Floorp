@@ -1,5 +1,5 @@
 If you wish to use these protobufs, you must generate their source files
-using  protoc from the protobuf project (http://code.google.com/p/protobuf/).
+using  protoc from the protobuf project (https://github.com/google/protobuf).
 
 -----
 Troubleshooting for Protobuf:

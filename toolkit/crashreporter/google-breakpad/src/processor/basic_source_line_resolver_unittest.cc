@@ -71,6 +71,7 @@ class TestCodeModule : public CodeModule {
   virtual CodeModule* Copy() const {
     return new TestCodeModule(code_file_);
   }
+  virtual bool is_unloaded() const { return false; }
   virtual uint64_t shrink_down_delta() const { return 0; }
   virtual void SetShrinkDownDelta(uint64_t shrink_down_delta) {}
 
@@ -454,16 +455,19 @@ TEST(SymbolParseHelper, ParseFileInvalid) {
 }
 
 // Test parsing of valid FUNC lines.  The format is:
-// FUNC <address> <size> <stack_param_size> <name>
+// FUNC [<multiple>] <address> <size> <stack_param_size> <name>
 TEST(SymbolParseHelper, ParseFunctionValid) {
+  bool multiple;
   uint64_t address;
   uint64_t size;
   long stack_param_size;
   char *name;
 
   char kTestLine[] = "FUNC 1 2 3 function name";
-  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine, &address, &size,
-                                               &stack_param_size, &name));
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine, &multiple, &address,
+                                               &size, &stack_param_size,
+                                               &name));
+  EXPECT_FALSE(multiple);
   EXPECT_EQ(1ULL, address);
   EXPECT_EQ(2ULL, size);
   EXPECT_EQ(3, stack_param_size);
@@ -471,25 +475,41 @@ TEST(SymbolParseHelper, ParseFunctionValid) {
 
   // Test hex address, size, and param size.
   char kTestLine1[] = "FUNC a1 a2 a3 function name";
-  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine1, &address, &size,
-                                               &stack_param_size, &name));
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine1, &multiple, &address,
+                                               &size, &stack_param_size,
+                                               &name));
+  EXPECT_FALSE(multiple);
   EXPECT_EQ(0xa1ULL, address);
   EXPECT_EQ(0xa2ULL, size);
   EXPECT_EQ(0xa3, stack_param_size);
   EXPECT_EQ("function name", string(name));
 
   char kTestLine2[] = "FUNC 0 0 0 function name";
-  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine2, &address, &size,
-                                               &stack_param_size, &name));
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine2, &multiple, &address,
+                                               &size, &stack_param_size,
+                                               &name));
+  EXPECT_FALSE(multiple);
   EXPECT_EQ(0ULL, address);
   EXPECT_EQ(0ULL, size);
   EXPECT_EQ(0, stack_param_size);
   EXPECT_EQ("function name", string(name));
+
+  // Test optional multiple field.
+  char kTestLine3[] = "FUNC m a1 a2 a3 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParseFunction(kTestLine3, &multiple, &address,
+                                               &size, &stack_param_size,
+                                               &name));
+  EXPECT_TRUE(multiple);
+  EXPECT_EQ(0xa1ULL, address);
+  EXPECT_EQ(0xa2ULL, size);
+  EXPECT_EQ(0xa3, stack_param_size);
+  EXPECT_EQ("function name", string(name));
 }
 
 // Test parsing of invalid FUNC lines.  The format is:
-// FUNC <address> <size> <stack_param_size> <name>
+// FUNC [<multiple>] <address> <size> <stack_param_size> <name>
 TEST(SymbolParseHelper, ParseFunctionInvalid) {
+  bool multiple;
   uint64_t address;
   uint64_t size;
   long stack_param_size;
@@ -497,36 +517,49 @@ TEST(SymbolParseHelper, ParseFunctionInvalid) {
 
   // Test missing function name.
   char kTestLine[] = "FUNC 1 2 3 ";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Test bad address.
   char kTestLine1[] = "FUNC 1z 2 3 function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine1, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine1, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Test large address.
   char kTestLine2[] = "FUNC 123123123123123123123123123 2 3 function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine2, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine2, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Test bad size.
   char kTestLine3[] = "FUNC 1 z2 3 function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine3, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine3, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Test large size.
   char kTestLine4[] = "FUNC 1 231231231231231231231231232 3 function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine4, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine4, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Test bad param size.
   char kTestLine5[] = "FUNC 1 2 3z function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine5, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine5, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Test large param size.
   char kTestLine6[] = "FUNC 1 2 312312312312312312312312323 function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine6, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine6, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
   // Negative param size.
   char kTestLine7[] = "FUNC 1 2 -5 function name";
-  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine7, &address, &size,
-                                                &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine7, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
+  // Test invalid optional field.
+  char kTestLine8[] = "FUNC x 1 2 5 function name";
+  ASSERT_FALSE(SymbolParseHelper::ParseFunction(kTestLine8, &multiple, &address,
+                                                &size, &stack_param_size,
+                                                &name));
 }
 
 // Test parsing of valid lines.  The format is:
@@ -611,67 +644,96 @@ TEST(SymbolParseHelper, ParseLineInvalid) {
 }
 
 // Test parsing of valid PUBLIC lines.  The format is:
-// PUBLIC <address> <stack_param_size> <name>
+// PUBLIC [<multiple>] <address> <stack_param_size> <name>
 TEST(SymbolParseHelper, ParsePublicSymbolValid) {
+  bool multiple;
   uint64_t address;
   long stack_param_size;
   char *name;
 
   char kTestLine[] = "PUBLIC 1 2 3";
-  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine, &address,
-                                                   &stack_param_size, &name));
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine, &multiple,
+                                                   &address, &stack_param_size,
+                                                   &name));
+  EXPECT_FALSE(multiple);
   EXPECT_EQ(1ULL, address);
   EXPECT_EQ(2, stack_param_size);
   EXPECT_EQ("3", string(name));
 
   // Test hex size and address.
   char kTestLine1[] = "PUBLIC a1 a2 function name";
-  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine1, &address,
-                                                   &stack_param_size, &name));
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine1, &multiple,
+                                                   &address, &stack_param_size,
+                                                   &name));
+  EXPECT_FALSE(multiple);
   EXPECT_EQ(0xa1ULL, address);
   EXPECT_EQ(0xa2, stack_param_size);
   EXPECT_EQ("function name", string(name));
 
   // Test 0 is a valid address.
   char kTestLine2[] = "PUBLIC 0 a2 function name";
-  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine2, &address,
-                                                   &stack_param_size, &name));
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine2, &multiple,
+                                                   &address, &stack_param_size,
+                                                   &name));
+  EXPECT_FALSE(multiple);
   EXPECT_EQ(0ULL, address);
+  EXPECT_EQ(0xa2, stack_param_size);
+  EXPECT_EQ("function name", string(name));
+
+  // Test optional multiple field.
+  char kTestLine3[] = "PUBLIC m a1 a2 function name";
+  ASSERT_TRUE(SymbolParseHelper::ParsePublicSymbol(kTestLine3, &multiple,
+                                                   &address, &stack_param_size,
+                                                   &name));
+  EXPECT_TRUE(multiple);
+  EXPECT_EQ(0xa1ULL, address);
   EXPECT_EQ(0xa2, stack_param_size);
   EXPECT_EQ("function name", string(name));
 }
 
 // Test parsing of invalid PUBLIC lines.  The format is:
-// PUBLIC <address> <stack_param_size> <name>
+// PUBLIC [<multiple>] <address> <stack_param_size> <name>
 TEST(SymbolParseHelper, ParsePublicSymbolInvalid) {
+  bool multiple;
   uint64_t address;
   long stack_param_size;
   char *name;
 
   // Test missing source function name.
   char kTestLine[] = "PUBLIC 1 2 ";
-  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine, &address,
-                                                    &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
   // Test bad address.
   char kTestLine1[] = "PUBLIC 1z 2 3";
-  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine1, &address,
-                                                    &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine1, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
   // Test large address.
   char kTestLine2[] = "PUBLIC 123123123123123123123123 2 3";
-  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine2, &address,
-                                                    &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine2, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
   // Test bad param stack size.
   char kTestLine3[] = "PUBLIC 1 z2 3";
-  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine3, &address,
-                                                    &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine3, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
   // Test large param stack size.
   char kTestLine4[] = "PUBLIC 1 123123123123123123123123123 3";
-  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine4, &address,
-                                                    &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine4, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
   // Test negative param stack size.
   char kTestLine5[] = "PUBLIC 1 -5 3";
-  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine5, &address,
-                                                    &stack_param_size, &name));
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine5, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
+  // Test invalid optional field.
+  char kTestLine6[] = "PUBLIC x 1 5 3";
+  ASSERT_FALSE(SymbolParseHelper::ParsePublicSymbol(kTestLine6, &multiple,
+                                                    &address, &stack_param_size,
+                                                    &name));
 }
 
 }  // namespace

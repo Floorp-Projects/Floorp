@@ -37,6 +37,7 @@
 #include "breakpad_googletest_includes.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/microdump.h"
 #include "google_breakpad/processor/microdump_processor.h"
 #include "google_breakpad/processor/process_state.h"
 #include "google_breakpad/processor/stack_frame.h"
@@ -47,6 +48,7 @@
 namespace {
 
 using google_breakpad::BasicSourceLineResolver;
+using google_breakpad::Microdump;
 using google_breakpad::MicrodumpProcessor;
 using google_breakpad::ProcessState;
 using google_breakpad::SimpleSymbolSupplier;
@@ -83,7 +85,8 @@ class MicrodumpProcessorTest : public ::testing::Test {
     StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
     MicrodumpProcessor processor(&frame_symbolizer);
 
-    return processor.Process(microdump_contents, state);
+    Microdump microdump(microdump_contents);
+    return processor.Process(&microdump, state);
   }
 
   void AnalyzeDump(const string& microdump_file_name, bool omit_symbols,
@@ -109,18 +112,27 @@ class MicrodumpProcessorTest : public ::testing::Test {
   string files_path_;
 };
 
-TEST_F(MicrodumpProcessorTest, TestProcess_Empty) {
-  ProcessState state;
-  google_breakpad::ProcessResult result =
-      ProcessMicrodump("", "", &state);
-  ASSERT_EQ(google_breakpad::PROCESS_ERROR_MINIDUMP_NOT_FOUND, result);
-}
-
 TEST_F(MicrodumpProcessorTest, TestProcess_Invalid) {
   ProcessState state;
   google_breakpad::ProcessResult result =
       ProcessMicrodump("", "This is not a valid microdump", &state);
   ASSERT_EQ(google_breakpad::PROCESS_ERROR_NO_THREAD_LIST, result);
+}
+
+TEST_F(MicrodumpProcessorTest, TestProcess_WithoutCrashReason) {
+  ProcessState state;
+  AnalyzeDump("microdump-arm64.dmp", true /* omit_symbols */,
+              2 /* expected_cpu_count */, &state);
+  ASSERT_EQ(state.crash_reason(), "");
+  ASSERT_EQ(state.crash_address(), 0x0u);
+}
+
+TEST_F(MicrodumpProcessorTest, TestProcess_WithCrashReason) {
+  ProcessState state;
+  AnalyzeDump("microdump-withcrashreason.dmp", true /* omit_symbols */,
+              8 /* expected_cpu_count */, &state);
+  ASSERT_EQ(state.crash_reason(), "SIGTRAP");
+  ASSERT_EQ(state.crash_address(), 0x4A7CB000u);
 }
 
 TEST_F(MicrodumpProcessorTest, TestProcess_MissingSymbols) {
@@ -132,7 +144,7 @@ TEST_F(MicrodumpProcessorTest, TestProcess_MissingSymbols) {
   ASSERT_EQ("arm64", state.system_info()->cpu);
   ASSERT_EQ("OS 64 VERSION INFO", state.system_info()->os_version);
   ASSERT_EQ(1U, state.threads()->size());
-  ASSERT_EQ(12U, state.threads()->at(0)->frames()->size());
+  ASSERT_EQ(11U, state.threads()->at(0)->frames()->size());
 
   ASSERT_EQ("",
             state.threads()->at(0)->frames()->at(0)->function_name);
@@ -205,7 +217,7 @@ TEST_F(MicrodumpProcessorTest, TestProcessX86) {
   ASSERT_EQ("x86", state.system_info()->cpu);
   ASSERT_EQ("asus/WW_Z00A/Z00A:5.0/LRX21V/2.19.40.22_20150627_5104_user:user/"
       "release-keys", state.system_info()->os_version);
-  ASSERT_EQ(56U, state.threads()->at(0)->frames()->size());
+  ASSERT_EQ(17U, state.threads()->at(0)->frames()->size());
   ASSERT_EQ("libc.so",
             state.threads()->at(0)->frames()->at(0)->module->debug_file());
   // TODO(mmandlis): Get symbols for the test X86 microdump and test function

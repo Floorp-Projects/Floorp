@@ -73,7 +73,7 @@ bool GUIDOrSignatureIdentifier::InitializeFromString(
   if (length > 32 && length <= 40) {
     // GUID
     if (SSCANF(identifier.c_str(),
-               "%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%X",
+               "%08X%04hX%04hX%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX%X",
                &guid_.Data1, &guid_.Data2, &guid_.Data3,
                &guid_.Data4[0], &guid_.Data4[1],
                &guid_.Data4[2], &guid_.Data4[3],
@@ -500,7 +500,7 @@ MSSymbolServerConverter::LocateAndConvertSymbolFile(
   if (!WindowsStringUtils::safe_mbstowcs(pdb_file, &pdb_file_w)) {
     fprintf(stderr,
             "LocateAndConvertSymbolFile: "
-                "WindowsStringUtils::safe_mbstowcs failed for %s\n",
+                "WindowsStringUtils::safe_mbstowcs failed for %ws\n",
             pdb_file_w.c_str());
     return LOCATE_FAILURE;
   }

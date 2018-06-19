@@ -230,16 +230,13 @@ breakpad_getcontext:
 #elif defined(__mips__)
 
 // This implementation is inspired by implementation of getcontext in glibc.
+#include <asm-mips/asm.h>
+#include <asm-mips/regdef.h>
 #if _MIPS_SIM == _ABIO32
-#include <asm/asm.h>
-#include <asm/regdef.h>
-#include <asm/fpregdef.h>
-#else
-#include <machine/asm.h>
-#include <machine/regdef.h>
+#include <asm-mips/fpregdef.h>
 #endif
 
-// from asm/asm.h
+// from asm-mips/asm.h
 #if _MIPS_SIM == _ABIO32
 #define ALSZ 7
 #define ALMASK ~7

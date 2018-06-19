@@ -60,7 +60,4 @@ Library('breakpad_processor')
 # Don't use the STL wrappers in the crashreporter clients
 DisableStlWrapping()
 
-# We allow warnings for third-party code that can be updated from upstream.
-AllowCompilerWarnings()
-
 include('/toolkit/crashreporter/crashreporter.mozbuild')

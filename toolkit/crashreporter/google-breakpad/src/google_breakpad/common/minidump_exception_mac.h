@@ -34,7 +34,7 @@
  *
  * Author: Mark Mentovai
  * Split into its own file: Neal Sidhwaney */
- 
+
 
 #ifndef GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_MAC_H__
 #define GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_MAC_H__
@@ -65,8 +65,10 @@ typedef enum {
       /* EXC_SYSCALL */
   MD_EXCEPTION_MAC_MACH_SYSCALL    = 8,
       /* EXC_MACH_SYSCALL */
-  MD_EXCEPTION_MAC_RPC_ALERT       = 9
+  MD_EXCEPTION_MAC_RPC_ALERT       = 9,
       /* EXC_RPC_ALERT */
+  MD_EXCEPTION_MAC_SIMULATED       = 0x43507378
+      /* Fake exception code used by Crashpad's SimulateCrash ('CPsx'). */
 } MDExceptionMac;
 
 /* For (MDException).exception_flags.  Breakpad minidump extension for Mac OS X

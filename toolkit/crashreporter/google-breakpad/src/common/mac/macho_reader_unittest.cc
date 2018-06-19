@@ -1114,7 +1114,7 @@ TEST_F(LoadCommand, SegmentBE32) {
                     Return(true)));
   EXPECT_TRUE(reader.WalkLoadCommands(&load_command_handler));
 
-  EXPECT_EQ(false,                        actual_segment.bits_64);
+  EXPECT_FALSE(actual_segment.bits_64);
   EXPECT_EQ("froon",                      actual_segment.name);
   EXPECT_EQ(0x1891139cU,                  actual_segment.vmaddr);
   EXPECT_EQ(0xcb76584fU,                  actual_segment.vmsize);
@@ -1151,7 +1151,7 @@ TEST_F(LoadCommand, SegmentLE32) {
                     Return(true)));
   EXPECT_TRUE(reader.WalkLoadCommands(&load_command_handler));
 
-  EXPECT_EQ(false,                        actual_segment.bits_64);
+  EXPECT_FALSE(actual_segment.bits_64);
   EXPECT_EQ("sixteenprecisely",           actual_segment.name);
   EXPECT_EQ(0x4b877866U,                  actual_segment.vmaddr);
   EXPECT_EQ(0xcb76584fU,                  actual_segment.vmsize);

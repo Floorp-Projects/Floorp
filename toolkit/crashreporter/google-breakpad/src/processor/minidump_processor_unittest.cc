@@ -71,7 +71,23 @@ class MockMinidump : public Minidump {
   MOCK_METHOD0(GetException, MinidumpException*());
   MOCK_METHOD0(GetAssertion, MinidumpAssertion*());
   MOCK_METHOD0(GetModuleList, MinidumpModuleList*());
+  MOCK_METHOD0(GetUnloadedModuleList, MinidumpUnloadedModuleList*());
   MOCK_METHOD0(GetMemoryList, MinidumpMemoryList*());
+};
+
+class MockMinidumpUnloadedModule : public MinidumpUnloadedModule {
+ public:
+  MockMinidumpUnloadedModule() : MinidumpUnloadedModule(NULL) {}
+};
+
+class MockMinidumpUnloadedModuleList : public MinidumpUnloadedModuleList {
+ public:
+  MockMinidumpUnloadedModuleList() : MinidumpUnloadedModuleList(NULL) {}
+
+  ~MockMinidumpUnloadedModuleList() {}
+  MOCK_CONST_METHOD0(Copy, CodeModules*());
+  MOCK_CONST_METHOD1(GetModuleForAddress,
+                     const MinidumpUnloadedModule*(uint64_t));
 };
 
 class MockMinidumpThreadList : public MinidumpThreadList {
@@ -157,6 +173,8 @@ using google_breakpad::MockMinidumpMemoryList;
 using google_breakpad::MockMinidumpMemoryRegion;
 using google_breakpad::MockMinidumpThread;
 using google_breakpad::MockMinidumpThreadList;
+using google_breakpad::MockMinidumpUnloadedModule;
+using google_breakpad::MockMinidumpUnloadedModuleList;
 using google_breakpad::ProcessState;
 using google_breakpad::scoped_ptr;
 using google_breakpad::SymbolSupplier;
@@ -319,6 +337,90 @@ class TestMinidumpContext : public MinidumpContext {
 
 class MinidumpProcessorTest : public ::testing::Test {
 };
+
+TEST_F(MinidumpProcessorTest, TestUnloadedModules) {
+  MockMinidump dump;
+
+  EXPECT_CALL(dump, path()).WillRepeatedly(Return("mock minidump"));
+  EXPECT_CALL(dump, Read()).WillRepeatedly(Return(true));
+
+  MDRawHeader fake_header;
+  fake_header.time_date_stamp = 0;
+  EXPECT_CALL(dump, header()).WillRepeatedly(Return(&fake_header));
+
+  MDRawSystemInfo raw_system_info;
+  memset(&raw_system_info, 0, sizeof(raw_system_info));
+  raw_system_info.processor_architecture = MD_CPU_ARCHITECTURE_X86;
+  raw_system_info.platform_id = MD_OS_WIN32_NT;
+  TestMinidumpSystemInfo dump_system_info(raw_system_info);
+
+  EXPECT_CALL(dump, GetSystemInfo()).
+      WillRepeatedly(Return(&dump_system_info));
+
+  // No loaded modules
+
+  MockMinidumpUnloadedModuleList unloaded_module_list;
+  EXPECT_CALL(dump, GetUnloadedModuleList()).
+      WillOnce(Return(&unloaded_module_list));
+
+  MockMinidumpMemoryList memory_list;
+  EXPECT_CALL(dump, GetMemoryList()).
+      WillOnce(Return(&memory_list));
+
+  MockMinidumpThreadList thread_list;
+  EXPECT_CALL(dump, GetThreadList()).
+      WillOnce(Return(&thread_list));
+
+  EXPECT_CALL(thread_list, thread_count()).
+    WillRepeatedly(Return(1));
+
+  MockMinidumpThread thread;
+  EXPECT_CALL(thread_list, GetThreadAtIndex(0)).
+    WillOnce(Return(&thread));
+
+  EXPECT_CALL(thread, GetThreadID(_)).
+    WillRepeatedly(DoAll(SetArgumentPointee<0>(1),
+                         Return(true)));
+
+  MDRawContextX86 thread_raw_context;
+  memset(&thread_raw_context, 0,
+         sizeof(thread_raw_context));
+  thread_raw_context.context_flags = MD_CONTEXT_X86_FULL;
+  const uint32_t kExpectedEIP = 0xabcd1234;
+  thread_raw_context.eip = kExpectedEIP;
+  TestMinidumpContext thread_context(thread_raw_context);
+  EXPECT_CALL(thread, GetContext()).
+    WillRepeatedly(Return(&thread_context));
+
+  // The memory contents don't really matter here, since it won't be used.
+  MockMinidumpMemoryRegion thread_memory(0x1234, "xxx");
+  EXPECT_CALL(thread, GetMemory()).
+    WillRepeatedly(Return(&thread_memory));
+  EXPECT_CALL(thread, GetStartOfStackMemoryRange()).
+    Times(0);
+  EXPECT_CALL(memory_list, GetMemoryRegionForAddress(_)).
+    Times(0);
+
+  MockMinidumpUnloadedModuleList* unloaded_module_list_copy =
+      new MockMinidumpUnloadedModuleList();
+  EXPECT_CALL(unloaded_module_list, Copy()).
+      WillOnce(Return(unloaded_module_list_copy));
+
+  MockMinidumpUnloadedModule unloaded_module;
+  EXPECT_CALL(*unloaded_module_list_copy, GetModuleForAddress(kExpectedEIP)).
+      WillOnce(Return(&unloaded_module));
+
+  MinidumpProcessor processor(reinterpret_cast<SymbolSupplier*>(NULL), NULL);
+  ProcessState state;
+  EXPECT_EQ(processor.Process(&dump, &state),
+            google_breakpad::PROCESS_OK);
+
+  // The single frame should be populated with the unloaded module.
+  ASSERT_EQ(1U, state.threads()->size());
+  ASSERT_EQ(1U, state.threads()->at(0)->frames()->size());
+  ASSERT_EQ(kExpectedEIP, state.threads()->at(0)->frames()->at(0)->instruction);
+  ASSERT_EQ(&unloaded_module, state.threads()->at(0)->frames()->at(0)->module);
+}
 
 TEST_F(MinidumpProcessorTest, TestCorruptMinidumps) {
   MockMinidump dump;

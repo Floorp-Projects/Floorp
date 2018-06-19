@@ -117,7 +117,7 @@
 // developer level errors.  This implementation simply macros to NSLog/NSAssert.
 // It is not intended to be a general logging/reporting system.
 //
-// Please see http://code.google.com/p/google-toolbox-for-mac/wiki/DevLogNAssert
+// Please see https://github.com/google/google-toolbox-for-mac/wiki/DevLogNAssert
 // for a little more background on the usage of these macros.
 //
 //    _GTMDevLog           log some error/problem in debug builds

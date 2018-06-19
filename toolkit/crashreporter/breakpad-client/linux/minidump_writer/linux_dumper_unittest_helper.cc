@@ -57,14 +57,15 @@
 
 void *thread_function(void *data) {
   int pipefd = *static_cast<int *>(data);
-  volatile pid_t thread_id = syscall(__NR_gettid);
+  volatile pid_t* thread_id = new pid_t;
+  *thread_id = syscall(__NR_gettid);
   // Signal parent that a thread has started.
   uint8_t byte = 1;
   if (write(pipefd, &byte, sizeof(byte)) != sizeof(byte)) {
     perror("ERROR: parent notification failed");
     return NULL;
   }
-  register volatile pid_t *thread_id_ptr asm(TID_PTR_REGISTER) = &thread_id;
+  register volatile pid_t *thread_id_ptr asm(TID_PTR_REGISTER) = thread_id;
   while (true)
     asm volatile ("" : : "r" (thread_id_ptr));
   return NULL;

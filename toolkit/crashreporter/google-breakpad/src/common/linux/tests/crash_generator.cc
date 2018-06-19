@@ -202,7 +202,7 @@ bool CrashGenerator::CreateChildCrash(
       // On Android the signal sometimes doesn't seem to get sent even though
       // tkill returns '0'.  Retry a couple of times if the signal doesn't get
       // through on the first go:
-      // https://code.google.com/p/google-breakpad/issues/detail?id=579
+      // https://bugs.chromium.org/p/google-breakpad/issues/detail?id=579
 #if defined(__ANDROID__)
       const int kRetries = 60;
       const unsigned int kSleepTimeInSeconds = 1;

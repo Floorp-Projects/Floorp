@@ -232,7 +232,7 @@ enum DwarfAttribute {
   DW_AT_call_column   = 0x57,
   DW_AT_call_file     = 0x58,
   DW_AT_call_line     = 0x59,
-  // DWARF 4 values.
+  // DWARF 4
   DW_AT_linkage_name  = 0x6e,
   // SGI/MIPS extensions.
   DW_AT_MIPS_fde = 0x2001,
@@ -501,7 +501,7 @@ enum DwarfOpcode {
   DW_OP_call_frame_cfa               =0x9c,
   DW_OP_bit_piece                    =0x9d,
   DW_OP_lo_user                      =0xe0,
-  DW_OP_hi_user                      =0xff,  
+  DW_OP_hi_user                      =0xff,
   // GNU extensions
   DW_OP_GNU_push_tls_address         =0xe0,
   // Extensions for Fission.  See http://gcc.gnu.org/wiki/DebugFission.
@@ -544,6 +544,8 @@ enum DwarfLanguage
     DW_LANG_ObjC_plus_plus           =0x0011,
     DW_LANG_UPC                      =0x0012,
     DW_LANG_D                        =0x0013,
+    DW_LANG_Rust                     =0x001c,
+    DW_LANG_Swift                    =0x001e,
     // Implementation-defined language code range.
     DW_LANG_lo_user = 0x8000,
     DW_LANG_hi_user = 0xffff,
@@ -670,7 +672,7 @@ enum DwarfPointerEncoding
     // encoding (except DW_EH_PE_aligned), and indicates that the
     // encoded value represents the address at which the true address
     // is stored, not the true address itself.
-    DW_EH_PE_indirect	= 0x80  
+    DW_EH_PE_indirect	= 0x80
   };
 
 }  // namespace dwarf2reader

@@ -43,17 +43,7 @@ AM_CXXFLAGS += -I$(top_srcdir)/src/common/android/include
 AM_CXXFLAGS += -I$(top_srcdir)/src/common/android/testing/include
 endif
 
-if GCC
-# These are good warnings to be treated as errors
-AM_CXXFLAGS += \
-	-Werror=missing-braces \
-	-Werror=non-virtual-dtor \
-	-Werror=overloaded-virtual \
-	-Werror=reorder \
-	-Werror=sign-compare \
-	-Werror=unused-variable \
-	-Werror=vla
-endif
+AM_CXXFLAGS += $(WARN_CXXFLAGS)
 
 if LINUX_HOST
 # Build as PIC on Linux, for linux_client_unittest_shlib
@@ -120,8 +110,10 @@ TEST_DEPS =
 else
 TEST_CFLAGS = \
 	-I$(top_srcdir)/src/testing/include \
-	-I$(top_srcdir)/src/testing/gtest/include \
-	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing/googletest/include \
+	-I$(top_srcdir)/src/testing/googletest \
+	-I$(top_srcdir)/src/testing/googlemock/include \
+	-I$(top_srcdir)/src/testing/googlemock \
 	-I$(top_srcdir)/src/testing
 TEST_LIBS = src/testing/libtesting.a
 TEST_DEPS = $(TEST_LIBS)
@@ -141,9 +133,9 @@ check_LIBRARIES += src/testing/libtesting.a
 if !SYSTEM_TEST_LIBS
 src_testing_libtesting_a_SOURCES = \
 	src/breakpad_googletest_includes.h \
-	src/testing/gtest/src/gtest-all.cc \
-	src/testing/gtest/src/gtest_main.cc \
-	src/testing/src/gmock-all.cc
+	src/testing/googletest/src/gtest-all.cc \
+	src/testing/googletest/src/gtest_main.cc \
+	src/testing/googlemock/src/gmock-all.cc
 src_testing_libtesting_a_CPPFLAGS = \
 	$(AM_CPPFLAGS) $(TEST_CFLAGS)
 endif
@@ -414,7 +406,8 @@ CLEANFILES += \
 	src/client/linux/linux_client_unittest_shlib
 
 check_PROGRAMS += \
-	src/client/linux/linux_client_unittest
+	src/client/linux/linux_client_unittest \
+	src/common/linux/google_crashdump_uploader_test
 
 if !DISABLE_TOOLS
 check_PROGRAMS += \
@@ -453,8 +446,12 @@ if ANDROID_HOST
 LOG_DRIVER = $(top_srcdir)/android/test-driver
 else
 # The default Autotools test driver script.
+if TESTS_AS_ROOT
+LOG_DRIVER = $(top_srcdir)/autotools/root-test-driver $(top_srcdir)/autotools/test-driver
+else
 LOG_DRIVER = $(top_srcdir)/autotools/test-driver
-endif
+endif !TESTS_AS_ROOT
+endif !ANDROID_HOST
 
 if LINUX_HOST
 src_client_linux_linux_dumper_unittest_helper_SOURCES = \
@@ -576,6 +573,7 @@ src_tools_linux_dump_syms_dump_syms_SOURCES = \
 	src/common/dwarf_line_to_module.cc \
 	src/common/language.cc \
 	src/common/module.cc \
+	src/common/path_helper.cc \
 	src/common/stabs_reader.cc \
 	src/common/stabs_to_module.cc \
 	src/common/dwarf/bytereader.cc \
@@ -593,9 +591,14 @@ src_tools_linux_dump_syms_dump_syms_SOURCES = \
 	src/common/linux/memory_mapped_file.cc \
 	src/common/linux/safe_readlink.cc \
 	src/tools/linux/dump_syms/dump_syms.cc
+src_tools_linux_dump_syms_dump_syms_CXXFLAGS = \
+	$(RUST_DEMANGLE_CFLAGS)
+src_tools_linux_dump_syms_dump_syms_LDADD = \
+	$(RUST_DEMANGLE_LIBS)
 
 src_tools_linux_md2core_minidump_2_core_SOURCES = \
 	src/common/linux/memory_mapped_file.cc \
+	src/common/path_helper.cc \
 	src/tools/linux/md2core/minidump-2-core.cc \
 	src/tools/linux/md2core/minidump_memory_range.h
 
@@ -619,6 +622,7 @@ src_tools_mac_dump_syms_dump_syms_mac_SOURCES = \
 	src/common/language.cc \
 	src/common/md5.cc \
 	src/common/module.cc \
+	src/common/path_helper.cc \
 	src/common/stabs_reader.cc \
 	src/common/stabs_to_module.cc \
 	src/common/dwarf/bytereader.cc \
@@ -641,7 +645,10 @@ src_tools_mac_dump_syms_dump_syms_mac_SOURCES = \
 	src/tools/mac/dump_syms/dump_syms_tool.cc
 src_tools_mac_dump_syms_dump_syms_mac_CXXFLAGS= \
 	-I$(top_srcdir)/src/third_party/mac_headers \
+	$(RUST_DEMANGLE_CFLAGS) \
 	-DHAVE_MACH_O_NLIST_H
+src_tools_mac_dump_syms_dump_syms_mac_LDADD= \
+	$(RUST_DEMANGLE_LIBS)
 
 src_common_dumper_unittest_SOURCES = \
 	src/common/byte_cursor_unittest.cc \
@@ -655,6 +662,7 @@ src_common_dumper_unittest_SOURCES = \
 	src/common/memory_range_unittest.cc \
 	src/common/module.cc \
 	src/common/module_unittest.cc \
+	src/common/path_helper.cc \
 	src/common/stabs_reader.cc \
 	src/common/stabs_reader_unittest.cc \
 	src/common/stabs_to_module.cc \
@@ -698,9 +706,11 @@ src_common_dumper_unittest_SOURCES = \
 	src/common/tests/file_utils.cc
 src_common_dumper_unittest_CPPFLAGS = \
 	$(AM_CPPFLAGS) $(TEST_CFLAGS) \
+	$(RUST_DEMANGLE_CFLAGS) \
 	$(PTHREAD_CFLAGS)
 src_common_dumper_unittest_LDADD = \
 	$(TEST_LIBS) \
+	$(RUST_DEMANGLE_LIBS) \
 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 
 src_common_mac_macho_reader_unittest_SOURCES = \
@@ -710,6 +720,7 @@ src_common_mac_macho_reader_unittest_SOURCES = \
 	src/common/language.cc \
 	src/common/md5.cc \
 	src/common/module.cc \
+	src/common/path_helper.cc \
 	src/common/stabs_reader.cc \
 	src/common/stabs_to_module.cc \
 	src/common/test_assembler.cc \
@@ -735,6 +746,17 @@ src_common_mac_macho_reader_unittest_LDADD = \
 	$(TEST_LIBS) \
 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 endif
+
+src_common_linux_google_crashdump_uploader_test_SOURCES = \
+	src/common/linux/google_crashdump_uploader.cc \
+	src/common/linux/google_crashdump_uploader_test.cc \
+	src/common/linux/libcurl_wrapper.cc
+src_common_linux_google_crashdump_uploader_test_CPPFLAGS = \
+	$(AM_CPPFLAGS) $(TEST_CFLAGS)
+src_common_linux_google_crashdump_uploader_test_LDADD = \
+	$(TEST_LIBS) \
+	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS) \
+	-ldl
 
 src_tools_linux_md2core_minidump_2_core_unittest_SOURCES = \
 	src/tools/linux/md2core/minidump_memory_range_unittest.cc
@@ -1174,6 +1196,7 @@ src_processor_minidump_dump_LDADD = \
 src_processor_microdump_stackwalk_SOURCES = \
 	src/processor/microdump_stackwalk.cc
 src_processor_microdump_stackwalk_LDADD = \
+	src/common/path_helper.o \
 	src/processor/basic_code_modules.o \
 	src/processor/basic_source_line_resolver.o \
 	src/processor/call_stack.o \
@@ -1207,6 +1230,7 @@ src_processor_microdump_stackwalk_LDADD = \
 src_processor_minidump_stackwalk_SOURCES = \
 	src/processor/minidump_stackwalk.cc
 src_processor_minidump_stackwalk_LDADD = \
+	src/common/path_helper.o \
 	src/processor/basic_code_modules.o \
 	src/processor/basic_source_line_resolver.o \
 	src/processor/call_stack.o \
@@ -1321,6 +1345,7 @@ EXTRA_DIST = \
 	src/common/windows/pdb_source_line_writer.h \
 	src/common/windows/string_utils-inl.h \
 	src/common/windows/string_utils.cc \
+	src/processor/microdump_stackwalk_test_vars \
 	src/processor/stackwalk_common.cc \
 	src/processor/stackwalk_common.h \
 	src/processor/stackwalker_selftest_sol.s \
@@ -1347,6 +1372,7 @@ EXTRA_DIST = \
 	src/processor/testdata/linux_raise_sigabrt.dmp \
 	src/processor/testdata/linux_stack_pointer_in_module.dmp \
 	src/processor/testdata/linux_stack_pointer_in_stack.dmp \
+	src/processor/testdata/linux_stack_pointer_in_stack_alt_name.dmp \
 	src/processor/testdata/linux_stacksmash.dmp \
 	src/processor/testdata/linux_write_to_nonwritable_module.dmp \
 	src/processor/testdata/linux_write_to_nonwritable_region_math.dmp \
@@ -1362,6 +1388,7 @@ EXTRA_DIST = \
 	src/processor/testdata/microdump.stackwalk-arm.out \
 	src/processor/testdata/microdump.stackwalk.machine_readable-arm64.out \
 	src/processor/testdata/microdump.stackwalk.machine_readable-arm.out \
+	src/processor/testdata/microdump-withcrashreason.dmp \
 	src/processor/testdata/microdump-x86.dmp \
 	src/processor/testdata/minidump2.dmp \
 	src/processor/testdata/minidump2.dump.out \
@@ -1391,54 +1418,61 @@ EXTRA_DIST = \
 	src/processor/testdata/symbols/overflow/B0E1FC01EF48E39CAF5C881D2DF0C3840/overflow.sym \
 	src/processor/testdata/symbols/test_app.pdb/5A9832E5287241C1838ED98914E9B7FF1/test_app.sym \
 	src/processor/testdata/test_app.cc \
-	src/testing/gtest/include/gtest/gtest.h \
-	src/testing/gtest/include/gtest/gtest-death-test.h \
-	src/testing/gtest/include/gtest/gtest-message.h \
-	src/testing/gtest/include/gtest/gtest-param-test.h \
-	src/testing/gtest/include/gtest/gtest-printers.h \
-	src/testing/gtest/include/gtest/gtest-spi.h \
-	src/testing/gtest/include/gtest/gtest-test-part.h \
-	src/testing/gtest/include/gtest/gtest-typed-test.h \
-	src/testing/gtest/include/gtest/gtest_pred_impl.h \
-	src/testing/gtest/include/gtest/gtest_prod.h \
-	src/testing/gtest/include/gtest/internal/gtest-death-test-internal.h \
-	src/testing/gtest/include/gtest/internal/gtest-filepath.h \
-	src/testing/gtest/include/gtest/internal/gtest-internal.h \
-	src/testing/gtest/include/gtest/internal/gtest-linked_ptr.h \
-	src/testing/gtest/include/gtest/internal/gtest-param-util-generated.h \
-	src/testing/gtest/include/gtest/internal/gtest-param-util.h \
-	src/testing/gtest/include/gtest/internal/gtest-port.h \
-	src/testing/gtest/include/gtest/internal/gtest-string.h \
-	src/testing/gtest/include/gtest/internal/gtest-tuple.h \
-	src/testing/gtest/include/gtest/internal/gtest-type-util.h \
-	src/testing/gtest/src/gtest.cc \
-	src/testing/gtest/src/gtest-death-test.cc \
-	src/testing/gtest/src/gtest-filepath.cc \
-	src/testing/gtest/src/gtest-internal-inl.h \
-	src/testing/gtest/src/gtest-port.cc \
-	src/testing/gtest/src/gtest-printers.cc \
-	src/testing/gtest/src/gtest-test-part.cc \
-	src/testing/gtest/src/gtest-typed-test.cc \
-	src/testing/include/gmock/gmock.h \
-	src/testing/include/gmock/gmock-actions.h \
-	src/testing/include/gmock/gmock-cardinalities.h \
-	src/testing/include/gmock/gmock-generated-actions.h \
-	src/testing/include/gmock/gmock-generated-function-mockers.h \
-	src/testing/include/gmock/gmock-generated-matchers.h \
-	src/testing/include/gmock/gmock-generated-nice-strict.h \
-	src/testing/include/gmock/gmock-matchers.h \
-	src/testing/include/gmock/gmock-more-actions.h \
-	src/testing/include/gmock/gmock-more-matchers.h \
-	src/testing/include/gmock/gmock-spec-builders.h \
-	src/testing/include/gmock/internal/gmock-generated-internal-utils.h \
-	src/testing/include/gmock/internal/gmock-internal-utils.h \
-	src/testing/include/gmock/internal/gmock-port.h \
-	src/testing/src/gmock.cc \
-	src/testing/src/gmock-cardinalities.cc \
-	src/testing/src/gmock-internal-utils.cc \
-	src/testing/src/gmock-matchers.cc \
-	src/testing/src/gmock-spec-builders.cc \
-	src/testing/src/gmock_main.cc \
+	src/testing/googletest/include/gtest/gtest.h \
+	src/testing/googletest/include/gtest/gtest-death-test.h \
+	src/testing/googletest/include/gtest/gtest-message.h \
+	src/testing/googletest/include/gtest/gtest-param-test.h \
+	src/testing/googletest/include/gtest/gtest-printers.h \
+	src/testing/googletest/include/gtest/gtest-spi.h \
+	src/testing/googletest/include/gtest/gtest-test-part.h \
+	src/testing/googletest/include/gtest/gtest-typed-test.h \
+	src/testing/googletest/include/gtest/gtest_pred_impl.h \
+	src/testing/googletest/include/gtest/gtest_prod.h \
+	src/testing/googletest/include/gtest/internal/custom/gtest-port.h \
+	src/testing/googletest/include/gtest/internal/custom/gtest-printers.h \
+	src/testing/googletest/include/gtest/internal/custom/gtest.h \
+	src/testing/googletest/include/gtest/internal/gtest-death-test-internal.h \
+	src/testing/googletest/include/gtest/internal/gtest-filepath.h \
+	src/testing/googletest/include/gtest/internal/gtest-internal.h \
+	src/testing/googletest/include/gtest/internal/gtest-linked_ptr.h \
+	src/testing/googletest/include/gtest/internal/gtest-param-util-generated.h \
+	src/testing/googletest/include/gtest/internal/gtest-param-util.h \
+	src/testing/googletest/include/gtest/internal/gtest-port-arch.h \
+	src/testing/googletest/include/gtest/internal/gtest-port.h \
+	src/testing/googletest/include/gtest/internal/gtest-string.h \
+	src/testing/googletest/include/gtest/internal/gtest-tuple.h \
+	src/testing/googletest/include/gtest/internal/gtest-type-util.h \
+	src/testing/googletest/src/gtest.cc \
+	src/testing/googletest/src/gtest-death-test.cc \
+	src/testing/googletest/src/gtest-filepath.cc \
+	src/testing/googletest/src/gtest-internal-inl.h \
+	src/testing/googletest/src/gtest-port.cc \
+	src/testing/googletest/src/gtest-printers.cc \
+	src/testing/googletest/src/gtest-test-part.cc \
+	src/testing/googletest/src/gtest-typed-test.cc \
+	src/testing/googlemock/include/gmock/gmock.h \
+	src/testing/googlemock/include/gmock/gmock-actions.h \
+	src/testing/googlemock/include/gmock/gmock-cardinalities.h \
+	src/testing/googlemock/include/gmock/gmock-generated-actions.h \
+	src/testing/googlemock/include/gmock/gmock-generated-function-mockers.h \
+	src/testing/googlemock/include/gmock/gmock-generated-matchers.h \
+	src/testing/googlemock/include/gmock/gmock-generated-nice-strict.h \
+	src/testing/googlemock/include/gmock/gmock-matchers.h \
+	src/testing/googlemock/include/gmock/gmock-more-actions.h \
+	src/testing/googlemock/include/gmock/gmock-more-matchers.h \
+	src/testing/googlemock/include/gmock/gmock-spec-builders.h \
+	src/testing/googlemock/include/gmock/internal/custom/gmock-generated-actions.h \
+	src/testing/googlemock/include/gmock/internal/custom/gmock-matchers.h \
+	src/testing/googlemock/include/gmock/internal/custom/gmock-port.h \
+	src/testing/googlemock/include/gmock/internal/gmock-generated-internal-utils.h \
+	src/testing/googlemock/include/gmock/internal/gmock-internal-utils.h \
+	src/testing/googlemock/include/gmock/internal/gmock-port.h \
+	src/testing/googlemock/src/gmock.cc \
+	src/testing/googlemock/src/gmock-cardinalities.cc \
+	src/testing/googlemock/src/gmock-internal-utils.cc \
+	src/testing/googlemock/src/gmock-matchers.cc \
+	src/testing/googlemock/src/gmock-spec-builders.cc \
+	src/testing/googlemock/src/gmock_main.cc \
 	src/third_party/curl/COPYING \
 	src/third_party/curl/curlbuild.h \
 	src/third_party/curl/curl.h \

@@ -69,6 +69,9 @@ LogStream::LogStream(std::ostream &stream, Severity severity,
     case SEVERITY_ERROR:
       severity_string = "ERROR";
       break;
+    case SEVERITY_CRITICAL:
+      severity_string = "CRITICAL";
+      break;
   }
 
   stream_ << time_string << ": " << PathnameStripper::File(file) << ":" <<

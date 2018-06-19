@@ -256,7 +256,7 @@ bool RangeMap<AddressType, EntryType>::RetrieveRangeAtIndex(
 
 template<typename AddressType, typename EntryType>
 int RangeMap<AddressType, EntryType>::GetCount() const {
-  return map_.size();
+  return static_cast<int>(map_.size());
 }
 
 
