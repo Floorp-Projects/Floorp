@@ -6,6 +6,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
 #include "BitReader.h"
+#include "BitWriter.h"
 #include "BufferReader.h"
 #include "ByteWriter.h"
 #include "AnnexB.h"
@@ -340,6 +341,40 @@ H264::DecodeNALUnit(const uint8_t* aNAL, size_t aLength)
       rbsp->AppendElement(byte);
     }
     lastbytes = (lastbytes << 8) | byte;
+  }
+  return rbsp.forget();
+}
+
+// The reverse of DecodeNALUnit. To allow the distinction between Annex B (that
+// uses 0x000001 as marker) and AVCC, the pattern 0x00 0x00 0x0n (where n is
+// between 0 and 3) can't be found in the bytestream. A 0x03 byte is inserted
+// after the second 0. Eg. 0x00 0x00 0x00 becomes 0x00 0x00 0x03 0x00
+/* static */ already_AddRefed<mozilla::MediaByteBuffer>
+H264::EncodeNALUnit(const uint8_t* aNAL, size_t aLength)
+{
+  MOZ_ASSERT(aNAL);
+  RefPtr<MediaByteBuffer> rbsp = new MediaByteBuffer();
+  BufferReader reader(aNAL, aLength);
+
+  auto res = reader.ReadU8();
+  if (res.isErr()) {
+    return rbsp.forget();
+  }
+  rbsp->AppendElement(res.unwrap());
+
+  res = reader.ReadU8();
+  if (res.isErr()) {
+    return rbsp.forget();
+  }
+  rbsp->AppendElement(res.unwrap());
+
+  while((res = reader.ReadU8()).isOk()) {
+    uint8_t val = res.unwrap();
+    if (val <= 0x03 && rbsp->ElementAt(rbsp->Length() - 2) == 0 &&
+        rbsp->ElementAt(rbsp->Length() - 1) == 0) {
+      rbsp->AppendElement(0x03);
+    }
+    rbsp->AppendElement(val);
   }
   return rbsp.forget();
 }
@@ -1017,6 +1052,101 @@ H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
   } while(br.PeekU8().isOk() && br.PeekU8().unwrap() != 0x80); // more_rbsp_data() msg[offset] != 0x80
   // ignore the trailing bits rbsp_trailing_bits();
   return false;
+}
+
+/*static */ already_AddRefed<mozilla::MediaByteBuffer>
+H264::CreateExtraData(uint8_t aProfile,
+                      uint8_t aConstraints,
+                      uint8_t aLevel,
+                      const gfx::IntSize& aSize)
+{
+  // SPS of a 144p video.
+  const uint8_t originSPS[] = { 0x4d, 0x40, 0x0c, 0xe8, 0x80, 0x80, 0x9d,
+                                0x80, 0xb5, 0x01, 0x01, 0x01, 0x40, 0x00,
+                                0x00, 0x00, 0x40, 0x00, 0x00, 0x0f, 0x03,
+                                0xc5, 0x0a, 0x44, 0x80 };
+
+  RefPtr<MediaByteBuffer> extraData = new MediaByteBuffer();
+  extraData->AppendElements(originSPS, sizeof(originSPS));
+  BitReader br(extraData, BitReader::GetBitLength(extraData));
+
+  RefPtr<MediaByteBuffer> sps = new MediaByteBuffer();
+  BitWriter bw(sps);
+
+  br.ReadBits(8); // Skip original profile_idc
+  bw.WriteU8(aProfile);
+  br.ReadBits(8); // Skip original constraint flags && reserved_zero_2bits
+  aConstraints = aConstraints & ~0x3; // Ensure reserved_zero_2bits are set to 0
+  bw.WriteBits(aConstraints, 8);
+  br.ReadBits(8); // Skip original level_idc
+  bw.WriteU8(aLevel);
+  bw.WriteUE(br.ReadUE()); // seq_parameter_set_id (0 stored on 1 bit)
+
+  if (aProfile == 100 || aProfile == 110 || aProfile == 122 ||
+      aProfile == 244 || aProfile == 44 || aProfile == 83 || aProfile == 86 ||
+      aProfile == 118 || aProfile == 128 || aProfile == 138 ||
+      aProfile == 139 || aProfile == 134) {
+    bw.WriteUE(1); // chroma_format_idc -> always set to 4:2:0 chroma format
+    bw.WriteUE(0); // bit_depth_luma_minus8 -> always 8 bits here
+    bw.WriteUE(0); // bit_depth_chroma_minus8 -> always 8 bits here
+  }
+
+  bw.WriteBits(br.ReadBits(11),
+               11); // log2_max_frame_num to gaps_in_frame_num_allowed_flag
+
+  // skip over original exp-golomb encoded width/height
+  br.ReadUE(); // skip width
+  br.ReadUE(); // skip height
+  uint32_t width = aSize.width;
+  uint32_t widthNeeded = width % 16 != 0 ? (width / 16 + 1) * 16 : width;
+  uint32_t height = aSize.height;
+  uint32_t heightNeeded = height % 16 != 0 ? (height / 16 + 1) * 16 : height;
+  bw.WriteUE(widthNeeded / 16 - 1);
+  bw.WriteUE(heightNeeded / 16 - 1);
+  bw.WriteBit(br.ReadBit()); // write frame_mbs_only_flag
+  bw.WriteBit(br.ReadBit()); // write direct_8x8_inference_flag;
+  if (widthNeeded != width || heightNeeded != height) {
+    // Write cropping value
+    bw.WriteBit(true);                       // skip frame_cropping_flag
+    bw.WriteUE(0);                           // frame_crop_left_offset
+    bw.WriteUE((widthNeeded - width) / 2);   // frame_crop_right_offset
+    bw.WriteUE(0);                           // frame_crop_top_offset
+    bw.WriteUE((heightNeeded - height) / 2); // frame_crop_bottom_offset
+  } else {
+    bw.WriteBit(false); // skip frame_cropping_flag
+  }
+  br.ReadBit(); // skip frame_cropping_flag;
+  // Write the remainings of the original sps (vui_parameters which sets an
+  // aspect ration of 1.0)
+  while (br.BitsLeft()) {
+    bw.WriteBit(br.ReadBit());
+  }
+  bw.CloseWithRbspTrailing();
+
+  RefPtr<MediaByteBuffer> encodedSPS =
+    EncodeNALUnit(sps->Elements(), sps->Length());
+  extraData->Clear();
+  extraData->AppendElement(1);
+  extraData->AppendElement(aProfile);
+  extraData->AppendElement(aConstraints);
+  extraData->AppendElement(aLevel);
+  extraData->AppendElement(3); // nalLENSize-1
+  extraData->AppendElement(1); // numPPS
+  uint8_t c[2];
+  mozilla::BigEndian::writeUint16(&c[0], encodedSPS->Length() + 1);
+  extraData->AppendElements(c, 2);
+  extraData->AppendElement((0x00 << 7) | (0x3 << 5 ) | H264_NAL_SPS);
+  extraData->AppendElements(*encodedSPS);
+
+  const uint8_t PPS[] = { 0xeb, 0xef, 0x20 };
+
+  extraData->AppendElement(1); // numPPS
+  mozilla::BigEndian::writeUint16(&c[0], sizeof(PPS) + 1);
+  extraData->AppendElements(c, 2);
+  extraData->AppendElement((0x00 << 7) | (0x3 << 5 ) | H264_NAL_PPS);
+  extraData->AppendElements(PPS, sizeof(PPS));
+
+  return extraData.forget();
 }
 
 #undef READUE
