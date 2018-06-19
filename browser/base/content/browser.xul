@@ -232,6 +232,10 @@
       <box class="panel-header">
         <label id="editBookmarkPanelTitle"/>
       </box>
+      <box>
+        <html:img id="editBookmarkPanelFavicon"/>
+      </box>
+      <box id="editBookmarkPanelImage"/>
 #include ../../components/places/content/editBookmarkPanel.inc.xul
       <hbox id="editBookmarkPanelBottomButtons" pack="end">
 #ifndef XP_UNIX
