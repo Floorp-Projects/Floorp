@@ -10,7 +10,16 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript"><![CDATA[
-    SimpleTest.ok(true, "Collecting baseline coverage for XUL (.xul) file types.");
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("Baseline coverage stabilization delay.");
+
+    async function delayBaseline() {
+      SimpleTest.ok(true, "Collecting baseline coverage for XUL (.xul) file types.");
+      await new Promise((c) => setTimeout(c, 30 * 1000));
+      SimpleTest.finish();
+    }
+
+    delayBaseline();
   ]]></script>
 
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;" />
