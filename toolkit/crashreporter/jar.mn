@@ -6,5 +6,4 @@ toolkit.jar:
 #ifdef MOZ_CRASHREPORTER
   content/global/crashes.xhtml            (content/crashes.xhtml)
   content/global/crashes.js               (content/crashes.js)
-  content/global/crashes.css              (content/crashes.css)
 #endif
