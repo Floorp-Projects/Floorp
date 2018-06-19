@@ -32,6 +32,12 @@ project(':feature-toolbar').projectDir = new File(rootDir, 'components/feature/t
 include ':browser-engine-gecko'
 project(':browser-engine-gecko').projectDir = new File(rootDir, 'components/browser/engine-gecko')
 
+include ':browser-engine-gecko-beta'
+project(':browser-engine-gecko-beta').projectDir = new File(rootDir, 'components/browser/engine-gecko-beta')
+
+include ':browser-engine-gecko-nightly'
+project(':browser-engine-gecko-nightly').projectDir = new File(rootDir, 'components/browser/engine-gecko-nightly')
+
 include ':browser-engine-system'
 project(':browser-engine-system').projectDir = new File(rootDir, 'components/browser/engine-system')
 

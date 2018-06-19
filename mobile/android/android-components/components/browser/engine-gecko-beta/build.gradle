@@ -32,8 +32,8 @@ dependencies {
     // We only compile against the ARM artifact. We let the app decide which artifact to actually
     // use at runtime. As the Kotlin/Java API is the same for all ABIs it is not important which one
     // we import here.
-    compileOnly "org.mozilla:geckoview-release-armeabi-v7a:${rootProject.ext.geckoRelease['version']}"
-    implementation "org.mozilla:geckoview-release-armeabi-v7a:${rootProject.ext.geckoRelease['version']}"
+    compileOnly "org.mozilla:geckoview-beta-armeabi-v7a:${rootProject.ext.geckoBeta['version']}"
+    testImplementation "org.mozilla:geckoview-beta-armeabi-v7a:${rootProject.ext.geckoBeta['version']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
@@ -44,10 +44,10 @@ dependencies {
     testImplementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
 }
 
-archivesBaseName = "engine-gecko"
+archivesBaseName = "engine-gecko-beta"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'engine-gecko',
-        'Engine implementation based on GeckoView.')
+        'engine-gecko-beta',
+        'Engine implementation based on GeckoView (Beta channel).')

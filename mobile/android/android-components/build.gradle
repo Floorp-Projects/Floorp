@@ -26,12 +26,24 @@ buildscript {
         version: '0.11'
     ]
 
-    // Synchronized versions numbers of GeckoView artifacts.
-    ext.gecko = [
+    // Synchronized versions numbers of GeckoView (Nightly) artifacts.
+    ext.geckoNightly = [
         // Discover nightly builds: https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
         nightlyDate: '2018.05.16',
         revision: 'dedd25bfd2794eaba95225361f82c701e49c9339',
         version: '62.0.20180516100458'
+    ]
+
+    // Synchronized versions numbers of GeckoView (Beta) artifacts.
+    ext.geckoBeta = [
+        // (61.0b14)
+        revision: '585281dde9604ddd197693ca5330f2b95987a181',
+        version: '61.0.20180614135649'
+    ]
+
+    ext.geckoRelease = [
+        revision: 'a0b222c551f586904f51228c49149d9b6b7e2a81',
+        version: '60.0.2'
     ]
 
     repositories {
@@ -59,15 +71,61 @@ allprojects {
         google()
         jcenter()
 
-        // GeckoView repositories
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // GeckoView Nightly
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        // ARM
         maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoNightly['nightlyDate']}.revision.${geckoNightly['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
         }
+
+        // x86
         maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoNightly['nightlyDate']}.revision.${geckoNightly['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
         }
+
+        // aarch64
         maven {
-            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoNightly['nightlyDate']}.revision.${geckoNightly['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // GeckoView Beta
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        // ARM
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-beta.revision.${geckoBeta['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
+        }
+
+        // x86
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-beta.revision.${geckoBeta['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
+        }
+
+        // aarch64
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-beta.revision.${geckoBeta['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // GeckoView Release (60.0.2)
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        // ARM
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
+        }
+
+        // x86
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
+        }
+
+        // aarch64
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision.${geckoRelease['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
         }
     }
 }

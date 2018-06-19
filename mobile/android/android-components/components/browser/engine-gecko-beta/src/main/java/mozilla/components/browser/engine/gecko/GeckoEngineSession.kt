@@ -4,22 +4,24 @@
 
 package mozilla.components.browser.engine.gecko
 
-import android.content.Context
-import android.util.Log
+import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
+import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 
 /**
  * Gecko-based EngineSession implementation.
  */
 class GeckoEngineSession(
-    context: Context
+    runtime: GeckoRuntime
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
 
     init {
-        geckoSession.open(context)
+        geckoSession.open(runtime)
 
         geckoSession.navigationDelegate = createNavigationDelegate()
         geckoSession.progressDelegate = createProgressDelegate()
@@ -67,34 +69,44 @@ class GeckoEngineSession(
      * method from onPause or similar, we also want a synchronous response.
      */
     @Throws(GeckoEngineException::class)
-    override fun saveState(): Map<String, Any> {
-        Log.d("GeckoEngineSession", "Not implemented: saveState()", RuntimeException())
-        return HashMap()
+    override fun saveState(): Map<String, Any> = runBlocking {
+        val stateMap = CompletableDeferred<Map<String, Any>>()
+        geckoSession.saveState({ state ->
+            if (state != null) {
+                stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
+            } else {
+                stateMap.completeExceptionally(GeckoEngineException("Failed to save state"))
+            }
+        })
+        stateMap.await()
     }
 
     /**
      * See [EngineSession.restoreState]
      */
     override fun restoreState(state: Map<String, Any>) {
-        Log.d("GeckoEngineSession", "Not implemented: restoreState()", RuntimeException())
+        if (state.containsKey(GECKO_STATE_KEY)) {
+            val sessionState = GeckoSession.SessionState(state[GECKO_STATE_KEY] as String)
+            geckoSession.restoreState(sessionState)
+        }
     }
 
     /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
-        override fun onNewSession(
-            session: GeckoSession?,
-            uri: String?,
-            response: GeckoSession.Response<GeckoSession>?
-        ) = Unit
-
         override fun onLocationChange(session: GeckoSession?, url: String) {
             notifyObservers { onLocationChange(url) }
         }
 
-        override fun onLoadRequest(session: GeckoSession?, uri: String?, target: Int): Boolean {
-            return false
+        override fun onLoadRequest(
+            session: GeckoSession?,
+            uri: String?,
+            target: Int,
+            flags: Int,
+            response: GeckoResponse<Boolean>
+        ) {
+            response.respond(false)
         }
 
         override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {
@@ -104,6 +116,12 @@ class GeckoEngineSession(
         override fun onCanGoBack(session: GeckoSession?, canGoBack: Boolean) {
             notifyObservers { onNavigationStateChange(canGoBack = canGoBack) }
         }
+
+        override fun onNewSession(
+            session: GeckoSession?,
+            uri: String?,
+            response: GeckoResponse<GeckoSession>
+        ) {}
     }
 
     /**

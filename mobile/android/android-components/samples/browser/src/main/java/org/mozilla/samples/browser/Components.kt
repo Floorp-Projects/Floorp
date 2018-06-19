@@ -7,29 +7,23 @@ package org.mozilla.samples.browser
 import android.content.Context
 import android.widget.Toast
 import kotlinx.coroutines.experimental.async
-import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.storage.DefaultSessionStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.browser.session.storage.DefaultSessionStorage
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionUseCases
-import org.mozilla.geckoview.GeckoRuntime
 
 /**
  * Helper class for lazily instantiating components needed by the application.
  */
 class Components(private val applicationContext: Context) {
-    // Engine
-    private val geckoRuntime by lazy {
-        GeckoRuntime.getDefault(applicationContext)
-    }
-    val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
+    val engine: Engine by lazy { EngineProvider.createEngine(applicationContext) }
 
     // Session
 

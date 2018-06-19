@@ -8,20 +8,25 @@ import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mozilla.gecko.util.BundleEventListener
+import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class GeckoEngineSessionTest {
 
     @Test
     fun testEngineSessionInitialization() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val runtime = mock(GeckoRuntime::class.java)
+        val engineSession = GeckoEngineSession(runtime)
 
         assertTrue(engineSession.geckoSession.isOpen)
         assertNotNull(engineSession.geckoSession.navigationDelegate)
@@ -30,7 +35,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testProgressDelegateNotifiesObservers() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedProgress = 0
         var observedLoadingState = false
@@ -67,7 +72,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testNavigationDelegateNotifiesObservers() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedUrl = ""
         var observedCanGoBack: Boolean = false
@@ -95,7 +100,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testLoadUrl() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var loadUriReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
                 BundleEventListener { _, _, _ -> loadUriReceived = true },
@@ -108,7 +113,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testReload() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.loadUrl("http://mozilla.org")
 
         var reloadReceived = false
@@ -123,7 +128,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testGoBack() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
                 BundleEventListener { _, _, _ -> eventReceived = true },
@@ -136,7 +141,7 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testGoForward() {
-        val engineSession = GeckoEngineSession(RuntimeEnvironment.application)
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
                 BundleEventListener { _, _, _ -> eventReceived = true },
@@ -144,6 +149,45 @@ class GeckoEngineSessionTest {
         )
 
         engineSession.goForward()
+        assertTrue(eventReceived)
+    }
+
+    @Test
+    fun testSaveState() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = mock(GeckoSession::class.java)
+        val currentState = GeckoSession.SessionState("")
+        val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
+
+        `when`(engineSession.geckoSession.saveState(any())).thenAnswer(
+                { inv -> (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(currentState) })
+
+        assertEquals(stateMap, engineSession.saveState())
+    }
+
+    @Test
+    fun testSaveStateThrowsExceptionOnNullResult() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = mock(GeckoSession::class.java)
+        `when`(engineSession.geckoSession.saveState(any())).thenAnswer(
+                { inv -> (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(null) })
+
+        try {
+            engineSession.saveState()
+            fail("Expected GeckoEngineException")
+        } catch (e: GeckoEngineException) { }
+    }
+
+    @Test
+    fun testRestoreState() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var eventReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> eventReceived = true },
+                "GeckoView:RestoreState"
+        )
+
+        engineSession.restoreState(mapOf(GeckoEngineSession.GECKO_STATE_KEY to ""))
         assertTrue(eventReceived)
     }
 }

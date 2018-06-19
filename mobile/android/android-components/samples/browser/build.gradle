@@ -25,6 +25,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "channel"
+
+    productFlavors {
+        nightly {
+            dimension "channel"
+        }
+        beta {
+            dimension "channel"
+        }
+        production {
+            dimension "channel"
+        }
+    }
 }
 
 kotlin {
@@ -38,7 +52,7 @@ dependencies {
     implementation project(':concept-toolbar')
 
     implementation project(':browser-engine-system')
-    implementation project(':browser-engine-gecko')
+
 
     implementation project(':browser-search')
     implementation project(':browser-session')
@@ -51,8 +65,15 @@ dependencies {
 
     implementation project(':ui-autocomplete')
 
-    implementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.gecko['version']}"
-    //implementation "org.mozilla:geckoview-nightly-x86:${rootProject.ext.gecko['version']}"
+    nightlyImplementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.geckoNightly['version']}"
+    //implementation "org.mozilla:geckoview-nightly-x86:${rootProject.ext.geckoNightly['version']}"
+    nightlyImplementation project(':browser-engine-gecko-nightly')
+
+    betaImplementation "org.mozilla:geckoview-beta-armeabi-v7a:61.0.20180614135649"
+    betaImplementation project(':browser-engine-gecko-beta')
+
+    productionImplementation "org.mozilla:geckoview-release-armeabi-v7a:60.0.2"
+    productionImplementation project(':browser-engine-gecko')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
