@@ -10,7 +10,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/Variant.h"
 #include "mozilla/XorShift128PlusRNG.h"
@@ -421,7 +420,7 @@ class JS::Realm : public JS::shadow::Realm
     js::ReadBarrieredScriptSourceObject selfHostingScriptSource { nullptr };
 
     // Last time at which an animation was played for this realm.
-    js::MainThreadData<mozilla::TimeStamp> lastAnimationTime;
+    int64_t lastAnimationTime = 0;
 
     /*
      * For generational GC, record whether a write barrier has added this
