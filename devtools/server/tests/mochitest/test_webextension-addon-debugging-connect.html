@@ -22,8 +22,10 @@ async function test_connect_addon(oopMode) {
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     background: function() {
+      /* eslint-disable no-undef */
       browser.test.log("background script executed");
       browser.test.sendMessage("background page ready");
+      /* eslint-enable no-undef */
     },
   });
   await extension.startup();
