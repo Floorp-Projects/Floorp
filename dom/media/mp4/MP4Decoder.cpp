@@ -5,12 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MP4Decoder.h"
-#include "MediaContainerType.h"
+#include "H264.h"
 #include "MP4Demuxer.h"
-#include "nsMimeTypes.h"
-#include "VideoUtils.h"
+#include "MediaContainerType.h"
 #include "PDMFactory.h"
+#include "VideoUtils.h"
 #include "mozilla/StaticPrefs.h"
+#include "nsMimeTypes.h"
 
 namespace mozilla {
 
@@ -117,9 +118,17 @@ MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
       continue;
     }
     if (isVideo && IsWhitelistedH264Codec(codec)) {
-      tracks.AppendElement(
+      auto trackInfo =
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/avc"), aType));
+          NS_LITERAL_CSTRING("video/avc"), aType);
+      uint8_t profile = 0, constraint = 0, level = 0;
+      MOZ_ALWAYS_TRUE(
+        ExtractH264CodecDetails(codec, profile, constraint, level));
+      uint32_t width = aType.ExtendedType().GetWidth().refOr(1280);
+      uint32_t height = aType.ExtendedType().GetHeight().refOr(720);
+      trackInfo->GetAsVideoInfo()->mExtraData =
+        H264::CreateExtraData(profile, constraint, level, { width, height });
+      tracks.AppendElement(std::move(trackInfo));
       continue;
     }
     // Unknown codec
