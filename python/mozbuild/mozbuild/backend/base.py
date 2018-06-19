@@ -174,9 +174,10 @@ class BuildBackend(LoggingMixin):
             with self._write_file(list_file) as fh:
                 fh.write('\n'.join(sorted(self._backend_output_files)))
         else:
-            # Always update its mtime.
-            with open(list_file, 'a'):
-                os.utime(list_file, None)
+            # Always update its mtime if we're not in dry-run mode.
+            if not self.dry_run:
+                with open(list_file, 'a'):
+                    os.utime(list_file, None)
 
         # Write out the list of input files for the backend
         with self._write_file('%s.in' % list_file) as fh:
