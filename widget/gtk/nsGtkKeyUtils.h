@@ -174,7 +174,10 @@ protected:
      */
     void Init();
     void InitXKBExtension();
-    void InitBySystemSettings();
+    void InitBySystemSettingsX11();
+#ifdef MOZ_WAYLAND
+    void InitBySystemSettingsWayland();
+#endif
 
     /**
      * mModifierKeys stores each hardware key information.
