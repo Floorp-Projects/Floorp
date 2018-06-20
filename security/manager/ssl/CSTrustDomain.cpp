@@ -70,7 +70,7 @@ CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   if (!component) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  nsrv = component->IsCertContentSigningRoot(candidateCert.get(), isRoot);
+  nsrv = component->IsCertContentSigningRoot(candidateCert.get(), &isRoot);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }

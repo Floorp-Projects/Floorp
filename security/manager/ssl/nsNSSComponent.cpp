@@ -731,34 +731,6 @@ nsNSSComponent::UnloadEnterpriseRoots()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("unloaded enterprise roots"));
 }
 
-NS_IMETHODIMP
-nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
-{
-  MutexAutoLock nsNSSComponentLock(mMutex);
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-  NS_ENSURE_ARG_POINTER(enterpriseRoots);
-
-  if (!mEnterpriseRoots) {
-    *enterpriseRoots = nullptr;
-    return NS_OK;
-  }
-  UniqueCERTCertList enterpriseRootsCopy(
-    nsNSSCertList::DupCertList(mEnterpriseRoots));
-  if (!enterpriseRootsCopy) {
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIX509CertList> enterpriseRootsCertList(
-    new nsNSSCertList(std::move(enterpriseRootsCopy)));
-  if (!enterpriseRootsCertList) {
-    return NS_ERROR_FAILURE;
-  }
-  enterpriseRootsCertList.forget(enterpriseRoots);
-  return NS_OK;
-}
-
 static const char* kEnterpriseRootModePref = "security.enterprise_roots.enabled";
 
 void
@@ -874,6 +846,7 @@ nsNSSComponent::ImportEnterpriseRootsForLocation(
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("imported %u roots", numImported));
 }
+#endif // XP_WIN
 
 NS_IMETHODIMP
 nsNSSComponent::TrustLoaded3rdPartyRoots()
@@ -901,15 +874,44 @@ nsNSSComponent::TrustLoaded3rdPartyRoots()
       }
     }
   }
+#ifdef XP_WIN
   if (mFamilySafetyRoot &&
       ChangeCertTrustWithPossibleAuthentication(mFamilySafetyRoot, trust,
                                                 nullptr) != SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("couldn't trust family safety certificate for TLS server auth"));
   }
+#endif
   return NS_OK;
 }
-#endif // XP_WIN
+
+NS_IMETHODIMP
+nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
+{
+  MutexAutoLock nsNSSComponentLock(mMutex);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  NS_ENSURE_ARG_POINTER(enterpriseRoots);
+
+  if (!mEnterpriseRoots) {
+    *enterpriseRoots = nullptr;
+    return NS_OK;
+  }
+  UniqueCERTCertList enterpriseRootsCopy(
+    nsNSSCertList::DupCertList(mEnterpriseRoots));
+  if (!enterpriseRootsCopy) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIX509CertList> enterpriseRootsCertList(
+    new nsNSSCertList(std::move(enterpriseRootsCopy)));
+  if (!enterpriseRootsCertList) {
+    return NS_ERROR_FAILURE;
+  }
+  enterpriseRootsCertList.forget(enterpriseRoots);
+  return NS_OK;
+}
 
 class LoadLoadableRootsTask final : public Runnable
 {
@@ -1002,9 +1004,10 @@ LoadLoadableRootsTask::Run()
   return NS_DispatchToMainThread(this);
 }
 
-nsresult
-nsNSSComponent::HasActiveSmartCards(bool& result)
+NS_IMETHODIMP
+nsNSSComponent::HasActiveSmartCards(bool* result)
 {
+  NS_ENSURE_ARG_POINTER(result);
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
@@ -1017,19 +1020,20 @@ nsNSSComponent::HasActiveSmartCards(bool& result)
   SECMODModuleList* list = SECMOD_GetDefaultModuleList();
   while (list) {
     if (SECMOD_HasRemovableSlots(list->module)) {
-      result = true;
+      *result = true;
       return NS_OK;
     }
     list = list->next;
   }
 #endif
-  result = false;
+  *result = false;
   return NS_OK;
 }
 
-nsresult
-nsNSSComponent::HasUserCertsInstalled(bool& result)
+NS_IMETHODIMP
+nsNSSComponent::HasUserCertsInstalled(bool* result)
 {
+  NS_ENSURE_ARG_POINTER(result);
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
@@ -1041,7 +1045,7 @@ nsNSSComponent::HasUserCertsInstalled(bool& result)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  result = false;
+  *result = false;
   UniqueCERTCertList certList(
     CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), certUsageSSLClient,
                               false, true, nullptr));
@@ -1055,7 +1059,7 @@ nsNSSComponent::HasUserCertsInstalled(bool& result)
   }
 
   // The list is not empty, meaning at least one cert is installed
-  result = true;
+  *result = true;
   return NS_OK;
 }
 
@@ -2322,12 +2326,14 @@ nsNSSComponent::RegisterObservers()
   return NS_OK;
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
-nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result)
+nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool* result)
 {
-  result = false;
+  NS_ENSURE_ARG_POINTER(cert);
+  NS_ENSURE_ARG_POINTER(result);
+  *result = false;
 
+#ifdef DEBUG
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
   if (!nsc) {
     return NS_ERROR_FAILURE;
@@ -2344,15 +2350,17 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result)
     return NS_OK;
   }
 
-  result = mTestBuiltInRootHash.Equals(certHash);
-  return NS_OK;
-}
+  *result = mTestBuiltInRootHash.Equals(certHash);
 #endif // DEBUG
 
+  return NS_OK;
+}
+
 NS_IMETHODIMP
-nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool& result)
+nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool* result)
 {
-  result = false;
+  NS_ENSURE_ARG_POINTER(result);
+  *result = false;
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
   if (!nsc) {
@@ -2374,7 +2382,7 @@ nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool& result)
     return NS_ERROR_FAILURE;
   }
 
-  result = mContentSigningRootHash.Equals(certHash);
+  *result = mContentSigningRootHash.Equals(certHash);
   return NS_OK;
 }
 
@@ -2394,13 +2402,15 @@ nsNSSComponent::IssuerMatchesMitmCanary(const char* aCertIssuer)
 
 SharedCertVerifier::~SharedCertVerifier() { }
 
-already_AddRefed<SharedCertVerifier>
-nsNSSComponent::GetDefaultCertVerifier()
+NS_IMETHODIMP
+nsNSSComponent::GetDefaultCertVerifier(SharedCertVerifier** result)
 {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mNSSInitialized);
+  NS_ENSURE_ARG_POINTER(result);
   RefPtr<SharedCertVerifier> certVerifier(mDefaultCertVerifier);
-  return certVerifier.forget();
+  certVerifier.forget(result);
+  return NS_OK;
 }
 
 namespace mozilla { namespace psm {
@@ -2411,11 +2421,15 @@ GetDefaultCertVerifier()
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID));
-  if (nssComponent) {
-    return nssComponent->GetDefaultCertVerifier();
+  if (!nssComponent) {
+    return nullptr;
   }
-
-  return nullptr;
+  RefPtr<SharedCertVerifier> result;
+  nsresult rv = nssComponent->GetDefaultCertVerifier(getter_AddRefs(result));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  return result.forget();
 }
 
 } } // namespace mozilla::psm

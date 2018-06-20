@@ -1,0 +1,110 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "cert.h"
+#include "SharedCertVerifier.h"
+#define PSM_COMPONENT_CONTRACTID "@mozilla.org/psm;1"
+%}
+
+interface nsIX509CertList;
+
+[ptr] native CERTCertificatePtr(CERTCertificate);
+[ptr] native SharedCertVerifierPtr(mozilla::psm::SharedCertVerifier);
+
+[scriptable, uuid(a0a8f52b-ea18-4abc-a3ca-eccf704ffe63)]
+interface nsINSSComponent : nsISupports {
+  /**
+   * When we log out of a PKCS#11 token, any TLS connections that may have
+   * involved a client certificate stored on that token must be closed. Since we
+   * don't have a fine-grained way to do this, we basically cancel everything.
+   * More speficially, this clears all temporary certificate exception overrides
+   * and any remembered client authentication certificate decisions, and then
+   * cancels all network connections (strictly speaking, this last part is
+   * overzealous - we only need to cancel all https connections (see bug
+   * 1446645)).
+   */
+  [noscript] void logoutAuthenticatedPK11();
+
+  /**
+   * Used to determine if the given CERTCertificate is the certificate we use in
+   * tests to simulate a built-in root certificate. Returns false in non-debug
+   * builds.
+   */
+  [noscript] bool isCertTestBuiltInRoot(in CERTCertificatePtr cert);
+
+  /**
+   * Used to determine if the given CERTCertificate is the content signing root
+   * certificate.
+   */
+  [noscript] bool isCertContentSigningRoot(in CERTCertificatePtr cert);
+
+  /**
+   * If enabled by the preference "security.enterprise_roots.enabled", returns
+   * an nsIX509CertList representing the imported enterprise root certificates
+   * (i.e. root certificates gleaned from the OS certificate store). Returns
+   * null otherwise.
+   * Currently this is only implemented on Windows, so this function returns
+   * null on all other platforms.
+   */
+  [noscript] nsIX509CertList getEnterpriseRoots();
+
+  /**
+   * During initialization, nsINSSComponent collects any 3rd party root
+   * certificates from the OS that may be relevant (e.g. enterprise roots, the
+   * Family Safety root on Windows 8). However, to prevent opening a PKCS#11
+   * login prompt and potentially re-entering initialization, the component
+   * delays trusting these roots until a later event tick. This is the function
+   * that enables that.
+   */
+  [noscript] void trustLoaded3rdPartyRoots();
+
+  /**
+   * For performance reasons, the builtin roots module is loaded on a background
+   * thread. When any code that depends on the builtin roots module runs, it
+   * must first wait for the module to be loaded.
+   */
+  [noscript] void blockUntilLoadableRootsLoaded();
+
+  /**
+   * In theory a token on a PKCS#11 module can be inserted or removed at any
+   * time. Operations that may depend on resources on external tokens should
+   * call this to ensure they have a recent view of the token.
+   */
+  [noscript] void checkForSmartCardChanges();
+
+  /**
+   * Used to potentially detect when a user's internet connection is being
+   * intercepted. When doing an update ping, if certificate verification fails,
+   * we make a note of the issuer distinguished name of that certificate.
+   * If a subsequent certificate verification fails, we compare issuer
+   * distinguished names. If they match, something may be intercepting the
+   * user's traffic (if they don't match, the server is likely misconfigured).
+   * This function succeeds if the given DN matches the noted DN and fails
+   * otherwise (e.g. if the update ping never failed).
+   */
+  [noscript] void issuerMatchesMitmCanary(in string certIssuer);
+
+  /**
+   * Returns true if the user has a PKCS#11 module with removable slots.
+   * Main thread only.
+   */
+  [noscript] bool hasActiveSmartCards();
+
+  /**
+   * Returns true if the user has any client authentication certificates.
+   * Main thread only.
+   */
+  [noscript] bool hasUserCertsInstalled();
+
+  /**
+   * Returns an already-adrefed handle to the currently configured shared
+   * certificate verifier.
+   */
+  [noscript] SharedCertVerifierPtr getDefaultCertVerifier();
+};
