@@ -117,6 +117,22 @@ VARCACHE_PREF(
 PREF("dom.serviceWorkers.parent_intercept", bool, false)
 
 //---------------------------------------------------------------------------
+// Clear-Site-Data prefs
+//---------------------------------------------------------------------------
+
+#ifdef NIGHTLY
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "dom.clearSiteData.enabled",
+   dom_clearSiteData_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+//---------------------------------------------------------------------------
 // Full-screen prefs
 //---------------------------------------------------------------------------
 
