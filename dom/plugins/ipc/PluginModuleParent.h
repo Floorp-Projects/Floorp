@@ -317,9 +317,11 @@ protected:
      * This mutex protects the crash reporter when the Plugin Hang UI event
      * handler is executing off main thread. It is intended to protect both
      * the mCrashReporter variable in addition to the CrashReporterHost object
-     * that mCrashReporter refers to.
+     * that mCrashReporter refers to. Sometimes asynchronous crash reporter
+     * callbacks are dispatched synchronously while the caller is still holding
+     * the mutex. This requires recursive locking support in the mutex.
      */
-    mozilla::Mutex mCrashReporterMutex;
+    mozilla::RecursiveMutex mCrashReporterMutex;
     UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 };
 
