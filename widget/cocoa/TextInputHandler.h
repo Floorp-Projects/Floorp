@@ -224,6 +224,7 @@ public:
   }
 
   bool IsForRTLLanguage();
+  bool IsForJapaneseLanguage();
   bool IsInitializedByCurrentInputSource();
 
   enum {

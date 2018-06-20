@@ -1751,6 +1751,23 @@ widget:
     record_in_processes:
       - 'main'
 
+  ime_name_on_mac:
+    bug_numbers:
+      - 1215818
+    description: >
+      Name of IME which was selected by users on macOS.  The value is Input
+      Source ID if non-Japanese IME was open.  Otherwise, if Japanese IME was
+      open, the value is Bundle ID.  Input Source ID includes input mode, but
+      Bundle ID does not include input mode.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains memory reporter counters.
 memoryreporter:
   max_ghost_windows:
