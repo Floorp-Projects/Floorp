@@ -1376,7 +1376,7 @@ DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallb
 
     MOZ_ASSERT(op == JSOP_GETINTRINSIC);
 
-    if (!GetIntrinsicOperation(cx, pc, res))
+    if (!GetIntrinsicOperation(cx, script, pc, res))
         return false;
 
     // An intrinsic operation will always produce the same result, so only
