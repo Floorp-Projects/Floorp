@@ -147,7 +147,14 @@ private:
   nsresult GetQname(nsAutoCString &aQname, unsigned int &aIndex);
   nsresult DohDecode(nsCString &aHost);
   nsresult ReturnData();
-  nsresult FailData();
+
+  // FailData() must be called to signal that the asynch TRR resolve is
+  // completed. For failed name resolves ("no such host"), the 'error' it
+  // passses on in its argument must be NS_ERROR_UNKNOWN_HOST. Other errors
+  // (if host was blacklisted, there as a bad content-type received, etc)
+  // other error codes must be used. This distinction is important for the
+  // subsequent logic to separate the error reasons.
+  nsresult FailData(nsresult error);
   nsresult DohDecodeQuery(const nsCString &query,
                           nsCString &host, enum TrrType &type);
   nsresult ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec);
