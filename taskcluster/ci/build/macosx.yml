@@ -9,7 +9,7 @@ macosx64/debug:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -43,7 +43,7 @@ macosx64/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -75,7 +75,7 @@ macosx64-asan-fuzzing/opt:
         symbol: Bof
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -110,7 +110,7 @@ macosx64-dmd/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -151,7 +151,7 @@ macosx64-devedition-nightly/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -187,7 +187,7 @@ macosx64-noopt/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -223,7 +223,7 @@ macosx64-add-on-devel/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -263,7 +263,7 @@ macosx64-nightly/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
