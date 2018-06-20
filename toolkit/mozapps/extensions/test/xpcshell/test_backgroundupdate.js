@@ -14,7 +14,6 @@ profileDir.append("extensions");
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
 
   await promiseStartupManager();

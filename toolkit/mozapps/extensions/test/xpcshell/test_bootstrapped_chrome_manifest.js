@@ -5,17 +5,6 @@
 const ADDON = {
   "install.rdf": {
     "id": "bug675371@tests.mozilla.org",
-    "version": "1.0",
-    "bootstrap": "true",
-    "name": "Bug 675371 Test",
-    "description": "Test Description",
-    "targetApplications": [
-      {
-        "id": "xpcshell@tests.mozilla.org",
-        "minVersion": "1",
-        "maxVersion": "1"
-      }
-    ]
   },
   "chrome.manifest": `content bug675371 .`,
   "test.js": `var active = true;`,

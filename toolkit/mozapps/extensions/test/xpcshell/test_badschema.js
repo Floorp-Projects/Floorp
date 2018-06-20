@@ -7,7 +7,6 @@
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
 // register files with server
-testserver.registerDirectory("/addons/", do_get_file("addons"));
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 // The test extension uses an insecure update url.
