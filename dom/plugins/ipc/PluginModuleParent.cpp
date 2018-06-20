@@ -580,7 +580,7 @@ PluginModuleChromeParent::InitCrashReporter()
     }
 
     {
-      mozilla::MutexAutoLock lock(mCrashReporterMutex);
+      mozilla::RecursiveMutexAutoLock lock(mCrashReporterMutex);
       mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
         GeckoProcessType_Plugin,
         shmem,
@@ -720,7 +720,7 @@ void
 PluginModuleChromeParent::WriteExtraDataForMinidump()
 {
     // mCrashReporterMutex is already held by the caller
-    mCrashReporterMutex.AssertCurrentThreadOwns();
+    mCrashReporterMutex.AssertCurrentThreadIn();
 
     typedef nsDependentCString cstring;
 
@@ -1086,7 +1086,7 @@ PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
                                            std::function<void(nsString)>&& aCallback,
                                            bool aAsync)
 {
-    mozilla::MutexAutoLock lock(mCrashReporterMutex);
+    mozilla::RecursiveMutexAutoLock lock(mCrashReporterMutex);
 
     if (!mCrashReporter || !mTakeFullMinidumpCallback.IsEmpty()) {
         aCallback(EmptyString());
@@ -1173,7 +1173,7 @@ PluginModuleChromeParent::TakeBrowserAndPluginMinidumps(bool aReportsReady,
                                                         const nsAString& aBrowserDumpId,
                                                         bool aAsync)
 {
-    mCrashReporterMutex.AssertCurrentThreadOwns();
+    mCrashReporterMutex.AssertCurrentThreadIn();
 
     // Generate crash report including plugin and browser process minidumps.
     // The plugin process is the parent report with additional dumps including
@@ -1208,7 +1208,7 @@ PluginModuleChromeParent::OnTakeFullMinidumpComplete(bool aReportsReady,
                                                      base::ProcessId aContentPid,
                                                      const nsAString& aBrowserDumpId)
 {
-    mCrashReporterMutex.AssertCurrentThreadOwns();
+    mCrashReporterMutex.AssertCurrentThreadIn();
 
     if (aReportsReady) {
         nsString dumpId = mCrashReporter->MinidumpID();
@@ -1293,7 +1293,7 @@ void
 PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgLoop,
                                                               const nsCString& aMonitorDescription)
 {
-    mCrashReporterMutex.AssertCurrentThreadOwns();
+    mCrashReporterMutex.AssertCurrentThreadIn();
 
     if (!mCrashReporter) {
         // If mCrashReporter is null then the hang has ended, the plugin module
@@ -1510,7 +1510,7 @@ RemoveMinidump(nsIFile* minidump)
 void
 PluginModuleChromeParent::ProcessFirstMinidump()
 {
-    mozilla::MutexAutoLock lock(mCrashReporterMutex);
+    mozilla::RecursiveMutexAutoLock lock(mCrashReporterMutex);
 
     if (!mCrashReporter)
         return;
