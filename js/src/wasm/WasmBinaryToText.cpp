@@ -40,16 +40,13 @@ struct WasmRenderContext
     JSContext* cx;
     AstModule* module;
     WasmPrintBuffer& buffer;
-    GeneratedSourceMap* maybeSourceMap;
     uint32_t indent;
     uint32_t currentFuncIndex;
 
-    WasmRenderContext(JSContext* cx, AstModule* module, WasmPrintBuffer& buffer,
-                      GeneratedSourceMap* sourceMap)
+    WasmRenderContext(JSContext* cx, AstModule* module, WasmPrintBuffer& buffer)
       : cx(cx),
         module(module),
         buffer(buffer),
-        maybeSourceMap(sourceMap),
         indent(0),
         currentFuncIndex(0)
     {}
@@ -250,14 +247,6 @@ RenderBlockNameAndSignature(WasmRenderContext& c, const AstName& name, ExprType 
 static bool
 RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine = true);
 
-#define MAP_AST_EXPR(c, expr)                                                         \
-    if (c.maybeSourceMap) {                                                           \
-        uint32_t lineno = c.buffer.lineno();                                          \
-        uint32_t column = c.buffer.column();                                          \
-        if (!c.maybeSourceMap->exprlocs().emplaceBack(lineno, column, expr.offset())) \
-            return false;                                                             \
-    }
-
 /*****************************************************************************/
 // binary format parsing and rendering
 
@@ -266,7 +255,6 @@ RenderNop(WasmRenderContext& c, AstNop& nop)
 {
     if (!RenderIndent(c))
         return false;
-    MAP_AST_EXPR(c, nop);
     return c.buffer.append("nop");
 }
 
@@ -278,7 +266,6 @@ RenderDrop(WasmRenderContext& c, AstDrop& drop)
 
     if (!RenderIndent(c))
         return false;
-    MAP_AST_EXPR(c, drop);
     return c.buffer.append("drop");
 }
 
@@ -287,7 +274,6 @@ RenderUnreachable(WasmRenderContext& c, AstUnreachable& unreachable)
 {
     if (!RenderIndent(c))
         return false;
-    MAP_AST_EXPR(c, unreachable);
     return c.buffer.append("unreachable");
 }
 
@@ -311,7 +297,6 @@ RenderCall(WasmRenderContext& c, AstCall& call)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, call);
     if (call.op() == Op::Call) {
         if (!c.buffer.append("call "))
             return false;
@@ -334,7 +319,6 @@ RenderCallIndirect(WasmRenderContext& c, AstCallIndirect& call)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, call);
     if (!c.buffer.append("call_indirect "))
         return false;
     return RenderRef(c, call.funcType());
@@ -346,7 +330,6 @@ RenderConst(WasmRenderContext& c, AstConst& cst)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, cst);
     if (!RenderValType(c, cst.val().type()))
         return false;
     if (!c.buffer.append(".const "))
@@ -374,7 +357,6 @@ RenderGetLocal(WasmRenderContext& c, AstGetLocal& gl)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, gl);
     if (!c.buffer.append("get_local "))
         return false;
     return RenderRef(c, gl.local());
@@ -389,7 +371,6 @@ RenderSetLocal(WasmRenderContext& c, AstSetLocal& sl)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, sl);
     if (!c.buffer.append("set_local "))
         return false;
     return RenderRef(c, sl.local());
@@ -404,7 +385,6 @@ RenderTeeLocal(WasmRenderContext& c, AstTeeLocal& tl)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, tl);
     if (!c.buffer.append("tee_local "))
         return false;
     return RenderRef(c, tl.local());
@@ -416,7 +396,6 @@ RenderGetGlobal(WasmRenderContext& c, AstGetGlobal& gg)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, gg);
     if (!c.buffer.append("get_global "))
         return false;
     return RenderRef(c, gg.global());
@@ -431,7 +410,6 @@ RenderSetGlobal(WasmRenderContext& c, AstSetGlobal& sg)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, sg);
     if (!c.buffer.append("set_global "))
         return false;
     return RenderRef(c, sg.global());
@@ -453,7 +431,6 @@ RenderBlock(WasmRenderContext& c, AstBlock& block, bool isInline = false)
     if (!isInline && !RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, block);
     if (block.op() == Op::Block) {
         if (!c.buffer.append("block"))
             return false;
@@ -523,7 +500,6 @@ RenderGrowMemory(WasmRenderContext& c, AstGrowMemory& gm)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, gm);
     return c.buffer.append("grow_memory\n");
 }
 
@@ -536,7 +512,6 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& unary)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, unary);
     const char* opStr;
     switch (unary.op()) {
       case Op::I32Eqz:     opStr = "i32.eqz"; break;
@@ -577,7 +552,6 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& binary)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, binary);
     const char* opStr;
     switch (binary.op()) {
       case Op::I32Add:      opStr = "i32.add"; break;
@@ -643,7 +617,6 @@ RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& ternary)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, ternary);
     const char* opStr;
     switch (ternary.op()) {
       case Op::Select: opStr = "select"; break;
@@ -664,7 +637,6 @@ RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& comp)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, comp);
     const char* opStr;
     switch (comp.op()) {
       case Op::I32Eq:  opStr = "i32.eq"; break;
@@ -714,7 +686,6 @@ RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& conv)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, conv);
     const char* opStr;
     switch (conv.op()) {
       case Op::I32WrapI64:        opStr = "i32.wrap/i64"; break;
@@ -764,7 +735,6 @@ RenderExtraConversionOperator(WasmRenderContext& c, AstExtraConversionOperator& 
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, conv);
     const char* opStr;
     switch (conv.op()) {
       case MiscOp::I32TruncSSatF32:   opStr = "i32.trunc_s:sat/f32"; break;
@@ -790,7 +760,6 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, if_);
     if (!c.buffer.append("if"))
         return false;
     if (!RenderBlockNameAndSignature(c, if_.name(), if_.type()))
@@ -858,7 +827,6 @@ RenderLoad(WasmRenderContext& c, AstLoad& load)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, load);
     uint32_t defaultAlignLog2;
     switch (load.op()) {
       case Op::I32Load8S:
@@ -950,7 +918,6 @@ RenderStore(WasmRenderContext& c, AstStore& store)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, store);
     uint32_t defaultAlignLog2;
     switch (store.op()) {
       case Op::I32Store8:
@@ -1024,7 +991,6 @@ RenderBranch(WasmRenderContext& c, AstBranch& branch)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, branch);
     if (op == Op::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
         return false;
 
@@ -1046,7 +1012,6 @@ RenderBrTable(WasmRenderContext& c, AstBranchTable& table)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, table);
     if (!c.buffer.append("br_table "))
         return false;
 
@@ -1073,7 +1038,6 @@ RenderReturn(WasmRenderContext& c, AstReturn& ret)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, ret);
     return c.buffer.append("return");
 }
 
@@ -1091,7 +1055,6 @@ RenderAtomicCmpXchg(WasmRenderContext& c, AstAtomicCmpXchg& cmpxchg)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, cmpxchg);
     const char* opname;
     switch (cmpxchg.op()) {
       case ThreadOp::I32AtomicCmpXchg8U:  opname = "i32.atomic.rmw8_u.cmpxchg"; break;
@@ -1119,7 +1082,6 @@ RenderAtomicLoad(WasmRenderContext& c, AstAtomicLoad& load)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, load);
     const char* opname;
     switch (load.op()) {
       case ThreadOp::I32AtomicLoad8U:  opname = "i32.atomic.load8_u"; break;
@@ -1150,7 +1112,6 @@ RenderAtomicRMW(WasmRenderContext& c, AstAtomicRMW& rmw)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, rmw);
     const char* opname;
     switch (rmw.op()) {
       case ThreadOp::I32AtomicAdd:     opname = "i32.atomic.rmw.add"; break;
@@ -1216,7 +1177,6 @@ RenderAtomicStore(WasmRenderContext& c, AstAtomicStore& store)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, store);
     const char* opname;
     switch (store.op()) {
       case ThreadOp::I32AtomicStore8U:  opname = "i32.atomic.store8_u"; break;
@@ -1250,7 +1210,6 @@ RenderWait(WasmRenderContext& c, AstWait& wait)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, wait);
     const char* opname;
     switch (wait.op()) {
       case ThreadOp::I32Wait:  opname = "i32.atomic.wait"; break;
@@ -1296,7 +1255,6 @@ RenderMemCopy(WasmRenderContext& c, AstMemCopy& mc)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, mc);
     const char* opStr = "memory.copy";
 
     return c.buffer.append(opStr, strlen(opStr));
@@ -1315,7 +1273,6 @@ RenderMemFill(WasmRenderContext& c, AstMemFill& mf)
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, mf);
     const char* opStr = "memory.fill";
 
     return c.buffer.append(opStr, strlen(opStr));
@@ -1940,11 +1897,6 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::TypeDef
             return false;
     }
 
-    if (c.maybeSourceMap) {
-        if (!c.maybeSourceMap->exprlocs().emplaceBack(c.buffer.lineno(), c.buffer.column(), func.endOffset()))
-            return false;
-    }
-
     return true;
 }
 
@@ -2110,14 +2062,11 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     return true;
 }
 
-#undef MAP_AST_EXPR
-
 /*****************************************************************************/
 // Top-level functions
 
 bool
-wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
-                   GeneratedSourceMap* sourceMap /* = nullptr */)
+wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 
@@ -2126,7 +2075,7 @@ wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuf
         return false;
 
     WasmPrintBuffer buf(buffer);
-    WasmRenderContext c(cx, module, buf, sourceMap);
+    WasmRenderContext c(cx, module, buf);
 
     if (!RenderModule(c, *module)) {
         if (!cx->isExceptionPending())

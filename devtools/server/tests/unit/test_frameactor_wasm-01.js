@@ -26,7 +26,10 @@ function run_test() {
       gClient, "test-stack",
       function(response, tabClient, threadClient) {
         gThreadClient = threadClient;
-        gThreadClient.reconfigure({ observeAsmJS: true }, function(response) {
+        gThreadClient.reconfigure({
+          observeAsmJS: true,
+          wasmBinarySource: true
+        }, function(response) {
           Assert.equal(!!response.error, false);
           test_pause_frame();
         });

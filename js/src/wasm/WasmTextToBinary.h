@@ -29,7 +29,8 @@ namespace wasm {
 // other than out-of-memory an error message string will be stored in 'error'.
 
 extern MOZ_MUST_USE bool
-TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, UniqueChars* error);
+TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, Uint32Vector* offsets,
+             UniqueChars* error);
 
 } // namespace wasm
 } // namespace js
