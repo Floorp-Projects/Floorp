@@ -5309,8 +5309,9 @@ pref("network.trr.confirmationNS", "example.com");
 // hardcode the resolution of the hostname in network.trr.uri instead of
 // relying on the system resolver to do it for you
 pref("network.trr.bootstrapAddress", "");
-// TRR blacklist entry expire time (in seconds). Default is 20 minutes.
-pref("network.trr.blacklist-duration", 1200);
+// TRR blacklist entry expire time (in seconds). Default is one minute.
+// Meant to survive basically a page load.
+pref("network.trr.blacklist-duration", 60);
 // Single TRR request timeout, in milliseconds
 pref("network.trr.request-timeout", 3000);
 // Allow AAAA entries to be used "early", before the A results are in
