@@ -55,7 +55,11 @@ public:
 
 private:
   bool SchemeIs(const char* aScheme);
-  static void* GetControlledDocumentToken(nsIDocument* aDocument);
+
+  // For ServiceWorker and for anti-tracking we need to use the document as
+  // token for the key. All those exceptions are handled by this method.
+  static void* GetSpecialCaseDocumentToken(nsIDocument* aDocument,
+                                           nsIURI* aURI);
 
   nsCOMPtr<nsIURI> mURI;
   Maybe<uint64_t> mBlobSerial;
