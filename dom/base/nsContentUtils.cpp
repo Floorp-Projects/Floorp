@@ -80,6 +80,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "nsArrayUtils.h"
@@ -521,24 +522,21 @@ IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(!aWindow || !aChannel,
              "A window and channel should not both be provided.");
 
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (!thirdPartyUtil) {
+    return false;
+  }
+
   // In the absence of a window or channel, we assume that we are first-party.
   bool thirdParty = false;
 
   if (aWindow) {
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID);
-    MOZ_ASSERT(thirdPartyUtil);
-
     Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
                                                  aURI,
                                                  &thirdParty);
   }
 
   if (aChannel) {
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID);
-    MOZ_ASSERT(thirdPartyUtil);
-
     // Note, we must call IsThirdPartyChannel() here and not just try to
     // use nsILoadInfo.isThirdPartyContext.  That nsILoadInfo property only
     // indicates if the parent loading window is third party or not.  We
