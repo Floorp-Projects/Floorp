@@ -2781,7 +2781,7 @@ public:
 
   bool HasSameTypeAndClip(const nsDisplayItem* aOther) const
   {
-    return GetType() == aOther->GetType() &&
+    return GetPerFrameKey() == aOther->GetPerFrameKey() &&
            GetClipChain() == aOther->GetClipChain();
   }
 
@@ -5700,12 +5700,6 @@ public:
     return mozilla::LAYER_ACTIVE;
   }
 
-  virtual bool CanMerge(const nsDisplayItem* aItem) const override
-  {
-    // Items with the same fixed position frame can be merged.
-    return HasSameTypeAndClip(aItem) && mFrame == aItem->Frame();
-  }
-
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
@@ -5765,12 +5759,6 @@ public:
                                    const ContainerLayerParameters& aParameters) override
   {
     return mozilla::LAYER_ACTIVE_FORCE;
-  }
-
-  virtual bool CanMerge(const nsDisplayItem* aItem) const override
-  {
-    // Items with the same fixed position frame can be merged.
-    return HasSameTypeAndClip(aItem) && mFrame == aItem->Frame();
   }
 
   virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) const override
