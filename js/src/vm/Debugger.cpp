@@ -10669,7 +10669,7 @@ DebuggerObject::unwrap(JSContext* cx, HandleDebuggerObject object,
     // Don't allow unwrapping to create a D.O whose referent is in an
     // invisible-to-Debugger global. (If our referent is a *wrapper* to such,
     // and the wrapper is in a visible realm, that's fine.)
-    if (unwrapped->nonCCWRealm()->creationOptions().invisibleToDebugger()) {
+    if (unwrapped->realm()->creationOptions().invisibleToDebugger()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_INVISIBLE_COMPARTMENT);
         return false;
     }
@@ -11545,27 +11545,7 @@ Debugger::isDebuggerCrossCompartmentEdge(JSObject* obj, const gc::Cell* target)
 
     return referent == target;
 }
-
-static void
-CheckDebuggeeThingRealm(Realm* realm, bool invisibleOk)
-{
-    MOZ_ASSERT(!realm->creationOptions().mergeable());
-    MOZ_ASSERT_IF(!invisibleOk, !realm->creationOptions().invisibleToDebugger());
-}
-
-void
-js::CheckDebuggeeThing(JSScript* script, bool invisibleOk)
-{
-    CheckDebuggeeThingRealm(script->realm(), invisibleOk);
-}
-
-void
-js::CheckDebuggeeThing(JSObject* obj, bool invisibleOk)
-{
-    if (Realm* realm = JS::GetObjectRealmOrNull(obj))
-        CheckDebuggeeThingRealm(realm, invisibleOk);
-}
-#endif // DEBUG
+#endif
 
 
 /*** JS::dbg::GarbageCollectionEvent **************************************************************/
