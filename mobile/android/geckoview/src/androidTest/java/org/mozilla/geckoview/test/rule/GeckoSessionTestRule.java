@@ -343,6 +343,12 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    public static class ChildCrashedException extends RuntimeException {
+        public ChildCrashedException(final String detailMessage) {
+            super(detailMessage);
+        }
+    }
+
     public static class RejectedPromiseException extends RuntimeException {
         private final Object mReason;
 
@@ -1197,7 +1203,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                             sRuntime.shutdown();
                         }
 
-                        throw new RuntimeException("Content process crashed");
+                        throw new ChildCrashedException("Child process crashed");
                     }
 
                     records.add(new CallRecord(session, method, args));
