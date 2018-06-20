@@ -130,12 +130,14 @@ private:
   void LoadFmtp(RustAttributeList* attributeList);
   void LoadPtime(RustAttributeList* attributeList);
   void LoadFlags(RustAttributeList* attributeList);
+  void LoadMaxMessageSize(RustAttributeList* attributeList);
   void LoadMid(RustAttributeList* attributeList);
   void LoadMsid(RustAttributeList* attributeList);
   void LoadMsidSemantics(RustAttributeList* attributeList);
   void LoadGroup(RustAttributeList* attributeList);
   void LoadRtcp(RustAttributeList* attributeList);
   void LoadRtcpFb(RustAttributeList* attributeList);
+  void LoadSctpPort(RustAttributeList* attributeList);
   void LoadSimulcast(RustAttributeList* attributeList);
   void LoadImageattr(RustAttributeList* attributeList);
   void LoadSctpmaps(RustAttributeList* attributeList);

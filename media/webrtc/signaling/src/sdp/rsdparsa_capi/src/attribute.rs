@@ -439,6 +439,26 @@ pub unsafe extern "C" fn sdp_get_ptime(attributes: *const Vec<SdpAttribute>) -> 
     -1
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_max_msg_sizse(attributes: *const Vec<SdpAttribute>) -> int64_t {
+    for attribute in (*attributes).iter() {
+        if let SdpAttribute::MaxMessageSize(max_msg_size) = *attribute {
+            return max_msg_size as int64_t;
+        }
+    }
+    -1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_get_sctp_port(attributes: *const Vec<SdpAttribute>) -> int64_t {
+    for attribute in (*attributes).iter() {
+        if let SdpAttribute::SctpPort(port) = *attribute {
+            return port as int64_t;
+        }
+    }
+    -1
+}
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeFlags {
