@@ -24,13 +24,13 @@ add_task(async function using_Ctrl_W() {
     await triggerClickOn(tab2, { ctrlKey: true });
     await triggerClickOn(tab3, { ctrlKey: true });
 
-    is(gBrowser.selectedTab, tab1, "Tab1 is focused");
-    ok(!tab1.multiselected, "Tab1 is not multiselected");
+    ok(tab1.multiselected, "Tab1 is multiselected");
     ok(tab2.multiselected, "Tab2 is multiselected");
     ok(tab3.multiselected, "Tab3 is multiselected");
     ok(!tab4.multiselected, "Tab4 is not multiselected");
-    is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
+    is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
 
+    let tab1Closing = BrowserTestUtils.waitForTabClosing(tab1);
     let tab2Closing = BrowserTestUtils.waitForTabClosing(tab2);
     let tab3Closing = BrowserTestUtils.waitForTabClosing(tab3);
 
@@ -40,28 +40,29 @@ add_task(async function using_Ctrl_W() {
     const shouldBeClosing = key == "w" || AppConstants.platform != "macosx";
 
     if (shouldBeClosing) {
+      await tab1Closing;
       await tab2Closing;
       await tab3Closing;
     }
 
-    is(gBrowser.selectedTab, tab1, "Tab1 is still focused");
-    ok(!tab1.closing, "Tab1 is not closing");
     ok(!tab4.closing, "Tab4 is not closing");
 
     if (shouldBeClosing) {
+      ok(tab1.closing, "Tab1 is closing");
       ok(tab2.closing, "Tab2 is closing");
       ok(tab3.closing, "Tab3 is closing");
       is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
     } else {
+      ok(!tab1.closing, "Tab1 is not closing");
       ok(!tab2.closing, "Tab2 is not closing");
       ok(!tab3.closing, "Tab3 is not closing");
-      is(gBrowser.multiSelectedTabsCount, 2, "Still Two multiselected tabs");
+      is(gBrowser.multiSelectedTabsCount, 3, "Still Three multiselected tabs");
 
+      BrowserTestUtils.removeTab(tab1);
       BrowserTestUtils.removeTab(tab2);
       BrowserTestUtils.removeTab(tab3);
     }
 
-    BrowserTestUtils.removeTab(tab1);
     BrowserTestUtils.removeTab(tab4);
   }
 });
