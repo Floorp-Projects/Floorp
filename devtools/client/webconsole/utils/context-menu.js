@@ -6,9 +6,6 @@
 
 "use strict";
 
-const Services = require("Services");
-const {gDevTools} = require("devtools/client/framework/devtools");
-
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
@@ -16,6 +13,8 @@ const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
 
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
+
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 /**
  * Create a Menu instance for the webconsole.
@@ -89,10 +88,7 @@ function createContextMenu(hud, parentNode, {
       if (!request) {
         return;
       }
-      const mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-      mainWindow.openWebLinkIn(request.url, "tab", {
-        triggeringPrincipal: mainWindow.document.nodePrincipal,
-      });
+      openContentLink(request.url);
     },
   }));
 

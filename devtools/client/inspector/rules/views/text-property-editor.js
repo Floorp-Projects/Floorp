@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {l10n} = require("devtools/shared/inspector/css-logic");
+const Services = require("Services");
+
+const { l10n } = require("devtools/shared/inspector/css-logic");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {InplaceEditor, editableField} =
       require("devtools/client/shared/inplace-editor");
@@ -18,7 +20,8 @@ const {
   parseDeclarations,
   parseSingleValue,
 } = require("devtools/shared/css/parsing-utils");
-const Services = require("Services");
+
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -284,8 +287,7 @@ TextPropertyEditor.prototype = {
         if (target.nodeName === "a") {
           event.stopPropagation();
           event.preventDefault();
-          const browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
-          browserWin.openWebLinkIn(target.href, "tab");
+          openContentLink(target.href);
         }
       });
 

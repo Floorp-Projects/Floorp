@@ -484,7 +484,7 @@ BlockReflowInput::RecoverFloats(nsLineList::iterator aLine,
 {
   WritingMode wm = mReflowInput.GetWritingMode();
   if (aLine->HasFloats()) {
-    // Place the floats into the space-manager again. Also slide
+    // Place the floats into the float manager again. Also slide
     // them, just like the regular frames on the line.
     nsFloatCache* fc = aLine->GetFirstFloat();
     while (fc) {

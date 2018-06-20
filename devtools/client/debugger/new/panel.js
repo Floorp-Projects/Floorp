@@ -8,6 +8,7 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { TargetFactory } = require("devtools/client/framework/target");
 const { Toolbox } = require("devtools/client/framework/toolbox");
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
@@ -63,24 +64,7 @@ DebuggerPanel.prototype = {
   },
 
   openLink: function(url) {
-    const parentDoc = this.toolbox.doc;
-    if (!parentDoc) {
-      return;
-    }
-
-    const win = parentDoc.querySelector("window");
-    if (!win) {
-      return;
-    }
-
-    const top = win.ownerDocument.defaultView.top;
-    if (!top || typeof top.openWebLink !== "function") {
-      return;
-    }
-
-    top.openWebLinkIn(url, "tab", {
-      triggeringPrincipal: win.document.nodePrincipal
-    });
+    openContentLink(url);
   },
 
   openWorkerToolbox: async function(worker) {

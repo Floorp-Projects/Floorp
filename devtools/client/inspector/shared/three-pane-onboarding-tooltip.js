@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { openWebLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("devtools/client/shared/link");
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -103,7 +103,7 @@ class ThreePaneOnboardingTooltip {
   onLearnMoreLinkClick() {
     Services.prefs.setBoolPref(SHOW_THREE_PANE_ONBOARDING_PREF, false);
     this.tooltip.hide();
-    openWebLink(LEARN_MORE_LINK);
+    openDocLink(LEARN_MORE_LINK);
   }
 }
 

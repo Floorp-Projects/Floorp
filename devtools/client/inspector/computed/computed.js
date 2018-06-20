@@ -27,6 +27,7 @@ const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overl
 loader.lazyRequireGetter(this, "StyleInspectorMenu", "devtools/client/inspector/shared/style-inspector-menu");
 loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -698,8 +699,7 @@ CssComputedView.prototype = {
     if (target.nodeName === "a") {
       event.stopPropagation();
       event.preventDefault();
-      const browserWin = this.inspector.target.tab.ownerDocument.defaultView;
-      browserWin.openWebLinkIn(target.href, "tab");
+      openContentLink(target.href);
     }
   },
 
@@ -1190,12 +1190,7 @@ PropertyView.prototype = {
    * The action when a user clicks on the MDN help link for a property.
    */
   mdnLinkClick: function(event) {
-    const inspector = this.tree.inspector;
-
-    if (inspector.target.tab) {
-      const browserWin = inspector.target.tab.ownerDocument.defaultView;
-      browserWin.openWebLinkIn(this.link, "tab");
-    }
+    openContentLink(this.link);
   },
 
   /**

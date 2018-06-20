@@ -63,20 +63,38 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: WORKER_URL },
     async function(browser) {
     // grab events..
-    var events = [];
+    let worker_duration = 0;
+    let worker_total = 0;
+    let duration = 0;
+    let total = 0;
+
     function getInfoFromService(subject, topic, value) {
       subject = subject.QueryInterface(Ci.nsIMutableArray);
       let enumerator = subject.enumerate();
       while (enumerator.hasMoreElements()) {
-        let item = enumerator.getNext();
-        item = item.QueryInterface(Ci.nsIPerformanceMetricsData);
-        if (item.pid == Services.appinfo.processID) {
+        let entry = enumerator.getNext();
+        entry = entry.QueryInterface(Ci.nsIPerformanceMetricsData);
+        if (entry.pid == Services.appinfo.processID) {
           parent_process_event = true;
         }
-        if (item.worker) {
+        if (entry.worker) {
           worker_event = true;
+          worker_duration += entry.duration;
+        } else {
+          duration += entry.duration;
         }
-        events.push(item);
+        // let's look at the XPCOM data we got back
+        let items = entry.items.QueryInterface(Ci.nsIMutableArray);
+        let enumerator2 = items.enumerate();
+        while (enumerator2.hasMoreElements()) {
+          let item = enumerator2.getNext();
+          item = item.QueryInterface(Ci.nsIPerformanceMetricsDispatchCategory);
+          if (entry.worker) {
+            worker_total += item.count;
+          } else {
+            total += item.count;
+          }
+        }
       }
     }
 
@@ -85,28 +103,15 @@ add_task(async function test() {
     // wait until we get some events back by triggering requestPerformanceMetrics
     await BrowserTestUtils.waitForCondition(() => {
       ChromeUtils.requestPerformanceMetrics();
-      return events.length > 10;
-    }, "wait for events to come in", 500, 10);
+      return worker_duration > 0 && duration > 0 && parent_process_event;
+    }, "wait for events to come in", 250, 20);
 
     BrowserTestUtils.removeTab(page1);
     BrowserTestUtils.removeTab(page2);
     BrowserTestUtils.removeTab(page3);
 
-    // let's check the events
-    let duration = 0;
-    let total = 0;
-    for (let i=0; i < events.length; i++) {
-      duration += events[i].duration;
-      // let's look at the XPCOM data we got back
-      let items = events[i].items.QueryInterface(Ci.nsIMutableArray);
-      let enumerator = items.enumerate();
-      while (enumerator.hasMoreElements()) {
-        let item = enumerator.getNext();
-        item = item.QueryInterface(Ci.nsIPerformanceMetricsDispatchCategory);
-        total += item.count;
-      }
-    }
-
+    Assert.ok(worker_duration > 0, "Worker duration should be positive");
+    Assert.ok(worker_total > 0, "Worker count should be positive");
     Assert.ok(duration > 0, "Duration should be positive");
     Assert.ok(total > 0, "Should get a positive count");
     Assert.ok(parent_process_event, "parent process sent back some events");
