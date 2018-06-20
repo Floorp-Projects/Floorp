@@ -482,6 +482,7 @@ public class WebViewProvider {
         }
 
         @Override
+        @SuppressWarnings({"PMD.NcssMethodCount"})
         public void saveWebViewState(@NonNull final Session session) {
             final CountDownLatch latch = new CountDownLatch(1);
             ThreadUtils.postToBackgroundThread(new Runnable() {
