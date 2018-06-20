@@ -1769,7 +1769,7 @@ class StaticAnalysis(MachCommandBase):
         # For each checker run it
         f = open(mozpath.join(self._clang_tidy_base_path, "config.yaml"))
         import yaml
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
         platform, _ = self.platform
 
         if platform not in config['platforms']:
@@ -1970,7 +1970,7 @@ class StaticAnalysis(MachCommandBase):
         import yaml
         with open(mozpath.join(self.topsrcdir, "tools", "clang-tidy", "config.yaml")) as f:
             try:
-                config = yaml.load(f)
+                config = yaml.safe_load(f)
                 for item in config['clang_checkers']:
                     if item['publish']:
                         checks += ',' + item['name']
