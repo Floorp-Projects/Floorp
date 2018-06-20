@@ -497,7 +497,7 @@ AbstractFramePtr::pushVarEnvironment(JSContext* cx, HandleScope scope)
 inline JS::Realm*
 AbstractFramePtr::realm() const
 {
-    return environmentChain()->nonCCWRealm();
+    return environmentChain()->realm();
 }
 
 inline unsigned
