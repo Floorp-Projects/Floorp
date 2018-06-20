@@ -34,8 +34,8 @@ namespace wasm {
 
 struct MetadataTier;
 
-// The generated source location for the AST node/expression. The offset field refers
-// an offset in an binary format file.
+// The generated source location for the AST node/expression. The offset field
+// refers an offset in an binary format file.
 
 struct ExprLoc
 {
@@ -48,39 +48,14 @@ struct ExprLoc
     {}
 };
 
-typedef Vector<ExprLoc, 0, SystemAllocPolicy> ExprLocVector;
-typedef Vector<uint32_t, 0, SystemAllocPolicy> ExprLocIndexVector;
-
-// The generated source map for WebAssembly binary file. This map is generated during
-// building the text buffer (see BinaryToExperimentalText).
-
-class GeneratedSourceMap
-{
-    ExprLocVector exprlocs_;
-    UniquePtr<ExprLocIndexVector> sortedByOffsetExprLocIndices_;
-    uint32_t totalLines_;
-
-  public:
-    explicit GeneratedSourceMap() : totalLines_(0) {}
-    ExprLocVector& exprlocs() { return exprlocs_; }
-
-    uint32_t totalLines() { return totalLines_; }
-    void setTotalLines(uint32_t val) { totalLines_ = val; }
-
-    bool searchLineByOffset(JSContext* cx, uint32_t offset, size_t* exprlocIndex);
-
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-};
-
-typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> StepModeCounters;
-typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAllocPolicy> WasmBreakpointSiteMap;
+typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAllocPolicy>
+    WasmBreakpointSiteMap;
 
 class DebugState
 {
     const SharedCode         code_;
     const SharedBytes        maybeBytecode_;
-    UniqueGeneratedSourceMap maybeSourceMap_;
     bool                     binarySource_;
 
     // State maintained when debugging is enabled. In this case, the Code is
@@ -92,7 +67,6 @@ class DebugState
     StepModeCounters         stepModeCounters_;
 
     void toggleDebugTrap(uint32_t offset, bool enabled);
-    bool ensureSourceMap(JSContext* cx);
 
   public:
     DebugState(SharedCode code,
@@ -101,10 +75,6 @@ class DebugState
 
     const Bytes* maybeBytecode() const { return maybeBytecode_ ? &maybeBytecode_->bytes : nullptr; }
     bool binarySource() const { return binarySource_; }
-
-    // If the source bytecode was saved when this Code was constructed, this
-    // method will render the binary as text. Otherwise, a diagnostic string
-    // will be returned.
 
     JSString* createText(JSContext* cx);
     bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);

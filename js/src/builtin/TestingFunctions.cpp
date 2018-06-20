@@ -659,28 +659,56 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     if (!twoByteChars.initTwoByte(cx, args[0].toString()))
         return false;
 
+    bool withOffsets = false;
     if (args.hasDefined(1)) {
-        if (!args[1].isString()) {
-            ReportUsageErrorASCII(cx, callee, "Second argument, if present, must be a String");
+        if (!args[1].isBoolean()) {
+            ReportUsageErrorASCII(cx, callee, "Second argument, if present, must be a boolean");
             return false;
         }
+        withOffsets = ToBoolean(args[1]);
     }
 
     uintptr_t stackLimit = GetNativeStackLimit(cx);
 
     wasm::Bytes bytes;
     UniqueChars error;
-    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), stackLimit, &bytes, &error)) {
+    wasm::Uint32Vector offsets;
+    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), stackLimit, &bytes, &offsets, &error)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                                   error.get() ? error.get() : "out of memory");
         return false;
     }
 
-    RootedObject obj(cx, JS_NewUint8Array(cx, bytes.length()));
+    RootedObject binary(cx, JS_NewUint8Array(cx, bytes.length()));
+    if (!binary)
+        return false;
+
+    memcpy(binary->as<TypedArrayObject>().viewDataUnshared(), bytes.begin(), bytes.length());
+
+    if (!withOffsets) {
+        args.rval().setObject(*binary);
+        return true;
+    }
+
+    RootedObject obj(cx, JS_NewPlainObject(cx));
     if (!obj)
         return false;
 
-    memcpy(obj->as<TypedArrayObject>().viewDataUnshared(), bytes.begin(), bytes.length());
+    constexpr unsigned propAttrs = JSPROP_ENUMERATE;
+    if (!JS_DefineProperty(cx, obj, "binary", binary, propAttrs))
+        return false;
+
+    RootedObject jsOffsets(cx, JS_NewArrayObject(cx, offsets.length()));
+    if (!jsOffsets)
+        return false;
+    for (size_t i = 0; i < offsets.length(); i++) {
+        uint32_t offset = offsets[i];
+        RootedValue offsetVal(cx, NumberValue(offset));
+        if (!JS_SetElement(cx, jsOffsets, i, offsetVal))
+            return false;
+    }
+    if (!JS_DefineProperty(cx, obj, "offsets", jsOffsets, propAttrs))
+        return false;
 
     args.rval().setObject(*obj);
     return true;
