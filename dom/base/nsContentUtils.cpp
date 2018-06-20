@@ -8854,6 +8854,36 @@ nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
   }
 }
 
+// static public
+bool
+nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
+                                              nsIChannel* aChannel,
+                                              nsIURI* aURI)
+{
+  if (!StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
+    return false;
+  }
+
+  // Let's check if this is a 3rd party context.
+  if (!IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+
+  // aChannel and aWindow are mutually exclusive.
+  channel = aChannel;
+  if (aWindow) {
+    nsIDocument* document = aWindow->GetExtantDoc();
+    if (document) {
+      channel = document->GetChannel();
+    }
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+  return httpChannel && httpChannel->GetIsTrackingResource();
+}
+
 // static, private
 nsContentUtils::StorageAccess
 nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
@@ -8871,27 +8901,8 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     return StorageAccess::eDeny;
   }
 
-  // Let's check if this is a 3rd party context.
-  bool thirdParty = IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI);
-
-  // Pref disabled.
-  if (thirdParty &&
-      StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
-    nsCOMPtr<nsIChannel> channel;
-
-    // aChannel and aWindow are mutually exclusive.
-    channel = aChannel;
-    if (aWindow) {
-      nsIDocument* document = aWindow->GetExtantDoc();
-      if (document) {
-        channel = document->GetChannel();
-      }
-    }
-
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-    if (httpChannel && httpChannel->GetIsTrackingResource()) {
-       return StorageAccess::eDeny;
-    }
+  if (StorageDisabledByAntiTracking(aWindow, aChannel, aURI)) {
+    return StorageAccess::eDeny;
   }
 
   if (aWindow) {
@@ -8970,7 +8981,8 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   }
 
   if ((behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
-       behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) && thirdParty) {
+       behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) &&
+      IsThirdPartyWindowOrChannel(aWindow, aChannel, aURI)) {
     // XXX For non-cookie forms of storage, we handle BEHAVIOR_LIMIT_FOREIGN by
     // simply rejecting the request to use the storage. In the future, if we
     // change the meaning of BEHAVIOR_LIMIT_FOREIGN to be one which makes sense
