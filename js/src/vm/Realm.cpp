@@ -642,12 +642,12 @@ Realm::forgetAllocationMetadataBuilder()
 void
 Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
-    MOZ_ASSERT(obj->realm() == this);
+    MOZ_ASSERT(obj->maybeCCWRealm() == this);
     assertSameCompartment(cx, compartment(), obj);
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (JSObject* metadata = allocationMetadataBuilder_->build(cx, obj, oomUnsafe)) {
-        MOZ_ASSERT(metadata->realm() == obj->realm());
+        MOZ_ASSERT(metadata->maybeCCWRealm() == obj->maybeCCWRealm());
         assertSameCompartment(cx, metadata);
 
         if (!objects_.objectMetadataTable) {
@@ -1016,7 +1016,7 @@ JS::GetCurrentRealmOrNull(JSContext* cx)
 JS_PUBLIC_API(JS::Realm*)
 JS::GetObjectRealmOrNull(JSObject* obj)
 {
-    return IsCrossCompartmentWrapper(obj) ? nullptr : obj->realm();
+    return IsCrossCompartmentWrapper(obj) ? nullptr : obj->nonCCWRealm();
 }
 
 JS_PUBLIC_API(void*)
