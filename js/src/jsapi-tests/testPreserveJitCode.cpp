@@ -7,8 +7,6 @@
 
 #include "jsapi-tests/tests.h"
 
-#include "vm/JSObject-inl.h"
-
 using namespace JS;
 
 static void
@@ -30,7 +28,7 @@ unsigned
 countIonScripts(JSObject* global)
 {
     unsigned count = 0;
-    js::IterateScripts(cx, global->nonCCWRealm(), &count, ScriptCallback);
+    js::IterateScripts(cx, global->realm(), &count, ScriptCallback);
     return count;
 }
 

@@ -2552,7 +2552,7 @@ DebugEnvironments::addDebugEnvironment(JSContext* cx, Handle<EnvironmentObject*>
                                        Handle<DebugEnvironmentProxy*> debugEnv)
 {
     MOZ_ASSERT(cx->realm() == env->realm());
-    MOZ_ASSERT(cx->realm() == debugEnv->nonCCWRealm());
+    MOZ_ASSERT(cx->realm() == debugEnv->realm());
 
     if (!CanUseDebugEnvironmentMaps(cx))
         return true;
@@ -2585,7 +2585,7 @@ DebugEnvironments::addDebugEnvironment(JSContext* cx, const EnvironmentIter& ei,
                                        Handle<DebugEnvironmentProxy*> debugEnv)
 {
     MOZ_ASSERT(!ei.hasSyntacticEnvironment());
-    MOZ_ASSERT(cx->realm() == debugEnv->nonCCWRealm());
+    MOZ_ASSERT(cx->realm() == debugEnv->realm());
     // Generators should always have environments.
     MOZ_ASSERT_IF(ei.scope().is<FunctionScope>(),
                   !ei.scope().as<FunctionScope>().canonicalFunction()->isGenerator() &&
@@ -2867,7 +2867,7 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
             continue;
 
         AbstractFramePtr frame = i.abstractFramePtr();
-        if (frame.realm() != cx->realm())
+        if (frame.environmentChain()->realm() != cx->realm())
             continue;
 
         if (frame.isFunctionFrame()) {
@@ -2896,7 +2896,7 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
 
         if (frame.prevUpToDate())
             return true;
-        MOZ_ASSERT(frame.realm()->isDebuggee());
+        MOZ_ASSERT(frame.environmentChain()->realm()->isDebuggee());
         frame.setPrevUpToDate();
     }
 
@@ -2935,7 +2935,7 @@ DebugEnvironments::unsetPrevUpToDateUntil(JSContext* cx, AbstractFramePtr until)
         if (frame == until)
             return;
 
-        if (frame.realm() != cx->realm())
+        if (frame.environmentChain()->realm() != cx->realm())
             continue;
 
         frame.unsetPrevUpToDate();

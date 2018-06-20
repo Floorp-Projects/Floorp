@@ -614,7 +614,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     MOZ_ASSERT(!JS_IsDeadWrapper(origTarget),
                "We don't want a dead proxy in the wrapper map");
     Value origv = ObjectValue(*origTarget);
-    Realm* wrealm = wobj->deprecatedRealm();
+    Realm* wrealm = wobj->realm();
     JS::Compartment* wcompartment = wobj->compartment();
 
     AutoDisableProxyCheck adpc;
