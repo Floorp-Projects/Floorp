@@ -1401,8 +1401,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * Internal method to perform callback checks at the end of a test.
      */
     public void performTestEndCheck() {
+        if (sCachedSession != null && mIgnoreCrash) {
+            // Make sure the cached session has been closed by crashes.
+            while (sCachedSession.isOpen()) {
+                loopUntilIdle(mTimeoutMillis);
+            }
+        }
+
         mWaitScopeDelegates.clearAndAssert();
         mTestScopeDelegates.clearAndAssert();
+
+        if (sCachedSession != null && mReuseSession) {
+            assertThat("Cached session should be open",
+                       sCachedSession.isOpen(), equalTo(true));
+        }
     }
 
     protected void cleanupSession(final GeckoSession session) {
@@ -1424,7 +1436,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         return session.equals(mMainSession) || mSubSessions.contains(session);
     }
 
-    protected void deleteCrashDumps() {
+    protected static void deleteCrashDumps() {
         File dumpDir = new File(sRuntime.getProfileDir(), "minidumps");
         for (final File dump : dumpDir.listFiles()) {
             dump.delete();
@@ -1437,10 +1449,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         for (final GeckoSession session : mSubSessions) {
             cleanupSession(session);
-        }
-
-        if (sCachedSession != null && mReuseSession && !mIgnoreCrash) {
-            assertThat("Cached session should be open", sCachedSession.isOpen(), equalTo(true));
         }
 
         if (mMainSession.isOpen() && mMainSession.equals(sCachedSession)) {
