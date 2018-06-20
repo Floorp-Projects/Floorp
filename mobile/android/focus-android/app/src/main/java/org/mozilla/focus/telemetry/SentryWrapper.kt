@@ -36,4 +36,8 @@ object SentryWrapper {
         val sentryDsn = if (isEnabled) BuildConfig.SENTRY_TOKEN else null
         Sentry.init(sentryDsn, AndroidSentryClientFactory(context.applicationContext))
     }
+
+    fun captureGeckoCrash() {
+        Sentry.capture("GeckoSession crashes, opening new session")
+    }
 }
