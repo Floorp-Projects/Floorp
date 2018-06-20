@@ -16,8 +16,6 @@
   <script type="application/javascript"
           src="chrome://devtools/content/shared/theme-switching.js"/>
 
-  <script type="application/javascript" src="shadereditor.js"/>
-
   <vbox class="theme-body" flex="1">
     <hbox id="reload-notice"
           class="notice-container"

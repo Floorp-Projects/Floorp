@@ -8,19 +8,19 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { front, EVENTS, shadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
-  const vsEditor = await ShadersEditorsView._getEditor("vs");
-  const fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await shadersEditorsView._getEditor("vs");
+  const fsEditor = await shadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  let error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  let error = await panel.once(EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new vertex shader source was compiled with errors.");
@@ -40,7 +40,7 @@ async function ifWebGLSupported() {
     "An assignment error is contained in the info log.");
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  error = await panel.once(EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new fragment shader source was compiled with errors.");
@@ -54,19 +54,19 @@ async function ifWebGLSupported() {
   ok(infoLog.includes("ERROR: 0:6: 'constructor'"),
     "A constructor error is contained in the info log.");
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   vsEditor.replaceText("vec4", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  error = await panel.once(EVENTS.SHADER_COMPILED);
   ok(!error, "The new vertex shader source was compiled successfully.");
 
   fsEditor.replaceText("vec3", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  error = await panel.once(EVENTS.SHADER_COMPILED);
   ok(!error, "The new fragment shader source was compiled successfully.");
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   await teardown(panel);
   finish();
