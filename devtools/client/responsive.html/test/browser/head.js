@@ -293,18 +293,17 @@ function getContentSize(ui) {
   }));
 }
 
-function waitForPageShow(browser) {
-  const mm = browser.messageManager;
-  return new Promise(resolve => {
-    const onShow = message => {
-      if (message.target != browser) {
-        return;
-      }
-      mm.removeMessageListener("PageVisibility:Show", onShow);
-      resolve();
-    };
-    mm.addMessageListener("PageVisibility:Show", onShow);
-  });
+async function waitForPageShow(browser) {
+  const tab = gBrowser.getTabForBrowser(browser);
+  const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
+  if (ui) {
+    browser = ui.getViewportBrowser();
+  }
+  info("Waiting for pageshow from " + (ui ? "responsive" : "regular") + " browser");
+  // Need to wait an extra tick after pageshow to ensure everyone is up-to-date,
+  // hence the waitForTick.
+  await BrowserTestUtils.waitForContentEvent(browser, "pageshow");
+  return waitForTick();
 }
 
 function waitForViewportLoad(ui) {
