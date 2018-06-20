@@ -1768,6 +1768,23 @@ widget:
     record_in_processes:
       - 'main'
 
+  ime_name_on_linux:
+    bug_numbers:
+      - 1215818
+    description: >
+      Name of active IM (e.g., xim, fcitx, ibus, etc) which was actually set by
+      env on Linux.  Different from Windows and macOS, this value includes
+      non-IME users even though this is recoded when first compositionstart
+      event because dead key is also implemented by IME on Linux.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains memory reporter counters.
 memoryreporter:
   max_ghost_windows:

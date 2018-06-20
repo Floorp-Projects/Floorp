@@ -128,6 +128,12 @@ public:
         }
     }
 
+    /**
+     * GetIMName() returns IM name associated with mContext.  If the context is
+     * xim, this look for actual engine from XMODIFIERS environment variable.
+     */
+    nsDependentCSubstring GetIMName() const;
+
 protected:
     ~IMContextWrapper();
 
