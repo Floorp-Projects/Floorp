@@ -20,7 +20,7 @@ def load_scalar(scalar):
     :param scalar: Scalar as YAML string
     :returns: Parsed Scalar dictionary
     """
-    return yaml.load(scalar)
+    return yaml.safe_load(scalar)
 
 
 class TestParser(unittest.TestCase):
