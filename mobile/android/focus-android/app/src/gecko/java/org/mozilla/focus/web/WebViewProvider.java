@@ -482,9 +482,17 @@ public class WebViewProvider {
         }
 
         @Override
-        @SuppressWarnings({"PMD.NcssMethodCount"})
         public void saveWebViewState(@NonNull final Session session) {
             final CountDownLatch latch = new CountDownLatch(1);
+            saveStateInBackground(latch, session);
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                // State was not saved
+            }
+        }
+
+        private void saveStateInBackground(final CountDownLatch latch, final Session session) {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -503,11 +511,6 @@ public class WebViewProvider {
                     geckoSession.saveState(response);
                 }
             });
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                // State was not saved
-            }
         }
 
         @Override
