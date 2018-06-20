@@ -46,6 +46,12 @@ let whitelist = [
   {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,
    isFromDevTools: false},
+  // The '-moz-menulist-button' value is only supported in chrome and UA sheets
+  // but forms.css is loaded as a document sheet by this test.
+  // Maybe bug 1261237 will fix this?
+  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+   errorMessage: /Error in parsing value for \u2018-moz-appearance\u2019/iu,
+   isFromDevTools: false},
   // These variables are declared somewhere else, and error when we load the
   // files directly. They're all marked intermittent because their appearance
   // in the error console seems to not be consistent.
