@@ -199,6 +199,7 @@ static const char kFontTwemojiMozilla[] = "Twemoji Mozilla";
 static const char kFontDroidSansFallback[] = "Droid Sans Fallback";
 static const char kFontWenQuanYiMicroHei[] = "WenQuanYi Micro Hei";
 static const char kFontNanumGothic[] = "NanumGothic";
+static const char kFontSymbola[] = "Symbola";
 
 void
 gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
@@ -219,6 +220,7 @@ gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
     aFontList.AppendElement(kFontFreeSerif);
     aFontList.AppendElement(kFontDejaVuSans);
     aFontList.AppendElement(kFontFreeSans);
+    aFontList.AppendElement(kFontSymbola);
 
     // add fonts for CJK ranges
     // xxx - this isn't really correct, should use the same CJK font ordering
