@@ -1044,6 +1044,16 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Anti-Tracking prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "privacy.trackingprotection.storagerestriction.enabled",
+   privacy_trackingprotection_storagerestriction_enabled,
+  bool, false
+)
+
+//---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------
 
