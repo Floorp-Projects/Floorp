@@ -31,6 +31,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/RangedPtr.h"
 
 #include <algorithm>
 #include <utility>
@@ -43,6 +44,9 @@
 #include "js/Date.h"
 #include "js/GCHashTable.h"
 #include "js/Wrapper.h"
+#ifdef ENABLE_BIGINT
+#include "vm/BigIntType.h"
+#endif
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/SavedFrame.h"
@@ -59,6 +63,7 @@ using namespace js;
 using mozilla::BitwiseCast;
 using mozilla::NativeEndian;
 using mozilla::NumbersAreIdentical;
+using mozilla::RangedPtr;
 using JS::CanonicalizeNaN;
 
 // When you make updates here, make sure you consider whether you need to bump the
@@ -106,6 +111,9 @@ enum StructuredDataType : uint32_t {
 
     SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
     SCTAG_SHARED_WASM_MEMORY_OBJECT,
+
+    SCTAG_BIGINT,
+    SCTAG_BIGINT_OBJECT,
 
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -413,6 +421,10 @@ struct JSStructuredCloneReader {
     JSString* readStringImpl(uint32_t nchars);
     JSString* readString(uint32_t data);
 
+#ifdef ENABLE_BIGINT
+    BigInt* readBigInt(uint32_t data);
+#endif
+
     bool checkDouble(double d);
     MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp,
                                      bool v1Read = false);
@@ -514,6 +526,10 @@ struct JSStructuredCloneWriter {
     bool traverseMap(HandleObject obj);
     bool traverseSet(HandleObject obj);
     bool traverseSavedFrame(HandleObject obj);
+
+#ifdef ENABLE_BIGINT
+    bool writeBigInt(uint32_t tag, BigInt* bi);
+#endif
 
     bool reportDataCloneError(uint32_t errorId);
 
@@ -1160,6 +1176,28 @@ JSStructuredCloneWriter::writeString(uint32_t tag, JSString* str)
            : out.writeChars(linear->twoByteChars(nogc), length);
 }
 
+#ifdef ENABLE_BIGINT
+bool
+JSStructuredCloneWriter::writeBigInt(uint32_t tag, BigInt* bi)
+{
+    bool signBit = bi->sign() < 1;
+    size_t length = BigInt::byteLength(bi);
+    // The length must fit in 31 bits to leave room for a sign bit.
+    if (length > size_t(INT32_MAX))
+        return false;
+    uint32_t lengthAndSign = length | (static_cast<uint32_t>(signBit) << 31);
+
+    js::UniquePtr<uint8_t> buf(static_cast<uint8_t*>(js_malloc(length)));
+    if (!buf)
+        return false;
+
+    BigInt::writeBytes(bi, RangedPtr<uint8_t>(buf.get(), length));
+    if (!out.writePair(tag, lengthAndSign))
+        return false;
+    return out.writeBytes(buf.get(), length);
+}
+#endif
+
 inline void
 JSStructuredCloneWriter::checkStack()
 {
@@ -1534,7 +1572,13 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         return out.writePair(SCTAG_NULL, 0);
     } else if (v.isUndefined()) {
         return out.writePair(SCTAG_UNDEFINED, 0);
-    } else if (v.isObject()) {
+    }
+#ifdef ENABLE_BIGINT
+    else if (v.isBigInt()) {
+        return writeBigInt(SCTAG_BIGINT, v.toBigInt());
+    }
+#endif
+    else if (v.isObject()) {
         RootedObject obj(context(), &v.toObject());
 
         bool backref;
@@ -1591,7 +1635,16 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return traverseMap(obj);
         } else if (cls == ESClass::Set) {
             return traverseSet(obj);
-        } else if (SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
+        }
+#ifdef ENABLE_BIGINT
+        else if (cls == ESClass::BigInt) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return writeBigInt(SCTAG_BIGINT_OBJECT, unboxed.toBigInt());
+        }
+#endif
+        else if (SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
             return traverseSavedFrame(obj);
         }
 
@@ -1903,6 +1956,25 @@ JSStructuredCloneReader::readString(uint32_t data)
     bool latin1 = data & (1 << 31);
     return latin1 ? readStringImpl<Latin1Char>(nchars) : readStringImpl<char16_t>(nchars);
 }
+
+#ifdef ENABLE_BIGINT
+BigInt*
+JSStructuredCloneReader::readBigInt(uint32_t data)
+{
+    size_t nbytes = data & JS_BITMASK(31);
+    bool isNegative = data & (1 << 31);
+
+    if (nbytes == 0)
+        return BigInt::create(context());
+
+    UniquePtr<uint8_t> buf(static_cast<uint8_t*>(js_malloc(nbytes)));
+    if (!buf)
+        return nullptr;
+    if (!in.readBytes(buf.get(), nbytes))
+        return nullptr;
+    return BigInt::createFromBytes(context(), isNegative ? -1 : 1, buf.get(), nbytes);
+}
+#endif
 
 static uint32_t
 TagToV1ArrayType(uint32_t tag)
@@ -2222,6 +2294,24 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
         if (!PrimitiveToObject(context(), vp))
             return false;
         break;
+      }
+
+      case SCTAG_BIGINT:
+      case SCTAG_BIGINT_OBJECT: {
+#ifdef ENABLE_BIGINT
+        RootedBigInt bi(context(), readBigInt(data));
+        if (!bi)
+            return false;
+        vp.setBigInt(bi);
+        if (tag == SCTAG_BIGINT_OBJECT && !PrimitiveToObject(context(), vp))
+            return false;
+        break;
+#else
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                  JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "BigInt unsupported");
+        return false;
+#endif
       }
 
       case SCTAG_DATE_OBJECT: {
