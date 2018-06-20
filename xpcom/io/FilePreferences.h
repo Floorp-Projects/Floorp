@@ -13,6 +13,12 @@ void InitPrefs();
 void InitDirectoriesWhitelist();
 bool IsBlockedUNCPath(const nsAString& aFilePath);
 
+#ifdef XP_WIN
+bool IsAllowedPath(const nsAString& aFilePath);
+#else
+bool IsAllowedPath(const nsACString& aFilePath);
+#endif
+
 namespace testing {
 
 void SetBlockUNCPaths(bool aBlock);
