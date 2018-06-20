@@ -43,41 +43,41 @@
 
     <ImageButton
         android:id="@+id/previousResult"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginEnd="6dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/accessibility_previous_result"
+        android:src="@drawable/ic_arrowhead_up"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/nextResult"
         app:layout_constraintStart_toEndOf="@+id/resultText"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/accessibility_previous_result"
-        android:src="@drawable/ic_arrowhead_up" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/nextResult"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginEnd="6dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/accessibility_next_result"
+        android:src="@drawable/ic_arrowhead_down"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/close_find_in_page"
         app:layout_constraintStart_toEndOf="@+id/previousResult"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/accessibility_next_result"
-        android:src="@drawable/ic_arrowhead_down" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/close_find_in_page"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
         android:layout_marginEnd="12dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/accessibility_dismiss_find_in_page"
+        android:src="@drawable/ic_close"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/nextResult"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/accessibility_dismiss_find_in_page"
-        android:src="@drawable/ic_close" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
