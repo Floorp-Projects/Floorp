@@ -22,7 +22,7 @@
       <div id="name-container">
         <label id="given-name-container">
           <span data-localization="givenName"/>
-          <input id="given-name" type="text"/>
+          <input id="given-name" type="text" required="true"/>
         </label>
         <label id="additional-name-container">
           <span data-localization="additionalName"/>
@@ -39,24 +39,24 @@
       </label>
       <label id="street-address-container">
         <span data-localization="streetAddress"/>
-        <textarea id="street-address" rows="3"/>
+        <textarea id="street-address" rows="3" required="true"/>
       </label>
       <label id="address-level2-container">
         <span data-localization="city"/>
-        <input id="address-level2" type="text"/>
+        <input id="address-level2" type="text" required="true"/>
       </label>
       <label id="address-level1-container">
         <span/>
-        <input id="address-level1" type="text"/>
+        <input id="address-level1" type="text" required="true"/>
       </label>
       <label id="postal-code-container">
         <span/>
-        <input id="postal-code" type="text"/>
+        <input id="postal-code" type="text" required="true"/>
       </label>
     </div>
     <label id="country-container">
       <span data-localization="country"/>
-      <select id="country">
+      <select id="country" required="true">
         <option/>
       </select>
     </label>

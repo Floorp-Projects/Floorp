@@ -146,10 +146,17 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.formHandler.loadRecord(record);
 
     // Add validation to some address fields
-    let postalCodeInput = this.form.querySelector("#postal-code");
-    let addressLevel1Input = this.form.querySelector("#address-level1");
-    for (let element of [postalCodeInput, addressLevel1Input]) {
-      element.required = element.closest(`#${element.id}-container`).style.display != "none";
+    for (let formElement of this.form.elements) {
+      let container = formElement.closest(`#${formElement.id}-container`);
+      if (formElement.localName == "button" || !container) {
+        continue;
+      }
+      let required = formElement.required && !formElement.disabled;
+      if (required) {
+        container.setAttribute("required", "true");
+      } else {
+        container.removeAttribute("required");
+      }
     }
 
     let shippingAddressErrors = request.paymentDetails.shippingAddressErrors;
