@@ -192,7 +192,6 @@ function awaitPromise(promise) {
   if (!success)
     throw result;
   return result;
-
 }
 
 /**
@@ -832,7 +831,6 @@ class DirectoryLocation extends XPIStateLocation {
   constructor(name, dir, scope, locked = true) {
     super(name, dir, scope);
     this.locked = locked;
-    this.initialized = false;
   }
 
   makeInstaller() {
@@ -911,7 +909,6 @@ class DirectoryLocation extends XPIStateLocation {
     if (!this.dir) {
       return addons;
     }
-    this.initialized = true;
 
     // Use a snapshot of the directory contents to avoid possible issues with
     // iterating over a directory while removing files from it (the YAFFS2
@@ -1585,6 +1582,8 @@ class BootstrapScope {
       } else {
         logger.debug(`Calling bootstrap method ${aMethod} on ${addon.id} version ${addon.version}`);
 
+        this._beforeCallBootstrapMethod(aMethod, params, aReason);
+
         try {
           result = method.call(scope, params, aReason);
         } catch (e) {
@@ -1607,6 +1606,9 @@ class BootstrapScope {
       }
     }
   }
+
+  // No-op method to be overridden by tests.
+  _beforeCallBootstrapMethod() {}
 
   /**
    * Loads a bootstrapped add-on's bootstrap.js into a sandbox and the reason
@@ -1854,8 +1856,6 @@ var XPIProvider = {
 
   // A Map of active addons to their bootstrapScope by ID
   activeAddons: new Map(),
-  // True if the platform could have activated extensions
-  extensionsActive: false,
   // Per-addon telemetry information
   _telemetryDetails: {},
   // Have we started shutting down bootstrap add-ons?
@@ -2234,8 +2234,6 @@ var XPIProvider = {
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
 
-      this.extensionsActive = true;
-
       timerManager.registerTimer("xpi-signature-verification", () => {
         XPIDatabase.verifySignatures();
       }, XPI_SIGNATURE_CHECK_PERIOD);
@@ -2279,9 +2277,6 @@ var XPIProvider = {
     if (!XPIDatabase.initialized) {
       await XPIDatabase.asyncLoadDB();
     }
-
-    // This is needed to allow xpcshell tests to simulate a restart
-    this.extensionsActive = false;
 
     await XPIDatabase.shutdown();
   },
@@ -2579,7 +2574,7 @@ var XPIProvider = {
 
     let addons = await Promise.all(
       Array.from(XPIStates.sideLoadedAddons.keys(),
-                 id => AddonManager.getAddonByID(id)));
+                 id => this.getAddonByID(id)));
 
     return addons.filter(addon => (addon.seen === false &&
                                    addon.permissions & AddonManager.PERM_CAN_ENABLE));
@@ -2620,25 +2615,6 @@ var XPIProvider = {
     XPIStates.save();
   },
 
-  /**
-   * Returns an Addon corresponding to an instance ID.
-   *
-   * @param {Symbol} aInstanceID
-   *        An Addon Instance ID
-   *
-   * @returns {AddonInternal?}
-   *
-   * @throws if the aInstanceID argument is not valid.
-   */
-   getAddonByInstanceID(aInstanceID) {
-     let id = this.getAddonIDByInstanceID(aInstanceID);
-     if (id) {
-       return XPIDatabase.syncGetAddonByID(id);
-     }
-
-     return null;
-   },
-
    getAddonIDByInstanceID(aInstanceID) {
      if (!aInstanceID || typeof aInstanceID != "symbol")
        throw Components.Exception("aInstanceID must be a Symbol()",
@@ -2670,17 +2646,11 @@ var XPIProvider = {
   async getActiveAddons(aTypes) {
     // If we already have the database loaded, returning full info is fast.
     if (this.isDBLoaded) {
-      let addons = await XPIProvider.getAddonsByTypes(aTypes);
+      let addons = await this.getAddonsByTypes(aTypes);
       return {
         addons: addons.filter(addon => addon.isActive),
         fullData: true,
       };
-    }
-
-    // Construct addon-like objects with the information we already
-    // have in memory.
-    if (!XPIStates.db) {
-      throw new Error("XPIStates not yet initialized");
     }
 
     let result = [];
@@ -2688,11 +2658,7 @@ var XPIProvider = {
       if (aTypes && !aTypes.includes(addon.type)) {
         continue;
       }
-      let {location} = addon;
-      let scope, isSystem;
-      if (location) {
-        ({scope, isSystem} = location);
-      }
+      let {scope, isSystem} = addon.location;
       result.push({
         id: addon.id,
         version: addon.version,

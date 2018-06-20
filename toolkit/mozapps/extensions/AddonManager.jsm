@@ -2053,33 +2053,6 @@ var AddonManagerInternal = {
                                .installTemporaryAddon(aFile);
   },
 
-  /**
-   * Returns an Addon corresponding to an instance ID.
-   * @param aInstanceID
-   *        An Addon Instance ID symbol
-   * @return {Promise}
-   * @resolves The found Addon or null if no such add-on exists.
-   * @rejects  Never
-   * @throws if the aInstanceID argument is not specified
-   *         or the AddonManager is not initialized
-   */
-   async getAddonByInstanceID(aInstanceID) {
-     return this.syncGetAddonByInstanceID(aInstanceID);
-   },
-
-   syncGetAddonByInstanceID(aInstanceID) {
-     if (!gStarted)
-       throw Components.Exception("AddonManager is not initialized",
-                                  Cr.NS_ERROR_NOT_INITIALIZED);
-
-     if (!aInstanceID || typeof aInstanceID != "symbol")
-       throw Components.Exception("aInstanceID must be a Symbol()",
-                                  Cr.NS_ERROR_INVALID_ARG);
-
-     return AddonManagerInternal._getProviderByName("XPIProvider")
-                                .getAddonByInstanceID(aInstanceID);
-   },
-
    syncGetAddonIDByInstanceID(aInstanceID) {
      if (!gStarted)
        throw Components.Exception("AddonManager is not initialized",
@@ -3369,10 +3342,6 @@ var AddonManager = {
 
   installTemporaryAddon(aDirectory) {
     return AddonManagerInternal.installTemporaryAddon(aDirectory);
-  },
-
-  getAddonByInstanceID(aInstanceID) {
-    return AddonManagerInternal.getAddonByInstanceID(aInstanceID);
   },
 
   addManagerListener(aListener) {
