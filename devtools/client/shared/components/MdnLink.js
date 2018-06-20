@@ -4,12 +4,11 @@
 
 "use strict";
 
-const Services = require("Services");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { gDevTools } = require("devtools/client/framework/devtools");
-
 const { a } = dom;
+
+loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
 
 function MDNLink({ url, title }) {
   return (
@@ -30,15 +29,7 @@ MDNLink.propTypes = {
 function onLearnMoreClick(e, url) {
   e.stopPropagation();
   e.preventDefault();
-
-  const win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  const { button, ctrlKey, metaKey } = e;
-  const isOSX = Services.appinfo.OS == "Darwin";
-  let where = "tab";
-  if (button === 1 || (button === 0 && (isOSX ? metaKey : ctrlKey))) {
-    where = "tabshifted";
-  }
-  win.openWebLinkIn(url, where, {triggeringPrincipal: win.document.nodePrincipal});
+  openDocLink(url);
 }
 
 module.exports = MDNLink;

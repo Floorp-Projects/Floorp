@@ -11,7 +11,6 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
-testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");

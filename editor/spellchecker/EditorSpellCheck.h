@@ -16,6 +16,7 @@
 #include "nscore.h"                     // for nsresult
 
 class mozSpellChecker;
+class nsComposeTxtSrvFilter;
 class nsIEditor;
 class nsISpellChecker;
 class nsITextServicesFilter;
@@ -57,7 +58,7 @@ protected:
   virtual ~EditorSpellCheck();
 
   RefPtr<mozSpellChecker> mSpellChecker;
-  nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
+  RefPtr<nsComposeTxtSrvFilter> mTxtSrvFilter;
   RefPtr<EditorBase> mEditor;
 
   nsTArray<nsString> mSuggestedWordList;

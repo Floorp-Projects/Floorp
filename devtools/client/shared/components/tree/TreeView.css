@@ -57,6 +57,10 @@
   overflow: hidden;
   padding-inline-start: 4px;
   white-space: nowrap;
+}
+
+.treeTable .treeValueCell > [aria-labelledby],
+.treeTable .treeLabelCell > .treeLabel {
   unicode-bidi: plaintext;
 }
 

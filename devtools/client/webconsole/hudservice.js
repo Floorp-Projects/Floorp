@@ -16,6 +16,7 @@ loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
 loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/webconsole-l10n");
+loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
 const BC_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 // The preference prefix for all of the Browser Console filters.
@@ -364,12 +365,7 @@ WebConsole.prototype = {
    *        The URL you want to open in a new tab.
    */
   openLink(link, e) {
-    const isOSX = Services.appinfo.OS == "Darwin";
-    let where = "tab";
-    if (e && (e.button === 1 || (e.button === 0 && (isOSX ? e.metaKey : e.ctrlKey)))) {
-      where = "tabshifted";
-    }
-    this.chromeUtilsWindow.openWebLinkIn(link, where);
+    openDocLink(link);
   },
 
   /**

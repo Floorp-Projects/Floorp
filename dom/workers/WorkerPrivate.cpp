@@ -9,11 +9,11 @@
 #include "js/MemoryMetrics.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
@@ -431,7 +431,8 @@ private:
     // Let's be sure that it is created before any
     // content loading.
     aWorkerPrivate->EnsurePerformanceStorage();
-    if (mozilla::dom::DOMPrefs::SchedulerLoggingEnabled()) {
+
+    if (mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
       aWorkerPrivate->EnsurePerformanceCounter();
     }
 
@@ -5381,16 +5382,16 @@ void
 WorkerPrivate::EnsurePerformanceCounter()
 {
   AssertIsOnWorkerThread();
-  MOZ_ASSERT(mozilla::dom::DOMPrefs::SchedulerLoggingEnabled());
+  MOZ_ASSERT(mozilla::StaticPrefs::dom_performance_enable_scheduler_timing());
   if (!mPerformanceCounter) {
-    mPerformanceCounter = new PerformanceCounter(NS_ConvertUTF16toUTF8(mWorkerName));
+    nsPrintfCString workerName("Worker:%s", NS_ConvertUTF16toUTF8(mWorkerName).get());
+    mPerformanceCounter = new PerformanceCounter(workerName);
   }
 }
 
 PerformanceCounter*
 WorkerPrivate::GetPerformanceCounter()
 {
-  MOZ_ASSERT(mPerformanceCounter);
   return mPerformanceCounter;
 }
 

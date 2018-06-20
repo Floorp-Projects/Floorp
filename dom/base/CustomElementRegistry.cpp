@@ -981,6 +981,45 @@ CustomElementRegistry::SetElementCreationCallback(const nsAString& aName,
   return;
 }
 
+static void
+TryUpgrade(nsINode& aNode)
+{
+  Element* element = aNode.IsElement() ? aNode.AsElement() : nullptr;
+  if (element) {
+    CustomElementData* ceData = element->GetCustomElementData();
+    if (ceData) {
+      NodeInfo* nodeInfo = element->NodeInfo();
+      nsAtom* typeAtom = ceData->GetCustomElementType();
+      CustomElementDefinition* definition =
+        nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
+                                                      nodeInfo->NameAtom(),
+                                                      nodeInfo->NamespaceID(),
+                                                      typeAtom);
+      if (definition) {
+        nsContentUtils::EnqueueUpgradeReaction(element, definition);
+      }
+    }
+
+    if (ShadowRoot* root = element->GetShadowRoot()) {
+      for (Element* child = root->GetFirstElementChild(); child;
+           child = child->GetNextElementSibling()) {
+        TryUpgrade(*child);
+      }
+    }
+  }
+
+  for (Element* child = aNode.GetFirstElementChild(); child;
+       child = child->GetNextElementSibling()) {
+    TryUpgrade(*child);
+  }
+}
+
+void
+CustomElementRegistry::Upgrade(nsINode& aRoot)
+{
+  TryUpgrade(aRoot);
+}
+
 void
 CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
                            JS::MutableHandle<JS::Value> aRetVal)

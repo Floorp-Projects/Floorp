@@ -33,9 +33,47 @@ const NOUPDATE_ID = "test_no_update_webext@tests.mozilla.org";
 // Create and configure the HTTP server.
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
-testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+
+const ADDONS = {
+  test_delay_update_complete_webextension_v2: {
+    "manifest.json": {
+      "manifest_version": 2,
+      "name": "Delay Upgrade",
+      "version": "2.0",
+      "applications": {
+        "gecko": {id: COMPLETE_ID}
+      }
+    }
+  },
+  test_delay_update_defer_webextension_v2: {
+    "manifest.json": {
+      "manifest_version": 2,
+      "name": "Delay Upgrade",
+      "version": "2.0",
+      "applications": {
+        "gecko": {id: DEFER_ID}
+      }
+    }
+  },
+  test_delay_update_ignore_webextension_v2: {
+    "manifest.json": {
+      "manifest_version": 2,
+      "name": "Delay Upgrade",
+      "version": "2.0",
+      "applications": {
+        "gecko": {id: IGNORE_ID}
+      }
+    }
+  },
+};
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+}
 
 // add-on registers upgrade listener, and ignores update.
 add_task(async function delay_updates_ignore() {

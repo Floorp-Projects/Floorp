@@ -17,9 +17,6 @@ Services.prefs.setIntPref("extensions.enabledScopes",
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
-const ID_DICT = "ab-CD@dictionaries.addons.mozilla.org";
-const XPI_DICT = do_get_addon("test_dictionary");
-
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 const profileDir = gProfD.clone();
@@ -35,8 +32,51 @@ registerDirectory("XREUSysExt", userExtDir.parent);
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
 // register files with server
-testserver.registerDirectory("/addons/", do_get_file("addons"));
 testserver.registerDirectory("/data/", do_get_file("data"));
+
+const ADDONS = {
+  test_dictionary: {
+    "install.rdf": {
+      "id": "ab-CD@dictionaries.addons.mozilla.org",
+      "type": "64",
+      "name": "Test Dictionary",
+    },
+    "dictionaries/ab-CD.dic": "1\ntest1\n",
+    "chrome.manifest": "content dict ./\n"
+  },
+  test_dictionary_3: {
+    "install.rdf": {
+      "id": "ab-CD@dictionaries.addons.mozilla.org",
+      "version": "2.0",
+      "type": "64",
+      "name": "Test Dictionary",
+    }
+  },
+  test_dictionary_4: {
+    "install.rdf": {
+      "id": "ef@dictionaries.addons.mozilla.org",
+      "version": "2.0",
+      "name": "Test Dictionary ef",
+    }
+  },
+  test_dictionary_5: {
+    "install.rdf": {
+      "id": "gh@dictionaries.addons.mozilla.org",
+      "version": "2.0",
+      "type": "64",
+      "name": "Test Dictionary gh",
+    }
+  },
+};
+
+const ID_DICT = "ab-CD@dictionaries.addons.mozilla.org";
+const XPI_DICT = AddonTestUtils.createTempXPIFile(ADDONS.test_dictionary);
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+}
 
 /**
  * This object is both a factory and an mozISpellCheckingEngine implementation (so, it
@@ -126,8 +166,7 @@ add_task(async function test_1() {
 
   HunspellEngine.activate();
 
-  let install = await AddonManager.getInstallForFile(
-    do_get_addon("test_dictionary"));
+  let install = await AddonManager.getInstallForFile(XPI_DICT);
   ensure_test_completed();
 
   notEqual(install, null);
@@ -363,7 +402,7 @@ add_task(async function test_12() {
 // Tests that bootstrapped extensions don't get loaded when in safe mode
 add_task(async function test_16() {
   await promiseRestartManager();
-  await promiseInstallFile(do_get_addon("test_dictionary"));
+  await promiseInstallFile(XPI_DICT);
 
   let addon = await AddonManager.getAddonByID(ID_DICT);
   // Should have installed and started

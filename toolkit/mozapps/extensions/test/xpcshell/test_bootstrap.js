@@ -33,84 +33,47 @@ userExtDir.append(gAppInfo.ID);
 registerDirectory("XREUSysExt", userExtDir.parent);
 
 
-const BOOTSTRAP = `
-  ChromeUtils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);
-`;
-
 const ADDONS = {
   test_bootstrap1_1: {
     "install.rdf": {
       id: "bootstrap1@tests.mozilla.org",
-      version: "1.0",
-      bootstrap: "true",
-      multiprocessCompatible: "true",
 
       name: "Test Bootstrap 1",
-      description: "Test Description",
 
       iconURL: "chrome://foo/skin/icon.png",
       aboutURL: "chrome://foo/content/about.xul",
       optionsURL: "chrome://foo/content/options.xul",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
   test_bootstrap1_2: {
     "install.rdf": {
       id: "bootstrap1@tests.mozilla.org",
       version: "2.0",
-      bootstrap: "true",
 
       name: "Test Bootstrap 1",
-      description: "Test Description",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
   test_bootstrap1_3: {
     "install.rdf": {
       id: "bootstrap1@tests.mozilla.org",
       version: "3.0",
-      bootstrap: "true",
 
       name: "Test Bootstrap 1",
-      description: "Test Description",
 
       targetApplications: [{
         id: "undefined",
         minVersion: "1",
         maxVersion: "1"}],
     },
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
   test_bootstrap2_1: {
     "install.rdf": {
       id: "bootstrap2@tests.mozilla.org",
-      version: "1.0",
-      bootstrap: "true",
-      multiprocessCompatible: "true",
-
-      name: "Test Bootstrap 2",
-      description: "Test Description",
-
-      iconURL: "chrome://foo/skin/icon.png",
-      aboutURL: "chrome://foo/content/about.xul",
-      optionsURL: "chrome://foo/content/options.xul",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
 };
 

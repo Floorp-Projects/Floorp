@@ -29,7 +29,6 @@ const tests = [{
       actions: [],
       value: "",
       description: "",
-      help: "",
       keyboardShortcut: "",
       childCount: 0,
       indexInParent: 0,

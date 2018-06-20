@@ -8,8 +8,6 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 BootstrapMonitor.init();
 
-const BOOTSTRAP_JS = `ChromeUtils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);`;
-
 // Ensure that a proxy file to an add-on with a valid manifest works.
 add_task(async function() {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
@@ -29,7 +27,7 @@ add_task(async function() {
     }],
     name: "Test Bootstrap 1 (proxy)",
   }, tempdir, ID, {
-    "bootstrap.js": BOOTSTRAP_JS,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   });
 
   // create proxy file in profile/extensions dir
@@ -57,7 +55,7 @@ add_task(async function() {
     Assert.ok(!addon.appDisabled);
     Assert.ok(addon.isActive);
     Assert.equal(addon.type, "extension");
-    Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_UNKNOWN);
 
     Assert.ok(proxyFile.exists());
 
@@ -87,7 +85,7 @@ add_task(async function() {
     }],
     name: "Test Bootstrap 1 (proxy)",
   }, tempdir, ID, {
-    "bootstrap.js": BOOTSTRAP_JS,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   });
 
   // create proxy file in profile/extensions dir

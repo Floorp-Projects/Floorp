@@ -20,9 +20,9 @@ using namespace js;
 
 Symbol*
 Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash, JSAtom* description,
-                    AutoLockForExclusiveAccess& lock)
+                    const AutoAccessAtomsZone& access)
 {
-    MOZ_ASSERT(cx->zone() == cx->atomsZone(lock));
+    MOZ_ASSERT(cx->zone() == cx->atomsZone(access));
 
     // Following js::AtomizeString, we grudgingly forgo last-ditch GC here.
     Symbol* p = Allocate<JS::Symbol, NoGC>(cx);

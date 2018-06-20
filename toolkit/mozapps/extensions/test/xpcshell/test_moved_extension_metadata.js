@@ -49,9 +49,7 @@ const ADDONS = [
   {
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
-      version: "1.0",
       name: "Test 2",
-      bootstrap: true,
 
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",

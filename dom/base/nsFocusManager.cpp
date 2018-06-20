@@ -3486,10 +3486,11 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       }
     }
 
-    // If aStartContent is not in scope owned by aRootContent
-    // (e.g., aStartContent is already in shadow DOM),
+    // If aStartContent is not in a scope owned by the root element
+    // (i.e. aStartContent is already in shadow DOM),
     // search from scope including aStartContent
-    if (aRootContent != FindOwner(aStartContent)) {
+    nsIContent* rootElement = aRootContent->OwnerDoc()->GetRootElement();
+    if (rootElement != FindOwner(aStartContent)) {
       nsIContent* contentToFocus =
         GetNextTabbableContentInAncestorScopes(&aStartContent,
                                                aOriginalStartContent,

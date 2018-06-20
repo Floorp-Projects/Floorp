@@ -52,23 +52,10 @@ add_task(async function() {
 
   info("Clicking on the Learn More link");
   const learnMoreLink = mixedActiveContentMessage.querySelector(".learn-more-link");
-  let linkSimulation = await simulateLinkClick(learnMoreLink);
+  const linkSimulation = await simulateLinkClick(learnMoreLink);
   checkLink({
     ...linkSimulation,
     expectedLink: LEARN_MORE_URI,
     expectedTab: "tab"
-  });
-
-  const isOSX = Services.appinfo.OS == "Darwin";
-  const ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
-    bubbles: true,
-    [isOSX ? "metaKey" : "ctrlKey"]: true,
-    view: window
-  });
-  linkSimulation = await simulateLinkClick(learnMoreLink, ctrlOrCmdKeyMouseEvent);
-  checkLink({
-    ...linkSimulation,
-    expectedLink: LEARN_MORE_URI,
-    expectedTab: "tabshifted"
   });
 });

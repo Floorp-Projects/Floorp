@@ -1,0 +1,9 @@
+This is intended to run in jsshell-bench.  We are migrating this from arewefastyet:
+https://github.com/mozilla/arewefastyet/tree/master/benchmarks/asmjs-apps
+
+There is no documentation on where this was pulled from, but it appears to be related to:
+https://github.com/kripken/Massive
+
+This benchmark has .js files which are 'minified' and to save space, we have removed the raw files
+which were stored in directories.  For example, box2d.js comes from the files in box2d/*.  We only
+have box2d.js in here.

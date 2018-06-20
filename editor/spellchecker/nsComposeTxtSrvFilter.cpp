@@ -18,51 +18,57 @@ nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
 
 NS_IMPL_ISUPPORTS(nsComposeTxtSrvFilter, nsITextServicesFilter)
 
-NS_IMETHODIMP
-nsComposeTxtSrvFilter::Skip(nsINode* aNode, bool *_retval)
+bool
+nsComposeTxtSrvFilter::Skip(nsINode* aNode) const
 {
-  *_retval = false;
-
-  // Check to see if we can skip this node
-  // For nodes that are blockquotes, we must make sure
-  // their type is "cite"
-  if (aNode) {
-    if (aNode->IsHTMLElement(nsGkAtoms::blockquote)) {
-      if (mIsForMail) {
-        *_retval = aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                   nsGkAtoms::type,
-                                                   nsGkAtoms::cite,
-                                                   eIgnoreCase);
-      }
-    } else if (aNode->IsHTMLElement(nsGkAtoms::span)) {
-      if (mIsForMail) {
-        *_retval = aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                   nsGkAtoms::mozquote,
-                                                   nsGkAtoms::_true,
-                                                   eIgnoreCase);
-        if (!*_retval) {
-          *_retval = aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                     nsGkAtoms::_class,
-                                                     nsGkAtoms::mozsignature,
-                                                     eCaseMatters);
-        }
-      }
-    } else if (aNode->IsAnyOfHTMLElements(nsGkAtoms::script,
-                                          nsGkAtoms::textarea,
-                                          nsGkAtoms::select,
-                                          nsGkAtoms::style,
-                                          nsGkAtoms::map)) {
-      *_retval = true;
-    } else if (aNode->IsHTMLElement(nsGkAtoms::table)) {
-      if (mIsForMail) {
-        *_retval =
-          aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                          nsGkAtoms::_class,
-                                          NS_LITERAL_STRING("moz-email-headers-table"),
-                                          eCaseMatters);
-      }
-    }
+  if (NS_WARN_IF(!aNode)) {
+    return false;
   }
 
-  return NS_OK;
+  // Check to see if we can skip this node
+
+  if (aNode->IsAnyOfHTMLElements(nsGkAtoms::script,
+                                 nsGkAtoms::textarea,
+                                 nsGkAtoms::select,
+                                 nsGkAtoms::style,
+                                 nsGkAtoms::map)) {
+    return true;
+  }
+
+  if (!mIsForMail) {
+    return false;
+  }
+
+  // For nodes that are blockquotes, we must make sure
+  // their type is "cite"
+  if (aNode->IsHTMLElement(nsGkAtoms::blockquote)) {
+    return aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::type,
+                                           nsGkAtoms::cite,
+                                           eIgnoreCase);
+  }
+
+  if (aNode->IsHTMLElement(nsGkAtoms::span)) {
+    if (aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                        nsGkAtoms::mozquote,
+                                        nsGkAtoms::_true,
+                                        eIgnoreCase)) {
+      return true;
+    }
+
+    return aNode->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::_class,
+                                           nsGkAtoms::mozsignature,
+                                           eCaseMatters);
+  }
+
+  if (aNode->IsHTMLElement(nsGkAtoms::table)) {
+    return aNode->AsElement()->AttrValueIs(
+                                 kNameSpaceID_None,
+                                 nsGkAtoms::_class,
+                                 NS_LITERAL_STRING("moz-email-headers-table"),
+                                 eCaseMatters);
+  }
+
+  return false;
 }

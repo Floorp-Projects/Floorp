@@ -10,6 +10,16 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+const ADDONS = {
+  test_bootstrap1_1: {
+    "install.rdf": {
+      "id": "bootstrap1@tests.mozilla.org",
+      "name": "Test Bootstrap 1",
+    },
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+  },
+};
+
 /* We want one add-on installed packed, and one installed unpacked
  */
 
@@ -25,26 +35,12 @@ function run_test() {
 add_task(async function setup() {
   await promiseWriteInstallRDFToXPI({
     id: "packed-enabled@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"
-    }],
     name: "Packed, Enabled",
   }, profileDir);
 
   // Packed, will be disabled
   await promiseWriteInstallRDFToXPI({
     id: "packed-disabled@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"
-    }],
     name: "Packed, Disabled",
   }, profileDir);
 });
@@ -137,13 +133,11 @@ add_task(async function uninstall_bootstrap() {
 add_task(async function install_bootstrap() {
   let XS = getXS();
 
-  let installer = await promiseInstallFile(
-    do_get_addon("test_bootstrap1_1"));
+  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.test_bootstrap1_1);
 
-  let newAddon = installer.addon;
-  let xState = XS.getAddon("app-profile", newAddon.id);
+  let xState = XS.getAddon("app-profile", addon.id);
   Assert.ok(!!xState);
   Assert.ok(xState.enabled);
-  Assert.equal(xState.mtime, newAddon.updateDate.getTime());
-  await newAddon.uninstall();
+  Assert.equal(xState.mtime, addon.updateDate.getTime());
+  await addon.uninstall();
 });

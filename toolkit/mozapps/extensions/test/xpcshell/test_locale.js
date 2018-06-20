@@ -2,6 +2,53 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const ADDONS = {
+  test_locale: {
+    "install.rdf": {
+      "id": "addon1@tests.mozilla.org",
+      "name": "Fallback Name",
+      "description": "Fallback Description",
+      "localized": [
+        {
+          "name": "fr-FR Name",
+          "description": "fr-FR Description",
+          "locale": [
+            "fr-FR",
+            ""
+          ],
+          "contributor": [
+            "Fr Contributor 1",
+            "Fr Contributor 2",
+            "Fr Contributor 3"
+          ]
+        },
+        {
+          "name": "de-DE Name",
+          "locale": [
+            "de-DE"
+          ]
+        },
+        {
+          "name": "es-ES Name",
+          "description": "es-ES Description",
+          "locale": [
+            "es-ES"
+          ]
+        },
+        {
+          "name": "Repeated locale",
+          "locale": [
+            "fr-FR"
+          ]
+        },
+        {
+          "name": "Missing locale"
+        }
+      ]
+    }
+  },
+};
+
 add_task(async function setup() {
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -12,7 +59,8 @@ add_task(async function setup() {
 add_task(async function test_1() {
   await restartWithLocales(["fr-FR"]);
 
-  let install = await AddonManager.getInstallForFile(do_get_addon("test_locale"));
+  let xpi = AddonTestUtils.createTempXPIFile(ADDONS.test_locale);
+  let install = await AddonManager.getInstallForFile(xpi);
   Assert.equal(install.addon.name, "fr-FR Name");
   Assert.equal(install.addon.description, "fr-FR Description");
 

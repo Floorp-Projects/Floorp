@@ -35,6 +35,7 @@ loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item"
 loader.lazyRequireGetter(this, "ExtensionSidebar", "devtools/client/inspector/extensions/extension-sidebar");
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
@@ -54,6 +55,7 @@ const PORTRAIT_MODE_WIDTH_THRESHOLD = 700;
 // mode.
 const SIDE_PORTAIT_MODE_WIDTH_THRESHOLD = 1000;
 
+const THREE_PANE_FIRST_RUN_PREF = "devtools.inspector.three-pane-first-run";
 const SHOW_THREE_PANE_ONBOARDING_PREF = "devtools.inspector.show-three-pane-tooltip";
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
@@ -120,6 +122,7 @@ function Inspector(toolbox) {
   this.previousURL = this.target.url;
 
   this.is3PaneModeEnabled = Services.prefs.getBoolPref(THREE_PANE_ENABLED_PREF);
+  this.is3PaneModeFirstRun = Services.prefs.getBoolPref(THREE_PANE_FIRST_RUN_PREF);
   this.show3PaneTooltip = Services.prefs.getBoolPref(SHOW_THREE_PANE_ONBOARDING_PREF);
 
   this.nodeMenuTriggerInfo = null;
@@ -248,6 +251,14 @@ Inspector.prototype = {
       this.target.on("thread-resumed", this._updateDebuggerPausedWarning);
       this.toolbox.on("select", this._updateDebuggerPausedWarning);
       this._updateDebuggerPausedWarning();
+    }
+
+    // Resets the inspector sidebar widths if this is the first run of the 3 pane mode.
+    if (this.is3PaneModeFirstRun) {
+      Services.prefs.clearUserPref("devtools.toolsidebar-width.inspector");
+      Services.prefs.clearUserPref("devtools.toolsidebar-height.inspector");
+      Services.prefs.clearUserPref("devtools.toolsidebar-width.inspector.splitsidebar");
+      Services.prefs.setBoolPref(THREE_PANE_FIRST_RUN_PREF, false);
     }
 
     this._initMarkup();
@@ -1396,6 +1407,7 @@ Inspector.prototype = {
     this._toolbox = null;
     this.breadcrumbs = null;
     this.is3PaneModeEnabled = null;
+    this.is3PaneModeFirstRun = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;
     this.panelWin = null;
@@ -2358,8 +2370,7 @@ Inspector.prototype = {
       this.inspector.resolveRelativeURL(
         link, this.selection.nodeFront).then(url => {
           if (type === "uri") {
-            const browserWin = this.target.tab.ownerDocument.defaultView;
-            browserWin.openWebLinkIn(url, "tab");
+            openContentLink(url);
           } else if (type === "cssresource") {
             return this.toolbox.viewSourceInStyleEditor(url);
           } else if (type === "jsresource") {

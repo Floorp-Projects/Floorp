@@ -13,8 +13,8 @@
 #include "nscore.h"
 
 class nsAtom;
+class nsComposeTxtSrvFilter;
 class nsINode;
-class nsITextServicesFilter;
 class nsRange;
 
 class nsFilteredContentIterator final : public nsIContentIterator
@@ -25,7 +25,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFilteredContentIterator)
 
-  explicit nsFilteredContentIterator(nsITextServicesFilter* aFilter);
+  explicit nsFilteredContentIterator(nsComposeTxtSrvFilter* aFilter);
 
   /* nsIContentIterator */
   virtual nsresult Init(nsINode* aRoot) override;
@@ -77,7 +77,7 @@ protected:
   RefPtr<nsAtom> mSelectAreaAtom;
   RefPtr<nsAtom> mMapAtom;
 
-  nsCOMPtr<nsITextServicesFilter> mFilter;
+  RefPtr<nsComposeTxtSrvFilter> mFilter;
   RefPtr<nsRange>               mRange;
   bool                            mDidSkip;
   bool                            mIsOutOfRange;

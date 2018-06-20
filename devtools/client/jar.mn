@@ -215,6 +215,8 @@ devtools.jar:
     skin/images/tool-application.svg (themes/images/tool-application.svg)
     skin/images/close.svg (themes/images/close.svg)
     skin/images/clear.svg (themes/images/clear.svg)
+    skin/images/close-3-pane.svg (themes/images/close-3-pane.svg)
+    skin/images/open-3-pane.svg (themes/images/open-3-pane.svg)
     skin/images/vview-delete.png (themes/images/vview-delete.png)
     skin/images/vview-delete@2x.png (themes/images/vview-delete@2x.png)
     skin/images/vview-edit.png (themes/images/vview-edit.png)

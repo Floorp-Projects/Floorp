@@ -24,6 +24,7 @@ from mozbuild.frontend.data import (
     GeneratedFile,
     GeneratedSources,
     HostDefines,
+    HostProgram,
     HostRustLibrary,
     HostRustProgram,
     HostSources,
@@ -75,6 +76,7 @@ class TestEmitterBasic(unittest.TestCase):
         substs = dict(
             ENABLE_TESTS='1' if enable_tests else '',
             BIN_SUFFIX='.prog',
+            HOST_BIN_SUFFIX='.hostprog',
             OS_TARGET='WINNT',
             COMPILE_ENVIRONMENT='1',
             STL_FLAGS=['-I/path/to/topobjdir/dist/stl_wrappers'],
@@ -697,6 +699,18 @@ class TestEmitterBasic(unittest.TestCase):
             '!/dist/bin/foo/dist-subdir.prog',
             '!/final/target/final-target.prog',
             '!not-installed.prog',
+        ])
+
+    def test_host_program_paths(self):
+        """The destination of a HOST_PROGRAM (almost always dist/host/bin)
+        should be accurately reflected in Program.output_path."""
+        reader = self.reader('host-program-paths')
+        objs = self.read_topsrcdir(reader)
+        prog_paths = [o.output_path for o in objs if isinstance(o, HostProgram)]
+        self.assertEqual(prog_paths, [
+            '!/dist/host/bin/final-target.hostprog',
+            '!/dist/host/bin/dist-host-bin.hostprog',
+            '!not-installed.hostprog',
         ])
 
     def test_test_manifest_missing_manifest(self):

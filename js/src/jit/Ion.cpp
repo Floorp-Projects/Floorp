@@ -582,7 +582,7 @@ jit::LazyLinkTopActivation(JSContext* cx, LazyLinkExitFrameLayout* frame)
 }
 
 /* static */ void
-JitRuntime::Trace(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+JitRuntime::Trace(JSTracer* trc, const AutoAccessAtomsZone& access)
 {
     MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
 
@@ -591,7 +591,7 @@ JitRuntime::Trace(JSTracer* trc, AutoLockForExclusiveAccess& lock)
     if (trc->runtime()->atomsAreFinished())
         return;
 
-    Zone* zone = trc->runtime()->atomsZone(lock);
+    Zone* zone = trc->runtime()->atomsZone(access);
     for (auto i = zone->cellIter<JitCode>(); !i.done(); i.next()) {
         JitCode* code = i;
         TraceRoot(trc, &code, "wrapper");

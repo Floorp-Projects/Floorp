@@ -17,6 +17,16 @@ distroDir.append("distribution");
 distroDir.append("extensions");
 registerDirectory("XREAppDist", distroDir.parent);
 
+const ADDONS = {
+  test_distribution1_2: {
+    "install.rdf": {
+      "id": "addon1@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Distributed add-ons test",
+    }
+  },
+};
+
 var addon1_1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
@@ -175,7 +185,7 @@ async function run_test_6() {
 async function run_test_7() {
   Services.prefs.clearUserPref("extensions.installedDistroAddon.addon1@tests.mozilla.org");
 
-  await promiseInstallAllFiles([do_get_addon("test_distribution1_2")]);
+  await AddonTestUtils.promiseInstallXPI(ADDONS.test_distribution1_2);
   await promiseRestartManager(2);
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
@@ -195,7 +205,7 @@ async function run_test_8() {
 
   await promiseWriteInstallRDFForExtension(addon1_3, distroDir);
 
-  await promiseInstallAllFiles([do_get_addon("test_distribution1_2")]);
+  await AddonTestUtils.promiseInstallXPI(ADDONS.test_distribution1_2);
   await promiseRestartManager(3);
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
