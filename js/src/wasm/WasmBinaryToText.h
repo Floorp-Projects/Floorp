@@ -35,8 +35,7 @@ namespace wasm {
 // representation.
 
 MOZ_MUST_USE bool
-BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
-             GeneratedSourceMap* sourceMap = nullptr);
+BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer);
 
 }  // namespace wasm
 
