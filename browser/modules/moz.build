@@ -65,7 +65,7 @@ with Files("ContentWebRTC.jsm"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
 with Files("ExtensionsUI.jsm"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+    BUG_COMPONENT = ("WebExtensions", "General")
 
 with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
@@ -107,7 +107,7 @@ with Files("TabsPopup.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("ThemeVariableMap.jsm"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: Themes")
+    BUG_COMPONENT = ("WebExtensions", "Themes")
 
 with Files("TransientPrefs.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")

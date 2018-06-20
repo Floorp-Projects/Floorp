@@ -99,7 +99,7 @@ with Files("test/urlbar/**"):
     BUG_COMPONENT = ("Firefox", "Address Bar")
 
 with Files("test/webextensions/**"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: Untriaged")
+    BUG_COMPONENT = ("WebExtensions", "Untriaged")
 
 with Files("test/webrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
@@ -159,7 +159,7 @@ with Files("tabbrowser*"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("webext-panels*"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: Frontend")
+    BUG_COMPONENT = ("WebExtensions", "Frontend")
 
 with Files("webrtcIndicator*"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
