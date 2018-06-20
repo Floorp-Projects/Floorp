@@ -1765,7 +1765,12 @@ pref("network.http.focused_window_transaction_ratio", "0.9");
 
 // Whether or not we give more priority to active tab.
 // Note that this requires restart for changes to take effect.
+#ifdef ANDROID
+// disabled because of bug 1382274
+pref("network.http.active_tab_priority", false);
+#else
 pref("network.http.active_tab_priority", true);
+#endif
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -2108,7 +2113,12 @@ pref("network.auth.private-browsing-sso", false);
 
 // Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
+#ifdef ANDROID
+// disabled because of bug 1382274
+pref("network.http.throttle.enable", false);
+#else
 pref("network.http.throttle.enable", true);
+#endif
 pref("network.http.throttle.version", 2);
 
 // V1 prefs
