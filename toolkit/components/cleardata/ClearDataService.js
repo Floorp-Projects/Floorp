@@ -95,6 +95,16 @@ const NetworkCacheCleaner = {
 };
 
 const ImageCacheCleaner = {
+  deleteByPrincipal(aPrincipal) {
+    return new Promise(aResolve => {
+      let imageCache = Cc["@mozilla.org/image/tools;1"]
+                         .getService(Ci.imgITools)
+                         .getImgCacheForDocument(null);
+      imageCache.removeEntriesFromPrincipal(aPrincipal);
+      aResolve();
+    });
+  },
+
   deleteAll() {
     return new Promise(aResolve => {
       let imageCache = Cc["@mozilla.org/image/tools;1"]
