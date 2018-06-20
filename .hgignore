@@ -8,6 +8,9 @@
 (^|/)\.DS_Store$
 \.pdb
 \.egg-info
+\.gcda
+\.gcno
+\.gcov
 
 # Vim swap files.
 ^\.sw.$
