@@ -10,6 +10,7 @@ component_gc     = ('Core', 'JavaScript: GC')
 component_intl   = ('Core', 'JavaScript: Internationalization API')
 component_jit    = ('Core', 'JavaScript Engine: JIT')
 component_stl    = ('Core', 'JavaScript: Standard Library')
+component_wasm   = ('Core', 'Javascript: Web Assembly')
 
 FILES_PER_UNIFIED_FILE = 6
 
@@ -17,7 +18,7 @@ with Files('*'):
     BUG_COMPONENT = component_engine
 
 with Files('wasm/**'):
-    BUG_COMPONENT = component_jit
+    BUG_COMPONENT = component_wasm
 with Files('builtin/**'):
     BUG_COMPONENT = component_stl
 with Files('ctypes/**'):
