@@ -36,7 +36,6 @@
 
 #include "breakpad_googletest_includes.h"
 #include "client/mac/handler/exception_handler.h"
-#include "common/linux/ignore_ret.h"
 #include "common/mac/MachIPC.h"
 #include "common/tests/auto_tempdir.h"
 #include "google_breakpad/processor/minidump.h"
@@ -94,7 +93,7 @@ static bool MDCallback(const char *dump_dir, const char *file_name,
   path.append(".dmp");
 
   int fd = *reinterpret_cast<int*>(context);
-  IGNORE_RET(write(fd, path.c_str(), path.length() + 1));
+  (void)write(fd, path.c_str(), path.length() + 1);
   close(fd);
   exit(0);
   // not reached
@@ -294,7 +293,7 @@ TEST_F(ExceptionHandlerTest, DumpChildProcess) {
 
   // Unblock child process
   uint8_t data = 1;
-  IGNORE_RET(write(fds[1], &data, 1));
+  (void)write(fds[1], &data, 1);
 
   // Child process should have exited with a zero status.
   int ret;

@@ -28,12 +28,11 @@ MozStackFrameSymbolizer::MozStackFrameSymbolizer() :
 
 MozStackFrameSymbolizer::SymbolizerResult
 MozStackFrameSymbolizer::FillSourceLineInfo(const CodeModules* modules,
-                                            const CodeModules* unloaded_modules,
                                             const SystemInfo* system_info,
                                             StackFrame* stack_frame)
 {
   SymbolizerResult ret = StackFrameSymbolizer::FillSourceLineInfo(
-    modules, unloaded_modules, system_info, stack_frame);
+    modules, system_info, stack_frame);
 
   if (ret == kNoError && this->HasImplementation() &&
     stack_frame->function_name.empty()) {

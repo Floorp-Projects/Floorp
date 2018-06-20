@@ -41,7 +41,6 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         'language.cc',
         'md5.cc',
         'module.cc',
-        'path_helper.cc',
         'string_conversion.cc',
     ]
     if CONFIG['OS_ARCH'] == 'Darwin':

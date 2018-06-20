@@ -138,9 +138,7 @@ class CFISection: public Section {
                         unsigned return_address_register,
                         uint8_t version = 3,
                         const string &augmentation = "",
-                        bool dwarf64 = false,
-                        uint8_t address_size = 8,
-                        uint8_t segment_size = 0);
+                        bool dwarf64 = false);
 
   // Append a Frame Description Entry header to this section with the
   // given values. If dwarf64 is true, use the 64-bit DWARF initial

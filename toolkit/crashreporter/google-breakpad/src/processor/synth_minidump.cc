@@ -41,7 +41,10 @@ Section::Section(const Dump &dump)
   : test_assembler::Section(dump.endianness()) { }
 
 void Section::CiteLocationIn(test_assembler::Section *section) const {
-  (*section).D32(size_).D32(file_offset_);
+  if (this)
+    (*section).D32(size_).D32(file_offset_);
+  else
+    (*section).D32(0).D32(0);
 }
 
 void Stream::CiteStreamIn(test_assembler::Section *section) const {
@@ -269,14 +272,8 @@ Module::Module(const Dump &dump,
   D32(version_info.file_subtype);
   D32(version_info.file_date_hi);
   D32(version_info.file_date_lo);
-  if (cv_record)
-    cv_record->CiteLocationIn(this);
-  else
-    D32(0).D32(0);
-  if (misc_record)
-    misc_record->CiteLocationIn(this);
-  else
-    D32(0).D32(0);
+  cv_record->CiteLocationIn(this);
+  misc_record->CiteLocationIn(this);
   D64(0).D64(0);
 }
 
@@ -296,26 +293,6 @@ const MDVSFixedFileInfo Module::stock_version_info = {
   0,                                    // file_date_hi
   0                                     // file_date_lo
 };
-
-UnloadedModule::UnloadedModule(const Dump &dump,
-                               uint64_t base_of_image,
-                               uint32_t size_of_image,
-                               const String &name,
-                               uint32_t checksum,
-                               uint32_t time_date_stamp) : Section(dump) {
-  D64(base_of_image);
-  D32(size_of_image);
-  D32(checksum);
-  D32(time_date_stamp);
-  name.CiteStringIn(this);
-}
-
-UnloadedModuleList::UnloadedModuleList(const Dump &dump, uint32_t type)
-  : List<UnloadedModule>(dump, type, false) {
-  D32(sizeof(MDRawUnloadedModuleList));
-  D32(sizeof(MDRawUnloadedModule));
-  D32(count_label_);
-}
 
 Exception::Exception(const Dump &dump,
                      const Context &context,
@@ -348,7 +325,6 @@ Dump::Dump(uint64_t flags,
       stream_count_(0),
       thread_list_(*this, MD_THREAD_LIST_STREAM),
       module_list_(*this, MD_MODULE_LIST_STREAM),
-      unloaded_module_list_(*this, MD_UNLOADED_MODULE_LIST_STREAM),
       memory_list_(*this, MD_MEMORY_LIST_STREAM)
  {
   D32(MD_HEADER_SIGNATURE);
@@ -396,15 +372,9 @@ Dump &Dump::Add(Module *module) {
   return *this;
 }
 
-Dump &Dump::Add(UnloadedModule *unloaded_module) {
-  unloaded_module_list_.Add(unloaded_module);
-  return *this;
-}
-
 void Dump::Finish() {
   if (!thread_list_.Empty()) Add(&thread_list_);
   if (!module_list_.Empty()) Add(&module_list_);
-  if (!unloaded_module_list_.Empty()) Add(&unloaded_module_list_);
   if (!memory_list_.Empty()) Add(&memory_list_);
 
   // Create the stream directory. We don't use

@@ -40,10 +40,9 @@
 
 namespace google_breakpad {
 
-class Microdump;
 class ProcessState;
 class StackFrameSymbolizer;
-
+ 
 class MicrodumpProcessor {
  public:
   // Initializes the MicrodumpProcessor with a stack frame symbolizer.
@@ -53,7 +52,7 @@ class MicrodumpProcessor {
   virtual ~MicrodumpProcessor();
 
   // Processes the microdump contents and fills process_state with the result.
-  google_breakpad::ProcessResult Process(Microdump* microdump,
+  google_breakpad::ProcessResult Process(const string& microdump_contents,
                                          ProcessState* process_state);
  private:
   StackFrameSymbolizer* frame_symbolizer_;

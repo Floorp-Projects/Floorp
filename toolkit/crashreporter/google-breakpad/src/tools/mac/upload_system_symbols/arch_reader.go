@@ -59,8 +59,7 @@ func getArchStringFromHeader(header macho.FileHeader) string {
 }
 
 const (
-	MachODylib    macho.Type = C.kMachHeaderFtypeDylib
-	MachOBundle              = C.kMachHeaderFtypeBundle
-	MachOExe                 = C.kMachHeaderFtypeExe
-	MachODylinker            = C.kMachHeaderFtypeDylinker
+	MachODylib  macho.Type = C.kMachHeaderFtypeDylib
+	MachOBundle            = C.kMachHeaderFtypeBundle
+	MachOExe               = C.kMachHeaderFtypeExe
 )

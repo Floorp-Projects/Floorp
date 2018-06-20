@@ -58,7 +58,7 @@
       'target_name': 'minidump_upload',
       'type': 'executable',
       'sources': [
-        'symupload/minidump_upload.cc',
+        'symupload/minidump_upload.m',
       ],
       'dependencies': [
         '../common/common.gyp:common',

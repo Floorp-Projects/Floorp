@@ -32,7 +32,8 @@
 #include <string>
 #include <utility>
 
-#include "breakpad_googletest_includes.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace tools {
 namespace windows {
@@ -121,7 +122,7 @@ void RunCommand(const std::wstring& command_line,
   STARTUPINFO startup_info = {};
   PROCESS_INFORMATION process_info = {};
   startup_info.cb = sizeof(STARTUPINFO);
-  startup_info.hStdError = NULL;
+  startup_info.hStdError = child_stdout_write;
   startup_info.hStdInput = child_stdin_read;
   startup_info.hStdOutput = child_stdout_write;
   startup_info.dwFlags = STARTF_USESTDHANDLES;
@@ -162,7 +163,7 @@ void GetFileContents(const std::wstring& path, std::string* content) {
   }
 }
 
-class DumpSymsRegressionTest : public testing::TestWithParam<const wchar_t *> {
+class DumpSymsRegressionTest : public testing::Test {
  public:
   virtual void SetUp() {
     std::wstring self_dir;
@@ -179,8 +180,9 @@ class DumpSymsRegressionTest : public testing::TestWithParam<const wchar_t *> {
 
 }  //namespace
 
-TEST_P(DumpSymsRegressionTest, EnsureDumpedSymbolsMatch) {
-    const wchar_t* root_name = GetParam();
+TEST_F(DumpSymsRegressionTest, EnsureDumpedSymbolsMatch) {
+  for (size_t i = 0; i < sizeof(kRootNames) / sizeof(kRootNames[0]); ++i) {
+    const wchar_t* root_name = kRootNames[i];
     std::wstring root_path = testdata_dir + L"\\" + root_name;
 
     std::wstring sym_path = root_path + L".sym";
@@ -194,11 +196,8 @@ TEST_P(DumpSymsRegressionTest, EnsureDumpedSymbolsMatch) {
     ASSERT_NO_FATAL_FAILURE(RunCommand(command_line, &symbols));
 
     EXPECT_EQ(expected_symbols, symbols);
+  }
 }
-
-INSTANTIATE_TEST_CASE_P(DumpSyms, DumpSymsRegressionTest,
-                        testing::ValuesIn(kRootNames));
-
 
 }  // namespace dump_syms
 }  // namespace windows

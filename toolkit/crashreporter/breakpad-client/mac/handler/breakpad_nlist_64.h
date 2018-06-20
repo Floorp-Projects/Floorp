@@ -32,7 +32,6 @@
 // nlist function implemented to work on 64-bit.
 
 #ifndef CLIENT_MAC_HANDLER_BREAKPAD_NLIST_H__
-#define CLIENT_MAC_HANDLER_BREAKPAD_NLIST_H__
 
 #include <mach/machine.h>
 

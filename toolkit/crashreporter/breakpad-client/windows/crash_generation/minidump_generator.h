@@ -168,10 +168,6 @@ class MinidumpGenerator {
   // Folder path to store dump files.
   std::wstring dump_path_;
 
-  // UUID used to make dump file names.
-  UUID uuid_;
-  bool uuid_generated_;
-
   // The file where the dump will be written.
   HANDLE dump_file_;
 
