@@ -979,6 +979,8 @@ public:
 
   bool ShouldReportForServiceWorkerScope(const nsAString& aScope);
 
+  void PropagateClearSiteDataReload(const nsACString& aOrigin);
+
   already_AddRefed<mozilla::dom::InstallTriggerImpl> GetInstallTrigger();
 
   void UpdateTopInnerWindow();
