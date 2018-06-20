@@ -4,11 +4,6 @@
 
 "use strict";
 
-// We have to keep using Promise.jsm here, because DOM Promises
-// start freezing during panel iframes destruction.
-// More info in bug 1454373 comment 15.
-const Promise = require("promise");
-
 /**
  * Returns a deferred object, with a resolve and reject property.
  * https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Deferred
