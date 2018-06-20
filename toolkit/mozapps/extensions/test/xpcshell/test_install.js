@@ -15,13 +15,6 @@ const ADDONS = {
       id: "addon1@tests.mozilla.org",
       version: "1.0",
       name: "Test 1",
-      description: "Test Description",
-      bootstrap: true,
-
-      targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-          minVersion: "1",
-          maxVersion: "1"}],
     },
     "icon.png": "Fake icon image",
     "icon64.png": "Fake icon image",
@@ -31,14 +24,6 @@ const ADDONS = {
       id: "addon2@tests.mozilla.org",
       version: "2.0",
       name: "Real Test 2",
-      description: "Test Description",
-      bootstrap: true,
-
-      targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-          minVersion: "1",
-          maxVersion: "1"}],
-
     },
     "icon.png": "Fake icon image",
   },
@@ -47,13 +32,6 @@ const ADDONS = {
       id: "addon2@tests.mozilla.org",
       version: "3.0",
       name: "Real Test 3",
-      description: "Test Description",
-      bootstrap: true,
-
-      targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-          minVersion: "1",
-          maxVersion: "1"}],
     },
   },
   test_install3: {
@@ -61,8 +39,6 @@ const ADDONS = {
       id: "addon3@tests.mozilla.org",
       version: "1.0",
       name: "Real Test 4",
-      description: "Test Description",
-      bootstrap: true,
 
       updateURL: "http://example.com/data/test_install.rdf",
 
@@ -77,13 +53,6 @@ const ADDONS = {
       id: "addon6@tests.mozilla.org",
       version: "1.0",
       name: "Addon Test 6",
-      description: "Test Description",
-      bootstrap: true,
-
-      targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-          minVersion: "1",
-          maxVersion: "1"}],
     },
   },
   test_install7: {

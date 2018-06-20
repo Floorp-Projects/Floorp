@@ -39,6 +39,3 @@ MOZ_RAW=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=1
 
 MOZ_APP_ID={aa3c5121-dab2-40e2-81ca-7ea25febc110}
-
-# Enable checking that add-ons are signed by the trusted root
-MOZ_ADDON_SIGNING=1

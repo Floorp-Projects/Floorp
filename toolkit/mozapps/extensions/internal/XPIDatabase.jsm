@@ -1681,10 +1681,6 @@ this.XPIDatabase = {
         });
   },
 
-  syncGetAddon(aFilter) {
-    return _findAddon(this.addonDB, aFilter);
-  },
-
   /**
    * Asynchronously gets an add-on with a particular ID in a particular
    * install location.
@@ -1720,10 +1716,6 @@ this.XPIDatabase = {
    */
   getVisibleAddonForID(aId) {
     return this.getAddon(aAddon => ((aAddon.id == aId) && aAddon.visible));
-  },
-
-  syncGetVisibleAddonForID(aId) {
-    return this.syncGetAddon(aAddon => ((aAddon.id == aId) && aAddon.visible));
   },
 
   /**
@@ -1797,26 +1789,6 @@ this.XPIDatabase = {
    */
   async getAddonByID(aId) {
     let aAddon = await this.getVisibleAddonForID(aId);
-    return aAddon ? aAddon.wrapper : null;
-  },
-
-  /**
-   * Synchronously returns the Addon object for the add-on with the
-   * given ID.
-   *
-   * *DO NOT USE THIS IF YOU CAN AT ALL AVOID IT*
-   *
-   * This will always return null if the add-on database has not been
-   * loaded, and the resulting Addon object may not yet include a
-   * reference to its corresponding repository add-on object.
-   *
-   * @param {string} aId
-   *        The ID of the add-on to return.
-   * @returns {DBAddonInternal?}
-   *        The Addon object, if available.
-   */
-  syncGetAddonByID(aId) {
-    let aAddon = this.syncGetVisibleAddonForID(aId);
     return aAddon ? aAddon.wrapper : null;
   },
 
@@ -2570,7 +2542,6 @@ this.XPIDatabaseReconcile = {
     logger.debug(`Updating compatibility for add-on ${aOldAddon.id} in ${aLocation.name}`);
 
     let checkSigning = (aOldAddon.signedState === undefined &&
-                        AddonSettings.ADDON_SIGNING &&
                         SIGNED_TYPES.has(aOldAddon.type));
 
     let manifest = null;
