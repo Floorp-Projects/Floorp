@@ -15,4 +15,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')
+    BUG_COMPONENT = ('DevTools', 'Inspector')

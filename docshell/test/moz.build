@@ -29,10 +29,10 @@ with Files('browser/*tab_touch_events*'):
     BUG_COMPONENT = ('Core', 'DOM: Events')
 
 with Files('browser/*timelineMarkers*'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
 
 with Files('browser/*ua_emulation*'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+    BUG_COMPONENT = ('DevTools', 'General')
 
 with Files('chrome/*112564*'):
     BUG_COMPONENT = ('Core', 'Networking: HTTP')
