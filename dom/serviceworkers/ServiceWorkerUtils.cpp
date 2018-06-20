@@ -11,20 +11,17 @@
 namespace mozilla {
 namespace dom {
 
+
 bool
 ServiceWorkerParentInterceptEnabled()
 {
-  static bool sInit = false;
   static Atomic<bool> sEnabled;
-
-  if (!sInit) {
-    MOZ_ASSERT(NS_IsMainThread());
-    Preferences::AddAtomicBoolVarCache(&sEnabled,
-                                       "dom.serviceWorkers.parent_intercept",
-                                       false);
-    sInit = true;
+  static Atomic<bool> sInitialized;
+  if (!sInitialized) {
+    AssertIsOnMainThread();
+    sInitialized = true;
+    sEnabled = Preferences::GetBool("dom.serviceWorkers.parent_intercept", false);
   }
-
   return sEnabled;
 }
 

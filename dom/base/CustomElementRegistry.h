@@ -554,6 +554,8 @@ public:
   // Chrome-only method that give JS an opportunity to only load the custom
   // element definition script when needed.
   void SetElementCreationCallback(const nsAString& aName, CustomElementCreationCallback& aCallback, ErrorResult& aRv);
+
+  void Upgrade(nsINode& aRoot);
 };
 
 class MOZ_RAII AutoCEReaction final {

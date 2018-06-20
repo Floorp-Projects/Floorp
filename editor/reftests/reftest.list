@@ -134,4 +134,4 @@ needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-conten
 == 911201.html 911201-ref.html
 needs-focus == 969773.html 969773-ref.html
 fuzzy-if(skiaContent,1,220) == 997805.html 997805-ref.html
-fuzzy-if(skiaContent,1,220) == 1088158.html 1088158-ref.html
+fuzzy-if(skiaContent,1,220) skip-if(verify&&OSX) == 1088158.html 1088158-ref.html

@@ -30,10 +30,6 @@ function promiseWebExtensionShutdown() {
   });
 }
 
-const BOOTSTRAP = String.raw`
-  Components.utils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);
-`;
-
 const BOOTSTRAP_WITHOUT_SHUTDOWN = String.raw`
   Components.utils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this, [
     "install", "startup", "uninstall",
@@ -66,7 +62,7 @@ add_task(async function has_embedded_webextension_persisted() {
       maxVersion: "1.9.2"
     }]
   }, {
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
   });
 
@@ -139,7 +135,7 @@ add_task(async function run_embedded_webext_bootstrap() {
       maxVersion: "1.9.2"
     }]
   }, {
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
   });
 
@@ -224,7 +220,7 @@ add_task(async function reload_embedded_webext_bootstrap() {
       maxVersion: "1.9.2"
     }]
   }, {
-    "bootstrap.js": BOOTSTRAP,
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
   });
 

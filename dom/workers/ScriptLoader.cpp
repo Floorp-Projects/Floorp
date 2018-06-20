@@ -605,13 +605,10 @@ private:
 
 NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
 
-class ScriptLoaderHolder;
-
 class ScriptLoaderRunnable final : public nsIRunnable,
                                    public nsINamed
 {
   friend class ScriptExecutorRunnable;
-  friend class ScriptLoaderHolder;
   friend class CachePromiseHandler;
   friend class CacheScriptLoader;
   friend class LoaderListener;
@@ -624,7 +621,6 @@ class ScriptLoaderRunnable final : public nsIRunnable,
   Maybe<ServiceWorkerDescriptor> mController;
   bool mIsMainScript;
   WorkerScriptType mWorkerScriptType;
-  bool mCanceled;
   bool mCanceledMainThread;
   ErrorResult& mRv;
 
@@ -642,13 +638,19 @@ public:
   : mWorkerPrivate(aWorkerPrivate), mSyncLoopTarget(aSyncLoopTarget),
     mClientInfo(aClientInfo), mController(aController),
     mIsMainScript(aIsMainScript), mWorkerScriptType(aWorkerScriptType),
-    mCanceled(false), mCanceledMainThread(false), mRv(aRv)
+    mCanceledMainThread(false), mRv(aRv)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aSyncLoopTarget);
     MOZ_ASSERT_IF(aIsMainScript, aLoadInfos.Length() == 1);
 
     mLoadInfos.SwapElements(aLoadInfos);
+  }
+
+  void
+  CancelMainThreadWithBindingAborted()
+  {
+    CancelMainThread(NS_BINDING_ABORTED);
   }
 
 private:
@@ -814,23 +816,6 @@ private:
   }
 
   bool
-  Notify(WorkerStatus aStatus)
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    if (aStatus >= Terminating && !mCanceled) {
-      mCanceled = true;
-
-      MOZ_ALWAYS_SUCCEEDS(
-        NS_DispatchToMainThread(NewRunnableMethod("ScriptLoaderRunnable::CancelMainThreadWithBindingAborted",
-                                                  this,
-                                                  &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted)));
-    }
-
-    return true;
-  }
-
-  bool
   IsMainWorkerScript() const
   {
     return mIsMainScript && mWorkerScriptType == WorkerScript;
@@ -840,12 +825,6 @@ private:
   IsDebuggerScript() const
   {
     return mWorkerScriptType == DebuggerScript;
-  }
-
-  void
-  CancelMainThreadWithBindingAborted()
-  {
-    CancelMainThread(NS_BINDING_ABORTED);
   }
 
   void
@@ -1473,27 +1452,6 @@ private:
 };
 
 NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
-
-class MOZ_STACK_CLASS ScriptLoaderHolder final : public WorkerHolder
-{
-  // Raw pointer because this holder object follows the mRunnable life-time.
-  ScriptLoaderRunnable* mRunnable;
-
-public:
-  explicit ScriptLoaderHolder(ScriptLoaderRunnable* aRunnable)
-    : WorkerHolder("ScriptLoaderHolder")
-    , mRunnable(aRunnable)
-  {
-    MOZ_ASSERT(aRunnable);
-  }
-
-  virtual bool
-  Notify(WorkerStatus aStatus) override
-  {
-    mRunnable->Notify(aStatus);
-    return true;
-  }
-};
 
 NS_IMETHODIMP
 LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
@@ -2277,9 +2235,14 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
-  ScriptLoaderHolder workerHolder(loader);
+  RefPtr<StrongWorkerRef> workerRef =
+    StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [loader]() {
+      NS_DispatchToMainThread(NewRunnableMethod("ScriptLoader::CancelMainThreadWithBindingAborted",
+                                                loader,
+                                                &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted));
+    });
 
-  if (NS_WARN_IF(!workerHolder.HoldWorker(aWorkerPrivate, Terminating))) {
+  if (NS_WARN_IF(!workerRef)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

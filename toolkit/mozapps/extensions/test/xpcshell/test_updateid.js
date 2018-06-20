@@ -10,6 +10,23 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+const ADDONS = {
+  test_updateid1: {
+    "install.rdf": {
+      "id": "addon1@tests.mozilla.org",
+      "updateURL": "http://example.com/data/test_updateid.rdf",
+      "name": "Test Addon 1",
+    },
+  },
+  test_updateid2: {
+    "install.rdf": {
+      "id": "addon1.changed@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Test Addon 1",
+    },
+  },
+};
+
 function promiseInstallUpdate(install) {
   return new Promise((resolve, reject) => {
     install.addListener({
@@ -33,7 +50,12 @@ function promiseInstallUpdate(install) {
 // Create and configure the HTTP server.
 let testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
-testserver.registerDirectory("/addons/", do_get_file("addons"));
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+}
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
@@ -42,7 +64,7 @@ add_task(async function setup() {
 
 // Verify that an update to an add-on with a new ID fails
 add_task(async function test_update_new_id() {
-  await promiseInstallFile(do_get_addon("test_updateid1"));
+  await AddonTestUtils.promiseInstallXPI(ADDONS.test_updateid1);
 
   let addon = await promiseAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);

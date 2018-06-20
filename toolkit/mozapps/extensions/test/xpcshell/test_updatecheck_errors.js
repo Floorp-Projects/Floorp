@@ -17,7 +17,6 @@ add_task(async function setup() {
   // Create and configure the HTTP server.
   testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
 
   await promiseStartupManager();
 });

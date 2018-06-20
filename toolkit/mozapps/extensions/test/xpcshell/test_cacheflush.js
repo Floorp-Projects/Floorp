@@ -30,12 +30,6 @@ const ADDONS = [
     version: "2.0",
 
     name: "Cache Flush Test",
-    bootstrap: true,
-
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1" }],
   },
 ];
 

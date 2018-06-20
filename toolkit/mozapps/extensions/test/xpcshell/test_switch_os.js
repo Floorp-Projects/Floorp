@@ -13,10 +13,19 @@ profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
+const ADDONS = {
+  test_bootstrap1_1: {
+    "install.rdf": {
+      "id": "bootstrap1@tests.mozilla.org",
+    },
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+  },
+};
+
 add_task(async function() {
   await promiseStartupManager();
 
-  await promiseInstallFile(do_get_addon("test_bootstrap1_1"));
+  await AddonTestUtils.promiseInstallXPI(ADDONS.test_bootstrap1_1);
 
   let addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);
