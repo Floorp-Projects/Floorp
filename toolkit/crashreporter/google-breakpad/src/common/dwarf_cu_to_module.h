@@ -202,7 +202,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
     virtual void UnnamedFunction(uint64 offset);
 
     // __cxa_demangle() failed to demangle INPUT.
-    virtual void DemangleError(const string &input);
+    virtual void DemangleError(const string &input, int error);
 
     // The DW_FORM_ref_addr at OFFSET to TARGET was not handled because
     // FilePrivate did not retain the inter-CU specification data.

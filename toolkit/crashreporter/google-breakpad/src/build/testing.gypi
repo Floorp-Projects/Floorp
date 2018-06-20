@@ -32,15 +32,15 @@
       'target_name': 'gtest',
       'type': 'static_library',
       'sources': [
-        '../testing/googletest/src/gtest-all.cc',
+        '../testing/gtest/src/gtest-all.cc',
       ],
       'include_dirs': [
-        '../testing/googletest',
-        '../testing/googletest/include',
+        '../testing/gtest',
+        '../testing/gtest/include',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
-          '../testing/googletest/include',
+          '../testing/gtest/include',
         ],
       },
     },
@@ -51,7 +51,7 @@
         'gtest',
       ],
       'sources': [
-        '../testing/googletest/src/gtest_main.cc',
+        'gtest/src/gtest_main.cc',
       ],
     },
     {
@@ -61,15 +61,15 @@
         'gtest',
       ],
       'sources': [
-        '../testing/googlemock/src/gmock-all.cc',
+        '../testing/src/gmock-all.cc',
       ],
       'include_dirs': [
-        '../testing/googlemock',
-        '../testing/googlemock/include',
+        '../testing',
+        '../testing/include',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
-          '../testing/googlemock/include',
+          '../testing/include',
         ],
       },
       'export_dependent_settings': [
@@ -83,7 +83,7 @@
         'gmock',
       ],
       'sources': [
-        '../testing/googlemock/src/gmock_main.cc',
+        '../testing/src/gmock_main.cc',
       ],
     },
   ],

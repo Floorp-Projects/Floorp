@@ -54,20 +54,25 @@ MicrodumpProcessor::MicrodumpProcessor(StackFrameSymbolizer* frame_symbolizer)
 
 MicrodumpProcessor::~MicrodumpProcessor() {}
 
-ProcessResult MicrodumpProcessor::Process(Microdump *microdump,
+ProcessResult MicrodumpProcessor::Process(const string &microdump_contents,
                                           ProcessState* process_state) {
   assert(process_state);
 
   process_state->Clear();
 
-  process_state->modules_ = microdump->GetModules()->Copy();
+  if (microdump_contents.empty()) {
+    BPLOG(ERROR) << "Microdump is empty.";
+    return PROCESS_ERROR_MINIDUMP_NOT_FOUND;
+  }
+
+  Microdump microdump(microdump_contents);
+  process_state->modules_ = microdump.GetModules()->Copy();
   scoped_ptr<Stackwalker> stackwalker(
       Stackwalker::StackwalkerForCPU(
                             &process_state->system_info_,
-                            microdump->GetContext(),
-                            microdump->GetMemory(),
+                            microdump.GetContext(),
+                            microdump.GetMemory(),
                             process_state->modules_,
-                            /* unloaded_modules= */ NULL,
                             frame_symbolizer_));
 
   scoped_ptr<CallStack> stack(new CallStack());
@@ -84,12 +89,10 @@ ProcessResult MicrodumpProcessor::Process(Microdump *microdump,
   }
 
   process_state->threads_.push_back(stack.release());
-  process_state->thread_memory_regions_.push_back(microdump->GetMemory());
+  process_state->thread_memory_regions_.push_back(microdump.GetMemory());
   process_state->crashed_ = true;
   process_state->requesting_thread_ = 0;
-  process_state->system_info_ = *microdump->GetSystemInfo();
-  process_state->crash_reason_ = microdump->GetCrashReason();
-  process_state->crash_address_ = microdump->GetCrashAddress();
+  process_state->system_info_ = *microdump.GetSystemInfo();
 
   return PROCESS_OK;
 }

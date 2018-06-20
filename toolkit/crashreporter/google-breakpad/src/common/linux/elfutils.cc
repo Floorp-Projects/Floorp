@@ -78,12 +78,14 @@ void FindElfClassSection(const char *elf_base,
 template<typename ElfClass>
 void FindElfClassSegment(const char *elf_base,
                          typename ElfClass::Word segment_type,
-                         wasteful_vector<ElfSegment> *segments) {
+                         const void **segment_start,
+                         size_t *segment_size) {
   typedef typename ElfClass::Ehdr Ehdr;
   typedef typename ElfClass::Phdr Phdr;
 
   assert(elf_base);
-  assert(segments);
+  assert(segment_start);
+  assert(segment_size);
 
   assert(my_strncmp(elf_base, ELFMAG, SELFMAG) == 0);
 
@@ -95,10 +97,9 @@ void FindElfClassSegment(const char *elf_base,
 
   for (int i = 0; i < elf_header->e_phnum; ++i) {
     if (phdrs[i].p_type == segment_type) {
-      ElfSegment seg = {};
-      seg.start = elf_base + phdrs[i].p_offset;
-      seg.size = phdrs[i].p_filesz;
-      segments->push_back(seg);
+      *segment_start = elf_base + phdrs[i].p_offset;
+      *segment_size = phdrs[i].p_filesz;
+      return;
     }
   }
 }
@@ -121,7 +122,8 @@ bool FindElfSection(const void *elf_mapped_base,
                     const char *section_name,
                     uint32_t section_type,
                     const void **section_start,
-                    size_t *section_size) {
+                    size_t *section_size,
+                    int *elfclass) {
   assert(elf_mapped_base);
   assert(section_start);
   assert(section_size);
@@ -133,6 +135,10 @@ bool FindElfSection(const void *elf_mapped_base,
     return false;
 
   int cls = ElfClass(elf_mapped_base);
+  if (elfclass) {
+    *elfclass = cls;
+  }
+
   const char* elf_base =
     static_cast<const char*>(elf_mapped_base);
 
@@ -149,25 +155,37 @@ bool FindElfSection(const void *elf_mapped_base,
   return false;
 }
 
-bool FindElfSegments(const void* elf_mapped_base,
-                     uint32_t segment_type,
-                     wasteful_vector<ElfSegment>* segments) {
+bool FindElfSegment(const void *elf_mapped_base,
+                    uint32_t segment_type,
+                    const void **segment_start,
+                    size_t *segment_size,
+                    int *elfclass) {
   assert(elf_mapped_base);
-  assert(segments);
+  assert(segment_start);
+  assert(segment_size);
+
+  *segment_start = NULL;
+  *segment_size = 0;
 
   if (!IsValidElf(elf_mapped_base))
     return false;
 
   int cls = ElfClass(elf_mapped_base);
+  if (elfclass) {
+    *elfclass = cls;
+  }
+
   const char* elf_base =
     static_cast<const char*>(elf_mapped_base);
 
   if (cls == ELFCLASS32) {
-    FindElfClassSegment<ElfClass32>(elf_base, segment_type, segments);
-    return true;
+    FindElfClassSegment<ElfClass32>(elf_base, segment_type,
+                                    segment_start, segment_size);
+    return *segment_start != NULL;
   } else if (cls == ELFCLASS64) {
-    FindElfClassSegment<ElfClass64>(elf_base, segment_type, segments);
-    return true;
+    FindElfClassSegment<ElfClass64>(elf_base, segment_type,
+                                    segment_start, segment_size);
+    return *segment_start != NULL;
   }
 
   return false;
