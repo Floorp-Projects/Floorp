@@ -244,6 +244,7 @@ void
 DisplayItemData::AddFrame(nsIFrame* aFrame)
 {
   MOZ_RELEASE_ASSERT(mLayer);
+  MOZ_RELEASE_ASSERT(!mFrameList.Contains(aFrame));
   mFrameList.AppendElement(aFrame);
 
   SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
