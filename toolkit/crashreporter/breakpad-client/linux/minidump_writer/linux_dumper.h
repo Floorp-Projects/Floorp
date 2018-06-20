@@ -99,22 +99,10 @@ class LinuxDumper {
   // Returns true on success. One must have called |ThreadsSuspend| first.
   virtual bool GetThreadInfoByIndex(size_t index, ThreadInfo* info) = 0;
 
-  size_t GetMainThreadIndex() const {
-    for (size_t i = 0; i < threads_.size(); ++i) {
-      if (threads_[i] == pid_) return i;
-    }
-    return -1u;
-  }
-
   // These are only valid after a call to |Init|.
   const wasteful_vector<pid_t> &threads() { return threads_; }
   const wasteful_vector<MappingInfo*> &mappings() { return mappings_; }
   const MappingInfo* FindMapping(const void* address) const;
-  // Find the mapping which the given memory address falls in. Unlike
-  // FindMapping, this method uses the unadjusted mapping address
-  // ranges from the kernel, rather than the ranges that have had the
-  // load bias applied.
-  const MappingInfo* FindMappingNoBias(uintptr_t address) const;
   const wasteful_vector<elf_aux_val_t>& auxv() { return auxv_; }
 
   // Find a block of memory to take as the stack given the top of stack pointer.
@@ -122,32 +110,6 @@ class LinuxDumper {
   //   stack_len: (output) the length of the memory area
   //   stack_top: the current top of the stack
   bool GetStackInfo(const void** stack, size_t* stack_len, uintptr_t stack_top);
-
-  // Sanitize a copy of the stack by overwriting words that are not
-  // pointers with a sentinel (0x0defaced).
-  //   stack_copy: a copy of the stack to sanitize. |stack_copy| might
-  //               not be word aligned, but it represents word aligned
-  //               data copied from another location.
-  //   stack_len: the length of the allocation pointed to by |stack_copy|.
-  //   stack_pointer: the address of the stack pointer (used to locate
-  //                  the stack mapping, as an optimization).
-  //   sp_offset: the offset relative to stack_copy that reflects the
-  //              current value of the stack pointer.
-  void SanitizeStackCopy(uint8_t* stack_copy, size_t stack_len,
-                         uintptr_t stack_pointer, uintptr_t sp_offset);
-
-  // Test whether |stack_copy| contains a pointer-aligned word that
-  // could be an address within a given mapping.
-  //   stack_copy: a copy of the stack to check. |stack_copy| might
-  //               not be word aligned, but it represents word aligned
-  //               data copied from another location.
-  //   stack_len: the length of the allocation pointed to by |stack_copy|.
-  //   sp_offset: the offset relative to stack_copy that reflects the
-  //              current value of the stack pointer.
-  //   mapping: the mapping against which to test stack words.
-  bool StackHasPointerToMapping(const uint8_t* stack_copy, size_t stack_len,
-                                uintptr_t sp_offset,
-                                const MappingInfo& mapping);
 
   PageAllocator* allocator() { return &allocator_; }
 
@@ -170,8 +132,6 @@ class LinuxDumper {
                                    unsigned int mapping_id,
                                    wasteful_vector<uint8_t>& identifier);
 
-  void SetCrashInfoFromSigInfo(const siginfo_t& siginfo);
-
   uintptr_t crash_address() const { return crash_address_; }
   void set_crash_address(uintptr_t crash_address) {
     crash_address_ = crash_address;
@@ -179,10 +139,6 @@ class LinuxDumper {
 
   int crash_signal() const { return crash_signal_; }
   void set_crash_signal(int crash_signal) { crash_signal_ = crash_signal; }
-  const char* GetCrashSignalString() const;
-
-  void set_crash_signal_code(int code) { crash_signal_code_ = code; }
-  int crash_signal_code() const { return crash_signal_code_; }
 
   pid_t crash_thread() const { return crash_thread_; }
   void set_crash_thread(pid_t crash_thread) { crash_thread_ = crash_thread; }
@@ -232,9 +188,6 @@ class LinuxDumper {
 
   // Signal that terminated the crashed process.
   int crash_signal_;
-
-  // The code associated with |crash_signal_|.
-  int crash_signal_code_;
 
   // ID of the crashed thread.
   pid_t crash_thread_;

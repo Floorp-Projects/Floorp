@@ -40,11 +40,6 @@
       'dependencies': [
         '../../../common/windows/common_windows.gyp:common_windows_lib',
       ],
-      'msvs_settings': {
-        'VCLinkerTool': {
-          'LargeAddressAware': '2',
-        },
-      },
     },
   ],
 }

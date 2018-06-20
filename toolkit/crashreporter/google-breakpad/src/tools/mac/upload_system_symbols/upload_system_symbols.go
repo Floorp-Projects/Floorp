@@ -404,7 +404,7 @@ func (fq *findQueue) worker() {
 }
 
 func (fq *findQueue) dumpMachOFile(fp string, image *macho.File) {
-	if image.Type != MachODylib && image.Type != MachOBundle && image.Type != MachODylinker {
+	if image.Type != MachODylib && image.Type != MachOBundle {
 		return
 	}
 

@@ -34,13 +34,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
-#include <limits>
 #include <string>
 #include <vector>
 
-#include "common/path_helper.h"
 #include "common/scoped_ptr.h"
 #include "common/using_std_string.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
@@ -54,49 +51,38 @@
 
 namespace {
 
-struct Options {
-  bool machine_readable;
-  bool output_stack_contents;
-
-  string minidump_file;
-  std::vector<string> symbol_paths;
-};
-
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::Minidump;
-using google_breakpad::MinidumpMemoryList;
-using google_breakpad::MinidumpThreadList;
 using google_breakpad::MinidumpProcessor;
 using google_breakpad::ProcessState;
 using google_breakpad::SimpleSymbolSupplier;
 using google_breakpad::scoped_ptr;
 
-// Processes |options.minidump_file| using MinidumpProcessor.
-// |options.symbol_path|, if non-empty, is the base directory of a
-// symbol storage area, laid out in the format required by
-// SimpleSymbolSupplier.  If such a storage area is specified, it is
-// made available for use by the MinidumpProcessor.
+// Processes |minidump_file| using MinidumpProcessor.  |symbol_path|, if
+// non-empty, is the base directory of a symbol storage area, laid out in
+// the format required by SimpleSymbolSupplier.  If such a storage area
+// is specified, it is made available for use by the MinidumpProcessor.
 //
 // Returns the value of MinidumpProcessor::Process.  If processing succeeds,
 // prints identifying OS and CPU information from the minidump, crash
 // information if the minidump was produced as a result of a crash, and
 // call stacks for each thread contained in the minidump.  All information
 // is printed to stdout.
-bool PrintMinidumpProcess(const Options& options) {
+bool PrintMinidumpProcess(const string &minidump_file,
+                          const std::vector<string> &symbol_paths,
+                          bool machine_readable,
+                          bool output_stack_contents) {
   scoped_ptr<SimpleSymbolSupplier> symbol_supplier;
-  if (!options.symbol_paths.empty()) {
+  if (!symbol_paths.empty()) {
     // TODO(mmentovai): check existence of symbol_path if specified?
-    symbol_supplier.reset(new SimpleSymbolSupplier(options.symbol_paths));
+    symbol_supplier.reset(new SimpleSymbolSupplier(symbol_paths));
   }
 
   BasicSourceLineResolver resolver;
   MinidumpProcessor minidump_processor(symbol_supplier.get(), &resolver);
 
-  // Increase the maximum number of threads and regions.
-  MinidumpThreadList::set_max_threads(std::numeric_limits<uint32_t>::max());
-  MinidumpMemoryList::set_max_regions(std::numeric_limits<uint32_t>::max());
   // Process the minidump.
-  Minidump dump(options.minidump_file);
+  Minidump dump(minidump_file);
   if (!dump.Read()) {
      BPLOG(ERROR) << "Minidump " << dump.path() << " could not be read";
      return false;
@@ -108,72 +94,69 @@ bool PrintMinidumpProcess(const Options& options) {
     return false;
   }
 
-  if (options.machine_readable) {
+  if (machine_readable) {
     PrintProcessStateMachineReadable(process_state);
   } else {
-    PrintProcessState(process_state, options.output_stack_contents, &resolver);
+    PrintProcessState(process_state, output_stack_contents, &resolver);
   }
 
   return true;
 }
 
+void usage(const char *program_name) {
+  fprintf(stderr, "usage: %s [-m|-s] <minidump-file> [symbol-path ...]\n"
+          "    -m : Output in machine-readable format\n"
+          "    -s : Output stack contents\n",
+          program_name);
+}
+
 }  // namespace
 
-static void Usage(int argc, const char *argv[], bool error) {
-  fprintf(error ? stderr : stdout,
-          "Usage: %s [options] <minidump-file> [symbol-path ...]\n"
-          "\n"
-          "Output a stack trace for the provided minidump\n"
-          "\n"
-          "Options:\n"
-          "\n"
-          "  -m         Output in machine-readable format\n"
-          "  -s         Output stack contents\n",
-          google_breakpad::BaseName(argv[0]).c_str());
-}
+int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
 
-static void SetupOptions(int argc, const char *argv[], Options* options) {
-  int ch;
+  if (argc < 2) {
+    usage(argv[0]);
+    return 1;
+  }
 
-  options->machine_readable = false;
-  options->output_stack_contents = false;
+  const char *minidump_file;
+  bool machine_readable = false;
+  bool output_stack_contents = false;
+  int symbol_path_arg;
 
-  while ((ch = getopt(argc, (char * const *)argv, "hms")) != -1) {
-    switch (ch) {
-      case 'h':
-        Usage(argc, argv, false);
-        exit(0);
-        break;
-
-      case 'm':
-        options->machine_readable = true;
-        break;
-      case 's':
-        options->output_stack_contents = true;
-        break;
-
-      case '?':
-        Usage(argc, argv, true);
-        exit(1);
-        break;
+  if (strcmp(argv[1], "-m") == 0) {
+    if (argc < 3) {
+      usage(argv[0]);
+      return 1;
     }
+
+    machine_readable = true;
+    minidump_file = argv[2];
+    symbol_path_arg = 3;
+  } else if (strcmp(argv[1], "-s") == 0) {
+    if (argc < 3) {
+      usage(argv[0]);
+      return 1;
+    }
+
+    output_stack_contents = true;
+    minidump_file = argv[2];
+    symbol_path_arg = 3;
+  } else {
+    minidump_file = argv[1];
+    symbol_path_arg = 2;
   }
 
-  if ((argc - optind) == 0) {
-    fprintf(stderr, "%s: Missing minidump file\n", argv[0]);
-    Usage(argc, argv, true);
-    exit(1);
+  // extra arguments are symbol paths
+  std::vector<string> symbol_paths;
+  if (argc > symbol_path_arg) {
+    for (int argi = symbol_path_arg; argi < argc; ++argi)
+      symbol_paths.push_back(argv[argi]);
   }
 
-  options->minidump_file = argv[optind];
-
-  for (int argi = optind + 1; argi < argc; ++argi)
-    options->symbol_paths.push_back(argv[argi]);
-}
-
-int main(int argc, const char* argv[]) {
-  Options options;
-  SetupOptions(argc, argv, &options);
-
-  return PrintMinidumpProcess(options) ? 0 : 1;
+  return PrintMinidumpProcess(minidump_file,
+                              symbol_paths,
+                              machine_readable,
+                              output_stack_contents) ? 0 : 1;
 }

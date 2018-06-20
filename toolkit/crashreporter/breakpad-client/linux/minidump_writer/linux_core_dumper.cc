@@ -212,7 +212,6 @@ bool LinuxCoreDumper::EnumerateThreads() {
         if (first_thread) {
           crash_thread_ = pid;
           crash_signal_ = status->pr_info.si_signo;
-          crash_signal_code_ = status->pr_info.si_code;
         }
         first_thread = false;
         threads_.push_back(pid);

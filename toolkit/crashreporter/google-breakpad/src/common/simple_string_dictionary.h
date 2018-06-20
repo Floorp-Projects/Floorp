@@ -147,42 +147,39 @@ class NonAllocatingMap {
     if (!key)
       return NULL;
 
-    size_t index = GetEntryIndexForKey(key);
-    if (index == num_entries)
+    const Entry* entry = GetConstEntryForKey(key);
+    if (!entry)
       return NULL;
 
-    return entries_[index].value;
+    return entry->value;
   }
 
   // Stores |value| into |key|, replacing the existing value if |key| is
   // already present. |key| must not be NULL. If |value| is NULL, the key is
   // removed from the map. If there is no more space in the map, then the
-  // operation silently fails. Returns an index into the map that can be used
-  // to quickly access the entry, or |num_entries| on failure or when clearing
-  // a key with a null value.
-  size_t SetKeyValue(const char* key, const char* value) {
+  // operation silently fails.
+  void SetKeyValue(const char* key, const char* value) {
     if (!value) {
       RemoveKey(key);
-      return num_entries;
+      return;
     }
 
     assert(key);
     if (!key)
-      return num_entries;
+      return;
 
     // Key must not be an empty string.
     assert(key[0] != '\0');
     if (key[0] == '\0')
-      return num_entries;
+      return;
 
-    size_t entry_index = GetEntryIndexForKey(key);
+    Entry* entry = GetEntryForKey(key);
 
     // If it does not yet exist, attempt to insert it.
-    if (entry_index == num_entries) {
+    if (!entry) {
       for (size_t i = 0; i < num_entries; ++i) {
         if (!entries_[i].is_active()) {
-          entry_index = i;
-          Entry* entry = &entries_[i];
+          entry = &entries_[i];
 
           strncpy(entry->key, key, key_size);
           entry->key[key_size - 1] = '\0';
@@ -193,8 +190,8 @@ class NonAllocatingMap {
     }
 
     // If the map is out of space, entry will be NULL.
-    if (entry_index == num_entries)
-      return num_entries;
+    if (!entry)
+      return;
 
 #ifndef NDEBUG
     // Sanity check that the key only appears once.
@@ -206,46 +203,26 @@ class NonAllocatingMap {
     assert(count == 1);
 #endif
 
-    strncpy(entries_[entry_index].value, value, value_size);
-    entries_[entry_index].value[value_size - 1] = '\0';
-
-    return entry_index;
-  }
-
-  // Sets a value for a key that has already been set with SetKeyValue(), using
-  // the index returned from that function.
-  void SetValueAtIndex(size_t index, const char* value) {
-    assert(index < num_entries);
-    if (index >= num_entries)
-      return;
-
-    Entry* entry = &entries_[index];
-    assert(entry->key[0] != '\0');
-
     strncpy(entry->value, value, value_size);
     entry->value[value_size - 1] = '\0';
   }
 
   // Given |key|, removes any associated value. |key| must not be NULL. If
-  // the key is not found, this is a noop. This invalidates the index
-  // returned by SetKeyValue().
-  bool RemoveKey(const char* key) {
+  // the key is not found, this is a noop.
+  void RemoveKey(const char* key) {
     assert(key);
     if (!key)
-      return false;
+      return;
 
-    return RemoveAtIndex(GetEntryIndexForKey(key));
-  }
+    Entry* entry = GetEntryForKey(key);
+    if (entry) {
+      entry->key[0] = '\0';
+      entry->value[0] = '\0';
+    }
 
-  // Removes a value and key using an index that was returned from
-  // SetKeyValue(). After a call to this function, the index is invalidated.
-  bool RemoveAtIndex(size_t index) {
-    if (index >= num_entries)
-      return false;
-
-    entries_[index].key[0] = '\0';
-    entries_[index].value[0] = '\0';
-    return true;
+#ifndef NDEBUG
+    assert(GetEntryForKey(key) == NULL);
+#endif
   }
 
   // Places a serialized version of the map into |map| and returns the size.
@@ -258,13 +235,17 @@ class NonAllocatingMap {
   }
 
  private:
-  size_t GetEntryIndexForKey(const char* key) const {
+  const Entry* GetConstEntryForKey(const char* key) const {
     for (size_t i = 0; i < num_entries; ++i) {
       if (strncmp(key, entries_[i].key, key_size) == 0) {
-        return i;
+        return &entries_[i];
       }
     }
-    return num_entries;
+    return NULL;
+  }
+
+  Entry* GetEntryForKey(const char* key) {
+    return const_cast<Entry*>(GetConstEntryForKey(key));
   }
 
   Entry entries_[NumEntries];

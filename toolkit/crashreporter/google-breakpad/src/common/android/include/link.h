@@ -49,6 +49,7 @@
 extern "C" {
 #endif  // __cplusplus
 
+#if defined(ANDROID) && ANDROID_VERSION <= 20
 struct r_debug {
   int              r_version;
   struct link_map* r_map;
@@ -67,6 +68,7 @@ struct link_map {
   struct link_map* l_next;
   struct link_map* l_prev;
 };
+#endif
 
 #ifdef __cplusplus
 }  // extern "C"
