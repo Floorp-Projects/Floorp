@@ -103,8 +103,6 @@ public:
   VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState);
   explicit VRPose(nsISupports* aParent);
 
-  uint64_t FrameID() const { return mFrameId; }
-
   virtual void GetPosition(JSContext* aCx,
                            JS::MutableHandle<JSObject*> aRetval,
                            ErrorResult& aRv) override;
@@ -129,7 +127,6 @@ public:
 protected:
   ~VRPose();
 
-  uint64_t mFrameId;
   gfx::VRHMDSensorState mVRState;
 };
 
