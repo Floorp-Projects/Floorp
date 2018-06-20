@@ -542,8 +542,7 @@ JSContext::setRealm(JS::Realm* realm)
 }
 
 inline JSScript*
-JSContext::currentScript(jsbytecode** ppc,
-                         MaybeAllowCrossCompartment allowCrossCompartment) const
+JSContext::currentScript(jsbytecode** ppc, AllowCrossRealm allowCrossRealm) const
 {
     if (ppc)
         *ppc = nullptr;
@@ -554,31 +553,30 @@ JSContext::currentScript(jsbytecode** ppc,
 
     MOZ_ASSERT(act->cx() == this);
 
-    if (!allowCrossCompartment && act->compartment() != compartment())
+    // Cross-compartment implies cross-realm.
+    if (allowCrossRealm == AllowCrossRealm::DontAllow && act->compartment() != compartment())
         return nullptr;
 
+    JSScript* script = nullptr;
+    jsbytecode* pc = nullptr;
     if (act->isJit()) {
         if (act->hasWasmExitFP())
             return nullptr;
-        JSScript* script = nullptr;
-        js::jit::GetPcScript(const_cast<JSContext*>(this), &script, ppc);
-        MOZ_ASSERT(allowCrossCompartment || script->compartment() == compartment());
-        return script;
+        js::jit::GetPcScript(const_cast<JSContext*>(this), &script, &pc);
+    } else {
+        js::InterpreterFrame* fp = act->asInterpreter()->current();
+        MOZ_ASSERT(!fp->runningInJit());
+        script = fp->script();
+        pc = act->asInterpreter()->regs().pc;
     }
 
-    MOZ_ASSERT(act->isInterpreter());
+    MOZ_ASSERT(script->containsPC(pc));
 
-    js::InterpreterFrame* fp = act->asInterpreter()->current();
-    MOZ_ASSERT(!fp->runningInJit());
+    if (allowCrossRealm == AllowCrossRealm::DontAllow && script->realm() != realm())
+        return nullptr;
 
-    JSScript* script = fp->script();
-    MOZ_ASSERT(allowCrossCompartment || script->compartment() == compartment());
-
-    if (ppc) {
-        *ppc = act->asInterpreter()->regs().pc;
-        MOZ_ASSERT(script->containsPC(*ppc));
-    }
-
+    if (ppc)
+        *ppc = pc;
     return script;
 }
 
