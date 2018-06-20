@@ -46,6 +46,8 @@ public interface IWebView {
 
         void onURLChanged(final String url);
 
+        void onTitleChanged(final String title);
+
         void onRequest(final boolean isTriggeredByUserGesture);
 
         void onDownloadStart(Download download);

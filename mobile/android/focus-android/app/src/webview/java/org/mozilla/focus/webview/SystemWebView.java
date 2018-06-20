@@ -293,6 +293,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
                     final String viewURL = view.getUrl();
                     if (!UrlUtils.isInternalErrorURL(viewURL) && viewURL != null) {
                         callback.onURLChanged(viewURL);
+                        callback.onTitleChanged(getTitle());
                     }
                     callback.onProgress(newProgress);
                 }
