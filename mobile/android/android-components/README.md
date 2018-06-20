@@ -159,6 +159,14 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
+# Sample apps
+
+_Sample apps using various components._
+
+* [**Browser**](samples/browser) - A simple browser composed from browser components.
+
+* [**Toolbar**](samples/toolbar) - An app demoing multiple customized toolbars using the [**browser-toolbar**](components/browser/toolbar/README.md) component.
+
 # License
 
     This Source Code Form is subject to the terms of the Mozilla Public
