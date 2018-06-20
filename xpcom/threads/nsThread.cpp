@@ -32,6 +32,7 @@
 #include "mozilla/Scheduler.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
@@ -47,7 +48,6 @@
 #include "ThreadEventTarget.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DOMPrefs.h"
 
 #ifdef XP_LINUX
 #include <sys/time.h>
@@ -581,14 +581,6 @@ nsThread::~nsThread()
 #endif
 }
 
-bool
-nsThread::GetSchedulerLoggingEnabled() {
-  if (!NS_IsMainThread() || !mozilla::Preferences::IsServiceAvailable()) {
-    return false;
-  }
-  return mozilla::dom::DOMPrefs::SchedulerLoggingEnabled();
-}
-
 nsresult
 nsThread::Init(const nsACString& aName)
 {
@@ -1003,7 +995,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
         HangMonitor::NotifyActivity();
       }
 
-      bool schedulerLoggingEnabled = GetSchedulerLoggingEnabled();
+      bool schedulerLoggingEnabled = mozilla::StaticPrefs::dom_performance_enable_scheduler_timing();
       if (schedulerLoggingEnabled
           && mNestedEventLoopDepth > mCurrentEventLoopDepth
           && mCurrentPerformanceCounter) {

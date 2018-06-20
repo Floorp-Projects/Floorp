@@ -20,7 +20,6 @@ namespace InspectorUtils {
   unsigned long getRuleColumn(CSSRule rule);
   unsigned long getRelativeRuleLine(CSSRule rule);
   boolean hasRulesModifiedByCSSOM(CSSStyleSheet sheet);
-  [NewObject] CSSLexer getCSSLexer(DOMString text);
   unsigned long getSelectorCount(CSSStyleRule rule);
   [Throws] DOMString getSelectorText(CSSStyleRule rule,
                                      unsigned long selectorIndex);

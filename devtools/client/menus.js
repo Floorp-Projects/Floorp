@@ -34,6 +34,7 @@ loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/de
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
+loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
 
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
@@ -132,8 +133,7 @@ exports.menuitems = [
   { id: "getMoreDevtools",
     l10nKey: "getMoreDevtoolsCmd",
     oncommand(event) {
-      const window = event.target.ownerDocument.defaultView;
-      window.openWebLinkIn("https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/", "tab");
+      openDocLink("https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/");
     }
   },
 ];

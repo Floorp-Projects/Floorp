@@ -11,6 +11,7 @@
 #include "EventQueue.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/PerformanceCounter.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsIThreadInternal.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
@@ -148,6 +149,21 @@ WorkerThread::SetWorker(const WorkerThreadFriendKey& /* aKey */,
   }
 }
 
+void
+WorkerThread::IncrementDispatchCounter()
+{
+  if (!mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
+    return;
+  }
+  MutexAutoLock lock(mLock);
+  if (mWorkerPrivate) {
+    PerformanceCounter* performanceCounter = mWorkerPrivate->GetPerformanceCounter();
+    if (performanceCounter) {
+      performanceCounter->IncrementDispatchCounter(DispatchCategory::Worker);
+    }
+  }
+}
+
 nsresult
 WorkerThread::DispatchPrimaryRunnable(const WorkerThreadFriendKey& /* aKey */,
                                       already_AddRefed<nsIRunnable> aRunnable)
@@ -194,6 +210,10 @@ WorkerThread::DispatchAnyThread(const WorkerThreadFriendKey& /* aKey */,
     }
   }
 #endif
+
+  // Increment the PerformanceCounter dispatch count
+  // to keep track of how many runnables are executed.
+  IncrementDispatchCounter();
   nsCOMPtr<nsIRunnable> runnable(aWorkerRunnable);
 
   nsresult rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
@@ -228,12 +248,6 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
 
   const bool onWorkerThread = PR_GetCurrentThread() == mThread;
 
-  if (GetSchedulerLoggingEnabled() && onWorkerThread && mWorkerPrivate) {
-    PerformanceCounter* performanceCounter = mWorkerPrivate->GetPerformanceCounter();
-    if (performanceCounter) {
-      performanceCounter->IncrementDispatchCounter(DispatchCategory::Worker);
-    }
-  }
 
 #ifdef DEBUG
   if (runnable && !onWorkerThread) {
@@ -272,6 +286,9 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
     }
   }
 
+  // Increment the PerformanceCounter dispatch count
+  // to keep track of how many runnables are executed.
+  IncrementDispatchCounter();
   nsresult rv;
   if (runnable && onWorkerThread) {
     RefPtr<WorkerRunnable> workerRunnable = workerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());

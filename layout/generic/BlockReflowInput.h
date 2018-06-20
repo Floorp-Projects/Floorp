@@ -254,7 +254,7 @@ public:
   // The coordinates within the float manager where the block is being
   // placed <b>after</b> taking into account the blocks border and
   // padding. This, therefore, represents the inner "content area" (in
-  // spacemanager coordinates) where child frames will be placed,
+  // float manager coordinates) where child frames will be placed,
   // including child blocks and floats.
   nscoord mFloatManagerI, mFloatManagerB;
 

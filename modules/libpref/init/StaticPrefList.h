@@ -105,6 +105,12 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  "dom.performance.enable_scheduler_timing",
+  dom_performance_enable_scheduler_timing,
+  RelaxedAtomicBool, false
+)
+
 // If true. then the service worker interception and the ServiceWorkerManager
 // will live in the parent process.  This only takes effect on browser start.
 // Note, this is not currently safe to use for normal browsing yet.
