@@ -90,6 +90,7 @@ EnterprisePoliciesManager.prototype = {
     }
 
     this.status = Ci.nsIEnterprisePolicies.ACTIVE;
+    this._parsedPolicies = {};
     this._activatePolicies(provider.policies);
   },
 
@@ -134,6 +135,7 @@ EnterprisePoliciesManager.prototype = {
         continue;
       }
 
+      this._parsedPolicies[policyName] = parsedParameters;
       let policyImpl = Policies[policyName];
 
       for (let timing of Object.keys(this._callbacks)) {
@@ -298,6 +300,10 @@ EnterprisePoliciesManager.prototype = {
 
   isAllowed: function BG_sanitize(feature) {
     return !(feature in DisallowedFeatures);
+  },
+
+  getActivePolicies() {
+    return this._parsedPolicies;
   },
 };
 
