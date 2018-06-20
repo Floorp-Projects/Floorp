@@ -11,8 +11,6 @@ import android.view.View;
 
 import org.mozilla.focus.session.Session;
 
-import java.util.concurrent.CountDownLatch;
-
 public interface IWebView {
     class HitTarget {
         public final boolean isLink;
@@ -128,7 +126,7 @@ public interface IWebView {
 
     void restoreWebViewState(Session session);
 
-    void saveWebViewState(@NonNull Session session, CountDownLatch latch);
+    void saveWebViewState(@NonNull Session session);
 
     void exitFullscreen();
 

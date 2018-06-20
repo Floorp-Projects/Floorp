@@ -43,7 +43,6 @@ import org.mozilla.focus.web.WebViewProvider;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import mozilla.components.support.utils.ThreadUtils;
 
@@ -157,7 +156,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     }
 
     @Override
-    public void saveWebViewState(@NonNull Session session, CountDownLatch latch) {
+    public void saveWebViewState(@NonNull Session session) {
         // We store the actual state into another bundle that we will keep in memory as long as this
         // browsing session is active. The data that WebView stores in this bundle is too large for
         // Android to save and restore as part of the state bundle.

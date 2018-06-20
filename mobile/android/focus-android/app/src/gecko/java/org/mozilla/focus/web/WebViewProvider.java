@@ -482,7 +482,8 @@ public class WebViewProvider {
         }
 
         @Override
-        public void saveWebViewState(@NonNull final Session session, final CountDownLatch latch) {
+        public void saveWebViewState(@NonNull final Session session) {
+            final CountDownLatch latch = new CountDownLatch(1);
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -501,6 +502,11 @@ public class WebViewProvider {
                     geckoSession.saveState(response);
                 }
             });
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                // State was not saved
+            }
         }
 
         @Override
