@@ -400,7 +400,6 @@ MessageManagerTunnel.prototype = {
     // Messages sent to SelectParentHelper.jsm
     "Forms:UpdateDropDown",
     // Messages sent to browser.js
-    "PageVisibility:Hide",
     "PageVisibility:Show",
     // Messages sent to SessionStore.jsm
     "SessionStore:update",
