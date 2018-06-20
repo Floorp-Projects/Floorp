@@ -212,8 +212,9 @@ struct JSContext : public JS::RootingContext,
     friend class js::AutoRealm;
 
   public:
-    template <typename T>
-    inline void enterRealmOf(const T& target);
+    inline void enterRealmOf(JSObject* target);
+    inline void enterRealmOf(JSScript* target);
+    inline void enterRealmOf(js::ObjectGroup* target);
     inline void enterNullRealm();
 
     inline void leaveRealm(JS::Realm* oldRealm);
