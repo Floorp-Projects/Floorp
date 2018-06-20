@@ -8,19 +8,19 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { front, EVENTS, ShadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
   const vsEditor = await ShadersEditorsView._getEditor("vs");
   const fsEditor = await ShadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  await once(panel.panelWin, EVENTS.SHADER_COMPILED);
+  await once(panel, EVENTS.SHADER_COMPILED);
 
   // Synthesizing 'mouseover' events doesn't work, hack around this by
   // manually calling the event listener with the expected arguments.
