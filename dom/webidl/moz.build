@@ -436,7 +436,6 @@ WEBIDL_FILES = [
     'CSSImportRule.webidl',
     'CSSKeyframeRule.webidl',
     'CSSKeyframesRule.webidl',
-    'CSSLexer.webidl',
     'CSSMediaRule.webidl',
     'CSSMozDocumentRule.webidl',
     'CSSNamespaceRule.webidl',

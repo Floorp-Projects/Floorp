@@ -28,6 +28,7 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {OriginalSource} = require("devtools/client/styleeditor/original-source");
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
@@ -487,7 +488,7 @@ StyleEditorUI.prototype = {
    */
   _openLinkNewTab: function() {
     if (this._contextMenuStyleSheet) {
-      this._window.openWebLinkIn(this._contextMenuStyleSheet.href, "tab");
+      openContentLink(this._contextMenuStyleSheet.href);
     }
   },
 

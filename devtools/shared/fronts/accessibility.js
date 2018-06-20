@@ -41,10 +41,6 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
     return this._form.description;
   },
 
-  get help() {
-    return this._form.help;
-  },
-
   get keyboardShortcut() {
     return this._form.keyboardShortcut;
   },
@@ -98,10 +94,6 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
 
   descriptionChange: preEvent("description-change", function(description) {
     this._form.description = description;
-  }),
-
-  helpChange: preEvent("help-change", function(help) {
-    this._form.help = help;
   }),
 
   shortcutChange: preEvent("shortcut-change", function(keyboardShortcut) {

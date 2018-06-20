@@ -101,7 +101,7 @@ class GeckoEditableSupport final
     AutoTArray<IMETextChange, 4> mIMETextChanges;
     RefPtr<TextRangeArray> mIMERanges;
     int32_t mIMEMaskEventsCount; // Mask events when > 0.
-    bool mIMEUpdatingContext;
+    int32_t mIMEFocusCount; // We are focused when > 0.
     bool mIMESelectionChanged;
     bool mIMETextChangedDuringFlush;
     bool mIMEMonitorCursor;
@@ -180,7 +180,7 @@ public:
         , mEditableAttached(!mIsRemote)
         , mIMERanges(new TextRangeArray())
         , mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
-        , mIMEUpdatingContext(false)
+        , mIMEFocusCount(0)
         , mIMESelectionChanged(false)
         , mIMETextChangedDuringFlush(false)
         , mIMEMonitorCursor(false)

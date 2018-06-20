@@ -221,7 +221,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     incrementalState = State::MarkRoots;
 
     /* Make all the roots be edges emanating from the root node. */
-    traceRuntime(trc, prep.session());
+    traceRuntime(trc, prep);
 
     VerifyNode* node;
     node = trc->curnode;
@@ -655,7 +655,7 @@ CheckHeapTracer::check(AutoTraceSession& session)
 void
 js::gc::CheckHeapAfterGC(JSRuntime* rt)
 {
-    AutoTraceSession session(rt, JS::HeapState::Tracing);
+    AutoTraceSession session(rt);
     CheckHeapTracer tracer(rt);
     if (tracer.init())
         tracer.check(session);
@@ -724,7 +724,7 @@ js::CheckGrayMarkingState(JSRuntime* rt)
         return true;
 
     gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
-    AutoTraceSession session(rt, JS::HeapState::Tracing);
+    AutoTraceSession session(rt);
     CheckGrayMarkingTracer tracer(rt);
     if (!tracer.init())
         return true; // Ignore failure

@@ -583,7 +583,7 @@ class Zone : public JS::shadow::Zone,
     js::ZoneData<bool> isSystem;
 
 #ifdef DEBUG
-    js::ZoneData<unsigned> gcLastSweepGroupIndex;
+    js::MainThreadData<unsigned> gcLastSweepGroupIndex;
 #endif
 
     static js::HashNumber UniqueIdToHash(uint64_t uid) {
@@ -737,11 +737,11 @@ class Zone : public JS::shadow::Zone,
     uint32_t detachedTypedObjects = 0;
 
   private:
-    js::ZoneData<js::jit::JitZone*> jitZone_;
+    js::ZoneOrGCTaskData<js::jit::JitZone*> jitZone_;
 
     js::MainThreadData<bool> gcScheduled_;
     js::MainThreadData<bool> gcScheduledSaved_;
-    js::ZoneData<bool> gcPreserveCode_;
+    js::MainThreadData<bool> gcPreserveCode_;
     js::ZoneData<bool> keepShapeTables_;
 
     // Allow zones to be linked into a list

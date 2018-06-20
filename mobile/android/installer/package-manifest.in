@@ -390,7 +390,7 @@
 
 ; NOTE: This must match the config checks in
 ; /toolkit/components/backgroundhangmonitor/moz.build.
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN)
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN) && !defined(MOZ_ASAN)
 @BINPATH@/components/BHRTelemetryService.js
 @BINPATH@/components/BHRTelemetryService.manifest
 #endif

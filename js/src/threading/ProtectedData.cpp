@@ -65,17 +65,19 @@ CheckZone<Helper>::check() const
     if (OnHelperThread<Helper>())
         return;
 
-    JSContext* cx = TlsContext.get();
+    JSRuntime* runtime = TlsContext.get()->runtime();
     if (zone->isAtomsZone()) {
-        // The atoms zone is protected by the exclusive access lock.
-        MOZ_ASSERT(cx->runtime()->currentThreadHasExclusiveAccess());
+        // The atoms zone is protected by the exclusive access lock, but can be
+        // also accessed when off-thread parsing is blocked.
+        MOZ_ASSERT(runtime->currentThreadHasExclusiveAccess() ||
+                   (!runtime->isOffThreadParseRunning() && runtime->isOffThreadParsingBlocked()));
     } else if (zone->usedByHelperThread()) {
         // This may only be accessed by the helper thread using this zone.
         MOZ_ASSERT(zone->ownedByCurrentHelperThread());
     } else {
         // The main thread is permitted access to all zones. These accesses
         // are threadsafe if the zone is not in use by a helper thread.
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
     }
 }
 

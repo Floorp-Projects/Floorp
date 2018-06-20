@@ -40,16 +40,12 @@ add_task(async function task() {
 
   ok(statusCodeNode.title, l10n.getStr("webConsoleMoreInfoLabel"));
   const {
-    middleMouseEvent,
-    ctrlOrCmdKeyMouseEvent,
     rightClickMouseEvent,
     rightClickCtrlOrCmdKeyMouseEvent,
   } = getMouseEvents();
 
   const testCases = [
-    { clickEvent: middleMouseEvent, link: LEARN_MORE_URI, where: "tabshifted" },
     { clickEvent: null, link: LEARN_MORE_URI, where: "tab" },
-    { clickEvent: ctrlOrCmdKeyMouseEvent, link: LEARN_MORE_URI, where: "tabshifted" },
     { clickEvent: rightClickMouseEvent, link: null, where: null },
     { clickEvent: rightClickCtrlOrCmdKeyMouseEvent, link: null, where: null }
   ];
@@ -75,16 +71,6 @@ add_task(async function task() {
 function getMouseEvents() {
   const isOSX = Services.appinfo.OS == "Darwin";
 
-  const middleMouseEvent = new MouseEvent("click", {
-    bubbles: true,
-    button: 1,
-    view: window
-  });
-  const ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
-    bubbles: true,
-    [isOSX ? "metaKey" : "ctrlKey"]: true,
-    view: window
-  });
   const rightClickMouseEvent = new MouseEvent("contextmenu", {
     bubbles: true,
     button: 2,
@@ -98,8 +84,6 @@ function getMouseEvents() {
   });
 
   return {
-    middleMouseEvent,
-    ctrlOrCmdKeyMouseEvent,
     rightClickMouseEvent,
     rightClickCtrlOrCmdKeyMouseEvent,
   };

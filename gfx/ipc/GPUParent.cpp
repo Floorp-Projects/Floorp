@@ -384,6 +384,9 @@ GPUParent::RecvSimulateDeviceReset(GPUDeviceData* aOut)
 #if defined(XP_WIN)
   DeviceManagerDx::Get()->ForceDeviceReset(ForcedDeviceResetReason::COMPOSITOR_UPDATED);
   DeviceManagerDx::Get()->MaybeResetAndReacquireDevices();
+  if (gfxVars::UseWebRender()) {
+    wr::RenderThread::Get()->SimulateDeviceReset();
+  }
 #endif
   RecvGetDeviceStatus(aOut);
   return IPC_OK();

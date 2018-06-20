@@ -176,7 +176,6 @@ protected:
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
 
-  bool GetSchedulerLoggingEnabled();
   mozilla::TimeStamp mNextIdleDeadline;
   // Used to track which event is being executed by ProcessNextEvent
   nsCOMPtr<nsIRunnable> mCurrentEvent;

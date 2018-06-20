@@ -474,11 +474,6 @@ GetBuiltinTagSlow(JSContext* cx, HandleObject obj, MutableHandleString builtinTa
       case ESClass::RegExp:
         builtinTag.set(cx->names().objectRegExp);
         return true;
-#ifdef ENABLE_BIGINT
-      case ESClass::BigInt:
-        builtinTag.set(cx->names().objectBigInt);
-        return true;
-#endif
       default:
         if (obj->isCallable()) {
             // Non-standard: Prevent <object> from showing up as Function.
@@ -537,11 +532,6 @@ GetBuiltinTagFast(JSObject* obj, const Class* clasp, JSContext* cx)
         // Non-standard: Prevent <object> from showing up as Function.
         return cx->names().objectFunction;
     }
-
-#ifdef ENABLE_BIGINT
-    if (obj->is<BigIntObject>())
-        return cx->names().objectBigInt;
-#endif
 
     return nullptr;
 }

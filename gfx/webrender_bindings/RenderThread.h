@@ -168,9 +168,11 @@ public:
   WebRenderProgramCache* ProgramCache();
 
   /// Can only be called from the render thread.
-  void HandleDeviceReset(const char* aWhere);
+  void HandleDeviceReset(const char* aWhere, bool aNotify);
   /// Can only be called from the render thread.
   bool IsHandlingDeviceReset();
+  /// Can be called from any thread.
+  void SimulateDeviceReset();
 
   size_t RendererCount();
 

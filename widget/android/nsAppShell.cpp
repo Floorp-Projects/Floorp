@@ -534,13 +534,14 @@ nsAppShell::Init()
     if (obsServ) {
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
         obsServ->AddObserver(this, "profile-after-change", false);
-        obsServ->AddObserver(this, "tab-child-created", false);
         obsServ->AddObserver(this, "quit-application", false);
         obsServ->AddObserver(this, "quit-application-granted", false);
         obsServ->AddObserver(this, "xpcom-shutdown", false);
 
         if (XRE_IsParentProcess()) {
             obsServ->AddObserver(this, "chrome-document-loaded", false);
+        } else {
+            obsServ->AddObserver(this, "content-document-global-created", false);
         }
     }
 
@@ -660,19 +661,33 @@ nsAppShell::Observe(nsISupports* aSubject,
             mozilla::PrefsHelper::OnPrefChange(aData);
         }
 
-    } else if (!strcmp(aTopic, "tab-child-created")) {
+    } else if (!strcmp(aTopic, "content-document-global-created")) {
         // Associate the PuppetWidget of the newly-created TabChild with a
         // GeckoEditableChild instance.
         MOZ_ASSERT(!XRE_IsParentProcess());
 
+        nsCOMPtr<mozIDOMWindowProxy> domWindow = do_QueryInterface(aSubject);
+        MOZ_ASSERT(domWindow);
+        nsCOMPtr<nsIWidget> domWidget = widget::WidgetUtils::DOMWindowToWidget(
+                nsPIDOMWindowOuter::From(domWindow));
+        NS_ENSURE_TRUE(domWidget, NS_OK);
+
         dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-        nsCOMPtr<nsITabChild> ptabChild = do_QueryInterface(aSubject);
-        NS_ENSURE_TRUE(contentChild && ptabChild, NS_OK);
+        dom::TabChild* tabChild = domWidget->GetOwningTabChild();
+        RefPtr<widget::PuppetWidget> widget(tabChild->WebWidget());
+        NS_ENSURE_TRUE(contentChild && tabChild && widget, NS_OK);
+
+        widget::TextEventDispatcherListener* listener =
+                widget->GetNativeTextEventDispatcherListener();
+        if (listener && listener !=
+                static_cast<widget::TextEventDispatcherListener*>(widget)) {
+            // We already set a listener before.
+            return NS_OK;
+        }
 
         // Get the content/tab ID in order to get the correct
         // IGeckoEditableParent object, which GeckoEditableChild uses to
         // communicate with the parent process.
-        const auto tabChild = static_cast<dom::TabChild*>(ptabChild.get());
         const uint64_t contentId = contentChild->GetID();
         const uint64_t tabId = tabChild->GetTabId();
         NS_ENSURE_TRUE(contentId && tabId, NS_OK);
@@ -681,9 +696,8 @@ nsAppShell::Observe(nsISupports* aSubject,
                 contentId, tabId);
         NS_ENSURE_TRUE(editableParent, NS_OK);
 
-        RefPtr<widget::PuppetWidget> widget(tabChild->WebWidget());
         auto editableChild = java::GeckoEditableChild::New(editableParent);
-        NS_ENSURE_TRUE(widget && editableChild, NS_OK);
+        NS_ENSURE_TRUE(editableChild, NS_OK);
 
         RefPtr<widget::GeckoEditableSupport> editableSupport =
                 new widget::GeckoEditableSupport(editableChild);

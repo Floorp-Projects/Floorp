@@ -26,6 +26,9 @@ struct nsCSSValueList;
 
 namespace mozilla {
 class FontSlantStyle;
+namespace dom {
+class Element;
+}
 }
 
 // Style utility functions

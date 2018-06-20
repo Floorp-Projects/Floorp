@@ -13,6 +13,8 @@ const { getRect } = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
@@ -160,10 +162,7 @@ exports.items = [
         root.style.cursor = "pointer";
         root.addEventListener("click", () => {
           if (imageSummary.href) {
-            const mainWindow = context.environment.chromeWindow;
-            mainWindow.openWebLinkIn(imageSummary.href, "tab", {
-              triggeringPrincipal: document.nodePrincipal,
-            });
+            openContentLink(imageSummary.href);
           } else if (imageSummary.filename) {
             const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.initWithPath(imageSummary.filename);

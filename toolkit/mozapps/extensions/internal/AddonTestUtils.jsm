@@ -749,6 +749,19 @@ var AddonTestUtils = {
     let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
     XPIScope.AsyncShutdown = MockAsyncShutdown;
 
+    XPIScope.XPIInternal.BootstrapScope.prototype
+      ._beforeCallBootstrapMethod = (method, params, reason) => {
+        try {
+          this.emit("bootstrap-method", {method, params, reason});
+        } catch (e) {
+          try {
+            this.testScope.do_throw(e);
+          } catch (e) {
+            // Le sigh.
+          }
+        }
+      };
+
     this.addonIntegrationService = Cc["@mozilla.org/addons/integration;1"]
           .getService(Ci.nsIObserver);
 
@@ -881,7 +894,7 @@ var AddonTestUtils = {
   _writeProps(obj, props, indent = "  ") {
     let items = [];
     for (let prop of props) {
-      if (prop in obj)
+      if (obj[prop] !== undefined)
         items.push(escaped`${indent}<em:${prop}>${obj[prop]}</em:${prop}>\n`);
     }
     return items.join("");
@@ -906,11 +919,26 @@ var AddonTestUtils = {
   },
 
   createInstallRDF(data) {
+    let defaults = {
+      bootstrap: true,
+      version: "1.0",
+      name: `Test Extension ${data.id}`,
+      targetApplications: [
+        {
+          "id": "xpcshell@tests.mozilla.org",
+          "minVersion": "1",
+          "maxVersion": "64.*",
+        },
+      ],
+    };
+
     var rdf = '<?xml version="1.0"?>\n';
     rdf += '<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n' +
            '     xmlns:em="http://www.mozilla.org/2004/em-rdf#">\n';
 
     rdf += '<Description about="urn:mozilla:install-manifest">\n';
+
+    data = Object.assign({}, defaults, data);
 
     let props = ["id", "version", "type", "internalName", "updateURL",
                  "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
@@ -1014,6 +1042,8 @@ var AddonTestUtils = {
         await OS.File.makeDir(dirPath, {ignoreExisting: true});
       }
 
+      if (typeof data == "object" && ChromeUtils.getClassName(data) == "Object")
+        data = JSON.stringify(data);
       if (typeof data == "string")
         data = new TextEncoder("utf-8").encode(data);
 

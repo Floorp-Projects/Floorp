@@ -166,6 +166,10 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     jitSupportsSimd(false),
     offthreadIonCompilationEnabled_(true),
     parallelParsingEnabled_(true),
+#ifdef DEBUG
+    offThreadParsesRunning_(0),
+    offThreadParsingBlocked_(false),
+#endif
     autoWritableJitCodeActive_(false),
     oomCallback(nullptr),
     debuggerMallocSizeOf(ReturnZeroSize),
@@ -808,6 +812,7 @@ JSRuntime::setUsedByHelperThread(Zone* zone)
 {
     MOZ_ASSERT(!zone->usedByHelperThread());
     MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(!isOffThreadParsingBlocked());
     zone->setUsedByHelperThread();
     numActiveHelperThreadZones++;
 }

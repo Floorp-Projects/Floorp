@@ -5,7 +5,7 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const { div, button, p } = require("devtools/client/shared/vendor/react-dom-factories");
-const { openWebLink } = require("devtools/client/shared/link");
+const { openDocLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const selectors = require("devtools/client/performance-new/store/selectors");
@@ -28,7 +28,7 @@ class Description extends PureComponent {
   }
 
   handleLinkClick(event) {
-    openWebLink(event.target.value);
+    openDocLink(event.target.value);
   }
 
   /**

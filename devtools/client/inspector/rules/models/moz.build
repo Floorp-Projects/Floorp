@@ -8,4 +8,5 @@ DevToolsModules(
     'element-style.js',
     'rule.js',
     'text-property.js',
+    'user-properties.js',
 )

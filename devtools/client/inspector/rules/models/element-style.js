@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,31 +6,31 @@
 
 const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
-const {promiseWarn} = require("devtools/client/inspector/shared/utils");
-const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
-const {getCssProperties, isCssVariable} = require("devtools/shared/fronts/css-properties");
+const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
+const { promiseWarn } = require("devtools/client/inspector/shared/utils");
+const { getCssProperties, isCssVariable } = require("devtools/shared/fronts/css-properties");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
 /**
  * ElementStyle is responsible for the following:
  *   Keeps track of which properties are overridden.
  *   Maintains a list of Rule objects for a given element.
  *
- * @param {Element} element
- *        The element whose style we are viewing.
- * @param {CssRuleView} ruleView
- *        The instance of the rule-view panel.
- * @param {Object} store
- *        The ElementStyle can use this object to store metadata
- *        that might outlast the rule view, particularly the current
- *        set of disabled properties.
- * @param {PageStyleFront} pageStyle
- *        Front for the page style actor that will be providing
- *        the style information.
- * @param {Boolean} showUserAgentStyles
- *        Should user agent styles be inspected?
+ * @param  {Element} element
+ *         The element whose style we are viewing.
+ * @param  {CssRuleView} ruleView
+ *         The instance of the rule-view panel.
+ * @param  {Object} store
+ *         The ElementStyle can use this object to store metadata
+ *         that might outlast the rule view, particularly the current
+ *         set of disabled properties.
+ * @param  {PageStyleFront} pageStyle
+ *         Front for the page style actor that will be providing
+ *         the style information.
+ * @param  {Boolean} showUserAgentStyles
+ *         Should user agent styles be inspected?
  */
-function ElementStyle(element, ruleView, store, pageStyle,
-    showUserAgentStyles) {
+function ElementStyle(element, ruleView, store, pageStyle, showUserAgentStyles) {
   this.element = element;
   this.ruleView = ruleView;
   this.store = store || {};
@@ -54,13 +52,11 @@ function ElementStyle(element, ruleView, store, pageStyle,
 }
 
 ElementStyle.prototype = {
-  // The element we're looking at.
-  element: null,
-
   destroy: function() {
     if (this.destroyed) {
       return;
     }
+
     this.destroyed = true;
 
     for (const rule of this.rules) {
@@ -93,17 +89,12 @@ ElementStyle.prototype = {
       matchedSelectors: true,
       filter: this.showUserAgentStyles ? "ua" : undefined,
     }).then(entries => {
-      if (this.destroyed) {
-        return promise.resolve(undefined);
-      }
-
-      if (this.populated !== populated) {
-        // Don't care anymore.
+      if (this.destroyed || this.populated !== populated) {
         return promise.resolve(undefined);
       }
 
       // Store the current list of rules (if any) during the population
-      // process.  They will be reused if possible.
+      // process. They will be reused if possible.
       const existingRules = this.rules;
 
       this.rules = [];
@@ -141,7 +132,7 @@ ElementStyle.prototype = {
    * Get the font families in use by the element.
    *
    * Returns a promise that will be resolved to a list of CSS family
-   * names.  The list might have duplicates.
+   * names. The list might have duplicates.
    */
   getUsedFontFamilies: function() {
     return new Promise((resolve, reject) => {
@@ -167,25 +158,21 @@ ElementStyle.prototype = {
   },
 
   /**
-   * Add a rule if it's one we care about.  Filters out duplicates and
+   * Add a rule if it's one we care about. Filters out duplicates and
    * inherited styles with no inherited properties.
    *
-   * @param {Object} options
-   *        Options for creating the Rule, see the Rule constructor.
-   * @param {Array} existingRules
-   *        Rules to reuse if possible.  If a rule is reused, then it
-   *        it will be deleted from this array.
+   * @param  {Object} options
+   *         Options for creating the Rule, see the Rule constructor.
+   * @param  {Array} existingRules
+   *         Rules to reuse if possible. If a rule is reused, then it
+   *         it will be deleted from this array.
    * @return {Boolean} true if we added the rule.
    */
   _maybeAddRule: function(options, existingRules) {
     // If we've already included this domRule (for example, when a
     // common selector is inherited), ignore it.
-    if (options.rule &&
-        this.rules.some(rule => rule.domRule === options.rule)) {
-      return false;
-    }
-
-    if (options.system) {
+    if (options.system ||
+        (options.rule && this.rules.some(rule => rule.domRule === options.rule))) {
       return false;
     }
 
@@ -232,9 +219,9 @@ ElementStyle.prototype = {
    * Mark the properties listed in this.rules for a given pseudo element
    * with an overridden flag if an earlier property overrides it.
    *
-   * @param {String} pseudo
-   *        Which pseudo element to flag as overridden.
-   *        Empty string or undefined will default to no pseudo element.
+   * @param  {String} pseudo
+   *         Which pseudo element to flag as overridden.
+   *         Empty string or undefined will default to no pseudo element.
    */
   markOverridden: function(pseudo = "") {
     // Gather all the text properties applied by these rules, ordered
@@ -262,7 +249,7 @@ ElementStyle.prototype = {
       computedProps = computedProps.concat(textProp.computed);
     }
 
-    // Walk over the computed properties.  As we see a property name
+    // Walk over the computed properties. As we see a property name
     // for the first time, mark that property's name as taken by this
     // property.
     //
@@ -291,13 +278,14 @@ ElementStyle.prototype = {
         computedProp.overridden = true;
         continue;
       }
+
       let overridden;
       if (earlier &&
           computedProp.priority === "important" &&
           earlier.priority !== "important" &&
           (earlier.textProp.rule.inherited ||
            !computedProp.textProp.rule.inherited)) {
-        // New property is higher priority.  Mark the earlier property
+        // New property is higher priority. Mark the earlier property
         // overridden (which will reverse its dirty state).
         earlier._overriddenDirty = !earlier._overriddenDirty;
         earlier.overridden = true;
@@ -309,6 +297,7 @@ ElementStyle.prototype = {
       computedProp._overriddenDirty =
         (!!computedProp.overridden !== overridden);
       computedProp.overridden = overridden;
+
       if (!computedProp.overridden && computedProp.textProp.enabled) {
         taken[computedProp.name] = computedProp;
 
@@ -319,8 +308,8 @@ ElementStyle.prototype = {
     }
 
     // For each TextProperty, mark it overridden if all of its
-    // computed properties are marked overridden.  Update the text
-    // property's associated editor, if any.  This will clear the
+    // computed properties are marked overridden. Update the text
+    // property's associated editor, if any. This will clear the
     // _overriddenDirty state on all computed properties.
     for (const textProp of textProps) {
       // _updatePropertyOverridden will return true if the
@@ -333,21 +322,23 @@ ElementStyle.prototype = {
 
   /**
    * Mark a given TextProperty as overridden or not depending on the
-   * state of its computed properties.  Clears the _overriddenDirty state
+   * state of its computed properties. Clears the _overriddenDirty state
    * on all computed properties.
    *
-   * @param {TextProperty} prop
-   *        The text property to update.
+   * @param  {TextProperty} prop
+   *         The text property to update.
    * @return {Boolean} true if the TextProperty's overridden state (or any of
    *         its computed properties overridden state) changed.
    */
   _updatePropertyOverridden: function(prop) {
     let overridden = true;
     let dirty = false;
+
     for (const computedProp of prop.computed) {
       if (!computedProp.overridden) {
         overridden = false;
       }
+
       dirty = computedProp._overriddenDirty || dirty;
       delete computedProp._overriddenDirty;
     }
@@ -369,84 +360,6 @@ ElementStyle.prototype = {
   getVariable: function(name) {
     return this.variables.get(name);
   },
-};
-
-/**
- * Store of CSSStyleDeclarations mapped to properties that have been changed by
- * the user.
- */
-function UserProperties() {
-  this.map = new Map();
-}
-
-UserProperties.prototype = {
-  /**
-   * Get a named property for a given CSSStyleDeclaration.
-   *
-   * @param {CSSStyleDeclaration} style
-   *        The CSSStyleDeclaration against which the property is mapped.
-   * @param {String} name
-   *        The name of the property to get.
-   * @param {String} value
-   *        Default value.
-   * @return {String}
-   *        The property value if it has previously been set by the user, null
-   *        otherwise.
-   */
-  getProperty: function(style, name, value) {
-    const key = this.getKey(style);
-    const entry = this.map.get(key, null);
-
-    if (entry && name in entry) {
-      return entry[name];
-    }
-    return value;
-  },
-
-  /**
-   * Set a named property for a given CSSStyleDeclaration.
-   *
-   * @param {CSSStyleDeclaration} style
-   *        The CSSStyleDeclaration against which the property is to be mapped.
-   * @param {String} name
-   *        The name of the property to set.
-   * @param {String} userValue
-   *        The value of the property to set.
-   */
-  setProperty: function(style, name, userValue) {
-    const key = this.getKey(style, name);
-    const entry = this.map.get(key, null);
-
-    if (entry) {
-      entry[name] = userValue;
-    } else {
-      const props = {};
-      props[name] = userValue;
-      this.map.set(key, props);
-    }
-  },
-
-  /**
-   * Check whether a named property for a given CSSStyleDeclaration is stored.
-   *
-   * @param {CSSStyleDeclaration} style
-   *        The CSSStyleDeclaration against which the property would be mapped.
-   * @param {String} name
-   *        The name of the property to check.
-   */
-  contains: function(style, name) {
-    const key = this.getKey(style, name);
-    const entry = this.map.get(key, null);
-    return !!entry && name in entry;
-  },
-
-  getKey: function(style, name) {
-    return style.actorID + ":" + name;
-  },
-
-  clear: function() {
-    this.map.clear();
-  }
 };
 
 module.exports = ElementStyle;

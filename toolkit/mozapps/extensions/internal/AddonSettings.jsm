@@ -26,8 +26,6 @@ function makeConstant(name, value) {
   });
 }
 
-makeConstant("ADDON_SIGNING", AppConstants.MOZ_ADDON_SIGNING);
-
 if (AppConstants.MOZ_REQUIRE_SIGNING && !Cu.isInAutomation) {
   makeConstant("REQUIRE_SIGNING", true);
   makeConstant("LANGPACKS_REQUIRE_SIGNING", true);

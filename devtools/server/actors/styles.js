@@ -6,6 +6,7 @@
 
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {LongStringActor} = require("devtools/server/actors/string");
 const InspectorUtils = require("InspectorUtils");
 
@@ -1611,7 +1612,7 @@ function getRuleText(initialText, line, column) {
 
   const {offset: textOffset, text} =
       getTextAtLineColumn(initialText, line, column);
-  const lexer = InspectorUtils.getCSSLexer(text);
+  const lexer = getCSSLexer(text);
 
   // Search forward for the opening brace.
   while (true) {
@@ -1685,7 +1686,7 @@ function getSelectorOffsets(initialText, line, column) {
 
   const {offset: textOffset, text} =
       getTextAtLineColumn(initialText, line, column);
-  const lexer = InspectorUtils.getCSSLexer(text);
+  const lexer = getCSSLexer(text);
 
   // Search forward for the opening brace.
   let endOffset;

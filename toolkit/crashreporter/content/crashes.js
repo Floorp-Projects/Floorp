@@ -12,6 +12,13 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm");
 
+document.addEventListener("DOMContentLoaded", function() {
+  populateReportList();
+  document.getElementById("clear-reports").addEventListener("click", function() {
+    clearReports().then(null, Cu.reportError);
+  });
+});
+
 const buildID = Services.appinfo.appBuildID;
 
 function submitPendingReport(event) {

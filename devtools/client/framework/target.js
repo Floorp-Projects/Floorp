@@ -390,6 +390,19 @@ TabTarget.prototype = {
   },
 
   /**
+   * For local tabs, returns the tab's contentPrincipal, which can be used as a
+   * `triggeringPrincipal` when opening links.  However, this is a hack as it is not
+   * correct for subdocuments and it won't work for remote debugging.  Bug 1467945 hopes
+   * to devise a better approach.
+   */
+  get contentPrincipal() {
+    if (!this.isLocalTab) {
+      return null;
+    }
+    return this.tab.linkedBrowser.contentPrincipal;
+  },
+
+  /**
    * Adds remote protocol capabilities to the target, so that it can be used
    * for tools that support the Remote Debugging Protocol even for local
    * connections.

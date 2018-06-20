@@ -157,7 +157,27 @@ class MockExtension {
   }
 }
 
+function provide(obj, keys, value, override = false) {
+  if (keys.length == 1) {
+    if (!(keys[0] in obj) || override) {
+      obj[keys[0]] = value;
+    }
+  } else {
+    if (!(keys[0] in obj)) {
+      obj[keys[0]] = {};
+    }
+    provide(obj[keys[0]], keys.slice(1), value, override);
+  }
+}
+
 var ExtensionTestCommon = class ExtensionTestCommon {
+  static generateManifest(manifest) {
+    provide(manifest, ["name"], "Generated extension");
+    provide(manifest, ["manifest_version"], 2);
+    provide(manifest, ["version"], "1.0");
+    return manifest;
+  }
+
   /**
    * This code is designed to make it easy to test a WebExtension
    * without creating a bunch of files. Everything is contained in a
@@ -193,19 +213,6 @@ var ExtensionTestCommon = class ExtensionTestCommon {
     }
 
     let files = Object.assign({}, data.files);
-
-    function provide(obj, keys, value, override = false) {
-      if (keys.length == 1) {
-        if (!(keys[0] in obj) || override) {
-          obj[keys[0]] = value;
-        }
-      } else {
-        if (!(keys[0] in obj)) {
-          obj[keys[0]] = {};
-        }
-        provide(obj[keys[0]], keys.slice(1), value, override);
-      }
-    }
 
     provide(manifest, ["name"], "Generated extension");
     provide(manifest, ["manifest_version"], 2);

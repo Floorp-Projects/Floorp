@@ -4052,7 +4052,7 @@ nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
                    "redo line on totally empty line with non-empty band...");
       // We should never hit this case if we've placed floats on the
       // line; if we have, then the GetFloatAvailableSpace call is wrong
-      // and needs to happen after the caller pops the space manager
+      // and needs to happen after the caller pops the float manager
       // state.
       aState.FloatManager()->AssertStateMatches(aFloatStateBeforeLine);
 
@@ -6519,7 +6519,7 @@ nsBlockFrame::RecoverFloatsFor(nsIFrame*       aFrame,
 
   // Only blocks have floats
   nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aFrame);
-  // Don't recover any state inside a block that has its own space manager
+  // Don't recover any state inside a block that has its own float manager
   // (we don't currently have any blocks like this, though, thanks to our
   // use of extra frames for 'overflow')
   if (block && !nsBlockFrame::BlockNeedsFloatManager(block)) {

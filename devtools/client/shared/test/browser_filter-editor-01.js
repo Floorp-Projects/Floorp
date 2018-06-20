@@ -6,15 +6,15 @@
 // Tests that the Filter Editor Widget parses filter values correctly (setCssValue)
 
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
-const InspectorUtils = require("InspectorUtils");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
+const {getCSSLexer} = require("devtools/shared/css/lexer");
 
 // Verify that the given string consists of a valid CSS URL token.
 // Return true on success, false on error.
 function verifyURL(string) {
-  const lexer = InspectorUtils.getCSSLexer(string);
+  const lexer = getCSSLexer(string);
 
   const token = lexer.nextToken();
   if (!token || token.tokenType !== "url") {

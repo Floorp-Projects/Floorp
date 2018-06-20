@@ -24,6 +24,8 @@ const Tree = createFactory(require("devtools/client/shared/components/Virtualize
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep, ElementNode } = REPS;
 
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+
 const TELEMETRY_NODE_INSPECTED_COUNT = "devtools.accessibility.node_inspected_count";
 
 class AccessiblePropertyClass extends Component {
@@ -175,23 +177,7 @@ class Accessible extends Component {
   }
 
   openLink(link, e) {
-    if (!gToolbox) {
-      return;
-    }
-
-    // Avoid using Services.appinfo.OS in order to keep accessible pane's frontend free of
-    // priveleged code.
-    const os = window.navigator.userAgent;
-    const isOSX =  os && os.includes("Mac");
-    let where = "tab";
-    if (e && (e.button === 1 || (e.button === 0 && (isOSX ? e.metaKey : e.ctrlKey)))) {
-      where = "tabshifted";
-    } else if (e && e.shiftKey) {
-      where = "window";
-    }
-
-    const win = gToolbox.doc.defaultView.top;
-    win.openWebLinkIn(link, where);
+    openContentLink(link);
   }
 
   renderItem(item, depth, focused, arrow, expanded) {

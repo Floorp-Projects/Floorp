@@ -677,7 +677,7 @@ function checkSystemSection(data) {
 }
 
 function checkActiveAddon(data, partialRecord) {
-  let signedState = mozinfo.addon_signing ? "number" : "undefined";
+  let signedState = "number";
   // system add-ons have an undefined signState
   if (data.isSystem)
     signedState = "undefined";
@@ -1218,7 +1218,7 @@ add_task(async function test_addonsAndPlugins() {
     hasBinaryComponents: false,
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     isSystem: false,
     isWebExtension: true,
     multiprocessCompatible: true,
@@ -1258,7 +1258,7 @@ add_task(async function test_addonsAndPlugins() {
     hasBinaryComponents: false,
     installDay: WEBEXTENSION_ADDON_INSTALL_DATE,
     updateDay: WEBEXTENSION_ADDON_INSTALL_DATE,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     isSystem: false,
     isWebExtension: true,
     multiprocessCompatible: true,
@@ -1375,7 +1375,7 @@ add_task(async function test_signedAddon() {
     hasBinaryComponents: false,
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_SIGNED,
   };
 
   let deferred = PromiseUtils.defer();
@@ -1460,8 +1460,7 @@ add_task(async function test_collectionWithbrokenAddonData() {
     hasBinaryComponents: false,
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING :
-                                         AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_MISSING,
   };
 
   let receivedNotifications = 0;

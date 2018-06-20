@@ -9,6 +9,14 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+const ADDONS = {
+  test_bug567173: {
+    "install.rdf": {
+      "id": "bug567173",
+    }
+  },
+};
+
 async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -75,7 +83,8 @@ async function run_test_5() {
 
 // Checks that an add-on with an illegal ID shows an error
 async function run_test_6() {
-  let install = await AddonManager.getInstallForFile(do_get_addon("test_bug567173"));
+  let xpi = await AddonTestUtils.createTempXPIFile(ADDONS.test_bug567173);
+  let install = await AddonManager.getInstallForFile(xpi);
   Assert.notEqual(install, null);
   Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);

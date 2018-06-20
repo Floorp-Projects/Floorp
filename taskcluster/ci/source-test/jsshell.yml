@@ -44,3 +44,15 @@ bench-sixspeed:
             export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
             cd $GECKO_PATH &&
             ./mach jsshell-bench --binary $JSSHELL --perfherder six-speed
+
+bench-asmjsapps:
+    description: asm.js Apps shell benchmark suite
+    treeherder:
+        symbol: js-bench(asm.js-apps)
+    run:
+        command: >
+            cd $USE_ARTIFACT_PATH/build &&
+            unzip -q -d jsshell target.jsshell.zip &&
+            export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
+            cd $GECKO_PATH &&
+            ./mach jsshell-bench --binary $JSSHELL --perfherder asmjs-apps

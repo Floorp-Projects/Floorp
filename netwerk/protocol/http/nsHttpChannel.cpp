@@ -9305,6 +9305,34 @@ nsHttpChannel::GetWarningReporter()
     return mWarningReporter.get();
 }
 
+namespace {
+
+class CopyNonDefaultHeaderVisitor final : public nsIHttpHeaderVisitor
+{
+  nsCOMPtr<nsIHttpChannel> mTarget;
+
+  ~CopyNonDefaultHeaderVisitor() = default;
+
+  NS_IMETHOD
+  VisitHeader(const nsACString& aHeader, const nsACString& aValue) override
+  {
+    return mTarget->SetRequestHeader(aHeader, aValue, false /* merge */);
+  }
+
+public:
+  explicit CopyNonDefaultHeaderVisitor(nsIHttpChannel* aTarget)
+    : mTarget(aTarget)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mTarget);
+  }
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS(CopyNonDefaultHeaderVisitor, nsIHttpHeaderVisitor)
+
+} // anonymous namespace
+
 nsresult
 nsHttpChannel::RedirectToInterceptedChannel()
 {
@@ -9327,6 +9355,23 @@ nsHttpChannel::RedirectToInterceptedChannel()
     rv = SetupReplacementChannel(mURI, intercepted, true,
                                  nsIChannelEventSink::REDIRECT_INTERNAL);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Some APIs, like fetch(), allow content to set non-standard headers.
+    // Normally these APIs are responsible for copying these headers across
+    // redirects.  In the e10s parent-side intercept case, though, we currently
+    // "hide" the internal redirect to the InterceptedHttpChannel.  So the
+    // fetch() API does not have the opportunity to move headers over.
+    // Therefore, we do it automatically here.
+    //
+    // Once child-side interception is removed and the internal redirect no
+    // longer needs to be "hidden", then this header copying code can be
+    // removed.
+    if (ServiceWorkerParentInterceptEnabled()) {
+      nsCOMPtr<nsIHttpHeaderVisitor> visitor =
+        new CopyNonDefaultHeaderVisitor(intercepted);
+      rv = VisitNonDefaultRequestHeaders(visitor);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     mRedirectChannel = intercepted;
 

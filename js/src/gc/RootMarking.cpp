@@ -262,10 +262,9 @@ PropertyDescriptor::trace(JSTracer* trc)
 }
 
 void
-js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& session)
+js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoGCSession& session)
 {
     MOZ_ASSERT(!TlsContext.get()->suppressGC);
-    MOZ_ASSERT_IF(atomsZone->isCollecting(), session.maybeLock.isSome());
 
     // FinishRoots will have asserted that every root that we do not expect
     // is gone, so we can simply skip traceRuntime here.
@@ -274,14 +273,14 @@ js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc, AutoTraceSession& sessi
 
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
     if (atomsZone->isCollecting())
-        traceRuntimeAtoms(trc, session.lock());
+        traceRuntimeAtoms(trc, session.checkAtomsAccess());
     traceKeptAtoms(trc);
     Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
-    traceRuntimeCommon(trc, MarkRuntime, session);
+    traceRuntimeCommon(trc, MarkRuntime);
 }
 
 void
-js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoTraceSession& session)
+js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoGCSession& session)
 {
     MOZ_ASSERT(!TlsContext.get()->suppressGC);
 
@@ -296,7 +295,7 @@ js::gc::GCRuntime::traceRuntimeForMinorGC(JSTracer* trc, AutoTraceSession& sessi
 
     jit::JitRuntime::TraceJitcodeGlobalTableForMinorGC(trc);
 
-    traceRuntimeCommon(trc, TraceRuntime, session);
+    traceRuntimeCommon(trc, TraceRuntime);
 }
 
 void
@@ -308,7 +307,7 @@ js::TraceRuntime(JSTracer* trc)
     rt->gc.evictNursery();
     AutoPrepareForTracing prep(rt->mainContextFromOwnThread());
     gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
-    rt->gc.traceRuntime(trc, prep.session());
+    rt->gc.traceRuntime(trc, prep);
 }
 
 void
@@ -317,18 +316,19 @@ js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoTraceSession& session)
     MOZ_ASSERT(!rt->isBeingDestroyed());
 
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
-    traceRuntimeAtoms(trc, session.lock());
-    traceRuntimeCommon(trc, TraceRuntime, session);
+
+    traceRuntimeAtoms(trc, session);
+    traceRuntimeCommon(trc, TraceRuntime);
 }
 
 void
-js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock)
+js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc, const AutoAccessAtomsZone& access)
 {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_RUNTIME_DATA);
     TracePermanentAtoms(trc);
-    TraceAtoms(trc, lock);
+    TraceAtoms(trc, access);
     TraceWellKnownSymbols(trc);
-    jit::JitRuntime::Trace(trc, lock);
+    jit::JitRuntime::Trace(trc, access);
 }
 
 void
@@ -344,8 +344,7 @@ js::gc::GCRuntime::traceKeptAtoms(JSTracer* trc)
 }
 
 void
-js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
-                                      AutoTraceSession& session)
+js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
 {
     {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_STACK);
@@ -386,7 +385,7 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
         r->traceRoots(trc, traceOrMark);
 
     // Trace helper thread roots.
-    HelperThreadState().trace(trc, session);
+    HelperThreadState().trace(trc);
 
     // Trace the embedding's black and gray roots.
     if (!JS::RuntimeHeapIsMinorCollecting()) {
@@ -450,9 +449,9 @@ js::gc::GCRuntime::finishRoots()
     grayRootTracer = Callback<JSTraceDataOp>(nullptr, nullptr);
 
     AssertNoRootsTracer trc(rt, TraceWeakMapKeysValues);
-    AutoPrepareForTracing prep(TlsContext.get());
+    AutoTraceSession session(rt);
     gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
-    traceRuntime(&trc, prep.session());
+    traceRuntime(&trc, session);
 
     // Restore the wrapper tracing so that we leak instead of leaving dangling
     // pointers.
