@@ -404,6 +404,77 @@ add_task(async function test_storage_local_data_migration_quota_exceeded_error()
   assertMigrationHistogramCount("failure", 1);
 });
 
+// Test that if the data migration fails to store the old data into the IndexedDB backend
+// then the expected telemetry histogram is being updated.
+add_task(async function test_storage_local_data_migration_failure() {
+  const EXTENSION_ID = "extension-data-migration-failure@mozilla.org";
+
+  // Reset the low disk mode, we don't want the quota manager to raise a QuotaExceededError
+  // during this test case.
+  setLowDiskMode(false);
+
+  // Create the file under the expected directory tree.
+  const {
+    jsonFile,
+    oldStorageFilename,
+  } = await createExtensionJSONFileWithData(EXTENSION_ID, {});
+
+  // Store a fake invalid value which is going to fail to be saved into IndexedDB
+  // (because it can't be cloned and it is going to raise a DataCloneError), which
+  // will trigger a data migration failure that we expect to increment the related
+  // telemetry histogram.
+  jsonFile.data.set("fake_invalid_key", new Error());
+
+  async function background() {
+    await browser.storage.local.set({"test_key_string_on_JSONFileBackend": "expected-value"});
+    browser.test.sendMessage("storage-local-data-migrated-and-set");
+  }
+
+  clearMigrationHistogram();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["storage"],
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+    },
+    background,
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("storage-local-data-migrated-and-set");
+
+  const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(extension.extension);
+
+  const idbConn = await ExtensionStorageIDB.open(storagePrincipal);
+  equal(await idbConn.isEmpty(extension.extension), true,
+        "No data stored in the ExtensionStorageIDB backend as expected");
+  equal(await OS.File.exists(oldStorageFilename), true,
+        "The old json storage should still be available if failed to be read");
+
+  await extension.unload();
+
+  assertTelemetryEvents(EXTENSION_ID, [
+    {
+      method: "migrateResult",
+      extra: {
+        backend: "JSONFile",
+        data_migrated: "n",
+        error_name: "DataCloneError",
+        has_jsonfile: "y",
+        has_olddata: "y",
+      },
+    },
+  ]);
+
+  assertMigrationHistogramCount("success", 0);
+  assertMigrationHistogramCount("failure", 1);
+});
+
 add_task(async function test_storage_local_data_migration_clear_pref() {
   Services.prefs.clearUserPref(LEAVE_STORAGE_PREF);
   Services.prefs.clearUserPref(LEAVE_UUID_PREF);
