@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 with Files("ChannelWrapper.webidl"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: Request Handling")
+    BUG_COMPONENT = ("WebExtensions", "Request Handling")
 
 with Files("HeapSnapshot.webidl"):
     BUG_COMPONENT = ("DevTools", "Memory")
@@ -17,13 +17,13 @@ with Files("InspectorUtils.webidl"):
     BUG_COMPONENT = ("DevTools", "Inspector")
 
 with Files("MatchGlob.webidl"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+    BUG_COMPONENT = ("WebExtensions", "General")
 
 with Files("MatchPattern.webidl"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+    BUG_COMPONENT = ("WebExtensions", "General")
 
 with Files("WebExtension*.webidl"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+    BUG_COMPONENT = ("WebExtensions", "General")
 
 PREPROCESSED_WEBIDL_FILES = [
     'ChromeUtils.webidl',

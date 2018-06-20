@@ -278,7 +278,7 @@ with Files("StereoPannerNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("StreamFilter*"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: Request Handling")
+    BUG_COMPONENT = ("WebExtensions", "Request Handling")
 
 with Files("Style*"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
