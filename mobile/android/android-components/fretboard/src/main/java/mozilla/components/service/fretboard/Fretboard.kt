@@ -60,4 +60,17 @@ class Fretboard(
     fun isInExperiment(context: Context, descriptor: ExperimentDescriptor): Boolean {
         return evaluator.evaluate(context, descriptor, experiments)
     }
+
+    /**
+     * Performs an action if the user is part of the specified experiment
+     *
+     * @param context context
+     * @param descriptor descriptor of the experiment to check
+     * @param block block of code to be executed if the user is part of the experiment
+     */
+    fun withExperiment(context: Context, descriptor: ExperimentDescriptor, block: (Experiment) -> Unit) {
+        if (evaluator.evaluate(context, descriptor, experiments)) {
+            block(experiments.first { it.id == descriptor.id })
+        }
+    }
 }
