@@ -242,7 +242,7 @@ with Files("Position*"):
     BUG_COMPONENT = ("Core", "Geolocation")
 
 with Files("ProfileTimelineMarker.webidl"):
-    BUG_COMPONENT = ("Firefox", "Developer Tools: Performance Tools (profiler/timeline)")
+    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
 
 with Files("ProgressEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")

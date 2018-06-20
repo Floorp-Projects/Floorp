@@ -10,4 +10,4 @@ DevToolsModules(
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Web Audio Editor')
+    BUG_COMPONENT = ('DevTools', 'Web Audio Editor')

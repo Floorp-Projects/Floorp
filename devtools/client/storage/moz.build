@@ -12,4 +12,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Storage Inspector')
+    BUG_COMPONENT = ('DevTools', 'Storage Inspector')

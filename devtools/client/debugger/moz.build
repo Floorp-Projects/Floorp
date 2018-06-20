@@ -20,4 +20,4 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+    BUG_COMPONENT = ('DevTools', 'Debugger')

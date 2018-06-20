@@ -65,7 +65,7 @@ with Files('Color.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
 with Files('Console.jsm'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
+    BUG_COMPONENT = ('DevTools', 'Console')
 
 with Files('DateTimePicker*.jsm'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls ')
