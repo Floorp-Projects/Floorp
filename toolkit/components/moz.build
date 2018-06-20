@@ -17,6 +17,7 @@ DIRS += [
     'aboutmemory',
     'aboutperformance',
     'alerts',
+    'antitracking',
     'apppicker',
     'asyncshutdown',
     'backgroundhangmonitor',
