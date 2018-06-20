@@ -2590,6 +2590,18 @@ ContentChild::RecvUpdateRequestedLocales(nsTArray<nsCString>&& aRequestedLocales
 }
 
 mozilla::ipc::IPCResult
+ContentChild::RecvClearSiteDataReloadNeeded(const nsString& aOrigin)
+{
+  // Rebroadcast "clear-site-data-reload-needed".
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "clear-site-data-reload-needed",
+                         aOrigin.get());
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentChild::RecvAddPermission(const IPC::Permission& permission)
 {
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
