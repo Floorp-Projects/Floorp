@@ -76,6 +76,11 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'TestFilePreferencesWin.cpp',
     ]
+else:
+    UNIFIED_SOURCES += [
+        'TestFilePreferencesUnix.cpp',
+    ]
+
 
 if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl':
     UNIFIED_SOURCES += [
