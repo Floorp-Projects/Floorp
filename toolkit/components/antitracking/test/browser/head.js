@@ -1,5 +1,5 @@
 const TEST_DOMAIN = "http://example.net/";
-const TEST_3RD_PARTY_DOMAIN = "http://tracking.example.com/";
+const TEST_3RD_PARTY_DOMAIN = "https://tracking.example.com/";
 
 const TEST_PATH = "browser/toolkit/components/antitracking/test/browser/";
 
@@ -9,14 +9,14 @@ const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 this.AntiTracking = {
-  runTest(name, callbackTracking, callbackNonTracking) {
-    this._createTask(name, true, callbackTracking);
+  runTest(name, callbackTracking, callbackNonTracking, extraPrefs) {
+    this._createTask(name, true, callbackTracking, extraPrefs);
     if (callbackNonTracking) {
       this._createTask(name, false, callbackNonTracking);
     }
   },
 
-  _createTask(name, blocking, callback) {
+  _createTask(name, blocking, callback, extraPrefs) {
     add_task(async function() {
       info("Starting " + (blocking ? "blocking" : "non-blocking") + " test " + name);
 
@@ -27,6 +27,10 @@ this.AntiTracking = {
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", blocking],
       ]});
+
+      if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
+       await SpecialPowers.pushPrefEnv({"set": extraPrefs });
+      }
 
       await UrlClassifierTestUtils.addTestTrackers();
 
