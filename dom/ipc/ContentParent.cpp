@@ -1857,8 +1857,8 @@ ContentParent::ShouldKeepProcessAlive() const
     return false;
   }
 
-  // We might want to keep alive some content processes alive during test runs,
-  // for performance reasons. This should never be used in production.
+  // We might want to keep some content processes alive for performance reasons.
+  // e.g. test runs and privileged content process for some about: pages.
   // We don't want to alter behavior if the pref is not set, so default to 0.
   int32_t processesToKeepAlive = 0;
 

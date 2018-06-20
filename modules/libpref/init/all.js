@@ -3218,6 +3218,14 @@ pref("dom.ipc.processCount.file", 1);
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
+// Privileged content only supports a single content process.
+pref("dom.ipc.processCount.privileged", 1);
+
+// Keep a single privileged content process alive for performance reasons.
+// e.g. we do not want to throw content processes out every time we navigate
+// away from about:newtab.
+pref("dom.ipc.keepProcessesAlive.privileged", 1);
+
 // Whether a native event loop should be used in the content process.
 #if defined(XP_WIN)
 pref("dom.ipc.useNativeEventProcessing.content", false);
@@ -3253,6 +3261,9 @@ pref("browser.tabs.remote.separateFileUriProcess", true);
 // sorts of pages, which we have to do when we run them in the normal web
 // content process, causes compatibility issues.
 pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
+
+// Pref to control whether we use separate privileged content processes.
+pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
 
 // Enable the use of display-lists for SVG hit-testing and painting.
 pref("svg.display-lists.hit-testing.enabled", true);
