@@ -12,6 +12,7 @@
 #include "mozilla/TextEditor.h"         // for TextEditor
 #include "nsAString.h"                  // for nsAString::Length, etc
 #include "nsContentUtils.h"             // for nsContentUtils
+#include "nsComposeTxtSrvFilter.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsDependentSubstring.h"       // for Substring
 #include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
@@ -26,7 +27,6 @@
 #include "nsISelectionController.h"     // for nsISelectionController, etc
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF, NS_ADDREF, etc
-#include "nsITextServicesFilter.h"      // for nsITextServicesFilter
 #include "mozilla/intl/WordBreaker.h"   // for WordRange, WordBreaker
 #include "nsRange.h"                    // for nsRange
 #include "nsString.h"                   // for nsString, nsAutoString
@@ -359,7 +359,7 @@ TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange)
 }
 
 nsresult
-TextServicesDocument::SetFilter(nsITextServicesFilter* aFilter)
+TextServicesDocument::SetFilter(nsComposeTxtSrvFilter* aFilter)
 {
   // Hang on to the filter so we can set it into the filtered iterator.
   mTxtSvcFilter = aFilter;

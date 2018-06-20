@@ -79,6 +79,9 @@ VerifySignedDigest(TrustDomain& trustDomain,
     case der::PublicKeyAlgorithm::RSA_PKCS1:
       return trustDomain.VerifyRSAPKCS1SignedDigest(signedDigest,
                                                     signerSubjectPublicKeyInfo);
+    case der::PublicKeyAlgorithm::Uninitialized:
+      assert(false);
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
     MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
   }
 }

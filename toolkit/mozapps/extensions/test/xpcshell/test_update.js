@@ -32,70 +32,35 @@ const ADDONS = {
     "install.rdf": {
       id: "addon1@tests.mozilla.org",
       version: "2.0",
-      bootstrap: true,
       name: "Test 1",
-      description: "Test Description",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
   },
   test_update8: {
     "install.rdf": {
       id: "addon8@tests.mozilla.org",
       version: "2.0",
-      bootstrap: true,
       name: "Test 8",
-      description: "Test Description",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
   },
   test_update12: {
     "install.rdf": {
       id: "addon12@tests.mozilla.org",
       version: "2.0",
-      bootstrap: true,
       name: "Test 12",
-      description: "Test Description",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
   },
   test_install2_1: {
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
       version: "2.0",
-      bootstrap: true,
       name: "Real Test 2",
-      description: "Test Description",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
   },
   test_install2_2: {
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
       version: "3.0",
-      bootstrap: true,
       name: "Real Test 3",
-      description: "Test Description",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
     },
   },
 };
@@ -121,21 +86,12 @@ add_task(async function() {
   await promiseStartupManager();
   await promiseInstallXPI({
     id: "addon1@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1"
-    }],
     name: "Test Addon 1",
   });
 
   await promiseInstallXPI({
     id: "addon2@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -147,8 +103,6 @@ add_task(async function() {
 
   await promiseInstallXPI({
     id: "addon3@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,

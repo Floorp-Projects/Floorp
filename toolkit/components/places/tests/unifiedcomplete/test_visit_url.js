@@ -54,6 +54,17 @@ add_task(async function() {
     matches: [ { uri: makeActionURI("visiturl", {url: "about:config", input: "about:config"}), title: "about:config", style: [ "action", "visiturl", "heuristic" ] } ]
   });
 
+  info("visit url, with non-standard whitespace");
+  await check_autocomplete({
+    search: "https://www.mozilla.org\u2028",
+    searchParam: "enable-actions",
+    matches: [{
+      uri: makeActionURI("visiturl", {url: "https://www.mozilla.org/",
+                                      input: "https://www.mozilla.org"}),
+      title: "https://www.mozilla.org/",
+      style: [ "action", "visiturl", "heuristic" ]}]
+  });
+
   // This is distinct because of how we predict being able to url autofill via
   // host lookups.
   info("visit url, host matching visited host but not visited url");

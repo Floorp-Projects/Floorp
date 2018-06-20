@@ -9,6 +9,61 @@ const ID = "webextension1@tests.mozilla.org";
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+const ADDONS = {
+  webextension_1: {
+    "manifest.json": {
+      "name": "Web Extension Name",
+      "version": "1.0",
+      "manifest_version": 2,
+      "applications": {
+        "gecko": {
+          "id": "webextension1@tests.mozilla.org"
+        }
+      },
+      "icons": {
+        "48": "icon48.png",
+        "64": "icon64.png"
+      }
+    },
+    "chrome.manifest": "content webex ./\n"
+  },
+  webextension_3: {
+    "manifest.json": {
+      "name": "Web Extensiøn __MSG_name__",
+      "description": "Descriptïon __MSG_desc__ of add-on",
+      "version": "1.0",
+      "manifest_version": 2,
+      "default_locale": "en",
+      "applications": {
+        "gecko": {
+          "id": "webextension3@tests.mozilla.org"
+        }
+      }
+    },
+    "_locales/en/messages.json": {
+      "name": {
+        "message": "foo ☹",
+        "description": "foo"
+      },
+      "desc": {
+        "message": "bar ☹",
+        "description": "bar"
+      }
+    },
+    "_locales/fr/messages.json": {
+      "name": {
+        "message": "le foo ☺",
+        "description": "foo"
+      },
+      "desc": {
+        "message": "le bar ☺",
+        "description": "bar"
+      }
+    }
+  },
+};
+
+
 let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
@@ -20,7 +75,7 @@ add_task(async function test_1() {
 
   equal(GlobalManager.extensionMap.size, 0);
 
-  let {addon} = await promiseInstallFile(do_get_addon("webextension_1"), true);
+  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_1);
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
@@ -40,7 +95,7 @@ add_task(async function test_1() {
     isSystem: false,
     type: "extension",
     isWebExtension: true,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     iconURL: `${uri}icon48.png`,
     icon64URL: `${uri}icon64.png`,
   });
@@ -67,7 +122,7 @@ add_task(async function test_1() {
     isActive: true,
     isSystem: false,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
     iconURL: `${uri}icon48.png`,
     icon64URL: `${uri}icon64.png`,
   });
@@ -113,7 +168,7 @@ add_task(async function test_2() {
     isActive: true,
     isSystem: false,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await addon.uninstall();
@@ -124,7 +179,7 @@ add_task(async function test_2() {
 add_task(async function test_manifest_localization() {
   const extensionId = "webextension3@tests.mozilla.org";
 
-  let {addon} = await promiseInstallFile(do_get_addon("webextension_3"), true);
+  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_3);
 
   await addon.disable();
 
@@ -355,7 +410,7 @@ add_task(async function testThemeExtension() {
     isSystem: false,
     type: "theme",
     isWebExtension: true,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   await addon.uninstall();
@@ -401,7 +456,7 @@ add_task(async function test_theme_upgrade() {
     appDisabled: false,
     isActive: true,
     type: "extension",
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_PRIVILEGED,
   });
 
   // Create a webextension theme with the same ID

@@ -236,11 +236,13 @@ public:
     MOZ_ASSERT(aTouchEvent,
                "mRetargetedTouchTargets should be empty when dispatching non-touch events.");
 
-    WidgetTouchEvent::TouchArray& touches = aTouchEvent->mTouches;
-    MOZ_ASSERT(!touches.Length() ||
-               touches.Length() == mRetargetedTouchTargets->Length());
-    for (uint32_t i = 0; i < touches.Length(); ++i) {
-      touches[i]->mTarget = mRetargetedTouchTargets->ElementAt(i);
+    if (mRetargetedTouchTargets.isSome()) {
+      WidgetTouchEvent::TouchArray& touches = aTouchEvent->mTouches;
+      MOZ_ASSERT(!touches.Length() ||
+                 touches.Length() == mRetargetedTouchTargets->Length());
+      for (uint32_t i = 0; i < touches.Length(); ++i) {
+        touches[i]->mTarget = mRetargetedTouchTargets->ElementAt(i);
+      }
     }
 
     if (aDOMEvent) {

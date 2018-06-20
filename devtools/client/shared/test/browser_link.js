@@ -4,22 +4,22 @@
 
 "use strict";
 
-// Test link helpers openWebLink, openTrustedLink.
+// Test link helpers openDocLink, openTrustedLink.
 
 // Use any valid test page here.
 const TEST_URI = TEST_URI_ROOT + "dummy.html";
 
-const {openWebLink, openTrustedLink} =
+const {openDocLink, openTrustedLink} =
   require("devtools/client/shared/link");
 
 add_task(async function() {
   // Open a link to a page that will not trigger any request.
   info("Open web link to example.com test page");
-  openWebLink(TEST_URI);
+  openDocLink(TEST_URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   is(gBrowser.selectedBrowser.currentURI.spec, TEST_URI,
-    "openWebLink opened a tab with the expected url");
+    "openDocLink opened a tab with the expected url");
 
   info("Open trusted link to about:debugging");
   openTrustedLink("about:debugging");

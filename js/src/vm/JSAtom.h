@@ -39,13 +39,13 @@ FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
 
 namespace js {
 
-class AutoLockForExclusiveAccess;
+class AutoAccessAtomsZone;
 
 /*
  * Atom tracing and garbage collection hooks.
  */
 void
-TraceAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+TraceAtoms(JSTracer* trc, const AutoAccessAtomsZone& atomsAccess);
 
 void
 TracePermanentAtoms(JSTracer* trc);

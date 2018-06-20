@@ -241,18 +241,11 @@ public:
   RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult RecvGetInputContext(
-    widget::IMEState::Enabled* aIMEEnabled,
-    widget::IMEState::Open* aIMEOpen) override;
+    widget::IMEState* aIMEState) override;
 
   virtual mozilla::ipc::IPCResult RecvSetInputContext(
-    const widget::IMEState::Enabled& aIMEEnabled,
-    const widget::IMEState::Open& aIMEOpen,
-    const nsString& aType,
-    const nsString& aInputmode,
-    const nsString& aActionHint,
-    const bool& aInPrivateBrowsing,
-    const widget::InputContextAction::Cause& aCause,
-    const widget::InputContextAction::FocusChange& aFocusChange) override;
+    const widget::InputContext& aContext,
+    const widget::InputContextAction& aAction) override;
 
   // See nsIKeyEventInPluginCallback
   virtual void HandledWindowedPluginKeyEvent(

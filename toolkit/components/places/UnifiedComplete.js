@@ -1757,18 +1757,19 @@ Search.prototype = {
     let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
                 Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
     let fixupInfo = null;
+    let searchUrl = this._trimmedOriginalSearchString;
     try {
-      fixupInfo = Services.uriFixup.getFixupURIInfo(this._originalSearchString,
+      fixupInfo = Services.uriFixup.getFixupURIInfo(searchUrl,
                                                     flags);
     } catch (e) {
       if (e.result == Cr.NS_ERROR_MALFORMED_URI && !Prefs.get("keyword.enabled")) {
         let value = PlacesUtils.mozActionURI("visiturl", {
-          url: this._originalSearchString,
-          input: this._originalSearchString,
+          url: searchUrl,
+          input: searchUrl,
         });
         this._addMatch({
           value,
-          comment: this._originalSearchString,
+          comment: searchUrl,
           style: "action visiturl",
           frecency: Infinity
         });
@@ -1805,7 +1806,7 @@ Search.prototype = {
 
     let value = PlacesUtils.mozActionURI("visiturl", {
       url: escapedURL,
-      input: this._originalSearchString,
+      input: searchUrl,
     });
 
     let match = {
@@ -1822,7 +1823,7 @@ Search.prototype = {
     // By default we won't provide an icon, but for the subset of urls with a
     // host we'll check for a typed slash and set favicon for the host part.
     if (hostExpected &&
-        (this._trimmedOriginalSearchString.endsWith("/") || uri.pathQueryRef.length > 1)) {
+        (searchUrl.endsWith("/") || uri.pathQueryRef.length > 1)) {
       match.icon = `page-icon:${uri.prePath}/`;
     }
 

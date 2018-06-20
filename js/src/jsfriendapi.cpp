@@ -1252,9 +1252,9 @@ js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
     fprintf(dtrc.output, "# Roots.\n");
     {
         JSRuntime* rt = cx->runtime();
-        js::gc::AutoPrepareForTracing prep(cx);
+        js::gc::AutoTraceSession session(rt);
         gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
-        rt->gc.traceRuntime(&dtrc, prep.session());
+        rt->gc.traceRuntime(&dtrc, session);
     }
 
     fprintf(dtrc.output, "# Weak maps.\n");

@@ -85,6 +85,7 @@ public final class SessionTextInput {
         @WrapForJNI final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
 
         // IME enabled state for notifyIMEContext().
+        final int IME_STATE_UNKNOWN = -1;
         final int IME_STATE_DISABLED = 0;
         final int IME_STATE_ENABLED = 1;
         final int IME_STATE_PASSWORD = 2;

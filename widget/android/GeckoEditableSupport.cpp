@@ -1188,10 +1188,10 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
     }
 
 #ifdef DEBUG_ANDROID_IME
-    const NS_ConvertUTF16toUTF8 data(event.mData);
+    const NS_ConvertUTF16toUTF8 data(string);
     const char* text = data.get();
     ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%u",
-            text, event.mData.Length(), event.mRanges->Length());
+            text, string.Length(), mIMERanges->Length());
 #endif // DEBUG_ANDROID_IME
 
     if (NS_WARN_IF(NS_FAILED(BeginInputTransaction(mDispatcher)))) {
@@ -1254,6 +1254,8 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
         case NOTIFY_IME_OF_FOCUS: {
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
 
+            mIMEFocusCount++;
+
             RefPtr<GeckoEditableSupport> self(this);
             RefPtr<TextEventDispatcher> dispatcher = aTextEventDispatcher;
 
@@ -1264,7 +1266,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                 nsCOMPtr<nsIWidget> widget = dispatcher->GetWidget();
 
                 --mIMEMaskEventsCount;
-                if (mIMEMaskEventsCount || !widget || widget->Destroyed()) {
+                if (!mIMEFocusCount || !widget || widget->Destroyed()) {
                     return;
                 }
 
@@ -1300,10 +1302,16 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
         case NOTIFY_IME_OF_BLUR: {
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
 
-            if (!mIMEMaskEventsCount) {
-                mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
-                OnRemovedFrom(mDispatcher);
-            }
+            mIMEFocusCount--;
+            MOZ_ASSERT(mIMEFocusCount >= 0);
+
+            RefPtr<GeckoEditableSupport> self(this);
+            nsAppShell::PostEvent([this, self] {
+                if (!mIMEFocusCount) {
+                    mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
+                    OnRemovedFrom(mDispatcher);
+                }
+            });
 
             // Mask events because we lost focus. Unmask on the next focus.
             mIMEMaskEventsCount++;
@@ -1391,29 +1399,25 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
         return;
     }
 
-    if (mIMEUpdatingContext) {
-        return;
-    }
-    mIMEUpdatingContext = true;
-
-    RefPtr<GeckoEditableSupport> self(this);
     const bool inPrivateBrowsing = mInputContext.mInPrivateBrowsing;
-    const bool isUserAction = aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
+    const bool isUserAction =
+            aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
     const int32_t flags =
             (inPrivateBrowsing ? EditableListener::IME_FLAG_PRIVATE_BROWSING : 0) |
             (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0);
 
-    nsAppShell::PostEvent([this, self, flags] {
+    // Post an event to keep calls in order relative to NotifyIME.
+    nsAppShell::PostEvent([this, self = RefPtr<GeckoEditableSupport>(this),
+                           flags, context = mInputContext] {
         nsCOMPtr<nsIWidget> widget = GetWidget();
 
-        mIMEUpdatingContext = false;
         if (!widget || widget->Destroyed()) {
             return;
         }
-        mEditable->NotifyIMEContext(mInputContext.mIMEState.mEnabled,
-                                    mInputContext.mHTMLInputType,
-                                    mInputContext.mHTMLInputInputmode,
-                                    mInputContext.mActionHint,
+        mEditable->NotifyIMEContext(context.mIMEState.mEnabled,
+                                    context.mHTMLInputType,
+                                    context.mHTMLInputInputmode,
+                                    context.mActionHint,
                                     flags);
     });
 }

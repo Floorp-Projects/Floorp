@@ -11,7 +11,6 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const { throttle } = require("devtools/shared/throttle");
 const { debounce } = require("devtools/shared/debounce");
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
@@ -63,8 +62,6 @@ class FontInspector {
     this.ruleView = this.inspector.getPanel("ruleview").view;
     this.selectedRule = null;
     this.store = this.inspector.store;
-    // Map CSS property names to corresponding TextProperty instances from the Rule view.
-    this.textProperties = new Map();
     // Map CSS property names and variable font axis names to methods that write their
     // corresponding values to the appropriate TextProperty from the Rule view.
     // Values of variable font registered axes may be written to CSS font properties under
@@ -72,7 +69,7 @@ class FontInspector {
     this.writers = new Map();
 
     this.snapshotChanges = debounce(this.snapshotChanges, 100, this);
-    this.syncChanges = throttle(this.syncChanges, 100, this);
+    this.syncChanges = debounce(this.syncChanges, 100, this);
     this.onInstanceChange = this.onInstanceChange.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
@@ -151,8 +148,6 @@ class FontInspector {
     this.ruleView = null;
     this.selectedRule = null;
     this.store = null;
-    this.textProperties.clear();
-    this.textProperties = null;
     this.writers.clear();
     this.writers = null;
   }
@@ -229,17 +224,13 @@ class FontInspector {
    * @return {TextProperty}
    */
   getTextProperty(name, value) {
-    if (!this.textProperties.has(name)) {
-      let textProperty =
-        this.selectedRule.textProps.find(prop => prop.name === name);
-      if (!textProperty) {
-        textProperty = this.selectedRule.editor.addProperty(name, value, "", true);
-      }
-
-      this.textProperties.set(name, textProperty);
+    let textProperty =
+      this.selectedRule.textProps.find(prop => prop.name === name);
+    if (!textProperty) {
+      textProperty = this.selectedRule.editor.addProperty(name, value, "", true);
     }
 
-    return this.textProperties.get(name);
+    return textProperty;
   }
 
   /**
@@ -371,19 +362,23 @@ class FontInspector {
            this.inspector.selection.isElementNode();
   }
 
-    /**
-   * Sync the Rule view with the styles from the page. Called in a throttled way
+  /**
+   * Sync the Rule view with the latest styles from the page. Called in a debounced way
    * (see constructor) after property changes are applied directly to the CSS style rule
-   * on the page circumventing TextProperty.setValue() which triggers expensive DOM
+   * on the page circumventing direct TextProperty.setValue() which triggers expensive DOM
    * operations in TextPropertyEditor.update().
    *
-   * @param  {TextProperty} textProperty
-   *         Model of CSS declaration for a property in used in the rule view.
+   * @param  {String} name
+   *         CSS property name
    * @param  {String} value
-   *         Value of the CSS property that should be reflected in the rule view.
+   *         CSS property value
    */
-  syncChanges(textProperty, value) {
-    textProperty.updateValue(value);
+  syncChanges(name, value) {
+    const textProperty = this.getTextProperty(name, value);
+    if (textProperty) {
+      textProperty.setValue(value);
+    }
+
     this.ruleView.on("property-value-updated", this.onRuleUpdated);
   }
 
@@ -582,10 +577,9 @@ class FontInspector {
     this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
       filterProperties: FONT_PROPERTIES
     });
-    // Clear any references to writer methods and CSS declarations because the node's
+    // Clear any references to writer methods because the node's
     // styles may have changed since the last font editor refresh.
     this.writers.clear();
-    this.textProperties.clear();
     // Select the node's inline style as the rule where to write property value changes.
     this.selectedRule =
       this.ruleView.rules.find(rule => rule.domRule.type === ELEMENT_STYLE);
@@ -696,7 +690,15 @@ class FontInspector {
   }
 
   /**
-   * Preview a property value (live) then sync the changes (throttled) to the Rule view.
+   * Preview a property value (live) then sync the changes (debounced) to the Rule view.
+   *
+   * NOTE: Until Bug 1462591 is addressed, all changes are written to the element's inline
+   * style attribute. In this current scenario, Rule.previewPropertyValue()
+   * causes the whole inline style representation in the Rule view to update instead of
+   * just previewing the change on the element.
+   * We keep the debounced call to syncChanges() because it explicitly calls
+   * TextProperty.setValue() which performs other actions, including marking the property
+   * as "changed" in the Rule view with a green indicator.
    *
    * @param {String} name
    *        CSS property name
@@ -713,8 +715,8 @@ class FontInspector {
     this.ruleView.off("property-value-updated", this.onRuleUpdated);
     // Live preview font property changes on the page.
     textProperty.rule.previewPropertyValue(textProperty, value, "");
-    // Sync Rule view with changes reflected on the page (throttled).
-    this.syncChanges(textProperty, value);
+    // Sync Rule view with changes reflected on the page (debounced).
+    this.syncChanges(name, value);
   }
 }
 

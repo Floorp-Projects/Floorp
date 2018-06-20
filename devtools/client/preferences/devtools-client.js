@@ -44,7 +44,9 @@ pref("devtools.inspector.show-three-pane-tooltip", false);
 #endif
 // Enable the 3 pane mode in the inspector
 pref("devtools.inspector.three-pane-enabled", true);
-
+// Whether or not this is the first run of the 3 pane mode. Used to reset the default
+// inspector sidebar widths for its first run.
+pref("devtools.inspector.three-pane-first-run", true);
 // Collapse pseudo-elements by default in the rule-view
 pref("devtools.inspector.show_pseudo_elements", false);
 // The default size for image preview tooltips in the rule-view/computed-view/markup-view

@@ -512,6 +512,10 @@ class HostProgram(HostMixin, BaseProgram):
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
     KIND = 'host'
 
+    @property
+    def install_target(self):
+        return 'dist/host/bin'
+
 
 class SimpleProgram(BaseProgram):
     """Context derived container object for each program in SIMPLE_PROGRAMS"""

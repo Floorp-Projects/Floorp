@@ -535,8 +535,13 @@ function getHitTestConfig() {
   return window.hitTestConfig;
 }
 
-// Compute the coordinates of the center of the given element.
+// Compute the coordinates of the center of the given element. The argument
+// can either be a string (the id of the element desired) or the element
+// itself.
 function centerOf(element) {
+  if (typeof element === "string") {
+    element = document.getElementById(element);
+  }
   var bounds = element.getBoundingClientRect();
   return { x: bounds.x + (bounds.width / 2), y: bounds.y + (bounds.height / 2) };
 }

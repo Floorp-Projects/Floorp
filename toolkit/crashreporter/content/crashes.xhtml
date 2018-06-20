@@ -14,81 +14,14 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<style type="text/css">
-:root {
-  font-family: sans-serif;
-  margin: 40px auto;
-  min-width: 30em;
-  max-width: 60em;
-}
-table {
-  clear: both;
-  width: 90%;
-  margin: 0 auto;
-  padding-bottom: 2em;
-}
-th {
-  font-size: 130%;
-  text-align: left;
-  white-space: nowrap;
-}
-th[chromedir="rtl"] {
-  text-align: right;
-}
-/* name */
-th:first-child {
-  padding-inline-end: 2em;
-}
-/* submitted */
-th:last-child {
-  text-align: center;
-}
-:link, :visited {
-  display: block;
-  min-height: 17px;
-}
-/* date */
-td:first-child + td {
-  width: 0;
-  padding-inline-start: 1em;
-  padding-inline-end: .5em;
-  white-space: nowrap;
-}
-/* time */
-td:last-child {
-  width: 0;
-  padding-inline-start: .5em;
-  white-space: nowrap;
-}
-
-#clear-reports {
-  float: right;
-}
-#clear-reports[chromedir="rtl"] {
-  float: left;
-}
-
-.submitting {
-  background-image: url(chrome://global/skin/icons/loading.png);
-  background-repeat: no-repeat;
-  background-position: right;
-  background-size: 16px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .submitting {
-    background-image: url(chrome://global/skin/icons/loading@2x.png);
-  }
-}
-</style>
+<link rel="stylesheet" type="text/css" href="chrome://global/content/crashes.css"/>
 <link rel="stylesheet" media="screen, projection" type="text/css"
       href="chrome://global/skin/in-content/common.css"/>
 <script type="application/javascript" src="chrome://global/content/crashes.js"/>
 
 <title>&crashReports.title;</title>
-</head><body onload="populateReportList()" dir="&locale.dir;">
-<button chromedir="&locale.dir;" id="clear-reports"
-        onclick="clearReports().then(null, Cu.reportError)">&clearAllReports.label;</button>
+</head><body dir="&locale.dir;">
+<button chromedir="&locale.dir;" id="clear-reports">&clearAllReports.label;</button>
 <div id="reportList">
   <div id="reportListUnsubmitted">
     <h1>&crashesUnsubmitted.label;</h1>

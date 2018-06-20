@@ -1,0 +1,27 @@
+<html class="reftest-wait">
+<style>
+:not(feFuncB) {
+  position: fixed;
+}
+a:last-child {
+  -webkit-transform-style: preserve-3d;
+}
+* {
+  -webkit-backface-visibility: hidden;
+</style>
+<script>
+window.requestIdleCallback(function() {
+  document.documentElement.getBoundingClientRect();
+});
+function go() {
+  var c = document.createElement("a")
+  c.text = "-";
+  try { c.replaceChild(b, c.childNodes[0]); } catch(e) { }
+  try { document.body.appendChild(c); } catch(e) { }
+  document.documentElement.className = "";
+}
+</script>
+<body onload=go()>
+<d id="b">|
+<audio controls="">
+</html>

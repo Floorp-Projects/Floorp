@@ -237,6 +237,12 @@ used in Firefox.
 
 ## Release Notes
 
+### 0.8.1
+
+* Tweaked loop unrolling and memory alignment for SSE2 conversions between
+  UTF-16 and Latin1 in the `mem` module to increase the performance when
+  converting long buffers.
+
 ### 0.8.0
 
 * Changed the minimum supported version of Rust to 1.21.0 (semver breaking

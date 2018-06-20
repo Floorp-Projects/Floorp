@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Maybe.h"
 
+#include "gc/GC.h"
 #include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 #include "vm/HelperThreads.h"
@@ -22,43 +23,94 @@
 namespace js {
 namespace gc {
 
-/*
- * This class should be used by any code that needs to exclusive access to the
- * heap in order to trace through it...
- */
-class MOZ_RAII AutoTraceSession
+class MOZ_RAII AutoCheckCanAccessAtomsDuringGC
 {
-  public:
-    explicit AutoTraceSession(JSRuntime* rt, JS::HeapState state = JS::HeapState::Tracing);
-    ~AutoTraceSession();
-
-    // Constructing an AutoTraceSession takes the exclusive access lock, but GC
-    // may release it during a trace session if we're not collecting the atoms
-    // zone.
-    mozilla::Maybe<AutoLockForExclusiveAccess> maybeLock;
-
-    AutoLockForExclusiveAccess& lock() {
-        return maybeLock.ref();
-    }
-
-  protected:
+#ifdef DEBUG
     JSRuntime* runtime;
 
-  private:
-    AutoTraceSession(const AutoTraceSession&) = delete;
-    void operator=(const AutoTraceSession&) = delete;
+  public:
+    explicit AutoCheckCanAccessAtomsDuringGC(JSRuntime* rt)
+      : runtime(rt)
+    {
+        // Ensure we're only used from within the GC.
+        MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
 
+        // Ensure there is no off-thread parsing running.
+        MOZ_ASSERT(!rt->hasHelperThreadZones());
+
+        // Set up a check to assert if we try to start an off-thread parse.
+        runtime->setOffThreadParsingBlocked(true);
+    }
+    ~AutoCheckCanAccessAtomsDuringGC() {
+        runtime->setOffThreadParsingBlocked(false);
+    }
+#else
+  public:
+    explicit AutoCheckCanAccessAtomsDuringGC(JSRuntime* rt) {}
+#endif
+};
+
+// Abstract base class for exclusive heap access for tracing or GC.
+class MOZ_RAII AutoHeapSession
+{
+  public:
+    ~AutoHeapSession();
+
+  protected:
+    AutoHeapSession(JSRuntime* rt, JS::HeapState state);
+
+  private:
+    AutoHeapSession(const AutoHeapSession&) = delete;
+    void operator=(const AutoHeapSession&) = delete;
+
+    JSRuntime* runtime;
     JS::HeapState prevState;
     AutoGeckoProfilerEntry profilingStackFrame;
 };
 
-class MOZ_RAII AutoPrepareForTracing
+class MOZ_RAII AutoGCSession : public AutoHeapSession
 {
-    mozilla::Maybe<AutoTraceSession> session_;
-
   public:
-    explicit AutoPrepareForTracing(JSContext* cx);
-    AutoTraceSession& session() { return session_.ref(); }
+    explicit AutoGCSession(JSRuntime* rt, JS::HeapState state)
+      : AutoHeapSession(rt, state)
+    {}
+
+    AutoCheckCanAccessAtomsDuringGC& checkAtomsAccess() {
+        return maybeCheckAtomsAccess.ref();
+    }
+
+    // During a GC we can check that it's not possible for anything else to be
+    // using the atoms zone.
+    mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
+};
+
+class MOZ_RAII AutoTraceSession : public AutoLockForExclusiveAccess,
+                                  public AutoHeapSession
+{
+  public:
+    explicit AutoTraceSession(JSRuntime* rt)
+      : AutoLockForExclusiveAccess(rt),
+        AutoHeapSession(rt, JS::HeapState::Tracing)
+    {}
+};
+
+struct MOZ_RAII AutoFinishGC
+{
+    explicit AutoFinishGC(JSContext* cx) {
+        FinishGC(cx);
+    }
+};
+
+// This class should be used by any code that needs to exclusive access to the
+// heap in order to trace through it.
+class MOZ_RAII AutoPrepareForTracing : private AutoFinishGC,
+                                       public AutoTraceSession
+{
+  public:
+    explicit AutoPrepareForTracing(JSContext* cx)
+      : AutoFinishGC(cx),
+        AutoTraceSession(cx->runtime())
+    {}
 };
 
 AbortReason

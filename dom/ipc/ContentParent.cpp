@@ -96,6 +96,7 @@
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/WebBrowserPersistDocumentParent.h"
@@ -3310,7 +3311,7 @@ ContentParent::RecvFinishMemoryReport(const uint32_t& aGeneration)
 mozilla::ipc::IPCResult
 ContentParent::RecvAddPerformanceMetrics(nsTArray<PerformanceInfo>&& aMetrics)
 {
-  if (!mozilla::dom::DOMPrefs::SchedulerLoggingEnabled()) {
+  if (!mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
     // The pref is off, we should not get a performance metrics from the content
     // child
     return IPC_OK();

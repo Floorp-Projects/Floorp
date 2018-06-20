@@ -14,16 +14,14 @@
 
 "use strict";
 
-const Services = require("Services");
-const { gDevTools } = require("devtools/client/framework/devtools");
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 /**
  * Opens given request in a new tab.
  */
 function openRequestInTab(url, requestPostData) {
-  const win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   if (!requestPostData) {
-    win.openWebLinkIn(url, "tab", {relatedToCurrent: true});
+    openContentLink(url, {relatedToCurrent: true});
   } else {
     openPostRequestInTabHelper({
       url,

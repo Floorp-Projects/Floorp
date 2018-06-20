@@ -347,6 +347,20 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         })
     }
 
+    @Test fun waitUntilCalled_zeroCount() {
+        // Support having @AssertCalled(count = 0) annotations for waitUntilCalled calls.
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate, Callbacks.ScrollDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+
+            @AssertCalled(count = 0)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
+    }
+
     @Test fun forCallbacksDuringWait_anyMethod() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()

@@ -97,6 +97,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public static final String APK_URI_PREFIX = "resource://android/";
 
     private static final Method sGetNextMessage;
+    private static final Method sOnPageStart;
     private static final Method sOnPageStop;
     private static final Method sOnNewSession;
     private static final Method sOnCrash;
@@ -105,6 +106,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         try {
             sGetNextMessage = MessageQueue.class.getDeclaredMethod("next");
             sGetNextMessage.setAccessible(true);
+            sOnPageStart = GeckoSession.ProgressDelegate.class.getMethod(
+                    "onPageStart", GeckoSession.class, String.class);
             sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
                     "onPageStop", GeckoSession.class, boolean.class);
             sOnNewSession = GeckoSession.NavigationDelegate.class.getMethod(
@@ -1354,17 +1357,25 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         // load ends with the first onPageStop call, so ignore everything from the session
         // until the first onPageStop call.
 
+        // For the cached session, we may get multiple initial loads. We should specifically look
+        // for an about:blank load, and wait until that has stopped.
+        final boolean lookForAboutBlank = session.equals(sCachedSession);
+
         try {
             // We cannot detect initial page load without progress delegate.
             assertThat("ProgressDelegate cannot be null-delegate when opening session",
                        GeckoSession.ProgressDelegate.class, not(isIn(mNullDelegates)));
 
             mCallRecordHandler = new CallRecordHandler() {
+                private boolean mIsAboutBlank = !lookForAboutBlank;
+
                 @Override
                 public boolean handleCall(final Method method, final Object[] args) {
                     final boolean matching = DEFAULT_DELEGATES.contains(
                             method.getDeclaringClass()) && session.equals(args[0]);
-                    if (matching && sOnPageStop.equals(method)) {
+                    if (matching && sOnPageStart.equals(method)) {
+                        mIsAboutBlank = "about:blank".equals(args[1]);
+                    } else if (matching && mIsAboutBlank && sOnPageStop.equals(method)) {
                         mCallRecordHandler = null;
                     }
                     return matching;
@@ -1706,7 +1717,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     throw new RuntimeException(e);
                 }
                 final AssertCalled ac = getAssertCalled(callbackMethod, callback);
-                if (ac != null && ac.value()) {
+                if (ac != null && ac.value() && ac.count() != 0) {
                     methodCalls.add(new MethodCall(session, method,
                                                    ac, /* target */ null));
                 }

@@ -463,7 +463,12 @@ class TupBackend(CommonBackend):
     def _gen_host_program(self, backend_file, prog):
         _, _, _, extra_libs, _ = self._expand_libs(prog)
         objs = prog.objs
-        outputs = [prog.program]
+
+        if isinstance(prog, HostSimpleProgram):
+            outputs = [prog.name]
+        else:
+            outputs = [mozpath.relpath(prog.output_path.full_path,
+                                       backend_file.objdir)]
         host_libs = []
         for lib in prog.linked_libraries:
             if isinstance(lib, HostLibrary):

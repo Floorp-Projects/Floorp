@@ -6,6 +6,7 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/Move.h"
 #include "nsComponentManagerUtils.h"
+#include "nsComposeTxtSrvFilter.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -16,13 +17,12 @@
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
-#include "nsITextServicesFilter.h"
 #include "nsRange.h"
 
 using namespace mozilla;
 
 //------------------------------------------------------------
-nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFilter) :
+nsFilteredContentIterator::nsFilteredContentIterator(nsComposeTxtSrvFilter* aFilter) :
   mFilter(aFilter),
   mDidSkip(false),
   mIsOutOfRange(false),
@@ -347,15 +347,13 @@ nsFilteredContentIterator::CheckAdvNode(nsINode* aNode, bool& aDidSkip, eDirecti
 
   if (aNode && mFilter) {
     nsCOMPtr<nsINode> currentNode = aNode;
-    bool skipIt;
     while (1) {
-      nsresult rv = mFilter->Skip(aNode, &skipIt);
-      if (NS_SUCCEEDED(rv) && skipIt) {
+      if (mFilter->Skip(aNode)) {
         aDidSkip = true;
         // Get the next/prev node and then
         // see if we should skip that
         nsCOMPtr<nsINode> advNode;
-        rv = AdvanceNode(aNode, *getter_AddRefs(advNode), aDir);
+        nsresult rv = AdvanceNode(aNode, *getter_AddRefs(advNode), aDir);
         if (NS_SUCCEEDED(rv) && advNode) {
           aNode = advNode;
         } else {

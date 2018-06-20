@@ -67,3 +67,41 @@ add_task(async function test_discarded() {
   BrowserTestUtils.removeTab(tab2);
 });
 
+// If discard is called immediately after creating a new tab, the new tab may not have loaded,
+// and the sessionstore for that tab is not ready for discarding.  The result was a corrupted
+// sessionstore for the tab, which when the tab was activated, resulted in a tab with partial
+// state.
+add_task(async function test_create_then_discard() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs", "webNavigation"],
+    },
+
+    background: async function() {
+      let createdTab;
+
+      browser.tabs.onUpdated.addListener((tabId, updatedInfo) => {
+        if (!updatedInfo.discarded) {
+          return;
+        }
+
+        browser.webNavigation.onCompleted.addListener(async (details) => {
+          browser.test.assertEq(createdTab.id, details.tabId, "created tab navigation is completed");
+          let activeTab = await browser.tabs.get(details.tabId);
+          browser.test.assertEq("http://example.com/", details.url, "created tab url is correct");
+          browser.test.assertEq("http://example.com/", activeTab.url, "created tab url is correct");
+          browser.tabs.remove(details.tabId);
+          browser.test.notifyPass("test-finished");
+        }, {url: [{hostContains: "example.com"}]});
+
+        browser.tabs.update(tabId, {active: true});
+      });
+
+      createdTab = await browser.tabs.create({url: "http://example.com/", active: false});
+      browser.tabs.discard(createdTab.id);
+    },
+  });
+  await extension.startup();
+  await extension.awaitFinish("test-finished");
+  await extension.unload();
+});

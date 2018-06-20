@@ -5,17 +5,8 @@
 
 #include "nsISupports.idl"
 
-webidl Node;
-
-[scriptable, uuid(5BEC321F-59AC-413a-A4AD-8A8D7C50A0D0)]
+[scriptable, builtinclass, uuid(5BEC321F-59AC-413a-A4AD-8A8D7C50A0D0)]
 interface nsITextServicesFilter : nsISupports
 {
-
-  /**
-   * Indicates whether the content node should be skipped by the iterator
-   *  @param aNode - node to skip
-   */
-  boolean skip(in Node aNode);
-
 };
 

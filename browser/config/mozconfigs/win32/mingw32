@@ -14,7 +14,6 @@ unset MAKECAB
 #    --enable-crashreporter
 #    --enable-release
 #    LLVM_CONFIG
-#    MOZ_ADDON_SIGNING
 #    MOZ_REQUIRE_SIGNING
 #    --enable-js-shell
 #  build/mozconfig.automation

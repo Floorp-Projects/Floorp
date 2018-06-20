@@ -88,6 +88,7 @@ loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugge
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/environment-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
+loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
 
 XPCOMUtils.defineLazyGetter(this, "REMOTE_TIMEOUT", () =>
   Services.prefs.getIntPref("devtools.debugger.remote-timeout"));
@@ -1987,8 +1988,7 @@ var Scratchpad = {
    * Opens the MDN documentation page for Scratchpad.
    */
   openDocumentationPage: function SP_openDocumentationPage() {
-    const url = this.strings.GetStringFromName("help.openDocumentationPage");
-    this.browserWindow.openWebLinkIn(url, "tab");
+    openDocLink(this.strings.GetStringFromName("help.openDocumentationPage"));
     this.browserWindow.focus();
   },
 };
