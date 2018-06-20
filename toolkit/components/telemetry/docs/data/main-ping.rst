@@ -223,10 +223,6 @@ Integer count of the number of five-second intervals ('ticks') the user was cons
 This measure might be useful to give a trend of how much a user actually interacts with the browser when compared to overall session duration. It does not take into account whether or not the window has focus or is in the foreground. Just if it is receiving these interaction events.
 Note that in ``main`` pings, this measure is reset on subsession splits, while in ``saved-session`` pings it covers the whole browser session.
 
-pingsOverdue
-~~~~~~~~~~~~
-Integer count of pending pings that are overdue.
-
 histograms
 ----------
 This section contains the histograms that are valid for the current platform. ``Flag`` histograms are always created and submitted with a default value of ``false`` if a value of ``true`` is not recorded during the time period. Other histogram types (see :ref:`choosing-histogram-type`) are not created nor submitted if no data was added to them. The type and format of the reported histograms is described by the ``Histograms.json`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Histograms.json>`_. The ``info.revision`` field indicates the revision of the file that describes the reported histograms.
