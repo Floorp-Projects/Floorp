@@ -292,7 +292,7 @@ class ManageAddresses extends ManageRecords {
    * @param  {object} address [optional]
    */
   openEditDialog(address) {
-    this.prefWin.gSubDialog.open(EDIT_ADDRESS_URL, null, address);
+    this.prefWin.gSubDialog.open(EDIT_ADDRESS_URL, null, address, "novalidate");
   }
 
   getLabel(address) {

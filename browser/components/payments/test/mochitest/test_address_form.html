@@ -64,7 +64,7 @@ function sendStringAndCheckValidity(element, string, isValid) {
   }
   sendString(string);
   ok(element.checkValidity() == isValid,
-     `${element.id} should be ${isValid ? "valid" : "invalid"}`);
+     `${element.id} should be ${isValid ? "valid" : "invalid"} (${string})`);
 }
 
 add_task(async function test_initialState() {
@@ -299,17 +299,34 @@ add_task(async function test_field_validation() {
   ok(!postalCodeInput.checkValidity(), "postal-code should be invalid by default");
   ok(!addressLevel1Input.checkValidity(), "address-level1 should be invalid by default");
 
-  sendStringAndCheckValidity(postalCodeInput, "00001", true);
+  let countrySelect = form.form.querySelector("#country");
+  countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "US");
+  countrySelect.dispatchEvent(new Event("change"));
+
+  sendStringAndCheckValidity(addressLevel1Input, "MI", true);
+  sendStringAndCheckValidity(addressLevel1Input, "", false);
+  sendStringAndCheckValidity(postalCodeInput, "B4N4N4", false);
+  sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
+  sendStringAndCheckValidity(postalCodeInput, "R3J 3C7", false);
+  sendStringAndCheckValidity(addressLevel1Input, "", false);
+  sendStringAndCheckValidity(postalCodeInput, "11109", true);
+  sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
+  sendStringAndCheckValidity(postalCodeInput, "06390-0001", true);
+
+  countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "CA");
+  countrySelect.dispatchEvent(new Event("change"));
+
+  sendStringAndCheckValidity(postalCodeInput, "00001", false);
   sendStringAndCheckValidity(addressLevel1Input, "CA", true);
-  sendStringAndCheckValidity(postalCodeInput, "94043", true);
+  sendStringAndCheckValidity(postalCodeInput, "94043", false);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
   sendStringAndCheckValidity(postalCodeInput, "B4N4N4", true);
   sendStringAndCheckValidity(addressLevel1Input, "MI", true);
   sendStringAndCheckValidity(postalCodeInput, "R3J 3C7", true);
   sendStringAndCheckValidity(addressLevel1Input, "", false);
-  sendStringAndCheckValidity(postalCodeInput, "11109", true);
+  sendStringAndCheckValidity(postalCodeInput, "11109", false);
   sendStringAndCheckValidity(addressLevel1Input, "Nova Scotia", true);
-  sendStringAndCheckValidity(postalCodeInput, "06390-0001", true);
+  sendStringAndCheckValidity(postalCodeInput, "06390-0001", false);
 
   form.remove();
 });

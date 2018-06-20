@@ -42,6 +42,9 @@ var PaymentDialogUtils = {
         {fieldId: "address-level1"},
         {fieldId: "postal-code"},
       ],
+      // The following values come from addressReferences.js and should not be changed.
+      /* eslint-disable-next-line max-len */
+      "postalCodePattern": country == "US" ? "(\\d{5})(?:[ \\-](\\d{4}))?" : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
     };
   },
 };

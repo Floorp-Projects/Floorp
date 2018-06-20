@@ -96,6 +96,10 @@ class EditAddress extends EditAutofillForm {
     // Also need to use this._record so it has the default country selected.
     this.loadRecord(record);
     this.attachEventListeners();
+
+    if (config.novalidate) {
+      this.form.setAttribute("novalidate", "true");
+    }
   }
 
   loadRecord(record) {
@@ -115,10 +119,12 @@ class EditAddress extends EditAutofillForm {
    * @param  {string} country
    */
   formatForm(country) {
-    const {addressLevel1Label, postalCodeLabel, fieldsOrder} = this.getFormFormat(country);
+    const {addressLevel1Label, postalCodeLabel, fieldsOrder, postalCodePattern} =
+      this.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
     this.arrangeFields(fieldsOrder);
+    this.updatePostalCodeValidation(postalCodePattern);
   }
 
   arrangeFields(fieldsOrder) {
@@ -149,6 +155,15 @@ class EditAddress extends EditAutofillForm {
     for (let field of fields) {
       let container = document.getElementById(`${field}-container`);
       container.style.display = "none";
+    }
+  }
+
+  updatePostalCodeValidation(postalCodePattern) {
+    let postalCodeInput = document.getElementById("postal-code");
+    if (postalCodePattern && postalCodeInput.style.display != "none") {
+      postalCodeInput.setAttribute("pattern", postalCodePattern);
+    } else {
+      postalCodeInput.removeAttribute("pattern");
     }
   }
 

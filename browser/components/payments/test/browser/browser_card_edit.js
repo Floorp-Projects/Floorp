@@ -353,7 +353,7 @@ add_task(async function test_edit_link() {
       if (!field) {
         ok(false, `${key} field not found`);
       }
-      field.value = val + "1";
+      field.value = val.slice(0, -1) + "7";
       ok(!field.disabled, `Field #${key} shouldn't be disabled`);
     }
 
@@ -363,7 +363,7 @@ add_task(async function test_edit_link() {
              Object.keys(state.savedAddresses).length == 1;
     }, "Check still only one address and we're back on basic-card page");
 
-    is(Object.values(state.savedAddresses)[0].tel, PTU.Addresses.TimBL.tel + "1",
+    is(Object.values(state.savedAddresses)[0].tel, PTU.Addresses.TimBL.tel.slice(0, -1) + "7",
        "Check that address was edited and saved");
 
     content.document.querySelector("basic-card-form button:last-of-type").click();
