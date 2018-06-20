@@ -330,14 +330,6 @@ function* browserWindows() {
     yield windows.getNext();
 }
 
-/**
-* We can avoid adding multiple load event listeners and save some time by adding
-* one listener that calls all real handlers.
-*/
-function pageShowEventHandlers(persisted) {
-  XULBrowserWindow.asyncUpdateUI();
-}
-
 function UpdateBackForwardCommands(aWebNavigation) {
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
@@ -1414,14 +1406,6 @@ var gBrowserInit = {
     // We need to set the OfflineApps message listeners up before we
     // load homepages, which might need them.
     OfflineApps.init();
-
-    // This pageshow listener needs to be registered before we may call
-    // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
-    window.messageManager.addMessageListener("PageVisibility:Show", function(message) {
-      if (message.target == gBrowser.selectedBrowser) {
-        setTimeout(pageShowEventHandlers, 0, message.data.persisted);
-      }
-    });
 
     gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
       let ownerDoc = event.originalTarget;
