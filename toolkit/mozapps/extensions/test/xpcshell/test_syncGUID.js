@@ -23,27 +23,12 @@ add_task(async function setup() {
 const ADDONS = [
   {
     id: "addon1@tests.mozilla.org",
-    version: "1.0",
     name: "Test 1",
-    bootstrap: true,
-    description: "Test Description",
-
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"}],
   },
   {
     id: "addon2@tests.mozilla.org",
     version: "2.0",
     name: "Real Test 2",
-    bootstrap: true,
-    description: "Test Description",
-
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"}],
   },
 ];
 

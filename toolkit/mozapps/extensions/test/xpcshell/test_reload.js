@@ -5,9 +5,26 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-const sampleAddon = {
-  id: "webextension1@tests.mozilla.org",
-  name: "webextension_1",
+const ID = "webextension1@tests.mozilla.org";
+
+const ADDONS = {
+  webextension_1: {
+    "manifest.json": {
+      "name": "Web Extension Name",
+      "version": "1.0",
+      "manifest_version": 2,
+      "applications": {
+        "gecko": {
+          "id": ID
+        }
+      },
+      "icons": {
+        "48": "icon48.png",
+        "64": "icon64.png"
+      }
+    },
+    "chrome.manifest": "content webex ./\n"
+  },
 };
 
 const manifestSample = {
@@ -21,11 +38,6 @@ const manifestSample = {
   }],
 };
 
-async function installAddon(fixtureName, addonID) {
-  await promiseInstallAllFiles([do_get_addon(fixtureName)]);
-  return promiseAddonByID(addonID);
-}
-
 async function tearDownAddon(addon) {
   await addon.uninstall();
   await promiseShutdownManager();
@@ -35,8 +47,8 @@ add_task(async function test_reloading_a_temp_addon() {
   if (AppConstants.MOZ_APP_NAME == "thunderbird")
     return;
   await promiseRestartManager();
-  await AddonManager.installTemporaryAddon(do_get_addon(sampleAddon.name));
-  const addon = await promiseAddonByID(sampleAddon.id);
+  let xpi = AddonTestUtils.createTempXPIFile(ADDONS.webextension_1);
+  const addon = await AddonManager.installTemporaryAddon(xpi);
 
   var receivedOnUninstalled = false;
   var receivedOnUninstalling = false;
@@ -46,22 +58,22 @@ add_task(async function test_reloading_a_temp_addon() {
   const onReload = new Promise(resolve => {
     const listener = {
       onUninstalling: (addonObj) => {
-        if (addonObj.id === sampleAddon.id) {
+        if (addonObj.id === ID) {
           receivedOnUninstalling = true;
         }
       },
       onUninstalled: (addonObj) => {
-        if (addonObj.id === sampleAddon.id) {
+        if (addonObj.id === ID) {
           receivedOnUninstalled = true;
         }
       },
       onInstalling: (addonObj) => {
         receivedOnInstalling = true;
-        equal(addonObj.id, sampleAddon.id);
+        equal(addonObj.id, ID);
       },
       onInstalled: (addonObj) => {
         receivedOnInstalled = true;
-        equal(addonObj.id, sampleAddon.id);
+        equal(addonObj.id, ID);
         // This should be the last event called.
         AddonManager.removeAddonListener(listener);
         resolve();
@@ -86,7 +98,7 @@ add_task(async function test_reloading_a_temp_addon() {
 
 add_task(async function test_can_reload_permanent_addon() {
   await promiseRestartManager();
-  const addon = await installAddon(sampleAddon.name, sampleAddon.id);
+  const {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.webextension_1);
 
   let disabledCalled = false;
   let enabledCalled = false;

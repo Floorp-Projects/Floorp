@@ -14,6 +14,42 @@ profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "58");
 
+const ADDONS = {
+  langpack_1: {
+    "browser/localization/und/browser.ftl": "message-browser = Value from Browser\n",
+    "localization/und/toolkit_test.ftl": "message-id1 = Value 1\n",
+    "chrome/und/locale/und/global/test.properties": "message = Value from .properties\n",
+    "manifest.json": {
+      "name": "und Language Pack",
+      "version": "1",
+      "manifest_version": 2,
+      "applications": {
+        "gecko": {
+          "id": "langpack-und@test.mozilla.org",
+          "strict_min_version": "58.0",
+          "strict_max_version": "58.*"
+        }
+      },
+      "sources": {
+        "browser": {
+          "base_path": "browser/"
+        }
+      },
+      "langpack_id": "und",
+      "languages": {
+        "und": {
+          "chrome_resources": {
+            "global": "chrome/und/locale/und/global/"
+          },
+          "version": "20171001190118"
+        }
+      },
+      "author": "Mozilla Localization Task Force",
+      "description": "Language pack for Testy for und"
+    }
+  },
+};
+
 function promiseLangpackStartup() {
   return new Promise(resolve => {
     const EVENT = "webextension-langpack-startup";
@@ -38,7 +74,7 @@ add_task(async function() {
 
   let [, {addon}] = await Promise.all([
     promiseLangpackStartup(),
-    promiseInstallFile(do_get_addon("langpack_1"), true),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);
 
   // Now make sure that `und` locale is available.
@@ -76,7 +112,7 @@ add_task(async function() {
 add_task(async function() {
   let [, {addon}] = await Promise.all([
     promiseLangpackStartup(),
-    promiseInstallFile(do_get_addon("langpack_1"), true),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);
 
   {
@@ -117,7 +153,7 @@ add_task(async function() {
 add_task(async function() {
   let [, {addon}] = await Promise.all([
     promiseLangpackStartup(),
-    promiseInstallFile(do_get_addon("langpack_1"), true),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
   ]);
   Assert.ok(addon.isActive);
 

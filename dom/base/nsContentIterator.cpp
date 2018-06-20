@@ -893,9 +893,7 @@ protected:
 
   RefPtr<nsRange> mRange;
 
-  // these arrays all typically are used and have elements
   AutoTArray<nsIContent*, 8> mEndNodes;
-  AutoTArray<int32_t, 8>     mEndOffsets;
 };
 
 NS_IMPL_ADDREF_INHERITED(nsContentSubtreeIterator, nsContentIterator)
@@ -1015,8 +1013,13 @@ nsContentSubtreeIterator::InitWithRange()
   }
 
   // cache ancestors
-  nsContentUtils::GetAncestorsAndOffsets(endContainer, endOffset,
-                                         &mEndNodes, &mEndOffsets);
+  mEndNodes.Clear();
+  nsIContent* endNode =
+    endContainer->IsContent() ? endContainer->AsContent() : nullptr;
+  while (endNode) {
+    mEndNodes.AppendElement(endNode);
+    endNode = endNode->GetParent();
+  }
 
   nsIContent* firstCandidate = nullptr;
   nsIContent* lastCandidate = nullptr;
@@ -1029,7 +1032,8 @@ nsContentSubtreeIterator::InitWithRange()
     // no children, start at the node itself
     node = startContainer;
   } else {
-    nsIContent* child = startContainer->GetChildAt_Deprecated(offset);
+    nsIContent* child = mRange->GetChildAtStartOffset();
+    MOZ_ASSERT(child == startContainer->GetChildAt_Deprecated(offset));
     if (!child) {
       // offset after last child
       node = startContainer;
@@ -1078,7 +1082,8 @@ nsContentSubtreeIterator::InitWithRange()
   if (!offset || !numChildren) {
     node = endContainer;
   } else {
-    lastCandidate = endContainer->GetChildAt_Deprecated(--offset);
+    lastCandidate = mRange->EndRef().Ref();
+    MOZ_ASSERT(lastCandidate == endContainer->GetChildAt_Deprecated(--offset));
     NS_ASSERTION(lastCandidate,
                  "tree traversal trouble in nsContentSubtreeIterator::Init");
   }
