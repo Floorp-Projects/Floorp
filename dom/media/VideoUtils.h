@@ -238,8 +238,9 @@ enum H264_LEVEL {
 // Returns false on failure.
 bool
 ExtractH264CodecDetails(const nsAString& aCodecs,
-                        int16_t& aProfile,
-                        int16_t& aLevel);
+                        uint8_t& aProfile,
+                        uint8_t& aConstraint,
+                        uint8_t& aLevel);
 
 struct VideoColorSpace
 {

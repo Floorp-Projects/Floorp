@@ -17,9 +17,9 @@ namespace mozilla {
 static bool
 IsWhitelistedH264Codec(const nsAString& aCodec)
 {
-  int16_t profile = 0, level = 0;
+  uint8_t profile = 0, constraint = 0, level = 0;
 
-  if (!ExtractH264CodecDetails(aCodec, profile, level)) {
+  if (!ExtractH264CodecDetails(aCodec, profile, constraint, level)) {
     return false;
   }
 
