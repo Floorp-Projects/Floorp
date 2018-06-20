@@ -3595,6 +3595,10 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       !(aFlags & PaintFrameFlags::PAINT_DOCUMENT_RELATIVE) &&
       rootPresContext->NeedToComputePluginGeometryUpdates()) {
     builder.SetWillComputePluginGeometry(true);
+
+    // Disable partial updates for this paint as the list we're about to
+    // build has plugin-specific differences that won't trigger invalidations.
+    builder.SetDisablePartialUpdates(true);
   }
 
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
@@ -3945,6 +3949,10 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     if (layerManager) {
       layerManager->ScheduleComposite();
     }
+
+    // Disable partial updates for the following paint as well, as we now have
+    // a plugin-specific display list.
+    builder.SetDisablePartialUpdates(true);
   }
 
   builder.Check();
