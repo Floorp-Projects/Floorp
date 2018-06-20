@@ -478,9 +478,22 @@ JSContext::enterAtomsZone(const js::AutoLockForExclusiveAccess& lock)
     arenas_ = &zone_->arenas;
 }
 
-template <typename T>
 inline void
-JSContext::enterRealmOf(const T& target)
+JSContext::enterRealmOf(JSObject* target)
+{
+    MOZ_ASSERT(JS::CellIsNotGray(target));
+    enterRealm(target->deprecatedRealm());
+}
+
+inline void
+JSContext::enterRealmOf(JSScript* target)
+{
+    MOZ_ASSERT(JS::CellIsNotGray(target));
+    enterRealm(target->realm());
+}
+
+inline void
+JSContext::enterRealmOf(js::ObjectGroup* target)
 {
     MOZ_ASSERT(JS::CellIsNotGray(target));
     enterRealm(target->realm());
