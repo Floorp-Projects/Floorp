@@ -8,7 +8,7 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  const { gFront, EVENTS, L10N, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { front, EVENTS, L10N, ShadersListView, ShadersEditorsView } = panel;
 
   is(ShadersListView.itemCount, 0,
     "The shaders list should initially be empty.");
@@ -20,7 +20,7 @@ async function ifWebGLSupported() {
   reload(target);
 
   const [firstProgramActor, secondProgramActor] = await promise.all([
-    getPrograms(gFront, 2, (actors) => {
+    getPrograms(front, 2, (actors) => {
       // Fired upon each actor addition, we want to check only
       // after the first actor has been added so we can test state
       if (actors.length === 1) {
@@ -30,7 +30,7 @@ async function ifWebGLSupported() {
         checkSecondProgram();
       }
     }),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]).then(([programs, ]) => programs);
 
   is(ShadersListView.attachments[0].label, L10N.getFormatStr("shadersList.programLabel", 0),
@@ -51,11 +51,11 @@ async function ifWebGLSupported() {
   is(fragSource, fsEditor.getText(),
     "The vertex shader editor contains the correct text.");
 
-  const compiled = once(panel.panelWin, EVENTS.SHADER_COMPILED).then(() => {
+  const compiled = once(panel, EVENTS.SHADER_COMPILED).then(() => {
     ok(false, "Selecting a different program shouldn't recompile its shaders.");
   });
 
-  const shown = once(panel.panelWin, EVENTS.SOURCES_SHOWN).then(() => {
+  const shown = once(panel, EVENTS.SOURCES_SHOWN).then(() => {
     ok(true, "The vertex and fragment sources have changed in the editors.");
   });
 

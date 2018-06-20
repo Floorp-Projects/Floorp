@@ -7,12 +7,12 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { front, $, EVENTS, ShadersListView, ShadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
   is($("#reload-notice").hidden, true,
@@ -41,7 +41,7 @@ async function ifWebGLSupported() {
   const navigated = once(target, "will-navigate");
   navigate(target, "about:blank");
 
-  await promise.all([navigating, once(panel.panelWin, EVENTS.UI_RESET) ]);
+  await promise.all([navigating, once(panel, EVENTS.UI_RESET) ]);
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden while navigating.");
