@@ -2474,7 +2474,7 @@ CanEnableSpeculativeConnect()
   // Check if any 3rd party PKCS#11 module are installed, as they may produce
   // client certificates
   bool activeSmartCards = false;
-  nsresult rv = component->HasActiveSmartCards(activeSmartCards);
+  nsresult rv = component->HasActiveSmartCards(&activeSmartCards);
   if (NS_FAILED(rv) || activeSmartCards) {
     return false;
   }
@@ -2482,7 +2482,7 @@ CanEnableSpeculativeConnect()
   // If there are any client certificates installed, we can't enable speculative
   // connect, as it may pop up the certificate chooser at any time.
   bool hasUserCerts = false;
-  rv = component->HasUserCertsInstalled(hasUserCerts);
+  rv = component->HasUserCertsInstalled(&hasUserCerts);
   if (NS_FAILED(rv) || hasUserCerts) {
     return false;
   }

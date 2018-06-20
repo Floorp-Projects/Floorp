@@ -23,6 +23,7 @@ XPIDL_SOURCES += [
     'nsIKeygenThread.idl',
     'nsIKeyModule.idl',
     'nsILocalCertService.idl',
+    'nsINSSComponent.idl',
     'nsINSSErrorsService.idl',
     'nsINSSVersion.idl',
     'nsIPK11Token.idl',
