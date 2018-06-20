@@ -43,6 +43,7 @@ namespace loader {
         Parent,
         Web,
         Extension,
+        Privileged,
     };
 
     template <typename T>
