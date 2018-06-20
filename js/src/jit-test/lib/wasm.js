@@ -116,14 +116,6 @@ function wasmFullPass(text, expected, maybeImports, ...args) {
     let instance = new WebAssembly.Instance(module, maybeImports);
     assertEq(typeof instance.exports.run, 'function', "A 'run' function must be exported.");
     assertEq(instance.exports.run(...args), expected, "Initial module must return the expected result.");
-
-    let retext = wasmBinaryToText(binary);
-    let rebinary = wasmTextToBinary(retext);
-
-    assertEq(WebAssembly.validate(rebinary), true, "Recreated binary must validate.");
-    let remodule = new WebAssembly.Module(rebinary);
-    let reinstance = new WebAssembly.Instance(remodule, maybeImports);
-    assertEq(reinstance.exports.run(...args), expected, "Reformed module must return the expected result");
 }
 
 // Ditto, but expects a function named '$run' instead of exported with this name.
@@ -134,14 +126,14 @@ function wasmFullPassI64(text, expected, maybeImports, ...args) {
     let augmentedSrc = _augmentSrc(text, [ { type: 'i64', func: '$run', args, expected } ]);
     let augmentedBinary = wasmTextToBinary(augmentedSrc);
     new WebAssembly.Instance(new WebAssembly.Module(augmentedBinary), maybeImports).exports.assert_0();
-
-    let retext = wasmBinaryToText(augmentedBinary);
-    new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(retext)), maybeImports).exports.assert_0();
 }
 
 function wasmRunWithDebugger(wast, lib, init, done) {
     let g = newGlobal('');
     let dbg = new Debugger(g);
+
+    // Enable binary source mode.
+    dbg.allowWasmBinarySource = true;
 
     g.eval(`
 var wasm = wasmTextToBinary('${wast}');
@@ -158,19 +150,6 @@ var m = new WebAssembly.Instance(new WebAssembly.Module(wasm), lib);`);
         error = ex;
     }
     done({dbg, result, error, wasmScript, g,});
-}
-
-function wasmGetScriptBreakpoints(wasmScript) {
-    var result = [];
-    var sourceText = wasmScript.source.text;
-    sourceText.split('\n').forEach(function (line, i) {
-        var lineOffsets = wasmScript.getLineOffsets(i + 1);
-        if (lineOffsets.length === 0)
-            return;
-        assertEq(lineOffsets.length, 1);
-        result.push({str: line.trim(), line: i + 1, offset: lineOffsets[0]});
-    });
-    return result;
 }
 
 const WasmHelpers = {};
