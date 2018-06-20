@@ -102,3 +102,26 @@ AntiTracking.runTest("SharedWorkers",
     new SharedWorker("a.js", "foo");
     ok(true, "SharedWorker is allowed");
   });
+
+AntiTracking.runTest("ServiceWorkers",
+  async _ => {
+    await navigator.serviceWorker.register("empty.js", { scope: "/" }).then(
+      _ => { ok(false, "ServiceWorker cannot be used!"); },
+      _ => { ok(true, "ServiceWorker cannot be used!"); });
+  },
+  null,
+  [["dom.serviceWorkers.exemptFromPerDomainMax", true],
+   ["dom.serviceWorkers.enabled", true],
+   ["dom.serviceWorkers.testing.enabled", true]]);
+
+AntiTracking.runTest("DOM Cache",
+  async _ => {
+    await caches.open("wow").then(
+      _ => { ok(false, "DOM Cache cannot be used!"); },
+      _ => { ok(true, "DOM Cache cannot be used!"); });
+  },
+  async _ => {
+    await caches.open("wow").then(
+      _ => { ok(true, "DOM Cache can be used!"); },
+      _ => { ok(false, "DOM Cache can be used!"); });
+  });
