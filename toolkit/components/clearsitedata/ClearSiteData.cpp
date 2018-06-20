@@ -9,6 +9,7 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "nsASCIIMask.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -172,6 +173,11 @@ ClearSiteData::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC));
+
+  // Pref disabled.
+  if (!StaticPrefs::dom_clearSiteData_enabled()) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aSubject);
   if (NS_WARN_IF(!channel)) {
