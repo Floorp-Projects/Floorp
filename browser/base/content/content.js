@@ -334,14 +334,6 @@ addMessageListener("webrtc:Allow", ContentWebRTCShim);
 addMessageListener("webrtc:Deny", ContentWebRTCShim);
 addMessageListener("webrtc:StopSharing", ContentWebRTCShim);
 
-addEventListener("pageshow", function(event) {
-  if (event.target == content.document) {
-    sendAsyncMessage("PageVisibility:Show", {
-      persisted: event.persisted,
-    });
-  }
-});
-
 var PageMetadataMessenger = {
   init() {
     addMessageListener("PageMetadata:GetPageData", this);
