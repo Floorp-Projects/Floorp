@@ -118,9 +118,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
     this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
 
-    // The next line needs an onboarding check since we don't set previousId
-    // when navigating to add/edit directly from the summary page.
-    this.backButton.hidden = !page.previousId && page.onboardingWizard;
+    // The back button is temporarily hidden(See Bug 1462461).
+    this.backButton.hidden = !!page.onboardingWizard;
     this.cancelButton.hidden = !page.onboardingWizard;
 
     let record = {};
@@ -211,39 +210,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
         break;
       }
       case this.backButton: {
-        let {
-          page,
-          request,
-          "address-page": addressPage,
-          "basic-card-page": basicCardPage,
-          selectedShippingAddress,
-        } = this.requestStore.getState();
-
-        let nextState = {
+        this.requestStore.setState({
           page: {
-            id: page.previousId || "payment-summary",
-            onboardingWizard: page.onboardingWizard,
+            id: "payment-summary",
           },
-        };
-
-        let addressPageState;
-        if (page.onboardingWizard) {
-          if (request.paymentOptions.requestShipping) {
-            addressPageState = Object.assign({}, addressPage, {guid: selectedShippingAddress});
-          } else {
-            addressPageState =
-              Object.assign({}, addressPage, {guid: basicCardPage.billingAddressGUID});
-          }
-
-          let basicCardPageState = Object.assign({}, basicCardPage, {preserveFieldValues: true});
-
-          Object.assign(nextState, {
-            "address-page": addressPageState,
-            "basic-card-page": basicCardPageState,
-          });
-        }
-
-        this.requestStore.setState(nextState);
+        });
         break;
       }
       case this.saveButton: {
