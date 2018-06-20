@@ -23,6 +23,7 @@ DIRS += [
     'backgroundhangmonitor',
     'browser',
     'cleardata',
+    'clearsitedata',
     'cloudstorage',
     'commandlines',
     'contentprefs',
