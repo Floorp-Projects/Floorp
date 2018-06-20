@@ -82,9 +82,6 @@ const SEND_TICK_DELAY = 1 * MS_IN_A_MINUTE;
 // This exponential backoff will be reset by external ping submissions & idle-daily.
 const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 
-// The age of a pending ping to be considered overdue (in milliseconds).
-const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
-
 // Strings to map from XHR.errorCode to TELEMETRY_SEND_FAILURE_TYPE.
 // Echoes XMLHttpRequestMainThread's ErrorType enum.
 // Make sure that any additions done to XHR_ERROR_TYPE enum are also mirrored in
@@ -176,13 +173,6 @@ function gzipCompressString(string) {
 
 var TelemetrySend = {
 
-  /**
-   * Age in ms of a pending ping to be considered overdue.
-   */
-  get OVERDUE_PING_FILE_AGE() {
-    return OVERDUE_PING_FILE_AGE;
-  },
-
   get pendingPingCount() {
     return TelemetrySendImpl.pendingPingCount;
   },
@@ -229,13 +219,6 @@ var TelemetrySend = {
   submitPing(ping, options = {}) {
     options.usePingSender = options.usePingSender || false;
     return TelemetrySendImpl.submitPing(ping, options);
-  },
-
-  /**
-   * Count of pending pings that were found to be overdue at startup.
-   */
-  get overduePingsCount() {
-    return TelemetrySendImpl.overduePingsCount;
   },
 
   /**
@@ -597,8 +580,6 @@ var TelemetrySendImpl = {
   _currentPings: new Map(),
   // Used to skip spawning the pingsender if OS is shutting down.
   _isOSShutdown: false,
-  // Count of pending pings that were overdue.
-  _overduePingCount: 0,
   // Has the network shut down, making it too late to send pings?
   _tooLateToSend: false,
 
@@ -625,10 +606,6 @@ var TelemetrySendImpl = {
     }
 
     return this._logger;
-  },
-
-  get overduePingsCount() {
-    return this._overduePingCount;
   },
 
   get pendingPingRequests() {
@@ -731,11 +708,6 @@ var TelemetrySendImpl = {
 
     const now = Policy.now();
 
-    // Check for overdue pings.
-    const overduePings = infos.filter((info) =>
-      (now.getTime() - info.lastModificationDate) > OVERDUE_PING_FILE_AGE);
-    this._overduePingCount = overduePings.length;
-
     // Submit the age of the pending pings.
     for (let pingInfo of infos) {
       const ageInDays =
@@ -783,7 +755,6 @@ var TelemetrySendImpl = {
 
     this._shutdown = false;
     this._currentPings = new Map();
-    this._overduePingCount = 0;
     this._tooLateToSend = false;
     this._isOSShutdown = false;
     this._sendingEnabled = true;

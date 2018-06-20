@@ -14,7 +14,6 @@ ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
@@ -805,8 +804,6 @@ var Impl = {
     }
 
     ret.activeTicks = activeTicks;
-
-    ret.pingsOverdue = TelemetrySend.overduePingsCount;
 
     return ret;
   },
