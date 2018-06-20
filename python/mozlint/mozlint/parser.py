@@ -90,7 +90,7 @@ class Parser(object):
             raise LinterParseError(path, "Invalid filename, linters must end with '.yml'!")
 
         with open(path) as fh:
-            config = yaml.load(fh)
+            config = yaml.safe_load(fh)
 
         if not config:
             raise LinterParseError(path, "No lint definitions found!")
