@@ -10,6 +10,7 @@ const ObjectClient = require("devtools/shared/client/object-client");
 
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 
 /**
  * This object represents DOM panel. It's responsibility is to
@@ -179,10 +180,7 @@ DomPanel.prototype = {
   },
 
   openLink: function(url) {
-    const parentDoc = this._toolbox.doc;
-    const iframe = parentDoc.getElementById("this._toolbox");
-    const top = iframe.ownerDocument.defaultView.top;
-    top.openWebLinkIn(url, "tab");
+    openContentLink(url);
   },
 
   getRootGrip: function() {

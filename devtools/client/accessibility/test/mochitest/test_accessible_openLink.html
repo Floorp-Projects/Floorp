@@ -22,6 +22,7 @@ Test that openLink function is called if accessible object property is rendered 
 
 window.onload = async function() {
   try {
+    const { gDevTools } = require("devtools/client/framework/devtools");
     const Services = browserRequire("Services");
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory, createElement } =
@@ -34,28 +35,22 @@ window.onload = async function() {
       browserRequire("devtools/client/accessibility/components/Accessible"));
 
     function testLinkClicked(link, event, expectedUrl, expectedWhere) {
+      const browserWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+      const defaultOpenWebLinkIn = browserWindow.openWebLinkIn;
+
       const checker = Symbol();
       let onClickArgs = checker;
-      const mockToolbox = {
-        doc: {
-          defaultView: {
-            top: {
-              openWebLinkIn: (url, where) => {
-                onClickArgs = { url, where };
-              }
-            }
-          }
-        }
+      browserWindow.openWebLinkIn = (url, where) => {
+        onClickArgs = { url, where };
       };
 
-      window.gToolbox = mockToolbox;
       Simulate.click(link, event);
 
       ok(onClickArgs !== checker, "Link was clicked");
       is(onClickArgs.url, expectedUrl, "Correct URL is opened");
       is(onClickArgs.where, expectedWhere, "URL was opened correctly");
 
-      window.gToolbox = null;
+      browserWindow.openWebLinkIn = defaultOpenWebLinkIn;
     }
 
     const a = Accessible({ labelledby: "Test Accessible" });
@@ -71,13 +66,6 @@ window.onload = async function() {
 
     let link = document.querySelector(".url");
     testLinkClicked(link, null, URL, "tab");
-
-    let event = { button: 0 };
-    event[Services.appinfo.OS == "Darwin" ? "metaKey" : "ctrlKey"] = true;
-    testLinkClicked(link, event, URL, "tabshifted");
-
-    event = { shiftKey: true };
-    testLinkClicked(link, event, URL, "window");
 
     URL = "non-URL";
     await mockStore.dispatch(

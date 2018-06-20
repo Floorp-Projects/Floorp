@@ -769,14 +769,7 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
   if (!mTabChild) {
     return;
   }
-  mTabChild->SendSetInputContext(aContext.mIMEState.mEnabled,
-                                 aContext.mIMEState.mOpen,
-                                 aContext.mHTMLInputType,
-                                 aContext.mHTMLInputInputmode,
-                                 aContext.mActionHint,
-                                 aContext.mInPrivateBrowsing,
-                                 aAction.mCause,
-                                 aAction.mFocusChange);
+  mTabChild->SendSetInputContext(aContext, aAction);
 }
 
 InputContext
@@ -798,11 +791,7 @@ PuppetWidget::GetInputContext()
   // chrome widget is set to new context.
   InputContext context;
   if (mTabChild) {
-    IMEState::Enabled enabled;
-    IMEState::Open open;
-    mTabChild->SendGetInputContext(&enabled, &open);
-    context.mIMEState.mEnabled = enabled;
-    context.mIMEState.mOpen = open;
+    mTabChild->SendGetInputContext(&context.mIMEState);
   }
   return context;
 }

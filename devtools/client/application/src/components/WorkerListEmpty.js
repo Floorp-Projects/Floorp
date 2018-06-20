@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { openWebLink, openTrustedLink } = require("devtools/client/shared/link");
+const { openDocLink, openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const { a, article, h1, li, p, ul } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -39,7 +39,7 @@ class WorkerListEmpty extends Component {
   }
 
   openDocumentation() {
-    openWebLink(DOC_URL);
+    openDocLink(DOC_URL);
   }
 
   render() {
