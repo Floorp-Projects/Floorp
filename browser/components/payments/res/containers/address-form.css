@@ -30,6 +30,11 @@ address-form .error textarea {
   border: 1px solid #ce001a;
 }
 
+label[required] > span::after {
+  /* The asterisk should be localized, bug 1472278 */
+  content: "*";
+}
+
 .error-text:not(:empty) {
   border-radius: 2px;
   background-color: #ce001a;

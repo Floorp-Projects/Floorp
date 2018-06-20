@@ -300,6 +300,21 @@ add_task(async function test_field_validation() {
   ok(!addressLevel1Input.checkValidity(), "address-level1 should be invalid by default");
 
   let countrySelect = form.form.querySelector("#country");
+  let requiredFields = [
+    form.form.querySelector("#given-name"),
+    form.form.querySelector("#street-address"),
+    form.form.querySelector("#address-level2"),
+    postalCodeInput,
+    addressLevel1Input,
+    countrySelect,
+  ];
+  for (let field of requiredFields) {
+    let container = field.closest("label");
+    ok(container.hasAttribute("required"), "Container should have required attribute");
+    let label = field.closest("label").querySelector("span");
+    is(getComputedStyle(label, "::after").content, "\"*\"", "Asterisk should be on " + field.id);
+  }
+
   countrySelect.selectedIndex = [...countrySelect.options].findIndex(o => o.value == "US");
   countrySelect.dispatchEvent(new Event("change"));
 

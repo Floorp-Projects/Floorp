@@ -140,7 +140,9 @@ class EditAddress extends EditAutofillForm {
     for (let i = 0; i < fieldsOrder.length; i++) {
       let {fieldId, newLine} = fieldsOrder[i];
       let container = document.getElementById(`${fieldId}-container`);
-      inputs.push(...container.querySelectorAll("input, textarea, select"));
+      let containerInputs = [...container.querySelectorAll("input, textarea, select")];
+      containerInputs.forEach(function(input) { input.disabled = false; });
+      inputs.push(...containerInputs);
       container.style.display = "flex";
       container.style.order = i;
       container.style.pageBreakAfter = newLine ? "always" : "auto";
@@ -155,6 +157,9 @@ class EditAddress extends EditAutofillForm {
     for (let field of fields) {
       let container = document.getElementById(`${field}-container`);
       container.style.display = "none";
+      for (let input of [...container.querySelectorAll("input, textarea, select")]) {
+        input.disabled = true;
+      }
     }
   }
 
