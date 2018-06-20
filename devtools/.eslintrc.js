@@ -43,7 +43,6 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
-      "client/shared/AppCacheUtils.jsm",
       "client/webide/**",
     ],
     "rules": {
