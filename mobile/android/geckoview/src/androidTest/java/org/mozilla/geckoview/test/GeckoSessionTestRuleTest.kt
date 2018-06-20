@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ChildCrashedException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -1664,7 +1665,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         })
     }
 
-    @Test(expected = RuntimeException::class)
+    @Test(expected = ChildCrashedException::class)
     @ReuseSession(false)
     fun contentCrashFails() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
