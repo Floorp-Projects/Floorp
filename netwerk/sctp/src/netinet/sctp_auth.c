@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 324971 2017-10-25 09:12:22Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 334532 2018-06-02 16:28:10Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -1530,6 +1530,8 @@ sctp_auth_get_cookie_params(struct sctp_tcb *stcb, struct mbuf *m,
 	    if (p_random != NULL) {
 		keylen = sizeof(*p_random) + random_len;
 		memcpy(new_key->key, p_random, keylen);
+	    } else {
+		keylen = 0;
 	    }
 	    /* append in the AUTH chunks */
 	    if (chunks != NULL) {

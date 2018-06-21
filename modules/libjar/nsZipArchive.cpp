@@ -1136,6 +1136,7 @@ nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
   : mItem(item)
   , mBuf(aBuf)
   , mBufSize(aBufSize)
+  , mZs()
 #ifdef MOZ_JAR_BROTLI
   , mBrotliState(nullptr)
 #endif
