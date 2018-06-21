@@ -1,5 +1,8 @@
 # Fretboard
 
+[![Task Status](https://github.taskcluster.net/v1/repository/mozilla-mobile/fretboard/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-mobile/fretboard/master/latest)
+[![codecov](https://codecov.io/gh/mozilla-mobile/fretboard/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/fretboard)
+
 An Android framework for segmenting users in order to run A/B tests and rollout features gradually.
 
 ## License
