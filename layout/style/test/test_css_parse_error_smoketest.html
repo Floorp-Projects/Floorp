@@ -41,8 +41,9 @@
     { css: "* { -webkit-text-size-adjust: 100% }", error: "Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped." },
 
     { css: "@media (totally-unknown-feature) {}", error: "Expected media feature name but found ‘totally-unknown-feature’." },
-    { css: "@media \"foo\" {}", error: "Expected identifier in media list but found ‘\"foo\"’." },
+    { css: "@media \"foo\" {}", error: "Unexpected token ‘\"foo\"’ in media list." },
     { css: "@media (min-width) {}", error: "Media features with min- or max- must have a value." },
+    { css: "@media (min-width >= 3px) {}", error: "Unexpected operator in media list." },
     { css: "@media (device-height: -1px) {}", error: "Found invalid value for media feature." },
     { css: "@media (min-width: -1px) {}", error: "Found invalid value for media feature." },
     { css: "@media (min-resolution: 2) {}", error: "Found invalid value for media feature." },
