@@ -20,14 +20,31 @@ class JSONExperimentParserTest {
             Experiment.Matcher("es|en", "sample-appId", listOf("US")),
             Experiment.Bucket(20, 0),
             1526991669)
-        assertEquals("""{"buckets":{"min":0,"max":20},"name":"sample-name","match":{"regions":["US"],"appId":"sample-appId","lang":"es|en"},"description":"sample-description","id":"sample-id","last_modified":1526991669}""",
-            JSONExperimentParser().toJson(experiment).toString())
+        val jsonObject = JSONExperimentParser().toJson(experiment)
+        val buckets = jsonObject.getJSONObject("buckets")
+        assertEquals(0, buckets.getInt("min"))
+        assertEquals(20, buckets.getInt("max"))
+        assertEquals("sample-name", jsonObject.getString("name"))
+        val match = jsonObject.getJSONObject("match")
+        val regions = match.getJSONArray("regions")
+        assertEquals(1, regions.length())
+        assertEquals("US", regions.get(0))
+        assertEquals("sample-appId", match.getString("appId"))
+        assertEquals("es|en", match.getString("lang"))
+        assertEquals("sample-description", jsonObject.getString("description"))
+        assertEquals("sample-id", jsonObject.getString("id"))
+        assertEquals(1526991669, jsonObject.getLong("last_modified"))
     }
 
     @Test
     fun testToJsonNullValues() {
         val experiment = Experiment("id")
-        assertEquals("""{"buckets":{},"match":{},"id":"id"}""", JSONExperimentParser().toJson(experiment).toString())
+        val jsonObject = JSONExperimentParser().toJson(experiment)
+        val buckets = jsonObject.getJSONObject("buckets")
+        assertEquals(0, buckets.length())
+        val match = jsonObject.getJSONObject("match")
+        assertEquals(0, match.length())
+        assertEquals("id", jsonObject.getString("id"))
     }
 
     @Test
@@ -78,6 +95,21 @@ class JSONExperimentParserTest {
         payload.put("e", listOf(1, 2, 3, 4))
         val experiment = Experiment("id", payload = payload)
         val json = JSONExperimentParser().toJson(experiment)
-        assertEquals("""{"payload":{"a":"a","b":3,"c":3.5,"d":true,"e":[1,2,3,4]},"buckets":{},"match":{},"id":"id"}""", json.toString())
+        val payloadJson = json.getJSONObject("payload")
+        assertEquals("a", payloadJson.getString("a"))
+        assertEquals(3, payloadJson.getInt("b"))
+        assertEquals(3.5, payloadJson.getDouble("c"), 0.01)
+        assertEquals(true, payloadJson.getBoolean("d"))
+        val list = payloadJson.getJSONArray("e")
+        assertEquals(4, list.length())
+        assertEquals(1, list[0])
+        assertEquals(2, list[1])
+        assertEquals(3, list[2])
+        assertEquals(4, list[3])
+        val buckets = json.getJSONObject("buckets")
+        assertEquals(0, buckets.length())
+        val match = json.getJSONObject("match")
+        assertEquals(0, match.length())
+        assertEquals("id", json.getString("id"))
     }
 }

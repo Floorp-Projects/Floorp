@@ -8,6 +8,7 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
 import android.util.AtomicFile
 import mozilla.components.service.fretboard.Experiment
+import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
@@ -31,7 +32,24 @@ class AtomicFileExperimentStorageTest {
         assertFalse(atomicFile.baseFile.exists())
         AtomicFileExperimentStorage(atomicFile).save(experiments)
         assertTrue(atomicFile.baseFile.exists())
-        assertEquals("""{"experiments":[{"name":"sample-name","match":{"lang":"es|en","appId":"sample-appId","regions":["US"]},"buckets":{"max":20,"min":0},"description":"sample-description","id":"sample-id","last_modified":1526991669}]}""", String(atomicFile.readFully()))
+        val experimentsJson = JSONObject(String(atomicFile.readFully()))
+        assertEquals(1, experimentsJson.length())
+        val experimentsJsonArray = experimentsJson.getJSONArray("experiments")
+        assertEquals(1, experimentsJsonArray.length())
+        val experimentJson = experimentsJsonArray[0] as JSONObject
+        assertEquals("sample-name", experimentJson.getString("name"))
+        val experimentMatch = experimentJson.getJSONObject("match")
+        assertEquals("es|en", experimentMatch.getString("lang"))
+        assertEquals("sample-appId", experimentMatch.getString("appId"))
+        val experimentRegions = experimentMatch.getJSONArray("regions")
+        assertEquals(1, experimentRegions.length())
+        assertEquals("US", experimentRegions[0])
+        val experimentBuckets = experimentJson.getJSONObject("buckets")
+        assertEquals(20, experimentBuckets.getInt("max"))
+        assertEquals(0, experimentBuckets.getInt("min"))
+        assertEquals("sample-description", experimentJson.getString("description"))
+        assertEquals("sample-id", experimentJson.getString("id"))
+        assertEquals(1526991669, experimentJson.getLong("last_modified"))
         atomicFile.delete()
     }
 

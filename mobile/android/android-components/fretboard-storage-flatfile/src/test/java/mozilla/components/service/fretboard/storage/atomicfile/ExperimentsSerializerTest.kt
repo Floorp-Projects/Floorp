@@ -6,6 +6,7 @@ package mozilla.components.service.fretboard.storage.atomicfile
 
 import mozilla.components.service.fretboard.Experiment
 import org.json.JSONException
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -107,12 +108,47 @@ class ExperimentsSerializerTest {
                 Experiment.Bucket(10, 5),
                 1523549895749)
         )
-        assertEquals(experimentsJson.replace("\\s+".toRegex(), ""), ExperimentsSerializer().toJson(experiments))
+        val json = JSONObject(ExperimentsSerializer().toJson(experiments))
+        assertEquals(1, json.length())
+        val experimentsArray = json.getJSONArray("experiments")
+        assertEquals(2, experimentsArray.length())
+        val firstExperiment = experimentsArray[0] as JSONObject
+        val firstExperimentBuckets = firstExperiment.getJSONObject("buckets")
+        assertEquals(0, firstExperimentBuckets.getInt("min"))
+        assertEquals(100, firstExperimentBuckets.getInt("max"))
+        assertEquals("first", firstExperiment.getString("name"))
+        val firstExperimentMatch = firstExperiment.getJSONObject("match")
+        val firstExperimentRegions = firstExperimentMatch.getJSONArray("regions")
+        assertEquals(1, firstExperimentRegions.length())
+        assertEquals("esp", firstExperimentRegions[0])
+        assertEquals("^org.mozilla.firefox_beta${'$'}", firstExperimentMatch.getString("appId"))
+        assertEquals("eng|es|deu|fra", firstExperimentMatch.getString("lang"))
+        assertEquals("Description", firstExperiment.getString("description"))
+        assertEquals("experiment-id", firstExperiment.getString("id"))
+        assertEquals(1523549895713, firstExperiment.getLong("last_modified"))
+
+        val secondExperiment = experimentsArray[1] as JSONObject
+        val secondExperimentBuckets = secondExperiment.getJSONObject("buckets")
+        assertEquals(5, secondExperimentBuckets.getInt("min"))
+        assertEquals(10, secondExperimentBuckets.getInt("max"))
+        assertEquals("second", secondExperiment.getString("name"))
+        val secondExperimentMatch = secondExperiment.getJSONObject("match")
+        val secondExperimentRegions = secondExperimentMatch.getJSONArray("regions")
+        assertEquals(1, secondExperimentRegions.length())
+        assertEquals("deu", secondExperimentRegions[0])
+        assertEquals("^org.mozilla.firefox${'$'}", secondExperimentMatch.getString("appId"))
+        assertEquals("es|deu", secondExperimentMatch.getString("lang"))
+        assertEquals("SecondDescription", secondExperiment.getString("description"))
+        assertEquals("experiment-2-id", secondExperiment.getString("id"))
+        assertEquals(1523549895749, secondExperiment.getLong("last_modified"))
     }
 
     @Test
     fun testToJsonEmptyList() {
         val experiments = listOf<Experiment>()
-        assertEquals("""{"experiments":[]}""", ExperimentsSerializer().toJson(experiments))
+        val experimentsJson = JSONObject(ExperimentsSerializer().toJson(experiments))
+        assertEquals(1, experimentsJson.length())
+        val experimentsJsonArray = experimentsJson.getJSONArray("experiments")
+        assertEquals(0, experimentsJsonArray.length())
     }
 }
