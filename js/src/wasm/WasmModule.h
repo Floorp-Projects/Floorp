@@ -135,7 +135,6 @@ class Module : public JS::WasmModule
     const ExportVector      exports_;
     const DataSegmentVector dataSegments_;
     const ElemSegmentVector elemSegments_;
-    const StructTypeVector  structTypes_;
     const SharedBytes       bytecode_;
     ExclusiveTiering        tiering_;
 
@@ -171,7 +170,6 @@ class Module : public JS::WasmModule
            ExportVector&& exports,
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
-           StructTypeVector&& structTypes,
            const ShareableBytes& bytecode)
       : assumptions_(std::move(assumptions)),
         code_(&code),
@@ -181,7 +179,6 @@ class Module : public JS::WasmModule
         exports_(std::move(exports)),
         dataSegments_(std::move(dataSegments)),
         elemSegments_(std::move(elemSegments)),
-        structTypes_(std::move(structTypes)),
         bytecode_(&bytecode),
         tiering_(mutexid::WasmModuleTieringLock),
         codeIsBusy_(false)
