@@ -45,6 +45,7 @@ EXPORTS.mozilla += [
     'AppUnits.h',
     'ArrayView.h',
     'FontPropertyTypes.h',
+    'RelativeLuminanceUtils.h',
 ]
 
 EXPORTS.mozilla.gfx += [
