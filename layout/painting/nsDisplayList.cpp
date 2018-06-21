@@ -9250,6 +9250,12 @@ bool nsDisplayMask::CanPaintOnMaskLayer(LayerManager* aManager)
     return false;
   }
 
+  // We don't currently support this item creating a mask
+  // for both the clip-path, and rounded rect clipping.
+  if (GetClip().GetRoundedRectCount() != 0) {
+    return false;
+  }
+
   return true;
 }
 
