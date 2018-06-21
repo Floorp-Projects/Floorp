@@ -879,7 +879,7 @@ EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
   }
 
   nsIDocument* doc = node->OwnerDoc();
-  if (!doc || doc->HasBeenUserActivated()) {
+  if (!doc || doc->HasBeenUserGestureActivated()) {
     return;
   }
 
@@ -915,7 +915,7 @@ EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
              aEvent->mMessage == eMouseDown ||
              aEvent->mMessage == ePointerDown ||
              aEvent->mMessage == eTouchEnd);
-  doc->NotifyUserActivation();
+  doc->NotifyUserGestureActivation();
 }
 
 already_AddRefed<EventStateManager>
