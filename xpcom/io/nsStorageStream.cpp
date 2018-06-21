@@ -50,8 +50,9 @@ static LazyLogModule sStorageStreamLog("nsStorageStream");
 #define LOG(args) MOZ_LOG(sStorageStreamLog, mozilla::LogLevel::Debug, args)
 
 nsStorageStream::nsStorageStream()
-  : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(false),
-    mLastSegmentNum(-1), mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0)
+  : mSegmentedBuffer(0), mSegmentSize(0), mSegmentSizeLog2(0),
+    mWriteInProgress(false), mLastSegmentNum(-1), mWriteCursor(0),
+    mSegmentEnd(0), mLogicalLength(0)
 {
   LOG(("Creating nsStorageStream [%p].\n", this));
 }

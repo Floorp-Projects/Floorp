@@ -252,7 +252,7 @@ class CompileInfo
 
     explicit CompileInfo(unsigned nlocals)
       : script_(nullptr), fun_(nullptr), osrPc_(nullptr),
-        analysisMode_(Analysis_None), scriptNeedsArgsObj_(false),
+        analysisMode_(Analysis_None), scriptNeedsArgsObj_(false), hadOverflowBailout_(false),
         mayReadFrameArgsDirectly_(false), inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false), funNeedsSomeEnvironmentObject_(false)
     {

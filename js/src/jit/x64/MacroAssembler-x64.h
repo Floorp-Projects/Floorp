@@ -875,38 +875,38 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
-    Register extractObject(const Address& address, Register scratch) {
+    MOZ_MUST_USE Register extractObject(const Address& address, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         unboxObject(address, scratch);
         return scratch;
     }
-    Register extractObject(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractObject(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         unboxObject(value, scratch);
         return scratch;
     }
-    Register extractSymbol(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractSymbol(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         unboxSymbol(value, scratch);
         return scratch;
     }
-    Register extractInt32(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractInt32(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         unboxInt32(value, scratch);
         return scratch;
     }
-    Register extractBoolean(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractBoolean(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         unboxBoolean(value, scratch);
         return scratch;
     }
-    Register extractTag(const Address& address, Register scratch) {
+    MOZ_MUST_USE Register extractTag(const Address& address, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         loadPtr(address, scratch);
         splitTag(scratch, scratch);
         return scratch;
     }
-    Register extractTag(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractTag(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         splitTag(value, scratch);
         return scratch;

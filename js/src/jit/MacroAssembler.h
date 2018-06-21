@@ -2193,7 +2193,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
 
     using MacroAssemblerSpecific::extractTag;
-    Register extractTag(const TypedOrValueRegister& reg, Register scratch) {
+    MOZ_MUST_USE Register extractTag(const TypedOrValueRegister& reg, Register scratch) {
         if (reg.hasValue())
             return extractTag(reg.valueReg(), scratch);
         mov(ImmWord(MIRTypeToTag(reg.type())), scratch);
@@ -2201,7 +2201,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     using MacroAssemblerSpecific::extractObject;
-    Register extractObject(const TypedOrValueRegister& reg, Register scratch) {
+    MOZ_MUST_USE Register extractObject(const TypedOrValueRegister& reg, Register scratch) {
         if (reg.hasValue())
             return extractObject(reg.valueReg(), scratch);
         MOZ_ASSERT(reg.type() == MIRType::Object);

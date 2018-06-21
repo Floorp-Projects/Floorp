@@ -16,9 +16,9 @@ add_task(async function test_proxy_modes_and_autoconfig() {
     });
   }
 
-  let autoconfigURL = Services.io.newURI("data:text/plain,test");
+  let autoconfigURL = new URL("data:text/plain,test");
   ProxyPolicies.configureProxySettings({AutoConfigURL: autoconfigURL}, (_, value) => {
-    is(value, autoconfigURL.spec, "AutoconfigURL correctly set");
+    is(value, autoconfigURL.href, "AutoconfigURL correctly set");
   });
 });
 
