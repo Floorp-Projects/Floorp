@@ -515,7 +515,7 @@ Instance::Instance(JSContext* cx,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
-                   const ValVector& globalImportValues,
+                   const LitValVector& globalImportValues,
                    const WasmGlobalObjectVector& globalObjs)
   : realm_(cx->realm()),
     object_(object),
