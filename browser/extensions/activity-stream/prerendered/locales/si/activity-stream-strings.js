@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "firstrun_content": "Get your bookmarks, history, passwords and other settings on all your devices.",
   "firstrun_learn_more_link": "Learn more about Firefox Accounts",
   "firstrun_form_header": "Enter your email",
-  "firstrun_form_sub_header": "to continue to Firefox Sync.",
+  "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "Email",
   "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
   "firstrun_terms_of_service": "Terms of Service",

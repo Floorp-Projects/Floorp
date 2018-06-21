@@ -199,7 +199,7 @@ describe("ASRouter", () => {
     it("should return a null bundle if we do not have enough messages to fill the bundle", async () => {
       // force the only message to be a bundled message that needs 2 messages in the bundle
       await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
-      const bundle = Router._getBundledMessages(Router.state.messages[0]);
+      const bundle = await Router._getBundledMessages(Router.state.messages[0]);
       assert.equal(bundle, null);
     });
     it("should send a CLEAR_ALL message if no bundle available", async () => {
@@ -307,7 +307,7 @@ describe("ASRouter", () => {
       assert.calledWithExactly(Router.sendNextMessage, sinon.match.instanceOf(FakeRemotePageManager));
     });
     it("should call _getBundledMessages if we request a message that needs to be bundled", async () => {
-      sandbox.stub(Router, "_getBundledMessages");
+      sandbox.stub(Router, "_getBundledMessages").resolves();
       // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
       const [, testMessage] = Router.state.messages;
       const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage.id}});
@@ -315,8 +315,7 @@ describe("ASRouter", () => {
 
       assert.calledOnce(Router._getBundledMessages);
     });
-    it("should properly pick another message of the same template if it is bundled", async () => {
-      Router.sendMessage = sinon.spy();
+    it("should properly pick another message of the same template if it is bundled; force = true", async () => {
       // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
       const [, testMessage1, testMessage2] = Router.state.messages;
       const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage1.id}});
@@ -329,7 +328,22 @@ describe("ASRouter", () => {
         provider: testMessage1.provider,
         bundle: [{content: testMessage1.content, id: testMessage1.id}, {content: testMessage2.content, id: testMessage2.id}]
       };
-      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
+    });
+    it("should properly pick another message of the same template if it is bundled; force = false", async () => {
+      // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
+      const [, testMessage1, testMessage2] = Router.state.messages;
+      const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage1.id}});
+      await Router.setMessageById(testMessage1.id, msg.target, false);
+
+      // Expected object should have some properties of the original message it picked (testMessage1)
+      // plus the bundled content of the others that it picked of the same template (testMessage2)
+      const expectedObj = {
+        template: testMessage1.template,
+        provider: testMessage1.provider,
+        bundle: [{content: testMessage1.content, id: testMessage1.id}, {content: testMessage2.content, id: testMessage2.id}]
+      };
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
     });
     it("should get the bundle and send the message if the message has a bundle", async () => {
       sandbox.stub(Router, "sendNextMessage").resolves();
@@ -346,14 +360,14 @@ describe("ASRouter", () => {
       const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage.id}});
       await Router.onMessage(msg);
 
-      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: testMessage});
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: testMessage});
     });
 
     it("should broadcast CLEAR_ALL if provided id did not resolve to a message", async () => {
       const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: -1}});
       await Router.onMessage(msg);
 
-      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_ALL"});
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_ALL"});
     });
   });
 
