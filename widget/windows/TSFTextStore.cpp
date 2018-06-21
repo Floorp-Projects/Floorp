@@ -1131,8 +1131,7 @@ public:
             staticSink->IsATOK2012ActiveInternal() ||
             staticSink->IsATOK2013ActiveInternal() ||
             staticSink->IsATOK2014ActiveInternal() ||
-            staticSink->IsATOK2015ActiveInternal() ||
-            staticSink->IsATOK2016ActiveInternal());
+            staticSink->IsATOK2015ActiveInternal());
   }
 
 private:
