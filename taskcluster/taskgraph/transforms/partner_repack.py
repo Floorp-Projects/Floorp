@@ -73,7 +73,7 @@ def add_command_arguments(config, tasks):
                 task['run']['options'].append('limit-locale={}'.format(locale))
         if 'partner' in config.kind and config.params['release_partners']:
             for partner in config.params['release_partners']:
-                task['run']['options'].append('p={}'.format(partner))
+                task['run']['options'].append('partner={}'.format(partner))
 
         # The upstream taskIds are stored a special environment variable, because we want to use
         # task-reference's to resolve dependencies, but the string handling of MOZHARNESS_OPTIONS
