@@ -41,7 +41,7 @@ public:
   void SetGlobalObject(JSObject* global);
 
   explicit BackstagePass(nsIPrincipal* prin) :
-    mPrincipal(prin), mWrapper(nullptr)
+    mPrincipal(prin)
   {
   }
 

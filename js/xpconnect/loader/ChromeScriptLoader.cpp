@@ -49,8 +49,6 @@ public:
       , mGlobalObject(aGlobal)
       , mPromise(aPromise)
       , mCharset(aOptions.mCharset)
-      , mToken(nullptr)
-      , mScriptLength(0)
     {
         mOptions.setNoScriptRval(!aOptions.mHasReturnValue)
                 .setCanLazilyParse(aOptions.mLazilyParse)
