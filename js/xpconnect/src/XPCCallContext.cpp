@@ -34,12 +34,7 @@ XPCCallContext::XPCCallContext(JSContext* cx,
         mJSContext(cx),
         mWrapper(nullptr),
         mTearOff(nullptr),
-        mMember(nullptr),
-        mName(cx),
-        mStaticMemberIsLocal(false),
-        mArgc(0),
-        mArgv(nullptr),
-        mRetVal(nullptr)
+        mName(cx)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
