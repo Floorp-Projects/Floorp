@@ -3473,7 +3473,7 @@ RestyleManager::DoReparentComputedStyleForFirstLine(nsIFrame* aFrame,
     // to be careful to do that with our placeholder, not with us, if we're out of
     // flow.
     if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-      aFrame->GetPlaceholderFrame()->GetLayoutParentStyleForOutOfFlow(&providerFrame);
+      aFrame->FirstContinuation()->GetPlaceholderFrame()->GetLayoutParentStyleForOutOfFlow(&providerFrame);
     } else {
       providerFrame = nsFrame::CorrectStyleParentFrame(aFrame->GetParent(),
                                                        oldStyle->GetPseudo());
