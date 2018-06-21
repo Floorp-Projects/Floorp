@@ -78,6 +78,10 @@
                        crop="end">&trackingProtection.detectedNotBlocked4;</description>
           <description id="tracking-not-detected"
                        crop="end">&trackingProtection.notDetected4;</description>
+          <description id="tracking-loaded-exception"
+                       crop="end">&trackingProtection.detectedException;</description>
+          <description id="tracking-not-detected-exception"
+                       crop="end">&trackingProtection.notDetectedException;</description>
           <description id="tracking-reload-required"
                        crop="end">&trackingProtection.reloadRequired;</description>
 
