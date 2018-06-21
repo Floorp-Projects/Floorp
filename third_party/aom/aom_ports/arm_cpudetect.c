@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "aom_ports/arm.h"
-#include "./aom_config.h"
+#include "config/aom_config.h"
 
 #ifdef WINAPI_FAMILY
 #include <winapifamily.h>
@@ -50,9 +50,9 @@ int arm_cpu_caps(void) {
     return flags;
   }
   mask = arm_cpu_env_mask();
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
   flags |= HAS_NEON;
-#endif /* HAVE_NEON  || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
   return flags & mask;
 }
 
@@ -73,7 +73,7 @@ int arm_cpu_caps(void) {
  *  instructions via their assembled hex code.
  * All of these instructions should be essentially nops.
  */
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
   if (mask & HAS_NEON) {
     __try {
       /*VORR q0,q0,q0*/
@@ -83,7 +83,7 @@ int arm_cpu_caps(void) {
       /*Ignore exception.*/
     }
   }
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
   return flags & mask;
 }
 
@@ -100,9 +100,9 @@ int arm_cpu_caps(void) {
   mask = arm_cpu_env_mask();
   features = android_getCpuFeatures();
 
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
   if (features & ANDROID_CPU_ARM_FEATURE_NEON) flags |= HAS_NEON;
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
   return flags & mask;
 }
 
@@ -129,7 +129,7 @@ int arm_cpu_caps(void) {
      */
     char buf[512];
     while (fgets(buf, 511, fin) != NULL) {
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
       if (memcmp(buf, "Features", 8) == 0) {
         char *p;
         p = strstr(buf, " neon");
@@ -137,7 +137,7 @@ int arm_cpu_caps(void) {
           flags |= HAS_NEON;
         }
       }
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
     }
     fclose(fin);
   }

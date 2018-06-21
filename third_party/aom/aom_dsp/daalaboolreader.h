@@ -34,11 +34,13 @@ struct daala_reader {
 #if CONFIG_ACCOUNTING
   Accounting *accounting;
 #endif
+  uint8_t allow_update_cdf;
 };
 
 typedef struct daala_reader daala_reader;
 
 int aom_daala_reader_init(daala_reader *r, const uint8_t *buffer, int size);
+const uint8_t *aom_daala_reader_find_begin(daala_reader *r);
 const uint8_t *aom_daala_reader_find_end(daala_reader *r);
 uint32_t aom_daala_reader_tell(const daala_reader *r);
 uint32_t aom_daala_reader_tell_frac(const daala_reader *r);
@@ -95,12 +97,6 @@ static INLINE int aom_daala_read(daala_reader *r, int prob) {
 
   return bit;
 }
-
-#if CONFIG_RAWBITS
-static INLINE int aom_daala_read_bit(daala_reader *r) {
-  return od_ec_dec_bits(&r->ec, 1, "aom_bits");
-}
-#endif
 
 static INLINE int aom_daala_reader_has_error(daala_reader *r) {
   return r->ec.error;

@@ -11,7 +11,8 @@
 #ifndef AOM_DSP_AOM_CONVOLVE_H_
 #define AOM_DSP_AOM_CONVOLVE_H_
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom/aom_integer.h"
 
 #ifdef __cplusplus
@@ -30,16 +31,11 @@ extern "C" {
 // --Must round-up because block may be located at sub-pixel position.
 // --Require an additional SUBPEL_TAPS rows for the 8-tap filter tails.
 // --((64 - 1) * 32 + 15) >> 4 + 8 = 135.
-#if CONFIG_AV1 && CONFIG_EXT_PARTITION
+// TODO(wtc): Update the above comment to explain the value 263 used in aom.
 #define MAX_EXT_SIZE 263
-#else
-#define MAX_EXT_SIZE 135
-#endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
 
-#if CONFIG_AV1 && CONFIG_LOOP_RESTORATION
 #define EXTRAPREC_BITS 2
 #define EXTRAPREC_CLAMP_LIMIT(bd) (1 << ((bd) + 1 + EXTRAPREC_BITS))
-#endif
 
 typedef void (*convolve_fn_t)(const uint8_t *src, ptrdiff_t src_stride,
                               uint8_t *dst, ptrdiff_t dst_stride,
@@ -47,13 +43,11 @@ typedef void (*convolve_fn_t)(const uint8_t *src, ptrdiff_t src_stride,
                               const int16_t *filter_y, int y_step_q4, int w,
                               int h);
 
-#if CONFIG_HIGHBITDEPTH
 typedef void (*highbd_convolve_fn_t)(const uint8_t *src, ptrdiff_t src_stride,
                                      uint8_t *dst, ptrdiff_t dst_stride,
                                      const int16_t *filter_x, int x_step_q4,
                                      const int16_t *filter_y, int y_step_q4,
                                      int w, int h, int bd);
-#endif
 
 #ifdef __cplusplus
 }  // extern "C"

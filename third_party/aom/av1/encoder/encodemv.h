@@ -18,13 +18,6 @@
 extern "C" {
 #endif
 
-void av1_entropy_mv_init(void);
-
-#if !CONFIG_NEW_MULTISYMBOL
-void av1_write_nmv_probs(AV1_COMMON *cm, int usehp, aom_writer *w,
-                         nmv_context_counts *const counts);
-#endif
-
 void av1_encode_mv(AV1_COMP *cpi, aom_writer *w, const MV *mv, const MV *ref,
                    nmv_context *mvctx, int usehp);
 
@@ -34,10 +27,18 @@ void av1_build_nmv_cost_table(int *mvjoint, int *mvcost[2],
 
 void av1_update_mv_count(ThreadData *td);
 
-#if CONFIG_INTRABC
 void av1_encode_dv(aom_writer *w, const MV *mv, const MV *ref,
                    nmv_context *mvctx);
-#endif  // CONFIG_INTRABC
+int_mv av1_get_ref_mv(const MACROBLOCK *x, int ref_idx);
+int_mv av1_get_ref_mv_from_stack(int ref_idx,
+                                 const MV_REFERENCE_FRAME *ref_frame,
+                                 int ref_mv_idx,
+                                 const MB_MODE_INFO_EXT *mbmi_ext);
+void av1_find_best_ref_mvs_from_stack(int allow_hp,
+                                      const MB_MODE_INFO_EXT *mbmi_ext,
+                                      MV_REFERENCE_FRAME ref_frame,
+                                      int_mv *nearest_mv, int_mv *near_mv,
+                                      int is_integer);
 
 #ifdef __cplusplus
 }  // extern "C"
