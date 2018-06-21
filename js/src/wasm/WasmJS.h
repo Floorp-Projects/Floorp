@@ -154,10 +154,10 @@ class WasmGlobalObject : public NativeObject
     static const JSFunctionSpec static_methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmGlobalObject* create(JSContext* cx, const wasm::Val& value, bool isMutable);
+    static WasmGlobalObject* create(JSContext* cx, const wasm::LitVal& value, bool isMutable);
 
     wasm::ValType type() const;
-    wasm::Val val() const;
+    wasm::LitVal val() const;
     bool isMutable() const;
     // value() will MOZ_CRASH if the type is int64
     Value value() const;
@@ -219,7 +219,7 @@ class WasmInstanceObject : public NativeObject
                                       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
                                       Handle<FunctionVector> funcImports,
                                       const wasm::GlobalDescVector& globals,
-                                      const wasm::ValVector& globalImportValues,
+                                      const wasm::LitValVector& globalImportValues,
                                       const WasmGlobalObjectVector& globalObjs,
                                       HandleObject proto);
     void initExportsObj(JSObject& exportsObj);
