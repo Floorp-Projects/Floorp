@@ -5,8 +5,9 @@
 #ifndef nsHtml5String_h
 #define nsHtml5String_h
 
-#include "nsString.h"
 #include "nsAtom.h"
+#include "nsString.h"
+#include "nsStringBuffer.h"
 
 class nsHtml5TreeBuilder;
 
