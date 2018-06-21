@@ -906,27 +906,27 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY trackingProtection.off "Tracking Protection: OFF">
 <!ENTITY trackingProtection.title "Tracking Protection">
 <!ENTITY trackingProtection.tooltip "Open Tracking Protection Preferences">
-<!ENTITY trackingProtection.detectedBlocked3 "&brandShortName; is blocking parts of the page that may track your browsing.">
-<!ENTITY trackingProtection.detectedNotBlocked4 "Trackers have been detected on this webpage.">
-<!ENTITY trackingProtection.notDetected4 "No trackers detected on this page.">
+<!ENTITY trackingProtection.detectedBlocked4 "&brandShortName; is blocking parts of this page that may track your browsing.">
+<!ENTITY trackingProtection.detectedNotBlocked5 "&brandShortName; has detected elements that may track your browsing.">
 <!ENTITY trackingProtection.detectedException "&brandShortName; has detected elements that may track your browsing. You have disabled protection for this site.">
+<!ENTITY trackingProtection.notDetected5 "No tracking elements detected on this page.">
 <!ENTITY trackingProtection.notDetectedException "No tracking elements detected on this page. You have disabled protection for this site.">
 
-<!ENTITY trackingProtection.reloadRequired "You have enabled Tracking Protection. To block all trackers please reload the current webpage.">
-<!-- LOCALIZATION NOTE (trackingProtection.unblock.label, trackingProtection.unblock.accesskey):
+<!ENTITY trackingProtection.reloadRequired2 "You have enabled Tracking Protection. Reload this page to block all trackers.">
+<!-- LOCALIZATION NOTE (trackingProtection.unblock3.label, trackingProtection.unblock3.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in NON-private browsing mode. -->
-<!ENTITY trackingProtection.unblock2.label "Trust this site">
-<!ENTITY trackingProtection.unblock2.accesskey "T">
-<!-- LOCALIZATION NOTE (trackingProtection.unblockPrivate.label, trackingProtection.unblockPrivate.accesskey):
+<!ENTITY trackingProtection.unblock3.label "Disable For This Site">
+<!ENTITY trackingProtection.unblock3.accesskey "D">
+<!-- LOCALIZATION NOTE (trackingProtection.unblockPrivate3.label, trackingProtection.unblockPrivate3.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in PRIVATE browsing mode. -->
-<!ENTITY trackingProtection.unblockPrivate2.label "Trust this site for this session">
-<!ENTITY trackingProtection.unblockPrivate2.accesskey "T">
-<!ENTITY trackingProtection.block3.label "Turn Tracking Protection ON">
-<!ENTITY trackingProtection.block3.accesskey "T">
-<!ENTITY trackingProtection.reload.label "Reload This Page">
-<!ENTITY trackingProtection.reload.accesskey "R">
+<!ENTITY trackingProtection.unblockPrivate3.label "Disable For This Session">
+<!ENTITY trackingProtection.unblockPrivate3.accesskey "D">
+<!ENTITY trackingProtection.block4.label "Enable For This Site">
+<!ENTITY trackingProtection.block4.accesskey "E">
+<!ENTITY trackingProtection.reload2.label "Reload Page">
+<!ENTITY trackingProtection.reload2.accesskey "R">
 
 <!ENTITY pluginNotification.showAll.label "Show All">
 <!ENTITY pluginNotification.showAll.accesskey "S">
