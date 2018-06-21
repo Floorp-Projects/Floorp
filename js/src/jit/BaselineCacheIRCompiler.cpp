@@ -1243,7 +1243,7 @@ BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     ObjOperandId objId = reader.objOperandId();
     Address offsetAddr = stubAddress(reader.stubOffset());
     TypedThingLayout layout = reader.typedThingLayout();
-    ReferenceTypeDescr::Type type = reader.referenceTypeDescrType();
+    ReferenceType type = reader.referenceTypeDescrType();
 
     // Allocate the fixed registers first. These need to be fixed for
     // callTypeUpdateIC.
@@ -1254,7 +1254,7 @@ BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     AutoScratchRegister scratch2(allocator, masm);
 
     // We don't need a type update IC if the property is always a string.
-    if (type != ReferenceTypeDescr::TYPE_STRING) {
+    if (type != ReferenceType::TYPE_STRING) {
         LiveGeneralRegisterSet saveRegs;
         saveRegs.add(obj);
         saveRegs.add(val);

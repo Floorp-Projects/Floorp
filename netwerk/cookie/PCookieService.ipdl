@@ -46,6 +46,8 @@ parent:
    *        mozIThirdPartyUtil.isThirdPartyChannel. Third party requests may be
    *        rejected depending on user preferences; if those checks are
    *        disabled, this parameter is ignored.
+   * @param isTrackingResource
+   *        True if the the request has been marked as tracking.
    * @param isSafeTopLevelNav
    *        True for safe methods like e.g. GET.
    * @param isSameSiteForeign
@@ -66,6 +68,7 @@ parent:
    */
   nested(inside_cpow) sync GetCookieString(URIParams host,
                                            bool isForeign,
+                                           bool isTrackingResource,
                                            bool isSafeTopLevelNav,
                                            bool isSameSiteForeign,
                                            OriginAttributes attrs)
@@ -84,6 +87,8 @@ parent:
    *        mozIThirdPartyUtil.isThirdPartyChannel. Third party requests may be
    *        rejected depending on user preferences; if those checks are
    *        disabled, this parameter is ignored.
+   * @param isTrackingResource
+   *        True if the the request has been marked as tracking.
    * @param cookieString
    *        Same as the 'aCookie' argument to nsICookieService.setCookieString.
    * @param serverTime
@@ -105,6 +110,7 @@ parent:
   nested(inside_cpow) async SetCookieString(URIParams host,
                                             URIParams channelURI,
                                             bool isForeign,
+                                            bool isTrackingResource,
                                             nsCString cookieString,
                                             nsCString serverTime,
                                             OriginAttributes attrs,
@@ -112,6 +118,7 @@ parent:
 
   async PrepareCookieList(URIParams host,
                           bool isForeign,
+                          bool isTrackingResource,
                           bool isSafeTopLevelNav,
                           bool isSameSiteForeign,
                           OriginAttributes attrs);

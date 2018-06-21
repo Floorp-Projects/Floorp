@@ -243,6 +243,7 @@ class BranchDeadlineSet
 
   public:
     explicit BranchDeadlineSet(LifoAlloc& alloc)
+      : earliestRange_(0)
     {
         // Manually construct vectors in the uninitialized aligned storage.
         // This is because C++ arrays can otherwise only be constructed with

@@ -524,6 +524,7 @@ class Zone : public JS::shadow::Zone,
 
     void traceAtomCache(JSTracer* trc);
     void purgeAtomCacheOrDefer();
+    void purgeAtomCache();
 
     js::ExternalStringCache& externalStringCache() { return externalStringCache_.ref(); };
 
