@@ -68,7 +68,7 @@ struct ModuleEnvironment
     MemoryUsage               memoryUsage;
     uint32_t                  minMemoryLength;
     Maybe<uint32_t>           maxMemoryLength;
-    TypeDefVector             types;
+    SigWithIdVector           sigs;
     SigWithIdPtrVector        funcSigs;
     Uint32Vector              funcImportGlobalDataOffsets;
     GlobalDescVector          globals;
@@ -105,8 +105,8 @@ struct ModuleEnvironment
     size_t numTables() const {
         return tables.length();
     }
-    size_t numTypes() const {
-        return types.length();
+    size_t numSigs() const {
+        return sigs.length();
     }
     size_t numFuncs() const {
         return funcSigs.length();
@@ -133,7 +133,7 @@ struct ModuleEnvironment
         return funcIndex < funcImportGlobalDataOffsets.length();
     }
     uint32_t funcIndexToSigIndex(uint32_t funcIndex) const {
-        return TypeDef::fromSigWithIdPtr(funcSigs[funcIndex]) - types.begin();
+        return funcSigs[funcIndex] - sigs.begin();
     }
 };
 

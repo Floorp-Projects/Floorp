@@ -398,7 +398,6 @@ Module::compiledSerializedSize() const
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(dataSegments_) +
            SerializedVectorSize(elemSegments_) +
-           SerializedVectorSize(structTypes_) +
            code_->serializedSize();
 }
 
@@ -424,7 +423,6 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
-    cursor = SerializeVector(cursor, structTypes_);
     cursor = code_->serialize(cursor, linkData_);
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
 }
@@ -493,11 +491,6 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!cursor)
         return nullptr;
 
-    StructTypeVector structTypes;
-    cursor = DeserializeVector(cursor, &structTypes);
-    if (!cursor)
-        return nullptr;
-
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
     MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
 
@@ -509,7 +502,6 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                           std::move(exports),
                           std::move(dataSegments),
                           std::move(elemSegments),
-                          std::move(structTypes),
                           *bytecode);
 }
 
@@ -635,7 +627,6 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +
              dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
-             SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
     if (unlinkedCodeForDebugging_)
         *data += unlinkedCodeForDebugging_->sizeOfExcludingThis(mallocSizeOf);

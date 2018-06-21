@@ -1732,7 +1732,7 @@ OpIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee, ValueVector*
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
 
-    if (*sigIndex >= env_.numTypes())
+    if (*sigIndex >= env_.numSigs())
         return fail("signature index out of range");
 
     uint8_t flags;
@@ -1745,10 +1745,7 @@ OpIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee, ValueVector*
     if (!popWithType(ValType::I32, callee))
         return false;
 
-    if (!env_.types[*sigIndex].isFuncType())
-        return fail("expected signature type");
-
-    const Sig& sig = env_.types[*sigIndex].funcType();
+    const Sig& sig = env_.sigs[*sigIndex];
 
     if (!popCallArgs(sig.args(), argValues))
         return false;
@@ -1792,13 +1789,10 @@ OpIter<Policy>::readOldCallIndirect(uint32_t* sigIndex, Value* callee, ValueVect
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
 
-    if (*sigIndex >= env_.numTypes())
+    if (*sigIndex >= env_.numSigs())
         return fail("signature index out of range");
 
-    if (!env_.types[*sigIndex].isFuncType())
-        return fail("expected signature type");
-
-    const Sig& sig = env_.types[*sigIndex].funcType();
+    const Sig& sig = env_.sigs[*sigIndex];
 
     if (!popCallArgs(sig.args(), argValues))
         return false;

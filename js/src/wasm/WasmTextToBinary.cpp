@@ -94,7 +94,6 @@ class WasmToken
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
         ExtraConversionOpcode,
 #endif
-        Field,
         Float,
         Func,
         GetGlobal,
@@ -128,7 +127,6 @@ class WasmToken
         Shared,
         SignedInteger,
         Start,
-        Struct,
         Store,
         Table,
         TeeLocal,
@@ -366,7 +364,6 @@ class WasmToken
           case End:
           case Error:
           case Export:
-          case Field:
           case Float:
           case Func:
           case Global:
@@ -385,7 +382,6 @@ class WasmToken
           case Shared:
           case SignedInteger:
           case Start:
-          case Struct:
           case Table:
           case Text:
           case Then:
@@ -955,9 +951,6 @@ WasmTokenStream::next()
         break;
 
       case 'f':
-        if (consume(u"field"))
-            return WasmToken(WasmToken::Field, begin, cur_);
-
         if (consume(u"func"))
             return WasmToken(WasmToken::Func, begin, cur_);
 
@@ -1715,8 +1708,6 @@ WasmTokenStream::next()
 #endif
         if (consume(u"start"))
             return WasmToken(WasmToken::Start, begin, cur_);
-        if (consume(u"struct"))
-            return WasmToken(WasmToken::Struct, begin, cur_);
         break;
 
       case 't':
@@ -3340,71 +3331,24 @@ ParseFunc(WasmParseContext& c, AstModule* module)
     return func && module->append(func);
 }
 
-static bool
-ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, bool* isMutable);
-
-static bool
-ParseStructFields(WasmParseContext& c, AstStruct* str)
-{
-    AstNameVector    names(c.lifo);
-    AstValTypeVector types(c.lifo);
-
-    while (true) {
-        if (!c.ts.getIf(WasmToken::OpenParen))
-            break;
-
-        if (!c.ts.match(WasmToken::Field, c.error))
-            return false;
-
-        AstName name = c.ts.getIfName();
-
-        WasmToken typeToken;
-        bool isMutable;
-        if (!ParseGlobalType(c, &typeToken, &isMutable))
-            return false;
-        if (!c.ts.match(WasmToken::CloseParen, c.error))
-            return false;
-
-        if (!names.append(name))
-            return false;
-        if (!types.append(typeToken.valueType()))
-            return false;
-    }
-
-    *str = AstStruct(std::move(names), std::move(types));
-    return true;
-}
-
-static AstTypeDef*
+static AstSig*
 ParseTypeDef(WasmParseContext& c)
 {
     AstName name = c.ts.getIfName();
 
     if (!c.ts.match(WasmToken::OpenParen, c.error))
         return nullptr;
-
-    AstTypeDef* type = nullptr;
-    if (c.ts.getIf(WasmToken::Func)) {
-        AstSig sig(c.lifo);
-        if (!ParseFuncSig(c, &sig))
-            return nullptr;
-
-        type = new(c.lifo) AstSig(name, std::move(sig));
-    } else if (c.ts.getIf(WasmToken::Struct)) {
-        AstStruct str(c.lifo);
-        if (!ParseStructFields(c, &str))
-            return nullptr;
-
-        type = new(c.lifo) AstStruct(name, std::move(str));
-    } else {
-        c.ts.generateError(c.ts.peek(), "bad type definition", c.error);
+    if (!c.ts.match(WasmToken::Func, c.error))
         return nullptr;
-    }
+
+    AstSig sig(c.lifo);
+    if (!ParseFuncSig(c, &sig))
+        return nullptr;
 
     if (!c.ts.match(WasmToken::CloseParen, c.error))
         return nullptr;
 
-    return type;
+    return new(c.lifo) AstSig(name, std::move(sig));
 }
 
 static bool
@@ -3978,10 +3922,8 @@ ParseModule(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo, UniqueC
 
         switch (section.kind()) {
           case WasmToken::Type: {
-            AstTypeDef* typeDef = ParseTypeDef(c);
-            if (!typeDef)
-                return nullptr;
-            if (!module->append(static_cast<AstSig*>(typeDef)))
+            AstSig* sig = ParseTypeDef(c);
+            if (!sig || !module->append(sig))
                 return nullptr;
             break;
           }
@@ -4066,7 +4008,6 @@ class Resolver
     AstNameMap importMap_;
     AstNameMap tableMap_;
     AstNameMap memoryMap_;
-    AstNameMap typeMap_;
     AstNameVector targetStack_;
 
     bool registerName(AstNameMap& map, AstName name, size_t index) {
@@ -4104,7 +4045,6 @@ class Resolver
         importMap_(lifo),
         tableMap_(lifo),
         memoryMap_(lifo),
-        typeMap_(lifo),
         targetStack_(lifo)
     {}
     bool init() {
@@ -4113,7 +4053,6 @@ class Resolver
                importMap_.init() &&
                tableMap_.init() &&
                memoryMap_.init() &&
-               typeMap_.init() &&
                varMap_.init() &&
                globalMap_.init();
     }
@@ -4133,7 +4072,6 @@ class Resolver
     REGISTER(Global, globalMap_)
     REGISTER(Table, tableMap_)
     REGISTER(Memory, memoryMap_)
-    REGISTER(Type, typeMap_)
 
 #undef REGISTER
 
@@ -4159,7 +4097,6 @@ class Resolver
     RESOLVE(globalMap_, Global)
     RESOLVE(tableMap_, Table)
     RESOLVE(memoryMap_, Memory)
-    RESOLVE(typeMap_, Type)
 
 #undef RESOLVE
 
@@ -4601,18 +4538,11 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     if (!r.init())
         return false;
 
-    size_t numTypes = module->types().length();
-    for (size_t i = 0; i < numTypes; i++) {
-        AstTypeDef* ty = module->types()[i];
-        if (ty->isSig()) {
-            AstSig* sig = static_cast<AstSig*>(ty);
-            if (!r.registerSigName(sig->name(), i))
-                return r.fail("duplicate signature");
-        } else if (ty->isStruct()) {
-            AstStruct* str = static_cast<AstStruct*>(ty);
-            if (!r.registerTypeName(str->name(), i))
-                return r.fail("duplicate struct");
-        }
+    size_t numSigs = module->sigs().length();
+    for (size_t i = 0; i < numSigs; i++) {
+        AstSig* sig = module->sigs()[i];
+        if (!r.registerSigName(sig->name(), i))
+            return r.fail("duplicate signature");
     }
 
     size_t lastFuncIndex = 0;
@@ -5239,51 +5169,34 @@ EncodeExpr(Encoder& e, AstExpr& expr)
 static bool
 EncodeTypeSection(Encoder& e, AstModule& module)
 {
-    if (module.types().empty())
+    if (module.sigs().empty())
         return true;
 
     size_t offset;
     if (!e.startSection(SectionId::Type, &offset))
         return false;
 
-    if (!e.writeVarU32(module.types().length()))
+    if (!e.writeVarU32(module.sigs().length()))
         return false;
 
-    for (AstTypeDef* ty : module.types()) {
-        if (ty->isSig()) {
-            AstSig* sig = static_cast<AstSig*>(ty);
-            if (!e.writeVarU32(uint32_t(TypeCode::Func)))
+    for (AstSig* sig : module.sigs()) {
+        if (!e.writeVarU32(uint32_t(TypeCode::Func)))
+            return false;
+
+        if (!e.writeVarU32(sig->args().length()))
+            return false;
+
+        for (ValType t : sig->args()) {
+            if (!e.writeValType(t))
                 return false;
+        }
 
-            if (!e.writeVarU32(sig->args().length()))
+        if (!e.writeVarU32(!IsVoid(sig->ret())))
+            return false;
+
+        if (!IsVoid(sig->ret())) {
+            if (!e.writeValType(NonVoidToValType(sig->ret())))
                 return false;
-
-            for (ValType t : sig->args()) {
-                if (!e.writeValType(t))
-                    return false;
-            }
-
-            if (!e.writeVarU32(!IsVoid(sig->ret())))
-                return false;
-
-            if (!IsVoid(sig->ret())) {
-                if (!e.writeValType(NonVoidToValType(sig->ret())))
-                    return false;
-            }
-        } else if (ty->isStruct()) {
-            AstStruct* str = static_cast<AstStruct*>(ty);
-            if (!e.writeVarU32(uint32_t(TypeCode::Struct)))
-                return false;
-
-            if (!e.writeVarU32(str->fieldTypes().length()))
-                return false;
-
-            for (ValType t : str->fieldTypes()) {
-                if (!e.writeValType(t))
-                    return false;
-            }
-        } else {
-            MOZ_CRASH();
         }
     }
 
