@@ -110,38 +110,38 @@ wasm::HasSupport(JSContext* cx)
 }
 
 static bool
-ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val)
+ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, LitVal* val)
 {
     switch (targetType.code()) {
       case ValType::I32: {
         int32_t i32;
         if (!ToInt32(cx, v, &i32))
             return false;
-        *val = Val(uint32_t(i32));
+        *val = LitVal(uint32_t(i32));
         return true;
       }
       case ValType::F32: {
         double d;
         if (!ToNumber(cx, v, &d))
             return false;
-        *val = Val(float(d));
+        *val = LitVal(float(d));
         return true;
       }
       case ValType::F64: {
         double d;
         if (!ToNumber(cx, v, &d))
             return false;
-        *val = Val(d);
+        *val = LitVal(d);
         return true;
       }
       case ValType::AnyRef: {
         if (v.isNull()) {
-            *val = Val(ValType::AnyRef, nullptr);
+            *val = LitVal(ValType::AnyRef, nullptr);
         } else {
             JSObject* obj = ToObject(cx, v);
             if (!obj)
                 return false;
-            *val = Val(ValType::AnyRef, obj);
+            *val = LitVal(ValType::AnyRef, obj);
         }
         return true;
       }
@@ -152,7 +152,7 @@ ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val)
 }
 
 static Value
-ToJSValue(const Val& val)
+ToJSValue(const LitVal& val)
 {
     switch (val.type().code()) {
       case ValType::I32:
@@ -206,7 +206,7 @@ GetImports(JSContext* cx,
            MutableHandleWasmTableObject tableImport,
            MutableHandleWasmMemoryObject memoryImport,
            WasmGlobalObjectVector& globalObjs,
-           ValVector* globalImportValues)
+           LitValVector* globalImportValues)
 {
     const ImportVector& imports = module.imports();
     if (!imports.empty() && !importObj)
@@ -258,7 +258,7 @@ GetImports(JSContext* cx,
             break;
           }
           case DefinitionKind::Global: {
-            Val val;
+            LitVal val;
             const uint32_t index = globalIndex++;
             const GlobalDesc& global = globals[index];
             MOZ_ASSERT(global.importIndex() == index);
@@ -380,7 +380,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     RootedWasmMemoryObject memory(cx);
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
 
-    ValVector globals;
+    LitValVector globals;
     if (!GetImports(cx, *module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals))
         return false;
 
@@ -1070,7 +1070,7 @@ WasmInstanceObject::create(JSContext* cx,
                            SharedTableVector&& tables,
                            Handle<FunctionVector> funcImports,
                            const GlobalDescVector& globals,
-                           const ValVector& globalImportValues,
+                           const LitValVector& globalImportValues,
                            const WasmGlobalObjectVector& globalObjs,
                            HandleObject proto)
 {
@@ -1177,7 +1177,7 @@ Instantiate(JSContext* cx, const Module& module, HandleObject importObj,
     RootedWasmMemoryObject memory(cx);
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
 
-    ValVector globals;
+    LitValVector globals;
     if (!GetImports(cx, module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals))
         return false;
 
@@ -2155,7 +2155,7 @@ WasmGlobalObject::finalize(FreeOp*, JSObject* obj)
 }
 
 /* static */ WasmGlobalObject*
-WasmGlobalObject::create(JSContext* cx, const Val& val, bool isMutable)
+WasmGlobalObject::create(JSContext* cx, const LitVal& val, bool isMutable)
 {
     UniquePtr<Cell> cell = js::MakeUnique<Cell>();
     if (!cell)
@@ -2244,7 +2244,7 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Extract the initial value, or provide a suitable default.
     // Guard against control flow mistakes below failing to set |globalVal|.
-    Val globalVal = Val(uint32_t(0));
+    LitVal globalVal = LitVal(uint32_t(0));
     if (args.length() >= 2) {
         RootedValue valueVal(cx, args.get(1));
         if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal))
@@ -2252,10 +2252,10 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
     } else {
         switch (globalType.code()) {
           case ValType::I32:    /* set above */ break;
-          case ValType::I64: globalVal = Val(uint64_t(0)); break;
-          case ValType::F32:    globalVal = Val(float(0.0)); break;
-          case ValType::F64:    globalVal = Val(double(0.0)); break;
-          case ValType::AnyRef: globalVal = Val(ValType::AnyRef, nullptr); break;
+          case ValType::I64:    globalVal = LitVal(uint64_t(0)); break;
+          case ValType::F32:    globalVal = LitVal(float(0.0)); break;
+          case ValType::F64:    globalVal = LitVal(double(0.0)); break;
+          case ValType::AnyRef: globalVal = LitVal(ValType::AnyRef, nullptr); break;
           default: MOZ_CRASH();
         }
     }
@@ -2313,7 +2313,7 @@ WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    Val val;
+    LitVal val;
     if (!ToWebAssemblyValue(cx, global->type(), args.get(0), &val))
         return false;
 
@@ -2365,17 +2365,17 @@ WasmGlobalObject::isMutable() const
     return getReservedSlot(MUTABLE_SLOT).toBoolean();
 }
 
-Val
+LitVal
 WasmGlobalObject::val() const
 {
     Cell* cell = this->cell();
-    Val val;
+    LitVal val;
     switch (type().code()) {
-      case ValType::I32:    val = Val(uint32_t(cell->i32)); break;
-      case ValType::I64:    val = Val(uint64_t(cell->i64)); break;
-      case ValType::F32:    val = Val(cell->f32); break;
-      case ValType::F64:    val = Val(cell->f64); break;
-      case ValType::AnyRef: val = Val(ValType::AnyRef, (void*)cell->ptr); break;
+      case ValType::I32:    val = LitVal(uint32_t(cell->i32)); break;
+      case ValType::I64:    val = LitVal(uint64_t(cell->i64)); break;
+      case ValType::F32:    val = LitVal(cell->f32); break;
+      case ValType::F64:    val = LitVal(cell->f64); break;
+      case ValType::AnyRef: val = LitVal(ValType::AnyRef, (void*)cell->ptr); break;
       default:              MOZ_CRASH();
     }
     return val;

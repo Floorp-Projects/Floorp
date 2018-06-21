@@ -61,7 +61,7 @@ static_assert((MaxMemoryAccessSize & (MaxMemoryAccessSize-1)) == 0,
               "MaxMemoryAccessSize is not a power of two");
 
 void
-Val::writePayload(uint8_t* dst) const
+LitVal::writePayload(uint8_t* dst) const
 {
     switch (type_.code()) {
       case ValType::I32:
@@ -86,7 +86,7 @@ Val::writePayload(uint8_t* dst) const
         memcpy(dst, &u.ptr_, sizeof(intptr_t));
         return;
     }
-    MOZ_CRASH("unexpected Val type");
+    MOZ_CRASH("unexpected LitVal type");
 }
 
 bool
