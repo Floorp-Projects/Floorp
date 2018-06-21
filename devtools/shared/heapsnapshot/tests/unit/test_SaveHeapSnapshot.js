@@ -18,40 +18,52 @@ function run_test() {
 }
 
 function testBadParameters() {
-  throws(() => ChromeUtils.saveHeapSnapshot(),
-         "Should throw if arguments aren't passed in.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot(),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if arguments aren't passed in.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot(null),
-         "Should throw if boundaries isn't an object.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot(null),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if boundaries isn't an object.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({}),
-         "Should throw if the boundaries object doesn't have any properties.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({}),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if the boundaries object doesn't have any properties.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ runtime: true,
-                                              globals: [this] }),
-         "Should throw if the boundaries object has more than one property.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ runtime: true,
+                                                     globals: [this] }),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if the boundaries object has more than one property.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ debugger: {} }),
-         "Should throw if the debuggees object is not a Debugger object");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ debugger: {} }),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if the debuggees object is not a Debugger object");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ globals: [{}] }),
-         "Should throw if the globals array contains non-global objects.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ globals: [{}] }),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if the globals array contains non-global objects.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ runtime: false }),
-         "Should throw if runtime is supplied and is not true.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ runtime: false }),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if runtime is supplied and is not true.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ globals: null }),
-         "Should throw if globals is not an object.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ globals: null }),
+                /TypeError:.*can't be converted to a sequence/,
+                "Should throw if globals is not an object.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ globals: {} }),
-         "Should throw if globals is not an array.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ globals: {} }),
+                /TypeError:.*can't be converted to a sequence/,
+                "Should throw if globals is not an array.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ debugger: Debugger.prototype }),
-         "Should throw if debugger is the Debugger.prototype object.");
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ debugger: Debugger.prototype }),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if debugger is the Debugger.prototype object.");
 
-  throws(() => ChromeUtils.saveHeapSnapshot({ get globals() {
+  Assert.throws(() => ChromeUtils.saveHeapSnapshot({ get globals() {
     return [this];
-  } }), "Should throw if boundaries property is a getter.");
+  } }),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Should throw if boundaries property is a getter.");
 }
 
 const makeNewSandbox = () =>
