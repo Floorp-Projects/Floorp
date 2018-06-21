@@ -1209,9 +1209,6 @@ class MOZ_RAII AutoRooterGetterSetter
     inline AutoRooterGetterSetter(JSContext* cx, uint8_t attrs,
                                   GetterOp* pgetter, SetterOp* psetter
                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    inline AutoRooterGetterSetter(JSContext* cx, uint8_t attrs,
-                                  JSNative* pgetter, JSNative* psetter
-                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   private:
     mozilla::Maybe<Inner> inner;
