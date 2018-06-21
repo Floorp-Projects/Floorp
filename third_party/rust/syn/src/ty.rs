@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use punctuated::Punctuated;
 use super::*;
 use proc_macro2::TokenStream;
+use punctuated::Punctuated;
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "extra-traits")]
@@ -249,8 +249,8 @@ ast_enum! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use synom::Synom;
     use path::parsing::qpath;
+    use synom::Synom;
 
     impl Synom for Type {
         named!(parse -> Self, call!(ambig_ty, true));
@@ -394,7 +394,7 @@ pub mod parsing {
                 variadic: option!(cond_reduce!(inputs.empty_or_trailing(), punct!(...))) >>
                 (inputs, variadic)
             )) >>
-            output: syn!(ReturnType) >>
+            output: call!(ReturnType::without_plus) >>
             (TypeBareFn {
                 unsafety: unsafety,
                 abi: abi,
@@ -483,16 +483,21 @@ pub mod parsing {
         ));
     }
 
-    impl Synom for ReturnType {
-        named!(parse -> Self, alt!(
+    impl ReturnType {
+        named!(pub without_plus -> Self, call!(Self::parse, false));
+        named!(parse(allow_plus: bool) -> Self, alt!(
             do_parse!(
                 arrow: punct!(->) >>
-                ty: syn!(Type) >>
+                ty: call!(ambig_ty, allow_plus) >>
                 (ReturnType::Type(arrow, Box::new(ty)))
             )
             |
             epsilon!() => { |_| ReturnType::Default }
         ));
+    }
+
+    impl Synom for ReturnType {
+        named!(parse -> Self, call!(Self::parse, true));
 
         fn description() -> Option<&'static str> {
             Some("return type")
@@ -641,10 +646,11 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for TypeSlice {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.bracket_token.surround(tokens, |tokens| {
                 self.elem.to_tokens(tokens);
             });
@@ -652,7 +658,7 @@ mod printing {
     }
 
     impl ToTokens for TypeArray {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.bracket_token.surround(tokens, |tokens| {
                 self.elem.to_tokens(tokens);
                 self.semi_token.to_tokens(tokens);
@@ -662,7 +668,7 @@ mod printing {
     }
 
     impl ToTokens for TypePtr {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.star_token.to_tokens(tokens);
             match self.mutability {
                 Some(ref tok) => tok.to_tokens(tokens),
@@ -675,7 +681,7 @@ mod printing {
     }
 
     impl ToTokens for TypeReference {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.and_token.to_tokens(tokens);
             self.lifetime.to_tokens(tokens);
             self.mutability.to_tokens(tokens);
@@ -684,7 +690,7 @@ mod printing {
     }
 
     impl ToTokens for TypeBareFn {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.lifetimes.to_tokens(tokens);
             self.unsafety.to_tokens(tokens);
             self.abi.to_tokens(tokens);
@@ -704,13 +710,13 @@ mod printing {
     }
 
     impl ToTokens for TypeNever {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.bang_token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for TypeTuple {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.paren_token.surround(tokens, |tokens| {
                 self.elems.to_tokens(tokens);
             });
@@ -718,27 +724,27 @@ mod printing {
     }
 
     impl ToTokens for TypePath {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             PathTokens(&self.qself, &self.path).to_tokens(tokens);
         }
     }
 
     impl ToTokens for TypeTraitObject {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.dyn_token.to_tokens(tokens);
             self.bounds.to_tokens(tokens);
         }
     }
 
     impl ToTokens for TypeImplTrait {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.impl_token.to_tokens(tokens);
             self.bounds.to_tokens(tokens);
         }
     }
 
     impl ToTokens for TypeGroup {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.group_token.surround(tokens, |tokens| {
                 self.elem.to_tokens(tokens);
             });
@@ -746,7 +752,7 @@ mod printing {
     }
 
     impl ToTokens for TypeParen {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.paren_token.surround(tokens, |tokens| {
                 self.elem.to_tokens(tokens);
             });
@@ -754,25 +760,25 @@ mod printing {
     }
 
     impl ToTokens for TypeInfer {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.underscore_token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for TypeMacro {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.mac.to_tokens(tokens);
         }
     }
 
     impl ToTokens for TypeVerbatim {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.tts.to_tokens(tokens);
         }
     }
 
     impl ToTokens for ReturnType {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 ReturnType::Default => {}
                 ReturnType::Type(ref arrow, ref ty) => {
@@ -784,7 +790,7 @@ mod printing {
     }
 
     impl ToTokens for BareFnArg {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             if let Some((ref name, ref colon)) = self.name {
                 name.to_tokens(tokens);
                 colon.to_tokens(tokens);
@@ -794,7 +800,7 @@ mod printing {
     }
 
     impl ToTokens for BareFnArgName {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 BareFnArgName::Named(ref t) => t.to_tokens(tokens),
                 BareFnArgName::Wild(ref t) => t.to_tokens(tokens),
@@ -803,7 +809,7 @@ mod printing {
     }
 
     impl ToTokens for Abi {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.extern_token.to_tokens(tokens);
             self.name.to_tokens(tokens);
         }

@@ -105,6 +105,9 @@ class GeckoInstance(object):
         # Disable recommended automation prefs in CI
         "marionette.prefs.recommended": False,
 
+        # Disable download and usage of OpenH264, and Widevine plugins
+        "media.gmp-manager.updateEnabled": False,
+
         "media.volume_scale": "0.01",
 
         # Do not prompt for temporary redirects

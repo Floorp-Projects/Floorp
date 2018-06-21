@@ -48,15 +48,15 @@
 //!
 //!  - **Primitive types**:
 //!    - bool
-//!    - i8, i16, i32, i64, isize
-//!    - u8, u16, u32, u64, usize
+//!    - i8, i16, i32, i64, i128, isize
+//!    - u8, u16, u32, u64, u128, usize
 //!    - f32, f64
 //!    - char
 //!    - str
 //!    - &T and &mut T
 //!  - **Compound types**:
-//!    - [T]
-//!    - [T; 0] through [T; 32]
+//!    - \[T\]
+//!    - \[T; 0\] through \[T; 32\]
 //!    - tuples up to size 16
 //!  - **Common standard library types**:
 //!    - String
@@ -92,7 +92,8 @@
 //!    - Path
 //!    - PathBuf
 //!    - Range\<T\>
-//!    - num::NonZero* (unstable)
+//!    - num::NonZero*
+//!    - `!` *(unstable)*
 //!  - **Net types**:
 //!    - IpAddr
 //!    - Ipv4Addr
@@ -127,6 +128,13 @@ macro_rules! declare_error_trait {
         /// Trait used by `Serialize` implementations to generically construct
         /// errors belonging to the `Serializer` against which they are
         /// currently running.
+        ///
+        /// # Example implementation
+        ///
+        /// The [example data format] presented on the website shows an error
+        /// type appropriate for a basic JSON data format.
+        ///
+        /// [example data format]: https://serde.rs/data-format.html
         pub trait Error: Sized $(+ $($supertrait)::+)* {
             /// Used when a [`Serialize`] implementation encounters any error
             /// while serializing a type.
@@ -244,27 +252,27 @@ pub trait Serialize {
 
 /// A **data format** that can serialize any data structure supported by Serde.
 ///
-/// The role of this trait is to define the serialization half of the Serde data
-/// model, which is a way to categorize every Rust data structure into one of 27
-/// possible types. Each method of the `Serializer` trait corresponds to one of
-/// the types of the data model.
+/// The role of this trait is to define the serialization half of the [Serde
+/// data model], which is a way to categorize every Rust data structure into one
+/// of 29 possible types. Each method of the `Serializer` trait corresponds to
+/// one of the types of the data model.
 ///
 /// Implementations of `Serialize` map themselves into this data model by
 /// invoking exactly one of the `Serializer` methods.
 ///
 /// The types that make up the Serde data model are:
 ///
-///  - **12 primitive types**
+///  - **14 primitive types**
 ///    - bool
-///    - i8, i16, i32, i64
-///    - u8, u16, u32, u64
+///    - i8, i16, i32, i64, i128
+///    - u8, u16, u32, u64, u128
 ///    - f32, f64
 ///    - char
 ///  - **string**
 ///    - UTF-8 bytes with a length and no null terminator.
 ///    - When serializing, all strings are handled equally. When deserializing,
 ///      there are three flavors of strings: transient, owned, and borrowed.
-///  - **byte array** - [u8]
+///  - **byte array** - \[u8\]
 ///    - Similar to strings, during deserialization byte arrays can be transient,
 ///      owned, or borrowed.
 ///  - **option**
@@ -309,6 +317,15 @@ pub trait Serialize {
 /// is the `serde_json::value::Serializer` (distinct from the main `serde_json`
 /// serializer) that produces a `serde_json::Value` data structure in memory as
 /// output.
+///
+/// [Serde data model]: https://serde.rs/data-model.html
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website contains example code for
+/// a basic JSON `Serializer`.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait Serializer: Sized {
     /// The output type produced by this `Serializer` during successful
     /// serialization. Most serializers that produce text or binary output
@@ -492,6 +509,37 @@ pub trait Serializer: Sized {
     /// ```
     fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error>;
 
+    serde_if_integer128! {
+        /// Serialize an `i128` value.
+        ///
+        /// ```rust
+        /// # #[macro_use]
+        /// # extern crate serde;
+        /// #
+        /// # use serde::Serializer;
+        /// #
+        /// # __private_serialize!();
+        /// #
+        /// impl Serialize for i128 {
+        ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        ///     where
+        ///         S: Serializer,
+        ///     {
+        ///         serializer.serialize_i128(*self)
+        ///     }
+        /// }
+        /// #
+        /// # fn main() {}
+        /// ```
+        ///
+        /// This method is available only on Rust compiler versions >=1.26. The
+        /// default behavior unconditionally returns an error.
+        fn serialize_i128(self, v: i128) -> Result<Self::Ok, Self::Error> {
+            let _ = v;
+            Err(Error::custom("i128 is not supported"))
+        }
+    }
+
     /// Serialize a `u8` value.
     ///
     /// If the format does not differentiate between `u8` and `u64`, a
@@ -595,6 +643,37 @@ pub trait Serializer: Sized {
     /// # fn main() {}
     /// ```
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error>;
+
+    serde_if_integer128! {
+        /// Serialize a `u128` value.
+        ///
+        /// ```rust
+        /// # #[macro_use]
+        /// # extern crate serde;
+        /// #
+        /// # use serde::Serializer;
+        /// #
+        /// # __private_serialize!();
+        /// #
+        /// impl Serialize for u128 {
+        ///     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        ///     where
+        ///         S: Serializer,
+        ///     {
+        ///         serializer.serialize_u128(*self)
+        ///     }
+        /// }
+        /// #
+        /// # fn main() {}
+        /// ```
+        ///
+        /// This method is available only on Rust compiler versions >=1.26. The
+        /// default behavior unconditionally returns an error.
+        fn serialize_u128(self, v: u128) -> Result<Self::Ok, Self::Error> {
+            let _ = v;
+            Err(Error::custom("u128 is not supported"))
+        }
+    }
 
     /// Serialize an `f32` value.
     ///
@@ -1458,6 +1537,8 @@ pub trait Serializer: Sized {
 
 /// Returned from `Serializer::serialize_seq`.
 ///
+/// # Example use
+///
 /// ```rust
 /// # use std::marker::PhantomData;
 /// #
@@ -1495,6 +1576,13 @@ pub trait Serializer: Sized {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeSeq` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeSeq {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1512,6 +1600,8 @@ pub trait SerializeSeq {
 }
 
 /// Returned from `Serializer::serialize_tuple`.
+///
+/// # Example use
 ///
 /// ```rust
 /// use serde::ser::{Serialize, Serializer, SerializeTuple};
@@ -1586,6 +1676,13 @@ pub trait SerializeSeq {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeTuple` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeTuple {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1603,6 +1700,8 @@ pub trait SerializeTuple {
 }
 
 /// Returned from `Serializer::serialize_tuple_struct`.
+///
+/// # Example use
 ///
 /// ```rust
 /// use serde::ser::{Serialize, Serializer, SerializeTupleStruct};
@@ -1622,6 +1721,13 @@ pub trait SerializeTuple {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeTupleStruct` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeTupleStruct {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1639,6 +1745,8 @@ pub trait SerializeTupleStruct {
 }
 
 /// Returned from `Serializer::serialize_tuple_variant`.
+///
+/// # Example use
 ///
 /// ```rust
 /// use serde::ser::{Serialize, Serializer, SerializeTupleVariant};
@@ -1671,6 +1779,13 @@ pub trait SerializeTupleStruct {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeTupleVariant` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeTupleVariant {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1688,6 +1803,8 @@ pub trait SerializeTupleVariant {
 }
 
 /// Returned from `Serializer::serialize_map`.
+///
+/// # Example use
 ///
 /// ```rust
 /// # use std::marker::PhantomData;
@@ -1728,6 +1845,13 @@ pub trait SerializeTupleVariant {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeMap` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeMap {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1791,6 +1915,8 @@ pub trait SerializeMap {
 
 /// Returned from `Serializer::serialize_struct`.
 ///
+/// # Example use
+///
 /// ```rust
 /// use serde::ser::{Serialize, Serializer, SerializeStruct};
 ///
@@ -1813,6 +1939,13 @@ pub trait SerializeMap {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeStruct` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeStruct {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;
@@ -1842,6 +1975,8 @@ pub trait SerializeStruct {
 
 /// Returned from `Serializer::serialize_struct_variant`.
 ///
+/// # Example use
+///
 /// ```rust
 /// use serde::ser::{Serialize, Serializer, SerializeStructVariant};
 ///
@@ -1866,6 +2001,13 @@ pub trait SerializeStruct {
 ///     }
 /// }
 /// ```
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SerializeStructVariant` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SerializeStructVariant {
     /// Must match the `Ok` type of our `Serializer`.
     type Ok;

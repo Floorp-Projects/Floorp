@@ -589,7 +589,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #appMenu-tp-label {
   -moz-context-properties: fill;
   fill: currentColor;
-  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg#enabled);
+  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
   -moz-box-flex: 1;
 }
 

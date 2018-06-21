@@ -604,7 +604,7 @@ impl BorderRenderTaskInfo {
         widths: &BorderWidths,
         scale: LayoutToDeviceScale,
         brush_segments: &mut Vec<BrushSegment>,
-    ) -> Self {
+    ) -> Option<Self> {
         let mut border_segments = Vec::new();
 
         let dp_width_top = (widths.top * scale.0).ceil();
@@ -683,6 +683,10 @@ impl BorderRenderTaskInfo {
             dp_size_tl.width.max(dp_size_bl.width) + inner_width + dp_size_tr.width.max(dp_size_br.width),
             dp_size_tl.height.max(dp_size_tr.height) + inner_height + dp_size_bl.height.max(dp_size_br.height),
         );
+
+        if size.width == 0.0 || size.height == 0.0 {
+            return None;
+        }
 
         add_edge_segment(
             LayoutRect::from_floats(
@@ -860,10 +864,10 @@ impl BorderRenderTaskInfo {
             brush_segments,
         );
 
-        BorderRenderTaskInfo {
+        Some(BorderRenderTaskInfo {
             border_segments,
             size: size.to_i32(),
-        }
+        })
     }
 
     pub fn build_instances(&self, border: &NormalBorder) -> Vec<BorderInstance> {

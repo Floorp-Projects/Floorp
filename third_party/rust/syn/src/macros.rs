@@ -133,7 +133,7 @@ macro_rules! generate_to_tokens {
 
     (($($arms:tt)*) $tokens:ident $name:ident {}) => {
         impl ::quote::ToTokens for $name {
-            fn to_tokens(&self, $tokens: &mut ::quote::Tokens) {
+            fn to_tokens(&self, $tokens: &mut ::proc_macro2::TokenStream) {
                 match *self {
                     $($arms)*
                 }

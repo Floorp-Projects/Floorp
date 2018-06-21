@@ -12,7 +12,7 @@
 
 [package]
 name = "syn"
-version = "0.13.1"
+version = "0.14.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["/Cargo.toml", "/src/**/*.rs", "/README.md", "/LICENSE-APACHE", "/LICENSE-MIT"]
 description = "Nom parser for Rust source code"
@@ -24,26 +24,29 @@ repository = "https://github.com/dtolnay/syn"
 [package.metadata.docs.rs]
 all-features = true
 
+[package.metadata.playground]
+all-features = true
+
 [[example]]
 name = "dump-syntax"
 path = "examples/dump-syntax/main.rs"
 required-features = ["full", "parsing", "extra-traits"]
 [dependencies.proc-macro2]
-version = "0.3"
+version = "0.4.4"
 default-features = false
 
 [dependencies.quote]
-version = "0.5"
+version = "0.6"
 optional = true
 default-features = false
 
 [dependencies.unicode-xid]
 version = "0.1"
 [dev-dependencies.rayon]
-version = "1.0.0"
+version = "1.0"
 
 [dev-dependencies.walkdir]
-version = "2"
+version = "2.1"
 
 [features]
 clone-impls = []
