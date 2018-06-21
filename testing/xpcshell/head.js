@@ -511,6 +511,22 @@ function _execute_test() {
     this[func] = Assert[func].bind(Assert);
   }
 
+  let perTestCoverageEnabled = false;
+  try {
+    ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm");
+    perTestCoverageEnabled = true;
+  } catch (e) {
+    // If the module doesn't exist, code coverage is disabled.
+    // Otherwise, rethrow the exception.
+    if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
+      throw e;
+    }
+  }
+
+  if (perTestCoverageEnabled) {
+    PerTestCoverageUtils.beforeTest();
+  }
+
   try {
     do_test_pending("MAIN run_test");
     // Check if run_test() is defined. If defined, run it.
@@ -528,6 +544,10 @@ function _execute_test() {
 
     if (coverageCollector != null) {
       coverageCollector.recordTestCoverage(_TEST_FILE[0]);
+    }
+
+    if (perTestCoverageEnabled) {
+      PerTestCoverageUtils.afterTest();
     }
   } catch (e) {
     _passed = false;
