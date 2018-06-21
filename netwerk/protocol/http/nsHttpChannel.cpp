@@ -9343,7 +9343,11 @@ class CopyNonDefaultHeaderVisitor final : public nsIHttpHeaderVisitor
   NS_IMETHOD
   VisitHeader(const nsACString& aHeader, const nsACString& aValue) override
   {
-    return mTarget->SetRequestHeader(aHeader, aValue, false /* merge */);
+    if (aValue.IsEmpty()) {
+      return mTarget->SetEmptyRequestHeader(aHeader);
+    } else {
+      return mTarget->SetRequestHeader(aHeader, aValue, false /* merge */);
+    }
   }
 
 public:
