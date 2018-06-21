@@ -107,6 +107,16 @@ public class IconRequestBuilder {
     }
 
     /**
+     * If shouldSkipMemory is true then skip the memory cache and do not return
+     * a previously loaded icon.
+     */
+    @CheckResult
+    public IconRequestBuilder skipMemoryIf(boolean shouldSkipMemory) {
+        internal.skipMemory = shouldSkipMemory;
+        return this;
+    }
+
+    /**
      * The icon will be used as (Android) launcher icon. The loaded icon will be scaled to the
      * preferred Android launcher icon size.
      */
