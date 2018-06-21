@@ -6,7 +6,7 @@
 
 const { getBounds } = require("./utils/accessibility");
 const { createNode, isNodeValid } = require("./utils/markup");
-const { loadSheet } = require("devtools/shared/layout/utils");
+const { getCurrentZoom, loadSheet } = require("devtools/shared/layout/utils");
 
 /**
  * Stylesheet used for highlighter styling of accessible objects in chrome. It
@@ -80,7 +80,11 @@ class XULWindowAccessibleHighlighter {
    *                       information for the accessible object.
    */
   get _bounds() {
-    return getBounds(this.win, this.options);
+    // Zoom level for the top level browser window does not change and only inner frames
+    // do. So we need to get the zoom level of the current node's parent window.
+    const zoom = getCurrentZoom(this.currentNode);
+
+    return getBounds(this.win, { ...this.options, zoom });
   }
 
   /**
