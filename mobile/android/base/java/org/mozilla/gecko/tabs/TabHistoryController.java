@@ -25,7 +25,7 @@ public class TabHistoryController {
     };
 
     public interface OnShowTabHistory {
-        void onShowHistory(List<TabHistoryPage> historyPageList, int toIndex);
+        void onShowHistory(List<TabHistoryPage> historyPageList, int toIndex, boolean isPrivate);
     }
 
     public TabHistoryController(OnShowTabHistory showTabHistoryListener) {
@@ -39,6 +39,8 @@ public class TabHistoryController {
         final GeckoBundle data = new GeckoBundle(2);
         data.putString("action", action.name());
         data.putInt("tabId", tab.getId());
+
+        final boolean isPrivate = tab.isPrivate();
 
         EventDispatcher.getInstance().dispatch("Session:GetHistory", data, new EventCallback() {
             @Override
@@ -74,7 +76,7 @@ public class TabHistoryController {
                     historyPageList.add(new TabHistoryPage(title, url, selected));
                 }
 
-                showTabHistoryListener.onShowHistory(historyPageList, toIndex);
+                showTabHistoryListener.onShowHistory(historyPageList, toIndex, isPrivate);
             }
 
             @Override

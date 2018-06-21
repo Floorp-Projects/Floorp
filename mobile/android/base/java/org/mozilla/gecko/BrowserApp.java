@@ -792,7 +792,7 @@ public class BrowserApp extends GeckoApp
         // Initialize Tab History Controller.
         tabHistoryController = new TabHistoryController(new OnShowTabHistory() {
             @Override
-            public void onShowHistory(final List<TabHistoryPage> historyPageList, final int toIndex) {
+            public void onShowHistory(final List<TabHistoryPage> historyPageList, final int toIndex, final boolean isPrivate) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -806,7 +806,7 @@ public class BrowserApp extends GeckoApp
                             return;
                         }
 
-                        final TabHistoryFragment fragment = TabHistoryFragment.newInstance(historyPageList, toIndex);
+                        final TabHistoryFragment fragment = TabHistoryFragment.newInstance(historyPageList, toIndex, isPrivate);
                         final FragmentManager fragmentManager = getSupportFragmentManager();
                         GeckoAppShell.getHapticFeedbackDelegate().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                         fragment.show(R.id.tab_history_panel, fragmentManager.beginTransaction(), TAB_HISTORY_FRAGMENT_TAG);
