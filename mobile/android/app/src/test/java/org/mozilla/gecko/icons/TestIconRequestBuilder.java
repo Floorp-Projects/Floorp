@@ -84,6 +84,27 @@ public class TestIconRequestBuilder {
     }
 
     @Test
+    public void testPrivateMode() {
+        IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL_1)
+                .build();
+
+        Assert.assertFalse(request.isPrivateMode());
+
+        request.modify()
+                .setPrivateMode(true)
+                .deferBuild();
+
+        Assert.assertTrue(request.isPrivateMode());
+
+        request.modify()
+                .setPrivateMode(false)
+                .deferBuild();
+
+        Assert.assertFalse(request.isPrivateMode());
+    }
+
+    @Test
     public void testSkipNetwork() {
         IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL_1)
