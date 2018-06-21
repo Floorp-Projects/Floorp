@@ -447,8 +447,7 @@ TryResolvePropertyFromSpecs(JSContext* cx, HandleId id, HandleObject holder,
                                        JS_PROPERTYOP_SETTER(desc.setter()),
                                        // This particular descriptor, unlike most,
                                        // actually stores JSNatives directly,
-                                       // since we just set it up.  Do NOT pass
-                                       // JSPROP_PROPOP_ACCESSORS here!
+                                       // since we just set it up.
                                        desc.attributes()))
             {
                 return false;
