@@ -175,7 +175,11 @@ nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
   }
 
   nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
-  if (type == nsIContentPolicy::TYPE_DOCUMENT) {
+
+  // Allow top-level FTP documents and save-as download of FTP files on
+  // HTTP pages.
+  if (type == nsIContentPolicy::TYPE_DOCUMENT ||
+      type == nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
     return NS_OK;
   }
 
