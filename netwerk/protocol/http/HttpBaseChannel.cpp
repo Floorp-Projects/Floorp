@@ -42,6 +42,7 @@
 #include "nsINetworkInterceptController.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
+#include "mozilla/Services.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
@@ -2379,7 +2380,7 @@ HttpBaseChannel::GetTopWindowURI(nsIURI **aTopWindowURI)
   // Only compute the top window URI once. In e10s, this must be computed in the
   // child. The parent gets the top window URI through HttpChannelOpenArgs.
   if (!mTopWindowURI) {
-    util = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    util = services::GetThirdPartyUtil();
     if (!util) {
       return NS_ERROR_NOT_AVAILABLE;
     }

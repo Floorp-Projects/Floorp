@@ -17,4 +17,4 @@ DevToolsModules(
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')

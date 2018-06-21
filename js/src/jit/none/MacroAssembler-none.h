@@ -332,12 +332,12 @@ class MacroAssemblerNone : public Assembler
     void unboxNonDouble(const Address&, Register, JSValueType) { MOZ_CRASH();}
     void unboxGCThingForPreBarrierTrampoline(const Address&, Register) { MOZ_CRASH(); }
     void notBoolean(ValueOperand) { MOZ_CRASH(); }
-    Register extractObject(Address, Register) { MOZ_CRASH(); }
-    Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }
-    Register extractSymbol(ValueOperand, Register) { MOZ_CRASH(); }
-    Register extractInt32(ValueOperand, Register) { MOZ_CRASH(); }
-    Register extractBoolean(ValueOperand, Register) { MOZ_CRASH(); }
-    template <typename T> Register extractTag(T, Register) { MOZ_CRASH(); }
+    MOZ_MUST_USE Register extractObject(Address, Register) { MOZ_CRASH(); }
+    MOZ_MUST_USE Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }
+    MOZ_MUST_USE Register extractSymbol(ValueOperand, Register) { MOZ_CRASH(); }
+    MOZ_MUST_USE Register extractInt32(ValueOperand, Register) { MOZ_CRASH(); }
+    MOZ_MUST_USE Register extractBoolean(ValueOperand, Register) { MOZ_CRASH(); }
+    template <typename T> MOZ_MUST_USE Register extractTag(T, Register) { MOZ_CRASH(); }
 
     void convertFloat32ToInt32(FloatRegister, Register, Label*, bool v = true) { MOZ_CRASH(); }
     void convertDoubleToInt32(FloatRegister, Register, Label*, bool v = true) { MOZ_CRASH(); }

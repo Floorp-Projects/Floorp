@@ -8,7 +8,7 @@ with Files("browser/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 with Files("browser/*onsole*"):
-    BUG_COMPONENT = ("Firefox", "Developer Tools")
+    BUG_COMPONENT = ("DevTools", "General")
 
 with Files("browser/*autofocus*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")

@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
 
 EXPORTS.mozilla += [
     'AbstractTimelineMarker.h',

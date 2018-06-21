@@ -29,8 +29,11 @@
 class nsDiscriminatedUnion
 {
 public:
-
-  nsDiscriminatedUnion() : mType(nsIDataType::VTYPE_EMPTY) {}
+  nsDiscriminatedUnion()
+    : mType(nsIDataType::VTYPE_EMPTY)
+  {
+    u.mInt8Value = '\0';
+  }
   nsDiscriminatedUnion(const nsDiscriminatedUnion&) = delete;
   nsDiscriminatedUnion(nsDiscriminatedUnion&&) = delete;
 

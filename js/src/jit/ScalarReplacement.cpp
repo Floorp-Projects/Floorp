@@ -374,6 +374,7 @@ const char* ObjectMemoryView::phaseName = "Scalar Replacement of Object";
 
 ObjectMemoryView::ObjectMemoryView(TempAllocator& alloc, MInstruction* obj)
   : alloc_(alloc),
+    undefinedVal_(nullptr),
     obj_(obj),
     startBlock_(obj->block()),
     state_(nullptr),

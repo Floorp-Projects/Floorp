@@ -2808,6 +2808,7 @@ MacroAssembler::MacroAssembler(JSContext* cx)
 #ifdef DEBUG
     inCall_(false),
 #endif
+    dynamicAlignment_(false),
     emitProfilingInstrumentation_(false)
 {
     jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
@@ -2827,6 +2828,7 @@ MacroAssembler::MacroAssembler()
 #ifdef DEBUG
     inCall_(false),
 #endif
+    dynamicAlignment_(false),
     emitProfilingInstrumentation_(false)
 {
     JitContext* jcx = GetJitContext();
@@ -2853,6 +2855,7 @@ MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
 #ifdef DEBUG
     inCall_(false),
 #endif
+    dynamicAlignment_(false),
     emitProfilingInstrumentation_(false)
 {
     moveResolver_.setAllocator(alloc);

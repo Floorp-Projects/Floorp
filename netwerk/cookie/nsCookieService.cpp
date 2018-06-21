@@ -56,6 +56,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIConsoleService.h"
 #include "nsVariant.h"
@@ -2035,6 +2036,12 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   bool isForeign = true;
   mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
+  bool isTrackingResource = false;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    isTrackingResource = httpChannel->GetIsTrackingResource();
+  }
+
   // Get originAttributes.
   OriginAttributes attrs;
   if (aChannel) {
@@ -2044,7 +2051,8 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
   nsAutoCString result;
-  GetCookieStringInternal(aHostURI, isForeign, isSafeTopLevelNav, isSameSiteForeign,
+  GetCookieStringInternal(aHostURI, isForeign, isTrackingResource,
+                          isSafeTopLevelNav, isSameSiteForeign,
                           aHttpBound, attrs, result);
   *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
   return NS_OK;
@@ -2129,6 +2137,12 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   bool isForeign = true;
   mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
+  bool isTrackingResource = false;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    isTrackingResource = httpChannel->GetIsTrackingResource();
+  }
+
   // Get originAttributes.
   OriginAttributes attrs;
   if (aChannel) {
@@ -2137,7 +2151,7 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
 
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
-  SetCookieStringInternal(aHostURI, isForeign, cookieString,
+  SetCookieStringInternal(aHostURI, isForeign, isTrackingResource, cookieString,
                           serverTime, aFromHttp, attrs, aChannel);
   return NS_OK;
 }
@@ -2145,6 +2159,7 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
 void
 nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
                                          bool                    aIsForeign,
+                                         bool                    aIsTrackingResource,
                                          nsDependentCString     &aCookieHeader,
                                          const nsCString        &aServerTime,
                                          bool                    aFromHttp,
@@ -2187,8 +2202,9 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
   CookieStatus cookieStatus = CheckPrefs(mPermissionService, mCookieBehavior,
                                          mThirdPartySession,
                                          mThirdPartyNonsecureSession, aHostURI,
-                                         aIsForeign, aCookieHeader.get(),
-                                         priorCookieCount, aOriginAttrs);
+                                         aIsForeign, aIsTrackingResource,
+                                         aCookieHeader.get(), priorCookieCount,
+                                         aOriginAttrs);
 
   // fire a notification if third party or if cookie was rejected
   // (but not if there was an error)
@@ -3119,6 +3135,7 @@ nsCookieService::PathMatches(nsCookie* aCookie,
 void
 nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
                                   bool aIsForeign,
+                                  bool aIsTrackingResource,
                                   bool aIsSafeTopLevelNav,
                                   bool aIsSameSiteForeign,
                                   bool aHttpBound,
@@ -3160,8 +3177,9 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
   CookieStatus cookieStatus = CheckPrefs(mPermissionService, mCookieBehavior,
                                          mThirdPartySession,
                                          mThirdPartyNonsecureSession, aHostURI,
-                                         aIsForeign, nullptr,
-                                         priorCookieCount, aOriginAttrs);
+                                         aIsForeign, aIsTrackingResource,
+                                         nullptr, priorCookieCount,
+                                         aOriginAttrs);
 
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
@@ -3292,6 +3310,7 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
 void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aIsForeign,
+                                         bool aIsTrackingResource,
                                          bool aIsSafeTopLevelNav,
                                          bool aIsSameSiteForeign,
                                          bool aHttpBound,
@@ -3299,8 +3318,9 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          nsCString &aCookieString)
 {
   AutoTArray<nsCookie*, 8> foundCookieList;
-  GetCookiesForURI(aHostURI, aIsForeign, aIsSafeTopLevelNav, aIsSameSiteForeign,
-                   aHttpBound, aOriginAttrs, foundCookieList);
+  GetCookiesForURI(aHostURI, aIsForeign, aIsTrackingResource,
+                   aIsSafeTopLevelNav, aIsSameSiteForeign, aHttpBound,
+                   aOriginAttrs, foundCookieList);
 
   nsCookie* cookie;
   for (uint32_t i = 0; i < foundCookieList.Length(); ++i) {
@@ -4137,6 +4157,7 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
                             bool                    aThirdPartyNonsecureSession,
                             nsIURI                 *aHostURI,
                             bool                    aIsForeign,
+                            bool                    aIsTrackingResource,
                             const char             *aCookieHeader,
                             const int               aNumOfCookies,
                             const OriginAttributes &aOriginAttrs)
@@ -4156,6 +4177,13 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
   if (!principal) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "non-codebase principals cannot get/set cookies");
     return STATUS_REJECTED_WITH_ERROR;
+  }
+
+  // No cookies allowed if this request comes from a tracker, in a 3rd party
+  // context, when anti-tracking protection is enabled.
+  if (aIsForeign && aIsTrackingResource &&
+      StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
+      return STATUS_REJECTED;
   }
 
   // check the permission list first; if we find an entry, it overrides

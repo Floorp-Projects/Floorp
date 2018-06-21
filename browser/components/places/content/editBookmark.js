@@ -956,7 +956,7 @@ var gEditItemOverlay = {
       // representing element.
       let menupopup = this._folderMenuList.menupopup;
       for (let menuitem of menupopup.childNodes) {
-        if ("folderId" in menuitem && menuitem.folderId == aItemId) {
+        if ("folderGuid" in menuitem && menuitem.folderGuid == aGuid) {
           menuitem.label = aNewTitle;
           break;
         }
@@ -965,7 +965,7 @@ var gEditItemOverlay = {
     // We need to also update title of recent folders.
     if (this._recentFolders) {
       for (let folder of this._recentFolders) {
-        if (folder.folderId == aItemId) {
+        if (folder.folderGuid == aGuid) {
           folder.title = aNewTitle;
           break;
         }

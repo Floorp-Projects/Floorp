@@ -37,7 +37,7 @@ WinCompositorWindowThread::Start()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sWinCompositorWindowThread);
 
-  base::Thread* thread = new base::Thread("Renderer");
+  base::Thread* thread = new base::Thread("WinCompositor");
 
   base::Thread::Options options;
   // HWND requests ui thread.

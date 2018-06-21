@@ -195,7 +195,11 @@ KeymapWrapper::Init()
     memset(mModifierMasks, 0, sizeof(mModifierMasks));
 
     if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
-        InitBySystemSettings();
+        InitBySystemSettingsX11();
+#ifdef MOZ_WAYLAND
+    else
+        InitBySystemSettingsWayland();
+#endif
 
     gdk_window_add_filter(nullptr, FilterEvents, this);
 
@@ -275,10 +279,10 @@ KeymapWrapper::InitXKBExtension()
 }
 
 void
-KeymapWrapper::InitBySystemSettings()
+KeymapWrapper::InitBySystemSettingsX11()
 {
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-        ("%p InitBySystemSettings, mGdkKeymap=%p",
+        ("%p InitBySystemSettingsX11, mGdkKeymap=%p",
          this, mGdkKeymap));
 
     Display* display =
@@ -438,6 +442,16 @@ KeymapWrapper::InitBySystemSettings()
     XFreeModifiermap(xmodmap);
     XFree(xkeymap);
 }
+
+#ifdef MOZ_WAYLAND
+void
+KeymapWrapper::InitBySystemSettingsWayland()
+{
+    // Not implemented yet, but at least Alt modifier should be handled to save
+    // popular usage.
+    mModifierMasks[INDEX_ALT] = 1 << 3;
+}
+#endif
 
 KeymapWrapper::~KeymapWrapper()
 {

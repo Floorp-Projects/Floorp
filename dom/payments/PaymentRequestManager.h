@@ -64,6 +64,10 @@ public:
   nsresult ChangeShippingOption(PaymentRequest* aRequest,
                                 const nsAString& aOption);
 
+  // Called to ensure that we don't "leak" aRequest if we shut down while it had
+  // an active request to the parent.
+  void RequestIPCOver(PaymentRequest* aRequest);
+
 private:
   PaymentRequestManager() = default;
   ~PaymentRequestManager()

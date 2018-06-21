@@ -45,4 +45,4 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul'
 
 with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "WebExtensions: Request Handling")
+    BUG_COMPONENT = ("WebExtensions", "Request Handling")

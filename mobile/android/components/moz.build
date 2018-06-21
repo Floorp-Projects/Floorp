@@ -8,7 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('extensions/**'):
-    BUG_COMPONENT = ('Toolkit', 'WebExtensions: Android')
+    BUG_COMPONENT = ('WebExtensions', 'Android')
 
 XPIDL_SOURCES += [
     'SessionStore.idl',

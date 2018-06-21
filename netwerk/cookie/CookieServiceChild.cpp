@@ -172,10 +172,15 @@ CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
   }
 
   bool isForeign = false;
+  bool isTrackingResource = false;
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
   if (RequireThirdPartyCheck()) {
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+  }
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    isTrackingResource = httpChannel->GetIsTrackingResource();
   }
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   mozilla::OriginAttributes attrs;
@@ -186,8 +191,8 @@ CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
   SerializeURI(uri, uriParams);
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
-  SendPrepareCookieList(uriParams, isForeign, isSafeTopLevelNav,
-                        isSameSiteForeign, attrs);
+  SendPrepareCookieList(uriParams, isForeign, isTrackingResource,
+                        isSafeTopLevelNav, isSameSiteForeign, attrs);
 }
 
 mozilla::ipc::IPCResult
@@ -328,6 +333,7 @@ CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
 void
 CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *aHostURI,
                                                        bool                   aIsForeign,
+                                                       bool                   aIsTrackingResource,
                                                        bool                   aIsSafeTopLevelNav,
                                                        bool                   aIsSameSiteForeign,
                                                        const OriginAttributes &aOriginAttrs,
@@ -361,7 +367,7 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
     nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
                                 mThirdPartySession,
                                 mThirdPartyNonsecureSession, aHostURI,
-                                aIsForeign, nullptr,
+                                aIsForeign, aIsTrackingResource, nullptr,
                                 CountCookiesFromHashTable(baseDomain, aOriginAttrs),
                                 aOriginAttrs);
 
@@ -422,6 +428,7 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
 void
 CookieServiceChild::GetCookieStringSyncIPC(nsIURI                 *aHostURI,
                                            bool                   aIsForeign,
+                                           bool                   aIsTrackingResource,
                                            bool                   aIsSafeTopLevelNav,
                                            bool                   aIsSameSiteForeign,
                                            const OriginAttributes &aAttrs,
@@ -430,7 +437,7 @@ CookieServiceChild::GetCookieStringSyncIPC(nsIURI                 *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
-  SendGetCookieString(uriParams, aIsForeign, aIsSafeTopLevelNav, aIsSameSiteForeign, aAttrs, &aCookieString);
+  SendGetCookieString(uriParams, aIsForeign, aIsTrackingResource, aIsSafeTopLevelNav, aIsSameSiteForeign, aAttrs, &aCookieString);
 }
 
 uint32_t
@@ -554,19 +561,26 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   if (RequireThirdPartyCheck())
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
+  bool isTrackingResource = false;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    isTrackingResource = httpChannel->GetIsTrackingResource();
+  }
+
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
 
   nsAutoCString result;
   if (!mIPCSync) {
-    GetCookieStringFromCookieHashTable(aHostURI, !!isForeign, isSafeTopLevelNav,
-                                       isSameSiteForeign, attrs, result);
+    GetCookieStringFromCookieHashTable(aHostURI, isForeign, isTrackingResource,
+                                       isSafeTopLevelNav, isSameSiteForeign,
+                                       attrs, result);
   } else {
     if (!mIPCOpen) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    GetCookieStringSyncIPC(aHostURI, !!isForeign, isSafeTopLevelNav,
-                           isSameSiteForeign, attrs, result);
+    GetCookieStringSyncIPC(aHostURI, isForeign, isTrackingResource,
+                           isSafeTopLevelNav, isSameSiteForeign, attrs, result);
   }
 
   if (!result.IsEmpty())
@@ -597,6 +611,12 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   if (RequireThirdPartyCheck())
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
+  bool isTrackingResource = false;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    isTrackingResource = httpChannel->GetIsTrackingResource();
+  }
+
   nsDependentCString cookieString(aCookieString);
   nsDependentCString stringServerTime;
   if (aServerTime)
@@ -621,7 +641,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   // Asynchronously call the parent.
   if (mIPCOpen) {
     SendSetCookieString(hostURIParams, channelURIParams,
-                        !!isForeign, cookieString,
+                        isForeign, isTrackingResource, cookieString,
                         stringServerTime, attrs, aFromHttp);
   }
 
@@ -640,7 +660,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
                                 mThirdPartySession,
                                 mThirdPartyNonsecureSession, aHostURI,
-                                isForeign, aCookieString,
+                                isForeign, isTrackingResource, aCookieString,
                                 CountCookiesFromHashTable(baseDomain, attrs),
                                 attrs);
 

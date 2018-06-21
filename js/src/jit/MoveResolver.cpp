@@ -16,6 +16,7 @@ using namespace js;
 using namespace js::jit;
 
 MoveOperand::MoveOperand(MacroAssembler& masm, const ABIArg& arg)
+  : disp_(0)
 {
     switch (arg.kind()) {
       case ABIArg::GPR:
@@ -64,10 +65,9 @@ MoveResolver::addMove(const MoveOperand& from, const MoveOperand& to, MoveOp::Ty
 {
     // Assert that we're not doing no-op moves.
     MOZ_ASSERT(!(from == to));
-    PendingMove* pm = movePool_.allocate();
+    PendingMove* pm = movePool_.allocate(from, to, type);
     if (!pm)
         return false;
-    new (pm) PendingMove(from, to, type);
     pending_.pushBack(pm);
     return true;
 }
@@ -205,14 +205,14 @@ MoveResolver::resolve()
         PendingMove* pm = *iter;
 
         if (isDoubleAliasedAsSingle(pm->from()) || isDoubleAliasedAsSingle(pm->to())) {
-            PendingMove* lower = movePool_.allocate();
+            MoveOperand fromLower = SplitIntoLowerHalf(pm->from());
+            MoveOperand toLower = SplitIntoLowerHalf(pm->to());
+
+            PendingMove* lower = movePool_.allocate(fromLower, toLower, MoveOp::FLOAT32);
             if (!lower)
                 return false;
 
             // Insert the new node before the current position to not affect iteration.
-            MoveOperand fromLower = SplitIntoLowerHalf(pm->from());
-            MoveOperand toLower = SplitIntoLowerHalf(pm->to());
-            new (lower) PendingMove(fromLower, toLower, MoveOp::FLOAT32);
             pending_.insertBefore(pm, lower);
 
             // Overwrite pm in place for the upper move. Iteration proceeds as normal.

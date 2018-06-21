@@ -1735,6 +1735,7 @@ class StaticAnalysis(MachCommandBase):
         self.TOOLS_CHECKER_RETURNED_NO_ISSUES = 4
         self.TOOLS_CHECKER_RESULT_FILE_NOT_FOUND = 5
         self.TOOLS_CHECKER_DIFF_FAILED = 6
+        self.TOOLS_CHECKER_NOT_FOUND = 7
 
         # Configure the tree or download clang-tidy package, depending on the option that we choose
         if intree_tool:
@@ -1783,6 +1784,13 @@ class StaticAnalysis(MachCommandBase):
         self.log(logging.INFO, 'static-analysis', {},
                  "RUNNING: clang-tidy autotest for platform {0} with {1} workers.".format(
                      platform, max_workers))
+
+        # List all available checkers
+        cmd = [self._clang_tidy_path, '-list-checks', '-checks=*']
+        clang_output = subprocess.check_output(
+            cmd, stderr=subprocess.STDOUT).decode('utf-8')
+        available_checks = clang_output.split('\n')[1:]
+        self._clang_tidy_checks = [c.strip() for c in available_checks if c]
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
@@ -1874,7 +1882,12 @@ class StaticAnalysis(MachCommandBase):
 
         self.log(logging.INFO, 'static-analysis', {},"RUNNING: clang-tidy checker {}.".format(check))
 
-        # Verify is test file exists for checker
+        # Verify if this checker actually exists
+        if not check in self._clang_tidy_checks:
+            self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker {} doesn't exist in this clang-tidy version.".format(check))
+            return self.TOOLS_CHECKER_NOT_FOUND
+
+        # Verify if the test file exists for this checker
         if not os.path.exists(test_file_path_cpp):
             self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker {} doesn't have a test file.".format(check))
             return self.TOOLS_CHECKER_NO_TEST_FILE

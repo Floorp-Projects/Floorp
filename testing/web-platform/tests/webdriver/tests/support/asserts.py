@@ -1,3 +1,5 @@
+import os
+
 from webdriver import Element, WebDriverException
 
 
@@ -103,6 +105,40 @@ def assert_dialog_handled(session, expected_text):
             "Dialog with text '%s' was not handled." % expected_text)
 
 
+def assert_files_uploaded(session, element, files):
+
+    def get_file_contents(file_index):
+        return session.execute_async_script("""
+            let files = arguments[0].files;
+            let index = arguments[1];
+            let resolve = arguments[2];
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+              resolve(reader.result);
+            };
+            reader.readAsText(files[index]);
+        """, (element, file_index))
+
+    def get_uploaded_file_names():
+        return session.execute_script("""
+            let fileList = arguments[0].files;
+            let files = [];
+
+            for (var i = 0; i < fileList.length; i++) {
+              files.push(fileList[i].name);
+            }
+
+            return files;
+        """, args=(element,))
+
+    expected_file_names = [str(f.basename) for f in files]
+    assert get_uploaded_file_names() == expected_file_names
+
+    for index, f in enumerate(files):
+        assert get_file_contents(index) == f.read()
+
+
 def assert_same_element(session, a, b):
     """Verify that two element references describe the same element."""
     if isinstance(a, dict):
@@ -137,6 +173,17 @@ def assert_same_element(session, a, b):
         pass
 
     raise AssertionError(message)
+
+
+def assert_in_events(session, expected_events):
+    actual_events = session.execute_script("return window.events")
+    for expected_event in expected_events:
+        assert expected_event in actual_events
+
+
+def assert_events_equal(session, expected_events):
+    actual_events = session.execute_script("return window.events")
+    assert actual_events == expected_events
 
 
 def assert_element_has_focus(target_element):

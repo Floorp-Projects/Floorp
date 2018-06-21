@@ -13813,6 +13813,7 @@
     "bug_numbers": [1423013, 1423017],
     "expires_in_version": "65",
     "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
     "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
     "description": "How common are different types of out-of-reach viewport overflow?"
   }

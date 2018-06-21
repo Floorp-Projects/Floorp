@@ -8,10 +8,19 @@
 
 interface imgIRequest;
 interface nsIDocument;
+interface nsIPrincipal;
 interface nsIProperties;
 interface nsIURI;
 
 webidl Document;
+
+%{ C++
+namespace mozilla {
+class OriginAttributes;
+} // mozilla namespace
+%}
+
+[ptr] native OriginAttributesPtr(mozilla::OriginAttributes);
 
 /**
  * imgICache interface
@@ -40,6 +49,14 @@ interface imgICache : nsISupports
    * the cache.
    */
   [noscript] void removeEntry(in nsIURI uri, [optional] in Document doc);
+
+  /**
+   * Evict images from the cache with the same origin and the same
+   * originAttributes of the passed principal.
+   *
+   * @param aPrincipal The principal
+   */
+  void removeEntriesFromPrincipal(in nsIPrincipal aPrincipal);
 
   /**
    * Find Properties

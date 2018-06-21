@@ -115,10 +115,12 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     return pseudo.type === "::before" ? treeWalker.firstChild() : treeWalker.lastChild();
   },
 
+  get document() {
+    return this.node.ownerDocument;
+  },
+
   get window() {
-    // ownerGlobal doesn't exist in content privileged windows.
-    // eslint-disable-next-line mozilla/use-ownerGlobal
-    return this.node.ownerDocument.defaultView;
+    return this.document.defaultView;
   },
 
   /**
@@ -866,6 +868,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     for (const { player } of actors) {
       this.pauseSync(player);
     }
+
+    return this.waitForNextFrame(actors);
   },
 
   /**
@@ -877,6 +881,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     for (const { player } of actors) {
       this.playSync(player);
     }
+
+    return this.waitForNextFrame(actors);
   },
 
   /**
@@ -907,7 +913,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
       player.currentTime = (time - actor.createdTime) * player.playbackRate;
     }
 
-    return Promise.resolve();
+    return this.waitForNextFrame(players);
   },
 
   /**
@@ -992,5 +998,31 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
         animation.timeline.currentTime - animation.currentTime / animation.playbackRate;
       this.animationCreatedTimeMap.set(animation, createdTime);
     }
+  },
+
+  /**
+   * Wait for next animation frame.
+   *
+   * @param {Array} actors
+   * @return {Promise} which waits for next frame
+   */
+  waitForNextFrame(actors) {
+    const promises = actors.map(actor => {
+      const doc = actor.document;
+      const win = actor.window;
+      const timeAtCurrent = doc.timeline.currentTime;
+
+      return new Promise(resolve => {
+        win.requestAnimationFrame(() => {
+          if (timeAtCurrent === doc.timeline.currentTime) {
+            win.requestAnimationFrame(resolve);
+          } else {
+            resolve();
+          }
+        });
+      });
+    });
+
+    return Promise.all(promises);
   },
 });

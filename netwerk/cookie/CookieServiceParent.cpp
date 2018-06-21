@@ -155,8 +155,16 @@ CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel)
   thirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
   bool isForeign = true;
   thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+
+  bool isTrackingResource = false;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    isTrackingResource = httpChannel->GetIsTrackingResource();
+  }
+
   nsTArray<nsCookie*> foundCookieList;
-  mCookieService->GetCookiesForURI(uri, isForeign, isSafeTopLevelNav, aIsSameSiteForeign,
+  mCookieService->GetCookiesForURI(uri, isForeign, isTrackingResource,
+                                   isSafeTopLevelNav, aIsSameSiteForeign,
                                    false, attrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, uri);
@@ -187,6 +195,7 @@ CookieServiceParent::SerialializeCookieList(const nsTArray<nsCookie*> &aFoundCoo
 mozilla::ipc::IPCResult
 CookieServiceParent::RecvPrepareCookieList(const URIParams        &aHost,
                                            const bool             &aIsForeign,
+                                           const bool             &aIsTrackingResource,
                                            const bool             &aIsSafeTopLevelNav,
                                            const bool             &aIsSameSiteForeign,
                                            const OriginAttributes &aAttrs)
@@ -195,7 +204,8 @@ CookieServiceParent::RecvPrepareCookieList(const URIParams        &aHost,
 
   // Send matching cookies to Child.
   nsTArray<nsCookie*> foundCookieList;
-  mCookieService->GetCookiesForURI(hostURI, aIsForeign, aIsSafeTopLevelNav, aIsSameSiteForeign,
+  mCookieService->GetCookiesForURI(hostURI, aIsForeign, aIsTrackingResource,
+                                   aIsSafeTopLevelNav, aIsSameSiteForeign,
                                    false, aAttrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, hostURI);
@@ -213,6 +223,7 @@ CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy)
 mozilla::ipc::IPCResult
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
+                                         const bool& aIsTrackingResource,
                                          const bool& aIsSafeTopLevelNav,
                                          const bool& aIsSameSiteForeign,
                                          const OriginAttributes& aAttrs,
@@ -226,7 +237,8 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
   if (!hostURI)
     return IPC_FAIL_NO_REASON(this);
-  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aIsSafeTopLevelNav, aIsSameSiteForeign,
+  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aIsTrackingResource,
+                                          aIsSafeTopLevelNav, aIsSameSiteForeign,
                                           false, aAttrs, *aResult);
   return IPC_OK();
 }
@@ -235,6 +247,7 @@ mozilla::ipc::IPCResult
 CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const URIParams& aChannelURI,
                                          const bool& aIsForeign,
+                                         const bool& aIsTrackingResource,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
                                          const OriginAttributes& aAttrs,
@@ -271,7 +284,8 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   // We set this to true while processing this cookie update, to make sure
   // we don't send it back to the same content process.
   mProcessingCookie = true;
-  mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
+  mCookieService->SetCookieStringInternal(hostURI, aIsForeign,
+                                          aIsTrackingResource, cookieString,
                                           aServerTime, aFromHttp, aAttrs,
                                           dummyChannel);
   mProcessingCookie = false;

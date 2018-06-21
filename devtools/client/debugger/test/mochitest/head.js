@@ -740,14 +740,14 @@ AddonDebugger.prototype = {
     return groups;
   }),
 
-  _onMessage: function (event) {
-    if (typeof(event.data) !== "string") {
+  _onMessage: function(event) {
+    if (!event.data) {
       return;
     }
-    let json = JSON.parse(event.data);
-    switch (json.name) {
+    const msg = event.data;
+    switch (msg.name) {
       case "toolbox-title":
-        this.title = json.data.value;
+        this.title = msg.data.value;
         break;
     }
   }

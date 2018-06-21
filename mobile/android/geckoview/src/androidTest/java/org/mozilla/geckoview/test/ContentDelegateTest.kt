@@ -65,23 +65,24 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun crashContent() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
+        // that waits for debugger to attach during a SIGSEGV.
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
+                   equalTo(false))
 
-        sessionRule.session.loadUri(CONTENT_CRASH_URL)
-
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+        mainSession.loadUri(CONTENT_CRASH_URL)
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onCrash(session: GeckoSession) {
-                assertThat("Session should be closed after a crash", session.isOpen, equalTo(false))
-
-                // Recover immediately
-                session.open()
-                session.loadTestPath(HELLO_HTML_PATH)
+                assertThat("Session should be closed after a crash",
+                           session.isOpen, equalTo(false))
             }
         });
 
-        sessionRule.waitForPageStop()
-
-        sessionRule.forCallbacksDuringWait(object: Callbacks.ProgressDelegate {
+        // Recover immediately
+        mainSession.open()
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitUntilCalled(object: Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Page should load successfully", success, equalTo(true))
@@ -94,19 +95,28 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun crashContentMultipleSessions() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
+        // that waits for debugger to attach during a SIGSEGV.
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
+                   equalTo(false))
 
-        // We need to make sure all sessions in a given content process
-        // receive onCrash(). If we add multiple content processes, this
-        // test will need fixed to ensure the test sessions go into the
-        // same one.
-        sessionRule.createOpenSession()
-        sessionRule.session.loadUri(CONTENT_CRASH_URL)
+        // XXX we need to make sure all sessions in a given content process receive onCrash().
+        // If we add multiple content processes, this test will need to be fixed to ensure the
+        // test sessions go into the same one.
+        val newSession = sessionRule.createOpenSession()
+        mainSession.loadUri(CONTENT_CRASH_URL)
 
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @AssertCalled(count = 2)
-            override fun onCrash(session: GeckoSession) {
-                assertThat("Session should be closed after a crash", session.isOpen, equalTo(false))
-            }
-        });
+        // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
+        // individual sessions here. Therefore, assert 'onCrash' is called for the two sessions
+        // individually.
+        val remainingSessions = mutableListOf(newSession, mainSession)
+        while (remainingSessions.isNotEmpty()) {
+            sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+                @AssertCalled(count = 1)
+                override fun onCrash(session: GeckoSession) {
+                    remainingSessions.remove(session)
+                }
+            })
+        }
     }
 }

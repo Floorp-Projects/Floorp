@@ -113,12 +113,13 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
       aList->mDAG.mDirectPredecessorList.Length() >
       (aList->mDAG.mNodesInfo.Length() * kMaxEdgeRatio)) {
     return false;
-
   }
+
+  MOZ_RELEASE_ASSERT(initializeDAG || aList->mDAG.Length() == aList->Count());
 
   nsDisplayList saved;
   aList->mOldItems.SetCapacity(aList->Count());
-  MOZ_ASSERT(aList->mOldItems.IsEmpty());
+  MOZ_RELEASE_ASSERT(aList->mOldItems.IsEmpty());
   while (nsDisplayItem* item = aList->RemoveBottom()) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     item->mMergedItem = false;
@@ -173,7 +174,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
     // display items.
     item->RestoreState();
   }
-  MOZ_ASSERT(aList->mOldItems.Length() == aList->mDAG.Length());
+  MOZ_RELEASE_ASSERT(aList->mOldItems.Length() == aList->mDAG.Length());
   aList->RestoreState();
   return true;
 }
@@ -277,6 +278,7 @@ public:
     , mResultIsModified(false)
   {
     mMergedDAG.EnsureCapacityFor(mOldDAG);
+    MOZ_RELEASE_ASSERT(mOldItems.Length() == mOldDAG.Length());
   }
 
   MergedListIndex ProcessItemFromNewList(nsDisplayItem* aNewItem, const Maybe<MergedListIndex>& aPreviousItem) {
@@ -326,6 +328,7 @@ public:
     RetainedDisplayList result;
     result.AppendToTop(&mMergedItems);
     result.mDAG = std::move(mMergedDAG);
+    MOZ_RELEASE_ASSERT(result.mDAG.Length() == result.Count());
     return result;
   }
 

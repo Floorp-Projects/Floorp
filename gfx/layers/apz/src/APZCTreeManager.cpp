@@ -2043,15 +2043,6 @@ APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId,
 }
 
 void
-APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid& aTarget)
-{
-  APZThreadUtils::AssertOnControllerThread();
-
-  RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aTarget);
-  mInputQueue->SetConfirmedTargetApzc(aInputBlockId, apzc);
-}
-
-void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const Maybe<ZoomConstraints>& aConstraints)
 {

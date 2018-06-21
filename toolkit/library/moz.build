@@ -24,6 +24,8 @@ def Libxul(name):
 
     DELAYLOAD_DLLS += [
         'comdlg32.dll',
+        'hid.dll',
+        'msimg32.dll',
         'netapi32.dll',
         'secur32.dll',
         'wininet.dll',

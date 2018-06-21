@@ -221,7 +221,8 @@ Location::GetWritableURI(nsIURI** aURI, const nsACString* aNewRef)
   }
 
   if (!aNewRef) {
-    return uri->Clone(aURI);
+    uri.forget(aURI);
+    return NS_OK;
   }
 
   return uri->CloneWithNewRef(*aNewRef, aURI);

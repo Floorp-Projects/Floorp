@@ -2436,7 +2436,7 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
     unsigned flags;
     {
         jsbytecode* pc;
-        JSScript* script = cx->currentScript(&pc, JSContext::ALLOW_CROSS_COMPARTMENT);
+        JSScript* script = cx->currentScript(&pc, JSContext::AllowCrossRealm::Allow);
         if (!script)
             return true;
 

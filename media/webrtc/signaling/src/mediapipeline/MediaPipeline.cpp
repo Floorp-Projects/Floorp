@@ -1128,7 +1128,7 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
   IncrementRtpPacketsReceived(packet.len());
   OnRtpPacketReceived();
 
-  RtpLogger::LogPacket(packet, true, header.headerLength, mDescription);
+  RtpLogger::LogPacket(packet, true, mDescription);
 
   // Might be nice to pass ownership of the buffer in this case, but it is a
   // small optimization in a rare case.
@@ -1180,7 +1180,7 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet)
   CSFLogDebug(LOGTAG, "%s received RTCP packet.", mDescription.c_str());
   IncrementRtcpPacketsReceived();
 
-  RtpLogger::LogPacket(packet, true, 0, mDescription);
+  RtpLogger::LogPacket(packet, true, mDescription);
 
   // Might be nice to pass ownership of the buffer in this case, but it is a
   // small optimization in a rare case.
@@ -1647,13 +1647,7 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   packet.sdp_level() = Some(mPipeline->Level());
 
   if (RtpLogger::IsPacketLoggingOn()) {
-    int headerLen = 12;
-    webrtc::RTPHeader header;
-    if (mPipeline->mRtpParser &&
-        mPipeline->mRtpParser->Parse(packet.data(), packet.len(), &header)) {
-      headerLen = header.headerLength;
-    }
-    RtpLogger::LogPacket(packet, false, headerLen, mPipeline->mDescription);
+    RtpLogger::LogPacket(packet, false, mPipeline->mDescription);
   }
 
   if (isRtp) {

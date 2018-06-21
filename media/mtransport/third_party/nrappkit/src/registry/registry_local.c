@@ -882,22 +882,22 @@ nr_reg_local_init(nr_registry_module *me)
     return(_status);
 }
 
-#define NRREGGET(func, TYPE, type)                                  \
+#define NRREGLOCALGET(func, TYPE, type)                             \
 int                                                                 \
 func(NR_registry name, type *out)                                   \
 {                                                                   \
     return nr_reg_get(name, TYPE, out);                             \
 }
 
-NRREGGET(nr_reg_local_get_char,     NR_REG_TYPE_CHAR,     char)
-NRREGGET(nr_reg_local_get_uchar,    NR_REG_TYPE_UCHAR,    UCHAR)
-NRREGGET(nr_reg_local_get_int2,     NR_REG_TYPE_INT2,     INT2)
-NRREGGET(nr_reg_local_get_uint2,    NR_REG_TYPE_UINT2,    UINT2)
-NRREGGET(nr_reg_local_get_int4,     NR_REG_TYPE_INT4,     INT4)
-NRREGGET(nr_reg_local_get_uint4,    NR_REG_TYPE_UINT4,    UINT4)
-NRREGGET(nr_reg_local_get_int8,     NR_REG_TYPE_INT8,     INT8)
-NRREGGET(nr_reg_local_get_uint8,    NR_REG_TYPE_UINT8,    UINT8)
-NRREGGET(nr_reg_local_get_double,   NR_REG_TYPE_DOUBLE,   double)
+NRREGLOCALGET(nr_reg_local_get_char,     NR_REG_TYPE_CHAR,     char)
+NRREGLOCALGET(nr_reg_local_get_uchar,    NR_REG_TYPE_UCHAR,    UCHAR)
+NRREGLOCALGET(nr_reg_local_get_int2,     NR_REG_TYPE_INT2,     INT2)
+NRREGLOCALGET(nr_reg_local_get_uint2,    NR_REG_TYPE_UINT2,    UINT2)
+NRREGLOCALGET(nr_reg_local_get_int4,     NR_REG_TYPE_INT4,     INT4)
+NRREGLOCALGET(nr_reg_local_get_uint4,    NR_REG_TYPE_UINT4,    UINT4)
+NRREGLOCALGET(nr_reg_local_get_int8,     NR_REG_TYPE_INT8,     INT8)
+NRREGLOCALGET(nr_reg_local_get_uint8,    NR_REG_TYPE_UINT8,    UINT8)
+NRREGLOCALGET(nr_reg_local_get_double,   NR_REG_TYPE_DOUBLE,   double)
 
 int
 nr_reg_local_get_registry(NR_registry name, NR_registry out)
@@ -975,22 +975,22 @@ nr_reg_local_get_type(NR_registry name, NR_registry_type type)
 }
 
 
-#define NRREGSET(func, TYPE, type)                              \
+#define NRREGLOCALSET(func, TYPE, type)                         \
 int                                                             \
 func(NR_registry name, type data)                               \
 {                                                               \
     return nr_reg_set(name, TYPE, &data);                       \
 }
 
-NRREGSET(nr_reg_local_set_char,     NR_REG_TYPE_CHAR,     char)
-NRREGSET(nr_reg_local_set_uchar,    NR_REG_TYPE_UCHAR,    UCHAR)
-NRREGSET(nr_reg_local_set_int2,     NR_REG_TYPE_INT2,     INT2)
-NRREGSET(nr_reg_local_set_uint2,    NR_REG_TYPE_UINT2,    UINT2)
-NRREGSET(nr_reg_local_set_int4,     NR_REG_TYPE_INT4,     INT4)
-NRREGSET(nr_reg_local_set_uint4,    NR_REG_TYPE_UINT4,    UINT4)
-NRREGSET(nr_reg_local_set_int8,     NR_REG_TYPE_INT8,     INT8)
-NRREGSET(nr_reg_local_set_uint8,    NR_REG_TYPE_UINT8,    UINT8)
-NRREGSET(nr_reg_local_set_double,   NR_REG_TYPE_DOUBLE,   double)
+NRREGLOCALSET(nr_reg_local_set_char,     NR_REG_TYPE_CHAR,     char)
+NRREGLOCALSET(nr_reg_local_set_uchar,    NR_REG_TYPE_UCHAR,    UCHAR)
+NRREGLOCALSET(nr_reg_local_set_int2,     NR_REG_TYPE_INT2,     INT2)
+NRREGLOCALSET(nr_reg_local_set_uint2,    NR_REG_TYPE_UINT2,    UINT2)
+NRREGLOCALSET(nr_reg_local_set_int4,     NR_REG_TYPE_INT4,     INT4)
+NRREGLOCALSET(nr_reg_local_set_uint4,    NR_REG_TYPE_UINT4,    UINT4)
+NRREGLOCALSET(nr_reg_local_set_int8,     NR_REG_TYPE_INT8,     INT8)
+NRREGLOCALSET(nr_reg_local_set_uint8,    NR_REG_TYPE_UINT8,    UINT8)
+NRREGLOCALSET(nr_reg_local_set_double,   NR_REG_TYPE_DOUBLE,   double)
 
 int
 nr_reg_local_set_registry(NR_registry name)

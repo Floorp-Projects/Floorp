@@ -45,11 +45,10 @@ class MoveOperand
     int32_t disp_;
 
   public:
-    MoveOperand()
+    MoveOperand() = delete;
+    explicit MoveOperand(Register reg) : kind_(REG), code_(reg.code()), disp_(0)
     { }
-    explicit MoveOperand(Register reg) : kind_(REG), code_(reg.code())
-    { }
-    explicit MoveOperand(FloatRegister reg) : kind_(FLOAT_REG), code_(reg.code())
+    explicit MoveOperand(FloatRegister reg) : kind_(FLOAT_REG), code_(reg.code()), disp_(0)
     { }
     MoveOperand(Register reg, int32_t disp, Kind kind = MEMORY)
         : kind_(kind),
@@ -207,8 +206,7 @@ class MoveOp
     Type endCycleType_;
 
   public:
-    MoveOp()
-    { }
+    MoveOp() = delete;
     MoveOp(const MoveOperand& from, const MoveOperand& to, Type type)
       : from_(from),
         to_(to),
@@ -270,8 +268,8 @@ class MoveResolver
         public TempObject,
         public InlineListNode<PendingMove>
     {
-        PendingMove()
-        { }
+        PendingMove() = delete;
+
         PendingMove(const MoveOperand& from, const MoveOperand& to, Type type)
           : MoveOp(from, to, type)
         { }

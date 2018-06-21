@@ -353,7 +353,7 @@ public:
    * rectangle.
    */
   gfxRect TransformFrameRectFromTextChild(const nsRect& aRect,
-                                          nsIFrame* aChildFrame);
+                                          const nsIFrame* aChildFrame);
 
   // Return our ::-moz-svg-text anonymous box.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;

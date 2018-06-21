@@ -11,6 +11,7 @@
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(async function() {
+  await pushPref("devtools.inspector.fonteditor.enabled", true);
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
 

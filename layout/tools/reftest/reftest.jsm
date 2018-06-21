@@ -379,6 +379,7 @@ function ReadTests() {
             g.urlsFilterRegex = manifests[null];
 
             var globalFilter = manifests.hasOwnProperty("") ? new RegExp(manifests[""]) : null;
+            delete manifests[""];
             var manifestURLs = Object.keys(manifests);
 
             // Ensure we read manifests from higher up the directory tree first so that we

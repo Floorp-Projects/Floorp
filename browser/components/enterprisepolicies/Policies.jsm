@@ -127,10 +127,10 @@ var Policies = {
       addAllowDenyPermissions("cookie", param.Allow, param.Block);
 
       if (param.Block) {
-        const hosts = param.Block.map(uri => uri.host).sort().join("\n");
+        const hosts = param.Block.map(url => url.hostname).sort().join("\n");
         runOncePerModification("clearCookiesForBlockedHosts", hosts, () => {
           for (let blocked of param.Block) {
-            Services.cookies.removeCookiesWithOriginAttributes("{}", blocked.host);
+            Services.cookies.removeCookiesWithOriginAttributes("{}", blocked.hostname);
           }
         });
       }
@@ -508,9 +508,9 @@ var Policies = {
       // |homepages| will be a string containing a pipe-separated ('|') list of
       // URLs because that is what the "Home page" section of about:preferences
       // (and therefore what the pref |browser.startup.homepage|) accepts.
-      let homepages = param.URL.spec;
+      let homepages = param.URL.href;
       if (param.Additional && param.Additional.length > 0) {
-        homepages += "|" + param.Additional.map(url => url.spec).join("|");
+        homepages += "|" + param.Additional.map(url => url.href).join("|");
       }
       if (param.Locked) {
         setAndLockPref("browser.startup.homepage", homepages);
@@ -563,14 +563,14 @@ var Policies = {
 
   "OverrideFirstRunPage": {
     onProfileAfterChange(manager, param) {
-      let url = param ? param.spec : "";
+      let url = param ? param.href : "";
       setAndLockPref("startup.homepage_welcome_url", url);
     }
   },
 
   "OverridePostUpdatePage": {
     onProfileAfterChange(manager, param) {
-      let url = param ? param.spec : "";
+      let url = param ? param.href : "";
       setAndLockPref("startup.homepage_override_url", url);
       // The pref startup.homepage_override_url is only used
       // as a fallback when the update.xml file hasn't provided
@@ -857,18 +857,18 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
 
   for (let origin of allowList) {
     try {
-      Services.perms.add(origin,
+      Services.perms.add(Services.io.newURI(origin.href),
                          permissionName,
                          Ci.nsIPermissionManager.ALLOW_ACTION,
                          Ci.nsIPermissionManager.EXPIRE_POLICY);
     } catch (ex) {
       log.error(`Added by default for ${permissionName} permission in the permission
-      manager - ${origin.spec}`);
+      manager - ${origin.href}`);
     }
   }
 
   for (let origin of blockList) {
-    Services.perms.add(origin,
+    Services.perms.add(Services.io.newURI(origin.href),
                        permissionName,
                        Ci.nsIPermissionManager.DENY_ACTION,
                        Ci.nsIPermissionManager.EXPIRE_POLICY);

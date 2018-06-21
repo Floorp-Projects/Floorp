@@ -160,6 +160,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mInResize(false)
 , mWindowTransformIsIdentity(true)
 , mNumModalDescendents(0)
+, mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault)
 {
   if ([NSWindow respondsToSelector:@selector(setAllowsAutomaticWindowTabbing:)]) {
     // Disable automatic tabbing on 10.12. We need to do this before we

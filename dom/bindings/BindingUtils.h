@@ -976,6 +976,15 @@ MaybeWrapValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
     if (rval.isObject()) {
       return MaybeWrapObjectValue(cx, rval);
     }
+#ifdef ENABLE_BIGINT
+    // This could be optimized by checking the zone first, similar to
+    // the way strings are handled. At present, this is used primarily
+    // for structured cloning, so avoiding the overhead of JS_WrapValue
+    // calls is less important than for other types.
+    if (rval.isBigInt()) {
+      return JS_WrapValue(cx, rval);
+    }
+#endif
     MOZ_ASSERT(rval.isSymbol());
     JS_MarkCrossZoneId(cx, SYMBOL_TO_JSID(rval.toSymbol()));
   }

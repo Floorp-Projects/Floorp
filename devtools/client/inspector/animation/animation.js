@@ -326,10 +326,7 @@ class AnimationInspector {
     // sice the scrubber position is related the currentTime.
     // Also, don't update the state of removed animations since React components
     // may refer to the same instance still.
-    await this.updateAnimations(animations);
-
-    // Get rid of animations that were removed during async updateAnimations().
-    animations = animations.filter(animation => !!animation.state.type);
+    animations = await this.updateAnimations(animations);
 
     this.updateState(animations.concat(addedAnimations));
   }
@@ -403,12 +400,12 @@ class AnimationInspector {
       return;
     }
 
-    const { animations } = this.state;
+    let animations = this.state.animations;
     this.isCurrentTimeSet = true;
 
     try {
       await this.doSetCurrentTimes(currentTime);
-      await this.updateAnimations(animations);
+      animations = await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
       // in the meantime.
@@ -419,12 +416,12 @@ class AnimationInspector {
     this.isCurrentTimeSet = false;
 
     if (shouldRefresh) {
-      this.updateState([...animations]);
+      this.updateState(animations);
     }
   }
 
   async setAnimationsPlaybackRate(playbackRate) {
-    const animations = this.state.animations;
+    let animations = this.state.animations;
     // "changed" event on each animation will fire respectively when the playback
     // rate changed. Since for each occurrence of event, change of UI is urged.
     // To avoid this, disable the listeners once in order to not capture the event.
@@ -432,7 +429,7 @@ class AnimationInspector {
 
     try {
       await this.animationsFront.setPlaybackRates(animations, playbackRate);
-      await this.updateAnimations(animations);
+      animations = await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
       // in the meantime.
@@ -442,7 +439,7 @@ class AnimationInspector {
       this.setAnimationStateChangedListenerEnabled(true);
     }
 
-    await this.updateState([...animations]);
+    await this.updateState(animations);
   }
 
   async setAnimationsPlayState(doPlay) {
@@ -451,7 +448,7 @@ class AnimationInspector {
         await this.inspector.target.actorHasMethod("animations", "pauseSome");
     }
 
-    const { animations, timeScale } = this.state;
+    let { animations, timeScale } = this.state;
 
     try {
       if (doPlay && animations.every(animation =>
@@ -474,7 +471,7 @@ class AnimationInspector {
         await this.animationsFront.pauseAll();
       }
 
-      await this.updateAnimations(animations);
+      animations = await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
       // in the meantime.
@@ -482,7 +479,7 @@ class AnimationInspector {
       return;
     }
 
-    await this.updateState([...animations]);
+    await this.updateState(animations);
   }
 
   /**
@@ -629,31 +626,29 @@ class AnimationInspector {
     done();
   }
 
-  updateAnimations(animations) {
-    if (!animations.length) {
-      return Promise.resolve();
-    }
+  async updateAnimations(animations) {
+    let error = null;
 
-    return new Promise((resolve, reject) => {
-      let count = 0;
-      let error = null;
-
-      for (const animation of animations) {
+    const promises = animations.map(animation => {
+      return new Promise(resolve => {
         animation.refreshState().catch(e => {
           error = e;
         }).finally(() => {
-          count += 1;
-
-          if (count === animations.length) {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          }
+          resolve();
         });
-      }
+      });
     });
+    await Promise.all(promises);
+
+    if (error) {
+      throw new Error(error);
+    }
+
+    // Even when removal animation on inspected document, updateAnimations
+    // might be called before onAnimationsMutation due to the async timing.
+    // Return the animations as result of updateAnimations after getting rid of
+    // the animations since they should not display.
+    return animations.filter(anim => !!anim.state.type);
   }
 
   updateState(animations) {

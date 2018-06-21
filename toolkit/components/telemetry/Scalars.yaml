@@ -1881,6 +1881,18 @@ telemetry.test:
     record_in_processes:
       - 'main'
 
+  child_keyed_unsigned_int:
+    bug_numbers:
+      - 1466490
+    description: A testing keyed uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'content'
+
   keyed_boolean_kind:
     bug_numbers:
       - 1277806

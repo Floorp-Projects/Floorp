@@ -453,7 +453,8 @@ async function setupHistory() {
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
-  today.setSeconds(1);
+  today.setSeconds(0);
+  today.setMilliseconds(1);
   addPlace("http://today.com/", "Today", today.getTime() * 1000);
 
   let lastYear = new Date();
@@ -564,7 +565,8 @@ async function setupFormHistory() {
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
-  today.setSeconds(1);
+  today.setSeconds(0);
+  today.setMilliseconds(1);
   timestamp = today.getTime() * 1000;
   results = await searchEntries(["guid"], { fieldname: "today" });
   await update({ op: "update", firstUsed: timestamp, guid: results[0].guid });
@@ -655,7 +657,8 @@ async function setupDownloads() {
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
-  today.setSeconds(1);
+  today.setSeconds(0);
+  today.setMilliseconds(1);
 
   download = await Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",

@@ -10,7 +10,7 @@ add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept(
     [".compositor-all", ".compositor-notall", ".no-compositor"]);
-  const { inspector, panel } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } = await openAnimationInspector();
 
   info("Select a test node we know has an animation running on the compositor");
   await selectNodeAndWaitForAnimations(".compositor-all", inspector);
@@ -42,6 +42,33 @@ add_task(async function() {
   ok(hasTooltip(summaryGraphEl,
                 ANIMATION_L10N.getStr("player.somePropertiesOnCompositorTooltip")),
      "The element has the right tooltip content");
+
+  info("Check compositor sign after pausing");
+  await clickOnPauseResumeButton(animationInspector, panel);
+  ok(!summaryGraphEl.classList.contains("compositor"),
+    "The element should not have the compositor css class after pausing");
+
+  info("Check compositor sign after resuming");
+  await clickOnPauseResumeButton(animationInspector, panel);
+  ok(summaryGraphEl.classList.contains("compositor"),
+    "The element should have the compositor css class after resuming");
+
+  info("Check compositor sign after rewind");
+  await clickOnRewindButton(animationInspector, panel);
+  ok(!summaryGraphEl.classList.contains("compositor"),
+    "The element should not have the compositor css class after rewinding");
+  await clickOnPauseResumeButton(animationInspector, panel);
+  ok(summaryGraphEl.classList.contains("compositor"),
+    "The element should have the compositor css class after resuming");
+
+  info("Check compositor sign after setting the current time");
+  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  ok(!summaryGraphEl.classList.contains("compositor"),
+    "The element should not have the compositor css class " +
+    "after setting the current time");
+  await clickOnPauseResumeButton(animationInspector, panel);
+  ok(summaryGraphEl.classList.contains("compositor"),
+    "The element should have the compositor css class after resuming");
 });
 
 function hasTooltip(summaryGraphEl, expected) {
