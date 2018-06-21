@@ -163,6 +163,7 @@ protected:
     // returns NS_ERROR_NO_INTERFACE if the url does not map to a file
     virtual nsresult EnsureFile();
 
+    virtual nsresult Clone(nsIURI** aURI);
     virtual nsresult SetSpecInternal(const nsACString &input);
     virtual nsresult SetScheme(const nsACString &input);
     virtual nsresult SetUserPass(const nsACString &input);

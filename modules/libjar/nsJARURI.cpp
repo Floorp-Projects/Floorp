@@ -590,7 +590,7 @@ nsJARURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJARURI::Clone(nsIURI **result)
 {
     nsresult rv;
@@ -910,15 +910,11 @@ nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
         return NS_ERROR_INVALID_ARG;
     }
 
-    nsresult rv;
-
-    nsCOMPtr<nsIURI> newJARFile;
-    rv = jarFile->Clone(getter_AddRefs(newJARFile));
-    if (NS_FAILED(rv)) return rv;
-
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIURI> newJARFile = jarFile;
     nsCOMPtr<nsIURI> newJAREntryURI;
     if (refHandlingMode == eHonorRef) {
-      rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
+      newJAREntryURI = mJAREntry;
     } else if (refHandlingMode == eReplaceRef) {
       rv = mJAREntry->CloneWithNewRef(newRef, getter_AddRefs(newJAREntryURI));
     } else {
@@ -929,11 +925,10 @@ nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
     nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));
     NS_ASSERTION(newJAREntry, "This had better QI to nsIURL!");
 
-    nsJARURI* uri = new nsJARURI();
-    NS_ADDREF(uri);
+    RefPtr<nsJARURI> uri = new nsJARURI();
     uri->mJARFile = newJARFile;
     uri->mJAREntry = newJAREntry;
-    *result = uri;
+    uri.forget(result);
 
     return NS_OK;
 }

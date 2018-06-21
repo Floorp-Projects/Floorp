@@ -9,7 +9,7 @@ with Files('**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('devtools/**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+    BUG_COMPONENT = ('DevTools', 'General')
 
 with Files('mach/**'):
     BUG_COMPONENT = ('Core', 'mach')

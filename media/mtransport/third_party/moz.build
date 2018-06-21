@@ -22,59 +22,11 @@ elif CONFIG['MOZ_TSAN']:
     gyp_vars_copy.update(build_for_tool="tsan")
 
 # These files cannot be built in unified mode because of name clashes on RCSSTRING
-nICEr_non_unified_sources = [
-    'nICEr/src/crypto/nr_crypto.c',
-    'nICEr/src/ice/ice_candidate.c',
-    'nICEr/src/ice/ice_candidate_pair.c',
-    'nICEr/src/ice/ice_component.c',
-    'nICEr/src/ice/ice_ctx.c',
-    'nICEr/src/ice/ice_media_stream.c',
-    'nICEr/src/ice/ice_parser.c',
-    'nICEr/src/ice/ice_peer_ctx.c',
-    'nICEr/src/ice/ice_socket.c',
-    'nICEr/src/net/nr_socket.c',
-    'nICEr/src/net/transport_addr.c',
-    'nICEr/src/net/transport_addr_reg.c',
-    'nICEr/src/stun/addrs.c',
-    'nICEr/src/stun/nr_socket_turn.c',
-    'nICEr/src/stun/stun_build.c',
-    'nICEr/src/stun/stun_client_ctx.c',
-    'nICEr/src/stun/stun_codec.c',
-    'nICEr/src/stun/stun_hint.c',
-    'nICEr/src/stun/stun_msg.c',
-    'nICEr/src/stun/stun_proc.c',
-    'nICEr/src/stun/stun_server_ctx.c',
-    'nICEr/src/stun/stun_util.c',
-    'nICEr/src/stun/turn_client_ctx.c',
-    'nICEr/src/util/cb_args.c',
-    'nICEr/src/util/ice_util.c',
-]
-
-nrappkit_non_unified_sources = [
-    'nrappkit/src/log/r_log.c',
-    'nrappkit/src/registry/registry.c',
-    'nrappkit/src/registry/registry_local.c',
-    'nrappkit/src/util/byteorder.c',
-    'nrappkit/src/util/hex.c',
-    'nrappkit/src/util/libekr/debug.c',
-    'nrappkit/src/util/libekr/r_assoc.c',
-    'nrappkit/src/util/libekr/r_crc32.c',
-    'nrappkit/src/util/libekr/r_data.c',
-    'nrappkit/src/util/libekr/r_errors.c',
-    'nrappkit/src/util/libekr/r_list.c',
-    'nrappkit/src/util/libekr/r_memory.c',
-    'nrappkit/src/util/libekr/r_replace.c',
-    'nrappkit/src/util/libekr/r_time.c',
-    'nrappkit/src/util/p_buf.c',
-    'nrappkit/src/util/util.c',
-]
 
 GYP_DIRS['nICEr'].input = 'nICEr/nicer.gyp'
 GYP_DIRS['nICEr'].variables = gyp_vars_copy
 GYP_DIRS['nICEr'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-GYP_DIRS['nICEr'].non_unified_sources += nICEr_non_unified_sources
 
 GYP_DIRS['nrappkit'].input = 'nrappkit/nrappkit.gyp'
 GYP_DIRS['nrappkit'].variables = gyp_vars_copy
 GYP_DIRS['nrappkit'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-GYP_DIRS['nrappkit'].non_unified_sources += nrappkit_non_unified_sources

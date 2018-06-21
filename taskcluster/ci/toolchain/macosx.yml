@@ -18,7 +18,7 @@ macosx64-clang:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
@@ -47,7 +47,7 @@ macosx64-clang-tidy:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
@@ -74,7 +74,7 @@ macosx64-cctools-port:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
@@ -97,7 +97,7 @@ macosx64-gn:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:

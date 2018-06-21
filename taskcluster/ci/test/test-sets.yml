@@ -284,6 +284,7 @@ macosx64-talos-profiling:
     # - talos-tps-profiling # Bug 1453007 times out
 
 macosx64-qr-tests:
+    - crashtest
     - reftest
 
 linux32-tests:

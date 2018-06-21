@@ -80,9 +80,6 @@
    ekr@rtfm.com  Tue Jan 19 08:36:39 1999
  */
 
-
-static char *RCSSTRING __UNUSED__ ="$Id: r_list.c,v 1.2 2006/08/16 19:39:17 adamcain Exp $";
-
 #include <r_common.h>
 #include "r_list.h"
 
