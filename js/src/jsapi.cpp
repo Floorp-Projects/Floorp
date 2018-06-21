@@ -2251,22 +2251,6 @@ JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, double value
 }
 
 static bool
-DefineAccessorProperty(JSContext* cx, HandleObject obj, const char* name,
-                       const JSNativeWrapper& getter, const JSNativeWrapper& setter,
-                       unsigned attrs)
-{
-    AutoRooterGetterSetter gsRoot(cx, attrs, const_cast<JSNative*>(&getter.op),
-                                  const_cast<JSNative*>(&setter.op));
-
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-
-    return DefineAccessorPropertyById(cx, obj, id, getter, setter, attrs);
-}
-
-static bool
 DefineDataProperty(JSContext* cx, HandleObject obj, const char* name, HandleValue value,
                    unsigned attrs)
 {
@@ -2289,8 +2273,12 @@ JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, Native getter, Native setter,
                   unsigned attrs)
 {
-    return DefineAccessorProperty(cx, obj, name, NativeOpWrapper(getter), NativeOpWrapper(setter),
-                                  attrs);
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return DefineAccessorPropertyById(cx, obj, id, NativeOpWrapper(getter),
+                                      NativeOpWrapper(setter), attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2468,9 +2456,6 @@ JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleObject getter,
                  HandleObject setter, unsigned attrs)
 {
-    assertSameCompartment(cx, obj, getter, setter);
-    AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;

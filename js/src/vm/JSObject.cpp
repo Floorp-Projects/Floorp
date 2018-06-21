@@ -2809,8 +2809,8 @@ js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
     Rooted<PropertyDescriptor> desc(cx);
 
     {
-        JSGetterOp getterOp = JS_DATA_TO_FUNC_PTR(GetterOp, getter.get());
-        JSSetterOp setterOp = JS_DATA_TO_FUNC_PTR(SetterOp, setter.get());
+        GetterOp getterOp = JS_DATA_TO_FUNC_PTR(GetterOp, getter.get());
+        SetterOp setterOp = JS_DATA_TO_FUNC_PTR(SetterOp, setter.get());
         desc.initFields(nullptr, UndefinedHandleValue, attrs, getterOp, setterOp);
     }
 
