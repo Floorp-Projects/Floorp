@@ -103,7 +103,6 @@
 #include "TouchManager.h"
 #include "DecoderDoctorLogger.h"
 #include "MediaDecoder.h"
-#include "mozilla/ClearSiteData.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -286,8 +285,6 @@ nsLayoutStatics::Initialize()
 
   nsThreadManager::InitializeShutdownObserver();
 
-  ClearSiteData::Initialize();
-
   return NS_OK;
 }
 
@@ -396,6 +393,4 @@ nsLayoutStatics::Shutdown()
   PromiseDebugging::Shutdown();
 
   BlobURLProtocolHandler::RemoveDataEntries();
-
-  ClearSiteData::Shutdown();
 }
