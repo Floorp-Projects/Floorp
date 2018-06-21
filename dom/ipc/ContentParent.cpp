@@ -594,7 +594,6 @@ static const char* sObserverTopics[] = {
   "intl:requested-locales-changed",
   "cookie-changed",
   "private-cookie-changed",
-  "clear-site-data-reload-needed",
 };
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
@@ -3013,9 +3012,6 @@ ContentParent::Observe(nsISupports* aSubject,
                (!nsCRT::strcmp(aData, u"changed"))) {
       cs->AddCookie(xpcCookie);
     }
-  } else if (!strcmp(aTopic, "clear-site-data-reload-needed")) {
-    // Rebroadcast "clear-site-data-reload-needed".
-    Unused << SendClearSiteDataReloadNeeded(nsString(aData));
   }
   return NS_OK;
 }

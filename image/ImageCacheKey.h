@@ -41,10 +41,8 @@ public:
   bool operator==(const ImageCacheKey& aOther) const;
   PLDHashNumber Hash() const { return mHash; }
 
-  /// A weak pointer to the URI.
+  /// A weak pointer to the URI. For logging only.
   nsIURI* URI() const { return mURI; }
-
-  const OriginAttributes& OriginAttributesRef() const { return mOriginAttributes; }
 
   /// Is this cache entry for a chrome image?
   bool IsChrome() const { return mIsChrome; }

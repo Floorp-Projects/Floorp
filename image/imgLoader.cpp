@@ -1470,45 +1470,6 @@ imgLoader::ClearCache(bool chrome)
 }
 
 NS_IMETHODIMP
-imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal)
-{
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
-
-  imgCacheTable& cache = GetCache(nsContentUtils::IsSystemPrincipal(aPrincipal));
-  for (auto iter = cache.Iter(); !iter.Done(); iter.Next()) {
-    auto& key = iter.Key();
-
-    if (key.OriginAttributesRef() != BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()) {
-       continue;
-    }
-
-    nsAutoString imageOrigin;
-    nsresult rv = nsContentUtils::GetUTFOrigin(key.URI(), imageOrigin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    if (imageOrigin == origin) {
-      entriesToBeRemoved.AppendElement(iter.Data());
-    }
-  }
-
-  for (auto& entry : entriesToBeRemoved) {
-    if (!RemoveFromCache(entry)) {
-      NS_WARNING("Couldn't remove an entry from the cache in RemoveEntriesFromPrincipal()\n");
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 imgLoader::RemoveEntry(nsIURI* aURI,
                        nsIDocument* aDoc)
 {
