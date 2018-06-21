@@ -34,7 +34,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 325370 2017-11-03 20:46:12Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 334532 2018-06-02 16:28:10Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -7747,6 +7747,8 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 		if (p_random != NULL) {
 			keylen = sizeof(*p_random) + random_len;
 			memcpy(new_key->key, p_random, keylen);
+		} else {
+			keylen = 0;
 		}
 		/* append in the AUTH chunks */
 		if (chunks != NULL) {
