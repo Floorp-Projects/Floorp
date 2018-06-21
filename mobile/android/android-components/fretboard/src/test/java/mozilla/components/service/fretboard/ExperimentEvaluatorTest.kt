@@ -7,8 +7,8 @@ package mozilla.components.service.fretboard
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
@@ -49,12 +49,12 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 21))
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 69))
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 19))
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 70))
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 71))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 21))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 69))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 19))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 70))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 71))
     }
 
     @Test
@@ -87,9 +87,9 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
         `when`(context.packageName).thenReturn("test")
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -122,7 +122,7 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
         experiment = Experiment(
             "testid",
             "testexperiment",
@@ -141,7 +141,7 @@ class ExperimentEvaluatorTest {
                 20
             ),
             1528916183)
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -174,7 +174,7 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
         experiment = Experiment(
             "testid",
@@ -195,7 +195,7 @@ class ExperimentEvaluatorTest {
             ),
             1528916183)
 
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -228,10 +228,10 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
         packageInfo.versionName = "other.version"
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -264,7 +264,7 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
         experiment = Experiment(
             "testid",
@@ -285,7 +285,7 @@ class ExperimentEvaluatorTest {
             ),
             1528916183)
 
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -318,7 +318,7 @@ class ExperimentEvaluatorTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         val evaluator = ExperimentEvaluator()
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
         experiment = Experiment(
             "testid",
@@ -339,7 +339,7 @@ class ExperimentEvaluatorTest {
             ),
             1528916183)
 
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -377,7 +377,7 @@ class ExperimentEvaluatorTest {
             }
         })
 
-        assertTrue(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
 
         evaluator = ExperimentEvaluator(object : RegionProvider {
             override fun getRegion(): String {
@@ -385,7 +385,7 @@ class ExperimentEvaluatorTest {
             }
         })
 
-        assertFalse(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testid"), listOf(experiment), 20))
     }
 
     @Test
@@ -393,6 +393,6 @@ class ExperimentEvaluatorTest {
         val savedExperiment = Experiment("wrongid")
         val descriptor = ExperimentDescriptor("testid")
         val context = mock(Context::class.java)
-        assertFalse(ExperimentEvaluator().evaluate(context, descriptor, listOf(savedExperiment), 20))
+        assertNull(ExperimentEvaluator().evaluate(context, descriptor, listOf(savedExperiment), 20))
     }
 }

@@ -58,7 +58,7 @@ class Fretboard(
      * @return true if the user is part of the specified experiment, false otherwise
      */
     fun isInExperiment(context: Context, descriptor: ExperimentDescriptor): Boolean {
-        return evaluator.evaluate(context, descriptor, experiments)
+        return evaluator.evaluate(context, descriptor, experiments) != null
     }
 
     /**
@@ -69,8 +69,17 @@ class Fretboard(
      * @param block block of code to be executed if the user is part of the experiment
      */
     fun withExperiment(context: Context, descriptor: ExperimentDescriptor, block: (Experiment) -> Unit) {
-        if (evaluator.evaluate(context, descriptor, experiments)) {
-            block(experiments.first { it.id == descriptor.id })
-        }
+        evaluator.evaluate(context, descriptor, experiments)?.let { block(it) }
+    }
+
+    /**
+     * Gets the metadata associated with the specified experiment, even if the user is not part of it
+     *
+     * @param descriptor descriptor of the experiment
+     *
+     * @return metadata associated with the experiment
+     */
+    fun getExperiment(descriptor: ExperimentDescriptor): Experiment? {
+        return evaluator.getExperiment(descriptor, experiments)
     }
 }

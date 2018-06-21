@@ -15,7 +15,8 @@ data class Experiment(
     val description: String? = null,
     val match: Matcher? = null,
     val bucket: Bucket? = null,
-    val lastModified: Long? = null
+    val lastModified: Long? = null,
+    val payload: ExperimentPayload? = null
 ) {
     data class Matcher(
         val language: String? = null,

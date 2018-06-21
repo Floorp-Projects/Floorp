@@ -16,9 +16,17 @@ internal class ExperimentEvaluator(private val regionProvider: RegionProvider? =
         experimentDescriptor: ExperimentDescriptor,
         experiments: List<Experiment>,
         userBucket: Int = getUserBucket(context)
-    ): Boolean {
-        val experiment = experiments.firstOrNull { it.id == experimentDescriptor.id } ?: return false
-        return isInBucket(userBucket, experiment) && matches(context, experiment)
+    ): Experiment? {
+        val experiment = getExperiment(experimentDescriptor, experiments) ?: return null
+        return if (isInBucket(userBucket, experiment) && matches(context, experiment)) {
+            experiment
+        } else {
+            null
+        }
+    }
+
+    fun getExperiment(descriptor: ExperimentDescriptor, experiments: List<Experiment>): Experiment? {
+        return experiments.firstOrNull { it.id == descriptor.id }
     }
 
     private fun matches(context: Context, experiment: Experiment): Boolean {

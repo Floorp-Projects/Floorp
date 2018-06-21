@@ -34,12 +34,15 @@ class JSONExperimentParser {
         val bucket = if (bucketsObject != null) {
             Experiment.Bucket(bucketsObject.tryGetInt(MAX_KEY), bucketsObject.tryGetInt(MIN_KEY))
         } else null
+        val payloadJson: JSONObject? = jsonObject.optJSONObject(PAYLOAD_KEY)
+        val payload = if (payloadJson != null) jsonToPayload(payloadJson) else null
         return Experiment(jsonObject.getString(ID_KEY),
             jsonObject.tryGetString(NAME_KEY),
             jsonObject.tryGetString(DESCRIPTION_KEY),
             matcher,
             bucket,
-            jsonObject.tryGetLong(LAST_MODIFIED_KEY))
+            jsonObject.tryGetLong(LAST_MODIFIED_KEY),
+            payload)
     }
 
     /**
@@ -63,6 +66,37 @@ class JSONExperimentParser {
         jsonObject.putIfNotNull(DESCRIPTION_KEY, experiment.description)
         jsonObject.put(ID_KEY, experiment.id)
         jsonObject.putIfNotNull(LAST_MODIFIED_KEY, experiment.lastModified)
+        jsonObject.putIfNotNull(PAYLOAD_KEY, payloadToJson(experiment.payload))
+        return jsonObject
+    }
+
+    private fun jsonToPayload(jsonObject: JSONObject): ExperimentPayload {
+        // For now we decided to support primitive types only
+        val payload = ExperimentPayload()
+        for (key in jsonObject.keys()) {
+            val value = jsonObject.get(key)
+            if (value !is JSONObject) {
+                when (value) {
+                    is JSONArray -> payload.put(key, value.toList<Any>())
+                    else -> payload.put(key, value)
+                }
+            }
+        }
+        return payload
+    }
+
+    private fun payloadToJson(payload: ExperimentPayload?): JSONObject? {
+        if (payload == null) {
+            return null
+        }
+        val jsonObject = JSONObject()
+        for (key in payload.getKeys()) {
+            val value = payload.get(key)
+            when (value) {
+                is List<*> -> jsonObject.put(key, value.toJsonArray())
+                else -> jsonObject.put(key, value)
+            }
+        }
         return jsonObject
     }
 
@@ -124,5 +158,6 @@ class JSONExperimentParser {
         private const val NAME_KEY = "name"
         private const val DESCRIPTION_KEY = "description"
         private const val LAST_MODIFIED_KEY = "last_modified"
+        private const val PAYLOAD_KEY = "payload"
     }
 }
