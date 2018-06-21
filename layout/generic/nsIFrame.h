@@ -2832,7 +2832,7 @@ public:
   };
   Matrix4x4Flagged GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                                       nsIFrame **aOutAncestor,
-                                      uint32_t aFlags = 0);
+                                      uint32_t aFlags = 0) const;
 
   /**
    * Bit-flags to pass to IsFrameOfType()

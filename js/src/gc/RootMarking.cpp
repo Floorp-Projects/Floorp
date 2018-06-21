@@ -470,6 +470,9 @@ class BufferGrayRootsTracer final : public JS::CallbackTracer
     void onStringEdge(JSString** stringp) override { bufferRoot(*stringp); }
     void onScriptEdge(JSScript** scriptp) override { bufferRoot(*scriptp); }
     void onSymbolEdge(JS::Symbol** symbolp) override { bufferRoot(*symbolp); }
+#ifdef ENABLE_BIGINT
+    void onBigIntEdge(JS::BigInt** bip) override { bufferRoot(*bip); }
+#endif
 
     void onChild(const JS::GCCellPtr& thing) override {
         MOZ_CRASH("Unexpected gray root kind");
@@ -530,7 +533,7 @@ BufferGrayRootsTracer::bufferRoot(T* thing)
     MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     MOZ_ASSERT(thing);
     // Check if |thing| is corrupt by calling a method that touches the heap.
-    MOZ_ASSERT(thing->getTraceKind() <= JS::TraceKind::Null);
+    MOZ_ASSERT(thing->getTraceKind() != JS::TraceKind(0xff));
 
     TenuredCell* tenured = &thing->asTenured();
 
