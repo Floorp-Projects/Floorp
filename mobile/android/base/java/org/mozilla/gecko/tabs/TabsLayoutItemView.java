@@ -201,6 +201,7 @@ public class TabsLayoutItemView extends LinearLayout
             final Context appContext = getContext().getApplicationContext();
             mOngoingIconLoad = Icons.with(appContext)
                                        .pageUrl(url)
+                                       .setPrivateMode(tab.isPrivate())
                                        .skipNetwork()
                                        .targetSize(iconSize)
                                        .textSize(textSize)
