@@ -52,12 +52,12 @@
 //!
 //!  - **Primitive types**:
 //!    - bool
-//!    - i8, i16, i32, i64, isize
-//!    - u8, u16, u32, u64, usize
+//!    - i8, i16, i32, i64, i128, isize
+//!    - u8, u16, u32, u64, u128, usize
 //!    - f32, f64
 //!    - char
 //!  - **Compound types**:
-//!    - [T; 0] through [T; 32]
+//!    - \[T; 0\] through \[T; 32\]
 //!    - tuples up to size 16
 //!  - **Common standard library types**:
 //!    - String
@@ -66,7 +66,7 @@
 //!    - PhantomData\<T\>
 //!  - **Wrapper types**:
 //!    - Box\<T\>
-//!    - Box\<[T]\>
+//!    - Box\<\[T\]\>
 //!    - Box\<str\>
 //!    - Rc\<T\>
 //!    - Arc\<T\>
@@ -86,7 +86,7 @@
 //!    - Vec\<T\>
 //!  - **Zero-copy types**:
 //!    - &str
-//!    - &[u8]
+//!    - &\[u8\]
 //!  - **FFI types**:
 //!    - CString
 //!    - Box\<CStr\>
@@ -97,7 +97,8 @@
 //!    - Path
 //!    - PathBuf
 //!    - Range\<T\>
-//!    - num::NonZero* (unstable)
+//!    - num::NonZero*
+//!    - `!` *(unstable)*
 //!  - **Net types**:
 //!    - IpAddr
 //!    - Ipv4Addr
@@ -148,6 +149,13 @@ macro_rules! declare_error_trait {
         ///
         /// Most deserializers should only need to provide the `Error::custom` method
         /// and inherit the default behavior for the other methods.
+        ///
+        /// # Example implementation
+        ///
+        /// The [example data format] presented on the website shows an error
+        /// type appropriate for a basic JSON data format.
+        ///
+        /// [example data format]: https://serde.rs/data-format.html
         pub trait Error: Sized $(+ $($supertrait)::+)* {
             /// Raised when there is general error when deserializing a type.
             ///
@@ -504,6 +512,14 @@ impl<'a> Display for Expected + 'a {
 /// [de]: https://docs.serde.rs/serde/de/index.html
 /// [codegen]: https://serde.rs/codegen.html
 /// [impl-deserialize]: https://serde.rs/impl-deserialize.html
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed by `Self` when deserialized. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
 pub trait Deserialize<'de>: Sized {
     /// Deserialize this value from the given Serde deserializer.
     ///
@@ -568,6 +584,14 @@ pub trait Deserialize<'de>: Sized {
 ///     T: DeserializeOwned;
 /// # }
 /// ```
+///
+/// # Lifetime
+///
+/// The relationship between `Deserialize` and `DeserializeOwned` in trait
+/// bounds is explained in more detail on the page [Understanding deserializer
+/// lifetimes].
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
 pub trait DeserializeOwned: for<'de> Deserialize<'de> {}
 impl<T> DeserializeOwned for T
 where
@@ -617,6 +641,14 @@ where
 /// In practice the majority of deserialization is stateless. An API expecting a
 /// seed can be appeased by passing `std::marker::PhantomData` as a seed in the
 /// case of stateless deserialization.
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed by `Self::Value` when deserialized. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
 ///
 /// # Example
 ///
@@ -756,10 +788,10 @@ where
 /// A **data format** that can deserialize any data structure supported by
 /// Serde.
 ///
-/// The role of this trait is to define the deserialization half of the Serde
-/// data model, which is a way to categorize every Rust data type into one of 27
-/// possible types. Each method of the `Serializer` trait corresponds to one of
-/// the types of the data model.
+/// The role of this trait is to define the deserialization half of the [Serde
+/// data model], which is a way to categorize every Rust data type into one of
+/// 29 possible types. Each method of the `Serializer` trait corresponds to one
+/// of the types of the data model.
 ///
 /// Implementations of `Deserialize` map themselves into this data model by
 /// passing to the `Deserializer` a `Visitor` implementation that can receive
@@ -767,17 +799,17 @@ where
 ///
 /// The types that make up the Serde data model are:
 ///
-///  - **12 primitive types**
+///  - **14 primitive types**
 ///    - bool
-///    - i8, i16, i32, i64
-///    - u8, u16, u32, u64
+///    - i8, i16, i32, i64, i128
+///    - u8, u16, u32, u64, u128
 ///    - f32, f64
 ///    - char
 ///  - **string**
 ///    - UTF-8 bytes with a length and no null terminator.
 ///    - When serializing, all strings are handled equally. When deserializing,
 ///      there are three flavors of strings: transient, owned, and borrowed.
-///  - **byte array** - [u8]
+///  - **byte array** - \[u8\]
 ///    - Similar to strings, during deserialization byte arrays can be transient,
 ///      owned, or borrowed.
 ///  - **option**
@@ -841,6 +873,23 @@ where
 /// what type is in the input. Know that relying on `Deserializer::deserialize_any`
 /// means your data type will be able to deserialize from self-describing
 /// formats only, ruling out Bincode and many others.
+///
+/// [Serde data model]: https://serde.rs/data-model.html
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed from the input when deserializing. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website contains example code for
+/// a basic JSON `Deserializer`.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait Deserializer<'de>: Sized {
     /// The error type that can be returned if some error occurs during
     /// deserialization.
@@ -884,6 +933,20 @@ pub trait Deserializer<'de>: Sized {
     where
         V: Visitor<'de>;
 
+    serde_if_integer128! {
+        /// Hint that the `Deserialize` type is expecting an `i128` value.
+        ///
+        /// This method is available only on Rust compiler versions >=1.26. The
+        /// default behavior unconditionally returns an error.
+        fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+        where
+            V: Visitor<'de>
+        {
+            let _ = visitor;
+            Err(Error::custom("i128 is not supported"))
+        }
+    }
+
     /// Hint that the `Deserialize` type is expecting a `u8` value.
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
@@ -903,6 +966,20 @@ pub trait Deserializer<'de>: Sized {
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>;
+
+    serde_if_integer128! {
+        /// Hint that the `Deserialize` type is expecting an `u128` value.
+        ///
+        /// This method is available only on Rust compiler versions >=1.26. The
+        /// default behavior unconditionally returns an error.
+        fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+        where
+            V: Visitor<'de>
+        {
+            let _ = visitor;
+            Err(Error::custom("u128 is not supported"))
+        }
+    }
 
     /// Hint that the `Deserialize` type is expecting a `f32` value.
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -1136,6 +1213,16 @@ pub trait Deserializer<'de>: Sized {
 
 /// This trait represents a visitor that walks through a deserializer.
 ///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the requirement for lifetime of data
+/// that may be borrowed by `Self::Value`. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example
+///
 /// ```rust
 /// # use std::fmt;
 /// #
@@ -1250,6 +1337,20 @@ pub trait Visitor<'de>: Sized {
         Err(Error::invalid_type(Unexpected::Signed(v), &self))
     }
 
+    serde_if_integer128! {
+        /// The input contains a `i128`.
+        ///
+        /// This method is available only on Rust compiler versions >=1.26. The
+        /// default implementation fails with a type error.
+        fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
+        where
+            E: Error,
+        {
+            let _ = v;
+            Err(Error::invalid_type(Unexpected::Other("i128"), &self))
+        }
+    }
+
     /// The input contains a `u8`.
     ///
     /// The default implementation forwards to [`visit_u64`].
@@ -1294,6 +1395,20 @@ pub trait Visitor<'de>: Sized {
         E: Error,
     {
         Err(Error::invalid_type(Unexpected::Unsigned(v), &self))
+    }
+
+    serde_if_integer128! {
+        /// The input contains a `u128`.
+        ///
+        /// This method is available only on Rust compiler versions >=1.26. The
+        /// default implementation fails with a type error.
+        fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
+        where
+            E: Error,
+        {
+            let _ = v;
+            Err(Error::invalid_type(Unexpected::Other("u128"), &self))
+        }
     }
 
     /// The input contains an `f32`.
@@ -1544,6 +1659,21 @@ pub trait Visitor<'de>: Sized {
 ///
 /// This is a trait that a `Deserializer` passes to a `Visitor` implementation,
 /// which deserializes each item in a sequence.
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed by deserialized sequence elements. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `SeqAccess` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait SeqAccess<'de> {
     /// The error type that can be returned if some error occurs during
     /// deserialization.
@@ -1611,6 +1741,21 @@ where
 /// Provides a `Visitor` access to each entry of a map in the input.
 ///
 /// This is a trait that a `Deserializer` passes to a `Visitor` implementation.
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed by deserialized map entries. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `MapAccess` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait MapAccess<'de> {
     /// The error type that can be returned if some error occurs during
     /// deserialization.
@@ -1788,6 +1933,21 @@ where
 ///
 /// `EnumAccess` is created by the `Deserializer` and passed to the
 /// `Visitor` in order to identify which variant of an enum to deserialize.
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed by the deserialized enum variant. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `EnumAccess` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait EnumAccess<'de>: Sized {
     /// The error type that can be returned if some error occurs during
     /// deserialization.
@@ -1820,6 +1980,21 @@ pub trait EnumAccess<'de>: Sized {
 /// `VariantAccess` is a visitor that is created by the `Deserializer` and
 /// passed to the `Deserialize` to deserialize the content of a particular enum
 /// variant.
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed by the deserialized enum variant. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example implementation
+///
+/// The [example data format] presented on the website demonstrates an
+/// implementation of `VariantAccess` for a basic JSON data format.
+///
+/// [example data format]: https://serde.rs/data-format.html
 pub trait VariantAccess<'de>: Sized {
     /// The error type that can be returned if some error occurs during
     /// deserialization. Must match the error type of our `EnumAccess`.
@@ -2022,6 +2197,16 @@ pub trait VariantAccess<'de>: Sized {
 
 /// Converts an existing value into a `Deserializer` from which other values can
 /// be deserialized.
+///
+/// # Lifetime
+///
+/// The `'de` lifetime of this trait is the lifetime of data that may be
+/// borrowed from the resulting `Deserializer`. See the page [Understanding
+/// deserializer lifetimes] for a more detailed explanation of these lifetimes.
+///
+/// [Understanding deserializer lifetimes]: https://serde.rs/lifetimes.html
+///
+/// # Example
 ///
 /// ```rust
 /// #[macro_use]

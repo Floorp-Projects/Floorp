@@ -186,7 +186,7 @@ pub trait BlobImageRenderer: Send {
 
     fn request(
         &mut self,
-        services: &BlobImageResources,
+        resources: &BlobImageResources,
         key: BlobImageRequest,
         descriptor: &BlobImageDescriptor,
         dirty_rect: Option<DeviceUintRect>,

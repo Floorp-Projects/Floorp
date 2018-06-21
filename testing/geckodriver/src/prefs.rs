@@ -8,7 +8,7 @@ use mozprofile::preferences::Pref;
 // a Testing :: Marionette peer before you make any changes to this file.
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 53] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 54] = [
         // Make sure Shield doesn't hit the network.
         ("app.normandy.api_url", Pref::new("")),
 
@@ -120,6 +120,9 @@ lazy_static! {
 
         // Show chrome errors and warnings in the error console
         ("javascript.options.showInConsole", Pref::new(true)),
+
+        // Disable download and usage of OpenH264, and Widevine plugins
+        ("media.gmp-manager.updateEnabled", Pref::new(false)),
 
         // Do not prompt with long usernames or passwords in URLs
         // TODO: Remove once minimum supported Firefox release is 61.
