@@ -27,17 +27,7 @@ function run_test() {
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
   // The list of visibleDefaultEngines needs to match or the cache will be ignored.
-  let chan = NetUtil.newChannel({
-    uri: "resource://search-plugins/list.json",
-    loadUsingSystemPrincipal: true
-  });
-  let sis = Cc["@mozilla.org/scriptableinputstream;1"].
-              createInstance(Ci.nsIScriptableInputStream);
-  sis.init(chan.open2());
-  let list = sis.read(sis.available());
-  let searchSettings = JSON.parse(list);
-
-  cacheTemplate.visibleDefaultEngines = searchSettings.default.visibleDefaultEngines;
+  cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
 
   run_next_test();
 }

@@ -253,6 +253,40 @@ function getDefaultEngineName(isUS) {
   return defaultEngineName;
 }
 
+function getDefaultEngineList(isUS) {
+  // The list of visibleDefaultEngines needs to match or the cache will be ignored.
+  let chan = NetUtil.newChannel({
+    uri: "resource://search-plugins/list.json",
+    loadUsingSystemPrincipal: true
+  });
+  let json = parseJsonFromStream(chan.open2());
+  let visibleDefaultEngines = json.default.visibleDefaultEngines;
+
+  if (isUS === undefined)
+    isUS = Services.locale.getRequestedLocale() == "en-US" && isUSTimezone();
+
+  if (isUS) {
+    let searchSettings = json.locales["en-US"];
+    if ("US" in searchSettings &&
+        "visibleDefaultEngines" in searchSettings.US) {
+      visibleDefaultEngines = searchSettings.US.visibleDefaultEngines;
+    }
+    // From nsSearchService.js
+    let searchRegion = "US";
+    if ("regionOverrides" in json &&
+        searchRegion in json.regionOverrides) {
+      for (let engine in json.regionOverrides[searchRegion]) {
+        let index = visibleDefaultEngines.indexOf(engine);
+        if (index > -1) {
+          visibleDefaultEngines[index] = json.regionOverrides[searchRegion][engine];
+        }
+      }
+    }
+  }
+
+  return visibleDefaultEngines;
+}
+
 /**
  * Waits for the cache file to be saved.
  * @return {Promise} Resolved when the cache file is saved.
