@@ -2315,6 +2315,10 @@ static void ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize)
 nsRect
 nsLayoutUtils::RoundGfxRectToAppRect(const Rect &aRect, float aFactor)
 {
+  if (aRect.IsEmpty()) {
+    return nsRect();
+  }
+
   /* Get a new Rect whose units are app units by scaling by the specified factor. */
   Rect scaledRect = aRect;
   scaledRect.ScaleRoundOut(aFactor);
@@ -2331,6 +2335,10 @@ nsLayoutUtils::RoundGfxRectToAppRect(const Rect &aRect, float aFactor)
 nsRect
 nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
 {
+  if (aRect.IsEmpty()) {
+    return nsRect();
+  }
+
   /* Get a new gfxRect whose units are app units by scaling by the specified factor. */
   gfxRect scaledRect = aRect;
   scaledRect.ScaleRoundOut(aFactor);
@@ -3470,6 +3478,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 {
   AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame", GRAPHICS);
   typedef RetainedDisplayListBuilder::PartialUpdateResult PartialUpdateResult;
+
 
 #ifdef MOZ_DUMP_PAINTING
   if (!gPaintCountStack) {
