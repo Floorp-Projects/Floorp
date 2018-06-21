@@ -69,15 +69,6 @@ assertEq(ins.hello(4.0, 1), 16.0)
 assertEq(ins.x1(12), 36)
 assertEq(ins.x2(8), Math.PI)
 
-// Crude but at least checks that we have *something*.
-
-var txt = wasmBinaryToText(bin);
-var re = /\(type\s+\$[a-z0-9]+\s+\(struct/gm;
-assertEq(Array.isArray(re.exec(txt)), true);
-assertEq(Array.isArray(re.exec(txt)), true);
-assertEq(Array.isArray(re.exec(txt)), true);
-assertEq(Array.isArray(re.exec(txt)), false);
-
 // The field name is optional, so this should work.
 
 wasmEvalText(`
