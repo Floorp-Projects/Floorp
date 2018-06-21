@@ -19,7 +19,13 @@ var TrackingProtection = {
     // Convert document URI into the format used by
     // nsChannelClassifier::ShouldEnableTrackingProtection.
     // Any scheme turned into https is correct.
-    return Services.io.newURI("https://" + gBrowser.selectedBrowser.currentURI.hostPort);
+    try {
+      return Services.io.newURI("https://" + gBrowser.selectedBrowser.currentURI.hostPort);
+    } catch (e) {
+      // Getting the hostPort for about: and file: URIs fails, but TP doesn't work with
+      // these URIs anyway, so just return null here.
+      return null;
+    }
   },
 
   init() {
@@ -133,6 +139,13 @@ var TrackingProtection = {
   },
 
   onSecurityChange(state, isSimulated) {
+    let baseURI = this._baseURIForChannelClassifier;
+
+    // Don't deal with about:, file: etc.
+    if (!baseURI) {
+      return;
+    }
+
     // Only animate the shield if the event was not fired directly from
     // the tabbrowser (due to a browser change).
     if (isSimulated) {
@@ -147,9 +160,9 @@ var TrackingProtection = {
     // Check whether the user has added an exception for this site.
     let hasException = false;
     if (PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser)) {
-      hasException = PrivateBrowsingUtils.existsInTrackingAllowlist(this._baseURIForChannelClassifier);
+      hasException = PrivateBrowsingUtils.existsInTrackingAllowlist(baseURI);
     } else {
-      hasException = Services.perms.testExactPermission(this._baseURIForChannelClassifier,
+      hasException = Services.perms.testExactPermission(baseURI,
         "trackingprotection") == Services.perms.ALLOW_ACTION;
     }
 

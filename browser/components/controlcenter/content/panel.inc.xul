@@ -55,7 +55,7 @@
       <!-- Tracking Protection Section -->
       <hbox id="tracking-protection-container"
             class="identity-popup-section"
-            when-connection="not-secure secure secure-ev secure-cert-user-overridden file">
+            when-connection="not-secure secure secure-ev secure-cert-user-overridden extension">
         <vbox id="tracking-protection-content" flex="1">
           <hbox class="identity-popup-preferences-button-container">
             <label id="tracking-protection-label-on"
