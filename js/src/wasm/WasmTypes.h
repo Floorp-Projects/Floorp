@@ -766,14 +766,14 @@ enum class HasGcTypes
     True
 };
 
-// The Val class represents a single WebAssembly value of a given value type,
-// mostly for the purpose of numeric literals and initializers. A Val does not
-// directly map to a JS value since there is not (currently) a precise
-// representation of i64 values. A Val may contain non-canonical NaNs since,
+// The LitVal class represents a single WebAssembly value of a given value
+// type, mostly for the purpose of numeric literals and initializers. A LitVal
+// does not directly map to a JS value since there is not (currently) a precise
+// representation of i64 values. A LitVal may contain non-canonical NaNs since,
 // within WebAssembly, floats are not canonicalized. Canonicalization must
 // happen at the JS boundary.
 
-class Val
+class LitVal
 {
     ValType type_;
     union U {
@@ -789,32 +789,32 @@ class Val
     } u;
 
   public:
-    Val() = default;
+    LitVal() = default;
 
-    explicit Val(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
-    explicit Val(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
+    explicit LitVal(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
+    explicit LitVal(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
 
-    explicit Val(float f32) : type_(ValType::F32) { u.f32_ = f32; }
-    explicit Val(double f64) : type_(ValType::F64) { u.f64_ = f64; }
+    explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
+    explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
-    explicit Val(ValType refType, void* ptr) : type_(refType) {
+    explicit LitVal(ValType refType, void* ptr) : type_(refType) {
         MOZ_ASSERT(refType.isRefOrAnyRef());
         u.ptr_ = intptr_t(ptr);
     }
 
-    explicit Val(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
+    explicit LitVal(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
         memcpy(u.i8x16_, i8x16, sizeof(u.i8x16_));
     }
-    explicit Val(const I16x8& i16x8, ValType type = ValType::I16x8) : type_(type) {
+    explicit LitVal(const I16x8& i16x8, ValType type = ValType::I16x8) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I16x8 || type_ == ValType::B16x8);
         memcpy(u.i16x8_, i16x8, sizeof(u.i16x8_));
     }
-    explicit Val(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
+    explicit LitVal(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
         memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_));
     }
-    explicit Val(const F32x4& f32x4) : type_(ValType::F32x4) {
+    explicit LitVal(const F32x4& f32x4) : type_(ValType::F32x4) {
         memcpy(u.f32x4_, f32x4, sizeof(u.f32x4_));
     }
 
@@ -848,7 +848,7 @@ class Val
     void writePayload(uint8_t* dst) const;
 };
 
-typedef Vector<Val, 0, SystemAllocPolicy> ValVector;
+typedef Vector<LitVal, 0, SystemAllocPolicy> LitValVector;
 
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two
@@ -970,7 +970,7 @@ class InitExpr
   private:
     Kind kind_;
     union U {
-        Val val_;
+        LitVal val_;
         struct {
             uint32_t index_;
             ValType type_;
@@ -981,7 +981,7 @@ class InitExpr
   public:
     InitExpr() = default;
 
-    explicit InitExpr(Val val) : kind_(Kind::Constant) {
+    explicit InitExpr(LitVal val) : kind_(Kind::Constant) {
         u.val_ = val;
     }
 
@@ -993,7 +993,7 @@ class InitExpr
     Kind kind() const { return kind_; }
 
     bool isVal() const { return kind() == Kind::Constant; }
-    Val val() const { MOZ_ASSERT(isVal()); return u.val_; }
+    LitVal val() const { MOZ_ASSERT(isVal()); return u.val_; }
 
     uint32_t globalIndex() const { MOZ_ASSERT(kind() == Kind::GetGlobal); return u.global.index_; }
 
@@ -1105,7 +1105,7 @@ class GlobalDesc
             bool isWasm_;
             bool isExport_;
         } var;
-        Val cst_;
+        LitVal cst_;
         V() {}
     } u;
     GlobalKind kind_;
@@ -1166,7 +1166,7 @@ class GlobalDesc
     bool isImport() const { return kind_ == GlobalKind::Import; }
 
     bool isMutable() const { return !isConstant() && u.var.isMutable_; }
-    Val constantValue() const { MOZ_ASSERT(isConstant()); return u.cst_; }
+    LitVal constantValue() const { MOZ_ASSERT(isConstant()); return u.cst_; }
     const InitExpr& initExpr() const { MOZ_ASSERT(isVariable()); return u.var.val.initial_; }
     uint32_t importIndex() const { MOZ_ASSERT(isImport()); return u.var.val.import.index_; }
 
@@ -2328,7 +2328,7 @@ static const unsigned PageSize = 64 * 1024;
 // catch the overflow. MaxMemoryAccessSize is a conservative approximation of
 // the maximum guard space needed to catch all unaligned overflows.
 
-static const unsigned MaxMemoryAccessSize = Val::sizeofLargestValue();
+static const unsigned MaxMemoryAccessSize = LitVal::sizeofLargestValue();
 
 #ifdef WASM_HUGE_MEMORY
 
