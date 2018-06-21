@@ -130,7 +130,7 @@ mozlint:
 
 mozterm:
     description: python/mozterm unit tests
-    python-version: [2]
+    python-version: [2, 3]
     treeherder:
         symbol: term
     run:
