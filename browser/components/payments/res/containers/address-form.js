@@ -174,8 +174,30 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       }
       span.textContent = errorText;
     }
-  }
 
+    // Position the error messages all at once so layout flushes only once.
+    let formRect = this.form.getBoundingClientRect();
+    let errorSpanData = [...this.form.querySelectorAll(".error-text:not(:empty)")].map(span => {
+      let relatedInput = span.previousElementSibling;
+      let relatedRect = relatedInput.getBoundingClientRect();
+      return {
+        span,
+        top: relatedRect.bottom,
+        left: relatedRect.left - formRect.left,
+        right: formRect.right - relatedRect.right,
+      };
+    });
+    let isRTL = this.form.matches(":dir(rtl)");
+    for (let data of errorSpanData) {
+      // Subtract 10px for the padding-top and padding-bottom.
+      data.span.style.top = (data.top - 10) + "px";
+      if (isRTL) {
+        data.span.style.right = data.right + "px";
+      } else {
+        data.span.style.left = data.left + "px";
+      }
+    }
+  }
   handleEvent(event) {
     switch (event.type) {
       case "click": {
