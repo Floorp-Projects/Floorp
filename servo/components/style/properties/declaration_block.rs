@@ -24,7 +24,7 @@ use style_traits::{CssWriter, ParseError, ParsingMode, StyleParseErrorKind, ToCs
 use stylesheets::{CssRuleType, Origin, UrlExtraData};
 use super::*;
 use values::computed::Context;
-#[cfg(feature = "gecko")] use properties::animated_properties::AnimationValueMap;
+use properties::animated_properties::AnimationValueMap;
 
 /// The animation rules.
 ///
@@ -687,7 +687,6 @@ impl PropertyDeclarationBlock {
     }
 
     /// Convert AnimationValueMap to PropertyDeclarationBlock.
-    #[cfg(feature = "gecko")]
     pub fn from_animation_value_map(animation_value_map: &AnimationValueMap) -> Self {
         let len = animation_value_map.len();
         let mut declarations = Vec::with_capacity(len);
@@ -707,7 +706,6 @@ impl PropertyDeclarationBlock {
 
     /// Returns true if the declaration block has a CSSWideKeyword for the given
     /// property.
-    #[cfg(feature = "gecko")]
     pub fn has_css_wide_keyword(&self, property: &PropertyId) -> bool {
         if let Some(id) = property.longhand_id() {
             if !self.longhands.contains(id) {

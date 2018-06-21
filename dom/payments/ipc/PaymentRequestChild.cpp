@@ -86,34 +86,31 @@ void
 PaymentRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mRequest) {
-    DetachFromRequest();
+    DetachFromRequest(true);
   }
 }
 
 void
-PaymentRequestChild::MaybeDelete()
+PaymentRequestChild::MaybeDelete(bool aCanBeInManager)
 {
   if (mRequest) {
-    DetachFromRequest();
+    DetachFromRequest(aCanBeInManager);
     Send__delete__(this);
   }
 }
 
-bool
-PaymentRequestChild::SendRequestPayment(const IPCPaymentActionRequest& aAction)
-{
-  return PPaymentRequestChild::SendRequestPayment(aAction);
-}
-
 void
-PaymentRequestChild::DetachFromRequest()
+PaymentRequestChild::DetachFromRequest(bool aCanBeInManager)
 {
   MOZ_ASSERT(mRequest);
-  nsAutoString id;
-  mRequest->GetInternalId(id);
 
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  MOZ_ASSERT(manager);
+  if (aCanBeInManager) {
+    RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+    MOZ_ASSERT(manager);
+
+    RefPtr<PaymentRequest> request(mRequest);
+    manager->RequestIPCOver(request);
+  }
 
   mRequest->SetIPC(nullptr);
   mRequest = nullptr;

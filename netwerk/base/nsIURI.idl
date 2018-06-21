@@ -182,11 +182,6 @@ interface nsIURI : nsISupports
     boolean schemeIs(in string scheme);
 
     /**
-     * Clones the current URI.
-     */
-    nsIURI clone();
-
-    /**
      * This method resolves a relative string into an absolute URI string,
      * using this URI as the base. 
      *

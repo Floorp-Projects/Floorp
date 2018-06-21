@@ -16,6 +16,8 @@
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 #include "gfxUtils.h"
+#include <limits>
+#include <cmath>
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -953,6 +955,16 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                const gfxRect& aDirtyRect,
                                const gfxRect& aSkipRect)
 {
+  const double maxSize = (double)gfxPlatform::MaxTextureSize();
+  const double maxPos = (double)std::numeric_limits<std::int16_t>::max();
+  if (aRect.width > maxSize || aRect.height > maxSize ||
+      std::abs(aRect.x) > maxPos || std::abs(aRect.y) > maxPos) {
+    // The rectangle is huge, perhaps due to a very strong perspective or some other
+    // transform. We won't be able to blur something this big so give up now before
+    // overflowing or running into texture size limits later.
+    return;
+  }
+
   IntSize blurRadius = CalculateBlurRadius(aBlurStdDev);
   bool mirrorCorners = !aCornerRadii || aCornerRadii->AreRadiiSame();
 

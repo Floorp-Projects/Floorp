@@ -28,22 +28,22 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
     export('DIST_SUBDIR')
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+    BUG_COMPONENT = ('DevTools', 'General')
 
 with Files('docs/**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+    BUG_COMPONENT = ('DevTools', 'General')
 
 with Files('docs/tools/memory-panel.md'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
+    BUG_COMPONENT = ('DevTools', 'Memory')
 
 with Files('docs/tools/debugger-panel.md'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+    BUG_COMPONENT = ('DevTools', 'Debugger')
 
 with Files('docs/backend/debugger-api.md'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+    BUG_COMPONENT = ('DevTools', 'Debugger')
 
 with Files('docs/tools/http-inspector.md'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
+    BUG_COMPONENT = ('DevTools', 'Console')
 
 with Files('docs/tools/inspector-panel.md'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')
+    BUG_COMPONENT = ('DevTools', 'Inspector')

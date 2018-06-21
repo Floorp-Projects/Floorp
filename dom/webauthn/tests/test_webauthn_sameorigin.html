@@ -261,7 +261,29 @@
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
-        }
+        },
+        function () {
+          // Test with an rpId that is not a valid domain string
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: document.domain + ":somejunk",
+            allowCredentials: [gTrackedCredential["basic"]]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(arrivingHereIsGood);
+        },
+        function () {
+          // Test with another rpId that is not a valid domain string
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: document.domain + ":8888",
+            allowCredentials: [gTrackedCredential["basic"]]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsBad)
+                      .catch(arrivingHereIsGood);
+        },
       ];
       var i = 0;
       var runNextTest = () => {

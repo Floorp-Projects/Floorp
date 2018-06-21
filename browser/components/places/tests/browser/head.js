@@ -404,3 +404,18 @@ function getToolbarNodeForItemGuid(itemGuid) {
   }
   return null;
 }
+
+// Open the bookmarks Star UI by clicking the star button on the address bar.
+async function clickBookmarkStar() {
+  let shownPromise = promisePopupShown(document.getElementById("editBookmarkPanel"));
+  BookmarkingUI.star.click();
+  await shownPromise;
+}
+
+// Close the bookmarks Star UI by clicking the "Done" button.
+async function hideBookmarksPanel() {
+  let hiddenPromise = promisePopupHidden(document.getElementById("editBookmarkPanel"));
+  // Confirm and close the dialog.
+  document.getElementById("editBookmarkPanelDoneButton").click();
+  await hiddenPromise;
+}

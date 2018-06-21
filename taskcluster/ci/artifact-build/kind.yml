@@ -28,7 +28,7 @@ jobs:
         run-on-projects: ['trunk', 'try']
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            max-run-time: 36000
+            max-run-time: 3600
             env:
                 PERFHERDER_EXTRA_OPTIONS: artifact
         run:

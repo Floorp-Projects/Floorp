@@ -81,7 +81,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
 
     explicit ScopedXPCOM(const char* testName,
                          nsIDirectoryServiceProvider *dirSvcProvider = nullptr)
-    : mDirSvcProvider(dirSvcProvider)
+    : mServMgr(nullptr)
+    , mDirSvcProvider(dirSvcProvider)
     {
       mTestName = testName;
       printf("Running %s tests...\n", mTestName);

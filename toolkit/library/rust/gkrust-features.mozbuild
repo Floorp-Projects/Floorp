@@ -32,8 +32,8 @@ if CONFIG['RUSTC_VERSION'] < "1.27":
     gkrust_features += ['oom_with_global_alloc']
 elif CONFIG['RUSTC_VERSION'] >= "1.28" and CONFIG['RUSTC_VERSION'] < "1.29":
     gkrust_features += ['oom_with_hook']
-elif not CONFIG['MOZ_AUTOMATION']:
-    # We don't want builds on automation to unwillingly stop annotating OOM
+elif CONFIG['MOZ_AUTOMATION']:
+    # We don't want builds on automation to unwittingly stop annotating OOM
     # crash reports from rust.
     error('Builds on automation must use a version of rust that supports OOM '
           'hooking')

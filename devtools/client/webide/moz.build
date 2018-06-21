@@ -19,4 +19,4 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: WebIDE')
+    BUG_COMPONENT = ('DevTools', 'WebIDE')

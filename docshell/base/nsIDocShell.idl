@@ -91,31 +91,6 @@ interface nsIDocShell : nsIDocShellTreeItem
                          in unsigned long aLoadFlags,
                          in boolean firstParty);
 
-  /**
-   * Loads a given stream. This will give priority to loading the requested
-   * stream in the object implementing this interface. If it can't be loaded
-   * here however, the URL dispatched will go through its normal process of
-   * content loading.
-   *
-   * @param aStream         - The input stream that provides access to the data
-   *                          to be loaded.  This must be a blocking, threadsafe
-   *                          stream implementation.
-   * @param aURI            - The URI representing the stream, or null.
-   * @param aContentType    - The type (MIME) of data being loaded (empty if unknown).
-   * @param aContentCharset - The charset of the data being loaded (empty if unknown).
-   * @param aLoadInfo       - This is the extended load info for this load.  This
-   *                          most often will be null, but if you need to do
-   *                          additional setup for this load you can get a
-   *                          loadInfo object by calling createLoadInfo.  Once
-   *                          you have this object you can set the needed
-   *                          properties on it and then pass it to loadStream.
-   */
-  [noscript]void loadStream(in nsIInputStream aStream,
-                            in nsIURI aURI,
-                            in ACString aContentType,
-                            in ACString aContentCharset,
-                            in nsIDocShellLoadInfo aLoadInfo);
-
   const long INTERNAL_LOAD_FLAGS_NONE                    = 0x0;
   const long INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL       = 0x1;
   const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2;

@@ -805,7 +805,7 @@ class ContextMenu {
     // nsDocumentViewer::GetInImage. Make sure to update both if this is
     // changed.
     if (context.target instanceof Ci.nsIImageLoadingContent &&
-        context.target.currentRequestFinalURI) {
+        (context.target.currentRequestFinalURI || context.target.currentURI)) {
       context.onImage = true;
 
       context.imageInfo = {
@@ -829,8 +829,9 @@ class ContextMenu {
 
       // The actual URL the image was loaded from (after redirects) is the
       // currentRequestFinalURI.  We should use that as the URL for purposes of
-      // deciding on the filename.
-      context.mediaURL = context.target.currentRequestFinalURI.spec;
+      // deciding on the filename, if it is present. It might not be present
+      // if images are blocked.
+      context.mediaURL = (context.target.currentRequestFinalURI || context.target.currentURI).spec;
 
       const descURL = context.target.getAttribute("longdesc");
 

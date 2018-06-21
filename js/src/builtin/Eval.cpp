@@ -262,11 +262,14 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
         const char* filename;
         bool mutedErrors;
         uint32_t pcOffset;
-        DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno, &pcOffset,
-                                             &mutedErrors,
-                                             evalType == DIRECT_EVAL
-                                             ? CALLED_FROM_JSOP_EVAL
-                                             : NOT_CALLED_FROM_JSOP_EVAL);
+        if (evalType == DIRECT_EVAL) {
+            DescribeScriptedCallerForDirectEval(cx, callerScript, pc, &filename, &lineno,
+                                                &pcOffset, &mutedErrors);
+            maybeScript = callerScript;
+        } else {
+            DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno, &pcOffset,
+                                                 &mutedErrors);
+        }
 
         const char* introducerFilename = filename;
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
@@ -344,17 +347,16 @@ js::DirectEvalStringFromIon(JSContext* cx,
     esg.lookupInEvalCache(linearStr, callerScript, pc);
 
     if (!esg.foundScript()) {
-        RootedScript maybeScript(cx);
         const char* filename;
         unsigned lineno;
         bool mutedErrors;
         uint32_t pcOffset;
-        DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno, &pcOffset,
-                                             &mutedErrors, CALLED_FROM_JSOP_EVAL);
+        DescribeScriptedCallerForDirectEval(cx, callerScript, pc, &filename, &lineno, &pcOffset,
+                                            &mutedErrors);
 
         const char* introducerFilename = filename;
-        if (maybeScript && maybeScript->scriptSource()->introducerFilename())
-            introducerFilename = maybeScript->scriptSource()->introducerFilename();
+        if (callerScript->scriptSource()->introducerFilename())
+            introducerFilename = callerScript->scriptSource()->introducerFilename();
 
         RootedScope enclosing(cx, callerScript->innermostScope(pc));
 
@@ -366,7 +368,8 @@ js::DirectEvalStringFromIon(JSContext* cx,
 
         if (introducerFilename) {
             options.setFileAndLine(filename, 1);
-            options.setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
+            options.setIntroductionInfo(introducerFilename, "eval", lineno, callerScript,
+                                        pcOffset);
         } else {
             options.setFileAndLine("eval", 1);
             options.setIntroductionType("eval");

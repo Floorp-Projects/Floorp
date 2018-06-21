@@ -48,8 +48,12 @@ const reducers = {
   },
 
   [UPDATE_DETAIL_VISIBILITY](state, { detailVisibility }) {
+    const selectedAnimation =
+      detailVisibility ? state.selectedAnimation : null;
+
     return Object.assign({}, state, {
-      detailVisibility
+      detailVisibility,
+      selectedAnimation,
     });
   },
 

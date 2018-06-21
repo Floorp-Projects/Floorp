@@ -493,6 +493,16 @@ var testcases = [ {
     alternateURI: "http://www.xn--lodaehvb5cdik4g.xn--node/",
     protocolChange: true,
   },
+  {
+    input: " \t mozilla.org/\t \t ",
+    fixedURI: "http://mozilla.org/",
+    alternateURI: "http://www.mozilla.org/",
+    protocolChange: true,
+  },
+  {
+    input: " moz\ti\tlla.org ",
+    keywordLookup: true,
+  },
 ];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
@@ -589,24 +599,25 @@ function do_single_test_run() {
 
       // Both APIs should then also be using the same spec.
       Assert.equal(!!fixupURIOnly, !!URIInfo.preferredURI);
-      if (fixupURIOnly)
-        Assert.equal(fixupURIOnly.spec, URIInfo.preferredURI.spec);
+      if (fixupURIOnly) {
+        Assert.equal(fixupURIOnly.spec, URIInfo.preferredURI.spec, "Fixed and preferred URI should match");
+      }
 
       let isFileURL = expectedFixedURI && expectedFixedURI.startsWith("file");
 
       // Check the fixedURI:
       let makeAlternativeURI = flags & urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI;
       if (makeAlternativeURI && alternativeURI != null) {
-        Assert.equal(URIInfo.fixedURI.spec, alternativeURI);
+        Assert.equal(URIInfo.fixedURI.spec, alternativeURI, "should have gotten alternate URI");
       } else {
-        Assert.equal(URIInfo.fixedURI && URIInfo.fixedURI.spec, expectedFixedURI);
+        Assert.equal(URIInfo.fixedURI && URIInfo.fixedURI.spec, expectedFixedURI, "should get correct fixed URI");
       }
 
       // Check booleans on input:
       let couldDoKeywordLookup = flags & urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-      Assert.equal(!!URIInfo.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup);
-      Assert.equal(URIInfo.fixupChangedProtocol, expectProtocolChange);
-      Assert.equal(URIInfo.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
+      Assert.equal(!!URIInfo.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup, "keyword lookup as expected");
+      Assert.equal(URIInfo.fixupChangedProtocol, expectProtocolChange, "protocol change as expected");
+      Assert.equal(URIInfo.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null, "alternative URI as expected");
 
       // Check the preferred URI
       if (couldDoKeywordLookup) {
@@ -620,19 +631,21 @@ function do_single_test_run() {
             }
             let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
             let spec = URIInfo.preferredURI.spec.replace(/%27/g, "'");
-            Assert.equal(spec, searchURL);
+            Assert.equal(spec, searchURL, "should get correct search URI");
           } else {
-            Assert.equal(URIInfo.preferredURI, null);
+            Assert.equal(URIInfo.preferredURI, null, "not expecting a preferred URI");
           }
         } else {
-          Assert.equal(URIInfo.preferredURI.spec, URIInfo.fixedURI.spec);
+          Assert.equal(URIInfo.preferredURI.spec, URIInfo.fixedURI.spec, "fixed URI should match");
         }
       } else {
         // In these cases, we should never be doing a keyword lookup and
         // the fixed URI should be preferred:
-        Assert.equal(URIInfo.preferredURI.spec, URIInfo.fixedURI.spec);
+        let prefURI = URIInfo.preferredURI && URIInfo.preferredURI.spec;
+        let fixedURI = URIInfo.fixedURI && URIInfo.fixedURI.spec;
+        Assert.equal(prefURI, fixedURI, "fixed URI should be same as expected");
       }
-      Assert.equal(sanitize(testInput), URIInfo.originalInput);
+      Assert.equal(sanitize(testInput), URIInfo.originalInput, "should mirror original input");
     }
   }
 }

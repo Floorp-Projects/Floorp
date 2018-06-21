@@ -8,7 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
 with Files('addons/**'):
-    BUG_COMPONENT = ('Toolkit', 'WebExtensions: General')
+    BUG_COMPONENT = ('WebExtensions', 'General')
 
 with Files('docs/**'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
@@ -38,7 +38,7 @@ with Files('tests/xpcshell/test_JSONFile.js'):
     BUG_COMPONENT = ('Toolkit', 'Form Manager')
 
 with Files('tests/xpcshell/test_Match*.js'):
-    BUG_COMPONENT = ('Toolkit', 'WebExtensions: General')
+    BUG_COMPONENT = ('WebExtensions', 'General')
 
 with Files('tests/xpcshell/test_NewTabUtils.js'):
     BUG_COMPONENT = ('Firefox', 'New Tab Page')
@@ -65,7 +65,7 @@ with Files('Color.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
 with Files('Console.jsm'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
+    BUG_COMPONENT = ('DevTools', 'Console')
 
 with Files('DateTimePicker*.jsm'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls ')
@@ -83,7 +83,7 @@ with Files('FormLikeFactory.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Password Manager')
 
 with Files('IndexedDB.jsm'):
-    BUG_COMPONENT = ('Toolkit', 'WebExtensions: General')
+    BUG_COMPONENT = ('WebExtensions', 'General')
 
 with Files('InlineSpellChecker*.jsm'):
     BUG_COMPONENT = ('Core', 'Spell Checker')

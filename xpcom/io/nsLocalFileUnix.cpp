@@ -223,10 +223,12 @@ nsDirEnumeratorUnix::Close()
 }
 
 nsLocalFile::nsLocalFile()
+  : mCachedStat()
 {
 }
 
 nsLocalFile::nsLocalFile(const nsACString& aFilePath)
+  : mCachedStat()
 {
   InitWithNativePath(aFilePath);
 }

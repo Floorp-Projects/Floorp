@@ -34,16 +34,13 @@ class AnimationItem extends Component {
     super(props);
 
     this.state = {
-      isSelected: false,
+      isSelected: this.isSelected(props),
     };
   }
 
   componentWillReceiveProps(nextProps) {
-    const { animation } = this.props;
-
     this.setState({
-      isSelected: nextProps.selectedAnimation &&
-                  animation.actorID === nextProps.selectedAnimation.actorID
+      isSelected: this.isSelected(nextProps),
     });
   }
 
@@ -51,6 +48,11 @@ class AnimationItem extends Component {
     return this.state.isSelected !== nextState.isSelected ||
            this.props.animation !== nextProps.animation ||
            this.props.timeScale !== nextProps.timeScale;
+  }
+
+  isSelected(props) {
+    return props.selectedAnimation &&
+           props.animation.actorID === props.selectedAnimation.actorID;
   }
 
   render() {

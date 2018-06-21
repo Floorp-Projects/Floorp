@@ -123,6 +123,7 @@ Classifier::GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
 Classifier::Classifier()
   : mIsTableRequestResultOutdated(true)
   , mUpdateInterrupted(true)
+  , mIsClosed(false)
 {
   NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),
                     getter_AddRefs(mUpdateThread));
@@ -178,6 +179,10 @@ Classifier::SetupPathNames()
 nsresult
 Classifier::CreateStoreDirectory()
 {
+  if (mIsClosed) {
+    return NS_OK; // nothing to do, the classifier is done
+  }
+
   // Ensure the safebrowsing directory exists.
   bool storeExists;
   nsresult rv = mRootStoreDirectory->Exists(&storeExists);
@@ -243,6 +248,7 @@ Classifier::Close()
 {
   // Close will be called by PreShutdown, so it is important to note that
   // things put here should not affect an ongoing update thread.
+  mIsClosed = true;
   DropStores();
 }
 
@@ -255,17 +261,20 @@ Classifier::Reset()
   LOG(("Reset() is called so we interrupt the update."));
   mUpdateInterrupted = true;
 
-  auto resetFunc = [=] {
-    DropStores();
+  RefPtr<Classifier> self = this;
+  auto resetFunc = [self] {
+    if (self->mIsClosed) {
+      return; // too late to reset, bail
+    }
+    self->DropStores();
 
-    mRootStoreDirectory->Remove(true);
-    mBackupDirectory->Remove(true);
-    mUpdatingDirectory->Remove(true);
-    mToDeleteDirectory->Remove(true);
+    self->mRootStoreDirectory->Remove(true);
+    self->mBackupDirectory->Remove(true);
+    self->mUpdatingDirectory->Remove(true);
+    self->mToDeleteDirectory->Remove(true);
 
-    CreateStoreDirectory();
-
-    RegenActiveTables();
+    self->CreateStoreDirectory();
+    self->RegenActiveTables();
   };
 
   if (!mUpdateThread) {
@@ -708,36 +717,38 @@ Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
   nsCOMPtr<nsIThread> callerThread = NS_GetCurrentThread();
   MOZ_ASSERT(callerThread != mUpdateThread);
 
+  RefPtr<Classifier> self = this;
   nsCOMPtr<nsIRunnable> bgRunnable =
-    NS_NewRunnableFunction("safebrowsing::Classifier::AsyncApplyUpdates", [=] {
-      MOZ_ASSERT(NS_GetCurrentThread() == mUpdateThread,
+    NS_NewRunnableFunction("safebrowsing::Classifier::AsyncApplyUpdates",
+                           [self, aUpdates, aCallback, callerThread] {
+      MOZ_ASSERT(NS_GetCurrentThread() == self->mUpdateThread,
                  "MUST be on update thread");
 
       nsresult bgRv;
       nsCString failedTableName;
+
       TableUpdateArray updates;
 
       // Make a copy of the array since we'll be removing entries as
       // we process them on the background thread.
       if (updates.AppendElements(aUpdates, fallible)) {
         LOG(("Step 1. ApplyUpdatesBackground on update thread."));
-        bgRv = ApplyUpdatesBackground(updates, failedTableName);
+        bgRv = self->ApplyUpdatesBackground(updates, failedTableName);
       } else {
         LOG(("Step 1. Not enough memory to run ApplyUpdatesBackground on update thread."));
         bgRv = NS_ERROR_OUT_OF_MEMORY;
       }
 
       nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction(
-        "safebrowsing::Classifier::AsyncApplyUpdates", [=] {
+        "safebrowsing::Classifier::AsyncApplyUpdates",
+        [self, aCallback, bgRv, failedTableName, callerThread] {
           MOZ_ASSERT(NS_GetCurrentThread() == callerThread,
                      "MUST be on caller thread");
 
           LOG(("Step 2. ApplyUpdatesForeground on caller thread"));
-          nsresult rv = ApplyUpdatesForeground(bgRv, failedTableName);
-          ;
+          nsresult rv = self->ApplyUpdatesForeground(bgRv, failedTableName);
 
           LOG(("Step 3. Updates applied! Fire callback."));
-
           aCallback(rv);
         });
       callerThread->Dispatch(fgRunnable, NS_DISPATCH_NORMAL);
@@ -893,6 +904,10 @@ Classifier::DropStores()
 nsresult
 Classifier::RegenActiveTables()
 {
+  if (mIsClosed) {
+    return NS_OK; // nothing to do, the classifier is done
+  }
+
   mActiveTablesCache.Clear();
 
   nsTArray<nsCString> foundTables;

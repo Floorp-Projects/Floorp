@@ -15,4 +15,4 @@ BROWSER_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: about:debugging')
+    BUG_COMPONENT = ('DevTools', 'about:debugging')

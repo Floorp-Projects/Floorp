@@ -1695,7 +1695,7 @@ IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     int32_t offset = int32StubField(reader.stubOffset());
     TypedThingLayout layout = reader.typedThingLayout();
-    ReferenceTypeDescr::Type type = reader.referenceTypeDescrType();
+    ReferenceType type = reader.referenceTypeDescrType();
 
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
 
@@ -1704,7 +1704,7 @@ IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
 
     // We don't need to check property types if the property is always a
     // string.
-    if (type != ReferenceTypeDescr::TYPE_STRING) {
+    if (type != ReferenceType::TYPE_STRING) {
         FailurePath* failure;
         if (!addFailurePath(&failure))
             return false;
@@ -1718,7 +1718,7 @@ IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
 
     emitStoreTypedObjectReferenceProp(val, type, dest, scratch2);
 
-    if (needsPostBarrier() && type != ReferenceTypeDescr::TYPE_STRING)
+    if (needsPostBarrier() && type != ReferenceType::TYPE_STRING)
         emitPostBarrierSlot(obj, val, scratch1);
     return true;
 }

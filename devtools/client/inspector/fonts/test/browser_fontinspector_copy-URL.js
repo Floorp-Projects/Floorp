@@ -10,8 +10,10 @@
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(async function() {
-  const { view } = await openFontInspectorForURL(TEST_URI);
+  await pushPref("devtools.inspector.fonteditor.enabled", true);
+  const { view, inspector } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
+  await selectNode("div", inspector);
 
   const fontEl = getUsedFontsEls(viewDoc)[0];
   const linkEl = fontEl.querySelector(".font-origin");

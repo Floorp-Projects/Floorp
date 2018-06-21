@@ -10,8 +10,11 @@
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(async function() {
-  const {view} = await openFontInspectorForURL(TEST_URI);
+  await pushPref("devtools.inspector.fonteditor.enabled", true);
+  const { view, inspector } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
+  await selectNode("div", inspector);
+  await expandOtherFontsAccordion(viewDoc);
 
   const previews = viewDoc.querySelectorAll("#font-container .font-preview");
   const initialPreviews = [...previews].map(p => p.src);

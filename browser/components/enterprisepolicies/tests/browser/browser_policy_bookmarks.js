@@ -15,7 +15,7 @@ let CURRENT_POLICY;
 
 const BASE_POLICY = {
   "policies": {
-    "display_bookmarks_toolbar": true,
+    "DisplayBookmarksToolbar": true,
     "Bookmarks": [
       {
         "Title": "Bookmark 1",

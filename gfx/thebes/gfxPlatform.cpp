@@ -1062,7 +1062,7 @@ gfxPlatform::InitLayersIPC()
       layers::PaintThread::Start();
     }
   } else if (XRE_IsParentProcess()) {
-    if (gfxVars::UseWebRender()) {
+    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && gfxVars::UseWebRender()) {
       wr::RenderThread::Start();
     }
 

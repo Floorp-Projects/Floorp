@@ -20,8 +20,8 @@ function RemoteWebProgressRequest(spec, originalSpec, matchedList, requestCPOW) 
 RemoteWebProgressRequest.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel, Ci.nsIClassifiedChannel]),
 
-  get URI() { return this._uri.clone(); },
-  get originalURI() { return this._originalURI.clone(); },
+  get URI() { return this._uri; },
+  get originalURI() { return this._originalURI; },
   get matchedList() { return this._matchedList; }
 };
 

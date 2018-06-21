@@ -24,7 +24,7 @@ android-test/opt:
             - name: public/build
               path: /builds/worker/artifacts/
               type: directory
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: mozharness
         actions: [get-secrets build]
@@ -74,7 +74,7 @@ android-lint/opt:
             - name: public/build
               path: /builds/worker/artifacts/
               type: directory
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: mozharness
         actions: [get-secrets build]
@@ -127,7 +127,7 @@ android-checkstyle/opt:
             - name: public/build
               path: /builds/worker/artifacts/
               type: directory
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: mozharness
         actions: [get-secrets build]
@@ -176,7 +176,7 @@ android-findbugs/opt:
             - name: public/build
               path: /builds/worker/artifacts/
               type: directory
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: mozharness
         actions: [get-secrets build]
@@ -220,7 +220,7 @@ android-geckoview-docs/opt:
             - name: public/android/geckoview-docs/geckoview-javadoc.jar
               path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/libs/geckoview-javadoc.jar
               type: file
-        max-run-time: 36000
+        max-run-time: 7200
     run:
         using: mozharness
         actions: [get-secrets build]

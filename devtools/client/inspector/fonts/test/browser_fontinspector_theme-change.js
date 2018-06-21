@@ -18,23 +18,27 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function() {
+  await pushPref("devtools.inspector.fonteditor.enabled", true);
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
-  const { document: doc } = view;
+  const viewDoc = view.document;
 
   await selectNode(".normal-text", inspector);
+  await expandOtherFontsAccordion(viewDoc);
+  const otherFontsEls = getOtherFontsEls(viewDoc);
+  const fontEl = otherFontsEls[0];
 
   // Store the original preview URI for later comparison.
-  const originalURI = doc.querySelector("#font-container .font-preview").src;
+  const originalURI = fontEl.querySelector(".font-preview").src;
   const newTheme = originalTheme === "light" ? "dark" : "light";
 
   info(`Original theme was '${originalTheme}'.`);
 
   await setThemeAndWaitForUpdate(newTheme, inspector);
-  isnot(doc.querySelector("#font-container .font-preview").src, originalURI,
+  isnot(fontEl.querySelector(".font-preview").src, originalURI,
     "The preview image changed with the theme.");
 
   await setThemeAndWaitForUpdate(originalTheme, inspector);
-  is(doc.querySelector("#font-container .font-preview").src, originalURI,
+  is(fontEl.querySelector(".font-preview").src, originalURI,
     "The preview image is correct after the original theme was restored.");
 });
 

@@ -24,7 +24,7 @@ void RunTestInNewThread(Function&& aFunction) {
   testingThread->Shutdown();
 }
 
-nsresult SyncApplyUpdates(Classifier* aClassifier,
+nsresult SyncApplyUpdates(RefPtr<Classifier> aClassifier,
                           TableUpdateArray& aUpdates)
 {
   // We need to spin a new thread specifically because the callback
@@ -89,7 +89,7 @@ void ApplyUpdate(TableUpdateArray& updates)
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
-  UniquePtr<Classifier> classifier(new Classifier());
+  RefPtr<Classifier> classifier = new Classifier();
   classifier->Open(*file);
 
   {
@@ -102,7 +102,7 @@ void ApplyUpdate(TableUpdateArray& updates)
       ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
-  SyncApplyUpdates(classifier.get(), updates);
+  SyncApplyUpdates(classifier, updates);
 }
 
 void ApplyUpdate(TableUpdate* update)

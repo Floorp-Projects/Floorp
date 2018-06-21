@@ -391,7 +391,8 @@ JSContext::freeOsrTempData()
 }
 
 JitRealm::JitRealm()
-  : stubCodes_(nullptr)
+  : stubCodes_(nullptr),
+    stringsCanBeInNursery(false)
 {
 }
 
@@ -844,6 +845,7 @@ IonScript::IonScript(IonCompilationId compilationId)
     safepointsStart_(0),
     safepointsSize_(0),
     frameSlots_(0),
+    argumentSlots_(0),
     frameSize_(0),
     bailoutTable_(0),
     bailoutEntries_(0),
@@ -852,10 +854,15 @@ IonScript::IonScript(IonCompilationId compilationId)
     snapshots_(0),
     snapshotsListSize_(0),
     snapshotsRVATableSize_(0),
+    recovers_(0),
+    recoversSize_(0),
     constantTable_(0),
     constantEntries_(0),
+    sharedStubList_(0),
+    sharedStubEntries_(0),
     invalidationCount_(0),
     compilationId_(compilationId),
+    optimizationLevel_(OptimizationLevel::Normal),
     osrPcMismatchCounter_(0),
     fallbackStubSpace_()
 {
