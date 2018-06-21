@@ -29,7 +29,7 @@ class EditAutofillForm {
    */
   buildFormObject() {
     return Array.from(this._elements.form.elements).reduce((obj, input) => {
-      if (input.value && !input.disabled) {
+      if (!input.disabled) {
         obj[input.id] = input.value;
       }
       return obj;
