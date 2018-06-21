@@ -2992,11 +2992,6 @@ DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs
     if (!PropertySpecNameToId(cx, fs->name, &id))
         return false;
 
-    if (StandardProtoKeyOrNull(obj) == JSProto_Array && id == NameToId(cx->names().values)) {
-        if (!cx->options().arrayProtoValues())
-            return true;
-    }
-
     JSFunction* fun = NewFunctionFromSpec(cx, fs, id);
     if (!fun)
         return false;

@@ -14,4 +14,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: DOM')
+    BUG_COMPONENT = ('DevTools', 'DOM')

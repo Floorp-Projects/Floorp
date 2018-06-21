@@ -201,7 +201,7 @@ TypedObjectPrediction::scalarType() const
     return extractType<ScalarTypeDescr>();
 }
 
-ReferenceTypeDescr::Type
+ReferenceType
 TypedObjectPrediction::referenceType() const
 {
     return extractType<ReferenceTypeDescr>();

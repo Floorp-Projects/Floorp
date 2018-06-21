@@ -52,7 +52,7 @@ bench-asmjsapps:
     run:
         command: >
             cd $USE_ARTIFACT_PATH/build &&
-            unzip -q -d jsshell target.jsshell.zip &&
+            unzip -qo -d jsshell target.jsshell.zip &&
             export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
             cd $GECKO_PATH &&
             ./mach jsshell-bench --binary $JSSHELL --perfherder asmjs-apps

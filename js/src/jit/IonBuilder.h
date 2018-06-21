@@ -288,7 +288,7 @@ class IonBuilder
     AbortReasonOr<Ok> setPropTryReferenceTypedObjectValue(bool* emitted,
                                                           MDefinition* typedObj,
                                                           const LinearSum& byteOffset,
-                                                          ReferenceTypeDescr::Type type,
+                                                          ReferenceType type,
                                                           MDefinition* value,
                                                           PropertyName* name);
     AbortReasonOr<Ok> setPropTryScalarPropOfTypedObject(bool* emitted,
@@ -385,7 +385,7 @@ class IonBuilder
                                                     ScalarTypeDescr::Type type);
     AbortReasonOr<Ok> pushReferenceLoadFromTypedObject(MDefinition* typedObj,
                                                        const LinearSum& byteOffset,
-                                                       ReferenceTypeDescr::Type type,
+                                                       ReferenceType type,
                                                        PropertyName* name);
 
     // jsop_setelem() helpers.

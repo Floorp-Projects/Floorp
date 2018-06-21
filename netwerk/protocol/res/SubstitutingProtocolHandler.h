@@ -127,6 +127,7 @@ public:
 private:
   explicit SubstitutingURL() : nsStandardURL(true) {}
   explicit SubstitutingURL(bool aSupportsFileURL) : nsStandardURL(true) { MOZ_ASSERT(aSupportsFileURL); }
+  virtual nsresult Clone(nsIURI** aURI) override { return nsStandardURL::Clone(aURI); }
 
 public:
   class Mutator

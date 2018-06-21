@@ -514,6 +514,7 @@ static void read_nested_curveType(struct mem_source *src, struct curveType *(*cu
 		(*curveArray)[i] = read_curveType(src, curve_offset + channel_offset, &tag_len);
 		if (!(*curveArray)[i]) {
 			invalid_source(src, "invalid nested curveType curve");
+			break;
 		}
 
 		channel_offset += tag_len;

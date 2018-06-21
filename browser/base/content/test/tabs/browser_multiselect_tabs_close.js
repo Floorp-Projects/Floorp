@@ -69,11 +69,6 @@ add_task(async function usingTabContextMenu() {
 
     is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
-    // Check the context menu with zero multiselected tabs
-    updateTabContextMenu(tab4);
-    is(menuItemCloseTab.hidden, false, "Close Tab is visible");
-    is(menuItemCloseSelectedTabs.hidden, true, "Close Selected Tabs is hidden");
-
     await triggerClickOn(tab1, { ctrlKey: true });
     await triggerClickOn(tab2, { ctrlKey: true });
 
@@ -83,8 +78,13 @@ add_task(async function usingTabContextMenu() {
     ok(!tab4.multiselected, "Tab4 is not multiselected");
     is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
 
-    // Check the context menu with two multiselected tabs
+    // Check the context menu with a non-multiselected tab
     updateTabContextMenu(tab4);
+    is(menuItemCloseTab.hidden, false, "Close Tab is visible");
+    is(menuItemCloseSelectedTabs.hidden, true, "Close Selected Tabs is hidden");
+
+    // Check the context menu with a multiselected tab
+    updateTabContextMenu(tab2);
     is(menuItemCloseTab.hidden, true, "Close Tab is hidden");
     is(menuItemCloseSelectedTabs.hidden, false, "Close Selected Tabs is visible");
 

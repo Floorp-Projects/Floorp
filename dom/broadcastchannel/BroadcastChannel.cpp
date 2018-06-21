@@ -17,6 +17,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 
 #include "nsIBFCacheEntry.h"
@@ -299,11 +300,24 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
+
+    if (StaticPrefs::privacy_trackingprotection_storagerestriction_enabled() &&
+        nsContentUtils::StorageAllowedForWindow(window) !=
+          nsContentUtils::StorageAccess::eAllow) {
+      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
   } else {
     JSContext* cx = aGlobal.Context();
 
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
     MOZ_ASSERT(workerPrivate);
+
+    if (StaticPrefs::privacy_trackingprotection_storagerestriction_enabled() &&
+        !workerPrivate->IsStorageAllowed()) {
+      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
 
     RefPtr<StrongWorkerRef> workerRef =
       StrongWorkerRef::Create(workerPrivate, "BroadcastChannel",

@@ -452,30 +452,30 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
-    Register extractObject(const Address& address, Register scratch);
-    Register extractObject(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractObject(const Address& address, Register scratch);
+    MOZ_MUST_USE Register extractObject(const ValueOperand& value, Register scratch) {
         unboxObject(value, scratch);
         return scratch;
     }
-    Register extractString(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractString(const ValueOperand& value, Register scratch) {
         unboxString(value, scratch);
         return scratch;
     }
-    Register extractSymbol(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractSymbol(const ValueOperand& value, Register scratch) {
         unboxSymbol(value, scratch);
         return scratch;
     }
-    Register extractInt32(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractInt32(const ValueOperand& value, Register scratch) {
         unboxInt32(value, scratch);
         return scratch;
     }
-    Register extractBoolean(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractBoolean(const ValueOperand& value, Register scratch) {
         unboxBoolean(value, scratch);
         return scratch;
     }
-    Register extractTag(const Address& address, Register scratch);
-    Register extractTag(const BaseIndex& address, Register scratch);
-    Register extractTag(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractTag(const Address& address, Register scratch);
+    MOZ_MUST_USE Register extractTag(const BaseIndex& address, Register scratch);
+    MOZ_MUST_USE Register extractTag(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchRegister);
         splitTag(value, scratch);
         return scratch;

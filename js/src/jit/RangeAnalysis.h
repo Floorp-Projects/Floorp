@@ -195,15 +195,15 @@ class Range : public TempObject {
     // exponent computation have to be over-estimations of the actual result. On
     // the Int32 this over approximation is rectified.
 
-    int32_t lower_;
-    int32_t upper_;
+    MOZ_INIT_OUTSIDE_CTOR int32_t lower_;
+    MOZ_INIT_OUTSIDE_CTOR int32_t upper_;
 
-    bool hasInt32LowerBound_;
-    bool hasInt32UpperBound_;
+    MOZ_INIT_OUTSIDE_CTOR bool hasInt32LowerBound_;
+    MOZ_INIT_OUTSIDE_CTOR bool hasInt32UpperBound_;
 
-    FractionalPartFlag canHaveFractionalPart_ : 1;
-    NegativeZeroFlag canBeNegativeZero_ : 1;
-    uint16_t max_exponent_;
+    MOZ_INIT_OUTSIDE_CTOR FractionalPartFlag canHaveFractionalPart_ : 1;
+    MOZ_INIT_OUTSIDE_CTOR NegativeZeroFlag canBeNegativeZero_ : 1;
+    MOZ_INIT_OUTSIDE_CTOR uint16_t max_exponent_;
 
     // Any symbolic lower or upper bound computed for this term.
     const SymbolicBound* symbolicLower_;

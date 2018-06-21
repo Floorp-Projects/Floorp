@@ -49,7 +49,7 @@ L10n Drivers:
   - Francesco Lodolo (:flod)
   - Zibi Braniecki (:gandalf)
   - Axel Hecht (:pike)
-  - Stas Malolepszy (:stas)
+  - Staś Małolepszy (:stas)
 
 
 Major Benefits
@@ -164,6 +164,8 @@ has been added to the build system.
 `Pontoon`_, the main localization tool used to translate Firefox, has been rebuilding
 its user experience to support localizers in their work.
 
+
+.. _fluent-tutorial-social-contract:
 
 Social Contract
 ===============

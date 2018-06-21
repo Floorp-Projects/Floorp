@@ -117,6 +117,22 @@ VARCACHE_PREF(
 PREF("dom.serviceWorkers.parent_intercept", bool, false)
 
 //---------------------------------------------------------------------------
+// Clear-Site-Data prefs
+//---------------------------------------------------------------------------
+
+#ifdef NIGHTLY
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "dom.clearSiteData.enabled",
+   dom_clearSiteData_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+//---------------------------------------------------------------------------
 // Full-screen prefs
 //---------------------------------------------------------------------------
 
@@ -1025,6 +1041,16 @@ VARCACHE_PREF(
   "view_source.editor.external",
    view_source_editor_external,
   bool, false
+)
+
+//---------------------------------------------------------------------------
+// Anti-Tracking prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "privacy.trackingprotection.storagerestriction.enabled",
+   privacy_trackingprotection_storagerestriction_enabled,
+  RelaxedAtomicBool, false
 )
 
 //---------------------------------------------------------------------------

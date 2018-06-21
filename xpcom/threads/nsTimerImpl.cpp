@@ -332,6 +332,7 @@ nsTimer::Release(void)
 
 nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
   mHolder(nullptr),
+  mType(0),
   mGeneration(0),
   mITimer(aTimer),
   mMutex("nsTimerImpl::mMutex")

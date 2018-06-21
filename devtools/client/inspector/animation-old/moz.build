@@ -17,4 +17,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Animation Inspector')
+    BUG_COMPONENT = ('DevTools', 'Animation Inspector')

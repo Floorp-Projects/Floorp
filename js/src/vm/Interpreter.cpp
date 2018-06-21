@@ -3270,7 +3270,7 @@ END_CASE(JSOP_GETIMPORT)
 CASE(JSOP_GETINTRINSIC)
 {
     ReservedRooted<Value> rval(&rootValue0);
-    if (!GetIntrinsicOperation(cx, REGS.pc, &rval))
+    if (!GetIntrinsicOperation(cx, script, REGS.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);

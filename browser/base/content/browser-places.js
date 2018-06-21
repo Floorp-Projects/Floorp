@@ -215,7 +215,7 @@ var StarUI = {
   },
 
   _bookmarkPopupInitialized: false,
-  async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark, aUrl) {
+  async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark, aUrl, aIsCurrentBrowser = true) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
     if (this.panel.state == "showing" ||
@@ -227,15 +227,15 @@ var StarUI = {
     this._itemGuids = null;
 
     if (this._bookmarkPopupInitialized) {
-      await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl);
+      await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl, aIsCurrentBrowser);
       return;
     }
     this._bookmarkPopupInitialized = true;
 
-    await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl);
+    await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl, aIsCurrentBrowser);
   },
 
-  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl) {
+  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl, aIsCurrentBrowser) {
     if (this.panel.state != "closed")
       return;
 
@@ -271,6 +271,8 @@ var StarUI = {
         gNavigatorBundle.getString("editBookmark.removeBookmarks.accesskey"));
     }
 
+    this._setIconAndPreviewImage(aIsCurrentBrowser);
+
     this.beginBatch();
 
     if (aAnchorElement && aAnchorElement.closest("#urlbar")) {
@@ -290,14 +292,38 @@ var StarUI = {
       }
       target.addEventListener("popupshown", function(event) {
         fn();
-      }, {"capture": true, "once": true});
+      }, {capture: true, once: true});
     };
     gEditItemOverlay.initPanel({ node: aNode,
                                  onPanelReady,
                                  hiddenRows: ["location",
                                               "loadInSidebar", "keyword"],
                                  focusedElement: "preferred"});
+
     this.panel.openPopup(aAnchorElement, aPosition);
+  },
+
+  _setIconAndPreviewImage(aIsCurrentBrowser) {
+    let faviconImage = this._element("editBookmarkPanelFavicon");
+    faviconImage.removeAttribute("iconloadingprincipal");
+    faviconImage.removeAttribute("src");
+
+    document.mozSetImageElement("editBookmarkPanelImageCanvas", null);
+
+    if (!aIsCurrentBrowser) {
+      return;
+    }
+
+    let tab = gBrowser.selectedTab;
+    if (tab.hasAttribute("image") && !tab.hasAttribute("busy")) {
+      faviconImage.setAttribute("iconloadingprincipal",
+                                tab.getAttribute("iconloadingprincipal"));
+      faviconImage.setAttribute("src", tab.getAttribute("image"));
+    }
+
+    let canvas = PageThumbs.createCanvas(window);
+    PageThumbs.captureToCanvas(gBrowser.selectedBrowser, canvas);
+    document.mozSetImageElement("editBookmarkPanelImageCanvas", canvas);
   },
 
   panelShown:
@@ -397,6 +423,7 @@ var PlacesCommandHook = {
   async bookmarkPage(aBrowser, aShowEditUI, aUrl = null, aTitle = null) {
     // If aUrl is provided, we want to bookmark that url rather than the
     // the current page
+    let isCurrentBrowser = !aUrl;
     let url = aUrl ? new URL(aUrl) : new URL(aBrowser.currentURI.spec);
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
@@ -452,13 +479,13 @@ var PlacesCommandHook = {
     let anchor = BookmarkingUI.anchor;
     if (anchor) {
       await StarUI.showEditBookmarkPopup(node, anchor, "bottomcenter topright",
-                                         isNewBookmark, url);
+                                         isNewBookmark, url, isCurrentBrowser);
       return;
     }
 
     // Fall back to showing the panel over the content area.
     await StarUI.showEditBookmarkPopup(node, aBrowser, "overlap", isNewBookmark,
-                                       url);
+                                       url, isCurrentBrowser);
   },
 
   /**

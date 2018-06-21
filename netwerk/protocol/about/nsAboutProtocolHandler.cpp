@@ -425,9 +425,9 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
     NS_ENSURE_TRUE(mInnerURI, nullptr);
 
     nsCOMPtr<nsIURI> innerClone;
-    nsresult rv;
+    nsresult rv = NS_OK;
     if (aRefHandlingMode == eHonorRef) {
-        rv = mInnerURI->Clone(getter_AddRefs(innerClone));
+        innerClone = mInnerURI;
     } else if (aRefHandlingMode == eReplaceRef) {
         rv = mInnerURI->CloneWithNewRef(aNewRef, getter_AddRefs(innerClone));
     } else {

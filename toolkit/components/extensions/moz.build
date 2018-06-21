@@ -6,7 +6,7 @@
 
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'WebExtensions: General')
+    BUG_COMPONENT = ('WebExtensions', 'General')
 
 EXTRA_JS_MODULES += [
     'Extension.jsm',

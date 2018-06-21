@@ -35,9 +35,6 @@
    briank@networkresonance.com  Wed May 16 16:46:00 PDT 2007
  */
 
-
-static char *RCSSTRING __UNUSED__ ="$Id: byteorder.c,v 1.2 2007/06/26 22:37:55 adamcain Exp $";
-
 #include "nr_common.h"
 #ifndef WIN32
 #include <arpa/inet.h>

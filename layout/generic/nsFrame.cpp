@@ -6809,7 +6809,7 @@ nsIFrame::GetNearestWidget(nsPoint& aOffset) const
 Matrix4x4Flagged
 nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                              nsIFrame** aOutAncestor,
-                             uint32_t aFlags)
+                             uint32_t aFlags) const
 {
   MOZ_ASSERT(aOutAncestor, "Need a place to put the ancestor!");
 
@@ -6892,7 +6892,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     return Matrix4x4();
 
   /* Keep iterating while the frame can't possibly be transformed. */
-  nsIFrame* current = this;
+  const nsIFrame* current = this;
   while (!(*aOutAncestor)->IsTransformed() &&
          !nsLayoutUtils::IsPopup(*aOutAncestor) &&
          *aOutAncestor != aStopAtAncestor &&

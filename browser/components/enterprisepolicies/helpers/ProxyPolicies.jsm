@@ -40,7 +40,7 @@ var ProxyPolicies = {
     }
 
     if (param.AutoConfigURL) {
-      setPref("network.proxy.autoconfig_url", param.AutoConfigURL.spec);
+      setPref("network.proxy.autoconfig_url", param.AutoConfigURL.href);
     }
 
     if (param.UseProxyForDNS !== undefined) {

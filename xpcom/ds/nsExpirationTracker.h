@@ -33,7 +33,11 @@ struct nsExpirationState
     MAX_INDEX_IN_GENERATION = (1U << 28) - 1
   };
 
-  nsExpirationState() : mGeneration(NOT_TRACKED) {}
+  nsExpirationState()
+    : mGeneration(NOT_TRACKED)
+    , mIndexInGeneration(0)
+  {
+  }
   bool IsTracked() { return mGeneration != NOT_TRACKED; }
 
   /**

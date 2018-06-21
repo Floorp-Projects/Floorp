@@ -825,24 +825,24 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
-    Register extractObject(const Address& address, Register scratch);
-    Register extractObject(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractObject(const Address& address, Register scratch);
+    MOZ_MUST_USE Register extractObject(const ValueOperand& value, Register scratch) {
         unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_OBJECT);
         return value.payloadReg();
     }
-    Register extractSymbol(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractSymbol(const ValueOperand& value, Register scratch) {
         unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_SYMBOL);
         return value.payloadReg();
     }
-    Register extractInt32(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractInt32(const ValueOperand& value, Register scratch) {
         return value.payloadReg();
     }
-    Register extractBoolean(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractBoolean(const ValueOperand& value, Register scratch) {
         return value.payloadReg();
     }
-    Register extractTag(const Address& address, Register scratch);
-    Register extractTag(const BaseIndex& address, Register scratch);
-    Register extractTag(const ValueOperand& value, Register scratch) {
+    MOZ_MUST_USE Register extractTag(const Address& address, Register scratch);
+    MOZ_MUST_USE Register extractTag(const BaseIndex& address, Register scratch);
+    MOZ_MUST_USE Register extractTag(const ValueOperand& value, Register scratch) {
         return value.typeReg();
     }
 

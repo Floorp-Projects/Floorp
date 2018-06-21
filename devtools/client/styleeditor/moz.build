@@ -16,4 +16,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Style Editor')
+    BUG_COMPONENT = ('DevTools', 'Style Editor')

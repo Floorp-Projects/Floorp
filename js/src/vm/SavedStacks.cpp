@@ -784,15 +784,15 @@ public:
 
         MOZ_RELEASE_ASSERT(cx->realm());
         if (obj)
-            MOZ_RELEASE_ASSERT(obj->realm());
+            MOZ_RELEASE_ASSERT(obj->deprecatedRealm());
 
         // Note that obj might be null here, since we're doing this before
         // UnwrapSavedFrame.
-        if (obj && cx->realm() != obj->realm())
+        if (obj && cx->realm() != obj->deprecatedRealm())
         {
             JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes;
             if (subsumes && subsumes(cx->realm()->principals(),
-                                     obj->realm()->principals()))
+                                     obj->deprecatedRealm()->principals()))
             {
                 ar_.emplace(cx, obj);
             }

@@ -21,7 +21,15 @@ const INITIAL_STATE = {
   axes: {},
   // Copy of the most recent axes values. Used to revert from a named instance.
   customInstanceValues: [],
-  // Fonts applicable to selected element.
+  // Font families declared on the selected element
+  families: {
+    // Names of font families used
+    used: [],
+    // Names of font families declared but not used
+    notUsed: []
+  },
+  // Fonts whose family names are declared in CSS font-family and used
+  // on the selected element.
   fonts: [],
   // Current selected font variation instance.
   instance: {
@@ -70,7 +78,7 @@ const reducers = {
     return newState;
   },
 
-  [UPDATE_EDITOR_STATE](state, { fonts, properties }) {
+  [UPDATE_EDITOR_STATE](state, { fonts, families, properties }) {
     const axes = parseFontVariationAxes(properties["font-variation-settings"]);
 
     // If not defined in font-variation-settings, setup "wght" axis with the value of
@@ -90,7 +98,7 @@ const reducers = {
       axes.wdth = match[1];
     }
 
-    return { ...state, axes, fonts, properties };
+    return { ...state, axes, fonts, families, properties };
   },
 
   [UPDATE_PROPERTY_VALUE](state, { property, value }) {

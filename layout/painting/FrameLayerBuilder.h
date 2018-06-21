@@ -703,6 +703,17 @@ public:
     return mInactiveLayerClip;
   }
 
+  /*
+   * If we're building layers for an item with an inactive layer tree,
+   * this function saves the item's clip, which will later be applied
+   * to the event regions. The clip should be relative to
+   * mContainingPaintedLayer->mReferenceFrame.
+   */
+  void SetInactiveLayerClip(const DisplayItemClip* aClip)
+  {
+    mInactiveLayerClip = aClip;
+  }
+
   bool IsBuildingRetainedLayers()
   {
     return !mIsInactiveLayerManager && mRetainingManager;

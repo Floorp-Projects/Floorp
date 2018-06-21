@@ -17,6 +17,8 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
   return new ConsoleAPI({
@@ -156,9 +158,9 @@ function validateAndParseSimpleParam(param, type) {
       }
 
       try {
-        parsedParam = Services.io.newURI(param);
+        parsedParam = new URL(param);
 
-        let pathQueryRef = parsedParam.pathQueryRef;
+        let pathQueryRef = parsedParam.pathname + parsedParam.hash;
         // Make sure that "origin" types won't accept full URLs.
         if (pathQueryRef != "/" && pathQueryRef != "") {
           valid = false;
@@ -182,7 +184,7 @@ function validateAndParseSimpleParam(param, type) {
       }
 
       try {
-        parsedParam = Services.io.newURI(param);
+        parsedParam = new URL(param);
         valid = true;
       } catch (ex) {
         valid = false;

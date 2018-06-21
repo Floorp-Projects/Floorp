@@ -65,7 +65,9 @@ class ProtectedRegionTree
   public:
     ProtectedRegionTree()
       : lock(mutexid::ProtectedRegionTree),
-        alloc(4096),
+        // Here "false" is used to not use the memory protection mechanism of
+        // LifoAlloc in order to prevent dead-locks.
+        alloc(4096, false),
         tree(&alloc)
     {
         sProtectedRegionsInit = true;

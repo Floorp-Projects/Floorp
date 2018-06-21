@@ -47,7 +47,8 @@ class BailoutStack
 
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    BailoutStack* bailout)
-  : machine_(bailout->machineState())
+  : machine_(bailout->machineState()),
+    activation_(nullptr)
 {
     uint8_t* sp = bailout->parentStackPointer();
     framePointer_ = sp + bailout->frameSize();
@@ -62,7 +63,8 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
 
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    InvalidationBailoutStack* bailout)
-  : machine_(bailout->machine())
+  : machine_(bailout->machine()),
+    activation_(nullptr)
 {
     framePointer_ = (uint8_t*) bailout->fp();
     topFrameSize_ = framePointer_ - bailout->sp();

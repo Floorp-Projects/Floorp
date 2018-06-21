@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ChildCrashedException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -1652,23 +1653,27 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @ReuseSession(false)
     @Test fun contentCrashIgnored() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
+        // that waits for debugger to attach during a SIGSEGV.
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
+                   equalTo(false))
 
-        // This test has some kind of strange race on ARM emulators
-        assumeThat(!(sessionRule.env.isEmulator && sessionRule.env.cpuArch.contains("arm")),
-                equalTo(true))
-
-        sessionRule.session.loadUri(CONTENT_CRASH_URL)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+        mainSession.loadUri(CONTENT_CRASH_URL)
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onCrash(session: GeckoSession) = Unit
         })
     }
 
-    @Test(expected = RuntimeException::class)
+    @Test(expected = ChildCrashedException::class)
     @ReuseSession(false)
     fun contentCrashFails() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
-        assumeThat(sessionRule.env.shouldShutdownOnCrash(), equalTo(false));
+        assumeThat(sessionRule.env.shouldShutdownOnCrash(), equalTo(false))
+        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
+        // that waits for debugger to attach during a SIGSEGV.
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
+                   equalTo(false))
 
         sessionRule.session.loadUri(CONTENT_CRASH_URL)
         sessionRule.waitForPageStop()

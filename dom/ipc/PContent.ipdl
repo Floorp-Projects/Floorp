@@ -455,6 +455,8 @@ child:
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 
+    async ClearSiteDataReloadNeeded(nsString origin);
+
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
 

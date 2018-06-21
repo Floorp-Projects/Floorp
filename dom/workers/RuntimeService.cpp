@@ -308,9 +308,7 @@ LoadContextOptions(const char* aPrefName, void* /* aClosure */)
                 .setFuzzing(GetWorkerPref<bool>(NS_LITERAL_CSTRING("fuzzing.enabled")))
 #endif
                 .setStreams(GetWorkerPref<bool>(NS_LITERAL_CSTRING("streams")))
-                .setExtraWarnings(GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict")))
-                .setArrayProtoValues(GetWorkerPref<bool>(
-                      NS_LITERAL_CSTRING("array_prototype_values")));
+                .setExtraWarnings(GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict")));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

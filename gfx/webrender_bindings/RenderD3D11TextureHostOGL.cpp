@@ -164,7 +164,7 @@ RenderDXGITextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
 
   if (!mLocked) {
     if (mKeyedMutex) {
-      HRESULT hr = mKeyedMutex->AcquireSync(0, 100);
+      HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
       if (hr != S_OK) {
         gfxCriticalError() << "RenderDXGITextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
         return InvalidToWrExternalImage();
@@ -357,7 +357,7 @@ RenderDXGIYCbCrTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
   if (!mLocked) {
     if (mKeyedMutexs[0]) {
       for (const auto& mutex : mKeyedMutexs) {
-        HRESULT hr = mutex->AcquireSync(0, 100);
+        HRESULT hr = mutex->AcquireSync(0, 10000);
         if (hr != S_OK) {
           gfxCriticalError() << "RenderDXGIYCbCrTextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
           return InvalidToWrExternalImage();

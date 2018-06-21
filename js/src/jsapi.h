@@ -712,7 +712,6 @@ class JS_PUBLIC_API(ContextOptions) {
 #ifdef FUZZING
         , fuzzing_(false)
 #endif
-        , arrayProtoValues_(true)
     {
     }
 
@@ -876,12 +875,6 @@ class JS_PUBLIC_API(ContextOptions) {
     }
 #endif
 
-    bool arrayProtoValues() const { return arrayProtoValues_; }
-    ContextOptions& setArrayProtoValues(bool flag) {
-        arrayProtoValues_ = flag;
-        return *this;
-    }
-
     void disableOptionsForSafeMode() {
         setBaseline(false);
         setIon(false);
@@ -918,7 +911,6 @@ class JS_PUBLIC_API(ContextOptions) {
 #ifdef FUZZING
     bool fuzzing_ : 1;
 #endif
-    bool arrayProtoValues_ : 1;
 
 };
 

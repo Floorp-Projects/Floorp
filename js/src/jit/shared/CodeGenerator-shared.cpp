@@ -75,7 +75,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
     checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
     frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
-    frameInitialAdjustment_(0)
+    frameInitialAdjustment_(0),
+    frameClass_(FrameSizeClass::None())
 {
     if (gen->isProfilerInstrumentationEnabled())
         masm.enableProfilingInstrumentation();
@@ -107,7 +108,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
 
         // FrameSizeClass is only used for bailing, which cannot happen in
         // wasm code.
-        frameClass_ = FrameSizeClass::None();
+        MOZ_ASSERT(frameClass_ == FrameSizeClass::None());
     } else {
         frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
     }

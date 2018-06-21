@@ -41,8 +41,10 @@ public:
   bool operator==(const ImageCacheKey& aOther) const;
   PLDHashNumber Hash() const { return mHash; }
 
-  /// A weak pointer to the URI. For logging only.
+  /// A weak pointer to the URI.
   nsIURI* URI() const { return mURI; }
+
+  const OriginAttributes& OriginAttributesRef() const { return mOriginAttributes; }
 
   /// Is this cache entry for a chrome image?
   bool IsChrome() const { return mIsChrome; }
@@ -53,7 +55,11 @@ public:
 
 private:
   bool SchemeIs(const char* aScheme);
-  static void* GetControlledDocumentToken(nsIDocument* aDocument);
+
+  // For ServiceWorker and for anti-tracking we need to use the document as
+  // token for the key. All those exceptions are handled by this method.
+  static void* GetSpecialCaseDocumentToken(nsIDocument* aDocument,
+                                           nsIURI* aURI);
 
   nsCOMPtr<nsIURI> mURI;
   Maybe<uint64_t> mBlobSerial;
