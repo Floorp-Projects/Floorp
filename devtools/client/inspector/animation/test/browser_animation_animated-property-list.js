@@ -38,17 +38,5 @@ add_task(async function() {
     is(itemEls.length, expectedNumber,
        `The number of animated-property-list should be ${ expectedNumber } ` +
        `at ${ targetClass }`);
-
-    if (itemEls.length < 2) {
-      continue;
-    }
-
-    info("Checking the background color for " +
-         `the animated property item at ${ targetClass }`);
-    const evenColor = panel.ownerGlobal.getComputedStyle(itemEls[0]).backgroundColor;
-    const oddColor = panel.ownerGlobal.getComputedStyle(itemEls[1]).backgroundColor;
-    isnot(evenColor, oddColor,
-          "Background color of an even animated property item " +
-          "should be different from odd");
   }
 });

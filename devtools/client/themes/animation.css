@@ -5,31 +5,33 @@
 /* Animation-inspector specific theme variables */
 
 :root {
-  --animation-even-background-color: rgba(0, 0, 0, 0.05);
+  --animation-item-hover-color: var(--grey-30-a40);
+  --animation-item-selected-color: var(--grey-30-a90);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --cssanimation-color: var(--purple-50);
+  --csstransition-color: var(--blue-55);
   --devtools-toolbar-height: 24px;
   --fast-track-image: url("images/animation-fast-track.svg");
-  --fill-color-cssanimation: var(--theme-contrast-background);
-  --fill-color-csstransition: var(--theme-highlight-blue);
-  --fill-color-scriptanimation: var(--theme-graphs-green);
   --graph-height: 30px;
   --graph-right-offset: 10px;
   --keyframe-marker-shadow-color: #c4c4c4;
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
-  --progress-bar-color: #909090;
+  --progress-bar-color: var(--grey-40);
   --resume-image: url(chrome://devtools/skin/images/play.svg);
   --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
-  --scrubber-color: #dd00a9;
+  --scriptanimation-color: var(--green-60);
+  --scrubber-color: var(--magenta-65);
   --sidebar-width: 200px;
-  --stroke-color-cssanimation: var(--theme-highlight-lightorange);
-  --stroke-color-csstransition: var(--theme-highlight-bluegrey);
-  --stroke-color-scriptanimation: var(--theme-highlight-green);
-  --tick-line-style: 0.5px solid rgba(128, 136, 144, 0.5);
+  --tick-line-style: 0.5px solid var(--theme-splitter-color);
 }
 
 :root.theme-dark {
-  --animation-even-background-color: rgba(255, 255, 255, 0.05);
+  --animation-item-hover-color: var(--grey-60-a50);
+  --animation-item-selected-color: var(--grey-60);
+  --csstransition-color: var(--blue-50);
   --keyframe-marker-shadow-color: #818181;
+  --progress-bar-color: var(--grey-50);
+  --scrubber-color: var(--magenta-50);
 }
 
 /* Root element of animation inspector */
@@ -132,27 +134,27 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 /* Animation Item */
-.animation-item:nth-child(2n+1) {
-  background-color: var(--animation-even-background-color);
-}
-
 .animation-item.cssanimation {
-  --computed-timing-graph-color: var(--fill-color-cssanimation);
-  --effect-timing-graph-color: var(--stroke-color-cssanimation);
+  --graph-color: var(--cssanimation-color);
+  --graph-opacity: 0.7;
 }
 
 .animation-item.csstransition {
-  --computed-timing-graph-color: var(--fill-color-csstransition);
-  --effect-timing-graph-color: var(--stroke-color-csstransition);
+  --graph-color: var(--csstransition-color);
+  --graph-opacity: 0.8;
 }
 
 .animation-item.scriptanimation {
-  --computed-timing-graph-color: var(--fill-color-scriptanimation);
-  --effect-timing-graph-color: var(--stroke-color-scriptanimation);
+  --graph-color: var(--scriptanimation-color);
+  --graph-opacity: 0.5;
+}
+
+.animation-item:hover {
+  background-color: var(--animation-item-hover-color);
 }
 
 .animation-item.selected {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--animation-item-selected-color);
 }
 
 /* Animation Target */
@@ -191,7 +193,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   cursor: pointer;
   grid-column: 2 / 3;
   height: var(--graph-height);
-  padding-top: 5px;
+  padding-bottom: 3px;
+  padding-top: 3px;
   position: relative;
 }
 
@@ -215,7 +218,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .animation-computed-timing-path path {
-  fill: var(--computed-timing-graph-color);
+  fill: var(--graph-color);
+  fill-opacity: var(--graph-opacity);
   vector-effect: non-scaling-stroke;
   transform: scale(1, -1);
 }
@@ -226,7 +230,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .animation-effect-timing-path path {
   fill: none;
-  stroke: var(--effect-timing-graph-color);
+  stroke: var(--graph-color);
   stroke-dasharray: 2px 2px;
   transform: scale(1, -1);
   vector-effect: non-scaling-stroke;
@@ -250,7 +254,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background-color: var(--theme-graphs-grey);
   height: 3px;
   position: absolute;
-  top: calc(100% - 1.5px);
+  bottom: 2px;
 }
 
 .animation-delay-sign::before,
@@ -266,7 +270,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .animation-delay-sign.fill,
 .animation-end-delay-sign.fill {
-  background-color: var(--effect-timing-graph-color);
+  background-color: var(--graph-color);
 }
 
 .animation-delay-sign.negative::before {
@@ -305,7 +309,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 /* Animation Detail */
 .animation-detail-container {
-  background-color: var(--theme-body-background);
+  background-color: var(--theme-sidebar-background);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -365,10 +369,6 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 /* Animated Property Item */
-.animated-property-item:nth-child(2n+1) {
-  background-color: var(--animation-even-background-color);
-}
-
 .animated-property-item.unchanged {
   opacity: 0.6;
 }
@@ -388,15 +388,15 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .animated-property-list-container.cssanimation .animated-property-name.compositor {
-  --fast-track-color: var(--stroke-color-cssanimation);
+  --fast-track-color: var(--cssanimation-color);
 }
 
 .animated-property-list-container.csstransition .animated-property-name.compositor {
-  --fast-track-color: var(--stroke-color-csstransition);
+  --fast-track-color: var(--csstransition-color);
 }
 
 .animated-property-list-container.scriptanimation .animated-property-name.compositor {
-  --fast-track-color: var(--stroke-color-scriptanimation);
+  --fast-track-color: var(--scriptanimation-color);
 }
 
 .animated-property-name.compositor span::before {
@@ -430,20 +430,21 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .keyframes-graph-path path {
-  fill: #00b0bd88;
-  stroke: #00b0bd;
+  fill: var(--teal-60);
+  fill-opacity: 0.5;
+  stroke: var(--teal-70);
   vector-effect: non-scaling-stroke;
   transform: scale(1, -1);
 }
 
 .keyframes-graph.opacity .keyframes-graph-path path {
-  fill: #df00a988;
-  stroke: #df00a9;
+  fill: var(--magenta-50);
+  stroke: var(--magenta-70);
 }
 
 .keyframes-graph.transform .keyframes-graph-path path {
-  fill: #ea800088;
-  stroke: #ea8000;
+  fill: var(--yellow-50);
+  stroke: var(--yellow-60);
 }
 
 .keyframes-graph-path .color-path path {
@@ -496,15 +497,15 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .animated-property-list-container.cssanimation .keyframe-marker-item {
-  background-color: var(--fill-color-cssanimation);
+  background-color: var(--cssanimation-color);
 }
 
 .animated-property-list-container.csstransition .keyframe-marker-item {
-  background-color: var(--fill-color-csstransition);
+  background-color: var(--csstransition-color);
 }
 
 .animated-property-list-container.scriptanimation .keyframe-marker-item {
-  background-color: var(--fill-color-scriptanimation);
+  background-color: var(--scriptanimation-color);
 }
 
 /* Common Components */

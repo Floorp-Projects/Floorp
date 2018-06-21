@@ -213,8 +213,11 @@
 
   /* Firefox Colors CSS Variables v1.0.3
    * Colors are taken from: https://github.com/FirefoxUX/design-tokens */
+  --magenta-50: #ff1ad9;
   --magenta-65: #dd00a9;
+  --magenta-70: #b5007f;
 
+  --purple-50: #9400ff;
   --purple-60: #8000d7;
 
   --blue-40: #45a1ff;
@@ -223,20 +226,28 @@
   --blue-60: #0060df;
   --blue-70: #003eaa;
 
+  --teal-60: #00c8d7;
+  --teal-70: #008ea4;
+
   --red-70: #a4000f;
 
   --green-50: #30e60b;
   --green-60: #12bc00;
   --green-70: #058b00;
 
+  --yellow-50: #ffe900;
+  --yellow-60: #d7b600;
   --yellow-80: #715100;
 
   --grey-10: #f9f9fa;
   --grey-20: #ededf0;
   --grey-30: #d7d7db;
+  --grey-30-a40: rgba(215, 215, 219, 0.4);
+  --grey-30-a90: rgba(215, 215, 219, 0.9);
   --grey-40: #b1b1b3;
   --grey-50: #737373;
   --grey-60: #4a4a4f;
+  --grey-60-a50: rgba(74, 74, 79, 0.5);
   --grey-70: #38383d;
   --grey-80: #2a2a2e;
   --grey-90: #0c0c0d;
