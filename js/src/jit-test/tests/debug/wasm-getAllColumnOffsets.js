@@ -9,7 +9,6 @@ if (!wasmDebuggingIsSupported())
 
 // Checking if experimental format generates internal source map to binary file
 // by querying debugger scripts getAllColumnOffsets.
-// (Notice that the source map will not be produced by wasmBinaryToText)
 function getAllOffsets(wast) {
   var sandbox = newGlobal('');
   var dbg = new Debugger();
