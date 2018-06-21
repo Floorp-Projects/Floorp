@@ -171,6 +171,27 @@ public class TestIconRequestBuilder {
     }
 
     @Test
+    public void testSkipMemoryIf() {
+        IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL_1)
+                .build();
+
+        Assert.assertFalse(request.shouldSkipMemory());
+
+        request.modify()
+                .skipMemoryIf(true)
+                .deferBuild();
+
+        Assert.assertTrue(request.shouldSkipMemory());
+
+        request.modify()
+                .skipMemoryIf(false)
+                .deferBuild();
+
+        Assert.assertFalse(request.shouldSkipMemory());
+    }
+
+    @Test
     public void testExecutionOnBackgroundThread() {
         IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL_1)
