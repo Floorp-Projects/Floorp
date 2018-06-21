@@ -909,6 +909,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY trackingProtection.detectedBlocked3 "&brandShortName; is blocking parts of the page that may track your browsing.">
 <!ENTITY trackingProtection.detectedNotBlocked4 "Trackers have been detected on this webpage.">
 <!ENTITY trackingProtection.notDetected4 "No trackers detected on this page.">
+<!ENTITY trackingProtection.detectedException "&brandShortName; has detected elements that may track your browsing. You have disabled protection for this site.">
+<!ENTITY trackingProtection.notDetectedException "No tracking elements detected on this page. You have disabled protection for this site.">
+
 <!ENTITY trackingProtection.reloadRequired "You have enabled Tracking Protection. To block all trackers please reload the current webpage.">
 <!-- LOCALIZATION NOTE (trackingProtection.unblock.label, trackingProtection.unblock.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
