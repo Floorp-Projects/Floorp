@@ -11,7 +11,7 @@ with Files("controlCenter/**"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
 with Files("devtools/**"):
-    BUG_COMPONENT = ("Firefox", "Developer Tools")
+    BUG_COMPONENT = ("DevTools", "General")
 
 with Files("permissionPrompts/**"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")

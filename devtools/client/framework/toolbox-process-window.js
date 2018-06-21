@@ -229,18 +229,17 @@ function onUnload() {
 }
 
 function onMessage(event) {
-  try {
-    const json = JSON.parse(event.data);
-    switch (json.name) {
-      case "toolbox-raise":
-        raise();
-        break;
-      case "toolbox-title":
-        setTitle(json.data.value);
-        break;
-    }
-  } catch (e) {
-    console.error(e);
+  if (!event.data) {
+    return;
+  }
+  const msg = event.data;
+  switch (msg.name) {
+    case "toolbox-raise":
+      raise();
+      break;
+    case "toolbox-title":
+      setTitle(msg.data.value);
+      break;
   }
 }
 

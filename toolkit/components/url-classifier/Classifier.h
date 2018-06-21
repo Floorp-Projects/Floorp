@@ -25,8 +25,9 @@ namespace safebrowsing {
  */
 class Classifier {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Classifier);
+
   Classifier();
-  ~Classifier();
 
   nsresult Open(nsIFile& aCacheDirectory);
   void Close();
@@ -123,6 +124,8 @@ public:
                     nsIUrlClassifierCacheInfo** aCache);
 
 private:
+  ~Classifier();
+
   void DropStores();
   void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);
 
@@ -226,6 +229,8 @@ private:
   // be accessed in CopyInUseDirForUpdate().
   // It will be initialized right before update on the worker thread.
   nsCOMPtr<nsIFile> mRootStoreDirectoryForUpdate;
+
+  bool mIsClosed; // true once Close() has been called
 };
 
 } // namespace safebrowsing

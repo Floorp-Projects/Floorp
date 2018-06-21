@@ -4,7 +4,7 @@
 
 #![cfg_attr(feature = "oom_with_global_alloc",
             feature(global_allocator, alloc, alloc_system, allocator_api))]
-#![cfg_attr(feature = "oom_with_hook", feature(oom_hook))]
+#![cfg_attr(feature = "oom_with_hook", feature(alloc_error_hook))]
 
 #[cfg(feature="servo")]
 extern crate geckoservo;
@@ -222,7 +222,7 @@ static HEAP: global_alloc::GeckoHeap = global_alloc::GeckoHeap;
 
 #[cfg(feature = "oom_with_hook")]
 mod oom_hook {
-    use std::alloc::{Layout, set_oom_hook};
+    use std::alloc::{Layout, set_alloc_error_hook};
 
     extern "C" {
         fn GeckoHandleOOM(size: usize) -> !;
@@ -235,7 +235,7 @@ mod oom_hook {
     }
 
     pub fn install() {
-        set_oom_hook(hook);
+        set_alloc_error_hook(hook);
     }
 }
 

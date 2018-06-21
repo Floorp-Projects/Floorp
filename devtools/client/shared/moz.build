@@ -20,7 +20,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'AppCacheUtils.jsm',
     'autocomplete-popup.js',
     'browser-loader.js',
     'css-angle.js',
@@ -58,7 +57,7 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+    BUG_COMPONENT = ('DevTools', 'General')
 
 with Files('components/**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Shared Components')
+    BUG_COMPONENT = ('DevTools', 'Shared Components')

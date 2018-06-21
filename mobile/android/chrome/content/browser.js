@@ -903,7 +903,8 @@ var BrowserApp = {
                 return;
             }
 
-            ContentAreaUtils.saveImageURL(aTarget.currentRequestFinalURI.spec, null, "SaveImageTitle",
+            let uri = aTarget.currentRequestFinalURI || aTarget.currentURI;
+            ContentAreaUtils.saveImageURL(uri.spec, null, "SaveImageTitle",
                                           false, true, aTarget.ownerDocument.documentURIObject,
                                           aTarget.ownerDocument);
         });

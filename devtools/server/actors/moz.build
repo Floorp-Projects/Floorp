@@ -68,37 +68,37 @@ DevToolsModules(
 )
 
 with Files('animation.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Animation Inspector')
+    BUG_COMPONENT = ('DevTools', 'Animation Inspector')
 
 with Files('breakpoint.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+    BUG_COMPONENT = ('DevTools', 'Debugger')
 
 with Files('css-properties.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: CSS Rules Inspector')
+    BUG_COMPONENT = ('DevTools', 'CSS Rules Inspector')
 
 with Files('csscoverage.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Graphics Commandline and Toolbar')
+    BUG_COMPONENT = ('DevTools', 'Graphics Commandline and Toolbar')
 
 with Files('memory.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
+    BUG_COMPONENT = ('DevTools', 'Memory')
 
 with Files('performance*'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
 
 with Files('source.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+    BUG_COMPONENT = ('DevTools', 'Debugger')
 
 with Files('storage.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Storage Inspector')
+    BUG_COMPONENT = ('DevTools', 'Storage Inspector')
 
 with Files('stylesheets.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Style Editor')
+    BUG_COMPONENT = ('DevTools', 'Style Editor')
 
 with Files('webaudio.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Web Audio Editor')
+    BUG_COMPONENT = ('DevTools', 'Web Audio Editor')
 
 with Files('webconsole.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
+    BUG_COMPONENT = ('DevTools', 'Console')
 
 with Files('webgl.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: WebGL Shader Editor')
+    BUG_COMPONENT = ('DevTools', 'WebGL Shader Editor')

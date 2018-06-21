@@ -49,7 +49,7 @@ crashtest:
             default: true
     tier:
         by-test-platform:
-            linux64-qr/.*: 1
+            .*-qr/.*: 1
             default: default
 
 jsreftest:

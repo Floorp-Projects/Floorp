@@ -74,8 +74,8 @@ class FontInspector {
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
-    this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onRuleUpdated = this.onRuleUpdated.bind(this);
+    this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
     this.updateFontVariationSettings = this.updateFontVariationSettings.bind(this);
@@ -108,7 +108,6 @@ class FontInspector {
     this.inspector.selection.on("new-node-front", this.onNewNode);
     // @see ToolSidebar.onSidebarTabSelected()
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
-    this.ruleView.on("property-value-updated", this.onRuleUpdated);
 
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
@@ -153,6 +152,51 @@ class FontInspector {
   }
 
   /**
+   * Get a subset of fonts used on a node whose font family names are found in the
+   * node's CSS font-family property value. The fonts will be sorted in the order their
+   * family names are declared in CSS font-family.
+   *
+   * Fonts returned by this.getFontsForNode() contain, among others, these attributes:
+   * - CSSFamilyName: a string of the font's family name (ex: "Times");
+   * - CSSGeneric: a string of the generic font family (ex: "serif", "sans-serif") if
+   * the font was resolved from a generic font family keyword, like serif, instead of
+   * an explicit font famly, like "Times". If the font is resolved from an
+   * explicit font family, CSSGeneric is null.
+   *
+   * For example:
+   * font-family: "Avenir", serif;
+   *
+   * If fonts from both families are used, it will yield:
+   * { CSSFamilyName: "Avenir", CSSGeneric: null, ... },
+   * { CSSFamilyName: "Times", CSSGeneric: "serif", ... },
+   *
+   * @param {Array} fonts
+   *        Fonts used on a node got from a call to this.getFontsForNode().
+   * @param {Array} fontFamilies
+   *        Strings of font families from a node's CSS font-family property value.
+   * @return {Array}
+   *         Subset of `fonts` whose font family names appear in `fontFamilies`.
+   */
+  filterFontsUsed(fonts = [], fontFamilies = []) {
+    return fontFamilies.reduce((acc, family) => {
+      const match = fonts.find(font => {
+        const generic = typeof font.CSSGeneric === "string"
+          ? font.CSSGeneric.toLowerCase()
+          : font.CSSGeneric;
+
+        return generic === family.toLowerCase()
+          || font.CSSFamilyName.toLowerCase() === family.toLowerCase();
+      });
+
+      if (match) {
+        acc.push(match);
+      }
+
+      return acc;
+    }, []);
+  }
+
+  /**
    * Get all expected CSS font properties and values from the node's matching rules and
    * fallback to computed style.
    *
@@ -162,9 +206,12 @@ class FontInspector {
     const KEYWORD_VALUES = ["initial", "inherit", "unset", "none"];
     const properties = {};
 
-    // First, get all expected font properties from computed styles.
+    // First, get all expected font properties from computed styles, if available.
     for (const prop of FONT_PROPERTIES) {
-      properties[prop] = this.nodeComputedStyle[prop].value;
+      properties[prop] =
+        (this.nodeComputedStyle[prop] && this.nodeComputedStyle[prop].value)
+          ? this.nodeComputedStyle[prop].value
+          : "";
     }
 
     // Then, replace with enabled font properties found on any of the rules that apply.
@@ -343,12 +390,41 @@ class FontInspector {
   }
 
   /**
+   * Given a list of font families, return an object that groups them into sets of used
+   * and not used if they match families of fonts from the given list of fonts used on a
+   * node.
+   *
+   * @See this.filterFontsUsed() for an explanation of CSSFamilyName and CSSGeneric.
+   *
+   * @param {Array} fontsUsed
+   *        Fonts used on a node.
+   * @param {Array} fontFamilies
+   *        Strings of font families
+   * @return {Object}
+   */
+  groupFontFamilies(fontsUsed = [], fontFamilies = []) {
+    const families = {};
+    // Font family names declared and used.
+    families.used = fontsUsed.map(font =>
+      font.CSSGeneric ? font.CSSGeneric : font.CSSFamilyName
+    );
+    const familiesUsedLowercase = families.used.map(family => family.toLowerCase());
+    // Font family names declared but not used.
+    families.notUsed = fontFamilies
+      .map(family => family.toLowerCase())
+      .filter(family => !familiesUsedLowercase.includes(family));
+
+    return families;
+  }
+
+  /**
    * Check if the font inspector panel is visible.
    *
    * @return {Boolean}
    */
   isPanelVisible() {
-    return this.inspector.sidebar &&
+    return this.inspector &&
+           this.inspector.sidebar &&
            this.inspector.sidebar.getCurrentTabID() === "fontinspector";
   }
   /**
@@ -357,7 +433,8 @@ class FontInspector {
    * @return {Boolean}
    */
   isSelectedNodeValid() {
-    return this.inspector.selection.nodeFront &&
+    return this.inspector &&
+           this.inspector.selection.nodeFront &&
            this.inspector.selection.isConnected() &&
            this.inspector.selection.isElementNode();
   }
@@ -568,44 +645,51 @@ class FontInspector {
 
     const node = this.inspector.selection.nodeFront;
     const fonts = await this.getFontsForNode(node, options);
-    if (!fonts.length) {
-      this.store.dispatch(resetFontEditor());
-      return;
-    }
 
     // Get computed styles for the selected node, but filter by CSS font properties.
     this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
       filterProperties: FONT_PROPERTIES
     });
-    // Clear any references to writer methods because the node's
+
+    if (!this.nodeComputedStyle) {
+      this.store.dispatch(resetFontEditor());
+      return;
+    }
+
+    // Clear any references to writer methods and CSS declarations because the node's
     // styles may have changed since the last font editor refresh.
     this.writers.clear();
     // Select the node's inline style as the rule where to write property value changes.
     this.selectedRule =
       this.ruleView.rules.find(rule => rule.domRule.type === ELEMENT_STYLE);
-    const fontEditor = this.store.getState().fontEditor;
+
     const properties = this.getFontProperties();
-    // Names of fonts declared in font-family property without quotes and space trimmed.
-    const declaredFontNames =
-      properties["font-family"].split(",").map(font => font.replace(/\"+/g, "").trim());
-
-    // Mark available fonts as used if their names appears in the font-family declaration.
-    // TODO: sort used fonts in order of font-family declaration.
-    for (const font of fonts) {
-      font.used = declaredFontNames.includes(font.CSSFamilyName);
-    }
-
+    const familiesDeclared =
+      properties["font-family"].split(",")
+      .map(font => font.replace(/["']+/g, "").trim());
+    // Subset of fonts used on the node whose family names exist in CSS font-family.
+    let fontsUsed = this.filterFontsUsed(fonts, familiesDeclared);
+    // Object with font families groupped by used and not used.
+    const families = this.groupFontFamilies(fontsUsed, familiesDeclared);
     // Assign writer methods to each axis defined in font-variation-settings.
     const axes = parseFontVariationAxes(properties["font-variation-settings"]);
     Object.keys(axes).map(axis => {
       this.writers.set(axis, this.getWriterForAxis(axis));
     });
 
-    // Update the font editor state only if property values differ from the ones in store.
-    // This can happen when a user makes manual changes in the Rule view.
-    if (JSON.stringify(properties) !== JSON.stringify(fontEditor.properties)) {
-      this.store.dispatch(updateFontEditor(fonts, properties));
+    // Pick fonts from descendants if no declared fonts were used on this node.
+    if (!fontsUsed.length && fonts.length) {
+      const otherVarFonts = fonts.filter(font => {
+        return (font.variationAxes && font.variationAxes.length);
+      });
+
+      // Prefer picking variable fonts if any were found on descendants of this node.
+      // The FontEditor component will render UI for the first font in the list.
+      fontsUsed = otherVarFonts.length ? otherVarFonts : fonts;
     }
+
+    this.store.dispatch(updateFontEditor(fontsUsed, families, properties));
+    this.inspector.emit("fonteditor-updated");
   }
 
   /**

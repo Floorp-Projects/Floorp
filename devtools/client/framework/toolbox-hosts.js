@@ -335,11 +335,12 @@ CustomHost.prototype = {
     if (!topWindow) {
       return;
     }
-    const json = {name: "toolbox-" + msg, uid: this.uid};
-    if (data) {
-      json.data = data;
-    }
-    topWindow.postMessage(JSON.stringify(json), "*");
+    const message = {
+      name: "toolbox-" + msg,
+      uid: this.uid,
+      data,
+    };
+    topWindow.postMessage(message, "*");
   },
 
   /**

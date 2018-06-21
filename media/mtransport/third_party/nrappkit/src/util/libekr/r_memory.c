@@ -36,9 +36,6 @@
    ekr@rtfm.com  Thu Apr 22 20:40:45 2004
  */
 
-
-static char *RCSSTRING __UNUSED__="$Id: r_memory.c,v 1.2 2006/08/16 19:39:17 adamcain Exp $";
-
 #include <string.h>
 #include <stddef.h>
 #include <assert.h>

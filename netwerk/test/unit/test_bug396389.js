@@ -32,7 +32,7 @@ function run_test() {
   var uri1 = ios.newURI("file:///");
   Assert.ok(uri1 instanceof Ci.nsIFileURL);
 
-  var uri2 = uri1.clone();
+  var uri2 = uri1.mutate().finalize();
   Assert.ok(uri2 instanceof Ci.nsIFileURL);
   Assert.ok(uri1.equals(uri2));
 
