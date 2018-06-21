@@ -7081,6 +7081,14 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 #endif
     MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental || lastMarkSlice);
 
+    /*
+     * It's possible to be in the middle of an incremental collection, but not
+     * doing an incremental collection IF we had to return and re-enter the GC
+     * in order to collect the nursery.
+     */
+    MOZ_ASSERT_IF(isIncrementalGCInProgress() && !isIncremental,
+         lastMarkSlice && nursery().isEmpty());
+
     isIncremental = !budget.isUnlimited();
 
     if (useZeal && hasIncrementalTwoSliceZealMode()) {
@@ -7189,6 +7197,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         MOZ_FALLTHROUGH;
 
       case State::Sweep:
+        MOZ_ASSERT(nursery().isEmpty());
         if (performSweepActions(budget) == NotFinished)
             break;
 
@@ -7233,6 +7242,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
       case State::Compact:
         if (isCompacting) {
+            MOZ_ASSERT(nursery().isEmpty());
             if (!startedCompacting)
                 beginCompactPhase();
 
