@@ -4,7 +4,7 @@
 
 <!-- LOCALIZATION NOTE : FILE This file contains the CSS Coverage Report
    - strings. See the 'csscoverage' command for more information, and
-   - devtools/client/styleeditor/styleeditor.xul for context -->
+   - devtools/client/styleeditor/index.xul for context -->
 
 <!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
    - keep it in English, or another language commonly spoken among web developers.

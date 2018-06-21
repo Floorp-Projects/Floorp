@@ -24,19 +24,19 @@ browser/chrome/browser/skin/classic/browser/connection-secure.svg
 browser/chrome/browser/skin/classic/browser/controlcenter/warning-gray.svg
 # devtools reduction is bug 1311178
 browser/chrome/devtools/content/dom/content/dom-view.css
-browser/chrome/devtools/content/dom/dom.html
+browser/chrome/devtools/content/dom/index.html
 browser/chrome/devtools/content/dom/main.js
 browser/chrome/devtools/content/framework/toolbox-options.js
 browser/chrome/devtools/content/inspector/fonts/fonts.js
-browser/chrome/devtools/content/inspector/inspector.xhtml
+browser/chrome/devtools/content/inspector/index.xhtml
 browser/chrome/devtools/content/projecteditor/lib/helpers/readdir.js
 browser/chrome/devtools/content/shared/theme-switching.js
 browser/chrome/devtools/modules/devtools/client/dom/content/dom-view.css
-browser/chrome/devtools/modules/devtools/client/dom/dom.html
+browser/chrome/devtools/modules/devtools/client/dom/index.html
 browser/chrome/devtools/modules/devtools/client/dom/main.js
 browser/chrome/devtools/modules/devtools/client/framework/toolbox-options.js
 browser/chrome/devtools/modules/devtools/client/inspector/fonts/fonts.js
-browser/chrome/devtools/modules/devtools/client/inspector/inspector.xhtml
+browser/chrome/devtools/modules/devtools/client/inspector/index.xhtml
 browser/chrome/devtools/modules/devtools/client/jsonview/css/controls.png
 browser/chrome/devtools/modules/devtools/client/jsonview/css/controls@2x.png
 browser/chrome/devtools/modules/devtools/client/projecteditor/lib/helpers/readdir.js

@@ -7,7 +7,7 @@
 requestLongerTimeout(2);
 
 // Test XBL anonymous content in the markupview
-const TEST_URL = "chrome://devtools/content/scratchpad/scratchpad.xul";
+const TEST_URL = "chrome://devtools/content/scratchpad/index.xul";
 
 add_task(async function() {
   const {inspector} = await openInspectorForURL(TEST_URL);

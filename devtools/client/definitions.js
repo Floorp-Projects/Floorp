@@ -70,7 +70,7 @@ Tools.inspector = {
   accesskey: l10n("inspector.accesskey"),
   ordinal: 1,
   icon: "chrome://devtools/skin/images/tool-inspector.svg",
-  url: "chrome://devtools/content/inspector/inspector.xhtml",
+  url: "chrome://devtools/content/inspector/index.xhtml",
   label: l10n("inspector.label"),
   panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {
@@ -105,13 +105,13 @@ Tools.webConsole = {
   id: "webconsole",
   accesskey: l10n("webConsoleCmd.accesskey"),
   ordinal: 2,
-  url: "chrome://devtools/content/webconsole/webconsole.html",
+  url: "chrome://devtools/content/webconsole/index.html",
   get browserConsoleUsesHTML() {
     return Services.prefs.getBoolPref("devtools.browserconsole.html");
   },
   get browserConsoleURL() {
     return this.browserConsoleUsesHTML ?
-      "chrome://devtools/content/webconsole/webconsole.html" :
+      "chrome://devtools/content/webconsole/index.html" :
       "chrome://devtools/content/webconsole/browserconsole.xul";
   },
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
@@ -149,7 +149,7 @@ Tools.jsdebugger = {
   accesskey: l10n("debuggerMenu.accesskey"),
   ordinal: 3,
   icon: "chrome://devtools/skin/images/tool-debugger.svg",
-  url: "chrome://devtools/content/debugger/debugger.xul",
+  url: "chrome://devtools/content/debugger/index.xul",
   label: l10n("ToolboxDebugger.label"),
   panelLabel: l10n("ToolboxDebugger.panelLabel"),
   get tooltip() {
@@ -176,7 +176,7 @@ function switchDebugger() {
       return new NewDebuggerPanel(iframeWindow, toolbox);
     };
   } else {
-    Tools.jsdebugger.url = "chrome://devtools/content/debugger/debugger.xul";
+    Tools.jsdebugger.url = "chrome://devtools/content/debugger/index.xul";
     Tools.jsdebugger.build = function(iframeWindow, toolbox) {
       return new DebuggerPanel(iframeWindow, toolbox);
     };
@@ -195,7 +195,7 @@ Tools.styleEditor = {
   visibilityswitch: "devtools.styleeditor.enabled",
   accesskey: l10n("open.accesskey"),
   icon: "chrome://devtools/skin/images/tool-styleeditor.svg",
-  url: "chrome://devtools/content/styleeditor/styleeditor.xul",
+  url: "chrome://devtools/content/styleeditor/index.xul",
   label: l10n("ToolboxStyleEditor.label"),
   panelLabel: l10n("ToolboxStyleEditor.panelLabel"),
   get tooltip() {
@@ -238,7 +238,7 @@ Tools.canvasDebugger = {
   ordinal: 6,
   visibilityswitch: "devtools.canvasdebugger.enabled",
   icon: "chrome://devtools/skin/images/tool-canvas.svg",
-  url: "chrome://devtools/content/canvasdebugger/canvasdebugger.xul",
+  url: "chrome://devtools/content/canvasdebugger/index.xul",
   label: l10n("ToolboxCanvasDebugger.label"),
   panelLabel: l10n("ToolboxCanvasDebugger.panelLabel"),
   tooltip: l10n("ToolboxCanvasDebugger.tooltip"),
@@ -271,7 +271,7 @@ Tools.performance = {
 
 function switchPerformancePanel() {
   if (Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
-    Tools.performance.url = "chrome://devtools/content/performance-new/perf.xhtml";
+    Tools.performance.url = "chrome://devtools/content/performance-new/index.xhtml";
     Tools.performance.build = function(frame, target) {
       return new NewPerformancePanel(frame, target);
     };
@@ -282,7 +282,7 @@ function switchPerformancePanel() {
       return true;
     };
   } else {
-    Tools.performance.url = "chrome://devtools/content/performance/performance.xul";
+    Tools.performance.url = "chrome://devtools/content/performance/index.xul";
     Tools.performance.build = function(frame, target) {
       return new PerformancePanel(frame, target);
     };
@@ -302,7 +302,7 @@ Tools.memory = {
   id: "memory",
   ordinal: 8,
   icon: "chrome://devtools/skin/images/tool-memory.svg",
-  url: "chrome://devtools/content/memory/memory.xhtml",
+  url: "chrome://devtools/content/memory/index.xhtml",
   visibilityswitch: "devtools.memory.enabled",
   label: l10n("memory.label"),
   panelLabel: l10n("memory.panelLabel"),
@@ -348,7 +348,7 @@ Tools.storage = {
   accesskey: l10n("storage.accesskey"),
   visibilityswitch: "devtools.storage.enabled",
   icon: "chrome://devtools/skin/images/tool-storage.svg",
-  url: "chrome://devtools/content/storage/storage.xul",
+  url: "chrome://devtools/content/storage/index.xul",
   label: l10n("storage.label"),
   menuLabel: l10n("storage.menuLabel"),
   panelLabel: l10n("storage.panelLabel"),
@@ -373,7 +373,7 @@ Tools.webAudioEditor = {
   ordinal: 11,
   visibilityswitch: "devtools.webaudioeditor.enabled",
   icon: "chrome://devtools/skin/images/tool-webaudio.svg",
-  url: "chrome://devtools/content/webaudioeditor/webaudioeditor.xul",
+  url: "chrome://devtools/content/webaudioeditor/index.xul",
   label: l10n("ToolboxWebAudioEditor1.label"),
   panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel"),
   tooltip: l10n("ToolboxWebAudioEditor1.tooltip"),
@@ -392,7 +392,7 @@ Tools.scratchpad = {
   ordinal: 12,
   visibilityswitch: "devtools.scratchpad.enabled",
   icon: "chrome://devtools/skin/images/tool-scratchpad.svg",
-  url: "chrome://devtools/content/scratchpad/scratchpad.xul",
+  url: "chrome://devtools/content/scratchpad/index.xul",
   label: l10n("scratchpad.label"),
   panelLabel: l10n("scratchpad.panelLabel"),
   tooltip: l10n("scratchpad.tooltip"),
@@ -414,7 +414,7 @@ Tools.dom = {
   ordinal: 13,
   visibilityswitch: "devtools.dom.enabled",
   icon: "chrome://devtools/skin/images/tool-dom.svg",
-  url: "chrome://devtools/content/dom/dom.html",
+  url: "chrome://devtools/content/dom/index.html",
   label: l10n("dom.label"),
   panelLabel: l10n("dom.panelLabel"),
   get tooltip() {
@@ -440,7 +440,7 @@ Tools.accessibility = {
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.accessibility.enabled",
   icon: "chrome://devtools/skin/images/tool-accessibility.svg",
-  url: "chrome://devtools/content/accessibility/accessibility.html",
+  url: "chrome://devtools/content/accessibility/index.html",
   label: l10n("accessibility.label"),
   panelLabel: l10n("accessibility.panelLabel"),
   get tooltip() {
