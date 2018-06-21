@@ -5,6 +5,8 @@
 /* Animation-inspector specific theme variables */
 
 :root {
+  --animation-item-hover-color: var(--grey-30-a40);
+  --animation-item-selected-color: var(--grey-30-a90);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
   --cssanimation-color: var(--purple-50);
   --csstransition-color: var(--blue-55);
@@ -24,6 +26,8 @@
 }
 
 :root.theme-dark {
+  --animation-item-hover-color: var(--grey-60-a50);
+  --animation-item-selected-color: var(--grey-60);
   --csstransition-color: var(--blue-50);
   --keyframe-marker-shadow-color: #818181;
   --progress-bar-color: var(--grey-50);
@@ -145,8 +149,12 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   --graph-opacity: 0.5;
 }
 
+.animation-item:hover {
+  background-color: var(--animation-item-hover-color);
+}
+
 .animation-item.selected {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--animation-item-selected-color);
 }
 
 /* Animation Target */
@@ -185,7 +193,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   cursor: pointer;
   grid-column: 2 / 3;
   height: var(--graph-height);
-  padding-top: 5px;
+  padding-bottom: 3px;
+  padding-top: 3px;
   position: relative;
 }
 
@@ -245,7 +254,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background-color: var(--theme-graphs-grey);
   height: 3px;
   position: absolute;
-  top: calc(100% - 1.5px);
+  bottom: 2px;
 }
 
 .animation-delay-sign::before,

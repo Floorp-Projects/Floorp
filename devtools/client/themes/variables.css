@@ -242,9 +242,12 @@
   --grey-10: #f9f9fa;
   --grey-20: #ededf0;
   --grey-30: #d7d7db;
+  --grey-30-a40: rgba(215, 215, 219, 0.4);
+  --grey-30-a90: rgba(215, 215, 219, 0.9);
   --grey-40: #b1b1b3;
   --grey-50: #737373;
   --grey-60: #4a4a4f;
+  --grey-60-a50: rgba(74, 74, 79, 0.5);
   --grey-70: #38383d;
   --grey-80: #2a2a2e;
   --grey-90: #0c0c0d;
