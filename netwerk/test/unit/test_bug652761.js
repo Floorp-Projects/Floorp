@@ -10,8 +10,7 @@ function run_test()
           uri: "http://localhost:80000/",
           loadUsingSystemPrincipal: true
         });
-    }, "invalid port");
+    }, /NS_ERROR_MALFORMED_URI/, "invalid port");
 
     do_test_finished();
 }
-
