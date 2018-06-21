@@ -15,7 +15,7 @@
             if (!window.location.protocol.startsWith('http'))
                 showSection('local-message', false);
 
-            if (location.search("?gecko"))
+            if (location.search == '?gecko' || location.search == '?raptor')
                 startTest();
         });
     </script>
