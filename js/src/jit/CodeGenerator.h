@@ -72,7 +72,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     ~CodeGenerator();
 
     MOZ_MUST_USE bool generate();
-    MOZ_MUST_USE bool generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffset,
+    MOZ_MUST_USE bool generateWasm(wasm::FuncTypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
                                    wasm::FuncOffsets* offsets);
 
     MOZ_MUST_USE bool link(JSContext* cx, CompilerConstraintList* constraints);

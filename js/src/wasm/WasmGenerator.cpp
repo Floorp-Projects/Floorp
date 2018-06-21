@@ -195,7 +195,7 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     // The funcToCodeRange_ maps function indices to code-range indices and all
     // elements will be initialized by the time module generation is finished.
 
-    if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
+    if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcTypes.length()))
         return false;
 
     // Pre-reserve space for large Vectors to avoid the significant cost of the
@@ -230,8 +230,8 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
 
         env_->funcImportGlobalDataOffsets[i] = globalDataOffset;
 
-        Sig copy;
-        if (!copy.clone(*env_->funcSigs[i]))
+        FuncType copy;
+        if (!copy.clone(*env_->funcTypes[i]))
             return false;
         if (!metadataTier_->funcImports.emplaceBack(std::move(copy), globalDataOffset))
             return false;
@@ -247,22 +247,22 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
             if (!td.isFuncType())
                 continue;
 
-            SigWithId& sig = td.funcType();
-            if (SigIdDesc::isGlobal(sig)) {
+            FuncTypeWithId& funcType = td.funcType();
+            if (FuncTypeIdDesc::isGlobal(funcType)) {
                 uint32_t globalDataOffset;
                 if (!allocateGlobalBytes(sizeof(void*), sizeof(void*), &globalDataOffset))
                     return false;
 
-                sig.id = SigIdDesc::global(sig, globalDataOffset);
+                funcType.id = FuncTypeIdDesc::global(funcType, globalDataOffset);
 
-                Sig copy;
-                if (!copy.clone(sig))
+                FuncType copy;
+                if (!copy.clone(funcType))
                     return false;
 
-                if (!metadata_->sigIds.emplaceBack(std::move(copy), sig.id))
+                if (!metadata_->funcTypeIds.emplaceBack(std::move(copy), funcType.id))
                     return false;
             } else {
-                sig.id = SigIdDesc::immediate(sig);
+                funcType.id = FuncTypeIdDesc::immediate(funcType);
             }
         }
     }
@@ -327,10 +327,10 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
         return false;
 
     for (const ExportedFunc& funcIndex : exportedFuncs) {
-        Sig sig;
-        if (!sig.clone(*env_->funcSigs[funcIndex.index()]))
+        FuncType funcType;
+        if (!funcType.clone(*env_->funcTypes[funcIndex.index()]))
             return false;
-        metadataTier_->funcExports.infallibleEmplaceBack(std::move(sig), funcIndex.index(),
+        metadataTier_->funcExports.infallibleEmplaceBack(std::move(funcType), funcIndex.index(),
                                                          funcIndex.isExplicit());
     }
 
@@ -888,15 +888,15 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     if (env_->debugEnabled()) {
         metadata_->debugEnabled = true;
 
-        const size_t numSigs = env_->funcSigs.length();
-        if (!metadata_->debugFuncArgTypes.resize(numSigs))
+        const size_t numFuncTypes = env_->funcTypes.length();
+        if (!metadata_->debugFuncArgTypes.resize(numFuncTypes))
             return false;
-        if (!metadata_->debugFuncReturnTypes.resize(numSigs))
+        if (!metadata_->debugFuncReturnTypes.resize(numFuncTypes))
             return false;
-        for (size_t i = 0; i < numSigs; i++) {
-            if (!metadata_->debugFuncArgTypes[i].appendAll(env_->funcSigs[i]->args()))
+        for (size_t i = 0; i < numFuncTypes; i++) {
+            if (!metadata_->debugFuncArgTypes[i].appendAll(env_->funcTypes[i]->args()))
                 return false;
-            metadata_->debugFuncReturnTypes[i] = env_->funcSigs[i]->ret();
+            metadata_->debugFuncReturnTypes[i] = env_->funcTypes[i]->ret();
         }
         metadataTier_->debugFuncToCodeRange = std::move(funcToCodeRange_);
 
