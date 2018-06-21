@@ -86,33 +86,25 @@
 }
 
 .item.client .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/twisty.svg#open");
+  background-image: url("chrome://global/skin/tree/twisty-expanded.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: #636363;
+  fill-opacity: 1;
 }
 
 .item.client.closed .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/twisty.svg#clsd");
-}
-
-.item.client .item-twisty-container:hover {
-  background-image: url("chrome://global/skin/tree/twisty.svg#open-hover");
-}
-
-.item.client.closed .item-twisty-container:hover {
-  background-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
-}
-
-.item.client .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
+  background-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
+  fill: #b6b6b6;
 }
 
 .item.client.closed .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
+  background-image: url("chrome://global/skin/tree/twisty-collapsed-rtl.svg");
 }
 
-.item.client .item-twisty-container:hover:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
+.item.client .item-twisty-container:hover {
+  fill: #4ed0f9;
 }
 
-.item.client.closed .item-twisty-container:hover:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
+.item.client.selected .item-twisty-container:not(:hover) {
+  fill: currentColor;
 }
