@@ -476,9 +476,7 @@ static const uint8_t JSPROP_READONLY =         0x02;
 /* property cannot be deleted */
 static const uint8_t JSPROP_PERMANENT =        0x04;
 
-/* Passed to JS_Define(UC)Property* and JS_DefineElement if getters/setters are
-   JSGetterOp/JSSetterOp */
-static const uint8_t JSPROP_PROPOP_ACCESSORS = 0x08;
+/* (0x08 is unused) */
 
 /* property holds getter function */
 static const uint8_t JSPROP_GETTER =           0x10;

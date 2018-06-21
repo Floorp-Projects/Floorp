@@ -2806,8 +2806,6 @@ js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
                            JSGetterOp getter, JSSetterOp setter, unsigned attrs,
                            ObjectOpResult& result)
 {
-    MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
-
     Rooted<PropertyDescriptor> desc(cx);
     desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
     if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
