@@ -76,10 +76,8 @@ class KintoExperimentSource(
         var maxLastModified: Long = -1
         for (experiment in experiments) {
             val lastModified = experiment.lastModified
-            if (lastModified != null) {
-                if (lastModified > maxLastModified) {
-                    maxLastModified = lastModified
-                }
+            if (lastModified != null && lastModified > maxLastModified) {
+                maxLastModified = lastModified
             }
         }
         return if (maxLastModified > 0) maxLastModified else null

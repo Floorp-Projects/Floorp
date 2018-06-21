@@ -33,6 +33,11 @@ class AtomicFileExperimentStorageTest {
         AtomicFileExperimentStorage(atomicFile).save(experiments)
         assertTrue(atomicFile.baseFile.exists())
         val experimentsJson = JSONObject(String(atomicFile.readFully()))
+        checkSavedExperimentsJson(experimentsJson)
+        atomicFile.delete()
+    }
+
+    private fun checkSavedExperimentsJson(experimentsJson: JSONObject) {
         assertEquals(1, experimentsJson.length())
         val experimentsJsonArray = experimentsJson.getJSONArray("experiments")
         assertEquals(1, experimentsJsonArray.length())
@@ -50,7 +55,6 @@ class AtomicFileExperimentStorageTest {
         assertEquals("sample-description", experimentJson.getString("description"))
         assertEquals("sample-id", experimentJson.getString("id"))
         assertEquals(1526991669, experimentJson.getLong("last_modified"))
-        atomicFile.delete()
     }
 
     @Test

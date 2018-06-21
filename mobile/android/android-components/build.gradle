@@ -40,7 +40,7 @@ plugins {
 detekt {
     version = "1.0.0.RC7"
     defaultProfile {
-        input = "$projectDir/fretboard"
+        input = "$projectDir"
         config = "$projectDir/config/detekt.yml"
         filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
         output = "$projectDir/build/reports/detekt"
