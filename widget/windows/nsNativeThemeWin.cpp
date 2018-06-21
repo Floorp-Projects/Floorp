@@ -7,6 +7,7 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/Logging.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsColor.h"
 #include "nsDeviceContext.h"
@@ -4111,60 +4112,6 @@ ToColorRef(nscolor aColor)
   return RGB(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
 }
 
-static float
-ComputeColorComponentLuminance(uint8_t aComponent)
-{
-  float v = float(aComponent) / 255.0f;
-  if (v <= 0.03928f) {
-    return v / 12.92f;
-  }
-  return std::pow((v + 0.055f) / 1.055f, 2.4f);
-}
-
-static constexpr float
-ComputeRelativeLuminanceFromComponents(float aR, float aG, float aB)
-{
-  return 0.2126f * aR + 0.7152f * aG + 0.0722f * aB;
-}
-
-// This function is written according to the algorithm defined in
-// https://www.w3.org/TR/WCAG20/#relativeluminancedef
-static float
-ComputeRelativeLuminance(nscolor aColor)
-{
-  float r = ComputeColorComponentLuminance(NS_GET_R(aColor));
-  float g = ComputeColorComponentLuminance(NS_GET_G(aColor));
-  float b = ComputeColorComponentLuminance(NS_GET_B(aColor));
-  return ComputeRelativeLuminanceFromComponents(r, g, b);
-}
-
-// Inverse function of ComputeColorComponentLuminance.
-static uint8_t
-DecomputeColorComponentLuminance(float aComponent)
-{
-  if (aComponent <= 0.03928f / 12.92f) {
-    aComponent *= 12.92f;
-  } else {
-    aComponent = std::pow(aComponent, 1.0f / 2.4f) * 1.055f - 0.055f;
-  }
-  return ClampColor(aComponent * 255.0f);
-}
-
-// Adjust the luminance of the color to the given value.
-static nscolor
-AdjustColorLuminance(nscolor aColor, float aLuminance)
-{
-  float r = ComputeColorComponentLuminance(NS_GET_R(aColor));
-  float g = ComputeColorComponentLuminance(NS_GET_G(aColor));
-  float b = ComputeColorComponentLuminance(NS_GET_B(aColor));
-  float luminance = ComputeRelativeLuminanceFromComponents(r, g, b);
-  float factor = aLuminance / luminance;
-  uint8_t r1 = DecomputeColorComponentLuminance(r * factor);
-  uint8_t g1 = DecomputeColorComponentLuminance(g * factor);
-  uint8_t b1 = DecomputeColorComponentLuminance(b * factor);
-  return NS_RGB(r1, g1, b1);
-}
-
 static nscolor
 GetScrollbarArrowColor(nscolor aTrackColor)
 {
@@ -4181,7 +4128,7 @@ GetScrollbarArrowColor(nscolor aTrackColor)
   //
   // This function is written based on these values.
 
-  float luminance = ComputeRelativeLuminance(aTrackColor);
+  float luminance = RelativeLuminanceUtils::Compute(aTrackColor);
   // Color with luminance larger than 0.72 has contrast ratio over 4.6
   // to color with luminance of gray 96, so this value is chosen for
   // this range. It is the luminance of gray 221.
@@ -4189,7 +4136,7 @@ GetScrollbarArrowColor(nscolor aTrackColor)
     // ComputeRelativeLuminanceFromComponents(96). That function cannot
     // be constexpr because of std::pow.
     const float GRAY96_LUMINANCE = 0.117f;
-    return AdjustColorLuminance(aTrackColor, GRAY96_LUMINANCE);
+    return RelativeLuminanceUtils::Adjust(aTrackColor, GRAY96_LUMINANCE);
   }
   // The contrast ratio of a color to black equals that to white when its
   // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
