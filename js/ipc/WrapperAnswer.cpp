@@ -27,6 +27,8 @@ using namespace mozilla::jsipc;
 using mozilla::dom::AutoJSAPI;
 using mozilla::dom::AutoEntryScript;
 
+using xpc::IsInAutomation;
+
 static void
 MaybeForceDebugGC()
 {
@@ -96,6 +98,9 @@ WrapperAnswer::deadCPOW(AutoJSAPI& jsapi, ReturnStatus* rs)
 bool
 WrapperAnswer::RecvPreventExtensions(const ObjectId& objId, ReturnStatus* rs)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -129,6 +134,9 @@ bool
 WrapperAnswer::RecvGetPropertyDescriptor(const ObjectId& objId, const JSIDVariant& idVar,
                                          ReturnStatus* rs, PPropertyDescriptor* out)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -161,6 +169,9 @@ bool
 WrapperAnswer::RecvGetOwnPropertyDescriptor(const ObjectId& objId, const JSIDVariant& idVar,
                                             ReturnStatus* rs, PPropertyDescriptor* out)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -193,6 +204,9 @@ bool
 WrapperAnswer::RecvDefineProperty(const ObjectId& objId, const JSIDVariant& idVar,
                                   const PPropertyDescriptor& descriptor, ReturnStatus* rs)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -223,6 +237,9 @@ WrapperAnswer::RecvDefineProperty(const ObjectId& objId, const JSIDVariant& idVa
 bool
 WrapperAnswer::RecvDelete(const ObjectId& objId, const JSIDVariant& idVar, ReturnStatus* rs)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -250,6 +267,9 @@ bool
 WrapperAnswer::RecvHas(const ObjectId& objId, const JSIDVariant& idVar, ReturnStatus* rs,
                        bool* foundp)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -277,6 +297,9 @@ bool
 WrapperAnswer::RecvHasOwn(const ObjectId& objId, const JSIDVariant& idVar, ReturnStatus* rs,
                           bool* foundp)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -304,6 +327,9 @@ bool
 WrapperAnswer::RecvGet(const ObjectId& objId, const JSVariant& receiverVar,
                        const JSIDVariant& idVar, ReturnStatus* rs, JSVariant* result)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     // We may run scripted getters.
@@ -343,6 +369,9 @@ bool
 WrapperAnswer::RecvSet(const ObjectId& objId, const JSIDVariant& idVar, const JSVariant& value,
                        const JSVariant& receiverVar, ReturnStatus* rs)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     // We may run scripted setters.
@@ -378,6 +407,9 @@ WrapperAnswer::RecvSet(const ObjectId& objId, const JSIDVariant& idVar, const JS
 bool
 WrapperAnswer::RecvIsExtensible(const ObjectId& objId, ReturnStatus* rs, bool* result)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -408,6 +440,9 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId& objId,
                                    JSVariant* result,
                                    nsTArray<JSParam>* outparams)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoEntryScript aes(scopeForTargetObjects(),
@@ -508,6 +543,9 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId& objId,
 bool
 WrapperAnswer::RecvHasInstance(const ObjectId& objId, const JSVariant& vVar, ReturnStatus* rs, bool* bp)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -535,6 +573,9 @@ bool
 WrapperAnswer::RecvGetBuiltinClass(const ObjectId& objId, ReturnStatus* rs,
                                    uint32_t* classValue)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     *classValue = uint32_t(js::ESClass::Other);
@@ -562,6 +603,9 @@ bool
 WrapperAnswer::RecvIsArray(const ObjectId& objId, ReturnStatus* rs,
                            uint32_t* ans)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     *ans = uint32_t(IsArrayAnswer::NotArray);
@@ -588,6 +632,9 @@ WrapperAnswer::RecvIsArray(const ObjectId& objId, ReturnStatus* rs,
 bool
 WrapperAnswer::RecvClassName(const ObjectId& objId, nsCString* name)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -611,6 +658,9 @@ WrapperAnswer::RecvClassName(const ObjectId& objId, nsCString* name)
 bool
 WrapperAnswer::RecvGetPrototype(const ObjectId& objId, ReturnStatus* rs, ObjectOrNullVariant* result)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     *result = NullVariant();
@@ -640,6 +690,9 @@ bool
 WrapperAnswer::RecvGetPrototypeIfOrdinary(const ObjectId& objId, ReturnStatus* rs, bool* isOrdinary,
                                           ObjectOrNullVariant* result)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     *result = NullVariant();
@@ -670,6 +723,9 @@ bool
 WrapperAnswer::RecvRegExpToShared(const ObjectId& objId, ReturnStatus* rs,
                                   nsString* source, uint32_t* flags)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -698,6 +754,9 @@ bool
 WrapperAnswer::RecvGetPropertyKeys(const ObjectId& objId, const uint32_t& flags,
                                    ReturnStatus* rs, nsTArray<JSIDVariant>* ids)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -730,6 +789,9 @@ bool
 WrapperAnswer::RecvInstanceOf(const ObjectId& objId, const JSIID& iid, ReturnStatus* rs,
                               bool* instanceof)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
@@ -759,6 +821,9 @@ bool
 WrapperAnswer::RecvDOMInstanceOf(const ObjectId& objId, const int& prototypeID,
                                  const int& depth, ReturnStatus* rs, bool* instanceof)
 {
+    if (!IsInAutomation())
+        return false;
+
     MaybeForceDebugGC();
 
     AutoJSAPI jsapi;
