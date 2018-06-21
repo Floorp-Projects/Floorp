@@ -421,36 +421,30 @@ TryResolvePropertyFromSpecs(JSContext* cx, HandleId id, HandleObject holder,
         desc.value().setUndefined();
         unsigned flags = psMatch->flags;
         if (psMatch->isAccessor()) {
-            RootedFunction getterObj(cx);
-            RootedFunction setterObj(cx);
+            RootedObject getterObj(cx);
+            RootedObject setterObj(cx);
             if (psMatch->isSelfHosted()) {
-                getterObj = JS::GetSelfHostedFunction(cx, psMatch->accessors.getter.selfHosted.funname, id, 0);
-                if (!getterObj)
+                JSFunction* getterFun = JS::GetSelfHostedFunction(cx, psMatch->accessors.getter.selfHosted.funname, id, 0);
+                if (!getterFun)
                     return false;
-                desc.setGetterObject(JS_GetFunctionObject(getterObj));
+                getterObj = JS_GetFunctionObject(getterFun);
                 if (psMatch->accessors.setter.selfHosted.funname) {
                     MOZ_ASSERT(flags & JSPROP_SETTER);
-                    setterObj = JS::GetSelfHostedFunction(cx, psMatch->accessors.setter.selfHosted.funname, id, 0);
-                    if (!setterObj)
+                    JSFunction* setterFun = JS::GetSelfHostedFunction(cx, psMatch->accessors.setter.selfHosted.funname, id, 0);
+                    if (!setterFun)
                         return false;
-                    desc.setSetterObject(JS_GetFunctionObject(setterObj));
+                    setterObj = JS_GetFunctionObject(setterFun);
                 }
+                if (!JS_DefinePropertyById(cx, holder, id, getterObj, setterObj, flags))
+                    return false;
             } else {
-                desc.setGetter(JS_CAST_NATIVE_TO(psMatch->accessors.getter.native.op,
-                                                 JSGetterOp));
-                desc.setSetter(JS_CAST_NATIVE_TO(psMatch->accessors.setter.native.op,
-                                                 JSSetterOp));
-            }
-            desc.setAttributes(flags);
-            if (!JS_DefinePropertyById(cx, holder, id,
-                                       JS_PROPERTYOP_GETTER(desc.getter()),
-                                       JS_PROPERTYOP_SETTER(desc.setter()),
-                                       // This particular descriptor, unlike most,
-                                       // actually stores JSNatives directly,
-                                       // since we just set it up.
-                                       desc.attributes()))
-            {
-                return false;
+                if (!JS_DefinePropertyById(cx, holder, id,
+                                           psMatch->accessors.getter.native.op,
+                                           psMatch->accessors.setter.native.op,
+                                           flags))
+                {
+                    return false;
+                }
             }
         } else {
             RootedValue v(cx);

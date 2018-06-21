@@ -1460,9 +1460,6 @@ private:
 namespace JS {
 namespace detail {
 
-/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_NATIVE_TO only. */
-inline int CheckIsNative(JSNative native);
-
 /* NEVER DEFINED, DON'T USE.  For use by JS_CAST_STRING_TO only. */
 template<size_t N>
 inline int
@@ -1471,18 +1468,8 @@ CheckIsCharacterLiteral(const char (&arr)[N]);
 /* NEVER DEFINED, DON'T USE.  For use by JS_CAST_INT32_TO only. */
 inline int CheckIsInt32(int32_t value);
 
-/* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_GETTER only. */
-inline int CheckIsGetterOp(JSGetterOp op);
-
-/* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_SETTER only. */
-inline int CheckIsSetterOp(JSSetterOp op);
-
 } // namespace detail
 } // namespace JS
-
-#define JS_CAST_NATIVE_TO(v, To) \
-  (static_cast<void>(sizeof(JS::detail::CheckIsNative(v))), \
-   reinterpret_cast<To>(v))
 
 #define JS_CAST_STRING_TO(s, To) \
   (static_cast<void>(sizeof(JS::detail::CheckIsCharacterLiteral(s))), \
@@ -1495,14 +1482,6 @@ inline int CheckIsSetterOp(JSSetterOp op);
 #define JS_CHECK_ACCESSOR_FLAGS(flags) \
   (static_cast<mozilla::EnableIf<((flags) & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0>::Type>(0), \
    (flags))
-
-#define JS_PROPERTYOP_GETTER(v) \
-  (static_cast<void>(sizeof(JS::detail::CheckIsGetterOp(v))), \
-   reinterpret_cast<JSNative>(v))
-
-#define JS_PROPERTYOP_SETTER(v) \
-  (static_cast<void>(sizeof(JS::detail::CheckIsSetterOp(v))), \
-   reinterpret_cast<JSNative>(v))
 
 #define JS_PS_ACCESSOR_SPEC(name, getter, setter, flags, extraFlags) \
     { name, uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | extraFlags), \
