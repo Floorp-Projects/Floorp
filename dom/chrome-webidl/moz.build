@@ -43,6 +43,7 @@ WEBIDL_FILES = [
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',
     'PrecompiledScript.webidl',
+    'PrioEncoder.webidl',
     'PromiseDebugging.webidl',
     'StructuredCloneHolder.webidl',
     'WebExtensionContentScript.webidl',
