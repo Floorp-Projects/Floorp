@@ -26,7 +26,6 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.ext.dependencies['kotlin']}"
-        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.3'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -73,4 +72,54 @@ task ktlint(type: JavaExec, group: "verification") {
     classpath = configurations.ktlint
     main = "com.github.shyiko.ktlint.Main"
     args "**/*.kt"
+}
+
+subprojects {
+    apply plugin: 'jacoco'
+
+    afterEvaluate {
+        if (it.hasProperty('android')) {
+            android {
+                testOptions {
+                    unitTests {
+                        includeAndroidResources = true
+                    }
+                }
+            }
+
+            if (project.hasProperty("coverage")) {
+                tasks.withType(Test) {
+                    jacoco.includeNoLocationClasses = true
+                    doLast { jacocoTestReport.execute() }
+                }
+
+                task jacocoTestReport(type: JacocoReport) {
+                    reports {
+                        xml.enabled = true
+                        html.enabled = true
+                    }
+
+                    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                                      '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+                    def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
+                    def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
+                    def mainSrc = "$project.projectDir/src/main/java"
+
+                    sourceDirectories = files([mainSrc])
+                    classDirectories = files([kotlinDebugTree, javaDebugTree])
+                    executionData = fileTree(dir: project.buildDir, includes: [
+                            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
+                    ])
+                }
+
+                android {
+                    buildTypes {
+                        debug {
+                            testCoverageEnabled true
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -17,7 +17,7 @@ before_install:
   - yes | sdkmanager "platforms;android-27"
 
 script:
-  - ./gradlew --no-daemon clean assemble test jacocoTestReport
+  - ./gradlew --no-daemon clean test -Pcoverage
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
