@@ -126,10 +126,17 @@ struct AstBase
     }
 };
 
+struct AstNode
+{
+    void* operator new(size_t numBytes, LifoAlloc& astLifo) throw() {
+        return astLifo.alloc(numBytes);
+    }
+};
+
 class AstFuncType;
 class AstStructType;
 
-class AstTypeDef : public AstBase
+class AstTypeDef : public AstNode
 {
   protected:
     enum class Which { IsFuncType, IsStructType };
@@ -257,19 +264,6 @@ AstTypeDef::asStructType() const
     MOZ_ASSERT(isStructType());
     return *static_cast<const AstStructType*>(this);
 }
-
-const uint32_t AstNodeUnknownOffset = 0;
-
-class AstNode : public AstBase
-{
-    uint32_t offset_; // if applicable, offset in the binary format file
-
-  public:
-    AstNode() : offset_(AstNodeUnknownOffset) {}
-
-    uint32_t offset() const { return offset_; }
-    void setOffset(uint32_t offset) { offset_ = offset; }
-};
 
 enum class AstExprKind
 {
@@ -862,7 +856,6 @@ class AstFunc : public AstNode
     AstValTypeVector vars_;
     AstNameVector localNames_;
     AstExprVector body_;
-    uint32_t endOffset_; // if applicable, offset in the binary format file
 
   public:
     AstFunc(AstName name, AstRef ft, AstValTypeVector&& vars,
@@ -871,16 +864,13 @@ class AstFunc : public AstNode
         funcType_(ft),
         vars_(std::move(vars)),
         localNames_(std::move(locals)),
-        body_(std::move(body)),
-        endOffset_(AstNodeUnknownOffset)
+        body_(std::move(body))
     {}
     AstRef& funcType() { return funcType_; }
     const AstValTypeVector& vars() const { return vars_; }
     const AstNameVector& locals() const { return localNames_; }
     const AstExprVector& body() const { return body_; }
     AstName name() const { return name_; }
-    uint32_t endOffset() const { return endOffset_; }
-    void setEndOffset(uint32_t offset) { endOffset_ = offset; }
 };
 
 class AstGlobal : public AstNode
