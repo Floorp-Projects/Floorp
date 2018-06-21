@@ -72,25 +72,13 @@ protected:
   explicit VRDisplayHost(VRDeviceType aType);
   virtual ~VRDisplayHost();
 
-#if defined(XP_WIN)
-  // Subclasses should override this SubmitFrame function.
-  // Returns true if the SubmitFrame call will block as necessary
-  // to control timing of the next frame and throttle the render loop
-  // for the needed framerate.
-  virtual bool SubmitFrame(ID3D11Texture2D* aSource,
-                           const IntSize& aSize,
+  // This SubmitFrame() must be overridden by children and block until
+  // the next frame is ready to start and the resources in aTexture can
+  // safely be released.
+  virtual bool SubmitFrame(const layers::SurfaceDescriptor& aTexture,
+                           uint64_t aFrameId,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) = 0;
-#elif defined(XP_MACOSX)
-  virtual bool SubmitFrame(MacIOSurface* aMacIOSurface,
-                           const IntSize& aSize,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect) = 0;
-#elif defined(MOZ_WIDGET_ANDROID)
-  virtual bool SubmitFrame(const mozilla::layers::SurfaceTextureDescriptor& aSurface,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect) = 0;
-#endif
 
   VRDisplayInfo mDisplayInfo;
 

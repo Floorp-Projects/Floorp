@@ -14,6 +14,7 @@ contract @mozilla.org/network/protocol/about;1?what=privatebrowsing {322ba47e-70
 contract @mozilla.org/network/protocol/about;1?what=blocked {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 contract @mozilla.org/network/protocol/about;1?what=accounts {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 contract @mozilla.org/network/protocol/about;1?what=logins {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=experiments {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 
 # DirectoryProvider.js
 component {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b} DirectoryProvider.js

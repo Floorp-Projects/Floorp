@@ -32,7 +32,7 @@ pub fn delimited(input: Cursor) -> PResult<(MacroDelimiter, TokenStream)> {
             Delimiter::None => return parse_error(),
         };
 
-        return Ok(((delimiter, g.stream().clone()), rest))
+        return Ok(((delimiter, g.stream().clone()), rest));
     }
     parse_error()
 }
@@ -41,7 +41,7 @@ pub fn delimited(input: Cursor) -> PResult<(MacroDelimiter, TokenStream)> {
 pub fn braced(input: Cursor) -> PResult<(Brace, TokenStream)> {
     if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
         if g.delimiter() == Delimiter::Brace {
-            return Ok(((Brace(g.span()), g.stream().clone()), rest))
+            return Ok(((Brace(g.span()), g.stream().clone()), rest));
         }
     }
     parse_error()
@@ -51,7 +51,7 @@ pub fn braced(input: Cursor) -> PResult<(Brace, TokenStream)> {
 pub fn parenthesized(input: Cursor) -> PResult<(Paren, TokenStream)> {
     if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
         if g.delimiter() == Delimiter::Parenthesis {
-            return Ok(((Paren(g.span()), g.stream().clone()), rest))
+            return Ok(((Paren(g.span()), g.stream().clone()), rest));
         }
     }
     parse_error()
@@ -89,8 +89,8 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
                 }
                 s2.next().is_none()
             }
-            (&TokenTree::Op(ref o1), &TokenTree::Op(ref o2)) => {
-                o1.op() == o2.op() && match (o1.spacing(), o2.spacing()) {
+            (&TokenTree::Punct(ref o1), &TokenTree::Punct(ref o2)) => {
+                o1.as_char() == o2.as_char() && match (o1.spacing(), o2.spacing()) {
                     (Spacing::Alone, Spacing::Alone) | (Spacing::Joint, Spacing::Joint) => true,
                     _ => false,
                 }
@@ -98,7 +98,7 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
             (&TokenTree::Literal(ref l1), &TokenTree::Literal(ref l2)) => {
                 l1.to_string() == l2.to_string()
             }
-            (&TokenTree::Term(ref s1), &TokenTree::Term(ref s2)) => s1.as_str() == s2.as_str(),
+            (&TokenTree::Ident(ref s1), &TokenTree::Ident(ref s2)) => s1 == s2,
             _ => false,
         }
     }
@@ -124,16 +124,16 @@ impl<'a> Hash for TokenTreeHelper<'a> {
                 }
                 0xffu8.hash(h); // terminator w/ a variant we don't normally hash
             }
-            TokenTree::Op(ref op) => {
+            TokenTree::Punct(ref op) => {
                 1u8.hash(h);
-                op.op().hash(h);
+                op.as_char().hash(h);
                 match op.spacing() {
                     Spacing::Alone => 0u8.hash(h),
                     Spacing::Joint => 1u8.hash(h),
                 }
             }
             TokenTree::Literal(ref lit) => (2u8, lit.to_string()).hash(h),
-            TokenTree::Term(ref word) => (3u8, word.as_str()).hash(h),
+            TokenTree::Ident(ref word) => (3u8, word).hash(h),
         }
     }
 }

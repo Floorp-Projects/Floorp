@@ -278,6 +278,15 @@ public:
     return p.forget();
   }
 
+  template<typename ResolveOrRejectValueType_>
+  static RefPtr<MozPromise>
+  CreateAndResolveOrReject(ResolveOrRejectValueType_&& aValue, const char* aSite)
+  {
+    RefPtr<typename MozPromise::Private> p = new MozPromise::Private(aSite);
+    p->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue), aSite);
+    return p.forget();
+  }
+
   typedef MozPromise<nsTArray<ResolveValueType>, RejectValueType, IsExclusive> AllPromiseType;
 private:
   class AllPromiseHolder : public MozPromiseRefcountable

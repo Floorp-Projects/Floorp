@@ -12,7 +12,7 @@
 #include "nsRefPtrHashtable.h"
 
 #include "gfxVR.h"
-#include "VRDisplayHost.h"
+#include "VRDisplayLocal.h"
 
 #if defined(XP_MACOSX)
 class MacIOSurface;
@@ -21,7 +21,7 @@ namespace mozilla {
 namespace gfx {
 namespace impl {
 
-class VRDisplayPuppet : public VRDisplayHost
+class VRDisplayPuppet : public VRDisplayLocal
 {
 public:
   void SetDisplayInfo(const VRDisplayInfo& aDisplayInfo);

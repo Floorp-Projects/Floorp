@@ -213,9 +213,15 @@ public:
 
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override
   {
-    mInputInfos.Clear();
-    mSeekTarget.reset();
-    return RemoteDataDecoder::Flush();
+    RefPtr<RemoteVideoDecoder> self = this;
+    return RemoteDataDecoder::Flush()->Then(
+      mTaskQueue,
+      __func__,
+      [self](const FlushPromise::ResolveOrRejectValue& aValue) {
+        self->mInputInfos.Clear();
+        self->mSeekTarget.reset();
+        return FlushPromise::CreateAndResolveOrReject(aValue, __func__);
+      });
   }
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override
@@ -238,7 +244,13 @@ public:
 
   void SetSeekThreshold(const TimeUnit& aTime) override
   {
-    mSeekTarget = Some(aTime);
+    RefPtr<RemoteVideoDecoder> self = this;
+    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+      "RemoteVideoDecoder::SetSeekThreshold",
+      [self, aTime]() { self->mSeekTarget = Some(aTime); });
+    nsresult rv = mTaskQueue->Dispatch(runnable.forget());
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   bool IsUsefulData(const RefPtr<MediaData>& aSample) override
@@ -258,8 +270,12 @@ private:
   const VideoInfo mConfig;
   GeckoSurface::GlobalRef mSurface;
   AndroidSurfaceTextureHandle mSurfaceHandle;
-  SimpleMap<InputInfo> mInputInfos;
+  // Only accessed on reader's task queue.
   bool mIsCodecSupportAdaptivePlayback = false;
+  // Accessed on mTaskQueue, reader's TaskQueue and Java callback tread.
+  // SimpleMap however is thread-safe, so it's okay to do so.
+  SimpleMap<InputInfo> mInputInfos;
+  // Only accessed on the TaskQueue.
   Maybe<TimeUnit> mSeekTarget;
 };
 

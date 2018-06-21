@@ -47,6 +47,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayState>
     WriteParam(aMsg, aParam.mIsMounted);
     WriteParam(aMsg, aParam.mStageSize.width);
     WriteParam(aMsg, aParam.mStageSize.height);
+    WriteParam(aMsg, aParam.mLastSubmittedFrameId);
     WriteParam(aMsg, aParam.mPresentingGeneration);
     for (int i = 0; i < 16; i++) {
       // TODO - Should probably memcpy the whole array or
@@ -73,6 +74,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayState>
         !ReadParam(aMsg, aIter, &(aResult->mIsMounted)) ||
         !ReadParam(aMsg, aIter, &(aResult->mStageSize.width)) ||
         !ReadParam(aMsg, aIter, &(aResult->mStageSize.height)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLastSubmittedFrameId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPresentingGeneration))) {
       return false;
     }
