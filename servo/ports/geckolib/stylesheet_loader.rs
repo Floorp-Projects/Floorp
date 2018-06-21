@@ -6,7 +6,6 @@ use cssparser::SourceLocation;
 use nsstring::nsCString;
 use servo_arc::Arc;
 use style::context::QuirksMode;
-use style::error_reporting::NullReporter;
 use style::gecko::data::GeckoStyleSheet;
 use style::gecko::global_style_data::GLOBAL_STYLE_DATA;
 use style::gecko_bindings::bindings;
@@ -104,10 +103,15 @@ impl AsyncStylesheetParser {
         // are being logged, Gecko prevents the parallel parsing path from
         // running.
         let sheet = Arc::new(StylesheetContents::from_str(
-            input, self.extra_data.clone(), self.origin,
-            &global_style_data.shared_lock, Some(&self), &NullReporter,
-            self.quirks_mode.into(), self.line_number_offset)
-        );
+            input,
+            self.extra_data.clone(),
+            self.origin,
+            &global_style_data.shared_lock,
+            Some(&self),
+            None,
+            self.quirks_mode.into(),
+            self.line_number_offset,
+        ));
 
         unsafe {
             bindings::Gecko_StyleSheet_FinishAsyncParse(self.load_data.get(), sheet.into_strong());

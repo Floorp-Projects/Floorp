@@ -293,12 +293,10 @@ public:
 class XPCRootSetElem
 {
 public:
-    XPCRootSetElem()
+    XPCRootSetElem() :
+        mNext(nullptr),
+        mSelfp(nullptr)
     {
-#ifdef DEBUG
-        mNext = nullptr;
-        mSelfp = nullptr;
-#endif
     }
 
     ~XPCRootSetElem()

@@ -340,10 +340,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             AutoResolveName arn(ccx, id);
             if (resolved)
                 *resolved = true;
-            return JS_DefinePropertyById(ccx, obj, id,
-                                         JS_DATA_TO_FUNC_PTR(JSNative, funobj.get()),
-                                         nullptr,
-                                         propFlags);
+            return JS_DefinePropertyById(ccx, obj, id, funobj, nullptr, propFlags);
         }
 
         if (resolved)
@@ -406,21 +403,18 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
     propFlags |= JSPROP_GETTER;
     propFlags &= ~JSPROP_READONLY;
-    JSObject* funobj = funval.toObjectOrNull();
-    JSNative getter = JS_DATA_TO_FUNC_PTR(JSNative, funobj);
-    JSNative setter;
+    RootedObject funobjGetter(ccx, funval.toObjectOrNull());
+    RootedObject funobjSetter(ccx);
     if (member->IsWritableAttribute()) {
         propFlags |= JSPROP_SETTER;
-        setter = JS_DATA_TO_FUNC_PTR(JSNative, funobj);
-    } else {
-        setter = nullptr;
+        funobjSetter = funobjGetter;
     }
 
     AutoResolveName arn(ccx, id);
     if (resolved)
         *resolved = true;
 
-    return JS_DefinePropertyById(ccx, obj, id, getter, setter, propFlags);
+    return JS_DefinePropertyById(ccx, obj, id, funobjGetter, funobjSetter, propFlags);
 }
 
 /***************************************************************************/
