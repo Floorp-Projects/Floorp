@@ -65,7 +65,8 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
                                      gfxContext* aCtx,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea,
-                                     imgDrawingParams& aImgParams)
+                                     imgDrawingParams& aImgParams,
+                                     float aOpacity)
 {
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
@@ -97,7 +98,7 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
                             aPaintCallback, scaleMatrixInDevUnits,
                             aDirtyArea, nullptr, nullptr, nullptr);
   if (instance.IsInitialized()) {
-    instance.Render(aCtx, aImgParams);
+    instance.Render(aCtx, aImgParams, aOpacity);
   }
 }
 
@@ -493,7 +494,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget *aDest, imgDrawingParams& aImgPara
 }
 
 void
-nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams)
+nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams, float aOpacity)
 {
   MOZ_ASSERT(mTargetFrame, "Need a frame for rendering");
 
@@ -521,7 +522,7 @@ nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams)
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
-    mInputImages, Point(0, 0));
+    mInputImages, Point(0, 0), DrawOptions(aOpacity));
 }
 
 nsRegion
