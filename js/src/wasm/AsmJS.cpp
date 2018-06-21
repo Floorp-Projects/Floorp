@@ -137,8 +137,8 @@ class AsmJSGlobal
                 VarInitKind initKind_;
                 union U {
                     ValType importType_;
-                    Val val_;
-                    U() : val_(Val()) {}
+                    LitVal val_;
+                    U() : val_(LitVal()) {}
                 } u;
             } var;
             uint32_t ffiIndex_;
@@ -178,7 +178,7 @@ class AsmJSGlobal
         MOZ_ASSERT(pod.which_ == Variable);
         return pod.u.var.initKind_;
     }
-    Val varInitVal() const {
+    LitVal varInitVal() const {
         MOZ_ASSERT(pod.which_ == Variable);
         MOZ_ASSERT(pod.u.var.initKind_ == InitConstant);
         return pod.u.var.u.val_;
@@ -823,7 +823,7 @@ ParseVarOrConstStatement(AsmJSParser& parser, ParseNode** var)
 //
 // This class distinguishes between signed and unsigned integer SIMD types like
 // Int32x4 and Uint32x4, and so does Type below. The wasm ValType and ExprType
-// enums, and the wasm::Val class do not.
+// enums, and the wasm::LitVal class do not.
 class NumLit
 {
   public:
@@ -948,33 +948,33 @@ class NumLit
         return false;
     }
 
-    Val value() const {
+    LitVal value() const {
         switch (which_) {
           case NumLit::Fixnum:
           case NumLit::NegativeInt:
           case NumLit::BigUnsigned:
-            return Val(toUint32());
+            return LitVal(toUint32());
           case NumLit::Float:
-            return Val(toFloat());
+            return LitVal(toFloat());
           case NumLit::Double:
-            return Val(toDouble());
+            return LitVal(toDouble());
           case NumLit::Int8x16:
           case NumLit::Uint8x16:
-            return Val(simdValue().asInt8x16());
+            return LitVal(simdValue().asInt8x16());
           case NumLit::Int16x8:
           case NumLit::Uint16x8:
-            return Val(simdValue().asInt16x8());
+            return LitVal(simdValue().asInt16x8());
           case NumLit::Int32x4:
           case NumLit::Uint32x4:
-            return Val(simdValue().asInt32x4());
+            return LitVal(simdValue().asInt32x4());
           case NumLit::Float32x4:
-            return Val(simdValue().asFloat32x4());
+            return LitVal(simdValue().asFloat32x4());
           case NumLit::Bool8x16:
-            return Val(simdValue().asInt8x16(), ValType::B8x16);
+            return LitVal(simdValue().asInt8x16(), ValType::B8x16);
           case NumLit::Bool16x8:
-            return Val(simdValue().asInt16x8(), ValType::B16x8);
+            return LitVal(simdValue().asInt16x8(), ValType::B16x8);
           case NumLit::Bool32x4:
-            return Val(simdValue().asInt32x4(), ValType::B32x4);
+            return LitVal(simdValue().asInt32x4(), ValType::B32x4);
           case NumLit::OutOfRangeInt:;
         }
         MOZ_CRASH("bad literal");
@@ -2287,7 +2287,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         for (uint32_t& index : elems)
             index += funcImportMap_.count();
 
-        return env_.elemSegments.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), std::move(elems));
+        return env_.elemSegments.emplaceBack(tableIndex, InitExpr(LitVal(uint32_t(0))), std::move(elems));
     }
     bool declareImport(PropertyName* name, FuncType&& sig, unsigned ffiIndex, uint32_t* importIndex) {
         FuncImportMap::AddPtr p = funcImportMap_.lookupForAdd(NamedSig::Lookup(name, sig));
@@ -7671,7 +7671,7 @@ HasPureCoercion(JSContext* cx, HandleValue v)
 }
 
 static bool
-ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal, Val* val)
+ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal, LitVal* val)
 {
     switch (global.varInitKind()) {
       case AsmJSGlobal::InitConstant:
@@ -7691,7 +7691,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             int32_t i32;
             if (!ToInt32(cx, v, &i32))
                 return false;
-            *val = Val(uint32_t(i32));
+            *val = LitVal(uint32_t(i32));
             return true;
           }
           case ValType::I64:
@@ -7700,42 +7700,42 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             float f;
             if (!RoundFloat32(cx, v, &f))
                 return false;
-            *val = Val(f);
+            *val = LitVal(f);
             return true;
           }
           case ValType::F64: {
             double d;
             if (!ToNumber(cx, v, &d))
                 return false;
-            *val = Val(d);
+            *val = LitVal(d);
             return true;
           }
           case ValType::I8x16: {
             SimdConstant simdConstant;
             if (!ToSimdConstant<Int8x16>(cx, v, &simdConstant))
                 return false;
-            *val = Val(simdConstant.asInt8x16());
+            *val = LitVal(simdConstant.asInt8x16());
             return true;
           }
           case ValType::I16x8: {
             SimdConstant simdConstant;
             if (!ToSimdConstant<Int16x8>(cx, v, &simdConstant))
                 return false;
-            *val = Val(simdConstant.asInt16x8());
+            *val = LitVal(simdConstant.asInt16x8());
             return true;
           }
           case ValType::I32x4: {
             SimdConstant simdConstant;
             if (!ToSimdConstant<Int32x4>(cx, v, &simdConstant))
                 return false;
-            *val = Val(simdConstant.asInt32x4());
+            *val = LitVal(simdConstant.asInt32x4());
             return true;
           }
           case ValType::F32x4: {
             SimdConstant simdConstant;
             if (!ToSimdConstant<Float32x4>(cx, v, &simdConstant))
                 return false;
-            *val = Val(simdConstant.asFloat32x4());
+            *val = LitVal(simdConstant.asFloat32x4());
             return true;
           }
           case ValType::B8x16: {
@@ -7743,7 +7743,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             if (!ToSimdConstant<Bool8x16>(cx, v, &simdConstant))
                 return false;
             // Bool8x16 uses the same data layout as Int8x16.
-            *val = Val(simdConstant.asInt8x16());
+            *val = LitVal(simdConstant.asInt8x16());
             return true;
           }
           case ValType::B16x8: {
@@ -7751,7 +7751,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             if (!ToSimdConstant<Bool16x8>(cx, v, &simdConstant))
                 return false;
             // Bool16x8 uses the same data layout as Int16x8.
-            *val = Val(simdConstant.asInt16x8());
+            *val = LitVal(simdConstant.asInt16x8());
             return true;
           }
           case ValType::B32x4: {
@@ -7759,7 +7759,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             if (!ToSimdConstant<Bool32x4>(cx, v, &simdConstant))
                 return false;
             // Bool32x4 uses the same data layout as Int32x4.
-            *val = Val(simdConstant.asInt32x4());
+            *val = LitVal(simdConstant.asInt32x4());
             return true;
           }
           case ValType::Ref:
@@ -8133,7 +8133,8 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
 
 static bool
 GetImports(JSContext* cx, const AsmJSMetadata& metadata, HandleValue globalVal,
-           HandleValue importVal, MutableHandle<FunctionVector> funcImports, ValVector* valImports)
+           HandleValue importVal, MutableHandle<FunctionVector> funcImports,
+           LitValVector* valImports)
 {
     Rooted<FunctionVector> ffis(cx, FunctionVector(cx));
     if (!ffis.resize(metadata.numFFIs))
@@ -8142,7 +8143,7 @@ GetImports(JSContext* cx, const AsmJSMetadata& metadata, HandleValue globalVal,
     for (const AsmJSGlobal& global : metadata.asmJSGlobals) {
         switch (global.which()) {
           case AsmJSGlobal::Variable: {
-            Val val;
+            LitVal val;
             if (!ValidateGlobalVariable(cx, global, importVal, &val))
                 return false;
             if (!valImports->append(val))
@@ -8208,7 +8209,7 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
             return false;
     }
 
-    ValVector valImports;
+    LitValVector valImports;
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     if (!GetImports(cx, metadata, globalVal, importVal, &funcs, &valImports))
         return false;

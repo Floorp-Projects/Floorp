@@ -8328,7 +8328,7 @@ BaseCompiler::emitGetGlobal()
     const GlobalDesc& global = env_.globals[id];
 
     if (global.isConstant()) {
-        Val value = global.constantValue();
+        LitVal value = global.constantValue();
         switch (value.type().code()) {
           case ValType::I32:
             pushI32(value.i32());
