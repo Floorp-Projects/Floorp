@@ -184,6 +184,7 @@ nsHostRecord::nsHostRecord(const nsHostKey& key)
     , addr(nullptr)
     , negative(false)
     , mResolverMode(MODE_NATIVEONLY)
+    , mFirstTRRresult(NS_OK)
     , mResolving(0)
     , mTRRSuccess(0)
     , mNativeSuccess(0)
@@ -1519,6 +1520,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
             rec->mTRRSuccess++;
         }
         if (TRROutstanding()) {
+            rec->mFirstTRRresult = status;
             if (NS_FAILED(status)) {
                 return LOOKUP_OK; // wait for outstanding
             }
@@ -1558,6 +1560,16 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
                 rec->mFirstTRR = nullptr;
             }
 
+            if (NS_FAILED(rec->mFirstTRRresult) &&
+                NS_FAILED(status) &&
+                (rec->mFirstTRRresult != NS_ERROR_UNKNOWN_HOST) &&
+                (status != NS_ERROR_UNKNOWN_HOST)) {
+                // the errors are not failed resolves, that means
+                // something else failed, consider this as *TRR not used*
+                // for actually trying to resolve the host
+                rec->mTRRUsed = false;
+            }
+
             if (!rec->mTRRSuccess) {
                 // no TRR success
                 newRRSet = nullptr;
@@ -1570,6 +1582,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
                 MOZ_ASSERT(rec->mResolving);
                 return LOOKUP_OK;
             }
+
             // continue
         }
 

@@ -31,11 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <stdarg.h>
-
-
-static char *RCSSTRING __UNUSED__="$Id: ice_util.c,v 1.2 2008/04/28 17:59:05 ekr Exp $";
-
-#include <stdarg.h>
 #include <string.h>
 #include "nr_api.h"
 #include "ice_util.h"

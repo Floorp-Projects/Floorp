@@ -122,7 +122,7 @@ TRR::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if ((gTRRService == nullptr) || NS_FAILED(SendHTTPRequest())) {
-    FailData();
+    FailData(NS_ERROR_FAILURE);
     // The dtor will now be run
   }
   return NS_OK;
@@ -850,7 +850,7 @@ TRR::ReturnData()
 }
 
 nsresult
-TRR::FailData()
+TRR::FailData(nsresult error)
 {
   if (!mHostResolver) {
     return NS_ERROR_FAILURE;
@@ -859,7 +859,7 @@ TRR::FailData()
   // this comes from TRR
   AddrInfo *ai = new AddrInfo(mHost, mType);
 
-  (void)mHostResolver->CompleteLookup(mRec, NS_ERROR_FAILURE, ai, mPB);
+  (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB);
   mHostResolver = nullptr;
   mRec = nullptr;
   return NS_OK;
@@ -933,7 +933,7 @@ TRR::OnStopRequest(nsIRequest *aRequest,
       // try and parse missing content-types, but otherwise require udpwireformat
       LOG(("TRR:OnStopRequest %p %s %d should fail due to content type %s\n",
            this, mHost.get(), mType, contentType.get()));
-      FailData();
+      FailData(NS_ERROR_UNEXPECTED);
       return NS_OK;
     }
 
@@ -952,7 +952,7 @@ TRR::OnStopRequest(nsIRequest *aRequest,
 
   LOG(("TRR:OnStopRequest %p status %x mFailed %d\n",
        this, (int)aStatusCode, mFailed));
-  FailData();
+  FailData(NS_ERROR_UNKNOWN_HOST);
   return NS_OK;
 }
 

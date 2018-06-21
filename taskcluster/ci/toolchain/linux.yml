@@ -79,7 +79,7 @@ linux64-clang-6-macosx-cross:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
@@ -109,7 +109,7 @@ linux64-clang-tidy:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
     run:
         using: toolchain-script
         script: build-clang-tidy-linux.sh
@@ -134,7 +134,7 @@ linux64-gcc-4.9:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
     run:
         using: toolchain-script
         script: build-gcc-4.9-linux.sh
@@ -159,7 +159,7 @@ linux64-gcc-6:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
     run:
         using: toolchain-script
         script: build-gcc-6-linux.sh
@@ -184,7 +184,7 @@ linux64-gcc-7:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
     run:
         using: toolchain-script
         script: build-gcc-7-linux.sh
@@ -252,7 +252,7 @@ linux64-binutils:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 3600
     run:
         using: toolchain-script
         script: build-binutils-linux.sh
@@ -269,7 +269,7 @@ linux64-cctools-port:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
     run:
         using: toolchain-script
         script: build-cctools-port.sh
@@ -288,7 +288,7 @@ linux64-hfsplus:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
     run:
         using: toolchain-script
         script: build-hfsplus-linux.sh
@@ -308,7 +308,7 @@ linux64-libdmg:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
     run:
         using: toolchain-script
         script: build-libdmg-hfsplus.sh
@@ -324,7 +324,7 @@ linux64-android-sdk-linux-repack:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: android-build}
-        max-run-time: 36000
+        max-run-time: 1800
         artifacts:
             - name: project/gecko/android-sdk
               path: /builds/worker/project/gecko/android-sdk/
@@ -372,7 +372,7 @@ linux64-android-gradle-dependencies:
         docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
-        max-run-time: 36000
+        max-run-time: 1800
     run:
         using: toolchain-script
         script: android-gradle-dependencies.sh
@@ -431,7 +431,7 @@ linux64-rust-nightly:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', 'nightly-2018-06-13',
+            '--channel', 'nightly-2018-06-20',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -497,7 +497,7 @@ linux64-sccache:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
     run:
         using: toolchain-script
         script: build-sccache.sh
@@ -535,7 +535,7 @@ linux64-gn:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 1800
     run:
         using: toolchain-script
         script: build-gn-linux.sh

@@ -24,9 +24,10 @@ registerCleanupFunction(() => {
  */
 var _selectNode = selectNode;
 selectNode = async function(node, inspector, reason) {
-  const onUpdated = inspector.once("fontinspector-updated");
+  const onInspectorUpdated = inspector.once("fontinspector-updated");
+  const onEditorUpdated = inspector.once("fonteditor-updated");
   await _selectNode(node, inspector, reason);
-  await onUpdated;
+  await Promise.all([onInspectorUpdated, onEditorUpdated]);
 };
 
 /**
@@ -96,7 +97,7 @@ async function updatePreviewText(view, text) {
  * @return {Array}
  */
 function getUsedFontsEls(viewDoc) {
-  return viewDoc.querySelectorAll("#font-container > .fonts-list > li");
+  return viewDoc.querySelectorAll("#font-editor .fonts-list li");
 }
 
 /**
@@ -138,4 +139,16 @@ function getOtherFontsEls(viewDoc) {
  */
 function getName(fontEl) {
   return fontEl.querySelector(".font-name").textContent;
+}
+
+/**
+ * Given a font element, return the font's URL.
+ *
+ * @param  {DOMNode} fontEl
+ *         The font element.
+ * @return {String}
+ *         The URL where the font was loaded from as shown in the UI.
+ */
+function getURL(fontEl) {
+  return fontEl.querySelector(".font-origin").textContent;
 }

@@ -11,19 +11,6 @@
 const bookmarkPanel = document.getElementById("editBookmarkPanel");
 let folders;
 
-async function clickBookmarkStar() {
-  let shownPromise = promisePopupShown(bookmarkPanel);
-  BookmarkingUI.star.click();
-  await shownPromise;
-}
-
-async function hideBookmarksPanel() {
-  let hiddenPromise = promisePopupHidden(bookmarkPanel);
-  // Confirm and close the dialog.
-  document.getElementById("editBookmarkPanelDoneButton").click();
-  await hiddenPromise;
-}
-
 async function openPopupAndSelectFolder(guid, newBookmark = false) {
   await clickBookmarkStar();
 

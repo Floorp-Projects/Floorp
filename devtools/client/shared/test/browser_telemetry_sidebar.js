@@ -11,6 +11,13 @@ const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
+var animationPanelId;
+if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
+  animationPanelId = "newanimationinspector";
+} else {
+  animationPanelId = "animationinspector";
+}
+
 const DATA = [
   {
     timestamp: null,
@@ -20,6 +27,17 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "computedview",
+      newpanel: animationPanelId
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: animationPanelId,
       newpanel: "fontinspector"
     }
   },
@@ -53,6 +71,17 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "computedview",
+      newpanel: animationPanelId
+    }
+  },
+  {
+    timestamp: null,
+    category: "devtools.main",
+    method: "sidepanel_changed",
+    object: "inspector",
+    value: null,
+    extra: {
+      oldpanel: animationPanelId,
       newpanel: "fontinspector"
     }
   },
@@ -108,7 +137,7 @@ function testSidebar(toolbox) {
 
   const inspector = toolbox.getCurrentPanel();
   let sidebarTools = ["computedview", "layoutview", "fontinspector",
-                      "animationinspector"];
+                      animationPanelId];
 
   // Concatenate the array with itself so that we can open each tool twice.
   sidebarTools = [...sidebarTools, ...sidebarTools];

@@ -182,7 +182,7 @@ Clear()
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
-  UniquePtr<Classifier> classifier(new Classifier());
+  RefPtr<Classifier> classifier = new Classifier();
   classifier->Open(*file);
   classifier->Reset();
 }
@@ -193,10 +193,10 @@ testUpdateFail(TableUpdateArray& tableUpdates)
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
-  UniquePtr<Classifier> classifier(new Classifier());
+  RefPtr<Classifier> classifier = new Classifier();
   classifier->Open(*file);
 
-  nsresult rv = SyncApplyUpdates(classifier.get(), tableUpdates);
+  nsresult rv = SyncApplyUpdates(classifier, tableUpdates);
   ASSERT_TRUE(NS_FAILED(rv));
 }
 
@@ -217,10 +217,10 @@ testUpdate(TableUpdateArray& tableUpdates,
       ASSERT_TRUE(NS_SUCCEEDED(rv));
   }
 
-  UniquePtr<Classifier> classifier(new Classifier());
+  RefPtr<Classifier> classifier = new Classifier();
   classifier->Open(*file);
 
-  nsresult rv = SyncApplyUpdates(classifier.get(), tableUpdates);
+  nsresult rv = SyncApplyUpdates(classifier, tableUpdates);
   ASSERT_TRUE(rv == NS_OK);
   VerifyPrefixSet(expected);
 }

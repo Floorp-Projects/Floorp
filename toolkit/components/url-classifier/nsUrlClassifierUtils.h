@@ -5,7 +5,6 @@
 #ifndef nsUrlClassifierUtils_h_
 #define nsUrlClassifierUtils_h_
 
-#include "nsAutoPtr.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"

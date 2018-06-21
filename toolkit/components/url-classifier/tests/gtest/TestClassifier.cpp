@@ -12,13 +12,13 @@
 typedef nsCString _Fragment;
 typedef nsTArray<nsCString> _PrefixArray;
 
-static UniquePtr<Classifier>
+static RefPtr<Classifier>
 GetClassifier()
 {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
-  UniquePtr<Classifier> classifier = MakeUnique<Classifier>();
+  RefPtr<Classifier> classifier = new Classifier();
   nsresult rv = classifier->Open(*file);
   EXPECT_TRUE(rv == NS_OK);
 
@@ -26,7 +26,7 @@ GetClassifier()
 }
 
 static nsresult
-SetupLookupCacheV4(Classifier* classifier,
+SetupLookupCacheV4(RefPtr<Classifier> classifier,
                    const _PrefixArray& aPrefixArray,
                    const nsACString& aTable)
 {
@@ -46,7 +46,7 @@ SetupLookupCacheV4(Classifier* classifier,
 }
 
 static nsresult
-SetupLookupCacheV2(Classifier* classifier,
+SetupLookupCacheV2(RefPtr<Classifier> classifier,
                    const _PrefixArray& aPrefixArray,
                    const nsACString& aTable)
 {
@@ -72,7 +72,7 @@ SetupLookupCacheV2(Classifier* classifier,
 }
 
 static void
-TestReadNoiseEntries(Classifier* classifier,
+TestReadNoiseEntries(RefPtr<Classifier> classifier,
                      const _PrefixArray& aPrefixArray,
                      const nsCString& aTable,
                      const nsCString& aFragment)
@@ -104,7 +104,7 @@ TestReadNoiseEntries(Classifier* classifier,
 
 TEST(UrlClassifier, ReadNoiseEntriesV4)
 {
-  UniquePtr<Classifier> classifier(GetClassifier());
+  RefPtr<Classifier> classifier = GetClassifier();
   _PrefixArray array = { GeneratePrefix(_Fragment("bravo.com/"), 5),
                          GeneratePrefix(_Fragment("browsing.com/"), 9),
                          GeneratePrefix(_Fragment("gound.com/"), 4),
@@ -116,15 +116,15 @@ TEST(UrlClassifier, ReadNoiseEntriesV4)
   array.Sort();
 
   nsresult rv;
-  rv = SetupLookupCacheV4(classifier.get(), array, GTEST_TABLE_V4);
+  rv = SetupLookupCacheV4(classifier, array, GTEST_TABLE_V4);
   ASSERT_TRUE(rv == NS_OK);
 
-  TestReadNoiseEntries(classifier.get(), array, GTEST_TABLE_V4, _Fragment("gound.com/"));
+  TestReadNoiseEntries(classifier, array, GTEST_TABLE_V4, _Fragment("gound.com/"));
 }
 
 TEST(UrlClassifier, ReadNoiseEntriesV2)
 {
-  UniquePtr<Classifier> classifier(GetClassifier());
+  RefPtr<Classifier> classifier = GetClassifier();
   _PrefixArray array = { GeneratePrefix(_Fragment("helloworld.com/"), 4),
                          GeneratePrefix(_Fragment("firefox.com/"), 4),
                          GeneratePrefix(_Fragment("chrome.com/"), 4),
@@ -137,8 +137,8 @@ TEST(UrlClassifier, ReadNoiseEntriesV2)
                        };
 
   nsresult rv;
-  rv = SetupLookupCacheV2(classifier.get(), array, GTEST_TABLE_V2);
+  rv = SetupLookupCacheV2(classifier, array, GTEST_TABLE_V2);
   ASSERT_TRUE(rv == NS_OK);
 
-  TestReadNoiseEntries(classifier.get(), array, GTEST_TABLE_V2, _Fragment("helloworld.com/"));
+  TestReadNoiseEntries(classifier, array, GTEST_TABLE_V2, _Fragment("helloworld.com/"));
 }

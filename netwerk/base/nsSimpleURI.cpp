@@ -627,7 +627,7 @@ nsSimpleURI::SetRefOnClone(nsSimpleURI* url,
     }
 }
 
-NS_IMETHODIMP
+nsresult
 nsSimpleURI::Clone(nsIURI** result)
 {
     return CloneInternal(eHonorRef, EmptyCString(), result);

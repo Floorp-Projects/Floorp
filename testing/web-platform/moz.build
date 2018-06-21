@@ -199,7 +199,7 @@ with Files("tests/conformance-checkers/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/console/**"):
-    BUG_COMPONENT = ("Firefox", "Developer Tools: Console")
+    BUG_COMPONENT = ("DevTools", "Console")
 
 with Files("tests/content-security-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")

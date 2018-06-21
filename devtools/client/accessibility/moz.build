@@ -23,4 +23,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Accessibility')
+    BUG_COMPONENT = ('DevTools', 'Accessibility Tools')

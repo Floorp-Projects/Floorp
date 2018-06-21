@@ -90,8 +90,6 @@
    ekr@rtfm.com  Sun Jan 17 17:57:15 1999
  */
 
-static char *RCSSTRING __UNUSED__ ="$Id: r_assoc.c,v 1.4 2007/06/08 17:41:49 adamcain Exp $";
-
 #include <r_common.h>
 #include <string.h>
 #include "r_assoc.h"

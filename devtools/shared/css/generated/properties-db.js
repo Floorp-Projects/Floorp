@@ -281,6 +281,7 @@ exports.CSS_PROPERTIES = {
       "scrollbarthumb-vertical",
       "scrollbartrack-horizontal",
       "scrollbartrack-vertical",
+      "scrollcorner",
       "searchfield",
       "separator",
       "spinner",

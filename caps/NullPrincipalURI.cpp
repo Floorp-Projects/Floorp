@@ -281,7 +281,7 @@ NullPrincipalURI::SetUserPass(const nsACString& aUserPass)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::Clone(nsIURI** _newURI)
 {
   nsCOMPtr<nsIURI> uri = new NullPrincipalURI(*this);

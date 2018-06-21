@@ -34,12 +34,12 @@ bool RtpLogger::IsPacketLoggingOn() {
 }
 
 void RtpLogger::LogPacket(const MediaPacket& packet, bool input,
-                          size_t headerLength, std::string desc) {
-  bool isRtp = (packet.type() == MediaPacket::RTP);
+                          std::string desc) {
   if (CSFLogTestLevel(CSF_LOG_DEBUG)) {
+    bool isRtp = (packet.type() == MediaPacket::RTP);
     std::stringstream ss;
     /* This creates text2pcap compatible format, e.g.:
-     *   O 10:36:26.864934  000000 80 c8 00 06 6d ... RTCP_PACKET
+     *  RTCP_PACKET O 10:36:26.864934  000000 80 c8 00 06 6d ... 
      */
     ss << (input ? "I " : "O ");
     std::time_t t = std::time(nullptr);
@@ -60,21 +60,11 @@ void RtpLogger::LogPacket(const MediaPacket& packet, bool input,
 #endif
     ss << " 000000";
     ss << std::hex << std::setfill('0');
-    size_t offset_ = headerLength;
-    if (isRtp && (offset_ + 5 < packet.len())) {
-      // Allow the first 5 bytes of the payload in clear
-      offset_ += 5;
-    }
     for (size_t i=0; i < packet.len(); ++i) {
-      if (isRtp && i > offset_) {
-        ss << " 00";
-      }
-      else {
-        ss << " " << std::setw(2) << (int)packet.data()[i];
-      }
+      ss << " " << std::setw(2) << (int)packet.data()[i];
     }
-    CSFLogDebug(LOGTAG, "%s%s%s", ss.str().c_str(),
-                (isRtp ? " RTP_PACKET " : " RTCP_PACKET "), desc.c_str());
+    CSFLogDebug(LOGTAG, "%s%s%s", desc.c_str(),
+                (isRtp ? " RTP_PACKET " : " RTCP_PACKET "), ss.str().c_str());
   }
 }
 

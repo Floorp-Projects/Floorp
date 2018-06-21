@@ -141,9 +141,7 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     }
 
     if (stickDocument) {
-        nsCOMPtr<nsIURI> stickURI;
-        documentURI->Clone(getter_AddRefs(stickURI));
-        update->StickDocument(stickURI);
+        update->StickDocument(documentURI);
     }
 
     return NS_OK;
