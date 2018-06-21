@@ -12,8 +12,8 @@ use euclid::{TypedTransform3D, vec3};
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
 use gpu_types::{BrushFlags, BrushInstance, ClipChainRectIndex};
-use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex, CompositePrimitiveInstance};
-use gpu_types::{PrimitiveInstance, RasterizationSpace, SimplePrimitiveInstance, ZBufferId};
+use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex, SplitCompositeInstance};
+use gpu_types::{PrimitiveInstance, RasterizationSpace, GlyphInstance, ZBufferId};
 use gpu_types::ZBufferIdGenerator;
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
@@ -520,17 +520,13 @@ impl AlphaBatchBuilder {
                 .expect("BUG: unexpected surface in splitting")
                 .resolve_render_task_id();
             let source_task_address = render_tasks.get_task_address(source_task_id);
-            let gpu_address = gpu_handle.as_int(gpu_cache);
+            let gpu_address = gpu_cache.get_address(&gpu_handle);
 
-            let instance = CompositePrimitiveInstance::new(
+            let instance = SplitCompositeInstance::new(
                 task_address,
                 source_task_address,
-                RenderTaskAddress(0),
                 gpu_address,
-                0,
                 z_generator.next(),
-                0,
-                0,
             );
 
             batch.push(PrimitiveInstance::from(instance));
@@ -641,14 +637,6 @@ impl AlphaBatchBuilder {
         let clip_task_address = prim_metadata
             .clip_task_id
             .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
-        let base_instance = SimplePrimitiveInstance::new(
-            prim_cache_address,
-            task_address,
-            clip_task_address,
-            clip_chain_rect_index,
-            scroll_id,
-            z,
-        );
 
         let specified_blend_mode = ctx.prim_store.get_blend_mode(prim_metadata);
 
@@ -1169,6 +1157,14 @@ impl AlphaBatchBuilder {
 
                         let key = BatchKey::new(kind, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(key, &task_relative_bounding_rect);
+                        let base_instance = GlyphInstance::new(
+                            prim_cache_address,
+                            task_address,
+                            clip_task_address,
+                            clip_chain_rect_index,
+                            scroll_id,
+                            z,
+                        );
 
                         for glyph in glyphs {
                             batch.push(base_instance.build(
@@ -1471,9 +1467,10 @@ impl BrushPrimitive {
                         )
                     }
                     BorderSource::Border { ref handle, .. } => {
-                        let rt_handle = handle
-                            .as_ref()
-                            .expect("bug: render task handle not allocated");
+                        let rt_handle = match *handle {
+                            Some(ref handle) => handle,
+                            None => return None,
+                        };
                         let rt_cache_entry = resource_cache
                             .get_cached_render_task(rt_handle);
                         resource_cache.get_texture_cache_item(&rt_cache_entry.handle)

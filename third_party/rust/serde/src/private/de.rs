@@ -50,9 +50,9 @@ where
         }
 
         forward_to_deserialize_any! {
-            bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-            byte_buf unit unit_struct newtype_struct seq tuple tuple_struct map
-            struct enum identifier ignored_any
+            bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+            bytes byte_buf unit unit_struct newtype_struct seq tuple
+            tuple_struct map struct enum identifier ignored_any
         }
     }
 
@@ -1618,8 +1618,8 @@ mod content {
         }
 
         forward_to_deserialize_any! {
-            bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-            byte_buf option unit unit_struct newtype_struct seq tuple
+            bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+            bytes byte_buf option unit unit_struct newtype_struct seq tuple
             tuple_struct map struct enum identifier ignored_any
         }
     }
@@ -1716,8 +1716,8 @@ mod content {
         }
 
         forward_to_deserialize_any! {
-            bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-            byte_buf option unit unit_struct newtype_struct seq tuple
+            bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+            bytes byte_buf option unit unit_struct newtype_struct seq tuple
             tuple_struct map struct enum identifier ignored_any
         }
     }
@@ -2306,8 +2306,8 @@ mod content {
         }
 
         forward_to_deserialize_any! {
-            bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-            byte_buf option unit unit_struct newtype_struct seq tuple
+            bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+            bytes byte_buf option unit unit_struct newtype_struct seq tuple
             tuple_struct map struct enum identifier ignored_any
         }
     }
@@ -2323,7 +2323,8 @@ mod content {
             T: de::DeserializeSeed<'de>,
         {
             match self.iter.next() {
-                Some(value) => seed.deserialize(ContentRefDeserializer::new(value))
+                Some(value) => seed
+                    .deserialize(ContentRefDeserializer::new(value))
                     .map(Some),
                 None => Ok(None),
             }
@@ -2405,8 +2406,8 @@ mod content {
         }
 
         forward_to_deserialize_any! {
-            bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-            byte_buf option unit unit_struct newtype_struct seq tuple
+            bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+            bytes byte_buf option unit unit_struct newtype_struct seq tuple
             tuple_struct map struct enum identifier ignored_any
         }
     }
@@ -2577,9 +2578,9 @@ where
     }
 
     forward_to_deserialize_any! {
-        bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-        byte_buf option unit unit_struct newtype_struct seq tuple tuple_struct
-        map struct enum identifier ignored_any
+        bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+        bytes byte_buf option unit unit_struct newtype_struct seq tuple
+        tuple_struct map struct enum identifier ignored_any
     }
 }
 
@@ -2616,9 +2617,9 @@ where
     }
 
     forward_to_deserialize_any! {
-        bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string bytes
-        byte_buf option unit unit_struct newtype_struct seq tuple tuple_struct
-        map struct enum identifier ignored_any
+        bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
+        bytes byte_buf option unit unit_struct newtype_struct seq tuple
+        tuple_struct map struct enum identifier ignored_any
     }
 }
 
@@ -2722,7 +2723,7 @@ where
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(FlatMapAccess::new(self.0.iter_mut(), None))
+        visitor.visit_map(FlatMapAccess::new(self.0.iter()))
     }
 
     fn deserialize_struct<V>(
@@ -2734,7 +2735,7 @@ where
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(FlatMapAccess::new(self.0.iter_mut(), Some(fields)))
+        visitor.visit_map(FlatStructAccess::new(self.0.iter_mut(), fields))
     }
 
     fn deserialize_newtype_struct<V>(self, _name: &str, visitor: V) -> Result<V::Value, Self::Error>
@@ -2783,22 +2784,19 @@ where
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub struct FlatMapAccess<'a, 'de: 'a, E> {
-    iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
-    pending_content: Option<Content<'de>>,
-    fields: Option<&'static [&'static str]>,
+    iter: slice::Iter<'a, Option<(Content<'de>, Content<'de>)>>,
+    pending_content: Option<&'a Content<'de>>,
     _marker: PhantomData<E>,
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<'a, 'de, E> FlatMapAccess<'a, 'de, E> {
     fn new(
-        iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
-        fields: Option<&'static [&'static str]>,
+        iter: slice::Iter<'a, Option<(Content<'de>, Content<'de>)>>,
     ) -> FlatMapAccess<'a, 'de, E> {
         FlatMapAccess {
             iter: iter,
             pending_content: None,
-            fields: fields,
             _marker: PhantomData,
         }
     }
@@ -2816,19 +2814,67 @@ where
         T: DeserializeSeed<'de>,
     {
         while let Some(item) = self.iter.next() {
+            // Items in the vector are nulled out when used by a struct.
+            if let Some((ref key, ref content)) = *item {
+                self.pending_content = Some(content);
+                return seed.deserialize(ContentRefDeserializer::new(key)).map(Some);
+            }
+        }
+        Ok(None)
+    }
+
+    fn next_value_seed<T>(&mut self, seed: T) -> Result<T::Value, Self::Error>
+    where
+        T: DeserializeSeed<'de>,
+    {
+        match self.pending_content.take() {
+            Some(value) => seed.deserialize(ContentRefDeserializer::new(value)),
+            None => Err(Error::custom("value is missing")),
+        }
+    }
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub struct FlatStructAccess<'a, 'de: 'a, E> {
+    iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
+    pending_content: Option<Content<'de>>,
+    fields: &'static [&'static str],
+    _marker: PhantomData<E>,
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+impl<'a, 'de, E> FlatStructAccess<'a, 'de, E> {
+    fn new(
+        iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
+        fields: &'static [&'static str],
+    ) -> FlatStructAccess<'a, 'de, E> {
+        FlatStructAccess {
+            iter: iter,
+            pending_content: None,
+            fields: fields,
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+impl<'a, 'de, E> MapAccess<'de> for FlatStructAccess<'a, 'de, E>
+where
+    E: Error,
+{
+    type Error = E;
+
+    fn next_key_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
+    where
+        T: DeserializeSeed<'de>,
+    {
+        while let Some(item) = self.iter.next() {
             // items in the vector are nulled out when used.  So we can only use
             // an item if it's still filled in and if the field is one we care
             // about.  In case we do not know which fields we want, we take them all.
             let use_item = match *item {
                 None => false,
-                Some((ref c, _)) => {
-                    c.as_str()
-                        .map_or(self.fields.is_none(), |key| match self.fields {
-                            None => true,
-                            Some(fields) if fields.contains(&key) => true,
-                            _ => false,
-                        })
-                }
+                Some((ref c, _)) => c.as_str().map_or(false, |key| self.fields.contains(&key)),
             };
 
             if use_item {

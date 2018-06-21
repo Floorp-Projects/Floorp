@@ -74,8 +74,10 @@ impl Eq for Attribute {}
 #[cfg(feature = "extra-traits")]
 impl PartialEq for Attribute {
     fn eq(&self, other: &Self) -> bool {
-        self.style == other.style && self.pound_token == other.pound_token
-            && self.bracket_token == other.bracket_token && self.path == other.path
+        self.style == other.style
+            && self.pound_token == other.pound_token
+            && self.bracket_token == other.bracket_token
+            && self.path == other.path
             && TokenStreamHelper(&self.tts) == TokenStreamHelper(&other.tts)
             && self.is_sugared_doc == other.is_sugared_doc
     }
@@ -107,19 +109,19 @@ impl Attribute {
         };
 
         if self.tts.is_empty() {
-            return Some(Meta::Word(*name));
+            return Some(Meta::Word(name.clone()));
         }
 
         let tts = self.tts.clone().into_iter().collect::<Vec<_>>();
 
         if tts.len() == 1 {
-            if let Some(meta) = Attribute::extract_meta_list(*name, &tts[0]) {
+            if let Some(meta) = Attribute::extract_meta_list(name.clone(), &tts[0]) {
                 return Some(meta);
             }
         }
 
         if tts.len() == 2 {
-            if let Some(meta) = Attribute::extract_name_value(*name, &tts[0], &tts[1]) {
+            if let Some(meta) = Attribute::extract_name_value(name.clone(), &tts[0], &tts[1]) {
                 return Some(meta);
             }
         }
@@ -133,7 +135,7 @@ impl Attribute {
             _ => return None,
         };
         if g.delimiter() != Delimiter::Parenthesis {
-            return None
+            return None;
         }
         let tokens = g.stream().clone().into_iter().collect::<Vec<_>>();
         let nested = match list_of_nested_meta_items_from_tokens(&tokens) {
@@ -149,14 +151,14 @@ impl Attribute {
 
     fn extract_name_value(ident: Ident, a: &TokenTree, b: &TokenTree) -> Option<Meta> {
         let a = match *a {
-            TokenTree::Op(ref o) => o,
+            TokenTree::Punct(ref o) => o,
             _ => return None,
         };
         if a.spacing() != Spacing::Alone {
-            return None
+            return None;
         }
-        if a.op() != '=' {
-            return None
+        if a.as_char() != '=' {
+            return None;
         }
 
         match *b {
@@ -167,21 +169,17 @@ impl Attribute {
                     lit: Lit::new(l.clone()),
                 }))
             }
-            TokenTree::Term(ref term) => {
-                match term.as_str() {
-                    v @ "true" | v @ "false" => {
-                        Some(Meta::NameValue(MetaNameValue {
-                            ident: ident,
-                            eq_token: Token![=]([a.span()]),
-                            lit: Lit::Bool(LitBool {
-                                value: v == "true",
-                                span: b.span(),
-                            }),
-                        }))
-                    },
-                    _ => None ,
-                }
-            }
+            TokenTree::Ident(ref v) => match &v.to_string()[..] {
+                v @ "true" | v @ "false" => Some(Meta::NameValue(MetaNameValue {
+                    ident: ident,
+                    eq_token: Token![=]([a.span()]),
+                    lit: Lit::Bool(LitBool {
+                        value: v == "true",
+                        span: b.span(),
+                    }),
+                })),
+                _ => None,
+            },
             _ => None,
         }
     }
@@ -200,21 +198,20 @@ fn nested_meta_item_from_tokens(tts: &[TokenTree]) -> Option<(NestedMeta, &[Toke
             }
         }
 
-        TokenTree::Term(sym) => {
-            let ident = Ident::new(sym.as_str(), sym.span());
+        TokenTree::Ident(ref ident) => {
             if tts.len() >= 3 {
-                if let Some(meta) = Attribute::extract_name_value(ident, &tts[1], &tts[2]) {
-                    return Some((NestedMeta::Meta(meta), &tts[3..]))
+                if let Some(meta) = Attribute::extract_name_value(ident.clone(), &tts[1], &tts[2]) {
+                    return Some((NestedMeta::Meta(meta), &tts[3..]));
                 }
             }
 
             if tts.len() >= 2 {
-                if let Some(meta) = Attribute::extract_meta_list(ident, &tts[1]) {
-                    return Some((NestedMeta::Meta(meta), &tts[2..]))
+                if let Some(meta) = Attribute::extract_meta_list(ident.clone(), &tts[1]) {
+                    return Some((NestedMeta::Meta(meta), &tts[2..]));
                 }
             }
 
-            Some((Meta::Word(ident).into(), &tts[1..]))
+            Some((Meta::Word(ident.clone()).into(), &tts[1..]))
         }
 
         _ => None,
@@ -231,12 +228,12 @@ fn list_of_nested_meta_items_from_tokens(
         let prev_comma = if first {
             first = false;
             None
-        } else if let TokenTree::Op(ref op) = tts[0] {
+        } else if let TokenTree::Punct(ref op) = tts[0] {
             if op.spacing() != Spacing::Alone {
-                return None
+                return None;
             }
-            if op.op() != ',' {
-                return None
+            if op.as_char() != ',' {
+                return None;
             }
             let tok = Token![,]([op.span()]);
             tts = &tts[1..];
@@ -340,9 +337,9 @@ impl Meta {
     /// `#[derive(Copy)]`, and the `path` in `#[path = "sys/windows.rs"]`.
     pub fn name(&self) -> Ident {
         match *self {
-            Meta::Word(ref meta) => *meta,
-            Meta::List(ref meta) => meta.ident,
-            Meta::NameValue(ref meta) => meta.ident,
+            Meta::Word(ref meta) => meta.clone(),
+            Meta::List(ref meta) => meta.ident.clone(),
+            Meta::NameValue(ref meta) => meta.ident.clone(),
         }
     }
 }
@@ -401,11 +398,11 @@ pub mod parsing {
     use super::*;
     use buffer::Cursor;
     use parse_error;
+    use proc_macro2::{Literal, Punct, Spacing, Span, TokenTree};
     use synom::PResult;
-    use proc_macro2::{Literal, Spacing, Span, TokenTree, Op};
 
     fn eq(span: Span) -> TokenTree {
-        let mut op = Op::new('=', Spacing::Alone);
+        let mut op = Punct::new('=', Spacing::Alone);
         op.set_span(span);
         op.into()
     }
@@ -522,10 +519,11 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for Attribute {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.pound_token.to_tokens(tokens);
             if let AttrStyle::Inner(ref b) = self.style {
                 b.to_tokens(tokens);
@@ -538,7 +536,7 @@ mod printing {
     }
 
     impl ToTokens for MetaList {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.ident.to_tokens(tokens);
             self.paren_token.surround(tokens, |tokens| {
                 self.nested.to_tokens(tokens);
@@ -547,7 +545,7 @@ mod printing {
     }
 
     impl ToTokens for MetaNameValue {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.ident.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             self.lit.to_tokens(tokens);
