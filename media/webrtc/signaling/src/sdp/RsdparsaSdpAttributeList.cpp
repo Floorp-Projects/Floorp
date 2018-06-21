@@ -816,7 +816,7 @@ RsdparsaSdpAttributeList::LoadFlags(RustAttributeList* attributeList)
 void
 RsdparsaSdpAttributeList::LoadMaxMessageSize(RustAttributeList* attributeList)
 {
-  int64_t max_msg_size = sdp_get_max_msg_sizse(attributeList);
+  int64_t max_msg_size = sdp_get_max_msg_size(attributeList);
   if (max_msg_size >= 0) {
     SetAttribute(new SdpNumberAttribute(SdpAttribute::kMaxMessageSizeAttribute,
                                         static_cast<uint32_t>(max_msg_size)));

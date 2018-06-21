@@ -4065,6 +4065,75 @@ TEST_P(NewSdpTest, CheckAddMediaSection) {
   }
 }
 
+TEST_P(NewSdpTest, CheckAddDataChannel_Draft05) {
+  // Parse any valid sdp with a media section
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=application 56436 DTLS/SCTP 5000" CRLF);
+
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(1U, mSdp->GetMediaSectionCount());
+
+  auto& mediaSection = mSdp->GetMediaSection(0);
+  mediaSection.AddDataChannel("webrtc-datachannel", 6000, 16, 0);
+
+  ASSERT_FALSE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kMaxMessageSizeAttribute));
+  ASSERT_TRUE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kSctpmapAttribute));
+  ASSERT_TRUE(mediaSection.GetAttributeList().GetSctpmap().HasEntry("6000"));
+  ASSERT_EQ(16U, mediaSection.GetAttributeList().
+                 GetSctpmap().GetFirstEntry().streams);
+  ASSERT_EQ("webrtc-datachannel", mediaSection.GetAttributeList().
+                                  GetSctpmap().GetFirstEntry().name);
+
+  mediaSection.AddDataChannel("webrtc-datachannel", 15000, 8, 1800);
+
+  ASSERT_TRUE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kMaxMessageSizeAttribute));
+  ASSERT_EQ(1800U, mediaSection.GetAttributeList().GetMaxMessageSize());
+  ASSERT_TRUE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kSctpmapAttribute));
+  ASSERT_TRUE(mediaSection.GetAttributeList().GetSctpmap().HasEntry("15000"));
+  ASSERT_EQ(8U, mediaSection.GetAttributeList().
+                GetSctpmap().GetFirstEntry().streams);
+}
+
+TEST_P(NewSdpTest, CheckAddDataChannel) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=application 56436 UDP/DTLS/SCTP webrtc-datachannel" CRLF);
+
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(1U, mSdp->GetMediaSectionCount());
+
+  auto& mediaSection = mSdp->GetMediaSection(0);
+  mediaSection.AddDataChannel("webrtc-datachannel", 6000, 16, 0);
+
+  ASSERT_FALSE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kMaxMessageSizeAttribute));
+  ASSERT_TRUE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kSctpPortAttribute));
+  ASSERT_EQ(6000U, mediaSection.GetAttributeList().GetSctpPort());
+
+  mediaSection.AddDataChannel("webrtc-datachannel", 15000, 8, 1800);
+
+  ASSERT_TRUE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kMaxMessageSizeAttribute));
+  ASSERT_EQ(1800U, mediaSection.GetAttributeList().GetMaxMessageSize());
+  ASSERT_TRUE(mediaSection.GetAttributeList().
+              HasAttribute(SdpAttribute::kSctpPortAttribute));
+  ASSERT_EQ(15000U, mediaSection.GetAttributeList().GetSctpPort());
+}
+
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
   for (auto a = static_cast<size_t>(SdpAttribute::kFirstAttribute);
        a <= static_cast<size_t>(SdpAttribute::kLastAttribute);

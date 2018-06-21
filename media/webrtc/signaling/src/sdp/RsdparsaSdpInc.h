@@ -333,7 +333,7 @@ size_t sdp_get_fmtp(const RustAttributeList* aList, size_t listSize,
                     RustSdpAttributeFmtp* ret);
 
 int64_t sdp_get_ptime(const RustAttributeList* aList);
-int64_t sdp_get_max_msg_sizse(const RustAttributeList* aList);
+int64_t sdp_get_max_msg_size(const RustAttributeList* aList);
 int64_t sdp_get_sctp_port(const RustAttributeList* aList);
 
 RustSdpAttributeFlags sdp_get_attribute_flags(const RustAttributeList* aList);
