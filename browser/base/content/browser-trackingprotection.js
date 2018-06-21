@@ -224,14 +224,6 @@ var TrackingProtection = {
   },
 
   enableForCurrentPage() {
-    // If users are not clicking this link to unblock a specific exception,
-    // open the privacy settings to allow users to turn TP on globally. We might
-    // change this button to allow globally toggling the pref in the future.
-    if (!this.enabled) {
-      this.openPreferences("identityPopup-TP-action");
-      return;
-    }
-
     // Remove the current host from the 'trackingprotection' consumer
     // of the permission manager. This effectively removes this host
     // from the tracking protection allowlist.
