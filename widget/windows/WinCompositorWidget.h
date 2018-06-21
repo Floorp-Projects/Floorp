@@ -10,6 +10,7 @@
 #include "gfxASurface.h"
 #include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/Mutex.h"
 #include "nsIWidget.h"
 
 class nsWindow;
@@ -124,6 +125,7 @@ private:
   gfx::CriticalSection mPresentLock;
 
   // Transparency handling.
+  mozilla::Mutex mTransparentSurfaceLock;
   nsTransparencyMode mTransparencyMode;
   RefPtr<gfxASurface> mTransparentSurface;
   HDC mMemoryDC;
