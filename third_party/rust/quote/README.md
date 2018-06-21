@@ -8,7 +8,7 @@ Rust Quasi-Quoting
 This crate provides the [`quote!`] macro for turning Rust syntax tree data
 structures into tokens of source code.
 
-[`quote!`]: https://docs.rs/quote/0.5/quote/macro.quote.html
+[`quote!`]: https://docs.rs/quote/0.6/quote/macro.quote.html
 
 Procedural macros in Rust receive a stream of tokens as input, execute arbitrary
 Rust code to determine how to manipulate those tokens, and produce a stream of
@@ -31,9 +31,11 @@ macros.
 *Version requirement: Quote supports any compiler version back to Rust's very
 first support for procedural macros in Rust 1.15.0.*
 
+[*Release notes*](https://github.com/dtolnay/quote/releases)
+
 ```toml
 [dependencies]
-quote = "0.5"
+quote = "0.6"
 ```
 
 ```rust
@@ -44,19 +46,18 @@ extern crate quote;
 ## Syntax
 
 The quote crate provides a [`quote!`] macro within which you can write Rust code
-that gets packaged into a [`quote::Tokens`] and can be treated as data. You
-should think of `Tokens` as representing a fragment of Rust source code. Call
-`to_string()` on a `Tokens` to get back the fragment of source code as a string,
-or call `into()` to stream them as a `TokenStream` back to the compiler in a
-procedural macro.
+that gets packaged into a [`TokenStream`] and can be treated as data. You should
+think of `TokenStream` as representing a fragment of Rust source code. This type
+can be returned directly back to the compiler by a procedural macro to get
+compiled into the caller's crate.
 
-[`quote::Tokens`]: https://docs.rs/quote/0.5/quote/struct.Tokens.html
+[`TokenStream`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.TokenStream.html
 
 Within the `quote!` macro, interpolation is done with `#var`. Any type
 implementing the [`quote::ToTokens`] trait can be interpolated. This includes
 most Rust primitive types as well as most of the syntax tree types from [`syn`].
 
-[`quote::ToTokens`]: https://docs.rs/quote/0.5/quote/trait.ToTokens.html
+[`quote::ToTokens`]: https://docs.rs/quote/0.6/quote/trait.ToTokens.html
 [`syn`]: https://github.com/dtolnay/syn
 
 ```rust
@@ -68,7 +69,8 @@ let tokens = quote! {
 
     impl #generics serde::Serialize for SerializeWith #generics #where_clause {
         fn serialize<S>(&self, s: &mut S) -> Result<(), S::Error>
-            where S: serde::Serializer
+        where
+            S: serde::Serializer,
         {
             #path(self.value, s)
         }
@@ -102,14 +104,24 @@ does not produce a trailing comma. This matches the behavior of delimiters in
 
 Any interpolated tokens preserve the `Span` information provided by their
 `ToTokens` implementation. Tokens that originate within a `quote!` invocation
-are spanned with [`Span::def_site()`].
+are spanned with [`Span::call_site()`].
 
-[`Span::def_site()`]: https://docs.rs/proc-macro2/0.2/proc_macro2/struct.Span.html#method.def_site
+[`Span::call_site()`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.Span.html#method.call_site
 
 A different span can be provided explicitly through the [`quote_spanned!`]
 macro.
 
-[`quote_spanned!`]: https://docs.rs/quote/0.5/quote/macro.quote_spanned.html
+[`quote_spanned!`]: https://docs.rs/quote/0.6/quote/macro.quote_spanned.html
+
+### Limitations
+
+- A non-repeating variable may not be interpolated inside of a repeating block
+  ([#7]).
+- The same variable may not be interpolated more than once inside of a repeating
+  block ([#8]).
+
+[#7]: https://github.com/dtolnay/quote/issues/7
+[#8]: https://github.com/dtolnay/quote/issues/8
 
 ### Recursion limit
 

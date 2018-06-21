@@ -4,7 +4,7 @@ use std::str::{Bytes, CharIndices, Chars};
 
 use unicode_xid::UnicodeXID;
 
-use imp::LexError;
+use stable::LexError;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Cursor<'a> {
@@ -73,7 +73,8 @@ pub fn whitespace(input: Cursor) -> PResult<()> {
     while i < bytes.len() {
         let s = input.advance(i);
         if bytes[i] == b'/' {
-            if s.starts_with("//") && (!s.starts_with("///") || s.starts_with("////"))
+            if s.starts_with("//")
+                && (!s.starts_with("///") || s.starts_with("////"))
                 && !s.starts_with("//!")
             {
                 if let Some(len) = s.find('\n') {
@@ -84,7 +85,8 @@ pub fn whitespace(input: Cursor) -> PResult<()> {
             } else if s.starts_with("/**/") {
                 i += 4;
                 continue;
-            } else if s.starts_with("/*") && (!s.starts_with("/**") || s.starts_with("/***"))
+            } else if s.starts_with("/*")
+                && (!s.starts_with("/**") || s.starts_with("/***"))
                 && !s.starts_with("/*!")
             {
                 let (_, com) = block_comment(s)?;

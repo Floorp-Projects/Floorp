@@ -1,22 +1,20 @@
 #![cfg_attr(not(procmacro2_semver_exempt), allow(dead_code))]
 
-use std::borrow::Borrow;
+#[cfg(procmacro2_semver_exempt)]
 use std::cell::RefCell;
 #[cfg(procmacro2_semver_exempt)]
 use std::cmp;
-use std::collections::HashMap;
 use std::fmt;
 use std::iter;
-use std::rc::Rc;
 use std::str::FromStr;
 use std::vec;
 
 use strnom::{block_comment, skip_whitespace, whitespace, word_break, Cursor, PResult};
 use unicode_xid::UnicodeXID;
 
-use {Delimiter, Group, Op, Spacing, TokenTree};
+use {Delimiter, Group, Punct, Spacing, TokenTree};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct TokenStream {
     inner: Vec<TokenTree>,
 }
@@ -25,7 +23,7 @@ pub struct TokenStream {
 pub struct LexError;
 
 impl TokenStream {
-    pub fn empty() -> TokenStream {
+    pub fn new() -> TokenStream {
         TokenStream { inner: Vec::new() }
     }
 
@@ -65,7 +63,7 @@ impl FromStr for TokenStream {
                 if skip_whitespace(input).len() != 0 {
                     Err(LexError)
                 } else {
-                    Ok(output.inner)
+                    Ok(output)
                 }
             }
             Err(LexError) => Err(LexError),
@@ -89,15 +87,15 @@ impl fmt::Display for TokenStream {
                         Delimiter::Bracket => ("[", "]"),
                         Delimiter::None => ("", ""),
                     };
-                    if tt.stream().inner.inner.len() == 0 {
+                    if tt.stream().into_iter().next().is_none() {
                         write!(f, "{} {}", start, end)?
                     } else {
                         write!(f, "{} {} {}", start, tt.stream(), end)?
                     }
                 }
-                TokenTree::Term(ref tt) => write!(f, "{}", tt.as_str())?,
-                TokenTree::Op(ref tt) => {
-                    write!(f, "{}", tt.op())?;
+                TokenTree::Ident(ref tt) => write!(f, "{}", tt)?,
+                TokenTree::Punct(ref tt) => {
+                    write!(f, "{}", tt.as_char())?;
                     match tt.spacing() {
                         Spacing::Alone => {}
                         Spacing::Joint => joint = true,
@@ -108,6 +106,13 @@ impl fmt::Display for TokenStream {
         }
 
         Ok(())
+    }
+}
+
+impl fmt::Debug for TokenStream {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("TokenStream ")?;
+        f.debug_list().entries(self.clone()).finish()
     }
 }
 
@@ -149,6 +154,12 @@ impl iter::FromIterator<TokenTree> for TokenStream {
     }
 }
 
+impl Extend<TokenTree> for TokenStream {
+    fn extend<I: IntoIterator<Item = TokenTree>>(&mut self, streams: I) {
+        self.inner.extend(streams);
+    }
+}
+
 pub type TokenTreeIter = vec::IntoIter<TokenTree>;
 
 impl IntoIterator for TokenStream {
@@ -160,24 +171,25 @@ impl IntoIterator for TokenStream {
     }
 }
 
-#[cfg(procmacro2_semver_exempt)]
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FileName(String);
 
-#[cfg(procmacro2_semver_exempt)]
+#[allow(dead_code)]
+pub fn file_name(s: String) -> FileName {
+    FileName(s)
+}
+
 impl fmt::Display for FileName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-#[cfg(procmacro2_semver_exempt)]
 #[derive(Clone, PartialEq, Eq)]
 pub struct SourceFile {
     name: FileName,
 }
 
-#[cfg(procmacro2_semver_exempt)]
 impl SourceFile {
     /// Get the path to this source file as a string.
     pub fn path(&self) -> &FileName {
@@ -190,14 +202,12 @@ impl SourceFile {
     }
 }
 
-#[cfg(procmacro2_semver_exempt)]
 impl AsRef<FileName> for SourceFile {
     fn as_ref(&self) -> &FileName {
         self.path()
     }
 }
 
-#[cfg(procmacro2_semver_exempt)]
 impl fmt::Debug for SourceFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("SourceFile")
@@ -207,7 +217,6 @@ impl fmt::Debug for SourceFile {
     }
 }
 
-#[cfg(procmacro2_semver_exempt)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LineColumn {
     pub line: usize,
@@ -314,7 +323,7 @@ impl Codemap {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Span {
     #[cfg(procmacro2_semver_exempt)]
     lo: u32,
@@ -393,30 +402,40 @@ impl Span {
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct Term {
-    intern: usize,
-    span: Span,
+impl fmt::Debug for Span {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        #[cfg(procmacro2_semver_exempt)]
+        return write!(f, "bytes({}..{})", self.lo, self.hi);
+
+        #[cfg(not(procmacro2_semver_exempt))]
+        write!(f, "Span")
+    }
 }
 
-thread_local!(static SYMBOLS: RefCell<Interner> = RefCell::new(Interner::new()));
+#[derive(Clone)]
+pub struct Ident {
+    sym: String,
+    span: Span,
+    raw: bool,
+}
 
-impl Term {
-    pub fn new(string: &str, span: Span) -> Term {
+impl Ident {
+    fn _new(string: &str, raw: bool, span: Span) -> Ident {
         validate_term(string);
 
-        Term {
-            intern: SYMBOLS.with(|s| s.borrow_mut().intern(string)),
+        Ident {
+            sym: string.to_owned(),
             span: span,
+            raw: raw,
         }
     }
 
-    pub fn as_str(&self) -> &str {
-        SYMBOLS.with(|interner| {
-            let interner = interner.borrow();
-            let s = interner.get(self.intern);
-            unsafe { &*(s as *const str) }
-        })
+    pub fn new(string: &str, span: Span) -> Ident {
+        Ident::_new(string, false, span)
+    }
+
+    pub fn new_raw(string: &str, span: Span) -> Ident {
+        Ident::_new(string, true, span)
     }
 
     pub fn span(&self) -> Span {
@@ -428,87 +447,84 @@ impl Term {
     }
 }
 
-fn validate_term(string: &str) {
-    let validate = if string.starts_with('\'') {
-        &string[1..]
-    } else if string.starts_with("r#") {
-        &string[2..]
-    } else {
-        string
-    };
+#[inline]
+fn is_ident_start(c: char) -> bool {
+    ('a' <= c && c <= 'z')
+        || ('A' <= c && c <= 'Z')
+        || c == '_'
+        || (c > '\x7f' && UnicodeXID::is_xid_start(c))
+}
 
+#[inline]
+fn is_ident_continue(c: char) -> bool {
+    ('a' <= c && c <= 'z')
+        || ('A' <= c && c <= 'Z')
+        || c == '_'
+        || ('0' <= c && c <= '9')
+        || (c > '\x7f' && UnicodeXID::is_xid_continue(c))
+}
+
+fn validate_term(string: &str) {
+    let validate = string;
     if validate.is_empty() {
-        panic!("Term is not allowed to be empty; use Option<Term>");
+        panic!("Ident is not allowed to be empty; use Option<Ident>");
     }
 
     if validate.bytes().all(|digit| digit >= b'0' && digit <= b'9') {
-        panic!("Term cannot be a number; use Literal instead");
+        panic!("Ident cannot be a number; use Literal instead");
     }
 
-    fn xid_ok(string: &str) -> bool {
+    fn ident_ok(string: &str) -> bool {
         let mut chars = string.chars();
         let first = chars.next().unwrap();
-        if !(UnicodeXID::is_xid_start(first) || first == '_') {
+        if !is_ident_start(first) {
             return false;
         }
         for ch in chars {
-            if !UnicodeXID::is_xid_continue(ch) {
+            if !is_ident_continue(ch) {
                 return false;
             }
         }
         true
     }
 
-    if !xid_ok(validate) {
-        panic!("{:?} is not a valid Term", string);
+    if !ident_ok(validate) {
+        panic!("{:?} is not a valid Ident", string);
     }
 }
 
-impl fmt::Debug for Term {
+impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("Term").field(&self.as_str()).finish()
-    }
-}
-
-struct Interner {
-    string_to_index: HashMap<MyRc, usize>,
-    index_to_string: Vec<Rc<String>>,
-}
-
-#[derive(Hash, Eq, PartialEq)]
-struct MyRc(Rc<String>);
-
-impl Borrow<str> for MyRc {
-    fn borrow(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Interner {
-    fn new() -> Interner {
-        Interner {
-            string_to_index: HashMap::new(),
-            index_to_string: Vec::new(),
+        if self.raw {
+            "r#".fmt(f)?;
         }
-    }
-
-    fn intern(&mut self, s: &str) -> usize {
-        if let Some(&idx) = self.string_to_index.get(s) {
-            return idx;
-        }
-        let s = Rc::new(s.to_string());
-        self.index_to_string.push(s.clone());
-        self.string_to_index
-            .insert(MyRc(s), self.index_to_string.len() - 1);
-        self.index_to_string.len() - 1
-    }
-
-    fn get(&self, idx: usize) -> &str {
-        &self.index_to_string[idx]
+        self.sym.fmt(f)
     }
 }
 
-#[derive(Clone, Debug)]
+impl fmt::Debug for Ident {
+    // Ident(proc_macro), Ident(r#union)
+    #[cfg(not(procmacro2_semver_exempt))]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug = f.debug_tuple("Ident");
+        debug.field(&format_args!("{}", self));
+        debug.finish()
+    }
+
+    // Ident {
+    //     sym: proc_macro,
+    //     span: bytes(128..138)
+    // }
+    #[cfg(procmacro2_semver_exempt)]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug = f.debug_struct("Ident");
+        debug.field("sym", &format_args!("{}", self));
+        debug.field("span", &self.span);
+        debug.finish()
+    }
+}
+
+#[derive(Clone)]
 pub struct Literal {
     text: String,
     span: Span,
@@ -584,7 +600,8 @@ impl Literal {
     }
 
     pub fn string(t: &str) -> Literal {
-        let mut s = t.chars()
+        let mut s = t
+            .chars()
             .flat_map(|c| c.escape_default())
             .collect::<String>();
         s.push('"');
@@ -629,17 +646,27 @@ impl fmt::Display for Literal {
     }
 }
 
-fn token_stream(mut input: Cursor) -> PResult<::TokenStream> {
+impl fmt::Debug for Literal {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug = fmt.debug_struct("Literal");
+        debug.field("lit", &format_args!("{}", self.text));
+        #[cfg(procmacro2_semver_exempt)]
+        debug.field("span", &self.span);
+        debug.finish()
+    }
+}
+
+fn token_stream(mut input: Cursor) -> PResult<TokenStream> {
     let mut trees = Vec::new();
     loop {
         let input_no_ws = skip_whitespace(input);
         if input_no_ws.rest.len() == 0 {
-            break
+            break;
         }
         if let Ok((a, tokens)) = doc_comment(input_no_ws) {
             input = a;
             trees.extend(tokens);
-            continue
+            continue;
         }
 
         let (a, tt) = match token_tree(input_no_ws) {
@@ -649,7 +676,7 @@ fn token_stream(mut input: Cursor) -> PResult<::TokenStream> {
         trees.push(tt);
         input = a;
     }
-    Ok((input, ::TokenStream::_new(TokenStream { inner: trees })))
+    Ok((input, TokenStream { inner: trees }))
 }
 
 #[cfg(not(procmacro2_semver_exempt))]
@@ -658,7 +685,7 @@ fn spanned<'a, T>(
     f: fn(Cursor<'a>) -> PResult<'a, T>,
 ) -> PResult<'a, (T, ::Span)> {
     let (a, b) = f(skip_whitespace(input))?;
-    Ok((a, ((b, ::Span::_new(Span { })))))
+    Ok((a, ((b, ::Span::_new_stable(Span {})))))
 }
 
 #[cfg(procmacro2_semver_exempt)]
@@ -670,7 +697,7 @@ fn spanned<'a, T>(
     let lo = input.off;
     let (a, b) = f(input)?;
     let hi = a.off;
-    let span = ::Span::_new(Span { lo: lo, hi: hi });
+    let span = ::Span::_new_stable(Span { lo: lo, hi: hi });
     Ok((a, (b, span)))
 }
 
@@ -683,11 +710,11 @@ fn token_tree(input: Cursor) -> PResult<TokenTree> {
 named!(token_kind -> TokenTree, alt!(
     map!(group, TokenTree::Group)
     |
-    map!(literal, TokenTree::Literal) // must be before symbol
+    map!(literal, |l| TokenTree::Literal(::Literal::_new_stable(l))) // must be before symbol
     |
-    symbol
+    map!(op, TokenTree::Punct)
     |
-    map!(op, TokenTree::Op)
+    symbol_leading_ws
 ));
 
 named!(group -> Group, alt!(
@@ -695,73 +722,61 @@ named!(group -> Group, alt!(
         punct!("("),
         token_stream,
         punct!(")")
-    ) => { |ts| Group::new(Delimiter::Parenthesis, ts) }
+    ) => { |ts| Group::new(Delimiter::Parenthesis, ::TokenStream::_new_stable(ts)) }
     |
     delimited!(
         punct!("["),
         token_stream,
         punct!("]")
-    ) => { |ts| Group::new(Delimiter::Bracket, ts) }
+    ) => { |ts| Group::new(Delimiter::Bracket, ::TokenStream::_new_stable(ts)) }
     |
     delimited!(
         punct!("{"),
         token_stream,
         punct!("}")
-    ) => { |ts| Group::new(Delimiter::Brace, ts) }
+    ) => { |ts| Group::new(Delimiter::Brace, ::TokenStream::_new_stable(ts)) }
 ));
 
-fn symbol(mut input: Cursor) -> PResult<TokenTree> {
-    input = skip_whitespace(input);
+fn symbol_leading_ws(input: Cursor) -> PResult<TokenTree> {
+    symbol(skip_whitespace(input))
+}
 
+fn symbol(input: Cursor) -> PResult<TokenTree> {
     let mut chars = input.char_indices();
 
-    let lifetime = input.starts_with("'");
-    if lifetime {
-        chars.next();
-    }
-
-    let raw = !lifetime && input.starts_with("r#");
+    let raw = input.starts_with("r#");
     if raw {
         chars.next();
         chars.next();
     }
 
     match chars.next() {
-        Some((_, ch)) if UnicodeXID::is_xid_start(ch) || ch == '_' => {}
+        Some((_, ch)) if is_ident_start(ch) => {}
         _ => return Err(LexError),
     }
 
     let mut end = input.len();
     for (i, ch) in chars {
-        if !UnicodeXID::is_xid_continue(ch) {
+        if !is_ident_continue(ch) {
             end = i;
             break;
         }
     }
 
     let a = &input.rest[..end];
-    if a == "r#_" || lifetime && a != "'static" && KEYWORDS.contains(&&a[1..]) {
+    if a == "r#_" {
         Err(LexError)
-    } else if a == "_" {
-        Ok((input.advance(end), Op::new('_', Spacing::Alone).into()))
     } else {
-        Ok((
-            input.advance(end),
-            ::Term::new(a, ::Span::call_site()).into(),
-        ))
+        let ident = if raw {
+            ::Ident::_new_raw(&a[2..], ::Span::call_site())
+        } else {
+            ::Ident::new(a, ::Span::call_site())
+        };
+        Ok((input.advance(end), ident.into()))
     }
 }
 
-// From https://github.com/rust-lang/rust/blob/master/src/libsyntax_pos/symbol.rs
-static KEYWORDS: &'static [&'static str] = &[
-    "abstract", "alignof", "as", "become", "box", "break", "const", "continue", "crate", "do",
-    "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in", "let", "loop",
-    "macro", "match", "mod", "move", "mut", "offsetof", "override", "priv", "proc", "pub", "pure",
-    "ref", "return", "self", "Self", "sizeof", "static", "struct", "super", "trait", "true",
-    "type", "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield",
-];
-
-fn literal(input: Cursor) -> PResult<::Literal> {
+fn literal(input: Cursor) -> PResult<Literal> {
     let input_no_ws = skip_whitespace(input);
 
     match literal_nocapture(input_no_ws) {
@@ -769,10 +784,7 @@ fn literal(input: Cursor) -> PResult<::Literal> {
             let start = input.len() - input_no_ws.len();
             let len = input_no_ws.len() - a.len();
             let end = start + len;
-            Ok((
-                a,
-                ::Literal::_new(Literal::_new(input.rest[start..end].to_string())),
-            ))
+            Ok((a, Literal::_new(input.rest[start..end].to_string())))
         }
         Err(LexError) => Err(LexError),
     }
@@ -1131,7 +1143,7 @@ fn float_digits(input: Cursor) -> PResult<()> {
 fn int(input: Cursor) -> PResult<()> {
     let (rest, ()) = digits(input)?;
     for suffix in &[
-        "isize", "i8", "i16", "i32", "i64", "i128", "usize", "u8", "u16", "u32", "u64", "u128"
+        "isize", "i8", "i16", "i32", "i64", "i128", "usize", "u8", "u16", "u32", "u64", "u128",
     ] {
         if rest.starts_with(suffix) {
             return word_break(rest.advance(suffix.len()));
@@ -1183,21 +1195,30 @@ fn digits(mut input: Cursor) -> PResult<()> {
     }
 }
 
-fn op(input: Cursor) -> PResult<Op> {
+fn op(input: Cursor) -> PResult<Punct> {
     let input = skip_whitespace(input);
     match op_char(input) {
+        Ok((rest, '\'')) => {
+            symbol(rest)?;
+            Ok((rest, Punct::new('\'', Spacing::Joint)))
+        }
         Ok((rest, ch)) => {
             let kind = match op_char(rest) {
                 Ok(_) => Spacing::Joint,
                 Err(LexError) => Spacing::Alone,
             };
-            Ok((rest, Op::new(ch, kind)))
+            Ok((rest, Punct::new(ch, kind)))
         }
         Err(LexError) => Err(LexError),
     }
 }
 
 fn op_char(input: Cursor) -> PResult<char> {
+    if input.starts_with("//") || input.starts_with("/*") {
+        // Do not accept `/` of a comment as an op.
+        return Err(LexError);
+    }
+
     let mut chars = input.chars();
     let first = match chars.next() {
         Some(ch) => ch,
@@ -1205,7 +1226,7 @@ fn op_char(input: Cursor) -> PResult<char> {
             return Err(LexError);
         }
     };
-    let recognized = "~!@#$%^&*-=+|;:,<.>/?";
+    let recognized = "~!@#$%^&*-=+|;:,<.>/?'";
     if recognized.contains(first) {
         Ok((input.advance(first.len_utf8()), first))
     } else {
@@ -1216,13 +1237,13 @@ fn op_char(input: Cursor) -> PResult<char> {
 fn doc_comment(input: Cursor) -> PResult<Vec<TokenTree>> {
     let mut trees = Vec::new();
     let (rest, ((comment, inner), span)) = spanned(input, doc_comment_contents)?;
-    trees.push(TokenTree::Op(Op::new('#', Spacing::Alone)));
+    trees.push(TokenTree::Punct(Punct::new('#', Spacing::Alone)));
     if inner {
-        trees.push(Op::new('!', Spacing::Alone).into());
+        trees.push(Punct::new('!', Spacing::Alone).into());
     }
     let mut stream = vec![
-        TokenTree::Term(::Term::new("doc", span)),
-        TokenTree::Op(Op::new('=', Spacing::Alone)),
+        TokenTree::Ident(::Ident::new("doc", span)),
+        TokenTree::Punct(Punct::new('=', Spacing::Alone)),
         TokenTree::Literal(::Literal::string(comment)),
     ];
     for tt in stream.iter_mut() {

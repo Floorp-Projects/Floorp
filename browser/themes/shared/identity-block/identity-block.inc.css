@@ -148,12 +148,12 @@
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon {
-  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg#enabled);
+  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
   margin-inline-end: 0;
 }
 
 #tracking-protection-icon[state="loaded-tracking-content"] {
-  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg#disabled);
+  list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
 
 #tracking-protection-icon[animate] {

@@ -50,13 +50,13 @@ static const uint32_t kNumOpenVRHaptcs = 1;
 VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
                                  ::vr::IVRChaperone *aVRChaperone,
                                  ::vr::IVRCompositor *aVRCompositor)
-  : VRDisplayHost(VRDeviceType::OpenVR)
+  : VRDisplayLocal(VRDeviceType::OpenVR)
   , mVRSystem(aVRSystem)
   , mVRChaperone(aVRChaperone)
   , mVRCompositor(aVRCompositor)
   , mIsPresenting(false)
 {
-  MOZ_COUNT_CTOR_INHERITED(VRDisplayOpenVR, VRDisplayHost);
+  MOZ_COUNT_CTOR_INHERITED(VRDisplayOpenVR, VRDisplayLocal);
 
   VRDisplayState& state = mDisplayInfo.mDisplayState;
 
@@ -98,7 +98,7 @@ VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
 VRDisplayOpenVR::~VRDisplayOpenVR()
 {
   Destroy();
-  MOZ_COUNT_DTOR_INHERITED(VRDisplayOpenVR, VRDisplayHost);
+  MOZ_COUNT_DTOR_INHERITED(VRDisplayOpenVR, VRDisplayLocal);
 }
 
 void
@@ -350,11 +350,11 @@ VRDisplayOpenVR::StopPresentation()
 }
 
 bool
-VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
-                             ::vr::ETextureType aTextureType,
-                             const IntSize& aSize,
-                             const gfx::Rect& aLeftEyeRect,
-                             const gfx::Rect& aRightEyeRect)
+VRDisplayOpenVR::SubmitFrameOpenVRHandle(void* aTextureHandle,
+                                         ::vr::ETextureType aTextureType,
+                                         const IntSize& aSize,
+                                         const gfx::Rect& aLeftEyeRect,
+                                         const gfx::Rect& aRightEyeRect)
 {
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
   if (!mIsPresenting) {
@@ -400,9 +400,9 @@ VRDisplayOpenVR::SubmitFrame(ID3D11Texture2D* aSource,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
-  return SubmitFrame((void *)aSource,
-                     ::vr::ETextureType::TextureType_DirectX,
-                     aSize, aLeftEyeRect, aRightEyeRect);
+  return SubmitFrameOpenVRHandle((void *)aSource,
+                                 ::vr::ETextureType::TextureType_DirectX,
+                                 aSize, aLeftEyeRect, aRightEyeRect);
 }
 
 #elif defined(XP_MACOSX)
@@ -418,9 +418,9 @@ VRDisplayOpenVR::SubmitFrame(MacIOSurface* aMacIOSurface,
   if (ioSurface == nullptr) {
     NS_WARNING("VRDisplayOpenVR::SubmitFrame() could not get an IOSurface");
   } else {
-    result = SubmitFrame((void *)ioSurface,
-                         ::vr::ETextureType::TextureType_IOSurface,
-                         aSize, aLeftEyeRect, aRightEyeRect);
+    result = SubmitFrameOpenVRHandle((void *)ioSurface,
+                                     ::vr::ETextureType::TextureType_IOSurface,
+                                     aSize, aLeftEyeRect, aRightEyeRect);
   }
   return result;
 }

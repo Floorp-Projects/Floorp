@@ -273,83 +273,8 @@ VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
 #endif // !defined(MOZ_WIDGET_ANDROID)
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost");
 
-  mFrameStarted = false;
-  switch (aTexture.type()) {
-
-#if defined(XP_WIN)
-    case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
-      if (!CreateD3DObjects()) {
-        return;
-      }
-      const SurfaceDescriptorD3D10& surf = aTexture.get_SurfaceDescriptorD3D10();
-      RefPtr<ID3D11Texture2D> dxTexture;
-      HRESULT hr = mDevice->OpenSharedResource((HANDLE)surf.handle(),
-        __uuidof(ID3D11Texture2D),
-        (void**)(ID3D11Texture2D**)getter_AddRefs(dxTexture));
-      if (FAILED(hr) || !dxTexture) {
-        NS_WARNING("Failed to open shared texture");
-        return;
-      }
-
-      // Similar to LockD3DTexture in TextureD3D11.cpp
-      RefPtr<IDXGIKeyedMutex> mutex;
-      dxTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
-      if (mutex) {
-        HRESULT hr = mutex->AcquireSync(0, 1000);
-        if (hr == WAIT_TIMEOUT) {
-          gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
-        }
-        else if (hr == WAIT_ABANDONED) {
-          gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
-        }
-        if (FAILED(hr)) {
-          NS_WARNING("Failed to lock the texture");
-          return;
-        }
-      }
-      bool success = SubmitFrame(dxTexture, surf.size(),
-                                 aLeftEyeRect, aRightEyeRect);
-      if (mutex) {
-        HRESULT hr = mutex->ReleaseSync(0);
-        if (FAILED(hr)) {
-          NS_WARNING("Failed to unlock the texture");
-        }
-      }
-      if (!success) {
-        return;
-      }
-      break;
-    }
-#elif defined(XP_MACOSX)
-    case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
-      const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
-      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(desc.surfaceId(),
-                                                              desc.scaleFactor(),
-                                                              !desc.isOpaque());
-      if (!surf) {
-        NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
-        return;
-      }
-      IntSize texSize = gfx::IntSize(surf->GetDevicePixelWidth(),
-                                     surf->GetDevicePixelHeight());
-      if (!SubmitFrame(surf, texSize, aLeftEyeRect, aRightEyeRect)) {
-        return;
-      }
-      break;
-    }
-#elif defined(MOZ_WIDGET_ANDROID)
-    case SurfaceDescriptor::TSurfaceTextureDescriptor: {
-      const SurfaceTextureDescriptor& desc = aTexture.get_SurfaceTextureDescriptor();
-      if (!SubmitFrame(desc, aLeftEyeRect, aRightEyeRect)) {
-        return;
-      }
-      break;
-    }
-#endif
-    default: {
-      NS_WARNING("Unsupported SurfaceDescriptor type for VR layer texture");
-      return;
-    }
+  if (!SubmitFrame(aTexture, aFrameId, aLeftEyeRect, aRightEyeRect)) {
+    return;
   }
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
@@ -381,12 +306,6 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect)
 {
-#if !defined(MOZ_WIDGET_ANDROID)
-  if (!mSubmitThread) {
-    mSubmitThread = new VRThread(NS_LITERAL_CSTRING("VR_SubmitFrame"));
-  }
-#endif // !defined(MOZ_WIDGET_ANDROID)
-
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
     return;
@@ -397,12 +316,18 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
     return;
   }
 
+  mFrameStarted = false;
+
   RefPtr<Runnable> submit =
     NewRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>, uint64_t,
       StoreCopyPassByConstLRef<gfx::Rect>, StoreCopyPassByConstLRef<gfx::Rect>>(
       "gfx::VRDisplayHost::SubmitFrameInternal", this, &VRDisplayHost::SubmitFrameInternal,
       aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
+
 #if !defined(MOZ_WIDGET_ANDROID)
+  if (!mSubmitThread) {
+    mSubmitThread = new VRThread(NS_LITERAL_CSTRING("VR_SubmitFrame"));
+  }
   mSubmitThread->Start();
   mSubmitThread->PostTask(submit.forget());
 #else
