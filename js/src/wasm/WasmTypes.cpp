@@ -151,14 +151,14 @@ GetCPUID()
 }
 
 size_t
-Sig::serializedSize() const
+FuncType::serializedSize() const
 {
     return sizeof(ret_) +
            SerializedPodVectorSize(args_);
 }
 
 uint8_t*
-Sig::serialize(uint8_t* cursor) const
+FuncType::serialize(uint8_t* cursor) const
 {
     cursor = WriteScalar<ExprType>(cursor, ret_);
     cursor = SerializePodVector(cursor, args_);
@@ -166,7 +166,7 @@ Sig::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-Sig::deserialize(const uint8_t* cursor)
+FuncType::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadScalar<ExprType>(cursor, &ret_)) &&
     (cursor = DeserializePodVector(cursor, &args_));
@@ -174,7 +174,7 @@ Sig::deserialize(const uint8_t* cursor)
 }
 
 size_t
-Sig::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+FuncType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return args_.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -237,17 +237,17 @@ EncodeImmediateType(ValType vt)
 }
 
 /* static */ bool
-SigIdDesc::isGlobal(const Sig& sig)
+FuncTypeIdDesc::isGlobal(const FuncType& funcType)
 {
-    unsigned numTypes = (sig.ret() == ExprType::Void ? 0 : 1) +
-                        (sig.args().length());
+    unsigned numTypes = (funcType.ret() == ExprType::Void ? 0 : 1) +
+                        (funcType.args().length());
     if (numTypes > sMaxTypes)
         return true;
 
-    if (sig.ret() != ExprType::Void && !IsImmediateType(NonVoidToValType(sig.ret())))
+    if (funcType.ret() != ExprType::Void && !IsImmediateType(NonVoidToValType(funcType.ret())))
         return true;
 
-    for (ValType v : sig.args()) {
+    for (ValType v : funcType.args()) {
         if (!IsImmediateType(v))
             return true;
     }
@@ -255,11 +255,11 @@ SigIdDesc::isGlobal(const Sig& sig)
     return false;
 }
 
-/* static */ SigIdDesc
-SigIdDesc::global(const Sig& sig, uint32_t globalDataOffset)
+/* static */ FuncTypeIdDesc
+FuncTypeIdDesc::global(const FuncType& funcType, uint32_t globalDataOffset)
 {
-    MOZ_ASSERT(isGlobal(sig));
-    return SigIdDesc(Kind::Global, globalDataOffset);
+    MOZ_ASSERT(isGlobal(funcType));
+    return FuncTypeIdDesc(Kind::Global, globalDataOffset);
 }
 
 static ImmediateType
@@ -270,61 +270,61 @@ LengthToBits(uint32_t length)
     return length;
 }
 
-/* static */ SigIdDesc
-SigIdDesc::immediate(const Sig& sig)
+/* static */ FuncTypeIdDesc
+FuncTypeIdDesc::immediate(const FuncType& funcType)
 {
     ImmediateType immediate = ImmediateBit;
     uint32_t shift = sTagBits;
 
-    if (sig.ret() != ExprType::Void) {
+    if (funcType.ret() != ExprType::Void) {
         immediate |= (1 << shift);
         shift += sReturnBit;
 
-        immediate |= EncodeImmediateType(NonVoidToValType(sig.ret())) << shift;
+        immediate |= EncodeImmediateType(NonVoidToValType(funcType.ret())) << shift;
         shift += sTypeBits;
     } else {
         shift += sReturnBit;
     }
 
-    immediate |= LengthToBits(sig.args().length()) << shift;
+    immediate |= LengthToBits(funcType.args().length()) << shift;
     shift += sLengthBits;
 
-    for (ValType argType : sig.args()) {
+    for (ValType argType : funcType.args()) {
         immediate |= EncodeImmediateType(argType) << shift;
         shift += sTypeBits;
     }
 
     MOZ_ASSERT(shift <= sTotalBits);
-    return SigIdDesc(Kind::Immediate, immediate);
+    return FuncTypeIdDesc(Kind::Immediate, immediate);
 }
 
 size_t
-SigWithId::serializedSize() const
+FuncTypeWithId::serializedSize() const
 {
-    return Sig::serializedSize() +
+    return FuncType::serializedSize() +
            sizeof(id);
 }
 
 uint8_t*
-SigWithId::serialize(uint8_t* cursor) const
+FuncTypeWithId::serialize(uint8_t* cursor) const
 {
-    cursor = Sig::serialize(cursor);
+    cursor = FuncType::serialize(cursor);
     cursor = WriteBytes(cursor, &id, sizeof(id));
     return cursor;
 }
 
 const uint8_t*
-SigWithId::deserialize(const uint8_t* cursor)
+FuncTypeWithId::deserialize(const uint8_t* cursor)
 {
-    (cursor = Sig::deserialize(cursor)) &&
+    (cursor = FuncType::deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &id, sizeof(id)));
     return cursor;
 }
 
 size_t
-SigWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return Sig::sizeOfExcludingThis(mallocSizeOf);
+    return FuncType::sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
