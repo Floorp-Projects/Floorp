@@ -440,7 +440,7 @@ pub unsafe extern "C" fn sdp_get_ptime(attributes: *const Vec<SdpAttribute>) -> 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_max_msg_sizse(attributes: *const Vec<SdpAttribute>) -> int64_t {
+pub unsafe extern "C" fn sdp_get_max_msg_size(attributes: *const Vec<SdpAttribute>) -> int64_t {
     for attribute in (*attributes).iter() {
         if let SdpAttribute::MaxMessageSize(max_msg_size) = *attribute {
             return max_msg_size as int64_t;
