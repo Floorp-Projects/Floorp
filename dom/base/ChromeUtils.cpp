@@ -547,9 +547,7 @@ namespace module_getter {
 
     js::SetFunctionNativeReserved(getter, SLOT_URI, uri);
 
-    return JS_DefinePropertyById(aCx, aTarget, id,
-                                 JS_DATA_TO_FUNC_PTR(JSNative, getter.get()),
-                                 JS_DATA_TO_FUNC_PTR(JSNative, setter.get()),
+    return JS_DefinePropertyById(aCx, aTarget, id, getter, setter,
                                  JSPROP_GETTER | JSPROP_SETTER | JSPROP_ENUMERATE);
   }
 } // namespace module_getter
