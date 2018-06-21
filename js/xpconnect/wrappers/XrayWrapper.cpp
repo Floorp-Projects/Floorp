@@ -421,13 +421,12 @@ TryResolvePropertyFromSpecs(JSContext* cx, HandleId id, HandleObject holder,
         desc.value().setUndefined();
         unsigned flags = psMatch->flags;
         if (psMatch->isAccessor()) {
-            RootedObject getterObj(cx);
-            RootedObject setterObj(cx);
             if (psMatch->isSelfHosted()) {
                 JSFunction* getterFun = JS::GetSelfHostedFunction(cx, psMatch->accessors.getter.selfHosted.funname, id, 0);
                 if (!getterFun)
                     return false;
-                getterObj = JS_GetFunctionObject(getterFun);
+                RootedObject getterObj(cx, JS_GetFunctionObject(getterFun));
+                RootedObject setterObj(cx);
                 if (psMatch->accessors.setter.selfHosted.funname) {
                     MOZ_ASSERT(flags & JSPROP_SETTER);
                     JSFunction* setterFun = JS::GetSelfHostedFunction(cx, psMatch->accessors.setter.selfHosted.funname, id, 0);

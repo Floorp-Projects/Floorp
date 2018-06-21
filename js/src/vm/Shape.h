@@ -388,11 +388,6 @@ class MOZ_RAII AutoKeepShapeTables
 };
 
 /*
- * Use the reserved attribute bit to mean shadowability.
- */
-#define JSPROP_SHADOWABLE       JSPROP_INTERNAL_USE_BIT
-
-/*
  * Shapes encode information about both a property lineage *and* a particular
  * property. This information is split across the Shape and the BaseShape
  * at shape->base(). Both Shape and BaseShape can be either owned or unowned
@@ -1077,8 +1072,6 @@ class Shape : public gc::TenuredCell
     bool isAccessorDescriptor() const {
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
     }
-
-    bool hasShadowable() const { return attrs & JSPROP_SHADOWABLE; }
 
     uint32_t entryCount() {
         JS::AutoCheckCannotGC nogc;
