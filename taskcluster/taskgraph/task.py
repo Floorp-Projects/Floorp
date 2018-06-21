@@ -21,7 +21,7 @@ class Task(object):
 
     - task_id -- TaskCluster taskId under which this task will be created
 
-    This class is just a convenience wraper for the data type and managing
+    This class is just a convenience wrapper for the data type and managing
     display, comparison, serialization, etc. It has no functionality of its own.
     """
     def __init__(self, kind, label, attributes, task,
