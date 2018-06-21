@@ -836,14 +836,6 @@ public:
     mBidiEnabled = true;
   }
 
-  /**
-   * Check if the document contains (or has contained) any MathML elements.
-   */
-  bool GetMathMLEnabled() const
-  {
-    return mMathMLEnabled;
-  }
-
   void SetMathMLEnabled()
   {
     mMathMLEnabled = true;
@@ -1467,28 +1459,6 @@ public:
    * Accessors to the collection of stylesheets owned by this document.
    * Style sheets are ordered, most significant last.
    */
-
-  /**
-   * These exists to allow us to on-demand load user-agent style sheets that
-   * would otherwise be loaded by nsDocumentViewer::CreateStyleSet. This allows
-   * us to keep the memory used by a document's rule cascade data (the stuff in
-   * its nsStyleSet's nsCSSRuleProcessors) - which can be considerable - lower
-   * than it would be if we loaded all built-in user-agent style sheets up
-   * front.
-   *
-   * By "built-in" user-agent style sheets we mean the user-agent style sheets
-   * that gecko itself supplies (such as html.css and svg.css) as opposed to
-   * user-agent level style sheets inserted by add-ons or the like.
-   *
-   * This function prepends the given style sheet to the document's style set
-   * in order to make sure that it does not override user-agent style sheets
-   * supplied by add-ons or by the app (Firefox OS or Firefox Mobile, for
-   * example), since their sheets should override built-in sheets.
-   *
-   * TODO We can get rid of the whole concept of delayed loading if we fix
-   * bug 77999.
-   */
-  void EnsureOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);
 
   mozilla::dom::StyleSheetList* StyleSheets()
   {
@@ -3616,7 +3586,6 @@ protected:
 
   void UpdateDocumentStates(mozilla::EventStates);
 
-  void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);
   void RemoveDocStyleSheetsFromStyleSets();
   void RemoveStyleSheetsFromStyleSets(
       const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets,
@@ -4418,7 +4387,6 @@ protected:
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
 
-  nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
   // Member to store out last-selected stylesheet set.
