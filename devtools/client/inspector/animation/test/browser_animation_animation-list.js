@@ -17,15 +17,6 @@ add_task(async function() {
      animationInspector.state.animations.length,
      "The number of animations displayed matches the number of animations");
 
-  info("Checking the background color for the animation list items");
-  const animationItemEls = panel.querySelectorAll(".animation-list .animation-item");
-  const evenColor =
-    panel.ownerGlobal.getComputedStyle(animationItemEls[0]).backgroundColor;
-  const oddColor =
-    panel.ownerGlobal.getComputedStyle(animationItemEls[1]).backgroundColor;
-  isnot(evenColor, oddColor,
-    "Background color of an even animation should be different from odd");
-
   info("Checking list and items existence after select a element which has an animation");
   await selectNodeAndWaitForAnimations(".animated", inspector);
   is(panel.querySelectorAll(".animation-list .animation-item").length, 1,
