@@ -7,6 +7,7 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -109,7 +110,10 @@ public class SessionAccessibility {
                             // as a child. It is a source for events,
                             // but not a member of the tree you
                             // can get to by traversing down.
-                            onInitializeAccessibilityNodeInfo(mView, info);
+                            if (mView.getDisplay() != null) {
+                                // When running junit tests we don't have a display
+                                onInitializeAccessibilityNodeInfo(mView, info);
+                            }
                             info.setClassName("android.webkit.WebView"); // TODO: WTF
                             if (Build.VERSION.SDK_INT >= 19) {
                                 Bundle bundle = info.getExtras();
@@ -244,19 +248,14 @@ public class SessionAccessibility {
         });
     }
 
-    public static class Settings {
+    private static class Settings {
         private static final Settings INSTANCE = new Settings();
-        private boolean mEnabled;
+        private static final String FORCE_ACCESSIBILITY_PREF = "accessibility.force_disabled";
+
+        private volatile boolean mEnabled;
+        /* package */ volatile boolean mForceEnabled;
 
         public Settings() {
-            EventDispatcher.getInstance().registerUiThreadListener(new BundleEventListener() {
-                @Override
-                public void handleMessage(final String event, final GeckoBundle message,
-                                          final EventCallback callback) {
-                    updateAccessibilitySettings();
-                }
-            }, "GeckoView:AccessibilityReady", null);
-
             final Context context = GeckoAppShell.getApplicationContext();
             AccessibilityManager accessibilityManager =
                 (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
@@ -283,6 +282,17 @@ public class SessionAccessibility {
                 }
                 );
             }
+
+            PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
+                @Override
+                public void prefValue(String pref, int value) {
+                    if (pref.equals(FORCE_ACCESSIBILITY_PREF)) {
+                        mForceEnabled = value < 0;
+                        dispatch();
+                    }
+                }
+            };
+            PrefsHelper.addObserver(new String[]{ FORCE_ACCESSIBILITY_PREF }, prefHandler);
         }
 
         public static Settings getInstance() {
@@ -290,26 +300,20 @@ public class SessionAccessibility {
         }
 
         public static boolean isEnabled() {
-            return INSTANCE.mEnabled;
+            return INSTANCE.mEnabled || INSTANCE.mForceEnabled;
         }
 
         private void updateAccessibilitySettings() {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    final AccessibilityManager accessibilityManager = (AccessibilityManager)
-                            GeckoAppShell.getApplicationContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
-                    mEnabled = accessibilityManager.isEnabled() &&
-                               accessibilityManager.isTouchExplorationEnabled();
+            final AccessibilityManager accessibilityManager = (AccessibilityManager)
+                    GeckoAppShell.getApplicationContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+            mEnabled = accessibilityManager.isEnabled() && accessibilityManager.isTouchExplorationEnabled();
 
-                    dispatch();
-                }
-            });
+            dispatch();
         }
 
         private void dispatch() {
             final GeckoBundle ret = new GeckoBundle(1);
-            ret.putBoolean("enabled", mEnabled);
+            ret.putBoolean("enabled", mEnabled || mForceEnabled);
             // "GeckoView:AccessibilitySettings" is dispatched to the Gecko thread.
             EventDispatcher.getInstance().dispatch("GeckoView:AccessibilitySettings", ret);
             // "GeckoView:AccessibilityEnabled" is dispatched to the UI thread.
@@ -358,7 +362,9 @@ public class SessionAccessibility {
         node.setPassword(message.getBoolean("password"));
         node.setFocusable(message.getBoolean("focusable"));
         node.setFocused(message.getBoolean("focused"));
-        node.setEditable(message.getBoolean("editable"));
+        if (Build.VERSION.SDK_INT >= 18) {
+          node.setEditable(message.getBoolean("editable"));
+        }
 
         final String[] textArray = message.getStringArray("text");
         StringBuilder sb = new StringBuilder();
@@ -374,9 +380,6 @@ public class SessionAccessibility {
         if (message.getBoolean("clickable")) {
             node.setClickable(true);
             node.addAction(AccessibilityNodeInfo.ACTION_CLICK);
-        } else {
-            node.setClickable(false);
-            node.removeAction(AccessibilityNodeInfo.ACTION_CLICK);
         }
 
         final GeckoBundle bounds = message.getBundle("bounds");
@@ -427,9 +430,7 @@ public class SessionAccessibility {
                  eventType == AccessibilityEvent.TYPE_VIEW_HOVER_ENTER)) {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
-            if (mVirtualContentNode == null) {
-                mVirtualContentNode = AccessibilityNodeInfo.obtain(mView, eventSource);
-            }
+            mVirtualContentNode = AccessibilityNodeInfo.obtain(mView, eventSource);
             populateNodeInfoFromJSON(mVirtualContentNode, message);
         }
 
