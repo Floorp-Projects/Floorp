@@ -15,6 +15,7 @@ using mozilla::DebugOnly;
 ControlFlowGenerator::ControlFlowGenerator(TempAllocator& temp, JSScript* script)
   : script(script),
     current(nullptr),
+    pc(nullptr),
     alloc_(temp),
     blocks_(temp),
     cfgStack_(temp),
