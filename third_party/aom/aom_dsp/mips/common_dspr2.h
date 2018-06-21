@@ -13,7 +13,9 @@
 #define AOM_COMMON_MIPS_DSPR2_H_
 
 #include <assert.h>
-#include "./aom_config.h"
+
+#include "config/aom_config.h"
+
 #include "aom/aom_integer.h"
 
 #ifdef __cplusplus

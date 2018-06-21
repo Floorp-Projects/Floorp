@@ -11,7 +11,8 @@
 
 #include <immintrin.h>
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 
 static INLINE void init_one_qp(const __m128i *p, __m256i *qp) {

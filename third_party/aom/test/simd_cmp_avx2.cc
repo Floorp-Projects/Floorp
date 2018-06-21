@@ -12,4 +12,4 @@
 #define ARCH AVX2
 #define ARCH_POSTFIX(name) name##_avx2
 #define SIMD_NAMESPACE simd_test_avx2
-#include "./simd_cmp_impl.h"
+#include "test/simd_cmp_impl.h"

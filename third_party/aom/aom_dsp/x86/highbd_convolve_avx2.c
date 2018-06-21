@@ -11,8 +11,11 @@
 #include <immintrin.h>
 #include <string.h>
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_dsp/x86/convolve.h"
+#include "aom_dsp/x86/convolve_avx2.h"
+#include "aom_dsp/x86/synonyms.h"
 
 // -----------------------------------------------------------------------------
 // Copy and average
@@ -100,102 +103,257 @@ void aom_highbd_convolve_copy_avx2(const uint8_t *src8, ptrdiff_t src_stride,
   }
 }
 
-void aom_highbd_convolve_avg_avx2(const uint8_t *src8, ptrdiff_t src_stride,
-                                  uint8_t *dst8, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x, int filter_x_stride,
-                                  const int16_t *filter_y, int filter_y_stride,
-                                  int width, int h, int bd) {
-  uint16_t *src = CONVERT_TO_SHORTPTR(src8);
-  uint16_t *dst = CONVERT_TO_SHORTPTR(dst8);
-  (void)filter_x;
-  (void)filter_y;
-  (void)filter_x_stride;
-  (void)filter_y_stride;
-  (void)bd;
+void av1_highbd_convolve_y_sr_avx2(const uint16_t *src, int src_stride,
+                                   uint16_t *dst, int dst_stride, int w, int h,
+                                   InterpFilterParams *filter_params_x,
+                                   InterpFilterParams *filter_params_y,
+                                   const int subpel_x_q4, const int subpel_y_q4,
+                                   ConvolveParams *conv_params, int bd) {
+  int i, j;
+  const int fo_vert = filter_params_y->taps / 2 - 1;
+  const uint16_t *const src_ptr = src - fo_vert * src_stride;
+  (void)filter_params_x;
+  (void)subpel_x_q4;
+  (void)conv_params;
 
-  assert(width % 4 == 0);
-  if (width > 32) {  // width = 64
-    __m256i p0, p1, p2, p3, u0, u1, u2, u3;
-    do {
-      p0 = _mm256_loadu_si256((const __m256i *)src);
-      p1 = _mm256_loadu_si256((const __m256i *)(src + 16));
-      p2 = _mm256_loadu_si256((const __m256i *)(src + 32));
-      p3 = _mm256_loadu_si256((const __m256i *)(src + 48));
-      src += src_stride;
-      u0 = _mm256_loadu_si256((const __m256i *)dst);
-      u1 = _mm256_loadu_si256((const __m256i *)(dst + 16));
-      u2 = _mm256_loadu_si256((const __m256i *)(dst + 32));
-      u3 = _mm256_loadu_si256((const __m256i *)(dst + 48));
-      _mm256_storeu_si256((__m256i *)dst, _mm256_avg_epu16(p0, u0));
-      _mm256_storeu_si256((__m256i *)(dst + 16), _mm256_avg_epu16(p1, u1));
-      _mm256_storeu_si256((__m256i *)(dst + 32), _mm256_avg_epu16(p2, u2));
-      _mm256_storeu_si256((__m256i *)(dst + 48), _mm256_avg_epu16(p3, u3));
-      dst += dst_stride;
-      h--;
-    } while (h > 0);
-  } else if (width > 16) {  // width = 32
-    __m256i p0, p1, u0, u1;
-    do {
-      p0 = _mm256_loadu_si256((const __m256i *)src);
-      p1 = _mm256_loadu_si256((const __m256i *)(src + 16));
-      src += src_stride;
-      u0 = _mm256_loadu_si256((const __m256i *)dst);
-      u1 = _mm256_loadu_si256((const __m256i *)(dst + 16));
-      _mm256_storeu_si256((__m256i *)dst, _mm256_avg_epu16(p0, u0));
-      _mm256_storeu_si256((__m256i *)(dst + 16), _mm256_avg_epu16(p1, u1));
-      dst += dst_stride;
-      h--;
-    } while (h > 0);
-  } else if (width > 8) {  // width = 16
-    __m256i p0, p1, u0, u1;
-    do {
-      p0 = _mm256_loadu_si256((const __m256i *)src);
-      p1 = _mm256_loadu_si256((const __m256i *)(src + src_stride));
-      src += src_stride << 1;
-      u0 = _mm256_loadu_si256((const __m256i *)dst);
-      u1 = _mm256_loadu_si256((const __m256i *)(dst + dst_stride));
+  assert(conv_params->round_0 <= FILTER_BITS);
+  assert(((conv_params->round_0 + conv_params->round_1) <= (FILTER_BITS + 1)) ||
+         ((conv_params->round_0 + conv_params->round_1) == (2 * FILTER_BITS)));
 
-      _mm256_storeu_si256((__m256i *)dst, _mm256_avg_epu16(p0, u0));
-      _mm256_storeu_si256((__m256i *)(dst + dst_stride),
-                          _mm256_avg_epu16(p1, u1));
-      dst += dst_stride << 1;
-      h -= 2;
-    } while (h > 0);
-  } else if (width > 4) {  // width = 8
-    __m128i p0, p1, u0, u1;
-    do {
-      p0 = _mm_loadu_si128((const __m128i *)src);
-      p1 = _mm_loadu_si128((const __m128i *)(src + src_stride));
-      src += src_stride << 1;
-      u0 = _mm_loadu_si128((const __m128i *)dst);
-      u1 = _mm_loadu_si128((const __m128i *)(dst + dst_stride));
+  __m256i s[8], coeffs_y[4];
 
-      _mm_storeu_si128((__m128i *)dst, _mm_avg_epu16(p0, u0));
-      _mm_storeu_si128((__m128i *)(dst + dst_stride), _mm_avg_epu16(p1, u1));
-      dst += dst_stride << 1;
-      h -= 2;
-    } while (h > 0);
-  } else {  // width = 4
-    __m128i p0, p1, u0, u1;
-    do {
-      p0 = _mm_loadl_epi64((const __m128i *)src);
-      p1 = _mm_loadl_epi64((const __m128i *)(src + src_stride));
-      src += src_stride << 1;
-      u0 = _mm_loadl_epi64((const __m128i *)dst);
-      u1 = _mm_loadl_epi64((const __m128i *)(dst + dst_stride));
+  const int bits = FILTER_BITS;
 
-      _mm_storel_epi64((__m128i *)dst, _mm_avg_epu16(u0, p0));
-      _mm_storel_epi64((__m128i *)(dst + dst_stride), _mm_avg_epu16(u1, p1));
-      dst += dst_stride << 1;
-      h -= 2;
-    } while (h > 0);
+  const __m128i round_shift_bits = _mm_cvtsi32_si128(bits);
+  const __m256i round_const_bits = _mm256_set1_epi32((1 << bits) >> 1);
+  const __m256i clip_pixel =
+      _mm256_set1_epi16(bd == 10 ? 1023 : (bd == 12 ? 4095 : 255));
+  const __m256i zero = _mm256_setzero_si256();
+
+  prepare_coeffs(filter_params_y, subpel_y_q4, coeffs_y);
+
+  for (j = 0; j < w; j += 8) {
+    const uint16_t *data = &src_ptr[j];
+    /* Vertical filter */
+    {
+      __m256i src6;
+      __m256i s01 = _mm256_permute2x128_si256(
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 0 * src_stride))),
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 1 * src_stride))),
+          0x20);
+      __m256i s12 = _mm256_permute2x128_si256(
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 1 * src_stride))),
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 2 * src_stride))),
+          0x20);
+      __m256i s23 = _mm256_permute2x128_si256(
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 2 * src_stride))),
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 3 * src_stride))),
+          0x20);
+      __m256i s34 = _mm256_permute2x128_si256(
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 3 * src_stride))),
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 4 * src_stride))),
+          0x20);
+      __m256i s45 = _mm256_permute2x128_si256(
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 4 * src_stride))),
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 5 * src_stride))),
+          0x20);
+      src6 = _mm256_castsi128_si256(
+          _mm_loadu_si128((__m128i *)(data + 6 * src_stride)));
+      __m256i s56 = _mm256_permute2x128_si256(
+          _mm256_castsi128_si256(
+              _mm_loadu_si128((__m128i *)(data + 5 * src_stride))),
+          src6, 0x20);
+
+      s[0] = _mm256_unpacklo_epi16(s01, s12);
+      s[1] = _mm256_unpacklo_epi16(s23, s34);
+      s[2] = _mm256_unpacklo_epi16(s45, s56);
+
+      s[4] = _mm256_unpackhi_epi16(s01, s12);
+      s[5] = _mm256_unpackhi_epi16(s23, s34);
+      s[6] = _mm256_unpackhi_epi16(s45, s56);
+
+      for (i = 0; i < h; i += 2) {
+        data = &src_ptr[i * src_stride + j];
+
+        const __m256i s67 = _mm256_permute2x128_si256(
+            src6,
+            _mm256_castsi128_si256(
+                _mm_loadu_si128((__m128i *)(data + 7 * src_stride))),
+            0x20);
+
+        src6 = _mm256_castsi128_si256(
+            _mm_loadu_si128((__m128i *)(data + 8 * src_stride)));
+
+        const __m256i s78 = _mm256_permute2x128_si256(
+            _mm256_castsi128_si256(
+                _mm_loadu_si128((__m128i *)(data + 7 * src_stride))),
+            src6, 0x20);
+
+        s[3] = _mm256_unpacklo_epi16(s67, s78);
+        s[7] = _mm256_unpackhi_epi16(s67, s78);
+
+        const __m256i res_a = convolve(s, coeffs_y);
+
+        __m256i res_a_round = _mm256_sra_epi32(
+            _mm256_add_epi32(res_a, round_const_bits), round_shift_bits);
+
+        if (w - j > 4) {
+          const __m256i res_b = convolve(s + 4, coeffs_y);
+          __m256i res_b_round = _mm256_sra_epi32(
+              _mm256_add_epi32(res_b, round_const_bits), round_shift_bits);
+
+          __m256i res_16bit = _mm256_packs_epi32(res_a_round, res_b_round);
+          res_16bit = _mm256_min_epi16(res_16bit, clip_pixel);
+          res_16bit = _mm256_max_epi16(res_16bit, zero);
+
+          _mm_storeu_si128((__m128i *)&dst[i * dst_stride + j],
+                           _mm256_castsi256_si128(res_16bit));
+          _mm_storeu_si128((__m128i *)&dst[i * dst_stride + j + dst_stride],
+                           _mm256_extracti128_si256(res_16bit, 1));
+        } else if (w == 4) {
+          res_a_round = _mm256_packs_epi32(res_a_round, res_a_round);
+          res_a_round = _mm256_min_epi16(res_a_round, clip_pixel);
+          res_a_round = _mm256_max_epi16(res_a_round, zero);
+
+          _mm_storel_epi64((__m128i *)&dst[i * dst_stride + j],
+                           _mm256_castsi256_si128(res_a_round));
+          _mm_storel_epi64((__m128i *)&dst[i * dst_stride + j + dst_stride],
+                           _mm256_extracti128_si256(res_a_round, 1));
+        } else {
+          res_a_round = _mm256_packs_epi32(res_a_round, res_a_round);
+          res_a_round = _mm256_min_epi16(res_a_round, clip_pixel);
+          res_a_round = _mm256_max_epi16(res_a_round, zero);
+
+          xx_storel_32((__m128i *)&dst[i * dst_stride + j],
+                       _mm256_castsi256_si128(res_a_round));
+          xx_storel_32((__m128i *)&dst[i * dst_stride + j + dst_stride],
+                       _mm256_extracti128_si256(res_a_round, 1));
+        }
+
+        s[0] = s[1];
+        s[1] = s[2];
+        s[2] = s[3];
+
+        s[4] = s[5];
+        s[5] = s[6];
+        s[6] = s[7];
+      }
+    }
   }
 }
 
-// -----------------------------------------------------------------------------
-// Horizontal and vertical filtering
+void av1_highbd_convolve_x_sr_avx2(const uint16_t *src, int src_stride,
+                                   uint16_t *dst, int dst_stride, int w, int h,
+                                   InterpFilterParams *filter_params_x,
+                                   InterpFilterParams *filter_params_y,
+                                   const int subpel_x_q4, const int subpel_y_q4,
+                                   ConvolveParams *conv_params, int bd) {
+  int i, j;
+  const int fo_horiz = filter_params_x->taps / 2 - 1;
+  const uint16_t *const src_ptr = src - fo_horiz;
+  (void)subpel_y_q4;
+  (void)filter_params_y;
+
+  // Check that, even with 12-bit input, the intermediate values will fit
+  // into an unsigned 16-bit intermediate array.
+  assert(bd + FILTER_BITS + 2 - conv_params->round_0 <= 16);
+
+  __m256i s[4], coeffs_x[4];
+
+  const __m256i round_const_x =
+      _mm256_set1_epi32(((1 << conv_params->round_0) >> 1));
+  const __m128i round_shift_x = _mm_cvtsi32_si128(conv_params->round_0);
+
+  const int bits = FILTER_BITS - conv_params->round_0;
+  const __m128i round_shift_bits = _mm_cvtsi32_si128(bits);
+  const __m256i round_const_bits = _mm256_set1_epi32((1 << bits) >> 1);
+  const __m256i clip_pixel =
+      _mm256_set1_epi16(bd == 10 ? 1023 : (bd == 12 ? 4095 : 255));
+  const __m256i zero = _mm256_setzero_si256();
+
+  assert(bits >= 0);
+  assert((FILTER_BITS - conv_params->round_1) >= 0 ||
+         ((conv_params->round_0 + conv_params->round_1) == 2 * FILTER_BITS));
+
+  prepare_coeffs(filter_params_x, subpel_x_q4, coeffs_x);
+
+  for (j = 0; j < w; j += 8) {
+    /* Horizontal filter */
+    for (i = 0; i < h; i += 2) {
+      const __m256i row0 =
+          _mm256_loadu_si256((__m256i *)&src_ptr[i * src_stride + j]);
+      __m256i row1 =
+          _mm256_loadu_si256((__m256i *)&src_ptr[(i + 1) * src_stride + j]);
+
+      const __m256i r0 = _mm256_permute2x128_si256(row0, row1, 0x20);
+      const __m256i r1 = _mm256_permute2x128_si256(row0, row1, 0x31);
+
+      // even pixels
+      s[0] = _mm256_alignr_epi8(r1, r0, 0);
+      s[1] = _mm256_alignr_epi8(r1, r0, 4);
+      s[2] = _mm256_alignr_epi8(r1, r0, 8);
+      s[3] = _mm256_alignr_epi8(r1, r0, 12);
+
+      __m256i res_even = convolve(s, coeffs_x);
+      res_even = _mm256_sra_epi32(_mm256_add_epi32(res_even, round_const_x),
+                                  round_shift_x);
+
+      // odd pixels
+      s[0] = _mm256_alignr_epi8(r1, r0, 2);
+      s[1] = _mm256_alignr_epi8(r1, r0, 6);
+      s[2] = _mm256_alignr_epi8(r1, r0, 10);
+      s[3] = _mm256_alignr_epi8(r1, r0, 14);
+
+      __m256i res_odd = convolve(s, coeffs_x);
+      res_odd = _mm256_sra_epi32(_mm256_add_epi32(res_odd, round_const_x),
+                                 round_shift_x);
+
+      res_even = _mm256_sra_epi32(_mm256_add_epi32(res_even, round_const_bits),
+                                  round_shift_bits);
+      res_odd = _mm256_sra_epi32(_mm256_add_epi32(res_odd, round_const_bits),
+                                 round_shift_bits);
+
+      __m256i res_even1 = _mm256_packs_epi32(res_even, res_even);
+      __m256i res_odd1 = _mm256_packs_epi32(res_odd, res_odd);
+
+      __m256i res = _mm256_unpacklo_epi16(res_even1, res_odd1);
+      res = _mm256_min_epi16(res, clip_pixel);
+      res = _mm256_max_epi16(res, zero);
+
+      if (w - j > 4) {
+        _mm_storeu_si128((__m128i *)&dst[i * dst_stride + j],
+                         _mm256_castsi256_si128(res));
+        _mm_storeu_si128((__m128i *)&dst[i * dst_stride + j + dst_stride],
+                         _mm256_extracti128_si256(res, 1));
+      } else if (w == 4) {
+        _mm_storel_epi64((__m128i *)&dst[i * dst_stride + j],
+                         _mm256_castsi256_si128(res));
+        _mm_storel_epi64((__m128i *)&dst[i * dst_stride + j + dst_stride],
+                         _mm256_extracti128_si256(res, 1));
+      } else {
+        xx_storel_32((__m128i *)&dst[i * dst_stride + j],
+                     _mm256_castsi256_si128(res));
+        xx_storel_32((__m128i *)&dst[i * dst_stride + j + dst_stride],
+                     _mm256_extracti128_si256(res, 1));
+      }
+    }
+  }
+}
 
 #define CONV8_ROUNDING_BITS (7)
+
+// -----------------------------------------------------------------------------
+// Horizontal and vertical filtering
 
 static const uint8_t signal_pattern_0[32] = { 0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 6,
                                               7, 6, 7, 8, 9, 0, 1, 2, 3, 2, 3,
@@ -817,250 +975,6 @@ static void aom_highbd_filter_block1d8_v2_avx2(
   } while (height > 0);
 }
 
-// Calculation with averaging the input pixels
-
-static INLINE void store_8x1_avg_pixels(const __m256i *y0, const __m256i *mask,
-                                        uint16_t *dst) {
-  const __m128i a0 = _mm256_castsi256_si128(*y0);
-  const __m128i a1 = _mm256_extractf128_si256(*y0, 1);
-  __m128i res = _mm_packus_epi32(a0, a1);
-  const __m128i pix = _mm_loadu_si128((const __m128i *)dst);
-  res = _mm_min_epi16(res, _mm256_castsi256_si128(*mask));
-  res = _mm_avg_epu16(res, pix);
-  _mm_storeu_si128((__m128i *)dst, res);
-}
-
-static INLINE void store_8x2_avg_pixels(const __m256i *y0, const __m256i *y1,
-                                        const __m256i *mask, uint16_t *dst,
-                                        ptrdiff_t pitch) {
-  __m256i a = _mm256_packus_epi32(*y0, *y1);
-  const __m128i pix0 = _mm_loadu_si128((const __m128i *)dst);
-  const __m128i pix1 = _mm_loadu_si128((const __m128i *)(dst + pitch));
-  const __m256i pix =
-      _mm256_insertf128_si256(_mm256_castsi128_si256(pix0), pix1, 1);
-  a = _mm256_min_epi16(a, *mask);
-  a = _mm256_avg_epu16(a, pix);
-  _mm_storeu_si128((__m128i *)dst, _mm256_castsi256_si128(a));
-  _mm_storeu_si128((__m128i *)(dst + pitch), _mm256_extractf128_si256(a, 1));
-}
-
-static INLINE void store_16x1_avg_pixels(const __m256i *y0, const __m256i *y1,
-                                         const __m256i *mask, uint16_t *dst) {
-  __m256i a = _mm256_packus_epi32(*y0, *y1);
-  const __m256i pix = _mm256_loadu_si256((const __m256i *)dst);
-  a = _mm256_min_epi16(a, *mask);
-  a = _mm256_avg_epu16(a, pix);
-  _mm256_storeu_si256((__m256i *)dst, a);
-}
-
-static INLINE void store_16x2_avg_pixels(const __m256i *y0, const __m256i *y1,
-                                         const __m256i *mask, uint16_t *dst,
-                                         ptrdiff_t pitch) {
-  const __m256i pix0 = _mm256_loadu_si256((const __m256i *)dst);
-  const __m256i pix1 = _mm256_loadu_si256((const __m256i *)(dst + pitch));
-  __m256i p = _mm256_min_epi16(*y0, *mask);
-  p = _mm256_avg_epu16(p, pix0);
-  _mm256_storeu_si256((__m256i *)dst, p);
-
-  p = _mm256_min_epi16(*y1, *mask);
-  p = _mm256_avg_epu16(p, pix1);
-  _mm256_storeu_si256((__m256i *)(dst + pitch), p);
-}
-
-static INLINE void store_8x1_2t_avg_pixels_ver(const __m128i *y0,
-                                               const __m128i *y1,
-                                               const __m128i *mask,
-                                               uint16_t *dst) {
-  __m128i res = _mm_packus_epi32(*y0, *y1);
-  const __m128i pix = _mm_loadu_si128((const __m128i *)dst);
-  res = _mm_min_epi16(res, *mask);
-  res = _mm_avg_epu16(res, pix);
-  _mm_storeu_si128((__m128i *)dst, res);
-}
-
-static void aom_highbd_filter_block1d8_h8_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[8], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-
-  __m256i ff[4];
-  pack_filters(filter, ff);
-
-  src_ptr -= 3;
-  do {
-    pack_8x2_pixels(src_ptr, src_pitch, signal);
-    filter_8x1_pixels(signal, ff, &res0);
-    filter_8x1_pixels(&signal[4], ff, &res1);
-    store_8x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
-    height -= 2;
-    src_ptr += src_pitch << 1;
-    dst_ptr += dst_pitch << 1;
-  } while (height > 1);
-
-  if (height > 0) {
-    pack_8x1_pixels(src_ptr, signal);
-    filter_8x1_pixels(signal, ff, &res0);
-    store_8x1_avg_pixels(&res0, &max, dst_ptr);
-  }
-}
-
-static void aom_highbd_filter_block1d16_h8_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[8], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-
-  __m256i ff[4];
-  pack_filters(filter, ff);
-
-  src_ptr -= 3;
-  do {
-    pack_16x1_pixels(src_ptr, signal);
-    filter_8x1_pixels(signal, ff, &res0);
-    filter_8x1_pixels(&signal[4], ff, &res1);
-    store_16x1_avg_pixels(&res0, &res1, &max, dst_ptr);
-    height -= 1;
-    src_ptr += src_pitch;
-    dst_ptr += dst_pitch;
-  } while (height > 0);
-}
-
-static void aom_highbd_filter_block1d8_v8_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[9], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-
-  __m256i ff[4];
-  pack_filters(filter, ff);
-
-  pack_8x9_init(src_ptr, src_pitch, signal);
-
-  do {
-    pack_8x9_pixels(src_ptr, src_pitch, signal);
-
-    filter_8x9_pixels(signal, ff, &res0, &res1);
-    store_8x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
-    update_pixels(signal);
-
-    src_ptr += src_pitch << 1;
-    dst_ptr += dst_pitch << 1;
-    height -= 2;
-  } while (height > 0);
-}
-
-static void aom_highbd_filter_block1d16_v8_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[17], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-
-  __m256i ff[4];
-  pack_filters(filter, ff);
-
-  pack_16x9_init(src_ptr, src_pitch, signal);
-
-  do {
-    pack_16x9_pixels(src_ptr, src_pitch, signal);
-    filter_16x9_pixels(signal, ff, &res0, &res1);
-    store_16x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
-    update_16x9_pixels(signal);
-
-    src_ptr += src_pitch << 1;
-    dst_ptr += dst_pitch << 1;
-    height -= 2;
-  } while (height > 0);
-}
-
-static void aom_highbd_filter_block1d8_h2_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[2], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-
-  __m256i ff;
-  pack_2t_filter(filter, &ff);
-
-  src_ptr -= 3;
-  do {
-    pack_8x2_2t_pixels(src_ptr, src_pitch, signal);
-    filter_16_2t_pixels(signal, &ff, &res0, &res1);
-    store_8x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
-    height -= 2;
-    src_ptr += src_pitch << 1;
-    dst_ptr += dst_pitch << 1;
-  } while (height > 1);
-
-  if (height > 0) {
-    pack_8x1_2t_pixels(src_ptr, signal);
-    filter_8x1_2t_pixels(signal, &ff, &res0);
-    store_8x1_avg_pixels(&res0, &max, dst_ptr);
-  }
-}
-
-static void aom_highbd_filter_block1d16_h2_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[2], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-
-  __m256i ff;
-  pack_2t_filter(filter, &ff);
-
-  src_ptr -= 3;
-  do {
-    pack_16x1_2t_pixels(src_ptr, signal);
-    filter_16_2t_pixels(signal, &ff, &res0, &res1);
-    store_16x1_avg_pixels(&res0, &res1, &max, dst_ptr);
-    height -= 1;
-    src_ptr += src_pitch;
-    dst_ptr += dst_pitch;
-  } while (height > 0);
-}
-
-static void aom_highbd_filter_block1d16_v2_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m256i signal[3], res0, res1;
-  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
-  __m256i ff;
-
-  pack_2t_filter(filter, &ff);
-  pack_16x2_init(src_ptr, signal);
-
-  do {
-    pack_16x2_2t_pixels(src_ptr, src_pitch, signal);
-    filter_16x2_2t_pixels(signal, &ff, &res0, &res1);
-    store_16x1_avg_pixels(&res0, &res1, &max, dst_ptr);
-
-    src_ptr += src_pitch;
-    dst_ptr += dst_pitch;
-    height -= 1;
-  } while (height > 0);
-}
-
-static void aom_highbd_filter_block1d8_v2_avg_avx2(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  __m128i signal[3], res0, res1;
-  const __m128i max = _mm_set1_epi16((1 << bd) - 1);
-  __m128i ff;
-
-  pack_8x1_2t_filter(filter, &ff);
-  pack_8x2_init(src_ptr, signal);
-
-  do {
-    pack_8x2_2t_pixels_ver(src_ptr, src_pitch, signal);
-    filter_8_2t_pixels(signal, &ff, &res0, &res1);
-    store_8x1_2t_avg_pixels_ver(&res0, &res1, &max, dst_ptr);
-
-    src_ptr += src_pitch;
-    dst_ptr += dst_pitch;
-    height -= 1;
-  } while (height > 0);
-}
-
 void aom_highbd_filter_block1d4_h8_sse2(const uint16_t *, ptrdiff_t, uint16_t *,
                                         ptrdiff_t, uint32_t, const int16_t *,
                                         int);
@@ -1080,32 +994,5 @@ void aom_highbd_filter_block1d4_v2_sse2(const uint16_t *, ptrdiff_t, uint16_t *,
 
 HIGH_FUN_CONV_1D(horiz, x_step_q4, filter_x, h, src, , avx2);
 HIGH_FUN_CONV_1D(vert, y_step_q4, filter_y, v, src - src_stride * 3, , avx2);
-HIGH_FUN_CONV_2D(, avx2);
-
-void aom_highbd_filter_block1d4_h8_avg_sse2(const uint16_t *, ptrdiff_t,
-                                            uint16_t *, ptrdiff_t, uint32_t,
-                                            const int16_t *, int);
-void aom_highbd_filter_block1d4_h2_avg_sse2(const uint16_t *, ptrdiff_t,
-                                            uint16_t *, ptrdiff_t, uint32_t,
-                                            const int16_t *, int);
-void aom_highbd_filter_block1d4_v8_avg_sse2(const uint16_t *, ptrdiff_t,
-                                            uint16_t *, ptrdiff_t, uint32_t,
-                                            const int16_t *, int);
-void aom_highbd_filter_block1d4_v2_avg_sse2(const uint16_t *, ptrdiff_t,
-                                            uint16_t *, ptrdiff_t, uint32_t,
-                                            const int16_t *, int);
-#define aom_highbd_filter_block1d4_h8_avg_avx2 \
-  aom_highbd_filter_block1d4_h8_avg_sse2
-#define aom_highbd_filter_block1d4_h2_avg_avx2 \
-  aom_highbd_filter_block1d4_h2_avg_sse2
-#define aom_highbd_filter_block1d4_v8_avg_avx2 \
-  aom_highbd_filter_block1d4_v8_avg_sse2
-#define aom_highbd_filter_block1d4_v2_avg_avx2 \
-  aom_highbd_filter_block1d4_v2_avg_sse2
-
-HIGH_FUN_CONV_1D(avg_horiz, x_step_q4, filter_x, h, src, avg_, avx2);
-HIGH_FUN_CONV_1D(avg_vert, y_step_q4, filter_y, v, src - src_stride * 3, avg_,
-                 avx2);
-HIGH_FUN_CONV_2D(avg_, avx2);
 
 #undef HIGHBD_FUNC

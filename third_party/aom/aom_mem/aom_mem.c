@@ -9,14 +9,23 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#define __AOM_MEM_C__
-
 #include "aom_mem.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "include/aom_mem_intrnl.h"
 #include "aom/aom_integer.h"
+
+#if defined(AOM_MAX_ALLOCABLE_MEMORY)
+// Returns 0 in case of overflow of nmemb * size.
+static int check_size_argument_overflow(uint64_t nmemb, uint64_t size) {
+  const uint64_t total_size = nmemb * size;
+  if (nmemb == 0) return 1;
+  if (size > AOM_MAX_ALLOCABLE_MEMORY / nmemb) return 0;
+  if (total_size != (size_t)total_size) return 0;
+  return 1;
+}
+#endif
 
 static size_t GetAlignedMallocSize(size_t size, size_t align) {
   return size + align - 1 + ADDRESS_STORAGE_SIZE;
@@ -40,6 +49,9 @@ static void *GetActualMallocAddress(void *const mem) {
 void *aom_memalign(size_t align, size_t size) {
   void *x = NULL;
   const size_t aligned_size = GetAlignedMallocSize(size, align);
+#if defined(AOM_MAX_ALLOCABLE_MEMORY)
+  if (!check_size_argument_overflow(1, aligned_size)) return NULL;
+#endif
   void *const addr = malloc(aligned_size);
   if (addr) {
     x = align_addr((unsigned char *)addr + ADDRESS_STORAGE_SIZE, align);
@@ -64,11 +76,9 @@ void aom_free(void *memblk) {
   }
 }
 
-#if CONFIG_HIGHBITDEPTH
 void *aom_memset16(void *dest, int val, size_t length) {
   size_t i;
   uint16_t *dest16 = (uint16_t *)dest;
   for (i = 0; i < length; i++) *dest16++ = val;
   return dest;
 }
-#endif  // CONFIG_HIGHBITDEPTH

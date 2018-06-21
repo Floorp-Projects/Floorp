@@ -12,7 +12,8 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_dsp/mips/convolve_common_dspr2.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/aom_filter.h"

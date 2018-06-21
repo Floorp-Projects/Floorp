@@ -10,7 +10,8 @@
  */
 
 #include <immintrin.h>
-#include "./aom_dsp_rtcd.h"
+
+#include "config/aom_dsp_rtcd.h"
 
 static unsigned int sad32x32(const uint8_t *src_ptr, int src_stride,
                              const uint8_t *ref_ptr, int ref_stride) {

@@ -19,6 +19,7 @@
 #include "av1/encoder/ratectrl.h"
 #include "av1/encoder/rd.h"
 #include "av1/encoder/segmentation.h"
+#include "av1/encoder/dwt.h"
 #include "aom_ports/system_state.h"
 
 #define ENERGY_MIN (-4)
@@ -34,10 +35,8 @@ static const int segment_id[ENERGY_SPAN] = { 0, 1, 1, 2, 3, 4 };
 #define SEGMENT_ID(i) segment_id[(i)-ENERGY_MIN]
 
 DECLARE_ALIGNED(16, static const uint8_t, av1_all_zeros[MAX_SB_SIZE]) = { 0 };
-#if CONFIG_HIGHBITDEPTH
 DECLARE_ALIGNED(16, static const uint16_t,
                 av1_highbd_all_zeros[MAX_SB_SIZE]) = { 0 };
-#endif
 
 unsigned int av1_vaq_segment_id(int energy) {
   ENERGY_IN_BOUNDS(energy);
@@ -49,6 +48,16 @@ void av1_vaq_frame_setup(AV1_COMP *cpi) {
   struct segmentation *seg = &cm->seg;
   int i;
 
+  int resolution_change =
+      cm->prev_frame && (cm->width != cm->prev_frame->width ||
+                         cm->height != cm->prev_frame->height);
+  if (resolution_change) {
+    memset(cpi->segmentation_map, 0, cm->mi_rows * cm->mi_cols);
+    av1_clearall_segfeatures(seg);
+    aom_clear_system_state();
+    av1_disable_segmentation(seg);
+    return;
+  }
   if (frame_is_intra_only(cm) || cm->error_resilient_mode ||
       cpi->refresh_alt_ref_frame ||
       (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref)) {
@@ -56,8 +65,6 @@ void av1_vaq_frame_setup(AV1_COMP *cpi) {
 
     av1_enable_segmentation(seg);
     av1_clearall_segfeatures(seg);
-
-    seg->abs_delta = SEGMENT_DELTADATA;
 
     aom_clear_system_state();
 
@@ -72,11 +79,6 @@ void av1_vaq_frame_setup(AV1_COMP *cpi) {
       // This could lead to an illegal combination of partition size and q.
       if ((cm->base_qindex != 0) && ((cm->base_qindex + qindex_delta) == 0)) {
         qindex_delta = -cm->base_qindex + 1;
-      }
-
-      // No need to enable SEG_LVL_ALT_Q for this segment.
-      if (rate_ratio[i] == 1.0) {
-        continue;
       }
 
       av1_set_segdata(seg, i, SEG_LVL_ALT_Q, qindex_delta);
@@ -108,7 +110,6 @@ static void aq_variance(const uint8_t *a, int a_stride, const uint8_t *b,
   }
 }
 
-#if CONFIG_HIGHBITDEPTH
 static void aq_highbd_variance64(const uint8_t *a8, int a_stride,
                                  const uint8_t *b8, int b_stride, int w, int h,
                                  uint64_t *sse, uint64_t *sum) {
@@ -139,7 +140,6 @@ static void aq_highbd_8_variance(const uint8_t *a8, int a_stride,
   *sse = (unsigned int)sse_long;
   *sum = (int)sum_long;
 }
-#endif  // CONFIG_HIGHBITDEPTH
 
 static unsigned int block_variance(const AV1_COMP *const cpi, MACROBLOCK *x,
                                    BLOCK_SIZE bs) {
@@ -154,7 +154,6 @@ static unsigned int block_variance(const AV1_COMP *const cpi, MACROBLOCK *x,
     const int bw = MI_SIZE * mi_size_wide[bs] - right_overflow;
     const int bh = MI_SIZE * mi_size_high[bs] - bottom_overflow;
     int avg;
-#if CONFIG_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
       aq_highbd_8_variance(x->plane[0].src.buf, x->plane[0].src.stride,
                            CONVERT_TO_BYTEPTR(av1_highbd_all_zeros), 0, bw, bh,
@@ -165,14 +164,9 @@ static unsigned int block_variance(const AV1_COMP *const cpi, MACROBLOCK *x,
       aq_variance(x->plane[0].src.buf, x->plane[0].src.stride, av1_all_zeros, 0,
                   bw, bh, &sse, &avg);
     }
-#else
-    aq_variance(x->plane[0].src.buf, x->plane[0].src.stride, av1_all_zeros, 0,
-                bw, bh, &sse, &avg);
-#endif  // CONFIG_HIGHBITDEPTH
     var = sse - (unsigned int)(((int64_t)avg * avg) / (bw * bh));
     return (unsigned int)((uint64_t)var * 256) / (bw * bh);
   } else {
-#if CONFIG_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
       var =
           cpi->fn_ptr[bs].vf(x->plane[0].src.buf, x->plane[0].src.stride,
@@ -181,10 +175,6 @@ static unsigned int block_variance(const AV1_COMP *const cpi, MACROBLOCK *x,
       var = cpi->fn_ptr[bs].vf(x->plane[0].src.buf, x->plane[0].src.stride,
                                av1_all_zeros, 0, &sse);
     }
-#else
-    var = cpi->fn_ptr[bs].vf(x->plane[0].src.buf, x->plane[0].src.stride,
-                             av1_all_zeros, 0, &sse);
-#endif  // CONFIG_HIGHBITDEPTH
     return (unsigned int)((uint64_t)var * 256) >> num_pels_log2_lookup[bs];
   }
 }
@@ -204,4 +194,54 @@ int av1_block_energy(const AV1_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bs) {
       (cpi->oxcf.pass == 2) ? cpi->twopass.mb_av_energy : DEFAULT_E_MIDPOINT;
   energy = av1_log_block_var(cpi, x, bs) - energy_midpoint;
   return clamp((int)round(energy), ENERGY_MIN, ENERGY_MAX);
+}
+
+unsigned int haar_ac_energy(MACROBLOCK *x, BLOCK_SIZE bs) {
+  MACROBLOCKD *xd = &x->e_mbd;
+  int stride = x->plane[0].src.stride;
+  uint8_t *buf = x->plane[0].src.buf;
+  const int bw = MI_SIZE * mi_size_wide[bs];
+  const int bh = MI_SIZE * mi_size_high[bs];
+  int hbd = xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH;
+
+  int var = 0;
+  for (int r = 0; r < bh; r += 8)
+    for (int c = 0; c < bw; c += 8) {
+      var += av1_haar_ac_sad_8x8_uint8_input(buf + c + r * stride, stride, hbd);
+    }
+
+  return (unsigned int)((uint64_t)var * 256) >> num_pels_log2_lookup[bs];
+}
+
+double av1_log_block_wavelet_energy(MACROBLOCK *x, BLOCK_SIZE bs) {
+  unsigned int haar_sad = haar_ac_energy(x, bs);
+  aom_clear_system_state();
+  return log(haar_sad + 1.0);
+}
+
+int av1_block_wavelet_energy_level(const AV1_COMP *cpi, MACROBLOCK *x,
+                                   BLOCK_SIZE bs) {
+  double energy, energy_midpoint;
+  aom_clear_system_state();
+  energy_midpoint = (cpi->oxcf.pass == 2) ? cpi->twopass.frame_avg_haar_energy
+                                          : DEFAULT_E_MIDPOINT;
+  energy = av1_log_block_wavelet_energy(x, bs) - energy_midpoint;
+  return clamp((int)round(energy), ENERGY_MIN, ENERGY_MAX);
+}
+
+int av1_compute_deltaq_from_energy_level(const AV1_COMP *const cpi,
+                                         int block_var_level) {
+  ENERGY_IN_BOUNDS(block_var_level);
+
+  const int rate_level = SEGMENT_ID(block_var_level);
+  const AV1_COMMON *const cm = &cpi->common;
+  int qindex_delta =
+      av1_compute_qdelta_by_rate(&cpi->rc, cm->frame_type, cm->base_qindex,
+                                 rate_ratio[rate_level], cm->bit_depth);
+
+  if ((cm->base_qindex != 0) && ((cm->base_qindex + qindex_delta) == 0)) {
+    qindex_delta = -cm->base_qindex + 1;
+  }
+
+  return qindex_delta;
 }
