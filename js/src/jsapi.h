@@ -2016,9 +2016,6 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
         return (desc().attrs & bits) == bits;
     }
 
-    // Non-API attributes bit used internally for arguments objects.
-    enum { SHADOWABLE = JSPROP_INTERNAL_USE_BIT };
-
   public:
     // Descriptors with JSGetterOp/JSSetterOp are considered data
     // descriptors. It's complicated.
@@ -2075,14 +2072,14 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                                      JSPROP_GETTER |
                                      JSPROP_SETTER |
                                      JSPROP_RESOLVING |
-                                     SHADOWABLE)) == 0);
+                                     JSPROP_INTERNAL_USE_BIT)) == 0);
         MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
         MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
         if (isAccessorDescriptor()) {
             MOZ_ASSERT(!has(JSPROP_READONLY));
             MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
             MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
-            MOZ_ASSERT(!has(SHADOWABLE));
+            MOZ_ASSERT(!has(JSPROP_INTERNAL_USE_BIT));
             MOZ_ASSERT(value().isUndefined());
             MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter());
             MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter());
@@ -2107,7 +2104,7 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
                                      JSPROP_GETTER |
                                      JSPROP_SETTER |
                                      JSPROP_RESOLVING |
-                                     SHADOWABLE)) == 0);
+                                     JSPROP_INTERNAL_USE_BIT)) == 0);
         MOZ_ASSERT_IF(isAccessorDescriptor(), has(JSPROP_GETTER) && has(JSPROP_SETTER));
 #endif
     }
