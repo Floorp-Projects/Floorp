@@ -1,0 +1,38 @@
+MOZ_AUTOMATION_L10N_CHECK=0
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+
+#add-on signing is checked but not enforced
+MOZ_REQUIRE_SIGNING=0
+# Enable MOZ_ALLOW_LEGACY_EXTENSIONS
+ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
+
+. $topsrcdir/build/mozconfig.stylo
+
+# ASan specific options on Linux
+ac_add_options --enable-valgrind
+
+. $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
+
+ac_add_options --disable-sandbox
+ac_add_options --disable-profiling
+ac_add_options --disable-warnings-as-errors
+ac_add_options --enable-coverage
+
+export CFLAGS="--coverage"
+export CXXFLAGS="--coverage"
+export LDFLAGS="--coverage"
+
+ac_add_options --enable-fuzzing
+unset MOZ_STDCXX_COMPAT
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=asan-cov
+
+. "$topsrcdir/build/mozconfig.common.override"
+
