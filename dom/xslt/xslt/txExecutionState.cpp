@@ -56,6 +56,7 @@ txExecutionState::txExecutionState(txStylesheet* aStylesheet,
                                    bool aDisableLoads)
     : mOutputHandler(nullptr),
       mResultHandler(nullptr),
+      mOutputHandlerFactory(nullptr),
       mStylesheet(aStylesheet),
       mNextInstruction(nullptr),
       mLocalVariables(nullptr),

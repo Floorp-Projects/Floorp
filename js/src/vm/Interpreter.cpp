@@ -4834,8 +4834,6 @@ js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, H
                               HandleObject val)
 {
     MOZ_ASSERT(val->isCallable());
-    GetterOp getter;
-    SetterOp setter;
 
     JSOp op = JSOp(*pc);
 
@@ -4846,18 +4844,14 @@ js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, H
     if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER ||
         op == JSOP_INITHIDDENPROP_GETTER || op == JSOP_INITHIDDENELEM_GETTER)
     {
-        getter = CastAsGetterOp(val);
-        setter = nullptr;
         attrs |= JSPROP_GETTER;
-    } else {
-        MOZ_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER ||
-                   op == JSOP_INITHIDDENPROP_SETTER || op == JSOP_INITHIDDENELEM_SETTER);
-        getter = nullptr;
-        setter = CastAsSetterOp(val);
-        attrs |= JSPROP_SETTER;
+        return DefineAccessorProperty(cx, obj, id, val, nullptr, attrs);
     }
 
-    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
+    MOZ_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER ||
+               op == JSOP_INITHIDDENPROP_SETTER || op == JSOP_INITHIDDENELEM_SETTER);
+    attrs |= JSPROP_SETTER;
+    return DefineAccessorProperty(cx, obj, id, nullptr, val, attrs);
 }
 
 bool

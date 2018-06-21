@@ -7,6 +7,9 @@
  * http://dev.w3.org/csswg/cssom/
  */
 
+ // Because of getComputedStyle, many CSSStyleDeclaration objects can be
+ // short-living.
+[ProbablyShortLivingWrapper]
 interface CSSStyleDeclaration {
   [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
   attribute DOMString cssText;

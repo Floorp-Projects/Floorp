@@ -26,7 +26,7 @@ use style::data::{ElementStyles, self};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
 use style::element_state::{DocumentState, ElementState};
-use style::error_reporting::{ContextualParseError, NullReporter, ParseErrorReporter};
+use style::error_reporting::{ContextualParseError, ParseErrorReporter};
 use style::font_metrics::{FontMetricsProvider, get_metrics_provider_for_product};
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::global_style_data::{GLOBAL_STYLE_DATA, GlobalStyleData, STYLE_THREAD_POOL};
@@ -1155,7 +1155,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(mode: SheetParsingMode) -> RawServoStyl
             origin,
             shared_lock,
             /* loader = */ None,
-            &NullReporter,
+            None,
             QuirksMode::NoQuirks,
             0
         )
@@ -1196,10 +1196,15 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
 
 
     Arc::new(StylesheetContents::from_str(
-        input, url_data.clone(), mode_to_origin(mode),
-        &global_style_data.shared_lock, loader, &reporter,
-        quirks_mode.into(), line_number_offset)
-    ).into_strong()
+        input,
+        url_data.clone(),
+        mode_to_origin(mode),
+        &global_style_data.shared_lock,
+        loader,
+        reporter.as_ref().map(|r| r as &ParseErrorReporter),
+        quirks_mode.into(),
+        line_number_offset,
+    )).into_strong()
 }
 
 #[no_mangle]
@@ -2515,6 +2520,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     write_locked_arc(rule, |rule: &mut FontFaceRule| {
@@ -2724,6 +2730,7 @@ macro_rules! counter_style_descriptors {
                 Some(CssRuleType::CounterStyle),
                 ParsingMode::DEFAULT,
                 QuirksMode::NoQuirks,
+                None,
             );
 
             write_locked_arc(rule, |rule: &mut CounterStyleRule| {
@@ -3206,18 +3213,15 @@ pub unsafe extern "C" fn Servo_StyleSet_CompatModeChanged(raw_data: RawServoStyl
     data.stylist.set_quirks_mode(QuirksMode::from(doc.mCompatMode));
 }
 
-fn parse_property_into<R>(
+fn parse_property_into(
     declarations: &mut SourcePropertyDeclaration,
     property_id: PropertyId,
     value: *const nsACString,
     data: *mut URLExtraData,
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
-    reporter: &R
-) -> Result<(), ()>
-where
-    R: ParseErrorReporter
-{
+    reporter: Option<&ParseErrorReporter>,
+) -> Result<(), ()> {
     use style_traits::ParsingMode;
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
@@ -3246,8 +3250,17 @@ pub extern "C" fn Servo_ParseProperty(
                                                    RawServoDeclarationBlockStrong::null());
     let mut declarations = SourcePropertyDeclaration::new();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
-    match parse_property_into(&mut declarations, id, value, data,
-                              parsing_mode, quirks_mode.into(), &reporter) {
+    let result = parse_property_into(
+        &mut declarations,
+        id,
+        value,
+        data,
+        parsing_mode,
+        quirks_mode.into(),
+        reporter.as_ref().map(|r| r as &ParseErrorReporter),
+    );
+
+    match result {
         Ok(()) => {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let mut block = PropertyDeclarationBlock::new();
@@ -3278,6 +3291,7 @@ pub extern "C" fn Servo_ParseEasing(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     let easing = unsafe { (*easing).to_string() };
     let mut input = ParserInput::new(&easing);
@@ -3368,7 +3382,7 @@ pub extern "C" fn Servo_ParseStyleAttribute(
         parse_style_attribute(
             value,
             url_data,
-            &reporter,
+            reporter.as_ref().map(|r| r as &ParseErrorReporter),
             quirks_mode.into(),
         )
     )).into_strong()
@@ -3553,7 +3567,7 @@ fn set_property(
         data,
         parsing_mode,
         quirks_mode,
-        &reporter,
+        reporter.as_ref().map(|r| r as &ParseErrorReporter),
     );
 
     if result.is_err() {
@@ -3757,14 +3771,12 @@ pub unsafe extern "C" fn Servo_MediaList_SetText(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        // TODO(emilio): Looks like error reporting could be useful here?
+        None,
     );
 
     write_locked_arc(list, |list: &mut MediaList| {
-        *list = MediaList::parse(
-            &context,
-            &mut parser,
-            &NullReporter,
-        );
+        *list = MediaList::parse(&context, &mut parser);
     })
 }
 
@@ -3801,6 +3813,7 @@ pub extern "C" fn Servo_MediaList_AppendMedium(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     write_locked_arc(list, |list: &mut MediaList| {
         list.append_medium(&context, new_medium);
@@ -3819,6 +3832,7 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     write_locked_arc(list, |list: &mut MediaList| list.delete_medium(&context, old_medium))
 }
@@ -4210,6 +4224,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context);
     let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(
@@ -4250,7 +4265,7 @@ pub unsafe extern "C" fn Servo_CSSSupports2(
         DUMMY_URL_DATA,
         structs::ParsingMode_Default,
         QuirksMode::NoQuirks,
-        &NullReporter,
+        None,
     ).is_ok()
 }
 
@@ -4269,6 +4284,7 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
             Some(CssRuleType::Style),
             ParsingMode::DEFAULT,
             QuirksMode::NoQuirks,
+            None,
         );
 
         cond.eval(&context)
@@ -5328,7 +5344,7 @@ pub unsafe extern "C" fn Servo_SelectorList_Drop(list: RawServoSelectorListOwned
 
 fn parse_color(
     value: &str,
-    error_reporter: Option<&ErrorReporter>,
+    error_reporter: Option<&ParseErrorReporter>,
 ) -> Result<specified::Color, ()> {
     let mut input = ParserInput::new(value);
     let mut parser = Parser::new(&mut input);
@@ -5339,11 +5355,12 @@ fn parse_color(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        error_reporter,
     );
 
     let start_position = parser.position();
     parser.parse_entirely(|i| specified::Color::parse(&context, i)).map_err(|err| {
-        if let Some(error_reporter) = error_reporter {
+        if error_reporter.is_some() {
             match err.kind {
                 ParseErrorKind::Custom(StyleParseErrorKind::ValueError(..)) => {
                     let location = err.location.clone();
@@ -5351,7 +5368,7 @@ fn parse_color(
                         parser.slice_from(start_position),
                         err,
                     );
-                    error_reporter.report(location, error);
+                    context.log_css_error(location, error);
                 }
                 // Ignore other kinds of errors that might be reported, such as
                 // ParseErrorKind::Basic(BasicParseErrorKind::UnexpectedToken),
@@ -5385,12 +5402,12 @@ pub extern "C" fn Servo_ComputeColor(
     let value = unsafe { (*value).to_string() };
     let result_color = unsafe { result_color.as_mut().unwrap() };
 
-    let reporter = unsafe { loader.as_mut() }.map(|loader| {
+    let reporter = unsafe { loader.as_mut() }.and_then(|loader| {
         // Make an ErrorReporter that will report errors as being "from DOM".
         ErrorReporter::new(ptr::null_mut(), loader, ptr::null_mut())
     });
 
-    match parse_color(&value, reporter.as_ref()) {
+    match parse_color(&value, reporter.as_ref().map(|r| r as &ParseErrorReporter)) {
         Ok(specified_color) => {
             let computed_color = match raw_data {
                 Some(raw_data) => {
@@ -5442,6 +5459,7 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     let margin = parser.parse_entirely(|p| {
@@ -5484,7 +5502,8 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
         unsafe { dummy_url_data() },
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
-        QuirksMode::NoQuirks
+        QuirksMode::NoQuirks,
+        None,
     );
 
     let transform = match parser.parse_entirely(|t| transform::parse(&context, t)) {
@@ -5527,6 +5546,7 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     let font = match parser.parse_entirely(|f| font::parse_value(&context, f)) {
@@ -5584,6 +5604,7 @@ pub unsafe extern "C" fn Servo_SourceSizeList_Parse(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     // NB: Intentionally not calling parse_entirely.

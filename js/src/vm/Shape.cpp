@@ -541,6 +541,21 @@ Shape::updateDictionaryTable(ShapeTable* table, ShapeTable::Entry* entry,
     parent->handoffTableTo(this);
 }
 
+static void
+AssertValidPropertyOp(NativeObject* obj, GetterOp getter, SetterOp setter, unsigned attrs)
+{
+    // We only support PropertyOp accessors on ArrayObject and ArgumentsObject
+    // and we don't want to add more of these properties (bug 1404885).
+
+#ifdef DEBUG
+    if ((getter && !(attrs & JSPROP_GETTER)) ||
+        (setter && !(attrs & JSPROP_SETTER)))
+    {
+        MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<ArgumentsObject>());
+    }
+#endif
+}
+
 /* static */ Shape*
 NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
@@ -550,6 +565,8 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 {
     AutoCheckShapeConsistency check(obj);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+
+    AssertValidPropertyOp(obj, getter, setter, attrs);
 
     if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry, keep))
         return nullptr;
@@ -972,6 +989,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
 
     AutoCheckShapeConsistency check(obj);
     AssertValidArrayIndex(obj, id);
+    AssertValidPropertyOp(obj, getter, setter, attrs);
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
