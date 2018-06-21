@@ -107,10 +107,9 @@ function testTrackingPageUnblocked() {
   }
 
   is(!hidden("#tracking-protection-icon"), TrackingProtection.enabled, "icon is visible if TP is on");
-  ok(!hidden("#tracking-action-block"), "blockButton is visible");
+  is(!hidden("#tracking-action-block"), TrackingProtection.enabled, "blockButton is visible if TP is on");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
-  is(!hidden("#tracking-protection-preferences-button"), TrackingProtection.enabled,
-    "preferences button is visible if TP is on");
+  ok(!hidden("#tracking-protection-preferences-button"), "preferences button is visible");
 
   // Make sure that the blocked tracking elements message appears
   ok(hidden("#tracking-not-detected"), "labelNoTracking is hidden");
