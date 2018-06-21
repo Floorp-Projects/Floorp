@@ -1526,27 +1526,6 @@ GetThemeDpiScaleFactor(nsIFrame* aFrame)
   return 1.0;
 }
 
-static bool
-IsWidgetScrollbarPart(uint8_t aWidgetType)
-{
-  switch (aWidgetType) {
-    case NS_THEME_SCROLLBAR:
-    case NS_THEME_SCROLLBAR_SMALL:
-    case NS_THEME_SCROLLBAR_VERTICAL:
-    case NS_THEME_SCROLLBAR_HORIZONTAL:
-    case NS_THEME_SCROLLBARBUTTON_UP:
-    case NS_THEME_SCROLLBARBUTTON_DOWN:
-    case NS_THEME_SCROLLBARBUTTON_LEFT:
-    case NS_THEME_SCROLLBARBUTTON_RIGHT:
-    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
-    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
-    case NS_THEME_SCROLLCORNER:
-      return true;
-    default:
-      return false;
-  }
-}
-
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
@@ -1959,7 +1938,7 @@ RENDER_AGAIN:
 }
 
 static nscolor
-GetScrollbarFaceColorForAuto()
+GetScrollbarFaceColorForAuto(ComputedStyle* aStyle)
 {
   // Do we want to derive from scrollbar-track-color when possible?
   DWORD sysColor = ::GetSysColor(COLOR_SCROLLBAR);
@@ -1992,7 +1971,7 @@ nsNativeThemeWin::GetWidgetAutoColor(ComputedStyle* aStyle, uint8_t aWidgetType)
 
     case NS_THEME_SCROLLBARTHUMB_VERTICAL:
     case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
-      return GetScrollbarFaceColorForAuto();
+      return GetScrollbarFaceColorForAuto(aStyle);
 
     default:
       return nsITheme::GetWidgetAutoColor(aStyle, aWidgetType);
@@ -4132,51 +4111,6 @@ ToColorRef(nscolor aColor)
   return RGB(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
 }
 
-static nscolor
-GetOpaqueBackgroundColor(ComputedStyle* aStyle)
-{
-  nscolor color = aStyle->StyleBackground()->BackgroundColor(aStyle);
-  if (NS_GET_A(color) == 255) {
-    return color;
-  }
-  // Compose white background with the background color.
-  return NS_ComposeColors(NS_RGB(255, 255, 255), color);
-}
-
-static nscolor
-GetScrollbarFaceColor(ComputedStyle* aStyle)
-{
-  StyleComplexColor complexColor =
-    aStyle->StyleUserInterface()->mScrollbarFaceColor;
-  if (complexColor.IsAuto()) {
-    return GetScrollbarFaceColorForAuto();
-  }
-  nscolor color = complexColor.CalcColor(aStyle);
-  if (NS_GET_A(color) == 255) {
-    return color;
-  }
-  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
-  return NS_ComposeColors(bgColor, color);
-}
-
-static nscolor
-GetScrollbarTrackColor(ComputedStyle* aStyle)
-{
-  StyleComplexColor complexColor =
-    aStyle->StyleUserInterface()->mScrollbarTrackColor;
-  nscolor color;
-  if (complexColor.IsAuto()) {
-    color = GetScrollbarTrackColorForAuto(aStyle);
-  } else {
-    color = complexColor.CalcColor(aStyle);
-  }
-  if (NS_GET_A(color) == 255) {
-    return color;
-  }
-  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
-  return NS_ComposeColors(bgColor, color);
-}
-
 static float
 ComputeColorComponentLuminance(uint8_t aComponent)
 {
@@ -4282,7 +4216,8 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
           dr(aClipRect.X(), aClipRect.Y(),
              aClipRect.Width(), aClipRect.Height());
 
-  nscolor trackColor = GetScrollbarTrackColor(aStyle);
+  nscolor trackColor =
+    GetScrollbarTrackColor(aStyle, &GetScrollbarTrackColorForAuto);
   HBRUSH dcBrush = (HBRUSH) GetStockObject(DC_BRUSH);
 
   gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
@@ -4318,7 +4253,8 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
           tr2.Deflate(0, dev2css);
         }
         nativeDrawing.TransformToNativeRect(tr2, widgetRect);
-        nscolor faceColor = GetScrollbarFaceColor(aStyle);
+        nscolor faceColor =
+          GetScrollbarFaceColor(aStyle, &GetScrollbarFaceColorForAuto);
         ::SetDCBrushColor(hdc, ToColorRef(faceColor));
         ::FillRect(hdc, &widgetRect, dcBrush);
         break;
