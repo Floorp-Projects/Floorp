@@ -45,6 +45,7 @@
 #include "nsDNSPrefetch.h"
 #include "nsChannelClassifier.h"
 #include "nsIRedirectResultListener.h"
+#include "mozIThirdPartyUtil.h"
 #include "mozilla/dom/ContentVerifier.h"
 #include "mozilla/TimeStamp.h"
 #include "nsError.h"
@@ -57,6 +58,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "nsISSLSocketControl.h"
 #include "sslt.h"
 #include "nsContentUtils.h"
@@ -102,6 +104,7 @@
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/Predictor.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs.h"
 #include "CacheControlParser.h"
 #include "nsMixedContentBlocker.h"
 #include "CacheStorageService.h"
@@ -3735,6 +3738,30 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
     }
     if (mTRR) {
         extension.Append("TRR");
+    }
+
+    if (StaticPrefs::privacy_trackingprotection_storagerestriction_enabled() &&
+        mIsTrackingResource) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+            services::GetThirdPartyUtil();
+        if (thirdPartyUtil) {
+            bool thirdParty = false;
+            Unused << thirdPartyUtil->IsThirdPartyChannel(this,
+                                                          nullptr,
+                                                          &thirdParty);
+            if (thirdParty) {
+                nsCOMPtr<nsIURI> topWindowURI;
+                rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsAutoString topWindowOrigin;
+                rv = nsContentUtils::GetUTFOrigin(topWindowURI, topWindowOrigin);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                extension.Append("-trackerFor:");
+                extension.Append(NS_ConvertUTF16toUTF8(topWindowOrigin));
+            }
+        }
     }
 
     mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;

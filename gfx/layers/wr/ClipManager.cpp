@@ -91,7 +91,7 @@ ClipManager::PushOverrideForASR(const ActiveScrolledRoot* aASR,
   Maybe<wr::WrClipId> scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
   MOZ_ASSERT(scrollId.isSome());
 
-  CLIP_LOG("Pushing override %" PRIu64 " -> %s\n", scrollId->id,
+  CLIP_LOG("Pushing override %zu -> %s\n", scrollId->id,
       aClipId ? Stringify(aClipId->id).c_str() : "(none)");
   auto it = mASROverride.insert({ *scrollId, std::stack<Maybe<wr::WrClipId>>() });
   it.first->second.push(aClipId);
@@ -114,7 +114,7 @@ ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR)
   auto it = mASROverride.find(*scrollId);
   MOZ_ASSERT(it != mASROverride.end());
   MOZ_ASSERT(!(it->second.empty()));
-  CLIP_LOG("Popping override %" PRIu64 " -> %s\n", scrollId->id,
+  CLIP_LOG("Popping override %zu -> %s\n", scrollId->id,
       it->second.top() ? Stringify(it->second.top()->id).c_str() : "(none)");
   it->second.pop();
   if (it->second.empty()) {
@@ -133,7 +133,7 @@ ClipManager::ClipIdAfterOverride(const Maybe<wr::WrClipId>& aClipId)
     return aClipId;
   }
   MOZ_ASSERT(!it->second.empty());
-  CLIP_LOG("Overriding %" PRIu64 " with %s\n", aClipId->id,
+  CLIP_LOG("Overriding %zu with %s\n", aClipId->id,
       it->second.top() ? Stringify(it->second.top()->id).c_str() : "(none)");
   return it->second.top();
 }
@@ -309,7 +309,7 @@ ClipManager::DefineClipChain(const DisplayItemClipChain* aChain,
     if (it != cache.end()) {
       // Found it in the currently-active cache, so just use the id we have for
       // it.
-      CLIP_LOG("cache[%p] => %" PRIu64 "\n", chain, it->second.id);
+      CLIP_LOG("cache[%p] => %zu\n", chain, it->second.id);
       clipIds.AppendElement(it->second);
       continue;
     }
@@ -339,7 +339,7 @@ ClipManager::DefineClipChain(const DisplayItemClipChain* aChain,
         wr::ToRoundedLayoutRect(clip), &wrRoundedRects);
     clipIds.AppendElement(clipId);
     cache[chain] = clipId;
-    CLIP_LOG("cache[%p] <= %" PRIu64 "\n", chain, clipId.id);
+    CLIP_LOG("cache[%p] <= %zu\n", chain, clipId.id);
   }
 
   // Now find the parent display item's clipchain id

@@ -2308,11 +2308,11 @@ ScalarTypeFromSimpleTypeDescrKey(uint32_t key)
     return ScalarTypeDescr::Type(key >> 1);
 }
 
-inline ReferenceTypeDescr::Type
+inline ReferenceType
 ReferenceTypeFromSimpleTypeDescrKey(uint32_t key)
 {
     MOZ_ASSERT(!SimpleTypeDescrKeyIsScalar(key));
-    return ReferenceTypeDescr::Type(key >> 1);
+    return ReferenceType(key >> 1);
 }
 
 // JSOP_NEWARRAY

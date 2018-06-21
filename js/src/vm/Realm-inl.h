@@ -46,7 +46,10 @@ JS::Realm::globalIsAboutToBeFinalized()
 /* static */ inline js::ObjectRealm&
 js::ObjectRealm::get(const JSObject* obj)
 {
-    return obj->realm()->objects_;
+    // Note: obj might be a CCW if we're accessing ObjectRealm::enumerators.
+    // CCWs here are fine because we always return the same ObjectRealm for a
+    // particular (CCW) object.
+    return obj->maybeCCWRealm()->objects_;
 }
 
 template <typename T>

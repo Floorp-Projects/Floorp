@@ -2784,8 +2784,8 @@ MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const Address& a
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    Register tag = extractTag(address, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
     return cond == Equal ? AboveOrEqual : Below;
 }
 
@@ -2794,8 +2794,8 @@ MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const Address& add
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_MAGIC));
+    Register tag = extractTag(address, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_MAGIC));
     return cond;
 }
 
@@ -2804,8 +2804,8 @@ MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Address& add
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_INT32));
+    Register tag = extractTag(address, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_INT32));
     return cond;
 }
 
@@ -2814,8 +2814,8 @@ MacroAssemblerARMCompat::testDouble(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testDouble(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testDouble(cond, tag);
 }
 
 Assembler::Condition
@@ -2823,8 +2823,8 @@ MacroAssemblerARMCompat::testBoolean(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testBoolean(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testBoolean(cond, tag);
 }
 
 Assembler::Condition
@@ -2832,8 +2832,8 @@ MacroAssemblerARMCompat::testNull(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testNull(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testNull(cond, tag);
 }
 
 Assembler::Condition
@@ -2841,8 +2841,8 @@ MacroAssemblerARMCompat::testUndefined(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testUndefined(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testUndefined(cond, tag);
 }
 
 Assembler::Condition
@@ -2850,8 +2850,8 @@ MacroAssemblerARMCompat::testString(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testString(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testString(cond, tag);
 }
 
 Assembler::Condition
@@ -2859,8 +2859,8 @@ MacroAssemblerARMCompat::testSymbol(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testSymbol(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testSymbol(cond, tag);
 }
 
 Assembler::Condition
@@ -2868,8 +2868,8 @@ MacroAssemblerARMCompat::testObject(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testObject(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testObject(cond, tag);
 }
 
 Assembler::Condition
@@ -2877,8 +2877,8 @@ MacroAssemblerARMCompat::testNumber(Condition cond, const Address& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    return testNumber(cond, scratch);
+    Register tag = extractTag(address, scratch);
+    return testNumber(cond, tag);
 }
 
 Assembler::Condition
@@ -2903,8 +2903,8 @@ MacroAssemblerARMCompat::testUndefined(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_UNDEFINED));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_UNDEFINED));
     return cond;
 }
 
@@ -2913,8 +2913,8 @@ MacroAssemblerARMCompat::testNull(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_NULL));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_NULL));
     return cond;
 }
 
@@ -2923,8 +2923,8 @@ MacroAssemblerARMCompat::testBoolean(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_BOOLEAN));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_BOOLEAN));
     return cond;
 }
 
@@ -2933,8 +2933,8 @@ MacroAssemblerARMCompat::testString(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_STRING));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_STRING));
     return cond;
 }
 
@@ -2943,8 +2943,8 @@ MacroAssemblerARMCompat::testSymbol(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_SYMBOL));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
 }
 
@@ -2953,8 +2953,8 @@ MacroAssemblerARMCompat::testInt32(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_INT32));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_INT32));
     return cond;
 }
 
@@ -2963,8 +2963,8 @@ MacroAssemblerARMCompat::testObject(Condition cond, const BaseIndex& src)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_OBJECT));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_OBJECT));
     return cond;
 }
 
@@ -2974,8 +2974,8 @@ MacroAssemblerARMCompat::testDouble(Condition cond, const BaseIndex& src)
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     Assembler::Condition actual = (cond == Equal) ? Below : AboveOrEqual;
     ScratchRegisterScope scratch(asMasm());
-    extractTag(src, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_CLEAR));
+    Register tag = extractTag(src, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_CLEAR));
     return actual;
 }
 
@@ -2984,8 +2984,8 @@ MacroAssemblerARMCompat::testMagic(Condition cond, const BaseIndex& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_TAG_MAGIC));
+    Register tag = extractTag(address, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_MAGIC));
     return cond;
 }
 
@@ -2994,8 +2994,8 @@ MacroAssemblerARMCompat::testGCThing(Condition cond, const BaseIndex& address)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     ScratchRegisterScope scratch(asMasm());
-    extractTag(address, scratch);
-    ma_cmp(scratch, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    Register tag = extractTag(address, scratch);
+    ma_cmp(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
     return cond == Equal ? AboveOrEqual : Below;
 }
 
@@ -4931,7 +4931,7 @@ MacroAssembler::branchValueIsNurseryCell(Condition cond, const Address& address,
     Label done, checkAddress;
 
     Register tag = temp;
-    extractTag(address, tag);
+    tag = extractTag(address, tag);
     branchTestObject(Assembler::Equal, tag, &checkAddress);
     branchTestString(Assembler::NotEqual, tag, cond == Assembler::Equal ? &done : label);
 

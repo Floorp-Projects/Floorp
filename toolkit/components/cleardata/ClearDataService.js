@@ -95,6 +95,16 @@ const NetworkCacheCleaner = {
 };
 
 const ImageCacheCleaner = {
+  deleteByPrincipal(aPrincipal) {
+    return new Promise(aResolve => {
+      let imageCache = Cc["@mozilla.org/image/tools;1"]
+                         .getService(Ci.imgITools)
+                         .getImgCacheForDocument(null);
+      imageCache.removeEntriesFromPrincipal(aPrincipal);
+      aResolve();
+    });
+  },
+
   deleteAll() {
     return new Promise(aResolve => {
       let imageCache = Cc["@mozilla.org/image/tools;1"]
@@ -703,7 +713,7 @@ ClearDataService.prototype = Object.freeze({
     }
 
     return this._deleteInternal(aFlags, aCallback, aCleaner => {
-      if ("deleteByPrincipal" in aCleaner && aCleaner.deleteByPrincipal) {
+      if (aCleaner.deleteByPrincipal) {
         return aCleaner.deleteByPrincipal(aPrincipal);
       }
       // Some of the 'Cleaners' do not support to delete by principal. Fallback

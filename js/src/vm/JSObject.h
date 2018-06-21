@@ -162,7 +162,6 @@ class JSObject : public js::gc::Cell
 
     JS::Compartment* compartment() const { return group_->compartment(); }
     JS::Compartment* maybeCompartment() const { return compartment(); }
-    JS::Realm* realm() const { return group_->realm(); }
 
     inline js::Shape* maybeShape() const;
     inline js::Shape* ensureShape(JSContext* cx);
@@ -433,8 +432,26 @@ class JSObject : public js::gc::Cell
     inline js::GlobalObject& deprecatedGlobal() const;
 
     // Cross-compartment wrappers are not associated with a single realm/global,
-    // so this method asserts the object is not a CCW.
+    // so these methods assert the object is not a CCW.
     inline js::GlobalObject& nonCCWGlobal() const;
+
+    JS::Realm* nonCCWRealm() const {
+        MOZ_ASSERT(!js::IsCrossCompartmentWrapper(this));
+        return group_->realm();
+    }
+
+    // Returns the object's realm even if the object is a CCW (be careful, in
+    // this case the realm is not very meaningful because wrappers are shared by
+    // all realms in the compartment).
+    JS::Realm* maybeCCWRealm() const {
+        return group_->realm();
+    }
+
+    // Deprecated: call nonCCWRealm(), maybeCCWRealm(), or NativeObject::realm()
+    // instead!
+    JS::Realm* deprecatedRealm() const {
+        return group_->realm();
+    }
 
     /*
      * ES5 meta-object properties and operations.

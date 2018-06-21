@@ -288,9 +288,9 @@ HasOwnProperty(JSContext* cx, HandleValue val, HandleValue idValue, bool* result
 
 
 inline bool
-GetIntrinsicOperation(JSContext* cx, jsbytecode* pc, MutableHandleValue vp)
+GetIntrinsicOperation(JSContext* cx, HandleScript script, jsbytecode* pc, MutableHandleValue vp)
 {
-    RootedPropertyName name(cx, cx->currentScript()->getName(pc));
+    RootedPropertyName name(cx, script->getName(pc));
     return GlobalObject::getIntrinsicValue(cx, cx->global(), name, vp);
 }
 

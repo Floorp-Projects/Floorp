@@ -118,7 +118,8 @@ class TypedObjectPrediction {
     // Constructing a prediction. Generally, you start with an empty
     // prediction and invoke addDescr() repeatedly.
 
-    TypedObjectPrediction() {
+    TypedObjectPrediction()
+      : data_() {
         kind_ = Empty;
     }
 
@@ -166,8 +167,8 @@ class TypedObjectPrediction {
     //
     // Only valid when |kind()| is Scalar, Reference, or Simd (as appropriate).
 
-    ScalarTypeDescr::Type scalarType() const;
-    ReferenceTypeDescr::Type referenceType() const;
+    Scalar::Type scalarType() const;
+    ReferenceType referenceType() const;
     SimdType simdType() const;
 
     ///////////////////////////////////////////////////////////////////////////

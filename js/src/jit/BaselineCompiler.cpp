@@ -2218,7 +2218,7 @@ BaselineCompiler::emit_JSOP_MUTATEPROTO()
     // Keep values on the stack for the decompiler.
     frame.syncStack(0);
 
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R0.scratchReg());
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
 
     prepareVMCall();
@@ -2701,7 +2701,7 @@ BaselineCompiler::getEnvironmentCoordinateObject(Register reg)
 
     masm.loadPtr(frame.addressOfEnvironmentChain(), reg);
     for (unsigned i = ec.hops(); i; i--)
-        masm.extractObject(Address(reg, EnvironmentObject::offsetOfEnclosingEnvironment()), reg);
+        masm.unboxObject(Address(reg, EnvironmentObject::offsetOfEnclosingEnvironment()), reg);
 }
 
 Address
@@ -3000,8 +3000,8 @@ BaselineCompiler::emitInitPropGetterSetter()
 
     prepareVMCall();
 
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-2)), R1.scratchReg());
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), R1.scratchReg());
 
     pushArg(R0.scratchReg());
     pushArg(ImmGCPtr(script->getName(pc)));
@@ -3057,13 +3057,13 @@ BaselineCompiler::emitInitElemGetterSetter()
     // decompiler.
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-1)), R1.scratchReg());
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R1.scratchReg());
 
     prepareVMCall();
 
     pushArg(R1.scratchReg());
     pushArg(R0);
-    masm.extractObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-3)), R0.scratchReg());
     pushArg(R0.scratchReg());
     pushArg(ImmPtr(pc));
 
