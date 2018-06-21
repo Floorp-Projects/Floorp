@@ -27,7 +27,6 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/Debugger.h"
-#include "wasm/WasmBinaryToText.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmValidate.h"
 

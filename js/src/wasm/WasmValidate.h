@@ -132,9 +132,6 @@ struct ModuleEnvironment
     bool funcIsImport(uint32_t funcIndex) const {
         return funcIndex < funcImportGlobalDataOffsets.length();
     }
-    uint32_t funcIndexToFuncTypeIndex(uint32_t funcIndex) const {
-        return TypeDef::fromFuncTypeWithIdPtr(funcTypes[funcIndex]) - types.begin();
-    }
 };
 
 // The Encoder class appends bytes to the Bytes object it is given during

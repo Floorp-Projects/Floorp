@@ -401,8 +401,6 @@ UNIFIED_SOURCES += [
     'vm/Xdr.cpp',
     'wasm/AsmJS.cpp',
     'wasm/WasmBaselineCompile.cpp',
-    'wasm/WasmBinaryToAST.cpp',
-    'wasm/WasmBinaryToText.cpp',
     'wasm/WasmBuiltins.cpp',
     'wasm/WasmCode.cpp',
     'wasm/WasmCompile.cpp',
@@ -420,7 +418,6 @@ UNIFIED_SOURCES += [
     'wasm/WasmStubs.cpp',
     'wasm/WasmTable.cpp',
     'wasm/WasmTextToBinary.cpp',
-    'wasm/WasmTextUtils.cpp',
     'wasm/WasmTypes.cpp',
     'wasm/WasmValidate.cpp'
 ]
