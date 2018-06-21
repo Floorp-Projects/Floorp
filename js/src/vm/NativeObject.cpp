@@ -2701,10 +2701,6 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
             // result is |shape|.
 
             // Steps 5.e.i-ii.
-            if (pobj->is<ArrayObject>() && id == NameToId(cx->names().length)) {
-                Rooted<ArrayObject*> arr(cx, &pobj->as<ArrayObject>());
-                return ArraySetLength(cx, arr, id, shape->attributes(), v, result);
-            }
             return NativeSetExistingDataProperty(cx, pobj, shape, v, result);
         }
 
