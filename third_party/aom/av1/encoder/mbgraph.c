@@ -11,8 +11,8 @@
 
 #include <limits.h>
 
-#include "./av1_rtcd.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/av1_rtcd.h"
+#include "config/aom_dsp_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_mem/aom_mem.h"
@@ -47,32 +47,28 @@ static unsigned int do_16x16_motion_iteration(AV1_COMP *cpi, const MV *ref_mv,
   av1_hex_search(x, &ref_full, step_param, x->errorperbit, 0,
                  cond_cost_list(cpi, cost_list), &v_fn_ptr, 0, ref_mv);
 
-// Try sub-pixel MC
-// if (bestsme > error_thresh && bestsme < INT_MAX)
-#if CONFIG_AMVR
-  if (cpi->common.cur_frame_mv_precision_level == 1) {
+  // Try sub-pixel MC
+  // if (bestsme > error_thresh && bestsme < INT_MAX)
+  if (cpi->common.cur_frame_force_integer_mv == 1) {
     x->best_mv.as_mv.row *= 8;
     x->best_mv.as_mv.col *= 8;
   } else {
-#else
-  {
-#endif
     int distortion;
     unsigned int sse;
-    cpi->find_fractional_mv_step(x, ref_mv, cpi->common.allow_high_precision_mv,
-                                 x->errorperbit, &v_fn_ptr, 0,
-                                 mv_sf->subpel_iters_per_step,
-                                 cond_cost_list(cpi, cost_list), NULL, NULL,
-                                 &distortion, &sse, NULL, NULL, 0, 0, 0, 0, 0);
+    cpi->find_fractional_mv_step(
+        x, &cpi->common, mb_row, mb_col, ref_mv,
+        cpi->common.allow_high_precision_mv, x->errorperbit, &v_fn_ptr, 0,
+        mv_sf->subpel_iters_per_step, cond_cost_list(cpi, cost_list), NULL,
+        NULL, &distortion, &sse, NULL, NULL, 0, 0, 0, 0, 0);
   }
 
-  if (has_second_ref(&xd->mi[0]->mbmi))
-    xd->mi[0]->mbmi.mode = NEW_NEWMV;
+  if (has_second_ref(xd->mi[0]))
+    xd->mi[0]->mode = NEW_NEWMV;
   else
-    xd->mi[0]->mbmi.mode = NEWMV;
+    xd->mi[0]->mode = NEWMV;
 
-  xd->mi[0]->mbmi.mv[0] = x->best_mv;
-  xd->mi[0]->mbmi.ref_frame[1] = NONE_FRAME;
+  xd->mi[0]->mv[0] = x->best_mv;
+  xd->mi[0]->ref_frame[1] = NONE_FRAME;
 
   av1_build_inter_predictors_sby(&cpi->common, xd, mb_row, mb_col, NULL,
                                  BLOCK_16X16);
@@ -108,7 +104,7 @@ static int do_16x16_motion_search(AV1_COMP *cpi, const MV *ref_mv, int mb_row,
   // If the current best reference mv is not centered on 0,0 then do a 0,0
   // based search as well.
   if (ref_mv->row != 0 || ref_mv->col != 0) {
-    MV zero_ref_mv = { 0, 0 };
+    MV zero_ref_mv = kZeroMv;
 
     tmp_err = do_16x16_motion_iteration(cpi, &zero_ref_mv, mb_row, mb_col);
     if (tmp_err < err) {
@@ -144,14 +140,14 @@ static int find_best_16x16_intra(AV1_COMP *cpi, PREDICTION_MODE *pbest_mode) {
 
   // calculate SATD for each intra prediction mode;
   // we're intentionally not doing 4x4, we just want a rough estimate
-  for (mode = DC_PRED; mode <= TM_PRED; mode++) {
+  for (mode = DC_PRED; mode <= PAETH_PRED; mode++) {
     unsigned int err;
 
-    xd->mi[0]->mbmi.mode = mode;
-    av1_predict_intra_block(cm, xd, 16, 16, BLOCK_16X16, mode,
-                            x->plane[0].src.buf, x->plane[0].src.stride,
-                            xd->plane[0].dst.buf, xd->plane[0].dst.stride, 0, 0,
-                            0);
+    xd->mi[0]->mode = mode;
+    av1_predict_intra_block(cm, xd, 16, 16, TX_16X16, mode, 0, 0,
+                            FILTER_INTRA_MODES, x->plane[0].src.buf,
+                            x->plane[0].src.stride, xd->plane[0].dst.buf,
+                            xd->plane[0].dst.stride, 0, 0, 0);
     err = aom_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
                        xd->plane[0].dst.buf, xd->plane[0].dst.stride);
 
@@ -231,8 +227,8 @@ static void update_mbgraph_frame_stats(AV1_COMP *cpi,
 
   int mb_col, mb_row, offset = 0;
   int mb_y_offset = 0, arf_y_offset = 0, gld_y_offset = 0;
-  MV gld_top_mv = { 0, 0 };
-  MODE_INFO mi_local;
+  MV gld_top_mv = kZeroMv;
+  MB_MODE_INFO mi_local;
 
   av1_zero(mi_local);
   // Set up limit values for motion vectors to prevent them extending outside
@@ -244,9 +240,9 @@ static void update_mbgraph_frame_stats(AV1_COMP *cpi,
   xd->plane[0].pre[0].stride = buf->y_stride;
   xd->plane[1].dst.stride = buf->uv_stride;
   xd->mi[0] = &mi_local;
-  mi_local.mbmi.sb_type = BLOCK_16X16;
-  mi_local.mbmi.ref_frame[0] = LAST_FRAME;
-  mi_local.mbmi.ref_frame[1] = NONE_FRAME;
+  mi_local.sb_type = BLOCK_16X16;
+  mi_local.ref_frame[0] = LAST_FRAME;
+  mi_local.ref_frame[1] = NONE_FRAME;
 
   for (mb_row = 0; mb_row < cm->mb_rows; mb_row++) {
     MV gld_left_mv = gld_top_mv;

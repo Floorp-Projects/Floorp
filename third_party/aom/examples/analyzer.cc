@@ -12,13 +12,14 @@
 #include <wx/aboutdlg.h>
 #include <wx/cmdline.h>
 #include <wx/dcbuffer.h>
-#include "./tools_common.h"
-#include "./video_reader.h"
+
 #include "aom/aom_decoder.h"
 #include "aom/aomdx.h"
-#include "av1/decoder/accounting.h"
 #include "av1/common/onyxc_int.h"
+#include "av1/decoder/accounting.h"
 #include "av1/decoder/inspection.h"
+#include "common/tools_common.h"
+#include "common/video_reader.h"
 
 #define OD_SIGNMASK(a) (-((a) < 0))
 #define OD_FLIPSIGNI(a, b) (((a) + OD_SIGNMASK(b)) ^ OD_SIGNMASK(b))
@@ -108,7 +109,7 @@ bool AV1Decoder::step() {
     size_t frame_size;
     const unsigned char *frame_data;
     frame_data = aom_video_reader_get_frame(reader, &frame_size);
-    if (aom_codec_decode(&codec, frame_data, frame_size, NULL, 0)) {
+    if (aom_codec_decode(&codec, frame_data, frame_size, NULL)) {
       fprintf(stderr, "Failed to decode frame.");
       return false;
     } else {
@@ -129,11 +130,10 @@ int AV1Decoder::getWidth() const {
 }
 
 int AV1Decoder::getWidthPadding() const {
-  return show_padding
-             ? AOMMAX(info->frame_width + 16,
-                      ALIGN_POWER_OF_TWO(info->frame_width, 6)) -
-                   info->frame_width
-             : 0;
+  return show_padding ? AOMMAX(info->frame_width + 16,
+                               ALIGN_POWER_OF_TWO(info->frame_width, 6)) -
+                            info->frame_width
+                      : 0;
 }
 
 int AV1Decoder::getHeight() const {
@@ -141,11 +141,10 @@ int AV1Decoder::getHeight() const {
 }
 
 int AV1Decoder::getHeightPadding() const {
-  return show_padding
-             ? AOMMAX(info->frame_height + 16,
-                      ALIGN_POWER_OF_TWO(info->frame_height, 6)) -
-                   info->frame_height
-             : 0;
+  return show_padding ? AOMMAX(info->frame_height + 16,
+                               ALIGN_POWER_OF_TWO(info->frame_height, 6)) -
+                            info->frame_height
+                      : 0;
 }
 
 bool AV1Decoder::getAccountingStruct(Accounting **accounting) {
@@ -285,19 +284,22 @@ void AnalyzerPanel::render() {
       cbval = ((pmask & OD_CB_MASK) >> 1) * (cbval - 128);
       crval = ((pmask & OD_CR_MASK) >> 2) * (crval - 128);
       /*This is intentionally slow and very accurate.*/
-      rval = OD_CLAMPI(0, (int32_t)OD_DIV_ROUND(
-                              2916394880000LL * yval + 4490222169144LL * crval,
-                              9745792000LL),
+      rval = OD_CLAMPI(
+          0,
+          (int32_t)OD_DIV_ROUND(
+              2916394880000LL * yval + 4490222169144LL * crval, 9745792000LL),
+          65535);
+      gval = OD_CLAMPI(0,
+                       (int32_t)OD_DIV_ROUND(2916394880000LL * yval -
+                                                 534117096223LL * cbval -
+                                                 1334761232047LL * crval,
+                                             9745792000LL),
                        65535);
-      gval = OD_CLAMPI(0, (int32_t)OD_DIV_ROUND(2916394880000LL * yval -
-                                                    534117096223LL * cbval -
-                                                    1334761232047LL * crval,
-                                                9745792000LL),
-                       65535);
-      bval = OD_CLAMPI(0, (int32_t)OD_DIV_ROUND(
-                              2916394880000LL * yval + 5290866304968LL * cbval,
-                              9745792000LL),
-                       65535);
+      bval = OD_CLAMPI(
+          0,
+          (int32_t)OD_DIV_ROUND(
+              2916394880000LL * yval + 5290866304968LL * cbval, 9745792000LL),
+          65535);
       unsigned char *px_row = p;
       for (int v = 0; v < zoom; v++) {
         unsigned char *px = px_row;
@@ -701,8 +703,8 @@ bool Analyzer::OnCmdLineParsed(wxCmdLineParser &parser) {  // NOLINT
   bool bit_accounting = parser.Found(_("a"));
   if (bit_accounting && !CONFIG_ACCOUNTING) {
     fprintf(stderr,
-            "Bit accounting support not found.  "
-            "Recompile with:\n./configure --enable-accounting\n");
+            "Bit accounting support not found. "
+            "Recompile with:\n./cmake -DCONFIG_ACCOUNTING=1\n");
     return false;
   }
   frame = new AnalyzerFrame(parser.Found(_("a")));

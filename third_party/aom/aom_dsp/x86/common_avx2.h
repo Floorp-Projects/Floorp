@@ -14,7 +14,7 @@
 
 #include <immintrin.h>
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
 
 // Note: in and out could have the same value
 static INLINE void mm256_transpose_16x16(const __m256i *in, __m256i *out) {

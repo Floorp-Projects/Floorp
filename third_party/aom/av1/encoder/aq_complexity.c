@@ -39,20 +39,28 @@ static const double aq_c_var_thresholds[AQ_C_STRENGTHS][AQ_C_SEGMENTS] = {
   { -3.0, -2.0, -1.0, 100.00, 100.0 }
 };
 
-#define DEFAULT_COMPLEXITY 64
-
 static int get_aq_c_strength(int q_index, aom_bit_depth_t bit_depth) {
   // Approximate base quatizer (truncated to int)
-  const int base_quant = av1_ac_quant(q_index, 0, bit_depth) / 4;
+  const int base_quant = av1_ac_quant_Q3(q_index, 0, bit_depth) / 4;
   return (base_quant > 10) + (base_quant > 25);
 }
 
 void av1_setup_in_frame_q_adj(AV1_COMP *cpi) {
   AV1_COMMON *const cm = &cpi->common;
   struct segmentation *const seg = &cm->seg;
+  int resolution_change =
+      cm->prev_frame && (cm->width != cm->prev_frame->width ||
+                         cm->height != cm->prev_frame->height);
 
   // Make SURE use of floating point in this function is safe.
   aom_clear_system_state();
+
+  if (resolution_change) {
+    memset(cpi->segmentation_map, 0, cm->mi_rows * cm->mi_cols);
+    av1_clearall_segfeatures(seg);
+    av1_disable_segmentation(seg);
+    return;
+  }
 
   if (frame_is_intra_only(cm) || cm->error_resilient_mode ||
       cpi->refresh_alt_ref_frame ||
@@ -73,9 +81,6 @@ void av1_setup_in_frame_q_adj(AV1_COMP *cpi) {
     }
 
     av1_enable_segmentation(seg);
-
-    // Select delta coding method.
-    seg->abs_delta = SEGMENT_DELTADATA;
 
     // Default segment "Q" feature is disabled so it defaults to the baseline Q.
     av1_disable_segfeature(seg, DEFAULT_AQ2_SEG, SEG_LVL_ALT_Q);
@@ -107,13 +112,13 @@ void av1_setup_in_frame_q_adj(AV1_COMP *cpi) {
 
 #define DEFAULT_LV_THRESH 10.0
 #define MIN_DEFAULT_LV_THRESH 8.0
-#define VAR_STRENGTH_STEP 0.25
 // Select a segment for the current block.
 // The choice of segment for a block depends on the ratio of the projected
 // bits for the block vs a target average and its spatial complexity.
 void av1_caq_select_segment(const AV1_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
                             int mi_row, int mi_col, int projected_rate) {
   const AV1_COMMON *const cm = &cpi->common;
+  const int num_planes = av1_num_planes(cm);
 
   const int mi_offset = mi_row * cm->mi_cols + mi_col;
   const int xmis = AOMMIN(cm->mi_cols - mi_col, mi_size_wide[bs]);
@@ -126,9 +131,10 @@ void av1_caq_select_segment(const AV1_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
     segment = DEFAULT_AQ2_SEG;
   } else {
     // Rate depends on fraction of a SB64 in frame (xmis * ymis / bw * bh).
-    // It is converted to bits * 256 units.
-    const int64_t num = (int64_t)cpi->rc.sb64_target_rate * xmis * ymis * 256;
-    const int denom = cm->mib_size * cm->mib_size;
+    // It is converted to bits << AV1_PROB_COST_SHIFT units.
+    const int64_t num = (int64_t)(cpi->rc.sb64_target_rate * xmis * ymis)
+                        << AV1_PROB_COST_SHIFT;
+    const int denom = cm->seq_params.mib_size * cm->seq_params.mib_size;
     const int target_rate = (int)(num / denom);
     double logvar;
     double low_var_thresh;
@@ -139,7 +145,7 @@ void av1_caq_select_segment(const AV1_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
                                                     MIN_DEFAULT_LV_THRESH)
                                            : DEFAULT_LV_THRESH;
 
-    av1_setup_src_planes(mb, cpi->source, mi_row, mi_col);
+    av1_setup_src_planes(mb, cpi->source, mi_row, mi_col, num_planes);
     logvar = av1_log_block_var(cpi, mb, bs);
 
     segment = AQ_C_SEGMENTS - 1;  // Just in case no break out below.

@@ -60,8 +60,9 @@ my $version_minor = $version_components[1];
 my $version_patch = $version_components[2];
 
 my $version_extra = "";
-if (@version_components > 3) {
-  $version_extra = $version_components[3];
+if (length($git_desc) > 0) {
+  my @git_desc_components = split('-', $git_desc, 2);
+  $version_extra = $git_desc_components[1];
 }
 
 open(my $version_file, '>', $version_filename) or

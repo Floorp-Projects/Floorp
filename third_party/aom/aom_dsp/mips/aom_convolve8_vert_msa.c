@@ -10,7 +10,9 @@
  */
 
 #include <assert.h>
-#include "./aom_dsp_rtcd.h"
+
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom_dsp/mips/aom_convolve_msa.h"
 
 static void common_vt_8t_4w_msa(const uint8_t *src, int32_t src_stride,
