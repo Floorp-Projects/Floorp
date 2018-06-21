@@ -10,8 +10,10 @@ use std::cmp::Ordering;
 use std::fmt::{self, Display};
 use std::hash::{Hash, Hasher};
 
-use proc_macro2::{Span, Term};
+use proc_macro2::{Ident, Span};
 use unicode_xid::UnicodeXID;
+
+use token::Apostrophe;
 
 /// A Rust lifetime: `'a`.
 ///
@@ -27,9 +29,10 @@ use unicode_xid::UnicodeXID;
 /// *This type is available if Syn is built with the `"derive"` or `"full"`
 /// feature.*
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Lifetime {
-    term: Term,
+    pub apostrophe: Apostrophe,
+    pub ident: Ident,
 }
 
 impl Lifetime {
@@ -65,28 +68,22 @@ impl Lifetime {
         }
 
         Lifetime {
-            term: Term::new(s, span),
+            apostrophe: Default::default(),
+            ident: Ident::new(&s[1..], span),
         }
-    }
-
-    pub fn span(&self) -> Span {
-        self.term.span()
-    }
-
-    pub fn set_span(&mut self, span: Span) {
-        self.term.set_span(span);
     }
 }
 
 impl Display for Lifetime {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        self.term.as_str().fmt(formatter)
+        "'".fmt(formatter)?;
+        self.ident.fmt(formatter)
     }
 }
 
 impl PartialEq for Lifetime {
     fn eq(&self, other: &Lifetime) -> bool {
-        self.term.as_str() == other.term.as_str()
+        self.ident.eq(&other.ident)
     }
 }
 
@@ -100,40 +97,37 @@ impl PartialOrd for Lifetime {
 
 impl Ord for Lifetime {
     fn cmp(&self, other: &Lifetime) -> Ordering {
-        self.term.as_str().cmp(other.term.as_str())
+        self.ident.cmp(&other.ident)
     }
 }
 
 impl Hash for Lifetime {
     fn hash<H: Hasher>(&self, h: &mut H) {
-        self.term.as_str().hash(h)
+        self.ident.hash(h)
     }
 }
 
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use synom::Synom;
     use buffer::Cursor;
     use parse_error;
     use synom::PResult;
+    use synom::Synom;
 
     impl Synom for Lifetime {
         fn parse(input: Cursor) -> PResult<Self> {
-            let (term, rest) = match input.term() {
-                Some(term) => term,
-                _ => return parse_error(),
+            let (apostrophe, rest) = Apostrophe::parse(input)?;
+            let (ident, rest) = match rest.ident() {
+                Some(pair) => pair,
+                None => return parse_error(),
             };
-            if !term.as_str().starts_with('\'') {
-                return parse_error();
-            }
 
-            Ok((
-                Lifetime {
-                    term: term,
-                },
-                rest,
-            ))
+            let ret = Lifetime {
+                ident: ident,
+                apostrophe: apostrophe,
+            };
+            Ok((ret, rest))
         }
 
         fn description() -> Option<&'static str> {
@@ -145,11 +139,13 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for Lifetime {
-        fn to_tokens(&self, tokens: &mut Tokens) {
-            self.term.to_tokens(tokens);
+        fn to_tokens(&self, tokens: &mut TokenStream) {
+            self.apostrophe.to_tokens(tokens);
+            self.ident.to_tokens(tokens);
         }
     }
 }
