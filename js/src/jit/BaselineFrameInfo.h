@@ -65,9 +65,9 @@ class StackValue
     };
 
   private:
-    Kind kind_;
+    MOZ_INIT_OUTSIDE_CTOR Kind kind_;
 
-    union Data {
+    MOZ_INIT_OUTSIDE_CTOR union Data {
         JS::Value constant;
         ValueOperand reg;
         uint32_t localSlot;
@@ -80,7 +80,7 @@ class StackValue
         MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
     } data;
 
-    JSValueType knownType_;
+    MOZ_INIT_OUTSIDE_CTOR JSValueType knownType_;
 
   public:
     StackValue() {

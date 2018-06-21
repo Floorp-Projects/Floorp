@@ -2955,6 +2955,14 @@ public:
   static StorageAccess StorageAllowedForPrincipal(nsIPrincipal* aPrincipal);
 
   /*
+   * Returns true if this window/channel should disable storages because of the
+   * anti-tracking feature.
+   */
+  static bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
+                                            nsIChannel* aChannel,
+                                            nsIURI* aURI);
+
+  /*
    * Serializes a HTML nsINode into its markup representation.
    */
   static bool SerializeNodeToMarkup(nsINode* aRoot,

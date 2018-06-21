@@ -279,6 +279,13 @@ _useragent(NPP npp);
 void*
 _memalloc (uint32_t size);
 
+// Deprecated entry points for the old Java plugin.
+void* /* OJI type: JRIEnv* */
+_getJavaEnv();
+
+void* /* OJI type: jref */
+_getJavaPeer(NPP npp);
+
 void
 _urlredirectresponse(NPP instance, void* notifyData, NPBool allow);
 

@@ -246,8 +246,7 @@ class ConstantOrRegister
 
   public:
 
-    ConstantOrRegister()
-    {}
+    ConstantOrRegister() = delete;
 
     MOZ_IMPLICIT ConstantOrRegister(const Value& value)
       : constant_(true)

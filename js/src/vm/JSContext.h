@@ -212,8 +212,9 @@ struct JSContext : public JS::RootingContext,
     friend class js::AutoRealm;
 
   public:
-    template <typename T>
-    inline void enterRealmOf(const T& target);
+    inline void enterRealmOf(JSObject* target);
+    inline void enterRealmOf(JSScript* target);
+    inline void enterRealmOf(js::ObjectGroup* target);
     inline void enterNullRealm();
 
     inline void leaveRealm(JS::Realm* oldRealm);
@@ -709,16 +710,17 @@ struct JSContext : public JS::RootingContext,
 
     /*
      * Get the topmost script and optional pc on the stack. By default, this
-     * function only returns a JSScript in the current compartment, returning
-     * nullptr if the current script is in a different compartment. This
-     * behavior can be overridden by passing ALLOW_CROSS_COMPARTMENT.
+     * function only returns a JSScript in the current realm, returning nullptr
+     * if the current script is in a different realm. This behavior can be
+     * overridden by passing AllowCrossRealm::Allow.
      */
-    enum MaybeAllowCrossCompartment {
-        DONT_ALLOW_CROSS_COMPARTMENT = false,
-        ALLOW_CROSS_COMPARTMENT = true
+    enum class AllowCrossRealm {
+        DontAllow = false,
+        Allow = true
     };
-    inline JSScript* currentScript(jsbytecode** pc = nullptr,
-                                   MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
+    inline JSScript*
+    currentScript(jsbytecode** pc = nullptr,
+                  AllowCrossRealm allowCrossRealm = AllowCrossRealm::DontAllow) const;
 
     inline js::Nursery& nursery();
     inline void minorGC(JS::gcreason::Reason reason);
