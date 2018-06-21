@@ -14,7 +14,8 @@ const ONBOARDING_MESSAGES = [
       icon: "privatebrowsing",
       button_label: "Try It Now",
       button_action: "OPEN_PRIVATE_BROWSER_WINDOW"
-    }
+    },
+    targeting: "isFirstRun"
   },
   {
     id: "ONBOARDING_2",
@@ -27,7 +28,8 @@ const ONBOARDING_MESSAGES = [
       button_label: "Try It Now",
       button_action: "OPEN_URL",
       button_action_params: "https://screenshots.firefox.com/#tour"
-    }
+    },
+    targeting: "isFirstRun"
   },
   {
     id: "ONBOARDING_3",
@@ -40,7 +42,8 @@ const ONBOARDING_MESSAGES = [
       button_label: "Try It Now",
       button_action: "OPEN_ABOUT_PAGE",
       button_action_params: "addons"
-    }
+    },
+    targeting: "isFirstRun && isInExperimentCohort == 1"
   },
   {
     id: "ONBOARDING_4",
@@ -53,7 +56,8 @@ const ONBOARDING_MESSAGES = [
       button_label: "Get Ghostery",
       button_action: "OPEN_URL",
       button_action_params: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"
-    }
+    },
+    targeting: "isFirstRun && isInExperimentCohort == 2"
   }
 ];
 
