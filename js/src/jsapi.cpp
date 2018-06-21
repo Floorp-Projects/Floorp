@@ -2115,9 +2115,7 @@ DefineAccessorPropertyById(JSContext* cx, HandleObject obj, HandleId id,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, getter, setter);
 
-    JSGetterOp getterOp = JS_DATA_TO_FUNC_PTR(GetterOp, getter.get());
-    JSSetterOp setterOp = JS_DATA_TO_FUNC_PTR(SetterOp, setter.get());
-    return js::DefineAccessorProperty(cx, obj, id, getterOp, setterOp, attrs);
+    return js::DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
 }
 
 static bool
