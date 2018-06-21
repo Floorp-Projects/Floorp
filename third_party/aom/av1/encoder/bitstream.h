@@ -20,34 +20,24 @@ extern "C" {
 
 struct aom_write_bit_buffer;
 
-#if CONFIG_REFERENCE_BUFFER
-void write_sequence_header(AV1_COMMON *const cm,
-                           struct aom_write_bit_buffer *wb);
-#endif
+void write_sequence_header(AV1_COMP *cpi, struct aom_write_bit_buffer *wb);
 
-void av1_pack_bitstream(AV1_COMP *const cpi, uint8_t *dest, size_t *size);
+uint32_t write_obu_header(OBU_TYPE obu_type, int obu_extension,
+                          uint8_t *const dst);
 
-void av1_encode_token_init(void);
+int write_uleb_obu_size(uint32_t obu_header_size, uint32_t obu_payload_size,
+                        uint8_t *dest);
+
+int av1_pack_bitstream(AV1_COMP *const cpi, uint8_t *dest, size_t *size);
 
 static INLINE int av1_preserve_existing_gf(AV1_COMP *cpi) {
-#if CONFIG_EXT_REFS
   // Do not swap gf and arf indices for internal overlay frames
   return !cpi->multi_arf_allowed && cpi->rc.is_src_frame_alt_ref &&
          !cpi->rc.is_src_frame_ext_arf;
-#else
-  return !cpi->multi_arf_allowed && cpi->refresh_golden_frame &&
-         cpi->rc.is_src_frame_alt_ref;
-#endif  // CONFIG_EXT_REFS
 }
 
 void av1_write_tx_type(const AV1_COMMON *const cm, const MACROBLOCKD *xd,
-#if CONFIG_SUPERTX
-                       const int supertx_enabled,
-#endif
-#if CONFIG_TXK_SEL
-                       int blk_row, int blk_col, int block, int plane,
-                       TX_SIZE tx_size,
-#endif
+                       int blk_row, int blk_col, int plane, TX_SIZE tx_size,
                        aom_writer *w);
 
 #ifdef __cplusplus

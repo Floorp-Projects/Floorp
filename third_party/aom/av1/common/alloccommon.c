@@ -10,7 +10,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom_mem/aom_mem.h"
 
 #include "av1/common/alloccommon.h"
@@ -25,15 +26,42 @@ int av1_get_MBs(int width, int height) {
   const int mi_cols = aligned_width >> MI_SIZE_LOG2;
   const int mi_rows = aligned_height >> MI_SIZE_LOG2;
 
-#if CONFIG_CB4X4
   const int mb_cols = (mi_cols + 2) >> 2;
   const int mb_rows = (mi_rows + 2) >> 2;
-#else
-  const int mb_cols = (mi_cols + 1) >> 1;
-  const int mb_rows = (mi_rows + 1) >> 1;
-#endif
   return mb_rows * mb_cols;
 }
+
+#if LOOP_FILTER_BITMASK
+static int alloc_loop_filter_mask(AV1_COMMON *cm) {
+  aom_free(cm->lf.lfm);
+  cm->lf.lfm = NULL;
+
+  // Each lfm holds bit masks for all the 4x4 blocks in a max
+  // 64x64 (128x128 for ext_partitions) region.  The stride
+  // and rows are rounded up / truncated to a multiple of 16
+  // (32 for ext_partition).
+  cm->lf.lfm_stride = (cm->mi_cols + (MI_SIZE_64X64 - 1)) >> MIN_MIB_SIZE_LOG2;
+  cm->lf.lfm_num = ((cm->mi_rows + (MI_SIZE_64X64 - 1)) >> MIN_MIB_SIZE_LOG2) *
+                   cm->lf.lfm_stride;
+  cm->lf.lfm =
+      (LoopFilterMask *)aom_calloc(cm->lf.lfm_num, sizeof(*cm->lf.lfm));
+  if (!cm->lf.lfm) return 1;
+
+  unsigned int i;
+  for (i = 0; i < cm->lf.lfm_num; ++i) av1_zero(cm->lf.lfm[i]);
+
+  return 0;
+}
+
+static void free_loop_filter_mask(AV1_COMMON *cm) {
+  if (cm->lf.lfm == NULL) return;
+
+  aom_free(cm->lf.lfm);
+  cm->lf.lfm = NULL;
+  cm->lf.lfm_num = 0;
+  cm->lf.lfm_stride = 0;
+}
+#endif
 
 void av1_set_mb_mi(AV1_COMMON *cm, int width, int height) {
   // Ensure that the decoded width and height are both multiples of
@@ -48,79 +76,13 @@ void av1_set_mb_mi(AV1_COMMON *cm, int width, int height) {
   cm->mi_rows = aligned_height >> MI_SIZE_LOG2;
   cm->mi_stride = calc_mi_size(cm->mi_cols);
 
-#if CONFIG_CB4X4
   cm->mb_cols = (cm->mi_cols + 2) >> 2;
   cm->mb_rows = (cm->mi_rows + 2) >> 2;
-#else
-  cm->mb_cols = (cm->mi_cols + 1) >> 1;
-  cm->mb_rows = (cm->mi_rows + 1) >> 1;
-#endif
   cm->MBs = cm->mb_rows * cm->mb_cols;
-}
 
-static int alloc_seg_map(AV1_COMMON *cm, int seg_map_size) {
-  int i;
-
-  for (i = 0; i < NUM_PING_PONG_BUFFERS; ++i) {
-    cm->seg_map_array[i] = (uint8_t *)aom_calloc(seg_map_size, 1);
-    if (cm->seg_map_array[i] == NULL) return 1;
-  }
-  cm->seg_map_alloc_size = seg_map_size;
-
-  // Init the index.
-  cm->seg_map_idx = 0;
-  cm->prev_seg_map_idx = 1;
-
-  cm->current_frame_seg_map = cm->seg_map_array[cm->seg_map_idx];
-  if (!cm->frame_parallel_decode)
-    cm->last_frame_seg_map = cm->seg_map_array[cm->prev_seg_map_idx];
-
-  return 0;
-}
-
-static void free_seg_map(AV1_COMMON *cm) {
-  int i;
-
-  for (i = 0; i < NUM_PING_PONG_BUFFERS; ++i) {
-    aom_free(cm->seg_map_array[i]);
-    cm->seg_map_array[i] = NULL;
-  }
-
-  cm->current_frame_seg_map = NULL;
-
-  if (!cm->frame_parallel_decode) {
-    cm->last_frame_seg_map = NULL;
-  }
-  cm->seg_map_alloc_size = 0;
-}
-
-static void free_scratch_buffers(AV1_COMMON *cm) {
-  (void)cm;
-#if CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
-  for (int i = 0; i < 4; ++i) {
-    if (cm->ncobmcaw_buf[i]) {
-      aom_free(cm->ncobmcaw_buf[i]);
-      cm->ncobmcaw_buf[i] = NULL;
-    }
-  }
-#endif  // CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
-}
-
-static int alloc_scratch_buffers(AV1_COMMON *cm) {
-  (void)cm;
-#if CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
-  // If not allocated already, allocate
-  if (!cm->ncobmcaw_buf[0] && !cm->ncobmcaw_buf[1] && !cm->ncobmcaw_buf[2] &&
-      !cm->ncobmcaw_buf[3]) {
-    for (int i = 0; i < 4; ++i) {
-      CHECK_MEM_ERROR(
-          cm, cm->ncobmcaw_buf[i],
-          (uint8_t *)aom_memalign(
-              16, (1 + CONFIG_HIGHBITDEPTH) * MAX_MB_PLANE * MAX_SB_SQUARE));
-    }
-  }
-#endif  // CONFIG_NCOBMC && CONFIG_NCOBMC_ADAPT_WEIGHT
-  return 0;
+#if LOOP_FILTER_BITMASK
+  alloc_loop_filter_mask(cm);
+#endif
 }
 
 void av1_free_ref_frame_buffers(BufferPool *pool) {
@@ -134,95 +96,177 @@ void av1_free_ref_frame_buffers(BufferPool *pool) {
     }
     aom_free(pool->frame_bufs[i].mvs);
     pool->frame_bufs[i].mvs = NULL;
-#if CONFIG_MFMV
-    aom_free(pool->frame_bufs[i].tpl_mvs);
-    pool->frame_bufs[i].tpl_mvs = NULL;
-#endif
+    aom_free(pool->frame_bufs[i].seg_map);
+    pool->frame_bufs[i].seg_map = NULL;
     aom_free_frame_buffer(&pool->frame_bufs[i].buf);
-#if CONFIG_HASH_ME
-    av1_hash_table_destroy(&pool->frame_bufs[i].hash_table);
-#endif
   }
 }
 
-#if CONFIG_LOOP_RESTORATION
-// Assumes cm->rst_info[p].restoration_tilesize is already initialized
+// Assumes cm->rst_info[p].restoration_unit_size is already initialized
 void av1_alloc_restoration_buffers(AV1_COMMON *cm) {
-  int p;
-#if CONFIG_FRAME_SUPERRES
-  int width = cm->superres_upscaled_width;
-  int height = cm->superres_upscaled_height;
-#else
-  int width = cm->width;
-  int height = cm->height;
-#endif  // CONFIG_FRAME_SUPERRES
-  av1_alloc_restoration_struct(cm, &cm->rst_info[0], width, height);
-  for (p = 1; p < MAX_MB_PLANE; ++p)
-    av1_alloc_restoration_struct(cm, &cm->rst_info[p],
-                                 ROUND_POWER_OF_TWO(width, cm->subsampling_x),
-                                 ROUND_POWER_OF_TWO(height, cm->subsampling_y));
-  aom_free(cm->rst_internal.tmpbuf);
-  CHECK_MEM_ERROR(cm, cm->rst_internal.tmpbuf,
-                  (int32_t *)aom_memalign(16, RESTORATION_TMPBUF_SIZE));
+  const int num_planes = av1_num_planes(cm);
+  for (int p = 0; p < num_planes; ++p)
+    av1_alloc_restoration_struct(cm, &cm->rst_info[p], p > 0);
 
-#if CONFIG_STRIPED_LOOP_RESTORATION
-  // Allocate internal storage for the loop restoration stripe boundary lines
-  for (p = 0; p < MAX_MB_PLANE; ++p) {
-    int w = p == 0 ? width : ROUND_POWER_OF_TWO(width, cm->subsampling_x);
-    int align_bits = 5;  // align for efficiency
-    int stride = ALIGN_POWER_OF_TWO(w, align_bits);
-    int num_stripes = (height + 63) / 64;
-    // for each processing stripe: 2 lines above, 2 below
-    int buf_size = num_stripes * 2 * stride;
-    uint8_t *above_buf, *below_buf;
-
-    aom_free(cm->rst_internal.stripe_boundary_above[p]);
-    aom_free(cm->rst_internal.stripe_boundary_below[p]);
-
-#if CONFIG_HIGHBITDEPTH
-    if (cm->use_highbitdepth) buf_size = buf_size * 2;
-#endif
-    CHECK_MEM_ERROR(cm, above_buf,
-                    (uint8_t *)aom_memalign(1 << align_bits, buf_size));
-    CHECK_MEM_ERROR(cm, below_buf,
-                    (uint8_t *)aom_memalign(1 << align_bits, buf_size));
-    cm->rst_internal.stripe_boundary_above[p] = above_buf;
-    cm->rst_internal.stripe_boundary_below[p] = below_buf;
-    cm->rst_internal.stripe_boundary_stride[p] = stride;
+  if (cm->rst_tmpbuf == NULL) {
+    CHECK_MEM_ERROR(cm, cm->rst_tmpbuf,
+                    (int32_t *)aom_memalign(16, RESTORATION_TMPBUF_SIZE));
   }
-#endif  // CONFIG_STRIPED_LOOP_RESTORATION
+
+  if (cm->rlbs == NULL) {
+    CHECK_MEM_ERROR(cm, cm->rlbs, aom_malloc(sizeof(RestorationLineBuffers)));
+  }
+
+  // For striped loop restoration, we divide each row of tiles into "stripes",
+  // of height 64 luma pixels but with an offset by RESTORATION_UNIT_OFFSET
+  // luma pixels to match the output from CDEF. We will need to store 2 *
+  // RESTORATION_CTX_VERT lines of data for each stripe, and also need to be
+  // able to quickly answer the question "Where is the <n>'th stripe for tile
+  // row <m>?" To make that efficient, we generate the rst_last_stripe array.
+  int num_stripes = 0;
+  for (int i = 0; i < cm->tile_rows; ++i) {
+    TileInfo tile_info;
+    av1_tile_set_row(&tile_info, cm, i);
+    const int mi_h = tile_info.mi_row_end - tile_info.mi_row_start;
+    const int ext_h = RESTORATION_UNIT_OFFSET + (mi_h << MI_SIZE_LOG2);
+    const int tile_stripes = (ext_h + 63) / 64;
+    num_stripes += tile_stripes;
+    cm->rst_end_stripe[i] = num_stripes;
+  }
+
+  // Now we need to allocate enough space to store the line buffers for the
+  // stripes
+  const int frame_w = cm->superres_upscaled_width;
+  const int use_highbd = cm->use_highbitdepth ? 1 : 0;
+
+  for (int p = 0; p < num_planes; ++p) {
+    const int is_uv = p > 0;
+    const int ss_x = is_uv && cm->subsampling_x;
+    const int plane_w = ((frame_w + ss_x) >> ss_x) + 2 * RESTORATION_EXTRA_HORZ;
+    const int stride = ALIGN_POWER_OF_TWO(plane_w, 5);
+    const int buf_size = num_stripes * stride * RESTORATION_CTX_VERT
+                         << use_highbd;
+    RestorationStripeBoundaries *boundaries = &cm->rst_info[p].boundaries;
+
+    if (buf_size != boundaries->stripe_boundary_size ||
+        boundaries->stripe_boundary_above == NULL ||
+        boundaries->stripe_boundary_below == NULL) {
+      aom_free(boundaries->stripe_boundary_above);
+      aom_free(boundaries->stripe_boundary_below);
+
+      CHECK_MEM_ERROR(cm, boundaries->stripe_boundary_above,
+                      (uint8_t *)aom_memalign(32, buf_size));
+      CHECK_MEM_ERROR(cm, boundaries->stripe_boundary_below,
+                      (uint8_t *)aom_memalign(32, buf_size));
+
+      boundaries->stripe_boundary_size = buf_size;
+    }
+    boundaries->stripe_boundary_stride = stride;
+  }
 }
 
 void av1_free_restoration_buffers(AV1_COMMON *cm) {
   int p;
   for (p = 0; p < MAX_MB_PLANE; ++p)
     av1_free_restoration_struct(&cm->rst_info[p]);
-  aom_free(cm->rst_internal.tmpbuf);
-  cm->rst_internal.tmpbuf = NULL;
-}
-#endif  // CONFIG_LOOP_RESTORATION
+  aom_free(cm->rst_tmpbuf);
+  cm->rst_tmpbuf = NULL;
+  aom_free(cm->rlbs);
+  cm->rlbs = NULL;
+  for (p = 0; p < MAX_MB_PLANE; ++p) {
+    RestorationStripeBoundaries *boundaries = &cm->rst_info[p].boundaries;
+    aom_free(boundaries->stripe_boundary_above);
+    aom_free(boundaries->stripe_boundary_below);
+    boundaries->stripe_boundary_above = NULL;
+    boundaries->stripe_boundary_below = NULL;
+  }
 
-void av1_free_context_buffers(AV1_COMMON *cm) {
+  aom_free_frame_buffer(&cm->rst_frame);
+}
+
+void av1_free_above_context_buffers(AV1_COMMON *cm,
+                                    int num_free_above_contexts) {
   int i;
-  cm->free_mi(cm);
-  free_seg_map(cm);
-  free_scratch_buffers(cm);
-  for (i = 0; i < MAX_MB_PLANE; i++) {
+  const int num_planes = cm->num_allocated_above_context_planes;
+
+  for (int tile_row = 0; tile_row < num_free_above_contexts; tile_row++) {
+    for (i = 0; i < num_planes; i++) {
+      aom_free(cm->above_context[i][tile_row]);
+      cm->above_context[i][tile_row] = NULL;
+    }
+    aom_free(cm->above_seg_context[tile_row]);
+    cm->above_seg_context[tile_row] = NULL;
+
+    aom_free(cm->above_txfm_context[tile_row]);
+    cm->above_txfm_context[tile_row] = NULL;
+  }
+  for (i = 0; i < num_planes; i++) {
     aom_free(cm->above_context[i]);
     cm->above_context[i] = NULL;
   }
   aom_free(cm->above_seg_context);
   cm->above_seg_context = NULL;
-  cm->above_context_alloc_cols = 0;
-#if CONFIG_VAR_TX
+
   aom_free(cm->above_txfm_context);
   cm->above_txfm_context = NULL;
 
-  for (i = 0; i < MAX_MB_PLANE; ++i) {
-    aom_free(cm->top_txfm_context[i]);
-    cm->top_txfm_context[i] = NULL;
-  }
+  cm->num_allocated_above_contexts = 0;
+  cm->num_allocated_above_context_mi_col = 0;
+  cm->num_allocated_above_context_planes = 0;
+}
+
+void av1_free_context_buffers(AV1_COMMON *cm) {
+  cm->free_mi(cm);
+
+  av1_free_above_context_buffers(cm, cm->num_allocated_above_contexts);
+
+#if LOOP_FILTER_BITMASK
+  free_loop_filter_mask(cm);
 #endif
+}
+
+int av1_alloc_above_context_buffers(AV1_COMMON *cm,
+                                    int num_alloc_above_contexts) {
+  const int num_planes = av1_num_planes(cm);
+  int plane_idx;
+  const int aligned_mi_cols =
+      ALIGN_POWER_OF_TWO(cm->mi_cols, MAX_MIB_SIZE_LOG2);
+
+  // Allocate above context buffers
+  cm->num_allocated_above_contexts = num_alloc_above_contexts;
+  cm->num_allocated_above_context_mi_col = aligned_mi_cols;
+  cm->num_allocated_above_context_planes = num_planes;
+  for (plane_idx = 0; plane_idx < num_planes; plane_idx++) {
+    cm->above_context[plane_idx] = (ENTROPY_CONTEXT **)aom_calloc(
+        num_alloc_above_contexts, sizeof(cm->above_context[0]));
+    if (!cm->above_context[plane_idx]) return 1;
+  }
+
+  cm->above_seg_context = (PARTITION_CONTEXT **)aom_calloc(
+      num_alloc_above_contexts, sizeof(cm->above_seg_context));
+  if (!cm->above_seg_context) return 1;
+
+  cm->above_txfm_context = (TXFM_CONTEXT **)aom_calloc(
+      num_alloc_above_contexts, sizeof(cm->above_txfm_context));
+  if (!cm->above_txfm_context) return 1;
+
+  for (int tile_row = 0; tile_row < num_alloc_above_contexts; tile_row++) {
+    for (plane_idx = 0; plane_idx < num_planes; plane_idx++) {
+      cm->above_context[plane_idx][tile_row] = (ENTROPY_CONTEXT *)aom_calloc(
+          aligned_mi_cols, sizeof(*cm->above_context[0][tile_row]));
+      if (!cm->above_context[plane_idx][tile_row]) return 1;
+    }
+
+    cm->above_seg_context[tile_row] = (PARTITION_CONTEXT *)aom_calloc(
+        aligned_mi_cols, sizeof(*cm->above_seg_context[tile_row]));
+    if (!cm->above_seg_context[tile_row]) return 1;
+
+    cm->above_txfm_context[tile_row] = (TXFM_CONTEXT *)aom_calloc(
+        aligned_mi_cols, sizeof(*cm->above_txfm_context[tile_row]));
+    if (!cm->above_txfm_context[tile_row]) return 1;
+  }
+
+  return 0;
 }
 
 int av1_alloc_context_buffers(AV1_COMMON *cm, int width, int height) {
@@ -233,52 +277,6 @@ int av1_alloc_context_buffers(AV1_COMMON *cm, int width, int height) {
   if (cm->mi_alloc_size < new_mi_size) {
     cm->free_mi(cm);
     if (cm->alloc_mi(cm, new_mi_size)) goto fail;
-  }
-
-  if (cm->seg_map_alloc_size < cm->mi_rows * cm->mi_cols) {
-    // Create the segmentation map structure and set to 0.
-    free_seg_map(cm);
-    if (alloc_seg_map(cm, cm->mi_rows * cm->mi_cols)) goto fail;
-  }
-  if (alloc_scratch_buffers(cm)) goto fail;
-
-  if (cm->above_context_alloc_cols < cm->mi_cols) {
-    // TODO(geza.lore): These are bigger than they need to be.
-    // cm->tile_width would be enough but it complicates indexing a
-    // little elsewhere.
-    const int aligned_mi_cols =
-        ALIGN_POWER_OF_TWO(cm->mi_cols, MAX_MIB_SIZE_LOG2);
-    int i;
-
-    for (i = 0; i < MAX_MB_PLANE; i++) {
-      aom_free(cm->above_context[i]);
-      cm->above_context[i] = (ENTROPY_CONTEXT *)aom_calloc(
-          aligned_mi_cols << (MI_SIZE_LOG2 - tx_size_wide_log2[0]),
-          sizeof(*cm->above_context[0]));
-      if (!cm->above_context[i]) goto fail;
-    }
-
-    aom_free(cm->above_seg_context);
-    cm->above_seg_context = (PARTITION_CONTEXT *)aom_calloc(
-        aligned_mi_cols, sizeof(*cm->above_seg_context));
-    if (!cm->above_seg_context) goto fail;
-
-#if CONFIG_VAR_TX
-    aom_free(cm->above_txfm_context);
-    cm->above_txfm_context = (TXFM_CONTEXT *)aom_calloc(
-        aligned_mi_cols << TX_UNIT_WIDE_LOG2, sizeof(*cm->above_txfm_context));
-    if (!cm->above_txfm_context) goto fail;
-
-    for (i = 0; i < MAX_MB_PLANE; ++i) {
-      aom_free(cm->top_txfm_context[i]);
-      cm->top_txfm_context[i] =
-          (TXFM_CONTEXT *)aom_calloc(aligned_mi_cols << TX_UNIT_WIDE_LOG2,
-                                     sizeof(*cm->top_txfm_context[0]));
-      if (!cm->top_txfm_context[i]) goto fail;
-    }
-#endif
-
-    cm->above_context_alloc_cols = aligned_mi_cols;
   }
 
   return 0;
@@ -299,18 +297,4 @@ void av1_remove_common(AV1_COMMON *cm) {
   cm->frame_contexts = NULL;
 }
 
-void av1_init_context_buffers(AV1_COMMON *cm) {
-  cm->setup_mi(cm);
-  if (cm->last_frame_seg_map && !cm->frame_parallel_decode)
-    memset(cm->last_frame_seg_map, 0, cm->mi_rows * cm->mi_cols);
-}
-
-void av1_swap_current_and_last_seg_map(AV1_COMMON *cm) {
-  // Swap indices.
-  const int tmp = cm->seg_map_idx;
-  cm->seg_map_idx = cm->prev_seg_map_idx;
-  cm->prev_seg_map_idx = tmp;
-
-  cm->current_frame_seg_map = cm->seg_map_array[cm->seg_map_idx];
-  cm->last_frame_seg_map = cm->seg_map_array[cm->prev_seg_map_idx];
-}
+void av1_init_context_buffers(AV1_COMMON *cm) { cm->setup_mi(cm); }

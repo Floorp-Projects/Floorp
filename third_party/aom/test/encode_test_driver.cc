@@ -7,13 +7,14 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+ */
 
 #include <string>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom_ports/mem.h"
 #include "test/codec_factory.h"
 #include "test/decode_test_driver.h"
@@ -34,21 +35,6 @@ void Encoder::InitEncoder(VideoSource *video) {
 
     res = aom_codec_enc_init(&encoder_, CodecInterface(), &cfg_, init_flags_);
     ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
-
-#if CONFIG_AV1_ENCODER
-    if (CodecInterface() == &aom_codec_av1_cx_algo) {
-// Default to 1 tile column for AV1. With CONFIG_EXT_TILE, the
-// default is already the largest possible tile size
-#if !CONFIG_EXT_TILE
-      const int log2_tile_columns = 0;
-      res = aom_codec_control_(&encoder_, AV1E_SET_TILE_COLUMNS,
-                               log2_tile_columns);
-      ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
-#endif  // !CONFIG_EXT_TILE
-    } else
-#endif
-    {
-    }
   }
 }
 
@@ -82,15 +68,14 @@ void Encoder::EncodeFrameInternal(const VideoSource &video,
   }
 
   // Encode the frame
-  API_REGISTER_STATE_CHECK(res = aom_codec_encode(&encoder_, img, video.pts(),
-                                                  video.duration(), frame_flags,
-                                                  deadline_));
+  API_REGISTER_STATE_CHECK(res =
+                               aom_codec_encode(&encoder_, img, video.pts(),
+                                                video.duration(), frame_flags));
   ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
 }
 
 void Encoder::Flush() {
-  const aom_codec_err_t res =
-      aom_codec_encode(&encoder_, NULL, 0, 0, 0, deadline_);
+  const aom_codec_err_t res = aom_codec_encode(&encoder_, NULL, 0, 0, 0);
   if (!encoder_.priv)
     ASSERT_EQ(AOM_CODEC_ERROR, res) << EncoderError();
   else
@@ -105,11 +90,8 @@ void EncoderTest::InitializeConfig() {
 void EncoderTest::SetMode(TestMode mode) {
   switch (mode) {
     case kOnePassGood:
-    case kTwoPassGood: deadline_ = AOM_DL_GOOD_QUALITY; break;
-    case kRealTime:
-      deadline_ = AOM_DL_GOOD_QUALITY;
-      cfg_.g_lag_in_frames = 0;
-      break;
+    case kTwoPassGood: break;
+    case kRealTime: cfg_.g_lag_in_frames = 0; break;
     default: ASSERT_TRUE(false) << "Unexpected mode " << mode;
   }
   mode_ = mode;
@@ -149,14 +131,16 @@ static bool compare_img(const aom_image_t *img1, const aom_image_t *img2,
                         int *const mismatch_row, int *const mismatch_col,
                         int *const mismatch_plane, int *const mismatch_pix1,
                         int *const mismatch_pix2) {
-  if (img1->fmt != img2->fmt || img1->cs != img2->cs ||
-      img1->d_w != img2->d_w || img1->d_h != img2->d_h) {
+  if (img1->fmt != img2->fmt || img1->cp != img2->cp || img1->tc != img2->tc ||
+      img1->mc != img2->mc || img1->d_w != img2->d_w ||
+      img1->d_h != img2->d_h || img1->monochrome != img2->monochrome) {
     if (mismatch_row != NULL) *mismatch_row = -1;
     if (mismatch_col != NULL) *mismatch_col = -1;
     return false;
   }
 
-  for (int plane = 0; plane < 3; plane++) {
+  const int num_planes = img1->monochrome ? 1 : 3;
+  for (int plane = 0; plane < num_planes; plane++) {
     if (!compare_plane(img1->planes[plane], img1->stride[plane],
                        img2->planes[plane], img2->stride[plane],
                        aom_img_plane_width(img1, plane),
@@ -209,7 +193,7 @@ void EncoderTest::RunLoop(VideoSource *video) {
 
     BeginPassHook(pass);
     testing::internal::scoped_ptr<Encoder> encoder(
-        codec_->CreateEncoder(cfg_, deadline_, init_flags_, &stats_));
+        codec_->CreateEncoder(cfg_, init_flags_, &stats_));
     ASSERT_TRUE(encoder.get() != NULL);
 
     ASSERT_NO_FATAL_FAILURE(video->Begin());
@@ -228,10 +212,11 @@ void EncoderTest::RunLoop(VideoSource *video) {
       dec_init_flags |= AOM_CODEC_USE_INPUT_FRAGMENTS;
     testing::internal::scoped_ptr<Decoder> decoder(
         codec_->CreateDecoder(dec_cfg, dec_init_flags));
-#if CONFIG_AV1 && CONFIG_EXT_TILE
+#if CONFIG_AV1_DECODER
     if (decoder->IsAV1()) {
       // Set dec_cfg.tile_row = -1 and dec_cfg.tile_col = -1 so that the whole
       // frame is decoded.
+      decoder->Control(AV1_SET_TILE_MODE, cfg_.large_scale_tile);
       decoder->Control(AV1_SET_DECODE_TILE_ROW, -1);
       decoder->Control(AV1_SET_DECODE_TILE_COL, -1);
     }
@@ -256,8 +241,16 @@ void EncoderTest::RunLoop(VideoSource *video) {
           case AOM_CODEC_CX_FRAME_PKT:
             has_cxdata = true;
             if (decoder.get() != NULL && DoDecode()) {
-              aom_codec_err_t res_dec = decoder->DecodeFrame(
-                  (const uint8_t *)pkt->data.frame.buf, pkt->data.frame.sz);
+              aom_codec_err_t res_dec;
+              if (DoDecodeInvisible()) {
+                res_dec = decoder->DecodeFrame(
+                    (const uint8_t *)pkt->data.frame.buf, pkt->data.frame.sz);
+              } else {
+                res_dec = decoder->DecodeFrame(
+                    (const uint8_t *)pkt->data.frame.buf +
+                        (pkt->data.frame.sz - pkt->data.frame.vis_frame_size),
+                    pkt->data.frame.vis_frame_size);
+              }
 
               if (!HandleDecodeResult(res_dec, decoder.get())) break;
 

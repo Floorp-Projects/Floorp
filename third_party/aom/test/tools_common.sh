@@ -76,61 +76,46 @@ cleanup() {
   if [ -n "${AOM_TOOL_TEST}" ] && [ "${AOM_TOOL_TEST}" != '<unset>' ]; then
     echo "FAIL: $AOM_TOOL_TEST"
   fi
+  if [ "${AOM_TEST_PRESERVE_OUTPUT}" = "yes" ]; then
+    return
+  fi
   if [ -n "${AOM_TEST_OUTPUT_DIR}" ] && [ -d "${AOM_TEST_OUTPUT_DIR}" ]; then
     rm -rf "${AOM_TEST_OUTPUT_DIR}"
   fi
 }
 
-# Echoes the git hash portion of the VERSION_STRING variable defined in
-# $LIBAOM_CONFIG_PATH/config.mk to stdout, or the version number string when
-# no git hash is contained in VERSION_STRING.
-config_hash() {
-  aom_config_mk="${LIBAOM_CONFIG_PATH}/config.mk"
-  if [ ! -f "${aom_config_mk}" ]; then
-    aom_config_c="${LIBAOM_CONFIG_PATH}/aom_config.c"
-    # Clean up the aom_git_hash pointer line from aom_config.c.
-    # 1. Run grep on aom_config.c for aom_git_hash and limit results to 1.
-    # 2. Split the line using ' = "' as separator.
-    # 3. Abuse sed to consume the trailing "; from the assignment to the
-    #    aom_git_hash pointer.
-    awk -F ' = "' '/aom_git_hash/ { print $NF; exit }' "${aom_config_c}" \
-      | sed s/\"\;//
-    return
-  fi
+# Echoes the version string assigned to the VERSION_STRING_NOSP variable defined
+# in $LIBAOM_CONFIG_PATH/config/aom_version.h to stdout.
+cmake_version() {
+  aom_version_h="${LIBAOM_CONFIG_PATH}/config/aom_version.h"
 
-  # Find VERSION_STRING line, split it with "-g" and print the last field to
-  # output the git hash to stdout.
-  aom_version=$(awk -F -g '/VERSION_STRING/ {print $NF}' "${aom_config_mk}")
-  # Handle two situations here:
-  # 1. The default case: $aom_version is a git hash, so echo it unchanged.
-  # 2. When being run a non-dev tree, the -g portion is not present in the
-  #    version string: It's only the version number.
-  #    In this case $aom_version is something like 'VERSION_STRING=v1.3.0', so
-  #    we echo only what is after the '='.
-  echo "${aom_version##*=}"
+  # Find VERSION_STRING_NOSP line, split it with '"' and print the next to last
+  # field to output the version string to stdout.
+  aom_version=$(awk -F \" '/VERSION_STRING_NOSP/ {print $(NF-1)}' \
+    "${aom_version_h}")
+  echo "v${aom_version}"
 }
 
-# Echoes the short form of the current git hash.
-current_hash() {
+# Echoes current git version as reported by running 'git describe', or the
+# version used by the cmake build when git is unavailable.
+source_version() {
   if git --version > /dev/null 2>&1; then
     (cd "$(dirname "${0}")"
-    git rev-parse HEAD)
+    git describe)
   else
-    # Return the config hash if git is unavailable: Fail silently, git hashes
-    # are used only for warnings.
-    config_hash
+    cmake_version
   fi
 }
 
-# Echoes warnings to stdout when git hash in aom_config.h does not match the
-# current git hash.
-check_git_hashes() {
-  hash_at_configure_time=$(config_hash)
-  hash_now=$(current_hash)
+# Echoes warnings to stdout when source version and CMake build generated
+# version are out of sync.
+check_version_strings() {
+  cmake_version=$(cmake_version)
+  source_version=$(source_version)
 
-  if [ "${hash_at_configure_time}" != "${hash_now}" ]; then
-    echo "Warning: git hash has changed since last configure."
-    vlog "  config hash: ${hash_at_configure_time} hash now: ${hash_now}"
+  if [ "${cmake_version}" != "${source_version}" ]; then
+    echo "Warning: version has changed since last cmake run."
+    vlog "  cmake version: ${cmake_version} version now: ${source_version}"
   fi
 }
 
@@ -159,7 +144,7 @@ verify_aom_test_environment() {
 # is available.
 aom_config_option_enabled() {
   aom_config_option="${1}"
-  aom_config_file="${LIBAOM_CONFIG_PATH}/aom_config.h"
+  aom_config_file="${LIBAOM_CONFIG_PATH}/config/aom_config.h"
   config_line=$(grep "${aom_config_option}" "${aom_config_file}")
   if echo "${config_line}" | egrep -q '1$'; then
     echo yes
@@ -174,22 +159,29 @@ is_windows_target() {
   fi
 }
 
-# Echoes path to $1 when it's executable and exists in ${LIBAOM_BIN_PATH}, or an
-# empty string. Caller is responsible for testing the string once the function
-# returns.
+# Echoes path to $1 when it's executable and exists in one of the directories
+# included in $tool_paths, or an empty string. Caller is responsible for testing
+# the string once the function returns.
 aom_tool_path() {
   local readonly tool_name="$1"
-  local tool_path="${LIBAOM_BIN_PATH}/${tool_name}${AOM_TEST_EXE_SUFFIX}"
-  if [ ! -x "${tool_path}" ]; then
-    # Try one directory up: when running via examples.sh the tool could be in
-    # the parent directory of $LIBAOM_BIN_PATH.
-    tool_path="${LIBAOM_BIN_PATH}/../${tool_name}${AOM_TEST_EXE_SUFFIX}"
-  fi
+  local readonly root_path="${LIBAOM_BIN_PATH}"
+  local readonly suffix="${AOM_TEST_EXE_SUFFIX}"
+  local readonly tool_paths="\
+    ${root_path}/${tool_name}${suffix} \
+    ${root_path}/../${tool_name}${suffix} \
+    ${root_path}/tools/${tool_name}${suffix} \
+    ${root_path}/../tools/${tool_name}${suffix}"
 
-  if [ ! -x "${tool_path}" ]; then
-    tool_path=""
-  fi
-  echo "${tool_path}"
+  local toolpath=""
+
+  for tool_path in ${tool_paths}; do
+    if [ -x "${tool_path}" ] && [ -f "${tool_path}" ]; then
+      echo "${tool_path}"
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 # Echoes yes to stdout when the file named by positional parameter one exists
@@ -210,6 +202,14 @@ av1_decode_available() {
 # CONFIG_AV1_ENCODER.
 av1_encode_available() {
   [ "$(aom_config_option_enabled CONFIG_AV1_ENCODER)" = "yes" ] && echo yes
+}
+
+# Echoes "fast" encode params for use with aomenc.
+aomenc_encode_test_fast_params() {
+  echo "--cpu-used=1
+        --limit=${AV1_ENCODE_TEST_FRAME_LIMIT}
+        --lag-in-frames=0
+        --test-decode=fatal"
 }
 
 # Echoes yes to stdout when aom_config_option_enabled() reports yes for
@@ -285,7 +285,7 @@ run_tests() {
   # Combine environment and actual tests.
   local tests_to_run="${env_tests} ${tests_to_filter}"
 
-  check_git_hashes
+  check_version_strings
 
   # Run tests.
   for test in ${tests_to_run}; do
@@ -296,7 +296,7 @@ run_tests() {
     test_end "${test}"
   done
 
-  local tested_config="$(test_configuration_target) @ $(current_hash)"
+  local tested_config="$(test_configuration_target) @ $(source_version)"
   echo "${test_name}: Done, all tests pass for ${tested_config}."
 }
 
@@ -352,10 +352,9 @@ encode_yuv_raw_input_av1() {
     local readonly encoder="$(aom_tool_path aomenc)"
     shift
     eval "${encoder}" $(yuv_raw_input) \
-      --codec=av1 \
-      $@ \
-      --limit=5 \
+      $(aomenc_encode_test_fast_params) \
       --output="${output}" \
+      $@ \
       ${devnull}
 
     if [ ! -e "${output}" ]; then
@@ -427,7 +426,7 @@ else
   AOM_TEST_TEMP_ROOT=/tmp
 fi
 
-AOM_TEST_OUTPUT_DIR="${AOM_TEST_TEMP_ROOT}/aom_test_$$"
+AOM_TEST_OUTPUT_DIR="${AOM_TEST_OUTPUT_DIR:-${AOM_TEST_TEMP_ROOT}/aom_test_$$}"
 
 if ! mkdir -p "${AOM_TEST_OUTPUT_DIR}" || \
    [ ! -d "${AOM_TEST_OUTPUT_DIR}" ]; then
@@ -436,17 +435,19 @@ if ! mkdir -p "${AOM_TEST_OUTPUT_DIR}" || \
   exit 1
 fi
 
+AOM_TEST_PRESERVE_OUTPUT=${AOM_TEST_PRESERVE_OUTPUT:-no}
+
 if [ "$(is_windows_target)" = "yes" ]; then
   AOM_TEST_EXE_SUFFIX=".exe"
 fi
 
 # Variables shared by tests.
-VP8_IVF_FILE="${LIBAOM_TEST_DATA_PATH}/vp80-00-comprehensive-001.ivf"
-AV1_IVF_FILE="${LIBAOM_TEST_DATA_PATH}/vp90-2-09-subpixel-00.ivf"
-
-AV1_WEBM_FILE="${LIBAOM_TEST_DATA_PATH}/vp90-2-00-quantizer-00.webm"
-AV1_FPM_WEBM_FILE="${LIBAOM_TEST_DATA_PATH}/vp90-2-07-frame_parallel-1.webm"
-AV1_LT_50_FRAMES_WEBM_FILE="${LIBAOM_TEST_DATA_PATH}/vp90-2-02-size-32x08.webm"
+AV1_ENCODE_CPU_USED=${AV1_ENCODE_CPU_USED:-1}
+AV1_ENCODE_TEST_FRAME_LIMIT=${AV1_ENCODE_TEST_FRAME_LIMIT:-5}
+AV1_IVF_FILE="${AV1_IVF_FILE:-${AOM_TEST_OUTPUT_DIR}/av1.ivf}"
+AV1_OBU_ANNEXB_FILE="${AV1_OBU_ANNEXB_FILE:-${AOM_TEST_OUTPUT_DIR}/av1.annexb.obu}"
+AV1_OBU_SEC5_FILE="${AV1_OBU_SEC5_FILE:-${AOM_TEST_OUTPUT_DIR}/av1.section5.obu}"
+AV1_WEBM_FILE="${AV1_WEBM_FILE:-${AOM_TEST_OUTPUT_DIR}/av1.webm}"
 
 YUV_RAW_INPUT="${LIBAOM_TEST_DATA_PATH}/hantro_collage_w352h288.yuv"
 YUV_RAW_INPUT_WIDTH=352
@@ -462,18 +463,22 @@ vlog "$(basename "${0%.*}") test configuration:
   LIBAOM_BIN_PATH=${LIBAOM_BIN_PATH}
   LIBAOM_CONFIG_PATH=${LIBAOM_CONFIG_PATH}
   LIBAOM_TEST_DATA_PATH=${LIBAOM_TEST_DATA_PATH}
-  AOM_IVF_FILE=${AOM_IVF_FILE}
-  AV1_IVF_FILE=${AV1_IVF_FILE}
-  AV1_WEBM_FILE=${AV1_WEBM_FILE}
   AOM_TEST_EXE_SUFFIX=${AOM_TEST_EXE_SUFFIX}
   AOM_TEST_FILTER=${AOM_TEST_FILTER}
   AOM_TEST_LIST_TESTS=${AOM_TEST_LIST_TESTS}
   AOM_TEST_OUTPUT_DIR=${AOM_TEST_OUTPUT_DIR}
   AOM_TEST_PREFIX=${AOM_TEST_PREFIX}
+  AOM_TEST_PRESERVE_OUTPUT=${AOM_TEST_PRESERVE_OUTPUT}
   AOM_TEST_RUN_DISABLED_TESTS=${AOM_TEST_RUN_DISABLED_TESTS}
   AOM_TEST_SHOW_PROGRAM_OUTPUT=${AOM_TEST_SHOW_PROGRAM_OUTPUT}
   AOM_TEST_TEMP_ROOT=${AOM_TEST_TEMP_ROOT}
   AOM_TEST_VERBOSE_OUTPUT=${AOM_TEST_VERBOSE_OUTPUT}
+  AV1_ENCODE_CPU_USED=${AV1_ENCODE_CPU_USED}
+  AV1_ENCODE_TEST_FRAME_LIMIT=${AV1_ENCODE_TEST_FRAME_LIMIT}
+  AV1_IVF_FILE=${AV1_IVF_FILE}
+  AV1_OBU_ANNEXB_FILE=${AV1_OBU_ANNEXB_FILE}
+  AV1_OBU_SEC5_FILE=${AV1_OBU_SEC5_FILE}
+  AV1_WEBM_FILE=${AV1_WEBM_FILE}
   YUV_RAW_INPUT=${YUV_RAW_INPUT}
   YUV_RAW_INPUT_WIDTH=${YUV_RAW_INPUT_WIDTH}
   YUV_RAW_INPUT_HEIGHT=${YUV_RAW_INPUT_HEIGHT}
