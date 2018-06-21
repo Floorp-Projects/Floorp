@@ -91,7 +91,7 @@ mochitest-harness:
 
 mozbase:
     description: testing/mozbase unit tests
-    python-version: [2]
+    python-version: [2, 3]
     treeherder:
         symbol: mb
     run:
