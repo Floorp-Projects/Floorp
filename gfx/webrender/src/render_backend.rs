@@ -762,6 +762,7 @@ impl RenderBackend {
                                 &mut frame_counter,
                                 &mut profile_counters,
                                 ops,
+                                true,
                             );
                         }
                     },
@@ -962,6 +963,7 @@ impl RenderBackend {
                     frame_counter,
                     profile_counters,
                     DocumentOps::nop(),
+                    false,
                 )
             }
         }
@@ -976,6 +978,7 @@ impl RenderBackend {
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
         initial_op: DocumentOps,
+        has_built_scene: bool,
     ) {
         let mut op = initial_op;
 
@@ -1073,7 +1076,7 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     &mut profile_counters.resources,
-                    op.build,
+                    op.build || has_built_scene,
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
