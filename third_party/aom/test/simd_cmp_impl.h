@@ -7,11 +7,13 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+ */
 
 #include <assert.h>
 #include <string>
-#include "./aom_dsp_rtcd.h"
+
+#include "config/aom_dsp_rtcd.h"
+
 #include "test/acm_random.h"
 #include "aom_dsp/aom_simd.h"
 #undef SIMD_INLINE
@@ -21,6 +23,14 @@
 // Machine tuned code goes into this file. This file is included from
 // simd_cmp_sse2.cc, simd_cmp_ssse3.cc etc which define the macros
 // ARCH (=neon, sse2, ssse3, etc), SIMD_NAMESPACE and ARCH_POSTFIX().
+
+#ifdef _MSC_VER
+// Disable "value of intrinsic immediate argument 'value' is out of range
+// 'lowerbound - upperbound'" warning. Visual Studio emits this warning though
+// the parameters are conditionally checked in e.g., v256_shr_n_byte. Adding a
+// mask doesn't always appear to be sufficient.
+#pragma warning(disable : 4556)
+#endif
 
 using libaom_test::ACMRandom;
 
@@ -171,6 +181,18 @@ v128 imm_v128_shr_n_s32(v128 a) {
   return v128_shr_n_s32(a, shift);
 }
 template <int shift>
+v128 imm_v128_shl_n_64(v128 a) {
+  return v128_shl_n_64(a, shift);
+}
+template <int shift>
+v128 imm_v128_shr_n_u64(v128 a) {
+  return v128_shr_n_u64(a, shift);
+}
+template <int shift>
+v128 imm_v128_shr_n_s64(v128 a) {
+  return v128_shr_n_s64(a, shift);
+}
+template <int shift>
 v128 imm_v128_align(v128 a, v128 b) {
   return v128_align(a, b, shift);
 }
@@ -220,10 +242,30 @@ c_v128 c_imm_v128_shr_n_s32(c_v128 a) {
   return c_v128_shr_n_s32(a, shift);
 }
 template <int shift>
+c_v128 c_imm_v128_shl_n_64(c_v128 a) {
+  return c_v128_shl_n_64(a, shift);
+}
+template <int shift>
+c_v128 c_imm_v128_shr_n_u64(c_v128 a) {
+  return c_v128_shr_n_u64(a, shift);
+}
+template <int shift>
+c_v128 c_imm_v128_shr_n_s64(c_v128 a) {
+  return c_v128_shr_n_s64(a, shift);
+}
+template <int shift>
 c_v128 c_imm_v128_align(c_v128 a, c_v128 b) {
   return c_v128_align(a, b, shift);
 }
 
+template <int shift>
+v256 imm_v256_shl_n_word(v256 a) {
+  return v256_shl_n_word(a, shift);
+}
+template <int shift>
+v256 imm_v256_shr_n_word(v256 a) {
+  return v256_shr_n_word(a, shift);
+}
 template <int shift>
 v256 imm_v256_shl_n_byte(v256 a) {
   return v256_shl_n_byte(a, shift);
@@ -269,10 +311,30 @@ v256 imm_v256_shr_n_s32(v256 a) {
   return v256_shr_n_s32(a, shift);
 }
 template <int shift>
+v256 imm_v256_shl_n_64(v256 a) {
+  return v256_shl_n_64(a, shift);
+}
+template <int shift>
+v256 imm_v256_shr_n_u64(v256 a) {
+  return v256_shr_n_u64(a, shift);
+}
+template <int shift>
+v256 imm_v256_shr_n_s64(v256 a) {
+  return v256_shr_n_s64(a, shift);
+}
+template <int shift>
 v256 imm_v256_align(v256 a, v256 b) {
   return v256_align(a, b, shift);
 }
 
+template <int shift>
+c_v256 c_imm_v256_shl_n_word(c_v256 a) {
+  return c_v256_shl_n_word(a, shift);
+}
+template <int shift>
+c_v256 c_imm_v256_shr_n_word(c_v256 a) {
+  return c_v256_shr_n_word(a, shift);
+}
 template <int shift>
 c_v256 c_imm_v256_shl_n_byte(c_v256 a) {
   return c_v256_shl_n_byte(a, shift);
@@ -318,6 +380,18 @@ c_v256 c_imm_v256_shr_n_s32(c_v256 a) {
   return c_v256_shr_n_s32(a, shift);
 }
 template <int shift>
+c_v256 c_imm_v256_shl_n_64(c_v256 a) {
+  return c_v256_shl_n_64(a, shift);
+}
+template <int shift>
+c_v256 c_imm_v256_shr_n_u64(c_v256 a) {
+  return c_v256_shr_n_u64(a, shift);
+}
+template <int shift>
+c_v256 c_imm_v256_shr_n_s64(c_v256 a) {
+  return c_v256_shr_n_s64(a, shift);
+}
+template <int shift>
 c_v256 c_imm_v256_align(c_v256 a, c_v256 b) {
   return c_v256_align(a, b, shift);
 }
@@ -348,6 +422,18 @@ uint32_t c_v128_sad_u8(c_v128 a, c_v128 b) {
 uint32_t c_v128_ssd_u8(c_v128 a, c_v128 b) {
   return c_v128_ssd_u8_sum(::c_v128_ssd_u8(c_v128_ssd_u8_init(), a, b));
 }
+uint32_t v128_sad_u16(v128 a, v128 b) {
+  return v128_sad_u16_sum(::v128_sad_u16(v128_sad_u16_init(), a, b));
+}
+uint64_t v128_ssd_s16(v128 a, v128 b) {
+  return v128_ssd_s16_sum(::v128_ssd_s16(v128_ssd_s16_init(), a, b));
+}
+uint32_t c_v128_sad_u16(c_v128 a, c_v128 b) {
+  return c_v128_sad_u16_sum(::c_v128_sad_u16(c_v128_sad_u16_init(), a, b));
+}
+uint64_t c_v128_ssd_s16(c_v128 a, c_v128 b) {
+  return c_v128_ssd_s16_sum(::c_v128_ssd_s16(c_v128_ssd_s16_init(), a, b));
+}
 uint32_t v256_sad_u8(v256 a, v256 b) {
   return v256_sad_u8_sum(::v256_sad_u8(v256_sad_u8_init(), a, b));
 }
@@ -360,6 +446,18 @@ uint32_t c_v256_sad_u8(c_v256 a, c_v256 b) {
 uint32_t c_v256_ssd_u8(c_v256 a, c_v256 b) {
   return c_v256_ssd_u8_sum(::c_v256_ssd_u8(c_v256_ssd_u8_init(), a, b));
 }
+uint32_t v256_sad_u16(v256 a, v256 b) {
+  return v256_sad_u16_sum(::v256_sad_u16(v256_sad_u16_init(), a, b));
+}
+uint64_t v256_ssd_s16(v256 a, v256 b) {
+  return v256_ssd_s16_sum(::v256_ssd_s16(v256_ssd_s16_init(), a, b));
+}
+uint32_t c_v256_sad_u16(c_v256 a, c_v256 b) {
+  return c_v256_sad_u16_sum(::c_v256_sad_u16(c_v256_sad_u16_init(), a, b));
+}
+uint64_t c_v256_ssd_s16(c_v256 a, c_v256 b) {
+  return c_v256_ssd_s16_sum(::c_v256_ssd_s16(c_v256_ssd_s16_init(), a, b));
+}
 
 namespace {
 
@@ -371,16 +469,18 @@ typedef struct {
   fptr simd;
 } mapping;
 
-#define MAP(name)                                                              \
-  {                                                                            \
-    #name,                                                                     \
-        reinterpret_cast < fptr > (c_##name), reinterpret_cast < fptr > (name) \
+#define MAP(name)                                \
+  {                                              \
+    #name, reinterpret_cast < fptr > (c_##name), \
+        reinterpret_cast < fptr > (name)         \
   }
 
 const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v64_ssd_u8),
                       MAP(v64_add_8),
                       MAP(v64_add_16),
+                      MAP(v64_sadd_s8),
+                      MAP(v64_sadd_u8),
                       MAP(v64_sadd_s16),
                       MAP(v64_add_32),
                       MAP(v64_sub_8),
@@ -396,6 +496,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v64_ziphi_16),
                       MAP(v64_ziplo_32),
                       MAP(v64_ziphi_32),
+                      MAP(v64_pack_s32_u16),
                       MAP(v64_pack_s32_s16),
                       MAP(v64_pack_s16_u8),
                       MAP(v64_pack_s16_s8),
@@ -414,6 +515,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v64_madd_us8),
                       MAP(v64_avg_u8),
                       MAP(v64_rdavg_u8),
+                      MAP(v64_rdavg_u16),
                       MAP(v64_avg_u16),
                       MAP(v64_min_u8),
                       MAP(v64_max_u8),
@@ -554,10 +656,15 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v64_from_16),
                       MAP(v128_sad_u8),
                       MAP(v128_ssd_u8),
+                      MAP(v128_sad_u16),
+                      MAP(v128_ssd_s16),
                       MAP(v128_add_8),
                       MAP(v128_add_16),
+                      MAP(v128_sadd_s8),
+                      MAP(v128_sadd_u8),
                       MAP(v128_sadd_s16),
                       MAP(v128_add_32),
+                      MAP(v128_add_64),
                       MAP(v128_sub_8),
                       MAP(v128_ssub_u8),
                       MAP(v128_ssub_s8),
@@ -565,6 +672,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v128_ssub_s16),
                       MAP(v128_ssub_u16),
                       MAP(v128_sub_32),
+                      MAP(v128_sub_64),
                       MAP(v128_ziplo_8),
                       MAP(v128_ziphi_8),
                       MAP(v128_ziplo_16),
@@ -579,6 +687,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v128_unziplo_16),
                       MAP(v128_unziphi_32),
                       MAP(v128_unziplo_32),
+                      MAP(v128_pack_s32_u16),
                       MAP(v128_pack_s32_s16),
                       MAP(v128_pack_s16_u8),
                       MAP(v128_pack_s16_s8),
@@ -593,6 +702,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v128_madd_us8),
                       MAP(v128_avg_u8),
                       MAP(v128_rdavg_u8),
+                      MAP(v128_rdavg_u16),
                       MAP(v128_avg_u16),
                       MAP(v128_min_u8),
                       MAP(v128_max_u8),
@@ -600,12 +710,17 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v128_max_s8),
                       MAP(v128_min_s16),
                       MAP(v128_max_s16),
+                      MAP(v128_min_s32),
+                      MAP(v128_max_s32),
                       MAP(v128_cmpgt_s8),
                       MAP(v128_cmplt_s8),
                       MAP(v128_cmpeq_8),
                       MAP(v128_cmpgt_s16),
                       MAP(v128_cmpeq_16),
                       MAP(v128_cmplt_s16),
+                      MAP(v128_cmpgt_s32),
+                      MAP(v128_cmpeq_32),
+                      MAP(v128_cmplt_s32),
                       MAP(v128_shuffle_8),
                       MAP(imm_v128_align<1>),
                       MAP(imm_v128_align<2>),
@@ -624,6 +739,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(imm_v128_align<15>),
                       MAP(v128_abs_s8),
                       MAP(v128_abs_s16),
+                      MAP(v128_padd_u8),
                       MAP(v128_padd_s16),
                       MAP(v128_unpacklo_u16_s32),
                       MAP(v128_unpacklo_s16_s32),
@@ -728,6 +844,54 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(imm_v128_shr_n_s32<20>),
                       MAP(imm_v128_shr_n_s32<24>),
                       MAP(imm_v128_shr_n_s32<28>),
+                      MAP(imm_v128_shl_n_64<1>),
+                      MAP(imm_v128_shl_n_64<4>),
+                      MAP(imm_v128_shl_n_64<8>),
+                      MAP(imm_v128_shl_n_64<12>),
+                      MAP(imm_v128_shl_n_64<16>),
+                      MAP(imm_v128_shl_n_64<20>),
+                      MAP(imm_v128_shl_n_64<24>),
+                      MAP(imm_v128_shl_n_64<28>),
+                      MAP(imm_v128_shl_n_64<32>),
+                      MAP(imm_v128_shl_n_64<36>),
+                      MAP(imm_v128_shl_n_64<40>),
+                      MAP(imm_v128_shl_n_64<44>),
+                      MAP(imm_v128_shl_n_64<48>),
+                      MAP(imm_v128_shl_n_64<52>),
+                      MAP(imm_v128_shl_n_64<56>),
+                      MAP(imm_v128_shl_n_64<60>),
+                      MAP(imm_v128_shr_n_u64<1>),
+                      MAP(imm_v128_shr_n_u64<4>),
+                      MAP(imm_v128_shr_n_u64<8>),
+                      MAP(imm_v128_shr_n_u64<12>),
+                      MAP(imm_v128_shr_n_u64<16>),
+                      MAP(imm_v128_shr_n_u64<20>),
+                      MAP(imm_v128_shr_n_u64<24>),
+                      MAP(imm_v128_shr_n_u64<28>),
+                      MAP(imm_v128_shr_n_u64<32>),
+                      MAP(imm_v128_shr_n_u64<36>),
+                      MAP(imm_v128_shr_n_u64<40>),
+                      MAP(imm_v128_shr_n_u64<44>),
+                      MAP(imm_v128_shr_n_u64<48>),
+                      MAP(imm_v128_shr_n_u64<52>),
+                      MAP(imm_v128_shr_n_u64<56>),
+                      MAP(imm_v128_shr_n_u64<60>),
+                      MAP(imm_v128_shr_n_s64<1>),
+                      MAP(imm_v128_shr_n_s64<4>),
+                      MAP(imm_v128_shr_n_s64<8>),
+                      MAP(imm_v128_shr_n_s64<12>),
+                      MAP(imm_v128_shr_n_s64<16>),
+                      MAP(imm_v128_shr_n_s64<20>),
+                      MAP(imm_v128_shr_n_s64<24>),
+                      MAP(imm_v128_shr_n_s64<28>),
+                      MAP(imm_v128_shr_n_s64<32>),
+                      MAP(imm_v128_shr_n_s64<36>),
+                      MAP(imm_v128_shr_n_s64<40>),
+                      MAP(imm_v128_shr_n_s64<44>),
+                      MAP(imm_v128_shr_n_s64<48>),
+                      MAP(imm_v128_shr_n_s64<52>),
+                      MAP(imm_v128_shr_n_s64<56>),
+                      MAP(imm_v128_shr_n_s64<60>),
                       MAP(v128_from_v64),
                       MAP(v128_zip_8),
                       MAP(v128_zip_16),
@@ -746,21 +910,29 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v128_shl_32),
                       MAP(v128_shr_u32),
                       MAP(v128_shr_s32),
+                      MAP(v128_shl_64),
+                      MAP(v128_shr_u64),
+                      MAP(v128_shr_s64),
                       MAP(v128_hadd_u8),
+                      MAP(v128_dotp_su8),
                       MAP(v128_dotp_s16),
+                      MAP(v128_dotp_s32),
                       MAP(v128_low_u32),
                       MAP(v128_low_v64),
                       MAP(v128_high_v64),
                       MAP(v128_from_64),
                       MAP(v128_from_32),
+                      MAP(v128_movemask_8),
                       MAP(v128_zero),
                       MAP(v128_dup_8),
                       MAP(v128_dup_16),
                       MAP(v128_dup_32),
+                      MAP(v128_dup_64),
                       MAP(v128_unpacklo_u8_s16),
                       MAP(v128_unpackhi_u8_s16),
                       MAP(v128_unpacklo_s8_s16),
                       MAP(v128_unpackhi_s8_s16),
+                      MAP(v128_blend_8),
                       MAP(u32_load_unaligned),
                       MAP(u32_store_unaligned),
                       MAP(v64_load_unaligned),
@@ -769,12 +941,20 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v128_store_unaligned),
                       MAP(v256_sad_u8),
                       MAP(v256_ssd_u8),
+                      MAP(v256_sad_u16),
+                      MAP(v256_ssd_s16),
                       MAP(v256_hadd_u8),
+                      MAP(v256_low_u64),
+                      MAP(v256_dotp_su8),
                       MAP(v256_dotp_s16),
+                      MAP(v256_dotp_s32),
                       MAP(v256_add_8),
                       MAP(v256_add_16),
+                      MAP(v256_sadd_s8),
+                      MAP(v256_sadd_u8),
                       MAP(v256_sadd_s16),
                       MAP(v256_add_32),
+                      MAP(v256_add_64),
                       MAP(v256_sub_8),
                       MAP(v256_ssub_u8),
                       MAP(v256_ssub_s8),
@@ -782,6 +962,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v256_ssub_u16),
                       MAP(v256_ssub_s16),
                       MAP(v256_sub_32),
+                      MAP(v256_sub_64),
                       MAP(v256_ziplo_8),
                       MAP(v256_ziphi_8),
                       MAP(v256_ziplo_16),
@@ -796,6 +977,9 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v256_unziplo_16),
                       MAP(v256_unziphi_32),
                       MAP(v256_unziplo_32),
+                      MAP(v256_unziphi_64),
+                      MAP(v256_unziplo_64),
+                      MAP(v256_pack_s32_u16),
                       MAP(v256_pack_s32_s16),
                       MAP(v256_pack_s16_u8),
                       MAP(v256_pack_s16_s8),
@@ -810,6 +994,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v256_madd_us8),
                       MAP(v256_avg_u8),
                       MAP(v256_rdavg_u8),
+                      MAP(v256_rdavg_u16),
                       MAP(v256_avg_u16),
                       MAP(v256_min_u8),
                       MAP(v256_max_u8),
@@ -817,14 +1002,20 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v256_max_s8),
                       MAP(v256_min_s16),
                       MAP(v256_max_s16),
+                      MAP(v256_min_s32),
+                      MAP(v256_max_s32),
                       MAP(v256_cmpgt_s8),
                       MAP(v256_cmplt_s8),
                       MAP(v256_cmpeq_8),
                       MAP(v256_cmpgt_s16),
                       MAP(v256_cmplt_s16),
                       MAP(v256_cmpeq_16),
+                      MAP(v256_cmpgt_s32),
+                      MAP(v256_cmplt_s32),
+                      MAP(v256_cmpeq_32),
                       MAP(v256_shuffle_8),
                       MAP(v256_pshuffle_8),
+                      MAP(v256_wideshuffle_8),
                       MAP(imm_v256_align<1>),
                       MAP(imm_v256_align<2>),
                       MAP(imm_v256_align<3>),
@@ -874,13 +1065,47 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v256_shl_32),
                       MAP(v256_shr_u32),
                       MAP(v256_shr_s32),
+                      MAP(v256_shl_64),
+                      MAP(v256_shr_u64),
+                      MAP(v256_shr_s64),
                       MAP(v256_abs_s8),
                       MAP(v256_abs_s16),
+                      MAP(v256_padd_u8),
                       MAP(v256_padd_s16),
                       MAP(v256_unpacklo_u16_s32),
                       MAP(v256_unpacklo_s16_s32),
                       MAP(v256_unpackhi_u16_s32),
                       MAP(v256_unpackhi_s16_s32),
+                      MAP(imm_v256_shr_n_word<1>),
+                      MAP(imm_v256_shr_n_word<2>),
+                      MAP(imm_v256_shr_n_word<3>),
+                      MAP(imm_v256_shr_n_word<4>),
+                      MAP(imm_v256_shr_n_word<5>),
+                      MAP(imm_v256_shr_n_word<6>),
+                      MAP(imm_v256_shr_n_word<7>),
+                      MAP(imm_v256_shr_n_word<8>),
+                      MAP(imm_v256_shr_n_word<9>),
+                      MAP(imm_v256_shr_n_word<10>),
+                      MAP(imm_v256_shr_n_word<11>),
+                      MAP(imm_v256_shr_n_word<12>),
+                      MAP(imm_v256_shr_n_word<13>),
+                      MAP(imm_v256_shr_n_word<14>),
+                      MAP(imm_v256_shr_n_word<15>),
+                      MAP(imm_v256_shl_n_word<1>),
+                      MAP(imm_v256_shl_n_word<2>),
+                      MAP(imm_v256_shl_n_word<3>),
+                      MAP(imm_v256_shl_n_word<4>),
+                      MAP(imm_v256_shl_n_word<5>),
+                      MAP(imm_v256_shl_n_word<6>),
+                      MAP(imm_v256_shl_n_word<7>),
+                      MAP(imm_v256_shl_n_word<8>),
+                      MAP(imm_v256_shl_n_word<9>),
+                      MAP(imm_v256_shl_n_word<10>),
+                      MAP(imm_v256_shl_n_word<11>),
+                      MAP(imm_v256_shl_n_word<12>),
+                      MAP(imm_v256_shl_n_word<13>),
+                      MAP(imm_v256_shl_n_word<14>),
+                      MAP(imm_v256_shl_n_word<15>),
                       MAP(imm_v256_shr_n_byte<1>),
                       MAP(imm_v256_shr_n_byte<2>),
                       MAP(imm_v256_shr_n_byte<3>),
@@ -1012,10 +1237,60 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(imm_v256_shr_n_s32<20>),
                       MAP(imm_v256_shr_n_s32<24>),
                       MAP(imm_v256_shr_n_s32<28>),
+                      MAP(imm_v256_shl_n_64<1>),
+                      MAP(imm_v256_shl_n_64<4>),
+                      MAP(imm_v256_shl_n_64<8>),
+                      MAP(imm_v256_shl_n_64<12>),
+                      MAP(imm_v256_shl_n_64<16>),
+                      MAP(imm_v256_shl_n_64<20>),
+                      MAP(imm_v256_shl_n_64<24>),
+                      MAP(imm_v256_shl_n_64<28>),
+                      MAP(imm_v256_shl_n_64<32>),
+                      MAP(imm_v256_shl_n_64<36>),
+                      MAP(imm_v256_shl_n_64<40>),
+                      MAP(imm_v256_shl_n_64<44>),
+                      MAP(imm_v256_shl_n_64<48>),
+                      MAP(imm_v256_shl_n_64<52>),
+                      MAP(imm_v256_shl_n_64<56>),
+                      MAP(imm_v256_shl_n_64<60>),
+                      MAP(imm_v256_shr_n_u64<1>),
+                      MAP(imm_v256_shr_n_u64<4>),
+                      MAP(imm_v256_shr_n_u64<8>),
+                      MAP(imm_v256_shr_n_u64<12>),
+                      MAP(imm_v256_shr_n_u64<16>),
+                      MAP(imm_v256_shr_n_u64<20>),
+                      MAP(imm_v256_shr_n_u64<24>),
+                      MAP(imm_v256_shr_n_u64<28>),
+                      MAP(imm_v256_shr_n_u64<32>),
+                      MAP(imm_v256_shr_n_u64<36>),
+                      MAP(imm_v256_shr_n_u64<40>),
+                      MAP(imm_v256_shr_n_u64<44>),
+                      MAP(imm_v256_shr_n_u64<48>),
+                      MAP(imm_v256_shr_n_u64<52>),
+                      MAP(imm_v256_shr_n_u64<56>),
+                      MAP(imm_v256_shr_n_u64<60>),
+                      MAP(imm_v256_shr_n_s64<1>),
+                      MAP(imm_v256_shr_n_s64<4>),
+                      MAP(imm_v256_shr_n_s64<8>),
+                      MAP(imm_v256_shr_n_s64<12>),
+                      MAP(imm_v256_shr_n_s64<16>),
+                      MAP(imm_v256_shr_n_s64<20>),
+                      MAP(imm_v256_shr_n_s64<24>),
+                      MAP(imm_v256_shr_n_s64<28>),
+                      MAP(imm_v256_shr_n_s64<32>),
+                      MAP(imm_v256_shr_n_s64<36>),
+                      MAP(imm_v256_shr_n_s64<40>),
+                      MAP(imm_v256_shr_n_s64<44>),
+                      MAP(imm_v256_shr_n_s64<48>),
+                      MAP(imm_v256_shr_n_s64<52>),
+                      MAP(imm_v256_shr_n_s64<56>),
+                      MAP(imm_v256_shr_n_s64<60>),
+                      MAP(v256_movemask_8),
                       MAP(v256_zero),
                       MAP(v256_dup_8),
                       MAP(v256_dup_16),
                       MAP(v256_dup_32),
+                      MAP(v256_dup_64),
                       MAP(v256_low_u32),
                       MAP(v256_low_v64),
                       MAP(v256_from_64),
@@ -1026,6 +1301,7 @@ const mapping m[] = { MAP(v64_sad_u8),
                       MAP(v256_unpackhi_u8_s16),
                       MAP(v256_unpacklo_s8_s16),
                       MAP(v256_unpackhi_s8_s16),
+                      MAP(v256_blend_8),
                       { NULL, NULL, NULL } };
 #undef MAP
 
@@ -1042,7 +1318,7 @@ void Map(const char *name, fptr *ref, fptr *simd) {
   *simd = m[i].simd;
 }
 
-// Used for printing errors in TestSimd1Arg and TestSimd2Args
+// Used for printing errors in TestSimd1Arg, TestSimd2Args and TestSimd3Args
 std::string Print(const uint8_t *a, int size) {
   std::string text = "0x";
   for (int i = 0; i < size; i++) {
@@ -1055,7 +1331,8 @@ std::string Print(const uint8_t *a, int size) {
   return text;
 }
 
-// Used in TestSimd1Arg and TestSimd2Args to restrict argument ranges
+// Used in TestSimd1Arg, TestSimd2Args and TestSimd3Args to restrict argument
+// ranges
 void SetMask(uint8_t *s, int size, uint32_t mask, uint32_t maskwidth) {
   switch (maskwidth) {
     case 0: {
@@ -1133,16 +1410,16 @@ uint8_t c_u8_load_aligned(const void *p) {
   return *(reinterpret_cast<const uint8_t *>(p));
 }
 
-// CompareSimd1Arg and CompareSimd2Args compare intrinsics taking 1 or
-// 2 arguments respectively with their corresponding C reference.
-// Ideally, the loads and stores should have gone into the template
-// parameter list, but v64 and v128 could be typedef'ed to the same
-// type (which is the case on x86) and then we can't instantiate both
-// v64 and v128, so the function return and argument types, including
-// the always differing types in the C equivalent are used instead.
-// The function arguments must be void pointers and then go through a
-// cast to avoid matching errors in the branches eliminated by the
-// typeid tests in the calling function.
+// CompareSimd1Arg, CompareSimd2Args and CompareSimd3Args compare
+// intrinsics taking 1, 2 or 3 arguments respectively with their
+// corresponding C reference.  Ideally, the loads and stores should
+// have gone into the template parameter list, but v64 and v128 could
+// be typedef'ed to the same type (which is the case on x86) and then
+// we can't instantiate both v64 and v128, so the function return and
+// argument types, including the always differing types in the C
+// equivalent are used instead.  The function arguments must be void
+// pointers and then go through a cast to avoid matching errors in the
+// branches eliminated by the typeid tests in the calling function.
 template <typename Ret, typename Arg, typename CRet, typename CArg>
 int CompareSimd1Arg(fptr store, fptr load, fptr simd, void *d, fptr c_store,
                     fptr c_load, fptr c_simd, void *ref_d, const void *a) {
@@ -1185,6 +1462,35 @@ int CompareSimd2Args(fptr store, fptr load1, fptr load2, fptr simd, void *d,
   return memcmp(ref_d, d, sizeof(CRet));
 }
 
+template <typename Ret, typename Arg1, typename Arg2, typename Arg3,
+          typename CRet, typename CArg1, typename CArg2, typename CArg3>
+int CompareSimd3Args(fptr store, fptr load1, fptr load2, fptr load3, fptr simd,
+                     void *d, fptr c_store, fptr c_load1, fptr c_load2,
+                     fptr c_load3, fptr c_simd, void *ref_d, const void *a,
+                     const void *b, const void *c) {
+  void (*const my_store)(void *, Ret) = (void (*const)(void *, Ret))store;
+  Arg1 (*const my_load1)(const void *) = (Arg1(*const)(const void *))load1;
+  Arg2 (*const my_load2)(const void *) = (Arg2(*const)(const void *))load2;
+  Arg3 (*const my_load3)(const void *) = (Arg3(*const)(const void *))load3;
+  Ret (*const my_simd)(Arg1, Arg2, Arg3) = (Ret(*const)(Arg1, Arg2, Arg3))simd;
+  void (*const my_c_store)(void *, CRet) = (void (*const)(void *, CRet))c_store;
+  CArg1 (*const my_c_load1)(const void *) =
+      (CArg1(*const)(const void *))c_load1;
+  CArg2 (*const my_c_load2)(const void *) =
+      (CArg2(*const)(const void *))c_load2;
+  CArg2 (*const my_c_load3)(const void *) =
+      (CArg2(*const)(const void *))c_load3;
+  CRet (*const my_c_simd)(CArg1, CArg2, CArg3) =
+      (CRet(*const)(CArg1, CArg2, CArg3))c_simd;
+
+  // Call reference and intrinsic
+  my_c_store(ref_d, my_c_simd(my_c_load1(a), my_c_load2(b), my_c_load3(c)));
+  my_store(d, my_simd(my_load1(a), my_load2(b), my_load3(c)));
+
+  // Compare results
+  return memcmp(ref_d, d, sizeof(CRet));
+}
+
 }  // namespace
 
 template <typename CRet, typename CArg>
@@ -1194,9 +1500,10 @@ void TestSimd1Arg(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
   fptr ref_simd;
   fptr simd;
   int error = 0;
-  DECLARE_ALIGNED(32, uint8_t, s[sizeof(CArg)]);
-  DECLARE_ALIGNED(32, uint8_t, d[sizeof(CRet)]);
-  DECLARE_ALIGNED(32, uint8_t, ref_d[sizeof(CRet)]);
+  DECLARE_ALIGNED(32, uint8_t, s[32]);
+  DECLARE_ALIGNED(32, uint8_t, d[32]);
+  DECLARE_ALIGNED(32, uint8_t, ref_d[32]);
+  assert(sizeof(CArg) <= 32 && sizeof(CRet) <= 32);
   memset(ref_d, 0, sizeof(ref_d));
   memset(d, 0, sizeof(d));
 
@@ -1347,6 +1654,14 @@ void TestSimd1Arg(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
           reinterpret_cast<fptr>(u32_load_aligned), simd, d,
           reinterpret_cast<fptr>(c_v128_store_aligned),
           reinterpret_cast<fptr>(c_u32_load_aligned), ref_simd, ref_d, s);
+    } else if (typeid(CRet) == typeid(c_v128) &&
+               typeid(CArg) == typeid(uint64_t)) {
+      // V128_U64
+      error = CompareSimd1Arg<v128, uint64_t, CRet, CArg>(
+          reinterpret_cast<fptr>(v128_store_aligned),
+          reinterpret_cast<fptr>(u64_load_aligned), simd, d,
+          reinterpret_cast<fptr>(c_v128_store_aligned),
+          reinterpret_cast<fptr>(c_u64_load_aligned), ref_simd, ref_d, s);
     } else if (typeid(CRet) == typeid(c_v256) &&
                typeid(CArg) == typeid(c_v256)) {
       // V256_V256
@@ -1387,6 +1702,14 @@ void TestSimd1Arg(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
           reinterpret_cast<fptr>(u32_load_aligned), simd, d,
           reinterpret_cast<fptr>(c_v256_store_aligned),
           reinterpret_cast<fptr>(c_u32_load_aligned), ref_simd, ref_d, s);
+    } else if (typeid(CRet) == typeid(c_v256) &&
+               typeid(CArg) == typeid(uint64_t)) {
+      // V256_U64
+      error = CompareSimd1Arg<v256, uint64_t, CRet, CArg>(
+          reinterpret_cast<fptr>(v256_store_aligned),
+          reinterpret_cast<fptr>(u64_load_aligned), simd, d,
+          reinterpret_cast<fptr>(c_v256_store_aligned),
+          reinterpret_cast<fptr>(c_u64_load_aligned), ref_simd, ref_d, s);
     } else if (typeid(CRet) == typeid(uint32_t) &&
                typeid(CArg) == typeid(c_v256)) {
       // U32_V256
@@ -1422,10 +1745,11 @@ void TestSimd2Args(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
   fptr ref_simd;
   fptr simd;
   int error = 0;
-  DECLARE_ALIGNED(32, uint8_t, s1[sizeof(CArg1)]);
-  DECLARE_ALIGNED(32, uint8_t, s2[sizeof(CArg2)]);
-  DECLARE_ALIGNED(32, uint8_t, d[sizeof(CRet)]);
-  DECLARE_ALIGNED(32, uint8_t, ref_d[sizeof(CRet)]);
+  DECLARE_ALIGNED(32, uint8_t, s1[32]);
+  DECLARE_ALIGNED(32, uint8_t, s2[32]);
+  DECLARE_ALIGNED(32, uint8_t, d[32]);
+  DECLARE_ALIGNED(32, uint8_t, ref_d[32]);
+  assert(sizeof(CArg1) <= 32 && sizeof(CArg2) <= 32 && sizeof(CRet) <= 32);
   memset(ref_d, 0, sizeof(ref_d));
   memset(d, 0, sizeof(d));
 
@@ -1525,6 +1849,18 @@ void TestSimd2Args(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
           reinterpret_cast<fptr>(c_v128_load_aligned),
           reinterpret_cast<fptr>(c_v128_load_aligned),
           reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2);
+    } else if (typeid(CRet) == typeid(uint64_t) &&
+               typeid(CArg1) == typeid(c_v128) &&
+               typeid(CArg2) == typeid(c_v128)) {
+      // U64_V128V128
+      error = CompareSimd2Args<uint64_t, v128, v128, CRet, CArg1, CArg2>(
+          reinterpret_cast<fptr>(u64_store_aligned),
+          reinterpret_cast<fptr>(v128_load_aligned),
+          reinterpret_cast<fptr>(v128_load_aligned), simd, d,
+          reinterpret_cast<fptr>(c_u64_store_aligned),
+          reinterpret_cast<fptr>(c_v128_load_aligned),
+          reinterpret_cast<fptr>(c_v128_load_aligned),
+          reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2);
     } else if (typeid(CRet) == typeid(int64_t) &&
                typeid(CArg1) == typeid(c_v128) &&
                typeid(CArg2) == typeid(c_v128)) {
@@ -1582,6 +1918,18 @@ void TestSimd2Args(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
           reinterpret_cast<fptr>(v256_load_aligned),
           reinterpret_cast<fptr>(v256_load_aligned), simd, d,
           reinterpret_cast<fptr>(c_v256_store_aligned),
+          reinterpret_cast<fptr>(c_v256_load_aligned),
+          reinterpret_cast<fptr>(c_v256_load_aligned),
+          reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2);
+    } else if (typeid(CRet) == typeid(uint64_t) &&
+               typeid(CArg1) == typeid(c_v256) &&
+               typeid(CArg2) == typeid(c_v256)) {
+      // U64_V256V256
+      error = CompareSimd2Args<uint64_t, v256, v256, CRet, CArg1, CArg2>(
+          reinterpret_cast<fptr>(u64_store_aligned),
+          reinterpret_cast<fptr>(v256_load_aligned),
+          reinterpret_cast<fptr>(v256_load_aligned), simd, d,
+          reinterpret_cast<fptr>(c_u64_store_aligned),
           reinterpret_cast<fptr>(c_v256_load_aligned),
           reinterpret_cast<fptr>(c_v256_load_aligned),
           reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2);
@@ -1647,6 +1995,83 @@ void TestSimd2Args(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
                       << Print(ref_d, sizeof(ref_d)) << " (ref)";
 }
 
+template <typename CRet, typename CArg1, typename CArg2, typename CArg3>
+void TestSimd3Args(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
+                   const char *name) {
+  ACMRandom rnd(ACMRandom::DeterministicSeed());
+  fptr ref_simd;
+  fptr simd;
+  int error = 0;
+  DECLARE_ALIGNED(32, uint8_t, s1[32]);
+  DECLARE_ALIGNED(32, uint8_t, s2[32]);
+  DECLARE_ALIGNED(32, uint8_t, s3[32]);
+  DECLARE_ALIGNED(32, uint8_t, d[32]);
+  DECLARE_ALIGNED(32, uint8_t, ref_d[32]);
+  assert(sizeof(CArg1) <= 32 && sizeof(CArg2) <= 32 && sizeof(CArg3) <= 32 &&
+         sizeof(CRet) <= 32);
+  memset(ref_d, 0, sizeof(ref_d));
+  memset(d, 0, sizeof(d));
+
+  Map(name, &ref_simd, &simd);
+  if (simd == NULL || ref_simd == NULL) {
+    FAIL() << "Internal error: Unknown intrinsic function " << name;
+  }
+
+  for (unsigned int count = 0;
+       count < iterations && !error && !testing::Test::HasFailure(); count++) {
+    for (unsigned int c = 0; c < sizeof(CArg1); c++) s1[c] = rnd.Rand8();
+
+    for (unsigned int c = 0; c < sizeof(CArg2); c++) s2[c] = rnd.Rand8();
+
+    for (unsigned int c = 0; c < sizeof(CArg3); c++) s3[c] = rnd.Rand8();
+
+    if (maskwidth) SetMask(s3, sizeof(CArg3), mask, maskwidth);
+
+    if (typeid(CRet) == typeid(c_v128) && typeid(CArg1) == typeid(c_v128) &&
+        typeid(CArg2) == typeid(c_v128) && typeid(CArg3) == typeid(c_v128)) {
+      // V128_V128V128V128
+      error =
+          CompareSimd3Args<v128, v128, v128, v128, CRet, CArg1, CArg2, CArg3>(
+              reinterpret_cast<fptr>(v128_store_aligned),
+              reinterpret_cast<fptr>(v128_load_aligned),
+              reinterpret_cast<fptr>(v128_load_aligned),
+              reinterpret_cast<fptr>(v128_load_aligned), simd, d,
+              reinterpret_cast<fptr>(c_v128_store_aligned),
+              reinterpret_cast<fptr>(c_v128_load_aligned),
+              reinterpret_cast<fptr>(c_v128_load_aligned),
+              reinterpret_cast<fptr>(c_v128_load_aligned),
+              reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2, s3);
+    } else if (typeid(CRet) == typeid(c_v256) &&
+               typeid(CArg1) == typeid(c_v256) &&
+               typeid(CArg2) == typeid(c_v256) &&
+               typeid(CArg3) == typeid(c_v256)) {
+      // V256_V256V256V256
+      error =
+          CompareSimd3Args<v256, v256, v256, v256, CRet, CArg1, CArg2, CArg3>(
+              reinterpret_cast<fptr>(v256_store_aligned),
+              reinterpret_cast<fptr>(v256_load_aligned),
+              reinterpret_cast<fptr>(v256_load_aligned),
+              reinterpret_cast<fptr>(v256_load_aligned), simd, d,
+              reinterpret_cast<fptr>(c_v256_store_aligned),
+              reinterpret_cast<fptr>(c_v256_load_aligned),
+              reinterpret_cast<fptr>(c_v256_load_aligned),
+              reinterpret_cast<fptr>(c_v256_load_aligned),
+              reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2, s3);
+    } else {
+      FAIL() << "Internal error: Unknown intrinsic function "
+             << typeid(CRet).name() << " " << name << "("
+             << typeid(CArg1).name() << ", " << typeid(CArg2).name() << ", "
+             << typeid(CArg3).name() << ")";
+    }
+  }
+
+  EXPECT_EQ(0, error) << "Error: mismatch for " << name << "("
+                      << Print(s1, sizeof(s1)) << ", " << Print(s2, sizeof(s2))
+                      << ", " << Print(s3, sizeof(s3)) << ") -> "
+                      << Print(d, sizeof(d)) << " (simd), "
+                      << Print(ref_d, sizeof(ref_d)) << " (ref)";
+}
+
 // Instantiations to make the functions callable from another files
 template void TestSimd1Arg<c_v64, uint8_t>(uint32_t, uint32_t, uint32_t,
                                            const char *);
@@ -1682,6 +2107,8 @@ template void TestSimd1Arg<c_v128, uint16_t>(uint32_t, uint32_t, uint32_t,
                                              const char *);
 template void TestSimd1Arg<c_v128, uint32_t>(uint32_t, uint32_t, uint32_t,
                                              const char *);
+template void TestSimd1Arg<c_v128, uint64_t>(uint32_t, uint32_t, uint32_t,
+                                             const char *);
 template void TestSimd1Arg<c_v128, c_v64>(uint32_t, uint32_t, uint32_t,
                                           const char *);
 template void TestSimd1Arg<uint32_t, c_v128>(uint32_t, uint32_t, uint32_t,
@@ -1698,10 +2125,15 @@ template void TestSimd2Args<c_v128, uint64_t, uint64_t>(uint32_t, uint32_t,
                                                         uint32_t, const char *);
 template void TestSimd2Args<c_v128, c_v64, c_v64>(uint32_t, uint32_t, uint32_t,
                                                   const char *);
+template void TestSimd2Args<uint64_t, c_v128, c_v128>(uint32_t, uint32_t,
+                                                      uint32_t, const char *);
 template void TestSimd2Args<int64_t, c_v128, c_v128>(uint32_t, uint32_t,
                                                      uint32_t, const char *);
 template void TestSimd2Args<uint32_t, c_v128, c_v128>(uint32_t, uint32_t,
                                                       uint32_t, const char *);
+template void TestSimd3Args<c_v128, c_v128, c_v128, c_v128>(uint32_t, uint32_t,
+                                                            uint32_t,
+                                                            const char *);
 template void TestSimd1Arg<c_v256, c_v128>(uint32_t, uint32_t, uint32_t,
                                            const char *);
 template void TestSimd1Arg<c_v256, c_v256>(uint32_t, uint32_t, uint32_t,
@@ -1714,6 +2146,8 @@ template void TestSimd1Arg<c_v256, uint16_t>(uint32_t, uint32_t, uint32_t,
                                              const char *);
 template void TestSimd1Arg<c_v256, uint32_t>(uint32_t, uint32_t, uint32_t,
                                              const char *);
+template void TestSimd1Arg<c_v256, uint64_t>(uint32_t, uint32_t, uint32_t,
+                                             const char *);
 template void TestSimd1Arg<uint32_t, c_v256>(uint32_t, uint32_t, uint32_t,
                                              const char *);
 template void TestSimd1Arg<c_v64, c_v256>(uint32_t, uint32_t, uint32_t,
@@ -1724,9 +2158,14 @@ template void TestSimd2Args<c_v256, c_v256, c_v256>(uint32_t, uint32_t,
                                                     uint32_t, const char *);
 template void TestSimd2Args<c_v256, c_v256, uint32_t>(uint32_t, uint32_t,
                                                       uint32_t, const char *);
+template void TestSimd2Args<uint64_t, c_v256, c_v256>(uint32_t, uint32_t,
+                                                      uint32_t, const char *);
 template void TestSimd2Args<int64_t, c_v256, c_v256>(uint32_t, uint32_t,
                                                      uint32_t, const char *);
 template void TestSimd2Args<uint32_t, c_v256, c_v256>(uint32_t, uint32_t,
                                                       uint32_t, const char *);
+template void TestSimd3Args<c_v256, c_v256, c_v256, c_v256>(uint32_t, uint32_t,
+                                                            uint32_t,
+                                                            const char *);
 
 }  // namespace SIMD_NAMESPACE

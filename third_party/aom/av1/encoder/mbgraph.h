@@ -23,10 +23,12 @@ typedef struct {
       int_mv mv;
       PREDICTION_MODE mode;
     } m;
-  } ref[TOTAL_REFS_PER_FRAME];
+  } ref[REF_FRAMES];
 } MBGRAPH_MB_STATS;
 
-typedef struct { MBGRAPH_MB_STATS *mb_stats; } MBGRAPH_FRAME_STATS;
+typedef struct {
+  MBGRAPH_MB_STATS *mb_stats;
+} MBGRAPH_FRAME_STATS;
 
 struct AV1_COMP;
 

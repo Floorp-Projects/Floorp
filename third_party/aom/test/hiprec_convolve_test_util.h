@@ -12,14 +12,16 @@
 #ifndef TEST_HIPREC_CONVOLVE_TEST_UTIL_H_
 #define TEST_HIPREC_CONVOLVE_TEST_UTIL_H_
 
-#include "third_party/googletest/src/googletest/include/gtest/gtest.h"
+#include "config/av1_rtcd.h"
+
 #include "test/acm_random.h"
 #include "test/util.h"
-#include "./av1_rtcd.h"
-#include "./aom_dsp_rtcd.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
+#include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
+#include "aom_ports/aom_timer.h"
+#include "av1/common/convolve.h"
 #include "av1/common/mv.h"
 
 namespace libaom_test {
@@ -30,9 +32,10 @@ typedef void (*hiprec_convolve_func)(const uint8_t *src, ptrdiff_t src_stride,
                                      uint8_t *dst, ptrdiff_t dst_stride,
                                      const int16_t *filter_x, int x_step_q4,
                                      const int16_t *filter_y, int y_step_q4,
-                                     int w, int h);
+                                     int w, int h,
+                                     const ConvolveParams *conv_params);
 
-typedef std::tr1::tuple<int, int, int, hiprec_convolve_func>
+typedef ::testing::tuple<int, int, int, hiprec_convolve_func>
     HiprecConvolveParam;
 
 ::testing::internal::ParamGenerator<HiprecConvolveParam> BuildParams(
@@ -48,20 +51,21 @@ class AV1HiprecConvolveTest
 
  protected:
   void RunCheckOutput(hiprec_convolve_func test_impl);
+  void RunSpeedTest(hiprec_convolve_func test_impl);
 
   libaom_test::ACMRandom rnd_;
 };
 
 }  // namespace AV1HiprecConvolve
 
-#if CONFIG_HIGHBITDEPTH
 namespace AV1HighbdHiprecConvolve {
 typedef void (*highbd_hiprec_convolve_func)(
     const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
     ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4,
-    const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+    const int16_t *filter_y, int y_step_q4, int w, int h,
+    const ConvolveParams *conv_params, int bps);
 
-typedef std::tr1::tuple<int, int, int, int, highbd_hiprec_convolve_func>
+typedef ::testing::tuple<int, int, int, int, highbd_hiprec_convolve_func>
     HighbdHiprecConvolveParam;
 
 ::testing::internal::ParamGenerator<HighbdHiprecConvolveParam> BuildParams(
@@ -77,12 +81,12 @@ class AV1HighbdHiprecConvolveTest
 
  protected:
   void RunCheckOutput(highbd_hiprec_convolve_func test_impl);
+  void RunSpeedTest(highbd_hiprec_convolve_func test_impl);
 
   libaom_test::ACMRandom rnd_;
 };
 
 }  // namespace AV1HighbdHiprecConvolve
-#endif  // CONFIG_HIGHBITDEPTH
 
 }  // namespace libaom_test
 

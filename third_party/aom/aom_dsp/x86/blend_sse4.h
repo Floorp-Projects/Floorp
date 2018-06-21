@@ -53,7 +53,6 @@ static INLINE __m128i blend_8(const uint8_t *src0, const uint8_t *src1,
   return v_res_w;
 }
 
-#if CONFIG_HIGHBITDEPTH
 typedef __m128i (*blend_unit_fn)(const uint16_t *src0, const uint16_t *src1,
                                  const __m128i v_m0_w, const __m128i v_m1_w);
 
@@ -141,6 +140,5 @@ static INLINE __m128i blend_8_b12(const uint16_t *src0, const uint16_t *src1,
 
   return v_res_w;
 }
-#endif  // CONFIG_HIGHBITDEPTH
 
 #endif  // AOM_DSP_X86_BLEND_SSE4_H_

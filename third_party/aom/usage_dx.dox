@@ -5,11 +5,7 @@
     decoded images. The decoder expects packets to comprise exactly one image
     frame of data. Packets \ref MUST be passed in decode order. If the
     application wishes to associate some data with the frame, the
-    <code>user_priv</code> member may be set. The <code>deadline</code>
-    parameter controls the amount of time in microseconds the decoder should
-    spend working on the frame. This is typically used to support adaptive
-    \ref usage_postproc based on the amount of free CPU time. For more
-    information on the <code>deadline</code> parameter, see \ref usage_deadline.
+    <code>user_priv</code> member may be set.
 
     \ref samples
 
@@ -55,8 +51,7 @@
     postprocessing filters, and the available filters may differ from platform
     to platform. Embedded devices often do not have enough CPU to implement
     postprocessing in software. The filter selection is generally handled
-    automatically by the codec, depending on the amount of time remaining before
-    hitting the user-specified \ref usage_deadline after decoding the frame.
+    automatically by the codec.
 
 
 */

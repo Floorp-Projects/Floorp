@@ -9,7 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 #include <immintrin.h>  // AVX2
-#include "./aom_dsp_rtcd.h"
+
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
 
 void aom_sad32x32x4d_avx2(const uint8_t *src, int src_stride,

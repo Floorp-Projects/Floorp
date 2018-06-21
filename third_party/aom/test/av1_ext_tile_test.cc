@@ -46,6 +46,7 @@ class AV1ExtTileTest
     cfg.allow_lowbitdepth = 1;
 
     decoder_ = codec_->CreateDecoder(cfg, 0);
+    decoder_->Control(AV1_SET_TILE_MODE, 1);
     decoder_->Control(AV1_SET_DECODE_TILE_ROW, -1);
     decoder_->Control(AV1_SET_DECODE_TILE_COL, -1);
 
@@ -86,13 +87,8 @@ class AV1ExtTileTest
       encoder->Control(AV1E_SET_TILE_ROWS, kTileSize);
       // TODO(yunqingwang): test single_tile_decoding = 0.
       encoder->Control(AV1E_SET_SINGLE_TILE_DECODING, 1);
-#if CONFIG_EXT_PARTITION
       // Always use 64x64 max partition.
       encoder->Control(AV1E_SET_SUPERBLOCK_SIZE, AOM_SUPERBLOCK_SIZE_64X64);
-#endif
-#if CONFIG_LOOPFILTERING_ACROSS_TILES
-      encoder->Control(AV1E_SET_TILE_LOOPFILTER, 0);
-#endif
     }
 
     if (video->frame() == 1) {
@@ -174,6 +170,23 @@ class AV1ExtTileTest
     }
   }
 
+  void TestRoundTrip() {
+    ::libaom_test::I420VideoSource video(
+        "hantro_collage_w352h288.yuv", kImgWidth, kImgHeight, 30, 1, 0, kLimit);
+    cfg_.rc_target_bitrate = 500;
+    cfg_.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
+    cfg_.large_scale_tile = 1;
+    cfg_.g_lag_in_frames = 0;
+    cfg_.g_threads = 1;
+
+    // Tile encoding
+    init_flags_ = AOM_CODEC_USE_PSNR;
+    ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+
+    // Compare to check if two vectors are equal.
+    ASSERT_EQ(md5_, tile_md5_);
+  }
+
   ::libaom_test::TestMode encoding_mode_;
   int set_cpu_used_;
   ::libaom_test::Decoder *decoder_;
@@ -182,25 +195,19 @@ class AV1ExtTileTest
   std::vector<std::string> tile_md5_;
 };
 
-TEST_P(AV1ExtTileTest, DecoderResultTest) {
-  ::libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", kImgWidth,
-                                       kImgHeight, 30, 1, 0, kLimit);
-  cfg_.rc_target_bitrate = 500;
-  cfg_.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
-  cfg_.large_scale_tile = 1;
-  cfg_.g_lag_in_frames = 0;
-  cfg_.g_threads = 1;
-
-  // Tile encoding
-  init_flags_ = AOM_CODEC_USE_PSNR;
-  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-
-  // Compare to check if two vectors are equal.
-  ASSERT_EQ(md5_, tile_md5_);
-}
+TEST_P(AV1ExtTileTest, DISABLED_DecoderResultTest) { TestRoundTrip(); }
 
 AV1_INSTANTIATE_TEST_CASE(
     // Now only test 2-pass mode.
     AV1ExtTileTest, ::testing::Values(::libaom_test::kTwoPassGood),
-    ::testing::Range(0, 4));
+    ::testing::Range(1, 4));
+
+class AV1ExtTileTestLarge : public AV1ExtTileTest {};
+
+TEST_P(AV1ExtTileTestLarge, DISABLED_DecoderResultTest) { TestRoundTrip(); }
+
+AV1_INSTANTIATE_TEST_CASE(
+    // Now only test 2-pass mode.
+    AV1ExtTileTestLarge, ::testing::Values(::libaom_test::kTwoPassGood),
+    ::testing::Range(0, 1));
 }  // namespace

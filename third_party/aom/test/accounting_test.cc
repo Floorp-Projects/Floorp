@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+ */
 
 #include <math.h>
 #include <stdlib.h>
@@ -35,10 +35,7 @@ TEST(AV1, TestAccounting) {
   }
   aom_stop_encode(&bw);
   aom_reader br;
-#if CONFIG_ANS && ANS_MAX_SYMBOLS
-  br.window_size = 1 << 16;
-#endif
-  aom_reader_init(&br, bw_buffer, bw.pos, NULL, NULL);
+  aom_reader_init(&br, bw_buffer, bw.pos);
 
   Accounting accounting;
   aom_accounting_init(&accounting);
@@ -54,7 +51,7 @@ TEST(AV1, TestAccounting) {
   GTEST_ASSERT_EQ(accounting.syms.num_syms, 0);
 
   // Should record 2 * kSymbols accounting symbols.
-  aom_reader_init(&br, bw_buffer, bw.pos, NULL, NULL);
+  aom_reader_init(&br, bw_buffer, bw.pos);
   br.accounting = &accounting;
   for (int i = 0; i < kSymbols; i++) {
     aom_read(&br, 32, "A");

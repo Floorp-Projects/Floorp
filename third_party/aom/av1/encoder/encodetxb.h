@@ -12,7 +12,8 @@
 #ifndef ENCODETXB_H_
 #define ENCODETXB_H_
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "av1/common/blockd.h"
 #include "av1/common/onyxc_int.h"
 #include "av1/common/txb_common.h"
@@ -25,6 +26,7 @@ extern "C" {
 
 typedef struct TxbInfo {
   tran_low_t *qcoeff;
+  uint8_t *levels;  // absolute values and clamped to 255.
   tran_low_t *dqcoeff;
   const tran_low_t *tcoeff;
   const int16_t *dequant;
@@ -33,7 +35,7 @@ typedef struct TxbInfo {
   TX_SIZE txs_ctx;
   TX_TYPE tx_type;
   int bwl;
-  int stride;
+  int width;
   int height;
   int eob;
   int seg_eob;
@@ -41,51 +43,27 @@ typedef struct TxbInfo {
   TXB_CTX *txb_ctx;
   int64_t rdmult;
   const LV_MAP_CTX_TABLE *coeff_ctx_table;
+  const qm_val_t *iqmatrix;
+  int tx_type_cost;
 } TxbInfo;
-
-typedef struct TxbCache {
-  int nz_count_arr[MAX_TX_SQUARE];
-  int nz_ctx_arr[MAX_TX_SQUARE];
-  int base_count_arr[NUM_BASE_LEVELS][MAX_TX_SQUARE];
-  int base_mag_arr[MAX_TX_SQUARE]
-                  [2];  // [0]: max magnitude [1]: num of max magnitude
-  int base_ctx_arr[NUM_BASE_LEVELS][MAX_TX_SQUARE];
-
-  int br_count_arr[MAX_TX_SQUARE];
-  int br_mag_arr[MAX_TX_SQUARE]
-                [2];  // [0]: max magnitude [1]: num of max magnitude
-  int br_ctx_arr[MAX_TX_SQUARE];
-} TxbCache;
-
-typedef struct TxbProbs {
-  const aom_prob *dc_sign_prob;
-  const aom_prob *nz_map;
-  aom_prob (*coeff_base)[COEFF_BASE_CONTEXTS];
-  const aom_prob *coeff_lps;
-  const aom_prob *eob_flag;
-  const aom_prob *txb_skip;
-#if BR_NODE
-  const aom_prob *coeff_br;
-#endif
-} TxbProbs;
 
 void av1_alloc_txb_buf(AV1_COMP *cpi);
 void av1_free_txb_buf(AV1_COMP *cpi);
-int av1_cost_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCK *x, int plane,
-                        int blk_row, int blk_col, int block, TX_SIZE tx_size,
-                        TXB_CTX *txb_ctx);
+int av1_cost_coeffs_txb(const AV1_COMMON *const cm, const MACROBLOCK *x,
+                        const int plane, const int blk_row, const int blk_col,
+                        const int block, const TX_SIZE tx_size,
+                        const TXB_CTX *const txb_ctx);
 void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
-                          aom_writer *w, int blk_row, int blk_col, int block,
-                          int plane, TX_SIZE tx_size, const tran_low_t *tcoeff,
+                          aom_writer *w, int blk_row, int blk_col, int plane,
+                          TX_SIZE tx_size, const tran_low_t *tcoeff,
                           uint16_t eob, TXB_CTX *txb_ctx);
-void av1_write_coeffs_mb(const AV1_COMMON *const cm, MACROBLOCK *x,
-                         aom_writer *w, int plane);
+void av1_write_coeffs_mb(const AV1_COMMON *const cm, MACROBLOCK *x, int mi_row,
+                         int mi_col, aom_writer *w, BLOCK_SIZE bsize);
 int av1_get_txb_entropy_context(const tran_low_t *qcoeff,
                                 const SCAN_ORDER *scan_order, int eob);
 void av1_update_txb_context(const AV1_COMP *cpi, ThreadData *td,
                             RUN_TYPE dry_run, BLOCK_SIZE bsize, int *rate,
-                            const int mi_row, const int mi_col);
-void av1_write_txb_probs(AV1_COMP *cpi, aom_writer *w);
+                            int mi_row, int mi_col, uint8_t allow_update_cdf);
 
 void av1_update_txb_context_b(int plane, int block, int blk_row, int blk_col,
                               BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
@@ -98,16 +76,10 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
 void av1_set_coeff_buffer(const AV1_COMP *const cpi, MACROBLOCK *const x,
                           int mi_row, int mi_col);
 
-#if CONFIG_TXK_SEL
-int64_t av1_search_txk_type(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
-                            int block, int blk_row, int blk_col,
-                            BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
-                            const ENTROPY_CONTEXT *a, const ENTROPY_CONTEXT *l,
-                            int use_fast_coef_costing, RD_STATS *rd_stats);
-#endif
-int av1_optimize_txb(const AV1_COMMON *cm, MACROBLOCK *x, int plane,
-                     int blk_row, int blk_col, int block, TX_SIZE tx_size,
-                     TXB_CTX *txb_ctx, int fast_mode);
+void hbt_destroy();
+int av1_optimize_txb_new(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
+                         int block, TX_SIZE tx_size, TX_TYPE tx_type,
+                         const TXB_CTX *txb_ctx, int *rate_cost, int sharpness);
 #ifdef __cplusplus
 }
 #endif

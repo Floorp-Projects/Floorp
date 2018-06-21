@@ -19,16 +19,10 @@
 extern "C" {
 #endif
 
-extern const uint16_t av1_prob_cost[256];
+extern const uint16_t av1_prob_cost[128];
 
 // The factor to scale from cost in bits to cost in av1_prob_cost units.
 #define AV1_PROB_COST_SHIFT 9
-
-#define av1_cost_zero(prob) (av1_prob_cost[prob])
-
-#define av1_cost_one(prob) av1_cost_zero(256 - (prob))
-
-#define av1_cost_bit(prob, bit) av1_cost_zero((bit) ? 256 - (prob) : (prob))
 
 // Cost of coding an n bit literal, using 128 (i.e. 50%) probability
 // for each bit.
@@ -38,31 +32,11 @@ extern const uint16_t av1_prob_cost[256];
 static INLINE int av1_cost_symbol(aom_cdf_prob p15) {
   assert(0 < p15 && p15 < CDF_PROB_TOP);
   const int shift = CDF_PROB_BITS - 1 - get_msb(p15);
-  return av1_cost_zero(get_prob(p15 << shift, CDF_PROB_TOP)) +
-         av1_cost_literal(shift);
+  const int prob = get_prob(p15 << shift, CDF_PROB_TOP);
+  assert(prob >= 128);
+  return av1_prob_cost[prob - 128] + av1_cost_literal(shift);
 }
 
-static INLINE unsigned int cost_branch256(const unsigned int ct[2],
-                                          aom_prob p) {
-  return ct[0] * av1_cost_zero(p) + ct[1] * av1_cost_one(p);
-}
-
-static INLINE int treed_cost(aom_tree tree, const aom_prob *probs, int bits,
-                             int len) {
-  int cost = 0;
-  aom_tree_index i = 0;
-
-  do {
-    const int bit = (bits >> --len) & 1;
-    cost += av1_cost_bit(probs[i >> 1], bit);
-    i = tree[i + bit];
-  } while (len);
-
-  return cost;
-}
-
-void av1_cost_tokens(int *costs, const aom_prob *probs, aom_tree tree);
-void av1_cost_tokens_skip(int *costs, const aom_prob *probs, aom_tree tree);
 void av1_cost_tokens_from_cdf(int *costs, const aom_cdf_prob *cdf,
                               const int *inv_map);
 
