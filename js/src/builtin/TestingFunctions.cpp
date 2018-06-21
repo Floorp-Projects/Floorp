@@ -63,7 +63,6 @@
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
-#include "wasm/WasmBinaryToText.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -711,63 +710,6 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setObject(*obj);
-    return true;
-}
-
-static bool
-WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
-{
-    if (!cx->options().wasm()) {
-        JS_ReportErrorASCII(cx, "wasm support unavailable");
-        return false;
-    }
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
-        return false;
-    }
-
-    Rooted<TypedArrayObject*> code(cx, &args[0].toObject().as<TypedArrayObject>());
-
-    if (!TypedArrayObject::ensureHasBuffer(cx, code))
-        return false;
-
-    if (code->isSharedMemory()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
-        return false;
-    }
-
-    const uint8_t* bufferStart = code->bufferUnshared()->dataPointer();
-    const uint8_t* bytes = bufferStart + code->byteOffset();
-    uint32_t length = code->byteLength();
-
-    Vector<uint8_t> copy(cx);
-    if (code->bufferUnshared()->hasInlineData()) {
-        if (!copy.append(bytes, length))
-            return false;
-        bytes = copy.begin();
-    }
-
-    if (args.length() > 1) {
-        JS_ReportErrorASCII(cx, "wasm text format selection is not supported");
-        return false;
-    }
-
-    StringBuffer buffer(cx);
-    bool ok = wasm::BinaryToText(cx, bytes, length, buffer);
-    if (!ok) {
-        if (!cx->isExceptionPending())
-            JS_ReportErrorASCII(cx, "wasm binary to text print error");
-        return false;
-    }
-
-    JSString* result = buffer.finishString();
-    if (!result)
-        return false;
-
-    args.rval().setString(result);
     return true;
 }
 
@@ -5705,10 +5647,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",
 "  Translates the given text wasm module into its binary encoding."),
-
-    JS_FN_HELP("wasmBinaryToText", WasmBinaryToText, 1, 0,
-"wasmBinaryToText(bin)",
-"  Translates binary encoding to text format"),
 
     JS_FN_HELP("wasmExtractCode", WasmExtractCode, 1, 0,
 "wasmExtractCode(module[, tier])",
