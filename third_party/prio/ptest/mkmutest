@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# This file is part of mutest, a simple micro unit testing framework for C.
+#
+# mutest was written by Leandro Lucarella <llucax@gmail.com> and is released
+# under the BOLA license, please see the LICENSE file or visit:
+# http://blitiri.com.ar/p/bola/
+#
+# This is a simple script to generate a C file that runs all the test suites
+# present in .o files passed as arguments.
+#
+# Please, read the README file for more details.
+#
+
+
+# the trick here is getting all the test cases present in an object file using
+# nm. All the tests must take and return void, start with "mutest_" and, of
+# course, should not be static, which leads to a small limitation: all test
+# cases must have unique names, even across test suites.
+
+# the first argument should be mutest.h
+if [ -z "$1" ]
+then
+	echo "Too few arguments" >&2
+	echo "Usage: $0 mutest_h_location [object files...]" >&2
+	exit 1
+fi
+mutest_h="$1"
+shift
+echo "#include \"$mutest_h\""
+echo "void mu_run_suites() {"
+echo
+for file in "$@"
+do
+	pr_file=`echo "$file" | sed 's/\"/\\\\\"/g'`
+	suite=`basename "$file" .o | sed 's/\"/\\\\\"/g'`
+#symbols=`nm "$file" | egrep '^[[:xdigit:]]{8} T mu_\w+$' | cut -c12-`
+	symbols=`nm "$file" | egrep ' T _mu_\w+$' | cut -c21-`
+	symbols+=`nm "$file" | egrep ' T mu_\w+$' | cut -c20-`
+	tests=`echo "$symbols" | egrep '^mu_test'`
+	inits=`echo "$symbols" | egrep '^mu_init'`
+	terms=`echo "$symbols" | egrep '^mu_term'`
+	echo -e '\tdo {'
+	echo -e '\t\tmutest_suite_name = "'"$suite"'";'
+	echo -e '\t\tmu_print(MU_SUITE, "\\nRunning suite '"'$suite'"'\\n");'
+	for init in $inits
+	do
+		echo -e "\\t\\tmu_run_init($init);"
+	done
+	for testcase in $tests
+	do
+		echo -e "\t\tmu_run_case($testcase);"
+	done
+	for term in $terms
+	do
+		echo -e "\t\tmu_run_term($term);"
+	done
+	echo -e "\t\tif (mutest_suite_failed) ++mutest_failed_suites;"
+	echo -e "\t\telse                     ++mutest_passed_suites;"
+	echo -e "\t\tmutest_suite_failed = 0;"
+	echo -e '\t} while (0);'
+	echo
+done
+echo "}"
+
