@@ -10,14 +10,13 @@ use proc_macro2::{Literal, Span};
 use std::str;
 
 #[cfg(feature = "printing")]
-use proc_macro2::Term;
+use proc_macro2::Ident;
 
 #[cfg(feature = "parsing")]
 use proc_macro2::TokenStream;
 #[cfg(feature = "parsing")]
 use {ParseError, Synom};
 
-#[cfg(any(feature = "printing", feature = "parsing", feature = "derive"))]
 use proc_macro2::TokenTree;
 
 #[cfg(feature = "extra-traits")]
@@ -112,9 +111,7 @@ impl LitStr {
     pub fn new(value: &str, span: Span) -> Self {
         let mut lit = Literal::string(value);
         lit.set_span(span);
-        LitStr {
-            token: lit,
-        }
+        LitStr { token: lit }
     }
 
     pub fn value(&self) -> String {
@@ -137,7 +134,10 @@ impl LitStr {
 
         // Token stream with every span replaced by the given one.
         fn respan_token_stream(stream: TokenStream, span: Span) -> TokenStream {
-            stream.into_iter().map(|token| respan_token_tree(token, span)).collect()
+            stream
+                .into_iter()
+                .map(|token| respan_token_tree(token, span))
+                .collect()
         }
 
         // Token tree with every span replaced by the given one.
@@ -337,7 +337,7 @@ macro_rules! lit_extra_traits {
                 self.$field.to_string().hash(state);
             }
         }
-    }
+    };
 }
 
 impl LitVerbatim {
@@ -413,10 +413,10 @@ ast_enum! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use synom::Synom;
     use buffer::Cursor;
     use parse_error;
     use synom::PResult;
+    use synom::Synom;
 
     impl Synom for Lit {
         fn parse(input: Cursor) -> PResult<Self> {
@@ -429,17 +429,17 @@ pub mod parsing {
                         Ok((Lit::new(lit), rest))
                     }
                 }
-                _ => match input.term() {
-                    Some((term, rest)) => Ok((
+                _ => match input.ident() {
+                    Some((ident, rest)) => Ok((
                         Lit::Bool(LitBool {
-                            value: if term.as_str() == "true" {
+                            value: if ident == "true" {
                                 true
-                            } else if term.as_str() == "false" {
+                            } else if ident == "false" {
                                 false
                             } else {
                                 return parse_error();
                             },
-                            span: term.span(),
+                            span: ident.span(),
                         }),
                         rest,
                     )),
@@ -506,53 +506,54 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::{ToTokens, TokenStreamExt};
 
     impl ToTokens for LitStr {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for LitByteStr {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for LitByte {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for LitChar {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for LitInt {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for LitFloat {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
 
     impl ToTokens for LitBool {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             let s = if self.value { "true" } else { "false" };
-            tokens.append(Term::new(s, self.span));
+            tokens.append(Ident::new(s, self.span));
         }
     }
 
     impl ToTokens for LitVerbatim {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.token.to_tokens(tokens);
         }
     }
@@ -560,9 +561,9 @@ mod printing {
 
 mod value {
     use super::*;
+    use proc_macro2::TokenStream;
     use std::char;
     use std::ops::{Index, RangeFrom};
-    use proc_macro2::TokenStream;
 
     impl Lit {
         /// Interpret a Syn literal from a proc-macro2 literal.
@@ -580,42 +581,20 @@ mod value {
             let value = token.to_string();
 
             match value::byte(&value, 0) {
-                b'"' | b'r' => {
-                    return Lit::Str(LitStr {
-                        token: token,
-                    })
-                }
+                b'"' | b'r' => return Lit::Str(LitStr { token: token }),
                 b'b' => match value::byte(&value, 1) {
-                    b'"' | b'r' => {
-                        return Lit::ByteStr(LitByteStr {
-                            token: token,
-                        })
-                    }
-                    b'\'' => {
-                        return Lit::Byte(LitByte {
-                            token: token,
-                        })
-                    }
+                    b'"' | b'r' => return Lit::ByteStr(LitByteStr { token: token }),
+                    b'\'' => return Lit::Byte(LitByte { token: token }),
                     _ => {}
                 },
-                b'\'' => {
-                    return Lit::Char(LitChar {
-                        token: token,
-                    })
-                }
+                b'\'' => return Lit::Char(LitChar { token: token }),
                 b'0'...b'9' => if number_is_int(&value) {
-                    return Lit::Int(LitInt {
-                        token: token,
-                    });
+                    return Lit::Int(LitInt { token: token });
                 } else if number_is_float(&value) {
-                    return Lit::Float(LitFloat {
-                        token: token,
-                    });
+                    return Lit::Float(LitFloat { token: token });
                 } else {
                     // number overflow
-                    return Lit::Verbatim(LitVerbatim {
-                        token: token,
-                    });
+                    return Lit::Verbatim(LitVerbatim { token: token });
                 },
                 _ => if value == "true" || value == "false" {
                     return Lit::Bool(LitBool {
