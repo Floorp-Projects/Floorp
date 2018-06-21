@@ -186,7 +186,7 @@ NS_NewElement(Element** aResult,
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
-  RefPtr<nsAtom> isAtom = aIs ? NS_Atomize(*aIs) : nullptr;
+  RefPtr<nsAtom> isAtom = aIs ? NS_AtomizeMainThread(*aIs) : nullptr;
   if (ns == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, ni.forget(), aFromParser, isAtom);
   }

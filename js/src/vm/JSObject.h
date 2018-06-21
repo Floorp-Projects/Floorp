@@ -716,7 +716,7 @@ DefineProperty(JSContext* cx, HandleObject obj, HandleId id,
 
 extern bool
 DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                       HandleObject getter, HandleObject setter, unsigned attrs,
                        ObjectOpResult& result);
 
 extern bool
@@ -724,18 +724,8 @@ DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
                    unsigned attrs, ObjectOpResult& result);
 
 extern bool
-DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                       JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                       ObjectOpResult& result);
-
-extern bool
 DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
                    unsigned attrs, ObjectOpResult& result);
-
-extern bool
-DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
-                      JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                      ObjectOpResult& result);
 
 extern bool
 DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
@@ -750,23 +740,16 @@ DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<JS::Property
 
 extern bool
 DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       JSGetterOp getter, JSSetterOp setter, unsigned attrs = JSPROP_ENUMERATE);
+                       HandleObject getter, HandleObject setter,
+                       unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
 DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
                    unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
-DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                       JSGetterOp getter, JSSetterOp setter, unsigned attrs = JSPROP_ENUMERATE);
-
-extern bool
 DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
                    unsigned attrs = JSPROP_ENUMERATE);
-
-extern bool
-DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
-                      JSGetterOp getter, JSSetterOp setter, unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
 DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
@@ -1093,18 +1076,6 @@ CloneObject(JSContext* cx, HandleObject obj, Handle<js::TaggedProto> proto);
 
 extern JSObject*
 DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKind = GenericObject);
-
-inline JSGetterOp
-CastAsGetterOp(JSObject* object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSGetterOp, object);
-}
-
-inline JSSetterOp
-CastAsSetterOp(JSObject* object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSSetterOp, object);
-}
 
 /* ES6 draft rev 32 (2015 Feb 2) 6.2.4.5 ToPropertyDescriptor(Obj) */
 bool

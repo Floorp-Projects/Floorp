@@ -25,12 +25,12 @@ public:
   static void
   Initialize();
 
-  static void
-  Shutdown();
-
 private:
   ClearSiteData();
   ~ClearSiteData();
+
+  static void
+  Shutdown();
 
   class PendingCleanupHolder;
 
