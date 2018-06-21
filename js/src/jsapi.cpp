@@ -2125,16 +2125,12 @@ DefineAccessorPropertyById(JSContext* cx, HandleObject obj, HandleId id,
                            const JSNativeWrapper& get, const JSNativeWrapper& set,
                            unsigned attrs)
 {
-    // When we use DefineProperty, we need full scriptable Function objects rather
-    // than JSNatives. However, we might be pulling this property descriptor off
-    // of something with JSNative property descriptors. If we are, wrap them in
-    // JS Function objects.
+    // Getter/setter are both possibly-null JSNatives. Wrap them in JSFunctions.
 
-    // Getter/setter are both possibly-null JSNatives (or possibly-null
-    // JSFunction* if JSPROP_GETTER or JSPROP_SETTER is appropriately set).
+    MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+
     RootedFunction getter(cx);
-    RootedFunction setter(cx);
-    if (get.op && !(attrs & JSPROP_GETTER)) {
+    if (get.op) {
         RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Get));
         if (!atom)
             return false;
@@ -2147,7 +2143,9 @@ DefineAccessorPropertyById(JSContext* cx, HandleObject obj, HandleId id,
 
         attrs |= JSPROP_GETTER;
     }
-    if (set.op && !(attrs & JSPROP_SETTER)) {
+
+    RootedFunction setter(cx);
+    if (set.op) {
         RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Set));
         if (!atom)
             return false;
