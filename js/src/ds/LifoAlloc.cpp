@@ -187,8 +187,13 @@ LifoAlloc::newChunkWithCapacity(size_t n)
         chunkSize = defaultChunkSize_;
     }
 
+    bool protect = false;
+#ifdef LIFO_CHUNK_PROTECT
+    protect = protect_;
+#endif
+
     // Create a new BumpChunk, and allocate space for it.
-    BumpChunk result = detail::BumpChunk::newWithCapacity(chunkSize, protect_);
+    BumpChunk result = detail::BumpChunk::newWithCapacity(chunkSize, protect);
     if (!result)
         return nullptr;
     MOZ_ASSERT(result->computedSizeOfIncludingThis() == chunkSize);
