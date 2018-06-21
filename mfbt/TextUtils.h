@@ -121,6 +121,22 @@ IsAsciiDigit(Char aChar)
 }
 
 /**
+ * Returns true iff |aChar| matches [0-9a-fA-F].
+ *
+ * This function is basically isxdigit, but guaranteed to be only for ASCII.
+ */
+template<typename Char>
+constexpr bool
+IsAsciiHexDigit(Char aChar)
+{
+  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
+  auto uc = static_cast<UnsignedChar>(aChar);
+  return ('0' <= uc && uc <= '9') ||
+         ('a' <= uc && uc <= 'f') ||
+         ('A' <= uc && uc <= 'F');
+}
+
+/**
  * Returns true iff |aChar| matches [a-zA-Z0-9].
  *
  * This function is basically what you thought isalnum was, except its behavior
