@@ -1247,7 +1247,6 @@ pub fn visit_generics_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Gener
 }
 
 pub fn visit_ident_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Ident) {
-    // Skipped field _i . term;
 }
 # [ cfg ( feature = "full" ) ]
 pub fn visit_impl_item_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut ImplItem) {
@@ -1546,7 +1545,8 @@ pub fn visit_label_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Label) {
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lifetime_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut Lifetime) {
-    // Skipped field _i . term;
+    // Skipped field _i . apostrophe;
+    _visitor.visit_ident_mut(& mut _i . ident);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lifetime_def_mut<V: VisitMut + ?Sized>(_visitor: &mut V, _i: &mut LifetimeDef) {

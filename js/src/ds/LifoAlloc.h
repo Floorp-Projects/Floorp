@@ -227,6 +227,9 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
 
 #if defined(DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 # define LIFO_CHUNK_PROTECT 1
+#endif
+
+#ifdef LIFO_CHUNK_PROTECT
     // Constant used to know if the current chunk should be protected. This is
     // mainly use to prevent dead-lock in the MemoryProtectionExceptionHandler
     // methods.

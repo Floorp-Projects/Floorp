@@ -380,6 +380,16 @@ impl TextureCache {
         }
     }
 
+    // Returns true if the image needs to be uploaded to the
+    // texture cache (either never uploaded, or has been
+    // evicted on a previous frame).
+    pub fn needs_upload(&self, handle: &TextureCacheHandle) -> bool {
+        match handle.entry {
+            Some(ref handle) => self.entries.get_opt(handle).is_none(),
+            None => true,
+        }
+    }
+
     pub fn max_texture_size(&self) -> u32 {
         self.max_texture_size
     }
@@ -1211,7 +1221,7 @@ impl TextureUpdate {
         layer_index: i32,
         dirty_rect: Option<DeviceUintRect>,
     ) -> TextureUpdate {
-        let data_src = match data {
+        let source = match data {
             ImageData::Blob(..) => {
                 panic!("The vector image should have been rasterized.");
             }
@@ -1236,25 +1246,33 @@ impl TextureUpdate {
 
         let update_op = match dirty_rect {
             Some(dirty) => {
+                // the dirty rectangle doesn't have to be within the area but has to intersect it, at least
                 let stride = descriptor.compute_stride();
                 let offset = descriptor.offset + dirty.origin.y * stride + dirty.origin.x * descriptor.format.bytes_per_pixel();
-                let origin =
-                    DeviceUintPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y);
+
                 TextureUpdateOp::Update {
-                    rect: DeviceUintRect::new(origin, dirty.size),
-                    source: data_src,
+                    rect: DeviceUintRect::new(
+                        DeviceUintPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y),
+                        DeviceUintSize::new(
+                            dirty.size.width.min(size.width - dirty.origin.x),
+                            dirty.size.height.min(size.height - dirty.origin.y),
+                        ),
+                    ),
+                    source,
                     stride: Some(stride),
                     offset,
                     layer_index,
                 }
             }
-            None => TextureUpdateOp::Update {
-                rect: DeviceUintRect::new(origin, size),
-                source: data_src,
-                stride: descriptor.stride,
-                offset: descriptor.offset,
-                layer_index,
-            },
+            None => {
+                TextureUpdateOp::Update {
+                    rect: DeviceUintRect::new(origin, size),
+                    source,
+                    stride: descriptor.stride,
+                    offset: descriptor.offset,
+                    layer_index,
+                }
+            }
         };
 
         TextureUpdate {

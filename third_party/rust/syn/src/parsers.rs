@@ -95,6 +95,8 @@ macro_rules! named {
 #[macro_export]
 macro_rules! call {
     ($i:expr, $fun:expr $(, $args:expr)*) => {{
+        #[allow(unused_imports)]
+        use $crate::synom::ext::*;
         let i = $i;
         eprintln!(concat!(" -> ", stringify!($fun), " @ {:?}"), i);
         let r = $fun(i $(, $args)*);
@@ -143,9 +145,11 @@ macro_rules! call {
 #[cfg(not(synom_verbose_trace))]
 #[macro_export]
 macro_rules! call {
-    ($i:expr, $fun:expr $(, $args:expr)*) => {
+    ($i:expr, $fun:expr $(, $args:expr)*) => {{
+        #[allow(unused_imports)]
+        use $crate::synom::ext::*;
         $fun($i $(, $args)*)
-    };
+    }};
 }
 
 /// Transform the result of a parser by applying a function or closure.
@@ -217,7 +221,7 @@ pub fn invoke<T, R, F: FnOnce(T) -> R>(f: F, t: T) -> R {
 /// #[macro_use]
 /// extern crate syn;
 ///
-/// use syn::{Expr, Ident};
+/// use syn::Expr;
 ///
 /// /// Parses any expression that does not begin with a `-` minus sign.
 /// named!(not_negative_expr -> Expr, do_parse!(
@@ -723,7 +727,7 @@ macro_rules! reject {
     ($i:expr,) => {{
         let _ = $i;
         $crate::parse_error()
-    }}
+    }};
 }
 
 /// Run a series of parsers and produce all of the results in a tuple.
@@ -811,15 +815,16 @@ macro_rules! tuple_parser {
 /// ```rust
 /// #[macro_use]
 /// extern crate syn;
+/// extern crate proc_macro2;
 ///
-/// use syn::Ident;
+/// use proc_macro2::{Ident, Span};
 ///
 /// // Parse any identifier token, or the `!` token in which case the
 /// // identifier is treated as `"BANG"`.
 /// named!(ident_or_bang -> Ident, alt!(
 ///     syn!(Ident)
 ///     |
-///     punct!(!) => { |_| "BANG".into() }
+///     punct!(!) => { |_| Ident::new("BANG", Span::call_site()) }
 /// ));
 /// #
 /// # fn main() {}
@@ -926,10 +931,10 @@ macro_rules! alt {
 /// extern crate syn;
 /// extern crate proc_macro2;
 ///
-/// use syn::Ident;
+/// use proc_macro2::Ident;
+/// use proc_macro2::TokenStream;
 /// use syn::token::Paren;
 /// use syn::synom::Synom;
-/// use proc_macro2::TokenStream;
 ///
 /// /// Parse a macro invocation that uses `(` `)` parentheses.
 /// ///
@@ -1259,6 +1264,58 @@ macro_rules! tap {
 macro_rules! syn {
     ($i:expr, $t:ty) => {
         <$t as $crate::synom::Synom>::parse($i)
+    };
+}
+
+/// Parse the given word as a keyword.
+///
+/// For words that are keywords in the Rust language, it is better to use the
+/// [`keyword!`] parser which returns a unique type for each keyword.
+///
+/// [`keyword!`]: macro.keyword.html
+///
+/// - **Syntax:** `custom_keyword!(KEYWORD)`
+/// - **Output:** `Ident`
+///
+/// ```rust
+/// #[macro_use]
+/// extern crate syn;
+///
+/// use syn::Ident;
+/// use syn::synom::Synom;
+///
+/// struct Flag {
+///     name: Ident,
+/// }
+///
+/// // Parses the custom keyword `flag` followed by any name for a flag.
+/// //
+/// // Example: `flag Verbose`
+/// impl Synom for Flag {
+///     named!(parse -> Flag, do_parse!(
+///         custom_keyword!(flag) >>
+///         name: syn!(Ident) >>
+///         (Flag { name })
+///     ));
+/// }
+/// #
+/// # fn main() {}
+/// ```
+///
+/// *This macro is available if Syn is built with the `"parsing"` feature.*
+#[macro_export]
+macro_rules! custom_keyword {
+    ($i:expr, $keyword:ident) => {
+        match <$crate::Ident as $crate::synom::Synom>::parse($i) {
+            ::std::result::Result::Err(err) => ::std::result::Result::Err(err),
+            ::std::result::Result::Ok((token, i)) => {
+                if token == stringify!($keyword) {
+                    ::std::result::Result::Ok((token, i))
+                } else {
+                    $crate::parse_error()
+                }
+            }
+        }
     };
 }
 
