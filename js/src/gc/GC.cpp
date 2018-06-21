@@ -7095,7 +7095,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         initialReason = reason;
         cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
         isCompacting = shouldCompact();
-        lastMarkSlice = false;
+        MOZ_ASSERT(!lastMarkSlice);
         rootsRemoved = false;
 
         incrementalState = State::MarkRoots;
@@ -7156,7 +7156,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         }
 
         incrementalState = State::Sweep;
-
+        lastMarkSlice = false;
         beginSweepPhase(reason, session);
 
         MOZ_FALLTHROUGH;
