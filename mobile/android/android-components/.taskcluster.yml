@@ -33,7 +33,8 @@ tasks:
         - '--login'
         - '-cx'
         - >-
-          mkdir -p /build/fretboard
+          export TERM=dumb
+          && mkdir -p /build/fretboard
           && cd /build/fretboard
           && git clone {{ event.head.repo.url }}
           && cd fretboard
