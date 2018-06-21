@@ -145,7 +145,7 @@
     "DisableAppUpdate": {
       "description": "Prevent the browser from updating.",
       "first_available": "60.0",
-      "enterprise_only": true,
+      "machine_only": true,
 
       "type": "boolean"
     },
@@ -274,7 +274,7 @@
     "DisableSystemAddonUpdate": {
       "description": "Prevent the browser from installing and updating system addons.",
       "first_available": "60.0",
-      "enterprise_only": true,
+      "machine_only": true,
 
       "type": "boolean"
     },
