@@ -47,7 +47,9 @@
             valuesByIteration.push(measuredValues.tests);
         },
         didFinishLastIteration: function () {
-            document.head.removeChild(document.querySelector('style'));
+            try {
+              document.head.removeChild(document.querySelector('style'));
+            } catch(ex) {}
 
             var measuredValuesByFullName = {};
             function addToMeasuredValue(value, fullName, aggregator) {
