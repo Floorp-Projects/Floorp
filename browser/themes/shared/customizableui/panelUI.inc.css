@@ -605,7 +605,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   border: 1px solid transparent;
   margin-top: 4px;
   margin-bottom: 4px;
-  margin-inline-end: 10px;
+  margin-inline-start: 1px;
+  margin-inline-end: 7px;
   padding: 2px;
   transition: padding .2s ease;
 }
@@ -1040,7 +1041,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   height: auto;
   margin-inline-start: 18px;
   min-width: auto;
-  padding: 4px;
+  padding: 4px 5px;
 }
 
 #appMenu-zoom-controls > .subviewbutton {
