@@ -14,6 +14,8 @@ ChromeUtils.import("resource:///modules/ShellService.jsm");
 ChromeUtils.import("resource:///modules/TransientPrefs.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+ChromeUtils.import("resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 
@@ -233,6 +235,17 @@ if (AppConstants.MOZ_UPDATER) {
 // We store this in a global so tests can await it.
 var promiseLoadHandlersList;
 
+// Load the preferences string bundle for a given locale.
+function getBundleForLocale(locale) {
+  function generateContexts(resourceIds) {
+    return L10nRegistry.generateContexts([locale], resourceIds);
+  }
+  return new Localization([
+    "browser/preferences/preferences.ftl",
+    "branding/brand.ftl",
+  ], generateContexts);
+}
+
 var gNodeToObjectMap = new WeakMap();
 
 var gMainPane = {
@@ -337,6 +350,10 @@ var gMainPane = {
     connectionSettingsLink.setAttribute("href", connectionSettingsUrl);
     this.updateProxySettingsUI();
     initializeProxyUI(gMainPane);
+
+    if (Services.prefs.getBoolPref("intl.multilingual.enabled")) {
+      gMainPane.initBrowserLocale();
+    }
 
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
@@ -760,6 +777,60 @@ var gMainPane = {
     }
     if (checkbox.checked !== newValue) {
       checkbox.checked = newValue;
+    }
+  },
+
+  initBrowserLocale() {
+    let localeCodes = Services.locale.getAvailableLocales();
+    let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
+    let locales = localeCodes.map((code, i) => ({code, name: localeNames[i]}));
+    locales.sort((a, b) => a.name > b.name);
+
+    let fragment = document.createDocumentFragment();
+    for (let {code, name} of locales) {
+      let menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("value", code);
+      menuitem.setAttribute("label", name);
+      fragment.appendChild(menuitem);
+    }
+    let menulist = document.getElementById("defaultBrowserLanguage");
+    let menupopup = menulist.querySelector("menupopup");
+    menupopup.appendChild(fragment);
+    menulist.value = Services.locale.getRequestedLocale();
+
+    document.getElementById("browserLanguagesBox").hidden = false;
+  },
+
+  /* Show the confirmation message bar to allow a restart into the new language. */
+  async onBrowserLanguageChange(event) {
+    let locale = event.target.value;
+    let messageBar = document.getElementById("confirmBrowserLanguage");
+    if (locale == Services.locale.getRequestedLocale()) {
+      messageBar.hidden = true;
+      return;
+    }
+    // Set the text in the message bar for the new locale.
+    let newBundle = getBundleForLocale(locale);
+    let description = messageBar.querySelector("description");
+    description.textContent = await newBundle.formatValue(
+      "confirm-browser-language-change-description");
+    let button = messageBar.querySelector("button");
+    button.setAttribute(
+      "label", await newBundle.formatValue(
+        "confirm-browser-language-change-button"));
+    messageBar.hidden = false;
+  },
+
+  /* Confirm the locale change and restart the browser in the new locale. */
+  confirmBrowserLanguageChange() {
+    let locale = document.getElementById("defaultBrowserLanguage").value;
+    Services.locale.setRequestedLocales([locale]);
+
+    // Restart with the new locale.
+    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+    if (!cancelQuit.data) {
+      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
     }
   },
 
