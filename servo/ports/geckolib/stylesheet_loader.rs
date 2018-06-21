@@ -12,14 +12,13 @@ use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::Gecko_LoadStyleSheet;
 use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
 use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
-use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::sugar::ownership::FFIArcHelpers;
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
-use style::stylesheets::StylesheetContents;
+use style::stylesheets::{StylesheetContents, UrlExtraData};
 use style::stylesheets::import_rule::ImportSheet;
 use style::values::CssUrl;
 
@@ -69,7 +68,7 @@ impl StyleStylesheetLoader for StylesheetLoader {
 
 pub struct AsyncStylesheetParser {
     load_data: RefPtr<SheetLoadDataHolder>,
-    extra_data: RefPtr<URLExtraData>,
+    extra_data: UrlExtraData,
     bytes: nsCString,
     origin: Origin,
     quirks_mode: QuirksMode,
@@ -79,7 +78,7 @@ pub struct AsyncStylesheetParser {
 impl AsyncStylesheetParser {
     pub fn new(
         load_data: RefPtr<SheetLoadDataHolder>,
-        extra_data: RefPtr<URLExtraData>,
+        extra_data: UrlExtraData,
         bytes: nsCString,
         origin: Origin,
         quirks_mode: QuirksMode,
