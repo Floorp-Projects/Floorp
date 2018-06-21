@@ -30,12 +30,6 @@ struct od_ec_enc {
   unsigned char *buf;
   /*The size of the buffer.*/
   uint32_t storage;
-  /*The offset at which the last byte containing raw bits was written.*/
-  uint32_t end_offs;
-  /*Bits that will be read from/written at the end.*/
-  od_ec_window end_window;
-  /*Number of valid bits in end_window.*/
-  int nend_bits;
   /*A buffer for output bytes with their associated carry flags.*/
   uint16_t *precarry_buf;
   /*The size of the pre-carry buffer.*/

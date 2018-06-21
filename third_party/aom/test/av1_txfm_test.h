@@ -19,17 +19,20 @@
 #endif
 #include <math.h>
 
+#include "config/av1_rtcd.h"
+
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
 #include "test/acm_random.h"
-#include "av1/common/enums.h"
 #include "av1/common/av1_txfm.h"
-#include "./av1_rtcd.h"
+#include "av1/common/blockd.h"
+#include "av1/common/enums.h"
 
 namespace libaom_test {
 typedef enum {
   TYPE_DCT = 0,
   TYPE_ADST,
+  TYPE_IDTX,
   TYPE_IDCT,
   TYPE_IADST,
   TYPE_LAST
@@ -46,8 +49,10 @@ void reference_adst_1d(const double *in, double *out, int size);
 
 void reference_hybrid_1d(double *in, double *out, int size, int type);
 
-void reference_hybrid_2d(double *in, double *out, int size, int type0,
-                         int type1);
+double get_amplification_factor(TX_TYPE tx_type, TX_SIZE tx_size);
+
+void reference_hybrid_2d(double *in, double *out, TX_TYPE tx_type,
+                         TX_SIZE tx_size);
 template <typename Type1, typename Type2>
 static double compute_avg_abs_error(const Type1 *a, const Type2 *b,
                                     const int size) {
@@ -60,81 +65,62 @@ static double compute_avg_abs_error(const Type1 *a, const Type2 *b,
 }
 
 template <typename Type>
-void fliplr(Type *dest, int stride, int length);
+void fliplr(Type *dest, int width, int height, int stride);
 
 template <typename Type>
-void flipud(Type *dest, int stride, int length);
+void flipud(Type *dest, int width, int height, int stride);
 
 template <typename Type>
-void fliplrud(Type *dest, int stride, int length);
+void fliplrud(Type *dest, int width, int height, int stride);
 
-typedef void (*TxfmFunc)(const int32_t *in, int32_t *out, const int8_t *cos_bit,
+typedef void (*TxfmFunc)(const int32_t *in, int32_t *out, const int8_t cos_bit,
                          const int8_t *range_bit);
 
-typedef void (*Fwd_Txfm2d_Func)(const int16_t *, int32_t *, int, TX_TYPE, int);
-typedef void (*Inv_Txfm2d_Func)(const int32_t *, uint16_t *, int, TX_TYPE, int);
+typedef void (*InvTxfm2dFunc)(const int32_t *, uint16_t *, int, TX_TYPE, int);
+typedef void (*LbdInvTxfm2dFunc)(const int32_t *, uint8_t *, int, TX_TYPE,
+                                 TX_SIZE, int);
 
 static const int bd = 10;
 static const int input_base = (1 << bd);
 
-#if CONFIG_HIGHBITDEPTH
+static INLINE bool IsTxSizeTypeValid(TX_SIZE tx_size, TX_TYPE tx_type) {
+  const TX_SIZE tx_size_sqr_up = txsize_sqr_up_map[tx_size];
+  TxSetType tx_set_type;
+  if (tx_size_sqr_up > TX_32X32) {
+    tx_set_type = EXT_TX_SET_DCTONLY;
+  } else if (tx_size_sqr_up == TX_32X32) {
+    tx_set_type = EXT_TX_SET_DCT_IDTX;
+  } else {
+    tx_set_type = EXT_TX_SET_ALL16;
+  }
+  return av1_ext_tx_used[tx_set_type][tx_type] != 0;
+}
+
 #if CONFIG_AV1_ENCODER
 
-static const Fwd_Txfm2d_Func fwd_txfm_func_ls[TX_SIZES_ALL] = {
-#if CONFIG_CHROMA_2X2
-  NULL,
-#endif
-  av1_fwd_txfm2d_4x4_c,
-  av1_fwd_txfm2d_8x8_c,
-  av1_fwd_txfm2d_16x16_c,
-  av1_fwd_txfm2d_32x32_c,
-#if CONFIG_TX64X64
-  av1_fwd_txfm2d_64x64_c,
-#endif  // CONFIG_TX64X64
-  av1_fwd_txfm2d_4x8_c,
-  av1_fwd_txfm2d_8x4_c,
-  av1_fwd_txfm2d_8x16_c,
-  av1_fwd_txfm2d_16x8_c,
-  av1_fwd_txfm2d_16x32_c,
-  av1_fwd_txfm2d_32x16_c,
-#if CONFIG_TX64X64
-  av1_fwd_txfm2d_32x64_c,
-  av1_fwd_txfm2d_64x32_c,
-#endif  // CONFIG_TX64X64
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+static const FwdTxfm2dFunc fwd_txfm_func_ls[TX_SIZES_ALL] = {
+  av1_fwd_txfm2d_4x4_c,   av1_fwd_txfm2d_8x8_c,   av1_fwd_txfm2d_16x16_c,
+  av1_fwd_txfm2d_32x32_c, av1_fwd_txfm2d_64x64_c, av1_fwd_txfm2d_4x8_c,
+  av1_fwd_txfm2d_8x4_c,   av1_fwd_txfm2d_8x16_c,  av1_fwd_txfm2d_16x8_c,
+  av1_fwd_txfm2d_16x32_c, av1_fwd_txfm2d_32x16_c, av1_fwd_txfm2d_32x64_c,
+  av1_fwd_txfm2d_64x32_c, av1_fwd_txfm2d_4x16_c,  av1_fwd_txfm2d_16x4_c,
+  av1_fwd_txfm2d_8x32_c,  av1_fwd_txfm2d_32x8_c,  av1_fwd_txfm2d_16x64_c,
+  av1_fwd_txfm2d_64x16_c,
 };
 #endif
 
-static const Inv_Txfm2d_Func inv_txfm_func_ls[TX_SIZES_ALL] = {
-#if CONFIG_CHROMA_2X2
-  NULL,
-#endif
-  av1_inv_txfm2d_add_4x4_c,
-  av1_inv_txfm2d_add_8x8_c,
-  av1_inv_txfm2d_add_16x16_c,
-  av1_inv_txfm2d_add_32x32_c,
-#if CONFIG_TX64X64
-  av1_inv_txfm2d_add_64x64_c,
-#endif  // CONFIG_TX64X64
-  av1_inv_txfm2d_add_4x8_c,
-  av1_inv_txfm2d_add_8x4_c,
-  av1_inv_txfm2d_add_8x16_c,
-  av1_inv_txfm2d_add_16x8_c,
-  av1_inv_txfm2d_add_16x32_c,
-  av1_inv_txfm2d_add_32x16_c,
-#if CONFIG_TX64X64
-  av1_inv_txfm2d_add_32x64_c,
-  av1_inv_txfm2d_add_64x32_c,
-#endif  // CONFIG_TX64X64
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+static const InvTxfm2dFunc inv_txfm_func_ls[TX_SIZES_ALL] = {
+  av1_inv_txfm2d_add_4x4_c,   av1_inv_txfm2d_add_8x8_c,
+  av1_inv_txfm2d_add_16x16_c, av1_inv_txfm2d_add_32x32_c,
+  av1_inv_txfm2d_add_64x64_c, av1_inv_txfm2d_add_4x8_c,
+  av1_inv_txfm2d_add_8x4_c,   av1_inv_txfm2d_add_8x16_c,
+  av1_inv_txfm2d_add_16x8_c,  av1_inv_txfm2d_add_16x32_c,
+  av1_inv_txfm2d_add_32x16_c, av1_inv_txfm2d_add_32x64_c,
+  av1_inv_txfm2d_add_64x32_c, av1_inv_txfm2d_add_4x16_c,
+  av1_inv_txfm2d_add_16x4_c,  av1_inv_txfm2d_add_8x32_c,
+  av1_inv_txfm2d_add_32x8_c,  av1_inv_txfm2d_add_16x64_c,
+  av1_inv_txfm2d_add_64x16_c,
 };
-#endif  // CONFIG_HIGHBITDEPTH
 
 #define BD_NUM 3
 
@@ -143,7 +129,7 @@ extern int8_t low_range_arr[];
 extern int8_t high_range_arr[];
 
 void txfm_stage_range_check(const int8_t *stage_range, int stage_num,
-                            const int8_t *cos_bit, int low_range,
+                            const int8_t cos_bit, int low_range,
                             int high_range);
 }  // namespace libaom_test
 #endif  // AV1_TXFM_TEST_H_

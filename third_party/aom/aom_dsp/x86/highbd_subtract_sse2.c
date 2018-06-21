@@ -13,8 +13,8 @@
 #include <emmintrin.h>
 #include <stddef.h>
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
 
 typedef void (*SubtractWxHFuncType)(int16_t *diff, ptrdiff_t diff_stride,
                                     const uint16_t *src, ptrdiff_t src_stride,
@@ -204,21 +204,15 @@ SUBTRACT_FUN(32x32) { STACK_V(16, subtract_32x16); }
 SUBTRACT_FUN(32x64) { STACK_V(32, subtract_32x32); }
 SUBTRACT_FUN(64x32) { STACK_H(32, subtract_32x32); }
 SUBTRACT_FUN(64x64) { STACK_V(32, subtract_64x32); }
-#if CONFIG_EXT_PARTITION
 SUBTRACT_FUN(64x128) { STACK_V(64, subtract_64x64); }
 SUBTRACT_FUN(128x64) { STACK_H(64, subtract_64x64); }
 SUBTRACT_FUN(128x128) { STACK_V(64, subtract_128x64); }
-#endif
 SUBTRACT_FUN(4x16) { STACK_V(8, subtract_4x8); }
 SUBTRACT_FUN(16x4) { STACK_H(8, subtract_8x4); }
 SUBTRACT_FUN(8x32) { STACK_V(16, subtract_8x16); }
 SUBTRACT_FUN(32x8) { STACK_H(16, subtract_16x8); }
 SUBTRACT_FUN(16x64) { STACK_V(32, subtract_16x32); }
 SUBTRACT_FUN(64x16) { STACK_H(32, subtract_32x16); }
-#if CONFIG_EXT_PARTITION
-SUBTRACT_FUN(32x128) { STACK_V(64, subtract_32x64); }
-SUBTRACT_FUN(128x32) { STACK_H(64, subtract_64x32); }
-#endif
 
 static SubtractWxHFuncType getSubtractFunc(int rows, int cols) {
   if (rows == 4) {
@@ -244,25 +238,17 @@ static SubtractWxHFuncType getSubtractFunc(int rows, int cols) {
     if (cols == 16) return subtract_16x32;
     if (cols == 32) return subtract_32x32;
     if (cols == 64) return subtract_64x32;
-#if CONFIG_EXT_PARTITION
-    if (cols == 128) return subtract_128x32;
-#endif  // CONFIG_EXT_PARTITION
   }
   if (rows == 64) {
     if (cols == 16) return subtract_16x64;
     if (cols == 32) return subtract_32x64;
     if (cols == 64) return subtract_64x64;
-#if CONFIG_EXT_PARTITION
     if (cols == 128) return subtract_128x64;
-#endif  // CONFIG_EXT_PARTITION
   }
-#if CONFIG_EXT_PARTITION
   if (rows == 128) {
-    if (cols == 32) return subtract_32x128;
     if (cols == 64) return subtract_64x128;
     if (cols == 128) return subtract_128x128;
   }
-#endif  // CONFIG_EXT_PARTITION
   assert(0);
   return NULL;
 }

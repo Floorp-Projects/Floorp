@@ -13,13 +13,15 @@
 #include <string.h>
 #include <tmmintrin.h>
 
-#include "./aom_config.h"
-#include "./aom_dsp_rtcd.h"
-#include "aom_dsp/blend.h"
+#include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
+
 #include "aom/aom_integer.h"
-#include "aom_ports/mem.h"
 #include "aom_dsp/aom_filter.h"
+#include "aom_dsp/blend.h"
+#include "aom_dsp/x86/masked_variance_intrin_ssse3.h"
 #include "aom_dsp/x86/synonyms.h"
+#include "aom_ports/mem.h"
 
 // For width a multiple of 16
 static void bilinear_filter(const uint8_t *src, int src_stride, int xoffset,
@@ -108,11 +110,9 @@ static void masked_variance4xh(const uint8_t *src_ptr, int src_stride,
     return *sse - (uint32_t)(((int64_t)sum * sum) / (4 * H));                 \
   }
 
-#if CONFIG_EXT_PARTITION
 MASK_SUBPIX_VAR_SSSE3(128, 128)
 MASK_SUBPIX_VAR_SSSE3(128, 64)
 MASK_SUBPIX_VAR_SSSE3(64, 128)
-#endif
 MASK_SUBPIX_VAR_SSSE3(64, 64)
 MASK_SUBPIX_VAR_SSSE3(64, 32)
 MASK_SUBPIX_VAR_SSSE3(32, 64)
@@ -126,18 +126,12 @@ MASK_SUBPIX_VAR8XH_SSSE3(8)
 MASK_SUBPIX_VAR8XH_SSSE3(4)
 MASK_SUBPIX_VAR4XH_SSSE3(8)
 MASK_SUBPIX_VAR4XH_SSSE3(4)
-#if CONFIG_EXT_PARTITION_TYPES
 MASK_SUBPIX_VAR4XH_SSSE3(16)
 MASK_SUBPIX_VAR_SSSE3(16, 4)
 MASK_SUBPIX_VAR8XH_SSSE3(32)
 MASK_SUBPIX_VAR_SSSE3(32, 8)
 MASK_SUBPIX_VAR_SSSE3(64, 16)
 MASK_SUBPIX_VAR_SSSE3(16, 64)
-#if CONFIG_EXT_PARTITION
-MASK_SUBPIX_VAR_SSSE3(128, 32)
-MASK_SUBPIX_VAR_SSSE3(32, 128)
-#endif  // CONFIG_EXT_PARTITION
-#endif  // CONFIG_EXT_PARTITION_TYPES
 
 static INLINE __m128i filter_block(const __m128i a, const __m128i b,
                                    const __m128i filter) {
@@ -523,7 +517,6 @@ static void masked_variance4xh(const uint8_t *src_ptr, int src_stride,
   *sse = _mm_cvtsi128_si32(_mm_srli_si128(sum, 4));
 }
 
-#if CONFIG_HIGHBITDEPTH
 // For width a multiple of 8
 static void highbd_bilinear_filter(const uint16_t *src, int src_stride,
                                    int xoffset, int yoffset, uint16_t *dst,
@@ -695,11 +688,9 @@ static void highbd_masked_variance4xh(const uint16_t *src_ptr, int src_stride,
     return (var >= 0) ? (uint32_t)var : 0;                                  \
   }
 
-#if CONFIG_EXT_PARTITION
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(128, 128)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(128, 64)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(64, 128)
-#endif
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(64, 64)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(64, 32)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(32, 64)
@@ -713,18 +704,12 @@ HIGHBD_MASK_SUBPIX_VAR_SSSE3(8, 8)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(8, 4)
 HIGHBD_MASK_SUBPIX_VAR4XH_SSSE3(8)
 HIGHBD_MASK_SUBPIX_VAR4XH_SSSE3(4)
-#if CONFIG_EXT_PARTITION_TYPES
 HIGHBD_MASK_SUBPIX_VAR4XH_SSSE3(16)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(16, 4)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(8, 32)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(32, 8)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(16, 64)
 HIGHBD_MASK_SUBPIX_VAR_SSSE3(64, 16)
-#if CONFIG_EXT_PARTITION
-HIGHBD_MASK_SUBPIX_VAR_SSSE3(32, 128)
-HIGHBD_MASK_SUBPIX_VAR_SSSE3(128, 32)
-#endif
-#endif
 
 static INLINE __m128i highbd_filter_block(const __m128i a, const __m128i b,
                                           const __m128i filter) {
@@ -1041,4 +1026,40 @@ static void highbd_masked_variance4xh(const uint16_t *src_ptr, int src_stride,
   *sse = _mm_cvtsi128_si32(_mm_srli_si128(sum, 4));
 }
 
-#endif
+void aom_comp_mask_pred_ssse3(uint8_t *comp_pred, const uint8_t *pred,
+                              int width, int height, const uint8_t *ref,
+                              int ref_stride, const uint8_t *mask,
+                              int mask_stride, int invert_mask) {
+  const uint8_t *src0 = invert_mask ? pred : ref;
+  const uint8_t *src1 = invert_mask ? ref : pred;
+  const int stride0 = invert_mask ? width : ref_stride;
+  const int stride1 = invert_mask ? ref_stride : width;
+  assert(height % 2 == 0);
+  int i = 0;
+  if (width == 8) {
+    comp_mask_pred_8_ssse3(comp_pred, height, src0, stride0, src1, stride1,
+                           mask, mask_stride);
+  } else if (width == 16) {
+    do {
+      comp_mask_pred_16_ssse3(src0, src1, mask, comp_pred);
+      comp_mask_pred_16_ssse3(src0 + stride0, src1 + stride1,
+                              mask + mask_stride, comp_pred + width);
+      comp_pred += (width << 1);
+      src0 += (stride0 << 1);
+      src1 += (stride1 << 1);
+      mask += (mask_stride << 1);
+      i += 2;
+    } while (i < height);
+  } else {  // width == 32
+    assert(width == 32);
+    do {
+      comp_mask_pred_16_ssse3(src0, src1, mask, comp_pred);
+      comp_mask_pred_16_ssse3(src0 + 16, src1 + 16, mask + 16, comp_pred + 16);
+      comp_pred += (width);
+      src0 += (stride0);
+      src1 += (stride1);
+      mask += (mask_stride);
+      i += 1;
+    } while (i < height);
+  }
+}

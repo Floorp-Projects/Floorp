@@ -11,7 +11,8 @@
 #ifndef TEST_CODEC_FACTORY_H_
 #define TEST_CODEC_FACTORY_H_
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
+
 #include "aom/aom_decoder.h"
 #include "aom/aom_encoder.h"
 #if CONFIG_AV1_ENCODER
@@ -39,7 +40,6 @@ class CodecFactory {
                                  const aom_codec_flags_t flags) const = 0;
 
   virtual Encoder *CreateEncoder(aom_codec_enc_cfg_t cfg,
-                                 unsigned long deadline,
                                  const unsigned long init_flags,
                                  TwopassStatsStore *stats) const = 0;
 
@@ -54,22 +54,26 @@ class CodecFactory {
 template <class T1>
 class CodecTestWithParam
     : public ::testing::TestWithParam<
-          std::tr1::tuple<const libaom_test::CodecFactory *, T1> > {};
+          ::testing::tuple<const libaom_test::CodecFactory *, T1> > {};
 
 template <class T1, class T2>
 class CodecTestWith2Params
     : public ::testing::TestWithParam<
-          std::tr1::tuple<const libaom_test::CodecFactory *, T1, T2> > {};
+          ::testing::tuple<const libaom_test::CodecFactory *, T1, T2> > {};
 
 template <class T1, class T2, class T3>
 class CodecTestWith3Params
     : public ::testing::TestWithParam<
-          std::tr1::tuple<const libaom_test::CodecFactory *, T1, T2, T3> > {};
+          ::testing::tuple<const libaom_test::CodecFactory *, T1, T2, T3> > {};
+
+template <class T1, class T2, class T3, class T4>
+class CodecTestWith4Params
+    : public ::testing::TestWithParam< ::testing::tuple<
+          const libaom_test::CodecFactory *, T1, T2, T3, T4> > {};
 
 /*
  * AV1 Codec Definitions
  */
-#if CONFIG_AV1
 class AV1Decoder : public Decoder {
  public:
   explicit AV1Decoder(aom_codec_dec_cfg_t cfg) : Decoder(cfg) {}
@@ -89,9 +93,9 @@ class AV1Decoder : public Decoder {
 
 class AV1Encoder : public Encoder {
  public:
-  AV1Encoder(aom_codec_enc_cfg_t cfg, unsigned long deadline,
-             const unsigned long init_flags, TwopassStatsStore *stats)
-      : Encoder(cfg, deadline, init_flags, stats) {}
+  AV1Encoder(aom_codec_enc_cfg_t cfg, const uint32_t init_flags,
+             TwopassStatsStore *stats)
+      : Encoder(cfg, init_flags, stats) {}
 
  protected:
   virtual aom_codec_iface_t *CodecInterface() const {
@@ -123,14 +127,12 @@ class AV1CodecFactory : public CodecFactory {
   }
 
   virtual Encoder *CreateEncoder(aom_codec_enc_cfg_t cfg,
-                                 unsigned long deadline,
                                  const unsigned long init_flags,
                                  TwopassStatsStore *stats) const {
 #if CONFIG_AV1_ENCODER
-    return new AV1Encoder(cfg, deadline, init_flags, stats);
+    return new AV1Encoder(cfg, init_flags, stats);
 #else
     (void)cfg;
-    (void)deadline;
     (void)init_flags;
     (void)stats;
     return NULL;
@@ -158,9 +160,6 @@ const libaom_test::AV1CodecFactory kAV1;
           ::testing::Values(static_cast<const libaom_test::CodecFactory *>( \
               &libaom_test::kAV1)),                                         \
           __VA_ARGS__))
-#else
-#define AV1_INSTANTIATE_TEST_CASE(test, ...)
-#endif  // CONFIG_AV1
 
 }  // namespace libaom_test
 #endif  // TEST_CODEC_FACTORY_H_

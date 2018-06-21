@@ -12,7 +12,7 @@
 #ifndef AV1_DECODER_DECODER_H_
 #define AV1_DECODER_DECODER_H_
 
-#include "./aom_config.h"
+#include "config/aom_config.h"
 
 #include "aom/aom_codec.h"
 #include "aom_dsp/bitreader.h"
@@ -29,73 +29,61 @@
 #include "av1/decoder/inspection.h"
 #endif
 
-#if CONFIG_PVQ
-#include "aom_dsp/entdec.h"
-#include "av1/decoder/decint.h"
-#include "av1/encoder/encodemb.h"
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// TODO(hkuang): combine this with TileWorkerData.
-typedef struct TileData {
-  AV1_COMMON *cm;
-  aom_reader bit_reader;
-  DECLARE_ALIGNED(16, MACROBLOCKD, xd);
+typedef struct ThreadData {
+  aom_reader *bit_reader;
+  DECLARE_ALIGNED(32, MACROBLOCKD, xd);
   /* dqcoeff are shared by all the planes. So planes must be decoded serially */
-  DECLARE_ALIGNED(16, tran_low_t, dqcoeff[MAX_TX_SQUARE]);
-#if CONFIG_PVQ
-  /* forward transformed predicted image, a reference for PVQ */
-  DECLARE_ALIGNED(16, tran_low_t, pvq_ref_coeff[OD_TXSIZE_MAX * OD_TXSIZE_MAX]);
-#endif
-#if CONFIG_CFL
-  CFL_CTX cfl;
-#endif
-  DECLARE_ALIGNED(16, FRAME_CONTEXT, tctx);
-  DECLARE_ALIGNED(16, uint8_t, color_index_map[2][MAX_SB_SQUARE]);
-#if CONFIG_MRC_TX
-  DECLARE_ALIGNED(16, uint8_t, mrc_mask[MAX_SB_SQUARE]);
-#endif  // CONFIG_MRC_TX
-} TileData;
+  DECLARE_ALIGNED(32, tran_low_t, dqcoeff[MAX_TX_SQUARE]);
+  CB_BUFFER cb_buffer_base;
+  uint8_t *mc_buf[2];
+  int32_t mc_buf_size;
+} ThreadData;
 
-typedef struct TileWorkerData {
-  struct AV1Decoder *pbi;
+typedef struct TileDataDec {
+  TileInfo tile_info;
   aom_reader bit_reader;
-  FRAME_COUNTS counts;
-  DECLARE_ALIGNED(16, MACROBLOCKD, xd);
-  /* dqcoeff are shared by all the planes. So planes must be decoded serially */
-  DECLARE_ALIGNED(16, tran_low_t, dqcoeff[MAX_TX_SQUARE]);
-#if CONFIG_PVQ
-  /* forward transformed predicted image, a reference for PVQ */
-  DECLARE_ALIGNED(16, tran_low_t, pvq_ref_coeff[OD_TXSIZE_MAX * OD_TXSIZE_MAX]);
-#endif
-#if CONFIG_CFL
-  CFL_CTX cfl;
-#endif
-  FRAME_CONTEXT tctx;
-  DECLARE_ALIGNED(16, uint8_t, color_index_map[2][MAX_SB_SQUARE]);
-#if CONFIG_MRC_TX
-  DECLARE_ALIGNED(16, uint8_t, mrc_mask[MAX_SB_SQUARE]);
-#endif  // CONFIG_MRC_TX
-  struct aom_internal_error_info error_info;
-} TileWorkerData;
+  DECLARE_ALIGNED(16, FRAME_CONTEXT, tctx);
+} TileDataDec;
 
 typedef struct TileBufferDec {
   const uint8_t *data;
   size_t size;
-  const uint8_t *raw_data_end;  // The end of the raw tile buffer in the
-                                // bit stream.
-  int col;                      // only used with multi-threaded decoding
 } TileBufferDec;
 
+typedef struct DataBuffer {
+  const uint8_t *data;
+  size_t size;
+} DataBuffer;
+
+typedef struct EXTERNAL_REFERENCES {
+  YV12_BUFFER_CONFIG refs[MAX_EXTERNAL_REFERENCES];
+  int num;
+} EXTERNAL_REFERENCES;
+
+typedef struct TileJobsDec {
+  TileBufferDec *tile_buffer;
+  TileDataDec *tile_data;
+} TileJobsDec;
+
+typedef struct AV1DecTileMTData {
+#if CONFIG_MULTITHREAD
+  pthread_mutex_t *job_mutex;
+#endif
+  TileJobsDec *job_queue;
+  int jobs_enqueued;
+  int jobs_dequeued;
+  int alloc_tile_rows;
+  int alloc_tile_cols;
+} AV1DecTileMT;
+
 typedef struct AV1Decoder {
-  DECLARE_ALIGNED(16, MACROBLOCKD, mb);
+  DECLARE_ALIGNED(32, MACROBLOCKD, mb);
 
-  DECLARE_ALIGNED(16, AV1_COMMON, common);
-
-  int ready_for_new_data;
+  DECLARE_ALIGNED(32, AV1_COMMON, common);
 
   int refresh_frame_flags;
 
@@ -105,20 +93,38 @@ typedef struct AV1Decoder {
 
   AVxWorker *frame_worker_owner;  // frame_worker that owns this pbi.
   AVxWorker lf_worker;
+  AV1LfSync lf_row_sync;
+  AV1LrSync lr_row_sync;
+  AV1LrStruct lr_ctxt;
   AVxWorker *tile_workers;
-  TileWorkerData *tile_worker_data;
-  TileInfo *tile_worker_info;
-  int num_tile_workers;
-
-  TileData *tile_data;
+  int num_workers;
+  DecWorkerData *thread_data;
+  ThreadData td;
+  TileDataDec *tile_data;
   int allocated_tiles;
 
   TileBufferDec tile_buffers[MAX_TILE_ROWS][MAX_TILE_COLS];
+  AV1DecTileMT tile_mt_info;
 
-  AV1LfSync lf_row_sync;
+  // Each time the decoder is called, we expect to receive a full temporal unit.
+  // This can contain up to one shown frame per spatial layer in the current
+  // operating point (note that some layers may be entirely omitted).
+  // If the 'output_all_layers' option is true, we save all of these shown
+  // frames so that they can be returned to the application. If the
+  // 'output_all_layers' option is false, then we only output one image per
+  // temporal unit.
+  //
+  // Note: The saved buffers are released at the start of the next time the
+  // application calls aom_codec_decode().
+  int output_all_layers;
+  YV12_BUFFER_CONFIG *output_frames[MAX_NUM_SPATIAL_LAYERS];
+  size_t output_frame_index[MAX_NUM_SPATIAL_LAYERS];  // Buffer pool indices
+  size_t num_output_frames;  // How many frames are queued up so far?
 
-  aom_decrypt_cb decrypt_cb;
-  void *decrypt_state;
+  // In order to properly support random-access decoding, we need
+  // to behave slightly differently for the very first frame we decode.
+  // So we track whether this is the first frame or not.
+  int decoding_first_frame;
 
   int allow_lowbitdepth;
   int max_threads;
@@ -127,29 +133,47 @@ typedef struct AV1Decoder {
   int hold_ref_buf;  // hold the reference buffer.
 
   int tile_size_bytes;
-#if CONFIG_EXT_TILE
   int tile_col_size_bytes;
   int dec_tile_row, dec_tile_col;  // always -1 for non-VR tile encoding
-#endif                             // CONFIG_EXT_TILE
 #if CONFIG_ACCOUNTING
   int acct_enabled;
   Accounting accounting;
 #endif
-  size_t uncomp_hdr_size;       // Size of the uncompressed header
-  size_t first_partition_size;  // Size of the compressed header
-  int tg_size;                  // Number of tiles in the current tilegroup
-  int tg_start;                 // First tile in the current tilegroup
+  size_t uncomp_hdr_size;  // Size of the uncompressed header
+  int tg_size;             // Number of tiles in the current tilegroup
+  int tg_start;            // First tile in the current tilegroup
   int tg_size_bit_offset;
+  int sequence_header_ready;
 #if CONFIG_INSPECTION
   aom_inspect_cb inspect_cb;
   void *inspect_ctx;
 #endif
+  int operating_point;
+  int current_operating_point;
+  int seen_frame_header;
+
+  // State if the camera frame header is already decoded while
+  // large_scale_tile = 1.
+  int camera_frame_header_ready;
+  size_t frame_header_size;
+  DataBuffer obu_size_hdr;
+  int output_frame_width_in_tiles_minus_1;
+  int output_frame_height_in_tiles_minus_1;
+  int tile_count_minus_1;
+  uint32_t coded_tile_data_size;
+  unsigned int ext_tile_debug;  // for ext-tile software debug & testing
+  EXTERNAL_REFERENCES ext_refs;
+  size_t tile_list_size;
+  uint8_t *tile_list_output;
+  size_t buffer_sz;
 } AV1Decoder;
 
 int av1_receive_compressed_data(struct AV1Decoder *pbi, size_t size,
                                 const uint8_t **dest);
 
-int av1_get_raw_frame(struct AV1Decoder *pbi, YV12_BUFFER_CONFIG *sd);
+// Get the frame at a particular index in the output queue
+int av1_get_raw_frame(AV1Decoder *pbi, size_t index, YV12_BUFFER_CONFIG **sd,
+                      aom_film_grain_t **grain_params);
 
 int av1_get_frame_to_show(struct AV1Decoder *pbi, YV12_BUFFER_CONFIG *frame);
 
@@ -157,29 +181,16 @@ aom_codec_err_t av1_copy_reference_dec(struct AV1Decoder *pbi, int idx,
                                        YV12_BUFFER_CONFIG *sd);
 
 aom_codec_err_t av1_set_reference_dec(AV1_COMMON *cm, int idx,
+                                      int use_external_ref,
                                       YV12_BUFFER_CONFIG *sd);
-
-static INLINE uint8_t read_marker(aom_decrypt_cb decrypt_cb,
-                                  void *decrypt_state, const uint8_t *data) {
-  if (decrypt_cb) {
-    uint8_t marker;
-    decrypt_cb(decrypt_state, data, &marker, 1);
-    return marker;
-  }
-  return *data;
-}
-
-// This function is exposed for use in tests, as well as the inlined function
-// "read_marker".
-aom_codec_err_t av1_parse_superframe_index(const uint8_t *data, size_t data_sz,
-                                           uint32_t sizes[8], int *count,
-                                           int *index_size,
-                                           aom_decrypt_cb decrypt_cb,
-                                           void *decrypt_state);
+aom_codec_err_t av1_copy_new_frame_dec(AV1_COMMON *cm,
+                                       YV12_BUFFER_CONFIG *new_frame,
+                                       YV12_BUFFER_CONFIG *sd);
 
 struct AV1Decoder *av1_decoder_create(BufferPool *const pool);
 
 void av1_decoder_remove(struct AV1Decoder *pbi);
+void av1_dealloc_dec_jobs(struct AV1DecTileMTData *tile_jobs_sync);
 
 static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
                                       BufferPool *const pool) {
@@ -196,7 +207,6 @@ static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
   }
 }
 
-#if CONFIG_EXT_REFS || CONFIG_TEMPMV_SIGNALING
 static INLINE int dec_is_ref_frame_buf(AV1Decoder *const pbi,
                                        RefCntBuffer *frame_buf) {
   AV1_COMMON *const cm = &pbi->common;
@@ -208,7 +218,6 @@ static INLINE int dec_is_ref_frame_buf(AV1Decoder *const pbi,
   }
   return (i < INTER_REFS_PER_FRAME);
 }
-#endif  // CONFIG_EXT_REFS
 
 #define ACCT_STR __func__
 static INLINE int av1_read_uniform(aom_reader *r, int n) {
@@ -221,6 +230,13 @@ static INLINE int av1_read_uniform(aom_reader *r, int n) {
   else
     return (v << 1) - m + aom_read_literal(r, 1, ACCT_STR);
 }
+
+typedef void (*palette_visitor_fn_t)(MACROBLOCKD *const xd, int plane,
+                                     aom_reader *r);
+
+void av1_visit_palette(AV1Decoder *const pbi, MACROBLOCKD *const xd, int mi_row,
+                       int mi_col, aom_reader *r, BLOCK_SIZE bsize,
+                       palette_visitor_fn_t visit);
 
 #ifdef __cplusplus
 }  // extern "C"

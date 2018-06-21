@@ -20,22 +20,22 @@ extern "C" {
 
 #define AV1_K_MEANS_RENAME(func, dim) func##_dim##dim
 
-void AV1_K_MEANS_RENAME(av1_calc_indices, 1)(const float *data,
-                                             const float *centroids,
+void AV1_K_MEANS_RENAME(av1_calc_indices, 1)(const int *data,
+                                             const int *centroids,
                                              uint8_t *indices, int n, int k);
-void AV1_K_MEANS_RENAME(av1_calc_indices, 2)(const float *data,
-                                             const float *centroids,
+void AV1_K_MEANS_RENAME(av1_calc_indices, 2)(const int *data,
+                                             const int *centroids,
                                              uint8_t *indices, int n, int k);
-void AV1_K_MEANS_RENAME(av1_k_means, 1)(const float *data, float *centroids,
+void AV1_K_MEANS_RENAME(av1_k_means, 1)(const int *data, int *centroids,
                                         uint8_t *indices, int n, int k,
                                         int max_itr);
-void AV1_K_MEANS_RENAME(av1_k_means, 2)(const float *data, float *centroids,
+void AV1_K_MEANS_RENAME(av1_k_means, 2)(const int *data, int *centroids,
                                         uint8_t *indices, int n, int k,
                                         int max_itr);
 
 // Given 'n' 'data' points and 'k' 'centroids' each of dimension 'dim',
 // calculate the centroid 'indices' for the data points.
-static INLINE void av1_calc_indices(const float *data, const float *centroids,
+static INLINE void av1_calc_indices(const int *data, const int *centroids,
                                     uint8_t *indices, int n, int k, int dim) {
   if (dim == 1) {
     AV1_K_MEANS_RENAME(av1_calc_indices, 1)(data, centroids, indices, n, k);
@@ -50,7 +50,7 @@ static INLINE void av1_calc_indices(const float *data, const float *centroids,
 // dimension 'dim', runs up to 'max_itr' iterations of k-means algorithm to get
 // updated 'centroids' and the centroid 'indices' for elements in 'data'.
 // Note: the output centroids are rounded off to nearest integers.
-static INLINE void av1_k_means(const float *data, float *centroids,
+static INLINE void av1_k_means(const int *data, int *centroids,
                                uint8_t *indices, int n, int k, int dim,
                                int max_itr) {
   if (dim == 1) {
@@ -66,9 +66,8 @@ static INLINE void av1_k_means(const float *data, float *centroids,
 // puts these unique centroids in first 'k' indices of 'centroids' array.
 // Ideally, the centroids should be rounded to integers before calling this
 // method.
-int av1_remove_duplicates(float *centroids, int num_centroids);
+int av1_remove_duplicates(int *centroids, int num_centroids);
 
-#if CONFIG_PALETTE_DELTA_ENCODING
 // Given a color cache and a set of base colors, find if each cache color is
 // present in the base colors, record the binary results in "cache_color_found".
 // Record the colors that are not in the color cache in "out_cache_colors".
@@ -80,20 +79,14 @@ int av1_index_color_cache(const uint16_t *color_cache, int n_cache,
 // assign zero_count with the number of deltas being 0.
 int av1_get_palette_delta_bits_v(const PALETTE_MODE_INFO *const pmi,
                                  int bit_depth, int *zero_count, int *min_bits);
-#endif  // CONFIG_PALETTE_DELTA_ENCODING
 
 // Return the rate cost for transmitting luma palette color values.
 int av1_palette_color_cost_y(const PALETTE_MODE_INFO *const pmi,
-#if CONFIG_PALETTE_DELTA_ENCODING
-                             uint16_t *color_cache, int n_cache,
-#endif  // CONFIG_PALETTE_DELTA_ENCODING
-                             int bit_depth);
+                             uint16_t *color_cache, int n_cache, int bit_depth);
 
 // Return the rate cost for transmitting chroma palette color values.
 int av1_palette_color_cost_uv(const PALETTE_MODE_INFO *const pmi,
-#if CONFIG_PALETTE_DELTA_ENCODING
                               uint16_t *color_cache, int n_cache,
-#endif  // CONFIG_PALETTE_DELTA_ENCODING
                               int bit_depth);
 
 #ifdef __cplusplus

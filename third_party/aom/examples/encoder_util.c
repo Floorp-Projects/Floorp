@@ -11,10 +11,11 @@
 
 // Utility functions used by encoder binaries.
 
+#include "examples/encoder_util.h"
+
 #include <assert.h>
 #include <string.h>
 
-#include "./encoder_util.h"
 #include "aom/aom_integer.h"
 
 #define mmin(a, b) ((a) < (b) ? (a) : (b))
@@ -40,6 +41,7 @@ static void find_mismatch_plane(const aom_image_t *const img1,
   assert(img1->x_chroma_shift == img2->x_chroma_shift &&
          img1->y_chroma_shift == img2->y_chroma_shift);
   loc[0] = loc[1] = loc[2] = loc[3] = -1;
+  if (img1->monochrome && img2->monochrome && plane) return;
   int match = 1;
   uint32_t i, j;
   for (i = 0; match && i < c_h; i += bsizey) {
@@ -79,21 +81,16 @@ static void find_mismatch_helper(const aom_image_t *const img1,
                                  const aom_image_t *const img2,
                                  int use_highbitdepth, int yloc[4], int uloc[4],
                                  int vloc[4]) {
-#if !CONFIG_HIGHBITDEPTH
-  assert(!use_highbitdepth);
-#endif  // !CONFIG_HIGHBITDEPTH
   find_mismatch_plane(img1, img2, AOM_PLANE_Y, use_highbitdepth, yloc);
   find_mismatch_plane(img1, img2, AOM_PLANE_U, use_highbitdepth, uloc);
   find_mismatch_plane(img1, img2, AOM_PLANE_V, use_highbitdepth, vloc);
 }
 
-#if CONFIG_HIGHBITDEPTH
 void aom_find_mismatch_high(const aom_image_t *const img1,
                             const aom_image_t *const img2, int yloc[4],
                             int uloc[4], int vloc[4]) {
   find_mismatch_helper(img1, img2, 1, yloc, uloc, vloc);
 }
-#endif
 
 void aom_find_mismatch(const aom_image_t *const img1,
                        const aom_image_t *const img2, int yloc[4], int uloc[4],
@@ -103,37 +100,37 @@ void aom_find_mismatch(const aom_image_t *const img1,
 
 int aom_compare_img(const aom_image_t *const img1,
                     const aom_image_t *const img2) {
+  assert(img1->cp == img2->cp);
+  assert(img1->tc == img2->tc);
+  assert(img1->mc == img2->mc);
+  assert(img1->monochrome == img2->monochrome);
+
+  int num_planes = img1->monochrome ? 1 : 3;
+
   uint32_t l_w = img1->d_w;
   uint32_t c_w = (img1->d_w + img1->x_chroma_shift) >> img1->x_chroma_shift;
   const uint32_t c_h =
       (img1->d_h + img1->y_chroma_shift) >> img1->y_chroma_shift;
-  uint32_t i;
   int match = 1;
 
   match &= (img1->fmt == img2->fmt);
   match &= (img1->d_w == img2->d_w);
   match &= (img1->d_h == img2->d_h);
-#if CONFIG_HIGHBITDEPTH
   if (img1->fmt & AOM_IMG_FMT_HIGHBITDEPTH) {
     l_w *= 2;
     c_w *= 2;
   }
-#endif
 
-  for (i = 0; i < img1->d_h; ++i)
-    match &= (memcmp(img1->planes[AOM_PLANE_Y] + i * img1->stride[AOM_PLANE_Y],
-                     img2->planes[AOM_PLANE_Y] + i * img2->stride[AOM_PLANE_Y],
-                     l_w) == 0);
+  for (int plane = 0; plane < num_planes; ++plane) {
+    uint32_t height = plane ? c_h : img1->d_h;
+    uint32_t width = plane ? c_w : l_w;
 
-  for (i = 0; i < c_h; ++i)
-    match &= (memcmp(img1->planes[AOM_PLANE_U] + i * img1->stride[AOM_PLANE_U],
-                     img2->planes[AOM_PLANE_U] + i * img2->stride[AOM_PLANE_U],
-                     c_w) == 0);
-
-  for (i = 0; i < c_h; ++i)
-    match &= (memcmp(img1->planes[AOM_PLANE_V] + i * img1->stride[AOM_PLANE_V],
-                     img2->planes[AOM_PLANE_V] + i * img2->stride[AOM_PLANE_V],
-                     c_w) == 0);
+    for (uint32_t i = 0; i < height; ++i) {
+      match &=
+          (memcmp(img1->planes[plane] + i * img1->stride[plane],
+                  img2->planes[plane] + i * img2->stride[plane], width) == 0);
+    }
+  }
 
   return match;
 }
