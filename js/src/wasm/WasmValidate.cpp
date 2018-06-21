@@ -1650,28 +1650,28 @@ DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalD
         int32_t i32;
         if (!d.readVarS32(&i32))
             return d.fail("failed to read initializer i32 expression");
-        *init = InitExpr(Val(uint32_t(i32)));
+        *init = InitExpr(LitVal(uint32_t(i32)));
         break;
       }
       case uint16_t(Op::I64Const): {
         int64_t i64;
         if (!d.readVarS64(&i64))
             return d.fail("failed to read initializer i64 expression");
-        *init = InitExpr(Val(uint64_t(i64)));
+        *init = InitExpr(LitVal(uint64_t(i64)));
         break;
       }
       case uint16_t(Op::F32Const): {
         float f32;
         if (!d.readFixedF32(&f32))
             return d.fail("failed to read initializer f32 expression");
-        *init = InitExpr(Val(f32));
+        *init = InitExpr(LitVal(f32));
         break;
       }
       case uint16_t(Op::F64Const): {
         double f64;
         if (!d.readFixedF64(&f64))
             return d.fail("failed to read initializer f64 expression");
-        *init = InitExpr(Val(f64));
+        *init = InitExpr(LitVal(f64));
         break;
       }
       case uint16_t(Op::RefNull): {
@@ -1683,7 +1683,7 @@ DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalD
             return false;
         if (valType != uint8_t(ValType::AnyRef))
             return d.fail("expected anyref as type for ref.null");
-        *init = InitExpr(Val(ValType::AnyRef, nullptr));
+        *init = InitExpr(LitVal(ValType::AnyRef, nullptr));
         break;
       }
       case uint16_t(Op::GetGlobal): {

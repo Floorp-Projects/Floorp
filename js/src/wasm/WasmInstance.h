@@ -78,7 +78,7 @@ class Instance
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
              Handle<FunctionVector> funcImports,
-             const ValVector& globalImportValues,
+             const LitValVector& globalImportValues,
              const WasmGlobalObjectVector& globalObjs);
     ~Instance();
     bool init(JSContext* cx);
