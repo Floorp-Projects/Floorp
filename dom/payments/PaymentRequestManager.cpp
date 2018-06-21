@@ -309,6 +309,17 @@ PaymentRequestManager::NotifyRequestDone(PaymentRequest* aRequest)
   }
 }
 
+void
+PaymentRequestManager::RequestIPCOver(PaymentRequest* aRequest)
+{
+  // This must only be called from ActorDestroy or if we're sure we won't
+  // receive any more IPC for aRequest.
+  mActivePayments.Remove(aRequest);
+  if (aRequest == mShowingRequest) {
+    mShowingRequest = nullptr;
+  }
+}
+
 already_AddRefed<PaymentRequestManager>
 PaymentRequestManager::GetSingleton()
 {
