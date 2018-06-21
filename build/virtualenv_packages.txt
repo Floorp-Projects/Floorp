@@ -17,6 +17,7 @@ mozilla.pth:third_party/python/fluent
 mozilla.pth:third_party/python/funcsigs
 mozilla.pth:third_party/python/futures
 mozilla.pth:third_party/python/more-itertools
+mozilla.pth:third_party/python/gyp/pylib
 mozilla.pth:third_party/python/python-hglib
 mozilla.pth:third_party/python/pluggy
 mozilla.pth:third_party/python/jsmin
@@ -66,7 +67,6 @@ mozilla.pth:testing/xpcshell
 mozilla.pth:third_party/python/mock-1.0.0
 mozilla.pth:xpcom/typelib/xpt/tools
 mozilla.pth:tools/docs
-mozilla.pth:media/webrtc/trunk/tools/gyp/pylib
 mozilla.pth:third_party/python/cbor2
 mozilla.pth:third_party/python/pyasn1
 mozilla.pth:third_party/python/pyasn1-modules
