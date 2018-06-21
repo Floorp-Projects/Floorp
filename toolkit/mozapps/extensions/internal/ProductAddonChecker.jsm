@@ -6,7 +6,7 @@
 
 /* exported ProductAddonChecker */
 
-const LOCAL_EME_SOURCES = [{
+const LOCAL_GMP_SOURCES = [{
   "id": "gmp-gmpopenh264",
   "src": "chrome://global/content/gmp-sources/openh264.json"
 }, {
@@ -233,7 +233,7 @@ function downloadLocalConfig() {
     return Promise.resolve({usedFallback: true, gmpAddons: []});
   }
 
-  return Promise.all(LOCAL_EME_SOURCES.map(conf => {
+  return Promise.all(LOCAL_GMP_SOURCES.map(conf => {
     return downloadJSON(conf.src).then(addons => {
 
       let platforms = addons.vendors[conf.id].platforms;
