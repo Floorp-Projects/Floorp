@@ -39,10 +39,6 @@ class Benchmark(object):
         else:
             self.bench_dir = os.path.join(self.bench_dir, 'tests', 'webkit', 'PerformanceTests')
 
-        LOG.info("bench_dir to be used for benchmark source: %s" % self.bench_dir)
-        if not os.path.exists(self.bench_dir):
-            os.makedirs(self.bench_dir)
-
         # when running locally we need to get the benchmark source
         if self.config.get('run_local', False):
             self.get_webkit_source()
@@ -56,21 +52,19 @@ class Benchmark(object):
     def get_webkit_source(self):
         # in production the build system auto copies webkit source into place;
         # but when run locally we need to do this manually, so that raptor can find it
-        if 'speedometer' in self.test['name']:
-            # we only want to copy over the source for the benchmark that is about to run
-            dest = os.path.join(self.bench_dir, 'Speedometer')
-            src = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'], 'third_party',
-                               'webkit', 'PerformanceTests', 'Speedometer')
-        else:
-            # otherwise copy all, but be sure to add each benchmark above instead
-            dest = self.bench_dir
-            # source for all benchmarks is repo/third_party...
-            src = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'], 'third_party',
-                               'webkit', 'PerformanceTests')
+        # TODO: when we have benchmarks that are not in webkit, ensure we copy them
+        dest = self.bench_dir
+        # source for all benchmarks is repo/third_party...
+        src = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'], 'third_party',
+                           'webkit', 'PerformanceTests')
 
         if os.path.exists(dest):
             LOG.info("benchmark source already exists at: %s" % dest)
             return
+        else:
+            # making parent directory tree as copytree will fail if bench_dir exists
+            LOG.info("bench_dir to be used for benchmark source: %s" % self.bench_dir)
+            os.makedirs(os.path.dirname(self.bench_dir))
 
         LOG.info("copying webkit benchmarks from %s to %s" % (src, dest))
         try:
