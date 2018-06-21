@@ -8,7 +8,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown, inline_always, new_ret_no_self))]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.1")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.3")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.

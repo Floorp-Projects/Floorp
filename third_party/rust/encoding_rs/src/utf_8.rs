@@ -16,6 +16,24 @@ use ascii::basic_latin_to_ascii;
 use handles::*;
 use variant::*;
 
+cfg_if!{
+    if #[cfg(feature = "simd-accel")] {
+        use ::std::intrinsics::unlikely;
+        use ::std::intrinsics::likely;
+    } else {
+        #[inline(always)]
+        // Unsafe to match the intrinsic, which is needlessly unsafe.
+        unsafe fn unlikely(b: bool) -> bool {
+            b
+        }
+        #[inline(always)]
+        // Unsafe to match the intrinsic, which is needlessly unsafe.
+        unsafe fn likely(b: bool) -> bool {
+            b
+        }
+    }
+}
+
 // Keep this cfg_if in sync with whether the utf_8_core module is defined in lib.rs.
 cfg_if! {
     // When running 32-bit ARM code on Raspberry Pi 3, which has a 64-bit CPU,
@@ -644,54 +662,68 @@ impl Utf8Encoder {
             'inner: loop {
                 // The following loop is only broken out of as a goto forward.
                 loop {
-                    if written + 4 > dst.len() {
+                    // Unfortunately, this check isn't enough for the compiler to elide
+                    // the bound checks on writes to dst, which is why they are manually
+                    // elided, which makes a measurable difference.
+                    if written.checked_add(4).unwrap() > dst.len() {
                         return (EncoderResult::OutputFull, read, written);
                     }
                     read += 1;
                     if unit < 0x800 {
-                        dst[written] = (unit >> 6) as u8 | 0xC0u8;
-                        written += 1;
-                        dst[written] = (unit & 0x3F) as u8 | 0x80u8;
-                        written += 1;
+                        unsafe {
+                            *(dst.get_unchecked_mut(written)) = (unit >> 6) as u8 | 0xC0u8;
+                            written += 1;
+                            *(dst.get_unchecked_mut(written)) = (unit & 0x3F) as u8 | 0x80u8;
+                            written += 1;
+                        }
                         break;
                     }
                     let unit_minus_surrogate_start = unit.wrapping_sub(0xD800);
-                    if unit_minus_surrogate_start > (0xDFFF - 0xD800) {
-                        dst[written] = (unit >> 12) as u8 | 0xE0u8;
-                        written += 1;
-                        dst[written] = ((unit & 0xFC0) >> 6) as u8 | 0x80u8;
-                        written += 1;
-                        dst[written] = (unit & 0x3F) as u8 | 0x80u8;
-                        written += 1;
+                    if unsafe { likely(unit_minus_surrogate_start > (0xDFFF - 0xD800)) } {
+                        unsafe {
+                            *(dst.get_unchecked_mut(written)) = (unit >> 12) as u8 | 0xE0u8;
+                            written += 1;
+                            *(dst.get_unchecked_mut(written)) = ((unit & 0xFC0) >> 6) as u8 | 0x80u8;
+                            written += 1;
+                            *(dst.get_unchecked_mut(written)) = (unit & 0x3F) as u8 | 0x80u8;
+                            written += 1;
+                        }
                         break;
                     }
-                    if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
+                    if unsafe { likely(unit_minus_surrogate_start <= (0xDBFF - 0xD800)) } {
                         // high surrogate
-                        if read == src.len() {
+                        // read > src.len() is impossible, but using
+                        // >= instead of == allows the compiler to elide a bound check.
+                        if read >= src.len() {
+                            debug_assert_eq!(read, src.len());
                             // Unpaired surrogate at the end of the buffer.
-                            dst[written] = 0xEFu8;
-                            written += 1;
-                            dst[written] = 0xBFu8;
-                            written += 1;
-                            dst[written] = 0xBDu8;
-                            written += 1;
+                            unsafe {
+                                *(dst.get_unchecked_mut(written)) = 0xEFu8;
+                                written += 1;
+                                *(dst.get_unchecked_mut(written)) = 0xBFu8;
+                                written += 1;
+                                *(dst.get_unchecked_mut(written)) = 0xBDu8;
+                                written += 1;
+                            }
                             return (EncoderResult::InputEmpty, read, written);
                         }
                         let second = src[read];
                         let second_minus_low_surrogate_start = second.wrapping_sub(0xDC00);
-                        if second_minus_low_surrogate_start <= (0xDFFF - 0xDC00) {
+                        if unsafe { likely(second_minus_low_surrogate_start <= (0xDFFF - 0xDC00)) } {
                             // The next code unit is a low surrogate. Advance position.
                             read += 1;
                             let astral = ((unit as u32) << 10) + second as u32
                                 - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32);
-                            dst[written] = (astral >> 18) as u8 | 0xF0u8;
-                            written += 1;
-                            dst[written] = ((astral & 0x3F000u32) >> 12) as u8 | 0x80u8;
-                            written += 1;
-                            dst[written] = ((astral & 0xFC0u32) >> 6) as u8 | 0x80u8;
-                            written += 1;
-                            dst[written] = (astral & 0x3Fu32) as u8 | 0x80u8;
-                            written += 1;
+                            unsafe {
+                                *(dst.get_unchecked_mut(written)) = (astral >> 18) as u8 | 0xF0u8;
+                                written += 1;
+                                *(dst.get_unchecked_mut(written)) = ((astral & 0x3F000u32) >> 12) as u8 | 0x80u8;
+                                written += 1;
+                                *(dst.get_unchecked_mut(written)) = ((astral & 0xFC0u32) >> 6) as u8 | 0x80u8;
+                                written += 1;
+                                *(dst.get_unchecked_mut(written)) = (astral & 0x3Fu32) as u8 | 0x80u8;
+                                written += 1;
+                            }
                             break;
                         }
                         // The next code unit is not a low surrogate. Don't advance
@@ -699,21 +731,29 @@ impl Utf8Encoder {
                         // Fall through
                     }
                     // Unpaired low surrogate
-                    dst[written] = 0xEFu8;
-                    written += 1;
-                    dst[written] = 0xBFu8;
-                    written += 1;
-                    dst[written] = 0xBDu8;
-                    written += 1;
+                    unsafe {
+                        *(dst.get_unchecked_mut(written)) = 0xEFu8;
+                        written += 1;
+                        *(dst.get_unchecked_mut(written)) = 0xBFu8;
+                        written += 1;
+                        *(dst.get_unchecked_mut(written)) = 0xBDu8;
+                        written += 1;
+                    }
                     break;
                 }
                 // Now see if the next unit is Basic Latin
-                if read == src.len() {
+                // read > src.len() is impossible, but using
+                // >= instead of == allows the compiler to elide a bound check.
+                if read >= src.len() {
+                    debug_assert_eq!(read, src.len());
                     return (EncoderResult::InputEmpty, read, written);
                 }
                 unit = src[read];
-                if unit < 0x80 {
-                    if written == dst.len() {
+                if unsafe { unlikely(unit < 0x80) } {
+                    // written > dst.len() is impossible, but using
+                    // >= instead of == allows the compiler to elide a bound check.
+                    if written >= dst.len() {
+                        debug_assert_eq!(written, dst.len());
                         return (EncoderResult::OutputFull, read, written);
                     }
                     dst[written] = unit as u8;
