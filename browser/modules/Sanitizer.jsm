@@ -206,6 +206,7 @@ var Sanitizer = {
         d.setHours(0); // zero us back to midnight...
         d.setMinutes(0);
         d.setSeconds(0);
+        d.setMilliseconds(0);
         startDate = d.valueOf() * 1000; // convert to epoch usec
         break;
       case Sanitizer.TIMESPAN_24HOURS :

@@ -1106,6 +1106,11 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     return;
   }
 
+  if (nsContentUtils::StorageDisabledByAntiTracking(GetInnerWindow(), nullptr,
+                                                    nullptr)) {
+    return;
+  }
+
   // If the document is a cookie-averse Document... return the empty string.
   if (IsCookieAverse()) {
     return;

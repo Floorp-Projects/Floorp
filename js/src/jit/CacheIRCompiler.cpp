@@ -1727,7 +1727,7 @@ CacheIRCompiler::emitLoadEnclosingEnvironment()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Register reg = allocator.defineRegister(masm, reader.objOperandId());
-    masm.extractObject(Address(obj, EnvironmentObject::offsetOfEnclosingEnvironment()), reg);
+    masm.unboxObject(Address(obj, EnvironmentObject::offsetOfEnclosingEnvironment()), reg);
     return true;
 }
 
@@ -2432,13 +2432,13 @@ CacheIRCompiler::emitLoadTypedObjectResultShared(const Address& fieldAddr, Regis
         masm.loadFromTypedArray(type, fieldAddr, output.valueReg(),
                                 /* allowDouble = */ true, scratch, nullptr);
     } else {
-        ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
+        ReferenceType type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
         switch (type) {
-          case ReferenceTypeDescr::TYPE_ANY:
+          case ReferenceType::TYPE_ANY:
             masm.loadValue(fieldAddr, output.valueReg());
             break;
 
-          case ReferenceTypeDescr::TYPE_OBJECT: {
+          case ReferenceType::TYPE_OBJECT: {
             Label notNull, done;
             masm.loadPtr(fieldAddr, scratch);
             masm.branchTestPtr(Assembler::NonZero, scratch, scratch, &notNull);
@@ -2450,7 +2450,7 @@ CacheIRCompiler::emitLoadTypedObjectResultShared(const Address& fieldAddr, Regis
             break;
           }
 
-          case ReferenceTypeDescr::TYPE_STRING:
+          case ReferenceType::TYPE_STRING:
             masm.loadPtr(fieldAddr, scratch);
             masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
             break;
@@ -2666,18 +2666,18 @@ CacheIRCompiler::emitBreakpoint()
 }
 
 void
-CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
+CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceType type,
                                                    const Address& dest, Register scratch)
 {
     // Callers will post-barrier this store.
 
     switch (type) {
-      case ReferenceTypeDescr::TYPE_ANY:
+      case ReferenceType::TYPE_ANY:
         EmitPreBarrier(masm, dest, MIRType::Value);
         masm.storeValue(val, dest);
         break;
 
-      case ReferenceTypeDescr::TYPE_OBJECT: {
+      case ReferenceType::TYPE_OBJECT: {
         EmitPreBarrier(masm, dest, MIRType::Object);
         Label isNull, done;
         masm.branchTestObject(Assembler::NotEqual, val, &isNull);
@@ -2690,7 +2690,7 @@ CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTy
         break;
       }
 
-      case ReferenceTypeDescr::TYPE_STRING:
+      case ReferenceType::TYPE_STRING:
         EmitPreBarrier(masm, dest, MIRType::String);
         masm.unboxString(val, scratch);
         masm.storePtr(scratch, dest);

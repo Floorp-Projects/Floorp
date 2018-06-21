@@ -3319,32 +3319,36 @@ js::GetScriptLineExtent(JSScript* script)
 }
 
 void
-js::DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript maybeScript,
-                                         const char** file, unsigned* linenop,
-                                         uint32_t* pcOffset, bool* mutedErrors,
-                                         LineOption opt)
+js::DescribeScriptedCallerForDirectEval(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                        const char** file, unsigned* linenop, uint32_t* pcOffset,
+                                        bool* mutedErrors)
 {
-    if (opt == CALLED_FROM_JSOP_EVAL) {
-        jsbytecode* pc = nullptr;
-        maybeScript.set(cx->currentScript(&pc));
-        static_assert(JSOP_SPREADEVAL_LENGTH == JSOP_STRICTSPREADEVAL_LENGTH,
-                    "next op after a spread must be at consistent offset");
-        static_assert(JSOP_EVAL_LENGTH == JSOP_STRICTEVAL_LENGTH,
-                    "next op after a direct eval must be at consistent offset");
-        MOZ_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_STRICTEVAL ||
-                   JSOp(*pc) == JSOP_SPREADEVAL || JSOp(*pc) == JSOP_STRICTSPREADEVAL);
+    MOZ_ASSERT(script->containsPC(pc));
 
-        bool isSpread = JSOp(*pc) == JSOP_SPREADEVAL || JSOp(*pc) == JSOP_STRICTSPREADEVAL;
-        jsbytecode* nextpc = pc + (isSpread ? JSOP_SPREADEVAL_LENGTH : JSOP_EVAL_LENGTH);
-        MOZ_ASSERT(*nextpc == JSOP_LINENO);
+    static_assert(JSOP_SPREADEVAL_LENGTH == JSOP_STRICTSPREADEVAL_LENGTH,
+                  "next op after a spread must be at consistent offset");
+    static_assert(JSOP_EVAL_LENGTH == JSOP_STRICTEVAL_LENGTH,
+                  "next op after a direct eval must be at consistent offset");
 
-        *file = maybeScript->filename();
-        *linenop = GET_UINT32(nextpc);
-        *pcOffset = pc - maybeScript->code();
-        *mutedErrors = maybeScript->mutedErrors();
-        return;
-    }
+    MOZ_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_STRICTEVAL ||
+               JSOp(*pc) == JSOP_SPREADEVAL || JSOp(*pc) == JSOP_STRICTSPREADEVAL);
 
+    bool isSpread = (JSOp(*pc) == JSOP_SPREADEVAL ||
+                     JSOp(*pc) == JSOP_STRICTSPREADEVAL);
+    jsbytecode* nextpc = pc + (isSpread ? JSOP_SPREADEVAL_LENGTH : JSOP_EVAL_LENGTH);
+    MOZ_ASSERT(*nextpc == JSOP_LINENO);
+
+    *file = script->filename();
+    *linenop = GET_UINT32(nextpc);
+    *pcOffset = script->pcToOffset(pc);
+    *mutedErrors = script->mutedErrors();
+}
+
+void
+js::DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript maybeScript,
+                                         const char** file, unsigned* linenop, uint32_t* pcOffset,
+                                         bool* mutedErrors)
+{
     NonBuiltinFrameIter iter(cx, cx->realm()->principals());
 
     if (iter.done()) {
