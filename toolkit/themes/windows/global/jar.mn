@@ -56,14 +56,6 @@ toolkit.jar:
   skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
-  skin/classic/global/tree/twisty.svg                      (tree/twisty.svg)
-  skin/classic/global/tree/twisty-preWin10.svg             (tree/twisty-preWin10.svg)
-
-% override chrome://global/skin/tree/twisty.svg#clsd              chrome://global/skin/tree/twisty-preWin10.svg#clsd           osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#clsd-rtl          chrome://global/skin/tree/twisty-preWin10.svg#clsd-rtl       osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#clsd-hover        chrome://global/skin/tree/twisty-preWin10.svg#clsd-hover     osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#clsd-hover-rtl    chrome://global/skin/tree/twisty-preWin10.svg#clsd-hover-rtl osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open              chrome://global/skin/tree/twisty-preWin10.svg#open           osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open-rtl          chrome://global/skin/tree/twisty-preWin10.svg#open-rtl       osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open-hover        chrome://global/skin/tree/twisty-preWin10.svg#open-hover     osversion<=6.3
-% override chrome://global/skin/tree/twisty.svg#open-hover-rtl    chrome://global/skin/tree/twisty-preWin10.svg#open-hover-rtl osversion<=6.3
+  skin/classic/global/tree/twisty-collapsed.svg            (tree/twisty-collapsed.svg)
+  skin/classic/global/tree/twisty-collapsed-rtl.svg        (tree/twisty-collapsed-rtl.svg)
+  skin/classic/global/tree/twisty-expanded.svg             (tree/twisty-expanded.svg)

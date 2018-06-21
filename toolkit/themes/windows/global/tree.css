@@ -265,35 +265,23 @@ treechildren::-moz-tree-twisty {
   padding-inline-end: 1px;
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd");
+  list-style-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: #b6b6b6;
+  fill-opacity: 1;
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(close) {
+  list-style-image: url("chrome://global/skin/tree/twisty-collapsed-rtl.svg");
 }
 
 treechildren::-moz-tree-twisty(open) {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#open");
+  list-style-image: url("chrome://global/skin/tree/twisty-expanded.svg");
+  fill: #636363;
 }
 
 treechildren::-moz-tree-twisty(hover) {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
-}
-
-treechildren::-moz-tree-twisty(hover, open) {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover");
-}
-
-treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
-}
-
-treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open) {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
-}
-
-treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover) {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
-}
-
-treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
-  list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
+  fill: #4ed0f9;
 }
 
 treechildren::-moz-tree-indentation {
