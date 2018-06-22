@@ -23,10 +23,10 @@ class Benchmark;
 class BenchmarkPlayback : public QueueObject
 {
   friend class Benchmark;
-  BenchmarkPlayback(Benchmark* aMainThreadState, MediaDataDemuxer* aDemuxer);
+  BenchmarkPlayback(Benchmark* aGlobalState, MediaDataDemuxer* aDemuxer);
   void DemuxSamples();
   void DemuxNextSample();
-  void MainThreadShutdown();
+  void GlobalShutdown();
   void InitDecoder(TrackInfo&& aInfo);
 
   void Output(const MediaDataDecoder::DecodedData& aResults);
@@ -36,7 +36,7 @@ class BenchmarkPlayback : public QueueObject
   // Shutdown trackdemuxer and demuxer if any and shutdown the task queues.
   void FinalizeShutdown();
 
-  Atomic<Benchmark*> mMainThreadState;
+  Atomic<Benchmark*> mGlobalState;
 
   RefPtr<TaskQueue> mDecoderTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
