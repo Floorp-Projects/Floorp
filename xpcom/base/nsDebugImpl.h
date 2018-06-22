@@ -20,6 +20,11 @@ public:
                          void** aInstancePtr);
 
   /*
+   * If we are in multiprocess mode, return the process name.
+   */
+  static const char* GetMultiprocessMode();
+
+  /*
    * Inform nsDebugImpl that we're in multiprocess mode.
    *
    * If aDesc is not nullptr, the string it points to must be
