@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.EngineSession
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import kotlinx.coroutines.experimental.launch
 
 /**
  * Gecko-based EngineSession implementation.
@@ -71,13 +72,15 @@ class GeckoEngineSession(
     @Throws(GeckoEngineException::class)
     override fun saveState(): Map<String, Any> = runBlocking {
         val stateMap = CompletableDeferred<Map<String, Any>>()
-        geckoSession.saveState({ state ->
-            if (state != null) {
-                stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
-            } else {
-                stateMap.completeExceptionally(GeckoEngineException("Failed to save state"))
-            }
-        })
+        launch {
+            geckoSession.saveState({ state ->
+                if (state != null) {
+                    stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
+                } else {
+                    stateMap.completeExceptionally(GeckoEngineException("Failed to save state"))
+                }
+            })
+        }
         stateMap.await()
     }
 
