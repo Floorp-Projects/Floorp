@@ -6837,7 +6837,6 @@ AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     MOZ_ASSERT(prevState == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
-    MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery().isEmpty());
 
     rt->heapState_ = heapState;
 }
