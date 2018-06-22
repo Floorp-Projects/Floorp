@@ -43,7 +43,6 @@ add_task(async function test_methods_calling() {
   equal(values[1], "[en] Value3");
 
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
   L10nRegistry.load = originalLoad;
   Services.locale.setRequestedLocales(originalRequested);
 });
@@ -90,7 +89,6 @@ key = { PLATFORM() ->
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
 
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
   L10nRegistry.load = originalLoad;
 });
 
@@ -138,7 +136,6 @@ add_task(async function test_add_remove_resourceIds() {
   equal(values[1], "Value2");
 
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
   L10nRegistry.load = originalLoad;
   Services.locale.setRequestedLocales(originalRequested);
 });
