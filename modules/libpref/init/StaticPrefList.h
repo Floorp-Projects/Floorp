@@ -888,6 +888,36 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "media.benchmark.vp9.fps",
+   MediaBenchmarkVp9Fps,
+  RelaxedAtomicUint32, 0
+)
+
+VARCACHE_PREF(
+  "media.benchmark.vp9.threshold",
+   MediaBenchmarkVp9Threshold,
+  RelaxedAtomicUint32, 150
+)
+
+VARCACHE_PREF(
+  "media.benchmark.vp9.versioncheck",
+   MediaBenchmarkVp9Versioncheck,
+  RelaxedAtomicUint32, 0
+)
+
+VARCACHE_PREF(
+  "media.benchmark.frames",
+   MediaBenchmarkFrames,
+  RelaxedAtomicUint32, 300
+)
+
+VARCACHE_PREF(
+  "media.benchmark.timeout",
+   MediaBenchmarkTimeout,
+  RelaxedAtomicUint32, 1000
+)
+
 //---------------------------------------------------------------------------
 // Network prefs
 //---------------------------------------------------------------------------
