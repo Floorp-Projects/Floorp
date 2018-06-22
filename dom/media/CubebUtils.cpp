@@ -301,6 +301,15 @@ cubeb* GetCubebContext()
   return GetCubebContextUnlocked();
 }
 
+// This is only exported when running tests.
+void
+ForceSetCubebContext(cubeb* aCubebContext)
+{
+  StaticMutexAutoLock lock(sMutex);
+  sCubebContext = aCubebContext;
+  sCubebState = CubebState::Initialized;
+}
+
 bool InitPreferredSampleRate()
 {
   StaticMutexAutoLock lock(sMutex);
