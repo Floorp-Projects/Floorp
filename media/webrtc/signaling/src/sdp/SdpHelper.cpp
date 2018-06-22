@@ -176,7 +176,7 @@ SdpHelper::DisableMsection(Sdp* sdp, SdpMediaSection* msection)
       msection->AddCodec("120", "VP8", 90000, 1);
       break;
     case SdpMediaSection::kApplication:
-      msection->AddDataChannel("rejected", 0, 0, 0);
+      msection->AddDataChannel("webrtc-datachannel", 0, 0, 0);
       break;
     default:
       // We need to have something here to fit the grammar, this seems safe
@@ -716,9 +716,7 @@ SdpMediaSection::Protocol
 SdpHelper::GetProtocolForMediaType(SdpMediaSection::MediaType type)
 {
   if (type == SdpMediaSection::kApplication) {
-    return SdpMediaSection::kDtlsSctp;
-    // TODO switch to offer the new SCTP SDP (Bug 1335206)
-    //return SdpMediaSection::kUdpDtlsSctp;
+    return SdpMediaSection::kUdpDtlsSctp;
   }
 
   return SdpMediaSection::kUdpTlsRtpSavpf;

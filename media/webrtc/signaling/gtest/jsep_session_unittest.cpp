@@ -1357,12 +1357,21 @@ protected:
       ASSERT_EQ("120", rtpmap->pt);
       ASSERT_EQ("VP8", rtpmap->name);
     } else if (msection->GetMediaType() == SdpMediaSection::kApplication) {
-      ASSERT_EQ("0", msection->GetFormats()[0]);
-      const SdpSctpmapAttributeList::Sctpmap* sctpmap(msection->GetSctpmap());
-      ASSERT_TRUE(sctpmap);
-      ASSERT_EQ("0", sctpmap->pt);
-      ASSERT_EQ("rejected", sctpmap->name);
-      ASSERT_EQ(0U, sctpmap->streams);
+      if (msection->GetProtocol() == SdpMediaSection::kUdpDtlsSctp ||
+          msection->GetProtocol() == SdpMediaSection::kTcpDtlsSctp) {
+        // draft 21 format
+        ASSERT_EQ("webrtc-datachannel", msection->GetFormats()[0]);
+        ASSERT_FALSE(msection->GetSctpmap());
+        ASSERT_EQ(0U, msection->GetSctpPort());
+      } else {
+        // old draft 05 format
+        ASSERT_EQ("0", msection->GetFormats()[0]);
+        const SdpSctpmapAttributeList::Sctpmap* sctpmap(msection->GetSctpmap());
+        ASSERT_TRUE(sctpmap);
+        ASSERT_EQ("0", sctpmap->pt);
+        ASSERT_EQ("rejected", sctpmap->name);
+        ASSERT_EQ(0U, sctpmap->streams);
+      }
     } else {
       // Not that we would have any test which tests this...
       ASSERT_EQ("19", msection->GetFormats()[0]);
@@ -1479,7 +1488,11 @@ private:
       auto& msection = sdp->GetMediaSection(i);
 
       if (msection.GetMediaType() == SdpMediaSection::kApplication) {
-        ASSERT_EQ(SdpMediaSection::kDtlsSctp, msection.GetProtocol());
+        if (!(msection.GetProtocol() == SdpMediaSection::kUdpDtlsSctp ||
+              msection.GetProtocol() == SdpMediaSection::kTcpDtlsSctp)) {
+          // old draft 05 format
+          ASSERT_EQ(SdpMediaSection::kDtlsSctp, msection.GetProtocol());
+        }
       } else {
         ASSERT_EQ(SdpMediaSection::kUdpTlsRtpSavpf, msection.GetProtocol());
       }
