@@ -80,7 +80,7 @@ using namespace mozilla::dom;
  * 2) setting of the right media, title, enabled state, etc on the
  *    sheet: PrepareSheet()
  * 3) Insertion of the sheet in the proper cascade order:
- *    InsertSheetInDoc() and InsertChildSheet()
+ *    InsertSheetInTree() and InsertChildSheet()
  * 4) Load of the sheet: LoadSheet() including security checks
  * 5) Parsing of the sheet: ParseSheet()
  * 6) Cleanup: SheetComplete()
@@ -1150,9 +1150,12 @@ Loader::PrepareSheet(StyleSheet* aSheet,
 }
 
 /**
- * InsertSheetInDoc handles ordering of sheets in the document.  Here
- * we have two types of sheets -- those with linking elements and
- * those without.  The latter are loaded by Link: headers.
+ * InsertSheetInTree handles ordering of sheets in the document or shadow root.
+ *
+ * Here we have two types of sheets -- those with linking elements and
+ * those without.  The latter are loaded by Link: headers, and are only added to
+ * the document.
+ *
  * The following constraints are observed:
  * 1) Any sheet with a linking element comes after all sheets without
  *    linking elements
@@ -1162,18 +1165,32 @@ Loader::PrepareSheet(StyleSheet* aSheet,
  * 3) Sheets with linking elements are ordered based on document order
  *    as determined by CompareDocumentPosition.
  */
-nsresult
-Loader::InsertSheetInDoc(StyleSheet* aSheet,
-                         nsIContent* aLinkingContent,
-                         nsIDocument* aDocument)
+void
+Loader::InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent)
 {
-  LOG(("css::Loader::InsertSheetInDoc"));
-  MOZ_ASSERT(aSheet, "Nothing to insert");
-  MOZ_ASSERT(aDocument, "Must have a document to insert into");
+  LOG(("css::Loader::InsertSheetInTree"));
+  MOZ_ASSERT(mDocument, "Must have a document to insert into");
+  MOZ_ASSERT(!aLinkingContent ||
+             aLinkingContent->IsInUncomposedDoc() ||
+             aLinkingContent->IsInShadowTree(),
+             "Why would we insert it anywhere?");
+
+  nsCOMPtr<nsIStyleSheetLinkingElement> linkingElement =
+    do_QueryInterface(aLinkingContent);
+  if (linkingElement) {
+    linkingElement->SetStyleSheet(&aSheet);
+  }
+
+  ShadowRoot* shadow =
+    aLinkingContent ? aLinkingContent->GetContainingShadow() : nullptr;
+
+  auto& target = shadow
+    ? static_cast<DocumentOrShadowRoot&>(*shadow)
+    : static_cast<DocumentOrShadowRoot&>(*mDocument);
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
-  int32_t sheetCount = aDocument->SheetCount();
+  int32_t sheetCount = target.SheetCount();
 
   /*
    * Start the walk at the _end_ of the list, since in the typical
@@ -1183,11 +1200,9 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
    * insertionPoint is the index of the stylesheet that immediately
    * precedes the one we're inserting.
    */
-  int32_t insertionPoint;
-  for (insertionPoint = sheetCount - 1; insertionPoint >= 0; --insertionPoint) {
-    StyleSheet* curSheet = aDocument->SheetAt(insertionPoint);
-    NS_ASSERTION(curSheet, "There must be a sheet here!");
-    nsCOMPtr<nsINode> sheetOwner = curSheet->GetOwnerNode();
+  int32_t insertionPoint = sheetCount - 1;
+  for (; insertionPoint >= 0; --insertionPoint) {
+    nsINode* sheetOwner = target.SheetAt(insertionPoint)->GetOwnerNode();
     if (sheetOwner && !aLinkingContent) {
       // Keep moving; all sheets with a sheetOwner come after all
       // sheets without a linkingNode
@@ -1195,13 +1210,13 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
     }
 
     if (!sheetOwner) {
-      // Aha!  The current sheet has no sheet owner, so we want to
-      // insert after it no matter whether we have a linkingNode
+      // Aha!  The current sheet has no sheet owner, so we want to insert after
+      // it no matter whether we have a linking content or not.
       break;
     }
 
-    NS_ASSERTION(aLinkingContent != sheetOwner,
-                 "Why do we still have our old sheet?");
+    MOZ_ASSERT(aLinkingContent != sheetOwner,
+               "Why do we still have our old sheet?");
 
     // Have to compare
     if (nsContentUtils::PositionIsBefore(sheetOwner, aLinkingContent)) {
@@ -1211,20 +1226,15 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
     }
   }
 
-  ++insertionPoint; // adjust the index to the spot we want to insert in
+  ++insertionPoint;
 
-  // XXX <meta> elements do not implement nsIStyleSheetLinkingElement;
-  // need to fix this for them to be ordered correctly.
-  nsCOMPtr<nsIStyleSheetLinkingElement>
-    linkingElement = do_QueryInterface(aLinkingContent);
-  if (linkingElement) {
-    linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
+  if (shadow) {
+    shadow->InsertSheetAt(insertionPoint, aSheet);
+  } else {
+    mDocument->InsertSheetAt(insertionPoint, aSheet);
   }
 
-  aDocument->InsertStyleSheetAt(aSheet, insertionPoint);
-  LOG(("  Inserting into document at position %d", insertionPoint));
-
-  return NS_OK;
+  LOG(("  Inserting into target (doc: %d) at position %d", target.AsNode().IsDocument(), insertionPoint));
 }
 
 /**
@@ -1918,14 +1928,7 @@ Loader::LoadInlineStyle(const SheetInfo& aInfo,
   auto matched =
     PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
-  if (aInfo.mContent->IsInShadowTree()) {
-    aInfo.mContent->GetContainingShadow()->InsertSheet(sheet, aInfo.mContent);
-  } else {
-    rv = InsertSheetInDoc(sheet, aInfo.mContent, mDocument);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
-  }
+  InsertSheetInTree(*sheet, aInfo.mContent);
 
   nsIPrincipal* principal = aInfo.mContent->NodePrincipal();
   if (aInfo.mTriggeringPrincipal) {
@@ -2035,14 +2038,7 @@ Loader::LoadStyleLink(const SheetInfo& aInfo, nsICSSLoaderObserver* aObserver)
   auto matched =
     PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
-  if (aInfo.mContent && aInfo.mContent->IsInShadowTree()) {
-    aInfo.mContent->GetContainingShadow()->InsertSheet(sheet, aInfo.mContent);
-  } else {
-    rv = InsertSheetInDoc(sheet, aInfo.mContent, mDocument);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
-  }
+  InsertSheetInTree(*sheet, aInfo.mContent);
 
   nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
     do_QueryInterface(aInfo.mContent));
