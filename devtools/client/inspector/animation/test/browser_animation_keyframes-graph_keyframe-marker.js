@@ -6,7 +6,7 @@
 // Test for following keyframe marker.
 // * element existence
 // * title
-// * and left style
+// * and marginInlineStart style
 
 const TEST_DATA = [
   {
@@ -17,11 +17,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "rgb(255, 0, 0)",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "rgb(0, 255, 0)",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -30,11 +30,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "space round",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "round space",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -43,11 +43,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "10px",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "20px",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -56,11 +56,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "0px",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "100px",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -69,11 +69,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "0",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "1",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -82,11 +82,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "right",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "center",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -95,11 +95,11 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "translate(0px)",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "translate(100px)",
-            left: "100%",
+            marginInlineStart: "100%",
           }
         ],
       },
@@ -113,19 +113,19 @@ const TEST_DATA = [
         expectedValues: [
           {
             title: "0",
-            left: "0%",
+            marginInlineStart: "0%",
           },
           {
             title: "1",
-            left: "10%",
+            marginInlineStart: "10%",
           },
           {
             title: "0",
-            left: "13%",
+            marginInlineStart: "13%",
           },
           {
             title: "1",
-            left: "100%",
+            marginInlineStart: "100%",
           },
         ],
       },
@@ -163,9 +163,10 @@ add_task(async function() {
         is(markerEl.getAttribute("title"), expectedValue.title,
          `title in ${ hintTarget } should be ${ expectedValue.title }`);
 
-        info(`Checking left style in ${ hintTarget }`);
-        is(markerEl.style.left, expectedValue.left,
-         `left in ${ hintTarget } should be ${ expectedValue.left }`);
+        info(`Checking marginInlineStart style in ${ hintTarget }`);
+        is(markerEl.style.marginInlineStart, expectedValue.marginInlineStart,
+          `marginInlineStart in ${ hintTarget } should be ` +
+          `${ expectedValue.marginInlineStart }`);
       }
     }
   }
