@@ -4,11 +4,11 @@
 
 package org.mozilla.gecko.tests;
 
+import android.media.AudioManager;
+
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.media.MediaControlService;
-
-import android.media.AudioManager;
+import org.mozilla.gecko.media.GeckoMediaControlAgent;
 
 public class testMediaControl extends MediaPlaybackTest {
     public void testMediaControl() {
@@ -61,15 +61,15 @@ public class testMediaControl extends MediaPlaybackTest {
         checkIfMediaPlayingSuccess(true /* playing */);
 
         info("- simulate media control pause -");
-        notifyMediaControlService(MediaControlService.ACTION_PAUSE);
+        notifyMediaControlAgent(GeckoMediaControlAgent.ACTION_PAUSE);
         checkIfMediaPlayingSuccess(false /* paused */);
 
         info("- simulate media control resume -");
-        notifyMediaControlService(MediaControlService.ACTION_RESUME);
+        notifyMediaControlAgent(GeckoMediaControlAgent.ACTION_RESUME);
         checkIfMediaPlayingSuccess(true /* playing */);
 
         info("- simulate media control stop -");
-        notifyMediaControlService(MediaControlService.ACTION_STOP);
+        notifyMediaControlAgent(GeckoMediaControlAgent.ACTION_STOP);
         checkIfMediaPlayingSuccess(false /* paused */, true /* clear notification */);
 
         info("- close tab -");
@@ -179,7 +179,7 @@ public class testMediaControl extends MediaPlaybackTest {
         checkIfMediaPlayingSuccess(true /* playing */);
 
         info("- simulate media control pause -");
-        notifyMediaControlService(MediaControlService.ACTION_PAUSE);
+        notifyMediaControlAgent(GeckoMediaControlAgent.ACTION_PAUSE);
         checkIfMediaPlayingSuccess(false /* paused */);
 
         info("- resume media from page -");
