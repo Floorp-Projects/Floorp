@@ -1154,11 +1154,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
 
 void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
-                                    AtomsTable* aAllowed,
-                                    const nsStaticAtom* const* aURLs,
-                                    bool aAllowXLink,
-                                    bool aAllowStyle,
-                                    bool aAllowDangerousSrc)
+                                    AllowedAttributes aAllowed)
 {
   uint32_t ac = aElement->GetAttrCount();
 
@@ -1168,7 +1164,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     RefPtr<nsAtom> attrLocal = attrName->LocalName();
 
     if (kNameSpaceID_None == attrNs) {
-      if (aAllowStyle && nsGkAtoms::style == attrLocal) {
+      if (aAllowed.mStyle && nsGkAtoms::style == attrLocal) {
         nsAutoString value;
         aElement->GetAttr(attrNs, attrLocal, value);
         nsIDocument* document = aElement->OwnerDoc();
@@ -1195,10 +1191,10 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         }
         continue;
       }
-      if (aAllowDangerousSrc && nsGkAtoms::src == attrLocal) {
+      if (aAllowed.mDangerousSrc && nsGkAtoms::src == attrLocal) {
         continue;
       }
-      if (IsURL(aURLs, attrLocal)) {
+      if (IsURL(aAllowed.mURLs, attrLocal)) {
         if (SanitizeURL(aElement, attrNs, attrLocal)) {
           // in case the attribute removal shuffled the attribute order, start
           // the loop again.
@@ -1211,11 +1207,11 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         // HTML element)
       }
       if (!mDropNonCSSPresentation &&
-          (aAllowed == sAttributesHTML) && // element is HTML
+          (aAllowed.mNames == sAttributesHTML) && // element is HTML
           sPresAttributesHTML->Contains(attrLocal)) {
         continue;
       }
-      if (aAllowed->Contains(attrLocal) &&
+      if (aAllowed.mNames->Contains(attrLocal) &&
           !((attrLocal == nsGkAtoms::rel &&
              aElement->IsHTMLElement(nsGkAtoms::link)) ||
             (!mFullDocument &&
@@ -1251,7 +1247,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         continue;
       }
       // else not allowed
-    } else if (aAllowXLink && kNameSpaceID_XLink == attrNs) {
+    } else if (aAllowed.mXLink && kNameSpaceID_XLink == attrNs) {
       if (nsGkAtoms::href == attrLocal) {
         if (SanitizeURL(aElement, attrNs, attrLocal)) {
           // in case the attribute removal shuffled the attribute order, start
@@ -1428,20 +1424,17 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
           // consumers though.
           nsContentUtils::SetNodeTextContent(node, styleText, true);
         }
+        AllowedAttributes allowed;
+        allowed.mStyle = mAllowStyles;
         if (ns == kNameSpaceID_XHTML) {
-          SanitizeAttributes(elt,
-                             sAttributesHTML,
-                             kURLAttributesHTML,
-                             false,
-                             mAllowStyles,
-                             false);
+          allowed.mNames = sAttributesHTML;
+          allowed.mURLs = kURLAttributesHTML;
+          SanitizeAttributes(elt, allowed);
         } else {
-          SanitizeAttributes(elt,
-                             sAttributesSVG,
-                             kURLAttributesSVG,
-                             true,
-                             mAllowStyles,
-                             false);
+          allowed.mNames = sAttributesSVG;
+          allowed.mURLs = kURLAttributesSVG;
+          allowed.mXLink = true;
+          SanitizeAttributes(elt, allowed);
         }
         node = node->GetNextNonChildNode(aRoot);
         continue;
@@ -1471,27 +1464,24 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
                    ns == kNameSpaceID_SVG ||
                    ns == kNameSpaceID_MathML,
           "Should have only HTML, MathML or SVG here!");
+      AllowedAttributes allowed;
       if (ns == kNameSpaceID_XHTML) {
-        SanitizeAttributes(elt,
-                           sAttributesHTML,
-                           kURLAttributesHTML,
-                           false, mAllowStyles,
-                           (nsGkAtoms::img == localName) &&
-                           !mCidEmbedsOnly);
+        allowed.mNames = sAttributesHTML;
+        allowed.mURLs = kURLAttributesHTML;
+        allowed.mStyle = mAllowStyles;
+        allowed.mDangerousSrc = nsGkAtoms::img == localName && !mCidEmbedsOnly;
+        SanitizeAttributes(elt, allowed);
       } else if (ns == kNameSpaceID_SVG) {
-        SanitizeAttributes(elt,
-                           sAttributesSVG,
-                           kURLAttributesSVG,
-                           true,
-                           mAllowStyles,
-                           false);
+        allowed.mNames = sAttributesSVG;
+        allowed.mURLs = kURLAttributesSVG;
+        allowed.mXLink = true;
+        allowed.mStyle = mAllowStyles;
+        SanitizeAttributes(elt, allowed);
       } else {
-        SanitizeAttributes(elt,
-                           sAttributesMathML,
-                           kURLAttributesMathML,
-                           true,
-                           false,
-                           false);
+        allowed.mNames = sAttributesMathML;
+        allowed.mURLs = kURLAttributesMathML;
+        allowed.mXLink = true;
+        SanitizeAttributes(elt, allowed);
       }
       node = node->GetNextNode(aRoot);
       continue;
