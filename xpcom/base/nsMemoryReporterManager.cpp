@@ -1421,15 +1421,10 @@ public:
       "Memory used by the atom table.");
 
     MOZ_COLLECT_REPORT(
-      "explicit/atoms/dynamic/atom-objects", KIND_HEAP, UNITS_BYTES,
-      sizes.mDynamicAtomObjects,
-      "Memory used by dynamic atom objects.");
-
-    MOZ_COLLECT_REPORT(
-      "explicit/atoms/dynamic/unshared-buffers", KIND_HEAP, UNITS_BYTES,
-      sizes.mDynamicUnsharedBuffers,
-      "Memory used by unshared string buffers pointed to by dynamic atom "
-      "objects.");
+      "explicit/atoms/dynamic-objects-and-chars", KIND_HEAP, UNITS_BYTES,
+      sizes.mDynamicAtoms,
+      "Memory used by dynamic atom objects and chars (which are stored "
+      "at the end of each atom object).");
 
     return NS_OK;
   }

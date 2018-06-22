@@ -12817,7 +12817,7 @@
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
-    "description": "Time spent in the paint pipeline for content."
+    "description": "Time spent in the paint pipeline for content in milliseconds."
   },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
@@ -12825,10 +12825,11 @@
     "bug_numbers": [1309442],
     "expires_in_version": "66",
     "keyed": true,
+    "keys": ["dl", "flb", "fr", "r"],
     "kind": "linear",
     "high": 100,
     "n_buckets": 10,
-    "description": "Percentage of time taken by phases in expensive content paints."
+    "description": "Percentages of times for phases in an expensive content paint relative to the time spent in the entire expensive paint. (\"dl\" = Display list, \"flb\" = Frame layer builder, \"fr\" = Flush rasterization, \"r\" = Rasterization)"
   },
   "CONTENT_SMALL_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
@@ -12836,10 +12837,11 @@
     "bug_numbers": [1430897],
     "expires_in_version": "66",
     "keyed": true,
+    "keys": ["dl", "flb", "fr", "r"],
     "kind": "linear",
     "high": 100,
     "n_buckets": 10,
-    "description": "Percentage of time taken by phases in normal content paints."
+    "description": "Percentages of times for phases in a normal content paint relative to the time spent in the entire normal paint. (\"dl\" = Display list, \"flb\" = Frame layer builder, \"fr\" = Flush rasterization, \"r\" = Rasterization)"
   },
   "NARRATE_CONTENT_BY_LANGUAGE_2": {
     "record_in_processes": ["main", "content"],
