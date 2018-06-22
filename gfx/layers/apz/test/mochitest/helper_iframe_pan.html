@@ -18,7 +18,7 @@ function scrollOuter() {
   };
   SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd");
 
-  synthesizeNativeTouchDrag(outer.contentDocument.body, 10, 100, 0, -(50 + TOUCH_SLOP));
+  synthesizeNativeTouchDrag(outer.contentDocument.body, 10, 100, 0, -50);
   dump("Finished native drag, waiting for transform-end observer...\n");
 }
 
