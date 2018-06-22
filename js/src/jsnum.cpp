@@ -86,7 +86,7 @@ ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start, const CharT* en
                               double* dp)
 {
     size_t length = end - start;
-    ScopedJSFreePtr<char> cstr(cx->pod_malloc<char>(length + 1));
+    UniqueChars cstr(cx->pod_malloc<char>(length + 1));
     if (!cstr)
         return false;
 
@@ -101,7 +101,7 @@ ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start, const CharT* en
         return false;
 
     char* estr;
-    *dp = js_strtod_harder(cx->dtoaState, cstr, &estr);
+    *dp = js_strtod_harder(cx->dtoaState, cstr.get(), &estr);
 
     return true;
 }
