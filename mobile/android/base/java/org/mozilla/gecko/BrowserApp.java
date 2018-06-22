@@ -16,8 +16,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -110,6 +112,7 @@ import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.lwt.LightweightTheme;
+import org.mozilla.gecko.media.PictureInPictureController;
 import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
@@ -237,6 +240,7 @@ public class BrowserApp extends GeckoApp
     public ViewFlipper mActionBarFlipper;
     public ActionModeCompatView mActionBar;
     private VideoPlayer mVideoPlayer;
+    private PictureInPictureController mPipController;
     private BrowserToolbar mBrowserToolbar;
     private View doorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
@@ -269,6 +273,7 @@ public class BrowserApp extends GeckoApp
     private boolean mShowingToolbarChromeForActionBar;
 
     private SafeIntent safeStartingIntent;
+    private Intent startingIntentAfterPip;
     private boolean isInAutomation;
 
     private static class MenuItemInfo implements Parcelable {
@@ -864,6 +869,7 @@ public class BrowserApp extends GeckoApp
         }
 
         setBrowserToolbarListeners();
+        mPipController = new PictureInPictureController(this);
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
@@ -1184,6 +1190,38 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        try {
+            mPipController.tryEnteringPictureInPictureMode();
+        } catch (IllegalStateException exception) {
+            Log.e(LOGTAG, "Cannot enter in Picture In Picture mode:\n" + exception.getMessage());
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+
+        if (!isInPictureInPictureMode) {
+            mPipController.cleanResources();
+
+            // User clicked a new link to be opened in Firefox.
+            // We returned from Picture-in-picture mode and now must try to open that link.
+            if (startingIntentAfterPip != null) {
+                getApplication().startActivity(startingIntentAfterPip);
+                startingIntentAfterPip = null;
+            } else {
+                // After returning from Picture-in-picture mode the video will still be playing
+                // in fullscreen. But now we have the status bar showing.
+                // Call setFullscreen(..) to hide it and offer the same fullscreen video experience
+                // that the user had before entering in Picture-in-picture mode.
+                ActivityUtils.setFullScreen(this, true);
+            }
+        }
+    }
+
+    @Override
     public void onRestart() {
         super.onRestart();
         if (mIsAbortingAppLaunch) {
@@ -1237,6 +1275,12 @@ public class BrowserApp extends GeckoApp
         super.onStop();
         if (mIsAbortingAppLaunch) {
             return;
+        }
+
+        if (mPipController.isInPipMode()) {
+            // If screen is locked we should exit PictureInPicture mode
+            moveTaskToBack(true);
+            mPipController.cleanResources();
         }
 
         // We only show the guest mode notification when our activity is in the foreground.
@@ -4114,6 +4158,33 @@ public class BrowserApp extends GeckoApp
      */
     @Override
     protected void onNewIntent(Intent externalIntent) {
+
+        // Currently there is no way to exit PictureInPicture mode programmatically
+        // https://issuetracker.google.com/issues/37254459
+        // but because we are "singleTask" we will receive the Intents to open a new link.
+        // When this happens, the new Intent will trigger `onPictureInPictureModeChanged(..)`
+        //
+        // Whenever the user presses a new link to be opened in Firefox we must
+        // cache the received Intent, wait for PictureInPicture mode to end and then act on that Intent.
+        if (mPipController.isInPipMode()) {
+
+            startingIntentAfterPip = externalIntent;
+
+            // Pattern used to exit MultiWindow - https://stackoverflow.com/a/43288507/4249825
+            // also works for us.
+            // Without this the old tab would continue playing media.
+            moveTaskToBack(true);
+            startingIntentAfterPip.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
+            // To enter PictureInPicture mode the video must be playing in fullscreen, which also
+            // means the orientation will be changed to Landscape.
+            // If when pressing the new link the device is actually in Portrait we will force
+            // the activity to enter in Portrait before opening the new tab.
+            setRequestedOrientationForCurrentActivity(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+
+            return;
+        }
+
         final SafeIntent intent = new SafeIntent(externalIntent);
         String action = intent.getAction();
 

@@ -885,3 +885,10 @@ See also https://bug1409261.bmoattachments.org/attachment.cgi?id=8919897 -->
 <!ENTITY pwa_add_to_launcher_badge2 "Add to Home Screen">
 <!ENTITY pwa_continue_to_website "Continue to Website">
 <!ENTITY pwa_onboarding_sumo "You can easily add this website to your Home screen to have instant access and browse faster with an app-like experience.">
+
+<!-- Used by accessibility services to identify the play/pause buttons shown in the
+Picture-in-picture mini window -->
+<!ENTITY pip_play_button_title "Play">
+<!ENTITY pip_play_button_description "Resume playing">
+<!ENTITY pip_pause_button_title "Pause">
+<!ENTITY pip_pause_button_description "Pause playing">
