@@ -5,7 +5,7 @@
 
 // Test for following DelaySign component works.
 // * element existance
-// * left position
+// * marginInlineStart position
 // * width
 // * additinal class
 
@@ -13,7 +13,7 @@ const TEST_DATA = [
   {
     targetClass: "delay-positive",
     expectedResult: {
-      left: "25%",
+      marginInlineStart: "25%",
       width: "25%",
     },
   },
@@ -21,7 +21,7 @@ const TEST_DATA = [
     targetClass: "delay-negative",
     expectedResult: {
       additionalClass: "negative",
-      left: "0%",
+      marginInlineStart: "0%",
       width: "25%",
     },
   },
@@ -29,7 +29,7 @@ const TEST_DATA = [
     targetClass: "fill-backwards-with-delay-iterationstart",
     expectedResult: {
       additionalClass: "fill",
-      left: "25%",
+      marginInlineStart: "25%",
       width: "25%",
     },
   },
@@ -40,7 +40,7 @@ const TEST_DATA = [
     targetClass: "fill-both-width-delay-iterationstart",
     expectedResult: {
       additionalClass: "fill",
-      left: "25%",
+      marginInlineStart: "25%",
       width: "25%",
     },
   },
@@ -64,8 +64,8 @@ add_task(async function() {
     if (expectedResult) {
       ok(delaySignEl, "The delay sign element should be in animation item element");
 
-      is(delaySignEl.style.left, expectedResult.left,
-        `Left position should be ${ expectedResult.left }`);
+      is(delaySignEl.style.marginInlineStart, expectedResult.marginInlineStart,
+        `marginInlineStart position should be ${ expectedResult.marginInlineStart }`);
       is(delaySignEl.style.width, expectedResult.width,
         `Width should be ${ expectedResult.width }`);
 

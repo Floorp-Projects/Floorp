@@ -5,7 +5,7 @@
 
 // Test for following EndDelaySign component works.
 // * element existance
-// * left position
+// * marginInlineStart position
 // * width
 // * additinal class
 
@@ -13,7 +13,7 @@ const TEST_DATA = [
   {
     targetClass: "enddelay-positive",
     expectedResult: {
-      left: "75%",
+      marginInlineStart: "75%",
       width: "25%",
     },
   },
@@ -21,7 +21,7 @@ const TEST_DATA = [
     targetClass: "enddelay-negative",
     expectedResult: {
       additionalClass: "negative",
-      left: "50%",
+      marginInlineStart: "50%",
       width: "25%",
     },
   },
@@ -29,7 +29,7 @@ const TEST_DATA = [
     targetClass: "enddelay-with-fill-forwards",
     expectedResult: {
       additionalClass: "fill",
-      left: "75%",
+      marginInlineStart: "75%",
       width: "25%",
     },
   },
@@ -56,8 +56,8 @@ add_task(async function() {
     if (expectedResult) {
       ok(endDelaySignEl, "The endDelay sign element should be in animation item element");
 
-      is(endDelaySignEl.style.left, expectedResult.left,
-        `Left position should be ${ expectedResult.left }`);
+      is(endDelaySignEl.style.marginInlineStart, expectedResult.marginInlineStart,
+        `marginInlineStart position should be ${ expectedResult.marginInlineStart }`);
       is(endDelaySignEl.style.width, expectedResult.width,
         `Width should be ${ expectedResult.width }`);
 
