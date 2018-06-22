@@ -375,6 +375,7 @@ enum GeckoProcessType
 
   GeckoProcessType_GPU,      // GPU and compositor process
   GeckoProcessType_PDFium,   // Gecko PDFium process
+  GeckoProcessType_VR,       // VR process
   GeckoProcessType_End,
   GeckoProcessType_Invalid = GeckoProcessType_End
 };
@@ -386,7 +387,8 @@ static const char* const kGeckoProcessTypeString[] = {
   "ipdlunittest",
   "geckomediaplugin",
   "gpu",
-  "pdfium"
+  "pdfium",
+  "vr"
 };
 
 static_assert(MOZ_ARRAY_LENGTH(kGeckoProcessTypeString) ==
@@ -463,6 +465,9 @@ XRE_API(bool,
 
 XRE_API(bool,
         XRE_IsGPUProcess, ())
+
+XRE_API(bool,
+        XRE_IsVRProcess, ())
 
 XRE_API(bool,
         XRE_IsPluginProcess, ())
