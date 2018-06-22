@@ -37,6 +37,7 @@
             android:layout_height="16dp"
             android:layout_gravity="bottom"
             android:layout_marginBottom="16dp"
+            android:importantForAccessibility="noHideDescendants"
             app:tabBackground="@drawable/indicator_onboarding"
             app:tabGravity="center"
             app:tabIndicatorHeight="0dp"
