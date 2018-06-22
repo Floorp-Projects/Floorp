@@ -2520,7 +2520,7 @@ StopLoadingSheets(
   }
 }
 
-nsresult
+void
 Loader::Stop()
 {
   uint32_t pendingCount = mSheets ? mSheets->mPendingDatas.Count() : 0;
@@ -2534,29 +2534,20 @@ Loader::Stop()
     StopLoadingSheets(mSheets->mLoadingDatas, arr);
   }
 
-  uint32_t i;
-  for (i = 0; i < mPostedEvents.Length(); ++i) {
-    SheetLoadData* data = mPostedEvents[i];
+  for (RefPtr<SheetLoadData>& data : mPostedEvents) {
     data->mIsCancelled = true;
-    if (arr.AppendElement(data)) {
-      // SheetComplete() calls Release(), so give this an extra ref.
-      NS_ADDREF(data);
-    }
-#ifdef DEBUG
-    else {
-      NS_NOTREACHED("We preallocated this memory... shouldn't really fail, "
-                    "except we never check that preallocation succeeds.");
-    }
-#endif
+    // SheetComplete() calls Release(), so give this an extra ref.
+    NS_ADDREF(data);
+    // Move since we're about to get rid of the array below.
+    arr.AppendElement(std::move(data));
   }
   mPostedEvents.Clear();
 
   mDatasToNotifyOn += arr.Length();
-  for (i = 0; i < arr.Length(); ++i) {
+  for (RefPtr<SheetLoadData>& data : arr) {
     --mDatasToNotifyOn;
-    SheetComplete(arr[i], NS_BINDING_ABORTED);
+    SheetComplete(data, NS_BINDING_ABORTED);
   }
-  return NS_OK;
 }
 
 bool

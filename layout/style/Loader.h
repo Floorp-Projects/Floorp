@@ -380,7 +380,7 @@ public:
    * Stop loading all sheets.  All nsICSSLoaderObservers involved will be
    * notified with NS_BINDING_ABORTED as the status, possibly synchronously.
    */
-  nsresult Stop(void);
+  void Stop();
 
   /**
    * nsresult Loader::StopLoadingSheet(nsIURI* aURL), which notifies the
@@ -438,7 +438,7 @@ public:
   // selected and aHasAlternateRel is false.
   IsAlternate IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel);
 
-  typedef nsTArray<RefPtr<SheetLoadData> > LoadDataArray;
+  typedef nsTArray<RefPtr<SheetLoadData>> LoadDataArray;
 
   // Measure our size.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -595,7 +595,7 @@ private:
 
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
   // Note that these are rare.
-  LoadDataArray     mPostedEvents;
+  LoadDataArray mPostedEvents;
 
   // Our array of "global" observers
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver> > mObservers;
