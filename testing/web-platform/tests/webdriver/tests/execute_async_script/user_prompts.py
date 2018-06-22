@@ -17,9 +17,8 @@ def execute_async_script(session, script, args=None):
         body)
 
 
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
-
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_accept(session):
     response = execute_async_script(session, "window.alert('Hello');")
     assert_success(response, None)
 
@@ -28,9 +27,8 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
         session.alert.accept()
 
 
-def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "dismiss"})}})
-
+@pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
+def test_handle_prompt_dismiss(session):
     response = execute_async_script(session, "window.alert('Hello');")
     assert_success(response, None)
 
@@ -39,9 +37,8 @@ def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
         session.alert.dismiss()
 
 
-def test_handle_prompt_dismiss_and_notify(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "dismiss and notify"})}})
-
+@pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss and notify"})
+def test_handle_prompt_dismiss_and_notify(session):
     response = execute_async_script(session, "window.alert('Hello');")
     assert_success(response, None)
 
@@ -51,9 +48,8 @@ def test_handle_prompt_dismiss_and_notify(new_session, add_browser_capabilites):
         session.alert.dismiss()
 
 
-def test_handle_prompt_accept_and_notify(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept and notify"})}})
-
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
+def test_handle_prompt_accept_and_notify(session):
     response = execute_async_script(session, "window.alert('Hello');")
     assert_success(response, None)
 
@@ -63,9 +59,8 @@ def test_handle_prompt_accept_and_notify(new_session, add_browser_capabilites):
         session.alert.accept()
 
 
-def test_handle_prompt_ignore(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "ignore"})}})
-
+@pytest.mark.capabilities({"unhandledPromptBehavior": "ignore"})
+def test_handle_prompt_ignore(session):
     response = execute_async_script(session, "window.alert('Hello');")
     assert_success(response, None)
 
@@ -74,9 +69,7 @@ def test_handle_prompt_ignore(new_session, add_browser_capabilites):
     session.alert.dismiss()
 
 
-def test_handle_prompt_default(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({})}})
-
+def test_handle_prompt_default(session):
     response = execute_async_script(session, "window.alert('Hello');")
     assert_success(response, None)
 
@@ -86,9 +79,8 @@ def test_handle_prompt_default(new_session, add_browser_capabilites):
         session.alert.dismiss()
 
 
-def test_handle_prompt_twice(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
-
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_twice(session):
     response = execute_async_script(session, "window.alert('Hello');window.alert('Bye');")
     assert_success(response, None)
 

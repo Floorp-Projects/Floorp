@@ -1,3 +1,5 @@
+import pytest
+
 from tests.support.asserts import assert_error, assert_dialog_handled, assert_success
 from tests.support.inline import inline
 from tests.support.fixtures import create_dialog
@@ -10,9 +12,8 @@ def is_element_selected(session, element_id):
             element_id=element_id))
 
 
-def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
-    # 13.1 step 2
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "dismiss"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
+def test_handle_prompt_dismiss(session):
     session.url = inline("<input id=foo>")
     element = session.find.css("#foo", all=False)
 
@@ -35,9 +36,8 @@ def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
     assert_dialog_handled(session, "dismiss #3")
 
 
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    # 13.1 step 2
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_accept(session):
     session.url = inline("<input id=foo>")
     element = session.find.css("#foo", all=False)
 
