@@ -855,6 +855,9 @@ parent:
     sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard)
         returns (IPCDataTransfer dataTransfer);
 
+    // Returns a list of formats supported by the clipboard
+    sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
+
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);
 
