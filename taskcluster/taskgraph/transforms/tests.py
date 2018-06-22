@@ -559,6 +559,8 @@ def set_treeherder_machine_platform(config, tests):
         # the table, workaround the issue for QR.
         if '-qr' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']
+        elif 'android-hw' in test['test-platform']:
+            test['treeherder-machine-platform'] = test['test-platform']
         else:
             test['treeherder-machine-platform'] = translation.get(
                 test['build-platform'], test['test-platform'])
@@ -684,6 +686,8 @@ def handle_suite_category(config, tests):
         if suite.startswith('test-verify') or suite.startswith('test-coverage'):
             pass
         elif script == 'android_emulator_unittest.py':
+            category_arg = '--test-suite'
+        elif script == 'android_hardware_unittest.py':
             category_arg = '--test-suite'
         elif script == 'desktop_unittest.py':
             category_arg = '--{}-suite'.format(suite)
@@ -928,6 +932,16 @@ def set_worker_type(config, tests):
                 ]
             # now we have the right platform set the worker type accordingly
             test['worker-type'] = win_worker_type_platform[test['virtualization']]
+        elif test_platform.startswith('android-hw-g5'):
+            if test['suite'] == 'raptor':
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-g5'
+            else:
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-unit-g5'
+        elif test_platform.startswith('android-hw-p2'):
+            if test['suite'] == 'raptor':
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-perf-p2'
+            else:
+                test['worker-type'] = 'proj-autophone/gecko-t-ap-unit-p2'
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') == 'talos' and \
                  not test['build-platform'].startswith('linux64-ccov'):
