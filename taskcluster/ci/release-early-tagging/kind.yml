@@ -1,0 +1,48 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_version_bump:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: Release Promotion version tag for buildN
+    run-on-projects: []
+    shipping-phase: promote
+    worker-type:
+        by-project:
+            mozilla-(beta|release|esr.*): scriptworker-prov-v1/treescript-v1
+            maple: scriptworker-prov-v1/treescript-v1
+            birch: scriptworker-prov-v1/treescript-v1
+            jamun: scriptworker-prov-v1/treescript-v1
+            default: scriptworker-prov-v1/treescript-dev
+    worker:
+        implementation: treescript
+        tags: ['buildN']
+        bump: false
+        push:
+            by-project:
+                mozilla-beta: true
+                mozilla-release: true
+                mozilla-esr52: true
+                mozilla-esr60: true
+                maple: true
+                birch: true
+                default: false
+
+jobs:
+    fennec:
+        name: fennec-tag-buildN
+        shipping-product: fennec
+
+    firefox:
+        name: firefox-tag-buildN
+        shipping-product: firefox
+
+    devedition:
+        name: devedition-tag-buildN
+        shipping-product: devedition
