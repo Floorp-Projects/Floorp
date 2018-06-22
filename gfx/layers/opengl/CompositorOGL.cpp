@@ -2023,6 +2023,10 @@ CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit)
 bool
 CompositorOGL::SupportsTextureDirectMapping()
 {
+  if (!gfxPrefs::AllowTextureDirectMapping()) {
+    return false;
+  }
+
   if (mGLContext) {
     mGLContext->MakeCurrent();
     return mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage) &&
