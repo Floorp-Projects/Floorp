@@ -54,16 +54,6 @@ TEST(Atoms, 16vs8)
   }
 }
 
-TEST(Atoms, BufferSharing)
-{
-  nsString unique;
-  unique.AssignLiteral("this is a unique string !@#$");
-
-  RefPtr<nsAtom> atom = NS_Atomize(unique);
-
-  EXPECT_EQ(unique.get(), atom->GetUTF16String());
-}
-
 TEST(Atoms, Null)
 {
   nsAutoString str(NS_LITERAL_STRING("string with a \0 char"));

@@ -1,4 +1,4 @@
-52804
+52808
 0/nm
 0th/pt
 1/n1
@@ -16938,6 +16938,7 @@ blameworthiness/M
 blameworthy/P
 blammo
 blanch/GDS
+blanche/S
 blancmange/MS
 bland/PTRY
 blandish/DSLG
@@ -18614,6 +18615,7 @@ carsick/P
 carsickness/M
 cart/SZGMDR
 cartage/M
+carte/S
 cartel/MS
 carter/M
 carthorse/SM
@@ -27760,6 +27762,7 @@ gazer/M
 gazette/MGDS
 gazetteer/MS
 gazillion/S
+gazillionth
 gazpacho/M
 gazump/DGS
 gear/MDGS
@@ -36405,6 +36408,7 @@ neurosurgical
 neurotic/MS
 neurotically
 neuroticism
+neurotoxin/S
 neurotransmitter/SM
 neut
 neuter/MDGS
@@ -40457,7 +40461,7 @@ precise/DRSYTGNP
 preciseness/M
 precision/M
 preclude/GDS
-preclusion/M
+preclusion/MS
 precocious/YP
 precociousness/M
 precocity/M
@@ -43963,7 +43967,7 @@ scree/MDS
 screech/GMDS
 screechy/TR
 screed/S
-screen/SJMDG
+screen/SJMDGRZ
 screening/M
 screenplay/SM
 screensaver/SM
@@ -49414,7 +49418,7 @@ trail/ZGSMDR
 trailblazer/MS
 trailblazing/M
 trailer/M
-train/ZGSMDRB
+train/ZGSMDRBJ
 trained/U
 trainee/SM
 trainer/M

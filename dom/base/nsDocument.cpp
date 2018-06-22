@@ -5358,12 +5358,6 @@ nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
     return nullptr;
   }
 
-  // We're about to insert random content here that will be rendered. We're
-  // going to need more than svg.css here...
-  if (IsSVGDocument()) {
-    AsSVGDocument()->EnsureNonSVGUserAgentStyleSheetsLoaded();
-  }
-
   nsAutoScriptBlocker scriptBlocker;
   nsCOMPtr<Element> container = shell->GetCanvasFrame()
                                      ->GetCustomContentContainer();
