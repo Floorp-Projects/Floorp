@@ -132,7 +132,7 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
         'linux64-asan',
         'linux64-stylo-sequential'
     ],
-    'Android 4.3': ['android-4.3-arm7-api-16'],
+    'Android 4.3 Emulator': ['android-em-4.3-arm7-api-16'],
     '10.10': ['macosx64'],
     # other commonly-used substrings for platforms not yet supported with
     # in-tree taskgraphs:
