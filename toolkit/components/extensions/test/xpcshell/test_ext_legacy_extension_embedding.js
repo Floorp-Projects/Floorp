@@ -141,7 +141,7 @@ add_task(async function test_startup_error_empty_manifest() {
   const files = {
     "webextension/manifest.json": ``,
   };
-  const expectedError = "(NS_BASE_STREAM_CLOSED)";
+  const expectedError = /NS_BASE_STREAM_CLOSED/;
 
   let fakeHybridAddonFile = Extension.generateZipFile(files);
 
@@ -153,7 +153,7 @@ add_task(async function test_startup_error_invalid_json_manifest() {
   const files = {
     "webextension/manifest.json": `{ "name": }`,
   };
-  const expectedError = "JSON.parse:";
+  const expectedError = /JSON.parse:/;
 
   let fakeHybridAddonFile = Extension.generateZipFile(files);
 
