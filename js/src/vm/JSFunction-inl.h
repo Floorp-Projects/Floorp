@@ -78,7 +78,7 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
                          ? extendedFinalizeKind
                          : finalizeKind;
 
-    if (CanReuseScriptForClone(cx->compartment(), fun, parent))
+    if (CanReuseScriptForClone(cx->realm(), fun, parent))
         return CloneFunctionReuseScript(cx, fun, parent, kind, newKind, proto);
 
     RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
