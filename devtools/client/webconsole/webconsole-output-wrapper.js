@@ -35,7 +35,7 @@ function WebConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
   this.queuedRequestUpdates = [];
   this.throttledDispatchPromise = null;
 
-  this._telemetry = new Telemetry();
+  this.telemetry = new Telemetry();
 
   store = configureStore(this.hud);
 }
@@ -163,18 +163,29 @@ WebConsoleOutputWrapper.prototype = {
       if (this.toolbox) {
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
-            this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() =>
-              this.hud.emit("source-in-debugger-opened")
-            );
+            this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() => {
+              this.telemetry.recordEvent("devtools.main", "jump_to_source", "webconsole",
+                                         null, { "session_id": this.toolbox.sessionId }
+              );
+              this.hud.emit("source-in-debugger-opened");
+            });
           },
           onViewSourceInScratchpad: frame => this.toolbox.viewSourceInScratchpad(
             frame.url,
             frame.line
-          ),
+          ).then(() => {
+            this.telemetry.recordEvent("devtools.main", "jump_to_source", "webconsole",
+                                       null, { "session_id": this.toolbox.sessionId }
+            );
+          }),
           onViewSourceInStyleEditor: frame => this.toolbox.viewSourceInStyleEditor(
             frame.url,
             frame.line
-          ),
+          ).then(() => {
+            this.telemetry.recordEvent("devtools.main", "jump_to_source", "webconsole",
+                                       null, { "session_id": this.toolbox.sessionId }
+            );
+          }),
           openNetworkPanel: (requestId) => {
             return this.toolbox.selectTool("netmonitor").then((panel) => {
               return panel.panelWin.Netmonitor.inspectRequest(requestId);
@@ -393,7 +404,7 @@ WebConsoleOutputWrapper.prototype = {
         store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
 
         const length = this.queuedMessageAdds.length;
-        this._telemetry.addEventProperty(
+        this.telemetry.addEventProperty(
           "devtools.main", "enter", "webconsole", null, "message_count", length);
 
         this.queuedMessageAdds = [];
