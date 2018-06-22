@@ -110,10 +110,6 @@ android {
 
     variantFilter { variant ->
         def flavors = variant.flavors*.name
-        if (flavors.contains("gecko") && flavors.contains("focus")) {
-            // We only need Klar builds with gecko for now
-            setIgnore(true)
-        }
 
         if (flavors.contains("webview") && !flavors.contains("universal")) {
             // WebView builds support all ABIs
