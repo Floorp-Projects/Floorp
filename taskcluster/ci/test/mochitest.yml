@@ -7,6 +7,7 @@ job-defaults:
         script:
             by-test-platform:
                 android-em.*: android_emulator_unittest.py
+                android-hw.*: android_hardware_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
@@ -19,6 +20,8 @@ job-defaults:
                 android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
+                android-hw.*:
+                    - android/android_hw.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -294,12 +297,13 @@ mochitest-media:
         mochitest-flavor: plain
         chunked:
             by-test-platform:
-                android-em.*: false
+                android.*: false
                 macosx64.*: false
                 windows10-64.*: false
                 default: true
     tier:
         by-test-platform:
+            android-hw.*: 3
             linux64-qr/.*: 1
             default: default
 
@@ -350,8 +354,8 @@ mochitest-webgl:
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
-            android-em.*: 10
             android-em-7.0-x86/opt: 1
+            android-em.*: 10
             windows.*: 8
             default: 3
     e10s:
