@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::error::Error;
 use buffer::Cursor;
+use std::error::Error;
 use std::fmt::{self, Display};
 
 /// The result of a `Synom` parser.
@@ -22,7 +22,7 @@ pub type PResult<'a, O> = Result<(O, Cursor<'a>), ParseError>;
 /// An error with a default error message.
 ///
 /// NOTE: We should provide better error messages in the future.
-pub fn parse_error<O>() -> PResult<'static, O> {
+pub fn parse_error<'a, O>() -> PResult<'a, O> {
     Err(ParseError(None))
 }
 

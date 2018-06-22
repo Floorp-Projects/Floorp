@@ -47,6 +47,7 @@ SOURCES += [
     'gfxVRExternal.cpp',
     'gfxVRPuppet.cpp',
     'VRDisplayHost.cpp',
+    'VRDisplayLocal.cpp',
 ]
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets

@@ -61,7 +61,7 @@ Structure:
       // The following properties may all be null if we fail to collect them.
       histograms: {...},
       keyedHistograms: {...},
-      chromeHangs: {...},
+      chromeHangs: {...}, // removed in firefox 62
       threadHangStats: [...], // obsolete in firefox 57, use the 'bhr' ping
       capturedStacks: {...},
       log: [...], // obsolete in firefox 61, use Event Telemetry or Scalars
@@ -349,6 +349,9 @@ Structure:
 
 chromeHangs
 -----------
+As of Firefox 62, chromeHangs has been removed. Please look to the bhr ping for
+similar functionality.
+
 Contains the statistics about the hangs happening exclusively on the main thread of the parent process. Precise C++ stacks are reported. This is only available on Nightly Release on Windows, when building using "--enable-profiling" switch.
 
 Some limits are applied:

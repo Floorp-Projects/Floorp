@@ -135,6 +135,7 @@ ClearSiteData::Initialize()
   }
 
   obs->AddObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, false);
+  obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   gClearSiteData = service;
 }
 
@@ -156,6 +157,7 @@ ClearSiteData::Shutdown()
   }
 
   obs->RemoveObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
+  obs->RemoveObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 }
 
 ClearSiteData::ClearSiteData() = default;
@@ -165,6 +167,11 @@ NS_IMETHODIMP
 ClearSiteData::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData)
 {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Shutdown();
+    return NS_OK;
+  }
+
   MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC));
 
   // Pref disabled.

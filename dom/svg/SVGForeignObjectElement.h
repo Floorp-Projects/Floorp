@@ -36,9 +36,6 @@ public:
   virtual bool HasValidDimensions() const override;
 
   // nsIContent interface
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,

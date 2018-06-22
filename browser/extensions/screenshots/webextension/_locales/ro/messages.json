@@ -30,10 +30,10 @@
     "message": "Descarcă"
   },
   "downloadOnlyNotice": {
-    "message": "În prezent ești în modul numai de descărcare."
+    "message": "În prezent ești în modul numai descărcare."
   },
   "downloadOnlyDetails": {
-    "message": "Firefox Screenshots se mută automat în modul descărcare în aceste situații:"
+    "message": "Firefox Screenshots se schimbă automat în modul numai descărcare în aceste situații:"
   },
   "downloadOnlyDetailsPrivate": {
     "message": "În fereastra de navigare privată."
@@ -65,7 +65,7 @@
     "message": "Copiază"
   },
   "notificationImageCopiedTitle": {
-    "message": "Captura copiată"
+    "message": "Captură copiată"
   },
   "notificationImageCopiedDetails": {
     "message": "Captura a fost copiată în clipboard. Apasă $META_KEY$-V pentru a lipi.",

@@ -6163,8 +6163,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
 
       if (!JS_DefineUCProperty(cx, prototype,
              nameChars.twoByteChars(), name->length(),
-             JS_DATA_TO_FUNC_PTR(JSNative, getterObj.get()),
-             JS_DATA_TO_FUNC_PTR(JSNative, setterObj.get()),
+             getterObj, setterObj,
              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER))
       {
         return false;

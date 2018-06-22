@@ -495,11 +495,10 @@ SVGSVGElement::BindToTree(nsIDocument* aDocument,
                                               aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsIDocument* doc = GetComposedDoc();
-  if (doc) {
-    // Setup the style sheet during binding, not element construction,
-    // because we could move the root SVG element from the document
-    // that created it to another document.
+  if (nsIDocument* doc = GetComposedDoc()) {
+    // Setup the style sheet during binding, not element construction, because
+    // we could move the root SVG element from the document that created it to
+    // another document.
     auto cache = nsLayoutStylesheetCache::Singleton();
     doc->EnsureOnDemandBuiltInUASheet(cache->SVGSheet());
   }

@@ -682,10 +682,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
       // build is done, so we don't need to do it here.
       ScheduleGenerateFrame();
     }
-
-    if (ShouldParentObserveEpoch()) {
-      mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
-    }
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
@@ -695,6 +691,10 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     // though DisplayList was not pushed to webrender.
     TimeStamp now = TimeStamp::Now();
     mCompositorBridge->DidComposite(GetLayersId(), now, now);
+  }
+
+  if (ShouldParentObserveEpoch()) {
+    mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
   }
 
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
@@ -769,6 +769,10 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
   } else if (sendDidComposite) {
     TimeStamp now = TimeStamp::Now();
     mCompositorBridge->DidComposite(GetLayersId(), now, now);
+  }
+
+  if (ShouldParentObserveEpoch()) {
+    mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
   }
 
   return IPC_OK();

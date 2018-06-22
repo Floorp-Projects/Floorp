@@ -27,7 +27,7 @@ class AnimationName extends PureComponent {
       dom.text(
         {
           y: "50%",
-          x: "100%"
+          x: "100%",
         },
         animation.state.name
       )

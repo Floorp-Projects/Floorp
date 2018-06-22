@@ -12,7 +12,7 @@
 
 [package]
 name = "quote"
-version = "0.5.2"
+version = "0.6.3"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["Cargo.toml", "src/**/*.rs", "tests/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "Quasi-quoting macro quote!(...)"
@@ -22,7 +22,7 @@ keywords = ["syn"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/dtolnay/quote"
 [dependencies.proc-macro2]
-version = "0.3"
+version = "0.4.4"
 default-features = false
 
 [features]

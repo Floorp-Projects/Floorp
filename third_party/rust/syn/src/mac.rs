@@ -46,7 +46,8 @@ impl Eq for Macro {}
 #[cfg(feature = "extra-traits")]
 impl PartialEq for Macro {
     fn eq(&self, other: &Self) -> bool {
-        self.path == other.path && self.bang_token == other.bang_token
+        self.path == other.path
+            && self.bang_token == other.bang_token
             && self.delimiter == other.delimiter
             && TokenStreamHelper(&self.tts) == TokenStreamHelper(&other.tts)
     }
@@ -93,10 +94,11 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for Macro {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.path.to_tokens(tokens);
             self.bang_token.to_tokens(tokens);
             match self.delimiter {

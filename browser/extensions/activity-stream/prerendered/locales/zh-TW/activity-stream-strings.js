@@ -49,7 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "您儲存或造訪過的網站精選",
   "prefs_highlights_options_visited_label": "造訪過的頁面",
   "prefs_highlights_options_download_label": "最新下載",
-  "prefs_highlights_options_pocket_label": "已將頁面儲存至 Pocket",
+  "prefs_highlights_options_pocket_label": "儲存至 Pocket 的頁面",
   "prefs_snippets_description": "來自 Mozilla 及 Firefox 的大小事",
   "settings_pane_button_label": "自訂您的新分頁頁面",
   "settings_pane_topsites_header": "熱門網站",

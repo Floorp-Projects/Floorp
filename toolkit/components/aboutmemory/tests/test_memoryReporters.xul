@@ -101,8 +101,8 @@
       present.places = true;
     } else if (aPath.search(/^explicit\/images/) >= 0) {
       present.images = true;
-    } else if (aPath.search(/^explicit\/atoms\/dynamic\/atom-objects$/) >= 0) {
-      present.dynamicAtomObjects = true;
+    } else if (aPath.search(/^explicit\/atoms\/dynamic-objects-and-chars$/) >= 0) {
+      present.dynamicObjectsAndChars = true;
     } else if (/\[System Principal\].*this-is-a-sandbox-name/.test(aPath)) {
       // A system compartment with a location (such as a sandbox) should
       // show that location.
@@ -259,7 +259,7 @@
     ok(present.windowObjectsJsRealms,       "window-objects/.../js realms are present");
     ok(present.places,                      "places is present");
     ok(present.images,                      "images is present");
-    ok(present.dynamicAtomObjects,          "dynamic/atom-objects is present");
+    ok(present.dynamicObjectsAndChars,      "dynamic-objects-and-chars is present");
     ok(present.sandboxLocation,             "sandbox locations are present");
     ok(present.bigString,                   "large string is present");
     ok(present.smallString1,                "small string 1 is present");

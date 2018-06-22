@@ -9,9 +9,9 @@
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/HangMonitor.h"
 #include "mozilla/mscom/SpinEvent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SystemGroup.h"
@@ -181,7 +181,7 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable)
 MainThreadInvoker::MainThreadAPC(ULONG_PTR aParam)
 {
   AUTO_PROFILER_THREAD_WAKE;
-  mozilla::HangMonitor::NotifyActivity(mozilla::HangMonitor::kGeneralActivity);
+  mozilla::BackgroundHangMonitor().NotifyActivity();
   MOZ_ASSERT(NS_IsMainThread());
   auto runnable = reinterpret_cast<SyncRunnable*>(aParam);
   runnable->APCRun();

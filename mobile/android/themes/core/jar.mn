@@ -12,6 +12,7 @@ chrome.jar:
   skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutBase.css                        (aboutBase.css)
   skin/aboutDownloads.css                   (aboutDownloads.css)
+  skin/aboutExperiments.css                 (aboutExperiments.css)
   skin/aboutMemory.css                      (aboutMemory.css)
   skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)

@@ -17,7 +17,7 @@ The upcoming support has features like:
 * Structured input/output
 
 The hope is that libraries ported to `proc_macro2` will be trivial to port to
-the real `proc_macro` crate once the support on nightly is stabilize.
+the real `proc_macro` crate once the support on nightly is stabilized.
 
 ## Usage
 
@@ -27,7 +27,7 @@ itself. Usage is done via:
 
 ```toml
 [dependencies]
-proc-macro2 = "0.3"
+proc-macro2 = "0.4"
 ```
 
 followed by
@@ -57,7 +57,7 @@ You can enable this feature via:
 
 ```toml
 [dependencies]
-proc-macro2 = { version = "0.3", features = ["nightly"] }
+proc-macro2 = { version = "0.4", features = ["nightly"] }
 ```
 
 

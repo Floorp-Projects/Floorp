@@ -376,7 +376,7 @@ main {
   padding: 15px;
   position: fixed;
   top: 15px;
-  z-index: 12001; }
+  z-index: 1000; }
   .prefs-button button:hover, .prefs-button button:focus {
     background-color: var(--newtab-element-hover-color); }
   .prefs-button button:active {
@@ -813,14 +813,14 @@ main {
   display: none; }
 
 .overlay-wrapper {
-  position: fixed;
+  position: absolute;
   top: 0;
   width: 100vw;
   height: 100vh;
   z-index: 21000;
-  font-weight: 200;
   transition: opacity 0.4s;
-  opacity: 0; }
+  opacity: 0;
+  overflow-x: auto; }
   .overlay-wrapper.show {
     transition: none;
     opacity: 1; }
@@ -829,6 +829,12 @@ main {
       transition-delay: 0.2s;
       transform: translateY(-50%) scale(1);
       opacity: 1; }
+      @media screen and (max-width: 790px) {
+        .overlay-wrapper.show .firstrun-sign-in {
+          float: none;
+          margin: auto;
+          top: 190px;
+          margin-bottom: 100px; } }
     .overlay-wrapper.show .firstrun-firefox-logo {
       transition: opacity 2.3s;
       opacity: 1; }
@@ -853,7 +859,8 @@ main {
   height: 100%;
   display: block;
   background: url("../data/content/assets/fox-tail.png") top -200px center no-repeat, linear-gradient(to bottom, #003EAA 40%, #004EC2 60%, #0060DF 80%, #0080FF 90%, #00C7FF 100%) top center no-repeat, #003EAA;
-  background-size: cover; }
+  background-size: cover;
+  position: fixed; }
 
 .firstrun-sign-in {
   transform: translateY(-50%) scale(0.8);
@@ -889,18 +896,21 @@ main {
     padding-inline-start: 20px;
     border: 1px solid #737373;
     border-radius: 2px;
-    font-size: 16px; }
+    font-size: 16px;
+    transition: border-color 150ms, box-shadow 150ms; }
     .firstrun-sign-in .email-input:hover {
       border-color: #0C0C0D; }
+    .firstrun-sign-in .email-input:focus {
+      border-color: #0A84FF;
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
   .firstrun-sign-in .form-header {
-    font-size: 18px;
+    font-size: 22px;
     margin: 15px auto; }
-  .firstrun-sign-in .form-header span {
+  .firstrun-sign-in .form-header .sub-header {
     font-size: 14px;
     margin-top: 4px;
     display: block; }
   .firstrun-sign-in button {
-    border-radius: 2px;
     display: block;
     cursor: pointer;
     margin: 10px auto 0; }
@@ -909,21 +919,22 @@ main {
     height: 43px;
     width: 250px;
     padding: 8px 0;
-    border: 1px solid #0060DF;
+    border: 0;
+    border-radius: 4px;
     color: #FFF;
-    background-color: #0A84FF;
-    transition-duration: 150ms;
-    transition-property: background-color; }
-    .firstrun-sign-in .continue-button:not([disabled]):active {
+    background-color: #0060DF;
+    transition: background-color 150ms; }
+    .firstrun-sign-in .continue-button:not([disabled]):active, .firstrun-sign-in .continue-button:not([disabled]):hover {
       background: #003EAA;
       border-color: #002275; }
   .firstrun-sign-in .skip-button {
     font-size: 13px;
-    margin-top: 40px;
+    margin-top: 35px;
     margin-bottom: 20px;
     background-color: #FCFCFC;
     color: #0A84FF;
     border: 1px solid #0A84FF;
+    border-radius: 2px;
     min-height: 24px;
     padding: 5px 10px;
     transition: background-color 150ms, color 150ms, border-color 150ms; }
@@ -943,6 +954,15 @@ main {
   float: inline-start;
   clear: both;
   width: 435px; }
+  @media screen and (max-width: 825px) {
+    .firstrun-left-divider {
+      width: 400px; } }
+  @media screen and (max-width: 790px) {
+    .firstrun-left-divider {
+      margin: auto;
+      float: none;
+      width: 352px;
+      text-align: center; } }
 
 .firstrun-content {
   line-height: 1.5;
@@ -962,8 +982,11 @@ main {
   background: url("chrome://branding/content/about-logo.png") top left no-repeat;
   background-size: 90px 90px;
   margin: 40px 0 10px;
-  padding-top: 110px;
-  font-weight: 200; }
+  padding-top: 110px; }
+  @media screen and (max-width: 790px) {
+    .firstrun-title {
+      background: url("chrome://branding/content/about-logo.png") top center no-repeat;
+      background-size: 90px 90px; } }
 
 [dir='rtl'] .firstrun-title {
   background-position: top right; }
@@ -981,6 +1004,13 @@ main {
   z-index: 10;
   transition: opacity 0.3s;
   opacity: 0; }
+  @media screen and (max-width: 825px) {
+    .fxaccounts-container {
+      width: 784px; } }
+  @media screen and (max-width: 790px) {
+    .fxaccounts-container {
+      width: auto;
+      height: 100%; } }
 
 .firstrun-title,
 .firstrun-content,
@@ -1698,7 +1728,7 @@ main {
   top: 0;
   width: 100%;
   display: none;
-  z-index: 100000; }
+  z-index: 1100; }
   .modalOverlayOuter.active {
     display: block; }
 
@@ -1712,7 +1742,7 @@ main {
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   display: none;
-  z-index: 100001; }
+  z-index: 1101; }
   @media (max-width: 960px) {
     .modalOverlayInner {
       width: 100%;
@@ -1722,6 +1752,9 @@ main {
       box-shadow: none;
       border-radius: 0; } }
   @media (max-width: 850px) and (max-height: 730px) {
+    .modalOverlayInner {
+      overflow-y: scroll; } }
+  @media (max-width: 650px) and (max-height: 600px) {
     .modalOverlayInner {
       overflow-y: scroll; } }
   .modalOverlayInner.active {
@@ -1749,6 +1782,9 @@ main {
     text-align: center;
     background-color: #FFF; }
     @media (max-width: 850px) and (max-height: 730px) {
+      .modalOverlayInner .footer {
+        position: sticky; } }
+    @media (max-width: 650px) and (max-height: 600px) {
       .modalOverlayInner .footer {
         position: sticky; } }
     .modalOverlayInner .footer .modalButton {
@@ -1832,6 +1868,9 @@ main {
           margin-top: 0;
           line-height: 22px;
           font-size: 15px; } }
+  @media (max-width: 650px) {
+    .onboardingMessage {
+      height: 250px; } }
   .onboardingMessage .onboardingMessageImage {
     height: 100px;
     width: 120px;
@@ -1866,6 +1905,9 @@ main {
       margin-bottom: 12px;
       font-size: 15px;
       line-height: 22px; }
+      @media (max-width: 650px) {
+        .onboardingMessage .onboardingContent > span > p {
+          margin-bottom: 0px; } }
   .onboardingMessage .onboardingButton {
     background-color: rgba(12, 12, 13, 0.1);
     border: none;
@@ -1879,6 +1921,10 @@ main {
         float: right;
         margin-top: -60px;
         margin-right: -10px; } }
+    @media (max-width: 650px) {
+      .onboardingMessage .onboardingButton {
+        float: none;
+        margin-top: 30px; } }
   .onboardingMessage::before {
     content: '';
     height: 220px;

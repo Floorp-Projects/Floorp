@@ -15,7 +15,7 @@
 #include "mozilla/EnumeratedArray.h"
 
 #include "gfxVR.h"
-#include "VRDisplayHost.h"
+#include "VRDisplayLocal.h"
 #include "ovr_capi_dynamic.h"
 
 struct ID3D11Device;
@@ -90,7 +90,7 @@ private:
   void StopRendering();
 };
 
-class VRDisplayOculus : public VRDisplayHost
+class VRDisplayOculus : public VRDisplayLocal
 {
 public:
   void ZeroSensor() override;

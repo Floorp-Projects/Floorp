@@ -189,7 +189,7 @@ public:
     /**
      * Holds any SMIL override style declaration for this element.
      */
-    RefPtr<mozilla::DeclarationBlock> mSMILOverrideStyleDeclaration;
+    RefPtr<DeclarationBlock> mSMILOverrideStyleDeclaration;
 
     /**
     * The controllers of the XUL Element.

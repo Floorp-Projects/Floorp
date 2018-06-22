@@ -79,7 +79,7 @@
 //! error appear in the correct place underlining the right type.
 
 use proc_macro2::{Span, TokenStream};
-use quote::{ToTokens, Tokens};
+use quote::ToTokens;
 
 /// A trait that can provide the `Span` of the complete contents of a syntax
 /// tree node.
@@ -109,10 +109,9 @@ where
 {
     #[cfg(procmacro2_semver_exempt)]
     fn span(&self) -> Span {
-        let mut tokens = Tokens::new();
+        let mut tokens = TokenStream::new();
         self.to_tokens(&mut tokens);
-        let token_stream = TokenStream::from(tokens);
-        let mut iter = token_stream.into_iter();
+        let mut iter = tokens.into_iter();
         let mut span = match iter.next() {
             Some(tt) => tt.span(),
             None => {
@@ -129,10 +128,9 @@ where
 
     #[cfg(not(procmacro2_semver_exempt))]
     fn span(&self) -> Span {
-        let mut tokens = Tokens::new();
+        let mut tokens = TokenStream::new();
         self.to_tokens(&mut tokens);
-        let token_stream = TokenStream::from(tokens);
-        let mut iter = token_stream.into_iter();
+        let mut iter = tokens.into_iter();
 
         // We can't join spans without procmacro2_semver_exempt so just grab the
         // first one.

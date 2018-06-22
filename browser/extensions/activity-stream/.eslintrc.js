@@ -33,8 +33,6 @@ module.exports = {
     }
   }],
   "rules": {
-    "no-undef": 1, // Override eslint-plugin-mozilla until 0.13.1+ is available
-
     "promise/catch-or-return": 2,
     "promise/param-names": 2,
 

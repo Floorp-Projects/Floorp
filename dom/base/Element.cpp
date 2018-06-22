@@ -1224,6 +1224,16 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
     return nullptr;
   }
 
+  if (StaticPrefs::dom_webcomponents_shadowdom_report_usage()) {
+    OwnerDoc()->ReportShadowDOMUsage();
+  }
+
+  return AttachShadowWithoutNameChecks(aInit.mMode);
+}
+
+already_AddRefed<ShadowRoot>
+Element::AttachShadowWithoutNameChecks(ShadowRootMode aMode)
+{
   nsAutoScriptBlocker scriptBlocker;
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
@@ -1244,13 +1254,9 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
    *    and mode is init’s mode.
    */
   RefPtr<ShadowRoot> shadowRoot =
-    new ShadowRoot(this, aInit.mMode, nodeInfo.forget());
+    new ShadowRoot(this, aMode, nodeInfo.forget());
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
-
-  if (StaticPrefs::dom_webcomponents_shadowdom_report_usage()) {
-    OwnerDoc()->ReportShadowDOMUsage();
-  }
 
   /**
    * 5. Set context object’s shadow root to shadow.
@@ -1261,6 +1267,27 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
    * 6. Return shadow.
    */
   return shadowRoot.forget();
+}
+
+void
+Element::UnattachShadow()
+{
+  if (!GetShadowRoot()) {
+    return;
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+
+  if (nsIDocument* doc = GetComposedDoc()) {
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->DestroyFramesForAndRestyle(this);
+    }
+  }
+  MOZ_ASSERT(!GetPrimaryFrame());
+
+  // Simply unhook the shadow root from the element.
+  MOZ_ASSERT(!GetShadowRoot()->HasSlots(), "Won't work when shadow root has slots!");
+  SetShadowRoot(nullptr);
 }
 
 void

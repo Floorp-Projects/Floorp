@@ -57,7 +57,7 @@ this.takeshot = (function() {
         shot.thumbnail = thumbnailImage;
       }
     }).then(() => {
-      return browser.tabs.create({url: shot.creatingUrl})
+      return browser.tabs.create({url: shot.creatingUrl});
     }).then((tab) => {
       openedTab = tab;
       sendEvent("internal", "open-shot-tab");

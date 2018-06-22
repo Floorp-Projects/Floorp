@@ -6,7 +6,7 @@ use api::{BorderRadius, ClipMode, LayoutPoint, LayoutPointAu, LayoutRect, Layout
 use app_units::Au;
 use prim_store::EdgeAaSegmentMask;
 use std::{cmp, usize};
-use util::extract_inner_rect_safe;
+use util::{extract_inner_rect_safe, RectHelpers};
 
 bitflags! {
     pub struct ItemFlags: u8 {
@@ -210,61 +210,69 @@ impl SegmentBuilder {
         inner_rect: LayoutRect,
         inner_clip_mode: Option<ClipMode>,
     ) {
-        debug_assert!(outer_rect.contains_rect(&inner_rect));
+        if inner_rect.is_well_formed_and_nonempty() {
+            debug_assert!(outer_rect.contains_rect(&inner_rect));
 
-        let p0 = outer_rect.origin;
-        let p1 = inner_rect.origin;
-        let p2 = inner_rect.bottom_right();
-        let p3 = outer_rect.bottom_right();
+            let p0 = outer_rect.origin;
+            let p1 = inner_rect.origin;
+            let p2 = inner_rect.bottom_right();
+            let p3 = outer_rect.bottom_right();
 
-        let segments = &[
-            LayoutRect::new(
-                LayoutPoint::new(p0.x, p0.y),
-                LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p2.x, p0.y),
-                LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p2.x, p2.y),
-                LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p0.x, p2.y),
-                LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p1.x, p0.y),
-                LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p2.x, p1.y),
-                LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p1.x, p2.y),
-                LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
-            ),
-            LayoutRect::new(
-                LayoutPoint::new(p0.x, p1.y),
-                LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
-            ),
-        ];
+            let segments = &[
+                LayoutRect::new(
+                    LayoutPoint::new(p0.x, p0.y),
+                    LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p2.x, p0.y),
+                    LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p2.x, p2.y),
+                    LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p0.x, p2.y),
+                    LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p1.x, p0.y),
+                    LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p2.x, p1.y),
+                    LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p1.x, p2.y),
+                    LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
+                ),
+                LayoutRect::new(
+                    LayoutPoint::new(p0.x, p1.y),
+                    LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
+                ),
+            ];
 
-        for segment in segments {
+            for segment in segments {
+                self.items.push(Item::new(
+                    *segment,
+                    None,
+                    true
+                ));
+            }
+
+            if inner_clip_mode.is_some() {
+                self.items.push(Item::new(
+                    inner_rect,
+                    inner_clip_mode,
+                    false,
+                ));
+            }
+        } else {
             self.items.push(Item::new(
-                *segment,
+                outer_rect,
                 None,
                 true
-            ));
-        }
-
-        if inner_clip_mode.is_some() {
-            self.items.push(Item::new(
-                inner_rect,
-                inner_clip_mode,
-                false,
             ));
         }
     }

@@ -279,7 +279,9 @@ The example below illustrates how to create such an action in Python::
           ...
       },
 
-An equivalent in yaml. Notice that we can't inspect parameters in this case::
+An equivalent in yaml. Notice that we can't inspect parameters in this case:
+
+.. code-block: yaml
 
   ---
   name: retrigger

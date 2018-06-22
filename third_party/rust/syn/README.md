@@ -3,7 +3,7 @@ Nom parser for Rust source code
 
 [![Build Status](https://api.travis-ci.org/dtolnay/syn.svg?branch=master)](https://travis-ci.org/dtolnay/syn)
 [![Latest Version](https://img.shields.io/crates/v/syn.svg)](https://crates.io/crates/syn)
-[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/syn/0.13/syn/)
+[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/syn/0.14/syn/)
 [![Rustc Version 1.15+](https://img.shields.io/badge/rustc-1.15+-lightgray.svg)](https://blog.rust-lang.org/2017/02/02/Rust-1.15.html)
 
 Syn is a parsing library for parsing a stream of Rust tokens into a syntax tree
@@ -42,11 +42,11 @@ contains some APIs that may be useful for Rust procedural macros more generally.
   procedural macros enable only what they need, and do not pay in compile time
   for all the rest.
 
-[`syn::File`]: https://docs.rs/syn/0.13/syn/struct.File.html
-[`syn::Item`]: https://docs.rs/syn/0.13/syn/enum.Item.html
-[`syn::Expr`]: https://docs.rs/syn/0.13/syn/enum.Expr.html
-[`syn::Type`]: https://docs.rs/syn/0.13/syn/enum.Type.html
-[`syn::DeriveInput`]: https://docs.rs/syn/0.13/syn/struct.DeriveInput.html
+[`syn::File`]: https://docs.rs/syn/0.14/syn/struct.File.html
+[`syn::Item`]: https://docs.rs/syn/0.14/syn/enum.Item.html
+[`syn::Expr`]: https://docs.rs/syn/0.14/syn/enum.Expr.html
+[`syn::Type`]: https://docs.rs/syn/0.14/syn/enum.Type.html
+[`syn::DeriveInput`]: https://docs.rs/syn/0.14/syn/struct.DeriveInput.html
 
 If you get stuck with anything involving procedural macros in Rust I am happy to
 provide help even if the issue is not related to Syn. Please file a ticket in
@@ -56,6 +56,8 @@ this repo.
 first support for procedural macros in Rust 1.15.0. Some features especially
 around error reporting are only available in newer compilers or on the nightly
 channel.*
+
+[*Release notes*](https://github.com/dtolnay/syn/releases)
 
 ## Example of a custom derive
 
@@ -70,8 +72,8 @@ tokens back to the compiler to compile into the user's crate.
 
 ```toml
 [dependencies]
-syn = "0.13"
-quote = "0.5"
+syn = "0.14"
+quote = "0.6"
 
 [lib]
 proc-macro = true
@@ -242,6 +244,8 @@ available.
   types.
 - **`extra-traits`** — Debug, Eq, PartialEq, Hash impls for all syntax tree
   types.
+- **`proc-macro`** *(enabled by default)* — Runtime dependency on the dynamic
+  library libproc_macro from rustc toolchain.
 
 ## Nightly features
 
@@ -258,8 +262,8 @@ On a nightly compiler, to eliminate the stable shim and use the compiler's
 
 ```toml
 [dependencies]
-syn = "0.13"
-proc-macro2 = { version = "0.3", features = ["nightly"] }
+syn = "0.14"
+proc-macro2 = { version = "0.4", features = ["nightly"] }
 ```
 
 ## License

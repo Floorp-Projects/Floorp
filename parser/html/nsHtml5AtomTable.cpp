@@ -7,7 +7,7 @@
 
 nsHtml5AtomEntry::nsHtml5AtomEntry(KeyTypePointer aStr)
   : nsStringHashKey(aStr)
-  , mAtom(new nsDynamicAtom(*aStr))
+  , mAtom(nsDynamicAtom::Create(*aStr))
 {
 }
 
@@ -20,7 +20,7 @@ nsHtml5AtomEntry::nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther)
 
 nsHtml5AtomEntry::~nsHtml5AtomEntry()
 {
-  delete mAtom;
+  nsDynamicAtom::Destroy(mAtom);
 }
 
 nsHtml5AtomTable::nsHtml5AtomTable()

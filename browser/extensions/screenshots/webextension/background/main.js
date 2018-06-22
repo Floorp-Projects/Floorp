@@ -130,19 +130,27 @@ this.main = (function() {
   }
 
   exports.onClickedContextMenu = catcher.watchFunction((info, tab) => {
-    if (!tab) {
-      // Not in a page/tab context, ignore
-      return;
-    }
-    if (!urlEnabled(tab.url)) {
-      senderror.showError({
-        popupMessage: "UNSHOOTABLE_PAGE"
-      });
-      return;
-    }
-    catcher.watchPromise(
+    catcher.watchPromise(hasSeenOnboarding.then(onboarded => {
+      if (!tab) {
+        // Not in a page/tab context, ignore
+        return;
+      }
+      if (!urlEnabled(tab.url)) {
+        if (!onboarded) {
+          sendEvent("goto-onboarding", "selection-button", {incognito: tab.incognito});
+          forceOnboarding();
+          return;
+        }
+        senderror.showError({
+          popupMessage: "UNSHOOTABLE_PAGE"
+        });
+        return;
+      }
+      // No need to catch() here because of watchPromise().
+      // eslint-disable-next-line promise/catch-or-return
       toggleSelector(tab)
-        .then(() => sendEvent("start-shot", "context-menu", {incognito: tab.incognito})));
+        .then(() => sendEvent("start-shot", "context-menu", {incognito: tab.incognito}));
+    }));
   });
 
   function urlEnabled(url) {
@@ -200,7 +208,7 @@ this.main = (function() {
       const id = makeUuid();
       return browser.notifications.create(id, {
         type: "basic",
-        iconUrl: "../icons/copy.png",
+        iconUrl: "../icons/copied-notification.svg",
         title: browser.i18n.getMessage("notificationLinkCopiedTitle"),
         message: browser.i18n.getMessage("notificationLinkCopiedDetails", pasteSymbol)
       });
@@ -234,12 +242,12 @@ this.main = (function() {
           catcher.watchPromise(communication.sendToBootstrap("incrementCount", {scalar: "copy"}));
           return browser.notifications.create({
             type: "basic",
-            iconUrl: "../icons/copy.png",
+            iconUrl: "../icons/copied-notification.svg",
             title: browser.i18n.getMessage("notificationImageCopiedTitle"),
             message: browser.i18n.getMessage("notificationImageCopiedDetails", pasteSymbol)
           });
         });
-    })
+    });
   });
 
   communication.register("downloadShot", (sender, info) => {
@@ -257,13 +265,18 @@ this.main = (function() {
         browser.downloads.onChanged.removeListener(onChangedCallback);
       }
     });
-    browser.downloads.onChanged.addListener(onChangedCallback)
+    browser.downloads.onChanged.addListener(onChangedCallback);
     catcher.watchPromise(communication.sendToBootstrap("incrementCount", {scalar: "download"}));
     return browser.windows.getLastFocused().then(windowInfo => {
       return browser.downloads.download({
         url,
         incognito: windowInfo.incognito,
         filename: info.filename
+      }).catch((error) => {
+        // We are not logging error message when user cancels download
+        if (error && error.message && !error.message.includes("canceled")) {
+          log.error(error.message);
+        }
       }).then((id) => {
         downloadId = id;
       });

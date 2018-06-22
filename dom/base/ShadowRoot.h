@@ -139,6 +139,7 @@ private:
 public:
   void AddSlot(HTMLSlotElement* aSlot);
   void RemoveSlot(HTMLSlotElement* aSlot);
+  bool HasSlots() const { return !mSlotMap.IsEmpty(); };
 
   const RawServoAuthorStyles* ServoStyles() const
   {

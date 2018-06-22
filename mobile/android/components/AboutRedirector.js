@@ -67,6 +67,11 @@ var modules = {
     uri: "chrome://browser/content/aboutAccounts.xhtml",
     privileged: true
   },
+  experiments: {
+    uri: "chrome://browser/content/aboutExperiments.xhtml",
+    privileged: true,
+    hide: true
+  },
 };
 
 function AboutRedirector() {}

@@ -29,11 +29,25 @@
   "downloadScreenshot": {
     "message": "ດາວໂຫລດ"
   },
+  "downloadOnlyDetailsPrivate": {
+    "message": "ໃນຫນ້າຕ່າງການທ່ອງເວັບແບບສ່ວນຕົວ."
+  },
   "notificationLinkCopiedTitle": {
     "message": "ໄດ້ສຳເນົາລີ້ງໄວ້ແລ້ວ"
   },
   "notificationLinkCopiedDetails": {
     "message": "ລີ້ງໄປຫາຮູບພາບຂອງທ່ານໄດ້ຖືກບັນທຶກໄວ້ໃນຄຣິບບອດ. ກົດ $META_KEY$-V ເພື່ອວາງ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "ສຳເນົາ"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "ຮູບພາບຂອງທ່ານໄດ້ຖືກສຳເນົາລົງໃນຄລິບບອດ. ກົດ $META_KEY$-V ເພື່ອວາງ.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
