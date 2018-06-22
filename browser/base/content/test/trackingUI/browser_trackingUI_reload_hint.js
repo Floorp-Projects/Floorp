@@ -35,8 +35,8 @@ add_task(async function testReloadHint() {
     let reloadButton = document.getElementById("tracking-action-reload");
     let trackingLoaded = document.getElementById("tracking-loaded");
     let reloadHint = document.getElementById("tracking-reload-required");
-    ok(!hidden(blockButton), "The enable tracking protection button is shown.");
     ok(!hidden(trackingLoaded), "The tracking loaded info is shown.");
+    ok(hidden(blockButton), "The enable tracking protection button is not shown.");
     ok(hidden(reloadButton), "The reload button is not shown.");
     ok(hidden(reloadHint), "The reload hint is not shown.");
 

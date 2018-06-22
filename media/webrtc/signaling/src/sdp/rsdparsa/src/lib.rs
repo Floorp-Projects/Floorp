@@ -7,6 +7,7 @@ extern crate serde_derive;
 extern crate serde;
 
 use std::net::IpAddr;
+use std::str::FromStr;
 use std::fmt;
 
 pub mod attribute_type;
@@ -17,7 +18,8 @@ pub mod unsupported_types;
 
 use attribute_type::{SdpAttribute, SdpAttributeType, parse_attribute};
 use error::{SdpParserInternalError, SdpParserError};
-use media_type::{SdpMedia, SdpMediaLine, parse_media, parse_media_vector};
+use media_type::{SdpMedia, SdpMediaLine, parse_media, parse_media_vector, SdpProtocolValue,
+                 SdpMediaValue, SdpFormatList};
 use network::{parse_addrtype, parse_nettype, parse_unicast_addr};
 use unsupported_types::{parse_email, parse_information, parse_key, parse_phone, parse_repeat,
                         parse_uri, parse_zone};
@@ -181,6 +183,30 @@ impl SdpSession {
 
     pub fn has_media(&self) -> bool {
         !self.media.is_empty()
+    }
+
+    pub fn add_media(&mut self, media_type: SdpMediaValue, direction: SdpAttribute, port: u32,
+                     protocol: SdpProtocolValue, addr: String)
+                     -> Result<(),SdpParserInternalError> {
+       let mut media = SdpMedia::new(SdpMediaLine {
+           media: media_type,
+           port,
+           port_count: 1,
+           proto: protocol,
+           formats: SdpFormatList::Integers(Vec::new()),
+       });
+
+       media.add_attribute(&direction)?;
+
+       media.set_connection(&SdpConnection {
+           addr: IpAddr::from_str(addr.as_str())?,
+           ttl: None,
+           amount: None,
+       })?;
+
+       self.media.push(media);
+
+       Ok(())
     }
 }
 

@@ -903,7 +903,8 @@ var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, Theme };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* WEBPACK VAR INJECTION */(function(global) {/* unused harmony export convertLinks */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_fluent_react__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_lib_init_store__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_ImpressionsWrapper_ImpressionsWrapper__ = __webpack_require__(27);
@@ -997,10 +998,10 @@ const ALLOWED_TAGS = {
  * Transform an object (tag name: {url}) into (tag name: anchor) where the url
  * is used as href, in order to render links inside a Fluent.Localized component.
  */
-function convertLinks(links) {
+function convertLinks(links, sendClick) {
   if (links) {
     return Object.keys(links).reduce((acc, linkTag) => {
-      acc[linkTag] = __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("a", { href: Object(__WEBPACK_IMPORTED_MODULE_8__template_utils__["a" /* safeURI */])(links[linkTag].url) });
+      acc[linkTag] = __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement("a", { href: Object(__WEBPACK_IMPORTED_MODULE_8__template_utils__["a" /* safeURI */])(links[linkTag].url), "data-metric": links[linkTag].metric, onClick: sendClick });
       return acc;
     }, {});
   }
@@ -1014,7 +1015,7 @@ function convertLinks(links) {
 function RichText(props) {
   return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
     __WEBPACK_IMPORTED_MODULE_1_fluent_react__["b" /* Localized */],
-    _extends({ id: "RichTextSnippet" }, ALLOWED_TAGS, convertLinks(props.links)),
+    _extends({ id: "RichTextSnippet" }, ALLOWED_TAGS, convertLinks(props.links, props.sendClick)),
     __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
       "span",
       null,
@@ -1027,6 +1028,7 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.Pu
   constructor(props) {
     super(props);
     this.onMessageFromParent = this.onMessageFromParent.bind(this);
+    this.sendClick = this.sendClick.bind(this);
     this.sendImpression = this.sendImpression.bind(this);
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
     this.state = { message: {}, bundle: {} };
@@ -1047,6 +1049,19 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.Pu
 
   sendImpression(extraProps) {
     this.sendUserActionTelemetry(Object.assign({ event: "IMPRESSION" }, extraProps));
+  }
+
+  // If link has a `metric` data attribute send it as part of the `value`
+  // telemetry field which can have arbitrary values.
+  // Used for router messages with links as part of the content.
+  sendClick(event) {
+    const metric = {
+      value: event.target.dataset.metric,
+      // Used for the `source` of the event. Needed to differentiate
+      // from other snippet or onboarding events that may occur.
+      id: "NEWTAB_FOOTER_BAR_CONTENT"
+    };
+    this.sendUserActionTelemetry(Object.assign({ event: "CLICK_BUTTON" }, metric));
   }
 
   onBlockById(id) {
@@ -1103,7 +1118,9 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.Pu
         __WEBPACK_IMPORTED_MODULE_1_fluent_react__["a" /* LocalizationProvider */],
         { messages: generateMessages(this.state.message.content.text) },
         __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9__templates_SimpleSnippet_SimpleSnippet__["a" /* SimpleSnippet */], _extends({}, this.state.message, {
-          richText: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(RichText, { text: this.state.message.content.text, links: this.state.message.content.links }),
+          richText: __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(RichText, { text: this.state.message.content.text,
+            links: this.state.message.content.links,
+            sendClick: this.sendClick }),
           UISurface: "NEWTAB_FOOTER_BAR",
           getNextMessage: ASRouterUtils.getNextMessage,
           onBlock: this.onBlockById(this.state.message.id),
@@ -5618,12 +5635,13 @@ function addSnippetsSubscriber(store) {
 
   store.subscribe(_asyncToGenerator(function* () {
     const state = store.getState();
+    const isASRouterEnabled = state.Prefs.values.asrouterExperimentEnabled && state.Prefs.values.asrouterOnboardingCohort > 0;
     // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
     // state.Snippets.initialized             Is the snippets data initialized?
     // snippets.initialized:                  Is SnippetsProvider currently initialised?
     if (state.Prefs.values["feeds.snippets"] &&
     // If the message center experiment is enabled, don't show snippets
-    !state.Prefs.values.asrouterExperimentEnabled && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
+    !isASRouterEnabled && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
     // Don't call init multiple times
     !initializing && location.href !== "about:welcome") {
       initializing = true;
@@ -5635,9 +5653,9 @@ function addSnippetsSubscriber(store) {
 
     // Turn on AS Router snippets if the experiment is enabled and the snippets pref is on;
     // otherwise, turn it off.
-    if (state.Prefs.values.asrouterExperimentEnabled && state.Prefs.values["feeds.snippets"] && !asrouterContent.initialized) {
+    if ((state.Prefs.values.asrouterExperimentEnabled || state.Prefs.values.asrouterOnboardingCohort > 0) && state.Prefs.values["feeds.snippets"] && !asrouterContent.initialized) {
       asrouterContent.init();
-    } else if ((!state.Prefs.values.asrouterExperimentEnabled || !state.Prefs.values["feeds.snippets"]) && asrouterContent.initialized) {
+    } else if ((!state.Prefs.values.asrouterExperimentEnabled && state.Prefs.values.asrouterOnboardingCohort === 0 || !state.Prefs.values["feeds.snippets"]) && asrouterContent.initialized) {
       asrouterContent.uninit();
     }
   }));
@@ -6637,7 +6655,8 @@ class _Base extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComponent 
     const { App, locale, strings } = props;
     const { initialized } = App;
 
-    if (props.Prefs.values.asrouterExperimentEnabled && window.location.hash === "#asrouter") {
+    const prefs = props.Prefs.values;
+    if ((prefs.asrouterExperimentEnabled || prefs.asrouterOnboardingCohort > 0) && window.location.hash === "#asrouter") {
       return __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_content_src_components_ASRouterAdmin_ASRouterAdmin__["a" /* ASRouterAdmin */], null);
     }
 
@@ -8773,7 +8792,7 @@ class _StartupOverlay extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pure
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react_intl__["FormattedMessage"], { id: "firstrun_form_header" }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
                 "span",
-                null,
+                { className: "sub-header" },
                 __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react_intl__["FormattedMessage"], { id: "firstrun_form_sub_header" })
               )
             ),

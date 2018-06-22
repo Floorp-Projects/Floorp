@@ -163,6 +163,10 @@ const PREFS_CONFIG = new Map([
     title: "Is the message center experiment on?",
     value: false
   }],
+  ["asrouterOnboardingCohort", {
+    title: "What cohort is the user in?",
+    value: 0
+  }],
   ["asrouter.snippetsUrl", {
     title: "A custom URL for the AS router snippets",
     value: ""

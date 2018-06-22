@@ -199,14 +199,6 @@ unit. Before submission, the filenames of the files are linked:
 - **uuid.dmp** - *plugin process dump file*
 - **uuid-<other>.dmp** - *other process dump file as listed in additional_minidumps*
 
-Browser Hangs
-=============
-
-There is a feature of Firefox that will crash Firefox if it stops processing
-messages after a certain period of time. This feature doesn't work well and is
-disabled by default. See ``xpcom/threads/HangMonitor.cpp``. Hang crashes
-are annotated with ``Hang=1``.
-
 about:crashes
 =============
 

@@ -77,7 +77,8 @@ export class _Base extends React.PureComponent {
     const {App, locale, strings} = props;
     const {initialized} = App;
 
-    if (props.Prefs.values.asrouterExperimentEnabled && window.location.hash === "#asrouter") {
+    const prefs = props.Prefs.values;
+    if ((prefs.asrouterExperimentEnabled || prefs.asrouterOnboardingCohort > 0) && window.location.hash === "#asrouter") {
       return (<ASRouterAdmin />);
     }
 

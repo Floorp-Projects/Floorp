@@ -51,6 +51,10 @@
     }
   }
 
+  @media(max-width: 650px) {
+    height: 250px;
+  }
+
   .onboardingMessageImage {
     height: 100px;
     width: 120px;
@@ -100,6 +104,10 @@
       margin-bottom: 12px;
       font-size: 15px;
       line-height: 22px;
+
+      @media(max-width: 650px) {
+        margin-bottom: 0px;
+      }
     }
   }
 
@@ -117,6 +125,11 @@
       float: right;
       margin-top: -60px;
       margin-right: -10px;
+    }
+
+    @media(max-width: 650px) {
+      float: none;
+      margin-top: 30px;
     }
   }
 

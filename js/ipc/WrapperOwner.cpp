@@ -1182,7 +1182,10 @@ JSObject*
 WrapperOwner::fromRemoteObjectVariant(JSContext* cx, const RemoteObject& objVar)
 {
     Maybe<ObjectId> maybeObjId(ObjectId::deserialize(objVar.serializedId()));
-    MOZ_RELEASE_ASSERT(maybeObjId.isSome());
+    if (maybeObjId.isNothing()) {
+        return nullptr;
+    }
+
     ObjectId objId = maybeObjId.value();
     RootedObject obj(cx, findCPOWById(objId));
     if (!obj) {

@@ -49,7 +49,7 @@ class EndDelaySign extends PureComponent {
                    (fill === "both" || fill === "forwards" ? " fill" : ""),
         style: {
           width: `${ width }%`,
-          left: `${ offset }%`,
+          marginInlineStart: `${ offset }%`,
         },
       }
     );

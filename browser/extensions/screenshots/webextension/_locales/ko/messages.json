@@ -47,6 +47,9 @@
   "downloadOnlyDetailsESR": {
     "message": "Firefox ESR을 사용중입니다."
   },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "업로드가 비활성화 되었습니다."
+  },
   "notificationLinkCopiedTitle": {
     "message": "링크 복사됨"
   },

@@ -1291,6 +1291,10 @@
       <field name="_contextEngine">null</field>
 
       <constructor><![CDATA[
+        // Force the <deck> Custom Element to be constructed. This can be removed
+        // once Bug 1470242 makes this happen behind the scenes.
+        customElements.upgrade(this.header);
+
         // Prevent popup events from the context menu from reaching the autocomplete
         // binding (or other listeners).
         let menu = document.getAnonymousElementByAttribute(this, "anonid", "search-one-offs-context-menu");
