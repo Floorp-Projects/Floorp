@@ -34,6 +34,7 @@
 
 #define STARTUP_COMPLETE_TOPIC "browser-delayed-startup-finished"
 #define DOC_ELEM_INSERTED_TOPIC "document-element-inserted"
+#define CONTENT_DOCUMENT_LOADED_TOPIC "content-document-loaded"
 #define CACHE_WRITE_TOPIC "browser-idle-startup-tasks-finished"
 #define CLEANUP_TOPIC "xpcom-shutdown"
 #define SHUTDOWN_TOPIC "quit-application-granted"
@@ -370,7 +371,7 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
             Unused << NS_NewNamedThread("SaveScripts",
                                         getter_AddRefs(mSaveThread), this);
         }
-    } else if (!strcmp(topic, DOC_ELEM_INSERTED_TOPIC)) {
+    } else if (mContentStartupFinishedTopic.Equals(topic)) {
         // If this is an uninitialized about:blank viewer or a chrome: document
         // (which should always be an XBL binding document), ignore it. We don't
         // have to worry about it loading malicious content.
@@ -403,8 +404,16 @@ ScriptPreloader::FinishContentStartup()
 {
     MOZ_ASSERT(XRE_IsContentProcess());
 
+#ifdef DEBUG
+    if (mContentStartupFinishedTopic.Equals(CONTENT_DOCUMENT_LOADED_TOPIC)) {
+        MOZ_ASSERT(sProcessType == ProcessType::Privileged);
+    } else {
+        MOZ_ASSERT(sProcessType != ProcessType::Privileged);
+    }
+#endif /* DEBUG */
+
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    obs->RemoveObserver(this, DOC_ELEM_INSERTED_TOPIC);
+    obs->RemoveObserver(this, mContentStartupFinishedTopic.get());
 
     mSaveTimer = nullptr;
 
@@ -504,11 +513,20 @@ ScriptPreloader::InitCache(const Maybe<ipc::FileDescriptor>& cacheFile, ScriptCa
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     MOZ_RELEASE_ASSERT(obs);
 
-    // In the child process, we need to freeze the script cache before any
-    // untrusted code has been executed. The insertion of the first DOM
-    // document element may sometimes be earlier than is ideal, but at
-    // least it should always be safe.
-    obs->AddObserver(this, DOC_ELEM_INSERTED_TOPIC, false);
+    if (sProcessType == ProcessType::Privileged) {
+        // Since we control all of the documents loaded in the privileged
+        // content process, we can increase the window of active time for the
+        // ScriptPreloader to include the scripts that are loaded until the
+        // first document finishes loading.
+        mContentStartupFinishedTopic.AssignLiteral(CONTENT_DOCUMENT_LOADED_TOPIC);
+    } else {
+        // In the child process, we need to freeze the script cache before any
+        // untrusted code has been executed. The insertion of the first DOM
+        // document element may sometimes be earlier than is ideal, but at
+        // least it should always be safe.
+        mContentStartupFinishedTopic.AssignLiteral(DOC_ELEM_INSERTED_TOPIC);
+    }
+    obs->AddObserver(this, mContentStartupFinishedTopic.get(), false);
 
     RegisterWeakMemoryReporter(this);
 
