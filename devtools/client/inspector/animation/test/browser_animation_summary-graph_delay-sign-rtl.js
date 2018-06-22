@@ -3,10 +3,10 @@
 
 "use strict";
 
-/* import-globals-from current-time-scrubber_head.js */
-
 add_task(async function() {
   Services.scriptloader.loadSubScript(
-    CHROME_URL_ROOT + "current-time-scrubber_head.js", this);
-  await testCurrentTimeScrubber();
+    CHROME_URL_ROOT + "summary-graph_delay-sign_head.js", this);
+  await pushPref("intl.uidirection", 1);
+  // eslint-disable-next-line no-undef
+  await testSummaryGraphDelaySign();
 });
