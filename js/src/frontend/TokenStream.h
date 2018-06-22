@@ -450,11 +450,15 @@ class TokenStreamPosition;
  */
 class TokenStreamShared
 {
+  protected:
+    static constexpr size_t ntokens = 4; // 1 current + 2 lookahead, rounded
+                                         // to power of 2 to avoid divmod by 3
+
+    static constexpr unsigned ntokensMask = ntokens - 1;
+
+    template<typename CharT> friend class TokenStreamPosition;
+
   public:
-    /**
-     * Max lookahead accommodates one gotten token and one peeked-ahead (ergo
-     * temporarily gotten) token.
-     */
     static constexpr unsigned maxLookahead = 2;
 
     static constexpr uint32_t NoOffset = UINT32_MAX;
@@ -494,13 +498,6 @@ class TokenStreamShared
                                "tokenization non-deterministic");
 #endif
     }
-
-  protected:
-    static_assert(mozilla::IsPowerOfTwo(maxLookahead),
-                  "maxLookahead must be a power of two to mask this way");
-    static constexpr unsigned ntokensMask = maxLookahead - 1;
-
-    template<typename CharT> friend class TokenStreamPosition;
 };
 
 static_assert(mozilla::IsEmpty<TokenStreamShared>::value,
@@ -848,7 +845,7 @@ class TokenStreamAnyChars
     // Options used for parsing/tokenizing.
     const ReadOnlyCompileOptions& options_;
 
-    Token               tokens[maxLookahead]; // circular token buffer
+    Token               tokens[ntokens];    // circular token buffer
   private:
     unsigned            cursor_;            // index of last parsed token
   protected:
