@@ -8,6 +8,7 @@
 
 interface nsIInputStream;
 interface nsIOutputStream;
+interface nsIPrincipal;
 interface nsITabParent;
 interface nsIWebBrowserPersistResourceVisitor;
 interface nsIWebBrowserPersistWriteCompletion;
@@ -60,6 +61,7 @@ interface nsIWebBrowserPersistDocument : nsISupports
   readonly attribute AString referrer;
   readonly attribute AString contentDisposition;
   readonly attribute nsIInputStream postData;
+  readonly attribute nsIPrincipal principal;
 
   /**
    * The cache key.  Unlike in nsISHEntry, where it's wrapped in an
