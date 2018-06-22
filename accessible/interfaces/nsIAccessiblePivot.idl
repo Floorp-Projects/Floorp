@@ -17,7 +17,7 @@ interface nsIAccessiblePivotObserver;
 /**
  * The pivot interface encapsulates a reference to a single place in an accessible
  * subtree. The pivot is a point or a range in the accessible tree. This interface
- * provides traversal methods to move the pivot to next/prev state that complies 
+ * provides traversal methods to move the pivot to next/prev state that complies
  * to a given rule.
  */
 [scriptable, uuid(81fe5144-059b-42db-bd3a-f6ce3158d5e9)]
@@ -209,6 +209,8 @@ interface nsIAccessiblePivotObserver : nsISupports
   void onPivotChanged(in nsIAccessiblePivot aPivot,
                       in nsIAccessible aOldAccessible,
                       in long aOldStart, in long aOldEnd,
+                      in nsIAccessible aNewAccessible,
+                      in long aNewStart, in long aNewEnd,
                       in PivotMoveReason aReason,
                       in boolean aIsFromUserInput);
 };

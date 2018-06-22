@@ -343,6 +343,10 @@ public:
   void
   RemovePendingReadyPromise(const ClientInfo& aClientInfo);
 
+  void
+  NoteInheritedController(const ClientInfo& aClientInfo,
+                          const ServiceWorkerDescriptor& aController);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
@@ -352,7 +356,8 @@ private:
 
   RefPtr<GenericPromise>
   StartControllingClient(const ClientInfo& aClientInfo,
-                         ServiceWorkerRegistrationInfo* aRegistrationInfo);
+                         ServiceWorkerRegistrationInfo* aRegistrationInfo,
+                         bool aControlClientHandle = true);
 
   void
   StopControllingClient(const ClientInfo& aClientInfo);

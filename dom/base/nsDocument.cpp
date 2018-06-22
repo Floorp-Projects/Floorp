@@ -4218,19 +4218,6 @@ nsIDocument::NotifyStyleSheetRemoved(StyleSheet* aSheet, bool aDocumentSheet)
 }
 
 void
-nsIDocument::AddStyleSheet(StyleSheet* aSheet)
-{
-  MOZ_ASSERT(aSheet);
-  DocumentOrShadowRoot::AppendSheet(*aSheet);
-
-  if (aSheet->IsApplicable()) {
-    AddStyleSheetToStyleSets(aSheet);
-  }
-
-  NotifyStyleSheetAdded(aSheet, true);
-}
-
-void
 nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 {
   if (nsIPresShell* shell = GetShell()) {
@@ -4294,17 +4281,15 @@ nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
 }
 
 void
-nsIDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
+nsIDocument::InsertSheetAt(size_t aIndex, StyleSheet& aSheet)
 {
-  MOZ_ASSERT(aSheet);
+  DocumentOrShadowRoot::InsertSheetAt(aIndex, aSheet);
 
-  DocumentOrShadowRoot::InsertSheetAt(aIndex, *aSheet);
-
-  if (aSheet->IsApplicable()) {
-    AddStyleSheetToStyleSets(aSheet);
+  if (aSheet.IsApplicable()) {
+    AddStyleSheetToStyleSets(&aSheet);
   }
 
-  NotifyStyleSheetAdded(aSheet, true);
+  NotifyStyleSheetAdded(&aSheet, true);
 }
 
 

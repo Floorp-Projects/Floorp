@@ -438,6 +438,39 @@ ClientSource::Control(const ClientControlledArgs& aArgs)
   return ref.forget();
 }
 
+void
+ClientSource::InheritController(const ServiceWorkerDescriptor& aServiceWorker)
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+
+  // If we are in legacy child-side intercept mode then we must tell the current
+  // process SWM that this client inherited a controller.  This will only update
+  // the local SWM data and not send any messages to the ClientManagerService.
+  //
+  // Note, we only do this when inheriting the controller for main thread
+  // windows.  The legacy mode never proprly marked inherited blob URL workers
+  // controlled in the SWM.
+  if (!ServiceWorkerParentInterceptEnabled() && GetDocShell()) {
+    AssertIsOnMainThread();
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->NoteInheritedController(mClientInfo, aServiceWorker);
+    }
+  }
+
+  // Also tell the parent-side ClientManagerService that the controller was
+  // inherited.  This is necessary for clients.matchAll() to work properly.
+  // In parent-side intercept mode this will also note the inheritance in
+  // the parent-side SWM.
+  MaybeExecute([aServiceWorker](PClientSourceChild* aActor) {
+    aActor->SendInheritController(ClientControlledArgs(aServiceWorker.ToIPC()));
+  });
+
+  // Finally, record the new controller in our local ClientSource for any
+  // immediate synchronous access.
+  SetController(aServiceWorker);
+}
+
 const Maybe<ServiceWorkerDescriptor>&
 ClientSource::GetController() const
 {

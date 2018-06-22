@@ -28,10 +28,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     "chrome,all,dialog=no,extrachrome,menubar,resizable,scrollbars,status," +
     "location,toolbar,personalbar," +
     `left=${screenX},top=${screenY}`;
-
-  if (Services.prefs.getBoolPref("browser.suppress_first_window_animation"))
-    browserWindowFeatures += ",suppressanimation";
-
   let win = Services.ww.openWindow(null, "about:blank", null,
                                    browserWindowFeatures, null);
 

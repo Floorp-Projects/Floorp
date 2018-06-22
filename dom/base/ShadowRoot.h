@@ -68,7 +68,6 @@ public:
     return mMode == ShadowRootMode::Closed;
   }
 
-  void InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent);
   void RemoveSheet(StyleSheet* aSheet);
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);
@@ -84,11 +83,15 @@ public:
    * Clones internal state, for example stylesheets, of aOther to 'this'.
    */
   void CloneInternalDataFrom(ShadowRoot* aOther);
+  void InsertSheetAt(size_t aIndex, StyleSheet&);
+
 private:
   void InsertSheetIntoAuthorData(size_t aIndex, StyleSheet&);
 
-  void InsertSheetAt(size_t aIndex, StyleSheet&);
-  void AppendStyleSheet(StyleSheet&);
+  void AppendStyleSheet(StyleSheet& aSheet)
+  {
+    InsertSheetAt(SheetCount(), aSheet);
+  }
 
   /**
    * Try to reassign an element to a slot and returns whether the assignment
