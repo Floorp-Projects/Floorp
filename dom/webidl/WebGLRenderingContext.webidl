@@ -32,6 +32,10 @@ typedef unrestricted float GLfloat;
 typedef unrestricted float GLclampf;
 typedef unsigned long long GLuint64EXT;
 
+// The power preference settings are documented in the WebGLContextAttributes
+// section of the specification.
+enum WebGLPowerPreference { "default", "low-power", "high-performance" };
+
 dictionary WebGLContextAttributes {
     // boolean alpha = true;
     // We deviate from the spec here.
@@ -43,6 +47,7 @@ dictionary WebGLContextAttributes {
     GLboolean premultipliedAlpha = true;
     GLboolean preserveDrawingBuffer = false;
     GLboolean failIfMajorPerformanceCaveat = false;
+    WebGLPowerPreference powerPreference = "default";
 };
 
 [Exposed=(Window,Worker),
