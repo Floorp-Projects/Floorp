@@ -16,7 +16,6 @@ def command(func):
 
         if session.session_id is None:
             session.start()
-        assert session.session_id is not None
 
         return func(self, *args, **kwargs)
 
@@ -665,7 +664,8 @@ class Element(object):
         self.id = id
         self.session = session
 
-        assert id not in self.session._element_cache
+        if id in self.session._element_cache:
+            raise ValueError("Element already in cache: %s" % id)
         self.session._element_cache[self.id] = self
 
     def __repr__(self):
@@ -677,7 +677,6 @@ class Element(object):
 
     @classmethod
     def from_json(cls, json, session):
-        assert Element.identifier in json
         uuid = json[Element.identifier]
         if uuid in session._element_cache:
             return session._element_cache[uuid]
