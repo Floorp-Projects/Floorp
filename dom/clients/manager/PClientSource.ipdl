@@ -25,6 +25,7 @@ parent:
   async ExecutionReady(ClientSourceExecutionReadyArgs aArgs);
   async Freeze();
   async Thaw();
+  async InheritController(ClientControlledArgs aArgs);
 
 child:
   async PClientSourceOp(ClientOpConstructorArgs aArgs);

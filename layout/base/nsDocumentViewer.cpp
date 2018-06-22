@@ -2514,6 +2514,11 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     styleSet->PrependStyleSheet(SheetType::Agent, sheet);
   }
 
+  sheet = cache->SVGSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  }
+
   styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
 
   if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
