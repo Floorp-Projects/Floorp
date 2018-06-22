@@ -552,21 +552,20 @@ private:
                      StyleSheetState aSheetState,
                      bool aIsPreLoad);
 
-  // Parse the stylesheet in aLoadData. The sheet data comes from aUTF16 if
-  // UTF-16 and from aUTF8 if UTF-8.
-  // Sets aCompleted to true if the parse finished, false otherwise (e.g. if the
-  // sheet had an @import).  If aCompleted is true when this returns, then
-  // ParseSheet also called SheetComplete on aLoadData.
-  void ParseSheet(const nsAString& aUTF16,
-                  const nsACString& aUTF8,
-                  SheetLoadData* aLoadData,
-                  bool aAllowAsync,
-                  bool& aCompleted);
+  enum class AllowAsyncParse
+  {
+    Yes,
+    No,
+  };
 
-  void DoParseSheetServo(const nsACString& aBytes,
-                         SheetLoadData* aLoadData,
-                         bool aAllowAsync,
-                         bool& aCompleted);
+  // Parse the stylesheet in the load data.
+  //
+  // Returns whether the parse finished. It may not finish e.g. if the sheet had
+  // an @import.
+  //
+  // If this function returns Completed::Yes, then ParseSheet also called
+  // SheetComplete on aLoadData.
+  Completed ParseSheet(const nsACString& aBytes, SheetLoadData*, AllowAsyncParse);
 
   // The load of the sheet in aLoadData is done, one way or another.  Do final
   // cleanup, including releasing aLoadData.
