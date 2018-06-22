@@ -34,7 +34,7 @@ function testFailure(header) {
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, dummyUri, header,
                       sslStatus, 0, sss.SOURCE_ORGANIC_REQUEST, {}, maxAge,
                       includeSubdomains);
-  }, "Parsed invalid header: " + header);
+  }, /NS_ERROR_FAILURE/, "Parsed invalid header: " + header);
 }
 
 function run_test() {
