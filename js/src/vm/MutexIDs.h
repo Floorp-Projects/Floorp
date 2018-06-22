@@ -48,7 +48,7 @@
   _(BufferStreamState,           500) \
   _(SharedArrayGrow,             500) \
   _(RuntimeScriptData,           500) \
-  _(WasmSigIdSet,                500) \
+  _(WasmFuncTypeIdSet,           500) \
   _(WasmCodeProfilingLabels,     500) \
   _(WasmModuleTieringLock,       500) \
   _(WasmCompileTaskState,        500) \

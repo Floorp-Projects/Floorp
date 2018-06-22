@@ -191,7 +191,7 @@ class ModuleSegment : public CodeSegment
 
 class FuncExport
 {
-    Sig sig_;
+    FuncType funcType_;
     MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
         uint32_t funcIndex_;
         uint32_t interpCodeRangeIndex_;
@@ -201,8 +201,8 @@ class FuncExport
 
   public:
     FuncExport() = default;
-    explicit FuncExport(Sig&& sig, uint32_t funcIndex, bool hasEagerStubs)
-      : sig_(std::move(sig))
+    explicit FuncExport(FuncType&& funcType, uint32_t funcIndex, bool hasEagerStubs)
+      : funcType_(std::move(funcType))
     {
         pod.funcIndex_ = funcIndex;
         pod.interpCodeRangeIndex_ = UINT32_MAX;
@@ -222,8 +222,8 @@ class FuncExport
     bool hasEagerStubs() const {
         return pod.hasEagerStubs_;
     }
-    const Sig& sig() const {
-        return sig_;
+    const FuncType& funcType() const {
+        return funcType_;
     }
     uint32_t funcIndex() const {
         return pod.funcIndex_;
@@ -240,7 +240,7 @@ class FuncExport
 
     bool clone(const FuncExport& src) {
         mozilla::PodAssign(&pod, &src.pod);
-        return sig_.clone(src.sig_);
+        return funcType_.clone(src.funcType_);
     }
 
     WASM_DECLARE_SERIALIZABLE(FuncExport)
@@ -256,7 +256,7 @@ typedef Vector<FuncExport, 0, SystemAllocPolicy> FuncExportVector;
 
 class FuncImport
 {
-    Sig sig_;
+    FuncType funcType_;
     struct CacheablePod {
         uint32_t tlsDataOffset_;
         uint32_t interpExitCodeOffset_; // Machine code offset
@@ -268,8 +268,8 @@ class FuncImport
         memset(&pod, 0, sizeof(CacheablePod));
     }
 
-    FuncImport(Sig&& sig, uint32_t tlsDataOffset)
-      : sig_(std::move(sig))
+    FuncImport(FuncType&& funcType, uint32_t tlsDataOffset)
+      : funcType_(std::move(funcType))
     {
         pod.tlsDataOffset_ = tlsDataOffset;
         pod.interpExitCodeOffset_ = 0;
@@ -285,8 +285,8 @@ class FuncImport
         pod.jitExitCodeOffset_ = off;
     }
 
-    const Sig& sig() const {
-        return sig_;
+    const FuncType& funcType() const {
+        return funcType_;
     }
     uint32_t tlsDataOffset() const {
         return pod.tlsDataOffset_;
@@ -300,7 +300,7 @@ class FuncImport
 
     bool clone(const FuncImport& src) {
         mozilla::PodAssign(&pod, &src.pod);
-        return sig_.clone(src.sig_);
+        return funcType_.clone(src.funcType_);
     }
 
     WASM_DECLARE_SERIALIZABLE(FuncImport)
@@ -394,7 +394,7 @@ typedef uint8_t ModuleHash[8];
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 {
-    SigWithIdVector       sigIds;
+    FuncTypeWithIdVector  funcTypeIds;
     GlobalDescVector      globals;
     TableDescVector       tables;
     NameInBytecodeVector  funcNames;

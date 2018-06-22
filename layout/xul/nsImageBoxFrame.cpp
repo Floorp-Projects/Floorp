@@ -417,7 +417,7 @@ nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
            hasSubRect ? &mSubRect : nullptr);
 }
 
-ImgDrawResult
+Maybe<ImgDrawResult>
 nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                          mozilla::wr::IpcResourceUpdateQueue& aResources,
                                          const StackingContextHelper& aSc,
@@ -433,7 +433,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                                                 anchorPoint,
                                                                 dest);
   if (!imgCon) {
-    return result;
+    return Nothing();
   }
 
   uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
@@ -455,7 +455,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
     imgCon->GetImageContainerAtSize(aManager, decodeSize, svgContext, containerFlags);
   if (!container) {
     NS_WARNING("Failed to get image container");
-    return ImgDrawResult::NOT_READY;
+    return Nothing();
   }
 
   gfx::IntSize size;
@@ -463,7 +463,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                                                                       aBuilder, aResources,
                                                                       aSc, size, Nothing());
   if (key.isNothing()) {
-    return ImgDrawResult::NOT_READY;
+    return Some(ImgDrawResult::NOT_READY);
   }
   wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
 
@@ -473,7 +473,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
                      wr::ToLayoutSize(fillRect.Size()), wr::ToLayoutSize(gapSize),
                      wr::ToImageRendering(sampleFilter), key.value());
 
-  return ImgDrawResult::SUCCESS;
+  return Some(ImgDrawResult::SUCCESS);
 }
 
 nsRect
@@ -564,10 +564,13 @@ nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
-  ImgDrawResult result = imageFrame->
+  Maybe<ImgDrawResult> result = imageFrame->
     CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, this, ToReferenceFrame(), flags);
+  if (!result) {
+    return false;
+  }
 
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, *result);
   return true;
 }
 
