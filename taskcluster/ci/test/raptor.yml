@@ -46,6 +46,7 @@ raptor-firefox-speedometer:
     run-on-projects:
         by-test-platform:
             macosx.*: ['try', 'mozilla-central']
+            linux64.*: ['try', 'mozilla-central']
             default: ['try']
     max-run-time: 1500
     mozharness:
