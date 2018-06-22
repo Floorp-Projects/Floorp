@@ -45,7 +45,6 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
     ARMRegister W1(R1_, 32);
     ARMRegister X1(R1_, 64);
     ARMRegister WTemp(ExtractTemp0, 32);
-    ARMRegister XTemp(ExtractTemp0, 64);
     Label maybeNegZero, revertRegister;
     switch(op_) {
       case JSOP_ADD:
