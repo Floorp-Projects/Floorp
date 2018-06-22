@@ -492,6 +492,7 @@ private:
     ScriptCacheChild* mChildActor = nullptr;
 
     nsString mBaseName;
+    nsCString mContentStartupFinishedTopic;
 
     nsCOMPtr<nsIFile> mProfD;
     nsCOMPtr<nsIThread> mSaveThread;
