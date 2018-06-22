@@ -148,23 +148,35 @@ registerCleanupFunction(async function cleanup() {
  *   - {ChromeWindow} window Firefox top level window we should use to open the tab
  *   - {Number} userContextId The userContextId of the tab.
  *   - {String} preferredRemoteType
+ *   - {Boolean} waitForLoad Wait for the page in the new tab to load. (Defaults to true.)
  * @return a promise that resolves to the tab object when the url is loaded
  */
-var addTab = async function(url, options = { background: false, window: window }) {
+var addTab = async function(url, options = {}) {
   info("Adding a new tab with URL: " + url);
 
-  const { background } = options;
+  const {
+    background = false,
+    userContextId,
+    preferredRemoteType,
+    waitForLoad = true,
+  } = options;
   const { gBrowser } = options.window ? options.window : window;
-  const { userContextId } = options;
 
-  const tab = BrowserTestUtils.addTab(gBrowser, url,
-    {userContextId, preferredRemoteType: options.preferredRemoteType});
+  const tab = BrowserTestUtils.addTab(gBrowser, url, {
+    userContextId,
+    preferredRemoteType,
+  });
+
   if (!background) {
     gBrowser.selectedTab = tab;
   }
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  info("Tab added and finished loading");
+  if (waitForLoad) {
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    info("Tab added and finished loading");
+  } else {
+    info("Tab added");
+  }
 
   return tab;
 };
