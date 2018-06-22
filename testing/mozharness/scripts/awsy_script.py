@@ -172,7 +172,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
             else:
                 os.environ['PYTHONPATH'] = dmd_py_lib_dir
 
-            env['DMD']= "--mode=dark-matter --stacks=full"
+            env['DMD'] = "--mode=dark-matter --stacks=full"
 
         runtime_testvars_path = os.path.join(self.awsy_path, 'runtime-testvars.json')
         runtime_testvars_file = open(runtime_testvars_path, 'wb')
