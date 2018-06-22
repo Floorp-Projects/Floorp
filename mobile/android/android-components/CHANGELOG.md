@@ -1,3 +1,21 @@
+# 0.11
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.41
+  * Kotlin coroutines 0.22.5
+  * GeckoView Nightly
+    * date: 2018.06.21
+    * version: 62.0.20180621100051
+    * revision: e834d23a292972ab4250a8be00e6740c43e41db2
+
+* **feature-session**, **browser-session**: Added functionality to process CustomTabsIntent.
+* **engine-gecko**: Created separate engine-gecko variants/modules for nightly/beta/release channels.
+* **browser-toolbar**: Added support for setting autocomplete filter.
+* Various refactorings (see commits below for details)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.10...v0.11)
+
 # 0.10
 
 * Compiled against:
@@ -12,6 +30,8 @@
 * **browser-session**: Added Custom Tabs configuration to session. Added new functionality that allows attaching a lifecycle owner to session observers so that observer can automatically be unregistered when the associated lifecycle ends.
 * **service-telemetry**: Updated createdTimestamp and createdDate fields for mobile-metrics ping
 
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.9...v0.10)
+
 # 0.9
 
 * Compiled against:
@@ -25,6 +45,8 @@
 
 * **feature-session**, **engine-gecko**, **engine-system**: Added functionality and API to save/restore engine session state and made sure it's persisted by default (using `DefaultSessionStorage`)
 * **concept-toolbar**: Use "AppCompat" versions of ImageButton and ImageView. Add `notifyListener` parameter to `setSelected` and `toggle` to specify whether or not listeners should be invoked.
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.8...v0.9)
 
 # 0.8
 
