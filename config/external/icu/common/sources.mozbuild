@@ -70,6 +70,7 @@ SOURCES += [
    '/intl/icu/source/common/servslkf.cpp',
    '/intl/icu/source/common/sharedobject.cpp',
    '/intl/icu/source/common/simpleformatter.cpp',
+   '/intl/icu/source/common/static_unicode_sets.cpp',
    '/intl/icu/source/common/stringpiece.cpp',
    '/intl/icu/source/common/stringtriebuilder.cpp',
    '/intl/icu/source/common/uarrsort.cpp',

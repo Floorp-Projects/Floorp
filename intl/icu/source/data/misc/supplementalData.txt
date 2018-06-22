@@ -1841,7 +1841,7 @@ supplementalData:table(nofallback){
             "islamic-tbla",
         }
     }
-    cldrVersion{"33"}
+    cldrVersion{"33.1"}
     codeMappings{
         {
             "AA",
@@ -7205,6 +7205,7 @@ supplementalData:table(nofallback){
                 "Cprt",
                 "Cyrl",
                 "Deva",
+                "Dogr",
                 "Dsrt",
                 "Dupl",
                 "Egyp",
@@ -7212,6 +7213,7 @@ supplementalData:table(nofallback){
                 "Ethi",
                 "Geor",
                 "Glag",
+                "Gong",
                 "Gonm",
                 "Goth",
                 "Gran",
@@ -7252,9 +7254,11 @@ supplementalData:table(nofallback){
                 "Lyci",
                 "Lydi",
                 "Mahj",
+                "Maka",
                 "Mand",
                 "Mani",
                 "Marc",
+                "Medf",
                 "Mend",
                 "Merc",
                 "Mero",
@@ -7286,6 +7290,7 @@ supplementalData:table(nofallback){
                 "Plrd",
                 "Prti",
                 "Rjng",
+                "Rohg",
                 "Runr",
                 "Samr",
                 "Sarb",
@@ -7296,6 +7301,8 @@ supplementalData:table(nofallback){
                 "Sidd",
                 "Sind",
                 "Sinh",
+                "Sogd",
+                "Sogo",
                 "Sora",
                 "Soyo",
                 "Sund",

@@ -611,6 +611,7 @@ keyTypeData:table(nofallback){
             finance{""}
             fullwide{""}
             geor{""}
+            gong{""}
             gonm{""}
             grek{""}
             greklow{""}
@@ -655,6 +656,7 @@ keyTypeData:table(nofallback){
             olck{""}
             orya{""}
             osma{""}
+            rohg{""}
             roman{""}
             romanlow{""}
             saur{""}

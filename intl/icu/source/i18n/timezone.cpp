@@ -752,8 +752,7 @@ private:
         len = mapLen;
     }
 
-    UBool getID(int32_t i) {
-        UErrorCode ec = U_ZERO_ERROR;
+    UBool getID(int32_t i, UErrorCode& ec) {
         int32_t idLen = 0;
         const UChar* id = NULL;
         UResourceBundle *top = ures_openDirect(0, kZONEINFO, &ec);
@@ -943,7 +942,7 @@ public:
 
     virtual const UnicodeString* snext(UErrorCode& status) {
         if (U_SUCCESS(status) && map != NULL && pos < len) {
-            getID(map[pos]);
+            getID(map[pos], status);
             ++pos;
             return &unistr;
         }
