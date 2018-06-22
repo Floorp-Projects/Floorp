@@ -62,15 +62,15 @@ public:
   struct Parameters
   {
     Parameters()
-      : mFramesToMeasure(-1)
+      : mFramesToMeasure(UINT32_MAX)
       , mStartupFrame(1)
       , mTimeout(TimeDuration::Forever())
     {
     }
 
-    Parameters(int32_t aFramesToMeasure,
+    Parameters(uint32_t aFramesToMeasure,
                uint32_t aStartupFrame,
-               int32_t aStopAtFrame,
+               uint32_t aStopAtFrame,
                const TimeDuration& aTimeout)
       : mFramesToMeasure(aFramesToMeasure)
       , mStartupFrame(aStartupFrame)
@@ -79,9 +79,9 @@ public:
     {
     }
 
-    const int32_t mFramesToMeasure;
+    const uint32_t mFramesToMeasure;
     const uint32_t mStartupFrame;
-    const Maybe<int32_t> mStopAtFrame;
+    const Maybe<uint32_t> mStopAtFrame;
     const TimeDuration mTimeout;
   };
 
@@ -91,6 +91,7 @@ public:
                      const Parameters& aParameters = Parameters());
   RefPtr<BenchmarkPromise> Run();
 
+  // Must be called on the main thread.
   static void Init();
 
 private:
