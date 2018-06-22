@@ -6,21 +6,19 @@ use cssparser::SourceLocation;
 use nsstring::nsCString;
 use servo_arc::Arc;
 use style::context::QuirksMode;
-use style::error_reporting::NullReporter;
 use style::gecko::data::GeckoStyleSheet;
 use style::gecko::global_style_data::GLOBAL_STYLE_DATA;
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::Gecko_LoadStyleSheet;
 use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
 use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
-use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::sugar::ownership::FFIArcHelpers;
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
-use style::stylesheets::StylesheetContents;
+use style::stylesheets::{StylesheetContents, UrlExtraData};
 use style::stylesheets::import_rule::ImportSheet;
 use style::values::CssUrl;
 
@@ -70,7 +68,7 @@ impl StyleStylesheetLoader for StylesheetLoader {
 
 pub struct AsyncStylesheetParser {
     load_data: RefPtr<SheetLoadDataHolder>,
-    extra_data: RefPtr<URLExtraData>,
+    extra_data: UrlExtraData,
     bytes: nsCString,
     origin: Origin,
     quirks_mode: QuirksMode,
@@ -80,7 +78,7 @@ pub struct AsyncStylesheetParser {
 impl AsyncStylesheetParser {
     pub fn new(
         load_data: RefPtr<SheetLoadDataHolder>,
-        extra_data: RefPtr<URLExtraData>,
+        extra_data: UrlExtraData,
         bytes: nsCString,
         origin: Origin,
         quirks_mode: QuirksMode,
@@ -104,10 +102,15 @@ impl AsyncStylesheetParser {
         // are being logged, Gecko prevents the parallel parsing path from
         // running.
         let sheet = Arc::new(StylesheetContents::from_str(
-            input, self.extra_data.clone(), self.origin,
-            &global_style_data.shared_lock, Some(&self), &NullReporter,
-            self.quirks_mode.into(), self.line_number_offset)
-        );
+            input,
+            self.extra_data.clone(),
+            self.origin,
+            &global_style_data.shared_lock,
+            Some(&self),
+            None,
+            self.quirks_mode.into(),
+            self.line_number_offset,
+        ));
 
         unsafe {
             bindings::Gecko_StyleSheet_FinishAsyncParse(self.load_data.get(), sheet.into_strong());

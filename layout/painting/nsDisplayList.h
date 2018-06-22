@@ -6856,6 +6856,7 @@ class PaintTelemetry
   enum class Metric {
     DisplayList,
     Layerization,
+    FlushRasterization,
     Rasterization,
     COUNT,
   };

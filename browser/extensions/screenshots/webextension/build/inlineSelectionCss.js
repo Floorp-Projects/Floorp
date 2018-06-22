@@ -23,6 +23,8 @@ window.inlineSelectionCss = `
     height: 32px;
     line-height: 32px;
     padding: 0 8px; }
+  .button.active, .active.highlight-button-cancel, .active.highlight-button-save, .active.highlight-button-download, .active.highlight-button-copy, .active.preview-button-save {
+    background-color: #dedede; }
   .button.tiny, .tiny.highlight-button-cancel, .tiny.highlight-button-save, .tiny.highlight-button-download, .tiny.highlight-button-copy, .tiny.preview-button-save {
     font-size: 14px;
     height: 26px;
@@ -452,6 +454,9 @@ window.inlineSelectionCss = `
   body.hcm .preview-overlay {
     background-color: black;
     opacity: 0.7; }
+
+.precision-cursor {
+  cursor: crosshair; }
 
 .highlight {
   border-radius: 2px;

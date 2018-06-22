@@ -211,13 +211,13 @@ SetFromTanRadians(double left, double right, double bottom, double top)
 VRDisplayOSVR::VRDisplayOSVR(OSVR_ClientContext* context,
                          OSVR_ClientInterface* iface,
                          OSVR_DisplayConfig* display)
-  : VRDisplayHost(VRDeviceType::OSVR)
+  : VRDisplayLocal(VRDeviceType::OSVR)
   , m_ctx(context)
   , m_iface(iface)
   , m_display(display)
 {
 
-  MOZ_COUNT_CTOR_INHERITED(VRDisplayOSVR, VRDisplayHost);
+  MOZ_COUNT_CTOR_INHERITED(VRDisplayOSVR, VRDisplayLocal);
 
   VRDisplayState& state = mDisplayInfo.mDisplayState;
   state.mIsConnected = true;

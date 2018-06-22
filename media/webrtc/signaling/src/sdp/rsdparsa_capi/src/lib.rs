@@ -15,7 +15,8 @@ use std::rc::Rc;
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 use rsdparsa::{SdpTiming, SdpBandwidth, SdpSession};
 use rsdparsa::error::SdpParserError;
-use rsdparsa::attribute_type::SdpAttribute;
+use rsdparsa::media_type::{SdpMediaValue, SdpProtocolValue};
+use rsdparsa::attribute_type::{SdpAttribute};
 
 pub mod types;
 pub mod network;
@@ -137,6 +138,66 @@ pub unsafe extern "C" fn sdp_get_session_connection(session: *const SdpSession,
             NS_OK
         },
         None => NS_ERROR_INVALID_ARG
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
+                                               media_type: u32, direction: u32,
+                                               port: u16, protocol: u32,
+                                               addr_type: u32, addr: StringView) -> nsresult {
+
+    let addr_str:String = match addr.into() {
+       Ok(x) => x,
+       Err(boxed_error) => {
+           println!("Error while pasing string, description: {:?}", (*boxed_error).description());
+           return NS_ERROR_INVALID_ARG;
+       }
+    };
+
+    let media_type = match media_type {
+        0 => SdpMediaValue::Audio,       // MediaType::kAudio
+        1 => SdpMediaValue::Video,       // MediaType::kVideo
+        3 => SdpMediaValue::Application, // MediaType::kApplication
+        _ => {
+         return NS_ERROR_INVALID_ARG;
+     }
+    };
+    let protocol = match protocol {
+        20 => SdpProtocolValue::RtpSavpf,        // Protocol::kRtpSavpf
+        24 => SdpProtocolValue::UdpTlsRtpSavpf,  // Protocol::kUdpTlsRtpSavpf
+        25 => SdpProtocolValue::TcpTlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
+        37 => SdpProtocolValue::DtlsSctp,        // Protocol::kDtlsSctp
+        38 => SdpProtocolValue::UdpDtlsSctp,     // Protocol::kUdpDtlsSctp
+        39 => SdpProtocolValue::TcpDtlsSctp,     // Protocol::kTcpDtlsSctp
+        _ => {
+            println!("INVALID PROTOCOL");
+          return NS_ERROR_INVALID_ARG;
+      }
+    };
+    let direction = match direction {
+        1 => SdpAttribute::Sendonly,
+        2 => SdpAttribute::Recvonly,
+        3 => SdpAttribute::Sendrecv,
+        _ => {
+          return NS_ERROR_INVALID_ARG;
+      }
+    };
+
+    // Check that the provided address type is valid. The rust parser will find out
+    // on his own which address type was provided
+    match addr_type {
+      // enum AddrType { kAddrTypeNone, kIPv4, kIPv6 };
+      // kAddrTypeNone is explicitly not covered as it is an 'invalid' flag
+      1...2 => (),
+      _ => {
+          return NS_ERROR_INVALID_ARG;
+      }
+    }
+
+    match (*session).add_media(media_type, direction, port as u32, protocol, addr_str) {
+        Ok(_) => NS_OK,
+        Err(_) => NS_ERROR_INVALID_ARG
     }
 }
 

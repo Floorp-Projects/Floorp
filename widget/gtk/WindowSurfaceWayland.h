@@ -8,6 +8,7 @@
 #define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
 
 #include <prthread.h>
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 namespace widget {
@@ -66,7 +67,7 @@ public:
   WindowBackBuffer(nsWaylandDisplay* aDisplay, int aWidth, int aHeight);
   ~WindowBackBuffer();
 
-  already_AddRefed<gfx::DrawTarget> Lock(const LayoutDeviceIntRegion& aRegion);
+  already_AddRefed<gfx::DrawTarget> Lock();
 
   void Attach(wl_surface* aSurface);
   void Detach();
@@ -112,17 +113,23 @@ public:
   void                      FrameCallbackHandler();
 
 private:
-  WindowBackBuffer*         GetBufferToDraw(int aWidth, int aHeight);
+  WindowBackBuffer*         GetFrontBufferToDraw(int aWidth, int aHeight);
   void                      UpdateScaleFactor();
+
+  already_AddRefed<gfx::DrawTarget> LockFrontBuffer(int aWidth, int aHeight);
+  already_AddRefed<gfx::DrawTarget> LockImageSurface(const gfx::IntSize& aLockSize);
+  bool                      CommitImageSurface(const LayoutDeviceIntRegion& aRegion);
 
   // TODO: Do we need to hold a reference to nsWindow object?
   nsWindow*                 mWindow;
   nsWaylandDisplay*         mWaylandDisplay;
   WindowBackBuffer*         mFrontBuffer;
   WindowBackBuffer*         mBackBuffer;
+  RefPtr<gfxImageSurface>   mImageSurface;
   wl_callback*              mFrameCallback;
   wl_surface*               mFrameCallbackSurface;
   MessageLoop*              mDisplayThreadMessageLoop;
+  bool                      mDirectWlBufferDraw;
   bool                      mDelayedCommit;
   bool                      mFullScreenDamage;
   bool                      mIsMainThread;

@@ -19,6 +19,8 @@ UNIFIED_SOURCES += [
     'Utils.cpp',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

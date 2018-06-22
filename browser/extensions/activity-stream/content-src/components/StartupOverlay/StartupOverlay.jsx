@@ -61,7 +61,7 @@ export class _StartupOverlay extends React.PureComponent {
               <a className="firstrun-link" href="https://www.mozilla.org/firefox/features/sync/" target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_learn_more_link" /></a>
             </div>
             <div className="firstrun-sign-in">
-              <p className="form-header"><FormattedMessage id="firstrun_form_header" /><span><FormattedMessage id="firstrun_form_sub_header" /></span></p>
+              <p className="form-header"><FormattedMessage id="firstrun_form_header" /><span className="sub-header"><FormattedMessage id="firstrun_form_sub_header" /></span></p>
               <form method="get" action="https://accounts.firefox.com?entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun" target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
                 <input name="service" type="hidden" value="sync" />
                 <input name="action" type="hidden" value="email" />

@@ -353,7 +353,7 @@ class PluginModuleContentParent : public PluginModuleParent
 
 class PluginModuleChromeParent
     : public PluginModuleParent
-    , public mozilla::HangMonitor::Annotator
+    , public mozilla::BackgroundHangAnnotator
 {
     friend class mozilla::ipc::CrashReporterHost;
     using TerminateChildProcessCallback =
@@ -477,7 +477,7 @@ private:
     PluginInstanceParent* GetManagingInstance(mozilla::ipc::IProtocol* aProtocol);
 
     virtual void
-    AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations) override;
+    AnnotateHang(mozilla::BackgroundHangAnnotations& aAnnotations) override;
 
     virtual bool ShouldContinueFromReplyTimeout() override;
 

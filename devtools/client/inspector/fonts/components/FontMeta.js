@@ -85,30 +85,33 @@ class FontMeta extends PureComponent {
     );
   }
 
-  renderFontName(name) {
+  renderFontName(name, family) {
+    let options = {};
+
     if (Services.prefs.getBoolPref(FONT_HIGHLIGHTER_PREF)) {
-      return dom.h1(
-        {
-          className: "font-name",
-          onMouseOver: this.onNameMouseOver,
-          onMouseOut: this.onNameMouseOut,
-        },
-        name
-      );
+      options = {
+        onMouseOver: this.onNameMouseOver,
+        onMouseOut: this.onNameMouseOut,
+      };
     }
 
-    return dom.h1({ className: "font-name" }, name);
+    return dom.div(
+      options,
+      dom.div({ className: "font-family-name" }, family),
+      dom.div({ className: "font-name" }, name)
+    );
   }
 
   render() {
     const {
+      CSSFamilyName,
       name,
       URI,
     } = this.props.font;
 
     return createElement(Fragment,
       null,
-      this.renderFontName(name),
+      this.renderFontName(name, CSSFamilyName),
       this.renderFontOrigin(URI)
     );
   }

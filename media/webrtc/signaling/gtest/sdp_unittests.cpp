@@ -3983,6 +3983,80 @@ TEST_P(NewSdpTest, CheckClearCodecs) {
                   HasAttribute(SdpAttribute::kRtpmapAttribute));
 }
 
+TEST_P(NewSdpTest, CheckAddMediaSection) {
+  ParseSdp(kBasicAudioVideoOffer);
+
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections";
+
+  mSdp->AddMediaSection(SdpMediaSection::kVideo,
+                        SdpDirectionAttribute::Direction::kSendrecv,
+                        58000, SdpMediaSection::kUdpDtlsSctp,sdp::kIPv4,
+                        "127.0.0.1");
+
+  ASSERT_EQ(4U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections after adding media section";
+
+  const SdpMediaSection& newMediaSection = mSdp->GetMediaSection(3);
+
+  ASSERT_EQ(SdpMediaSection::kVideo, newMediaSection.GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::Direction::kSendrecv,
+            newMediaSection.GetDirectionAttribute().mValue);
+  ASSERT_EQ(58000U, newMediaSection.GetPort());
+  ASSERT_EQ(SdpMediaSection::kUdpDtlsSctp, newMediaSection.GetProtocol());
+  ASSERT_EQ(sdp::kIPv4, newMediaSection.GetConnection().GetAddrType());
+  ASSERT_EQ("127.0.0.1", newMediaSection.GetConnection().GetAddress());
+
+
+  mSdp->AddMediaSection(SdpMediaSection::kAudio,
+                        SdpDirectionAttribute::Direction::kSendonly,
+                        14006, SdpMediaSection::kTcpTlsRtpSavpf, sdp::kIPv6,
+                        "2607:f8b0:4004:801::2013");
+
+  ASSERT_EQ(5U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections after adding media section";
+
+  const SdpMediaSection& nextNewMediaSection = mSdp->GetMediaSection(4);
+
+  ASSERT_EQ(SdpMediaSection::kAudio, nextNewMediaSection.GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::Direction::kSendonly,
+            nextNewMediaSection.GetDirectionAttribute().mValue);
+  ASSERT_EQ(14006U, nextNewMediaSection.GetPort());
+  ASSERT_EQ(SdpMediaSection::kTcpTlsRtpSavpf,
+            nextNewMediaSection.GetProtocol());
+  ASSERT_EQ(sdp::kIPv6, nextNewMediaSection.GetConnection().GetAddrType());
+  ASSERT_EQ("2607:f8b0:4004:801::2013",
+            nextNewMediaSection.GetConnection().GetAddress());
+
+  if(!IsParsingWithSipccParser()) {
+    // All following AddMediaSection calls are expected to fail
+    // SdpMediaSection::kDccpRtpAvp is expected to cause a failure
+    mSdp->AddMediaSection(SdpMediaSection::kAudio,
+                          SdpDirectionAttribute::Direction::kSendonly,
+                          14006, SdpMediaSection::kDccpRtpAvp, sdp::kIPv6,
+                          "2607:f8b0:4004:801::2013");
+    ASSERT_EQ(5U, mSdp->GetMediaSectionCount())
+      << "Wrong number of media sections after adding media section";
+
+    // sdp::kAddrTypeNone is expected to cause a failure
+    mSdp->AddMediaSection(SdpMediaSection::kAudio,
+                          SdpDirectionAttribute::Direction::kSendonly,
+                          14006, SdpMediaSection::kDtlsSctp, sdp::kAddrTypeNone,
+                          "2607:f8b0:4004:801::2013");
+    ASSERT_EQ(5U, mSdp->GetMediaSectionCount())
+      << "Wrong number of media sections after adding media section";
+
+    // "NOT:AN.IP.ADDRESS" is expected to cause a failure
+    mSdp->AddMediaSection(SdpMediaSection::kAudio,
+                          SdpDirectionAttribute::Direction::kSendonly,
+                          14006, SdpMediaSection::kTcpTlsRtpSavpf, sdp::kIPv6,
+                          "NOT:AN.IP.ADDRESS");
+    ASSERT_EQ(5U, mSdp->GetMediaSectionCount())
+      << "Wrong number of media sections after adding media section";
+  }
+}
+
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
   for (auto a = static_cast<size_t>(SdpAttribute::kFirstAttribute);
        a <= static_cast<size_t>(SdpAttribute::kLastAttribute);

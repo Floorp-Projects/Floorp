@@ -40,6 +40,9 @@ private:
 
 public:
   nsReadingIterator()
+    : mStart(nullptr)
+    , mEnd(nullptr)
+    , mPosition(nullptr)
   {
   }
   // nsReadingIterator( const nsReadingIterator<CharT>& );                    // auto-generated copy-constructor OK
@@ -142,6 +145,9 @@ private:
 
 public:
   nsWritingIterator()
+    : mStart(nullptr)
+    , mEnd(nullptr)
+    , mPosition(nullptr)
   {
   }
   // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK

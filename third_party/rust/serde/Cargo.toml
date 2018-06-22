@@ -12,14 +12,14 @@
 
 [package]
 name = "serde"
-version = "1.0.58"
+version = "1.0.66"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
 build = "build.rs"
-include = ["Cargo.toml", "build.rs", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+include = ["Cargo.toml", "build.rs", "src/**/*.rs", "crates-io.md", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A generic serialization/deserialization framework"
 homepage = "https://serde.rs"
 documentation = "https://docs.serde.rs/serde/"
-readme = "README.md"
+readme = "crates-io.md"
 keywords = ["serde", "serialization", "no_std"]
 categories = ["encoding"]
 license = "MIT/Apache-2.0"

@@ -8,17 +8,19 @@
 
 use internals::ast::{Container, Data, Field, Style};
 use internals::attr::{EnumTag, Identifier};
-use internals::Ctxt;
+use internals::{Ctxt, Derive};
+use syn::{Member, Type};
 
 /// Cross-cutting checks that require looking at more than a single attrs
 /// object. Simpler checks should happen when parsing and building the attrs.
-pub fn check(cx: &Ctxt, cont: &Container) {
+pub fn check(cx: &Ctxt, cont: &mut Container, derive: Derive) {
     check_getter(cx, cont);
     check_flatten(cx, cont);
     check_identifier(cx, cont);
     check_variant_skip_attrs(cx, cont);
     check_internal_tag_field_name_conflict(cx, cont);
     check_adjacent_tag_conflict(cx, cont);
+    check_transparent(cx, cont, derive);
 }
 
 /// Getters are only allowed inside structs (not enums) with the `remote`
@@ -171,17 +173,14 @@ fn check_variant_skip_attrs(cx: &Ctxt, cont: &Container) {
                 ));
             }
 
-            for (i, field) in variant.fields.iter().enumerate() {
-                let ident = field
-                    .ident
-                    .as_ref()
-                    .map_or_else(|| format!("{}", i), |ident| format!("`{}`", ident));
+            for field in &variant.fields {
+                let member = member_message(&field.member);
 
                 if field.attrs.skip_serializing() {
                     cx.error(format!(
                         "variant `{}` cannot have both #[serde(serialize_with)] and \
                          a field {} marked with #[serde(skip_serializing)]",
-                        variant.ident, ident
+                        variant.ident, member
                     ));
                 }
 
@@ -189,7 +188,7 @@ fn check_variant_skip_attrs(cx: &Ctxt, cont: &Container) {
                     cx.error(format!(
                         "variant `{}` cannot have both #[serde(serialize_with)] and \
                          a field {} marked with #[serde(skip_serializing_if)]",
-                        variant.ident, ident
+                        variant.ident, member
                     ));
                 }
             }
@@ -204,17 +203,14 @@ fn check_variant_skip_attrs(cx: &Ctxt, cont: &Container) {
                 ));
             }
 
-            for (i, field) in variant.fields.iter().enumerate() {
+            for field in &variant.fields {
                 if field.attrs.skip_deserializing() {
-                    let ident = field
-                        .ident
-                        .as_ref()
-                        .map_or_else(|| format!("{}", i), |ident| format!("`{}`", ident));
+                    let member = member_message(&field.member);
 
                     cx.error(format!(
                         "variant `{}` cannot have both #[serde(deserialize_with)] \
                          and a field {} marked with #[serde(skip_deserializing)]",
-                        variant.ident, ident
+                        variant.ident, member
                     ));
                 }
             }
@@ -280,5 +276,80 @@ fn check_adjacent_tag_conflict(cx: &Ctxt, cont: &Container) {
             type_tag
         );
         cx.error(message);
+    }
+}
+
+/// Enums and unit structs cannot be transparent.
+fn check_transparent(cx: &Ctxt, cont: &mut Container, derive: Derive) {
+    if !cont.attrs.transparent() {
+        return;
+    }
+
+    if cont.attrs.type_from().is_some() {
+        cx.error("#[serde(transparent)] is not allowed with #[serde(from = \"...\")]");
+    }
+
+    if cont.attrs.type_into().is_some() {
+        cx.error("#[serde(transparent)] is not allowed with #[serde(into = \"...\")]");
+    }
+
+    let fields = match cont.data {
+        Data::Enum(_, _) => {
+            cx.error("#[serde(transparent)] is not allowed on an enum");
+            return;
+        }
+        Data::Struct(Style::Unit, _) => {
+            cx.error("#[serde(transparent)] is not allowed on a unit struct");
+            return;
+        }
+        Data::Struct(_, ref mut fields) => fields,
+    };
+
+    let mut transparent_field = None;
+
+    for field in fields {
+        if allow_transparent(field, derive) {
+            if transparent_field.is_some() {
+                cx.error(
+                    "#[serde(transparent)] requires struct to have at most one transparent field",
+                );
+                return;
+            }
+            transparent_field = Some(field);
+        }
+    }
+
+    match transparent_field {
+        Some(transparent_field) => transparent_field.attrs.mark_transparent(),
+        None => match derive {
+            Derive::Serialize => {
+                cx.error("#[serde(transparent)] requires at least one field that is not skipped");
+            }
+            Derive::Deserialize => {
+                cx.error("#[serde(transparent)] requires at least one field that is neither skipped nor has a default");
+            }
+        },
+    }
+}
+
+fn member_message(member: &Member) -> String {
+    match *member {
+        Member::Named(ref ident) => format!("`{}`", ident),
+        Member::Unnamed(ref i) => i.index.to_string(),
+    }
+}
+
+fn allow_transparent(field: &Field, derive: Derive) -> bool {
+    if let Type::Path(ref ty) = *field.ty {
+        if let Some(seg) = ty.path.segments.last() {
+            if seg.into_value().ident == "PhantomData" {
+                return false;
+            }
+        }
+    }
+
+    match derive {
+        Derive::Serialize => !field.attrs.skip_serializing(),
+        Derive::Deserialize => !field.attrs.skip_deserializing() && field.attrs.default().is_none(),
     }
 }

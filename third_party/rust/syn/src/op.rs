@@ -174,10 +174,11 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for BinOp {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 BinOp::Add(ref t) => t.to_tokens(tokens),
                 BinOp::Sub(ref t) => t.to_tokens(tokens),
@@ -212,7 +213,7 @@ mod printing {
     }
 
     impl ToTokens for UnOp {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 UnOp::Deref(ref t) => t.to_tokens(tokens),
                 UnOp::Not(ref t) => t.to_tokens(tokens),

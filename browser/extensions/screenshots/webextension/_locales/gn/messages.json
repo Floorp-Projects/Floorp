@@ -1,4 +1,19 @@
 {
+  "addonDescription": {
+    "message": "Enohẽ ta’anga ha japyhypy ñandutígui ha eñongatu sapy’aite térã areve."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Ejapo mba’erechaha japyhypy"
+  },
+  "myShotsLink": {
+    "message": "Che japyhypy"
+  },
+  "screenshotInstructions": {
+    "message": "Embosyryry térã eikutu kuatiaroguépe embasa'y hag̃ua peteĩ tendaguasu. Ejopy ESC eheja hag̃ua."
+  },
   "saveScreenshotSelectedArea": {
     "message": "Ñongatu"
   },
@@ -10,5 +25,160 @@
   },
   "cancelScreenshot": {
     "message": "Heja"
+  },
+  "downloadScreenshot": {
+    "message": "Mboguejy"
+  },
+  "downloadOnlyNotice": {
+    "message": "Ko’ag̃aite eime ñemboguejy ayvúpe año."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots iñambue ijeheguínte ñemboguejy ayvúpe kóicha jave."
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Peteĩ ovetã kundaha ñemiguápe."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Kookie mbohapyha mba’éva ojepe’áma."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Never remember history” eipurukuaáma."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Eipuruhína Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Pe marandurenda ñemyanyhẽ ojepe’ahína."
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Juajuha monguatiapyre"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Pe juajuha japyhygua ojegueraháma kuatiajokohápe. Ejopy $META_KEY$ -V emboja hag̃ua.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Monguatia"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Japyhypy monguatiapyre"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Nde japyhypy ohóma kuatiajokohápe. Ejopy $META_KEY$ -V emboja hag̃ua.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "Ko ta'anga oñekytĩkuri $PIXELS$ px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ndoikói hína."
+  },
+  "requestErrorDetails": {
+    "message": "¡Che ñyrõ! Ndaikatúi roñongatu nde japyhypy. Eha'ãjey ag̃ave."
+  },
+  "connectionErrorTitle": {
+    "message": "Ndaikatúi roike nde japyhypykuéra mba'erechahápe."
+  },
+  "connectionErrorDetails": {
+    "message": "Ehechajey pe Ñandutípe jeike. Eikeséramo Ñandutípe, oĩ apañuãi sapy’agua Firefox Screenshots rembiapópe."
+  },
+  "loginErrorDetails": {
+    "message": "Ndaikatúi roñongatu pe japyhypy oĩ rupi apañuãi Firefox Screenshots rembiapópe. Eha’ãjey ag̃amieve."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ndaikatúi rojapyhy ko kuatiarogue."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Kóva ndaha'éi peteĩ ñanduti kuatiarogue ypykuéva, péicha rupi ndaikatúi roñongatu japyhypy."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Ndaikatúi jajapo peteĩ japyhypy Firefox Screenshots kuatiaroguépe!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Pe jeporavo michĩeterei"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots ndojepurukuaái kundaha ñemigua rekópe"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Rombyasy ko'ã oikóva. Romba'apohína tembiapo pyahúre osẽ porã hag̃ua."
+  },
+  "genericErrorTitle": {
+    "message": "¡Épa! Firefox Screenshots itavyraíma."
+  },
+  "genericErrorDetails": {
+    "message": "Ndoroikuaái mba'etépa pe oikóva. ¿Ejapose jeýpa térã ejapyhy peteĩ kuatiarogue ambuévagui?"
+  },
+  "tourBodyIntro": {
+    "message": "Ejapo, eñongatu ha emoherakuã mba'erechaha japyhypy eheja'ỹre Firefox."
+  },
+  "tourHeaderPageAction": {
+    "message": "Ñongatu ambue hendáicha"
+  },
+  "tourBodyPageAction": {
+    "message": "Emyasãi pe kuatiarogue oku'éva poravorã kundaharape rendápe ejapyhyse vove."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "Ejapyhy pe reipotáva añoite"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "Ehesakutu ha embosyryry ejapyhy hag̃ua kuatiarogue vore. Ikatu avei ehasa hi’ári ehechauka hag̃ua poravopy."
+  },
+  "tourHeaderFullPage": {
+    "message": "Ejapyhy ovetã térã kuatiarogue tuichaháicha"
+  },
+  "tourBodyFullPage": {
+    "message": "Eiporavo umi votõ yvate akatúa gotyogua ejapyhy hag̃ua ovetãme térã kuatiarogue tuichaháicha."
+  },
+  "tourHeaderDownloadUpload": {
+    "message": "Nde eipotaháicha"
+  },
+  "tourBodyDownloadUpload": {
+    "message": "Eñongatu nde japyhypy kytĩmbyre ñandutígui moherakuãrã térã ñemboguejyrã ne mohendahápe. Ikatu avei ehesakutu pe votõ Che japyhypy ejuhu hag̃ua opaite japyhypy ejapova'kue."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Ta’angarechaha tenondegua"
+  },
+  "tourPrevious": {
+    "message": "Ta’angarechaha mboyvegua"
+  },
+  "tourDone": {
+    "message": "Oĩma"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "Eipurúvo Firefox Screenshots, emoneĩma ko’ã $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ha $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Jejapopy"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Kuaaukaha ñemigua"
+  },
+  "libraryLabel": {
+    "message": "Japyhypy"
   }
 }

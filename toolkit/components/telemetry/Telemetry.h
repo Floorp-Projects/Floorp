@@ -29,9 +29,6 @@
  *****************************************************************************/
 
 namespace mozilla {
-namespace HangMonitor {
-  class HangAnnotations;
-} // namespace HangMonitor
 namespace Telemetry {
 
 struct HistogramAccumulation;
@@ -488,12 +485,6 @@ class ProcessedStack;
  * @param aAnnotations - Any annotations to be added to the report
  */
 #if defined(MOZ_GECKO_PROFILER)
-void RecordChromeHang(uint32_t aDuration,
-                      ProcessedStack &aStack,
-                      int32_t aSystemUptime,
-                      int32_t aFirefoxUptime,
-                      mozilla::HangMonitor::HangAnnotations&& aAnnotations);
-
 /**
  * Record the current thread's call stack on demand. Note that, the stack is
  * only captured once. Subsequent calls result in incrementing the capture

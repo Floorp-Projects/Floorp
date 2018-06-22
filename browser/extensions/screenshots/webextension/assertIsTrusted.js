@@ -16,5 +16,5 @@ this.assertIsTrusted = function assertIsTrusted(handlerFunction) {
     }
     return handlerFunction.call(this, event);
   };
-}
+};
 null;

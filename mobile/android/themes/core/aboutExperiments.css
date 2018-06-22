@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+li {
+  padding: 25px;
+  margin-bottom: 5px;
+}
+li[isEnabled="true"] {
+  background-color: #c5e1a5;
+}
+li[isEnabled="false"] {
+  background-color: #ef9a9a;
+}

@@ -243,7 +243,11 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     }
 
     if (!isAsmJS()) {
-        for (SigWithId& sig : env_->sigs) {
+        for (TypeDef& td : env_->types) {
+            if (!td.isFuncType())
+                continue;
+
+            SigWithId& sig = td.funcType();
             if (SigIdDesc::isGlobal(sig)) {
                 uint32_t globalDataOffset;
                 if (!allocateGlobalBytes(sizeof(void*), sizeof(void*), &globalDataOffset))
@@ -979,6 +983,12 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
     if (!code || !code->initialize(bytecode, *linkDataTier_))
         return nullptr;
 
+    StructTypeVector structTypes;
+    for (TypeDef& td : env_->types) {
+        if (td.isStructType() && !structTypes.append(std::move(td.structType())))
+            return nullptr;
+    }
+
     SharedModule module(js_new<Module>(std::move(assumptions_),
                                        *code,
                                        std::move(maybeDebuggingBytes),
@@ -987,6 +997,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
                                        std::move(env_->exports),
                                        std::move(env_->dataSegments),
                                        std::move(env_->elemSegments),
+                                       std::move(structTypes),
                                        bytecode));
     if (!module)
         return nullptr;

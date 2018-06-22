@@ -26,7 +26,7 @@ fn deserialize_blob(blob: &[u8]) -> Result<ColorU, ()> {
     };
 }
 
-// perform floor((x * a) / 255. + 0.5) see "Three wrongs make a right" for deriviation
+// perform floor((x * a) / 255. + 0.5) see "Three wrongs make a right" for derivation
 fn premul(x: u8, a: u8) -> u8 {
     let t = (x as u32) * (a as u32) + 128;
     ((t + (t >> 8)) >> 8) as u8
@@ -55,8 +55,9 @@ fn render_blob(
     };
 
     let mut dirty_rect = dirty_rect.unwrap_or(DeviceUintRect::new(
-        DeviceUintPoint::new(0, 0),
-        DeviceUintSize::new(descriptor.size.width, descriptor.size.height)));
+        DeviceUintPoint::origin(),
+        descriptor.size,
+    ));
 
     if let Some((tile_size, tile)) = tile {
         dirty_rect = intersect_for_tile(dirty_rect, size2(tile_size as u32, tile_size as u32),

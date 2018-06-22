@@ -1638,17 +1638,17 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     class HashableSig
     {
         uint32_t sigIndex_;
-        const SigWithIdVector& sigs_;
+        const TypeDefVector& types_;
 
       public:
-        HashableSig(uint32_t sigIndex, const SigWithIdVector& sigs)
-          : sigIndex_(sigIndex), sigs_(sigs)
+        HashableSig(uint32_t sigIndex, const TypeDefVector& types)
+          : sigIndex_(sigIndex), types_(types)
         {}
         uint32_t sigIndex() const {
             return sigIndex_;
         }
         const Sig& sig() const {
-            return sigs_[sigIndex_];
+            return types_[sigIndex_].funcType();
         }
 
         // Implement HashPolicy:
@@ -1666,8 +1666,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         PropertyName* name_;
 
       public:
-        NamedSig(PropertyName* name, uint32_t sigIndex, const SigWithIdVector& sigs)
-          : HashableSig(sigIndex, sigs), name_(name)
+        NamedSig(PropertyName* name, uint32_t sigIndex, const TypeDefVector& types)
+          : HashableSig(sigIndex, types), name_(name)
         {}
         PropertyName* name() const {
             return name_;
@@ -1755,22 +1755,22 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         return standardLibrarySimdOpNames_.putNew(atom->asPropertyName(), op);
     }
     bool newSig(Sig&& sig, uint32_t* sigIndex) {
-        if (env_.sigs.length() >= MaxTypes)
+        if (env_.types.length() >= MaxTypes)
             return failCurrentOffset("too many signatures");
 
-        *sigIndex = env_.sigs.length();
-        return env_.sigs.append(std::move(sig));
+        *sigIndex = env_.types.length();
+        return env_.types.append(std::move(sig));
     }
     bool declareSig(Sig&& sig, uint32_t* sigIndex) {
         SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
         if (p) {
             *sigIndex = p->sigIndex();
-            MOZ_ASSERT(env_.sigs[*sigIndex] == sig);
+            MOZ_ASSERT(env_.types[*sigIndex].funcType() == sig);
             return true;
         }
 
         return newSig(std::move(sig), sigIndex) &&
-               sigSet_.add(p, HashableSig(*sigIndex, env_.sigs));
+               sigSet_.add(p, HashableSig(*sigIndex, env_.types));
     }
 
   public:
@@ -2308,7 +2308,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         if (!declareSig(std::move(sig), &sigIndex))
             return false;
 
-        return funcImportMap_.add(p, NamedSig(name, sigIndex, env_.sigs), *importIndex);
+        return funcImportMap_.add(p, NamedSig(name, sigIndex, env_.types), *importIndex);
     }
 
     bool tryConstantAccess(uint64_t start, uint64_t width) {
@@ -2457,12 +2457,12 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         for (FuncImportMap::Range r = funcImportMap_.all(); !r.empty(); r.popFront()) {
             uint32_t funcIndex = r.front().value();
             MOZ_ASSERT(!env_.funcSigs[funcIndex]);
-            env_.funcSigs[funcIndex] = &env_.sigs[r.front().key().sigIndex()];
+            env_.funcSigs[funcIndex] = &env_.types[r.front().key().sigIndex()].funcType();
         }
         for (const Func& func : funcDefs_) {
             uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
             MOZ_ASSERT(!env_.funcSigs[funcIndex]);
-            env_.funcSigs[funcIndex] = &env_.sigs[func.sigIndex()];
+            env_.funcSigs[funcIndex] = &env_.types[func.sigIndex()].funcType();
         }
 
         if (!env_.funcImportGlobalDataOffsets.resize(funcImportMap_.count()))
@@ -4893,7 +4893,7 @@ CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Sig&& sig, Property
         return m.addFuncDef(name, usepn->pn_pos.begin, std::move(sig), func);
     }
 
-    const SigWithId& existingSig = m.env().sigs[existing->sigIndex()];
+    const SigWithId& existingSig = m.env().types[existing->sigIndex()].funcType();
 
     if (!CheckSignatureAgainstExisting(m, usepn, sig, existingSig))
         return false;
@@ -4951,7 +4951,7 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn, PropertyN
         if (mask != table.mask())
             return m.failf(usepn, "mask does not match previous value (%u)", table.mask());
 
-        if (!CheckSignatureAgainstExisting(m, usepn, sig, m.env().sigs[table.sigIndex()]))
+        if (!CheckSignatureAgainstExisting(m, usepn, sig, m.env().types[table.sigIndex()].funcType()))
             return false;
 
         *tableIndex = existing->tableIndex();
@@ -7376,7 +7376,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
         if (!func)
             return m.fail(elem, "function-pointer table's elements must be names of functions");
 
-        const Sig& funcSig = m.env().sigs[func->sigIndex()];
+        const Sig& funcSig = m.env().types[func->sigIndex()].funcType();
         if (sig) {
             if (*sig != funcSig)
                 return m.fail(elem, "all functions in table must have same signature");

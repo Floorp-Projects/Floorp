@@ -396,6 +396,4 @@ nsLayoutStatics::Shutdown()
   PromiseDebugging::Shutdown();
 
   BlobURLProtocolHandler::RemoveDataEntries();
-
-  ClearSiteData::Shutdown();
 }

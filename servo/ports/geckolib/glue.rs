@@ -26,7 +26,7 @@ use style::data::{ElementStyles, self};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
 use style::element_state::{DocumentState, ElementState};
-use style::error_reporting::{ContextualParseError, NullReporter, ParseErrorReporter};
+use style::error_reporting::{ContextualParseError, ParseErrorReporter};
 use style::font_metrics::{FontMetricsProvider, get_metrics_provider_for_product};
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::global_style_data::{GLOBAL_STYLE_DATA, GlobalStyleData, STYLE_THREAD_POOL};
@@ -143,7 +143,7 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, CounterStyleRule};
 use style::stylesheets::{DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule};
 use style::stylesheets::{KeyframesRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule};
-use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule};
+use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule, UrlExtraData};
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
@@ -189,10 +189,10 @@ impl ClosureHelper for DeclarationBlockMutationClosure {
 
 // A dummy url data for where we don't pass url data in.
 // We need to get rid of this sooner than later.
-static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut URLExtraData;
+static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut _;
 
 #[no_mangle]
-pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
+pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     use style::gecko_bindings::sugar::origin_flags;
 
     // Pretend that we're a Servo Layout thread, to make some assertions happy.
@@ -207,8 +207,7 @@ pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     specified::font::assert_variant_ligatures_matches();
     specified::box_::assert_touch_action_matches();
 
-    // Initialize the dummy url data
-    unsafe { DUMMY_URL_DATA = dummy_url_data; }
+    DUMMY_URL_DATA = dummy_url_data;
 }
 
 #[no_mangle]
@@ -218,15 +217,14 @@ pub extern "C" fn Servo_InitializeCooperativeThread() {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Shutdown() {
-    // The dummy url will be released after shutdown, so clear the
-    // reference to avoid use-after-free.
-    unsafe { DUMMY_URL_DATA = ptr::null_mut(); }
+pub unsafe extern "C" fn Servo_Shutdown() {
+    DUMMY_URL_DATA = ptr::null_mut();
     Stylist::shutdown();
 }
 
-unsafe fn dummy_url_data() -> &'static RefPtr<URLExtraData> {
-    RefPtr::from_ptr_ref(&DUMMY_URL_DATA)
+#[inline(always)]
+unsafe fn dummy_url_data() -> &'static UrlExtraData {
+    UrlExtraData::from_ptr_ref(&DUMMY_URL_DATA)
 }
 
 #[allow(dead_code)]
@@ -1155,7 +1153,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(mode: SheetParsingMode) -> RawServoStyl
             origin,
             shared_lock,
             /* loader = */ None,
-            &NullReporter,
+            None,
             QuirksMode::NoQuirks,
             0
         )
@@ -1181,7 +1179,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     let input: &str = unsafe { (*bytes).as_str_unchecked() };
 
     let reporter = ErrorReporter::new(stylesheet, loader, extra_data);
-    let url_data = unsafe { RefPtr::from_ptr_ref(&extra_data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&extra_data) };
     let loader = if loader.is_null() {
         None
     } else {
@@ -1196,14 +1194,19 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
 
 
     Arc::new(StylesheetContents::from_str(
-        input, url_data.clone(), mode_to_origin(mode),
-        &global_style_data.shared_lock, loader, &reporter,
-        quirks_mode.into(), line_number_offset)
-    ).into_strong()
+        input,
+        url_data.clone(),
+        mode_to_origin(mode),
+        &global_style_data.shared_lock,
+        loader,
+        reporter.as_ref().map(|r| r as &ParseErrorReporter),
+        quirks_mode.into(),
+        line_number_offset,
+    )).into_strong()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
+pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     load_data: *mut SheetLoadDataHolder,
     extra_data: *mut URLExtraData,
     bytes: *const nsACString,
@@ -1211,15 +1214,15 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     line_number_offset: u32,
     quirks_mode: nsCompatibility,
 ) {
-    let (load_data, extra_data, bytes) = unsafe {
-        let mut b = nsCString::new();
-        b.assign(&*bytes);
-        (RefPtr::new(load_data), RefPtr::new(extra_data), b)
-    };
+    let load_data = RefPtr::new(load_data);
+    let extra_data = UrlExtraData(RefPtr::new(extra_data));
+
+    let mut sheet_bytes = nsCString::new();
+    sheet_bytes.assign(&*bytes);
     let async_parser = AsyncStylesheetParser::new(
         load_data,
         extra_data,
-        bytes,
+        sheet_bytes,
         mode_to_origin(mode),
         quirks_mode.into(),
         line_number_offset
@@ -2508,13 +2511,14 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
     let value = value.as_ref().unwrap().as_str_unchecked();
     let mut input = ParserInput::new(&value);
     let mut parser = Parser::new(&mut input);
-    let url_data = RefPtr::from_ptr_ref(&data);
+    let url_data = UrlExtraData::from_ptr_ref(&data);
     let context = ParserContext::new(
         Origin::Author,
         url_data,
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     write_locked_arc(rule, |rule: &mut FontFaceRule| {
@@ -2724,6 +2728,7 @@ macro_rules! counter_style_descriptors {
                 Some(CssRuleType::CounterStyle),
                 ParsingMode::DEFAULT,
                 QuirksMode::NoQuirks,
+                None,
             );
 
             write_locked_arc(rule, |rule: &mut CounterStyleRule| {
@@ -3206,21 +3211,18 @@ pub unsafe extern "C" fn Servo_StyleSet_CompatModeChanged(raw_data: RawServoStyl
     data.stylist.set_quirks_mode(QuirksMode::from(doc.mCompatMode));
 }
 
-fn parse_property_into<R>(
+fn parse_property_into(
     declarations: &mut SourcePropertyDeclaration,
     property_id: PropertyId,
     value: *const nsACString,
     data: *mut URLExtraData,
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
-    reporter: &R
-) -> Result<(), ()>
-where
-    R: ParseErrorReporter
-{
+    reporter: Option<&ParseErrorReporter>,
+) -> Result<(), ()> {
     use style_traits::ParsingMode;
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
-    let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
 
     parse_one_declaration_into(
@@ -3246,8 +3248,17 @@ pub extern "C" fn Servo_ParseProperty(
                                                    RawServoDeclarationBlockStrong::null());
     let mut declarations = SourcePropertyDeclaration::new();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
-    match parse_property_into(&mut declarations, id, value, data,
-                              parsing_mode, quirks_mode.into(), &reporter) {
+    let result = parse_property_into(
+        &mut declarations,
+        id,
+        value,
+        data,
+        parsing_mode,
+        quirks_mode.into(),
+        reporter.as_ref().map(|r| r as &ParseErrorReporter),
+    );
+
+    match result {
         Ok(()) => {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let mut block = PropertyDeclarationBlock::new();
@@ -3271,13 +3282,14 @@ pub extern "C" fn Servo_ParseEasing(
     use style::properties::longhands::transition_timing_function;
 
     // FIXME Dummy URL data would work fine here.
-    let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let context = ParserContext::new(
         Origin::Author,
         url_data,
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     let easing = unsafe { (*easing).to_string() };
     let mut input = ParserInput::new(&easing);
@@ -3363,12 +3375,12 @@ pub extern "C" fn Servo_ParseStyleAttribute(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let value = unsafe { data.as_ref().unwrap().as_str_unchecked() };
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, raw_extra_data);
-    let url_data = unsafe { RefPtr::from_ptr_ref(&raw_extra_data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&raw_extra_data) };
     Arc::new(global_style_data.shared_lock.wrap(
         parse_style_attribute(
             value,
             url_data,
-            &reporter,
+            reporter.as_ref().map(|r| r as &ParseErrorReporter),
             quirks_mode.into(),
         )
     )).into_strong()
@@ -3553,7 +3565,7 @@ fn set_property(
         data,
         parsing_mode,
         quirks_mode,
-        &reporter,
+        reporter.as_ref().map(|r| r as &ParseErrorReporter),
     );
 
     if result.is_err() {
@@ -3757,14 +3769,12 @@ pub unsafe extern "C" fn Servo_MediaList_SetText(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        // TODO(emilio): Looks like error reporting could be useful here?
+        None,
     );
 
     write_locked_arc(list, |list: &mut MediaList| {
-        *list = MediaList::parse(
-            &context,
-            &mut parser,
-            &NullReporter,
-        );
+        *list = MediaList::parse(&context, &mut parser);
     })
 }
 
@@ -3801,6 +3811,7 @@ pub extern "C" fn Servo_MediaList_AppendMedium(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     write_locked_arc(list, |list: &mut MediaList| {
         list.append_medium(&context, new_medium);
@@ -3819,6 +3830,7 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     write_locked_arc(list, |list: &mut MediaList| list.delete_medium(&context, old_medium))
 }
@@ -4202,7 +4214,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
     use style::values::generics::image::Image;
     use style::values::specified::url::SpecifiedImageUrl;
 
-    let url_data = unsafe { RefPtr::from_ptr_ref(&raw_extra_data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&raw_extra_data) };
     let string = unsafe { (*value).to_string() };
     let context = ParserContext::new(
         Origin::Author,
@@ -4210,6 +4222,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context);
     let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(
@@ -4250,7 +4263,7 @@ pub unsafe extern "C" fn Servo_CSSSupports2(
         DUMMY_URL_DATA,
         structs::ParsingMode_Default,
         QuirksMode::NoQuirks,
-        &NullReporter,
+        None,
     ).is_ok()
 }
 
@@ -4269,6 +4282,7 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
             Some(CssRuleType::Style),
             ParsingMode::DEFAULT,
             QuirksMode::NoQuirks,
+            None,
         );
 
         cond.eval(&context)
@@ -5328,7 +5342,7 @@ pub unsafe extern "C" fn Servo_SelectorList_Drop(list: RawServoSelectorListOwned
 
 fn parse_color(
     value: &str,
-    error_reporter: Option<&ErrorReporter>,
+    error_reporter: Option<&ParseErrorReporter>,
 ) -> Result<specified::Color, ()> {
     let mut input = ParserInput::new(value);
     let mut parser = Parser::new(&mut input);
@@ -5339,11 +5353,12 @@ fn parse_color(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        error_reporter,
     );
 
     let start_position = parser.position();
     parser.parse_entirely(|i| specified::Color::parse(&context, i)).map_err(|err| {
-        if let Some(error_reporter) = error_reporter {
+        if error_reporter.is_some() {
             match err.kind {
                 ParseErrorKind::Custom(StyleParseErrorKind::ValueError(..)) => {
                     let location = err.location.clone();
@@ -5351,7 +5366,7 @@ fn parse_color(
                         parser.slice_from(start_position),
                         err,
                     );
-                    error_reporter.report(location, error);
+                    context.log_css_error(location, error);
                 }
                 // Ignore other kinds of errors that might be reported, such as
                 // ParseErrorKind::Basic(BasicParseErrorKind::UnexpectedToken),
@@ -5385,12 +5400,12 @@ pub extern "C" fn Servo_ComputeColor(
     let value = unsafe { (*value).to_string() };
     let result_color = unsafe { result_color.as_mut().unwrap() };
 
-    let reporter = unsafe { loader.as_mut() }.map(|loader| {
+    let reporter = unsafe { loader.as_mut() }.and_then(|loader| {
         // Make an ErrorReporter that will report errors as being "from DOM".
         ErrorReporter::new(ptr::null_mut(), loader, ptr::null_mut())
     });
 
-    match parse_color(&value, reporter.as_ref()) {
+    match parse_color(&value, reporter.as_ref().map(|r| r as &ParseErrorReporter)) {
         Ok(specified_color) => {
             let computed_color = match raw_data {
                 Some(raw_data) => {
@@ -5442,6 +5457,7 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     let margin = parser.parse_entirely(|p| {
@@ -5484,7 +5500,8 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
         unsafe { dummy_url_data() },
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
-        QuirksMode::NoQuirks
+        QuirksMode::NoQuirks,
+        None,
     );
 
     let transform = match parser.parse_entirely(|t| transform::parse(&context, t)) {
@@ -5520,13 +5537,14 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
     let string = unsafe { (*value).to_string() };
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
-    let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let context = ParserContext::new(
         Origin::Author,
         url_data,
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     let font = match parser.parse_entirely(|f| font::parse_value(&context, f)) {
@@ -5584,6 +5602,7 @@ pub unsafe extern "C" fn Servo_SourceSizeList_Parse(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        None,
     );
 
     // NB: Intentionally not calling parse_entirely.

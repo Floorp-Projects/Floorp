@@ -2803,13 +2803,17 @@ js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<Property
 
 bool
 js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                           HandleObject getter, HandleObject setter, unsigned attrs,
                            ObjectOpResult& result)
 {
-    MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
-
     Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
+
+    {
+        GetterOp getterOp = JS_DATA_TO_FUNC_PTR(GetterOp, getter.get());
+        SetterOp setterOp = JS_DATA_TO_FUNC_PTR(SetterOp, setter.get());
+        desc.initFields(nullptr, UndefinedHandleValue, attrs, getterOp, setterOp);
+    }
+
     if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
         MOZ_ASSERT(!cx->helperThread());
         return op(cx, obj, id, desc, result);
@@ -2831,31 +2835,11 @@ js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue
 }
 
 bool
-js::DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                           JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                           ObjectOpResult& result)
-{
-    RootedId id(cx, NameToId(name));
-    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs, result);
-}
-
-bool
 js::DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
                        unsigned attrs, ObjectOpResult& result)
 {
     RootedId id(cx, NameToId(name));
     return DefineDataProperty(cx, obj, id, value, attrs, result);
-}
-
-bool
-js::DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
-                          JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                          ObjectOpResult& result)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs, result);
 }
 
 bool
@@ -2870,7 +2854,7 @@ js::DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleVal
 
 bool
 js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           JSGetterOp getter, JSSetterOp setter, unsigned attrs)
+                           HandleObject getter, HandleObject setter, unsigned attrs)
 {
     ObjectOpResult result;
     if (!DefineAccessorProperty(cx, obj, id, getter, setter, attrs, result))
@@ -2899,29 +2883,11 @@ js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue
 }
 
 bool
-js::DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                           JSGetterOp getter, JSSetterOp setter, unsigned attrs)
-{
-    RootedId id(cx, NameToId(name));
-    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
-}
-
-bool
 js::DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
                        unsigned attrs)
 {
     RootedId id(cx, NameToId(name));
     return DefineDataProperty(cx, obj, id, value, attrs);
-}
-
-bool
-js::DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
-                          JSGetterOp getter, JSSetterOp setter, unsigned attrs)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
 }
 
 bool

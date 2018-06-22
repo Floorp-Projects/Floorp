@@ -73,6 +73,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/cak/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["crh"] += [
+  'webextension/_locales/crh/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["cs"] += [
   'webextension/_locales/cs/messages.json'
 ]
@@ -249,6 +253,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/lt/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["mai"] += [
+  'webextension/_locales/mai/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["mk"] += [
   'webextension/_locales/mk/messages.json'
 ]
@@ -399,6 +407,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["build"] 
   'webextension/build/onboardingCss.js',
   'webextension/build/onboardingHtml.js',
   'webextension/build/raven.js',
+  'webextension/build/selection.js',
   'webextension/build/shot.js',
   'webextension/build/thumbnailGenerator.js'
 ]
@@ -408,7 +417,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] 
   'webextension/icons/back.svg',
   'webextension/icons/cancel.svg',
   'webextension/icons/cloud.svg',
-  'webextension/icons/copy.png',
+  'webextension/icons/copied-notification.svg',
   'webextension/icons/copy.svg',
   'webextension/icons/done.svg',
   'webextension/icons/download.svg',

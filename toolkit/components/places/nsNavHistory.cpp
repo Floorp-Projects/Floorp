@@ -1466,7 +1466,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
         // visits older than yesterday.
         sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
         sqlFragmentSearchEndTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','localtime','start of day','-2 days','utc')*1000000)");
+          "(strftime('%s','now','localtime','start of day','-1 day','utc')*1000000)");
         break;
       case 3:
         // This month

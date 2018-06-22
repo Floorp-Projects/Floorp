@@ -223,6 +223,10 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_no_saved
       let cardCancelButton = content.document.querySelector("basic-card-form .cancel-button");
       ok(content.isVisible(cardCancelButton),
          "Cancel button is visible on the basic card page");
+
+      let cardBackButton = content.document.querySelector("basic-card-form .back-button");
+      ok(!content.isVisible(cardBackButton),
+         "Back button is hidden on the basic card page when it is shown first during onboarding");
     });
 
     // Do not await for this task since the dialog may close before the task resolves.

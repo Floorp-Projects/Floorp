@@ -265,9 +265,6 @@ class MachCommands(MachCommandBase):
                      help='TaskGroupId to which the action applies')
     @CommandArgument('--input', default=None,
                      help='Action input (.yml or .json)')
-    @CommandArgument('--task', default=None,
-                     help='Task definition (.yml or .json; if omitted, the task will be'
-                          'fetched from the queue)')
     @CommandArgument('callback', default=None,
                      help='Action callback name (Python function name)')
     def test_action_callback(self, **options):

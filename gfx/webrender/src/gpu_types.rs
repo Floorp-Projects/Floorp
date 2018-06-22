@@ -143,7 +143,7 @@ pub struct PrimitiveInstance {
     data: [i32; 8],
 }
 
-pub struct SimplePrimitiveInstance {
+pub struct GlyphInstance {
     pub specific_prim_address: GpuCacheAddress,
     pub task_address: RenderTaskAddress,
     pub clip_task_address: RenderTaskAddress,
@@ -152,7 +152,7 @@ pub struct SimplePrimitiveInstance {
     pub z: ZBufferId,
 }
 
-impl SimplePrimitiveInstance {
+impl GlyphInstance {
     pub fn new(
         specific_prim_address: GpuCacheAddress,
         task_address: RenderTaskAddress,
@@ -161,7 +161,7 @@ impl SimplePrimitiveInstance {
         scroll_id: ClipScrollNodeIndex,
         z: ZBufferId,
     ) -> Self {
-        SimplePrimitiveInstance {
+        GlyphInstance {
             specific_prim_address,
             task_address,
             clip_task_address,
@@ -187,53 +187,41 @@ impl SimplePrimitiveInstance {
     }
 }
 
-pub struct CompositePrimitiveInstance {
+pub struct SplitCompositeInstance {
     pub task_address: RenderTaskAddress,
     pub src_task_address: RenderTaskAddress,
-    pub backdrop_task_address: RenderTaskAddress,
-    pub data0: i32,
-    pub data1: i32,
+    pub polygons_address: GpuCacheAddress,
     pub z: ZBufferId,
-    pub data2: i32,
-    pub data3: i32,
 }
 
-impl CompositePrimitiveInstance {
+impl SplitCompositeInstance {
     pub fn new(
         task_address: RenderTaskAddress,
         src_task_address: RenderTaskAddress,
-        backdrop_task_address: RenderTaskAddress,
-        data0: i32,
-        data1: i32,
+        polygons_address: GpuCacheAddress,
         z: ZBufferId,
-        data2: i32,
-        data3: i32,
     ) -> Self {
-        CompositePrimitiveInstance {
+        SplitCompositeInstance {
             task_address,
             src_task_address,
-            backdrop_task_address,
-            data0,
-            data1,
+            polygons_address,
             z,
-            data2,
-            data3,
         }
     }
 }
 
-impl From<CompositePrimitiveInstance> for PrimitiveInstance {
-    fn from(instance: CompositePrimitiveInstance) -> Self {
+impl From<SplitCompositeInstance> for PrimitiveInstance {
+    fn from(instance: SplitCompositeInstance) -> Self {
         PrimitiveInstance {
             data: [
                 instance.task_address.0 as i32,
                 instance.src_task_address.0 as i32,
-                instance.backdrop_task_address.0 as i32,
+                instance.polygons_address.as_int(),
                 instance.z.0,
-                instance.data0,
-                instance.data1,
-                instance.data2,
-                instance.data3,
+                0,
+                0,
+                0,
+                0,
             ],
         }
     }

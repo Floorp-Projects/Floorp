@@ -14,7 +14,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
 
-#include "VRDisplayHost.h"
+#include "VRDisplayLocal.h"
 
 #include <osvr/ClientKit/ClientKitC.h>
 #include <osvr/ClientKit/DisplayC.h>
@@ -26,7 +26,7 @@ namespace mozilla {
 namespace gfx {
 namespace impl {
 
-class VRDisplayOSVR : public VRDisplayHost
+class VRDisplayOSVR : public VRDisplayLocal
 {
 public:
   void ZeroSensor() override;
@@ -57,7 +57,7 @@ protected:
   virtual ~VRDisplayOSVR()
   {
     Destroy();
-    MOZ_COUNT_DTOR_INHERITED(VRDisplayOSVR, VRDisplayHost);
+    MOZ_COUNT_DTOR_INHERITED(VRDisplayOSVR, VRDisplayLocal);
   }
   void Destroy();
 

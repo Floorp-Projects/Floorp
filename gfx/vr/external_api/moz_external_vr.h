@@ -235,6 +235,8 @@ struct VRDisplayState
   FloatSize_POD mStageSize;
   // We can't use a Matrix4x4 here unless we ensure it's a POD type
   float mSittingToStandingTransform[16];
+  uint64_t mLastSubmittedFrameId;
+  bool mLastSubmittedFrameSuccessful;
   uint32_t mPresentingGeneration;
 };
 
@@ -274,9 +276,8 @@ enum class VRLayerType : uint16_t {
 
 enum class VRLayerTextureType : uint16_t {
   LayerTextureType_None = 0,
-  LayerTextureType_DirectX = 1,
-  LayerTextureType_OpenGL = 2,
-  LayerTextureType_Vulkan = 3
+  LayerTextureType_D3D10SurfaceDescriptor = 1,
+  LayerTextureType_MacIOSurface = 2
 };
 
 struct VRLayer_2D_Content
@@ -291,6 +292,7 @@ struct VRLayer_Stereo_Immersive
   void* mTextureHandle;
   VRLayerTextureType mTextureType;
   uint64_t mFrameId;
+  uint64_t mInputFrameId;
   VRLayerEyeRect mLeftEyeRect;
   VRLayerEyeRect mRightEyeRect;
 };
@@ -315,6 +317,7 @@ struct VRBrowserState
 struct VRSystemState
 {
   uint32_t presentingGeneration;
+  bool enumerationCompleted;
   VRDisplayState displayState;
   VRHMDSensorState sensorState;
   VRControllerState controllerState[kVRControllerMaxCount];

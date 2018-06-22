@@ -1,4 +1,4 @@
-import {ASRouterUISurface, ASRouterUtils} from "content-src/asrouter/asrouter-content";
+import {ASRouterUISurface, ASRouterUtils, convertLinks} from "content-src/asrouter/asrouter-content";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {FAKE_LOCAL_MESSAGES} from "./constants";
 import {GlobalOverrider} from "test/unit/utils";
@@ -105,6 +105,23 @@ describe("ASRouterUISurface", () => {
       wrapper.find(".blockButton").simulate("click");
       assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "event", "BLOCK");
       assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "source", "NEWTAB_FOOTER_BAR");
+    });
+  });
+
+  describe("convertLinks", () => {
+    it("should return an object with anchor elements", () => {
+      const cta = {
+        url: "https://foo.com",
+        metric: "foo"
+      };
+      const stub = sandbox.stub();
+      const result = convertLinks({cta}, stub);
+
+      assert.property(result, "cta");
+      assert.propertyVal(result.cta, "type", "a");
+      assert.propertyVal(result.cta.props, "href", cta.url);
+      assert.propertyVal(result.cta.props, "data-metric", cta.metric);
+      assert.propertyVal(result.cta.props, "onClick", stub);
     });
   });
 

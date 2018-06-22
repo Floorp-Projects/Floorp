@@ -91,19 +91,19 @@
 //! use syn::{PathSegment, Expr, Attribute};
 //!
 //! # fn run_parsers() -> Result<(), syn::synom::ParseError> {
-//! #     let tokens = TokenStream::empty().into();
+//! #     let tokens = TokenStream::new().into();
 //! // Parse a nonempty sequence of path segments separated by `::` punctuation
 //! // with no trailing punctuation.
 //! let parser = Punctuated::<PathSegment, Token![::]>::parse_separated_nonempty;
 //! let path = parser.parse(tokens)?;
 //!
-//! #     let tokens = TokenStream::empty().into();
+//! #     let tokens = TokenStream::new().into();
 //! // Parse a possibly empty sequence of expressions terminated by commas with
 //! // an optional trailing punctuation.
 //! let parser = Punctuated::<Expr, Token![,]>::parse_terminated;
 //! let args = parser.parse(tokens)?;
 //!
-//! #     let tokens = TokenStream::empty().into();
+//! #     let tokens = TokenStream::new().into();
 //! // Parse zero or more outer attributes but not inner attributes.
 //! named!(outer_attrs -> Vec<Attribute>, many0!(Attribute::parse_outer));
 //! let attrs = outer_attrs.parse(tokens)?;
@@ -131,6 +131,7 @@
 //! - [`call!`](../macro.call.html)
 //! - [`cond!`](../macro.cond.html)
 //! - [`cond_reduce!`](../macro.cond_reduce.html)
+//! - [`custom_keyword!`](../macro.custom_keyword.html)
 //! - [`do_parse!`](../macro.do_parse.html)
 //! - [`epsilon!`](../macro.epsilon.html)
 //! - [`input_end!`](../macro.input_end.html)
@@ -151,8 +152,9 @@
 
 #[cfg(feature = "proc-macro")]
 use proc_macro;
-use proc_macro2;
+use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, TokenStream, TokenTree};
 
+use error::parse_error;
 pub use error::{PResult, ParseError};
 
 use buffer::{Cursor, TokenBuffer};
@@ -202,13 +204,99 @@ pub trait Synom: Sized {
     }
 }
 
-impl Synom for proc_macro2::TokenStream {
+impl Synom for TokenStream {
     fn parse(input: Cursor) -> PResult<Self> {
         Ok((input.token_stream(), Cursor::empty()))
     }
 
     fn description() -> Option<&'static str> {
         Some("arbitrary token stream")
+    }
+}
+
+impl Synom for TokenTree {
+    fn parse(input: Cursor) -> PResult<Self> {
+        match input.token_tree() {
+            Some((tt, rest)) => Ok((tt, rest)),
+            None => parse_error(),
+        }
+    }
+
+    fn description() -> Option<&'static str> {
+        Some("token tree")
+    }
+}
+
+impl Synom for Group {
+    fn parse(input: Cursor) -> PResult<Self> {
+        for delim in &[Delimiter::Parenthesis, Delimiter::Brace, Delimiter::Bracket] {
+            match input.group(*delim) {
+                Some((inside, span, rest)) => {
+                    let mut group = Group::new(*delim, inside.token_stream());
+                    group.set_span(span);
+                    return Ok((group, rest));
+                }
+                None => {}
+            }
+        }
+        parse_error()
+    }
+
+    fn description() -> Option<&'static str> {
+        Some("group token")
+    }
+}
+
+impl Synom for Ident {
+    fn parse(input: Cursor) -> PResult<Self> {
+        let (ident, rest) = match input.ident() {
+            Some(ident) => ident,
+            _ => return parse_error(),
+        };
+        match &ident.to_string()[..] {
+			"_"
+			// From https://doc.rust-lang.org/grammar.html#keywords
+			| "abstract" | "alignof" | "as" | "become" | "box" | "break" | "const"
+			| "continue" | "crate" | "do" | "else" | "enum" | "extern" | "false" | "final"
+			| "fn" | "for" | "if" | "impl" | "in" | "let" | "loop" | "macro" | "match"
+			| "mod" | "move" | "mut" | "offsetof" | "override" | "priv" | "proc" | "pub"
+			| "pure" | "ref" | "return" | "Self" | "self" | "sizeof" | "static" | "struct"
+			| "super" | "trait" | "true" | "type" | "typeof" | "unsafe" | "unsized" | "use"
+			| "virtual" | "where" | "while" | "yield" => return parse_error(),
+			_ => {}
+		}
+
+        Ok((ident, rest))
+    }
+
+    fn description() -> Option<&'static str> {
+        Some("identifier")
+    }
+}
+
+impl Synom for Punct {
+    fn parse(input: Cursor) -> PResult<Self> {
+        match input.punct() {
+            Some((punct, rest)) => Ok((punct, rest)),
+            None => parse_error(),
+        }
+    }
+
+    fn description() -> Option<&'static str> {
+        Some("punctuation token")
+    }
+}
+
+impl Synom for Literal {
+    fn parse(input: Cursor) -> PResult<Self> {
+        match input.literal() {
+            Some((literal, rest)) => Ok((literal, rest)),
+            None => parse_error(),
+        }
+    }
+
+    fn description() -> Option<&'static str> {
+        Some("literal token")
     }
 }
 
@@ -223,9 +311,12 @@ pub trait Parser: Sized {
     type Output;
 
     /// Parse a proc-macro2 token stream into the chosen syntax tree node.
-    fn parse2(self, tokens: proc_macro2::TokenStream) -> Result<Self::Output, ParseError>;
+    fn parse2(self, tokens: TokenStream) -> Result<Self::Output, ParseError>;
 
     /// Parse tokens of source code into the chosen syntax tree node.
+    ///
+    /// *This method is available if Syn is built with both the `"parsing"` and
+    /// `"proc-macro"` features.*
     #[cfg(feature = "proc-macro")]
     fn parse(self, tokens: proc_macro::TokenStream) -> Result<Self::Output, ParseError> {
         self.parse2(tokens.into())
@@ -245,10 +336,13 @@ pub trait Parser: Sized {
     }
 }
 
-impl<F, T> Parser for F where F: FnOnce(Cursor) -> PResult<T> {
+impl<F, T> Parser for F
+where
+    F: FnOnce(Cursor) -> PResult<T>,
+{
     type Output = T;
 
-    fn parse2(self, tokens: proc_macro2::TokenStream) -> Result<T, ParseError> {
+    fn parse2(self, tokens: TokenStream) -> Result<T, ParseError> {
         let buf = TokenBuffer::new2(tokens);
         let (t, rest) = self(buf.begin())?;
         if rest.eof() {
@@ -259,5 +353,63 @@ impl<F, T> Parser for F where F: FnOnce(Cursor) -> PResult<T> {
         } else {
             Err(ParseError::new("failed to parse all tokens"))
         }
+    }
+}
+
+/// Extension traits that are made available within the `call!` parser.
+///
+/// *This module is available if Syn is built with the `"parsing"` feature.*
+pub mod ext {
+    use super::*;
+    use proc_macro2::Ident;
+
+    /// Additional parsing methods for `Ident`.
+    ///
+    /// This trait is sealed and cannot be implemented for types outside of Syn.
+    ///
+    /// *This trait is available if Syn is built with the `"parsing"` feature.*
+    pub trait IdentExt: Sized + private::Sealed {
+        /// Parses any identifier including keywords.
+        ///
+        /// This is useful when parsing a DSL which allows Rust keywords as
+        /// identifiers.
+        ///
+        /// ```rust
+        /// #[macro_use]
+        /// extern crate syn;
+        ///
+        /// use syn::Ident;
+        ///
+        /// // Parses input that looks like `name = NAME` where `NAME` can be
+        /// // any identifier.
+        /// //
+        /// // Examples:
+        /// //
+        /// //     name = anything
+        /// //     name = impl
+        /// named!(parse_dsl -> Ident, do_parse!(
+        ///     custom_keyword!(name) >>
+        ///     punct!(=) >>
+        ///     name: call!(Ident::parse_any) >>
+        ///     (name)
+        /// ));
+        /// #
+        /// # fn main() {}
+        /// ```
+        fn parse_any(input: Cursor) -> PResult<Self>;
+    }
+
+    impl IdentExt for Ident {
+        fn parse_any(input: Cursor) -> PResult<Self> {
+            input.ident().map_or_else(parse_error, Ok)
+        }
+    }
+
+    mod private {
+        use proc_macro2::Ident;
+
+        pub trait Sealed {}
+
+        impl Sealed for Ident {}
     }
 }

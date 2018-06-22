@@ -88,9 +88,9 @@ macro_rules! parse_quote {
 ////////////////////////////////////////////////////////////////////////////////
 // Can parse any type that implements Synom.
 
-use synom::{Synom, Parser, PResult};
 use buffer::Cursor;
 use proc_macro2::TokenStream;
+use synom::{PResult, Parser, Synom};
 
 // Not public API.
 #[doc(hidden)]
@@ -105,7 +105,7 @@ pub fn parse<T: ParseQuote>(token_stream: TokenStream) -> T {
         Err(err) => match T::description() {
             Some(s) => panic!("failed to parse {}: {}", s, err),
             None => panic!("{}", err),
-        }
+        },
     }
 }
 
@@ -116,7 +116,10 @@ pub trait ParseQuote: Sized {
     fn description() -> Option<&'static str>;
 }
 
-impl<T> ParseQuote for T where T: Synom {
+impl<T> ParseQuote for T
+where
+    T: Synom,
+{
     fn parse(input: Cursor) -> PResult<Self> {
         <T as Synom>::parse(input)
     }

@@ -85,7 +85,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_collapse_section": "अनुभाग संक्षिप्त करें",
   "section_menu_action_expand_section": "अनुभाग विस्तृत करें",
   "section_menu_action_manage_section": "अनुभाग प्रबंधित करें",
-  "section_menu_action_manage_webext": "Manage Extension",
+  "section_menu_action_manage_webext": "विस्तारक प्रबंधित करें",
   "section_menu_action_add_topsite": "शीर्ष साइट जोड़ें",
   "section_menu_action_move_up": "ऊपर जाएँ",
   "section_menu_action_move_down": "नीचे जाएँ",

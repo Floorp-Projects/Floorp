@@ -92,9 +92,6 @@ class GeckoInstance(object):
         # Do not scan Wifi
         "geo.wifi.scan": False,
 
-        # No hang monitor
-        "hangmonitor.timeout": 0,
-
         "javascript.options.showInConsole": True,
 
         # Enable Marionette component
@@ -104,6 +101,9 @@ class GeckoInstance(object):
 
         # Disable recommended automation prefs in CI
         "marionette.prefs.recommended": False,
+
+        # Disable download and usage of OpenH264, and Widevine plugins
+        "media.gmp-manager.updateEnabled": False,
 
         "media.volume_scale": "0.01",
 

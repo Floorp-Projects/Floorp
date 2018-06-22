@@ -23,7 +23,7 @@ class KeyframeMarkerItem extends PureComponent {
         className: "keyframe-marker-item",
         title: keyframe.value,
         style: {
-          left: `${ keyframe.offset * 100 }%`,
+          marginInlineStart: `${ keyframe.offset * 100 }%`,
         },
       }
     );

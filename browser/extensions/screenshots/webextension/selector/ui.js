@@ -20,7 +20,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       el = el.parentNode;
     }
     return false;
-  }
+  };
 
   const substitutedCss = inlineSelectionCss.replace(/MOZ_EXTENSION([^"]+)/g, (match, filename) => {
     return browser.extension.getURL(filename);
@@ -81,7 +81,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
 
   const isDownloadOnly = exports.isDownloadOnly = function() {
     return window.downloadOnly;
-  }
+  };
 
   // the download notice is rendered in iframes that match the document height
   // or the window height. If parent iframe matches window height, pass in true
@@ -278,7 +278,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           this.element.style.height = "100%";
           this.element.addEventListener("load", watchFunction(() => {
             this.document = this.element.contentDocument;
-            assertIsBlankDocument(this.document)
+            assertIsBlankDocument(this.document);
             // eslint-disable-next-line no-unsanitized/property
             this.document.documentElement.innerHTML = `
                <head>
@@ -286,7 +286,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                 <title></title>
                </head>
                <body>
-                 <div class="preview-overlay">
+                 <div class="preview-overlay precision-cursor">
                    <div class="fixed-container">
                      <div class="face-container">
                        <div class="eye left"><div class="eyeball"></div></div>
@@ -665,7 +665,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
           clearTimeout(timer);
         }
         timer = setTimeout(cb, delay);
-      }
+      };
     },
 
     remove() {

@@ -8,5 +8,5 @@ this.assertIsBlankDocument = function assertIsBlankDocument(doc) {
     exc.foundURL = doc.documentURI;
     throw exc;
   }
-}
+};
 null;

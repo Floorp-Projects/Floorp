@@ -307,12 +307,14 @@ impl Generics {
     /// for that type.
     ///
     /// ```
+    /// # extern crate proc_macro2;
     /// # extern crate syn;
     /// # #[macro_use]
     /// # extern crate quote;
+    /// # use proc_macro2::{Span, Ident};
     /// # fn main() {
     /// # let generics: syn::Generics = Default::default();
-    /// # let name = syn::Ident::from("MyType");
+    /// # let name = Ident::new("MyType", Span::call_site());
     /// let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     /// quote! {
     ///     impl #impl_generics MyTrait for #name #ty_generics #where_clause {
@@ -486,8 +488,8 @@ ast_enum_of_structs! {
 pub mod parsing {
     use super::*;
 
-    use synom::Synom;
     use punctuated::Pair;
+    use synom::Synom;
 
     impl Synom for Generics {
         named!(parse -> Self, map!(
@@ -751,10 +753,11 @@ pub mod parsing {
 mod printing {
     use super::*;
     use attr::FilterAttrs;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::{ToTokens, TokenStreamExt};
 
     impl ToTokens for Generics {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             if self.params.is_empty() {
                 return;
             }
@@ -791,7 +794,7 @@ mod printing {
     }
 
     impl<'a> ToTokens for ImplGenerics<'a> {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             if self.0.params.is_empty() {
                 return;
             }
@@ -846,7 +849,7 @@ mod printing {
     }
 
     impl<'a> ToTokens for TypeGenerics<'a> {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             if self.0.params.is_empty() {
                 return;
             }
@@ -894,7 +897,7 @@ mod printing {
     }
 
     impl<'a> ToTokens for Turbofish<'a> {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             if !self.0.params.is_empty() {
                 <Token![::]>::default().to_tokens(tokens);
                 TypeGenerics(self.0).to_tokens(tokens);
@@ -903,7 +906,7 @@ mod printing {
     }
 
     impl ToTokens for BoundLifetimes {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.for_token.to_tokens(tokens);
             self.lt_token.to_tokens(tokens);
             self.lifetimes.to_tokens(tokens);
@@ -912,7 +915,7 @@ mod printing {
     }
 
     impl ToTokens for LifetimeDef {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.outer());
             self.lifetime.to_tokens(tokens);
             if !self.bounds.is_empty() {
@@ -923,7 +926,7 @@ mod printing {
     }
 
     impl ToTokens for TypeParam {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.outer());
             self.ident.to_tokens(tokens);
             if !self.bounds.is_empty() {
@@ -938,8 +941,8 @@ mod printing {
     }
 
     impl ToTokens for TraitBound {
-        fn to_tokens(&self, tokens: &mut Tokens) {
-            let to_tokens = |tokens: &mut Tokens| {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
+            let to_tokens = |tokens: &mut TokenStream| {
                 self.modifier.to_tokens(tokens);
                 self.lifetimes.to_tokens(tokens);
                 self.path.to_tokens(tokens);
@@ -952,7 +955,7 @@ mod printing {
     }
 
     impl ToTokens for TraitBoundModifier {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 TraitBoundModifier::None => {}
                 TraitBoundModifier::Maybe(ref t) => t.to_tokens(tokens),
@@ -961,7 +964,7 @@ mod printing {
     }
 
     impl ToTokens for ConstParam {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.outer());
             self.const_token.to_tokens(tokens);
             self.ident.to_tokens(tokens);
@@ -975,7 +978,7 @@ mod printing {
     }
 
     impl ToTokens for WhereClause {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             if !self.predicates.is_empty() {
                 self.where_token.to_tokens(tokens);
                 self.predicates.to_tokens(tokens);
@@ -984,7 +987,7 @@ mod printing {
     }
 
     impl ToTokens for PredicateType {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.lifetimes.to_tokens(tokens);
             self.bounded_ty.to_tokens(tokens);
             self.colon_token.to_tokens(tokens);
@@ -993,7 +996,7 @@ mod printing {
     }
 
     impl ToTokens for PredicateLifetime {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.lifetime.to_tokens(tokens);
             if !self.bounds.is_empty() {
                 TokensOrDefault(&self.colon_token).to_tokens(tokens);
@@ -1003,7 +1006,7 @@ mod printing {
     }
 
     impl ToTokens for PredicateEq {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.lhs_ty.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             self.rhs_ty.to_tokens(tokens);

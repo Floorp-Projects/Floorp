@@ -383,12 +383,13 @@ export function addSnippetsSubscriber(store) {
 
   store.subscribe(async () => {
     const state = store.getState();
+    const isASRouterEnabled = state.Prefs.values.asrouterExperimentEnabled && state.Prefs.values.asrouterOnboardingCohort > 0;
     // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
     // state.Snippets.initialized             Is the snippets data initialized?
     // snippets.initialized:                  Is SnippetsProvider currently initialised?
     if (state.Prefs.values["feeds.snippets"] &&
       // If the message center experiment is enabled, don't show snippets
-      !state.Prefs.values.asrouterExperimentEnabled &&
+      !isASRouterEnabled &&
       !state.Prefs.values.disableSnippets &&
       state.Snippets.initialized &&
       !snippets.initialized &&
@@ -410,12 +411,12 @@ export function addSnippetsSubscriber(store) {
     // Turn on AS Router snippets if the experiment is enabled and the snippets pref is on;
     // otherwise, turn it off.
     if (
-      state.Prefs.values.asrouterExperimentEnabled &&
+      (state.Prefs.values.asrouterExperimentEnabled || state.Prefs.values.asrouterOnboardingCohort > 0) &&
       state.Prefs.values["feeds.snippets"] &&
       !asrouterContent.initialized) {
       asrouterContent.init();
     } else if (
-      (!state.Prefs.values.asrouterExperimentEnabled || !state.Prefs.values["feeds.snippets"]) &&
+      ((!state.Prefs.values.asrouterExperimentEnabled && state.Prefs.values.asrouterOnboardingCohort === 0) || !state.Prefs.values["feeds.snippets"]) &&
       asrouterContent.initialized
     ) {
       asrouterContent.uninit();

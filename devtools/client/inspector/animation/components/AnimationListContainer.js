@@ -25,6 +25,7 @@ class AnimationListContainer extends PureComponent {
     return {
       addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      direction: PropTypes.string.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
@@ -82,6 +83,7 @@ class AnimationListContainer extends PureComponent {
     const {
       addAnimationsCurrentTimeListener,
       animations,
+      direction,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
@@ -106,6 +108,7 @@ class AnimationListContainer extends PureComponent {
           indicator: CurrentTimeScrubber(
             {
               addAnimationsCurrentTimeListener,
+              direction,
               removeAnimationsCurrentTimeListener,
               setAnimationsCurrentTime,
               timeScale,
