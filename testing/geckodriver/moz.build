@@ -9,7 +9,7 @@ if CONFIG["OS_ARCH"] != "WINNT":
     RUST_TESTS = ["geckodriver"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Testing", "Marionette")
+    BUG_COMPONENT = ("Testing", "geckodriver")
 
 SPHINX_TREES["geckodriver"] = "doc"
 
