@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test mozIDOMLocalization.connectRoot and translateRoots</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const domLocalization =
+    Cc["@mozilla.org/intl/domlocalization;1"].createInstance(
+      Ci.mozIDOMLocalization);
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+  const { L10nRegistry, FileSource } =
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+
+  const fs = {
+    "/localization/en-US/browser/menu.ftl": `
+title = Hello World
+title2 = Hello Another World
+`,
+  };
+  const originalLoad = L10nRegistry.load;
+  const originalRequested = Services.locale.getRequestedLocales();
+
+  L10nRegistry.load = async function(url) {
+    return fs.hasOwnProperty(url) ? fs[url] : false;
+  };
+
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
+  L10nRegistry.registerSource(source);
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    domLocalization.addResourceIds(["/browser/menu.ftl"], 1);
+
+    const frag1 = document.querySelectorAll("div")[0];
+    const frag2 = document.querySelectorAll("div")[1];
+    const h1 = document.querySelectorAll("h1")[0];
+    const h2 = document.querySelectorAll("h2")[0];
+
+    domLocalization.connectRoot(frag1);
+    domLocalization.connectRoot(frag2);
+
+    await domLocalization.translateRoots();
+
+    is(h1.textContent, "Hello World");
+    is(h2.textContent, "Hello Another World");
+
+    // Cleanup
+    L10nRegistry.removeSource(source.name);
+    L10nRegistry.load = originalLoad;
+    Services.locale.setRequestedLocales(originalRequested);
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <div>
+    <h1 data-l10n-id="title"></h1>
+  </div>
+  <div>
+    <h2 data-l10n-id="title2"></h2>
+  </div>
+</body>
+</html>
