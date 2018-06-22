@@ -263,5 +263,5 @@ add_task(async function test_broadcast_reject_invalid_sourceinfo() {
   await assert.rejects(broadcastService.addListener("ghi", "2018-05-06", {
       moduleName: "resource://gre/modules/ghi.jsm",
       symbolName: "getGhi"
-  }), "missing moduleURI", "rejects sourceInfo that doesn't have moduleURI");
+  }), /moduleURI must be a string/, "rejects sourceInfo that doesn't have moduleURI");
 });
