@@ -190,7 +190,7 @@ function templateHTML(options, html) {
 <html lang="${options.locale}" dir="${options.direction}">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy-Report-Only" content="script-src 'unsafe-inline'; img-src http: https: data: blob:; style-src 'unsafe-inline'; child-src 'none'; object-src 'none'; report-uri https://tiles.services.mozilla.com/v4/links/activity-stream/csp">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
     <title>${options.strings.newtab_page_title}</title>
     <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
