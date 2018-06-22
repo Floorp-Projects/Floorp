@@ -157,6 +157,27 @@ add_task(async function test_noShowIcons() {
   Services.prefs.clearUserPref("services.sync.syncedTabs.showRemoteIcons");
 });
 
+add_task(async function test_dontMatchSyncedTabs() {
+  Services.prefs.setBoolPref("services.sync.syncedTabs.showRemoteTabs", false);
+  configureEngine({
+    guid_mobile: {
+      id: "mobile",
+      tabs: [{
+        urlHistory: ["http://example.com/"],
+        title: "An Example",
+        icon: "http://favicon",
+      }],
+    }
+  });
+
+  await check_autocomplete({
+    search: "ex",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("ex", { heuristic: true }) ],
+  });
+  Services.prefs.clearUserPref("services.sync.syncedTabs.showRemoteTabs");
+});
+
 add_task(async function test_matches_title() {
   // URL doesn't match search expression, should still match the title.
   configureEngine({
