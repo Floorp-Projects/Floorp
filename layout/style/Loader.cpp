@@ -2515,7 +2515,7 @@ Loader::Stop()
   for (RefPtr<SheetLoadData>& data : mPostedEvents) {
     data->mIsCancelled = true;
     // SheetComplete() calls Release(), so give this an extra ref.
-    NS_ADDREF(data);
+    NS_ADDREF(data.get());
     // Move since we're about to get rid of the array below.
     arr.AppendElement(std::move(data));
   }
