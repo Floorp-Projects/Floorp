@@ -57,7 +57,7 @@ class IndicationBar extends PureComponent {
       {
         className: `indication-bar ${ className }`,
         style: {
-          transform: `translateX(${ offset }px)`,
+          marginInlineStart: offset + "px",
         },
       }
     );

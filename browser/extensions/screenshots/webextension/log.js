@@ -28,19 +28,19 @@ this.log = (function() {
   exports.debug = exports.info = exports.warn = exports.error = stub;
 
   if (shouldLog.debug) {
-    exports.debug = console.debug.bind(console);
+    exports.debug = console.debug;
   }
 
   if (shouldLog.info) {
-    exports.info = console.info.bind(console);
+    exports.info = console.info;
   }
 
   if (shouldLog.warn) {
-    exports.warn = console.warn.bind(console);
+    exports.warn = console.warn;
   }
 
   if (shouldLog.error) {
-    exports.error = console.error.bind(console);
+    exports.error = console.error;
   }
 
   return exports;

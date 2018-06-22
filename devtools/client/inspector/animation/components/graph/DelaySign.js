@@ -45,7 +45,7 @@ class DelaySign extends PureComponent {
                    (fill === "both" || fill === "backwards" ? " fill" : ""),
         style: {
           width: `${ width }%`,
-          left: `${ offset }%`,
+          marginInlineStart: `${ offset }%`,
         },
       }
     );

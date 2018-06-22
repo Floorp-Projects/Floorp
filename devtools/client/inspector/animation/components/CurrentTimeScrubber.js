@@ -15,6 +15,7 @@ class CurrentTimeScrubber extends PureComponent {
   static get propTypes() {
     return {
       addAnimationsCurrentTimeListener: PropTypes.func.isRequired,
+      direction: PropTypes.string.isRequired,
       removeAnimationsCurrentTimeListener: PropTypes.func.isRequired,
       setAnimationsCurrentTime: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
@@ -108,14 +109,22 @@ class CurrentTimeScrubber extends PureComponent {
 
   updateAnimationsCurrentTime(pageX, needRefresh) {
     const {
+      direction,
       setAnimationsCurrentTime,
       timeScale,
     } = this.props;
 
-    const time = pageX - this.controllerArea.x < 0 ?
-                   0 :
-                   (pageX - this.controllerArea.x) /
-                     this.controllerArea.width * timeScale.getDuration();
+    let progressRate = (pageX - this.controllerArea.x) / this.controllerArea.width;
+
+    if (progressRate < 0.0) {
+      progressRate = 0.0;
+    } else if (progressRate > 1.0) {
+      progressRate = 1.0;
+    }
+
+    const time = direction === "ltr"
+                  ? progressRate * timeScale.getDuration()
+                  : (1 - progressRate) * timeScale.getDuration();
 
     setAnimationsCurrentTime(time, needRefresh);
   }

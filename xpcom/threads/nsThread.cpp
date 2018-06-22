@@ -21,10 +21,10 @@
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "pratom.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Logging.h"
 #include "nsIObserverService.h"
-#include "mozilla/HangMonitor.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -992,7 +992,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
 
       if (MAIN_THREAD == mIsMainThread) {
-        HangMonitor::NotifyActivity();
+        BackgroundHangMonitor().NotifyActivity();
       }
 
       bool schedulerLoggingEnabled = mozilla::StaticPrefs::dom_performance_enable_scheduler_timing();
@@ -1219,7 +1219,7 @@ nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
   ipc::CancelCPOWs();
 
   if (aReallyWait) {
-    HangMonitor::Suspend();
+    BackgroundHangMonitor().NotifyWait();
   }
 
   // Fire a memory pressure notification, if one is pending.
