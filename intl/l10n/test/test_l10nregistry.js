@@ -40,7 +40,6 @@ add_task(async function test_empty_resourceids() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -57,7 +56,6 @@ add_task(async function test_empty_sources() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -80,7 +78,6 @@ add_task(async function test_methods_calling() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -118,7 +115,6 @@ add_task(async function test_has_one_source() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -175,7 +171,6 @@ add_task(async function test_has_two_sources() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -203,7 +198,6 @@ add_task(async function test_indexed() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -244,7 +238,6 @@ add_task(async function test_override() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -282,7 +275,6 @@ add_task(async function test_updating() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -348,7 +340,6 @@ add_task(async function test_removing() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -378,15 +369,16 @@ add_task(async function test_missing_file() {
   // returns a single context
 
   let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl", "test2.ftl"]);
-  (await ctxs.next());
-  (await ctxs.next());
+  (await ctxs.next()); // [platform, platform] - both present
+  (await ctxs.next()); // [platform, app] - second missing
+  (await ctxs.next()); // [app, platform] - both present
+  (await ctxs.next()); // [app, app] - second missing
 
   equal((await ctxs.next()).done, true);
 
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
 });
 
 /**
@@ -447,6 +439,5 @@ add_task(async function test_parallel_io() {
 
   // cleanup
   L10nRegistry.sources.clear();
-  L10nRegistry.ctxCache.clear();
   L10nRegistry.load = originalLoad;
 });
