@@ -6,8 +6,10 @@
 
 // For edges, the colors are the same. For corners, these
 // are the colors of each edge making up the corner.
-flat varying vec4 vColor0[2];
-flat varying vec4 vColor1[2];
+flat varying vec4 vColor00;
+flat varying vec4 vColor01;
+flat varying vec4 vColor10;
+flat varying vec4 vColor11;
 
 // A point + tangent defining the line where the edge
 // transition occurs. Used for corners only.
@@ -181,8 +183,12 @@ void main(void) {
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
     vPos = aRect.zw * aPosition.xy;
 
-    vColor0 = get_colors_for_side(aColor0, style0);
-    vColor1 = get_colors_for_side(aColor1, style1);
+    vec4[2] color0 = get_colors_for_side(aColor0, style0);
+    vColor00 = color0[0];
+    vColor01 = color0[1];
+    vec4[2] color1 = get_colors_for_side(aColor1, style1);
+    vColor10 = color1[0];
+    vColor11 = color1[1];
     vClipCenter_Sign = vec4(outer + clip_sign * aRadii, clip_sign);
     vClipRadii = vec4(aRadii, max(aRadii - aWidths, 0.0));
     vColorLine = vec4(outer, aWidths.y * -clip_sign.y, aWidths.x * clip_sign.x);
@@ -210,7 +216,8 @@ void main(void) {
 vec4 evaluate_color_for_style_in_corner(
     vec2 clip_relative_pos,
     int style,
-    vec4 color[2],
+    vec4 color0,
+    vec4 color1,
     vec4 clip_radii,
     float mix_factor,
     int segment,
@@ -234,7 +241,7 @@ vec4 evaluate_color_for_style_in_corner(
             );
             float d = min(-d_radii_a, d_radii_b);
             float alpha = distance_aa(aa_range, d);
-            return alpha * color[0];
+            return alpha * color0;
         }
         case BORDER_STYLE_GROOVE:
         case BORDER_STYLE_RIDGE: {
@@ -252,21 +259,22 @@ vec4 evaluate_color_for_style_in_corner(
                 case SEGMENT_BOTTOM_LEFT: swizzled_factor = 1.0 - mix_factor; break;
                 default: swizzled_factor = 0.0; break;
             };
-            vec4 c0 = mix(color[1], color[0], swizzled_factor);
-            vec4 c1 = mix(color[0], color[1], swizzled_factor);
+            vec4 c0 = mix(color1, color0, swizzled_factor);
+            vec4 c1 = mix(color0, color1, swizzled_factor);
             return mix(c0, c1, alpha);
         }
         default:
             break;
     }
 
-    return color[0];
+    return color0;
 }
 
 vec4 evaluate_color_for_style_in_edge(
     vec2 pos,
     int style,
-    vec4 color[2],
+    vec4 color0,
+    vec4 color1,
     float aa_range,
     int edge_axis
 ) {
@@ -284,20 +292,20 @@ vec4 evaluate_color_for_style_in_edge(
             }
             float d = min(d0, d1);
             float alpha = distance_aa(aa_range, d);
-            return alpha * color[0];
+            return alpha * color0;
         }
         case BORDER_STYLE_GROOVE:
         case BORDER_STYLE_RIDGE: {
             float ref = vEdgeReference[edge_axis] + vPartialWidths[edge_axis+2];
             float d = pos[edge_axis] - ref;
             float alpha = distance_aa(aa_range, d);
-            return mix(color[0], color[1], alpha);
+            return mix(color0, color1, alpha);
         }
         default:
             break;
     }
 
-    return color[0];
+    return color0;
 }
 
 void main(void) {
@@ -352,7 +360,8 @@ void main(void) {
         color0 = evaluate_color_for_style_in_corner(
             clip_relative_pos,
             style.x,
-            vColor0,
+            vColor00,
+            vColor01,
             vClipRadii,
             mix_factor,
             segment,
@@ -361,7 +370,8 @@ void main(void) {
         color1 = evaluate_color_for_style_in_corner(
             clip_relative_pos,
             style.y,
-            vColor1,
+            vColor10,
+            vColor11,
             vClipRadii,
             mix_factor,
             segment,
@@ -371,14 +381,16 @@ void main(void) {
         color0 = evaluate_color_for_style_in_edge(
             vPos,
             style.x,
-            vColor0,
+            vColor00,
+            vColor01,
             aa_range,
             edge_axis.x
         );
         color1 = evaluate_color_for_style_in_edge(
             vPos,
             style.y,
-            vColor1,
+            vColor10,
+            vColor11,
             aa_range,
             edge_axis.y
         );

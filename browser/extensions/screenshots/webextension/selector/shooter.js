@@ -208,7 +208,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         ui.triggerDownload(dataUrl, shotObject.filename);
         uicontrol.deactivate();
       }));
-    }))
+    }));
   };
 
   let copyInProgress = null;
@@ -228,7 +228,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         clearTimeout(copyInProgress);
         copyInProgress = null;
       }
-    }
+    };
     const shotPromise = previewDataUrl ? Promise.resolve(previewDataUrl) : screenshotPageAsync(selectedPos, type);
     catcher.watchPromise(shotPromise.then(dataUrl => {
       const blob = blobConverters.dataUrlToBlob(dataUrl);

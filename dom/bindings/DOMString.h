@@ -221,10 +221,10 @@ public:
         // Static atoms are backed by literals.
         SetLiteralInternal(aAtom->GetUTF16String(), aAtom->GetLength());
       } else {
-        // Dynamic atoms always have a string buffer and never have 0 length,
-        // because nsGkAtoms::_empty is a static atom.
-        SetKnownLiveStringBuffer(
-          aAtom->AsDynamic()->GetStringBuffer(), aAtom->GetLength());
+        // Dynamic atoms own their own chars, and never have 0 length because
+        // nsGkAtoms::_empty is a static atom.
+        MOZ_ASSERT(aAtom->GetLength() > 0);
+        AsAString().Assign(aAtom->AsDynamic()->String(), aAtom->GetLength());
       }
     } else if (aNullHandling == eTreatNullAsNull) {
       SetNull();

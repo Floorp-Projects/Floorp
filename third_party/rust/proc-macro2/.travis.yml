@@ -7,25 +7,20 @@ matrix:
     - rust: stable
     - rust: beta
     - rust: nightly
-      before_script:
-        - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
         - cargo test
-        - cargo build --features nightly
-        - cargo build --no-default-features
+        - cargo test --features nightly
+        - cargo test --no-default-features
         - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo test
-        - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo build --features nightly
-        - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo doc --no-deps
-      after_success:
-        - travis-cargo --only nightly doc-upload
+        - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo test --features nightly
+        - cargo update -Z minimal-versions && cargo build
+
+before_script:
+  - set -o errexit
 
 script:
   - cargo test
   - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo test
-env:
-  global:
-    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
-    - secure: "NAsZghAVTAksrm4WP4I66VmD2wW0eRbwB+ZKHUQfvbgUaCRvVdp4WBbWXGU/f/yHgDFWZwljWR4iPMiBwAK8nZsQFRuLFdHrOOHqbkj639LLdT9A07s1zLMB1GfR1fDttzrGhm903pbT2yxSyqqpahGYM7TaGDYYmKYIk4XyVNA5F5Sk7RI+rCecKraoYDeUEFbjWWYtU2FkEXsELEKj0emX5reWkR+wja3QokFcRZ25+Zd2dRC0K8W5QcY2UokLzKncBMCTC5q70H616S3r/9qW67Si1njsJ7RzP0NlZQUNQ/VCvwr4LCr9w+AD9i1SZtXxuux77tWEWSJvBzUc82dDMUv/floJuF7HTulSxxQoRm+fbzpXj9mgaJNiUHXru6ZRTCRVRUSXpcAco94bVoy/jnjrTe3jgAIZK5w14zA8yLw1Jxof31DlbcWORxgF+6fnY2nKPRN2oiQ50+jm1AuGDZX59/wMiu1QlkjOBHtikHp+u+7mp3SkkM04DvuQ/tWODQQnOOtrA0EB3i5H1zeTSnUcmbJufUljWWOvF1QYII08MccqwfG1KWbpobvdu+cV2iVhkq/lNCEL3Ai101CnmSCnMz+9oK/XxYOrx2TnaD9ootOKgnk7XWxF19GZecQx6O2hHTouxvB/0KcRPGWmMWl0H88f3T/Obql8bG8="
 
 notifications:
   email:

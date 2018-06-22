@@ -2147,6 +2147,15 @@ Gecko_GetComputedURLSpec(const URLValueData* aURL, nsCString* aOut)
   aOut->AssignLiteral("about:invalid");
 }
 
+void
+Gecko_nsIURI_Debug(nsIURI* aURI, nsCString* aOut)
+{
+  // TODO(emilio): Do we have more useful stuff to put here, maybe?
+  if (aURI) {
+    *aOut = aURI->GetSpecOrDefault();
+  }
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(css::URLValue, CSSURLValue);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);

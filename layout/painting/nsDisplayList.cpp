@@ -10026,6 +10026,7 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
 
   double dlMs = sMetrics[Metric::DisplayList];
   double flbMs = sMetrics[Metric::Layerization];
+  double frMs = sMetrics[Metric::FlushRasterization];
   double rMs = sMetrics[Metric::Rasterization];
 
   // If the total time was >= 16ms, then it's likely we missed a frame due to
@@ -10033,10 +10034,12 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
   if (totalMs >= 16.0) {
     recordLarge(NS_LITERAL_CSTRING("dl"), dlMs);
     recordLarge(NS_LITERAL_CSTRING("flb"), flbMs);
+    recordLarge(NS_LITERAL_CSTRING("fr"), frMs);
     recordLarge(NS_LITERAL_CSTRING("r"), rMs);
   } else {
     recordSmall(NS_LITERAL_CSTRING("dl"), dlMs);
     recordSmall(NS_LITERAL_CSTRING("flb"), flbMs);
+    recordSmall(NS_LITERAL_CSTRING("fr"), frMs);
     recordSmall(NS_LITERAL_CSTRING("r"), rMs);
   }
 }

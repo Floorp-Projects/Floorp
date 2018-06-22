@@ -6,12 +6,15 @@
 // from the JSONFile backend to the IDB backend.
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionStorage.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
-  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
+
+const {IDB_MIGRATE_RESULT_HISTOGRAM} = ExtensionStorageIDB;
+const CATEGORIES = ["success", "failure"];
 
 async function createExtensionJSONFileWithData(extensionId, data) {
   await ExtensionStorage.set(extensionId, data);
@@ -21,6 +24,20 @@ async function createExtensionJSONFileWithData(extensionId, data) {
   equal(await OS.File.exists(oldStorageFilename), true, "The old json file has been created");
 
   return {jsonFile, oldStorageFilename};
+}
+
+function clearMigrationHistogram() {
+  const histogram = Services.telemetry.getHistogramById(IDB_MIGRATE_RESULT_HISTOGRAM);
+  histogram.clear();
+  equal(histogram.snapshot().sum, 0,
+        `No data recorded for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`);
+}
+
+function assertMigrationHistogramCount(category, expectedCount) {
+  const histogram = Services.telemetry.getHistogramById(IDB_MIGRATE_RESULT_HISTOGRAM);
+
+  equal(histogram.snapshot().counts[CATEGORIES.indexOf(category)], expectedCount,
+        `Got the expected count on category "${category}" for histogram ${IDB_MIGRATE_RESULT_HISTOGRAM}`);
 }
 
 add_task(async function setup() {
@@ -56,6 +73,8 @@ add_task(async function test_storage_local_data_migration() {
     browser.test.sendMessage("storage-local-data-migrated");
   }
 
+  clearMigrationHistogram();
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["storage"],
@@ -81,6 +100,9 @@ add_task(async function test_storage_local_data_migration() {
 
   equal(await OS.File.exists(oldStorageFilename), false,
         "The old json storage file should have been removed");
+
+  assertMigrationHistogramCount("success", 1);
+  assertMigrationHistogramCount("failure", 0);
 
   await extension.unload();
 });
@@ -110,12 +132,14 @@ add_task(async function test_storage_local_corrupted_data_migration() {
     const storedData = await browser.storage.local.get();
 
     browser.test.assertEq(Object.keys(storedData).length, 0,
-                          "No data should be found found on invalid data migration");
+                          "No data should be found on invalid data migration");
 
     await browser.storage.local.set({"test_key_string_on_IDBBackend": "expected-value"});
 
     browser.test.sendMessage("storage-local-data-migrated-and-set");
   }
+
+  clearMigrationHistogram();
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -142,6 +166,11 @@ add_task(async function test_storage_local_corrupted_data_migration() {
 
   equal(await OS.File.exists(`${oldStorageFilename}.corrupt`), true,
         "The old json storage should still be available if failed to be read");
+
+  // The extension is still migrated successfully to the new backend if the file from the
+  // original json file was corrupted.
+  assertMigrationHistogramCount("success", 1);
+  assertMigrationHistogramCount("failure", 0);
 
   await extension.unload();
 });

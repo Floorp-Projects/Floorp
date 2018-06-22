@@ -2017,7 +2017,13 @@ public:
   }
   bool LoadsFullXULStyleSheetUpFront()
   {
-    return IsXULDocument() || AllowXULXBL();
+    if (IsXULDocument()) {
+      return true;
+    }
+    if (IsSVGDocument()) {
+      return false;
+    }
+    return AllowXULXBL();
   }
 
   bool IsScriptEnabled();

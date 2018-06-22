@@ -226,27 +226,46 @@ class _ASRouter {
     this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: state});
   }
 
-  _getBundledMessages(originalMessage) {
-    let bundledMessages = [];
-    bundledMessages.push({content: originalMessage.content, id: originalMessage.id});
-    for (const msg of this.state.messages) {
-      if (msg.bundled && msg.template === originalMessage.template && msg.id !== originalMessage.id && !this.state.blockList.includes(msg.id)) {
-        // Only copy the content - that's what the UI cares about
-        bundledMessages.push({content: msg.content, id: msg.id});
-      }
+  async _getBundledMessages(originalMessage, target, force = false) {
+    let result = [{content: originalMessage.content, id: originalMessage.id}];
 
-      // Stop once we have enough messages to fill a bundle
-      if (bundledMessages.length === originalMessage.bundled) {
-        break;
+    // First, find all messages of same template. These are potential matching targeting candidates
+    let bundledMessagesOfSameTemplate = this._getUnblockedMessages()
+                                          .filter(msg => msg.bundled && msg.template === originalMessage.template && msg.id !== originalMessage.id);
+
+    if (force) {
+      // Forcefully show the messages without targeting matching - this is for about:newtab#asrouter to show the messages
+      for (const message of bundledMessagesOfSameTemplate) {
+        result.push({content: message.content, id: message.id});
+        // Stop once we have enough messages to fill a bundle
+        if (result.length === originalMessage.bundled) {
+          break;
+        }
+      }
+    } else {
+      while (bundledMessagesOfSameTemplate.length) {
+        // Find a message that matches the targeting context - or break if there are no matching messages
+        const message = await ASRouterTargeting.findMatchingMessage(bundledMessagesOfSameTemplate, target);
+        if (!message) {
+          /* istanbul ignore next */ // Code coverage in mochitests
+          break;
+        }
+        // Only copy the content of the message (that's what the UI cares about)
+        // Also delete the message we picked so we don't pick it again
+        result.push({content: message.content, id: message.id});
+        bundledMessagesOfSameTemplate.splice(bundledMessagesOfSameTemplate.findIndex(msg => msg.id === message.id), 1);
+        // Stop once we have enough messages to fill a bundle
+        if (result.length === originalMessage.bundled) {
+          break;
+        }
       }
     }
 
     // If we did not find enough messages to fill the bundle, do not send the bundle down
-    if (bundledMessages.length < originalMessage.bundled) {
+    if (result.length < originalMessage.bundled) {
       return null;
     }
-
-    return {bundle: bundledMessages, provider: originalMessage.provider, template: originalMessage.template};
+    return {bundle: result, provider: originalMessage.provider, template: originalMessage.template};
   }
 
   _getUnblockedMessages() {
@@ -254,11 +273,11 @@ class _ASRouter {
     return state.messages.filter(item => !state.blockList.includes(item.id));
   }
 
-  _sendMessageToTarget(message, target) {
+  async _sendMessageToTarget(message, target, force = false) {
     let bundledMessages;
     // If this message needs to be bundled with other messages of the same template, find them and bundle them together
     if (message && message.bundled) {
-      bundledMessages = this._getBundledMessages(message);
+      bundledMessages = await this._getBundledMessages(message, target, force);
     }
     if (message && !message.bundled) {
       // If we only need to send 1 message, send the message
@@ -273,17 +292,17 @@ class _ASRouter {
 
   async sendNextMessage(target) {
     const msgs = this._getUnblockedMessages();
-    let message = await ASRouterTargeting.findMatchingMessage(msgs);
+    let message = await ASRouterTargeting.findMatchingMessage(msgs, target);
     await this.setState({lastMessageId: message ? message.id : null});
 
-    this._sendMessageToTarget(message, target);
+    await this._sendMessageToTarget(message, target);
   }
 
-  async setMessageById(id) {
+  async setMessageById(id, target, force = true) {
     await this.setState({lastMessageId: id});
     const newMessage = this.getMessageById(id);
 
-    this._sendMessageToTarget(newMessage, this.messageChannel);
+    await this._sendMessageToTarget(newMessage, target, force);
   }
 
   async blockById(idOrIds) {
@@ -355,7 +374,7 @@ class _ASRouter {
         });
         break;
       case "OVERRIDE_MESSAGE":
-        await this.setMessageById(action.data.id);
+        await this.setMessageById(action.data.id, target);
         break;
       case "ADMIN_CONNECT_STATE":
         target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});

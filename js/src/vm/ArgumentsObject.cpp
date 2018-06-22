@@ -576,7 +576,7 @@ MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId id,
         return true;
     }
 
-    unsigned attrs = JSPROP_SHADOWABLE | JSPROP_RESOLVING;
+    unsigned attrs = JSPROP_RESOLVING;
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg))
@@ -776,10 +776,20 @@ UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId i
         return true;
     }
 
-    unsigned attrs = JSPROP_SHADOWABLE;
-    GetterOp getter = UnmappedArgGetter;
-    SetterOp setter = UnmappedArgSetter;
+    if (JSID_IS_ATOM(id, cx->names().callee)) {
+        RootedObject throwTypeError(cx, GlobalObject::getOrCreateThrowTypeError(cx, cx->global()));
+        if (!throwTypeError)
+            return false;
 
+        unsigned attrs = JSPROP_RESOLVING | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER;
+        if (!NativeDefineAccessorProperty(cx, argsobj, id, throwTypeError, throwTypeError, attrs))
+            return false;
+
+        *resolvedp = true;
+        return true;
+    }
+
+    unsigned attrs = JSPROP_RESOLVING;
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg))
@@ -790,21 +800,14 @@ UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId i
         if (argsobj->hasOverriddenLength())
             return true;
     } else {
-        if (!JSID_IS_ATOM(id, cx->names().callee))
-            return true;
-
-        JSObject* throwTypeError = GlobalObject::getOrCreateThrowTypeError(cx, cx->global());
-        if (!throwTypeError)
-            return false;
-
-        attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER;
-        getter = CastAsGetterOp(throwTypeError);
-        setter = CastAsSetterOp(throwTypeError);
+        return true;
     }
 
-    attrs |= JSPROP_RESOLVING;
-    if (!NativeDefineAccessorProperty(cx, argsobj, id, getter, setter, attrs))
+    if (!NativeDefineAccessorProperty(cx, argsobj, id, UnmappedArgGetter, UnmappedArgSetter,
+                                      attrs))
+    {
         return false;
+    }
 
     *resolvedp = true;
     return true;

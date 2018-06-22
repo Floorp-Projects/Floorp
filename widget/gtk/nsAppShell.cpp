@@ -14,7 +14,7 @@
 #include "nsWindow.h"
 #include "mozilla/Logging.h"
 #include "prenv.h"
-#include "mozilla/HangMonitor.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
 #include "GeckoProfiler.h"
@@ -46,14 +46,14 @@ static GPollFunc sPollFunc;
 static gint
 PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
 {
-    mozilla::HangMonitor::Suspend();
+    mozilla::BackgroundHangMonitor().NotifyWait();
     gint result;
     {
         AUTO_PROFILER_LABEL("PollWrapper", IDLE);
         AUTO_PROFILER_THREAD_SLEEP;
         result = (*sPollFunc)(ufds, nfsd, timeout_);
     }
-    mozilla::HangMonitor::NotifyActivity();
+    mozilla::BackgroundHangMonitor().NotifyActivity();
     return result;
 }
 

@@ -2440,19 +2440,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
   UniquePtr<ServoStyleSet> styleSet = MakeUnique<ServoStyleSet>();
 
   // The document will fill in the document sheets when we create the presshell
-
-  if (aDocument->IsBeingUsedAsImage()) {
-    MOZ_ASSERT(aDocument->IsSVGDocument(),
-               "Do we want to skip most sheets for this new image type?");
-
-    // SVG-as-an-image must be kept as light and small as possible. We
-    // deliberately skip loading everything and leave svg.css (and html.css and
-    // xul.css) to be loaded on-demand.
-    // XXXjwatt Nothing else is loaded on-demand, but I don't think that
-    // should matter for SVG-as-an-image. If it does, I want to know why!
-    return styleSet;
-  }
-
   auto cache = nsLayoutStylesheetCache::Singleton();
 
   // Handle the user sheets.
@@ -2473,81 +2460,63 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     styleSet->PrependStyleSheet(SheetType::Agent, sheet);
   }
 
-  if (!aDocument->IsSVGDocument()) {
-    // !!! IMPORTANT - KEEP THIS BLOCK IN SYNC WITH
-    // !!! SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded.
+  sheet = cache->FormsSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  }
 
-    // SVGForeignObjectElement::BindToTree calls SVGDocument::
-    // EnsureNonSVGUserAgentStyleSheetsLoaded to loads these UA sheet
-    // on-demand. (Excluding the quirks sheet, which should never be loaded for
-    // an SVG document, and excluding xul.css which will be loaded on demand by
-    // nsXULElement::BindToTree.)
-
-    sheet = cache->FormsSheet();
+  if (aDocument->LoadsFullXULStyleSheetUpFront()) {
+    // This is the only place components.css gets loaded, unlike xul.css
+    sheet = cache->XULComponentsSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
 
-    if (aDocument->LoadsFullXULStyleSheetUpFront()) {
-      // This is the only place components.css gets loaded, unlike xul.css
-      sheet = cache->XULComponentsSheet();
-      if (sheet) {
-        styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-      }
-
-      // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
-      // up-front here.
-      sheet = cache->XULSheet();
-      if (sheet) {
-        styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-      }
-    }
-
-    sheet = cache->MinimalXULSheet();
-    if (sheet) {
-      // Load the minimal XUL rules for scrollbars and a few other XUL things
-      // that non-XUL (typically HTML) documents commonly use.
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-    }
-
-    sheet = cache->CounterStylesSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-    }
-
-    if (nsLayoutUtils::ShouldUseNoScriptSheet(aDocument)) {
-      sheet = cache->NoScriptSheet();
-      if (sheet) {
-        styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-      }
-    }
-
-    if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
-      sheet = cache->NoFramesSheet();
-      if (sheet) {
-        styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-      }
-    }
-
-    // We don't add quirk.css here; nsPresContext::CompatibilityModeChanged will
-    // append it if needed.
-
-    sheet = cache->HTMLSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
-    }
-
-    styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
-  } else {
-    // SVG documents may have scrollbars and need the scrollbar styling.
-    sheet = cache->MinimalXULSheet();
+    // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
+    // up-front here.
+    sheet = cache->XULSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
   }
 
-  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
-  if (sheetService) {
+  sheet = cache->MinimalXULSheet();
+  if (sheet) {
+    // Load the minimal XUL rules for scrollbars and a few other XUL things
+    // that non-XUL (typically HTML) documents commonly use.
+    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  }
+
+  sheet = cache->CounterStylesSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  }
+
+  if (nsLayoutUtils::ShouldUseNoScriptSheet(aDocument)) {
+    sheet = cache->NoScriptSheet();
+    if (sheet) {
+      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+    }
+  }
+
+  if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
+    sheet = cache->NoFramesSheet();
+    if (sheet) {
+      styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+    }
+  }
+
+  // We don't add quirk.css here; nsPresContext::CompatibilityModeChanged will
+  // append it if needed.
+
+  sheet = cache->HTMLSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  }
+
+  styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
+
+  if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
     for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
       styleSet->AppendStyleSheet(SheetType::Agent, sheet);
     }

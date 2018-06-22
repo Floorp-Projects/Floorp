@@ -7,8 +7,8 @@ this.randomString = function randomString(length, chars) {
   chars = chars || randomStringChars;
   let result = "";
   for (let i = 0; i < length; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)]
+    result += chars[Math.floor(Math.random() * chars.length)];
   }
   return result;
-}
+};
 null;

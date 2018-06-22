@@ -45,6 +45,8 @@ chrome.jar:
   content/RemoteDebugger.js            (content/RemoteDebugger.js)
   content/aboutAccounts.xhtml          (content/aboutAccounts.xhtml)
   content/aboutAccounts.js             (content/aboutAccounts.js)
+  content/aboutExperiments.xhtml       (content/aboutExperiments.xhtml)
+  content/aboutExperiments.js          (content/aboutExperiments.js)
   content/aboutLogins.xhtml            (content/aboutLogins.xhtml)
   content/aboutLogins.js               (content/aboutLogins.js)
 #ifndef RELEASE_OR_BETA

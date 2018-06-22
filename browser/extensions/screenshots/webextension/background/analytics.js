@@ -29,7 +29,7 @@ this.analytics = (function() {
     const sendTime = Date.now();
 
     pendingEvents.forEach(event => {
-      event.queueTime = sendTime - event.eventTime
+      event.queueTime = sendTime - event.eventTime;
       log.info(`sendEvent ${event.event}/${event.action}/${event.label || "none"} ${JSON.stringify(event.options)}`);
     });
 

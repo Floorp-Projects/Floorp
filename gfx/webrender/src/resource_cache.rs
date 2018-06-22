@@ -525,7 +525,7 @@ impl ResourceCache {
         &mut self,
         image_key: ImageKey,
         descriptor: ImageDescriptor,
-        mut data: ImageData,
+        data: ImageData,
         dirty_rect: Option<DeviceUintRect>,
     ) {
         let max_texture_size = self.max_texture_size();
@@ -539,11 +539,11 @@ impl ResourceCache {
             tiling = Some(DEFAULT_TILE_SIZE);
         }
 
-        if let ImageData::Blob(ref mut blob) = data {
+        if let ImageData::Blob(ref blob) = data {
             self.blob_image_renderer
                 .as_mut()
                 .unwrap()
-                .update(image_key, Arc::clone(&blob), dirty_rect);
+                .update(image_key, Arc::clone(blob), dirty_rect);
         }
 
         *image = ImageResource {
@@ -645,33 +645,33 @@ impl ResourceCache {
         //  - The image is a blob.
         //  - The blob hasn't already been requested this frame.
         if self.pending_image_requests.insert(request) && template.data.is_blob() {
-            if let Some(ref mut renderer) = self.blob_image_renderer {
-                let (offset, size) = match template.tiling {
-                    Some(tile_size) => {
-                        let tile_offset = request.tile.unwrap();
-                        let actual_size = compute_tile_size(
-                            &template.descriptor,
-                            tile_size,
-                            tile_offset,
-                        );
-                        let offset = DevicePoint::new(
-                            tile_offset.x as f32 * tile_size as f32,
-                            tile_offset.y as f32 * tile_size as f32,
-                        );
+            let (offset, size) = match template.tiling {
+                Some(tile_size) => {
+                    let tile_offset = request.tile.unwrap();
+                    let actual_size = compute_tile_size(
+                        &template.descriptor,
+                        tile_size,
+                        tile_offset,
+                    );
 
-                        if let Some(dirty) = dirty_rect {
-                            if intersect_for_tile(dirty, actual_size, tile_size, tile_offset).is_none() {
-                                // don't bother requesting unchanged tiles
-                                self.pending_image_requests.remove(&request);
-                                return
-                            }
+                    if let Some(dirty) = dirty_rect {
+                        if intersect_for_tile(dirty, actual_size, tile_size, tile_offset).is_none() {
+                            // don't bother requesting unchanged tiles
+                            self.pending_image_requests.remove(&request);
+                            return
                         }
-
-                        (offset, actual_size)
                     }
-                    None => (DevicePoint::zero(), template.descriptor.size),
-                };
 
+                    let offset = DevicePoint::new(
+                        tile_offset.x as f32 * tile_size as f32,
+                        tile_offset.y as f32 * tile_size as f32,
+                    );
+                    (offset, actual_size)
+                }
+                None => (DevicePoint::zero(), template.descriptor.size),
+            };
+
+            if let Some(ref mut renderer) = self.blob_image_renderer {
                 renderer.request(
                     &self.resources,
                     request.into(),
@@ -926,7 +926,6 @@ impl ResourceCache {
         for request in self.pending_image_requests.drain() {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
-            let mut dirty_rect = image_template.dirty_rect;
 
             let image_data = match image_template.data {
                 ImageData::Raw(..) | ImageData::External(..) => {
@@ -962,16 +961,23 @@ impl ResourceCache {
                 }
             };
 
-            let descriptor = if let Some(tile) = request.tile {
+            let entry = self.cached_images.get_mut(&request).as_mut().unwrap();
+            let mut descriptor = image_template.descriptor.clone();
+            //TODO: erasing the dirty rectangle here is incorrect for tiled images,
+            // since other tile requests may follow that depend on it
+            let mut local_dirty_rect = image_template.dirty_rect.take();
+
+            if let Some(tile) = request.tile {
                 let tile_size = image_template.tiling.unwrap();
-                let image_descriptor = &image_template.descriptor;
+                let clipped_tile_size = compute_tile_size(&descriptor, tile_size, tile);
 
-                let clipped_tile_size = compute_tile_size(image_descriptor, tile_size, tile);
-
-                if let Some(dirty) = dirty_rect {
-                    dirty_rect = intersect_for_tile(dirty, clipped_tile_size, tile_size, tile);
-                    if dirty_rect.is_none() {
-                        continue
+                if let Some(ref mut rect) = local_dirty_rect {
+                    match intersect_for_tile(*rect, clipped_tile_size, tile_size, tile) {
+                        Some(intersection) => *rect = intersection,
+                        None => {
+                            // if re-uploaded, the dirty rect is ignored anyway
+                            debug_assert!(self.texture_cache.needs_upload(&entry.texture_cache_handle))
+                        }
                     }
                 }
 
@@ -979,27 +985,17 @@ impl ResourceCache {
                 // already broken up into tiles. This affects the way we compute the stride
                 // and offset.
                 let tiled_on_cpu = image_template.data.is_blob();
-
-                let (stride, offset) = if tiled_on_cpu {
-                    (image_descriptor.stride, 0)
-                } else {
-                    let bpp = image_descriptor.format.bytes_per_pixel();
-                    let stride = image_descriptor.compute_stride();
-                    let offset = image_descriptor.offset +
+                if !tiled_on_cpu {
+                    let bpp = descriptor.format.bytes_per_pixel();
+                    let stride = descriptor.compute_stride();
+                    descriptor.stride = Some(stride);
+                    descriptor.offset +=
                         tile.y as u32 * tile_size as u32 * stride +
                         tile.x as u32 * tile_size as u32 * bpp;
-                    (Some(stride), offset)
-                };
-
-                ImageDescriptor {
-                    size: clipped_tile_size,
-                    stride,
-                    offset,
-                    ..*image_descriptor
                 }
-            } else {
-                image_template.descriptor.clone()
-            };
+
+                descriptor.size = clipped_tile_size;
+            }
 
             let filter = match request.rendering {
                 ImageRendering::Pixelated => {
@@ -1027,19 +1023,18 @@ impl ResourceCache {
                 }
             };
 
-            let entry = self.cached_images.get_mut(&request).as_mut().unwrap();
+            //Note: at this point, the dirty rectangle is local to the descriptor space
             self.texture_cache.update(
                 &mut entry.texture_cache_handle,
                 descriptor,
                 filter,
                 Some(image_data),
                 [0.0; 3],
-                dirty_rect,
+                local_dirty_rect,
                 gpu_cache,
                 None,
                 UvRectKind::Rect,
             );
-            image_template.dirty_rect = None;
         }
     }
 

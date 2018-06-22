@@ -523,9 +523,11 @@ txStylesheetCompilerState::txStylesheetCompilerState(txACompileObserver* aObserv
       mDisAllowed(0),
       mObserver(aObserver),
       mEmbedStatus(eNoEmbed),
+      mIsTopCompiler(false),
       mDoneWithThisStylesheet(false),
       mNextInstrPtr(nullptr),
-      mToplevelIterator(nullptr)
+      mToplevelIterator(nullptr),
+      mReferrerPolicy(mozilla::net::RP_Unset)
 {
     // Embedded stylesheets have another handler, which is set in
     // txStylesheetCompiler::init if the baseURI has a fragment identifier.

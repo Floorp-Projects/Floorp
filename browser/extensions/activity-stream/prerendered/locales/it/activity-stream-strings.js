@@ -17,7 +17,7 @@ window.gActivityStreamStrings = {
   "menu_action_open_private_window": "Apri in una nuova finestra anonima",
   "menu_action_dismiss": "Rimuovi",
   "menu_action_delete": "Elimina dalla cronologia",
-  "menu_action_pin": "Aggiungi alla bacheca",
+  "menu_action_pin": "Fissa alla bacheca",
   "menu_action_unpin": "Rimuovi dalla bacheca",
   "confirm_history_delete_p1": "Eliminare tutte le occorrenze di questa pagina dalla cronologia?",
   "confirm_history_delete_notice_p2": "Questa operazione non può essere annullata.",

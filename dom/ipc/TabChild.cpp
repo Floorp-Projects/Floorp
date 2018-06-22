@@ -3228,6 +3228,9 @@ TabChild::ReinitRendering()
   gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
 
   InitAPZState();
+  RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
+  MOZ_ASSERT(lm);
+  lm->SetLayerObserverEpoch(mLayerObserverEpoch);
 
   nsCOMPtr<nsIDocument> doc(GetDocument());
   doc->NotifyLayerManagerRecreated();

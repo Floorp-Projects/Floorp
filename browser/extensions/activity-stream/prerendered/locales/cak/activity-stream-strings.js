@@ -54,7 +54,7 @@ window.gActivityStreamStrings = {
   "settings_pane_button_label": "Tawichinaj ri ruxaq richin K'ak'a' Ruwi'",
   "settings_pane_topsites_header": "Utziläj taq ruxaq K'amaya'l",
   "settings_pane_highlights_header": "Taq k'ewachinïk",
-  "settings_pane_highlights_options_bookmarks": "Taq yaketal",
+  "settings_pane_highlights_options_bookmarks": "Yaketal",
   "settings_pane_snippets_header": "Taq pir",
   "edit_topsites_button_text": "Tinuk'",
   "edit_topsites_edit_button": "Tinuk' re ruxaq k'amaya'l re'",

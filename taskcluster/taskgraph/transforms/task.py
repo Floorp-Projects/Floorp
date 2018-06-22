@@ -545,7 +545,7 @@ task_description_schema = Schema({
         Required('release-name'): basestring,
     }, {
         Required('implementation'): 'treescript',
-        Required('tag'): bool,
+        Required('tags'): [Any('buildN', 'release', None)],
         Required('bump'): bool,
         Optional('bump-files'): [basestring],
         Optional('repo-param-prefix'): basestring,
@@ -1139,14 +1139,19 @@ def build_treescript_payload(config, task, task_def):
 
     task_def['payload'] = {}
     task_def.setdefault('scopes', [])
-    if worker['tag']:
+    if worker['tags']:
+        tag_names = []
         product = task['shipping-product'].upper()
         version = release_config['version'].replace('.', '_')
         buildnum = release_config['build_number']
-        tag_names = [
-            "{}_{}_BUILD{}".format(product, version, buildnum),
-            "{}_{}_RELEASE".format(product, version)
-        ]
+        if 'buildN' in worker['tags']:
+            tag_names.extend([
+                "{}_{}_BUILD{}".format(product, version, buildnum),
+            ])
+        if 'release' in worker['tags']:
+            tag_names.extend([
+              "{}_{}_RELEASE".format(product, version)
+            ])
         tag_info = {
             'tags': tag_names,
             'revision': config.params['{}head_rev'.format(worker.get('repo-param-prefix', ''))],

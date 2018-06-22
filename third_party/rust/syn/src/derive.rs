@@ -163,10 +163,11 @@ pub mod parsing {
 mod printing {
     use super::*;
     use attr::FilterAttrs;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for DeriveInput {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             for attr in self.attrs.outer() {
                 attr.to_tokens(tokens);
             }

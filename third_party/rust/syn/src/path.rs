@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use punctuated::Punctuated;
 use super::*;
+use punctuated::Punctuated;
 
 ast_struct! {
     /// A path at which a named item is exported: `std::collections::HashMap`.
@@ -31,9 +31,11 @@ impl Path {
 /// ```rust
 /// extern crate syn;
 /// extern crate quote;
+/// extern crate proc_macro2;
 ///
 /// use syn::{QSelf, Path, PathTokens};
-/// use quote::{Tokens, ToTokens};
+/// use proc_macro2::TokenStream;
+/// use quote::ToTokens;
 ///
 /// struct MyNode {
 ///     qself: Option<QSelf>,
@@ -41,7 +43,7 @@ impl Path {
 /// }
 ///
 /// impl ToTokens for MyNode {
-///     fn to_tokens(&self, tokens: &mut Tokens) {
+///     fn to_tokens(&self, tokens: &mut TokenStream) {
 ///         PathTokens(&self.qself, &self.path).to_tokens(tokens);
 ///     }
 /// }
@@ -295,7 +297,7 @@ pub mod parsing {
     impl Synom for ParenthesizedGenericArguments {
         named!(parse -> Self, do_parse!(
             data: parens!(Punctuated::parse_terminated) >>
-            output: syn!(ReturnType) >>
+            output: call!(ReturnType::without_plus) >>
             (ParenthesizedGenericArguments {
                 paren_token: data.0,
                 inputs: data.1,
@@ -416,24 +418,25 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use quote::{ToTokens, Tokens};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for Path {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.leading_colon.to_tokens(tokens);
             self.segments.to_tokens(tokens);
         }
     }
 
     impl ToTokens for PathSegment {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.ident.to_tokens(tokens);
             self.arguments.to_tokens(tokens);
         }
     }
 
     impl ToTokens for PathArguments {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 PathArguments::None => {}
                 PathArguments::AngleBracketed(ref arguments) => {
@@ -448,7 +451,7 @@ mod printing {
 
     impl ToTokens for GenericArgument {
         #[cfg_attr(feature = "cargo-clippy", allow(match_same_arms))]
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             match *self {
                 GenericArgument::Lifetime(ref lt) => lt.to_tokens(tokens),
                 GenericArgument::Type(ref ty) => ty.to_tokens(tokens),
@@ -473,7 +476,7 @@ mod printing {
     }
 
     impl ToTokens for AngleBracketedGenericArguments {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.colon2_token.to_tokens(tokens);
             self.lt_token.to_tokens(tokens);
 
@@ -516,7 +519,7 @@ mod printing {
     }
 
     impl ToTokens for Binding {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.ident.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             self.ty.to_tokens(tokens);
@@ -524,7 +527,7 @@ mod printing {
     }
 
     impl ToTokens for ParenthesizedGenericArguments {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             self.paren_token.surround(tokens, |tokens| {
                 self.inputs.to_tokens(tokens);
             });
@@ -533,7 +536,7 @@ mod printing {
     }
 
     impl<'a> ToTokens for PathTokens<'a> {
-        fn to_tokens(&self, tokens: &mut Tokens) {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
             let qself = match *self.0 {
                 Some(ref qself) => qself,
                 None => return self.1.to_tokens(tokens),

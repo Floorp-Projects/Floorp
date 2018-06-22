@@ -50,11 +50,11 @@ static const uint32_t kNumPuppetAxis = 3;
 static const uint32_t kNumPuppetHaptcs = 1;
 
 VRDisplayPuppet::VRDisplayPuppet()
- : VRDisplayHost(VRDeviceType::Puppet)
+ : VRDisplayLocal(VRDeviceType::Puppet)
  , mIsPresenting(false)
  , mSensorState{}
 {
-  MOZ_COUNT_CTOR_INHERITED(VRDisplayPuppet, VRDisplayHost);
+  MOZ_COUNT_CTOR_INHERITED(VRDisplayPuppet, VRDisplayLocal);
 
   VRDisplayState& state = mDisplayInfo.mDisplayState;
   strncpy(state.mDisplayName, "Puppet HMD", kVRDisplayNameMaxLen);
@@ -123,7 +123,7 @@ VRDisplayPuppet::VRDisplayPuppet()
 
 VRDisplayPuppet::~VRDisplayPuppet()
 {
-  MOZ_COUNT_DTOR_INHERITED(VRDisplayPuppet, VRDisplayHost);
+  MOZ_COUNT_DTOR_INHERITED(VRDisplayPuppet, VRDisplayLocal);
 }
 
 void

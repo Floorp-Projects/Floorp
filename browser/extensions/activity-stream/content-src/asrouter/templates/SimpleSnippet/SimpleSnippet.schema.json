@@ -1,7 +1,7 @@
 {
   "title": "SimpleSnippet",
   "description": "A simple template with an icon, text, and optional button.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "type": "object",
   "properties": {
     "title": {
@@ -50,6 +50,10 @@
         "url": {
           "type": "string",
           "description": "The url where the link points to."
+        },
+        "metric": {
+          "type": "string",
+          "description": "Custom event name sent with telemetry event."
         }
       }
     }

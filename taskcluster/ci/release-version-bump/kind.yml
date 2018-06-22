@@ -25,7 +25,7 @@ job-defaults:
             default: scriptworker-prov-v1/treescript-dev
     worker:
         implementation: treescript
-        tag: true
+        tags: ['release']
         bump: true
         bump-files:
             by-project:

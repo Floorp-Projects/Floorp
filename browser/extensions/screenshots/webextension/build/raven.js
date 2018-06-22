@@ -1,4 +1,4 @@
-/*! Raven.js 3.24.1 (f3b3500) | github.com/getsentry/raven-js */
+/*! Raven.js 3.25.2 (30b6d4e) | github.com/getsentry/raven-js */
 
 /*
  * Includes TraceKit
@@ -74,10 +74,12 @@ var md5 = _dereq_(8);
 var RavenConfigError = _dereq_(1);
 
 var utils = _dereq_(5);
+var isErrorEvent = utils.isErrorEvent;
+var isDOMError = utils.isDOMError;
+var isDOMException = utils.isDOMException;
 var isError = utils.isError;
 var isObject = utils.isObject;
 var isPlainObject = utils.isPlainObject;
-var isErrorEvent = utils.isErrorEvent;
 var isUndefined = utils.isUndefined;
 var isFunction = utils.isFunction;
 var isString = utils.isString;
@@ -115,7 +117,11 @@ function now() {
 var _window =
   typeof window !== 'undefined'
     ? window
-    : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+    : typeof global !== 'undefined'
+      ? global
+      : typeof self !== 'undefined'
+        ? self
+        : {};
 var _document = _window.document;
 var _navigator = _window.navigator;
 
@@ -205,7 +211,7 @@ Raven.prototype = {
   // webpack (using a build step causes webpack #1617). Grunt verifies that
   // this value matches package.json during build.
   //   See: https://github.com/getsentry/raven-js/issues/465
-  VERSION: '3.24.1',
+  VERSION: '3.25.2',
 
   debug: false,
 
@@ -537,6 +543,23 @@ Raven.prototype = {
     if (isErrorEvent(ex) && ex.error) {
       // If it is an ErrorEvent with `error` property, extract it to get actual Error
       ex = ex.error;
+    } else if (isDOMError(ex) || isDOMException(ex)) {
+      // If it is a DOMError or DOMException (which are legacy APIs, but still supported in some browsers)
+      // then we just extract the name and message, as they don't provide anything else
+      // https://developer.mozilla.org/en-US/docs/Web/API/DOMError
+      // https://developer.mozilla.org/en-US/docs/Web/API/DOMException
+      var name = ex.name || (isDOMError(ex) ? 'DOMError' : 'DOMException');
+      var message = ex.message ? name + ': ' + ex.message : name;
+
+      return this.captureMessage(
+        message,
+        objectMerge(options, {
+          // neither DOMError or DOMException provide stack trace and we most likely wont get it this way as well
+          // but it's barely any overhead so we may at least try
+          stacktrace: true,
+          trimHeadFrames: options.trimHeadFrames + 1
+        })
+      );
     } else if (isError(ex)) {
       // we have a real Error object
       ex = ex;
@@ -548,6 +571,7 @@ Raven.prototype = {
       ex = new Error(options.message);
     } else {
       // If none of previous checks were valid, then it means that
+      // it's not a DOMError/DOMException
       // it's not a plain Object
       // it's not a valid ErrorEvent (one with an error property)
       // it's not an Error
@@ -639,6 +663,14 @@ Raven.prototype = {
 
     // stack[0] is `throw new Error(msg)` call itself, we are interested in the frame that was just before that, stack[1]
     var initialCall = isArray(stack.stack) && stack.stack[1];
+
+    // if stack[1] is `Raven.captureException`, it means that someone passed a string to it and we redirected that call
+    // to be handled by `captureMessage`, thus `initialCall` is the 3rd one, not 2nd
+    // initialCall => captureException(string) => captureMessage(string)
+    if (initialCall && initialCall.func === 'Raven.captureException') {
+      initialCall = stack.stack[2];
+    }
+
     var fileurl = (initialCall && initialCall.url) || '';
 
     if (
@@ -1436,17 +1468,30 @@ Raven.prototype = {
               status_code: null
             };
 
-            return origFetch.apply(this, args).then(function(response) {
-              fetchData.status_code = response.status;
+            return origFetch
+              .apply(this, args)
+              .then(function(response) {
+                fetchData.status_code = response.status;
 
-              self.captureBreadcrumb({
-                type: 'http',
-                category: 'fetch',
-                data: fetchData
+                self.captureBreadcrumb({
+                  type: 'http',
+                  category: 'fetch',
+                  data: fetchData
+                });
+
+                return response;
+              })
+              ['catch'](function(err) {
+                // if there is an error performing the request
+                self.captureBreadcrumb({
+                  type: 'http',
+                  category: 'fetch',
+                  data: fetchData,
+                  level: 'error'
+                });
+
+                throw err;
               });
-
-              return response;
-            });
           };
         },
         wrappedBuiltIns
@@ -1459,7 +1504,7 @@ Raven.prototype = {
       if (_document.addEventListener) {
         _document.addEventListener('click', self._breadcrumbEventHandler('click'), false);
         _document.addEventListener('keypress', self._keypressEventHandler(), false);
-      } else if(_document.attachEvent){
+      } else if (_document.attachEvent) {
         // IE8 Compatibility
         _document.attachEvent('onclick', self._breadcrumbEventHandler('click'));
         _document.attachEvent('onkeypress', self._keypressEventHandler());
@@ -1475,8 +1520,8 @@ Raven.prototype = {
     var hasPushAndReplaceState =
       !isChromePackagedApp &&
       _window.history &&
-      history.pushState &&
-      history.replaceState;
+      _window.history.pushState &&
+      _window.history.replaceState;
     if (autoBreadcrumbs.location && hasPushAndReplaceState) {
       // TODO: remove onpopstate handler on uninstall()
       var oldOnPopState = _window.onpopstate;
@@ -1505,8 +1550,8 @@ Raven.prototype = {
         };
       };
 
-      fill(history, 'pushState', historyReplacementFunction, wrappedBuiltIns);
-      fill(history, 'replaceState', historyReplacementFunction, wrappedBuiltIns);
+      fill(_window.history, 'pushState', historyReplacementFunction, wrappedBuiltIns);
+      fill(_window.history, 'replaceState', historyReplacementFunction, wrappedBuiltIns);
     }
 
     if (autoBreadcrumbs.console && 'console' in _window && console.log) {
@@ -1722,7 +1767,7 @@ Raven.prototype = {
             }
           ]
         },
-        culprit: fileurl
+        transaction: fileurl
       },
       options
     );
@@ -1796,7 +1841,7 @@ Raven.prototype = {
 
     if (this._hasNavigator && _navigator.userAgent) {
       httpData.headers = {
-        'User-Agent': navigator.userAgent
+        'User-Agent': _navigator.userAgent
       };
     }
 
@@ -1837,7 +1882,7 @@ Raven.prototype = {
     if (
       !last ||
       current.message !== last.message || // defined for captureMessage
-      current.culprit !== last.culprit // defined for captureException/onerror
+      current.transaction !== last.transaction // defined for captureException/onerror
     )
       return false;
 
@@ -2182,7 +2227,11 @@ Raven.prototype = {
   },
 
   _logDebug: function(level) {
-    if (this._originalConsoleMethods[level] && this.debug) {
+    // We allow `Raven.debug` and `Raven.config(DSN, { debug: true })` to not make backward incompatible API change
+    if (
+      this._originalConsoleMethods[level] &&
+      (this.debug || this._globalOptions.debug)
+    ) {
       // In IE<10 console methods do not have their own 'apply' method
       Function.prototype.apply.call(
         this._originalConsoleMethods[level],
@@ -2295,7 +2344,7 @@ function isObject(what) {
 // Yanked from https://git.io/vS8DV re-used under CC0
 // with some tiny modifications
 function isError(value) {
-  switch ({}.toString.call(value)) {
+  switch (Object.prototype.toString.call(value)) {
     case '[object Error]':
       return true;
     case '[object Exception]':
@@ -2308,7 +2357,15 @@ function isError(value) {
 }
 
 function isErrorEvent(value) {
-  return supportsErrorEvent() && {}.toString.call(value) === '[object ErrorEvent]';
+  return Object.prototype.toString.call(value) === '[object ErrorEvent]';
+}
+
+function isDOMError(value) {
+  return Object.prototype.toString.call(value) === '[object DOMError]';
+}
+
+function isDOMException(value) {
+  return Object.prototype.toString.call(value) === '[object DOMException]';
 }
 
 function isUndefined(what) {
@@ -2345,6 +2402,24 @@ function isEmptyObject(what) {
 function supportsErrorEvent() {
   try {
     new ErrorEvent(''); // eslint-disable-line no-new
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function supportsDOMError() {
+  try {
+    new DOMError(''); // eslint-disable-line no-new
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function supportsDOMException() {
+  try {
+    new DOMException(''); // eslint-disable-line no-new
     return true;
   } catch (e) {
     return false;
@@ -2443,7 +2518,13 @@ function objectFrozen(obj) {
 }
 
 function truncate(str, max) {
-  return !max || str.length <= max ? str : str.substr(0, max) + '\u2026';
+  if (typeof max !== 'number') {
+    throw new Error('2nd argument to `truncate` function should be a number');
+  }
+  if (typeof str !== 'string' || max === 0) {
+    return str;
+  }
+  return str.length <= max ? str : str.substr(0, max) + '\u2026';
 }
 
 /**
@@ -2742,10 +2823,9 @@ function jsonSize(value) {
 }
 
 function serializeValue(value) {
-  var maxLength = 40;
-
   if (typeof value === 'string') {
-    return value.length <= maxLength ? value : value.substr(0, maxLength - 1) + '\u2026';
+    var maxLength = 40;
+    return truncate(value, maxLength);
   } else if (
     typeof value === 'number' ||
     typeof value === 'boolean' ||
@@ -2861,6 +2941,8 @@ module.exports = {
   isObject: isObject,
   isError: isError,
   isErrorEvent: isErrorEvent,
+  isDOMError: isDOMError,
+  isDOMException: isDOMException,
   isUndefined: isUndefined,
   isFunction: isFunction,
   isPlainObject: isPlainObject,
@@ -2868,6 +2950,8 @@ module.exports = {
   isArray: isArray,
   isEmptyObject: isEmptyObject,
   supportsErrorEvent: supportsErrorEvent,
+  supportsDOMError: supportsDOMError,
+  supportsDOMException: supportsDOMException,
   supportsFetch: supportsFetch,
   supportsReferrerPolicy: supportsReferrerPolicy,
   supportsPromiseRejectionEvent: supportsPromiseRejectionEvent,
@@ -2927,8 +3011,22 @@ var ERROR_TYPES_RE = /^(?:[Uu]ncaught (?:exception: )?)?(?:((?:Eval|Internal|Ran
 
 function getLocationHref() {
   if (typeof document === 'undefined' || document.location == null) return '';
-
   return document.location.href;
+}
+
+function getLocationOrigin() {
+  if (typeof document === 'undefined' || document.location == null) return '';
+
+  // Oh dear IE10...
+  if (!document.location.origin) {
+    document.location.origin =
+      document.location.protocol +
+      '//' +
+      document.location.hostname +
+      (document.location.port ? ':' + document.location.port : '');
+  }
+
+  return document.location.origin;
 }
 
 /**
@@ -3336,6 +3434,44 @@ TraceKit.computeStackTrace = (function computeStackTraceWrapper() {
 
       if (!element.func && element.line) {
         element.func = UNKNOWN_FUNCTION;
+      }
+
+      if (element.url && element.url.substr(0, 5) === 'blob:') {
+        // Special case for handling JavaScript loaded into a blob.
+        // We use a synchronous AJAX request here as a blob is already in
+        // memory - it's not making a network request.  This will generate a warning
+        // in the browser console, but there has already been an error so that's not
+        // that much of an issue.
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', element.url, false);
+        xhr.send(null);
+
+        // If we failed to download the source, skip this patch
+        if (xhr.status === 200) {
+          var source = xhr.responseText || '';
+
+          // We trim the source down to the last 300 characters as sourceMappingURL is always at the end of the file.
+          // Why 300? To be in line with: https://github.com/getsentry/sentry/blob/4af29e8f2350e20c28a6933354e4f42437b4ba42/src/sentry/lang/javascript/processor.py#L164-L175
+          source = source.slice(-300);
+
+          // Now we dig out the source map URL
+          var sourceMaps = source.match(/\/\/# sourceMappingURL=(.*)$/);
+
+          // If we don't find a source map comment or we find more than one, continue on to the next element.
+          if (sourceMaps) {
+            var sourceMapAddress = sourceMaps[1];
+
+            // Now we check to see if it's a relative URL.
+            // If it is, convert it to an absolute one.
+            if (sourceMapAddress.charAt(0) === '~') {
+              sourceMapAddress = getLocationOrigin() + sourceMapAddress.slice(1);
+            }
+
+            // Now we strip the '.map' off of the end of the URL and update the
+            // element so that Sentry can match the map to the blob.
+            element.url = sourceMapAddress.slice(0, -4);
+          }
+        }
       }
 
       stack.push(element);

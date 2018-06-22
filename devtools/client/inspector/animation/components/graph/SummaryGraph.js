@@ -180,7 +180,7 @@ class SummaryGraph extends PureComponent {
       animation.state.name ?
         AnimationName(
           {
-            animation
+            animation,
           }
         )
       :

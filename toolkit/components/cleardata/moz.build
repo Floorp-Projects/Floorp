@@ -15,6 +15,10 @@ EXTRA_COMPONENTS += [
     'ClearDataService.manifest',
 ]
 
+EXTRA_JS_MODULES += [
+    'ServiceWorkerCleanUp.jsm',
+]
+
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 include('/ipc/chromium/chromium-config.mozbuild')
