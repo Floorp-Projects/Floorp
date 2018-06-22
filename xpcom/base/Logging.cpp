@@ -19,6 +19,7 @@
 #include "MainThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDebug.h"
+#include "nsDebugImpl.h"
 #include "NSPRLogModulesParser.h"
 #include "LogCommandLineHandler.h"
 
@@ -463,8 +464,8 @@ public:
     if (!mAddTimestamp) {
       if (!mIsRaw) {
         fprintf_stderr(out,
-                      "[%ld:%s]: %s/%s %s%s",
-                      pid, currentThreadName, ToLogStr(aLevel),
+                      "[%s %ld: %s]: %s/%s %s%s",
+                      nsDebugImpl::GetMultiprocessMode(), pid, currentThreadName, ToLogStr(aLevel),
                       aName, buffToWrite, newline);
       } else {
         fprintf_stderr(out, "%s%s", buffToWrite, newline);
@@ -474,10 +475,10 @@ public:
       PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
       fprintf_stderr(
           out,
-          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%ld:%s]: %s/%s %s%s",
+          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s %ld: %s]: %s/%s %s%s",
           now.tm_year, now.tm_month + 1, now.tm_mday,
           now.tm_hour, now.tm_min, now.tm_sec, now.tm_usec,
-          pid, currentThreadName, ToLogStr(aLevel),
+          nsDebugImpl::GetMultiprocessMode(), pid, currentThreadName, ToLogStr(aLevel),
           aName, buffToWrite, newline);
     }
 
