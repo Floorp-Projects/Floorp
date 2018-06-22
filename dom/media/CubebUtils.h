@@ -54,6 +54,11 @@ cubeb_stream_prefs GetDefaultStreamPrefs();
 uint32_t AndroidGetAudioOutputSampleRate();
 uint32_t AndroidGetAudioOutputFramesPerBuffer();
 #endif
+
+#ifdef ENABLE_SET_CUBEB_BACKEND
+void
+ForceSetCubebContext(cubeb* aCubebContext);
+#endif
 } // namespace CubebUtils
 } // namespace mozilla
 
