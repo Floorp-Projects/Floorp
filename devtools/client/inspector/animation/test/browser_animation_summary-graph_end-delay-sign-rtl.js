@@ -3,9 +3,11 @@
 
 "use strict";
 
+/* import-globals-from summary-graph_end-delay-sign_head.js */
+
 add_task(async function() {
   Services.scriptloader.loadSubScript(
     CHROME_URL_ROOT + "summary-graph_end-delay-sign_head.js", this);
-  // eslint-disable-next-line no-undef
+  await pushPref("intl.uidirection", 1);
   await testSummaryGraphEndDelaySign();
 });

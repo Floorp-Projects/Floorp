@@ -106,7 +106,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   z-index: 2;
 }
 
-.current-time-scrubber-area::before {
+.current-time-scrubber-area:dir(ltr)::before,
+.current-time-scrubber-area:dir(rtl)::after {
   content: "";
   cursor: col-resize;
   height: var(--devtools-toolbar-height);
@@ -114,6 +115,11 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   position: absolute;
   /* In order to click on edge of current-time-scrubber-controller element */
   width: calc(100% + 1px);
+}
+
+.current-time-scrubber-area:dir(rtl)::after {
+  /* In order to click on the start edge of current-time-scrubber-area element on RTL */
+  margin-inline-start: -1px;
 }
 
 .indication-bar.current-time-scrubber {
