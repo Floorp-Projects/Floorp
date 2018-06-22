@@ -56,7 +56,7 @@ void*
 SymbolicAddressTarget(SymbolicAddress sym);
 
 void*
-MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig);
+MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType);
 
 void
 ReleaseBuiltinThunks();

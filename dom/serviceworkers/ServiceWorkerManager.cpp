@@ -311,7 +311,8 @@ ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar)
 
 RefPtr<GenericPromise>
 ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
-                                             ServiceWorkerRegistrationInfo* aRegistrationInfo)
+                                             ServiceWorkerRegistrationInfo* aRegistrationInfo,
+                                             bool aControlClientHandle)
 {
   MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
 
@@ -342,7 +343,11 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
     ClientManager::CreateHandle(aClientInfo,
                                 SystemGroup::EventTargetFor(TaskCategory::Other));
 
-  ref = clientHandle->Control(active);
+  if (aControlClientHandle) {
+    ref = clientHandle->Control(active);
+  } else {
+    ref = GenericPromise::CreateAndResolve(false, __func__);
+  }
 
   aRegistrationInfo->StartControllingClient();
 
@@ -1157,6 +1162,29 @@ ServiceWorkerManager::RemovePendingReadyPromise(const ClientInfo& aClientInfo)
       mPendingReadyList.AppendElement(std::move(prd));
     }
   }
+}
+
+void
+ServiceWorkerManager::NoteInheritedController(const ClientInfo& aClientInfo,
+                                              const ServiceWorkerDescriptor& aController)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(aController.PrincipalInfo());
+  NS_ENSURE_TRUE_VOID(principal);
+
+  nsCOMPtr<nsIURI> scope;
+  nsresult rv =
+    NS_NewURI(getter_AddRefs(scope), aController.Scope(), nullptr, nullptr);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  RefPtr<ServiceWorkerRegistrationInfo> registration =
+    GetServiceWorkerRegistrationInfo(principal, scope);
+  NS_ENSURE_TRUE_VOID(registration);
+  NS_ENSURE_TRUE_VOID(registration->GetActive());
+
+  StartControllingClient(aClientInfo, registration, false /* aControlClientHandle */);
 }
 
 ServiceWorkerInfo*

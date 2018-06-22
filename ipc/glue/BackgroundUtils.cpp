@@ -715,7 +715,11 @@ MergeChildLoadInfoForwarder(const ChildLoadInfoForwarderArgs& aForwarderArgs,
   }
 
   if (reservedClientInfo.isSome()) {
-    aLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
+    // We need to override here instead of simply set the value.  This
+    // allows us to change the reserved client.  This is necessary when
+    // the ClientChannelHelper created a new reserved client in the
+    // child-side of the redirect.
+    aLoadInfo->OverrideReservedClientInfoInParent(reservedClientInfo.ref());
   } else if (initialClientInfo.isSome()) {
     aLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
   }
