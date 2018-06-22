@@ -34,7 +34,7 @@ object CustomSearchEngineStore {
 
     fun addSearchEngine(context: Context, engineName: String, searchQuery: String): Boolean {
         // This is not for a homescreen shortcut so we don't want an adaptive launcher icon.
-        val iconBitmap = IconGenerator.generateLauncherIconPreOreo(context, engineName[0])
+        val iconBitmap = IconGenerator.generateSearchEngineIcon(context)
         val searchEngineXml = SearchEngineWriter.buildSearchEngineXML(engineName, searchQuery, iconBitmap)
                 ?: return false
         val existingEngines = pref(context).getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, emptySet())

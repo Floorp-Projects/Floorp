@@ -10,8 +10,10 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
+import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.content.ContextCompat
 import android.util.TypedValue
 
@@ -23,6 +25,7 @@ class IconGenerator {
     companion object {
         private val TEXT_SIZE_DP = 36f
         private val DEFAULT_ICON_CHAR = '?'
+        private const val SEARCH_ICON_FRAME = 0.15
 
         /**
          * See [generateAdaptiveLauncherIcon] for more details.
@@ -53,6 +56,27 @@ class IconGenerator {
             options.inMutable = true
             val shape = BitmapFactory.decodeResource(context.resources, R.drawable.ic_homescreen_shape, options)
             return drawCharacterOnBitmap(context, character, shape)
+        }
+
+        @JvmStatic
+        fun generateSearchEngineIcon(context: Context): Bitmap {
+            val options = BitmapFactory.Options()
+            options.inMutable = true
+            val shape = BitmapFactory.decodeResource(context.resources, R.drawable.ic_search_engine_shape, options)
+            return drawVectorOnBitmap(context, R.drawable.ic_search, shape, SEARCH_ICON_FRAME)
+        }
+
+        private fun drawVectorOnBitmap(context: Context, vectorId: Int, bitmap: Bitmap, frame: Double): Bitmap {
+            val canvas = Canvas(bitmap)
+            // Select the area to draw with a frame
+            val rect = Rect((frame * canvas.width).toInt(),
+                    (frame * canvas.height).toInt(),
+                    ((1 - frame) * canvas.width).toInt(),
+                    ((1 - frame) * canvas.height).toInt())
+            val icon = VectorDrawableCompat.create(context.resources, vectorId, null)
+            icon!!.bounds = rect
+            icon.draw(canvas)
+            return bitmap
         }
 
         /**
