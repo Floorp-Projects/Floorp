@@ -122,6 +122,8 @@ using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #include "mozilla/widget/PDFiumProcessChild.h"
 #endif
 
+#include "VRProcessChild.h"
+
 using namespace mozilla;
 
 using mozilla::ipc::BrowserProcessSubThread;
@@ -668,6 +670,7 @@ XRE_InitChildProcess(int aArgc,
       break;
   case GeckoProcessType_GMPlugin:
   case GeckoProcessType_PDFium:
+  case GeckoProcessType_VR:
       uiLoopType = MessageLoop::TYPE_DEFAULT;
       break;
   default:
@@ -728,6 +731,10 @@ XRE_InitChildProcess(int aArgc,
 #endif
       case GeckoProcessType_GPU:
         process = new gfx::GPUProcessImpl(parentPID);
+        break;
+
+      case GeckoProcessType_VR:
+        process = new gfx::VRProcessChild(parentPID);
         break;
 
       default:

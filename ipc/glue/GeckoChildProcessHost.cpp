@@ -143,7 +143,8 @@ auto
 GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType processType) -> BinaryPathType
 {
   if (sRunSelfAsContentProc &&
-      (processType == GeckoProcessType_Content || processType == GeckoProcessType_GPU)) {
+      (processType == GeckoProcessType_Content || processType == GeckoProcessType_GPU ||
+       processType == GeckoProcessType_VR)) {
 #if defined(OS_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
@@ -763,7 +764,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   // Tmp dir that the GPU process should use for crash reports. This arg is
   // always populated (but possibly with an empty value) for a GPU child process.
-  if (mProcessType == GeckoProcessType_GPU) {
+  if (mProcessType == GeckoProcessType_GPU || mProcessType == GeckoProcessType_VR) {
     nsCOMPtr<nsIFile> file;
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
     nsAutoCString path;
@@ -1000,6 +1001,11 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
         shouldSandboxCurrentProcess = true;
       }
       break;
+    case GeckoProcessType_VR:
+      if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_VR_SANDBOX")) {
+        // TODO: Implement sandbox for VR process, Bug 1430043.
+      }
+      break;
     case GeckoProcessType_Default:
     default:
       MOZ_CRASH("Bad process type in GeckoChildProcessHost");
@@ -1082,6 +1088,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     // child processes.
     if (mProcessType == GeckoProcessType_Content ||
         mProcessType == GeckoProcessType_GPU ||
+        mProcessType == GeckoProcessType_VR ||
         mProcessType == GeckoProcessType_GMPlugin) {
       if (!mSandboxBroker.AddTargetPeer(process)) {
         NS_WARNING("Failed to add content process as target peer.");
