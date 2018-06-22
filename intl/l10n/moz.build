@@ -11,6 +11,17 @@ EXTRA_JS_MODULES += [
     'MessageContext.jsm',
 ]
 
+XPIDL_SOURCES += [
+    'mozIDOMLocalization.idl',
+]
+
+XPIDL_MODULE = 'locale'
+
+EXTRA_COMPONENTS += [
+    'mozDOMLocalization.js',
+    'mozDOMLocalization.manifest',
+]
+
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
