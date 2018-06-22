@@ -1247,8 +1247,10 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       uint32_t localLen = attrLocal->GetLength();
       // Allow underscore to cater to the MCE editor library.
       // Allow data-* on SVG and MathML, too, as a forward-compat measure.
+      // Allow aria-* on all for simplicity.
       if (UTF16StringStartsWith(localStr, localLen, u"_") ||
-          UTF16StringStartsWith(localStr, localLen, u"data-")) {
+          UTF16StringStartsWith(localStr, localLen, u"data-") ||
+          UTF16StringStartsWith(localStr, localLen, u"aria-")) {
         continue;
       }
       // else not allowed
