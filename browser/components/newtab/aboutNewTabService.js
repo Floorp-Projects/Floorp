@@ -9,20 +9,25 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AboutNewTab",
                                "resource:///modules/AboutNewTab.jsm");
 
 const TOPIC_APP_QUIT = "quit-application-granted";
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
+const TOPIC_CONTENT_DOCUMENT_INTERACTIVE = "content-document-interactive";
 
 // Automated tests ensure packaged locales are in this list. Copied output of:
 // https://github.com/mozilla/activity-stream/blob/master/bin/render-activity-stream-html.js
 const ACTIVITY_STREAM_LOCALES = "en-US ach an ar ast az be bg bn-BD bn-IN br bs ca cak crh cs cy da de dsb el en-CA en-GB eo es-AR es-CL es-ES es-MX et eu fa ff fi fr fy-NL ga-IE gd gl gn gu-IN he hi-IN hr hsb hu hy-AM ia id it ja ja-JP-mac ka kab kk km kn ko lij lo lt ltg lv mai mk ml mr ms my nb-NO ne-NP nl nn-NO oc pa-IN pl pt-BR pt-PT rm ro ru si sk sl sq sr sv-SE ta te th tl tr uk ur uz vi zh-CN zh-TW".split(" ");
 
 const ABOUT_URL = "about:newtab";
+const BASE_URL = "resource://activity-stream/";
+const ACTIVITY_STREAM_PAGES = new Set(["home", "newtab", "welcome"]);
 
 const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+const IS_PRIVILEGED_PROCESS = Services.appinfo.remoteType === E10SUtils.PRIVILEGED_REMOTE_TYPE;
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
@@ -46,6 +51,8 @@ function AboutNewTabService() {
 
   if (IS_MAIN_PROCESS) {
     AboutNewTab.init();
+  } else if (IS_PRIVILEGED_PROCESS) {
+    Services.obs.addObserver(this, TOPIC_CONTENT_DOCUMENT_INTERACTIVE);
   }
 }
 
@@ -114,10 +121,69 @@ AboutNewTabService.prototype = {
           this.notifyChange();
         }
         break;
+      case TOPIC_CONTENT_DOCUMENT_INTERACTIVE:
+        const win = subject.defaultView;
+
+        // It seems like "content-document-interactive" is triggered multiple
+        // times for a single window. The first event always seems to be an
+        // HTMLDocument object that contains a non-null window reference
+        // whereas the remaining ones seem to be proxied objects.
+        // https://searchfox.org/mozilla-central/rev/d2966246905102b36ef5221b0e3cbccf7ea15a86/devtools/server/actors/object.js#100-102
+        if (win === null) {
+          break;
+        }
+
+        // We use win.location.pathname instead of win.location.toString()
+        // because we want to account for URLs that contain the location hash
+        // property or query strings (e.g. about:newtab#foo, about:home?bar).
+        // Asserting here would be ideal, but this code path is also taken
+        // by the view-source:// scheme, so we should probably just bail out
+        // and do nothing.
+        if (!ACTIVITY_STREAM_PAGES.has(win.location.pathname)) {
+          break;
+        }
+
+        const onLoaded = () => {
+          const debugString = this._activityStreamDebug ? "-dev" : "";
+
+          // This list must match any similar ones in render-activity-stream-html.js.
+          const scripts = [
+            "chrome://browser/content/contentSearchUI.js",
+            "chrome://browser/content/contentTheme.js",
+            `${BASE_URL}vendor/react${debugString}.js`,
+            `${BASE_URL}vendor/react-dom${debugString}.js`,
+            `${BASE_URL}vendor/prop-types.js`,
+            `${BASE_URL}vendor/react-intl.js`,
+            `${BASE_URL}vendor/redux.js`,
+            `${BASE_URL}vendor/react-redux.js`,
+            `${BASE_URL}prerendered/${this.activityStreamLocale}/activity-stream-strings.js`,
+            `${BASE_URL}data/content/activity-stream.bundle.js`
+          ];
+
+          if (this._activityStreamPrerender) {
+            scripts.unshift(`${BASE_URL}prerendered/static/activity-stream-initial-state.js`);
+          }
+
+          for (let script of scripts) {
+            Services.scriptloader.loadSubScript(script, win); // Synchronous call
+          }
+        };
+        subject.addEventListener("DOMContentLoaded", onLoaded, {once: true});
+
+        // There is a possibility that DOMContentLoaded won't be fired. This
+        // unload event (which cannot be cancelled) will attempt to remove
+        // the listener for the DOMContentLoaded event.
+        const onUnloaded = () => {
+          subject.removeEventListener("DOMContentLoaded", onLoaded);
+        };
+        subject.addEventListener("unload", onUnloaded, {once: true});
+        break;
       case TOPIC_APP_QUIT:
         this.uninit();
         if (IS_MAIN_PROCESS) {
           AboutNewTab.uninit();
+        } else if (IS_PRIVILEGED_PROCESS) {
+          Services.obs.removeObserver(this, TOPIC_CONTENT_DOCUMENT_INTERACTIVE);
         }
         break;
       case TOPIC_LOCALES_CHANGE:
@@ -187,6 +253,7 @@ AboutNewTabService.prototype = {
       "activity-stream",
       this._activityStreamPrerender ? "-prerendered" : "",
       this._activityStreamDebug ? "-debug" : "",
+      this._privilegedContentProcess ? "-noscripts" : "",
       ".html"
     ].join("");
   },
