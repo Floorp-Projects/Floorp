@@ -641,4 +641,9 @@
   <string name="pwa_add_to_launcher_badge">&pwa_add_to_launcher_badge2;</string>
   <string name="pwa_onboarding_sumo">&pwa_onboarding_sumo;</string>
   <string name="pwa_continue_to_website">&pwa_continue_to_website;</string>
+
+  <string name="pip_play_button_title">&pip_play_button_title;</string>
+  <string name="pip_play_button_description">&pip_play_button_description;</string>
+  <string name="pip_pause_button_title">&pip_pause_button_title;</string>
+  <string name="pip_pause_button_description">&pip_pause_button_description;</string>
 </resources>
