@@ -130,7 +130,7 @@ function waitForFrameLoad(ui, targetURL) {
 
 function waitForViewportResizeTo(ui, width, height) {
   return new Promise(async function(resolve) {
-    const isSizeMatching = (data) => data.width == width && data.height == height;
+    const isSizeMatching = data => data.width == width && data.height == height;
 
     // If the viewport has already the expected size, we resolve the promise immediately.
     const size = await getContentSize(ui);
@@ -158,7 +158,7 @@ function waitForViewportResizeTo(ui, width, height) {
 
     const onBrowserLoadEnd = async function() {
       const data = await getContentSize(ui);
-      onResize(undefined, data);
+      onResize(data);
     };
 
     info(`Waiting for content-resize to ${width} x ${height}`);

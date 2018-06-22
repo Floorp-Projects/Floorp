@@ -228,6 +228,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
       // Show the browser content again now that the move is done.
       tab.linkedBrowser.style.visibility = "";
+      debug("Exit swap start");
     },
 
     stop() {
