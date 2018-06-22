@@ -232,6 +232,7 @@ public:
       , horizontal(false)
       , rtl(false)
       , onDarkBackground(false)
+      , custom(false)
     {}
 
     bool overlay : 1;
@@ -240,6 +241,10 @@ public:
     bool horizontal : 1;
     bool rtl : 1;
     bool onDarkBackground : 1;
+    bool custom : 1;
+    // Two colors only used when custom is true.
+    nscolor trackColor = NS_RGBA(0, 0, 0, 0);
+    nscolor faceColor = NS_RGBA(0, 0, 0, 0);
   };
 
   enum Widget : uint8_t {

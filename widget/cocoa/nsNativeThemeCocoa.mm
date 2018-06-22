@@ -31,6 +31,7 @@
 #include "nsIScrollableFrame.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Range.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -1359,6 +1360,26 @@ static void
 SetCGContextFillColor(CGContextRef cgContext, const Color& aColor)
 {
   CGContextSetRGBFillColor(cgContext, aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
+static void
+SetCGContextFillColor(CGContextRef cgContext, nscolor aColor)
+{
+  CGContextSetRGBFillColor(cgContext,
+                           NS_GET_R(aColor) / 255.0f,
+                           NS_GET_G(aColor) / 255.0f,
+                           NS_GET_B(aColor) / 255.0f,
+                           NS_GET_A(aColor) / 255.0f);
+}
+
+static void
+SetCGContextStrokeColor(CGContextRef cgContext, nscolor aColor)
+{
+  CGContextSetRGBStrokeColor(cgContext,
+                             NS_GET_R(aColor) / 255.0f,
+                             NS_GET_G(aColor) / 255.0f,
+                             NS_GET_B(aColor) / 255.0f,
+                             NS_GET_A(aColor) / 255.0f);
 }
 
 void
@@ -2694,6 +2715,21 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static nscolor
+GetAutoScrollbarTrackColor(ComputedStyle* aStyle)
+{
+  // Use the default scrollbar color. XXX Can we get it from the system?
+  return NS_RGB(0xFA, 0xFA, 0xFA);
+}
+
+static nscolor
+GetAutoScrollbarFaceColor(ComputedStyle* aStyle)
+{
+  // Use the default scrollbar color. We may want to derive from track
+  // color at some point.
+  return NS_RGB(0xC1, 0xC1, 0xC1);
+}
+
 nsNativeThemeCocoa::ScrollbarParams
 nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
 {
@@ -2707,6 +2743,15 @@ nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
   params.rtl = IsFrameRTL(aFrame);
   params.horizontal = aIsHorizontal;
   params.onDarkBackground = IsDarkBackground(aFrame);
+  // Don't use custom scrollbars for overlay scrollbars since they are
+  // generally good enough for use cases of custom scrollbars.
+  if (!params.overlay &&
+      aFrame->StyleUserInterface()->HasCustomScrollbars()) {
+    ComputedStyle* cs = aFrame->Style();
+    params.custom = true;
+    params.trackColor = GetScrollbarTrackColor(cs, &GetAutoScrollbarTrackColor);
+    params.faceColor = GetScrollbarFaceColor(cs, &GetAutoScrollbarFaceColor);
+  }
   return params;
 }
 
@@ -2716,6 +2761,39 @@ nsNativeThemeCocoa::DrawScrollbarThumb(CGContextRef cgContext,
                                        ScrollbarParams aParams)
 {
   CGRect drawRect = inBoxRect;
+  if (aParams.custom) {
+    const CGFloat kWidthRatio = 8.0f / 15.0f;
+    const CGFloat kLengthReductionRatio = 2.0f / 15.0f;
+    const CGFloat kOrthogonalDirOffset = 4.0f / 15.0f;
+    const CGFloat kParallelDirOffset = 1.0f / 15.0f;
+    CGFloat baseSize, cornerWidth;
+    CGRect thumbRect = inBoxRect;
+    if (aParams.horizontal) {
+      baseSize = inBoxRect.size.height;
+      thumbRect.size.height *= kWidthRatio;
+      thumbRect.size.width -= baseSize * kLengthReductionRatio;
+      thumbRect.origin.y += baseSize * kOrthogonalDirOffset;
+      thumbRect.origin.x += baseSize * kParallelDirOffset;
+      cornerWidth = thumbRect.size.height / 2.0f;
+    } else {
+      baseSize = inBoxRect.size.width;
+      thumbRect.size.width *= kWidthRatio;
+      thumbRect.size.height -= baseSize * kLengthReductionRatio;
+      thumbRect.origin.x += baseSize * kOrthogonalDirOffset;
+      thumbRect.origin.y += baseSize * kParallelDirOffset;
+      cornerWidth = thumbRect.size.width / 2.0f;
+    }
+    CGPathRef path = CGPathCreateWithRoundedRect(thumbRect,
+                                                 cornerWidth,
+                                                 cornerWidth,
+                                                 nullptr);
+    CGContextAddPath(cgContext, path);
+    CGPathRelease(path);
+    SetCGContextFillColor(cgContext, aParams.faceColor);
+    CGContextFillPath(cgContext);
+    return;
+  }
+
   if (aParams.overlay && !aParams.rolledOver) {
     if (aParams.horizontal) {
       drawRect.origin.y += 4;
@@ -2756,17 +2834,79 @@ nsNativeThemeCocoa::DrawScrollbarTrack(CGContextRef cgContext,
     return;
   }
 
-  RenderWithCoreUI(inBoxRect, cgContext,
-          [NSDictionary dictionaryWithObjectsAndKeys:
-            (aParams.overlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
-            (aParams.small ? @"small" : @"regular"), @"size",
-            (aParams.horizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
-            (aParams.onDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
-            [NSNumber numberWithBool:YES], @"noindicator",
-            [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
-            [NSNumber numberWithBool:YES], @"is.flipped",
-            nil],
-          true);
+  if (!aParams.custom) {
+    RenderWithCoreUI(inBoxRect, cgContext,
+      [NSDictionary dictionaryWithObjectsAndKeys:
+        (aParams.overlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
+        (aParams.small ? @"small" : @"regular"), @"size",
+        (aParams.horizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
+        (aParams.onDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
+        [NSNumber numberWithBool:YES], @"noindicator",
+        [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
+        [NSNumber numberWithBool:YES], @"is.flipped",
+        nil],
+      true);
+    return;
+  }
+
+  nscolor color = aParams.trackColor;
+  // Paint the background color
+  SetCGContextFillColor(cgContext, color);
+  CGContextFillRect(cgContext, inBoxRect);
+  // Paint decorations
+  float luminance = RelativeLuminanceUtils::Compute(color);
+  nscolor innerColor, shadowColor, outerColor;
+  if (luminance >= 0.5) {
+    innerColor = RelativeLuminanceUtils::Adjust(color, luminance * 0.836);
+    shadowColor = RelativeLuminanceUtils::Adjust(color, luminance * 0.982);
+    outerColor = RelativeLuminanceUtils::Adjust(color, luminance * 0.886);
+  } else {
+    innerColor = RelativeLuminanceUtils::Adjust(color, luminance * 1.196);
+    shadowColor = RelativeLuminanceUtils::Adjust(color, luminance * 1.018);
+    outerColor = RelativeLuminanceUtils::Adjust(color, luminance * 1.129);
+  }
+  CGPoint innerPoints[2];
+  CGPoint shadowPoints[2];
+  CGPoint outerPoints[2];
+  if (aParams.horizontal) {
+    innerPoints[0].x = inBoxRect.origin.x;
+    innerPoints[0].y = inBoxRect.origin.y + 0.5f;
+    innerPoints[1].x = innerPoints[0].x + inBoxRect.size.width;
+    innerPoints[1].y = innerPoints[0].y;
+    shadowPoints[0].x = innerPoints[0].x;
+    shadowPoints[0].y = innerPoints[0].y + 1.0f;
+    shadowPoints[1].x = innerPoints[1].x;
+    shadowPoints[1].y = shadowPoints[0].y;
+    outerPoints[0].x = innerPoints[0].x;
+    outerPoints[0].y = innerPoints[0].y + inBoxRect.size.height - 1;
+    outerPoints[1].x = innerPoints[1].x;
+    outerPoints[1].y = outerPoints[0].y;
+  } else {
+    if (aParams.rtl) {
+      innerPoints[0].x = inBoxRect.origin.x + inBoxRect.size.width - 0.5f;
+      shadowPoints[0].x = innerPoints[0].x - 1.0f;
+      outerPoints[0].x = inBoxRect.origin.x + 0.5f;
+    } else {
+      innerPoints[0].x = inBoxRect.origin.x + 0.5f;
+      shadowPoints[0].x = innerPoints[0].x + 1.0f;
+      outerPoints[0].x = inBoxRect.origin.x + inBoxRect.size.width - 0.5f;
+    }
+    innerPoints[0].y = inBoxRect.origin.y;
+    innerPoints[1].x = innerPoints[0].x;
+    innerPoints[1].y = innerPoints[0].y + inBoxRect.size.height;
+    shadowPoints[0].y = innerPoints[0].y;
+    shadowPoints[1].x = shadowPoints[0].x;
+    shadowPoints[1].y = innerPoints[1].y;
+    outerPoints[0].y = innerPoints[0].y;
+    outerPoints[1].x = outerPoints[0].x;
+    outerPoints[1].y = innerPoints[1].y;
+  }
+  SetCGContextStrokeColor(cgContext, innerColor);
+  CGContextStrokeLineSegments(cgContext, innerPoints, 2);
+  SetCGContextStrokeColor(cgContext, shadowColor);
+  CGContextStrokeLineSegments(cgContext, shadowPoints, 2);
+  SetCGContextStrokeColor(cgContext, outerColor);
+  CGContextStrokeLineSegments(cgContext, outerPoints, 2);
 }
 
 static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
