@@ -524,3 +524,77 @@ devtools.main:
     extra_keys:
       lines: The number of lines contained in the command.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  pause_behaviour_changed:
+    objects: ["debugger"]
+    bug_numbers: [1463117]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has changed pausing behaviour in the debugger.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      exceptions: Pause on exceptions is checked.
+      caught_exceptions: Pause on caught exceptions is checked.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  pause:
+    objects: ["debugger"]
+    bug_numbers: [1463118]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: Debugger has paused in a script due to a breakpoint or exception.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      reason: caught-exception, uncaught-exception, pausing, debugger-statement or breakpoint.
+      collapsed_callstacks: Number of collapsed callstacks in the call tree. These are call stacks that are part of external libraries e.g. react, which are collapsed  by default.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  continue:
+    objects: ["debugger"]
+    bug_numbers: [1463122]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has pressed the continue button on a paused script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  add_breakpoint:
+    objects: ["debugger"]
+    bug_numbers: [1463123]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has added a breakpoint to a script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  remove_breakpoint:
+    objects: ["debugger"]
+    bug_numbers: [1463124]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has removed a breakpoint from a script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  pretty_print:
+    objects: ["debugger"]
+    bug_numbers: [1463125]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User clicked the pretty print button to pretty print a script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  blackbox:
+    objects: ["debugger"]
+    bug_numbers: [1463126]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User clicked the blackbox button to blackbox a script.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
