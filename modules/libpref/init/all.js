@@ -3115,12 +3115,6 @@ pref("input_event_queue.default_duration_per_event", 1);
 // required to process the following input events.
 pref("input_event_queue.count_for_prediction", 9);
 
-// Hang monitor timeout after which we kill the browser, in seconds
-// (0 is disabled)
-// Disabled on all platforms per bug 705748 until the found issues are
-// resolved.
-pref("hangmonitor.timeout", 0);
-
 pref("plugins.load_appdir_plugins", false);
 // If true, plugins will be click to play
 pref("plugins.click_to_play", false);

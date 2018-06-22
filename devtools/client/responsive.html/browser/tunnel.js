@@ -405,6 +405,8 @@ MessageManagerTunnel.prototype = {
   ],
 
   OUTER_TO_INNER_MESSAGE_PREFIXES: [
+    // Messages sent from browser.xml
+    "Autoscroll:",
     // Messages sent from nsContextMenu.js
     "ContextMenu:",
     // Messages sent from DevTools
@@ -427,6 +429,8 @@ MessageManagerTunnel.prototype = {
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
+    // Messages sent to browser.xml
+    "Autoscroll:",
     // Messages sent to nsContextMenu.js
     "ContextMenu:",
     // Messages sent to DevTools

@@ -473,6 +473,7 @@ describe("addSnippetsSubscriber", () => {
     delete global.gSnippetsMap;
   });
   it("should initialize feeds.snippets pref is true and SnippetsProvider if .initialize is true", () => {
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouterOnboardingCohort", value: 0}});
     store.dispatch({type: at.SNIPPETS_DATA, data: {}});
     assert.calledOnce(snippets.init);
   });
@@ -521,8 +522,9 @@ describe("addSnippetsSubscriber", () => {
       assert.calledOnce(asrouterContent.init);
       assert.isTrue(asrouterContent.initialized);
     });
-    it("should uninitialize asrouter if asrouterExperimentEnabled pref is turned off", () => {
+    it("should uninitialize asrouter if asrouterExperimentEnabled pref is turned off and there are no onboarding experiments running", () => {
       store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouterExperimentEnabled", value: true}});
+      store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouterOnboardingCohort", value: 0}});
       assert.isTrue(asrouterContent.initialized);
 
       store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouterExperimentEnabled", value: false}});

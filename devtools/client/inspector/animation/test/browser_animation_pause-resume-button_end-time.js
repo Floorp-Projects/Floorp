@@ -50,6 +50,7 @@ function assertCurrentTimeLessThanDuration(animations) {
 
 function assertScrubberPosition(panel) {
   const scrubberEl = panel.querySelector(".current-time-scrubber");
-  const translateX = parseFloat(scrubberEl.style.transform.match(/-?\d+(\.\d+)?/)[0]);
-  ok(translateX >= 0, "The translateX of scrubber position should be zero or more");
+  const marginInlineStart = parseFloat(scrubberEl.style.marginInlineStart);
+  ok(marginInlineStart >= 0,
+     "The translateX of scrubber position should be zero or more");
 }

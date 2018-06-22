@@ -107,7 +107,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include <locale.h>
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
-#include "mozilla/HangMonitor.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
@@ -739,7 +738,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   mozilla::Telemetry::Init();
 
-  mozilla::HangMonitor::Startup();
   mozilla::BackgroundHangMonitor::Startup();
 
   const MessageLoop* const loop = MessageLoop::current();
@@ -798,7 +796,6 @@ NS_InitMinimalXPCOM()
 
   SharedThreadPool::InitStatics();
   mozilla::Telemetry::Init();
-  mozilla::HangMonitor::Startup();
   mozilla::BackgroundHangMonitor::Startup();
 
   return NS_OK;
@@ -864,7 +861,7 @@ nsresult
 ShutdownXPCOM(nsIServiceManager* aServMgr)
 {
   // Make sure the hang monitor is enabled for shutdown.
-  HangMonitor::NotifyActivity();
+  BackgroundHangMonitor().NotifyActivity();
 
   if (!NS_IsMainThread()) {
     MOZ_CRASH("Shutdown on wrong thread");
@@ -937,7 +934,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
     NS_ProcessPendingEvents(thread);
 
-    HangMonitor::NotifyActivity();
+    BackgroundHangMonitor().NotifyActivity();
 
     // Late-write checks needs to find the profile directory, so it has to
     // be initialized before mozilla::services::Shutdown or (because of
@@ -1090,7 +1087,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
   Omnijar::CleanUp();
 
-  HangMonitor::Shutdown();
   BackgroundHangMonitor::Shutdown();
 
   delete sMainHangMonitor;

@@ -135,11 +135,6 @@
 
 /* PREFERENCES BUTTON */
 
-.identity-popup-preferences-button-container {
-  display: flex;
-  justify-content: space-between;
-}
-
 .identity-popup-preferences-button {
   list-style-image: url(chrome://browser/skin/settings.svg);
   padding: 5px 8px !important;
@@ -311,12 +306,6 @@ description#identity-popup-content-verifier,
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
-/* Don't show the TP preferences button when TP is off since the main action already
- * opens about:preferences in that case */
-#tracking-protection-content[enabled="false"][state] .identity-popup-preferences-button {
-  display: none;
-}
-
 #tracking-protection-content[enabled="false"],
 #tracking-protection-content[state="loaded-tracking-content"] {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
@@ -347,7 +336,8 @@ description#identity-popup-content-verifier,
 /* Show the right tracking descriptions and buttons for the corresponding state. */
 
 /* Default state / Tracking not detected */
-#tracking-protection-content:not([state]) > #tracking-not-detected,
+#tracking-protection-content:not([state]):-moz-any([enabled="false"], :not([hasException])) > #tracking-not-detected,
+#tracking-protection-content:not([state])[enabled="true"][hasException] > #tracking-not-detected-exception,
 /* Blocking tracking, offer buttons to unblock (depending on PBM). */
 #tracking-protection-content[state="blocked-tracking-content"] > #tracking-blocked,
 #main-window:not([privatebrowsingmode]) #tracking-protection-content[state="blocked-tracking-content"] > #tracking-action-unblock,
@@ -355,9 +345,11 @@ description#identity-popup-content-verifier,
 /* Enabled and no exception but trackers loaded, probably needs a reload */
 #tracking-protection-content[enabled="true"]:not([hasException])[state="loaded-tracking-content"] > #tracking-reload-required,
 #tracking-protection-content[enabled="true"]:not([hasException])[state="loaded-tracking-content"] > #tracking-action-reload,
-/* Disabled or has an exception, offer to block the site. */
-#tracking-protection-content[state="loaded-tracking-content"]:-moz-any([enabled="false"],[hasException]) > #tracking-loaded,
-#tracking-protection-content[state="loaded-tracking-content"]:-moz-any([enabled="false"],[hasException]) > #tracking-action-block {
+/* Tracking Loaded */
+#tracking-protection-content[state="loaded-tracking-content"][enabled="false"] > #tracking-loaded,
+#tracking-protection-content[state="loaded-tracking-content"][enabled="true"][hasException] > #tracking-loaded-exception,
+/* Has an exception, offer to block the site again. */
+#tracking-protection-content[enabled="true"][hasException] > #tracking-action-block {
   display: -moz-box;
 }
 

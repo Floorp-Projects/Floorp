@@ -72,7 +72,7 @@ select.playback-rate-selector.devtools-button {
   background-image: url("chrome://devtools/skin/images/dropmarker.svg");
   background-position: calc(100% - 4px) center;
   background-repeat: no-repeat;
-  padding-right: 1em;
+  padding-inline-end: 1em;
   text-align: center;
 }
 
@@ -106,7 +106,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   z-index: 2;
 }
 
-.current-time-scrubber-area::before {
+.current-time-scrubber-area:dir(ltr)::before,
+.current-time-scrubber-area:dir(rtl)::after {
   content: "";
   cursor: col-resize;
   height: var(--devtools-toolbar-height);
@@ -116,11 +117,20 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   width: calc(100% + 1px);
 }
 
+.current-time-scrubber-area:dir(rtl)::after {
+  /* In order to click on the start edge of current-time-scrubber-area element on RTL */
+  margin-inline-start: -1px;
+}
+
 .indication-bar.current-time-scrubber {
   cursor: col-resize;
-  margin-left: -6px;
   pointer-events: auto;
   width: 12px;
+  transform: translateX(-6px);
+}
+
+.indication-bar.current-time-scrubber:dir(rtl) {
+  transform: translateX(6px);
 }
 
 .indication-bar.current-time-scrubber::before {
@@ -129,7 +139,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .indication-bar.current-time-scrubber::after {
-  border-left-color: var(--scrubber-color);
+  border-inline-start-color: var(--scrubber-color);
   left: 5px;
 }
 
@@ -163,7 +173,13 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   display: flex;
   grid-column: 1 / 2;
   height: var(--graph-height);
-  padding-left: 4px;
+  padding-inline-start: 4px;
+  /* animation-target is tech term, so it should be displayed as ltr. */
+  direction: ltr;
+}
+
+.animation-item:dir(rtl).animation-target {
+  right:0;
 }
 
 /* Reps component */
@@ -212,9 +228,18 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   -moz-context-properties: fill;
 }
 
+.animation-summary-graph.compositor:dir(rtl)::after {
+  right: unset;
+  left: 0;
+}
+
 .animation-summary-graph-path {
   height: 100%;
   width: 100%;
+}
+
+.animation-summary-graph:dir(rtl) .animation-summary-graph-path {
+  transform: scaleX(-1.0);
 }
 
 .animation-computed-timing-path path {
@@ -273,18 +298,46 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background-color: var(--graph-color);
 }
 
-.animation-delay-sign.negative::before {
+/* These are delay sign directions. Basically, we can't use
+  the transform due to pseudo element, So we use the left/right align. */
+
+.animation-delay-sign:dir(ltr)::before {
+  left: -3px;
+  right: unset;
+}
+
+.animation-delay-sign:dir(rtl)::before {
   left: unset;
   right: -3px;
 }
 
-.animation-end-delay-sign::before {
+.animation-delay-sign.negative:dir(ltr)::before {
+  left: unset;
   right: -3px;
 }
 
-.animation-end-delay-sign.negative::before {
+.animation-delay-sign.negative:dir(rtl)::before {
   left: -3px;
   right: unset;
+}
+
+.animation-end-delay-sign:dir(ltr)::before {
+  left: unset;
+  right: -3px;
+}
+
+.animation-end-delay-sign:dir(rtl)::before {
+  left: -3px;
+  right: unset;
+}
+
+.animation-end-delay-sign.negative:dir(ltr)::before {
+  left: -3px;
+  right: unset;
+}
+.animation-end-delay-sign.negative:dir(rtl)::before {
+  left: unset;
+  right: -3px;
 }
 
 .animation-name {
@@ -305,6 +358,14 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   stroke-opacity: .5;
   stroke-width: 4;
   text-anchor: end;
+}
+
+.animation-summary-graph:dir(rtl) .animation-name text {
+  transform: translateX(-100%);
+}
+
+.animation-summary-graph:dir(rtl) .animation-name {
+  right:0;
 }
 
 /* Animation Detail */
@@ -365,7 +426,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .indication-bar.keyframes-progress-bar::after {
-  border-left-color: var(--progress-bar-color);
+  border-inline-start-color: var(--progress-bar-color);
 }
 
 /* Animated Property Item */
@@ -379,11 +440,11 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   display: flex;
   height: var(--graph-height);
   justify-content: flex-end;
-  padding-right: 10px;
+  padding-inline-end: 10px;
 }
 
 .animated-property-name.compositor span {
-  padding-left: 15px;
+  padding-inline-start: 15px;
   position: relative;
 }
 
@@ -399,7 +460,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   --fast-track-color: var(--scriptanimation-color);
 }
 
-.animated-property-name.compositor span::before {
+.animated-property-name.compositor span:dir(ltr)::before,
+.animated-property-name.compositor span:dir(rtl)::after {
   background-image: var(--fast-track-image);
   background-repeat: no-repeat;
   background-size: contain;
@@ -407,7 +469,9 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   fill: var(--fast-track-color);
   height: 100%;
   position: absolute;
+  /* In order to support RTL/LTR both of environment, set the left and right to zero */
   left: 0;
+  right: 0;
   width: 15px;
   -moz-context-properties: fill;
 }
@@ -422,6 +486,10 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   height: var(--graph-height);
   padding-top: 5px;
   position: relative;
+}
+
+.keyframes-graph:dir(rtl) .keyframes-graph-path {
+  transform: scaleX(-1.0);
 }
 
 .keyframes-graph-path {
@@ -483,6 +551,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   list-style-type: none;
   top: 0%;
   width: 100%;
+  padding-inline-start: 0;
 }
 
 .keyframe-marker-item {
@@ -494,6 +563,10 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   height: 10px;
   transform: translate(-5px, -3px);
   width: 10px;
+}
+
+.keyframe-marker-item:dir(rtl) {
+  transform: translate(5px, -3px);
 }
 
 .animated-property-list-container.cssanimation .keyframe-marker-item {
@@ -547,7 +620,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .tick-line::before {
-  border-left: var(--tick-line-style);
+  border-inline-start: var(--tick-line-style);
   content: "";
   height: 100vh;
   position: fixed;
@@ -561,15 +634,19 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .tick-label {
-  border-left: var(--tick-line-style);
+  border-inline-start: var(--tick-line-style);
   height: 100%;
   position: absolute;
 }
 
 .animated-property-list-container .tick-label:last-child {
-  border-left: none;
-  border-right: var(--tick-line-style);
+  border-inline-start: unset;
+  border-inline-end: var(--tick-line-style);
   transform: translateX(calc(-100% + 0.5px));
+}
+
+.animated-property-list-container .tick-label:dir(rtl):last-child {
+  transform: translateX(calc(100% - 0.6px));
 }
 
 /* Indication Bar */
@@ -579,8 +656,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .indication-bar::before {
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
+  border-inline-start: 5px solid transparent;
+  border-inline-end: 5px solid transparent;
   border-top: 5px solid;
   content: "";
   left: -5px;
@@ -590,7 +667,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 }
 
 .indication-bar::after {
-  border-left: 1px solid;
+  border-inline-start: 1px solid;
   content: "";
   height: 100%;
   position: absolute;

@@ -19,7 +19,13 @@ var TrackingProtection = {
     // Convert document URI into the format used by
     // nsChannelClassifier::ShouldEnableTrackingProtection.
     // Any scheme turned into https is correct.
-    return Services.io.newURI("https://" + gBrowser.selectedBrowser.currentURI.hostPort);
+    try {
+      return Services.io.newURI("https://" + gBrowser.selectedBrowser.currentURI.hostPort);
+    } catch (e) {
+      // Getting the hostPort for about: and file: URIs fails, but TP doesn't work with
+      // these URIs anyway, so just return null here.
+      return null;
+    }
   },
 
   init() {
@@ -133,6 +139,13 @@ var TrackingProtection = {
   },
 
   onSecurityChange(state, isSimulated) {
+    let baseURI = this._baseURIForChannelClassifier;
+
+    // Don't deal with about:, file: etc.
+    if (!baseURI) {
+      return;
+    }
+
     // Only animate the shield if the event was not fired directly from
     // the tabbrowser (due to a browser change).
     if (isSimulated) {
@@ -144,11 +157,25 @@ var TrackingProtection = {
     let isBlocking = state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
     let isAllowing = state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
 
+    // Check whether the user has added an exception for this site.
+    let hasException = false;
+    if (PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser)) {
+      hasException = PrivateBrowsingUtils.existsInTrackingAllowlist(baseURI);
+    } else {
+      hasException = Services.perms.testExactPermission(baseURI,
+        "trackingprotection") == Services.perms.ALLOW_ACTION;
+    }
+
+    if (hasException) {
+      this.content.setAttribute("hasException", "true");
+    } else {
+      this.content.removeAttribute("hasException");
+    }
+
     if (isBlocking && this.enabled) {
       this.icon.setAttribute("tooltiptext", this.activeTooltipText);
       this.icon.setAttribute("state", "blocked-tracking-content");
       this.content.setAttribute("state", "blocked-tracking-content");
-      this.content.removeAttribute("hasException");
 
       // Open the tracking protection introduction panel, if applicable.
       if (this.enabledGlobally) {
@@ -162,21 +189,6 @@ var TrackingProtection = {
 
       this.shieldHistogramAdd(2);
     } else if (isAllowing) {
-      // Check whether the user has added an exception for this site.
-      let hasException = false;
-      if (PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser)) {
-        hasException = PrivateBrowsingUtils.existsInTrackingAllowlist(this._baseURIForChannelClassifier);
-      } else {
-        hasException = Services.perms.testExactPermission(this._baseURIForChannelClassifier,
-          "trackingprotection") == Services.perms.ALLOW_ACTION;
-      }
-
-      if (hasException) {
-        this.content.setAttribute("hasException", "true");
-      } else {
-        this.content.removeAttribute("hasException");
-      }
-
       // Only show the shield when TP is enabled for now.
       if (this.enabled) {
         this.icon.setAttribute("tooltiptext", this.disabledTooltipText);
@@ -194,7 +206,6 @@ var TrackingProtection = {
       this.icon.removeAttribute("tooltiptext");
       this.icon.removeAttribute("state");
       this.content.removeAttribute("state");
-      this.content.removeAttribute("hasException");
 
       // We didn't show the shield
       this.shieldHistogramAdd(0);
@@ -224,14 +235,6 @@ var TrackingProtection = {
   },
 
   enableForCurrentPage() {
-    // If users are not clicking this link to unblock a specific exception,
-    // open the privacy settings to allow users to turn TP on globally. We might
-    // change this button to allow globally toggling the pref in the future.
-    if (!this.enabled) {
-      this.openPreferences("identityPopup-TP-action");
-      return;
-    }
-
     // Remove the current host from the 'trackingprotection' consumer
     // of the permission manager. This effectively removes this host
     // from the tracking protection allowlist.

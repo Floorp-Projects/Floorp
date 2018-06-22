@@ -92,9 +92,6 @@ class GeckoInstance(object):
         # Do not scan Wifi
         "geo.wifi.scan": False,
 
-        # No hang monitor
-        "hangmonitor.timeout": 0,
-
         "javascript.options.showInConsole": True,
 
         # Enable Marionette component
