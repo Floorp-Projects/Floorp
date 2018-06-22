@@ -52,7 +52,7 @@ add_task(async function testAllowAgain() {
 
 add_task(async function testRemove() {
   await runTest(async (params, observeAllPromise, apply) => {
-    params.url.value = "test.com";
+    params.richlistbox.selectedIndex = 0;
     params.btnRemove.doCommand();
 
     assertListContents(params, []);
@@ -125,7 +125,7 @@ add_task(async function testAllowAgainHTTPSWithPort() {
 
 add_task(async function testRemoveHTTPSWithPort() {
   await runTest(async (params, observeAllPromise, apply) => {
-    params.url.value = "https://test.com:12345";
+    params.richlistbox.selectedIndex = 0;
     params.btnRemove.doCommand();
 
     assertListContents(params, []);
@@ -182,7 +182,7 @@ add_task(async function testAllowAgainPort() {
 
 add_task(async function testRemovePort() {
   await runTest(async (params, observeAllPromise, apply) => {
-    params.url.value = "localhost:12345";
+    params.richlistbox.selectedIndex = 0;
     params.btnRemove.doCommand();
 
     assertListContents(params, []);
@@ -194,6 +194,10 @@ add_task(async function testRemovePort() {
 
 add_task(async function testSort() {
   await runTest(async (params, observeAllPromise, apply) => {
+    // Sort by site name.
+    EventUtils.synthesizeMouseAtCenter(params.doc.getElementById("siteCol"), {},
+                                       params.doc.defaultView);
+
     for (let URL of ["http://a", "http://z", "http://b"]) {
       let URI = Services.io.newURI(URL);
       Services.perms.add(URI, "cookie", Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -205,6 +209,7 @@ add_task(async function testSort() {
       ["http://z", params.allowText],
     ]);
 
+    // Sort by site name in descending order.
     EventUtils.synthesizeMouseAtCenter(params.doc.getElementById("siteCol"), {},
                                        params.doc.defaultView);
 
@@ -230,10 +235,14 @@ add_task(async function testSort() {
 });
 
 function assertListContents(params, expected) {
-  Assert.equal(params.tree.view.rowCount, expected.length);
+  Assert.equal(params.richlistbox.itemCount, expected.length);
   for (let i = 0; i < expected.length; i++) {
-    Assert.equal(params.tree.view.getCellText(i, params.nameCol), expected[i][0]);
-    Assert.equal(params.tree.view.getCellText(i, params.statusCol), expected[i][1]);
+    let richlistitem = params.richlistbox.getItemAtIndex(i);
+    Assert.equal(richlistitem.getAttribute("origin"), expected[i][0]);
+    Assert.equal(richlistitem.querySelector(".website-name > label")
+                             .getAttribute("value"), expected[i][0]);
+    Assert.equal(richlistitem.querySelector(".website-capability-value")
+                             .getAttribute("value"), expected[i][1]);
   }
 }
 
@@ -258,9 +267,7 @@ async function runTest(test, observances) {
   doc = win.document;
   let params = {
     doc,
-    tree: doc.getElementById("permissionsTree"),
-    nameCol: doc.getElementById("permissionsTree").treeBoxObject.columns.getColumnAt(0),
-    statusCol: doc.getElementById("permissionsTree").treeBoxObject.columns.getColumnAt(1),
+    richlistbox: doc.getElementById("permissionsBox"),
     url: doc.getElementById("url"),
     btnAllow: doc.getElementById("btnAllow"),
     btnBlock: doc.getElementById("btnBlock"),

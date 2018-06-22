@@ -19,7 +19,6 @@
   <link rel="localization" href="browser/preferences/containers.ftl"/>
   <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
-  <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/preferences/containers.js"/>
 
   <keyset>
