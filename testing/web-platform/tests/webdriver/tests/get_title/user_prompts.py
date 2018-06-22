@@ -1,3 +1,5 @@
+import pytest
+
 from tests.support.asserts import assert_error, assert_success, assert_dialog_handled
 from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
@@ -12,9 +14,8 @@ def get_title(session):
         "GET", "session/{session_id}/title".format(**vars(session)))
 
 
-def test_title_handle_prompt_dismiss(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "dismiss"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
+def test_title_handle_prompt_dismiss(session):
     session.url = inline("<title>WD doc title</title>")
 
     expected_title = read_global(session, "document.title")
@@ -42,9 +43,8 @@ def test_title_handle_prompt_dismiss(new_session, add_browser_capabilites):
     assert read_global(session, "dismiss3") is None
 
 
-def test_title_handle_prompt_accept(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_title_handle_prompt_accept(session):
     session.url = inline("<title>WD doc title</title>")
     create_dialog(session)("alert", text="accept #1", result_var="accept1")
 

@@ -1,3 +1,5 @@
+import pytest
+
 from tests.support.asserts import assert_error, assert_dialog_handled
 from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
@@ -20,8 +22,8 @@ def test_handle_prompt_ignore():
     """TODO"""
 
 
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_accept(session):
     session.url = inline("<title>WD doc title</title>")
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")

@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import copy
 import json
 import os
 import urlparse
@@ -17,6 +18,10 @@ default_port = "4444"
 default_script_timeout = 30
 default_page_load_timeout = 300
 default_implicit_wait_timeout = 0
+
+
+_current_session = None
+_custom_session = False
 
 
 def ignore_exceptions(f):
@@ -172,10 +177,7 @@ def configuration():
     }
 
 
-_current_session = None
-
-
-def session(configuration, request):
+def session(capabilities, configuration, request):
     """Create and start a session for a test that does not itself test session creation.
 
     By default the session will stay open after each test, but we always try to start a
@@ -183,10 +185,24 @@ def session(configuration, request):
     possible to recover from some errors that might leave the session in a bad state, but
     does not demand that we start a new session per test."""
     global _current_session
+
+    # Update configuration capabilities with custom ones from the
+    # capabilities fixture, which can be set by tests
+    caps = copy.deepcopy(configuration["capabilities"])
+    caps.update(capabilities)
+    caps = {"alwaysMatch": caps}
+
+    # If there is a session with different capabilities active, end it now
+    if _current_session is not None and (
+            caps != _current_session.requested_capabilities):
+        _current_session.end()
+        _current_session = None
+
     if _current_session is None:
-        _current_session = webdriver.Session(configuration["host"],
-                                             configuration["port"],
-                                             capabilities={"alwaysMatch": configuration["capabilities"]})
+        _current_session = webdriver.Session(
+            configuration["host"],
+            configuration["port"],
+            capabilities=caps)
     try:
         _current_session.start()
     except webdriver.error.SessionNotCreatedException:
@@ -209,36 +225,6 @@ def current_session():
     return _current_session
 
 
-def new_session(configuration, request):
-    """Return a factory function that will attempt to start a session with a given body.
-
-    This is intended for tests that are themselves testing new session creation, and the
-    session created is closed at the end of the test."""
-    def end():
-        global _current_session
-        if _current_session is not None and _current_session.session_id:
-            _current_session.end()
-
-        _current_session = None
-
-    def create_session(body):
-        global _current_session
-        _session = webdriver.Session(configuration["host"],
-                                     configuration["port"],
-                                     capabilities=None)
-        value = _session.send_command("POST", "session", body=body)
-        # Don't set the global session until we are sure this succeeded
-        _current_session = _session
-        _session.session_id = value["sessionId"]
-
-        return value, _current_session
-
-    end()
-    request.addfinalizer(end)
-
-    return create_session
-
-
 def add_browser_capabilites(configuration):
     def update_capabilities(capabilities):
         # Make sure there aren't keys in common.
@@ -257,6 +243,7 @@ def url(server_config):
 
     inner.__name__ = "url"
     return inner
+
 
 def create_dialog(session):
     """Create a dialog (one of "alert", "prompt", or "confirm") and provide a

@@ -1,3 +1,5 @@
+import pytest
+
 from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
 from tests.support.fixtures import create_dialog
 
@@ -12,8 +14,8 @@ def test_handle_prompt_dismiss():
     """TODO"""
 
 
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_accept(session):
     original = session.window.rect
 
     # step 2
