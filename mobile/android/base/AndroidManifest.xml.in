@@ -58,6 +58,8 @@
                   android:taskAffinity="@ANDROID_PACKAGE_NAME@.BROWSER"
                   android:alwaysRetainTaskState="true"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:exported="true"

@@ -29,6 +29,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.IntentHelper;
@@ -36,6 +37,7 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import static org.mozilla.gecko.BuildConfig.DEBUG;
@@ -84,7 +86,7 @@ public class GeckoMediaControlAgent {
     /**
      * Internal state of MediaControlService, to indicate it is playing media, or paused...etc.
      */
-    private State mMediaState = State.STOPPED;
+    private static State sMediaState = State.STOPPED;
 
     protected enum State {
         PLAYING,
@@ -155,14 +157,14 @@ public class GeckoMediaControlAgent {
 
                     // If media is playing, we just need to create or remove
                     // the media control interface.
-                    if (mMediaState.equals(State.PLAYING)) {
+                    if (sMediaState.equals(State.PLAYING)) {
                         setState(mIsMediaControlPrefOn ? State.PLAYING : State.STOPPED);
                     }
 
                     // If turn off pref during pausing, except removing media
                     // interface, we also need to stop the service and notify
                     // gecko about that.
-                    if (mMediaState.equals(State.PAUSED) &&
+                    if (sMediaState.equals(State.PAUSED) &&
                             !mIsMediaControlPrefOn) {
                         handleAction(ACTION_STOP);
                     }
@@ -238,6 +240,10 @@ public class GeckoMediaControlAgent {
     }
 
     private void notifyObservers(String topic, String data) {
+        final GeckoBundle newStatusBundle = new GeckoBundle(1);
+        newStatusBundle.putString(topic, data);
+        EventDispatcher.getInstance().dispatch("MediaControlService:MediaPlayingStatus", newStatusBundle);
+
         GeckoAppShell.notifyObservers(topic, data);
     }
 
@@ -246,8 +252,8 @@ public class GeckoMediaControlAgent {
     }
 
     private void setState(State newState) {
-        mMediaState = newState;
-        setMediaStateForTab(mMediaState.equals(State.PLAYING));
+        sMediaState = newState;
+        setMediaStateForTab(sMediaState.equals(State.PLAYING));
         onStateChanged();
     }
 
@@ -264,9 +270,9 @@ public class GeckoMediaControlAgent {
             return;
         }
 
-        Log.d(LOGTAG, "onStateChanged, state = " + mMediaState);
+        Log.d(LOGTAG, "onStateChanged, state = " + sMediaState);
 
-        if (isNeedToRemoveControlInterface(mMediaState)) {
+        if (isNeedToRemoveControlInterface(sMediaState)) {
             stopForegroundService();
             NotificationManagerCompat.from(mContext).cancel(R.id.mediaControlNotification);
             release();
@@ -291,8 +297,8 @@ public class GeckoMediaControlAgent {
         });
     }
 
-    private boolean isMediaPlaying() {
-        return mMediaState.equals(State.PLAYING);
+    /* package */ static boolean isMediaPlaying() {
+        return sMediaState.equals(State.PLAYING);
     }
 
     public void handleAction(String action) {
@@ -308,7 +314,7 @@ public class GeckoMediaControlAgent {
             return;
         }
 
-        Log.d(LOGTAG, "HandleAction, action = " + action + ", mediaState = " + mMediaState);
+        Log.d(LOGTAG, "HandleAction, action = " + action + ", mediaState = " + sMediaState);
         switch (action) {
             case ACTION_RESUME :
                 mController.getTransportControls().play();
@@ -416,7 +422,7 @@ public class GeckoMediaControlAgent {
     }
 
     private Notification.Action createNotificationAction() {
-        final Intent intent = createIntentUponState(mMediaState);
+        final Intent intent = createIntentUponState(sMediaState);
         boolean isPlayAction = intent.getAction().equals(ACTION_RESUME);
 
         int icon = isPlayAction ? R.drawable.ic_media_play : R.drawable.ic_media_pause;
@@ -507,7 +513,7 @@ public class GeckoMediaControlAgent {
         mInitialized = false;
 
         Log.d(LOGTAG, "release");
-        if (!mMediaState.equals(State.STOPPED)) {
+        if (!sMediaState.equals(State.STOPPED)) {
             setState(State.STOPPED);
         }
         PrefsHelper.removeObserver(mPrefsObserver);
