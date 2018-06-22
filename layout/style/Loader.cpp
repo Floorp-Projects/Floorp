@@ -932,7 +932,7 @@ Loader::CreateSheet(nsIURI* aURI,
   MOZ_ASSERT(aSheet, "Null out param!");
 
   if (!mSheets) {
-    mSheets = new Sheets();
+    mSheets = MakeUnique<Sheets>();
   }
 
   *aSheet = nullptr;
