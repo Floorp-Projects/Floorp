@@ -15,6 +15,8 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
@@ -41,31 +43,33 @@ bool VP9Benchmark::sHasRunTest = false;
 bool
 VP9Benchmark::IsVP9DecodeFast()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Disable VP9 estimizer on Mac, see bug 1400787.
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_APPLEMEDIA)
   return false;
 #else
-  bool hasPref = Preferences::HasUserValue(sBenchmarkFpsPref);
-  uint32_t hadRecentUpdate = Preferences::GetUint(sBenchmarkFpsVersionCheck, 0U);
-
-  if (!sHasRunTest && (!hasPref || hadRecentUpdate != sBenchmarkVersionID)) {
+  static StaticMutex sMutex;
+  uint32_t decodeFps = StaticPrefs::MediaBenchmarkVp9Fps();
+  uint32_t hadRecentUpdate = StaticPrefs::MediaBenchmarkVp9Versioncheck();
+  bool needBenchmark;
+  {
+    StaticMutexAutoLock lock(sMutex);
+    needBenchmark = !sHasRunTest &&
+                    (decodeFps == 0 || hadRecentUpdate != sBenchmarkVersionID);
     sHasRunTest = true;
+  }
 
+  if (needBenchmark) {
     RefPtr<WebMDemuxer> demuxer = new WebMDemuxer(
       new BufferMediaResource(sWebMSample, sizeof(sWebMSample)));
-    RefPtr<Benchmark> estimiser =
-      new Benchmark(demuxer,
-                    {
-                      Preferences::GetInt("media.benchmark.frames", 300), // frames to measure
-                      1, // start benchmarking after decoding this frame.
-                      8, // loop after decoding that many frames.
-                      TimeDuration::FromMilliseconds(
-                        Preferences::GetUint("media.benchmark.timeout", 1000))
-                    });
+    RefPtr<Benchmark> estimiser = new Benchmark(
+      demuxer,
+      { StaticPrefs::MediaBenchmarkFrames(), // frames to measure
+        1, // start benchmarking after decoding this frame.
+        8, // loop after decoding that many frames.
+        TimeDuration::FromMilliseconds(StaticPrefs::MediaBenchmarkTimeout()) });
     estimiser->Run()->Then(
-      SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
+      AbstractThread::MainThread(),
+      __func__,
       [](uint32_t aDecodeFps) {
         if (XRE_IsContentProcess()) {
           dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
@@ -77,20 +81,17 @@ VP9Benchmark::IsVP9DecodeFast()
           Preferences::SetUint(sBenchmarkFpsPref, aDecodeFps);
           Preferences::SetUint(sBenchmarkFpsVersionCheck, sBenchmarkVersionID);
         }
-        Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_VP9_BENCHMARK_FPS, aDecodeFps);
+        Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_VP9_BENCHMARK_FPS,
+                              aDecodeFps);
       },
-      []() { });
+      []() {});
   }
 
-  if (!hasPref) {
+  if (decodeFps == 0) {
     return false;
   }
 
-  uint32_t decodeFps = Preferences::GetUint(sBenchmarkFpsPref);
-  uint32_t threshold =
-    Preferences::GetUint("media.benchmark.vp9.threshold", 150);
-
-  return decodeFps >= threshold;
+  return decodeFps >= StaticPrefs::MediaBenchmarkVp9Threshold();
 #endif
 }
 
@@ -209,7 +210,7 @@ BenchmarkPlayback::DemuxNextSample()
     [this, ref](RefPtr<MediaTrackDemuxer::SamplesHolder> aHolder) {
       mSamples.AppendElements(std::move(aHolder->mSamples));
       if (ref->mParameters.mStopAtFrame &&
-          mSamples.Length() == (size_t)ref->mParameters.mStopAtFrame.ref()) {
+          mSamples.Length() == ref->mParameters.mStopAtFrame.ref()) {
         InitDecoder(std::move(*mTrackDemuxer->GetInfo()));
       } else {
         Dispatch(NS_NewRunnableFunction("BenchmarkPlayback::DemuxNextSample",
@@ -310,9 +311,10 @@ BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
     mDecodeStartTime = Some(TimeStamp::Now());
   }
   TimeStamp now = TimeStamp::Now();
-  int32_t frames = mFrameCount - ref->mParameters.mStartupFrame;
+  uint32_t frames = mFrameCount - ref->mParameters.mStartupFrame;
   TimeDuration elapsedTime = now - mDecodeStartTime.refOr(now);
-  if (((frames == ref->mParameters.mFramesToMeasure) && frames > 0) ||
+  if (((frames == ref->mParameters.mFramesToMeasure) &&
+       mFrameCount > ref->mParameters.mStartupFrame && frames > 0) ||
       elapsedTime >= ref->mParameters.mTimeout || mDrained) {
     uint32_t decodeFps = frames / elapsedTime.ToSeconds();
     MainThreadShutdown();
