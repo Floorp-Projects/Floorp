@@ -589,6 +589,7 @@ showIntro=false
 """
 
 STATIC_CDT_CORE_PREFS="""eclipse.preferences.version=1
+indexer.updatePolicy=0
 """
 
 FORMATTER_SETTINGS = """org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
