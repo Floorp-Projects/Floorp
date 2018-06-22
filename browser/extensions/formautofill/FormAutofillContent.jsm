@@ -604,8 +604,20 @@ var FormAutofillContent = {
     }
   },
 
-  onPopupClosed() {
+  onPopupClosed(selectedRowStyle) {
     ProfileAutocomplete._clearProfilePreview();
+
+    let lastAutoCompleteResult = ProfileAutocomplete.lastProfileAutoCompleteResult;
+    let focusedInput = FormAutofillContent.activeInput;
+    if (lastAutoCompleteResult && FormAutofillContent._keyDownEnterForInput &&
+        focusedInput === FormAutofillContent._keyDownEnterForInput &&
+        focusedInput === ProfileAutocomplete.lastProfileAutoCompleteFocusedInput) {
+      if (selectedRowStyle == "autofill-footer") {
+        Services.cpmm.sendAsyncMessage("FormAutofill:OpenPreferences");
+      } else if (selectedRowStyle == "autofill-clear-button") {
+        FormAutofillContent.clearForm();
+      }
+    }
   },
 
   _markAsAutofillField(field) {
@@ -627,23 +639,14 @@ var FormAutofillContent = {
   },
 
   _onKeyDown(e) {
+    delete FormAutofillContent._keyDownEnterForInput;
     let lastAutoCompleteResult = ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = FormAutofillContent.activeInput;
-
     if (e.keyCode != e.DOM_VK_RETURN || !lastAutoCompleteResult ||
         !focusedInput || focusedInput != ProfileAutocomplete.lastProfileAutoCompleteFocusedInput) {
       return;
     }
-
-    let selectedIndex = ProfileAutocomplete._getSelectedIndex(e.target.ownerGlobal);
-    let selectedRowStyle = lastAutoCompleteResult.getStyleAt(selectedIndex);
-    focusedInput.addEventListener("DOMAutoComplete", () => {
-      if (selectedRowStyle == "autofill-footer") {
-        Services.cpmm.sendAsyncMessage("FormAutofill:OpenPreferences");
-      } else if (selectedRowStyle == "autofill-clear-button") {
-        FormAutofillContent.clearForm();
-      }
-    }, {once: true});
+    FormAutofillContent._keyDownEnterForInput = focusedInput;
   },
 };
 

@@ -56,6 +56,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormFillController, nsIFormFillController)
 
   nsresult Focus(mozilla::dom::Event* aEvent);
+  nsresult KeyDown(mozilla::dom::Event* aKeyEvent);
   nsresult KeyPress(mozilla::dom::Event* aKeyEvent);
   nsresult MouseDown(mozilla::dom::Event* aMouseEvent);
 

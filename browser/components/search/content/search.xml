@@ -102,7 +102,7 @@
             oneOffButtons.textbox = this.textbox;
             oneOffButtons.popup = this.textbox.popup;
           }
-        }, {capturing: true, once: true});
+        }, {capture: true, once: true});
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -508,7 +508,7 @@
                                           "anonid", "input-box-contextmenu");
         cxmenu.addEventListener("popupshowing",
                                 () => { this.initContextMenu(cxmenu); },
-                                {capturing: true, once: true});
+                                {capture: true, once: true});
 
         this.setAttribute("aria-owns", this.popup.id);
         document.getBindingParent(this)._textboxInitialized = true;
