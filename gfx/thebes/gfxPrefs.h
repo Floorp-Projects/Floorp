@@ -513,6 +513,12 @@ private:
   DECL_GFX_PREF(Once, "gfx.use-mutex-on-present",              UseMutexOnPresent, bool, false);
   DECL_GFX_PREF(Once, "gfx.use-surfacetexture-textures",       UseSurfaceTextureTextures, bool, false);
 
+#if defined(RELEASE_OR_BETA)
+  DECL_GFX_PREF(Once, "gfx.allow-texture-direct-mapping",      AllowTextureDirectMapping, bool, false);
+#else
+  DECL_GFX_PREF(Once, "gfx.allow-texture-direct-mapping",      AllowTextureDirectMapping, bool, true);
+#endif
+
   DECL_GFX_PREF(Live, "gfx.vsync.collect-scroll-transforms",   CollectScrollTransforms, bool, false);
   DECL_GFX_PREF(Once, "gfx.vsync.compositor.unobserve-count",  CompositorUnobserveCount, int32_t, 10);
 
