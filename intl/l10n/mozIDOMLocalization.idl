@@ -1,0 +1,27 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Document;
+webidl Element;
+
+[scriptable, uuid(7c468500-541f-4fe0-98c9-92a53b63ec8d)]
+interface mozIDOMLocalization : nsISupports
+{
+  unsigned long addResourceIds(in Array<AString> resourceIds);
+  unsigned long removeResourceIds(in Array<AString> resourceIds);
+
+  Promise formatMessages(in Array<jsval> aKeys);
+  Promise formatValues(in Array<jsval> aKeys);
+  Promise formatValue(in DOMString aId, [optional] in jsval aArgs);
+
+  Promise translateFragment(in Element aElement);
+  Promise translateElements(in Array<Element> aElements);
+
+  void connectRoot(in Element aElement);
+  Promise translateRoots();
+  readonly attribute Promise ready;
+};
