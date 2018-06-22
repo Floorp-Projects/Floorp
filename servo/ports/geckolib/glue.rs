@@ -143,7 +143,7 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, CounterStyleRule};
 use style::stylesheets::{DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule};
 use style::stylesheets::{KeyframesRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule};
-use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule};
+use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule, UrlExtraData};
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
@@ -189,10 +189,10 @@ impl ClosureHelper for DeclarationBlockMutationClosure {
 
 // A dummy url data for where we don't pass url data in.
 // We need to get rid of this sooner than later.
-static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut URLExtraData;
+static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut _;
 
 #[no_mangle]
-pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
+pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     use style::gecko_bindings::sugar::origin_flags;
 
     // Pretend that we're a Servo Layout thread, to make some assertions happy.
@@ -207,8 +207,7 @@ pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     specified::font::assert_variant_ligatures_matches();
     specified::box_::assert_touch_action_matches();
 
-    // Initialize the dummy url data
-    unsafe { DUMMY_URL_DATA = dummy_url_data; }
+    DUMMY_URL_DATA = dummy_url_data;
 }
 
 #[no_mangle]
@@ -218,15 +217,14 @@ pub extern "C" fn Servo_InitializeCooperativeThread() {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Shutdown() {
-    // The dummy url will be released after shutdown, so clear the
-    // reference to avoid use-after-free.
-    unsafe { DUMMY_URL_DATA = ptr::null_mut(); }
+pub unsafe extern "C" fn Servo_Shutdown() {
+    DUMMY_URL_DATA = ptr::null_mut();
     Stylist::shutdown();
 }
 
-unsafe fn dummy_url_data() -> &'static RefPtr<URLExtraData> {
-    RefPtr::from_ptr_ref(&DUMMY_URL_DATA)
+#[inline(always)]
+unsafe fn dummy_url_data() -> &'static UrlExtraData {
+    UrlExtraData::from_ptr_ref(&DUMMY_URL_DATA)
 }
 
 #[allow(dead_code)]
@@ -1181,7 +1179,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     let input: &str = unsafe { (*bytes).as_str_unchecked() };
 
     let reporter = ErrorReporter::new(stylesheet, loader, extra_data);
-    let url_data = unsafe { RefPtr::from_ptr_ref(&extra_data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&extra_data) };
     let loader = if loader.is_null() {
         None
     } else {
@@ -1208,7 +1206,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
+pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     load_data: *mut SheetLoadDataHolder,
     extra_data: *mut URLExtraData,
     bytes: *const nsACString,
@@ -1216,15 +1214,15 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     line_number_offset: u32,
     quirks_mode: nsCompatibility,
 ) {
-    let (load_data, extra_data, bytes) = unsafe {
-        let mut b = nsCString::new();
-        b.assign(&*bytes);
-        (RefPtr::new(load_data), RefPtr::new(extra_data), b)
-    };
+    let load_data = RefPtr::new(load_data);
+    let extra_data = UrlExtraData(RefPtr::new(extra_data));
+
+    let mut sheet_bytes = nsCString::new();
+    sheet_bytes.assign(&*bytes);
     let async_parser = AsyncStylesheetParser::new(
         load_data,
         extra_data,
-        bytes,
+        sheet_bytes,
         mode_to_origin(mode),
         quirks_mode.into(),
         line_number_offset
@@ -2513,7 +2511,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
     let value = value.as_ref().unwrap().as_str_unchecked();
     let mut input = ParserInput::new(&value);
     let mut parser = Parser::new(&mut input);
-    let url_data = RefPtr::from_ptr_ref(&data);
+    let url_data = UrlExtraData::from_ptr_ref(&data);
     let context = ParserContext::new(
         Origin::Author,
         url_data,
@@ -3224,7 +3222,7 @@ fn parse_property_into(
 ) -> Result<(), ()> {
     use style_traits::ParsingMode;
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
-    let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
 
     parse_one_declaration_into(
@@ -3284,7 +3282,7 @@ pub extern "C" fn Servo_ParseEasing(
     use style::properties::longhands::transition_timing_function;
 
     // FIXME Dummy URL data would work fine here.
-    let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let context = ParserContext::new(
         Origin::Author,
         url_data,
@@ -3377,7 +3375,7 @@ pub extern "C" fn Servo_ParseStyleAttribute(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let value = unsafe { data.as_ref().unwrap().as_str_unchecked() };
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, raw_extra_data);
-    let url_data = unsafe { RefPtr::from_ptr_ref(&raw_extra_data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&raw_extra_data) };
     Arc::new(global_style_data.shared_lock.wrap(
         parse_style_attribute(
             value,
@@ -4216,7 +4214,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
     use style::values::generics::image::Image;
     use style::values::specified::url::SpecifiedImageUrl;
 
-    let url_data = unsafe { RefPtr::from_ptr_ref(&raw_extra_data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&raw_extra_data) };
     let string = unsafe { (*value).to_string() };
     let context = ParserContext::new(
         Origin::Author,
@@ -5539,7 +5537,7 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
     let string = unsafe { (*value).to_string() };
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
-    let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let context = ParserContext::new(
         Origin::Author,
         url_data,
