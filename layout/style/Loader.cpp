@@ -1616,34 +1616,13 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
 /**
  * ParseSheet handles parsing the data stream.
  */
-void
-Loader::ParseSheet(const nsAString& aUTF16,
-                   const nsACString& aUTF8,
+Loader::Completed
+Loader::ParseSheet(const nsACString& aBytes,
                    SheetLoadData* aLoadData,
-                   bool aAllowAsync,
-                   bool& aCompleted)
+                   AllowAsyncParse aAllowAsync)
 {
   LOG(("css::Loader::ParseSheet"));
-  MOZ_ASSERT(aLoadData, "Must have load data");
-  MOZ_ASSERT(aLoadData->mSheet, "Must have sheet to parse into");
-  aCompleted = false;
-  MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
-  if (!aUTF16.IsEmpty()) {
-    DoParseSheetServo(NS_ConvertUTF16toUTF8(aUTF16),
-                      aLoadData,
-                      aAllowAsync,
-                      aCompleted);
-  } else {
-    DoParseSheetServo(aUTF8, aLoadData, aAllowAsync, aCompleted);
-  }
-}
-
-void
-Loader::DoParseSheetServo(const nsACString& aBytes,
-                          SheetLoadData* aLoadData,
-                          bool aAllowAsync,
-                          bool& aCompleted)
-{
+  MOZ_ASSERT(aLoadData);
   aLoadData->mIsBeingParsed = true;
 
   StyleSheet* sheet = aLoadData->mSheet;
@@ -1651,18 +1630,17 @@ Loader::DoParseSheetServo(const nsACString& aBytes,
 
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
-  if (aLoadData->mSyncLoad || !aAllowAsync) {
+  if (aLoadData->mSyncLoad || aAllowAsync == AllowAsyncParse::No) {
     sheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
     aLoadData->mIsBeingParsed = false;
 
     bool noPendingChildren = aLoadData->mPendingChildren == 0;
     MOZ_ASSERT_IF(aLoadData->mSyncLoad, noPendingChildren);
     if (noPendingChildren) {
-      aCompleted = true;
       SheetComplete(aLoadData, NS_OK);
+      return Completed::Yes;
     }
-
-    return;
+    return Completed::No;
   }
 
   // This parse does not need to be synchronous. \o/
@@ -1685,6 +1663,7 @@ Loader::DoParseSheetServo(const nsACString& aBytes,
       }
     }, [] { MOZ_CRASH("rejected parse promise"); }
   );
+  return Completed::No;
 }
 
 /**
@@ -1953,18 +1932,19 @@ Loader::LoadInlineStyle(const SheetInfo& aInfo,
 
   NS_ADDREF(data);
   data->mLineNumber = aLineNumber;
-  bool completed = true;
   // Parse completion releases the load data.
   //
   // Note that we need to parse synchronously, since the web expects that the
-  // effects of inline stylesheets are visible immediately (aside from @imports).
-  ParseSheet(aBuffer, EmptyCString(), data, /* aAllowAsync = */ false, completed);
+  // effects of inline stylesheets are visible immediately (aside from
+  // @imports).
+  NS_ConvertUTF16toUTF8 utf8(aBuffer);
+  Completed completed = ParseSheet(utf8, data, AllowAsyncParse::No);
 
-  // If completed is true, |data| may well be deleted by now.
-  if (!completed) {
+  // If the sheet is complete already, |data| may well be deleted by now.
+  if (completed == Completed::No) {
     data->mMustNotify = true;
   }
-  return LoadSheetResult { completed ? Completed::Yes : Completed::No, isAlternate, matched };
+  return LoadSheetResult { completed, isAlternate, matched };
 }
 
 Result<Loader::LoadSheetResult, nsresult>
