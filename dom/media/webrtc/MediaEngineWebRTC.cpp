@@ -396,9 +396,11 @@ CubebDeviceEnumerator::EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInf
   MutexAutoLock lock(mMutex);
 
   if (mDevices.IsEmpty() || mManualInvalidation) {
+    mDevices.Clear();
     CubebUtils::GetDeviceCollection(mDevices, CubebUtils::Input);
   }
 
+  aOutDevices.Clear();
   aOutDevices.AppendElements(mDevices);
 }
 
