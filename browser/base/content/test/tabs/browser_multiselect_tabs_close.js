@@ -18,7 +18,7 @@ add_task(async function usingTabCloseButton() {
 
     is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
-    await triggerClickOn(tab1, { ctrlKey: true });
+    await BrowserTestUtils.switchTab(gBrowser, tab1);
     await triggerClickOn(tab2, { ctrlKey: true });
 
     ok(tab1.multiselected, "Tab1 is multiselected");
@@ -69,7 +69,7 @@ add_task(async function usingTabContextMenu() {
 
     is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
-    await triggerClickOn(tab1, { ctrlKey: true });
+    await BrowserTestUtils.switchTab(gBrowser, tab1);
     await triggerClickOn(tab2, { ctrlKey: true });
 
     ok(tab1.multiselected, "Tab1 is multiselected");
