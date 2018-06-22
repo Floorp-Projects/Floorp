@@ -12,10 +12,9 @@
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "mozilla/DeclarationBlock.h"
-#include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoSpecifiedValues.h"
 
 using namespace mozilla;
 
@@ -311,8 +310,9 @@ nsMappedAttributes::LazilyResolveServoDeclaration(nsIDocument* aDoc)
   MOZ_ASSERT(!mServoStyle,
              "LazilyResolveServoDeclaration should not be called if mServoStyle is already set");
   if (mRuleMapper) {
-    mServoStyle = Servo_DeclarationBlock_CreateEmpty().Consume();
-    ServoSpecifiedValues servo = ServoSpecifiedValues(aDoc, mServoStyle.get());
-    (*mRuleMapper)(this, &servo);
+    MappedDeclarations declarations(
+      aDoc, Servo_DeclarationBlock_CreateEmpty().Consume());
+    (*mRuleMapper)(this, declarations);
+    mServoStyle = declarations.TakeDeclarationBlock();
   }
 }

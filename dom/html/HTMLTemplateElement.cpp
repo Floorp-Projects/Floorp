@@ -7,7 +7,7 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLTemplateElementBinding.h"
 
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsAtom.h"
