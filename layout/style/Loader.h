@@ -508,9 +508,8 @@ private:
                             dom::MediaList* aMediaList,
                             IsAlternate);
 
-  nsresult InsertSheetInDoc(StyleSheet* aSheet,
-                            nsIContent* aLinkingContent,
-                            nsIDocument* aDocument);
+  // Inserts a style sheet in a document or a ShadowRoot.
+  void InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent);
 
   nsresult InsertChildSheet(StyleSheet* aSheet,
                             StyleSheet* aParentSheet);
