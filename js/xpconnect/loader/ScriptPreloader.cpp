@@ -441,7 +441,7 @@ ScriptPreloader::GetCacheFile(const nsAString& suffix)
     return std::move(cacheFile);
 }
 
-static const uint8_t MAGIC[] = "mozXDRcachev001";
+static const uint8_t MAGIC[] = "mozXDRcachev002";
 
 Result<Ok, nsresult>
 ScriptPreloader::OpenCache()
