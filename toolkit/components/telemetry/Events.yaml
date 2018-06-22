@@ -598,3 +598,13 @@ devtools.main:
     expiry_version: never
     extra_keys:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  jump_to_source:
+    objects: ["webconsole"]
+    bug_numbers: [1463092]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has clicked a link to a source file in the web console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
