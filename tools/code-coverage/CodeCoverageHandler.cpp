@@ -44,7 +44,7 @@ void counters_reset() {
 
 StaticAutoPtr<CodeCoverageHandler> CodeCoverageHandler::instance;
 
-void CodeCoverageHandler::DumpCounters(int)
+void CodeCoverageHandler::DumpCounters()
 {
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
 
@@ -53,7 +53,12 @@ void CodeCoverageHandler::DumpCounters(int)
   printf_stderr("[CodeCoverage] Dump completed.\n");
 }
 
-void CodeCoverageHandler::ResetCounters(int)
+void CodeCoverageHandler::DumpCountersSignalHandler(int)
+{
+  DumpCounters();
+}
+
+void CodeCoverageHandler::ResetCounters()
 {
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
 
@@ -62,20 +67,25 @@ void CodeCoverageHandler::ResetCounters(int)
   printf_stderr("[CodeCoverage] Reset completed.\n");
 }
 
+void CodeCoverageHandler::ResetCountersSignalHandler(int)
+{
+  ResetCounters();
+}
+
 void CodeCoverageHandler::SetSignalHandlers()
 {
 #ifndef XP_WIN
   printf_stderr("[CodeCoverage] Setting handlers for process %d.\n", getpid());
 
   struct sigaction dump_sa;
-  dump_sa.sa_handler = CodeCoverageHandler::DumpCounters;
+  dump_sa.sa_handler = CodeCoverageHandler::DumpCountersSignalHandler;
   dump_sa.sa_flags = SA_RESTART;
   sigemptyset(&dump_sa.sa_mask);
   DebugOnly<int> r1 = sigaction(SIGUSR1, &dump_sa, nullptr);
   MOZ_ASSERT(r1 == 0, "Failed to install GCOV SIGUSR1 handler");
 
   struct sigaction reset_sa;
-  reset_sa.sa_handler = CodeCoverageHandler::ResetCounters;
+  reset_sa.sa_handler = CodeCoverageHandler::ResetCountersSignalHandler;
   reset_sa.sa_flags = SA_RESTART;
   sigemptyset(&reset_sa.sa_mask);
   DebugOnly<int> r2 = sigaction(SIGUSR2, &reset_sa, nullptr);
