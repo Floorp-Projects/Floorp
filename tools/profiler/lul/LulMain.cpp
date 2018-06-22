@@ -907,8 +907,8 @@ TaggedUWord DerefTUW(TaggedUWord aAddr, const StackImage* aStackImg)
     return TaggedUWord();
   }
 
-  return TaggedUWord(*(uintptr_t*)(aStackImg->mContents + aAddr.Value()
-                                   - aStackImg->mStartAvma));
+  return TaggedUWord(*(uintptr_t*)(
+           &aStackImg->mContents[aAddr.Value() - aStackImg->mStartAvma]));
 }
 
 // RUNS IN NO-MALLOC CONTEXT
