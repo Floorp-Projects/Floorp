@@ -61,7 +61,7 @@ HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     GenericSpecifiedValues* aData)
+                                     MappedDeclarations& aDecls)
 {
   bool noshade = false;
 
@@ -81,24 +81,24 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // Map align attribute into auto side margins
     switch (value->GetEnumValue()) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
-      aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
+      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
       break;
     case NS_STYLE_TEXT_ALIGN_RIGHT:
-      aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
+      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
       break;
     case NS_STYLE_TEXT_ALIGN_CENTER:
-      aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
-      aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
+      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
+      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
       break;
     }
   }
-  if (!aData->PropertyIsSet(eCSSProperty_height)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_height)) {
     // size: integer
     if (noshade) {
       // noshade case: size is set using the border
-      aData->SetAutoValue(eCSSProperty_height);
+      aDecls.SetAutoValue(eCSSProperty_height);
     } else {
       // normal case
       // the height includes the top and bottom borders that are initially 1px.
@@ -106,7 +106,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // removing all but the top border.
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
       if (value && value->Type() == nsAttrValue::eInteger) {
-        aData->SetPixelValue(eCSSProperty_height, (float)value->GetIntegerValue());
+        aDecls.SetPixelValue(eCSSProperty_height, (float)value->GetIntegerValue());
       } // else use default value from html.css
     }
   }
@@ -130,22 +130,22 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     } else {
       sizePerSide = 1.0f; // default to a 2px high line
     }
-    aData->SetPixelValueIfUnset(eCSSProperty_border_top_width, sizePerSide);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width, sizePerSide);
     if (allSides) {
-      aData->SetPixelValueIfUnset(eCSSProperty_border_right_width, sizePerSide);
-      aData->SetPixelValueIfUnset(eCSSProperty_border_bottom_width, sizePerSide);
-      aData->SetPixelValueIfUnset(eCSSProperty_border_left_width, sizePerSide);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width, sizePerSide);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, sizePerSide);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width, sizePerSide);
     }
 
-    if (!aData->PropertyIsSet(eCSSProperty_border_top_style))
-      aData->SetKeywordValue(eCSSProperty_border_top_style,
+    if (!aDecls.PropertyIsSet(eCSSProperty_border_top_style))
+      aDecls.SetKeywordValue(eCSSProperty_border_top_style,
                              NS_STYLE_BORDER_STYLE_SOLID);
     if (allSides) {
-      aData->SetKeywordValueIfUnset(eCSSProperty_border_right_style,
+      aDecls.SetKeywordValueIfUnset(eCSSProperty_border_right_style,
                                     NS_STYLE_BORDER_STYLE_SOLID);
-      aData->SetKeywordValueIfUnset(eCSSProperty_border_bottom_style,
+      aDecls.SetKeywordValueIfUnset(eCSSProperty_border_bottom_style,
                                     NS_STYLE_BORDER_STYLE_SOLID);
-      aData->SetKeywordValueIfUnset(eCSSProperty_border_left_style,
+      aDecls.SetKeywordValueIfUnset(eCSSProperty_border_left_style,
                                     NS_STYLE_BORDER_STYLE_SOLID);
 
       // If it would be noticeable, set the border radius to
@@ -155,18 +155,18 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       for (const nsCSSPropertyID* props =
             nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_radius);
            *props != eCSSProperty_UNKNOWN; ++props) {
-        aData->SetPixelValueIfUnset(*props, 10000.0f);
+        aDecls.SetPixelValueIfUnset(*props, 10000.0f);
       }
     }
   }
   // color: a color
   // (we got the color attribute earlier)
   if (colorIsSet) {
-    aData->SetColorValueIfUnset(eCSSProperty_color, color);
+    aDecls.SetColorValueIfUnset(eCSSProperty_color, color);
   }
 
-  nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

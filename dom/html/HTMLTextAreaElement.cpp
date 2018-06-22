@@ -13,7 +13,7 @@
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/MouseEvents.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentCID.h"
@@ -427,19 +427,19 @@ HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                           GenericSpecifiedValues* aData)
+                                           MappedDeclarations& aDecls)
 {
   // wrap=off
-  if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_white_space)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
     if (value && value->Type() == nsAttrValue::eString &&
         value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-      aData->SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
+      aDecls.SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
     }
   }
 
-  nsGenericHTMLFormElementWithState::MapDivAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElementWithState::MapDivAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 nsChangeHint

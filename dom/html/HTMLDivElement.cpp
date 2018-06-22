@@ -61,19 +61,19 @@ HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLDivElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                      GenericSpecifiedValues* aData)
+                                      MappedDeclarations& aDecls)
 {
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 static void
-MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, GenericSpecifiedValues* aData)
+MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls)
 {
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapBGColorInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapBGColorInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

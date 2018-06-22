@@ -8,7 +8,7 @@
 #include "mozilla/dom/HTMLTableColElementBinding.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
 
@@ -65,9 +65,9 @@ HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                           GenericSpecifiedValues* aData)
+                                           MappedDeclarations& aDecls)
 {
-  if (!aData->PropertyIsSet(eCSSProperty__x_span)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty__x_span)) {
     // span: int
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::span);
     if (value && value->Type() == nsAttrValue::eInteger) {
@@ -76,15 +76,15 @@ HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes
       // means something special for colspan and rowspan, but for <col
       // span> and <colgroup span> it's just disallowed.
       if (val > 0) {
-        aData->SetIntValue(eCSSProperty__x_span, value->GetIntegerValue());
+        aDecls.SetIntValue(eCSSProperty__x_span, value->GetIntegerValue());
       }
     }
   }
 
-  nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)
