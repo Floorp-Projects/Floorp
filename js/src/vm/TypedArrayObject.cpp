@@ -30,6 +30,7 @@
 #include "gc/Marking.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
+#include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
@@ -652,15 +653,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         NewObjectKind newKind = TenuredObject;
 
-        ScopedJSFreePtr<void> buf;
+        UniquePtr<void, JS::FreePolicy> buf;
         if (!fitsInline && len > 0) {
-            buf = cx->zone()->pod_malloc<uint8_t>(nbytes);
+            buf.reset(cx->zone()->pod_calloc<uint8_t>(nbytes));
             if (!buf) {
                 ReportOutOfMemory(cx);
                 return nullptr;
             }
-
-            memset(buf, 0, nbytes);
         }
 
         TypedArrayObject* obj = NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind);
@@ -668,7 +667,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         initTypedArraySlots(obj, len);
-        initTypedArrayData(cx, obj, len, buf.forget(), allocKind);
+        initTypedArrayData(cx, obj, len, buf.release(), allocKind);
 
         return obj;
     }
