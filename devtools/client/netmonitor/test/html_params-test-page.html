@@ -31,18 +31,30 @@
         });
       }
 
-      async function post(address, query, contentType, postBody) {
+      async function request(address, query, contentType, requestBody, method) {
         return new Promise(resolve => {
           const xhr = new XMLHttpRequest();
-          xhr.open("POST", address + query, true);
+          xhr.open(method, address + query, true);
           xhr.setRequestHeader("content-type", contentType);
           xhr.onreadystatechange = function() {
             if (this.readyState == this.DONE) {
               resolve();
             }
           };
-          xhr.send(postBody);
+          xhr.send(requestBody);
         });
+      }
+
+      async function post(address, query, contentType, postBody) {
+        return request(address, query, contentType, postBody, "POST");
+      }
+
+      async function patch(address, query, contentType, patchBody) {
+        return request(address, query, contentType, patchBody, "PATCH");
+      }
+
+      async function put(address, query, contentType, putBody) {
+        return request(address, query, contentType, putBody, "PUT");
       }
 
       async function performRequests() {
@@ -54,6 +66,8 @@
         await post("baz", "?a=b", undefined, '{ "foo": "bar" }');
         await post("baz", "?a=b", undefined, "?foo=bar");
         await get("baz", "");
+        await patch("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
+        await put("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
       }
     </script>
   </body>
