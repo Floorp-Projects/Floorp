@@ -3543,6 +3543,13 @@ SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj, ObjOperandId objI
     if (!nobj->containsDenseElement(index) || nobj->getElementsHeader()->isFrozen())
         return false;
 
+    // Don't optimize INITELEM (DefineProperty) on non-extensible objects: when
+    // the elements are sealed, we have to throw an exception. Note that we have
+    // to check !isExtensible instead of denseElementsAreSealed because sealing
+    // a (non-extensible) object does not necessarily trigger a Shape change.
+    if (IsPropertyInitOp(JSOp(*pc_)) && !nobj->isExtensible())
+        return false;
+
     if (typeCheckInfo_.needsTypeBarrier())
         writer.guardGroupForTypeBarrier(objId, nobj->group());
     TestMatchingNativeReceiver(writer, nobj, objId);

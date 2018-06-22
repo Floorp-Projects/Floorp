@@ -9152,11 +9152,17 @@ IonBuilder::initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
 
     bool mayBeNonExtensible = ElementAccessMightBeNonExtensible(constraints(), obj);
 
-    if (mayBeNonExtensible && hasExtraIndexedProperty) {
+    if (mayBeNonExtensible) {
         // FallibleStoreElement does not know how to deal with extra indexed
         // properties on the prototype. This case should be rare so we fall back
         // to an IC.
-        return Ok();
+        if (hasExtraIndexedProperty)
+            return Ok();
+
+        // Don't optimize INITELEM (DefineProperty) on potentially non-extensible
+        // objects: when the array is sealed, we have to throw an exception.
+        if (IsPropertyInitOp(JSOp(*pc)))
+            return Ok();
     }
 
     *emitted = true;
