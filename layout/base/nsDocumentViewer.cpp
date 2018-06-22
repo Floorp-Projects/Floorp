@@ -2514,14 +2514,12 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     styleSet->PrependStyleSheet(SheetType::Agent, sheet);
   }
 
-  sheet = cache->SVGSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  if (MOZ_LIKELY(mDocument->NodeInfoManager()->SVGEnabled())) {
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->SVGSheet());
   }
 
-  sheet = cache->MathMLSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(SheetType::Agent, sheet);
+  if (MOZ_LIKELY(mDocument->NodeInfoManager()->MathMLEnabled())) {
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->MathMLSheet());
   }
 
   styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
