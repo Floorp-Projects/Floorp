@@ -12,9 +12,21 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.net.URL
 
 @RunWith(RobolectricTestRunner::class)
 class HttpURLConnectionHttpClientTest {
+    @Test(expected = ExperimentDownloadException::class)
+    fun testGETIOException() {
+        val server = MockWebServer()
+        try {
+            val serverUrl = server.url("/").url().toString()
+            HttpURLConnectionHttpClient().get(URL(serverUrl.replace(server.port.toString(), (server.port + 1).toString())))
+        } finally {
+            server.shutdown()
+        }
+    }
+
     @Test(expected = ExperimentDownloadException::class)
     fun testGET404() {
         testGETError(404)
