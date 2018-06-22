@@ -239,7 +239,7 @@ def create_dialog(session):
 
     def create_dialog(dialog_type, text=None, result_var=None):
         assert dialog_type in ("alert", "confirm", "prompt"), (
-               "Invalid dialog type: '%s'" % dialog_type)
+            "Invalid dialog type: '%s'" % dialog_type)
 
         if text is None:
             text = ""
@@ -252,23 +252,16 @@ def create_dialog(session):
         assert re.search(r"^[_$a-z$][_$a-z0-9]*$", result_var, re.IGNORECASE), (
             'The `result_var` must be a valid JavaScript identifier')
 
-        # Script completion and modal summoning are scheduled on two separate
-        # turns of the event loop to ensure that both occur regardless of how
-        # the user agent manages script execution.
-        spawn = """
-            var done = arguments[0];
-            setTimeout(done, 0);
+        # Script completes itself when the user prompt has been opened.
+        session.execute_async_script("""
             setTimeout(function() {{
                 window.{0} = window.{1}("{2}");
             }}, 0);
-        """.format(result_var, dialog_type, text)
+            """.format(result_var, dialog_type, text))
 
-        session.send_session_command("POST",
-                                     "execute/async",
-                                     {"script": spawn, "args": []})
         wait(session,
-             lambda s: s.send_session_command("GET", "alert/text") == text,
-             "modal has not appeared",
+             lambda s: s.alert.text == text,
+             "No user prompt with text '{}' detected".format(text),
              timeout=15,
              ignored_exceptions=webdriver.NoSuchAlertException)
 
