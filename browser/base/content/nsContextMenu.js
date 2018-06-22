@@ -995,12 +995,22 @@ nsContextMenu.prototype = {
       target: this.target,
     });
 
+    // Cache this because we fetch the data async
+    let {documentURIObject} = gContextMenuContentData;
+
     let onMessage = (message) => {
       mm.removeMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
+      // FIXME can we switch this to a blob URL?
       let dataURL = message.data.dataURL;
-      saveImageURL(dataURL, name, "SaveImageTitle", true, false,
-                   document.documentURIObject, null, null, null,
-                   isPrivate);
+      saveImageURL(dataURL, name, "SaveImageTitle",
+                   true, // bypass cache
+                   false, // don't skip prompt for where to save
+                   documentURIObject, // referrer
+                   null, // document
+                   null, // content type
+                   null, // content disposition
+                   isPrivate,
+                   this.principal);
     };
     mm.addMessageListener("ContextMenu:SaveVideoFrameAsImage:Result", onMessage);
   },
@@ -1238,13 +1248,15 @@ nsContextMenu.prototype = {
       this._canvasToBlobURL(this.target).then(function(blobURL) {
         saveImageURL(blobURL, "canvas.png", "SaveImageTitle",
                      true, false, referrerURI, null, null, null,
-                     isPrivate);
+                     isPrivate,
+                     document.nodePrincipal /* system, because blob: */);
       }, Cu.reportError);
     } else if (this.onImage) {
       urlSecurityCheck(this.mediaURL, this.principal);
       saveImageURL(this.mediaURL, null, "SaveImageTitle", false,
                    false, referrerURI, null, gContextMenuContentData.contentType,
-                   gContextMenuContentData.contentDisposition, isPrivate);
+                   gContextMenuContentData.contentDisposition, isPrivate,
+                   this.principal);
     } else if (this.onVideo || this.onAudio) {
       var dialogTitle = this.onVideo ? "SaveVideoTitle" : "SaveAudioTitle";
       this.saveHelper(this.mediaURL, null, dialogTitle, false, doc, referrerURI,
