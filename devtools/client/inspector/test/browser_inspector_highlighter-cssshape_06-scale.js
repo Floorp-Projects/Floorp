@@ -18,7 +18,6 @@ add_task(async function() {
   const highlighters = view.highlighters;
   const config = { inspector, view, highlighters, testActor, helper };
 
-  await testTranslate(config);
   await testScale(config);
 });
 
@@ -32,48 +31,6 @@ async function teardown(config) {
   const { view, selector, property } = config;
   info(`Turn off shapes highlighter for ${selector}`);
   await toggleShapesHighlighter(view, selector, property, false);
-}
-
-async function testTranslate(config) {
-  const { testActor, helper, highlighters } = config;
-  const options = { transformMode: true };
-  const property = "clip-path";
-
-  for (const selector of SHAPE_SELECTORS) {
-    await setup({selector, property, options, ...config});
-    const { mouse } = helper;
-
-    const { center, width, height } = await getBoundingBoxInPx({selector, ...config});
-    const [x, y] = center;
-    const dx = width / 10;
-    const dy = height / 10;
-    let onShapeChangeApplied;
-
-    info(`Translating ${selector}`);
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
-    await mouse.down(x, y, selector);
-    await mouse.move(x + dx, y + dy, selector);
-    await mouse.up(x + dx, y + dy, selector);
-    await onShapeChangeApplied;
-
-    let newBB = await getBoundingBoxInPx({selector, ...config});
-    isnot(newBB.center[0], x, `${selector} translated on y axis`);
-    isnot(newBB.center[1], y, `${selector} translated on x axis`);
-
-    info(`Translating ${selector} back`);
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
-    await mouse.down(x + dx, y + dy, selector);
-    await mouse.move(x, y, selector);
-    await mouse.up(x, y, selector);
-    await testActor.reflow();
-    await onShapeChangeApplied;
-
-    newBB = await getBoundingBoxInPx({selector, ...config});
-    is(newBB.center[0], x, `${selector} translated back on x axis`);
-    is(newBB.center[1], y, `${selector} translated back on y axis`);
-
-    await teardown({selector, property, ...config});
-  }
 }
 
 async function testScale(config) {
