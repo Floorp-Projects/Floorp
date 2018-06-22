@@ -36,8 +36,8 @@ const {
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
-const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
+const STRINGS_URI = "devtools/shared/locales/highlighters.properties";
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 const COLUMNS = "cols";
 const ROWS = "rows";
@@ -1697,7 +1697,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     const dim = parseFloat(width.toPrecision(6)) +
               " \u00D7 " +
               parseFloat(height.toPrecision(6));
-    const position = LAYOUT_L10N.getFormatStr("layout.rowColumnPositions", rowNumber,
+    const position = L10N.getFormatStr("grid.rowColumnPositions", rowNumber,
       columnNumber);
 
     this.getElement("cell-infobar-position").setTextContent(position);
