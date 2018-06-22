@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for events while the form history popup is open</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form History test: Test for keydown handler submitting the form
+<p id="display"></p>
+
+<div id="content">
+  <form id="form1" action="javascript:handleSubmit()">
+    <input  type="text" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody">
+var form = document.getElementById("form1");
+var input = $_(1, "field1");
+var expectedValue = "value1";
+
+function handleSubmit() { // eslint-disable-line no-unused-vars
+  info("Submit");
+  ok(false, "The form should not be submitted");
+  input.removeEventListener("input", handleInput, true);
+  SimpleTest.finish();
+}
+
+function handleInput() {
+  info("Input");
+  is(input.value, expectedValue, "Check input value");
+  input.removeEventListener("input", handleInput, true);
+  SimpleTest.finish();
+}
+
+function runTest() {
+  input.addEventListener("input", handleInput, true);
+  input.addEventListener("keydown", function handleEnterDown(e) {
+    if (e.keyCode != KeyEvent.DOM_VK_RETURN) {
+      return;
+    }
+    info("Enter KeyDown");
+    input.removeEventListener("keydown", handleEnterDown, true);
+    form.submit();
+  }, true);
+
+  registerPopupShownListener(() => {
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter"); // select the first entry in the popup
+  });
+
+  // Focus the input before adjusting.value so that the caret goes to the end
+  // (since OS X doesn't show the dropdown otherwise).
+  input.focus();
+  input.value = "value";
+  input.focus();
+  synthesizeKey("KEY_ArrowDown");
+}
+
+function startTest() {
+  updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "value1" },
+  ], runTest);
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
