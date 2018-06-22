@@ -8,6 +8,10 @@ EXPORTS.gtest += [
     'MozGtestFriend.h',
 ]
 
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "GTest")
+    SCHEDULES.exclusive = ['gtest']
+
 if CONFIG['ENABLE_TESTS']:
     gtest_exports = [
         'benchmark/BlackBox.h',

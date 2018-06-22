@@ -1,0 +1,51 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Talos")
+    SCHEDULES.exclusive = ['talos']
+
+with Files("talos/startup_test/sessionrestore/**"):
+    BUG_COMPONENT = ("Firefox", "Session Restore")
+
+with Files("talos/startup_test/tresize/**"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+with Files("talos/tests/a11y/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("talos/tests/cpstartup/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("talos/tests/dromaeo/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("talos/tests/kraken/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
+
+with Files("talos/tests/scroll/**"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("talos/tests/svg*"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("talos/tests/tabpaint/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("talos/tests/tabswitch/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("talos/tests/tart/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("talos/tests/v8_7/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
+
+with Files("talos/tests/video/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("talos/tests/webgl/**"):
+    BUG_COMPONENT = ("Core", "Canvas: WebGL")
