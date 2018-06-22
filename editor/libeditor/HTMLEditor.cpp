@@ -22,7 +22,6 @@
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "HTMLURIRefObject.h"
-#include "StyleSheetTransactions.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 
@@ -270,7 +269,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLInlineTableEditor)
   NS_INTERFACE_MAP_ENTRY(nsITableEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorStyleSheets)
-  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
 NS_INTERFACE_MAP_END_INHERITING(TextEditor)
 
@@ -2916,74 +2914,6 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList)
 
 
 NS_IMETHODIMP
-HTMLEditor::AddStyleSheet(const nsAString& aURL)
-{
-  // Enable existing sheet if already loaded.
-  if (EnableExistingStyleSheet(aURL)) {
-    return NS_OK;
-  }
-
-  // Lose the previously-loaded sheet so there's nothing to replace
-  // This pattern is different from Override methods because
-  //  we must wait to remove mLastStyleSheetURL and add new sheet
-  //  at the same time (in StyleSheetLoaded callback) so they are undoable together
-  mLastStyleSheetURL.Truncate();
-  return ReplaceStyleSheet(aURL);
-}
-
-NS_IMETHODIMP
-HTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
-{
-  // Enable existing sheet if already loaded.
-  if (EnableExistingStyleSheet(aURL)) {
-    // Disable last sheet if not the same as new one
-    if (!mLastStyleSheetURL.IsEmpty() && !mLastStyleSheetURL.Equals(aURL)) {
-      return EnableStyleSheet(mLastStyleSheetURL, false);
-    }
-    return NS_OK;
-  }
-
-  // Make sure the pres shell doesn't disappear during the load.
-  if (NS_WARN_IF(!IsInitialized())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIURI> uaURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return ps->GetDocument()->CSSLoader()->LoadSheet(
-    uaURI, false, nullptr, nullptr, this);
-}
-
-NS_IMETHODIMP
-HTMLEditor::RemoveStyleSheet(const nsAString& aURL)
-{
-  return RemoveStyleSheetWithTransaction(aURL);
-}
-
-nsresult
-HTMLEditor::RemoveStyleSheetWithTransaction(const nsAString& aURL)
-{
-  RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
-  if (NS_WARN_IF(!sheet)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  RefPtr<RemoveStyleSheetTransaction> transaction =
-    RemoveStyleSheetTransaction::Create(*this, *sheet);
-  nsresult rv = DoTransaction(transaction);
-  if (NS_SUCCEEDED(rv)) {
-    mLastStyleSheetURL.Truncate();        // forget it
-  }
-  // Remove it from our internal list
-  return RemoveStyleSheetFromList(aURL);
-}
-
-
-NS_IMETHODIMP
 HTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
 {
   // Enable existing sheet if already loaded.
@@ -3068,8 +2998,7 @@ HTMLEditor::RemoveOverrideStyleSheet(const nsAString& aURL)
 }
 
 NS_IMETHODIMP
-HTMLEditor::EnableStyleSheet(const nsAString& aURL,
-                             bool aEnable)
+HTMLEditor::EnableStyleSheet(const nsAString& aURL, bool aEnable)
 {
   RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
   NS_ENSURE_TRUE(sheet, NS_OK); // Don't fail if sheet not found
@@ -3464,37 +3393,6 @@ HTMLEditor::DebugUnitTests(int32_t* outNumTests,
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
-}
-
-NS_IMETHODIMP
-HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
-                             bool aWasDeferred,
-                             nsresult aStatus)
-{
-  AutoPlaceholderBatch batchIt(this);
-
-  if (!mLastStyleSheetURL.IsEmpty()) {
-    RemoveStyleSheetWithTransaction(mLastStyleSheetURL);
-  }
-
-  RefPtr<AddStyleSheetTransaction> transaction =
-    AddStyleSheetTransaction::Create(*this, *aSheet);
-  nsresult rv = DoTransaction(transaction);
-  if (NS_SUCCEEDED(rv)) {
-    // Get the URI, then url spec from the sheet
-    nsAutoCString spec;
-    rv = aSheet->GetSheetURI()->GetSpec(spec);
-
-    if (NS_SUCCEEDED(rv)) {
-      // Save it so we can remove before applying the next one
-      CopyASCIItoUTF16(spec, mLastStyleSheetURL);
-
-      // Also save in our arrays of urls and sheets
-      AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
-    }
-  }
-
-  return NS_OK;
 }
 
 void
