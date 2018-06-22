@@ -82,4 +82,32 @@ class Fretboard(
     fun getExperiment(descriptor: ExperimentDescriptor): Experiment? {
         return evaluator.getExperiment(descriptor, experiments)
     }
+
+    /**
+     * Overrides a specified experiment
+     *
+     * @param descriptor descriptor of the experiment
+     * @param active overridden value for the experiment, true to activate it, false to deactivate
+     */
+    fun setOverride(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
+        evaluator.setOverride(context, descriptor, active)
+    }
+
+    /**
+     * Clears an override for a specified experiment
+     *
+     * @param descriptor descriptor of the experiment
+     */
+    fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
+        evaluator.clearOverride(context, descriptor)
+    }
+
+    /**
+     * Clears all experiment overrides
+     *
+     * @param context context
+     */
+    fun clearAllOverrides(context: Context) {
+        evaluator.clearAllOverrides(context)
+    }
 }

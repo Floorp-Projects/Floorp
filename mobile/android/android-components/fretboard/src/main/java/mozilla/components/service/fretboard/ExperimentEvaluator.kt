@@ -18,10 +18,9 @@ internal class ExperimentEvaluator(private val regionProvider: RegionProvider? =
         userBucket: Int = getUserBucket(context)
     ): Experiment? {
         val experiment = getExperiment(experimentDescriptor, experiments) ?: return null
-        return if (isInBucket(userBucket, experiment) && matches(context, experiment)) {
-            experiment
-        } else {
-            null
+        val isEnabled = isInBucket(userBucket, experiment) && matches(context, experiment)
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE).let {
+            return if (it.getBoolean(experimentDescriptor.id, isEnabled)) experiment else null
         }
     }
 
@@ -69,7 +68,29 @@ internal class ExperimentEvaluator(private val regionProvider: RegionProvider? =
         return (checksum % MAX_BUCKET).toInt()
     }
 
+    fun setOverride(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(descriptor.id, active)
+            .apply()
+    }
+
+    fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .remove(descriptor.id)
+            .apply()
+    }
+
+    fun clearAllOverrides(context: Context) {
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
+    }
+
     companion object {
         private const val MAX_BUCKET = 100L
+        private const val OVERRIDES_PREF_NAME = "mozilla.components.service.fretboard.overrides"
     }
 }

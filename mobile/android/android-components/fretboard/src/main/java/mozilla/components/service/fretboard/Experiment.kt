@@ -32,4 +32,18 @@ data class Experiment(
         val max: Int? = null,
         val min: Int? = null
     )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other == null || other !is Experiment) {
+            return false
+        }
+        return other.id == id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
 }
