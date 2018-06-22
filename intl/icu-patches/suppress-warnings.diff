@@ -1,11 +1,11 @@
 diff --git a/intl/icu/source/acinclude.m4 b/intl/icu/source/acinclude.m4
 --- a/intl/icu/source/acinclude.m4
 +++ b/intl/icu/source/acinclude.m4
-@@ -473,30 +473,36 @@ AC_DEFUN([AC_CHECK_STRICT_COMPILE],
+@@ -469,30 +469,36 @@ AC_DEFUN([AC_CHECK_STRICT_COMPILE],
              *)
                  # Do not use -ansi. It limits us to C90, and it breaks some platforms.
-                 # We use -std=c99 to disable the gnu99 defaults and its associated warnings
-                 CFLAGS="$CFLAGS -std=c99"
+                 # We use -std=c11 to disable the gnu99 defaults and its associated warnings
+                 CFLAGS="$CFLAGS -std=c11"
                  ;;
              esac
              
@@ -41,11 +41,11 @@ diff --git a/intl/icu/source/acinclude.m4 b/intl/icu/source/acinclude.m4
 diff --git a/intl/icu/source/configure b/intl/icu/source/configure
 --- a/intl/icu/source/configure
 +++ b/intl/icu/source/configure
-@@ -4319,30 +4319,36 @@ fi
+@@ -4359,30 +4359,36 @@ fi
              *)
                  # Do not use -ansi. It limits us to C90, and it breaks some platforms.
-                 # We use -std=c99 to disable the gnu99 defaults and its associated warnings
-                 CFLAGS="$CFLAGS -std=c99"
+                 # We use -std=c11 to disable the gnu99 defaults and its associated warnings
+                 CFLAGS="$CFLAGS -std=c11"
                  ;;
              esac
  
