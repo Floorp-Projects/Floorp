@@ -1249,20 +1249,17 @@ Loader::InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent)
  * restore CSSStyleSheet::InsertStyleSheetAt, which was removed in
  * bug 1220506.)
  */
-nsresult
-Loader::InsertChildSheet(StyleSheet* aSheet, StyleSheet* aParentSheet)
+void
+Loader::InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet)
 {
   LOG(("css::Loader::InsertChildSheet"));
-  MOZ_ASSERT(aSheet, "Nothing to insert");
-  MOZ_ASSERT(aParentSheet, "Need a parent to insert into");
 
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
-  aSheet->SetEnabled(true);
-  aParentSheet->PrependStyleSheet(aSheet);
+  aSheet.SetEnabled(true);
+  aParentSheet.PrependStyleSheet(&aSheet);
 
   LOG(("  Inserting into parent sheet"));
-  return NS_OK;
 }
 
 /**
@@ -2228,8 +2225,8 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     PrepareSheet(sheet, empty, empty, aMedia, IsAlternate::No);
   }
 
-  rv = InsertChildSheet(sheet, aParentSheet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(sheet);
+  InsertChildSheet(*sheet, *aParentSheet);
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));

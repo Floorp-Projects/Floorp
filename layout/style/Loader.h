@@ -510,9 +510,8 @@ private:
 
   // Inserts a style sheet in a document or a ShadowRoot.
   void InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent);
-
-  nsresult InsertChildSheet(StyleSheet* aSheet,
-                            StyleSheet* aParentSheet);
+  // Inserts a style sheet into a parent style sheet.
+  void InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet);
 
   nsresult InternalLoadNonDocumentSheet(
     nsIURI* aURL,
