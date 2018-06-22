@@ -465,18 +465,33 @@ class MOZ_STACK_CLASS PerHandlerParser
     //
     // |internalSyntaxParser_| is really a |Parser<SyntaxParseHandler, CharT>*|
     // where |CharT| varies per |Parser<ParseHandler, CharT>|.  But this
-    // template class doesn't have access to |CharT|, so we store a |void*|
-    // here, then intermediate all access to this field through accessors in
-    // |GeneralParser<ParseHandler, CharT>| that impose the real type on this
-    // field.
+    // template class doesn't know |CharT|, so we store a |void*| here and make
+    // |GeneralParser<ParseHandler, CharT>::getSyntaxParser| impose the real type.
     void* internalSyntaxParser_;
 
+  private:
+    // NOTE: The argument ordering here is deliberately different from the
+    //       public constructor so that typos calling the public constructor
+    //       are less likely to select this overload.
+    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+                     bool foldConstants, UsedNameTracker& usedNames, LazyScript* lazyOuterFunction,
+                     ScriptSourceObject* sourceObject, ParseGoal parseGoal,
+                     void* internalSyntaxParser);
+
   protected:
+    template<typename CharT>
     PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                      bool foldConstants, UsedNameTracker& usedNames,
-                     LazyScript* lazyOuterFunction,
-                     ScriptSourceObject* sourceObject,
-                     ParseGoal parseGoal);
+                     GeneralParser<SyntaxParseHandler, CharT>* syntaxParser,
+                     LazyScript* lazyOuterFunction, ScriptSourceObject* sourceObject,
+                     ParseGoal parseGoal)
+      : PerHandlerParser(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction,
+                         sourceObject, parseGoal,
+                         // JSOPTION_EXTRA_WARNINGS adds extra warnings not
+                         // generated when functions are parsed lazily.
+                         // ("use strict" doesn't inhibit lazy parsing.)
+                         static_cast<void*>(options.extraWarningsOption ? nullptr : syntaxParser))
+    {}
 
     static Node null() { return ParseHandler::null(); }
 
@@ -858,18 +873,9 @@ class MOZ_STACK_CLASS GeneralParser
         void transferErrorsTo(PossibleError* other);
     };
 
-  private:
-    // DO NOT USE THE syntaxParser_ FIELD DIRECTLY.  Use the accessors defined
-    // below to access this field per its actual type.
-    using Base::internalSyntaxParser_;
-
   protected:
     SyntaxParser* getSyntaxParser() const {
-        return reinterpret_cast<SyntaxParser*>(internalSyntaxParser_);
-    }
-
-    void setSyntaxParser(SyntaxParser* syntaxParser) {
-        internalSyntaxParser_ = syntaxParser;
+        return reinterpret_cast<SyntaxParser*>(Base::internalSyntaxParser_);
     }
 
   public:
@@ -1446,7 +1452,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, CharT> final
     using Base::abortIfSyntaxParser;
     using Base::disableSyntaxParser;
     using Base::getSyntaxParser;
-    using Base::setSyntaxParser;
 
   public:
     // Functions with multiple overloads of different visibility.  We can't

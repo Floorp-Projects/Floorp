@@ -36,6 +36,10 @@ public:
    */
   Accessible* Position() { return mPosition; }
 
+  int32_t StartOffset() { return mStartOffset; }
+
+  int32_t EndOffset() { return mEndOffset; }
+
 private:
   ~nsAccessiblePivot();
   nsAccessiblePivot() = delete;

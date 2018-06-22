@@ -80,7 +80,7 @@ using namespace mozilla::dom;
  * 2) setting of the right media, title, enabled state, etc on the
  *    sheet: PrepareSheet()
  * 3) Insertion of the sheet in the proper cascade order:
- *    InsertSheetInDoc() and InsertChildSheet()
+ *    InsertSheetInTree() and InsertChildSheet()
  * 4) Load of the sheet: LoadSheet() including security checks
  * 5) Parsing of the sheet: ParseSheet()
  * 6) Cleanup: SheetComplete()
@@ -932,7 +932,7 @@ Loader::CreateSheet(nsIURI* aURI,
   MOZ_ASSERT(aSheet, "Null out param!");
 
   if (!mSheets) {
-    mSheets = new Sheets();
+    mSheets = MakeUnique<Sheets>();
   }
 
   *aSheet = nullptr;
@@ -1150,9 +1150,12 @@ Loader::PrepareSheet(StyleSheet* aSheet,
 }
 
 /**
- * InsertSheetInDoc handles ordering of sheets in the document.  Here
- * we have two types of sheets -- those with linking elements and
- * those without.  The latter are loaded by Link: headers.
+ * InsertSheetInTree handles ordering of sheets in the document or shadow root.
+ *
+ * Here we have two types of sheets -- those with linking elements and
+ * those without.  The latter are loaded by Link: headers, and are only added to
+ * the document.
+ *
  * The following constraints are observed:
  * 1) Any sheet with a linking element comes after all sheets without
  *    linking elements
@@ -1162,18 +1165,32 @@ Loader::PrepareSheet(StyleSheet* aSheet,
  * 3) Sheets with linking elements are ordered based on document order
  *    as determined by CompareDocumentPosition.
  */
-nsresult
-Loader::InsertSheetInDoc(StyleSheet* aSheet,
-                         nsIContent* aLinkingContent,
-                         nsIDocument* aDocument)
+void
+Loader::InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent)
 {
-  LOG(("css::Loader::InsertSheetInDoc"));
-  MOZ_ASSERT(aSheet, "Nothing to insert");
-  MOZ_ASSERT(aDocument, "Must have a document to insert into");
+  LOG(("css::Loader::InsertSheetInTree"));
+  MOZ_ASSERT(mDocument, "Must have a document to insert into");
+  MOZ_ASSERT(!aLinkingContent ||
+             aLinkingContent->IsInUncomposedDoc() ||
+             aLinkingContent->IsInShadowTree(),
+             "Why would we insert it anywhere?");
+
+  nsCOMPtr<nsIStyleSheetLinkingElement> linkingElement =
+    do_QueryInterface(aLinkingContent);
+  if (linkingElement) {
+    linkingElement->SetStyleSheet(&aSheet);
+  }
+
+  ShadowRoot* shadow =
+    aLinkingContent ? aLinkingContent->GetContainingShadow() : nullptr;
+
+  auto& target = shadow
+    ? static_cast<DocumentOrShadowRoot&>(*shadow)
+    : static_cast<DocumentOrShadowRoot&>(*mDocument);
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
-  int32_t sheetCount = aDocument->SheetCount();
+  int32_t sheetCount = target.SheetCount();
 
   /*
    * Start the walk at the _end_ of the list, since in the typical
@@ -1183,11 +1200,9 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
    * insertionPoint is the index of the stylesheet that immediately
    * precedes the one we're inserting.
    */
-  int32_t insertionPoint;
-  for (insertionPoint = sheetCount - 1; insertionPoint >= 0; --insertionPoint) {
-    StyleSheet* curSheet = aDocument->SheetAt(insertionPoint);
-    NS_ASSERTION(curSheet, "There must be a sheet here!");
-    nsCOMPtr<nsINode> sheetOwner = curSheet->GetOwnerNode();
+  int32_t insertionPoint = sheetCount - 1;
+  for (; insertionPoint >= 0; --insertionPoint) {
+    nsINode* sheetOwner = target.SheetAt(insertionPoint)->GetOwnerNode();
     if (sheetOwner && !aLinkingContent) {
       // Keep moving; all sheets with a sheetOwner come after all
       // sheets without a linkingNode
@@ -1195,13 +1210,13 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
     }
 
     if (!sheetOwner) {
-      // Aha!  The current sheet has no sheet owner, so we want to
-      // insert after it no matter whether we have a linkingNode
+      // Aha!  The current sheet has no sheet owner, so we want to insert after
+      // it no matter whether we have a linking content or not.
       break;
     }
 
-    NS_ASSERTION(aLinkingContent != sheetOwner,
-                 "Why do we still have our old sheet?");
+    MOZ_ASSERT(aLinkingContent != sheetOwner,
+               "Why do we still have our old sheet?");
 
     // Have to compare
     if (nsContentUtils::PositionIsBefore(sheetOwner, aLinkingContent)) {
@@ -1211,20 +1226,15 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
     }
   }
 
-  ++insertionPoint; // adjust the index to the spot we want to insert in
+  ++insertionPoint;
 
-  // XXX <meta> elements do not implement nsIStyleSheetLinkingElement;
-  // need to fix this for them to be ordered correctly.
-  nsCOMPtr<nsIStyleSheetLinkingElement>
-    linkingElement = do_QueryInterface(aLinkingContent);
-  if (linkingElement) {
-    linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
+  if (shadow) {
+    shadow->InsertSheetAt(insertionPoint, aSheet);
+  } else {
+    mDocument->InsertSheetAt(insertionPoint, aSheet);
   }
 
-  aDocument->InsertStyleSheetAt(aSheet, insertionPoint);
-  LOG(("  Inserting into document at position %d", insertionPoint));
-
-  return NS_OK;
+  LOG(("  Inserting into target (doc: %d) at position %d", target.AsNode().IsDocument(), insertionPoint));
 }
 
 /**
@@ -1239,20 +1249,17 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
  * restore CSSStyleSheet::InsertStyleSheetAt, which was removed in
  * bug 1220506.)
  */
-nsresult
-Loader::InsertChildSheet(StyleSheet* aSheet, StyleSheet* aParentSheet)
+void
+Loader::InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet)
 {
   LOG(("css::Loader::InsertChildSheet"));
-  MOZ_ASSERT(aSheet, "Nothing to insert");
-  MOZ_ASSERT(aParentSheet, "Need a parent to insert into");
 
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
-  aSheet->SetEnabled(true);
-  aParentSheet->PrependStyleSheet(aSheet);
+  aSheet.SetEnabled(true);
+  aParentSheet.PrependStyleSheet(&aSheet);
 
   LOG(("  Inserting into parent sheet"));
-  return NS_OK;
 }
 
 /**
@@ -1330,8 +1337,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                                                 aLoadData->mLoaderPrincipal,
                                                 securityFlags,
                                                 contentPolicyType);
-    }
-    else {
+    } else {
       // either we are loading something inside a document, in which case
       // we should always have a requestingNode, or we are loading something
       // outside a document, in which case the loadingPrincipal and the
@@ -1393,8 +1399,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
   if (aSheetState == eSheetLoading) {
     mSheets->mLoadingDatas.Get(&key, &existingData);
     NS_ASSERTION(existingData, "CreateSheet lied about the state");
-  }
-  else if (aSheetState == eSheetPending){
+  } else if (aSheetState == eSheetPending) {
     mSheets->mPendingDatas.Get(&key, &existingData);
     NS_ASSERTION(existingData, "CreateSheet lied about the state");
   }
@@ -1609,34 +1614,13 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
 /**
  * ParseSheet handles parsing the data stream.
  */
-void
-Loader::ParseSheet(const nsAString& aUTF16,
-                   const nsACString& aUTF8,
+Loader::Completed
+Loader::ParseSheet(const nsACString& aBytes,
                    SheetLoadData* aLoadData,
-                   bool aAllowAsync,
-                   bool& aCompleted)
+                   AllowAsyncParse aAllowAsync)
 {
   LOG(("css::Loader::ParseSheet"));
-  MOZ_ASSERT(aLoadData, "Must have load data");
-  MOZ_ASSERT(aLoadData->mSheet, "Must have sheet to parse into");
-  aCompleted = false;
-  MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
-  if (!aUTF16.IsEmpty()) {
-    DoParseSheetServo(NS_ConvertUTF16toUTF8(aUTF16),
-                      aLoadData,
-                      aAllowAsync,
-                      aCompleted);
-  } else {
-    DoParseSheetServo(aUTF8, aLoadData, aAllowAsync, aCompleted);
-  }
-}
-
-void
-Loader::DoParseSheetServo(const nsACString& aBytes,
-                          SheetLoadData* aLoadData,
-                          bool aAllowAsync,
-                          bool& aCompleted)
-{
+  MOZ_ASSERT(aLoadData);
   aLoadData->mIsBeingParsed = true;
 
   StyleSheet* sheet = aLoadData->mSheet;
@@ -1644,18 +1628,17 @@ Loader::DoParseSheetServo(const nsACString& aBytes,
 
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
-  if (aLoadData->mSyncLoad || !aAllowAsync) {
+  if (aLoadData->mSyncLoad || aAllowAsync == AllowAsyncParse::No) {
     sheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
     aLoadData->mIsBeingParsed = false;
 
     bool noPendingChildren = aLoadData->mPendingChildren == 0;
     MOZ_ASSERT_IF(aLoadData->mSyncLoad, noPendingChildren);
     if (noPendingChildren) {
-      aCompleted = true;
       SheetComplete(aLoadData, NS_OK);
+      return Completed::Yes;
     }
-
-    return;
+    return Completed::No;
   }
 
   // This parse does not need to be synchronous. \o/
@@ -1678,6 +1661,7 @@ Loader::DoParseSheetServo(const nsACString& aBytes,
       }
     }, [] { MOZ_CRASH("rejected parse promise"); }
   );
+  return Completed::No;
 }
 
 /**
@@ -1918,14 +1902,7 @@ Loader::LoadInlineStyle(const SheetInfo& aInfo,
   auto matched =
     PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
-  if (aInfo.mContent->IsInShadowTree()) {
-    aInfo.mContent->GetContainingShadow()->InsertSheet(sheet, aInfo.mContent);
-  } else {
-    rv = InsertSheetInDoc(sheet, aInfo.mContent, mDocument);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
-  }
+  InsertSheetInTree(*sheet, aInfo.mContent);
 
   nsIPrincipal* principal = aInfo.mContent->NodePrincipal();
   if (aInfo.mTriggeringPrincipal) {
@@ -1953,18 +1930,19 @@ Loader::LoadInlineStyle(const SheetInfo& aInfo,
 
   NS_ADDREF(data);
   data->mLineNumber = aLineNumber;
-  bool completed = true;
   // Parse completion releases the load data.
   //
   // Note that we need to parse synchronously, since the web expects that the
-  // effects of inline stylesheets are visible immediately (aside from @imports).
-  ParseSheet(aBuffer, EmptyCString(), data, /* aAllowAsync = */ false, completed);
+  // effects of inline stylesheets are visible immediately (aside from
+  // @imports).
+  NS_ConvertUTF16toUTF8 utf8(aBuffer);
+  Completed completed = ParseSheet(utf8, data, AllowAsyncParse::No);
 
-  // If completed is true, |data| may well be deleted by now.
-  if (!completed) {
+  // If the sheet is complete already, |data| may well be deleted by now.
+  if (completed == Completed::No) {
     data->mMustNotify = true;
   }
-  return LoadSheetResult { completed ? Completed::Yes : Completed::No, isAlternate, matched };
+  return LoadSheetResult { completed, isAlternate, matched };
 }
 
 Result<Loader::LoadSheetResult, nsresult>
@@ -2035,14 +2013,7 @@ Loader::LoadStyleLink(const SheetInfo& aInfo, nsICSSLoaderObserver* aObserver)
   auto matched =
     PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
-  if (aInfo.mContent && aInfo.mContent->IsInShadowTree()) {
-    aInfo.mContent->GetContainingShadow()->InsertSheet(sheet, aInfo.mContent);
-  } else {
-    rv = InsertSheetInDoc(sheet, aInfo.mContent, mDocument);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
-  }
+  InsertSheetInTree(*sheet, aInfo.mContent);
 
   nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
     do_QueryInterface(aInfo.mContent));
@@ -2232,8 +2203,8 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     PrepareSheet(sheet, empty, empty, aMedia, IsAlternate::No);
   }
 
-  rv = InsertChildSheet(sheet, aParentSheet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(sheet);
+  InsertChildSheet(*sheet, *aParentSheet);
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
@@ -2527,7 +2498,7 @@ StopLoadingSheets(
   }
 }
 
-nsresult
+void
 Loader::Stop()
 {
   uint32_t pendingCount = mSheets ? mSheets->mPendingDatas.Count() : 0;
@@ -2541,29 +2512,20 @@ Loader::Stop()
     StopLoadingSheets(mSheets->mLoadingDatas, arr);
   }
 
-  uint32_t i;
-  for (i = 0; i < mPostedEvents.Length(); ++i) {
-    SheetLoadData* data = mPostedEvents[i];
+  for (RefPtr<SheetLoadData>& data : mPostedEvents) {
     data->mIsCancelled = true;
-    if (arr.AppendElement(data)) {
-      // SheetComplete() calls Release(), so give this an extra ref.
-      NS_ADDREF(data);
-    }
-#ifdef DEBUG
-    else {
-      NS_NOTREACHED("We preallocated this memory... shouldn't really fail, "
-                    "except we never check that preallocation succeeds.");
-    }
-#endif
+    // SheetComplete() calls Release(), so give this an extra ref.
+    NS_ADDREF(data.get());
+    // Move since we're about to get rid of the array below.
+    arr.AppendElement(std::move(data));
   }
   mPostedEvents.Clear();
 
   mDatasToNotifyOn += arr.Length();
-  for (i = 0; i < arr.Length(); ++i) {
+  for (RefPtr<SheetLoadData>& data : arr) {
     --mDatasToNotifyOn;
-    SheetComplete(arr[i], NS_BINDING_ABORTED);
+    SheetComplete(data, NS_BINDING_ABORTED);
   }
-  return NS_OK;
 }
 
 bool

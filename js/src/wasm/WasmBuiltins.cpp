@@ -347,9 +347,9 @@ CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData, Value* argv)
     const Code& code = tlsData->instance->code();
     const FuncExport& fe = code.metadata(code.stableTier()).funcExports[funcExportIndex];
 
-    for (size_t i = 0; i < fe.sig().args().length(); i++) {
+    for (size_t i = 0; i < fe.funcType().args().length(); i++) {
         HandleValue arg = HandleValue::fromMarkedLocation(&argv[i]);
-        switch (fe.sig().args()[i].code()) {
+        switch (fe.funcType().args()[i].code()) {
           case ValType::I32: {
             int32_t i32;
             if (!ToInt32(cx, arg, &i32))
@@ -1038,10 +1038,10 @@ wasm::SymbolicAddressTarget(SymbolicAddress sym)
 }
 
 static Maybe<ABIFunctionType>
-ToBuiltinABIFunctionType(const Sig& sig)
+ToBuiltinABIFunctionType(const FuncType& funcType)
 {
-    const ValTypeVector& args = sig.args();
-    ExprType ret = sig.ret();
+    const ValTypeVector& args = funcType.args();
+    ExprType ret = funcType.ret();
 
     uint32_t abiType;
     switch (ret) {
@@ -1065,14 +1065,14 @@ ToBuiltinABIFunctionType(const Sig& sig)
 }
 
 void*
-wasm::MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig)
+wasm::MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType)
 {
     MOZ_ASSERT(builtinThunks);
 
     if (!f->isNative() || !f->hasJitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative)
         return nullptr;
 
-    Maybe<ABIFunctionType> abiType = ToBuiltinABIFunctionType(sig);
+    Maybe<ABIFunctionType> abiType = ToBuiltinABIFunctionType(funcType);
     if (!abiType)
         return nullptr;
 
