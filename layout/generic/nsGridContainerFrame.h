@@ -246,13 +246,7 @@ public:
   }
 
   /**
-   * Return a container grid frame for the supplied frame, if available.
-   * @return nullptr if aFrame has no grid container.
-   */
-  static nsGridContainerFrame* GetGridContainerFrame(nsIFrame* aFrame);
-
-  /**
-   * Return a container grid frame, and ensure it has computed grid info
+   * Return a containing grid frame, and ensure it has computed grid info
    * @return nullptr if aFrame has no grid container, or frame was destroyed
    * @note this might destroy layout/style data since it may flush layout
    */
