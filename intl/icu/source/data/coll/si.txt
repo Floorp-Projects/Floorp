@@ -10,7 +10,7 @@ si{
                 "&ඖ<ං<ඃ"
                 "&ජ්ඤ<<ඥ"
             }
-            Version{"33"}
+            Version{"33.1"}
         }
         standard{
             Sequence{
@@ -19,7 +19,7 @@ si{
                 "&ඖ<ං<ඃ"
                 "&ඥ<ඤ"
             }
-            Version{"33"}
+            Version{"33.1"}
         }
     }
 }

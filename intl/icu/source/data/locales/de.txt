@@ -216,7 +216,7 @@ de{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.39.41"}
+    Version{"2.1.41.97"}
     calendar{
         buddhist{
             eras{
@@ -625,16 +625,16 @@ de{
         }
         gregorian{
             AmPmMarkers{
-                "vorm.",
-                "nachm.",
+                "AM",
+                "PM",
             }
             AmPmMarkersAbbr{
-                "vorm.",
-                "nachm.",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
-                "vm.",
-                "nm.",
+                "a",
+                "p",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -825,35 +825,35 @@ de{
                     abbreviated{
                         afternoon1{"Mittag"}
                         afternoon2{"Nachmittag"}
-                        am{"vorm."}
+                        am{"AM"}
                         evening1{"Abend"}
                         midnight{"Mitternacht"}
                         morning1{"Morgen"}
                         morning2{"Vormittag"}
                         night1{"Nacht"}
-                        pm{"nachm."}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"Mittag"}
                         afternoon2{"Nachmittag"}
-                        am{"vorm."}
+                        am{"a"}
                         evening1{"Abend"}
                         midnight{"Mitternacht"}
                         morning1{"Morgen"}
                         morning2{"Vormittag"}
                         night1{"Nacht"}
-                        pm{"nachm."}
+                        pm{"p"}
                     }
                     wide{
                         afternoon1{"Mittag"}
                         afternoon2{"Nachmittag"}
-                        am{"vorm."}
+                        am{"AM"}
                         evening1{"Abend"}
                         midnight{"Mitternacht"}
                         morning1{"Morgen"}
                         morning2{"Vormittag"}
                         night1{"Nacht"}
-                        pm{"nachm."}
+                        pm{"PM"}
                     }
                 }
             }
