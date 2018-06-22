@@ -1152,6 +1152,25 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   return didSanitize;
 }
 
+template<size_t Len>
+static bool
+UTF16StringStartsWith(const char16_t* aStr, uint32_t aLength,
+                      const char16_t (&aNeedle)[Len])
+{
+  MOZ_ASSERT(aNeedle[Len - 1] == '\0',
+             "needle should be a UTF-16 encoded string literal");
+
+  if (aLength < Len - 1) {
+    return false;
+  }
+  for (size_t i = 0; i < Len - 1; i++) {
+    if (aStr[i] != aNeedle[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                     AllowedAttributes aAllowed)
@@ -1225,11 +1244,11 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         continue;
       }
       const char16_t* localStr = attrLocal->GetUTF16String();
+      uint32_t localLen = attrLocal->GetLength();
       // Allow underscore to cater to the MCE editor library.
       // Allow data-* on SVG and MathML, too, as a forward-compat measure.
-      if (*localStr == '_' || (attrLocal->GetLength() > 5 && localStr[0] == 'd'
-          && localStr[1] == 'a' && localStr[2] == 't' && localStr[3] == 'a'
-          && localStr[4] == '-')) {
+      if (UTF16StringStartsWith(localStr, localLen, u"_") ||
+          UTF16StringStartsWith(localStr, localLen, u"data-")) {
         continue;
       }
       // else not allowed
