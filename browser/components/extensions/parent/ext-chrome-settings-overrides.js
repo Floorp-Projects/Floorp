@@ -185,7 +185,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 
     if (homepageUrl) {
       let inControl;
-      if (extension.startupReason == "ADDON_INSTALL") {
+      if (extension.startupReason == "ADDON_INSTALL" ||
+          extension.startupReason == "ADDON_ENABLE") {
         inControl = await ExtensionPreferencesManager.setSetting(
           extension.id, "homepage_override", homepageUrl);
       } else {
