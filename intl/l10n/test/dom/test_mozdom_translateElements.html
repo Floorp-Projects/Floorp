@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test mozIDOMLocalization.translateElements</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const domLocalization =
+    Cc["@mozilla.org/intl/domlocalization;1"].createInstance(
+      Ci.mozIDOMLocalization);
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+  const { L10nRegistry, FileSource } =
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
+
+  const fs = {
+    "/localization/en-US/browser/menu.ftl": `
+title = Hello World
+link =
+  .title = Click me
+`,
+  };
+  const originalLoad = L10nRegistry.load;
+  const originalRequested = Services.locale.getRequestedLocales();
+
+  L10nRegistry.load = async function(url) {
+    return fs.hasOwnProperty(url) ? fs[url] : false;
+  };
+
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
+  L10nRegistry.registerSource(source);
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    domLocalization.addResourceIds(["/browser/menu.ftl"], 1);
+
+    const p1 = document.querySelectorAll("p")[0];
+    const link1 = document.querySelectorAll("a")[0];
+
+    await domLocalization.translateElements([p1, link1], 2);
+
+    is(p1.textContent, "Hello World");
+    is(link1.getAttribute("title"), "Click me");
+
+    // Cleanup
+    L10nRegistry.removeSource(source.name);
+    L10nRegistry.load = originalLoad;
+    Services.locale.setRequestedLocales(originalRequested);
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <p data-l10n-id="title" />
+  <a data-l10n-id="link" />
+</body>
+</html>
