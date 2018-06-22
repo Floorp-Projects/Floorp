@@ -69,7 +69,6 @@ UNIFIED_SOURCES += [
     'PlaceholderTransaction.cpp',
     'SelectionState.cpp',
     'SplitNodeTransaction.cpp',
-    'StyleSheetTransactions.cpp',
     'TextEditor.cpp',
     'TextEditorDataTransfer.cpp',
     'TextEditorTest.cpp',

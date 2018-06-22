@@ -51,7 +51,6 @@ class nsIWidget;
 class nsRange;
 
 namespace mozilla {
-class AddStyleSheetTransaction;
 class AutoSelectionRestorer;
 class AutoTopLevelEditSubActionNotifier;
 class AutoTransactionsConserveSelection;
@@ -73,7 +72,6 @@ class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
 class PlaceholderTransaction;
-class RemoveStyleSheetTransaction;
 class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;

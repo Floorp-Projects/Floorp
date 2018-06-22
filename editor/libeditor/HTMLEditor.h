@@ -70,7 +70,6 @@ class HTMLEditor final : public TextEditor
                        , public nsITableEditor
                        , public nsIHTMLInlineTableEditor
                        , public nsIEditorStyleSheets
-                       , public nsICSSLoaderObserver
                        , public nsStubMutationObserver
 {
 public:
@@ -115,10 +114,6 @@ public:
 
   // nsISelectionListener overrides
   NS_DECL_NSISELECTIONLISTENER
-
-  // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet,
-                              bool aWasAlternate, nsresult aStatus) override;
 
   HTMLEditor();
 
@@ -781,12 +776,6 @@ protected: // Shouldn't be used by friend classes
    * ranges is deleted first.
    */
   nsresult InsertBrElementAtSelectionWithTransaction();
-
-  /**
-   * RemoveStyleSheetWithTransaction() removes the given URL stylesheet
-   * from mStyleSheets and mStyleSheetURLs.
-   */
-  nsresult RemoveStyleSheetWithTransaction(const nsAString& aURL);
 
   nsresult LoadHTML(const nsAString& aInputString);
 
