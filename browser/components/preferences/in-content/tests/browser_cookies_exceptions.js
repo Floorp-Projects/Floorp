@@ -5,15 +5,14 @@ requestLongerTimeout(3);
 
 add_task(async function testAllow() {
   await runTest(async (params, observeAllPromise, apply) => {
-    is(params.tree.view.rowCount, 0, "no cookie exceptions");
+    assertListContents(params, []);
 
     params.url.value = "test.com";
     params.btnAllow.doCommand();
-    is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
-    is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
-       "permission text should be set correctly");
+
+    assertListContents(params, [
+      ["http://test.com", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -25,10 +24,10 @@ add_task(async function testBlock() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "test.com";
     params.btnBlock.doCommand();
-    is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.denyText,
-       "permission should change to deny in UI");
+
+    assertListContents(params, [
+      ["http://test.com", params.denyText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -40,10 +39,10 @@ add_task(async function testAllowAgain() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "test.com";
     params.btnAllow.doCommand();
-    is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
-       "permission should revert back to allow");
+
+    assertListContents(params, [
+      ["http://test.com", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -55,7 +54,8 @@ add_task(async function testRemove() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "test.com";
     params.btnRemove.doCommand();
-    is(params.tree.view.rowCount, 0, "exception should be removed");
+
+    assertListContents(params, []);
 
     apply();
     await observeAllPromise;
@@ -66,7 +66,9 @@ add_task(async function testAdd() {
   await runTest(async (params, observeAllPromise, apply) => {
     let uri = Services.io.newURI("http://test.com");
     Services.perms.add(uri, "popup", Ci.nsIPermissionManager.DENY_ACTION);
-    is(params.tree.view.rowCount, 0, "adding unrelated permission should not change display");
+
+    info("Adding unrelated permission should not change display.");
+    assertListContents(params, []);
 
     apply();
     await observeAllPromise;
@@ -80,11 +82,10 @@ add_task(async function testAllowHTTPSWithPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "https://test.com:12345";
     params.btnAllow.doCommand();
-    is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
-    is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
-       "permission text should be set correctly");
+
+    assertListContents(params, [
+      ["https://test.com:12345", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -96,10 +97,10 @@ add_task(async function testBlockHTTPSWithPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "https://test.com:12345";
     params.btnBlock.doCommand();
-    is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.denyText,
-       "permission should change to deny in UI");
+
+    assertListContents(params, [
+      ["https://test.com:12345", params.denyText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -111,10 +112,10 @@ add_task(async function testAllowAgainHTTPSWithPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "https://test.com:12345";
     params.btnAllow.doCommand();
-    is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
-       "permission should revert back to allow");
+
+    assertListContents(params, [
+      ["https://test.com:12345", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -126,7 +127,8 @@ add_task(async function testRemoveHTTPSWithPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "https://test.com:12345";
     params.btnRemove.doCommand();
-    is(params.tree.view.rowCount, 0, "exception should be removed");
+
+    assertListContents(params, []);
 
     apply();
     await observeAllPromise;
@@ -137,11 +139,10 @@ add_task(async function testAllowPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "localhost:12345";
     params.btnAllow.doCommand();
-    is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
-    is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
-       "permission text should be set correctly");
+
+    assertListContents(params, [
+      ["http://localhost:12345", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -153,10 +154,10 @@ add_task(async function testBlockPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "localhost:12345";
     params.btnBlock.doCommand();
-    is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.denyText,
-       "permission should change to deny in UI");
+
+    assertListContents(params, [
+      ["http://localhost:12345", params.denyText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -168,10 +169,10 @@ add_task(async function testAllowAgainPort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "localhost:12345";
     params.btnAllow.doCommand();
-    is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
-       "origin name should be set correctly");
-    is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
-       "permission should revert back to allow");
+
+    assertListContents(params, [
+      ["http://localhost:12345", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -183,7 +184,8 @@ add_task(async function testRemovePort() {
   await runTest(async (params, observeAllPromise, apply) => {
     params.url.value = "localhost:12345";
     params.btnRemove.doCommand();
-    is(params.tree.view.rowCount, 0, "exception should be removed");
+
+    assertListContents(params, []);
 
     apply();
     await observeAllPromise;
@@ -197,24 +199,20 @@ add_task(async function testSort() {
       Services.perms.add(URI, "cookie", Ci.nsIPermissionManager.ALLOW_ACTION);
     }
 
-    is(params.tree.view.rowCount, 3, "Three permissions should be present");
-    is(params.tree.view.getCellText(0, params.nameCol), "http://a",
-       "site should be sorted. 'a' should be first");
-    is(params.tree.view.getCellText(1, params.nameCol), "http://b",
-       "site should be sorted. 'b' should be second");
-    is(params.tree.view.getCellText(2, params.nameCol), "http://z",
-       "site should be sorted. 'z' should be third");
+    assertListContents(params, [
+      ["http://a", params.allowText],
+      ["http://b", params.allowText],
+      ["http://z", params.allowText],
+    ]);
 
-    // Sort descending then check results in cleanup since sorting isn't synchronous.
     EventUtils.synthesizeMouseAtCenter(params.doc.getElementById("siteCol"), {},
                                        params.doc.defaultView);
 
-    is(params.tree.view.getCellText(0, params.nameCol), "http://z",
-       "site should be sorted. 'z' should be first");
-    is(params.tree.view.getCellText(1, params.nameCol), "http://b",
-       "site should be sorted. 'b' should be second");
-    is(params.tree.view.getCellText(2, params.nameCol), "http://a",
-       "site should be sorted. 'a' should be third");
+    assertListContents(params, [
+      ["http://z", params.allowText],
+      ["http://b", params.allowText],
+      ["http://a", params.allowText],
+    ]);
 
     apply();
     await observeAllPromise;
@@ -230,6 +228,14 @@ add_task(async function testSort() {
       { type: "cookie", origin: "http://b", data: "added",
         capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
 });
+
+function assertListContents(params, expected) {
+  Assert.equal(params.tree.view.rowCount, expected.length);
+  for (let i = 0; i < expected.length; i++) {
+    Assert.equal(params.tree.view.getCellText(i, params.nameCol), expected[i][0]);
+    Assert.equal(params.tree.view.getCellText(i, params.statusCol), expected[i][1]);
+  }
+}
 
 async function runTest(test, observances) {
   registerCleanupFunction(function() {
