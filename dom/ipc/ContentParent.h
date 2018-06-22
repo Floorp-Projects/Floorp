@@ -996,6 +996,10 @@ private:
                                                        const int32_t& aWhichClipboard,
                                                        bool* aHasType) override;
 
+  virtual mozilla::ipc::IPCResult RecvGetExternalClipboardFormats(const int32_t& aWhichClipboard,
+                                                                  const bool& aPlainTextOnly,
+                                                                  nsTArray<nsCString>* aTypes) override;
+
   virtual mozilla::ipc::IPCResult RecvPlaySound(const URIParams& aURI) override;
   virtual mozilla::ipc::IPCResult RecvBeep() override;
   virtual mozilla::ipc::IPCResult RecvPlayEventSound(const uint32_t& aEventId) override;
