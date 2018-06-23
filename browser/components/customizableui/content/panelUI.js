@@ -843,12 +843,12 @@ const PanelUI = {
   },
 
   _addedShortcuts: false,
-  _ensureShortcutsShown() {
-    if (this._addedShortcuts) {
+  _ensureShortcutsShown(view = this.mainView) {
+    if (view.hasAttribute("added-shortcuts")) {
       return;
     }
-    this._addedShortcuts = true;
-    for (let button of this.mainView.querySelectorAll("toolbarbutton[key]")) {
+    view.setAttribute("added-shortcuts", "true");
+    for (let button of view.querySelectorAll("toolbarbutton[key]")) {
       let keyId = button.getAttribute("key");
       let key = document.getElementById(keyId);
       if (!key) {
