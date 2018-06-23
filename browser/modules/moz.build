@@ -103,7 +103,7 @@ with Files("SiteDataManager.jsm"):
 with Files("SitePermissions.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
-with Files("TabsPopup.jsm"):
+with Files("TabsList.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("ThemeVariableMap.jsm"):
@@ -172,7 +172,7 @@ EXTRA_JS_MODULES += [
     'SchedulePressure.jsm',
     'SiteDataManager.jsm',
     'SitePermissions.jsm',
-    'TabsPopup.jsm',
+    'TabsList.jsm',
     'ThemeVariableMap.jsm',
     'TransientPrefs.jsm',
     'webrtcUI.jsm',
