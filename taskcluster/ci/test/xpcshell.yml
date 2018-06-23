@@ -2,14 +2,14 @@ job-defaults:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-4.2-x86/opt:
+                android-em-4.2-x86/opt:
                     - android/android_common.py
                     - android/androidx86.py
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -40,19 +40,19 @@ xpcshell:
         by-test-platform:
             linux32/debug: 12
             linux64/debug: 10
-            android-4.2-x86/opt: 6
-            android-4.3-arm7-api-16/debug: 12
+            android-em-4.2-x86/opt: 6
+            android-em-4.3-arm7-api-16/debug: 12
             macosx.*: 1
             windows.*: 1
             windows10-64-ccov/debug: 8
             default: 8
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     max-run-time:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 7200
+            android-em-4.3-arm7-api-16/debug: 7200
             default: 5400
     e10s: false
     allow-software-gl-layers: false
