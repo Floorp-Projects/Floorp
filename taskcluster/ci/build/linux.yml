@@ -971,7 +971,7 @@ linux64-ccov/debug:
         need-xvfb: true
     toolchains:
         - linux64-clang
-        - linux64-rust
+        - linux64-rust-nightly
         - linux64-gcc
         - linux64-sccache
 
