@@ -365,7 +365,7 @@ class Capabilities extends Map {
       // webdriver
       ["browserName", appinfo.name],
       ["browserVersion", appinfo.version],
-      ["platformName", Services.sysinfo.getProperty("name").toLowerCase()],
+      ["platformName", getWebDriverPlatformName()],
       ["platformVersion", Services.sysinfo.getProperty("version")],
       ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["acceptInsecureCerts", false],
@@ -498,6 +498,21 @@ this.Capabilities = Capabilities;
 this.PageLoadStrategy = PageLoadStrategy;
 this.Proxy = Proxy;
 this.Timeouts = Timeouts;
+
+function getWebDriverPlatformName() {
+  let name = Services.sysinfo.getProperty("name");
+
+  switch (name) {
+    case "Windows_NT":
+      return "windows";
+
+    case "Darwin":
+      return "mac";
+
+    default:
+      return name.toLowerCase();
+  }
+}
 
 // Specialisation of |JSON.stringify| that produces JSON-safe object
 // literals, dropping empty objects and entries which values are undefined
