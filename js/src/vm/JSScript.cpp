@@ -1618,7 +1618,9 @@ ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
 ScriptSource::PinnedChars::PinnedChars(JSContext* cx, ScriptSource* source,
                                        UncompressedSourceCache::AutoHoldEntry& holder,
                                        size_t begin, size_t len)
-  : source_(source)
+  : stack_(nullptr),
+    prev_(nullptr),
+    source_(source)
 {
     chars_ = source->chars(cx, holder, begin, len);
     if (chars_) {

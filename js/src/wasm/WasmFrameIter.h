@@ -99,10 +99,6 @@ enum class SymbolicAddress;
 // function that is used for better display in the profiler.
 class ExitReason
 {
-    uint32_t payload_;
-
-    ExitReason() {}
-
   public:
     enum class Fixed : uint32_t
     {
@@ -114,6 +110,13 @@ class ExitReason
         Trap,            // call to trap handler
         DebugTrap        // call to debug trap handler
     };
+
+  private:
+    uint32_t payload_;
+
+    ExitReason() : ExitReason(Fixed::None) {}
+
+  public:
 
     MOZ_IMPLICIT ExitReason(Fixed exitReason)
       : payload_(0x0 | (uint32_t(exitReason) << 1))
