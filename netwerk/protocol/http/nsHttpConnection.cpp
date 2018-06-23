@@ -1431,7 +1431,7 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
       // succesfullu write to the socket and this can only happen after
       // the TLS handshake is done.
       PRIntervalTime initialTLSDelta = now - mLastWriteTime;
-      if (initialTLSDelta > gHttpHandler->TLSHandshakeTimeout()) {
+      if (initialTLSDelta > PR_MillisecondsToInterval(gHttpHandler->TLSHandshakeTimeout())) {
         LOG(("canceling transaction: tls handshake takes too long: tls handshake "
              "last %ums, timeout is %dms.",
              PR_IntervalToMilliseconds(initialTLSDelta),
