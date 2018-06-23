@@ -3,13 +3,16 @@ job-defaults:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
+                android-hw.*: android_hardware_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
+                android-hw.*:
+                    - android/android_hw.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -24,7 +27,7 @@ cppunit:
     treeherder-symbol: Cpp
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     run-on-projects: built-projects
 
@@ -53,7 +56,7 @@ jittest:
     treeherder-symbol: Jit
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     run-on-projects: built-projects
     chunks:
@@ -61,7 +64,7 @@ jittest:
             windows.*: 1
             windows10-64-ccov/debug: 6
             macosx.*: 1
-            android-4.3-arm7-api-15/debug: 20
+            android-em-4.3-arm7-api-15/debug: 20
             android.*: 10
             default: 6
     max-run-time:
@@ -74,3 +77,7 @@ jittest:
                 windows.*: false
                 macosx.*: false
                 default: true
+    tier:
+        by-test-platform:
+            android-hw.*: 3
+            default: default
