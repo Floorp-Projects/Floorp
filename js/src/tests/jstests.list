@@ -280,10 +280,6 @@ skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317394
-skip-if(release_or_beta) script test262/built-ins/DataView/prototype/byteOffset/detached-buffer.js
-skip-if(release_or_beta) script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
 skip script test262/language/statements/do-while/cptn-abrupt-empty.js
 skip script test262/language/statements/do-while/cptn-normal.js
