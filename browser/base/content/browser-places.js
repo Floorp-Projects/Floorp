@@ -119,6 +119,7 @@ var StarUI = {
             PlacesTransactions.Remove(guidsForRemoval)
                               .transact().catch(Cu.reportError);
           } else if (this._isNewBookmark) {
+            this._showConfirmation();
             LibraryUI.triggerLibraryAnimation("bookmark");
           }
 
@@ -403,6 +404,26 @@ var StarUI = {
 
     await PlacesUtils.metadata.set(PlacesUIUtils.LAST_USED_FOLDERS_META_KEY,
                                    lastUsedFolderGuids);
+  },
+
+  _showConfirmation() {
+    let anchor;
+    if (window.toolbar.visible) {
+      for (let id of ["library-button", "bookmarks-menu-button"]) {
+        let element = document.getElementById(id);
+        if (element &&
+            element.getAttribute("cui-areatype") != "menu-panel" &&
+            element.getAttribute("overflowedItem") != "true") {
+          anchor = element;
+          break;
+        }
+      }
+    }
+    if (!anchor) {
+      anchor = document.getElementById("PanelUI-menu-button");
+    }
+
+    ConfirmationHint.show(anchor, "pageBookmarked");
   }
 };
 
