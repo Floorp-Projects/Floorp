@@ -464,21 +464,19 @@
         </panelview>
       </panelmultiview>
     </panel>
-    <panel id="pageActionFeedback"
+
+    <panel id="confirmation-hint"
            role="alert"
            type="arrow"
            hidden="true"
            flip="slide"
            position="bottomcenter topright"
            tabspecific="true"
-           noautofocus="true"
-           copyURLFeedback="&copyURLFeedback.label;"
-           sendToDeviceFeedback="&sendToDeviceFeedback.label;"
-           sendToDeviceOfflineFeedback="&sendToDeviceOfflineFeedback.label;">
-      <hbox id="pageActionFeedbackAnimatableBox">
-        <image id="pageActionFeedbackAnimatableImage"/>
+           noautofocus="true">
+      <hbox id="confirmation-hint-checkmark-animation-container">
+        <image id="confirmation-hint-checkmark-image"/>
       </hbox>
-      <label id="pageActionFeedbackMessage"/>
+      <label id="confirmation-hint-message"/>
     </panel>
 
     <menupopup id="pageActionContextMenu"
