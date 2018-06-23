@@ -279,55 +279,56 @@ AllocChars(JSString* str, size_t length, CharT** chars, size_t* capacity)
     return *chars != nullptr;
 }
 
-bool
-JSRope::copyLatin1CharsZ(JSContext* cx, ScopedJSFreePtr<Latin1Char>& out) const
+UniquePtr<Latin1Char[], JS::FreePolicy>
+JSRope::copyLatin1CharsZ(JSContext* cx) const
 {
-    return copyCharsInternal<Latin1Char>(cx, out, true);
+    return copyCharsInternal<Latin1Char>(cx, true);
 }
 
-bool
-JSRope::copyTwoByteCharsZ(JSContext* cx, ScopedJSFreePtr<char16_t>& out) const
+UniqueTwoByteChars
+JSRope::copyTwoByteCharsZ(JSContext* cx) const
 {
-    return copyCharsInternal<char16_t>(cx, out, true);
+    return copyCharsInternal<char16_t>(cx, true);
 }
 
-bool
-JSRope::copyLatin1Chars(JSContext* cx, ScopedJSFreePtr<Latin1Char>& out) const
+UniquePtr<Latin1Char[], JS::FreePolicy>
+JSRope::copyLatin1Chars(JSContext* cx) const
 {
-    return copyCharsInternal<Latin1Char>(cx, out, false);
+    return copyCharsInternal<Latin1Char>(cx, false);
 }
 
-bool
-JSRope::copyTwoByteChars(JSContext* cx, ScopedJSFreePtr<char16_t>& out) const
+UniqueTwoByteChars
+JSRope::copyTwoByteChars(JSContext* cx) const
 {
-    return copyCharsInternal<char16_t>(cx, out, false);
+    return copyCharsInternal<char16_t>(cx, false);
 }
 
 template <typename CharT>
-bool
-JSRope::copyCharsInternal(JSContext* cx, ScopedJSFreePtr<CharT>& out,
-                          bool nullTerminate) const
+UniquePtr<CharT[], JS::FreePolicy>
+JSRope::copyCharsInternal(JSContext* cx, bool nullTerminate) const
 {
     // Left-leaning ropes are far more common than right-leaning ropes, so
     // perform a non-destructive traversal of the rope, right node first,
     // splatting each node's characters into a contiguous buffer.
 
     size_t n = length();
+
+    UniquePtr<CharT[], JS::FreePolicy> out;
     if (cx)
         out.reset(cx->pod_malloc<CharT>(n + 1));
     else
         out.reset(js_pod_malloc<CharT>(n + 1));
 
     if (!out)
-        return false;
+        return nullptr;
 
     Vector<const JSString*, 8, SystemAllocPolicy> nodeStack;
     const JSString* str = this;
-    CharT* end = out + str->length();
+    CharT* end = out.get() + str->length();
     while (true) {
         if (str->isRope()) {
             if (!nodeStack.append(str->asRope().leftChild()))
-                return false;
+                return nullptr;
             str = str->asRope().rightChild();
         } else {
             end -= str->length();
@@ -338,12 +339,12 @@ JSRope::copyCharsInternal(JSContext* cx, ScopedJSFreePtr<CharT>& out,
         }
     }
 
-    MOZ_ASSERT(end == out);
+    MOZ_ASSERT(end == out.get());
 
     if (nullTerminate)
         out[n] = 0;
 
-    return true;
+    return out;
 }
 
 template <typename CharT>
@@ -1502,13 +1503,13 @@ NewStringDeflated(JSContext* cx, const char16_t* s, size_t n)
     if (JSInlineString::lengthFits<Latin1Char>(n))
         return NewInlineStringDeflated<allowGC>(cx, mozilla::Range<const char16_t>(s, n));
 
-    ScopedJSFreePtr<Latin1Char> news(cx->pod_malloc<Latin1Char>(n + 1));
+    UniquePtr<Latin1Char[], JS::FreePolicy> news(cx->pod_malloc<Latin1Char>(n + 1));
     if (!news)
         return nullptr;
 
     for (size_t i = 0; i < n; i++) {
         MOZ_ASSERT(s[i] <= JSString::MAX_LATIN1_CHAR);
-        news.get()[i] = Latin1Char(s[i]);
+        news[i] = Latin1Char(s[i]);
     }
     news[n] = '\0';
 
@@ -1516,7 +1517,7 @@ NewStringDeflated(JSContext* cx, const char16_t* s, size_t n)
     if (!str)
         return nullptr;
 
-    news.forget();
+    mozilla::Unused << news.release();
     return str;
 }
 
@@ -1604,7 +1605,7 @@ NewStringCopyNDontDeflate(JSContext* cx, const CharT* s, size_t n)
     if (JSInlineString::lengthFits<CharT>(n))
         return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
 
-    ScopedJSFreePtr<CharT> news(cx->pod_malloc<CharT>(n + 1));
+    UniquePtr<CharT[], JS::FreePolicy> news(cx->pod_malloc<CharT>(n + 1));
     if (!news) {
         if (!allowGC)
             cx->recoverFromOutOfMemory();
@@ -1618,7 +1619,7 @@ NewStringCopyNDontDeflate(JSContext* cx, const CharT* s, size_t n)
     if (!str)
         return nullptr;
 
-    news.forget();
+    mozilla::Unused << news.release();
     return str;
 }
 

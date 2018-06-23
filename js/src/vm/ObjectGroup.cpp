@@ -7,6 +7,7 @@
 #include "vm/ObjectGroup.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 
 #include "jsexn.h"
 
@@ -17,6 +18,7 @@
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
 #include "js/CharacterEncoding.h"
+#include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
@@ -1230,13 +1232,13 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
         group->setPreliminaryObjects(preliminaryObjects);
         preliminaryObjects->registerNewObject(obj);
 
-        ScopedJSFreePtr<jsid> ids(group->zone()->pod_calloc<jsid>(nproperties));
+        UniquePtr<jsid[], JS::FreePolicy> ids(group->zone()->pod_calloc<jsid>(nproperties));
         if (!ids) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
 
-        ScopedJSFreePtr<TypeSet::Type> types(
+        UniquePtr<TypeSet::Type[], JS::FreePolicy> types(
             group->zone()->pod_calloc<TypeSet::Type>(nproperties));
         if (!types) {
             ReportOutOfMemory(cx);
@@ -1250,14 +1252,14 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
         }
 
         ObjectGroupRealm::PlainObjectKey key;
-        key.properties = ids;
+        key.properties = ids.get();
         key.nproperties = nproperties;
         MOZ_ASSERT(ObjectGroupRealm::PlainObjectKey::match(key, lookup));
 
         ObjectGroupRealm::PlainObjectEntry entry;
         entry.group.set(group);
         entry.shape.set(obj->lastProperty());
-        entry.types = types;
+        entry.types = types.get();
 
         ObjectGroupRealm::PlainObjectTable::AddPtr np = table->lookupForAdd(lookup);
         if (!table->add(np, key, entry)) {
@@ -1265,8 +1267,8 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
             return nullptr;
         }
 
-        ids.forget();
-        types.forget();
+        mozilla::Unused << ids.release();
+        mozilla::Unused << types.release();
 
         return obj;
     }
