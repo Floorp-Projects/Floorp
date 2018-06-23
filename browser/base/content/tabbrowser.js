@@ -3735,6 +3735,18 @@ window._gBrowser = {
     }
   },
 
+  pinMultiSelectedTabs() {
+    for (let tab of this.selectedTabs) {
+        this.pinTab(tab);
+    }
+  },
+
+  unpinMultiSelectedTabs() {
+    for (let tab of this.selectedTabs) {
+        this.unpinTab(tab);
+    }
+  },
+
   activateBrowserForPrintPreview(aBrowser) {
     this._printPreviewBrowsers.add(aBrowser);
     if (this._switcher) {
