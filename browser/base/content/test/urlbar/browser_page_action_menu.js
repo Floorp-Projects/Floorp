@@ -137,11 +137,11 @@ add_task(async function copyURLFromPanel() {
     EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
     await hiddenPromise;
 
-    let feedbackPanel = document.getElementById("pageActionFeedback");
+    let feedbackPanel = document.getElementById("confirmation-hint");
     let feedbackShownPromise = BrowserTestUtils.waitForEvent(feedbackPanel, "popupshown");
     await feedbackShownPromise;
     Assert.equal(feedbackPanel.anchorNode.id, "pageActionButton", "Feedback menu should be anchored on the main Page Action button");
-    let feedbackHiddenPromise = promisePanelHidden("pageActionFeedback");
+    let feedbackHiddenPromise = promisePanelHidden("confirmation-hint");
     await feedbackHiddenPromise;
 
     action.pinnedToUrlbar = false;
@@ -160,13 +160,13 @@ add_task(async function copyURLFromURLBar() {
 
     let copyURLButton =
       document.getElementById("pageAction-urlbar-copyURL");
-    let feedbackShownPromise = promisePanelShown("pageActionFeedback");
+    let feedbackShownPromise = promisePanelShown("confirmation-hint");
     EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
 
     await feedbackShownPromise;
-    let panel = document.getElementById("pageActionFeedback");
+    let panel = document.getElementById("confirmation-hint");
     Assert.equal(panel.anchorNode.id, "pageAction-urlbar-copyURL", "Feedback menu should be anchored on the main URL bar button");
-    let feedbackHiddenPromise = promisePanelHidden("pageActionFeedback");
+    let feedbackHiddenPromise = promisePanelHidden("confirmation-hint");
     await feedbackHiddenPromise;
 
     action.pinnedToUrlbar = false;
@@ -617,13 +617,13 @@ add_task(async function sendToDevice_inUrlbar() {
     // And then the "Sent!" notification panel should open and close by itself
     // after a moment.
     info("Waiting for the Sent! notification panel to open");
-    await promisePanelShown(BrowserPageActionFeedback.panelNode.id);
+    await promisePanelShown(ConfirmationHint._panel.id);
     Assert.equal(
-      BrowserPageActionFeedback.panelNode.anchorNode.id,
+      ConfirmationHint._panel.anchorNode.id,
       urlbarButton.id
     );
     info("Waiting for the Sent! notification panel to close");
-    await promisePanelHidden(BrowserPageActionFeedback.panelNode.id);
+    await promisePanelHidden(ConfirmationHint._panel.id);
 
     // Remove Send to Device from the urlbar.
     action.pinnedToUrlbar = false;

@@ -57,13 +57,9 @@ function* test(testDriver) {
   function* scrollAndCheck(configuration, x, y, dx, dy, ex, ey, desc) {
     // Start with a clean slate
     yield resetConfiguration(configuration, testDriver);
-    // Figure out the panning deltas
-    if (dx != 0) {
-      dx = -(dx + TOUCH_SLOP);
-    }
-    if (dy != 0) {
-      dy = -(dy + TOUCH_SLOP);
-    }
+    // Reverse the touch delta in order to scroll in the desired direction
+    dx = -dx;
+    dy = -dy;
     // Do the pan
     yield ok(synthesizeNativeTouchDrag(scrollframe, x, y, dx, dy),
         "Synthesized drag of (" + dx + ", " + dy + ") on configuration " + configuration);
