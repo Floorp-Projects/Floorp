@@ -37,6 +37,11 @@
 class nsFrameLoader;
 
 namespace mozilla {
+
+namespace ipc {
+  class FileDescriptor;
+}
+
 namespace dom {
 
 class nsIContentParent;
@@ -53,6 +58,8 @@ class ParentProcessMessageManager;
 class ProcessMessageManager;
 
 namespace ipc {
+
+class WritableSharedMap;
 
 // Note: we round the time we spend to the nearest millisecond. So a min value
 // of 1 ms actually captures from 500us and above.
@@ -233,6 +240,8 @@ public:
                              JS::MutableHandle<JS::Value> aInitialProcessData,
                              mozilla::ErrorResult& aError);
 
+  mozilla::dom::ipc::WritableSharedMap* SharedData();
+
   NS_DECL_NSIMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
@@ -340,6 +349,7 @@ protected:
   nsTArray<nsString> mPendingScripts;
   nsTArray<bool> mPendingScriptsGlobalStates;
   JS::Heap<JS::Value> mInitialProcessData;
+  RefPtr<mozilla::dom::ipc::WritableSharedMap> mSharedData;
 
   void LoadPendingScripts(nsFrameMessageManager* aManager,
                           nsFrameMessageManager* aChildMM);

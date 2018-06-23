@@ -29,6 +29,11 @@ namespace mozilla {
 namespace dom {
 namespace ipc {
 
+using mozilla::ipc::AutoIPCStream;
+using mozilla::ipc::IPCStream;
+using mozilla::ipc::PBackgroundChild;
+using mozilla::ipc::PBackgroundParent;
+
 StructuredCloneData::StructuredCloneData()
   : StructuredCloneData(StructuredCloneHolder::TransferringSupported)
 {}
