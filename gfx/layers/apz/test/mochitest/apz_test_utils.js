@@ -679,6 +679,36 @@ function hitTestScrollbar(params) {
   }
 }
 
+// Return a list of prefs for the given test identifier.
+function getPrefs(ident) {
+  switch (ident) {
+    case "TOUCH_EVENTS:PAN":
+      return [
+        // Dropping the touch slop to 0 makes the tests easier to write because
+        // we can just do a one-pixel drag to get over the pan threshold rather
+        // than having to hard-code some larger value.
+        ["apz.touch_start_tolerance", "0.0"],
+        // The touchstart from the drag can turn into a long-tap if the touch-move
+        // events get held up. Try to prevent that by making long-taps require
+        // a 10 second hold. Note that we also cannot enable chaos mode on this
+        // test for this reason, since chaos mode can cause the long-press timer
+        // to fire sooner than the pref dictates.
+        ["ui.click_hold_context_menus.delay", 10000],
+        // The subtests in this test do touch-drags to pan the page, but we don't
+        // want those pans to turn into fling animations, so we increase the
+        // fling min velocity requirement absurdly high.
+        ["apz.fling_min_velocity_threshold", "10000"],
+        // The helper_div_pan's div gets a displayport on scroll, but if the
+        // test takes too long the displayport can expire before the new scroll
+        // position is synced back to the main thread. So we disable displayport
+        // expiry for these tests.
+        ["apz.displayport_expiry_ms", 0],
+      ];
+    default:
+      return [];
+  }
+}
+
 var ApzCleanup = {
   _cleanups: [],
 
