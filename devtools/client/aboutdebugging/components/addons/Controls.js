@@ -112,7 +112,7 @@ class AddonsControls extends Component {
         dom.button({
           id: "load-addon-from-file",
           onClick: this.loadAddonFromFile,
-        }, Strings.GetStringFromName("loadTemporaryAddon"))
+        }, Strings.GetStringFromName("loadTemporaryAddon2"))
       ),
       AddonsInstallError({
         error: this.state.installError,

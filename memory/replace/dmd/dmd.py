@@ -195,6 +195,9 @@ variable is used to find breakpad symbols for stack fixing.
     p.add_argument('--filter-stacks-for-testing', action='store_true',
                    help='filter stack traces; only useful for testing purposes')
 
+    p.add_argument('--allocation-filter',
+                   help='Only print entries that have a stack that matches the filter')
+
     p.add_argument('input_file',
                    help='a file produced by DMD')
 
@@ -549,6 +552,11 @@ def printDigest(args, digest):
         kindBlocks = 0
         kindUsableSize = 0
         maxRecord = 1000
+
+        if args.allocation_filter:
+            sortedRecords = list(filter(
+                lambda x: any(map(lambda y: args.allocation_filter in y, x.allocatedAtDesc)),
+                sortedRecords))
 
         # First iteration: get totals, etc.
         for record in sortedRecords:

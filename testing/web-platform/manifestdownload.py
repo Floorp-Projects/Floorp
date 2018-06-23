@@ -5,7 +5,7 @@ import json
 import os
 from datetime import datetime, timedelta
 import tarfile
-from vcs import Mercurial
+import vcs
 import requests
 from cStringIO import StringIO
 
@@ -14,10 +14,28 @@ def abs_path(path):
 
 
 def hg_commits(repo_root):
-    hg = Mercurial.get_func(repo_root)
-    return [item for item in hg("log", "-fl50", "--template={node}\n",
-            "testing/web-platform/tests/", "testing/web-platform/mozilla/tests").split("\n")
-            if item]
+    hg = vcs.Mercurial.get_func(repo_root)
+    for item in hg("log", "-fl50", "--template={node}\n", "testing/web-platform/tests",
+                   "testing/web-platform/mozilla/tests").splitlines():
+        yield item
+
+
+def git_commits(repo_root):
+    git = vcs.Git.get_func(repo_root)
+    for item in git("log", "--format=%H", "-n50", "testing/web-platform/tests",
+                    "testing/web-platform/mozilla/tests").splitlines():
+        yield git("cinnabar", "git2hg", item)
+
+
+def get_commits(logger, repo_root):
+    if vcs.Mercurial.is_hg_repo(repo_root):
+        return hg_commits(repo_root)
+
+    elif vcs.Git.is_git_repo(repo_root):
+        return git_commits(repo_root)
+
+    logger.warning("No VCS found")
+    return False
 
 
 def should_download(logger, manifest_path, rebuild_time=timedelta(days=5)):
@@ -59,10 +77,12 @@ def taskcluster_url(logger, commits):
 
 
 def download_manifest(logger, wpt_dir, commits_func, url_func, force=False):
-    if not force and not should_download(logger, wpt_dir):
+    if not force and not should_download(logger, os.path.join(wpt_dir, "meta", "MANIFEST.json")):
         return False
 
     commits = commits_func()
+    if not commits:
+        return False
     url = url_func(logger, commits) + "/artifacts/public/manifests.tar.gz"
 
     if not url:
@@ -106,7 +126,7 @@ def create_parser():
 
 
 def download_from_taskcluster(logger, wpt_dir, repo_root, force=False):
-    return download_manifest(logger, wpt_dir, lambda: hg_commits(repo_root),
+    return download_manifest(logger, wpt_dir, lambda: get_commits(logger, repo_root),
                              taskcluster_url, force)
 
 

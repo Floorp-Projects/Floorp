@@ -451,12 +451,12 @@ struct ValidatingPolicy
 typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 
 static bool
-DecodeFunctionBodyExprs(const ModuleEnvironment& env, const Sig& sig, const ValTypeVector& locals,
-                        const uint8_t* bodyEnd, Decoder* d)
+DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
+                        const ValTypeVector& locals, const uint8_t* bodyEnd, Decoder* d)
 {
     ValidatingOpIter iter(env, *d);
 
-    if (!iter.readFunctionStart(sig.ret()))
+    if (!iter.readFunctionStart(funcType.ret()))
         return false;
 
 #define CHECK(c) if (!(c)) return false; break
@@ -1026,10 +1026,10 @@ bool
 wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uint32_t bodySize,
                            Decoder& d)
 {
-    const Sig& sig = *env.funcSigs[funcIndex];
+    const FuncType& funcType = *env.funcTypes[funcIndex];
 
     ValTypeVector locals;
-    if (!locals.appendAll(sig.args()))
+    if (!locals.appendAll(funcType.args()))
         return false;
 
     const uint8_t* bodyBegin = d.currentPosition();
@@ -1037,7 +1037,7 @@ wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uin
     if (!DecodeLocalEntries(d, ModuleKind::Wasm, env.gcTypesEnabled, &locals))
         return false;
 
-    if (!DecodeFunctionBodyExprs(env, sig, locals, bodyBegin + bodySize, &d))
+    if (!DecodeFunctionBodyExprs(env, funcType, locals, bodyBegin + bodySize, &d))
         return false;
 
     return true;
@@ -1099,7 +1099,7 @@ DecodeFuncType(Decoder& d, ModuleEnvironment* env, uint32_t typeIndex)
         result = ToExprType(type);
     }
 
-    env->types[typeIndex] = TypeDef(Sig(std::move(args), result));
+    env->types[typeIndex] = TypeDef(FuncType(std::move(args), result));
     return true;
 }
 
@@ -1204,15 +1204,15 @@ DecodeName(Decoder& d)
 }
 
 static bool
-DecodeSignatureIndex(Decoder& d, const TypeDefVector& types, uint32_t* sigIndex)
+DecodeSignatureIndex(Decoder& d, const TypeDefVector& types, uint32_t* funcTypeIndex)
 {
-    if (!d.readVarU32(sigIndex))
+    if (!d.readVarU32(funcTypeIndex))
         return d.fail("expected signature index");
 
-    if (*sigIndex >= types.length())
+    if (*funcTypeIndex >= types.length())
         return d.fail("signature index out of range");
 
-    if (!types[*sigIndex].isFuncType())
+    if (!types[*funcTypeIndex].isFuncType())
         return d.fail("signature index references non-signature");
 
     return true;
@@ -1387,12 +1387,12 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
 
     switch (importKind) {
       case DefinitionKind::Function: {
-        uint32_t sigIndex;
-        if (!DecodeSignatureIndex(d, env->types, &sigIndex))
+        uint32_t funcTypeIndex;
+        if (!DecodeSignatureIndex(d, env->types, &funcTypeIndex))
             return false;
-        if (!env->funcSigs.append(&env->types[sigIndex].funcType()))
+        if (!env->funcTypes.append(&env->types[funcTypeIndex].funcType()))
             return false;
-        if (env->funcSigs.length() > MaxFuncs)
+        if (env->funcTypes.length() > MaxFuncs)
             return d.fail("too many functions");
         break;
       }
@@ -1452,7 +1452,7 @@ DecodeImportSection(Decoder& d, ModuleEnvironment* env)
         return false;
 
     // The global data offsets will be filled in by ModuleGenerator::init.
-    if (!env->funcImportGlobalDataOffsets.resize(env->funcSigs.length()))
+    if (!env->funcImportGlobalDataOffsets.resize(env->funcTypes.length()))
         return false;
 
     return true;
@@ -1471,19 +1471,19 @@ DecodeFunctionSection(Decoder& d, ModuleEnvironment* env)
     if (!d.readVarU32(&numDefs))
         return d.fail("expected number of function definitions");
 
-    CheckedInt<uint32_t> numFuncs = env->funcSigs.length();
+    CheckedInt<uint32_t> numFuncs = env->funcTypes.length();
     numFuncs += numDefs;
     if (!numFuncs.isValid() || numFuncs.value() > MaxFuncs)
         return d.fail("too many functions");
 
-    if (!env->funcSigs.reserve(numFuncs.value()))
+    if (!env->funcTypes.reserve(numFuncs.value()))
         return false;
 
     for (uint32_t i = 0; i < numDefs; i++) {
-        uint32_t sigIndex;
-        if (!DecodeSignatureIndex(d, env->types, &sigIndex))
+        uint32_t funcTypeIndex;
+        if (!DecodeSignatureIndex(d, env->types, &funcTypeIndex))
             return false;
-        env->funcSigs.infallibleAppend(&env->types[sigIndex].funcType());
+        env->funcTypes.infallibleAppend(&env->types[funcTypeIndex].funcType());
     }
 
     return d.finishSection(*range, "function");
@@ -1771,11 +1771,11 @@ DecodeStartSection(Decoder& d, ModuleEnvironment* env)
     if (funcIndex >= env->numFuncs())
         return d.fail("unknown start function");
 
-    const Sig& sig = *env->funcSigs[funcIndex];
-    if (!IsVoid(sig.ret()))
+    const FuncType& funcType = *env->funcTypes[funcIndex];
+    if (!IsVoid(funcType.ret()))
         return d.fail("start function must not return anything");
 
-    if (sig.args().length())
+    if (funcType.args().length())
         return d.fail("start function must be nullary");
 
     env->startFuncIndex = Some(funcIndex);

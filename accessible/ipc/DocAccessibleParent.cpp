@@ -389,6 +389,43 @@ DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult
+DocAccessibleParent::RecvVirtualCursorChangeEvent(const uint64_t& aID,
+                                                  const uint64_t& aOldPositionID,
+                                                  const int32_t& aOldStartOffset,
+                                                  const int32_t& aOldEndOffset,
+                                                  const uint64_t& aNewPositionID,
+                                                  const int32_t& aNewStartOffset,
+                                                  const int32_t& aNewEndOffset,
+                                                  const int16_t& aReason,
+                                                  const bool& aFromUser)
+{
+  ProxyAccessible* target = GetAccessible(aID);
+  ProxyAccessible* oldPosition = GetAccessible(aOldPositionID);
+  ProxyAccessible* newPosition = GetAccessible(aNewPositionID);
+
+#if defined(ANDROID)
+  ProxyVirtualCursorChangeEvent(target,
+                                newPosition, aOldStartOffset, aOldEndOffset,
+                                oldPosition, aNewStartOffset, aNewEndOffset,
+                                aReason, aFromUser);
+#endif
+
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  RefPtr<xpcAccVirtualCursorChangeEvent> event =
+    new xpcAccVirtualCursorChangeEvent(nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED,
+                                       GetXPCAccessible(target), doc,
+                                       nullptr, aFromUser,
+                                       GetXPCAccessible(oldPosition),
+                                       aOldStartOffset, aOldEndOffset,
+                                       GetXPCAccessible(newPosition),
+                                       aNewStartOffset, aNewEndOffset,
+                                       aReason);
+  nsCoreUtils::DispatchAccEvent(std::move(event));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 DocAccessibleParent::RecvRoleChangedEvent(const a11y::role& aRole)
 {
   if (mShutdown) {

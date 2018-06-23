@@ -38,7 +38,8 @@ function testNonExtensible() {
 
     assertEq(a.toString(), "4,9,3,,-2");
 }
-testNonExtensible();
+for (var i = 0; i < 15; i++)
+    testNonExtensible();
 
 function testSealed() {
     var a = [1, 2, 3, , 5];
@@ -87,7 +88,8 @@ function testSealed() {
 
     assertEq(a.toString(), "4,7,3,,5");
 }
-testSealed();
+for (var i = 0; i < 15; i++)
+    testSealed();
 
 function testFrozen() {
     var a = [1, 2, 3, , 5];
@@ -138,4 +140,5 @@ function testFrozen() {
 
     assertEq(a.toString(), "1,2,3,,5");
 }
-testFrozen();
+for (var i = 0; i < 15; i++)
+    testFrozen();

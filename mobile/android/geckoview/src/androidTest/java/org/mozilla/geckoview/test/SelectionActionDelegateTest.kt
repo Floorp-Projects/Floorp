@@ -173,7 +173,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "layout.accessiblecaret.enabled_on_touch" to true))
 
-        mainSession.loadTestPath(SELECTION_ACTION_PATH)
+        mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
         content.focus()

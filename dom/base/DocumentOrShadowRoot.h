@@ -179,7 +179,6 @@ public:
 protected:
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
-  void AppendSheet(StyleSheet& aSheet);
   void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
 
   nsIContent* Retarget(nsIContent* aContent) const;

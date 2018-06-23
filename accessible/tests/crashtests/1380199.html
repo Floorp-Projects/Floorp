@@ -1,0 +1,15 @@
+<script>
+window.onload=function(){
+  let o=document.getElementById('a');
+  let n=document.createElement('plaintext');
+  o.parentNode.replaceChild(n,o);
+  n.setAttribute('id','a');
+  document.getElementById('a').setAttribute('aria-owns','c b');
+  document.getElementById('d').setAttribute('width',1);
+}
+</script>
+>
+<script id='a'></script>
+<hgroup id='b'>
+<h6 id='c'>
+<video id='d' controls width='169' height='187'>

@@ -1,24 +1,27 @@
 job-defaults:
     target:
         by-test-platform:
-            android-7.0-x86/opt: geckoview-androidTest.apk
+            android-em-7.0-x86/opt: geckoview-androidTest.apk
             default: null
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
+                android-hw.*: android_hardware_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-4.2-x86/opt:
+                android-em-4.2-x86/opt:
                     - android/android_common.py
                     - android/androidx86.py
-                android-7.0-x86/opt:
+                android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
+                android-hw.*:
+                    - android/android_hw.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -42,7 +45,7 @@ mochitest:
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     virtualization:
         by-test-platform:
@@ -50,9 +53,9 @@ mochitest:
             default: virtual
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 48
-            android-7.0-x86/opt: 4
-            android.*: 24
+            android-em-4.3-arm7-api-16/debug: 48
+            android-em-7.0-x86/opt: 4
+            android-em.*: 24
             linux.*/debug: 16
             linux64-asan/opt: 10
             linux64-.*cov/opt: 10
@@ -64,19 +67,19 @@ mochitest:
             default: true
     max-run-time:
         by-test-platform:
-            android.*: 7200
+            android-em.*: 7200
             default: 5400
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
         extra-options:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - --test-suite=mochitest
                 default: []
         chunked:
             by-test-platform:
-                android.*: false
+                android-em.*: false
                 default: true
 
 mochitest-a11y:
@@ -158,29 +161,29 @@ mochitest-chrome:
     loopback-video: true
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 8
-            android-7.0-x86/opt: 1
-            android.*: 4
+            android-em-4.3-arm7-api-16/debug: 8
+            android-em-7.0-x86/opt: 1
+            android-em.*: 4
             default: 3
     max-run-time:
         by-test-platform:
-            android.*: 7200
+            android-em.*: 7200
             default: 3600
     e10s: false
     mozharness:
         mochitest-flavor: chrome
         extra-options:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - --test-suite=mochitest-chrome
                 default: []
         chunked:
             by-test-platform:
-                android.*: false
+                android-em.*: false
                 default: true
 
 mochitest-clipboard:
@@ -201,7 +204,7 @@ mochitest-clipboard:
         mochitest-flavor: plain
         extra-options:
             by-test-platform:
-                android.*:
+                android-em.*:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-clipboard
                 default:
@@ -245,7 +248,7 @@ mochitest-gpu:
     loopback-video: true
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     virtualization: virtual-with-gpu
     e10s:
@@ -256,7 +259,7 @@ mochitest-gpu:
         mochitest-flavor: plain
         extra-options:
             by-test-platform:
-                android.*:
+                android-em.*:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-gpu
                 default:
@@ -282,11 +285,11 @@ mochitest-media:
             default: virtual
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: large
     chunks:
         by-test-platform:
-            android-7.0-x86/opt: 1
+            android-em-7.0-x86/opt: 1
             macosx64.*: 1
             windows10-64.*: 1
             default: 3
@@ -300,6 +303,7 @@ mochitest-media:
                 default: true
     tier:
         by-test-platform:
+            android-hw.*: 3
             linux64-qr/.*: 1
             default: default
 
@@ -350,8 +354,8 @@ mochitest-webgl:
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
-            android.*: 10
-            android-7.0-x86/opt: 1
+            android-em-7.0-x86/opt: 1
+            android-em.*: 10
             windows.*: 8
             default: 3
     e10s:
@@ -362,11 +366,11 @@ mochitest-webgl:
     max-run-time:
         by-test-platform:
             windows.*: 5400
-            android.*: 7200
+            android-em.*: 7200
             default: 3600
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -374,7 +378,7 @@ mochitest-webgl:
         mochitest-flavor: plain
         chunked:
             by-test-platform:
-                android.*: false
+                android-em.*: false
                 default: true
     tier:
         by-test-platform:

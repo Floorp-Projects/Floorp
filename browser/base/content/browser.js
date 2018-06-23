@@ -56,7 +56,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   SitePermissions: "resource:///modules/SitePermissions.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
-  TabsPopup: "resource:///modules/TabsPopup.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   Translation: "resource:///modules/translation/Translation.jsm",
   UITour: "resource:///modules/UITour.jsm",
@@ -84,6 +83,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "PanelUI",
                                   "chrome://browser/content/customizableui/panelUI.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gViewSourceUtils",
                                   "chrome://global/content/viewSourceUtils.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gTabsPanel",
+                                  "chrome://browser/content/browser-allTabsMenu.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["LightWeightThemeWebInstaller",
                                          "gExtensionsNotifications",
                                          "gXPInstallObserver"],
@@ -1745,6 +1746,11 @@ var gBrowserInit = {
     scheduleIdleTask(() => {
       // Initialize the Sync UI
       gSync.init();
+    });
+
+    scheduleIdleTask(() => {
+      // Initialize the all tabs menu
+      gTabsPanel.init();
     });
 
     scheduleIdleTask(() => {

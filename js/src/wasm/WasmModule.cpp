@@ -858,7 +858,7 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
 
         const FuncExport& funcExport = instance.metadata(otherTier).lookupFuncExport(funcIndex);
 
-        if (funcExport.sig() != metadata(tier).funcImports[i].sig()) {
+        if (funcExport.funcType() != metadata(tier).funcImports[i].funcType()) {
             const Import& import = FindImportForFuncImport(imports_, i);
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG,
                                      import.module.get(), import.field.get());

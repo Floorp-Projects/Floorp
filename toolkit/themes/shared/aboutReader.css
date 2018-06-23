@@ -731,11 +731,21 @@ body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
   list-style: decimal;
 }
 
-/* Hide elements with common "hidden" class names */
+/* Visually hide (but don't display: none) screen reader elements */
 .moz-reader-content .visually-hidden,
 .moz-reader-content .visuallyhidden,
-.moz-reader-content .hidden,
-.moz-reader-content .invisible,
 .moz-reader-content .sr-only {
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  border-width: 0;
+}
+
+/* Hide elements with common "hidden" class names */
+.moz-reader-content .hidden,
+.moz-reader-content .invisible {
   display: none;
 }

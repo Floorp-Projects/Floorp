@@ -499,7 +499,7 @@ struct ChunkTrailer
   public:
     // The index of the chunk in the nursery, or LocationTenuredHeap.
     ChunkLocation   location;
-    uint32_t        padding;
+    uint32_t : 32; // padding
 
     // The store buffer for pointers from tenured things to things in this
     // chunk. Will be non-null only for nursery chunks.

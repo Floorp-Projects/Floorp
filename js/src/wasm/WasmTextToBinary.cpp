@@ -1979,8 +1979,8 @@ ParseCall(WasmParseContext& c, bool inParens)
 static AstCallIndirect*
 ParseCallIndirect(WasmParseContext& c, bool inParens)
 {
-    AstRef sig;
-    if (!c.ts.matchRef(&sig, c.error))
+    AstRef funcType;
+    if (!c.ts.matchRef(&funcType, c.error))
         return nullptr;
 
     AstExprVector args(c.lifo);
@@ -2000,7 +2000,7 @@ ParseCallIndirect(WasmParseContext& c, bool inParens)
     if (!index)
         return nullptr;
 
-    return new(c.lifo) AstCallIndirect(sig, ExprType::Void, std::move(args), index);
+    return new(c.lifo) AstCallIndirect(funcType, ExprType::Void, std::move(args), index);
 }
 
 static uint_fast8_t
@@ -3180,12 +3180,12 @@ ParseInlineExport(WasmParseContext& c, DefinitionKind kind, AstModule* module, A
 }
 
 static bool
-MaybeParseTypeUse(WasmParseContext& c, AstRef* sig)
+MaybeParseTypeUse(WasmParseContext& c, AstRef* funcType)
 {
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
         if (c.ts.getIf(WasmToken::Type)) {
-            if (!c.ts.matchRef(sig, c.error))
+            if (!c.ts.matchRef(funcType, c.error))
                 return false;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return false;
@@ -3197,7 +3197,7 @@ MaybeParseTypeUse(WasmParseContext& c, AstRef* sig)
 }
 
 static bool
-ParseFuncSig(WasmParseContext& c, AstSig* sig)
+ParseFuncSig(WasmParseContext& c, AstFuncType* funcType)
 {
     AstValTypeVector args(c.lifo);
     ExprType result = ExprType::Void;
@@ -3221,7 +3221,7 @@ ParseFuncSig(WasmParseContext& c, AstSig* sig)
             return false;
     }
 
-    *sig = AstSig(std::move(args), result);
+    *funcType = AstFuncType(std::move(args), result);
     return true;
 }
 
@@ -3232,13 +3232,13 @@ ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module)
         return false;
 
     if (ref->isInvalid()) {
-        AstSig sig(c.lifo);
-        if (!ParseFuncSig(c, &sig))
+        AstFuncType funcType(c.lifo);
+        if (!ParseFuncSig(c, &funcType))
             return false;
-        uint32_t sigIndex;
-        if (!module->declare(std::move(sig), &sigIndex))
+        uint32_t funcTypeIndex;
+        if (!module->declare(std::move(funcType), &funcTypeIndex))
             return false;
-        ref->setIndex(sigIndex);
+        ref->setIndex(funcTypeIndex);
     }
 
     return true;
@@ -3268,11 +3268,11 @@ ParseFunc(WasmParseContext& c, AstModule* module)
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return false;
 
-            AstRef sig;
-            if (!ParseFuncType(c, &sig, module))
+            AstRef funcType;
+            if (!ParseFuncType(c, &funcType, module))
                 return false;
 
-            auto* imp = new(c.lifo) AstImport(funcName, names.module.text(), names.field.text(), sig);
+            auto* imp = new(c.lifo) AstImport(funcName, names.module.text(), names.field.text(), funcType);
             return imp && module->append(imp);
         }
 
@@ -3289,8 +3289,8 @@ ParseFunc(WasmParseContext& c, AstModule* module)
         }
     }
 
-    AstRef sigRef;
-    if (!MaybeParseTypeUse(c, &sigRef))
+    AstRef funcTypeRef;
+    if (!MaybeParseTypeUse(c, &funcTypeRef))
         return false;
 
     AstExprVector body(c.lifo);
@@ -3329,14 +3329,14 @@ ParseFunc(WasmParseContext& c, AstModule* module)
     if (!ParseExprList(c, &body))
         return false;
 
-    if (sigRef.isInvalid()) {
-        uint32_t sigIndex;
-        if (!module->declare(AstSig(std::move(args), result), &sigIndex))
+    if (funcTypeRef.isInvalid()) {
+        uint32_t funcTypeIndex;
+        if (!module->declare(AstFuncType(std::move(args), result), &funcTypeIndex))
             return false;
-        sigRef.setIndex(sigIndex);
+        funcTypeRef.setIndex(funcTypeIndex);
     }
 
-    auto* func = new(c.lifo) AstFunc(funcName, sigRef, std::move(vars), std::move(locals), std::move(body));
+    auto* func = new(c.lifo) AstFunc(funcName, funcTypeRef, std::move(vars), std::move(locals), std::move(body));
     return func && module->append(func);
 }
 
@@ -3344,7 +3344,7 @@ static bool
 ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, bool* isMutable);
 
 static bool
-ParseStructFields(WasmParseContext& c, AstStruct* str)
+ParseStructFields(WasmParseContext& c, AstStructType* st)
 {
     AstNameVector    names(c.lifo);
     AstValTypeVector types(c.lifo);
@@ -3371,7 +3371,7 @@ ParseStructFields(WasmParseContext& c, AstStruct* str)
             return false;
     }
 
-    *str = AstStruct(std::move(names), std::move(types));
+    *st = AstStructType(std::move(names), std::move(types));
     return true;
 }
 
@@ -3385,17 +3385,17 @@ ParseTypeDef(WasmParseContext& c)
 
     AstTypeDef* type = nullptr;
     if (c.ts.getIf(WasmToken::Func)) {
-        AstSig sig(c.lifo);
-        if (!ParseFuncSig(c, &sig))
+        AstFuncType funcType(c.lifo);
+        if (!ParseFuncSig(c, &funcType))
             return nullptr;
 
-        type = new(c.lifo) AstSig(name, std::move(sig));
+        type = new(c.lifo) AstFuncType(name, std::move(funcType));
     } else if (c.ts.getIf(WasmToken::Struct)) {
-        AstStruct str(c.lifo);
-        if (!ParseStructFields(c, &str))
+        AstStructType st(c.lifo);
+        if (!ParseStructFields(c, &st))
             return nullptr;
 
-        type = new(c.lifo) AstStruct(name, std::move(str));
+        type = new(c.lifo) AstStructType(name, std::move(st));
     } else {
         c.ts.generateError(c.ts.peek(), "bad type definition", c.error);
         return nullptr;
@@ -3624,7 +3624,7 @@ ParseImport(WasmParseContext& c, AstModule* module)
     if (!c.ts.match(WasmToken::Text, &fieldName, c.error))
         return nullptr;
 
-    AstRef sigRef;
+    AstRef funcTypeRef;
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
         if (c.ts.getIf(WasmToken::Memory)) {
@@ -3669,17 +3669,17 @@ ParseImport(WasmParseContext& c, AstModule* module)
             if (name.empty())
                 name = c.ts.getIfName();
 
-            AstRef sigRef;
-            if (!ParseFuncType(c, &sigRef, module))
+            AstRef funcTypeRef;
+            if (!ParseFuncType(c, &funcTypeRef, module))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
 
-            return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), sigRef);
+            return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), funcTypeRef);
         }
 
         if (c.ts.getIf(WasmToken::Type)) {
-            if (!c.ts.matchRef(&sigRef, c.error))
+            if (!c.ts.matchRef(&funcTypeRef, c.error))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
@@ -3688,18 +3688,18 @@ ParseImport(WasmParseContext& c, AstModule* module)
         }
     }
 
-    if (sigRef.isInvalid()) {
-        AstSig sig(c.lifo);
-        if (!ParseFuncSig(c, &sig))
+    if (funcTypeRef.isInvalid()) {
+        AstFuncType funcType(c.lifo);
+        if (!ParseFuncSig(c, &funcType))
             return nullptr;
 
-        uint32_t sigIndex;
-        if (!module->declare(std::move(sig), &sigIndex))
+        uint32_t funcTypeIndex;
+        if (!module->declare(std::move(funcType), &funcTypeIndex))
             return nullptr;
-        sigRef.setIndex(sigIndex);
+        funcTypeRef.setIndex(funcTypeIndex);
     }
 
-    return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), sigRef);
+    return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), funcTypeRef);
 }
 
 static AstExport*
@@ -3981,7 +3981,7 @@ ParseModule(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo, UniqueC
             AstTypeDef* typeDef = ParseTypeDef(c);
             if (!typeDef)
                 return nullptr;
-            if (!module->append(static_cast<AstSig*>(typeDef)))
+            if (!module->append(static_cast<AstFuncType*>(typeDef)))
                 return nullptr;
             break;
           }
@@ -4061,7 +4061,7 @@ class Resolver
     UniqueChars* error_;
     AstNameMap varMap_;
     AstNameMap globalMap_;
-    AstNameMap sigMap_;
+    AstNameMap funcTypeMap_;
     AstNameMap funcMap_;
     AstNameMap importMap_;
     AstNameMap tableMap_;
@@ -4099,7 +4099,7 @@ class Resolver
       : error_(error),
         varMap_(lifo),
         globalMap_(lifo),
-        sigMap_(lifo),
+        funcTypeMap_(lifo),
         funcMap_(lifo),
         importMap_(lifo),
         tableMap_(lifo),
@@ -4108,7 +4108,7 @@ class Resolver
         targetStack_(lifo)
     {}
     bool init() {
-        return sigMap_.init() &&
+        return funcTypeMap_.init() &&
                funcMap_.init() &&
                importMap_.init() &&
                tableMap_.init() &&
@@ -4127,7 +4127,7 @@ class Resolver
         return name.empty() || registerName(map, name, index); \
     }
 
-    REGISTER(Sig, sigMap_)
+    REGISTER(FuncType, funcTypeMap_)
     REGISTER(Func, funcMap_)
     REGISTER(Var, varMap_)
     REGISTER(Global, globalMap_)
@@ -4153,7 +4153,7 @@ class Resolver
         return true;                                      \
     }
 
-    RESOLVE(sigMap_, Signature)
+    RESOLVE(funcTypeMap_, Signature)
     RESOLVE(funcMap_, Function)
     RESOLVE(varMap_, Local)
     RESOLVE(globalMap_, Global)
@@ -4266,7 +4266,7 @@ ResolveCallIndirect(Resolver& r, AstCallIndirect& c)
     if (!ResolveExpr(r, *c.index()))
         return false;
 
-    if (!r.resolveSignature(c.sig()))
+    if (!r.resolveSignature(c.funcType()))
         return false;
 
     return true;
@@ -4603,14 +4603,14 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 
     size_t numTypes = module->types().length();
     for (size_t i = 0; i < numTypes; i++) {
-        AstTypeDef* ty = module->types()[i];
-        if (ty->isSig()) {
-            AstSig* sig = static_cast<AstSig*>(ty);
-            if (!r.registerSigName(sig->name(), i))
+        AstTypeDef* td = module->types()[i];
+        if (td->isFuncType()) {
+            AstFuncType* funcType = static_cast<AstFuncType*>(td);
+            if (!r.registerFuncTypeName(funcType->name(), i))
                 return r.fail("duplicate signature");
-        } else if (ty->isStruct()) {
-            AstStruct* str = static_cast<AstStruct*>(ty);
-            if (!r.registerTypeName(str->name(), i))
+        } else if (td->isStructType()) {
+            AstStructType* structType = static_cast<AstStructType*>(td);
+            if (!r.registerTypeName(structType->name(), i))
                 return r.fail("duplicate struct");
         }
     }
@@ -4624,7 +4624,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
           case DefinitionKind::Function:
             if (!r.registerFuncName(imp->name(), lastFuncIndex++))
                 return r.fail("duplicate import");
-            if (!r.resolveSignature(imp->funcSig()))
+            if (!r.resolveSignature(imp->funcType()))
                 return false;
             break;
           case DefinitionKind::Global:
@@ -4643,7 +4643,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     }
 
     for (AstFunc* func : module->funcs()) {
-        if (!r.resolveSignature(func->sig()))
+        if (!r.resolveSignature(func->funcType()))
             return false;
         if (!r.registerFuncName(func->name(), lastFuncIndex++))
             return r.fail("duplicate function");
@@ -4820,7 +4820,7 @@ EncodeCallIndirect(Encoder& e, AstCallIndirect& c)
     if (!e.writeOp(Op::CallIndirect))
         return false;
 
-    if (!e.writeVarU32(c.sig().index()))
+    if (!e.writeVarU32(c.funcType().index()))
         return false;
 
     if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default)))
@@ -5249,36 +5249,36 @@ EncodeTypeSection(Encoder& e, AstModule& module)
     if (!e.writeVarU32(module.types().length()))
         return false;
 
-    for (AstTypeDef* ty : module.types()) {
-        if (ty->isSig()) {
-            AstSig* sig = static_cast<AstSig*>(ty);
+    for (AstTypeDef* td : module.types()) {
+        if (td->isFuncType()) {
+            AstFuncType* funcType = static_cast<AstFuncType*>(td);
             if (!e.writeVarU32(uint32_t(TypeCode::Func)))
                 return false;
 
-            if (!e.writeVarU32(sig->args().length()))
+            if (!e.writeVarU32(funcType->args().length()))
                 return false;
 
-            for (ValType t : sig->args()) {
+            for (ValType t : funcType->args()) {
                 if (!e.writeValType(t))
                     return false;
             }
 
-            if (!e.writeVarU32(!IsVoid(sig->ret())))
+            if (!e.writeVarU32(!IsVoid(funcType->ret())))
                 return false;
 
-            if (!IsVoid(sig->ret())) {
-                if (!e.writeValType(NonVoidToValType(sig->ret())))
+            if (!IsVoid(funcType->ret())) {
+                if (!e.writeValType(NonVoidToValType(funcType->ret())))
                     return false;
             }
-        } else if (ty->isStruct()) {
-            AstStruct* str = static_cast<AstStruct*>(ty);
+        } else if (td->isStructType()) {
+            AstStructType* st = static_cast<AstStructType*>(td);
             if (!e.writeVarU32(uint32_t(TypeCode::Struct)))
                 return false;
 
-            if (!e.writeVarU32(str->fieldTypes().length()))
+            if (!e.writeVarU32(st->fieldTypes().length()))
                 return false;
 
-            for (ValType t : str->fieldTypes()) {
+            for (ValType t : st->fieldTypes()) {
                 if (!e.writeValType(t))
                     return false;
             }
@@ -5305,7 +5305,7 @@ EncodeFunctionSection(Encoder& e, AstModule& module)
         return false;
 
     for (AstFunc* func : module.funcs()) {
-        if (!e.writeVarU32(func->sig().index()))
+        if (!e.writeVarU32(func->funcType().index()))
             return false;
     }
 
@@ -5374,7 +5374,7 @@ EncodeImport(Encoder& e, AstImport& imp)
 
     switch (imp.kind()) {
       case DefinitionKind::Function:
-        if (!e.writeVarU32(imp.funcSig().index()))
+        if (!e.writeVarU32(imp.funcType().index()))
             return false;
         break;
       case DefinitionKind::Global:

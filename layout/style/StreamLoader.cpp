@@ -114,13 +114,10 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
   // For reasons I don't understand, factoring the below lines into
   // a method on SheetLoadData resulted in a linker error. Hence,
   // accessing fields of mSheetLoadData from here.
-  bool dummy;
   mSheetLoadData->mLoader->ParseSheet(
-    EmptyString(),
     utf8String,
     mSheetLoadData,
-    /* aAllowAsync = */ true,
-    dummy);
+    Loader::AllowAsyncParse::Yes);
   return NS_OK;
 }
 

@@ -681,26 +681,26 @@ class Val
 
 typedef Vector<Val, 0, SystemAllocPolicy> ValVector;
 
-// The Sig class represents a WebAssembly function signature which takes a list
-// of value types and returns an expression type. The engine uses two in-memory
-// representations of the argument Vector's memory (when elements do not fit
-// inline): normal malloc allocation (via SystemAllocPolicy) and allocation in
-// a LifoAlloc (via LifoAllocPolicy). The former Sig objects can have any
-// lifetime since they own the memory. The latter Sig objects must not outlive
-// the associated LifoAlloc mark/release interval (which is currently the
-// duration of module validation+compilation). Thus, long-lived objects like
-// WasmModule must use malloced allocation.
+// The FuncType class represents a WebAssembly function signature which takes a
+// list of value types and returns an expression type. The engine uses two
+// in-memory representations of the argument Vector's memory (when elements do
+// not fit inline): normal malloc allocation (via SystemAllocPolicy) and
+// allocation in a LifoAlloc (via LifoAllocPolicy). The former FuncType objects
+// can have any lifetime since they own the memory. The latter FuncType objects
+// must not outlive the associated LifoAlloc mark/release interval (which is
+// currently the duration of module validation+compilation). Thus, long-lived
+// objects like WasmModule must use malloced allocation.
 
-class Sig
+class FuncType
 {
     ValTypeVector args_;
     ExprType ret_;
 
   public:
-    Sig() : args_(), ret_(ExprType::Void) {}
-    Sig(ValTypeVector&& args, ExprType ret) : args_(std::move(args)), ret_(ret) {}
+    FuncType() : args_(), ret_(ExprType::Void) {}
+    FuncType(ValTypeVector&& args, ExprType ret) : args_(std::move(args)), ret_(ret) {}
 
-    MOZ_MUST_USE bool clone(const Sig& rhs) {
+    MOZ_MUST_USE bool clone(const FuncType& rhs) {
         ret_ = rhs.ret_;
         MOZ_ASSERT(args_.empty());
         return args_.appendAll(rhs.args_);
@@ -716,10 +716,10 @@ class Sig
             hn = mozilla::AddToHash(hn, HashNumber(vt.code()));
         return hn;
     }
-    bool operator==(const Sig& rhs) const {
+    bool operator==(const FuncType& rhs) const {
         return ret() == rhs.ret() && EqualContainers(args(), rhs.args());
     }
-    bool operator!=(const Sig& rhs) const {
+    bool operator!=(const FuncType& rhs) const {
         return !(*this == rhs);
     }
 
@@ -742,14 +742,14 @@ class Sig
         return false;
     }
 
-    WASM_DECLARE_SERIALIZABLE(Sig)
+    WASM_DECLARE_SERIALIZABLE(FuncType)
 };
 
-struct SigHashPolicy
+struct FuncTypeHashPolicy
 {
-    typedef const Sig& Lookup;
-    static HashNumber hash(Lookup sig) { return sig.hash(); }
-    static bool match(const Sig* lhs, Lookup rhs) { return *lhs == rhs; }
+    typedef const FuncType& Lookup;
+    static HashNumber hash(Lookup ft) { return ft.hash(); }
+    static bool match(const FuncType* lhs, Lookup rhs) { return *lhs == rhs; }
 };
 
 // Structure type.
@@ -1081,18 +1081,18 @@ struct DataSegment
 
 typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
-// SigIdDesc describes a signature id that can be used by call_indirect and
-// table-entry prologues to structurally compare whether the caller and callee's
-// signatures *structurally* match. To handle the general case, a Sig is
-// allocated and stored in a process-wide hash table, so that pointer equality
-// implies structural equality. As an optimization for the 99% case where the
-// Sig has a small number of parameters, the Sig is bit-packed into a uint32
-// immediate value so that integer equality implies structural equality. Both
-// cases can be handled with a single comparison by always setting the LSB for
-// the immediates (the LSB is necessarily 0 for allocated Sig pointers due to
-// alignment).
+// FuncTypeIdDesc describes a function type that can be used by call_indirect
+// and table-entry prologues to structurally compare whether the caller and
+// callee's signatures *structurally* match. To handle the general case, a
+// FuncType is allocated and stored in a process-wide hash table, so that
+// pointer equality implies structural equality. As an optimization for the 99%
+// case where the FuncType has a small number of parameters, the FuncType is
+// bit-packed into a uint32 immediate value so that integer equality implies
+// structural equality. Both cases can be handled with a single comparison by
+// always setting the LSB for the immediates (the LSB is necessarily 0 for
+// allocated FuncType pointers due to alignment).
 
-class SigIdDesc
+class FuncTypeIdDesc
 {
   public:
     enum class Kind { None, Immediate, Global };
@@ -1102,15 +1102,15 @@ class SigIdDesc
     Kind kind_;
     size_t bits_;
 
-    SigIdDesc(Kind kind, size_t bits) : kind_(kind), bits_(bits) {}
+    FuncTypeIdDesc(Kind kind, size_t bits) : kind_(kind), bits_(bits) {}
 
   public:
     Kind kind() const { return kind_; }
-    static bool isGlobal(const Sig& sig);
+    static bool isGlobal(const FuncType& funcType);
 
-    SigIdDesc() : kind_(Kind::None), bits_(0) {}
-    static SigIdDesc global(const Sig& sig, uint32_t globalDataOffset);
-    static SigIdDesc immediate(const Sig& sig);
+    FuncTypeIdDesc() : kind_(Kind::None), bits_(0) {}
+    static FuncTypeIdDesc global(const FuncType& funcType, uint32_t globalDataOffset);
+    static FuncTypeIdDesc immediate(const FuncType& funcType);
 
     bool isGlobal() const { return kind_ == Kind::Global; }
 
@@ -1118,24 +1118,24 @@ class SigIdDesc
     uint32_t globalDataOffset() const { MOZ_ASSERT(kind_ == Kind::Global); return bits_; }
 };
 
-// SigWithId pairs a Sig with SigIdDesc, describing either how to compile code
-// that compares this signature's id or, at instantiation what signature ids to
-// allocate in the global hash and where to put them.
+// FuncTypeWithId pairs a FuncType with FuncTypeIdDesc, describing either how to
+// compile code that compares this signature's id or, at instantiation what
+// signature ids to allocate in the global hash and where to put them.
 
-struct SigWithId : Sig
+struct FuncTypeWithId : FuncType
 {
-    SigIdDesc id;
+    FuncTypeIdDesc id;
 
-    SigWithId() = default;
-    explicit SigWithId(Sig&& sig) : Sig(std::move(sig)), id() {}
-    SigWithId(Sig&& sig, SigIdDesc id) : Sig(std::move(sig)), id(id) {}
-    void operator=(Sig&& rhs) { Sig::operator=(std::move(rhs)); }
+    FuncTypeWithId() = default;
+    explicit FuncTypeWithId(FuncType&& funcType) : FuncType(std::move(funcType)), id() {}
+    FuncTypeWithId(FuncType&& funcType, FuncTypeIdDesc id) : FuncType(std::move(funcType)), id(id) {}
+    void operator=(FuncType&& rhs) { FuncType::operator=(std::move(rhs)); }
 
-    WASM_DECLARE_SERIALIZABLE(SigWithId)
+    WASM_DECLARE_SERIALIZABLE(FuncTypeWithId)
 };
 
-typedef Vector<SigWithId, 0, SystemAllocPolicy> SigWithIdVector;
-typedef Vector<const SigWithId*, 0, SystemAllocPolicy> SigWithIdPtrVector;
+typedef Vector<FuncTypeWithId, 0, SystemAllocPolicy> FuncTypeWithIdVector;
+typedef Vector<const FuncTypeWithId*, 0, SystemAllocPolicy> FuncTypeWithIdPtrVector;
 
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
@@ -1144,16 +1144,22 @@ class TypeDef
 {
     enum { IsFuncType, IsStructType, IsNone } tag_;
     union {
-        SigWithId  funcType_;
-        StructType structType_;
+        FuncTypeWithId funcType_;
+        StructType     structType_;
     };
 
   public:
     TypeDef() : tag_(IsNone), structType_(StructType()) {}
 
-    explicit TypeDef(Sig&& sig) : tag_(IsFuncType), funcType_(SigWithId(std::move(sig))) {}
+    explicit TypeDef(FuncType&& funcType)
+      : tag_(IsFuncType),
+        funcType_(FuncTypeWithId(std::move(funcType)))
+    {}
 
-    explicit TypeDef(StructType&& structType) : tag_(IsStructType), structType_(std::move(structType)) {}
+    explicit TypeDef(StructType&& structType)
+      : tag_(IsStructType),
+        structType_(std::move(structType))
+    {}
 
     TypeDef(TypeDef&& td) : tag_(td.tag_), structType_(StructType()) {
         switch (tag_) {
@@ -1165,7 +1171,7 @@ class TypeDef
 
     ~TypeDef() {
         switch (tag_) {
-          case IsFuncType:   funcType_.~SigWithId(); break;
+          case IsFuncType:   funcType_.~FuncTypeWithId(); break;
           case IsStructType: structType_.~StructType(); break;
           case IsNone:       break;
         }
@@ -1189,19 +1195,19 @@ class TypeDef
         return tag_ == IsStructType;
     }
 
-    const SigWithId& funcType() const {
+    const FuncTypeWithId& funcType() const {
         MOZ_ASSERT(isFuncType());
         return funcType_;
     }
 
-    SigWithId& funcType() {
+    FuncTypeWithId& funcType() {
         MOZ_ASSERT(isFuncType());
         return funcType_;
     }
 
-    // p has to point to the sig_ embedded within a TypeDef for this to be
+    // p has to point to the funcType_ embedded within a TypeDef for this to be
     // valid.
-    static const TypeDef* fromSigWithIdPtr(const SigWithId* p) {
+    static const TypeDef* fromFuncTypeWithIdPtr(const FuncTypeWithId* p) {
         const TypeDef* q = (const TypeDef*)((char*)p - offsetof(TypeDef, funcType_));
         MOZ_ASSERT(q->tag_ == IsFuncType);
         return q;
@@ -2002,7 +2008,7 @@ class CalleeDesc
             uint32_t globalDataOffset_;
             uint32_t minLength_;
             bool external_;
-            SigIdDesc sigId_;
+            FuncTypeIdDesc funcTypeId_;
         } table;
         SymbolicAddress builtin_;
     } u;
@@ -2021,13 +2027,13 @@ class CalleeDesc
         c.u.import.globalDataOffset_ = globalDataOffset;
         return c;
     }
-    static CalleeDesc wasmTable(const TableDesc& desc, SigIdDesc sigId) {
+    static CalleeDesc wasmTable(const TableDesc& desc, FuncTypeIdDesc funcTypeId) {
         CalleeDesc c;
         c.which_ = WasmTable;
         c.u.table.globalDataOffset_ = desc.globalDataOffset;
         c.u.table.minLength_ = desc.limits.initial;
         c.u.table.external_ = desc.external;
-        c.u.table.sigId_ = sigId;
+        c.u.table.funcTypeId_ = funcTypeId;
         return c;
     }
     static CalleeDesc asmJSTable(const TableDesc& desc) {
@@ -2074,9 +2080,9 @@ class CalleeDesc
         MOZ_ASSERT(which_ == WasmTable);
         return u.table.external_;
     }
-    SigIdDesc wasmTableSigId() const {
+    FuncTypeIdDesc wasmTableSigId() const {
         MOZ_ASSERT(which_ == WasmTable);
-        return u.table.sigId_;
+        return u.table.funcTypeId_;
     }
     uint32_t wasmTableMinLength() const {
         MOZ_ASSERT(which_ == WasmTable);

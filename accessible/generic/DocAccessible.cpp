@@ -680,14 +680,18 @@ NS_IMETHODIMP
 DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
                               nsIAccessible* aOldAccessible,
                               int32_t aOldStart, int32_t aOldEnd,
+                              nsIAccessible* aNewAccessible,
+                              int32_t aNewStart, int32_t aNewEnd,
                               PivotMoveReason aReason,
                               bool aIsFromUserInput)
 {
   RefPtr<AccEvent> event =
     new AccVCChangeEvent(
       this, (aOldAccessible ? aOldAccessible->ToInternalAccessible() : nullptr),
-      aOldStart, aOldEnd, aReason,
-      aIsFromUserInput ? eFromUserInput : eNoUserInput);
+      aOldStart, aOldEnd,
+      (aNewAccessible ? aNewAccessible->ToInternalAccessible() : nullptr),
+      aNewStart, aNewEnd,
+      aReason, aIsFromUserInput ? eFromUserInput : eNoUserInput);
   nsEventShell::FireEvent(event);
 
   return NS_OK;

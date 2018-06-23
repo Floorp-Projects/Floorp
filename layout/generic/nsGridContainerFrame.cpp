@@ -556,16 +556,15 @@ struct nsGridContainerFrame::GridItemInfo
   {
     mState[eLogicalAxisBlock] = StateBits(0);
     mState[eLogicalAxisInline] = StateBits(0);
-    nsIFrame* innerFrame = InnerFrame(mFrame);
-    if (innerFrame->IsGridContainerFrame()) {
-      const auto* f = static_cast<nsGridContainerFrame*>(innerFrame);
+    nsGridContainerFrame* gridFrame = GetGridContainerFrame(mFrame);
+    if (gridFrame) {
       auto parentWM = aFrame->GetParent()->GetWritingMode();
-      bool isOrthogonal = parentWM.IsOrthogonalTo(f->GetWritingMode());
-      if (f->IsColSubgrid()) {
+      bool isOrthogonal = parentWM.IsOrthogonalTo(gridFrame->GetWritingMode());
+      if (gridFrame->IsColSubgrid()) {
         mState[isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline] =
           StateBits::eIsSubgrid;
       }
-      if (f->IsRowSubgrid()) {
+      if (gridFrame->IsRowSubgrid()) {
         mState[isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock] =
           StateBits::eIsSubgrid;
       }
@@ -635,18 +634,6 @@ struct nsGridContainerFrame::GridItemInfo
   static bool IsStartRowLessThan(const GridItemInfo* a, const GridItemInfo* b)
   {
     return a->mArea.mRows.mStart < b->mArea.mRows.mStart;
-  }
-
-  // Return the inner frame of aFrame that might be a grid container.
-  // This drills down through scroll frames and such.
-  static nsIFrame* InnerFrame(nsIFrame* aFrame)
-  {
-    nsIFrame* inner = aFrame;
-    if (MOZ_UNLIKELY(aFrame->IsFieldSetFrame())) {
-      inner = static_cast<nsFieldSetFrame*>(aFrame)->GetInner();
-    }
-    inner = inner->GetContentInsertionFrame();
-    return inner ? inner : aFrame;
   }
 
   nsIFrame* const mFrame;
@@ -7008,23 +6995,26 @@ nsGridContainerFrame::TrackSize::Dump() const
 #endif // DEBUG
 
 nsGridContainerFrame*
+nsGridContainerFrame::GetGridContainerFrame(nsIFrame* aFrame)
+{
+  nsGridContainerFrame* gridFrame = nullptr;
+
+  if (aFrame) {
+    nsIFrame* inner = aFrame;
+    if (MOZ_UNLIKELY(aFrame->IsFieldSetFrame())) {
+      inner = static_cast<nsFieldSetFrame*>(aFrame)->GetInner();
+    }
+    inner = inner->GetContentInsertionFrame();
+    nsIFrame* possibleGridFrame = inner ? inner : aFrame;
+    gridFrame = possibleGridFrame->IsGridContainerFrame() ?
+      static_cast<nsGridContainerFrame*>(possibleGridFrame) : nullptr;
+  }
+  return gridFrame;
+}
+
+nsGridContainerFrame*
 nsGridContainerFrame::GetGridFrameWithComputedInfo(nsIFrame* aFrame)
 {
-  // Prepare a lambda function that we may need to call multiple times.
-  auto GetGridContainerFrame = [](nsIFrame *aFrame) {
-    // Return the aFrame's content insertion frame, iff it is
-    // a grid container.
-    nsGridContainerFrame* gridFrame = nullptr;
-
-    if (aFrame) {
-      nsIFrame* contentFrame = aFrame->GetContentInsertionFrame();
-      if (contentFrame && (contentFrame->IsGridContainerFrame())) {
-        gridFrame = static_cast<nsGridContainerFrame*>(contentFrame);
-      }
-    }
-    return gridFrame;
-  };
-
   nsGridContainerFrame* gridFrame = GetGridContainerFrame(aFrame);
   if (gridFrame) {
     // if any of our properties are missing, generate them

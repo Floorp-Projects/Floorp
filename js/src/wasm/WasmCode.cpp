@@ -393,14 +393,14 @@ ModuleSegment::lookupRange(const void* pc) const
 size_t
 FuncExport::serializedSize() const
 {
-    return sig_.serializedSize() +
+    return funcType_.serializedSize() +
            sizeof(pod);
 }
 
 uint8_t*
 FuncExport::serialize(uint8_t* cursor) const
 {
-    cursor = sig_.serialize(cursor);
+    cursor = funcType_.serialize(cursor);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
     return cursor;
 }
@@ -408,7 +408,7 @@ FuncExport::serialize(uint8_t* cursor) const
 const uint8_t*
 FuncExport::deserialize(const uint8_t* cursor)
 {
-    (cursor = sig_.deserialize(cursor)) &&
+    (cursor = funcType_.deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
@@ -416,20 +416,20 @@ FuncExport::deserialize(const uint8_t* cursor)
 size_t
 FuncExport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return sig_.sizeOfExcludingThis(mallocSizeOf);
+    return funcType_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
 FuncImport::serializedSize() const
 {
-    return sig_.serializedSize() +
+    return funcType_.serializedSize() +
            sizeof(pod);
 }
 
 uint8_t*
 FuncImport::serialize(uint8_t* cursor) const
 {
-    cursor = sig_.serialize(cursor);
+    cursor = funcType_.serialize(cursor);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
     return cursor;
 }
@@ -437,7 +437,7 @@ FuncImport::serialize(uint8_t* cursor) const
 const uint8_t*
 FuncImport::deserialize(const uint8_t* cursor)
 {
-    (cursor = sig_.deserialize(cursor)) &&
+    (cursor = funcType_.deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
@@ -445,7 +445,7 @@ FuncImport::deserialize(const uint8_t* cursor)
 size_t
 FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return sig_.sizeOfExcludingThis(mallocSizeOf);
+    return funcType_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 static size_t
@@ -587,7 +587,7 @@ LazyStubSegment::addStubs(size_t codeLength, const Uint32Vector& funcExportIndic
         codeRanges_.back().offsetBy(offsetInSegment);
         i++;
 
-        if (funcExports[funcExportIndex].sig().temporarilyUnsupportedAnyRef())
+        if (funcExports[funcExportIndex].funcType().temporarilyUnsupportedAnyRef())
             continue;
 
         const CodeRange& jitRange = codeRanges[i];
@@ -648,7 +648,7 @@ LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExpo
     DebugOnly<uint32_t> numExpectedRanges = 0;
     for (uint32_t funcExportIndex : funcExportIndices) {
         const FuncExport& fe = funcExports[funcExportIndex];
-        numExpectedRanges += fe.sig().temporarilyUnsupportedAnyRef() ? 1 : 2;
+        numExpectedRanges += fe.funcType().temporarilyUnsupportedAnyRef() ? 1 : 2;
         void* calleePtr = moduleSegmentBase +
                           moduleRanges[fe.interpCodeRangeIndex()].funcNormalEntry();
         Maybe<ImmPtr> callee;
@@ -722,7 +722,7 @@ LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExpo
 
         // Functions with anyref in their sig have only one entry (interp).
         // All other functions get an extra jit entry.
-        interpRangeIndex += fe.sig().temporarilyUnsupportedAnyRef() ? 1 : 2;
+        interpRangeIndex += fe.funcType().temporarilyUnsupportedAnyRef() ? 1 : 2;
     }
 
     return true;
@@ -746,7 +746,7 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
     const CodeRangeVector& codeRanges = segment->codeRanges();
 
     // Functions that have anyref in their sig don't get a jit entry.
-    if (codeTier.metadata().funcExports[funcExportIndex].sig().temporarilyUnsupportedAnyRef()) {
+    if (codeTier.metadata().funcExports[funcExportIndex].funcType().temporarilyUnsupportedAnyRef()) {
         MOZ_ASSERT(codeRanges.length() >= 1);
         MOZ_ASSERT(codeRanges.back().isInterpEntry());
         return true;
@@ -851,7 +851,7 @@ size_t
 Metadata::serializedSize() const
 {
     return sizeof(pod()) +
-           SerializedVectorSize(sigIds) +
+           SerializedVectorSize(funcTypeIds) +
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(funcNames) +
@@ -863,7 +863,7 @@ Metadata::serializedSize() const
 size_t
 Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
+    return SizeOfVectorExcludingThis(funcTypeIds, mallocSizeOf) +
            globals.sizeOfExcludingThis(mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
@@ -877,7 +877,7 @@ Metadata::serialize(uint8_t* cursor) const
 {
     MOZ_ASSERT(!debugEnabled && debugFuncArgTypes.empty() && debugFuncReturnTypes.empty());
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-    cursor = SerializeVector(cursor, sigIds);
+    cursor = SerializeVector(cursor, funcTypeIds);
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
     cursor = SerializePodVector(cursor, funcNames);
@@ -891,7 +891,7 @@ Metadata::serialize(uint8_t* cursor) const
 Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializeVector(cursor, &sigIds)) &&
+    (cursor = DeserializeVector(cursor, &funcTypeIds)) &&
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&

@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 class GeckoViewAccessibility extends GeckoViewModule {
   onInit() {
-    EventDispatcher.instance.dispatch("GeckoView:AccessibilityReady");
     EventDispatcher.instance.registerListener((aEvent, aData, aCallback) => {
       if (aData.enabled) {
         AccessFu.enable();

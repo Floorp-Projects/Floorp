@@ -145,6 +145,31 @@ ClientSourceParent::RecvThaw()
   return IPC_OK();
 }
 
+IPCResult
+ClientSourceParent::RecvInheritController(const ClientControlledArgs& aArgs)
+{
+  mController.reset();
+  mController.emplace(aArgs.serviceWorker());
+
+  // In parent-side intercept mode we must tell the parent-side SWM about
+  // this controller inheritence.  In legacy client-side mode this is done
+  // from the ClientSource instead.
+  if (!ServiceWorkerParentInterceptEnabled()) {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "ClientSourceParent::RecvInheritController",
+      [clientInfo = mClientInfo, controller = mController.ref()] () {
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        NS_ENSURE_TRUE_VOID(swm);
+
+        swm->NoteInheritedController(clientInfo, controller);
+      });
+
+    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  }
+
+  return IPC_OK();
+}
+
 void
 ClientSourceParent::ActorDestroy(ActorDestroyReason aReason)
 {

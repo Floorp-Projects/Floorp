@@ -157,6 +157,12 @@ class MachCommands(MachCommandBase):
                 kwargs['pref'] = 'security.sandbox.content.level:0'
                 self.log(logging.WARNING, 'awsy', {},
                     'Forcing \'security.sandbox.content.level\' = 0 because DMD is enabled.')
+            elif mozinfo.os == 'mac':
+                # On mac binary is in MacOS and dmd.py is in Resources, ie:
+                #   Name.app/Contents/MacOS/libdmd.dylib
+                #   Name.app/Contents/Resources/dmd.py
+                bin_dir = os.path.join(bin_dir, "../Resources/")
+
 
             # Also add the bin dir to the python path so we can use dmd.py
             if bin_dir not in sys.path:

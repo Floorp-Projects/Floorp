@@ -608,14 +608,14 @@ KindToString(JSContext* cx, const KindNames& names, DefinitionKind kind)
 }
 
 static JSString*
-SigToString(JSContext* cx, const Sig& sig)
+FuncTypeToString(JSContext* cx, const FuncType& funcType)
 {
     StringBuffer buf(cx);
     if (!buf.append('('))
         return nullptr;
 
     bool first = true;
-    for (ValType arg : sig.args()) {
+    for (ValType arg : funcType.args()) {
         if (!first && !buf.append(", ", strlen(", ")))
             return nullptr;
 
@@ -629,8 +629,8 @@ SigToString(JSContext* cx, const Sig& sig)
     if (!buf.append(") -> (", strlen(") -> (")))
         return nullptr;
 
-    if (sig.ret() != ExprType::Void) {
-        const char* retStr = ToCString(sig.ret());
+    if (funcType.ret() != ExprType::Void) {
+        const char* retStr = ToCString(funcType.ret());
         if (!buf.append(retStr, strlen(retStr)))
             return nullptr;
     }
@@ -688,10 +688,10 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (fuzzingSafe && import.kind == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, funcImports[numFuncImport++].sig());
-            if (!sigStr)
+            JSString* ftStr = FuncTypeToString(cx, funcImports[numFuncImport++].funcType());
+            if (!ftStr)
                 return false;
-            if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
+            if (!props.append(IdValuePair(NameToId(names.signature), StringValue(ftStr))))
                 return false;
         }
 
@@ -746,10 +746,10 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (fuzzingSafe && exp.kind() == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, funcExports[numFuncExport++].sig());
-            if (!sigStr)
+            JSString* ftStr = FuncTypeToString(cx, funcExports[numFuncExport++].funcType());
+            if (!ftStr)
                 return false;
-            if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
+            if (!props.append(IdValuePair(NameToId(names.signature), StringValue(ftStr))))
                 return false;
         }
 
@@ -1300,8 +1300,8 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     if (!EnsureLazyEntryStub(instance, funcExportIndex, funcExport))
         return false;
 
-    const Sig& sig = funcExport.sig();
-    unsigned numArgs = sig.args().length();
+    const FuncType& funcType = funcExport.funcType();
+    unsigned numArgs = funcType.args().length();
 
     if (instance.isAsmJS()) {
         // asm.js needs to act like a normal JS function which means having the
@@ -1322,7 +1322,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
         // Functions with anyref don't have jit entries yet, so they should
         // mostly behave like asm.js functions. Pretend it's the case, until
         // jit entries are implemented.
-        JSFunction::Flags flags = sig.temporarilyUnsupportedAnyRef()
+        JSFunction::Flags flags = funcType.temporarilyUnsupportedAnyRef()
                                 ? JSFunction::ASMJS_NATIVE
                                 : JSFunction::WASM_FUN;
 
@@ -1331,7 +1331,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
         if (!fun)
             return false;
 
-        if (sig.temporarilyUnsupportedAnyRef())
+        if (funcType.temporarilyUnsupportedAnyRef())
             fun->setAsmJSIndex(funcIndex);
         else
             fun->setWasmJitEntry(instance.code().getAddressOfJitEntry(funcIndex));

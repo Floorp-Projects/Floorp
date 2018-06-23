@@ -10,6 +10,7 @@
 #include "MessageEventRunnable.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ClientState.h"
@@ -3532,7 +3533,16 @@ WorkerPrivate::Control(const ServiceWorkerDescriptor& aServiceWorker)
     }
   }
   MOZ_DIAGNOSTIC_ASSERT(mClientSource);
-  mClientSource->SetController(aServiceWorker);
+
+  if (IsBlobURI(mLoadInfo.mBaseURI)) {
+    // Blob URL workers can only become controlled by inheriting from
+    // their parent.  Make sure to note this properly.
+    mClientSource->InheritController(aServiceWorker);
+  } else {
+    // Otherwise this is a normal interception and we simply record the
+    // controller locally.
+    mClientSource->SetController(aServiceWorker);
+  }
 }
 
 void
