@@ -371,6 +371,7 @@ add_test(function test_Capabilities_ctor() {
   ok(caps.has("browserName"));
   ok(caps.has("browserVersion"));
   ok(caps.has("platformName"));
+  ok(["linux", "mac", "windows", "android"].includes(caps.get("platformName")));
   ok(caps.has("platformVersion"));
   equal(PageLoadStrategy.Normal, caps.get("pageLoadStrategy"));
   equal(false, caps.get("acceptInsecureCerts"));
