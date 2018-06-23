@@ -35,13 +35,14 @@ namespace wasm {
 
 class Code;
 class CodeRange;
-class ModuleSegment;
 class DebugFrame;
+class FuncTypeIdDesc;
 class Instance;
-class SigIdDesc;
-struct Frame;
-struct FuncOffsets;
+class ModuleSegment;
+
 struct CallableOffsets;
+struct FuncOffsets;
+struct Frame;
 
 // Iterates over a linear group of wasm frames of a single wasm JitActivation,
 // called synchronously from C++ in the wasm thread. It will stop at the first
@@ -215,7 +216,7 @@ void
 GenerateJitEntryPrologue(jit::MacroAssembler& masm, Offsets* offsets);
 
 void
-GenerateFunctionPrologue(jit::MacroAssembler& masm, const SigIdDesc& sigId,
+GenerateFunctionPrologue(jit::MacroAssembler& masm, const FuncTypeIdDesc& funcTypeId,
                          const mozilla::Maybe<uint32_t>& tier1FuncIndex,
                          FuncOffsets* offsets);
 void

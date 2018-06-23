@@ -26,6 +26,7 @@ PERF_SUITES = [
     { 'name': "Base Content Resident Unique Memory", 'node': "resident-unique" },
     { 'name': "Base Content Heap Unclassified", 'node': "explicit/heap-unclassified" },
     { 'name': "Base Content JS", 'node': "js-main-runtime/" },
+    { 'name': "Base Content Explicit", 'node': "explicit/" },
 ]
 
 class TestMemoryUsage(AwsyTestCase):

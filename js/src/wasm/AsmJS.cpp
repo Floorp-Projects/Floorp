@@ -1647,17 +1647,17 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         uint32_t sigIndex() const {
             return sigIndex_;
         }
-        const Sig& sig() const {
+        const FuncType& funcType() const {
             return types_[sigIndex_].funcType();
         }
 
         // Implement HashPolicy:
-        typedef const Sig& Lookup;
+        typedef const FuncType& Lookup;
         static HashNumber hash(Lookup l) {
             return l.hash();
         }
         static bool match(HashableSig lhs, Lookup rhs) {
-            return lhs.sig() == rhs;
+            return lhs.funcType() == rhs;
         }
     };
 
@@ -1676,14 +1676,14 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         // Implement HashPolicy:
         struct Lookup {
             PropertyName* name;
-            const Sig& sig;
-            Lookup(PropertyName* name, const Sig& sig) : name(name), sig(sig) {}
+            const FuncType& funcType;
+            Lookup(PropertyName* name, const FuncType& funcType) : name(name), funcType(funcType) {}
         };
         static HashNumber hash(Lookup l) {
-            return HashGeneric(l.name, l.sig.hash());
+            return HashGeneric(l.name, l.funcType.hash());
         }
         static bool match(NamedSig lhs, Lookup rhs) {
-            return lhs.name() == rhs.name && lhs.sig() == rhs.sig;
+            return lhs.name() == rhs.name && lhs.funcType() == rhs.funcType;
         }
     };
 
@@ -1754,14 +1754,14 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             return false;
         return standardLibrarySimdOpNames_.putNew(atom->asPropertyName(), op);
     }
-    bool newSig(Sig&& sig, uint32_t* sigIndex) {
+    bool newSig(FuncType&& sig, uint32_t* sigIndex) {
         if (env_.types.length() >= MaxTypes)
             return failCurrentOffset("too many signatures");
 
         *sigIndex = env_.types.length();
         return env_.types.append(std::move(sig));
     }
-    bool declareSig(Sig&& sig, uint32_t* sigIndex) {
+    bool declareSig(FuncType&& sig, uint32_t* sigIndex) {
         SigSet::AddPtr p = sigSet_.lookupForAdd(sig);
         if (p) {
             *sigIndex = p->sigIndex();
@@ -2224,7 +2224,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
                                                         func.srcBegin() - asmJSMetadata_->srcStart,
                                                         func.srcEnd() - asmJSMetadata_->srcStart);
     }
-    bool addFuncDef(PropertyName* name, uint32_t firstUse, Sig&& sig, Func** func) {
+    bool addFuncDef(PropertyName* name, uint32_t firstUse, FuncType&& sig, Func** func) {
         uint32_t sigIndex;
         if (!declareSig(std::move(sig), &sigIndex))
             return false;
@@ -2244,7 +2244,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         *func = &funcDefs_.back();
         return true;
     }
-    bool declareFuncPtrTable(Sig&& sig, PropertyName* name, uint32_t firstUse, uint32_t mask,
+    bool declareFuncPtrTable(FuncType&& sig, PropertyName* name, uint32_t firstUse, uint32_t mask,
                              uint32_t* tableIndex)
     {
         if (mask > MaxTableInitialLength)
@@ -2288,7 +2288,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 
         return env_.elemSegments.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), std::move(elems));
     }
-    bool declareImport(PropertyName* name, Sig&& sig, unsigned ffiIndex, uint32_t* importIndex) {
+    bool declareImport(PropertyName* name, FuncType&& sig, unsigned ffiIndex, uint32_t* importIndex) {
         FuncImportMap::AddPtr p = funcImportMap_.lookupForAdd(NamedSig::Lookup(name, sig));
         if (p) {
             *importIndex = p->value();
@@ -2451,18 +2451,18 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         return true;
     }
     SharedModule finish() {
-        MOZ_ASSERT(env_.funcSigs.empty());
-        if (!env_.funcSigs.resize(funcImportMap_.count() + funcDefs_.length()))
+        MOZ_ASSERT(env_.funcTypes.empty());
+        if (!env_.funcTypes.resize(funcImportMap_.count() + funcDefs_.length()))
             return nullptr;
         for (FuncImportMap::Range r = funcImportMap_.all(); !r.empty(); r.popFront()) {
             uint32_t funcIndex = r.front().value();
-            MOZ_ASSERT(!env_.funcSigs[funcIndex]);
-            env_.funcSigs[funcIndex] = &env_.types[r.front().key().sigIndex()].funcType();
+            MOZ_ASSERT(!env_.funcTypes[funcIndex]);
+            env_.funcTypes[funcIndex] = &env_.types[r.front().key().sigIndex()].funcType();
         }
         for (const Func& func : funcDefs_) {
             uint32_t funcIndex = funcImportMap_.count() + func.funcDefIndex();
-            MOZ_ASSERT(!env_.funcSigs[funcIndex]);
-            env_.funcSigs[funcIndex] = &env_.types[func.sigIndex()].funcType();
+            MOZ_ASSERT(!env_.funcTypes[funcIndex]);
+            env_.funcTypes[funcIndex] = &env_.types[func.sigIndex()].funcType();
         }
 
         if (!env_.funcImportGlobalDataOffsets.resize(funcImportMap_.count()))
@@ -4855,7 +4855,8 @@ CheckCallArgs(FunctionValidator& f, ParseNode* callNode, ValTypeVector* args)
 }
 
 static bool
-CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Sig& sig, const Sig& existing)
+CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const FuncType& sig,
+                              const FuncType& existing)
 {
     if (sig.args().length() != existing.args().length()) {
         return m.failf(usepn, "incompatible number of arguments (%zu"
@@ -4880,7 +4881,7 @@ CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Sig& s
 }
 
 static bool
-CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Sig&& sig, PropertyName* name,
+CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, FuncType&& sig, PropertyName* name,
                        ModuleValidator::Func** func)
 {
     if (sig.args().length() > MaxParams)
@@ -4893,7 +4894,7 @@ CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Sig&& sig, Property
         return m.addFuncDef(name, usepn->pn_pos.begin, std::move(sig), func);
     }
 
-    const SigWithId& existingSig = m.env().types[existing->sigIndex()].funcType();
+    const FuncTypeWithId& existingSig = m.env().types[existing->sigIndex()].funcType();
 
     if (!CheckSignatureAgainstExisting(m, usepn, sig, existingSig))
         return false;
@@ -4923,7 +4924,7 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    Sig sig(std::move(args), ret.canonicalToExprType());
+    FuncType sig(std::move(args), ret.canonicalToExprType());
 
     ModuleValidator::Func* callee;
     if (!CheckFunctionSignature(f.m(), callNode, std::move(sig), calleeName, &callee))
@@ -4941,7 +4942,7 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
 
 static bool
 CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn, PropertyName* name,
-                                 Sig&& sig, unsigned mask, uint32_t* tableIndex)
+                                 FuncType&& sig, unsigned mask, uint32_t* tableIndex)
 {
     if (const ModuleValidator::Global* existing = m.lookupGlobal(name)) {
         if (existing->which() != ModuleValidator::Global::Table)
@@ -5006,7 +5007,7 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, Type ret, Type* type
     if (!CheckCallArgs<CheckIsArgType>(f, callNode, &args))
         return false;
 
-    Sig sig(std::move(args), ret.canonicalToExprType());
+    FuncType sig(std::move(args), ret.canonicalToExprType());
 
     uint32_t tableIndex;
     if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, std::move(sig), mask, &tableIndex))
@@ -5047,7 +5048,7 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
     if (!CheckCallArgs<CheckIsExternType>(f, callNode, &args))
         return false;
 
-    Sig sig(std::move(args), ret.canonicalToExprType());
+    FuncType sig(std::move(args), ret.canonicalToExprType());
 
     uint32_t importIndex;
     if (!f.m().declareImport(calleeName, std::move(sig), ffiIndex, &importIndex))
@@ -7305,8 +7306,11 @@ CheckFunction(ModuleValidator& m)
         return false;
 
     ModuleValidator::Func* func = nullptr;
-    if (!CheckFunctionSignature(m, fn, Sig(std::move(args), f.returnedType()), FunctionName(fn), &func))
+    if (!CheckFunctionSignature(m, fn, FuncType(std::move(args), f.returnedType()),
+                                FunctionName(fn), &func))
+    {
         return false;
+    }
 
     if (func->defined())
         return m.failName(fn, "function '%s' already defined", FunctionName(fn));
@@ -7366,7 +7370,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
     unsigned mask = length - 1;
 
     Uint32Vector elemFuncDefIndices;
-    const Sig* sig = nullptr;
+    const FuncType* sig = nullptr;
     for (ParseNode* elem = ListHead(arrayLiteral); elem; elem = NextNode(elem)) {
         if (!elem->isKind(ParseNodeKind::Name))
             return m.fail(elem, "function-pointer table's elements must be names of functions");
@@ -7376,7 +7380,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
         if (!func)
             return m.fail(elem, "function-pointer table's elements must be names of functions");
 
-        const Sig& funcSig = m.env().types[func->sigIndex()].funcType();
+        const FuncType& funcSig = m.env().types[func->sigIndex()].funcType();
         if (sig) {
             if (*sig != funcSig)
                 return m.fail(elem, "all functions in table must have same signature");
@@ -7388,7 +7392,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
             return false;
     }
 
-    Sig copy;
+    FuncType copy;
     if (!copy.clone(*sig))
         return false;
 

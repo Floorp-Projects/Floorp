@@ -325,6 +325,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
           if (eTransparencyTransparent == mTransparencyMode) {
+            // This mutex needs to be held when EnsureTransparentSurface is called.
+            MutexAutoLock lock(mBasicLayersSurface->GetTransparentSurfaceLock());
             targetSurface = mBasicLayersSurface->EnsureTransparentSurface();
           }
 #endif

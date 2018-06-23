@@ -3599,7 +3599,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
         return nullptr;
     }
 
-    if (CanReuseScriptForClone(cx->compartment(), fun, env)) {
+    if (CanReuseScriptForClone(cx->realm(), fun, env)) {
         // If the script is to be reused, either the script can already handle
         // non-syntactic scopes, or there is only the standard global lexical
         // scope.
@@ -4709,7 +4709,7 @@ JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg,
     CHECK_REQUEST(cx);
     RootedScript script(cx, scriptArg);
     RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
-    if (script->compartment() != cx->compartment()) {
+    if (script->realm() != cx->realm()) {
         script = CloneGlobalScript(cx, ScopeKind::Global, script);
         if (!script)
             return false;
@@ -4726,7 +4726,7 @@ JS::CloneAndExecuteScript(JSContext* cx, JS::AutoObjectVector& envChain,
 {
     CHECK_REQUEST(cx);
     RootedScript script(cx, scriptArg);
-    if (script->compartment() != cx->compartment()) {
+    if (script->realm() != cx->realm()) {
         script = CloneGlobalScript(cx, ScopeKind::NonSyntactic, script);
         if (!script)
             return false;

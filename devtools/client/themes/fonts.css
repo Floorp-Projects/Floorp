@@ -156,6 +156,17 @@
   -moz-user-select: none;
 }
 
+.font-family-unused-header {
+  -moz-user-select: none;
+  margin-bottom: .7em;
+  cursor: pointer;
+}
+
+.font-family-unused {
+  margin-bottom: .3em;
+  color: var(--grey-50);
+}
+
 .font-instance-select:active{
   outline: none;
 }

@@ -10,13 +10,13 @@ geckoview:
         script: android_emulator_unittest.py
         config:
             by-test-platform:
-                android-4.2-x86/opt:
+                android-em-4.2-x86/opt:
                     - android/android_common.py
                     - android/androidx86.py
-                android-7.0-x86/opt:
+                android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
         extra-options:
@@ -33,19 +33,19 @@ geckoview-junit:
     max-run-time: 3600
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 3
+            android-em-4.3-arm7-api-16/debug: 3
             default: 1
     mozharness:
         script: android_emulator_unittest.py
         config:
             by-test-platform:
-                android-4.2-x86/opt:
+                android-em-4.2-x86/opt:
                     - android/android_common.py
                     - android/androidx86.py
-                android-7.0-x86/opt:
+                android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3_junit.py
         extra-options:
@@ -58,8 +58,8 @@ robocop:
     instance-size: xlarge
     chunks:
         by-test-platform:
-            # android-4.3-arm7-api-16/debug -- not run
-            android-4.3-arm7-api-16/opt: 4
+            # android-em-4.3-arm7-api-16/debug -- not run
+            android-em-4.3-arm7-api-16/opt: 4
     loopback-video: true
     e10s: false
     mozharness:
@@ -92,7 +92,7 @@ test-verify:
     loopback-video: true
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     max-run-time: 10800
     allow-software-gl-layers: false
@@ -108,14 +108,14 @@ test-verify:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
-                android-7.0-x86/opt:
+                android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
                 linux.*:
@@ -136,7 +136,7 @@ test-verify-gpu:
     virtualization: virtual-with-gpu
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     max-run-time: 10800
     allow-software-gl-layers: false
@@ -152,14 +152,14 @@ test-verify-gpu:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
-                android-7.0-x86/opt:
+                android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
                 linux.*:
@@ -189,11 +189,11 @@ test-coverage:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -227,11 +227,11 @@ test-coverage-gpu:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:

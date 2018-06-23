@@ -1495,14 +1495,7 @@ public:
     return &DocumentOrShadowRoot::EnsureDOMStyleSheets();
   }
 
-  /**
-   * Insert a sheet at a particular spot in the stylesheet list (zero-based)
-   * @param aSheet the sheet to insert
-   * @param aIndex the index to insert at.
-   * @throws no exceptions
-   */
-  void InsertStyleSheetAt(mozilla::StyleSheet* aSheet, size_t aIndex);
-
+  void InsertSheetAt(size_t aIndex, mozilla::StyleSheet&);
 
   /**
    * Replace the stylesheets in aOldSheets with the stylesheets in
@@ -1518,8 +1511,15 @@ public:
 
   /**
    * Add a stylesheet to the document
+   *
+   * TODO(emilio): This is only used by parts of editor that are no longer in
+   * use by m-c or c-c, so remove.
    */
-  void AddStyleSheet(mozilla::StyleSheet* aSheet);
+  void AddStyleSheet(mozilla::StyleSheet* aSheet)
+  {
+    MOZ_ASSERT(aSheet);
+    InsertSheetAt(SheetCount(), *aSheet);
+  }
 
   /**
    * Remove a stylesheet from the document

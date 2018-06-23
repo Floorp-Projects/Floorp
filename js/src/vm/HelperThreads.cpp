@@ -2007,7 +2007,7 @@ HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked)
 
     currentTask.emplace(builder);
 
-    JSRuntime* rt = builder->script()->compartment()->runtimeFromAnyThread();
+    JSRuntime* rt = builder->script()->runtimeFromAnyThread();
 
     {
         AutoUnlockHelperThreadState unlock(locked);

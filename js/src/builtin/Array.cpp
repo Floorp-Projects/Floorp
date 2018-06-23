@@ -4187,16 +4187,8 @@ js::ArraySpeciesLookup::initialize(JSContext* cx)
 void
 js::ArraySpeciesLookup::reset()
 {
+    JS_POISON(this, 0xBB, sizeof(this), MemCheckKind::MakeUndefined);
     state_ = State::Uninitialized;
-    arrayProto_ = nullptr;
-    arrayConstructor_ = nullptr;
-    arrayConstructorShape_ = nullptr;
-#ifdef DEBUG
-    arraySpeciesShape_ = nullptr;
-    canonicalSpeciesFunc_ = nullptr;
-#endif
-    arrayProtoShape_ = nullptr;
-    arrayProtoConstructorSlot_ = -1;
 }
 
 bool

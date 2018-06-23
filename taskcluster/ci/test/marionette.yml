@@ -3,11 +3,11 @@ job-defaults:
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: marionette.py
         config:
             by-test-platform:
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 macosx.*:
@@ -24,19 +24,19 @@ marionette:
     treeherder-symbol: Mn
     max-run-time:
         by-test-platform:
-            android.*: 3600
+            android-em.*: 3600
             default: 5400
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     tier:
         by-test-platform:
-            android.*: 2
+            android-em.*: 2
             default: default
     chunks:
         by-test-platform:
-            android.*: 10
+            android-em.*: 10
             default: 1
 
 marionette-headless:

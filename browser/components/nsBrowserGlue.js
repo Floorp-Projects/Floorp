@@ -28,10 +28,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     "chrome,all,dialog=no,extrachrome,menubar,resizable,scrollbars,status," +
     "location,toolbar,personalbar," +
     `left=${screenX},top=${screenY}`;
-
-  if (Services.prefs.getBoolPref("browser.suppress_first_window_animation"))
-    browserWindowFeatures += ",suppressanimation";
-
   let win = Services.ww.openWindow(null, "about:blank", null,
                                    browserWindowFeatures, null);
 
@@ -1113,8 +1109,9 @@ BrowserGlue.prototype = {
     AutoCompletePopup.uninit();
     DateTimePickerParent.uninit();
 
-    // Browser errors are only collected on Nightly
-    if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_DATA_REPORTING) {
+    // Browser errors are only collected on Nightly, but telemetry for
+    // them is collected on all channels.
+    if (AppConstants.MOZ_DATA_REPORTING) {
       this.browserErrorReporter.uninit();
     }
 
@@ -1130,8 +1127,9 @@ BrowserGlue.prototype = {
     }
     this._windowsWereRestored = true;
 
-    // Browser errors are only collected on Nightly
-    if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_DATA_REPORTING) {
+    // Browser errors are only collected on Nightly, but telemetry for
+    // them is collected on all channels.
+    if (AppConstants.MOZ_DATA_REPORTING) {
       this.browserErrorReporter.init();
     }
 

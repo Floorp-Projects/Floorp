@@ -926,7 +926,7 @@ Disassemble1(JSContext* cx, JS::Handle<JSScript*> script, jsbytecode* pc, unsign
 #endif
 
 extern MOZ_MUST_USE bool
-DumpCompartmentPCCounts(JSContext* cx);
+DumpRealmPCCounts(JSContext* cx);
 
 } // namespace js
 

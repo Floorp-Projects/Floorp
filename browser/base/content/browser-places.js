@@ -645,10 +645,6 @@ function HistoryMenu(aPopupShowingEvent) {
   Object.keys(this._elements).forEach(name => {
     this[name] = document.getElementById(this._elements[name]);
   });
-  this._hiddenTabsPopup = new TabsPopup({
-    filterFn: (tab) => tab.hidden,
-    popup: this.hiddenTabsMenu.firstChild,
-  });
   PlacesMenu.call(this, aPopupShowingEvent,
                   "place:sort=4&maxResults=15");
 }

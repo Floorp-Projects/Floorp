@@ -3132,7 +3132,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
             Handle<GlobalObject*> global = cx->global();
             Rooted<LexicalEnvironmentObject*> globalLexical(cx, &global->lexicalEnvironment());
             RootedScope emptyGlobalScope(cx, &global->emptyGlobalScope());
-            MOZ_ASSERT(!CanReuseScriptForClone(cx->compartment(), selfHostedFunction, global));
+            MOZ_ASSERT(!CanReuseScriptForClone(cx->realm(), selfHostedFunction, global));
             clone = CloneFunctionAndScript(cx, selfHostedFunction, globalLexical, emptyGlobalScope,
                                            kind);
             // To be able to re-lazify the cloned function, its name in the

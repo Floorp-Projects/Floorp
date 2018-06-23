@@ -9,6 +9,7 @@
 #ifndef builtin_Array_h
 #define builtin_Array_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/TextUtils.h"
 
 #include "jspubtd.h"
@@ -224,24 +225,28 @@ class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
      *  Array's canonical value for @@species (canonicalSpeciesFunc_)
      *      To quickly retrieve and ensure that the @@species getter for Array
      *      has not changed.
+     *
+     * MOZ_INIT_OUTSIDE_CTOR fields below are set in |initialize()|.  The
+     * constructor only initializes a |state_| field, that defines whether the
+     * other fields are accessible.
      */
 
     // Pointer to canonical Array.prototype and Array.
-    NativeObject* arrayProto_;
-    NativeObject* arrayConstructor_;
+    MOZ_INIT_OUTSIDE_CTOR NativeObject* arrayProto_;
+    MOZ_INIT_OUTSIDE_CTOR NativeObject* arrayConstructor_;
 
     // Shape of matching Array, and slot containing the @@species
     // property, and the canonical value.
-    Shape* arrayConstructorShape_;
+    MOZ_INIT_OUTSIDE_CTOR Shape* arrayConstructorShape_;
 #ifdef DEBUG
-    Shape* arraySpeciesShape_;
-    JSFunction* canonicalSpeciesFunc_;
+    MOZ_INIT_OUTSIDE_CTOR Shape* arraySpeciesShape_;
+    MOZ_INIT_OUTSIDE_CTOR JSFunction* canonicalSpeciesFunc_;
 #endif
 
     // Shape of matching Array.prototype object, and slot containing the
     // constructor for it.
-    Shape* arrayProtoShape_;
-    uint32_t arrayProtoConstructorSlot_;
+    MOZ_INIT_OUTSIDE_CTOR Shape* arrayProtoShape_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t arrayProtoConstructorSlot_;
 
     enum class State : uint8_t {
         // Flags marking the lazy initialization of the above fields.
@@ -253,7 +258,7 @@ class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
         Disabled
     };
 
-    State state_;
+    State state_ = State::Uninitialized;
 
     // Initialize the internal fields.
     void initialize(JSContext* cx);
@@ -266,6 +271,7 @@ class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
     bool isArrayStateStillSane();
 
   public:
+    /** Construct an |ArraySpeciesLookup| in the uninitialized state. */
     ArraySpeciesLookup() {
         reset();
     }

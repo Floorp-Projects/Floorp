@@ -59,3 +59,12 @@ void
 a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
 {
 }
+
+#if defined(ANDROID)
+void
+a11y::ProxyVirtualCursorChangeEvent(ProxyAccessible*, ProxyAccessible*,
+                                    int32_t, int32_t, ProxyAccessible*,
+                                    int32_t, int32_t, uint16_t, bool)
+{
+}
+#endif

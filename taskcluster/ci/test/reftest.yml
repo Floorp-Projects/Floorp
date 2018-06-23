@@ -1,19 +1,19 @@
 job-defaults:
     target:
         by-test-platform:
-            android-7.0-x86/opt: geckoview-androidTest.apk
+            android-em-7.0-x86/opt: geckoview-androidTest.apk
             default: null
     mozharness:
         script:
             by-test-platform:
-                android.*: android_emulator_unittest.py
+                android-em.*: android_emulator_unittest.py
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-7.0-x86/opt:
+                android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android.*:
+                android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -31,7 +31,7 @@ crashtest:
     run-on-projects: built-projects
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     virtualization:
         by-test-platform:
@@ -39,9 +39,9 @@ crashtest:
             default: virtual
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 10
-            android-7.0-x86/opt: 1
-            android.*: 4
+            android-em-4.3-arm7-api-16/debug: 10
+            android-em-7.0-x86/opt: 1
+            android-em.*: 4
             default: 1
     e10s:
         by-test-platform:
@@ -60,13 +60,13 @@ jsreftest:
     run-on-projects: built-projects
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 100
-            android-7.0-x86/opt: 3
-            android.*: 40
+            android-em-4.3-arm7-api-16/debug: 100
+            android-em-7.0-x86/opt: 3
+            android-em.*: 40
             windows.*: 2
             windows10-64-ccov/debug: 5
             linux64-ccov/.*: 5
@@ -76,7 +76,7 @@ jsreftest:
             default: 3
     max-run-time:
         by-test-platform:
-            android.*: 7200
+            android-em.*: 7200
             windows10-64-ccov/debug: 7200
             default: 3600
     tier:
@@ -91,7 +91,7 @@ reftest:
     run-on-projects: built-projects
     instance-size:
         by-test-platform:
-            android.*: xlarge
+            android-em.*: xlarge
             default: default
     virtualization:
         by-test-platform:
@@ -99,9 +99,9 @@ reftest:
             default: virtual-with-gpu
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 56
-            android-7.0-x86/opt: 5
-            android.*: 28
+            android-em-4.3-arm7-api-16/debug: 56
+            android-em-7.0-x86/opt: 5
+            android-em.*: 28
             macosx64.*/opt: 2
             macosx64.*/debug: 3
             windows.*/opt: 2
@@ -114,13 +114,13 @@ reftest:
             default: true
     max-run-time:
         by-test-platform:
-            android.*: 7200
+            android-em.*: 7200
             windows10-64-ccov/debug: 5400
             default: 3600
     mozharness:
         chunked:
             by-test-platform:
-                android.*: false
+                android-em.*: false
                 macosx64/opt: false
                 windows10-64.*/opt: false
                 default: true

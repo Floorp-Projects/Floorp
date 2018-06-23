@@ -273,28 +273,49 @@ macosx64-ccov/debug:
         - macosx64-tests
 
 ##
-# Android platforms (matching /android.*/)
+# Android platforms (matching /android-em.*/)
+#
+# android-em test platforms execute on android emulators.
 
-android-4.3-arm7-api-16/debug:
+android-em-4.3-arm7-api-16/debug:
     build-platform: android-api-16/debug
     test-sets:
         - android-common-tests
         - android-gradle-tests
 
-android-4.3-arm7-api-16/opt:
+android-em-4.3-arm7-api-16/opt:
     build-platform: android-api-16/opt
     test-sets:
         - android-common-tests
         - android-opt-tests
         - android-gradle-tests
 
-android-4.2-x86/opt:
+android-em-4.2-x86/opt:
     build-platform: android-x86/opt
     test-sets:
         - android-x86-tests
 
 # Coming soon!
-# android-7.0-x86/opt:
+# android-em-7.0-x86/opt:
 #     build-platform: android-x86/opt
 #     test-sets:
 #         - android-x86-kvm-tests
+
+# android-hw test platforms execute on real devices attached to Autophone hosts.
+
+# android-hw-p2-8-0 Google Pixel 2 Android 8.0
+
+android-hw-p2-8-0-arm7-api-16/opt:
+    build-platform: android-api-16/opt
+    test-sets:
+        - android-hw-arm7-opt-unittests
+
+android-hw-p2-8-0-arm7-api-16/debug:
+    build-platform: android-api-16/debug
+    test-sets:
+        - android-hw-arm7-debug-unittests
+
+android-hw-p2-8-0-android-aarch64/opt:
+    build-platform: android-aarch64/opt
+    test-sets:
+        - android-hw-aarch64-opt-unittests
