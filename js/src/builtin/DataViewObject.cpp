@@ -853,13 +853,11 @@ DataViewObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
 {
     Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
-#ifdef NIGHTLY_BUILD
-    // Step 6,
+    // Step 6.
     if (thisView->arrayBufferEither().isDetached()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
-#endif
 
     // Step 7.
     args.rval().set(DataViewObject::byteLengthValue(thisView));
@@ -878,13 +876,11 @@ DataViewObject::byteOffsetGetterImpl(JSContext* cx, const CallArgs& args)
 {
     Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
 
-#ifdef NIGHTLY_BUILD
-    // Step 6,
+    // Step 6.
     if (thisView->arrayBufferEither().isDetached()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
-#endif
 
     // Step 7.
     args.rval().set(DataViewObject::byteOffsetValue(thisView));
