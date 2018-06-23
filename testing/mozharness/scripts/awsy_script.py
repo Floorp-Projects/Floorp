@@ -17,6 +17,8 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
+import mozinfo
+
 from mozharness.base.script import PreScriptAction
 from mozharness.base.log import INFO, ERROR
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
@@ -149,6 +151,29 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
 
         runtime_testvars = {'webRootDir': self.webroot_dir,
                             'resultsDir': self.results_dir}
+
+        # Check if this is a DMD build and if so enable it.
+        dmd_py_lib_dir = os.path.dirname(self.binary_path)
+        if mozinfo.os == 'mac':
+            # On mac binary is in MacOS and dmd.py is in Resources, ie:
+            #   Name.app/Contents/MacOS/libdmd.dylib
+            #   Name.app/Contents/Resources/dmd.py
+            dmd_py_lib_dir = os.path.join(dmd_py_lib_dir, "../Resources/")
+
+        dmd_path = os.path.join(dmd_py_lib_dir, "dmd.py")
+        if os.path.isfile(dmd_path):
+            runtime_testvars['dmd'] = True
+
+            # Allow the child process to import dmd.py
+            python_path = os.environ.get('PYTHONPATH')
+
+            if python_path:
+                os.environ['PYTHONPATH'] = "%s%s%s" % (python_path, os.pathsep, dmd_py_lib_dir)
+            else:
+                os.environ['PYTHONPATH'] = dmd_py_lib_dir
+
+            env['DMD'] = "--mode=dark-matter --stacks=full"
+
         runtime_testvars_path = os.path.join(self.awsy_path, 'runtime-testvars.json')
         runtime_testvars_file = open(runtime_testvars_path, 'wb')
         runtime_testvars_file.write(json.dumps(runtime_testvars, indent=2))

@@ -1435,6 +1435,22 @@ add_old_configure_assignment('MOZ_HARDENING_CFLAGS', security_hardening_cflags.f
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
 imply_option('--enable-pie', depends_if('--enable-hardening')(lambda v: v))
 
+# Code Coverage
+# ==============================================================
+
+js_option('--enable-coverage', env='MOZ_CODE_COVERAGE',
+          help='Enable code coverage')
+
+
+@depends('--enable-coverage')
+def code_coverage(value):
+    if value:
+        return True
+
+
+set_config('MOZ_CODE_COVERAGE', code_coverage)
+set_define('MOZ_CODE_COVERAGE', code_coverage)
+
 # ==============================================================
 
 option(env='RUSTFLAGS',
@@ -1510,14 +1526,19 @@ set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
 # ==============================================================
 
 
-@depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION')
-def cargo_incremental(opt_level, debug_rust, automation):
+@depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION', code_coverage)
+def cargo_incremental(opt_level, debug_rust, automation, code_coverage):
     """Return a value for the CARGO_INCREMENTAL environment variable."""
 
     # We never want to use incremental compilation in automation.  sccache
     # handles our automation use case much better than incremental compilation
     # would.
     if automation:
+        return '0'
+
+    # Coverage instrumentation doesn't play well with incremental compilation
+    # https://github.com/rust-lang/rust/issues/50203.
+    if code_coverage:
         return '0'
 
     # Incremental compilation is automatically turned on for debug builds, so
@@ -1637,22 +1658,6 @@ js_option('--enable-mozsearch-plugin', env='ENABLE_MOZSEARCH_PLUGIN',
 
 add_old_configure_assignment('ENABLE_MOZSEARCH_PLUGIN',
                              depends_if('--enable-mozsearch-plugin')(lambda _: True))
-
-# Code Coverage
-# ==============================================================
-
-js_option('--enable-coverage', env='MOZ_CODE_COVERAGE',
-          help='Enable code coverage')
-
-
-@depends('--enable-coverage')
-def code_coverage(value):
-    if value:
-        return True
-
-
-set_config('MOZ_CODE_COVERAGE', code_coverage)
-set_define('MOZ_CODE_COVERAGE', code_coverage)
 
 # Libstdc++ compatibility hacks
 # ==============================================================
