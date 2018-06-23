@@ -221,6 +221,12 @@
                   }
                   popup.className = "new-tab-popup";
                   popup.setAttribute("position", "after_end");
+                  popup.addEventListener("popupshowing", event => {
+                    createUserContextMenu(event, {
+                      useAccessKeys: false,
+                      showDefaultTab: Services.prefs.getIntPref("privacy.userContext.longPressBehavior") == 1
+                    });
+                  });
                   parent.appendChild(popup);
 
                   // longPressBehavior == 2 means that the menu is shown after X
@@ -2081,19 +2087,6 @@
         }
       ]]>
       </handler>
-    </handlers>
-  </binding>
-
-  <binding id="tabbrowser-newtab-popup"
-           extends="chrome://global/content/bindings/popup.xml#popup">
-    <handlers>
-      <handler event="popupshowing">
-      <![CDATA[
-        createUserContextMenu(event, {
-          useAccessKeys: false,
-          showDefaultTab: Services.prefs.getIntPref("privacy.userContext.longPressBehavior") == 1
-        });
-      ]]></handler>
     </handlers>
   </binding>
 
