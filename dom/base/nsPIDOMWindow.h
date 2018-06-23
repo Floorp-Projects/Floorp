@@ -332,6 +332,8 @@ public:
 
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
+  void NoteDOMContentLoaded();
+
   mozilla::dom::TabGroup* TabGroup();
 
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
