@@ -355,7 +355,8 @@ BinTokenReaderTester::AutoBase::init()
 }
 
 BinTokenReaderTester::AutoBase::AutoBase(BinTokenReaderTester& reader)
-    : reader_(reader)
+    : initialized_(false)
+    , reader_(reader)
 { }
 
 BinTokenReaderTester::AutoBase::~AutoBase()
