@@ -7,15 +7,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#profiles > listitem {
-  list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
-}
-
-#profiles > listitem image {
-  width: 16px;
-  height: 16px;
-}
-
 box#managebuttons > button {
   min-width: 8em;
 }
