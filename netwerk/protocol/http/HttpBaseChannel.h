@@ -676,6 +676,7 @@ protected:
   // so that the timing can still be queried from OnStopRequest
   TimingStruct                      mTransactionTimings;
 
+  bool                              mAsyncOpenTimeOverriden;
   bool                              mForcePending;
 
   bool mCorsIncludeCredentials;

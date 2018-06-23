@@ -2502,7 +2502,10 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     return NS_OK;
   }
 
-  mAsyncOpenTime = TimeStamp::Now();
+  if (!mAsyncOpenTimeOverriden) {
+    mAsyncOpenTime = TimeStamp::Now();
+  }
+
 #ifdef MOZ_TASK_TRACER
   if (tasktracer::IsStartLogging()) {
     nsCOMPtr<nsIURI> uri;
