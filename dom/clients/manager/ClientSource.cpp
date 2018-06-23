@@ -477,6 +477,22 @@ ClientSource::GetController() const
   return mController;
 }
 
+void
+ClientSource::NoteDOMContentLoaded()
+{
+  if (mController.isSome() && !ServiceWorkerParentInterceptEnabled()) {
+    AssertIsOnMainThread();
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->MaybeCheckNavigationUpdate(mClientInfo);
+    }
+  }
+
+  MaybeExecute([] (PClientSourceChild* aActor) {
+    aActor->SendNoteDOMContentLoaded();
+  });
+}
+
 RefPtr<ClientOpPromise>
 ClientSource::Focus(const ClientFocusArgs& aArgs)
 {
