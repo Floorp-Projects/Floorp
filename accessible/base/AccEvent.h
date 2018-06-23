@@ -485,6 +485,8 @@ public:
   AccVCChangeEvent(Accessible* aAccessible,
                    Accessible* aOldAccessible,
                    int32_t aOldStart, int32_t aOldEnd,
+                   Accessible* aNewAccessible,
+                   int32_t aNewStart, int32_t aNewEnd,
                    int16_t aReason,
                    EIsFromUserInput aIsFromUserInput = eFromUserInput);
 
@@ -497,16 +499,22 @@ public:
     return AccEvent::GetEventGroups() | (1U << eVirtualCursorChangeEvent);
   }
 
-  // AccTableChangeEvent
+  // AccVCChangeEvent
   Accessible* OldAccessible() const { return mOldAccessible; }
   int32_t OldStartOffset() const { return mOldStart; }
   int32_t OldEndOffset() const { return mOldEnd; }
+  Accessible* NewAccessible() const { return mNewAccessible; }
+  int32_t NewStartOffset() const { return mNewStart; }
+  int32_t NewEndOffset() const { return mNewEnd; }
   int32_t Reason() const { return mReason; }
 
 private:
   RefPtr<Accessible> mOldAccessible;
+  RefPtr<Accessible> mNewAccessible;
   int32_t mOldStart;
+  int32_t mNewStart;
   int32_t mOldEnd;
+  int32_t mNewEnd;
   int16_t mReason;
 };
 
@@ -567,4 +575,3 @@ MakeXPCEvent(AccEvent* aEvent);
 } // namespace mozilla
 
 #endif
-

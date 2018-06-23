@@ -244,8 +244,9 @@ class BrowserErrorReporter {
       Services.telemetry.keyedScalarAdd(TELEMETRY_ERROR_COLLECTED_FILENAME, key.slice(0, 69), 1);
     }
 
-    // Old builds should not send errors to Sentry
-    if (!this.isRecentBuild()) {
+    // We do not collect errors on non-Nightly channels, just telemetry.
+    // Also, old builds should not send errors to Sentry
+    if (!AppConstants.NIGHTLY_BUILD || !this.isRecentBuild()) {
       return;
     }
 

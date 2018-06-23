@@ -26,8 +26,8 @@ namespace detail {
 UniquePtr<BumpChunk>
 BumpChunk::newWithCapacity(size_t size, bool protect)
 {
-    MOZ_ASSERT(RoundUpPow2(size) == size);
-    MOZ_ASSERT(size >= sizeof(BumpChunk));
+    MOZ_DIAGNOSTIC_ASSERT(RoundUpPow2(size) == size);
+    MOZ_DIAGNOSTIC_ASSERT(size >= sizeof(BumpChunk));
     void* mem = js_malloc(size);
     if (!mem)
         return nullptr;

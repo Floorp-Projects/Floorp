@@ -3525,16 +3525,16 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
 
     MOZ_ASSERT(callee.which() == wasm::CalleeDesc::WasmTable);
 
-    // Write the sig-id into the ABI sig-id register.
-    wasm::SigIdDesc sigId = callee.wasmTableSigId();
-    switch (sigId.kind()) {
-      case wasm::SigIdDesc::Kind::Global:
-        loadWasmGlobalPtr(sigId.globalDataOffset(), WasmTableCallSigReg);
+    // Write the functype-id into the ABI functype-id register.
+    wasm::FuncTypeIdDesc funcTypeId = callee.wasmTableSigId();
+    switch (funcTypeId.kind()) {
+      case wasm::FuncTypeIdDesc::Kind::Global:
+        loadWasmGlobalPtr(funcTypeId.globalDataOffset(), WasmTableCallSigReg);
         break;
-      case wasm::SigIdDesc::Kind::Immediate:
-        move32(Imm32(sigId.immediate()), WasmTableCallSigReg);
+      case wasm::FuncTypeIdDesc::Kind::Immediate:
+        move32(Imm32(funcTypeId.immediate()), WasmTableCallSigReg);
         break;
-      case wasm::SigIdDesc::Kind::None:
+      case wasm::FuncTypeIdDesc::Kind::None:
         break;
     }
 

@@ -50,7 +50,7 @@ class TextInputDelegateTest : BaseSessionTest() {
 
     @Test fun restartInput() {
         // Check that restartInput is called on focus and blur.
-        mainSession.loadTestPath(SELECTION_ACTION_PATH)
+        mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
         mainSession.evaluateJS("$('$id').focus()")
@@ -85,7 +85,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         // Our user action trick doesn't work for design-mode, so we can't test that here.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))
 
-        mainSession.loadTestPath(SELECTION_ACTION_PATH)
+        mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
         // Focus the input once here and once below, but we should only get a
@@ -119,7 +119,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         // Our user action trick doesn't work for design-mode, so we can't test that here.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))
 
-        mainSession.loadTestPath(SELECTION_ACTION_PATH)
+        mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
         // Simulate a user action so we're allowed to show/hide the keyboard.
@@ -154,7 +154,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         // Our user action trick doesn't work for design-mode, so we can't test that here.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))
 
-        mainSession.loadTestPath(SELECTION_ACTION_PATH)
+        mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 
         // Simulate a user action so we're allowed to show/hide the keyboard.

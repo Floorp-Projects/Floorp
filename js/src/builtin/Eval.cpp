@@ -442,7 +442,7 @@ ExecuteInExtensibleLexicalEnvironment(JSContext* cx, HandleScript scriptArg, Han
     MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
     RootedScript script(cx, scriptArg);
-    if (script->compartment() != cx->compartment()) {
+    if (script->realm() != cx->realm()) {
         script = CloneGlobalScript(cx, ScopeKind::NonSyntactic, script);
         if (!script)
             return false;

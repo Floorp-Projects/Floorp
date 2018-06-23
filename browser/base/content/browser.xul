@@ -528,6 +528,7 @@
 #include ../../components/customizableui/content/panelUI.inc.xul
 #include ../../components/controlcenter/content/panel.inc.xul
 #include ../../components/downloads/content/downloadsPanel.inc.xul
+#include browser-allTabsMenu.inc.xul
 
     <hbox id="downloads-animation-container" mousethrough="always">
       <vbox id="downloads-notification-anchor" hidden="true">
@@ -679,29 +680,10 @@
 
       <toolbarbutton id="alltabs-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button badged-button"
-                     type="menu"
+                     oncommand="gTabsPanel.showAllTabsPanel();"
                      label="&listAllTabs.label;"
                      tooltiptext="&listAllTabs.label;"
-                     removable="false">
-        <menupopup id="alltabs-popup"
-                   position="after_end">
-          <menuitem id="alltabs_undoCloseTab"
-                    key="key_undoCloseTab"
-                    label="&undoCloseTab.label;"
-                    observes="History:UndoCloseTab"/>
-          <menuseparator id="alltabs-popup-separator-1"/>
-          <menu id="alltabs_containersTab"
-                label="&newUserContext.label;">
-            <menupopup id="alltabs_containersMenuTab" />
-          </menu>
-          <menuseparator id="alltabs-popup-separator-2"/>
-          <menu id="alltabs_hiddenTabs"
-                label="&hiddenTabs.label;">
-            <menupopup id="alltabs_hiddenTabsMenu"/>
-          </menu>
-          <menuseparator id="alltabs-popup-separator-3"/>
-        </menupopup>
-      </toolbarbutton>
+                     removable="false"/>
 
       <hbox class="titlebar-placeholder" type="post-tabs"
             ordinal="1000"

@@ -511,7 +511,7 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 }
 
 void
-wasm::GenerateFunctionPrologue(MacroAssembler& masm, const SigIdDesc& sigId,
+wasm::GenerateFunctionPrologue(MacroAssembler& masm, const FuncTypeIdDesc& funcTypeId,
                                const Maybe<uint32_t>& tier1FuncIndex, FuncOffsets* offsets)
 {
     // Flush pending pools so they do not get dumped between the 'begin' and
@@ -527,22 +527,22 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, const SigIdDesc& sigId,
     // Generate table entry. The BytecodeOffset of the trap is fixed up to be
     // the bytecode offset of the callsite by JitActivation::startWasmTrap.
     offsets->begin = masm.currentOffset();
-    switch (sigId.kind()) {
-      case SigIdDesc::Kind::Global: {
+    switch (funcTypeId.kind()) {
+      case FuncTypeIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
-        masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
+        masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
         masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
                        &normalEntry);
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }
-      case SigIdDesc::Kind::Immediate: {
-        masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg, Imm32(sigId.immediate()),
-                      &normalEntry);
+      case FuncTypeIdDesc::Kind::Immediate: {
+        masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
+                      Imm32(funcTypeId.immediate()), &normalEntry);
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }
-      case SigIdDesc::Kind::None:
+      case FuncTypeIdDesc::Kind::None:
         break;
     }
 

@@ -13,6 +13,7 @@
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
 #include "ApplicationAccessible.h"
+#include "nsAccessiblePivot.h"
 #include "nsGenericHTMLElement.h"
 #include "NotificationController.h"
 #include "nsEventShell.h"
@@ -877,7 +878,7 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
       uint64_t id = aEvent->GetAccessible()->IsDoc() ? 0 :
-        reinterpret_cast<uintptr_t>(aEvent->GetAccessible());
+        reinterpret_cast<uintptr_t>(aEvent->GetAccessible()->UniqueID());
 
       switch(aEvent->GetEventType()) {
         case nsIAccessibleEvent::EVENT_SHOW:
@@ -920,8 +921,20 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
         case nsIAccessibleEvent::EVENT_SELECTION_REMOVE: {
           AccSelChangeEvent* selEvent = downcast_accEvent(aEvent);
           uint64_t widgetID = selEvent->Widget()->IsDoc() ? 0 :
-            reinterpret_cast<uintptr_t>(selEvent->Widget());
+            reinterpret_cast<uintptr_t>(selEvent->Widget()->UniqueID());
           ipcDoc->SendSelectionEvent(id, widgetID, aEvent->GetEventType());
+          break;
+        }
+        case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
+          AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+          Accessible* position = vcEvent->NewAccessible();
+          Accessible* oldPosition = vcEvent->OldAccessible();
+          ipcDoc->SendVirtualCursorChangeEvent(id,
+            oldPosition ? reinterpret_cast<uintptr_t>(oldPosition->UniqueID()) : 0,
+            vcEvent->OldStartOffset(), vcEvent->OldEndOffset(),
+            position ? reinterpret_cast<uintptr_t>(position->UniqueID()) : 0,
+            vcEvent->NewStartOffset(), vcEvent->NewEndOffset(),
+            vcEvent->Reason(), vcEvent->IsFromUserInput());
           break;
         }
 #if defined(XP_WIN)

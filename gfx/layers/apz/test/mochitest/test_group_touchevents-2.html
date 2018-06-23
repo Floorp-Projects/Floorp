@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various touch tests that spawn in new windows (2)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var isWindows = getPlatform() == "windows";
+
+var subtests = [
+  // Taps on media elements to make sure the touchend event is delivered
+  // properly. We increase the long-tap timeout to ensure it doesn't get trip
+  // during the tap.
+  // Also this test (on Windows) cannot satisfy the OS requirement of providing
+  // an injected touch event every 100ms, because it waits for a paint between
+  // the touchstart and the touchend, so we have to use the "fake injection"
+  // code instead.
+  {'file': 'helper_bug1162771.html', 'prefs': [["ui.click_hold_context_menus.delay", 10000],
+                                               ["apz.test.fails_with_native_injection", isWindows]]},
+
+  // As with the previous test, this test cannot inject touch events every 100ms
+  // because it waits for a long-tap, so we have to use the "fake injection" code
+  // instead.
+  {'file': 'helper_long_tap.html', 'prefs': [["apz.test.fails_with_native_injection", isWindows]]},
+
+  // For the following tests, we want to make sure APZ doesn't wait for a content
+  // response that is never going to arrive. To detect this we set the content response
+  // timeout to a day, so that the entire test times out and fails if APZ does
+  // end up waiting.
+  {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
+                                                ["apz.test.fails_with_native_injection", isWindows]]},
+
+  {'file': 'helper_tap_default_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
+                                                        ["apz.test.fails_with_native_injection", isWindows],
+                                                        ["dom.event.default_to_passive_touch_listeners", true]]},
+
+  // Add new subtests to test_group_touch_events-3.html, not this file.
+];
+
+if (isApzEnabled()) {
+  ok(window.TouchEvent, "Check if TouchEvent is supported (it should be, the test harness forces it on everywhere)");
+  if (getPlatform() == "android") {
+    // This has a lot of subtests, and Android emulators are slow.
+    SimpleTest.requestLongerTimeout(2);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finish);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

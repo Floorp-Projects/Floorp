@@ -191,12 +191,12 @@ DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
 }
 
 bool
-js::DumpCompartmentPCCounts(JSContext* cx)
+js::DumpRealmPCCounts(JSContext* cx)
 {
     Rooted<GCVector<JSScript*>> scripts(cx, GCVector<JSScript*>(cx));
     for (auto iter = cx->zone()->cellIter<JSScript>(); !iter.done(); iter.next()) {
         JSScript* script = iter;
-        if (script->compartment() != cx->compartment())
+        if (script->realm() != cx->realm())
             continue;
         if (script->hasScriptCounts()) {
             if (!scripts.append(script))

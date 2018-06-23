@@ -820,6 +820,14 @@ BaselineCompiler::emitDebugTrap()
 
     bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(pc);
 
+#if defined(JS_CODEGEN_ARM64)
+    // Flush any pending constant pools to prevent incorrect
+    // PCMappingEntry offsets. See Bug 1446819.
+    masm.flush();
+    // Fix up the PCMappingEntry to avoid any constant pool.
+    pcMappingEntries_.back().nativeOffset = masm.currentOffset();
+#endif
+
     // Emit patchable call to debug trap handler.
     JitCode* handler = cx->runtime()->jitRuntime()->debugTrapHandler(cx);
     if (!handler)

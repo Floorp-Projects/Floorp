@@ -46,6 +46,10 @@ WORKER_TYPES = {
     "scriptworker-prov-v1/shipit-dev": ('shipit', None),
     "scriptworker-prov-v1/treescript-v1": ('treescript', None),
     'releng-hardware/gecko-t-osx-1010': ('generic-worker', 'macosx'),
+    'proj-autophone/gecko-t-ap-perf-g5': ('script-engine-autophone', 'linux'),
+    'proj-autophone/gecko-t-ap-unit-g5': ('script-engine-autophone', 'linux'),
+    'proj-autophone/gecko-t-ap-perf-p2': ('script-engine-autophone', 'linux'),
+    'proj-autophone/gecko-t-ap-unit-p2': ('script-engine-autophone', 'linux'),
 }
 
 

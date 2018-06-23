@@ -2411,9 +2411,9 @@ class MOZ_RAII ExecutionObservableFrame : public Debugger::ExecutionObservableSe
     }
 
     Zone* singleZone() const override {
-        // We never inline across compartments, let alone across zones, so
+        // We never inline across realms, let alone across zones, so
         // frames_'s script's zone is the only one of interest.
-        return frame_.script()->compartment()->zone();
+        return frame_.script()->zone();
     }
 
     JSScript* singleScriptForZoneInvalidation() const override {
@@ -2472,7 +2472,7 @@ class MOZ_RAII ExecutionObservableScript : public Debugger::ExecutionObservableS
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    Zone* singleZone() const override { return script_->compartment()->zone(); }
+    Zone* singleZone() const override { return script_->zone(); }
     JSScript* singleScriptForZoneInvalidation() const override { return script_; }
     bool shouldRecompileOrInvalidate(JSScript* script) const override {
         return script->hasBaselineScript() && script == script_;
@@ -2555,10 +2555,10 @@ MarkBaselineScriptActiveIfObservable(JSScript* script, const Debugger::Execution
 static bool
 AppendAndInvalidateScript(JSContext* cx, Zone* zone, JSScript* script, Vector<JSScript*>& scripts)
 {
-    // Enter the script's compartment as addPendingRecompile attempts to
+    // Enter the script's realm as addPendingRecompile attempts to
     // cancel off-thread compilations, whose books are kept on the
-    // script's compartment.
-    MOZ_ASSERT(script->compartment()->zone() == zone);
+    // script's realm.
+    MOZ_ASSERT(script->zone() == zone);
     AutoRealm ar(cx, script);
     zone->types.addPendingRecompile(cx, script);
     return scripts.append(script);

@@ -799,7 +799,7 @@ InvalidateScriptsInZone(JSContext* cx, Zone* zone, const Vector<DebugModeOSREntr
     RecompileInfoVector invalid;
     for (UniqueScriptOSREntryIter iter(entries); !iter.done(); ++iter) {
         JSScript* script = iter.entry().script;
-        if (script->compartment()->zone() != zone)
+        if (script->zone() != zone)
             continue;
 
         if (script->hasIonScript()) {

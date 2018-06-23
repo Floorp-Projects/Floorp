@@ -242,7 +242,10 @@ info("looking for compiler under {}/".format(compiler_dir))
 if os.path.exists(os.path.join(compiler_dir, 'bin', compiler)):
     env.setdefault('CC', os.path.join(compiler_dir, 'bin', compiler))
     env.setdefault('CXX', os.path.join(compiler_dir, 'bin', cxx))
-    platlib = 'lib64' if word_bits == 64 else 'lib'
+    if compiler == 'clang':
+        platlib = 'lib'
+    else:
+        platlib = 'lib64' if word_bits == 64 else 'lib'
     env.setdefault('LD_LIBRARY_PATH', os.path.join(compiler_dir, platlib))
 else:
     env.setdefault('CC', compiler)

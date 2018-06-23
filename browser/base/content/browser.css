@@ -251,9 +251,8 @@ panelview[mainview] > .panel-header {
   pointer-events: auto;
 }
 
-.new-tab-popup,
-#alltabs-popup {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
+.new-tab-popup {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-newtab-popup");
 }
 
 toolbar[printpreview="true"] {
@@ -844,7 +843,6 @@ toolbarspring {
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
-  #alltabs-popup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
   .menuitem-with-favicon > .menu-iconic-left > .menu-iconic-icon {
     image-rendering: -moz-crisp-edges;
   }

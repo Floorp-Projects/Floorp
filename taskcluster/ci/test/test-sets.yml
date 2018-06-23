@@ -368,3 +368,12 @@ devtools-tests:
 
 mochitest-headless:
     - mochitest-plain-headless
+
+android-hw-arm7-opt-unittests:
+    - mochitest-media
+
+android-hw-arm7-debug-unittests:
+    - mochitest-media
+
+android-hw-aarch64-opt-unittests:
+    - jittest

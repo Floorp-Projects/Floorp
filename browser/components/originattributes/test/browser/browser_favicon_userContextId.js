@@ -215,7 +215,6 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
 
   // Set the 'overflow' attribute to make allTabs button available.
   let tabBrowser = document.getElementById("tabbrowser-tabs");
-  let allTabsBtn = document.getElementById("alltabs-button");
   tabBrowser.setAttribute("overflow", true);
 
   // Create the observer object for observing request channels of the personal
@@ -239,14 +238,15 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   Services.obs.addObserver(observer, "http-on-modify-request");
 
   // Make the popup of allTabs showing up and trigger the loading of the favicon.
-  let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  let allTabsView = document.getElementById("allTabsMenu-allTabsView");
+  let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsView, "ViewShown");
+  gTabsPanel.showAllTabsPanel();
   await observer.promise;
   await allTabsPopupShownPromise;
 
   // Close the popup of allTabs and wait until it's done.
-  let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popuphidden");
-  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsView.panelMultiView, "PanelMultiViewHidden");
+  gTabsPanel.hideAllTabsPanel();
   await allTabsPopupHiddenPromise;
 
   // Remove the observer for not receiving the favicon requests for opening a tab
@@ -274,14 +274,14 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   Services.obs.addObserver(observer, "http-on-modify-request");
 
   // Make the popup of allTabs showing up again.
-  allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsView, "ViewShown");
+  gTabsPanel.showAllTabsPanel();
   await observer.promise;
   await allTabsPopupShownPromise;
 
   // Close the popup of allTabs and wait until it's done.
-  allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popuphidden");
-  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsView.panelMultiView, "PanelMultiViewHidden");
+  gTabsPanel.hideAllTabsPanel();
   await allTabsPopupHiddenPromise;
 
   Services.obs.removeObserver(observer, "http-on-modify-request");

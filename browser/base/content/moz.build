@@ -158,6 +158,9 @@ with Files("macWindow.inc.xul"):
 with Files("tabbrowser*"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
+with Files("browser-allTabsMenu.js"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("webext-panels*"):
     BUG_COMPONENT = ("WebExtensions", "Frontend")
 

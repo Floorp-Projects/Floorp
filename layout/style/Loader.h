@@ -10,7 +10,6 @@
 #define mozilla_css_Loader_h
 
 #include "nsIPrincipal.h"
-#include "nsAutoPtr.h"
 #include "nsCompatibility.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
@@ -26,6 +25,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 class nsICSSLoaderObserver;
@@ -380,7 +380,7 @@ public:
    * Stop loading all sheets.  All nsICSSLoaderObservers involved will be
    * notified with NS_BINDING_ABORTED as the status, possibly synchronously.
    */
-  nsresult Stop(void);
+  void Stop();
 
   /**
    * nsresult Loader::StopLoadingSheet(nsIURI* aURL), which notifies the
@@ -438,7 +438,7 @@ public:
   // selected and aHasAlternateRel is false.
   IsAlternate IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel);
 
-  typedef nsTArray<RefPtr<SheetLoadData> > LoadDataArray;
+  typedef nsTArray<RefPtr<SheetLoadData>> LoadDataArray;
 
   // Measure our size.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -508,12 +508,10 @@ private:
                             dom::MediaList* aMediaList,
                             IsAlternate);
 
-  nsresult InsertSheetInDoc(StyleSheet* aSheet,
-                            nsIContent* aLinkingContent,
-                            nsIDocument* aDocument);
-
-  nsresult InsertChildSheet(StyleSheet* aSheet,
-                            StyleSheet* aParentSheet);
+  // Inserts a style sheet in a document or a ShadowRoot.
+  void InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent);
+  // Inserts a style sheet into a parent style sheet.
+  void InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet);
 
   nsresult InternalLoadNonDocumentSheet(
     nsIURI* aURL,
@@ -554,21 +552,20 @@ private:
                      StyleSheetState aSheetState,
                      bool aIsPreLoad);
 
-  // Parse the stylesheet in aLoadData. The sheet data comes from aUTF16 if
-  // UTF-16 and from aUTF8 if UTF-8.
-  // Sets aCompleted to true if the parse finished, false otherwise (e.g. if the
-  // sheet had an @import).  If aCompleted is true when this returns, then
-  // ParseSheet also called SheetComplete on aLoadData.
-  void ParseSheet(const nsAString& aUTF16,
-                  const nsACString& aUTF8,
-                  SheetLoadData* aLoadData,
-                  bool aAllowAsync,
-                  bool& aCompleted);
+  enum class AllowAsyncParse
+  {
+    Yes,
+    No,
+  };
 
-  void DoParseSheetServo(const nsACString& aBytes,
-                         SheetLoadData* aLoadData,
-                         bool aAllowAsync,
-                         bool& aCompleted);
+  // Parse the stylesheet in the load data.
+  //
+  // Returns whether the parse finished. It may not finish e.g. if the sheet had
+  // an @import.
+  //
+  // If this function returns Completed::Yes, then ParseSheet also called
+  // SheetComplete on aLoadData.
+  Completed ParseSheet(const nsACString& aBytes, SheetLoadData*, AllowAsyncParse);
 
   // The load of the sheet in aLoadData is done, one way or another.  Do final
   // cleanup, including releasing aLoadData.
@@ -593,11 +590,11 @@ private:
     nsDataHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey, SheetLoadData*>
                       mPendingDatas; // weak refs
   };
-  nsAutoPtr<Sheets> mSheets;
+  UniquePtr<Sheets> mSheets;
 
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
   // Note that these are rare.
-  LoadDataArray     mPostedEvents;
+  LoadDataArray mPostedEvents;
 
   // Our array of "global" observers
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver> > mObservers;

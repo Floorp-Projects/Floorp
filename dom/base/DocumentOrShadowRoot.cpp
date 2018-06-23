@@ -35,14 +35,6 @@ DocumentOrShadowRoot::EnsureDOMStyleSheets()
 }
 
 void
-DocumentOrShadowRoot::AppendSheet(StyleSheet& aSheet)
-{
-  aSheet.SetAssociatedDocumentOrShadowRoot(
-    this, StyleSheet::OwnedByDocumentOrShadowRoot);
-  mStyleSheets.AppendElement(&aSheet);
-}
-
-void
 DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet)
 {
   aSheet.SetAssociatedDocumentOrShadowRoot(

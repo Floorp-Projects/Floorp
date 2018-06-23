@@ -589,6 +589,7 @@ showIntro=false
 """
 
 STATIC_CDT_CORE_PREFS="""eclipse.preferences.version=1
+indexer.updatePolicy=0
 """
 
 FORMATTER_SETTINGS = """org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
@@ -765,6 +766,9 @@ org.eclipse.cdt.ui.formatterprofiles.version=1
 removeTrailingWhitespace=true
 removeTrailingWhitespaceEditedLines=true
 scalability.numberOfLines=15000
+markOccurrences=true
+markOverloadedOperatorsOccurrences=true
+stickyOccurrences=false
 """
 
 NOINDEX_TEMPLATE = """eclipse.preferences.version=1

@@ -930,6 +930,22 @@ interface nsILoadInfo : nsISupports
   void SetReservedClientInfo(in const_ClientInfoRef aClientInfo);
 
   /**
+   * This will clear any existing reserved or initial client and override
+   * it with the given reserved client.  This is similar to calling
+   * TakeReservedClientSource() and then GiveReservedClientSource() with
+   * a new client as ClientChannelHelper does.  This method is needed,
+   * though, to perform this operation in the parent process where
+   * the LoadInfo does not have direct access to a ClientSource.
+   *
+   * If in doubt, do not call this method.  Its really only needed for
+   * a specific redirect case where the child has created a new client on
+   * redirect and we need to override the parent side's reserved client
+   * to match.
+   */
+  [noscript, nostdcall, notxpcom]
+  void OverrideReservedClientInfoInParent(in const_ClientInfoRef aClientInfo);
+
+  /**
    * Return the reserved ClientInfo for this load, if one has been set.
    */
   [noscript, nostdcall, notxpcom]

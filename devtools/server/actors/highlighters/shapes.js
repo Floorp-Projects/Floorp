@@ -1883,12 +1883,18 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // used width and height of the reference box as sqrt(width^2+height^2)/sqrt(2).
     const computedSize = Math.sqrt((width ** 2) + (height ** 2)) / Math.sqrt(2);
 
+    // Position coordinates for circle center in pixels.
+    const cxPx = width * center[0] / 100;
+    const cyPx = height * center[1] / 100;
+
     if (radius === "closest-side") {
       // radius is the distance from center to closest side of reference box
-      radius = Math.min(center[0], center[1], 100 - center[0], 100 - center[1]);
+      radius = Math.min(cxPx, cyPx, width - cxPx, height - cyPx);
+      radius = coordToPercent(`${radius}px`, computedSize);
     } else if (radius === "farthest-side") {
       // radius is the distance from center to farthest side of reference box
-      radius = Math.max(center[0], center[1], 100 - center[0], 100 - center[1]);
+      radius = Math.max(cxPx, cyPx, width - cxPx, height - cyPx);
+      radius = coordToPercent(`${radius}px`, computedSize);
     } else if (radius.includes("calc(")) {
       radius = evalCalcExpression(radius.substring(5, radius.length - 1), computedSize);
     } else {

@@ -1936,7 +1936,7 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool emitFunction();
     void emitInitStackLocals();
 
-    const SigWithId& sig() const { return *env_.funcSigs[func_.index]; }
+    const FuncTypeWithId& funcType() const { return *env_.funcTypes[func_.index]; }
 
     // Used by some of the ScratchRegister implementations.
     operator MacroAssembler&() const { return masm; }
@@ -3357,7 +3357,7 @@ class BaseCompiler final : public BaseCompilerInterface
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
         GenerateFunctionPrologue(masm,
-                                 env_.funcSigs[func_.index]->id,
+                                 env_.funcTypes[func_.index]->id,
                                  env_.mode == CompileMode::Tier1 ? Some(func_.index) : Nothing(),
                                  &offsets_);
 
@@ -3380,7 +3380,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
         // Copy arguments from registers to stack.
 
-        const ValTypeVector& args = sig().args();
+        const ValTypeVector& args = funcType().args();
 
         for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
             if (!i->argInRegister())
@@ -3417,7 +3417,7 @@ class BaseCompiler final : public BaseCompilerInterface
         MOZ_ASSERT(env_.debugEnabled());
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
         Address resultsAddress(masm.getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
-        switch (sig().ret()) {
+        switch (funcType().ret()) {
           case ExprType::Void:
             break;
           case ExprType::I32:
@@ -3444,7 +3444,7 @@ class BaseCompiler final : public BaseCompilerInterface
         MOZ_ASSERT(env_.debugEnabled());
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
         Address resultsAddress(masm.getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
-        switch (sig().ret()) {
+        switch (funcType().ret()) {
           case ExprType::Void:
             break;
           case ExprType::I32:
@@ -3760,10 +3760,10 @@ class BaseCompiler final : public BaseCompilerInterface
 
     // Precondition: sync()
 
-    void callIndirect(uint32_t sigIndex, const Stk& indexVal, const FunctionCall& call)
+    void callIndirect(uint32_t funcTypeIndex, const Stk& indexVal, const FunctionCall& call)
     {
-        const SigWithId& sig = env_.types[sigIndex].funcType();
-        MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
+        const FuncTypeWithId& funcType = env_.types[funcTypeIndex].funcType();
+        MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDesc::Kind::None);
 
         MOZ_ASSERT(env_.tables.length() == 1);
         const TableDesc& table = env_.tables[0];
@@ -3771,7 +3771,7 @@ class BaseCompiler final : public BaseCompilerInterface
         loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
         CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
-        CalleeDesc callee = CalleeDesc::wasmTable(table, sig.id);
+        CalleeDesc callee = CalleeDesc::wasmTable(table, funcType.id);
         masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
     }
 
@@ -7733,7 +7733,7 @@ BaseCompiler::emitReturn()
     if (deadCode_)
         return true;
 
-    doReturn(sig().ret(), PopStack(true));
+    doReturn(funcType().ret(), PopStack(true));
     deadCode_ = true;
 
     return true;
@@ -7819,16 +7819,16 @@ BaseCompiler::emitCall()
 
     sync();
 
-    const Sig& sig = *env_.funcSigs[funcIndex];
+    const FuncType& funcType = *env_.funcTypes[funcIndex];
     bool import = env_.funcIsImport(funcIndex);
 
-    uint32_t numArgs = sig.args().length();
+    uint32_t numArgs = funcType.args().length();
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::Wasm, import ? InterModule::True : InterModule::False);
 
-    if (!emitCallArgs(sig.args(), &baselineCall))
+    if (!emitCallArgs(funcType.args(), &baselineCall))
         return false;
 
     if (import)
@@ -7840,7 +7840,7 @@ BaseCompiler::emitCall()
 
     popValueStackBy(numArgs);
 
-    pushReturnedIfNonVoid(baselineCall, sig.ret());
+    pushReturnedIfNonVoid(baselineCall, funcType.ret());
 
     return true;
 }
@@ -7850,10 +7850,10 @@ BaseCompiler::emitCallIndirect()
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
-    uint32_t sigIndex;
+    uint32_t funcTypeIndex;
     Nothing callee_;
     BaseOpIter::ValueVector args_;
-    if (!iter_.readCallIndirect(&sigIndex, &callee_, &args_))
+    if (!iter_.readCallIndirect(&funcTypeIndex, &callee_, &args_))
         return false;
 
     if (deadCode_)
@@ -7861,11 +7861,11 @@ BaseCompiler::emitCallIndirect()
 
     sync();
 
-    const SigWithId& sig = env_.types[sigIndex].funcType();
+    const FuncTypeWithId& funcType = env_.types[funcTypeIndex].funcType();
 
     // Stack: ... arg1 .. argn callee
 
-    uint32_t numArgs = sig.args().length();
+    uint32_t numArgs = funcType.args().length();
     size_t stackSpace = stackConsumed(numArgs + 1);
 
     // The arguments must be at the stack top for emitCallArgs, so pop the
@@ -7877,16 +7877,16 @@ BaseCompiler::emitCallIndirect()
     FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::Wasm, InterModule::True);
 
-    if (!emitCallArgs(sig.args(), &baselineCall))
+    if (!emitCallArgs(funcType.args(), &baselineCall))
         return false;
 
-    callIndirect(sigIndex, callee, baselineCall);
+    callIndirect(funcTypeIndex, callee, baselineCall);
 
     endCall(baselineCall, stackSpace);
 
     popValueStackBy(numArgs);
 
-    pushReturnedIfNonVoid(baselineCall, sig.ret());
+    pushReturnedIfNonVoid(baselineCall, funcType.ret());
 
     return true;
 }
@@ -9247,7 +9247,7 @@ BaseCompiler::emitMemFill()
 bool
 BaseCompiler::emitBody()
 {
-    if (!iter_.readFunctionStart(sig().ret()))
+    if (!iter_.readFunctionStart(funcType().ret()))
         return false;
 
     initControl(controlItem());
@@ -9329,7 +9329,7 @@ BaseCompiler::emitBody()
 
             if (iter_.controlStackEmpty()) {
                 if (!deadCode_)
-                    doReturn(sig().ret(), PopStack(false));
+                    doReturn(funcType().ret(), PopStack(false));
                 return iter_.readFunctionEnd(iter_.end());
             }
             NEXT();
@@ -10134,7 +10134,7 @@ BaseCompiler::init()
         return false;
     }
 
-    if (!fr.setupLocals(locals_, sig().args(), env_.debugEnabled(), &localInfo_))
+    if (!fr.setupLocals(locals_, funcType().args(), env_.debugEnabled(), &localInfo_))
         return false;
 
     return true;
@@ -10207,7 +10207,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
         // Build the local types vector.
 
         ValTypeVector locals;
-        if (!locals.appendAll(env.funcSigs[func.index]->args()))
+        if (!locals.appendAll(env.funcTypes[func.index]->args()))
             return false;
         if (!DecodeLocalEntries(d, env.kind, env.gcTypesEnabled, &locals))
             return false;
