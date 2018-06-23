@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various touch tests that spawn in new windows (3)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var touch_action_prefs = [
+  ...getPrefs("TOUCH_EVENTS:PAN"),
+  ["layout.css.touch_action.enabled", true],
+  ["apz.test.fails_with_native_injection", getPlatform() == "windows"],
+];
+
+var subtests = [
+  // Simple test to exercise touch-action CSS property
+  {'file': 'helper_touch_action.html', 'prefs': touch_action_prefs},
+  // More complex touch-action tests, with overlapping regions and such
+  {'file': 'helper_touch_action_complex.html', 'prefs': touch_action_prefs},
+  // Tests that touch-action CSS properties are handled in APZ without waiting
+  // on the main-thread, when possible
+  {'file': 'helper_touch_action_regions.html', 'prefs': touch_action_prefs},
+  // Add new subtests here. If this starts timing out because it's taking too
+  // long, create a test_group_touchevents-4.html file. Refer to 1423011#c57
+  // for more details.
+];
+
+if (isApzEnabled()) {
+  ok(window.TouchEvent, "Check if TouchEvent is supported (it should be, the test harness forces it on everywhere)");
+  if (getPlatform() == "android") {
+    // This has a lot of subtests, and Android emulators are slow.
+    SimpleTest.requestLongerTimeout(2);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finish);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>
