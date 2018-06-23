@@ -2,11 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from helper_shadowdom.js */
-
 "use strict";
-
-loadHelperScript("helper_shadowdom.js");
 
 requestLongerTimeout(2);
 
@@ -206,12 +202,12 @@ for (const {url, tree, title} of TEST_DATA) {
     info(`Testing: [${title}] in OPEN mode`);
     await enableWebComponents();
     const {inspector} = await openInspectorForURL(url.replace("#MODE#", "open"));
-    await checkTreeFromRootSelector(tree, "test-component", inspector);
+    await assertMarkupViewAsTree(tree, "test-component", inspector);
   });
   add_task(async function() {
     info(`Testing: [${title}] in CLOSED mode`);
     await enableWebComponents();
     const {inspector} = await openInspectorForURL(url.replace("#MODE#", "closed"));
-    await checkTreeFromRootSelector(tree, "test-component", inspector);
+    await assertMarkupViewAsTree(tree, "test-component", inspector);
   });
 }
