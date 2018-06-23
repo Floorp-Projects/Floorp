@@ -22,6 +22,7 @@
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
+#include "js/UniquePtr.h"
 #include "util/Text.h"
 #include "vm/Printer.h"
 
@@ -666,8 +667,8 @@ class JSString : public js::gc::Cell
 class JSRope : public JSString
 {
     template <typename CharT>
-    bool copyCharsInternal(JSContext* cx, js::ScopedJSFreePtr<CharT>& out,
-                           bool nullTerminate) const;
+    js::UniquePtr<CharT[], JS::FreePolicy> copyCharsInternal(JSContext* cx,
+                                                             bool nullTerminate) const;
 
     enum UsingBarrier { WithIncrementalBarrier, NoBarrier };
 
@@ -689,16 +690,14 @@ class JSRope : public JSString
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
                                size_t length, js::gc::InitialHeap = js::gc::DefaultHeap);
 
-    bool copyLatin1Chars(JSContext* cx,
-                         js::ScopedJSFreePtr<JS::Latin1Char>& out) const;
-    bool copyTwoByteChars(JSContext* cx, js::ScopedJSFreePtr<char16_t>& out) const;
+    js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1Chars(JSContext* cx) const;
+    JS::UniqueTwoByteChars copyTwoByteChars(JSContext* cx) const;
 
-    bool copyLatin1CharsZ(JSContext* cx,
-                          js::ScopedJSFreePtr<JS::Latin1Char>& out) const;
-    bool copyTwoByteCharsZ(JSContext* cx, js::ScopedJSFreePtr<char16_t>& out) const;
+    js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1CharsZ(JSContext* cx) const;
+    JS::UniqueTwoByteChars copyTwoByteCharsZ(JSContext* cx) const;
 
     template <typename CharT>
-    bool copyChars(JSContext* cx, js::ScopedJSFreePtr<CharT>& out) const;
+    js::UniquePtr<CharT[], JS::FreePolicy> copyChars(JSContext* cx) const;
 
     // Hash function specific for ropes that avoids allocating a temporary
     // string. There are still allocations internally so it's technically
@@ -1734,18 +1733,17 @@ JSLinearString::chars(const JS::AutoRequireNoGC& nogc) const
 }
 
 template <>
-MOZ_ALWAYS_INLINE bool
-JSRope::copyChars<JS::Latin1Char>(JSContext* cx,
-                                  js::ScopedJSFreePtr<JS::Latin1Char>& out) const
+MOZ_ALWAYS_INLINE js::UniquePtr<JS::Latin1Char[], JS::FreePolicy>
+JSRope::copyChars<JS::Latin1Char>(JSContext* cx) const
 {
-    return copyLatin1Chars(cx, out);
+    return copyLatin1Chars(cx);
 }
 
 template <>
-MOZ_ALWAYS_INLINE bool
-JSRope::copyChars<char16_t>(JSContext* cx, js::ScopedJSFreePtr<char16_t>& out) const
+MOZ_ALWAYS_INLINE JS::UniqueTwoByteChars
+JSRope::copyChars<char16_t>(JSContext* cx) const
 {
-    return copyTwoByteChars(cx, out);
+    return copyTwoByteChars(cx);
 }
 
 template<>

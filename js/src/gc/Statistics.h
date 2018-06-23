@@ -221,7 +221,8 @@ struct Statistics
             finalState(gc::State::NotActive),
             resetReason(gc::AbortReason::None),
             start(start),
-            startFaults(startFaults)
+            startFaults(startFaults),
+            endFaults(0)
         {}
 
         SliceBudget budget;

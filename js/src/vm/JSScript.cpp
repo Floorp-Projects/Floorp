@@ -37,6 +37,7 @@
 #include "jit/IonCode.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -1617,7 +1618,9 @@ ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
 ScriptSource::PinnedChars::PinnedChars(JSContext* cx, ScriptSource* source,
                                        UncompressedSourceCache::AutoHoldEntry& holder,
                                        size_t begin, size_t len)
-  : source_(source)
+  : stack_(nullptr),
+    prev_(nullptr),
+    source_(source)
 {
     chars_ = source->chars(cx, holder, begin, len);
     if (chars_) {
@@ -3451,7 +3454,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     /* Script data */
 
     size_t size = src->dataSize();
-    ScopedJSFreePtr<uint8_t> data(AllocScriptData(cx->zone(), size));
+    UniquePtr<uint8_t, JS::FreePolicy> data(AllocScriptData(cx->zone(), size));
     if (size && !data) {
         ReportOutOfMemory(cx);
         return false;
@@ -3519,7 +3522,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     }
 
     /* This assignment must occur before all the Rebase calls. */
-    dst->data = data.forget();
+    dst->data = data.release();
     dst->dataSize_ = size;
     MOZ_ASSERT(bool(dst->data) == bool(src->data));
     if (dst->data)
@@ -4255,10 +4258,13 @@ LazyScript::CreateRaw(JSContext* cx, HandleFunction fun,
     size_t bytes = (p.numClosedOverBindings * sizeof(JSAtom*))
                  + (p.numInnerFunctions * sizeof(GCPtrFunction));
 
-    ScopedJSFreePtr<uint8_t> table(bytes ? fun->zone()->pod_malloc<uint8_t>(bytes) : nullptr);
-    if (bytes && !table) {
-        ReportOutOfMemory(cx);
-        return nullptr;
+    UniquePtr<uint8_t, JS::FreePolicy> table;
+    if (bytes) {
+        table.reset(fun->zone()->pod_malloc<uint8_t>(bytes));
+        if (!table) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
     }
 
     LazyScript* res = Allocate<LazyScript>(cx);
@@ -4267,8 +4273,8 @@ LazyScript::CreateRaw(JSContext* cx, HandleFunction fun,
 
     cx->realm()->scheduleDelazificationForDebugger();
 
-    return new (res) LazyScript(fun, *sourceObject, table.forget(), packed, sourceStart, sourceEnd,
-                                toStringStart, lineno, column);
+    return new (res) LazyScript(fun, *sourceObject, table.release(), packed, sourceStart,
+                                sourceEnd, toStringStart, lineno, column);
 }
 
 /* static */ LazyScript*
