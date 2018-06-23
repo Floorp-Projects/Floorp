@@ -3351,7 +3351,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     if (!src)
         return false;
 
-    ScopedJSFreePtr<char> filename;
+    UniqueChars filename;
     uint32_t lineno = 1;
     bool loc = true;
     RootedObject builder(cx);
@@ -3390,7 +3390,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
                 if (!str)
                     return false;
 
-                filename = JS_EncodeString(cx, str);
+                filename.reset(JS_EncodeString(cx, str));
                 if (!filename)
                     return false;
             }
@@ -3451,7 +3451,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     }
 
     /* Extract the builder methods first to report errors before parsing. */
-    ASTSerializer serialize(cx, loc, filename, lineno);
+    ASTSerializer serialize(cx, loc, filename.get(), lineno);
     if (!serialize.init(builder))
         return false;
 
@@ -3464,7 +3464,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         return false;
 
     CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
+    options.setFileAndLine(filename.get(), lineno);
     options.setCanLazilyParse(false);
     options.allowHTMLComments = target == ParseGoal::Script;
     mozilla::Range<const char16_t> chars = linearChars.twoByteRange();

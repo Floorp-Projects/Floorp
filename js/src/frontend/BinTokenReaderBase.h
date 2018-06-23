@@ -75,6 +75,7 @@ class MOZ_STACK_CLASS BinTokenReaderBase
   protected:
     BinTokenReaderBase(JSContext* cx, const uint8_t* start, const size_t length)
         : cx_(cx)
+        , poisoned_(false)
         , start_(start)
         , current_(start)
         , stop_(start + length)
