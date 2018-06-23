@@ -769,7 +769,6 @@
         "type": "function",
         "description": "Highlights the given tabs.",
         "async": "callback",
-        "unsupported": "true",
         "parameters": [
           {
             "type": "object",
