@@ -15,6 +15,7 @@ XPIDL_MODULE = 'dom'
 
 EXPORTS.mozilla.dom.ipc += [
     'IdType.h',
+    'SharedMap.h',
     'SharedStringMap.h',
     'StructuredCloneData.h',
 ]
@@ -69,6 +70,7 @@ UNIFIED_SOURCES += [
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
+    'SharedMap.cpp',
     'SharedStringMap.cpp',
     'StructuredCloneData.cpp',
     'TabChild.cpp',
