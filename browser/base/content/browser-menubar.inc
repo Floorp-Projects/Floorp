@@ -344,15 +344,10 @@
                 <menuitem id="historyRestoreLastSession"
                           label="&historyRestoreLastSession.label;"
                           command="Browser:RestoreLastSession"/>
-                <menu id="hiddenTabsMenu"
-                      label="&hiddenTabs.label;"
-                      hidden="true">
-                  <menupopup
-#ifndef XP_MACOSX
-                             placespopup="true"
-#endif
-                             />
-                </menu>
+                <menuitem id="hiddenTabsMenu"
+                          label="&hiddenTabs.label;"
+                          oncommand="gTabsPanel.showHiddenTabsPanel();"
+                          hidden="true"/>
                 <menu id="historyUndoMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
