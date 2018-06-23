@@ -1696,7 +1696,8 @@ class MOZ_STACK_CLASS TryEmitter
         controlKind_(controlKind),
         depth_(0),
         noteIndex_(0),
-        tryStart_(0)
+        tryStart_(0),
+        tryEnd_{}
 #ifdef DEBUG
       , state_(State::Start)
 #endif
@@ -2511,6 +2512,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     prologue(cx, lineNum),
     main(cx, lineNum),
     current(&main),
+    parser(nullptr),
     atomIndices(cx->frontendCollectionPool()),
     firstLine(lineNum),
     maxFixedSlots(0),

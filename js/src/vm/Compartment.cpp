@@ -127,22 +127,22 @@ CopyStringPure(JSContext* cx, JSString* str)
     }
 
     if (str->hasLatin1Chars()) {
-        ScopedJSFreePtr<Latin1Char> copiedChars;
-        if (!str->asRope().copyLatin1CharsZ(cx, copiedChars))
+        UniquePtr<Latin1Char[], JS::FreePolicy> copiedChars = str->asRope().copyLatin1CharsZ(cx);
+        if (!copiedChars)
             return nullptr;
 
-        auto* rawCopiedChars = copiedChars.forget();
+        auto* rawCopiedChars = copiedChars.release();
         auto* result = NewString<CanGC>(cx, rawCopiedChars, len);
         if (!result)
             js_free(rawCopiedChars);
         return result;
     }
 
-    ScopedJSFreePtr<char16_t> copiedChars;
-    if (!str->asRope().copyTwoByteCharsZ(cx, copiedChars))
+    UniqueTwoByteChars copiedChars = str->asRope().copyTwoByteCharsZ(cx);
+    if (!copiedChars)
         return nullptr;
 
-    auto* rawCopiedChars = copiedChars.forget();
+    auto* rawCopiedChars = copiedChars.release();
     auto* result = NewStringDontDeflate<CanGC>(cx, rawCopiedChars, len);
     if (!result)
         js_free(rawCopiedChars);
