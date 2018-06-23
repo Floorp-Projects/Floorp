@@ -707,6 +707,11 @@ class Tab extends TabBase {
     return this.nativeTab.selected;
   }
 
+  get highlighted() {
+    let {selected, multiselected} = this.nativeTab;
+    return selected || multiselected;
+  }
+
   get selected() {
     return this.nativeTab.selected;
   }
