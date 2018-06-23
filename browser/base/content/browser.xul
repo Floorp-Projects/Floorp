@@ -109,6 +109,12 @@
       <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
                 accesskey="&unpinTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
+      <menuitem id="context_pinSelectedTabs" label="&pinSelectedTabs.label;" hidden="true"
+                accesskey="&pinSelectedTabs.accesskey;"
+                oncommand="gBrowser.pinMultiSelectedTabs();"/>
+      <menuitem id="context_unpinSelectedTabs" label="&unpinSelectedTabs.label;" hidden="true"
+                accesskey="&unpinSelectedTabs.accesskey;"
+                oncommand="gBrowser.unpinMultiSelectedTabs();"/>
       <menuitem id="context_duplicateTab" label="&duplicateTab.label;"
                 accesskey="&duplicateTab.accesskey;"
                 oncommand="duplicateTabIn(TabContextMenu.contextTab, 'tab');"/>
