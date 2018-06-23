@@ -52,8 +52,6 @@ can reach it easily. -->
 <!ENTITY  sendPageToDevice.accesskey         "n">
 <!ENTITY  sendLinkToDevice.label             "Send Link to Device">
 <!ENTITY  sendLinkToDevice.accesskey         "n">
-<!ENTITY  sendToDeviceFeedback.label         "Sent!">
-<!ENTITY  sendToDeviceOfflineFeedback.label  "Queued (offline)">
 <!ENTITY  moveToNewWindow.label              "Move to New Window">
 <!ENTITY  moveToNewWindow.accesskey          "W">
 <!ENTITY  reopenInContainer.label            "Reopen in Container">
@@ -407,32 +405,21 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY customizeMenu.addToToolbar.label "Add to Toolbar">
 <!ENTITY customizeMenu.addToToolbar.accesskey "A">
-<!ENTITY customizeMenu.addToPanel.label "Add to Menu">
-<!ENTITY customizeMenu.addToPanel.accesskey "M">
 <!-- LOCALIZATION NOTE (customizeMenu.addToOverflowMenu.label,
      customizeMenu.pinToOverflowMenu.label, customizeMenu.unpinFromOverflowMenu.label)
      The overflow menu is the menu that appears if you click the chevron (>> button)
-     in the location bar. These labels are only used in Photon, where you can put
-     items into this menu permanently (pinned). -->
+     in the location bar. -->
 <!ENTITY customizeMenu.addToOverflowMenu.label "Add to Overflow Menu">
 <!ENTITY customizeMenu.addToOverflowMenu.accesskey "M">
-<!ENTITY customizeMenu.moveToToolbar.label "Move to Toolbar">
-<!ENTITY customizeMenu.moveToToolbar.accesskey "o">
-<!-- LOCALIZATION NOTE (customizeMenu.moveToPanel.accesskey, customizeMenu.pinToOverflowMenu.accesskey)
+<!-- LOCALIZATION NOTE (customizeMenu.pinToOverflowMenu.accesskey)
      can appear on the same context menu as menubarCmd and personalbarCmd,
-     so they should have different access keys. customizeMenu.moveToToolbar and
-     customizeMenu.moveToPanel are mutually exclusive, so can share access
-     keys.  -->
-<!ENTITY customizeMenu.moveToPanel.label "Move to Menu">
-<!ENTITY customizeMenu.moveToPanel.accesskey "o">
+     so they should have different access keys.  -->
 <!ENTITY customizeMenu.pinToOverflowMenu.label "Pin to Overflow Menu">
 <!ENTITY customizeMenu.pinToOverflowMenu.accesskey "P">
 <!ENTITY customizeMenu.unpinFromOverflowMenu.label "Unpin from Overflow Menu">
 <!ENTITY customizeMenu.unpinFromOverflowMenu.accesskey "U">
 <!ENTITY customizeMenu.removeFromToolbar.label "Remove from Toolbar">
 <!ENTITY customizeMenu.removeFromToolbar.accesskey "R">
-<!ENTITY customizeMenu.removeFromMenu.label "Remove from Menu">
-<!ENTITY customizeMenu.removeFromMenu.accesskey "R">
 <!ENTITY customizeMenu.addMoreItems.label "Add More Items…">
 <!ENTITY customizeMenu.addMoreItems.accesskey "A">
 <!ENTITY customizeMenu.autoHideDownloadsButton.label "Auto-Hide in Toolbar">
@@ -580,7 +567,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY bookmarkThisFrameCmd.label      "Bookmark This Frame">
 <!ENTITY bookmarkThisFrameCmd.accesskey  "m">
 <!ENTITY pageAction.copyLink.label    "Copy Link">
-<!ENTITY copyURLFeedback.label        "Copied!">
 <!ENTITY emailPageCmd.label           "Email Link…">
 <!ENTITY emailPageCmd.accesskey       "E">
 <!ENTITY savePageCmd.label            "Save Page As…">

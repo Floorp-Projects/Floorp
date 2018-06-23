@@ -12,7 +12,7 @@ UNIFIED_SOURCES += [
     'string_conversion.cc',
 ]
 
-if CONFIG['OS_ARCH'] != 'WINNT':
+if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'md5.cc',
     ]
