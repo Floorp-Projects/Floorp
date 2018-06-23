@@ -6869,7 +6869,10 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState()
 }
 
 struct JSExceptionState {
-    explicit JSExceptionState(JSContext* cx) : exception(cx) {}
+    explicit JSExceptionState(JSContext* cx)
+      : throwing(false),
+        exception(cx)
+    {}
     bool throwing;
     PersistentRootedValue exception;
 };

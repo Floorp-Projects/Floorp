@@ -83,7 +83,7 @@ struct EvalCacheLookup
     explicit EvalCacheLookup(JSContext* cx) : str(cx), callerScript(cx) {}
     RootedLinearString str;
     RootedScript callerScript;
-    jsbytecode* pc;
+    MOZ_INIT_OUTSIDE_CTOR jsbytecode* pc;
 };
 
 struct EvalCacheHashPolicy
