@@ -8,6 +8,7 @@
 #include "ScriptPreloader-inl.h"
 
 #include "mozilla/Unused.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "nsIFile.h"
 
 #include <private/pprio.h>

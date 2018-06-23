@@ -48,6 +48,7 @@
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -997,6 +998,19 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx,
     return;
   }
   aInitialProcessData.set(init);
+}
+
+WritableSharedMap*
+nsFrameMessageManager::SharedData()
+{
+  if (!mChrome || !mIsProcessManager) {
+    MOZ_ASSERT(false, "Should only call this binding method on ppmm");
+    return nullptr;
+  }
+  if (!mSharedData) {
+    mSharedData = new WritableSharedMap();
+  }
+  return mSharedData;
 }
 
 already_AddRefed<ProcessMessageManager>

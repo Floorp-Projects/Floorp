@@ -7,8 +7,10 @@
 #include "ProcessGlobal.h"
 
 #include "nsContentCID.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
+#include "mozilla/dom/ipc/SharedMap.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -25,6 +27,11 @@ ProcessGlobal::ProcessGlobal(nsFrameMessageManager* aMessageManager)
 ProcessGlobal::~ProcessGlobal()
 {
   mAnonymousGlobalScopes.Clear();
+  if (ContentChild* child = ContentChild::GetSingleton()) {
+    // Clear this now so we can be sure it's destroyed before cycle collector
+    // shutdown.
+    child->ClearSharedData();
+  }
   mozilla::DropJSObjects(this);
 }
 
@@ -70,6 +77,16 @@ ProcessGlobal::Get()
     sWasCreated = true;
   }
   return global;
+}
+
+already_AddRefed<mozilla::dom::ipc::SharedMap>
+ProcessGlobal::SharedData()
+{
+  if (ContentChild* child = ContentChild::GetSingleton()) {
+    return do_AddRef(child->SharedData());
+  }
+  auto* ppmm = nsFrameMessageManager::sParentProcessManager;
+  return do_AddRef(ppmm->SharedData()->GetReadOnly());
 }
 
 bool
