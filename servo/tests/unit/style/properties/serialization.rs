@@ -484,7 +484,7 @@ mod shorthand_serialization {
                 border-left: 4px solid; \
                 border-image: none;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -536,7 +536,7 @@ mod shorthand_serialization {
                 background-origin: border-box; \
                 background-clip: padding-box;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -560,7 +560,7 @@ mod shorthand_serialization {
                 background-origin: padding-box; \
                 background-clip: padding-box;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -584,7 +584,7 @@ mod shorthand_serialization {
                 background-origin: border-box, padding-box; \
                 background-clip: padding-box, padding-box;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -615,7 +615,7 @@ mod shorthand_serialization {
                 background-origin: border-box; \
                 background-clip: padding-box, padding-box;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -629,7 +629,7 @@ mod shorthand_serialization {
             let block_text = "\
                 background-position-x: 30px;\
                 background-position-y: bottom 20px;";
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
             let serialization = block.to_css_string();
             assert_eq!(serialization, "background-position: left 30px bottom 20px;");
 
@@ -638,7 +638,7 @@ mod shorthand_serialization {
             let block_text = "\
                 background-position-x: center;\
                 background-position-y: 20px;";
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
             let serialization = block.to_css_string();
             assert_eq!(serialization, "background-position: center 20px;");
         }
@@ -724,7 +724,7 @@ mod shorthand_serialization {
                 animation-iteration-count: infinite;\
                 animation-play-state: paused;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -743,7 +743,7 @@ mod shorthand_serialization {
                 animation-iteration-count: infinite, 2;\
                 animation-play-state: paused, running;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -769,7 +769,7 @@ mod shorthand_serialization {
                 animation-iteration-count: infinite, 2; \
                 animation-play-state: paused, running;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -786,7 +786,7 @@ mod shorthand_serialization {
                               animation-iteration-count: infinite, 2; \
                               animation-play-state: paused, running;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -804,7 +804,7 @@ mod shorthand_serialization {
                               transition-delay: 4s; \
                               transition-timing-function: cubic-bezier(0.2, 5, 0.5, 2);";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -818,7 +818,7 @@ mod shorthand_serialization {
                               transition-delay: 4s, 5s; \
                               transition-timing-function: cubic-bezier(0.2, 5, 0.5, 2), ease;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -840,7 +840,7 @@ mod shorthand_serialization {
                               transition-delay: 4s, 5s; \
                               transition-timing-function: cubic-bezier(0.2, 5, 0.5, 2), ease;";
 
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -853,7 +853,7 @@ mod shorthand_serialization {
                               transition-duration: 3s; \
                               transition-delay: 4s; \
                               transition-timing-function: steps(2, start);";
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -866,7 +866,7 @@ mod shorthand_serialization {
                               transition-duration: 3s; \
                               transition-delay: 4s; \
                               transition-timing-function: frames(2);";
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
 
@@ -879,7 +879,7 @@ mod shorthand_serialization {
         #[test]
         fn css_wide_keywords_should_be_parsed() {
             let block_text = "--a:inherit;";
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
             assert_eq!(serialization, "--a: inherit;");
@@ -888,7 +888,7 @@ mod shorthand_serialization {
         #[test]
         fn non_keyword_custom_property_should_be_unparsed() {
             let block_text = "--main-color: #06c;";
-            let block = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), block_text).unwrap();
+            let block = parse(|c, i| Ok(parse_property_declaration_list(c, i)), block_text).unwrap();
 
             let serialization = block.to_css_string();
             assert_eq!(serialization, block_text);
@@ -918,7 +918,7 @@ mod shorthand_serialization {
             let shadow_decl = BoxShadowList(vec![shadow_val]);
             properties.push(PropertyDeclaration::BoxShadow(shadow_decl));
             let shadow_css = "box-shadow: 1px 2px 3px 4px;";
-            let shadow = parse(|c, e, i| Ok(parse_property_declaration_list(c, e, i)), shadow_css).unwrap();
+            let shadow = parse(|c, i| Ok(parse_property_declaration_list(c, i)), shadow_css).unwrap();
 
             assert_eq!(shadow.to_css_string(), shadow_css);
         }
