@@ -559,6 +559,7 @@ linux64-asan/opt:
         - linux64-rust-size
         - linux64-sccache
 
+
 linux64-asan-fuzzing/opt:
     description: "Linux64 Fuzzing Opt ASAN"
     index:
@@ -581,37 +582,6 @@ linux64-asan-fuzzing/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: fuzzing-asan-tc
-        tooltool-downloads: public
-        need-xvfb: true
-    toolchains:
-        - linux64-clang
-        - linux64-gcc
-        - linux64-rust
-        - linux64-rust-size
-        - linux64-sccache
-
-linux64-asan-fuzzing-ccov/opt:
-    description: "Linux64 Fuzzing Opt ASAN w/ Coverage"
-    index:
-        product: firefox
-        job-name: linux64-fuzzing-asan-opt-cov
-    treeherder:
-        platform: linux64/asan
-        symbol: Bocf
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        env:
-            PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-ccov
-        max-run-time: 3600
-    run:
-        using: mozharness
-        actions: [get-secrets build check-test update]
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_64_builds.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: fuzzing-cov
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
