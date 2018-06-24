@@ -680,7 +680,7 @@ NS_IMPL_ISUPPORTS(nsStringBundleService,
 nsStringBundleService::~nsStringBundleService()
 {
   UnregisterWeakMemoryReporter(this);
-  flushBundleCache();
+  flushBundleCache(/* ignoreShared = */ false);
 }
 
 nsresult
@@ -715,38 +715,41 @@ nsStringBundleService::Observe(nsISupports* aSubject,
                                const char* aTopic,
                                const char16_t* aSomeData)
 {
-  if (strcmp("memory-pressure", aTopic) == 0 ||
-      strcmp("profile-do-change", aTopic) == 0 ||
+  if (strcmp("profile-do-change", aTopic) == 0 ||
       strcmp("chrome-flush-caches", aTopic) == 0 ||
       strcmp("intl:app-locales-changed", aTopic) == 0)
   {
-    flushBundleCache();
+    flushBundleCache(/* ignoreShared = */ false);
+  } else if (strcmp("memory-pressure", aTopic) == 0) {
+    flushBundleCache(/* ignoreShared = */ true);
   }
 
   return NS_OK;
 }
 
 void
-nsStringBundleService::flushBundleCache()
+nsStringBundleService::flushBundleCache(bool ignoreShared)
 {
-  // release all bundles in the cache
-  mBundleMap.Clear();
+  LinkedList<bundleCacheEntry_t> newList;
 
   while (!mBundleCache.isEmpty()) {
-    delete mBundleCache.popFirst();
+    UniquePtr<bundleCacheEntry_t> entry(mBundleCache.popFirst());
+    auto* bundle = nsStringBundleBase::Cast(entry->mBundle);
+
+    if (ignoreShared && bundle->IsShared()) {
+      newList.insertBack(entry.release());
+    } else {
+      mBundleMap.Remove(entry->mHashKey);
+    }
   }
 
-  // We never flush shared bundles, since their memory cannot be freed, so add
-  // them back to the map.
-  for (auto* entry : mSharedBundles) {
-    mBundleMap.Put(entry->mHashKey, entry);
-  }
+  mBundleCache = std::move(newList);
 }
 
 NS_IMETHODIMP
 nsStringBundleService::FlushBundles()
 {
-  flushBundleCache();
+  flushBundleCache(/* ignoreShared = */ false);
   return NS_OK;
 }
 
@@ -806,14 +809,11 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   RefPtr<SharedStringBundle> shared;
 
   if (cacheEntry) {
-    // cache hit!
-    // remove it from the list, it will later be reinserted
-    // at the head of the list
+    // Remove the entry from the list so it can be re-inserted at the back.
     cacheEntry->remove();
 
     shared = do_QueryObject(cacheEntry->mBundle);
   } else {
-    // hasn't been cached, so insert it into the hash table
     nsCOMPtr<nsIStringBundle> bundle;
     bool isContent = IsContentBundle(key);
     if (!isContent || !XRE_IsParentProcess()) {
@@ -848,10 +848,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   if (shared) {
     mSharedBundles.insertBack(cacheEntry);
   } else {
-    // at this point the cacheEntry should exist in the hashtable,
-    // but is not in the LRU cache.
-    // put the cache entry at the front of the list
-    mBundleCache.insertFront(cacheEntry);
+    mBundleCache.insertBack(cacheEntry);
   }
 
   // finally, return the value
@@ -859,37 +856,40 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   NS_ADDREF(*aResult);
 }
 
-bundleCacheEntry_t *
+UniquePtr<bundleCacheEntry_t>
+nsStringBundleService::evictOneEntry()
+{
+  for (auto* entry : mBundleCache) {
+    auto* bundle = nsStringBundleBase::Cast(entry->mBundle);
+    if (!bundle->IsShared()) {
+      entry->remove();
+      mBundleMap.Remove(entry->mHashKey);
+      return UniquePtr<bundleCacheEntry_t>(entry);
+    }
+  }
+  return nullptr;
+}
+
+bundleCacheEntry_t*
 nsStringBundleService::insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
                                        const nsACString& aHashKey)
 {
-  bundleCacheEntry_t *cacheEntry;
+  UniquePtr<bundleCacheEntry_t> cacheEntry;
 
-  if (mBundleMap.Count() < MAX_CACHED_BUNDLES ||
-      mBundleCache.isEmpty()) {
-    // cache not full - create a new entry
-    cacheEntry = new bundleCacheEntry_t();
-  } else {
-    // cache is full
-    // take the last entry in the list, and recycle it.
-    cacheEntry = mBundleCache.getLast();
-
-    // remove it from the hash table and linked list
-    NS_ASSERTION(mBundleMap.Contains(cacheEntry->mHashKey),
-                 "Element will not be removed!");
-    mBundleMap.Remove(cacheEntry->mHashKey);
-    cacheEntry->remove();
+  if (mBundleMap.Count() >= MAX_CACHED_BUNDLES) {
+    cacheEntry = evictOneEntry();
   }
 
-  // at this point we have a new cacheEntry that doesn't exist
-  // in the hashtable, so set up the cacheEntry
+  if (!cacheEntry) {
+    cacheEntry.reset(new bundleCacheEntry_t());
+  }
+
   cacheEntry->mHashKey = aHashKey;
   cacheEntry->mBundle = aBundle;
 
-  // insert the entry into the cache and map, make it the MRU
-  mBundleMap.Put(cacheEntry->mHashKey, cacheEntry);
+  mBundleMap.Put(cacheEntry->mHashKey, cacheEntry.get());
 
-  return cacheEntry;
+  return cacheEntry.release();
 }
 
 NS_IMETHODIMP
