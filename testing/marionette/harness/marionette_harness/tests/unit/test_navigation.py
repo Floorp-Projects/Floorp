@@ -50,7 +50,7 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
         self.test_page_remote = self.marionette.absolute_url("test.html")
         self.test_page_slow_resource = self.marionette.absolute_url("slow_resource.html")
 
-        if self.marionette.session_capabilities["platformName"] == "darwin":
+        if self.marionette.session_capabilities["platformName"] == "mac":
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
