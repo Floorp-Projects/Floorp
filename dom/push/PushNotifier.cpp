@@ -103,7 +103,7 @@ PushNotifier::Dispatch(PushDispatcher& aDispatcher)
 
     nsTArray<ContentParent*> contentActors;
     ContentParent::GetAll(contentActors);
-    if (!contentActors.IsEmpty()) {
+    if (!contentActors.IsEmpty() && !ServiceWorkerParentInterceptEnabled()) {
       // At least one content process is active, so e10s must be enabled.
       // Broadcast a message to notify observers and service workers.
       for (uint32_t i = 0; i < contentActors.Length(); ++i) {
@@ -128,7 +128,7 @@ PushNotifier::Dispatch(PushDispatcher& aDispatcher)
       return NS_OK;
     }
 
-    if (BrowserTabsRemoteAutostart()) {
+    if (BrowserTabsRemoteAutostart() && !ServiceWorkerParentInterceptEnabled()) {
       // e10s is enabled, but no content processes are active.
       return aDispatcher.HandleNoChildProcesses();
     }

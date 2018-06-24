@@ -477,6 +477,22 @@ ClientSource::GetController() const
   return mController;
 }
 
+void
+ClientSource::NoteDOMContentLoaded()
+{
+  if (mController.isSome() && !ServiceWorkerParentInterceptEnabled()) {
+    AssertIsOnMainThread();
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->MaybeCheckNavigationUpdate(mClientInfo);
+    }
+  }
+
+  MaybeExecute([] (PClientSourceChild* aActor) {
+    aActor->SendNoteDOMContentLoaded();
+  });
+}
+
 RefPtr<ClientOpPromise>
 ClientSource::Focus(const ClientFocusArgs& aArgs)
 {
@@ -611,21 +627,29 @@ ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
     CopyUTF8toUTF16(origin, init.mOrigin);
   }
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    // Shutting down. Just don't deliver this message.
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-    return ref.forget();
+  RefPtr<ServiceWorker> instance;
+
+  if (ServiceWorkerParentInterceptEnabled()) {
+    instance = globalObject->GetOrCreateServiceWorker(source);
+  } else {
+    // If we are in legacy child-side intercept mode then we need to verify
+    // this registration exists in the current process.
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (!swm) {
+      // Shutting down. Just don't deliver this message.
+      ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+      return ref.forget();
+    }
+
+    RefPtr<ServiceWorkerRegistrationInfo> reg =
+      swm->GetRegistration(principal, source.Scope());
+    if (reg) {
+      instance = globalObject->GetOrCreateServiceWorker(source);
+    }
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> reg =
-    swm->GetRegistration(principal, source.Scope());
-  if (reg) {
-    RefPtr<ServiceWorker> instance =
-      globalObject->GetOrCreateServiceWorker(source);
-    if (instance) {
-      init.mSource.SetValue().SetAsServiceWorker() = instance;
-    }
+  if (instance) {
+    init.mSource.SetValue().SetAsServiceWorker() = instance;
   }
 
   RefPtr<MessageEvent> event =
