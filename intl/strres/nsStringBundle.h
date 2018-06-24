@@ -69,33 +69,4 @@ protected:
     nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) override;
 };
 
-class nsExtensibleStringBundle;
-
-/**
- * An extensible implementation of the StringBundle interface.
- *
- * @created         28/Dec/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsExtensibleStringBundle final : public nsIStringBundle
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTRINGBUNDLE
-
-  nsresult Init(const char * aCategory, nsIStringBundleService *);
-
-public:
-  nsExtensibleStringBundle();
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-private:
-  virtual ~nsExtensibleStringBundle();
-
-  nsCOMArray<nsIStringBundle> mBundles;
-  bool mLoaded;
-};
-
-
-
 #endif
