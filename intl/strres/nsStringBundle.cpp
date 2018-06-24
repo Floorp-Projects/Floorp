@@ -8,7 +8,6 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsStringBundleService.h"
-#include "nsStringBundleTextOverride.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIMutableArray.h"
 #include "nsArrayEnumerator.h"
@@ -184,8 +183,8 @@ NS_IMPL_ISUPPORTS(StringBundleProxy, nsIStringBundle, StringBundleProxy)
 class SharedStringBundle final : public nsStringBundleBase
 {
 public:
-  SharedStringBundle(const char* aURLSpec, nsIStringBundleOverride* aOverrides)
-    : nsStringBundleBase(aURLSpec, aOverrides)
+  SharedStringBundle(const char* aURLSpec)
+    : nsStringBundleBase(aURLSpec)
   {}
 
   /**
@@ -288,10 +287,8 @@ NS_IMPL_ISUPPORTS(nsStringBundleBase, nsIStringBundle)
 NS_IMPL_ISUPPORTS_INHERITED0(nsStringBundle, nsStringBundleBase)
 NS_IMPL_ISUPPORTS_INHERITED(SharedStringBundle, nsStringBundleBase, SharedStringBundle)
 
-nsStringBundleBase::nsStringBundleBase(const char* aURLSpec,
-                                       nsIStringBundleOverride* aOverrideStrings) :
+nsStringBundleBase::nsStringBundleBase(const char* aURLSpec) :
   mPropertiesURL(aURLSpec),
-  mOverrideStrings(aOverrideStrings),
   mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
   mAttemptedLoad(false),
   mLoaded(false)
@@ -301,9 +298,8 @@ nsStringBundleBase::nsStringBundleBase(const char* aURLSpec,
 nsStringBundleBase::~nsStringBundleBase()
 {}
 
-nsStringBundle::nsStringBundle(const char* aURLSpec,
-                               nsIStringBundleOverride* aOverrideStrings)
-  : nsStringBundleBase(aURLSpec, aOverrideStrings)
+nsStringBundle::nsStringBundle(const char* aURLSpec)
+  : nsStringBundleBase(aURLSpec)
 {}
 
 nsStringBundle::~nsStringBundle()
@@ -326,9 +322,6 @@ nsStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   if (mProps) {
     n += mProps->SizeOfIncludingThis(aMallocSizeOf);
   }
-  if (mOverrideStrings) {
-    n += mOverrideStrings->SizeOfIncludingThis(aMallocSizeOf);
-  }
   return aMallocSizeOf(this) + n;
 }
 
@@ -348,9 +341,6 @@ SharedStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   size_t n = 0;
   if (mStringMap) {
     n += aMallocSizeOf(mStringMap);
-  }
-  if (mOverrideStrings) {
-    n += mOverrideStrings->SizeOfIncludingThis(aMallocSizeOf);
   }
   return aMallocSizeOf(this) + n;
 }
@@ -514,15 +504,6 @@ nsStringBundleBase::GetStringFromName(const char* aName, nsAString& aResult)
 
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
 
-  // try override first
-  if (mOverrideStrings) {
-    nsresult rv;
-    rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
-                                             nsDependentCString(aName),
-                                             aResult);
-    if (NS_SUCCEEDED(rv)) return rv;
-  }
-
   return GetStringImpl(nsDependentCString(aName), aResult);
 }
 
@@ -583,76 +564,10 @@ nsStringBundleBase::FormatStringFromName(const char* aName,
   return FormatString(formatStr.get(), aParams, aLength, aResult);
 }
 
-
-nsresult
-nsStringBundleBase::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings,
-                                           nsISimpleEnumerator** aResult)
-{
-  nsCOMPtr<nsISupports> supports;
-  nsCOMPtr<nsIPropertyElement> propElement;
-
-  nsresult rv;
-
-  nsCOMPtr<nsIMutableArray> resultArray =
-    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // first, append the override elements
-  nsCOMPtr<nsISimpleEnumerator> overrideEnumerator;
-  rv = aOverrideStrings->EnumerateKeysInBundle(mPropertiesURL,
-                                               getter_AddRefs(overrideEnumerator));
-
-  bool hasMore;
-  rv = overrideEnumerator->HasMoreElements(&hasMore);
-  NS_ENSURE_SUCCESS(rv, rv);
-  while (hasMore) {
-
-    rv = overrideEnumerator->GetNext(getter_AddRefs(supports));
-    if (NS_SUCCEEDED(rv))
-      resultArray->AppendElement(supports);
-
-    rv = overrideEnumerator->HasMoreElements(&hasMore);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // ok, now we have the override elements in resultArray
-  nsCOMPtr<nsISimpleEnumerator> propEnumerator;
-  rv = GetSimpleEnumerationImpl(getter_AddRefs(propEnumerator));
-  if (NS_FAILED(rv)) {
-    return NS_NewArrayEnumerator(aResult, resultArray);
-  }
-
-  do {
-    rv = propEnumerator->GetNext(getter_AddRefs(supports));
-    if (NS_SUCCEEDED(rv) &&
-        (propElement = do_QueryInterface(supports, &rv))) {
-
-      // now check if its in the override bundle
-      nsAutoCString key;
-      propElement->GetKey(key);
-
-      nsAutoString value;
-      rv = aOverrideStrings->GetStringFromName(mPropertiesURL, key, value);
-
-      // if it isn't there, then it is safe to append
-      if (NS_FAILED(rv))
-        resultArray->AppendElement(propElement);
-    }
-
-    rv = propEnumerator->HasMoreElements(&hasMore);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } while (hasMore);
-
-  return resultArray->Enumerate(aResult);
-}
-
 NS_IMETHODIMP
 nsStringBundleBase::GetSimpleEnumeration(nsISimpleEnumerator** aElements)
 {
   NS_ENSURE_ARG_POINTER(aElements);
-
-  if (mOverrideStrings)
-      return GetCombinedEnumeration(mOverrideStrings, aElements);
 
   return GetSimpleEnumerationImpl(aElements);
 }
@@ -945,14 +860,8 @@ nsStringBundleService::Init()
     os->AddObserver(this, "memory-pressure", true);
     os->AddObserver(this, "profile-do-change", true);
     os->AddObserver(this, "chrome-flush-caches", true);
-    os->AddObserver(this, "xpcom-category-entry-added", true);
     os->AddObserver(this, "intl:app-locales-changed", true);
   }
-
-  // instantiate the override service, if there is any.
-  // at some point we probably want to make this a category, and
-  // support multiple overrides
-  mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
 
   RegisterWeakMemoryReporter(this);
 
@@ -981,11 +890,6 @@ nsStringBundleService::Observe(nsISupports* aSubject,
       strcmp("intl:app-locales-changed", aTopic) == 0)
   {
     flushBundleCache();
-  }
-  else if (strcmp("xpcom-category-entry-added", aTopic) == 0 &&
-           NS_LITERAL_STRING("xpcom-autoregistration").Equals(aSomeData))
-  {
-    mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
   }
 
   return NS_OK;
@@ -1050,7 +954,7 @@ nsStringBundleService::RegisterContentBundle(const nsCString& aBundleURL,
     delete cacheEntry;
   }
 
-  auto bundle = MakeRefPtr<SharedStringBundle>(aBundleURL.get(), mOverrideStrings);
+  auto bundle = MakeRefPtr<SharedStringBundle>(aBundleURL.get());
   bundle->SetMapFile(aMapFile, aMapSize);
 
   if (proxy) {
@@ -1082,7 +986,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
     nsCOMPtr<nsIStringBundle> bundle;
     bool isContent = IsContentBundle(key);
     if (!isContent || !XRE_IsParentProcess()) {
-      bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
+      bundle = new nsStringBundle(aURLSpec);
     }
 
     // If this is a bundle which is used by the content processes, we want to
@@ -1100,7 +1004,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
     // becomes available.
     if (isContent) {
       if (XRE_IsParentProcess()) {
-        shared = new SharedStringBundle(aURLSpec, mOverrideStrings);
+        shared = new SharedStringBundle(aURLSpec);
         bundle = shared;
       } else {
         bundle = new StringBundleProxy(bundle.forget());
