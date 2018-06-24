@@ -2704,7 +2704,7 @@ nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
   params.small =
     (scrollbarFrame &&
      scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
-  params.rtl = aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  params.rtl = IsFrameRTL(aFrame);
   params.horizontal = aIsHorizontal;
   params.onDarkBackground = IsDarkBackground(aFrame);
   return params;
