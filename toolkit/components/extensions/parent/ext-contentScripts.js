@@ -131,6 +131,7 @@ this.contentScripts = class extends ExtensionAPI {
         for (let scriptId of scriptIds) {
           extension.registeredContentScripts.delete(scriptId);
         }
+        extension.updateContentScripts();
 
         extension.broadcast("Extension:UnregisterContentScripts", {
           id: extension.id,
@@ -162,6 +163,7 @@ this.contentScripts = class extends ExtensionAPI {
           });
 
           extension.registeredContentScripts.set(scriptId, scriptOptions);
+          extension.updateContentScripts();
 
           return scriptId;
         },
@@ -180,6 +182,7 @@ this.contentScripts = class extends ExtensionAPI {
 
           parentScriptsMap.delete(scriptId);
           extension.registeredContentScripts.delete(scriptId);
+          extension.updateContentScripts();
 
           contentScript.destroy();
 
