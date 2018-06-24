@@ -108,6 +108,8 @@ XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
 XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData);
 
+const {sharedData} = Services.ppmm;
+
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
 // storage used by the browser.storage.local API is not directly accessible from the extension code).
 XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
@@ -1245,6 +1247,8 @@ class LangpackBootstrapScope {
   }
 }
 
+let activeExtensionIDs = new Set();
+
 /**
  * This class is the main representation of an active WebExtension
  * in the main process.
@@ -1253,6 +1257,8 @@ class LangpackBootstrapScope {
 class Extension extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
+
+    this.sharedDataKeys = new Set();
 
     this.uuid = UUIDMap.get(addonData.id);
     this.instanceId = getUniqueId();
@@ -1306,6 +1312,8 @@ class Extension extends ExtensionData {
     this.whiteListedHosts = null;
     this._optionalOrigins = null;
     this.webAccessibleResources = null;
+
+    this.registeredContentScripts = new Map();
 
     this.emitter = new EventEmitter();
 
@@ -1513,6 +1521,15 @@ class Extension extends ExtensionData {
     return manifest;
   }
 
+  get contentSecurityPolicy() {
+    return this.manifest.content_security_policy;
+  }
+
+  get backgroundScripts() {
+    return (this.manifest.background &&
+            this.manifest.background.scripts);
+  }
+
   // Representation of the extension to send to content
   // processes. This should include anything the content process might
   // need.
@@ -1521,20 +1538,24 @@ class Extension extends ExtensionData {
       id: this.id,
       uuid: this.uuid,
       name: this.name,
+      contentSecurityPolicy: this.contentSecurityPolicy,
       instanceId: this.instanceId,
-      manifest: this.manifest,
       resourceURL: this.resourceURL,
-      baseURL: this.baseURI.spec,
       contentScripts: this.contentScripts,
-      registeredContentScripts: new Map(),
       webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
-      localeData: this.localeData.serialize(),
+      permissions: this.permissions,
+      optionalPermissions: this.manifest.optional_permissions,
+    };
+  }
+
+  // Extended serialized data which is only needed in the extensions process,
+  // and is never deserialized in web content processes.
+  serializeExtended() {
+    return {
+      backgroundScripts: this.backgroundScripts,
       childModules: this.modules && this.modules.child,
       dependencies: this.dependencies,
-      permissions: this.permissions,
-      principal: this.principal,
-      optionalPermissions: this.manifest.optional_permissions,
       schemaURLs: this.schemaURLs,
     };
   }
@@ -1577,6 +1598,30 @@ class Extension extends ExtensionData {
     });
   }
 
+  setSharedData(key, value) {
+    key = `extension/${this.id}/${key}`;
+    this.sharedDataKeys.add(key);
+
+    sharedData.set(key, value);
+  }
+
+  getSharedData(key, value) {
+    key = `extension/${this.id}/${key}`;
+    return sharedData.get(key);
+  }
+
+  initSharedData() {
+    this.setSharedData("", this.serialize());
+    this.setSharedData("extendedData", this.serializeExtended());
+    this.setSharedData("locales", this.localeData.serialize());
+    this.setSharedData("manifest", this.manifest);
+    this.updateContentScripts();
+  }
+
+  updateContentScripts() {
+    this.setSharedData("contentScripts", this.registeredContentScripts);
+  }
+
   runManifest(manifest) {
     let promises = [];
     for (let directive in manifest) {
@@ -1587,22 +1632,11 @@ class Extension extends ExtensionData {
       }
     }
 
-    let data = Services.ppmm.initialProcessData;
-    if (!data["Extension:Extensions"]) {
-      data["Extension:Extensions"] = [];
-    }
+    activeExtensionIDs.add(this.id);
+    sharedData.set("extensions/activeIDs", activeExtensionIDs);
 
-    let serial = this.serialize();
-
-    // Map of the programmatically registered content script definitions
-    // (by string scriptId), used in ext-contentScripts.js to propagate
-    // the registered content scripts to the child content processes
-    // (e.g. when a new content process starts after a content process crash).
-    this.registeredContentScripts = serial.registeredContentScripts;
-
-    data["Extension:Extensions"].push(serial);
-
-    return this.broadcast("Extension:Startup", serial).then(() => {
+    Services.ppmm.sharedData.flush();
+    return this.broadcast("Extension:Startup", this.id).then(() => {
       return Promise.all(promises);
     });
   }
@@ -1727,6 +1761,8 @@ class Extension extends ExtensionData {
 
       GlobalManager.init(this);
 
+      this.initSharedData();
+
       this.policy.active = false;
       this.policy = processScript.initExtension(this);
       this.policy.extension = this;
@@ -1798,8 +1834,12 @@ class Extension extends ExtensionData {
       StartupCache.clearAddonData(this.id);
     }
 
-    let data = Services.ppmm.initialProcessData;
-    data["Extension:Extensions"] = data["Extension:Extensions"].filter(e => e.id !== this.id);
+    activeExtensionIDs.delete(this.id);
+    sharedData.set("extensions/activeIDs", activeExtensionIDs);
+
+    for (let key of this.sharedDataKeys) {
+      sharedData.delete(key);
+    }
 
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
