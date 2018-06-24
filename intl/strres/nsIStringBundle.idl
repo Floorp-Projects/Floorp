@@ -83,7 +83,6 @@ interface nsIStringBundle : nsISupports
 interface nsIStringBundleService : nsISupports
 {
   nsIStringBundle createBundle(in string aURLSpec);
-  nsIStringBundle createExtensibleBundle(in string aRegistryKey);
 
   /**
    * Formats a message string from a status code and status arguments.
