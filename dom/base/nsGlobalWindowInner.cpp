@@ -2355,6 +2355,12 @@ nsPIDOMWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& aS
   nsGlobalWindowInner::Cast(this)->NoteCalledRegisterForServiceWorkerScope(aScope);
 }
 
+void
+nsPIDOMWindowInner::NoteDOMContentLoaded()
+{
+  nsGlobalWindowInner::Cast(this)->NoteDOMContentLoaded();
+}
+
 bool
 nsGlobalWindowInner::ShouldReportForServiceWorkerScope(const nsAString& aScope)
 {
@@ -2469,6 +2475,16 @@ nsGlobalWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& a
   }
 
   mClientSource->NoteCalledRegisterForServiceWorkerScope(aScope);
+}
+
+void
+nsGlobalWindowInner::NoteDOMContentLoaded()
+{
+  if (!mClientSource) {
+    return;
+  }
+
+  mClientSource->NoteDOMContentLoaded();
 }
 
 void
