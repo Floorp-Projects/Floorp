@@ -1632,7 +1632,7 @@ nsDocument::~nsDocument()
         Accumulate(Telemetry::CSP_UNSAFE_EVAL_DOCUMENTS_COUNT, 1);
       }
 
-      if (MOZ_UNLIKELY(mMathMLEnabled)) {
+      if (MOZ_UNLIKELY(GetMathMLEnabled())) {
         ScalarAdd(Telemetry::ScalarID::MATHML_DOC_COUNT, 1);
       }
     }
@@ -1695,6 +1695,7 @@ nsDocument::~nsDocument()
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
   }
+  // We don't own the mOnDemandBuiltInUASheets, so we don't need to reset them.
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -1917,6 +1918,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnDemandBuiltInUASheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
@@ -2455,6 +2457,7 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
     // filled the style set.  (This allows us to avoid calling
     // GetStyleBackendType() too early.)
     RemoveDocStyleSheetsFromStyleSets();
+    RemoveStyleSheetsFromStyleSets(mOnDemandBuiltInUASheets, SheetType::Agent);
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], SheetType::Agent);
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], SheetType::User);
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], SheetType::Doc);
@@ -2469,6 +2472,7 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   // Release all the sheets
   mStyleSheets.Clear();
+  mOnDemandBuiltInUASheets.Clear();
   for (auto& sheets : mAdditionalSheets) {
     sheets.Clear();
   }
@@ -2529,6 +2533,13 @@ nsIDocument::FillStyleSet(ServoStyleSet* aStyleSet)
       *sheetService->AuthorStyleSheets();
     for (StyleSheet* sheet : sheets) {
       aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
+    }
+  }
+
+  // Iterate backwards to maintain order
+  for (StyleSheet* sheet : Reversed(mOnDemandBuiltInUASheets)) {
+    if (sheet->IsApplicable()) {
+      aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
   }
 
@@ -4118,6 +4129,43 @@ nsIDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
   MOZ_ASSERT(mCachedRootElement != aKid,
              "Stale pointer in mCachedRootElement, after we tried to clear it "
              "(maybe somebody called GetRootElement() too early?)");
+}
+
+void
+nsIDocument::EnsureOnDemandBuiltInUASheet(StyleSheet* aSheet)
+{
+  if (mOnDemandBuiltInUASheets.Contains(aSheet)) {
+    return;
+  }
+  AddOnDemandBuiltInUASheet(aSheet);
+}
+
+void
+nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
+{
+  MOZ_ASSERT(!mOnDemandBuiltInUASheets.Contains(aSheet));
+
+  // Prepend here so that we store the sheets in mOnDemandBuiltInUASheets in
+  // the same order that they should end up in the style set.
+  mOnDemandBuiltInUASheets.InsertElementAt(0, aSheet);
+
+  if (aSheet->IsApplicable()) {
+    // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
+    if (nsIPresShell* shell = GetShell()) {
+      // Note that prepending here is necessary to make sure that html.css etc.
+      // does not override Firefox OS/Mobile's content.css sheet.
+      //
+      // Maybe we should have an insertion point to match the order of
+      // nsDocumentViewer::CreateStyleSet though?
+      //
+      // FIXME(emilio): We probably should, randomly prepending stuff here is
+      // very prone to subtle bugs, behavior differences...
+      shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet);
+      shell->ApplicableStylesChanged();
+    }
+  }
+
+  NotifyStyleSheetAdded(aSheet, false);
 }
 
 void
@@ -9494,6 +9542,21 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
           }
         }
       }
+
+      // Iterate backwards to maintain order
+      for (StyleSheet* sheet : Reversed(thisAsDoc->mOnDemandBuiltInUASheets)) {
+        if (sheet) {
+          if (sheet->IsApplicable()) {
+            RefPtr<StyleSheet> clonedSheet =
+              sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
+            NS_WARNING_ASSERTION(clonedSheet,
+                                 "Cloning a stylesheet didn't work!");
+            if (clonedSheet) {
+              clonedDoc->AddOnDemandBuiltInUASheet(clonedSheet);
+            }
+          }
+        }
+      }
     }
   }
   mCreatingStaticClone = false;
@@ -11698,6 +11761,11 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
   aWindowSizes.mLayoutStyleSheetsSize +=
     SizeOfOwnedSheetArrayExcludingThis(mStyleSheets,
                                        aWindowSizes.mState.mMallocSizeOf);
+  // Note that we do not own the sheets pointed to by mOnDemandBuiltInUASheets
+  // (the nsLayoutStyleSheetCache singleton does).
+  aWindowSizes.mLayoutStyleSheetsSize +=
+    mOnDemandBuiltInUASheets.ShallowSizeOfExcludingThis(
+      aWindowSizes.mState.mMallocSizeOf);
   for (auto& sheetArray : mAdditionalSheets) {
     aWindowSizes.mLayoutStyleSheetsSize +=
       SizeOfOwnedSheetArrayExcludingThis(sheetArray,
