@@ -169,7 +169,7 @@ TEST_F(APZCBasicTester, FlingIntoOverscroll) {
   SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
 
   // Scroll down by 25 px. Don't fling for simplicity.
-  ApzcPanNoFling(apzc, 50, 25);
+  Pan(apzc, 50, 25, PanOptions::NoFling);
 
   // Now scroll back up by 20px, this time flinging after.
   // The fling should cover the remaining 5 px of room to scroll, then
@@ -222,7 +222,7 @@ TEST_F(APZCBasicTester, PanningTransformNotifications) {
   }
 
   check.Call("Simple pan");
-  ApzcPanNoFling(apzc, 50, 25);
+  Pan(apzc, 50, 25, PanOptions::NoFling);
   check.Call("Complex pan");
   Pan(apzc, 25, 45);
   apzc->AdvanceAnimationsUntilEnd();
