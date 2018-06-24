@@ -106,9 +106,25 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     aDocument->RegisterPendingLinkUpdate(this);
   }
 
-  // Set the bit in the document for telemetry.
-  if (nsIDocument* doc = GetComposedDoc()) {
-    doc->SetMathMLEnabled();
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    if (!doc->GetMathMLEnabled()) {
+      // Enable MathML and setup the style sheet during binding, not element
+      // construction, because we could move a MathML element from the document
+      // that created it to another document.
+      auto cache = nsLayoutStylesheetCache::Singleton();
+      doc->SetMathMLEnabled();
+      doc->EnsureOnDemandBuiltInUASheet(cache->MathMLSheet());
+
+      // Rebuild style data for the presshell, because style system
+      // optimizations may have taken place assuming MathML was disabled.
+      // (See nsRuleNode::CheckSpecifiedProperties.)
+      RefPtr<nsPresContext> presContext = doc->GetPresContext();
+      if (presContext) {
+        presContext->
+          PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_Subtree);
+      }
+    }
   }
 
   return rv;
