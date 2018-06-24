@@ -379,18 +379,6 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
         menulist->GetInputField(getter_AddRefs(inputField));
         return inputField;
       }
-      else if (aContent->IsXULElement(nsGkAtoms::scale)) {
-        nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
-        if (!doc)
-          return nullptr;
-
-        nsINodeList* children = doc->BindingManager()->GetAnonymousNodesFor(aContent);
-        if (children) {
-          nsIContent* child = children->Item(0);
-          if (child && child->IsXULElement(nsGkAtoms::slider))
-            return child->AsElement();
-        }
-      }
     }
   }
 #endif
