@@ -28,6 +28,15 @@ public:
 
     const nsCString& BundleURL() const { return mPropertiesURL; }
 
+    // Returns true if this bundle has more than one reference. If it has only
+    // a single reference, it is assumed to be held alive by the bundle cache.
+    bool IsShared() const { return mRefCnt > 1; }
+
+    static nsStringBundleBase* Cast(nsIStringBundle* aBundle)
+    {
+      return static_cast<nsStringBundleBase*>(aBundle);
+    }
+
 protected:
     virtual ~nsStringBundleBase();
 
