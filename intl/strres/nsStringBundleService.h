@@ -14,7 +14,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIErrorService.h"
-#include "nsIStringBundleOverride.h"
 #include "nsIMemoryReporter.h"
 
 #include "mozilla/LinkedList.h"
@@ -75,7 +74,6 @@ private:
   mozilla::AutoCleanLinkedList<bundleCacheEntry_t> mSharedBundles;
 
   nsCOMPtr<nsIErrorService> mErrorService;
-  nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
 };
 
 #endif

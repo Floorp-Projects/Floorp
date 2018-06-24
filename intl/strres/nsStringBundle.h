@@ -13,12 +13,11 @@
 #include "nsCOMArray.h"
 
 class nsIPersistentProperties;
-class nsIStringBundleOverride;
 
 class nsStringBundleBase : public nsIStringBundle
 {
 public:
-    nsStringBundleBase(const char* aURLSpec, nsIStringBundleOverride*);
+    nsStringBundleBase(const char* aURLSpec);
 
     nsresult ParseProperties(nsIPersistentProperties**);
 
@@ -37,13 +36,9 @@ protected:
     virtual nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) = 0;
 
     nsCString              mPropertiesURL;
-    nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
     mozilla::ReentrantMonitor    mReentrantMonitor;
     bool                         mAttemptedLoad;
     bool                         mLoaded;
-
-    nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
-                                    nsISimpleEnumerator** aResult);
 
     size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
@@ -56,7 +51,7 @@ public:
 class nsStringBundle : public nsStringBundleBase
 {
 public:
-    nsStringBundle(const char* aURLSpec, nsIStringBundleOverride*);
+    nsStringBundle(const char* aURLSpec);
 
     NS_DECL_ISUPPORTS_INHERITED
 
