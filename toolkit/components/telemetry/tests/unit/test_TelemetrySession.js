@@ -275,7 +275,7 @@ function checkScalars(processes) {
   }
 }
 
-function checkPayload(payload, reason, successfulPings, savedPings) {
+function checkPayload(payload, reason, successfulPings) {
   Assert.ok("info" in payload, "Payload must contain an info section.");
   checkPayloadInfo(payload.info, reason);
 
@@ -283,7 +283,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok(payload.simpleMeasurements.uptime >= 0);
   Assert.equal(payload.simpleMeasurements.startupInterrupted, 1);
   Assert.equal(payload.simpleMeasurements.shutdownDuration, SHUTDOWN_TIME);
-  Assert.equal(payload.simpleMeasurements.savedPings, savedPings);
   Assert.ok("maximalNumberOfConcurrentThreads" in payload.simpleMeasurements);
   Assert.ok(payload.simpleMeasurements.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
 
@@ -578,9 +577,9 @@ add_task(async function test_saveLoadPing() {
   }
 
   checkPingFormat(pings[0], PING_TYPE_MAIN, true, true);
-  checkPayload(pings[0].payload, REASON_TEST_PING, 0, 1);
+  checkPayload(pings[0].payload, REASON_TEST_PING, 0);
   checkPingFormat(pings[1], PING_TYPE_SAVED_SESSION, true, true);
-  checkPayload(pings[1].payload, REASON_SAVED_SESSION, 0, 0);
+  checkPayload(pings[1].payload, REASON_SAVED_SESSION, 0);
 
   await TelemetryController.testShutdown();
 });
