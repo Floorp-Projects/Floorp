@@ -150,6 +150,11 @@ public:
   const Maybe<ServiceWorkerDescriptor>&
   GetController() const;
 
+  // Note that the client has reached DOMContentLoaded.  Only applies to window
+  // clients.
+  void
+  NoteDOMContentLoaded();
+
   RefPtr<ClientOpPromise>
   Focus(const ClientFocusArgs& aArgs);
 
