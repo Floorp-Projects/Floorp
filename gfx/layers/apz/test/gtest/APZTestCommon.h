@@ -211,6 +211,14 @@ public:
     mcc = nullptr;
   }
 
+  /**
+   * This function is not currently implemented.
+   * See bug 1468804 for more information.
+   **/
+  void CancelAnimation() {
+    EXPECT_TRUE(false);
+  }
+
 protected:
   AsyncPanZoomController* NewAPZCInstance(LayersId aLayersId,
                                           GeckoContentController* aController) override;
@@ -355,7 +363,8 @@ public:
      * to pass in coordinates that are sufficient to overcome the touch-start
      * tolerance *and* cause the desired amount of scrolling.
      */
-    ExactCoordinates = 0x2
+    ExactCoordinates = 0x2,
+    NoFling = 0x4
   };
 
   enum class PinchOptions {
@@ -412,11 +421,6 @@ public:
                          bool aExpectConsumed,
                          nsTArray<uint32_t>* aAllowedTouchBehaviors,
                          uint64_t* aOutInputBlockId = nullptr);
-
-  void ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
-                      int aTouchStartY,
-                      int aTouchEndY,
-                      uint64_t* aOutInputBlockId = nullptr);
 
   template<class InputReceiver>
   void DoubleTap(const RefPtr<InputReceiver>& aTarget,
@@ -589,6 +593,10 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
     (*aOutEventStatuses)[3] = status;
   }
 
+  if ((aOptions & PanOptions::NoFling)) {
+    aTarget->CancelAnimation();
+  }
+
   // Don't increment the time here. Animations started on touch-up, such as
   // flings, are affected by elapsed time, and we want to be able to sample
   // them immediately after they start, without time having elapsed.
@@ -628,15 +636,6 @@ APZCTesterBase::PanAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
   }
   EXPECT_EQ(touchMoveStatus, statuses[1]);
   EXPECT_EQ(touchMoveStatus, statuses[2]);
-}
-
-void
-APZCTesterBase::ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
-                               int aTouchStartY, int aTouchEndY,
-                               uint64_t* aOutInputBlockId)
-{
-  Pan(aApzc, aTouchStartY, aTouchEndY, PanOptions::None, nullptr, nullptr, aOutInputBlockId);
-  aApzc->CancelAnimation();
 }
 
 template<class InputReceiver>
