@@ -17,6 +17,7 @@
 #include "nsIMemoryReporter.h"
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 
 struct bundleCacheEntry_t;
 
@@ -64,13 +65,17 @@ private:
                             uint32_t argCount, char16_t** argArray,
                             nsAString& result);
 
-  void flushBundleCache();
+  void flushBundleCache(bool ignoreShared = true);
+
+  mozilla::UniquePtr<bundleCacheEntry_t> evictOneEntry();
 
   bundleCacheEntry_t* insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
                                       const nsACString &aHashKey);
 
   nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
+  // LRU list of cached entries, with the least-recently-used entry first.
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
+  // List of cached shared-memory string bundles, in arbitrary order.
   mozilla::AutoCleanLinkedList<bundleCacheEntry_t> mSharedBundles;
 
   nsCOMPtr<nsIErrorService> mErrorService;
