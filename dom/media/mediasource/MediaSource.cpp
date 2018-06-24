@@ -22,6 +22,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/mozalloc.h"
@@ -130,6 +131,7 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
   }
   if (mimeType == MEDIAMIMETYPE("video/webm")) {
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
+          StaticPrefs::MediaCapabilitiesEnabled() ||
           containerType->ExtendedType().Codecs().Contains(
             NS_LITERAL_STRING("vp8")) ||
 #ifdef MOZ_AV1
