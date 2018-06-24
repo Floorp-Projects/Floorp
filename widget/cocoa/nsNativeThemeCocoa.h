@@ -279,6 +279,7 @@ public:
     eScale,                        // ScaleParams
     eScrollbarThumb,               // ScrollbarParams
     eScrollbarTrack,               // ScrollbarParams
+    eScrollCorner,                 // ScrollbarParams
     eMultilineTextField,           // bool
     eListBox,
     eSourceList,                   // bool
@@ -320,6 +321,7 @@ public:
     static WidgetInfo Scale(const ScaleParams& aParams) { return WidgetInfo(Widget::eScale, aParams); }
     static WidgetInfo ScrollbarThumb(const ScrollbarParams& aParams) { return WidgetInfo(Widget::eScrollbarThumb, aParams); }
     static WidgetInfo ScrollbarTrack(const ScrollbarParams& aParams) { return WidgetInfo(Widget::eScrollbarTrack, aParams); }
+    static WidgetInfo ScrollCorner(const ScrollbarParams& aParams) { return WidgetInfo(Widget::eScrollCorner, aParams); }
     static WidgetInfo MultilineTextField(bool aParams) { return WidgetInfo(Widget::eMultilineTextField, aParams); }
     static WidgetInfo ListBox() { return WidgetInfo(Widget::eListBox, false); }
     static WidgetInfo SourceList(bool aParams) { return WidgetInfo(Widget::eSourceList, aParams); }
@@ -525,6 +527,8 @@ protected:
                           ScrollbarParams aParams);
   void DrawScrollbarTrack(CGContextRef cgContext, const CGRect& inBoxRect,
                           ScrollbarParams aParams);
+  void DrawScrollCorner(CGContextRef cgContext, const CGRect& inBoxRect,
+                        ScrollbarParams aParams);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                               bool aIsFocused);
   void DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect,
