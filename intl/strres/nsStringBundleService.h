@@ -43,9 +43,9 @@ public:
     size_t amt = SizeOfIncludingThis(MallocSizeOf);
 
     MOZ_COLLECT_REPORT(
-      "explicit/string-bundle-service", KIND_HEAP, UNITS_BYTES,
+      "explicit/string-bundles/service", KIND_HEAP, UNITS_BYTES,
       amt,
-      "Memory used for StringBundleService bundles");
+      "Memory used for StringBundleService overhead");
     return NS_OK;
   };
 
