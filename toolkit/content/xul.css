@@ -260,7 +260,6 @@ textbox,
 tab,
 radio,
 splitter,
-scale,
 menulist {
   -moz-window-dragging: no-drag;
 }
@@ -831,17 +830,6 @@ dropmarker > .dropmarker-icon {
   min-width: 0% ! important;
   min-height: 0% ! important;
   -moz-box-ordinal-group: 2147483646;
-}
-
-/********** scale **************/
-
-scale {
-  -moz-binding: url(chrome://global/content/bindings/scale.xml#scale);
-}
-
-.scale-slider {
-  -moz-binding: url(chrome://global/content/bindings/general.xml#basecontrol);
-  -moz-user-focus: normal;
 }
 
 /******** scrollbar ********/
