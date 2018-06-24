@@ -134,16 +134,12 @@ class StringBundleProxy : public nsIStringBundle
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
   {
-    return mTarget->SizeOfIncludingThis(aMallocSizeOf) + aMallocSizeOf(this);
+    return aMallocSizeOf(this);
   }
 
   size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override
   {
-    size_t size = mTarget->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
-    if (mRefCnt == 1) {
-      size += aMallocSizeOf(this);
-    }
-    return size;
+    return mRefCnt == 1 ? SizeOfIncludingThis(aMallocSizeOf) : 0;
   }
 
 protected:
@@ -183,10 +179,6 @@ NS_IMPL_ISUPPORTS(StringBundleProxy, nsIStringBundle, StringBundleProxy)
 class SharedStringBundle final : public nsStringBundleBase
 {
 public:
-  SharedStringBundle(const char* aURLSpec)
-    : nsStringBundleBase(aURLSpec)
-  {}
-
   /**
    * Initialize the string bundle with a file descriptor pointing to a
    * pre-populated key-value store for this string bundle. This should only be
@@ -244,6 +236,12 @@ public:
   }
 
 protected:
+  friend class nsStringBundleBase;
+
+  explicit SharedStringBundle(const char* aURLSpec)
+    : nsStringBundleBase(aURLSpec)
+  {}
+
   ~SharedStringBundle() override = default;
 
   nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
@@ -280,9 +278,23 @@ private:
 
 NS_IMPL_ISUPPORTS(StringMapEnumerator, nsISimpleEnumerator)
 
+template <typename T, typename... Args>
+already_AddRefed<T>
+MakeBundle(Args... args)
+{
+  return nsStringBundleBase::Create<T>(args...);
+}
+
+template <typename T, typename... Args>
+RefPtr<T>
+MakeBundleRefPtr(Args... args)
+{
+  return nsStringBundleBase::Create<T>(args...);
+}
+
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS(nsStringBundleBase, nsIStringBundle)
+NS_IMPL_ISUPPORTS(nsStringBundleBase, nsIStringBundle, nsIMemoryReporter)
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsStringBundle, nsStringBundleBase)
 NS_IMPL_ISUPPORTS_INHERITED(SharedStringBundle, nsStringBundleBase, SharedStringBundle)
@@ -296,7 +308,24 @@ nsStringBundleBase::nsStringBundleBase(const char* aURLSpec) :
 }
 
 nsStringBundleBase::~nsStringBundleBase()
-{}
+{
+  UnregisterWeakMemoryReporter(this);
+}
+
+void
+nsStringBundleBase::RegisterMemoryReporter()
+{
+  RegisterWeakMemoryReporter(this);
+}
+
+template <typename T, typename... Args>
+/* static */ already_AddRefed<T>
+nsStringBundleBase::Create(Args... args)
+{
+  RefPtr<T> bundle = new T(args...);
+  bundle->RegisterMemoryReporter();
+  return bundle.forget();
+}
 
 nsStringBundle::nsStringBundle(const char* aURLSpec)
   : nsStringBundleBase(aURLSpec)
@@ -316,7 +345,7 @@ nsStringBundleBase::AsyncPreload()
 }
 
 size_t
-nsStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+nsStringBundle::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   if (mProps) {
@@ -326,7 +355,7 @@ nsStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 size_t
-nsStringBundleBase::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
+nsStringBundleBase::SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   if (mRefCnt == 1) {
     return SizeOfIncludingThis(aMallocSizeOf);
@@ -336,7 +365,7 @@ nsStringBundleBase::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) co
 }
 
 size_t
-SharedStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+SharedStringBundle::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   if (mStringMap) {
@@ -345,6 +374,70 @@ SharedStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this) + n;
 }
 
+NS_IMETHODIMP
+nsStringBundleBase::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                   nsISupports* aData,
+                                   bool aAnonymize)
+{
+  // String bundle URLs are always local, and part of the distribution.
+  // There's no need to anonymize.
+  nsAutoCStringN<64> escapedURL(mPropertiesURL);
+  escapedURL.ReplaceChar('/', '\\');
+
+  size_t sharedSize = 0;
+  size_t heapSize = SizeOfIncludingThis(MallocSizeOf);
+
+  nsAutoCStringN<256> path("explicit/string-bundles/");
+  {
+    RefPtr<SharedStringBundle> shared = do_QueryObject(this);
+    if (shared) {
+      path.AppendLiteral("SharedStringBundle");
+      if (XRE_IsParentProcess()) {
+        sharedSize = shared->MapSize();
+      }
+    } else {
+      path.AppendLiteral("nsStringBundle");
+    }
+  }
+
+  path.AppendLiteral("(url=\"");
+  path.Append(escapedURL);
+
+  // Note: The memory reporter service holds a strong reference to reporters
+  // while collecting reports, so we want to ignore the extra ref in reports.
+  path.AppendLiteral("\", shared=");
+  path.AppendASCII(mRefCnt > 2 ? "true" : "false");
+  path.AppendLiteral(", refCount=");
+  path.AppendInt(uint32_t(mRefCnt - 1));
+
+  if (sharedSize) {
+    path.AppendLiteral(", sharedMemorySize=");
+    path.AppendInt(uint32_t(sharedSize));
+  }
+
+  path.AppendLiteral(")");
+
+  NS_NAMED_LITERAL_CSTRING(
+      desc,
+      "A StringBundle instance representing the data in a (probably "
+      "localized) .properties file. Data may be shared between "
+      "processes.");
+
+  aHandleReport->Callback(
+    EmptyCString(), path, KIND_HEAP, UNITS_BYTES,
+    heapSize, desc, aData);
+
+  if (sharedSize) {
+    path.ReplaceLiteral(0, sizeof("explicit/") - 1,
+                        "shared-");
+
+    aHandleReport->Callback(
+      EmptyCString(), path, KIND_OTHER, UNITS_BYTES,
+      sharedSize, desc, aData);
+  }
+
+  return NS_OK;
+}
 
 nsresult
 nsStringBundleBase::ParseProperties(nsIPersistentProperties** aProps)
@@ -704,7 +797,7 @@ nsStringBundleService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) 
 {
   size_t n = mBundleMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mBundleMap.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->mBundle->SizeOfIncludingThis(aMallocSizeOf);
+    n += aMallocSizeOf(iter.Data());
     n += iter.Data()->mHashKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
   return aMallocSizeOf(this) + n;
@@ -788,7 +881,7 @@ nsStringBundleService::RegisterContentBundle(const nsCString& aBundleURL,
     delete cacheEntry;
   }
 
-  auto bundle = MakeRefPtr<SharedStringBundle>(aBundleURL.get());
+  auto bundle = MakeBundleRefPtr<SharedStringBundle>(aBundleURL.get());
   bundle->SetMapFile(aMapFile, aMapSize);
 
   if (proxy) {
@@ -817,7 +910,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
     nsCOMPtr<nsIStringBundle> bundle;
     bool isContent = IsContentBundle(key);
     if (!isContent || !XRE_IsParentProcess()) {
-      bundle = new nsStringBundle(aURLSpec);
+      bundle = MakeBundle<nsStringBundle>(aURLSpec);
     }
 
     // If this is a bundle which is used by the content processes, we want to
@@ -835,7 +928,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
     // becomes available.
     if (isContent) {
       if (XRE_IsParentProcess()) {
-        shared = new SharedStringBundle(aURLSpec);
+        shared = MakeBundle<SharedStringBundle>(aURLSpec);
         bundle = shared;
       } else {
         bundle = new StringBundleProxy(bundle.forget());

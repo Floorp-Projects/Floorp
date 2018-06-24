@@ -8,21 +8,25 @@
 
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIStringBundle.h"
+#include "nsIMemoryReporter.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsCOMArray.h"
 
 class nsIPersistentProperties;
 
+
 class nsStringBundleBase : public nsIStringBundle
+                         , public nsIMemoryReporter
 {
 public:
-    nsStringBundleBase(const char* aURLSpec);
+    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
     nsresult ParseProperties(nsIPersistentProperties**);
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLE
+    NS_DECL_NSIMEMORYREPORTER
 
     virtual nsresult LoadProperties() = 0;
 
@@ -37,12 +41,19 @@ public:
       return static_cast<nsStringBundleBase*>(aBundle);
     }
 
+    template <typename T, typename... Args>
+    static already_AddRefed<T> Create(Args... args);
+
 protected:
+    nsStringBundleBase(const char* aURLSpec);
+
     virtual ~nsStringBundleBase();
 
     virtual nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) = 0;
 
     virtual nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) = 0;
+
+    void RegisterMemoryReporter();
 
     nsCString              mPropertiesURL;
     mozilla::ReentrantMonitor    mReentrantMonitor;
@@ -60,8 +71,6 @@ public:
 class nsStringBundle : public nsStringBundleBase
 {
 public:
-    nsStringBundle(const char* aURLSpec);
-
     NS_DECL_ISUPPORTS_INHERITED
 
     nsCOMPtr<nsIPersistentProperties> mProps;
@@ -71,6 +80,10 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 protected:
+    friend class nsStringBundleBase;
+
+    explicit nsStringBundle(const char* aURLSpec);
+
     virtual ~nsStringBundle();
 
     nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
