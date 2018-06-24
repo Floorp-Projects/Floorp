@@ -386,6 +386,7 @@ WEBIDL_FILES = [
     'AudioTrackList.webidl',
     'AudioWorkletGlobalScope.webidl',
     'AudioWorkletNode.webidl',
+    'AudioWorkletProcessor.webidl',
     'AutocompleteInfo.webidl',
     'BarProp.webidl',
     'BaseAudioContext.webidl',
