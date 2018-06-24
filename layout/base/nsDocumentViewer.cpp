@@ -2465,15 +2465,13 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     styleSet->PrependStyleSheet(SheetType::Agent, sheet);
   }
 
+  // This is the only place components.css / xul.css get loaded.
   if (aDocument->LoadsFullXULStyleSheetUpFront()) {
-    // This is the only place components.css gets loaded, unlike xul.css
     sheet = cache->XULComponentsSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
 
-    // nsXULElement::BindToTree loads xul.css on-demand if we don't load it
-    // up-front here.
     sheet = cache->XULSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet);
