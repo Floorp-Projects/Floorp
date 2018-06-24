@@ -21,8 +21,17 @@ class TestCapabilities(MarionetteTestCase):
                   processID: Services.appinfo.processID,
                 }
                 """)
-            self.os_name = self.marionette.execute_script(
-                "return Services.sysinfo.getProperty('name')").lower()
+            self.os_name = self.marionette.execute_script("""
+                let name = Services.sysinfo.getProperty("name");
+                switch (name) {
+                  case "Windows_NT":
+                    return "windows";
+                  case "Darwin":
+                    return "mac";
+                  default:
+                    return name.toLowerCase();
+                }
+                """)
             self.os_version = self.marionette.execute_script(
                 "return Services.sysinfo.getProperty('version')")
 
