@@ -29,7 +29,7 @@
 <script type="application/javascript"
         src="chrome://devtools/content/shared/theme-switching.js"/>
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/javascript" src="chrome://devtools/content/scratchpad/scratchpad.js"/>
+<script type="application/javascript" src="resource://devtools/client/scratchpad/scratchpad.js"/>
 
 #include ../../../toolkit/content/editMenuCommands.inc.xul
 
