@@ -1397,7 +1397,8 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+  TimeStamp start = TimeStamp::Now();
+  mAsyncImageManager->SetCompositionTime(start);
 
   {
     // TODO: We can improve upon this by using two transactions: one for everything that
@@ -1442,7 +1443,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   SetAPZSampleTime();
 
-  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId());
+  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), start);
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   auto startTime = TimeStamp::Now();

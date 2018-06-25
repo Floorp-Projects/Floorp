@@ -15,6 +15,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -413,7 +414,7 @@ RenderThread::SetDestroyed(wr::WindowId aWindowId)
 }
 
 void
-RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
+RenderThread::IncPendingFrameCount(wr::WindowId aWindowId, const TimeStamp& aStartTime)
 {
   MutexAutoLock lock(mFrameCountMapLock);
   auto it = mWindowInfos.find(AsUint64(aWindowId));
@@ -422,6 +423,7 @@ RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
     return;
   }
   it->second->mPendingCount++;
+  it->second->mStartTimes.push(aStartTime);
 }
 
 void
@@ -439,6 +441,14 @@ RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
     return;
   }
   info->mPendingCount--;
+  // This function gets called for "nop frames" where nothing was rendered or
+  // composited. But we count this time because the non-WR codepath equivalent
+  // in CompositorBridgeParent::ComposeToTarget also counts such frames. And
+  // anyway this should be relatively infrequent so it shouldn't skew the
+  // numbers much.
+  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
+                                          info->mStartTimes.front());
+  info->mStartTimes.pop();
 }
 
 void
@@ -470,6 +480,12 @@ RenderThread::FrameRenderingComplete(wr::WindowId aWindowId)
   }
   info->mPendingCount--;
   info->mRenderingCount--;
+  // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
+  // point until now (when the frame is finally pushed to the screen) is
+  // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
+  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
+                                          info->mStartTimes.front());
+  info->mStartTimes.pop();
 }
 
 void
