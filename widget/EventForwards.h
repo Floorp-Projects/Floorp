@@ -33,6 +33,30 @@ enum nsEventStatus
 
 namespace mozilla {
 
+enum class CanBubble
+{
+  eYes,
+  eNo
+};
+
+enum class Cancelable
+{
+  eYes,
+  eNo
+};
+
+enum class ChromeOnlyDispatch
+{
+  eYes,
+  eNo
+};
+
+enum class Trusted
+{
+  eYes,
+  eNo
+};
+
 /**
  * Event messages
  */

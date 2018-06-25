@@ -531,7 +531,10 @@ private:
     for (int32_t i = 0; i < targets.Count(); ++i) {
       nsIDocument* d = targets[i];
       nsContentUtils::DispatchTrustedEvent(d, d->GetWindow(),
-                                           aEvent, false, false, nullptr);
+                                           aEvent,
+                                           CanBubble::eNo,
+                                           Cancelable::eNo,
+                                           nullptr);
     }
   }
 
@@ -3055,7 +3058,7 @@ nsDocumentViewer::SetTextZoom(float aTextZoom)
   if (textZoomChange) {
     nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
                                         NS_LITERAL_STRING("TextZoomChange"),
-                                        true, true);
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   return NS_OK;
@@ -3175,7 +3178,7 @@ nsDocumentViewer::SetFullZoom(float aFullZoom)
   if (fullZoomChange) {
     nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
                                         NS_LITERAL_STRING("FullZoomChange"),
-                                        true, true);
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   return NS_OK;

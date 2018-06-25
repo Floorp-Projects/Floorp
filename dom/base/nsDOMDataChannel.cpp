@@ -340,9 +340,9 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
 
   RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
-  event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"), false, false,
-                          jsData, mOrigin, EmptyString(), nullptr,
-                          Sequence<OwningNonNull<MessagePort>>());
+  event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"), CanBubble::eNo,
+                          Cancelable::eNo, jsData, mOrigin, EmptyString(),
+                          nullptr, Sequence<OwningNonNull<MessagePort>>());
   event->SetTrusted(true);
 
   LOG(("%p(%p): %s - Dispatching\n",this,(void*)mDataChannel,__FUNCTION__));
@@ -382,7 +382,7 @@ nsDOMDataChannel::OnSimpleEvent(nsISupports* aContext, const nsAString& aName)
 
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  event->InitEvent(aName, false, false);
+  event->InitEvent(aName, CanBubble::eNo, Cancelable::eNo);
   event->SetTrusted(true);
 
   ErrorResult err;

@@ -200,7 +200,12 @@ class nsContentUtils
 {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
   typedef mozilla::dom::Element Element;
+  typedef mozilla::Cancelable Cancelable;
+  typedef mozilla::CanBubble CanBubble;
+  typedef mozilla::ChromeOnlyDispatch ChromeOnlyDispatch;
+  typedef mozilla::EventMessage EventMessage;
   typedef mozilla::TimeDuration TimeDuration;
+  typedef mozilla::Trusted Trusted;
 
 public:
   static nsresult Init();
@@ -1349,9 +1354,9 @@ public:
   static nsresult DispatchTrustedEvent(nsIDocument* aDoc,
                                        nsISupports* aTarget,
                                        const nsAString& aEventName,
-                                       bool aCanBubble,
-                                       bool aCancelable,
-                                       bool *aDefaultAction = nullptr);
+                                       CanBubble,
+                                       Cancelable,
+                                       bool* aDefaultAction = nullptr);
 
   /**
    * This method creates and dispatches a trusted event using an event message.
@@ -1365,18 +1370,19 @@ public:
    *                       see EventTarget::DispatchEvent.
    */
   template <class WidgetEventType>
-  static nsresult DispatchTrustedEvent(nsIDocument* aDoc,
-                                       nsISupports* aTarget,
-                                       mozilla::EventMessage aEventMessage,
-                                       bool aCanBubble,
-                                       bool aCancelable,
-                                       bool *aDefaultAction = nullptr,
-                                       bool aOnlyChromeDispatch = false)
+  static nsresult DispatchTrustedEvent(
+    nsIDocument* aDoc,
+    nsISupports* aTarget,
+    EventMessage aEventMessage,
+    CanBubble aCanBubble,
+    Cancelable aCancelable,
+    bool* aDefaultAction = nullptr,
+    ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo)
   {
     WidgetEventType event(true, aEventMessage);
     MOZ_ASSERT(GetEventClassIDFromMessage(aEventMessage) == event.mClass);
     return DispatchEvent(aDoc, aTarget, event, aEventMessage,
-                         aCanBubble, aCancelable, true,
+                         aCanBubble, aCancelable, Trusted::eYes,
                          aDefaultAction, aOnlyChromeDispatch);
   }
 
@@ -1396,9 +1402,9 @@ public:
   static nsresult DispatchUntrustedEvent(nsIDocument* aDoc,
                                          nsISupports* aTarget,
                                          const nsAString& aEventName,
-                                         bool aCanBubble,
-                                         bool aCancelable,
-                                         bool *aDefaultAction = nullptr);
+                                         CanBubble,
+                                         Cancelable,
+                                         bool* aDefaultAction = nullptr);
 
 
   /**
@@ -1413,18 +1419,19 @@ public:
    *                       see EventTarget::DispatchEvent.
    */
   template <class WidgetEventType>
-  static nsresult DispatchUntrustedEvent(nsIDocument* aDoc,
-                                         nsISupports* aTarget,
-                                         mozilla::EventMessage aEventMessage,
-                                         bool aCanBubble,
-                                         bool aCancelable,
-                                         bool *aDefaultAction = nullptr,
-                                         bool aOnlyChromeDispatch = false)
+  static nsresult DispatchUntrustedEvent(
+    nsIDocument* aDoc,
+    nsISupports* aTarget,
+    EventMessage aEventMessage,
+    CanBubble aCanBubble,
+    Cancelable aCancelable,
+    bool* aDefaultAction = nullptr,
+    ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo)
   {
     WidgetEventType event(false, aEventMessage);
     MOZ_ASSERT(GetEventClassIDFromMessage(aEventMessage) == event.mClass);
     return DispatchEvent(aDoc, aTarget, event, aEventMessage,
-                         aCanBubble, aCancelable, false,
+                         aCanBubble, aCancelable, Trusted::eNo,
                          aDefaultAction, aOnlyChromeDispatch);
   }
 
@@ -1449,9 +1456,9 @@ public:
   static nsresult DispatchChromeEvent(nsIDocument* aDoc,
                                       nsISupports* aTarget,
                                       const nsAString& aEventName,
-                                      bool aCanBubble,
-                                      bool aCancelable,
-                                      bool *aDefaultAction = nullptr);
+                                      CanBubble,
+                                      Cancelable,
+                                      bool* aDefaultAction = nullptr);
 
   /**
    * Helper function for dispatching a "DOMWindowFocus" event to
@@ -1482,9 +1489,9 @@ public:
   static nsresult DispatchEventOnlyToChrome(nsIDocument* aDoc,
                                             nsISupports* aTarget,
                                             const nsAString& aEventName,
-                                            bool aCanBubble,
-                                            bool aCancelable,
-                                            bool *aDefaultAction = nullptr);
+                                            CanBubble,
+                                            Cancelable,
+                                            bool* aDefaultAction = nullptr);
 
   /**
    * Determines if an event attribute name (such as onclick) is valid for
@@ -1503,13 +1510,13 @@ public:
    *
    * @param aName the event name to look up
    */
-  static mozilla::EventMessage GetEventMessage(nsAtom* aName);
+  static EventMessage GetEventMessage(nsAtom* aName);
 
   /**
    * Returns the EventMessage and nsAtom to be used for event listener
    * registration.
    */
-  static mozilla::EventMessage
+  static EventMessage
   GetEventMessageAndAtomForListener(const nsAString& aName, nsAtom** aOnName);
 
   /**
@@ -1531,8 +1538,8 @@ public:
    * @param aEventClassID only return event id for aEventClassID
    */
   static nsAtom* GetEventMessageAndAtom(const nsAString& aName,
-                                         mozilla::EventClassID aEventClassID,
-                                         mozilla::EventMessage* aEventMessage);
+                                        mozilla::EventClassID aEventClassID,
+                                        EventMessage* aEventMessage);
 
   /**
    * Used only during traversal of the XPCOM graph by the cycle
@@ -3278,21 +3285,21 @@ private:
   static nsresult DispatchEvent(nsIDocument* aDoc,
                                 nsISupports* aTarget,
                                 const nsAString& aEventName,
-                                bool aCanBubble,
-                                bool aCancelable,
-                                bool aTrusted,
-                                bool *aDefaultAction = nullptr,
-                                bool aOnlyChromeDispatch = false);
+                                CanBubble,
+                                Cancelable,
+                                Trusted,
+                                bool* aDefaultAction = nullptr,
+                                ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
 
   static nsresult DispatchEvent(nsIDocument* aDoc,
                                 nsISupports* aTarget,
                                 mozilla::WidgetEvent& aWidgetEvent,
-                                mozilla::EventMessage aEventMessage,
-                                bool aCanBubble,
-                                bool aCancelable,
-                                bool aTrusted,
-                                bool *aDefaultAction = nullptr,
-                                bool aOnlyChromeDispatch = false);
+                                EventMessage aEventMessage,
+                                CanBubble,
+                                Cancelable,
+                                Trusted,
+                                bool* aDefaultAction = nullptr,
+                                ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
 
   static void InitializeModifierStrings();
 
@@ -3306,7 +3313,7 @@ private:
                                       const nsString* aClasses);
 
   static mozilla::EventClassID
-  GetEventClassIDFromMessage(mozilla::EventMessage aEventMessage);
+  GetEventClassIDFromMessage(EventMessage aEventMessage);
 
   // Fills in aInfo with the tokens from the supplied autocomplete attribute.
   static AutocompleteAttrState InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrVal,
