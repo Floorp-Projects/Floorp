@@ -4182,7 +4182,7 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
   // No cookies allowed if this request comes from a tracker, in a 3rd party
   // context, when anti-tracking protection is enabled.
   if (aIsForeign && aIsTrackingResource &&
-      StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
+      StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
       return STATUS_REJECTED;
   }
 

@@ -3740,7 +3740,7 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
         extension.Append("TRR");
     }
 
-    if (StaticPrefs::privacy_trackingprotection_storagerestriction_enabled() &&
+    if (StaticPrefs::privacy_restrict3rdpartystorage_enabled() &&
         mIsTrackingResource) {
         nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
             services::GetThirdPartyUtil();
