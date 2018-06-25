@@ -2024,8 +2024,9 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
 
   RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
-  event->InitMessageEvent(nullptr, MESSAGE_EVENT_STRING, false, false,
-                          jsData, mImpl->mUTF16Origin, EmptyString(), nullptr,
+  event->InitMessageEvent(nullptr, MESSAGE_EVENT_STRING, CanBubble::eNo,
+                          Cancelable::eNo, jsData, mImpl->mUTF16Origin,
+                          EmptyString(), nullptr,
                           Sequence<OwningNonNull<MessagePort>>());
   event->SetTrusted(true);
 

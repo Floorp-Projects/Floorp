@@ -607,7 +607,9 @@ MediaKeySession::DispatchKeyStatusesChange()
   UpdateKeyStatusMap();
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("keystatuseschange"), false);
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("keystatuseschange"),
+                             CanBubble::eNo);
   asyncDispatcher->PostDOMEvent();
 }
 

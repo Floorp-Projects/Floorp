@@ -32,7 +32,10 @@ TestingDispatchEvent(nsIScriptElement* aScriptElement,
   }
 
   RefPtr<AsyncEventDispatcher> dispatcher =
-    new AsyncEventDispatcher(target, aEventType, true, false);
+    new AsyncEventDispatcher(target,
+                             aEventType,
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eNo);
   return dispatcher->PostDOMEvent();
 }
 

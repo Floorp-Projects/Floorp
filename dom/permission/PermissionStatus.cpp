@@ -120,7 +120,7 @@ PermissionStatus::PermissionChanged()
   UpdateState();
   if (mState != oldState) {
     RefPtr<AsyncEventDispatcher> eventDispatcher =
-      new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), false);
+      new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), CanBubble::eNo);
     eventDispatcher->PostDOMEvent();
   }
 }

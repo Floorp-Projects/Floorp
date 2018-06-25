@@ -2291,7 +2291,7 @@ EventStateManager::DoScrollZoom(nsIFrame* aTargetFrame,
       }
       nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
                                           NS_LITERAL_STRING("ZoomChangeUsingMouseWheel"),
-                                          true, true);
+                                          CanBubble::eYes, Cancelable::eYes);
     }
 }
 

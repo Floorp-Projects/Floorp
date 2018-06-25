@@ -364,7 +364,8 @@ public:
     LOG_EVENT(LogLevel::Debug,
               ("%p Dispatching simple event source error", mElement.get()));
     return nsContentUtils::DispatchTrustedEvent(
-      mElement->OwnerDoc(), mSource, NS_LITERAL_STRING("error"), false, false);
+      mElement->OwnerDoc(), mSource, NS_LITERAL_STRING("error"),
+      CanBubble::eNo, Cancelable::eNo);
   }
 };
 
@@ -1434,8 +1435,7 @@ public:
       mOwner->OwnerDoc(),
       static_cast<nsIContent*>(mOwner),
       NS_LITERAL_STRING("OpenMediaWithExternalApp"),
-      true,
-      true);
+      CanBubble::eYes, Cancelable::eYes);
   }
 
   RefPtr<MediaError> mError;
@@ -6308,7 +6308,9 @@ HTMLMediaElement::DispatchEvent(const nsAString& aName)
   }
 
   return nsContentUtils::DispatchTrustedEvent(
-    OwnerDoc(), static_cast<nsIContent*>(this), aName, false, false);
+    OwnerDoc(), static_cast<nsIContent*>(this), aName,
+    CanBubble::eNo,
+    Cancelable::eNo);
 }
 
 void
@@ -6956,12 +6958,13 @@ HTMLMediaElement::IsAllowedToPlay()
 {
   if (!AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this))) {
 #if defined(MOZ_WIDGET_ANDROID)
+    // FIXME: This should be chrome-only.
     nsContentUtils::DispatchTrustedEvent(
       OwnerDoc(),
       static_cast<nsIContent*>(this),
       NS_LITERAL_STRING("MozAutoplayMediaBlocked"),
-      false,
-      false);
+      CanBubble::eNo,
+      Cancelable::eNo);
 #endif
     LOG(LogLevel::Debug,
         ("%p %s AutoplayPolicy blocked autoplay.", this, __func__));

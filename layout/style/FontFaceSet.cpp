@@ -1689,7 +1689,7 @@ FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise()
   }
 
   (new AsyncEventDispatcher(this, NS_LITERAL_STRING("loading"),
-                            false))->PostDOMEvent();
+                            CanBubble::eNo))->PostDOMEvent();
 
   if (PrefEnabled()) {
     if (mReady &&

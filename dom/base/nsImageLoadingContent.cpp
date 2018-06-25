@@ -1256,7 +1256,10 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType, bool aIsCancelable
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
   RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
-    new LoadBlockingAsyncEventDispatcher(thisNode, aEventType, false, false);
+    new LoadBlockingAsyncEventDispatcher(thisNode,
+                                         aEventType,
+                                         CanBubble::eNo,
+                                         ChromeOnlyDispatch::eNo);
   loadBlockingAsyncDispatcher->PostDOMEvent();
 
   if (aIsCancelable) {

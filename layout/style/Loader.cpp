@@ -322,7 +322,7 @@ SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread)
                                        mLoadFailed ?
                                          NS_LITERAL_STRING("error") :
                                          NS_LITERAL_STRING("load"),
-                                       false, false);
+                                       CanBubble::eNo, Cancelable::eNo);
 
   // And unblock onload
   mLoader->UnblockOnload(true);
@@ -1989,7 +1989,8 @@ Loader::LoadStyleLink(const SheetInfo& aInfo, nsICSSLoaderObserver* aObserver)
       RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
         new LoadBlockingAsyncEventDispatcher(aInfo.mContent,
                                              NS_LITERAL_STRING("error"),
-                                             false, false);
+                                             CanBubble::eNo,
+                                             ChromeOnlyDispatch::eNo);
       loadBlockingAsyncDispatcher->PostDOMEvent();
     }
     return Err(rv);

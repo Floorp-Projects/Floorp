@@ -151,8 +151,7 @@ private:
     }
 
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
-                            false /* non-bubbling */,
-                            false /* cancelable */, value, EmptyString(),
+                            CanBubble::eNo, Cancelable::eNo, value, EmptyString(),
                             EmptyString(), nullptr, ports);
     event->SetTrusted(true);
 

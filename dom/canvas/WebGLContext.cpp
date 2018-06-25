@@ -1778,8 +1778,8 @@ WebGLContext::UpdateContextLossStatus()
         // The context has been lost and we haven't yet triggered the
         // callback, so do that now.
         const auto kEventName = NS_LITERAL_STRING("webglcontextlost");
-        const bool kCanBubble = true;
-        const bool kIsCancelable = true;
+        const auto kCanBubble = CanBubble::eYes;
+        const auto kIsCancelable = Cancelable::eYes;
         bool useDefaultHandler;
 
         if (mCanvasElement) {
@@ -1857,11 +1857,13 @@ WebGLContext::UpdateContextLossStatus()
                 mCanvasElement->OwnerDoc(),
                 static_cast<nsIContent*>(mCanvasElement),
                 NS_LITERAL_STRING("webglcontextrestored"),
-                true,
-                true);
+                CanBubble::eYes,
+                Cancelable::eYes);
         } else {
             RefPtr<Event> event = new Event(mOffscreenCanvas, nullptr, nullptr);
-            event->InitEvent(NS_LITERAL_STRING("webglcontextrestored"), true, true);
+            event->InitEvent(NS_LITERAL_STRING("webglcontextrestored"),
+                             CanBubble::eYes,
+                             Cancelable::eYes);
             event->SetTrusted(true);
             mOffscreenCanvas->DispatchEvent(*event);
         }

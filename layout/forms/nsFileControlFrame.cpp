@@ -328,12 +328,14 @@ nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent)
 
       nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
                                            static_cast<nsINode*>(inputElement),
-                                           NS_LITERAL_STRING("input"), true,
-                                           false);
+                                           NS_LITERAL_STRING("input"),
+                                           CanBubble::eYes,
+                                           Cancelable::eNo);
       nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
                                            static_cast<nsINode*>(inputElement),
-                                           NS_LITERAL_STRING("change"), true,
-                                           false);
+                                           NS_LITERAL_STRING("change"),
+                                           CanBubble::eYes,
+                                           Cancelable::eNo);
     }
   }
 

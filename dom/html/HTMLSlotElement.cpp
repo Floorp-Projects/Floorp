@@ -238,8 +238,9 @@ HTMLSlotElement::FireSlotChangeEvent()
 {
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("slotchange"), true,
-                                       false);
+                                       NS_LITERAL_STRING("slotchange"),
+                                       CanBubble::eYes,
+                                       Cancelable::eNo);
 }
 
 JSObject*

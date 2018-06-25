@@ -58,8 +58,24 @@ public:
               const nsAString& aType,
               const MessageEventInit& aEventInit);
 
-  void InitMessageEvent(JSContext* aCx, const nsAString& aType, bool aCanBubble,
-                        bool aCancelable, JS::Handle<JS::Value> aData,
+  void InitMessageEvent(JSContext* aCx, const nsAString& aType,
+                        bool aCanBubble, bool aCancelable,
+                        JS::Handle<JS::Value> aData,
+                        const nsAString& aOrigin, const nsAString& aLastEventId,
+                        const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
+                        const Sequence<OwningNonNull<MessagePort>>& aPorts)
+  {
+    InitMessageEvent(aCx, aType,
+                     aCanBubble ? CanBubble::eYes : CanBubble::eNo,
+                     aCancelable ? Cancelable::eYes : Cancelable::eNo,
+                     aData,
+                     aOrigin, aLastEventId,
+                     aSource, aPorts);
+  }
+
+  void InitMessageEvent(JSContext* aCx, const nsAString& aType,
+                        mozilla::CanBubble, mozilla::Cancelable,
+                        JS::Handle<JS::Value> aData,
                         const nsAString& aOrigin, const nsAString& aLastEventId,
                         const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
                         const Sequence<OwningNonNull<MessagePort>>& aPorts);

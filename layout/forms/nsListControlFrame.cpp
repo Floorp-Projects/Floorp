@@ -158,8 +158,9 @@ nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostD
   if (ShouldFireDropDownEvent()) {
     nsContentUtils::AddScriptRunner(
       new AsyncEventDispatcher(mContent,
-                               NS_LITERAL_STRING("mozhidedropdown"), true,
-                               true));
+                               NS_LITERAL_STRING("mozhidedropdown"),
+                               CanBubble::eYes,
+                               ChromeOnlyDispatch::eYes));
   }
 
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
@@ -1387,12 +1388,14 @@ nsListControlFrame::FireOnInputAndOnChange()
   nsCOMPtr<nsIContent> content = mContent;
   // Dispatch the input event.
   nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                       NS_LITERAL_STRING("input"), true,
-                                       false);
+                                       NS_LITERAL_STRING("input"),
+                                       CanBubble::eYes,
+                                       Cancelable::eNo);
   // Dispatch the change event.
   nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                       NS_LITERAL_STRING("change"), true,
-                                       false);
+                                       NS_LITERAL_STRING("change"),
+                                       CanBubble::eYes,
+                                       Cancelable::eNo);
 }
 
 NS_IMETHODIMP
@@ -1785,7 +1788,8 @@ FireShowDropDownEvent(nsIContent* aContent, bool aShow, bool aIsSourceTouchEvent
       eventName = NS_LITERAL_STRING("mozhidedropdown");
     }
     nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
-                                        eventName, true, false);
+                                        eventName, CanBubble::eYes,
+                                        Cancelable::eNo);
     return true;
   }
 

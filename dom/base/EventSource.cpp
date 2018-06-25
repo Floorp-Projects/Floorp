@@ -1518,8 +1518,9 @@ EventSourceImpl::DispatchAllMessageEvents()
     RefPtr<MessageEvent> event = new MessageEvent(mEventSource, nullptr,
                                                   nullptr);
 
-    event->InitMessageEvent(nullptr, message->mEventName, false, false, jsData,
-                            mOrigin, message->mLastEventID, nullptr,
+    event->InitMessageEvent(nullptr, message->mEventName, CanBubble::eNo,
+                            Cancelable::eNo, jsData, mOrigin,
+                            message->mLastEventID, nullptr,
                             Sequence<OwningNonNull<MessagePort>>());
     event->SetTrusted(true);
 

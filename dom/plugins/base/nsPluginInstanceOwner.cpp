@@ -123,7 +123,7 @@ public:
   {
     nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
         mFinished ? NS_LITERAL_STRING("MozPaintWaitFinished") : NS_LITERAL_STRING("MozPaintWait"),
-        true, true);
+        CanBubble::eYes, Cancelable::eYes);
     return NS_OK;
   }
 
@@ -2003,7 +2003,7 @@ void nsPluginInstanceOwner::PerformDelayedBlurs()
   nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(),
                                        windowRoot,
                                        NS_LITERAL_STRING("MozPerformDelayedBlur"),
-                                       false, false, nullptr);
+                                       CanBuble::No, Cancelable::eNo, nullptr);
 }
 
 #endif
