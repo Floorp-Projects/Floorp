@@ -807,3 +807,7 @@
 .undo-close-tab {
   list-style-image: url(chrome://browser/skin/undo.svg);
 }
+
+.undo-close-tab > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
