@@ -66,7 +66,6 @@ public class WebViewProvider {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                     new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.useContentProcessHint(true);
-            runtimeSettingsBuilder.javaCrashReportingEnabled(true);
             runtimeSettingsBuilder.nativeCrashReportingEnabled(true);
             geckoRuntime = GeckoRuntime.create(context.getApplicationContext(), runtimeSettingsBuilder.build());
         }
