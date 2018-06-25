@@ -3247,6 +3247,17 @@
     "n_buckets": 50,
     "description": "Time for a completed native name resolution (msec)"
   },
+  "DNS_NATIVE_QUEUING": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "bug_numbers": [1470215],
+    "n_buckets": 50,
+    "description": "Time in resolve queue waiting to getaddrinfo (msec)"
+  },
   "DNS_TRR_RACE": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],

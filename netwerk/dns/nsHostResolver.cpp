@@ -1818,6 +1818,9 @@ nsHostResolver::ThreadFunc()
 
         TimeStamp startTime = TimeStamp::Now();
         bool getTtl = rec->mGetTtl;
+        TimeDuration inQueue = startTime - rec->mNativeStart;
+        uint32_t ms = static_cast<uint32_t>(inQueue.ToMilliseconds());
+        Telemetry::Accumulate(Telemetry::DNS_NATIVE_QUEUING, ms);
         nsresult status = GetAddrInfo(rec->host, rec->af,
                                       rec->flags, &ai,
                                       getTtl);
