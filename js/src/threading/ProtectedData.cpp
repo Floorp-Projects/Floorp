@@ -26,7 +26,7 @@ OnHelperThread()
     }
 
     if (Helper == AllowedHelperThread::GCTask || Helper == AllowedHelperThread::GCTaskOrIonCompile) {
-        if (TlsContext.get()->performingGC || TlsContext.get()->runtime()->gc.onBackgroundThread())
+        if (TlsContext.get()->performingGC)
             return true;
     }
 

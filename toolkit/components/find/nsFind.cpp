@@ -596,11 +596,9 @@ nsFind::InitIterator(nsINode* aStartNode, int32_t aStartOffset,
 #ifdef DEBUG_FIND
   DEBUG_FIND_PRINTF("InitIterator search range:\n");
   DEBUG_FIND_PRINTF(" -- start %d, ", aStartOffset);
-  nsCOMPtr<nsINode> start = do_QueryInterface(aStartNode);
-  DumpNode(start);
+  DumpNode(aStartNode);
   DEBUG_FIND_PRINTF(" -- end %d, ", aEndOffset);
-  nsCOMPtr<nsINode> end = do_QueryInterface(aEndNode);
-  DumpNode(end);
+  DumpNode(aEndNode);
 #endif
 
   nsresult rv = mIterator->Init(aStartNode, aStartOffset, aEndNode, aEndOffset);

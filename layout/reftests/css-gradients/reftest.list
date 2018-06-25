@@ -1,5 +1,5 @@
 fuzzy-if(!contentSameGfxBackendAsCanvas,4,88500) fuzzy-if(azureSkiaGL||skiaContent,4,89700) == linear-1a.html linear-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(skiaContent,1,16000) fuzzy-if(webrender,1,23905) == linear-keywords-1a.html linear-keywords-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(skiaContent,1,16000) fuzzy-if(webrender,1,23918) == linear-keywords-1a.html linear-keywords-1-ref.html
 == linear-diagonal-1a.html linear-diagonal-1-ref.html
 == linear-diagonal-2a.html linear-diagonal-2-ref.html
 == linear-diagonal-3a.html linear-diagonal-3-ref.html

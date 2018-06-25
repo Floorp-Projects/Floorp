@@ -109,8 +109,8 @@ wasm::HasSupport(JSContext* cx)
            HasAvailableCompilerTier(cx);
 }
 
-bool
-wasm::ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val)
+static bool
+ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val)
 {
     switch (targetType.code()) {
       case ValType::I32: {
@@ -140,8 +140,8 @@ wasm::ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* 
     }
 }
 
-Value
-wasm::ToJSValue(const Val& val)
+static Value
+ToJSValue(const Val& val)
 {
     switch (val.type().code()) {
       case ValType::I32:

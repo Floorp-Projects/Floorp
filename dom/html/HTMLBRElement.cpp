@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/HTMLBRElementBinding.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
@@ -53,14 +53,14 @@ HTMLBRElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLBRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     GenericSpecifiedValues* aData)
+                                     MappedDeclarations& aDecls)
 {
-  if (!aData->PropertyIsSet(eCSSProperty_clear)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_clear)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::clear);
     if (value && value->Type() == nsAttrValue::eEnum)
-      aData->SetKeywordValue(eCSSProperty_clear, value->GetEnumValue());
+      aDecls.SetKeywordValue(eCSSProperty_clear, value->GetEnumValue());
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

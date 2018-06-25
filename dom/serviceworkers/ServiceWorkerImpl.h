@@ -31,7 +31,7 @@ class ServiceWorkerImpl final : public ServiceWorker::Inner
   RemoveServiceWorker(ServiceWorker* aWorker) override;
 
   void
-  PostMessage(ipc::StructuredCloneData&& aData,
+  PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
               const ClientInfo& aClientInfo,
               const ClientState& aClientState) override;
 

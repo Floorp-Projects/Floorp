@@ -44,15 +44,6 @@ HasCompilerSupport(JSContext* cx);
 bool
 HasSupport(JSContext* cx);
 
-// ToWebAssemblyValue and ToJSValue are conversion functions defined in
-// the Wasm JS API spec.
-
-bool
-ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val);
-
-Value
-ToJSValue(const Val& val);
-
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 

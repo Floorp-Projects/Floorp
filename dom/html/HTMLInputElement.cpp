@@ -65,7 +65,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
@@ -5581,19 +5581,19 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLInputElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        GenericSpecifiedValues* aData)
+                                        MappedDeclarations& aDecls)
 {
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
   if (value && value->Type() == nsAttrValue::eEnum &&
       value->GetEnumValue() == NS_FORM_INPUT_IMAGE) {
-    nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aData);
-    nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aData);
-    nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aDecls);
+    nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aDecls);
+    nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aDecls);
     // Images treat align as "float"
-    nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aDecls);
   }
 
-  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 nsChangeHint
