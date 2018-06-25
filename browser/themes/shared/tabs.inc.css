@@ -758,6 +758,17 @@
   max-width: 42em;
 }
 
+/* The list of tabs is in its own panel-subview-body which will scroll. We don't
+   want any padding above/below the scrollbars, so remove the padding/margin
+   from the separator and outer panel-subview-body. */
+#allTabsMenu-allTabsView > .panel-subview-body {
+  padding-bottom: 0;
+}
+
+#allTabsMenu-tabsSeparator {
+  margin-bottom: 0;
+}
+
 .all-tabs-item > .all-tabs-secondary-button {
   padding: 0;
   padding-inline-start: 6px;
