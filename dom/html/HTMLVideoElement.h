@@ -166,7 +166,7 @@ protected:
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    GenericSpecifiedValues* aGenericData);
+                                    MappedDeclarations&);
 
   static bool IsVideoStatsEnabled();
   double TotalPlayTime() const;

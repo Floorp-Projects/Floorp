@@ -249,7 +249,10 @@ class JUnitTestRunner(MochitestDesktop):
         try:
             cmd = self.build_command_line(test_filters)
             self.log.info("launching %s" % cmd)
-            self.device.shell(cmd, timeout=self.options.max_time, stdout_callback=callback)
+            p = self.device.shell(cmd, timeout=self.options.max_time, stdout_callback=callback)
+            if p.timedout:
+                self.log.error("TEST-UNEXPECTED-TIMEOUT | runjunit.py | "
+                               "Timed out after %d seconds" % self.options.max_time)
             self.log.info("Passed: %d" % self.pass_count)
             self.log.info("Failed: %d" % self.fail_count)
             self.log.info("Todo: %d" % self.todo_count)
@@ -326,7 +329,7 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           help="Disable multiprocess mode in test app.")
         self.add_argument("--max-time",
                           action="store",
-                          type=str,
+                          type=int,
                           dest="max_time",
                           default="2400",
                           help="Max time in seconds to wait for tests (default 2400s).")

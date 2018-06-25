@@ -7,7 +7,7 @@
 #include "mozilla/dom/HTMLLIElement.h"
 #include "mozilla/dom/HTMLLIElementBinding.h"
 
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -67,16 +67,16 @@ HTMLLIElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLLIElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     GenericSpecifiedValues* aData)
+                                     MappedDeclarations& aDecls)
 {
-  if (!aData->PropertyIsSet(eCSSProperty_list_style_type)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
     // type: enum
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
     if (value && value->Type() == nsAttrValue::eEnum)
-      aData->SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
+      aDecls.SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

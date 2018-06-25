@@ -7,7 +7,7 @@
 #include "mozilla/dom/HTMLSpanElement.h"
 #include "mozilla/dom/HTMLSpanElementBinding.h"
 
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsAtom.h"
