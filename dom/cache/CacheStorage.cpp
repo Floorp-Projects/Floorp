@@ -244,8 +244,8 @@ CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
                                            "Passed object is not a global object!");
   js::AssertSameCompartment(aCx, aGlobal);
 
-  if (NS_WARN_IF(!CacheStorageBinding::GetConstructorObject(aCx) ||
-                 !CacheBinding::GetConstructorObject(aCx))) {
+  if (NS_WARN_IF(!CacheStorage_Binding::GetConstructorObject(aCx) ||
+                 !Cache_Binding::GetConstructorObject(aCx))) {
     return false;
   }
 
@@ -490,7 +490,7 @@ CacheStorage::GetParentObject() const
 JSObject*
 CacheStorage::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::CacheStorageBinding::Wrap(aContext, this, aGivenProto);
+  return mozilla::dom::CacheStorage_Binding::Wrap(aContext, this, aGivenProto);
 }
 
 void

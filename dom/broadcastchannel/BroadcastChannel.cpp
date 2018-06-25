@@ -260,7 +260,7 @@ BroadcastChannel::~BroadcastChannel()
 JSObject*
 BroadcastChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return BroadcastChannelBinding::Wrap(aCx, this, aGivenProto);
+  return BroadcastChannel_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<BroadcastChannel>

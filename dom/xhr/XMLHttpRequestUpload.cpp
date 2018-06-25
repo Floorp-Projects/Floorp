@@ -19,7 +19,7 @@ NS_IMPL_RELEASE_INHERITED(XMLHttpRequestUpload, XMLHttpRequestEventTarget)
 /* virtual */ JSObject*
 XMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return XMLHttpRequestUploadBinding::Wrap(aCx, this, aGivenProto);
+  return XMLHttpRequestUpload_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // dom namespace

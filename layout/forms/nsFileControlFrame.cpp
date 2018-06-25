@@ -440,7 +440,7 @@ nsFileControlFrame::AttributeChanged(int32_t  aNameSpaceID,
                                      int32_t  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::tabindex) {
-    if (aModType == MutationEventBinding::REMOVAL) {
+    if (aModType == MutationEvent_Binding::REMOVAL) {
       mBrowseFilesOrDirs->UnsetAttr(aNameSpaceID, aAttribute, true);
     } else {
       nsAutoString value;

@@ -44,7 +44,7 @@ nsMimeTypeArray::~nsMimeTypeArray()
 JSObject*
 nsMimeTypeArray::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MimeTypeArrayBinding::Wrap(aCx, this, aGivenProto);
+  return MimeTypeArray_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -216,7 +216,7 @@ nsMimeType::GetParentObject() const
 JSObject*
 nsMimeType::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MimeTypeBinding::Wrap(aCx, this, aGivenProto);
+  return MimeType_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

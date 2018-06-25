@@ -1017,7 +1017,7 @@ IDBTransaction::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   AssertIsOnOwningThread();
 
-  return IDBTransactionBinding::Wrap(aCx, this, aGivenProto);
+  return IDBTransaction_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

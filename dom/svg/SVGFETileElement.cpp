@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGFETileElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFETileElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFETileElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGFETileElement::sStringInfo[2] =

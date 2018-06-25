@@ -209,9 +209,9 @@ JSObject*
 AudioContext::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mIsOffline) {
-    return OfflineAudioContextBinding::Wrap(aCx, this, aGivenProto);
+    return OfflineAudioContext_Binding::Wrap(aCx, this, aGivenProto);
   } else {
-    return AudioContextBinding::Wrap(aCx, this, aGivenProto);
+    return AudioContext_Binding::Wrap(aCx, this, aGivenProto);
   }
 }
 

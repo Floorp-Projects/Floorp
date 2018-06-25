@@ -1070,7 +1070,7 @@ PaymentRequest::~PaymentRequest()
 JSObject*
 PaymentRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PaymentRequestBinding::Wrap(aCx, this, aGivenProto);
+  return PaymentRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

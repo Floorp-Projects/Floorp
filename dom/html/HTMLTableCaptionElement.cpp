@@ -23,7 +23,7 @@ HTMLTableCaptionElement::~HTMLTableCaptionElement()
 JSObject*
 HTMLTableCaptionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableCaptionElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTableCaptionElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableCaptionElement)

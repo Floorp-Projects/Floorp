@@ -34,7 +34,7 @@ public:
     const override;
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRuleBinding::IMPORT_RULE; }
+  uint16_t Type() const final { return CSSRule_Binding::IMPORT_RULE; }
   void GetCssText(nsAString& aCssText) const override;
   void GetHref(nsAString& aHref) const;
   dom::MediaList* GetMedia() const;

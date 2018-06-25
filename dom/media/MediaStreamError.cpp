@@ -72,7 +72,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 MediaStreamError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaStreamErrorBinding::Wrap(aCx, this, aGivenProto);
+  return MediaStreamError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

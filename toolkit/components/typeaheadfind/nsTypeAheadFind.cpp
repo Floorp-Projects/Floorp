@@ -440,7 +440,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
 
   // XXXbz Should this really be ignoring errors?
   int16_t rangeCompareResult =
-    mStartPointRange->CompareBoundaryPoints(RangeBinding::START_TO_START,
+    mStartPointRange->CompareBoundaryPoints(Range_Binding::START_TO_START,
                                             *mSearchRange, IgnoreErrors());
   // No need to wrap find in doc if starting at beginning
   bool hasWrapped = (rangeCompareResult < 0);
@@ -494,7 +494,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
           // to continue at the start of returnRange.
           IgnoredErrorResult rv;
           int16_t compareResult =
-            mStartPointRange->CompareBoundaryPoints(RangeBinding::START_TO_END,
+            mStartPointRange->CompareBoundaryPoints(Range_Binding::START_TO_END,
                                                     *returnRange, rv);
           if (!rv.Failed() && compareResult <= 0) {
             // OK to start at the end of mStartPointRange
@@ -510,7 +510,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
           // need to continue at the end of returnRange.
           IgnoredErrorResult rv;
           int16_t compareResult =
-            mStartPointRange->CompareBoundaryPoints(RangeBinding::END_TO_START,
+            mStartPointRange->CompareBoundaryPoints(Range_Binding::END_TO_START,
                                                     *returnRange, rv);
           if (!rv.Failed() && compareResult >= 0) {
             // OK to start at the start of mStartPointRange

@@ -15,7 +15,7 @@ namespace dom {
 JSObject*
 SVGAnimateElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGAnimateElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGAnimateElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

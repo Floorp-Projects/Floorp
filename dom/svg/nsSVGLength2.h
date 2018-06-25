@@ -98,7 +98,7 @@ public:
             uint8_t aAttrEnum = 0xff,
             float aValue = 0,
             uint8_t aUnitType =
-              mozilla::dom::SVGLengthBinding::SVG_LENGTHTYPE_NUMBER) {
+              mozilla::dom::SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
     mAnimVal = mBaseVal = aValue;
     mSpecifiedUnitType = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -138,7 +138,7 @@ public:
   uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
   bool IsPercentage() const
     { return mSpecifiedUnitType ==
-        mozilla::dom::SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE; }
+        mozilla::dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
 

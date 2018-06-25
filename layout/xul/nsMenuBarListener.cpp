@@ -149,26 +149,26 @@ void nsMenuBarListener::InitAccessKey()
   mAccessKey = 0;
   mAccessKeyMask = 0;
 #else
-  mAccessKey = dom::KeyboardEventBinding::DOM_VK_ALT;
+  mAccessKey = dom::KeyboardEvent_Binding::DOM_VK_ALT;
   mAccessKeyMask = MODIFIER_ALT;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
   mAccessKey = Preferences::GetInt("ui.key.menuAccessKey", mAccessKey);
   switch (mAccessKey) {
-  case dom::KeyboardEventBinding::DOM_VK_SHIFT:
+  case dom::KeyboardEvent_Binding::DOM_VK_SHIFT:
     mAccessKeyMask = MODIFIER_SHIFT;
     break;
-  case dom::KeyboardEventBinding::DOM_VK_CONTROL:
+  case dom::KeyboardEvent_Binding::DOM_VK_CONTROL:
     mAccessKeyMask = MODIFIER_CONTROL;
     break;
-  case dom::KeyboardEventBinding::DOM_VK_ALT:
+  case dom::KeyboardEvent_Binding::DOM_VK_ALT:
     mAccessKeyMask = MODIFIER_ALT;
     break;
-  case dom::KeyboardEventBinding::DOM_VK_META:
+  case dom::KeyboardEvent_Binding::DOM_VK_META:
     mAccessKeyMask = MODIFIER_META;
     break;
-  case dom::KeyboardEventBinding::DOM_VK_WIN:
+  case dom::KeyboardEvent_Binding::DOM_VK_WIN:
     mAccessKeyMask = MODIFIER_OS;
     break;
   default:
@@ -435,7 +435,7 @@ nsMenuBarListener::KeyDown(Event* aKeyEvent)
   uint32_t theChar = keyEvent->KeyCode();
 
   uint16_t eventPhase = keyEvent->EventPhase();
-  bool capturing = (eventPhase == dom::EventBinding::CAPTURING_PHASE);
+  bool capturing = (eventPhase == dom::Event_Binding::CAPTURING_PHASE);
 
 #ifndef XP_MACOSX
   if (capturing && !mAccessKeyDown && theChar == NS_VK_F10 &&
@@ -529,7 +529,7 @@ nsMenuBarListener::MouseDown(Event* aMouseEvent)
   }
 
   // Don't do anything at capturing phase, any behavior should be cancelable.
-  if (aMouseEvent->EventPhase() == dom::EventBinding::CAPTURING_PHASE) {
+  if (aMouseEvent->EventPhase() == dom::Event_Binding::CAPTURING_PHASE) {
     return NS_OK;
   }
 

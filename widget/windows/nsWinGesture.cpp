@@ -209,10 +209,10 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
 
       if (evt.mDelta > 0) {
         evt.mDirection =
-          dom::SimpleGestureEventBinding::ROTATION_COUNTERCLOCKWISE;
+          dom::SimpleGestureEvent_Binding::ROTATION_COUNTERCLOCKWISE;
       }
       else if (evt.mDelta < 0) {
-        evt.mDirection = dom::SimpleGestureEventBinding::ROTATION_CLOCKWISE;
+        evt.mDirection = dom::SimpleGestureEvent_Binding::ROTATION_CLOCKWISE;
       }
 
       if (gi.dwFlags & GF_BEGIN) {
@@ -399,7 +399,7 @@ nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
   aWheelEvent.mLineOrPageDeltaX = aWheelEvent.mLineOrPageDeltaY = 0;
 
   aWheelEvent.mRefPoint = LayoutDeviceIntPoint(mPanRefPoint.x, mPanRefPoint.y);
-  aWheelEvent.mDeltaMode = dom::WheelEventBinding::DOM_DELTA_PIXEL;
+  aWheelEvent.mDeltaMode = dom::WheelEvent_Binding::DOM_DELTA_PIXEL;
   aWheelEvent.mScrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
   aWheelEvent.mIsNoLineOrPageDelta = true;
 

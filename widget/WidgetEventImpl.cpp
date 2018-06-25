@@ -626,16 +626,16 @@ WidgetInputEvent::AccelModifier()
   static Modifier sAccelModifier = MODIFIER_NONE;
   if (sAccelModifier == MODIFIER_NONE) {
     switch (Preferences::GetInt("ui.key.accelKey", 0)) {
-      case dom::KeyboardEventBinding::DOM_VK_META:
+      case dom::KeyboardEvent_Binding::DOM_VK_META:
         sAccelModifier = MODIFIER_META;
         break;
-      case dom::KeyboardEventBinding::DOM_VK_WIN:
+      case dom::KeyboardEvent_Binding::DOM_VK_WIN:
         sAccelModifier = MODIFIER_OS;
         break;
-      case dom::KeyboardEventBinding::DOM_VK_ALT:
+      case dom::KeyboardEvent_Binding::DOM_VK_ALT:
         sAccelModifier = MODIFIER_ALT;
         break;
-      case dom::KeyboardEventBinding::DOM_VK_CONTROL:
+      case dom::KeyboardEvent_Binding::DOM_VK_CONTROL:
         sAccelModifier = MODIFIER_CONTROL;
         break;
       default:
@@ -1178,31 +1178,31 @@ WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
 {
   switch (aCodeNameIndex) {
     case CODE_NAME_INDEX_Semicolon:     // VK_OEM_1 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_SEMICOLON;
+      return dom::KeyboardEvent_Binding::DOM_VK_SEMICOLON;
     case CODE_NAME_INDEX_Equal:         // VK_OEM_PLUS on Windows
-      return dom::KeyboardEventBinding::DOM_VK_EQUALS;
+      return dom::KeyboardEvent_Binding::DOM_VK_EQUALS;
     case CODE_NAME_INDEX_Comma:         // VK_OEM_COMMA on Windows
-      return dom::KeyboardEventBinding::DOM_VK_COMMA;
+      return dom::KeyboardEvent_Binding::DOM_VK_COMMA;
     case CODE_NAME_INDEX_Minus:         // VK_OEM_MINUS on Windows
-      return dom::KeyboardEventBinding::DOM_VK_HYPHEN_MINUS;
+      return dom::KeyboardEvent_Binding::DOM_VK_HYPHEN_MINUS;
     case CODE_NAME_INDEX_Period:        // VK_OEM_PERIOD on Windows
-      return dom::KeyboardEventBinding::DOM_VK_PERIOD;
+      return dom::KeyboardEvent_Binding::DOM_VK_PERIOD;
     case CODE_NAME_INDEX_Slash:         // VK_OEM_2 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_SLASH;
+      return dom::KeyboardEvent_Binding::DOM_VK_SLASH;
     case CODE_NAME_INDEX_Backquote:     // VK_OEM_3 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_BACK_QUOTE;
+      return dom::KeyboardEvent_Binding::DOM_VK_BACK_QUOTE;
     case CODE_NAME_INDEX_BracketLeft:   // VK_OEM_4 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_OPEN_BRACKET;
+      return dom::KeyboardEvent_Binding::DOM_VK_OPEN_BRACKET;
     case CODE_NAME_INDEX_Backslash:     // VK_OEM_5 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_BACK_SLASH;
+      return dom::KeyboardEvent_Binding::DOM_VK_BACK_SLASH;
     case CODE_NAME_INDEX_BracketRight:  // VK_OEM_6 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_CLOSE_BRACKET;
+      return dom::KeyboardEvent_Binding::DOM_VK_CLOSE_BRACKET;
     case CODE_NAME_INDEX_Quote:         // VK_OEM_7 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_QUOTE;
+      return dom::KeyboardEvent_Binding::DOM_VK_QUOTE;
     case CODE_NAME_INDEX_IntlBackslash: // VK_OEM_5 on Windows (ABNT, etc)
     case CODE_NAME_INDEX_IntlYen:       // VK_OEM_5 on Windows (JIS)
     case CODE_NAME_INDEX_IntlRo:        // VK_OEM_102 on Windows
-      return dom::KeyboardEventBinding::DOM_VK_BACK_SLASH;
+      return dom::KeyboardEvent_Binding::DOM_VK_BACK_SLASH;
     default:
       return 0;
   }
@@ -1281,168 +1281,168 @@ WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex)
 {
   switch (aKeyNameIndex) {
     case KEY_NAME_INDEX_Cancel:
-      return dom::KeyboardEventBinding::DOM_VK_CANCEL;
+      return dom::KeyboardEvent_Binding::DOM_VK_CANCEL;
     case KEY_NAME_INDEX_Help:
-      return dom::KeyboardEventBinding::DOM_VK_HELP;
+      return dom::KeyboardEvent_Binding::DOM_VK_HELP;
     case KEY_NAME_INDEX_Backspace:
-      return dom::KeyboardEventBinding::DOM_VK_BACK_SPACE;
+      return dom::KeyboardEvent_Binding::DOM_VK_BACK_SPACE;
     case KEY_NAME_INDEX_Tab:
-      return dom::KeyboardEventBinding::DOM_VK_TAB;
+      return dom::KeyboardEvent_Binding::DOM_VK_TAB;
     case KEY_NAME_INDEX_Clear:
-      return dom::KeyboardEventBinding::DOM_VK_CLEAR;
+      return dom::KeyboardEvent_Binding::DOM_VK_CLEAR;
     case KEY_NAME_INDEX_Enter:
-      return dom::KeyboardEventBinding::DOM_VK_RETURN;
+      return dom::KeyboardEvent_Binding::DOM_VK_RETURN;
     case KEY_NAME_INDEX_Shift:
-      return dom::KeyboardEventBinding::DOM_VK_SHIFT;
+      return dom::KeyboardEvent_Binding::DOM_VK_SHIFT;
     case KEY_NAME_INDEX_Control:
-      return dom::KeyboardEventBinding::DOM_VK_CONTROL;
+      return dom::KeyboardEvent_Binding::DOM_VK_CONTROL;
     case KEY_NAME_INDEX_Alt:
-      return dom::KeyboardEventBinding::DOM_VK_ALT;
+      return dom::KeyboardEvent_Binding::DOM_VK_ALT;
     case KEY_NAME_INDEX_Pause:
-      return dom::KeyboardEventBinding::DOM_VK_PAUSE;
+      return dom::KeyboardEvent_Binding::DOM_VK_PAUSE;
     case KEY_NAME_INDEX_CapsLock:
-      return dom::KeyboardEventBinding::DOM_VK_CAPS_LOCK;
+      return dom::KeyboardEvent_Binding::DOM_VK_CAPS_LOCK;
     case KEY_NAME_INDEX_Hiragana:
     case KEY_NAME_INDEX_Katakana:
     case KEY_NAME_INDEX_HiraganaKatakana:
     case KEY_NAME_INDEX_KanaMode:
-      return dom::KeyboardEventBinding::DOM_VK_KANA;
+      return dom::KeyboardEvent_Binding::DOM_VK_KANA;
     case KEY_NAME_INDEX_HangulMode:
-      return dom::KeyboardEventBinding::DOM_VK_HANGUL;
+      return dom::KeyboardEvent_Binding::DOM_VK_HANGUL;
     case KEY_NAME_INDEX_Eisu:
-      return dom::KeyboardEventBinding::DOM_VK_EISU;
+      return dom::KeyboardEvent_Binding::DOM_VK_EISU;
     case KEY_NAME_INDEX_JunjaMode:
-      return dom::KeyboardEventBinding::DOM_VK_JUNJA;
+      return dom::KeyboardEvent_Binding::DOM_VK_JUNJA;
     case KEY_NAME_INDEX_FinalMode:
-      return dom::KeyboardEventBinding::DOM_VK_FINAL;
+      return dom::KeyboardEvent_Binding::DOM_VK_FINAL;
     case KEY_NAME_INDEX_HanjaMode:
-      return dom::KeyboardEventBinding::DOM_VK_HANJA;
+      return dom::KeyboardEvent_Binding::DOM_VK_HANJA;
     case KEY_NAME_INDEX_KanjiMode:
-      return dom::KeyboardEventBinding::DOM_VK_KANJI;
+      return dom::KeyboardEvent_Binding::DOM_VK_KANJI;
     case KEY_NAME_INDEX_Escape:
-      return dom::KeyboardEventBinding::DOM_VK_ESCAPE;
+      return dom::KeyboardEvent_Binding::DOM_VK_ESCAPE;
     case KEY_NAME_INDEX_Convert:
-      return dom::KeyboardEventBinding::DOM_VK_CONVERT;
+      return dom::KeyboardEvent_Binding::DOM_VK_CONVERT;
     case KEY_NAME_INDEX_NonConvert:
-      return dom::KeyboardEventBinding::DOM_VK_NONCONVERT;
+      return dom::KeyboardEvent_Binding::DOM_VK_NONCONVERT;
     case KEY_NAME_INDEX_Accept:
-      return dom::KeyboardEventBinding::DOM_VK_ACCEPT;
+      return dom::KeyboardEvent_Binding::DOM_VK_ACCEPT;
     case KEY_NAME_INDEX_ModeChange:
-      return dom::KeyboardEventBinding::DOM_VK_MODECHANGE;
+      return dom::KeyboardEvent_Binding::DOM_VK_MODECHANGE;
     case KEY_NAME_INDEX_PageUp:
-      return dom::KeyboardEventBinding::DOM_VK_PAGE_UP;
+      return dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP;
     case KEY_NAME_INDEX_PageDown:
-      return dom::KeyboardEventBinding::DOM_VK_PAGE_DOWN;
+      return dom::KeyboardEvent_Binding::DOM_VK_PAGE_DOWN;
     case KEY_NAME_INDEX_End:
-      return dom::KeyboardEventBinding::DOM_VK_END;
+      return dom::KeyboardEvent_Binding::DOM_VK_END;
     case KEY_NAME_INDEX_Home:
-      return dom::KeyboardEventBinding::DOM_VK_HOME;
+      return dom::KeyboardEvent_Binding::DOM_VK_HOME;
     case KEY_NAME_INDEX_ArrowLeft:
-      return dom::KeyboardEventBinding::DOM_VK_LEFT;
+      return dom::KeyboardEvent_Binding::DOM_VK_LEFT;
     case KEY_NAME_INDEX_ArrowUp:
-      return dom::KeyboardEventBinding::DOM_VK_UP;
+      return dom::KeyboardEvent_Binding::DOM_VK_UP;
     case KEY_NAME_INDEX_ArrowRight:
-      return dom::KeyboardEventBinding::DOM_VK_RIGHT;
+      return dom::KeyboardEvent_Binding::DOM_VK_RIGHT;
     case KEY_NAME_INDEX_ArrowDown:
-      return dom::KeyboardEventBinding::DOM_VK_DOWN;
+      return dom::KeyboardEvent_Binding::DOM_VK_DOWN;
     case KEY_NAME_INDEX_Select:
-      return dom::KeyboardEventBinding::DOM_VK_SELECT;
+      return dom::KeyboardEvent_Binding::DOM_VK_SELECT;
     case KEY_NAME_INDEX_Print:
-      return dom::KeyboardEventBinding::DOM_VK_PRINT;
+      return dom::KeyboardEvent_Binding::DOM_VK_PRINT;
     case KEY_NAME_INDEX_Execute:
-      return dom::KeyboardEventBinding::DOM_VK_EXECUTE;
+      return dom::KeyboardEvent_Binding::DOM_VK_EXECUTE;
     case KEY_NAME_INDEX_PrintScreen:
-      return dom::KeyboardEventBinding::DOM_VK_PRINTSCREEN;
+      return dom::KeyboardEvent_Binding::DOM_VK_PRINTSCREEN;
     case KEY_NAME_INDEX_Insert:
-      return dom::KeyboardEventBinding::DOM_VK_INSERT;
+      return dom::KeyboardEvent_Binding::DOM_VK_INSERT;
     case KEY_NAME_INDEX_Delete:
-      return dom::KeyboardEventBinding::DOM_VK_DELETE;
+      return dom::KeyboardEvent_Binding::DOM_VK_DELETE;
     case KEY_NAME_INDEX_OS:
     // case KEY_NAME_INDEX_Super:
     // case KEY_NAME_INDEX_Hyper:
-      return dom::KeyboardEventBinding::DOM_VK_WIN;
+      return dom::KeyboardEvent_Binding::DOM_VK_WIN;
     case KEY_NAME_INDEX_ContextMenu:
-      return dom::KeyboardEventBinding::DOM_VK_CONTEXT_MENU;
+      return dom::KeyboardEvent_Binding::DOM_VK_CONTEXT_MENU;
     case KEY_NAME_INDEX_Standby:
-      return dom::KeyboardEventBinding::DOM_VK_SLEEP;
+      return dom::KeyboardEvent_Binding::DOM_VK_SLEEP;
     case KEY_NAME_INDEX_F1:
-      return dom::KeyboardEventBinding::DOM_VK_F1;
+      return dom::KeyboardEvent_Binding::DOM_VK_F1;
     case KEY_NAME_INDEX_F2:
-      return dom::KeyboardEventBinding::DOM_VK_F2;
+      return dom::KeyboardEvent_Binding::DOM_VK_F2;
     case KEY_NAME_INDEX_F3:
-      return dom::KeyboardEventBinding::DOM_VK_F3;
+      return dom::KeyboardEvent_Binding::DOM_VK_F3;
     case KEY_NAME_INDEX_F4:
-      return dom::KeyboardEventBinding::DOM_VK_F4;
+      return dom::KeyboardEvent_Binding::DOM_VK_F4;
     case KEY_NAME_INDEX_F5:
-      return dom::KeyboardEventBinding::DOM_VK_F5;
+      return dom::KeyboardEvent_Binding::DOM_VK_F5;
     case KEY_NAME_INDEX_F6:
-      return dom::KeyboardEventBinding::DOM_VK_F6;
+      return dom::KeyboardEvent_Binding::DOM_VK_F6;
     case KEY_NAME_INDEX_F7:
-      return dom::KeyboardEventBinding::DOM_VK_F7;
+      return dom::KeyboardEvent_Binding::DOM_VK_F7;
     case KEY_NAME_INDEX_F8:
-      return dom::KeyboardEventBinding::DOM_VK_F8;
+      return dom::KeyboardEvent_Binding::DOM_VK_F8;
     case KEY_NAME_INDEX_F9:
-      return dom::KeyboardEventBinding::DOM_VK_F9;
+      return dom::KeyboardEvent_Binding::DOM_VK_F9;
     case KEY_NAME_INDEX_F10:
-      return dom::KeyboardEventBinding::DOM_VK_F10;
+      return dom::KeyboardEvent_Binding::DOM_VK_F10;
     case KEY_NAME_INDEX_F11:
-      return dom::KeyboardEventBinding::DOM_VK_F11;
+      return dom::KeyboardEvent_Binding::DOM_VK_F11;
     case KEY_NAME_INDEX_F12:
-      return dom::KeyboardEventBinding::DOM_VK_F12;
+      return dom::KeyboardEvent_Binding::DOM_VK_F12;
     case KEY_NAME_INDEX_F13:
-      return dom::KeyboardEventBinding::DOM_VK_F13;
+      return dom::KeyboardEvent_Binding::DOM_VK_F13;
     case KEY_NAME_INDEX_F14:
-      return dom::KeyboardEventBinding::DOM_VK_F14;
+      return dom::KeyboardEvent_Binding::DOM_VK_F14;
     case KEY_NAME_INDEX_F15:
-      return dom::KeyboardEventBinding::DOM_VK_F15;
+      return dom::KeyboardEvent_Binding::DOM_VK_F15;
     case KEY_NAME_INDEX_F16:
-      return dom::KeyboardEventBinding::DOM_VK_F16;
+      return dom::KeyboardEvent_Binding::DOM_VK_F16;
     case KEY_NAME_INDEX_F17:
-      return dom::KeyboardEventBinding::DOM_VK_F17;
+      return dom::KeyboardEvent_Binding::DOM_VK_F17;
     case KEY_NAME_INDEX_F18:
-      return dom::KeyboardEventBinding::DOM_VK_F18;
+      return dom::KeyboardEvent_Binding::DOM_VK_F18;
     case KEY_NAME_INDEX_F19:
-      return dom::KeyboardEventBinding::DOM_VK_F19;
+      return dom::KeyboardEvent_Binding::DOM_VK_F19;
     case KEY_NAME_INDEX_F20:
-      return dom::KeyboardEventBinding::DOM_VK_F20;
+      return dom::KeyboardEvent_Binding::DOM_VK_F20;
     case KEY_NAME_INDEX_F21:
-      return dom::KeyboardEventBinding::DOM_VK_F21;
+      return dom::KeyboardEvent_Binding::DOM_VK_F21;
     case KEY_NAME_INDEX_F22:
-      return dom::KeyboardEventBinding::DOM_VK_F22;
+      return dom::KeyboardEvent_Binding::DOM_VK_F22;
     case KEY_NAME_INDEX_F23:
-      return dom::KeyboardEventBinding::DOM_VK_F23;
+      return dom::KeyboardEvent_Binding::DOM_VK_F23;
     case KEY_NAME_INDEX_F24:
-      return dom::KeyboardEventBinding::DOM_VK_F24;
+      return dom::KeyboardEvent_Binding::DOM_VK_F24;
     case KEY_NAME_INDEX_NumLock:
-      return dom::KeyboardEventBinding::DOM_VK_NUM_LOCK;
+      return dom::KeyboardEvent_Binding::DOM_VK_NUM_LOCK;
     case KEY_NAME_INDEX_ScrollLock:
-      return dom::KeyboardEventBinding::DOM_VK_SCROLL_LOCK;
+      return dom::KeyboardEvent_Binding::DOM_VK_SCROLL_LOCK;
     case KEY_NAME_INDEX_AudioVolumeMute:
-      return dom::KeyboardEventBinding::DOM_VK_VOLUME_MUTE;
+      return dom::KeyboardEvent_Binding::DOM_VK_VOLUME_MUTE;
     case KEY_NAME_INDEX_AudioVolumeDown:
-      return dom::KeyboardEventBinding::DOM_VK_VOLUME_DOWN;
+      return dom::KeyboardEvent_Binding::DOM_VK_VOLUME_DOWN;
     case KEY_NAME_INDEX_AudioVolumeUp:
-      return dom::KeyboardEventBinding::DOM_VK_VOLUME_UP;
+      return dom::KeyboardEvent_Binding::DOM_VK_VOLUME_UP;
     case KEY_NAME_INDEX_Meta:
-      return dom::KeyboardEventBinding::DOM_VK_META;
+      return dom::KeyboardEvent_Binding::DOM_VK_META;
     case KEY_NAME_INDEX_AltGraph:
-      return dom::KeyboardEventBinding::DOM_VK_ALTGR;
+      return dom::KeyboardEvent_Binding::DOM_VK_ALTGR;
     case KEY_NAME_INDEX_Process:
-      return dom::KeyboardEventBinding::DOM_VK_PROCESSKEY;
+      return dom::KeyboardEvent_Binding::DOM_VK_PROCESSKEY;
     case KEY_NAME_INDEX_Attn:
-      return dom::KeyboardEventBinding::DOM_VK_ATTN;
+      return dom::KeyboardEvent_Binding::DOM_VK_ATTN;
     case KEY_NAME_INDEX_CrSel:
-      return dom::KeyboardEventBinding::DOM_VK_CRSEL;
+      return dom::KeyboardEvent_Binding::DOM_VK_CRSEL;
     case KEY_NAME_INDEX_ExSel:
-      return dom::KeyboardEventBinding::DOM_VK_EXSEL;
+      return dom::KeyboardEvent_Binding::DOM_VK_EXSEL;
     case KEY_NAME_INDEX_EraseEof:
-      return dom::KeyboardEventBinding::DOM_VK_EREOF;
+      return dom::KeyboardEvent_Binding::DOM_VK_EREOF;
     case KEY_NAME_INDEX_Play:
-      return dom::KeyboardEventBinding::DOM_VK_PLAY;
+      return dom::KeyboardEvent_Binding::DOM_VK_PLAY;
     case KEY_NAME_INDEX_ZoomToggle:
     case KEY_NAME_INDEX_ZoomIn:
     case KEY_NAME_INDEX_ZoomOut:
-      return dom::KeyboardEventBinding::DOM_VK_ZOOM;
+      return dom::KeyboardEvent_Binding::DOM_VK_ZOOM;
     default:
       return 0;
   }

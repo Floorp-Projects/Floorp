@@ -85,7 +85,7 @@ MIDIPort::UnsetIPCPort()
 JSObject*
 MIDIPort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MIDIPortBinding::Wrap(aCx, this, aGivenProto);
+  return MIDIPort_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

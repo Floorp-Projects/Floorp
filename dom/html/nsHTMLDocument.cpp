@@ -202,7 +202,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHTMLDocument,
 JSObject*
 nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLDocumentBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

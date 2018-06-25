@@ -99,7 +99,7 @@ PerformanceObserver::Constructor(const GlobalObject& aGlobal,
 JSObject*
 PerformanceObserver::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceObserverBinding::Wrap(aCx, this, aGivenProto);
+  return PerformanceObserver_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGPolylineElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGPolylineElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGPolylineElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

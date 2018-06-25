@@ -22,7 +22,7 @@ ChromeNodeList::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 JSObject*
 ChromeNodeList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ChromeNodeListBinding::Wrap(aCx, this, aGivenProto);
+  return ChromeNodeList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

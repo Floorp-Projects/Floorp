@@ -2581,7 +2581,7 @@ HTMLInputElement::SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& a
   mFileData->ClearGetFilesHelpers();
 
   if (IsWebkitFileSystemEnabled()) {
-    HTMLInputElementBinding::ClearCachedWebkitEntriesValue(this);
+    HTMLInputElement_Binding::ClearCachedWebkitEntriesValue(this);
     mFileData->mEntries.Clear();
   }
 
@@ -2601,7 +2601,7 @@ HTMLInputElement::SetFiles(FileList* aFiles,
   mFileData->ClearGetFilesHelpers();
 
   if (IsWebkitFileSystemEnabled()) {
-    HTMLInputElementBinding::ClearCachedWebkitEntriesValue(this);
+    HTMLInputElement_Binding::ClearCachedWebkitEntriesValue(this);
     mFileData->mEntries.Clear();
   }
 
@@ -4399,7 +4399,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           if (!aVisitor.mEvent->DefaultPrevented() &&
               aVisitor.mEvent->IsTrusted() && IsMutable() && wheelEvent &&
               wheelEvent->mDeltaY != 0 &&
-              wheelEvent->mDeltaMode != WheelEventBinding::DOM_DELTA_PIXEL) {
+              wheelEvent->mDeltaMode != WheelEvent_Binding::DOM_DELTA_PIXEL) {
             if (mType == NS_FORM_INPUT_NUMBER) {
               nsNumberControlFrame* numberControlFrame =
                 do_QueryFrame(GetPrimaryFrame());
@@ -7599,7 +7599,7 @@ HTMLInputElement::PickerClosed()
 JSObject*
 HTMLInputElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLInputElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLInputElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 GetFilesHelper*

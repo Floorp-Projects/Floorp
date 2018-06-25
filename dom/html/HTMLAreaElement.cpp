@@ -168,7 +168,7 @@ HTMLAreaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
 JSObject*
 HTMLAreaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLAreaElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLAreaElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

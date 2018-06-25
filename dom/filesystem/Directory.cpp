@@ -103,7 +103,7 @@ Directory::GetParentObject() const
 JSObject*
 Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DirectoryBinding::Wrap(aCx, this, aGivenProto);
+  return Directory_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

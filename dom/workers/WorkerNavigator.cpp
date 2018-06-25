@@ -65,13 +65,13 @@ WorkerNavigator::Create(bool aOnLine)
 JSObject*
 WorkerNavigator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WorkerNavigatorBinding::Wrap(aCx, this, aGivenProto);
+  return WorkerNavigator_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
 WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages)
 {
-  WorkerNavigatorBinding::ClearCachedLanguagesValue(this);
+  WorkerNavigator_Binding::ClearCachedLanguagesValue(this);
   mProperties.mLanguages = aLanguages;
 }
 

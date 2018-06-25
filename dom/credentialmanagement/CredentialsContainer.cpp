@@ -144,7 +144,7 @@ CredentialsContainer::EnsureWebAuthnManager()
 JSObject*
 CredentialsContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CredentialsContainerBinding::Wrap(aCx, this, aGivenProto);
+  return CredentialsContainer_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

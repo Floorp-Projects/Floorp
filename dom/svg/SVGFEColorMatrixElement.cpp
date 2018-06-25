@@ -21,7 +21,7 @@ namespace dom {
 JSObject*
 SVGFEColorMatrixElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEColorMatrixElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEColorMatrixElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGEnumMapping SVGFEColorMatrixElement::sTypeMap[] = {

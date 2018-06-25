@@ -112,7 +112,7 @@ ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
 JSObject*
 ServiceWorkerContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ServiceWorkerContainerBinding::Wrap(aCx, this, aGivenProto);
+  return ServiceWorkerContainer_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 namespace {

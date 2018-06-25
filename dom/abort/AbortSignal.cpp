@@ -45,7 +45,7 @@ AbortSignal::AbortSignal(bool aAborted)
 JSObject*
 AbortSignal::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AbortSignalBinding::Wrap(aCx, this, aGivenProto);
+  return AbortSignal_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

@@ -51,7 +51,7 @@ TestInterfaceIterableDouble::Constructor(const GlobalObject& aGlobal,
 JSObject*
 TestInterfaceIterableDouble::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TestInterfaceIterableDoubleBinding::Wrap(aCx, this, aGivenProto);
+  return TestInterfaceIterableDouble_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsPIDOMWindowInner*

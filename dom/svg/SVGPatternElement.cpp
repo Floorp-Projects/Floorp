@@ -19,22 +19,22 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Pattern)
 namespace mozilla {
 namespace dom {
 
-using namespace SVGUnitTypesBinding;
+using namespace SVGUnitTypes_Binding;
 
 JSObject*
 SVGPatternElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGPatternElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGPatternElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //--------------------- Patterns ------------------------
 
 nsSVGElement::LengthInfo SVGPatternElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::height, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::height, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
 };
 
 nsSVGElement::EnumInfo SVGPatternElement::sEnumInfo[2] =
