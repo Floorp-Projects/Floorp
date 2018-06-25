@@ -217,8 +217,6 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
             binary_path = self.binary_path or self.config.get('binary_path')
             if not binary_path:
                 self.fatal("Raptor requires a path to the binary.")
-            if binary_path.endswith('.exe'):
-                binary_path = binary_path[:-4]
             kw_options['binary'] = binary_path
         else:
             if not self.run_local:

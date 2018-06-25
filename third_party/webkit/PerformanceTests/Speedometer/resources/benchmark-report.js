@@ -70,21 +70,21 @@
                 }
             });
 
-            var fullNames = new Array;
-            for (var fullName in measuredValuesByFullName)
-                fullNames.push(fullName);
+            var uniqueNames = new Array;
+            for (var uniqueName in measuredValuesByFullName)
+                uniqueNames.push(uniqueName);
 
             if (typeof tpRecordTime !== "undefined" || location.search == '?raptor') {
                 var values = new Array;
-                for (var i = 0; i < fullNames.length; i++) {
-                    values.push(measuredValuesByFullName[fullNames[i]]);
-                }
-                fullNames = new Array;
-                for (var fullName in measuredValuesByFullName) {
-                    for (var count=0; count < this.iterationCount; count++) {
-                        fullNames.push(fullName);
+                var fullNames = new Array;
+                for (var i = 0; i < uniqueNames.length; i++) {
+                    vals = measuredValuesByFullName[uniqueNames[i]];
+                    values.push(vals);
+                    for (var count=0; count < vals.length; count ++) {
+                        fullNames.push(uniqueNames[i]);
                     }
                 }
+
                 if (location.search == '?raptor') {
                     _data = ['raptor-benchmark', 'speedometer', measuredValuesByFullName];
                     window.postMessage(_data, '*');
