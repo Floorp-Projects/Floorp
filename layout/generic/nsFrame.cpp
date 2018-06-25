@@ -722,7 +722,12 @@ nsFrame::Init(nsIContent*       aContent,
   // Usually we update the state when the frame is restyled and has a
   // VisibilityChange change hint but we don't generate any change hints for
   // newly created frames.
-  UpdateVisibleDescendantsState();
+  // Note: We don't need to do this for placeholders since placeholders have
+  // different styles so that the styles don't have visibility:hidden even if
+  // the parent has visibility:hidden style.
+  if (!IsPlaceholderFrame()) {
+    UpdateVisibleDescendantsState();
+  }
 }
 
 void
@@ -3659,14 +3664,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   const nsStyleEffects* effects = child->StyleEffects();
   const nsStylePosition* pos = child->StylePosition();
 
-  const bool isVisuallyAtomic =
-    child->IsVisuallyAtomic(effectSet, disp, effects);
-
   const bool isPositioned =
     disp->IsAbsPosContainingBlock(child);
 
   const bool isStackingContext =
-    child->IsStackingContext(disp, pos, isPositioned, isVisuallyAtomic) ||
+    child->IsStackingContext(effectSet, disp, pos, effects, isPositioned) ||
     (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
@@ -3816,7 +3818,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   buildingForChild.RestoreBuildingInvisibleItemsValue();
 
-  if (isPositioned || isVisuallyAtomic ||
+  if (isPositioned || isStackingContext ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
@@ -10926,9 +10928,12 @@ nsIFrame::IsSelected() const
 }
 
 bool
-nsIFrame::IsVisuallyAtomic(EffectSet* aEffectSet,
-                           const nsStyleDisplay* aStyleDisplay,
-                           const nsStyleEffects* aStyleEffects) {
+nsIFrame::IsStackingContext(EffectSet* aEffectSet,
+                            const nsStyleDisplay* aStyleDisplay,
+                            const nsStylePosition* aStylePosition,
+                            const nsStyleEffects* aStyleEffects,
+                            bool aIsPositioned)
+{
   return HasOpacity(aEffectSet) ||
          IsTransformed(aStyleDisplay) ||
          aStyleDisplay->IsContainPaint() ||
@@ -10936,16 +10941,7 @@ nsIFrame::IsVisuallyAtomic(EffectSet* aEffectSet,
          // but the spec says it acts like the rest of these
          ChildrenHavePerspective(aStyleDisplay) ||
          aStyleEffects->mMixBlendMode != NS_STYLE_BLEND_NORMAL ||
-         nsSVGIntegrationUtils::UsingEffectsForFrame(this);
-}
-
-bool
-nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
-                            const nsStylePosition* aStylePosition,
-                            bool aIsPositioned,
-                            bool aIsVisuallyAtomic)
-{
-  return aIsVisuallyAtomic ||
+         nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
          (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
                             aStylePosition->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
          (aStyleDisplay->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
@@ -10956,16 +10952,10 @@ bool
 nsIFrame::IsStackingContext()
 {
   const nsStyleDisplay* disp = StyleDisplay();
-  const bool isVisuallyAtomic = IsVisuallyAtomic(EffectSet::GetEffectSet(this),
-                                                 disp, StyleEffects());
-  if (isVisuallyAtomic) {
-    // If this is changed, the function above should be updated as well.
-    return true;
-  }
-
   const bool isPositioned = disp->IsAbsPosContainingBlock(this);
-  return IsStackingContext(disp, StylePosition(),
-                           isPositioned, isVisuallyAtomic);
+  return IsStackingContext(EffectSet::GetEffectSet(this), disp,
+                           StylePosition(), StyleEffects(),
+                           isPositioned);
 }
 
 static bool

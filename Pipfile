@@ -6,13 +6,13 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-pipenv = "==2018.5.18"
-virtualenv = "==15.2.0"
-six = "==1.10.0"
 attrs = "==18.1.0"
-pytest = "==3.2.5"
 jsmin = "==2.1.0"
+json-e = "==2.5.0"
+pipenv = "==2018.5.18"
+pytest = "==3.2.5"
 python-hglib = "==2.4"
-
-[requires]
-python_version = "2.7"
+requests = "==2.9.1"
+six = "==1.10.0"
+virtualenv = "==15.2.0"
+voluptuous = "==0.10.5"
