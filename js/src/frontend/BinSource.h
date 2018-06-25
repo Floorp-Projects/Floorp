@@ -108,6 +108,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options)
         : BinASTParserBase(cx, alloc, usedNames)
         , options_(options)
+        , variableDeclarationKind_(VariableDeclarationKind::Var)
     {
     }
     ~BinASTParser()

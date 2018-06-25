@@ -134,7 +134,9 @@ class FakeMutableHandle : public js::MutableHandleBase<T, FakeMutableHandle<T>>
     DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(*ptr);
 
   private:
-    FakeMutableHandle() {}
+    FakeMutableHandle()
+      : ptr(nullptr)
+    {}
     DELETE_ASSIGNMENT_OPS(FakeMutableHandle, T);
 
     T* ptr;

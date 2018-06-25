@@ -6630,7 +6630,7 @@ JS_NewRegExpObject(JSContext* cx, const char* bytes, size_t length, unsigned fla
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    ScopedJSFreePtr<char16_t> chars(InflateString(cx, bytes, length));
+    UniqueTwoByteChars chars(InflateString(cx, bytes, length));
     if (!chars)
         return nullptr;
 
@@ -6869,7 +6869,10 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState()
 }
 
 struct JSExceptionState {
-    explicit JSExceptionState(JSContext* cx) : exception(cx) {}
+    explicit JSExceptionState(JSContext* cx)
+      : throwing(false),
+        exception(cx)
+    {}
     bool throwing;
     PersistentRootedValue exception;
 };

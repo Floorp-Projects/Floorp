@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WrappingOperations.h"
@@ -605,33 +604,6 @@ js_pod_realloc(T* prior, size_t oldSize, size_t newSize)
         return nullptr;
     return static_cast<T*>(js_realloc(prior, bytes));
 }
-
-namespace js {
-
-template<typename T>
-struct ScopedFreePtrTraits
-{
-    typedef T* type;
-    static T* empty() { return nullptr; }
-    static void release(T* ptr) { js_free(ptr); }
-};
-SCOPED_TEMPLATE(ScopedJSFreePtr, ScopedFreePtrTraits)
-
-template <typename T>
-struct ScopedDeletePtrTraits : public ScopedFreePtrTraits<T>
-{
-    static void release(T* ptr) { js_delete(ptr); }
-};
-SCOPED_TEMPLATE(ScopedJSDeletePtr, ScopedDeletePtrTraits)
-
-template <typename T>
-struct ScopedReleasePtrTraits : public ScopedFreePtrTraits<T>
-{
-    static void release(T* ptr) { if (ptr) ptr->release(); }
-};
-SCOPED_TEMPLATE(ScopedReleasePtr, ScopedReleasePtrTraits)
-
-} /* namespace js */
 
 namespace JS {
 

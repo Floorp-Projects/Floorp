@@ -68,6 +68,11 @@ async function ensureItems() {
 const PREF_SHOW_REMOTE_ICONS = "services.sync.syncedTabs.showRemoteIcons";
 let showRemoteIcons;
 
+// A preference used to disable the synced tabs from showing in awesomebar
+// matches.
+const PREF_SHOW_REMOTE_TABS = "services.sync.syncedTabs.showRemoteTabs";
+let showRemoteTabs;
+
 // An observer to invalidate _items and watch for changed prefs.
 function observe(subject, topic, data) {
   switch (topic) {
@@ -88,6 +93,8 @@ function observe(subject, topic, data) {
     case "nsPref:changed":
       if (data == PREF_SHOW_REMOTE_ICONS) {
         showRemoteIcons = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_ICONS, true);
+      } else if (data == PREF_SHOW_REMOTE_TABS) {
+        showRemoteTabs = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_TABS, true);
       }
       break;
 
@@ -99,9 +106,13 @@ function observe(subject, topic, data) {
 Services.obs.addObserver(observe, "weave:engine:sync:finish");
 Services.obs.addObserver(observe, "weave:service:start-over");
 
-// Observe the pref for showing remote icons and prime our bool that reflects its value.
+// Observe the prefs for showing remote icons and tabs and prime
+// our bools that reflect their values.
 Services.prefs.addObserver(PREF_SHOW_REMOTE_ICONS, observe);
+Services.prefs.addObserver(PREF_SHOW_REMOTE_TABS, observe);
 observe(null, "nsPref:changed", PREF_SHOW_REMOTE_ICONS);
+observe(null, "nsPref:changed", PREF_SHOW_REMOTE_TABS);
+
 
 // This public object is a static singleton.
 var PlacesRemoteTabsAutocompleteProvider = {
@@ -109,6 +120,10 @@ var PlacesRemoteTabsAutocompleteProvider = {
   async getMatches(searchString) {
     // If Sync isn't configured we bail early.
     if (!weaveXPCService || !weaveXPCService.ready || !weaveXPCService.enabled) {
+      return [];
+    }
+
+    if (!showRemoteTabs) {
       return [];
     }
 

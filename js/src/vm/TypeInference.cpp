@@ -26,6 +26,7 @@
 #include "jit/JitRealm.h"
 #include "jit/OptimizationTracking.h"
 #include "js/MemoryMetrics.h"
+#include "js/UniquePtr.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -3641,7 +3642,7 @@ PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx, ObjectGroup* gro
 
     AutoEnterAnalysis enter(cx);
 
-    ScopedJSDeletePtr<PreliminaryObjectArrayWithTemplate> preliminaryObjects(this);
+    UniquePtr<PreliminaryObjectArrayWithTemplate> preliminaryObjects(this);
     group->detachPreliminaryObjects();
 
     MOZ_ASSERT(shape());
@@ -3663,7 +3664,7 @@ PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext* cx, ObjectGroup* gro
             return;
     }
 
-    TryConvertToUnboxedLayout(cx, enter, shape(), group, preliminaryObjects);
+    TryConvertToUnboxedLayout(cx, enter, shape(), group, preliminaryObjects.get());
     AutoSweepObjectGroup sweep(group);
     if (group->maybeUnboxedLayout(sweep))
         return;
@@ -3692,7 +3693,7 @@ TypeNewScript::make(JSContext* cx, ObjectGroup* group, JSFunction* fun)
     if (group->unknownProperties(sweep))
         return true;
 
-    ScopedJSDeletePtr<TypeNewScript> newScript(cx->new_<TypeNewScript>());
+    auto newScript = cx->make_unique<TypeNewScript>();
     if (!newScript)
         return false;
 
@@ -3702,7 +3703,7 @@ TypeNewScript::make(JSContext* cx, ObjectGroup* group, JSFunction* fun)
     if (!newScript->preliminaryObjects)
         return true;
 
-    group->setNewScript(newScript.forget());
+    group->setNewScript(newScript.release());
 
     gc::gcTracer.traceTypeNewScript(group);
     return true;
@@ -3716,7 +3717,7 @@ TypeNewScript::makeNativeVersion(JSContext* cx, TypeNewScript* newScript,
 {
     MOZ_RELEASE_ASSERT(cx->zone()->types.activeAnalysis);
 
-    ScopedJSDeletePtr<TypeNewScript> nativeNewScript(cx->new_<TypeNewScript>());
+    auto nativeNewScript = cx->make_unique<TypeNewScript>();
     if (!nativeNewScript)
         return nullptr;
 
@@ -3734,7 +3735,7 @@ TypeNewScript::makeNativeVersion(JSContext* cx, TypeNewScript* newScript,
     }
     PodCopy(nativeNewScript->initializerList, newScript->initializerList, initializerLength);
 
-    return nativeNewScript.forget();
+    return nativeNewScript.release();
 }
 
 size_t

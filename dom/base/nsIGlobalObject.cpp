@@ -150,7 +150,7 @@ nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTarge
   // Protect against the function call triggering a mutation of the list
   // while we are iterating by copying the DETH references to a temporary
   // list.
-  AutoTArray<DOMEventTargetHelper*, 64> targetList;
+  AutoTArray<RefPtr<DOMEventTargetHelper>, 64> targetList;
   for (const DOMEventTargetHelper* deth = mEventTargetObjects.getFirst();
        deth; deth = deth->getNext()) {
     targetList.AppendElement(const_cast<DOMEventTargetHelper*>(deth));

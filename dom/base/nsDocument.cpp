@@ -5097,6 +5097,12 @@ nsIDocument::DispatchContentLoadedEvents()
                                         true, true);
   }
 
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (inner) {
+    inner->NoteDOMContentLoaded();
+  }
+
+  // TODO
   if (mMaybeServiceWorkerControlled) {
     using mozilla::dom::ServiceWorkerManager;
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();

@@ -946,69 +946,21 @@ var BrowserPageActions = {
 };
 
 
-var BrowserPageActionFeedback = {
-  /**
-   * The feedback page action panel DOM node (DOM node)
-   */
-  get panelNode() {
-    delete this.panelNode;
-    return this.panelNode = document.getElementById("pageActionFeedback");
-  },
+/**
+ * Shows the feedback popup for an action.
+ *
+ * @param  action (PageActions.Action, required)
+ *         The action associated with the feedback.
+ * @param  event (DOM event, optional)
+ *         The event that triggered the feedback.
+ * @param  messageId (string, optional)
+ *         Can be used to set a message id that is different from the action id.
+ */
+function showBrowserPageActionFeedback(action, event = null, messageId = null) {
+  let anchor = BrowserPageActions.panelAnchorNodeForAction(action, event);
 
-  get feedbackAnimationBox() {
-    delete this.feedbackAnimationBox;
-    return this.feedbackAnimationBox = document.getElementById("pageActionFeedbackAnimatableBox");
-  },
-
-  get feedbackLabel() {
-    delete this.feedbackLabel;
-    return this.feedbackLabel = document.getElementById("pageActionFeedbackMessage");
-  },
-
-  /**
-   * Shows the feedback popup for an action.
-   *
-   * @param  action (PageActions.Action, required)
-   *         The action associated with the feedback.
-   * @param  opts (object, optional)
-   *         An object with the following optional properties:
-   *         - event (DOM event): The event that triggered the feedback.
-   *         - textAttributeOverride (string): Normally the feedback text is
-   *           taken from an attribute on the feedback panel.  The attribute's
-   *           name is `${action.id}Feedback`.  Use this to override the
-   *           action.id part of the name.
-   *         - text (string): The text string.  If not given, an attribute on
-   *           panel is assumed to contain the text, as described above.
-   */
-  show(action, opts = {}) {
-    this.feedbackLabel.textContent =
-      opts.text ||
-      this.panelNode.getAttribute((opts.textAttributeOverride || action.id) +
-                                  "Feedback");
-    this.panelNode.hidden = false;
-
-    let event = opts.event || null;
-    let anchor = BrowserPageActions.panelAnchorNodeForAction(action, event);
-    PanelMultiView.openPopup(this.panelNode, anchor, {
-      position: "bottomcenter topright",
-      triggerEvent: event,
-    }).catch(Cu.reportError);
-
-    this.panelNode.addEventListener("popupshown", () => {
-      this.feedbackAnimationBox.setAttribute("animate", "true");
-
-      // The timeout value used here allows the panel to stay open for
-      // 1 second after the text transition (duration=120ms) has finished.
-      setTimeout(() => {
-        this.panelNode.hidePopup(true);
-      }, Services.prefs.getIntPref("browser.pageActions.feedbackTimeoutMS", 1120));
-    }, {once: true});
-    this.panelNode.addEventListener("popuphidden", () => {
-      this.feedbackAnimationBox.removeAttribute("animate");
-    }, {once: true});
-  },
-};
-
+  ConfirmationHint.show(anchor, messageId || action.id, {event, hideArrow: true});
+}
 
 // built-in actions below //////////////////////////////////////////////////////
 
@@ -1038,9 +990,7 @@ BrowserPageActions.copyURL = {
       .getService(Ci.nsIClipboardHelper)
       .copyString(gURLBar.makeURIReadable(gBrowser.selectedBrowser.currentURI).displaySpec);
     let action = PageActions.actionForID("copyURL");
-    BrowserPageActionFeedback.show(action, {
-      event,
-    });
+    showBrowserPageActionFeedback(action, event);
   },
 };
 
@@ -1117,11 +1067,8 @@ BrowserPageActions.sendToDevice = {
         // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
         if (event.target.classList.contains("sendtab-target")) {
           let action = PageActions.actionForID("sendToDevice");
-          let textAttributeOverride = gSync.offline && "sendToDeviceOffline";
-          BrowserPageActionFeedback.show(action, {
-            event,
-            textAttributeOverride,
-          });
+          let messageId = gSync.offline && "sendToDeviceOffline";
+          showBrowserPageActionFeedback(action, event, messageId);
         }
       });
       return item;
@@ -1233,9 +1180,7 @@ BrowserPageActions.addSearchEngine = {
   _installEngine(uri, image) {
     Services.search.addEngine(uri, null, image, false, {
       onSuccess: engine => {
-        BrowserPageActionFeedback.show(this.action, {
-          text: this.strings.GetStringFromName("searchAddedFoundEngine2"),
-        });
+        showBrowserPageActionFeedback(this.action);
       },
       onError(errorCode) {
         if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
