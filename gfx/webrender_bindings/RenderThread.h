@@ -21,6 +21,7 @@
 #include "mozilla/layers/SynchronousTask.h"
 
 #include <list>
+#include <queue>
 #include <unordered_map>
 
 namespace mozilla {
@@ -154,7 +155,7 @@ public:
   /// Can be called from any thread.
   bool TooManyPendingFrames(wr::WindowId aWindowId);
   /// Can be called from any thread.
-  void IncPendingFrameCount(wr::WindowId aWindowId);
+  void IncPendingFrameCount(wr::WindowId aWindowId, const TimeStamp& aStartTime);
   /// Can be called from any thread.
   void DecPendingFrameCount(wr::WindowId aWindowId);
   /// Can be called from any thread.
@@ -197,6 +198,9 @@ private:
     bool mIsDestroyed = false;
     int64_t mPendingCount = 0;
     int64_t mRenderingCount = 0;
+    // One entry in this queue for each pending frame, so the length
+    // should always equal mPendingCount
+    std::queue<TimeStamp> mStartTimes;
   };
 
   Mutex mFrameCountMapLock;
