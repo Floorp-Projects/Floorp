@@ -225,6 +225,7 @@ EXPORTS.mozilla.dom += [
     'Timeout.h',
     'TimeoutHandler.h',
     'TimeoutManager.h',
+    'TreeIterator.h',
     'TreeWalker.h',
     'WebKitCSSMatrix.h',
     'WindowOrientationObserver.h',
