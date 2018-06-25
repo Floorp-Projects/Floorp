@@ -30,12 +30,24 @@ const DISABLED_LABEL = L10N.getStr("netmonitor.security.disabled");
 const CONNECTION_LABEL = L10N.getStr("netmonitor.security.connection");
 const PROTOCOL_VERSION_LABEL = L10N.getStr("netmonitor.security.protocolVersion");
 const KEA_GROUP_LABEL = L10N.getStr("netmonitor.security.keaGroup");
+const KEA_GROUP_NONE = L10N.getStr("netmonitor.security.keaGroup.none");
+const KEA_GROUP_CUSTOM = L10N.getStr("netmonitor.security.keaGroup.custom");
+const KEA_GROUP_UNKNOWN = L10N.getStr("netmonitor.security.keaGroup.unknown");
 const SIGNATURE_SCHEME_LABEL = L10N.getStr("netmonitor.security.signatureScheme");
+const SIGNATURE_SCHEME_NONE = L10N.getStr("netmonitor.security.signatureScheme.none");
+const SIGNATURE_SCHEME_UNKNOWN =
+  L10N.getStr("netmonitor.security.signatureScheme.unknown");
 const HSTS_LABEL = L10N.getStr("netmonitor.security.hsts");
 const HPKP_LABEL = L10N.getStr("netmonitor.security.hpkp");
 const CERTIFICATE_LABEL = L10N.getStr("netmonitor.security.certificate");
 const CERTIFICATE_TRANSPARENCY_LABEL =
-    L10N.getStr("certmgr.certificateTransparency.label");
+  L10N.getStr("certmgr.certificateTransparency.label");
+const CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT =
+  L10N.getStr("certmgr.certificateTransparency.status.ok");
+const CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS =
+  L10N.getStr("certmgr.certificateTransparency.status.notEnoughSCTS");
+const CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS =
+  L10N.getStr("certmgr.certificateTransparency.status.notDiverseSCTS");
 const SUBJECT_INFO_LABEL = L10N.getStr("certmgr.subjectinfo.label");
 const CERT_DETAIL_COMMON_NAME_LABEL = L10N.getStr("certmgr.certdetail.cn");
 const CERT_DETAIL_ORG_LABEL = L10N.getStr("certmgr.certdetail.o");
@@ -121,6 +133,38 @@ class SecurityPanel extends Component {
       const { subject, issuer, validity, fingerprint } = securityInfo.cert;
       const HOST_HEADER_LABEL = L10N.getFormatStr("netmonitor.security.hostHeader",
         getUrlHost(url));
+
+      // Localize special values for key exchange group name.
+      if (securityInfo.keaGroupName == "none") {
+        securityInfo.keaGroupName = KEA_GROUP_NONE;
+      }
+      if (securityInfo.keaGroupName == "custom") {
+        securityInfo.keaGroupName = KEA_GROUP_CUSTOM;
+      }
+      if (securityInfo.keaGroupName == "unknown group") {
+        securityInfo.keaGroupName = KEA_GROUP_UNKNOWN;
+      }
+
+      // Localize special values for certificate signature scheme.
+      if (securityInfo.signatureSchemeName == "none") {
+        securityInfo.signatureSchemeName = SIGNATURE_SCHEME_NONE;
+      }
+      if (securityInfo.signatureSchemeName == "unknown signature") {
+        securityInfo.signatureSchemeName = SIGNATURE_SCHEME_UNKNOWN;
+      }
+
+      // Localize special values for certificate transparency status.
+      if (securityInfo.certificateTransparency == 5) {
+        securityInfo.certificateTransparency = CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
+      }
+      if (securityInfo.certificateTransparency == 6) {
+        securityInfo.certificateTransparency =
+          CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS;
+      }
+      if (securityInfo.certificateTransparency == 7) {
+        securityInfo.certificateTransparency =
+          CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS;
+      }
 
       object = {
         [CONNECTION_LABEL]: {
