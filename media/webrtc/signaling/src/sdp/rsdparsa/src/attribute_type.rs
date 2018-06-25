@@ -1118,9 +1118,10 @@ fn parse_group(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                 "FEC" => SdpAttributeGroupSemantic::ForwardErrorCorrection,
                 "DDP" => SdpAttributeGroupSemantic::DecodingDependency,
                 "BUNDLE" => SdpAttributeGroupSemantic::Bundle,
-                _ => {
-                    return Err(SdpParserInternalError::Generic("Unsupported group semantics"
-                                                                   .to_string()))
+                unknown @ _ => {
+                    return Err(SdpParserInternalError::Unsupported(
+                        format!("Unknown group semantic '{:?}' found", unknown)
+                    ))
                 }
             }
         }
@@ -1757,7 +1758,10 @@ fn test_parse_attribute_group() {
     assert!(parse_attribute("group:BUNDLE sdparta_0 sdparta_1 sdparta_2").is_ok());
 
     assert!(parse_attribute("group:").is_err());
-    assert!(parse_attribute("group:NEVER_SUPPORTED_SEMANTICS").is_err());
+    assert!(match parse_attribute("group:NEVER_SUPPORTED_SEMANTICS") {
+        Err(SdpParserInternalError::Unsupported(_)) => true,
+        _ => false
+    })
 }
 
 #[test]
