@@ -83,8 +83,6 @@ private:
 
   bool CanUseDXVA(IMFMediaType* aType, float aFramerate);
 
-  already_AddRefed<MFTDecoder> LoadAMDVP9Decoder();
-
   // Video frame geometry.
   const VideoInfo mVideoInfo;
   const gfx::IntSize mImageSize;
@@ -124,8 +122,6 @@ private:
   bool mGotExcessiveNullOutput = false;
   bool mIsValid = true;
   bool mIMFUsable = false;
-  bool mCheckForAMDDecoder = true;
-  Atomic<bool> mAMDVP9InUse;
   const float mFramerate;
 };
 

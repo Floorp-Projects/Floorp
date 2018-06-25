@@ -221,9 +221,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
       return true;
     }
     if (VPXDecoder::IsVP9(aTrackInfo.mMimeType) &&
-        ((gfxPrefs::PDMWMFAMDVP9DecoderEnabled() &&
-          CanCreateWMFDecoder<CLSID_AMDWebmMfVp9Dec>()) ||
-         CanCreateWMFDecoder<CLSID_WebmMfVpxDec>())) {
+        CanCreateWMFDecoder<CLSID_WebmMfVpxDec>()) {
       return true;
     }
   }
