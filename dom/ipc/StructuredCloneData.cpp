@@ -463,6 +463,12 @@ StructuredCloneData::StealExternalData(JSStructuredCloneData& aData)
   return true;
 }
 
+already_AddRefed<SharedJSAllocatedData>
+StructuredCloneData::TakeSharedData()
+{
+  return mSharedData.forget();
+}
+
 } // namespace ipc
 } // namespace dom
 } // namespace mozilla
