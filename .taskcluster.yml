@@ -4,6 +4,8 @@
 # - action tasks - taskcluster/taskgraph/actions/registry.py
 version: 1
 tasks:
+  $if: 'tasks_for in ["hg-push", "action", "cron"]'
+  then:
   - $let:
       # sometimes the push user is just `ffxbld` or the like, but we want an email-like field..
       ownerEmail: {$if: '"@" in push.owner', then: '${push.owner}', else: '${push.owner}@noreply.mozilla.org'}
@@ -197,3 +199,5 @@ tasks:
             then:
               cron: {$json: {$eval: 'cron'}}
           - tasks_for: '${tasks_for}'
+  # no tasks for unrecognized tasks_for
+  else: []

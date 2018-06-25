@@ -193,7 +193,13 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 if taskcluster_yml['version'] != 1:
                     raise Exception(
                         'actions.json must be updated to work with .taskcluster.yml')
-                if not isinstance(taskcluster_yml['tasks'], list):
+
+                # allow a top-level conditional (bug 1470886)
+                tasks = taskcluster_yml['tasks']
+                if isinstance(tasks, dict) and '$if' in tasks:
+                    tasks = tasks['then']
+
+                if not isinstance(tasks, list):
                     raise Exception(
                         '.taskcluster.yml "tasks" must be a list for action tasks')
 
@@ -206,7 +212,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                             'push': push,
                             'action': action,
                         },
-                        'in': taskcluster_yml['tasks'][0],
+                        'in': tasks[0],
                     },
                 })
 
