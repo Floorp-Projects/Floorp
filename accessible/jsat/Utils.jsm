@@ -277,12 +277,30 @@ var Utils = { // jshint ignore:line
     return false;
   },
 
+  isHidden: function isHidden(aAccessible) {
+    // Need to account for aria-hidden, so can't just check for INVISIBLE
+    // state.
+    let hidden = Utils.getAttributes(aAccessible).hidden;
+    return hidden && hidden === "true";
+  },
+
   visibleChildCount: function visibleChildCount(aAccessible) {
     let count = 0;
     for (let child = aAccessible.firstChild; child; child = child.nextSibling) {
-      ++count;
+      if (!this.isHidden(child)) {
+        ++count;
+      }
     }
     return count;
+  },
+
+  inHiddenSubtree: function inHiddenSubtree(aAccessible) {
+    for (let acc = aAccessible; acc; acc = acc.parent) {
+      if (this.isHidden(acc)) {
+        return true;
+      }
+    }
+    return false;
   },
 
   isAliveAndVisible: function isAliveAndVisible(aAccessible, aIsOnScreen) {
@@ -293,7 +311,8 @@ var Utils = { // jshint ignore:line
     try {
       let state = this.getState(aAccessible);
       if (state.contains(States.DEFUNCT) || state.contains(States.INVISIBLE) ||
-          (aIsOnScreen && state.contains(States.OFFSCREEN))) {
+          (aIsOnScreen && state.contains(States.OFFSCREEN)) ||
+          Utils.inHiddenSubtree(aAccessible)) {
         return false;
       }
     } catch (x) {
@@ -712,7 +731,12 @@ PivotContext.prototype = {
     }
     let child = aAccessible.firstChild;
     while (child) {
-      let include = true;
+      let include;
+      if (this._includeInvisible) {
+        include = true;
+      } else {
+        include = !Utils.isHidden(child);
+      }
       if (include) {
         if (aPreorder) {
           yield child;
