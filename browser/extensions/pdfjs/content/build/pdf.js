@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.602';
-var pdfjsBuild = '3b07147d';
+var pdfjsVersion = '2.0.625';
+var pdfjsBuild = 'e8b50883';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(6);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
@@ -824,11 +824,6 @@ var Util = function UtilClosure() {
     romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
     var romanStr = romanBuf.join('');
     return lowerCase ? romanStr.toLowerCase() : romanStr;
-  };
-  Util.extendObj = function extendObj(obj1, obj2) {
-    for (var key in obj2) {
-      obj1[key] = obj2[key];
-    }
   };
   Util.inherit = function Util_inherit(sub, base, prototype) {
     sub.prototype = Object.create(base.prototype);
@@ -4155,10 +4150,10 @@ function getDocument(src) {
     params.disableFontFace = _api_compatibility.apiCompatibilityParams.disableFontFace || false;
   }
   if (typeof params.disableRange !== 'boolean') {
-    params.disableRange = _api_compatibility.apiCompatibilityParams.disableRange || false;
+    params.disableRange = false;
   }
   if (typeof params.disableStream !== 'boolean') {
-    params.disableStream = _api_compatibility.apiCompatibilityParams.disableStream || false;
+    params.disableStream = false;
   }
   if (typeof params.disableAutoFetch !== 'boolean') {
     params.disableAutoFetch = false;
@@ -4228,7 +4223,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.602',
+    apiVersion: '2.0.625',
     source: {
       data: source.data,
       url: source.url,
@@ -4565,7 +4560,7 @@ var PDFPageProxy = function PDFPageProxyClosure() {
               resolve(textContent);
               return;
             }
-            _util.Util.extendObj(textContent.styles, value.styles);
+            Object.assign(textContent.styles, value.styles);
             textContent.items.push(...value.items);
             pump();
           }, reject);
@@ -5362,8 +5357,6 @@ var WorkerTransport = function WorkerTransportClosure() {
     get loadingParams() {
       let params = this._params;
       return (0, _util.shadow)(this, 'loadingParams', {
-        disableRange: params.disableRange,
-        disableStream: params.disableStream,
         disableAutoFetch: params.disableAutoFetch,
         disableCreateObjectURL: params.disableCreateObjectURL,
         disableFontFace: params.disableFontFace,
@@ -5569,8 +5562,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.602';
-  exports.build = build = '3b07147d';
+  exports.version = version = '2.0.625';
+  exports.build = build = 'e8b50883';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -10067,7 +10060,7 @@ var renderTextLayer = function renderTextLayerClosure() {
               capability.resolve();
               return;
             }
-            _util.Util.extendObj(styleCache, value.styles);
+            Object.assign(styleCache, value.styles);
             this._processItems(value.items, styleCache);
             pump();
           }, capability.reject);
