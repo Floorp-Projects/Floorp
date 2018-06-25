@@ -191,7 +191,7 @@ class apply_jsone_templates(object):
 
                 template_path = os.path.join(self.template_dir, template + '.yml')
                 with open(template_path) as f:
-                    template = yaml.load(f)
+                    template = yaml.safe_load(f)
                 result = jsone.render(template, context) or {}
                 for attr in ('task', 'attributes'):
                     if attr in result:
