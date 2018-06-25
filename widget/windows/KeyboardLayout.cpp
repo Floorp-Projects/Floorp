@@ -1988,8 +1988,10 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       // If it was followed by a char message but it was consumed by somebody,
       // we should mark it as consumed because somebody must have handled it
       // and we should prevent to do "double action" for the key operation.
+      // However, for compatibility with older version and other browsers,
+      // we should dispatch the events even in the web content.
       if (mCharMessageHasGone) {
-        aKeyEvent.PreventDefaultBeforeDispatch();
+        aKeyEvent.PreventDefaultBeforeDispatch(CrossProcessForwarding::eAllow);
       }
       MOZ_FALLTHROUGH;
     case eKeyDownOnPlugin:
@@ -2005,9 +2007,11 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       // key release, so that the menu bar does not trigger.  This helps avoid
       // triggering the menu bar for ALT key accelerators used in assistive
       // technologies such as Window-Eyes and ZoomText or for switching open
-      // state of IME.
+      // state of IME.  On the other hand, we should dispatch the events even
+      // in the web content for compatibility with older version and other
+      // browsers.
       if (mOriginalVirtualKeyCode == VK_MENU && mMsg.message != WM_SYSKEYUP) {
-        aKeyEvent.PreventDefaultBeforeDispatch();
+        aKeyEvent.PreventDefaultBeforeDispatch(CrossProcessForwarding::eAllow);
       }
       break;
     case eKeyPress:

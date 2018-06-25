@@ -2125,6 +2125,14 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& aEvent)
         status == nsEventStatus_eConsumeNoDefault) {
       localEvent.PreventDefault();
     }
+    // This is an ugly hack, mNoRemoteProcessDispatch is set to true when the
+    // event's PreventDefault() or StopScrollProcessForwarding() is called.
+    // And then, it'll be checked by ParamTraits<mozilla::WidgetEvent>::Write()
+    // whether the event is being sent to remote process unexpectedly.
+    // However, unfortunately, it cannot check the destination.  Therefore,
+    // we need to clear the flag explicitly here because ParamTraits should
+    // keep checking the flag for avoiding regression.
+    localEvent.mFlags.mNoRemoteProcessDispatch = false;
     SendReplyKeyEvent(localEvent);
   }
 

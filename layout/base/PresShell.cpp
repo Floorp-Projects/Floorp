@@ -7485,7 +7485,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
             //     for some reasons (not sure) but we need to detect
             //     if a chrome event handler will call PreventDefault()
             //     again and check it later.
-            aEvent->PreventDefaultBeforeDispatch();
+            aEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
             aEvent->mFlags.mOnlyChromeDispatch = true;
 
             // The event listeners in chrome can prevent this ESC behavior by
@@ -7504,7 +7504,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
             // XXX See above comment to understand the reason why this needs
             //     to claim that the Escape key event is consumed by content
             //     even though it will be dispatched only into chrome.
-            aEvent->PreventDefaultBeforeDispatch();
+            aEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
             aEvent->mFlags.mOnlyChromeDispatch = true;
             if (aEvent->mMessage == eKeyUp) {
               nsIDocument::UnlockPointer();
