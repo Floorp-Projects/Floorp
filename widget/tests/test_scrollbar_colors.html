@@ -46,24 +46,47 @@ const WIN_REFERENCES = [
   ["0,255,255", 2487],
 ];
 
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({
-  "set": [["layout.css.scrollbar-colors.enabled", true]],
-}, function() {
-  document.querySelector('#style').textContent = `
-    .outer {
-      scrollbar-face-color: blue;
-      scrollbar-track-color: cyan;
-    }
-  `;
+const MAC_REFERENCES = [
+  // Yellow background
+  ["255,255,0", 7225],
+  // Blue scrollbar face
+  ["0,0,255", 416],
+  // Cyan scrollbar track
+  ["0,255,255", 1760],
+];
 
-  let outer = document.querySelector('.outer');
-  let canvas = snapshotRect(window, outer.getBoundingClientRect());
-  let stats = countPixels(canvas);
-  for (let [color, count] of WIN_REFERENCES) {
-    let value = stats.get(color);
-    is(value, count, `Pixel count of color ${color}`);
-  }
-  SimpleTest.finish();
-});
+let outer = document.querySelector('.outer');
+let outerRect = outer.getBoundingClientRect();
+if (outerRect.width == outer.clientWidth &&
+    outerRect.height == outer.clientHeight) {
+  ok(true, "Using overlay scrollbar, skip this test");
+} else {
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({
+    "set": [["layout.css.scrollbar-colors.enabled", true]],
+  }, function() {
+    document.querySelector('#style').textContent = `
+      .outer {
+        scrollbar-face-color: blue;
+        scrollbar-track-color: cyan;
+      }
+    `;
+
+    let canvas = snapshotRect(window, outerRect);
+    let stats = countPixels(canvas);
+    let references;
+    if (navigator.platform.startsWith("Win")) {
+      references = WIN_REFERENCES;
+    } else if (navigator.platform.startsWith("Mac")) {
+      references = MAC_REFERENCES;
+    } else {
+      ok(false, "Unsupported platform");
+    }
+    for (let [color, count] of references) {
+      let value = stats.get(color);
+      is(value, count, `Pixel count of color ${color}`);
+    }
+    SimpleTest.finish();
+  });
+}
 </script>
