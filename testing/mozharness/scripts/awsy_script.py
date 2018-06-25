@@ -153,6 +153,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
                             'resultsDir': self.results_dir}
 
         # Check if this is a DMD build and if so enable it.
+        dmd_enabled = False
         dmd_py_lib_dir = os.path.dirname(self.binary_path)
         if mozinfo.os == 'mac':
             # On mac binary is in MacOS and dmd.py is in Resources, ie:
@@ -162,6 +163,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
 
         dmd_path = os.path.join(dmd_py_lib_dir, "dmd.py")
         if os.path.isfile(dmd_path):
+            dmd_enabled = True
             runtime_testvars['dmd'] = True
 
             # Allow the child process to import dmd.py
@@ -208,6 +210,8 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
             prefs_file = "prefs.json"
 
         cmd.append("--preferences=%s" % os.path.join(self.awsy_path, "conf", prefs_file))
+        if dmd_enabled:
+            cmd.append("--pref=security.sandbox.content.level:0")
         cmd.append(test_file)
 
         if self.config['single_stylo_traversal']:
