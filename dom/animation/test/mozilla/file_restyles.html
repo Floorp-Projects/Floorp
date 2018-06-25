@@ -134,6 +134,7 @@ function waitForWheelEvent(aTarget) {
 
 const omtaEnabled = isOMTAEnabled();
 
+const isAndroid = !!navigator.userAgent.includes("Android");
 const isWebRender =
   SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
 
@@ -1728,6 +1729,30 @@ waitForAllPaints(() => {
     is(markers.length, 5,
        'Visibility animation running on the main-thread on in-view element ' +
        'should not be throttled');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function restyling_outline_offset_animations_on_invisible_element() {
+    if (isAndroid) {
+      // FIXME: Bug 1470798: Enable this test on Android.
+      return;
+    }
+    const div = addDiv(null,
+                       { style: 'visibility: hidden; ' +
+                                'outline-style: solid; ' +
+                                'outline-width: 1px;' });
+    const animation =
+      div.animate({ outlineOffset: [ '0px', '10px' ] },
+                  { duration: 100 * MS_PER_SEC,
+                    iterations: Infinity });
+
+    await waitForAnimationReadyToRestyle(animation);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Outline offset animation running on the main-thread on invisible ' +
+       'element should be throttled');
     await ensureElementRemoval(div);
   });
 
