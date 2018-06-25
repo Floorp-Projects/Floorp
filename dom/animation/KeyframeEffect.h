@@ -446,8 +446,9 @@ private:
   // observers reflected by the transform.
   bool HasPropertiesThatMightAffectOverflow() const
   {
-    return mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
-                                    nsChangeHint_AddOrRemoveTransform |
+    return mCumulativeChangeHint & (nsChangeHint_AddOrRemoveTransform |
+                                    nsChangeHint_UpdateOverflow |
+                                    nsChangeHint_UpdatePostTransformOverflow |
                                     nsChangeHint_UpdateTransformLayer);
   }
 
