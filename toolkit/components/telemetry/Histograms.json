@@ -13778,25 +13778,25 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors whose inline table editing UI is actually used by users."
   },
-  "ACTIVE_DOCGROUPS_PER_TABGROUP": {
+  "ACTIVE_HTTP_DOCGROUPS_PER_TABGROUP": {
     "record_in_processes": ["content"],
     "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1441972],
+    "bug_numbers": [1441972, 1468843],
     "expires_in_version": "67",
     "kind": "exponential",
     "high": 50,
     "n_buckets": 20,
-    "description": "Number of active doc groups per tab group. Collected at the point when the top level document of the tab group is unloaded."
+    "description": "Number of active http:// and https:// doc groups per tab group. Collected at the point when the top level document of the tab group is unloaded."
   },
-  "TOTAL_DOCGROUPS_PER_TABGROUP": {
+  "TOTAL_HTTP_DOCGROUPS_PER_TABGROUP": {
     "record_in_processes": ["content"],
     "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1441972],
+    "bug_numbers": [1441972, 1468843],
     "expires_in_version": "67",
     "kind": "exponential",
     "high": 50,
     "n_buckets": 20,
-    "description": "Total number of doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
+    "description": "Total number of http:// and https:// doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
   },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
     "record_in_processes": ["content"],
