@@ -16,7 +16,6 @@ import android.support.test.uiautomator.UiSelector;
 import android.widget.RadioButton;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -131,7 +130,8 @@ public class SearchEngineSelectionTest {
         TestHelper.hint.click();
         googleWebView.waitForExists(waitingTime);
         TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
-        Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
+        //Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
+        TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
         // Search for words: <Google|DuckDuckGo|etc.>, mozilla, focus
         assertTrue(TestHelper.browserURLbar.getText().contains(mSearchEngine.toLowerCase()));
         assertTrue(TestHelper.browserURLbar.getText().contains("mozilla"));
@@ -143,8 +143,7 @@ public class SearchEngineSelectionTest {
         assertEquals(TestHelper.inlineAutocompleteEditText.getText(), "mozilla focus");
         TestHelper.pressEnterKey();
         googleWebView.waitForExists(waitingTime);
-        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
-        Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
+        TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
         // Search for words: <Google|DuckDuckGo|etc.>, mozilla, focus
         assertTrue(TestHelper.browserURLbar.getText().contains(mSearchEngine.toLowerCase()));
         assertTrue(TestHelper.browserURLbar.getText().contains("mozilla"));
