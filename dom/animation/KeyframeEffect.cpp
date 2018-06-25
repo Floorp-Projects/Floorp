@@ -511,11 +511,11 @@ KeyframeEffect::ComposeStyle(
     ComposeStyleRule(aComposeResult, prop, *segment, computedTiming);
   }
 
-  // If the animation produces a transform change hint that affects the overflow
-  // region, we need to record the current time to unthrottle the animation
+  // If the animation produces a change hint that affects the overflow region,
+  // we need to record the current time to unthrottle the animation
   // periodically when the animation is being throttled because it's scrolled
   // out of view.
-  if (HasTransformThatMightAffectOverflow()) {
+  if (HasPropertiesThatMightAffectOverflow()) {
     nsPresContext* presContext =
       nsContentUtils::GetContextForContent(mTarget->mElement);
     if (presContext) {
@@ -524,7 +524,7 @@ KeyframeEffect::ComposeStyle(
         EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
       MOZ_ASSERT(effectSet, "ComposeStyle should only be called on an effect "
                             "that is part of an effect set");
-      effectSet->UpdateLastTransformSyncTime(now);
+      effectSet->UpdateLastOverflowAnimationSyncTime(now);
     }
   }
 }
@@ -1231,19 +1231,18 @@ KeyframeEffect::CanThrottle() const
       !frame->IsVisibleOrMayHaveVisibleDescendants();
     if ((isVisibilityHidden && !HasVisibilityChange()) ||
         frame->IsScrolledOutOfView()) {
-      // If there are transform change hints, unthrottle the animation
-      // periodically since it might affect the overflow region.
-      if (HasTransformThatMightAffectOverflow()) {
-        // Don't throttle finite transform animations since the animation might
-        // suddenly come into view and if it was throttled it will be
-        // out-of-sync.
+      // Unthrottle the animation if there is a change hint that might affect
+      // the overflow region.
+      if (HasPropertiesThatMightAffectOverflow()) {
+        // Don't throttle finite animations since the animation might suddenly
+        // come into view and if it was throttled it will be out-of-sync.
         if (HasFiniteActiveDuration()) {
           return false;
         }
 
         return isVisibilityHidden
-          ? CanThrottleTransformChangesInScrollable(*frame)
-          : CanThrottleTransformChanges(*frame);
+          ? CanThrottleOverflowChangesInScrollable(*frame)
+          : CanThrottleOverflowChanges(*frame);
       }
       return true;
     }
@@ -1279,8 +1278,8 @@ KeyframeEffect::CanThrottle() const
 
     // If this is a transform animation that affects the overflow region,
     // we should unthrottle the animation periodically.
-    if (HasTransformThatMightAffectOverflow() &&
-        !CanThrottleTransformChangesInScrollable(*frame)) {
+    if (HasPropertiesThatMightAffectOverflow() &&
+        !CanThrottleOverflowChangesInScrollable(*frame)) {
       return false;
     }
   }
@@ -1295,24 +1294,24 @@ KeyframeEffect::CanThrottle() const
 }
 
 bool
-KeyframeEffect::CanThrottleTransformChanges(const nsIFrame& aFrame) const
+KeyframeEffect::CanThrottleOverflowChanges(const nsIFrame& aFrame) const
 {
   TimeStamp now = aFrame.PresContext()->RefreshDriver()->MostRecentRefresh();
 
   EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
                                                  mTarget->mPseudoType);
-  MOZ_ASSERT(effectSet, "CanThrottleTransformChanges is expected to be called"
+  MOZ_ASSERT(effectSet, "CanOverflowTransformChanges is expected to be called"
                         " on an effect in an effect set");
-  MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
+  MOZ_ASSERT(mAnimation, "CanOverflowTransformChanges is expected to be called"
                          " on an effect with a parent animation");
-  TimeStamp lastSyncTime = effectSet->LastTransformSyncTime();
+  TimeStamp lastSyncTime = effectSet->LastOverflowAnimationSyncTime();
   // If this animation can cause overflow, we can throttle some of the ticks.
   return (!lastSyncTime.IsNull() &&
     (now - lastSyncTime) < OverflowRegionRefreshInterval());
 }
 
 bool
-KeyframeEffect::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame) const
+KeyframeEffect::CanThrottleOverflowChangesInScrollable(nsIFrame& aFrame) const
 {
   // If the target element is not associated with any documents, we don't care
   // it.
@@ -1333,7 +1332,7 @@ KeyframeEffect::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame) const
     return true;
   }
 
-  if (CanThrottleTransformChanges(aFrame)) {
+  if (CanThrottleOverflowChanges(aFrame)) {
     return true;
   }
 
