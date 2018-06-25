@@ -479,6 +479,7 @@ nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
   y = 0;
   width = 0;
   height = 0;
+  type = NPWindowTypeWindow;
 
   mPrevWinProc = nullptr;
   mPluginWinProc = nullptr;
