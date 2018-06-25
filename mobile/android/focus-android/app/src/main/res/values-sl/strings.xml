@@ -40,7 +40,7 @@
   <string name="preference_search_engine_default">Privzet</string>
   <string name="preference_state_on">Vključeno</string>
   <string name="preference_state_off">Izklopljeno</string>
-  <string name="preference_subitem_autocomplete">Samodejno dopolni URL</string>
+  <string name="preference_subitem_autocomplete">Samodejno dopolnjevanje URL</string>
   <string name="preference_switch_autocomplete">Samodejno dopolni</string>
   <string name="preference_category_autocomplete_preinstalled">Privzeti seznam URL-jev</string>
   <string name="preference_autocomplete_preinstalled_summary">Omogočite, če želite, da %1$s v naslovni vrstici samodejno dopolni preko 450 priljubljenih URL-jev.</string>

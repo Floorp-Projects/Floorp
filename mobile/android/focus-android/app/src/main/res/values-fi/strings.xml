@@ -170,7 +170,7 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Lisää</string>
   <string name="dialog_addtohomescreen_action_cancel">Peruuta</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Pikakuvake aukeaa seurannanesto pois päältä</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Pikakuvake aukeaa ilman seurannan suojausta</string>
   <string name="notification_browsing_session_channel_name">Yksityinen selausistunto</string>
   <string name="notification_browsing_session_channel_description">Ilmoitusten avulla voit nollata %1$s istuntosi hipaisulla. Sinun ei tarvitse avata sovellusta nähdäksesi tiedot selaimestasi.</string>
   <string name="tabs_tray_action_erase">Tyhjennä selaushistoria</string>

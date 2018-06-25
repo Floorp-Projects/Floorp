@@ -91,7 +91,7 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla lucha por recolectar solo lo necesario para brindar y mejorar %1$s para todos.</string>
   <string name="preference_privacy_notice">Aviso de privacidad</string>
   <string name="preference_about">Acerca de %1$s</string>
-  <string name="preference_search_installed_search_engines">Motores de navegación instalados</string>
+  <string name="preference_search_installed_search_engines">Motores de búsqueda instalados</string>
   <string name="preference_search_restore">Restaurar motores predeterminados de búsqueda</string>
   <string name="preference_search_add2">+ Agregar otro motor de búsqueda</string>
   <string name="preference_search_remove_title">Eliminar motores de búsqueda</string>
@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Seguridad del sitio</string>
   <string name="preference_autocomplete_duplicate_url_error">La URL ya existe</string>
   <string name="find_in_page">Buscar en la página</string>
+  <string name="find_in_page_input">Buscar en la página</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
+  <string name="accessibility_next_result">Buscar resultado siguiente</string>
+  <string name="accessibility_previous_result">Buscar resultado anterior</string>
+  <string name="accessibility_dismiss_find_in_page">Cerrar la búsqueda</string>
   <string name="http_auth_dialog_title">Se requiere autenticación</string>
   <string name="http_auth_dialog_username">Nombre de usuario</string>
   <string name="http_auth_dialog_password">Contraseña</string>

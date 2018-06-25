@@ -161,7 +161,7 @@
   <string name="firstrun_search_title">Your search, your way</string>
   <string name="firstrun_search_text">Searching for something different? Choose another default search engine in Settings.</string>
   <string name="firstrun_shortcut_title">Add shortcuts to your home screen</string>
-  <string name="firstrun_shortcut_text">Return to your favorite sites in %1$s quickly. Just select \"Add to Home screen\" from the %1$s menu.</string>
+  <string name="firstrun_shortcut_text">Return to your favourite sites in %1$s quickly. Just select \"Add to Home screen\" from the %1$s menu.</string>
   <string name="firstrun_privacy_title">Make privacy a habit</string>
   <string name="firstrun_privacy_text">Set %1$s as your default browser and get the benefits of private browsing when you open webpages from other apps.</string>
   <string name="firstrun_close_button">OK, got it!</string>

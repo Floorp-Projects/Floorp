@@ -188,4 +188,16 @@
   <string name="security_popup_security_verified">Проверено от: %1$s</string>
   <string name="site_security_icon_content_description">Защита на страницата</string>
   <string name="preference_autocomplete_duplicate_url_error">Адресът вече съществува</string>
+  <string name="find_in_page">Търсене в страницата</string>
+  <string name="find_in_page_input">Търсене в страницата</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d от %2$d</string>
+  <string name="accessibility_next_result">Отиване на следващото съвпадение</string>
+  <string name="accessibility_previous_result">Отиване на предишното съвпадение</string>
+  <string name="accessibility_dismiss_find_in_page">Затваряне на търсенето</string>
+  <string name="http_auth_dialog_title">Необходимо е удостоверяване</string>
+  <string name="http_auth_dialog_username">Потребителско име</string>
+  <string name="http_auth_dialog_password">Парола</string>
+  <string name="preference_performance_request_desktop_site">Настолна версия на сайта</string>
+  <string name="custom_tab_copy_url_action">Адресът е копиран</string>
 </resources>

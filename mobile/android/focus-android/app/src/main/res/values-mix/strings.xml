@@ -189,6 +189,13 @@
   <string name="site_security_icon_content_description">Vaa sitio yoo</string>
   <string name="preference_autocomplete_duplicate_url_error">Tsa inka URL</string>
   <string name="find_in_page">Ndaduku yo\'o</string>
+  <string name="find_in_page_input">Nduku nu página</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d a %2$d</string>
+  <string name="accessibility_next_result">Nduku tu\'un nu\'u</string>
+  <string name="accessibility_previous_result">Nduku tu\'un sata</string>
+  <string name="accessibility_dismiss_find_in_page">Kasi nu ndukuku</string>
+  <string name="http_auth_dialog_title">Tsiniñu\'u kunchi\'i a vai</string>
   <string name="http_auth_dialog_username">Sivìi</string>
   <string name="http_auth_dialog_password">Tu\'un seè</string>
   <string name="preference_performance_request_desktop_site">Kaka sitio nu escritorio</string>

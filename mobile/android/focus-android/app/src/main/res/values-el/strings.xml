@@ -17,7 +17,8 @@
   <string name="menu_about">Πληροφορίες</string>
   <string name="menu_help">Βοήθεια</string>
   <string name="menu_rights">Τα δικαιώματά σας</string>
-  <string name="menu_trackers_blocked_title">Αποκλεισμένα trackers</string>
+  <string name="menu_trackers_blocked_title">Αποκλεισμένοι ιχνηλάτες</string>
+  <string name="menu_custom_tab_branding">Με την υποστήριξη του %1$s</string>
   <string name="share_dialog_title">Κοινοποίηση μέσω</string>
   <string name="notification_erase_text">Διαγραφή ιστορικού περιήγησης</string>
   <string name="notification_action_open">Άνοιγμα</string>
@@ -27,21 +28,43 @@
   <string name="text_selection_search_action">Ιδιωτική αναζήτηση</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#932;&#959; %1$s &#963;&#940;&#962; &#948;&#943;&#957;&#949;&#953; &#964;&#959;&#957; &#941;&#955;&#949;&#947;&#967;&#959;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#935;&#961;&#951;&#963;&#953;&#956;&#959;&#960;&#959;&#953;&#942;&#963;&#964;&#949; &#964;&#959; &#969;&#962; &#960;&#961;&#972;&#947;&#961;&#945;&#956;&#956;&#945; &#953;&#948;&#953;&#969;&#964;&#953;&#954;&#942;&#962; &#960;&#949;&#961;&#953;&#942;&#947;&#951;&#963;&#951;&#962;:\n  "<ul>"\n    "<li>&#913;&#957;&#945;&#950;&#951;&#964;&#942;&#963;&#964;&#949; &#954;&#945;&#953; &#960;&#949;&#961;&#953;&#951;&#947;&#951;&#952;&#949;&#943;&#964;&#949; &#949;&#957;&#964;&#972;&#962; &#964;&#951;&#962; &#949;&#966;&#945;&#961;&#956;&#959;&#947;&#942;&#962;</li>"\n    "<li>&#913;&#960;&#959;&#954;&#955;&#949;&#943;&#963;&#964;&#949; trackers (&#942; &#949;&#957;&#951;&#956;&#949;&#961;&#974;&#963;&#964;&#949; &#964;&#953;&#962; &#961;&#965;&#952;&#956;&#943;&#963;&#949;&#953;&#962; &#963;&#945;&#962; &#974;&#963;&#964;&#949; &#957;&#945; &#949;&#960;&#953;&#964;&#961;&#941;&#960;&#959;&#957;&#964;&#945;&#953;)</li>"\n    "<li>&#916;&#953;&#945;&#947;&#961;&#940;&#968;&#964;&#949; &#964;&#945; cookies, &#954;&#945;&#952;&#974;&#962; &#954;&#945;&#953; &#964;&#959; &#953;&#963;&#964;&#959;&#961;&#953;&#954;&#972; &#945;&#957;&#945;&#950;&#951;&#964;&#942;&#963;&#949;&#969;&#957; &#954;&#945;&#953; &#960;&#949;&#961;&#953;&#942;&#947;&#951;&#963;&#951;&#962;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#932;&#959; %1$s &#948;&#951;&#956;&#953;&#959;&#965;&#961;&#947;&#942;&#952;&#951;&#954;&#949; &#945;&#960;&#972; &#964;&#951; Mozilla. &#919; &#945;&#960;&#959;&#963;&#964;&#959;&#955;&#942; &#956;&#945;&#962; &#949;&#943;&#957;&#945;&#953; &#957;&#945; &#960;&#961;&#959;&#945;&#947;&#940;&#947;&#959;&#965;&#956;&#949; &#941;&#957;&#945; &#965;&#947;&#953;&#941;&#962;, &#945;&#957;&#959;&#953;&#967;&#964;&#972; &#948;&#953;&#945;&#948;&#943;&#954;&#964;&#965;&#959;.<br/>\n<a href="%2$s">&#924;&#940;&#952;&#949;&#964;&#949; &#960;&#949;&#961;&#953;&#963;&#963;&#972;&#964;&#949;&#961;&#945;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Απόρρητο &amp; Ασφάλεια</string>
+  <string name="preference_privacy_and_security_summary">Επιλογές παρακολούθησης, cookies, δεδομένων</string>
+  <string name="preference_category_tracking_protection">Προστασία από καταγραφή</string>
+  <string name="preference_category_web_content">Διαδικτυακό περιεχόμενο</string>
+  <string name="preference_category_switching_apps">Εναλλαγή εφαρμογών</string>
+  <string name="preference_category_general">Γενικά</string>
+  <string name="preference_category_data_collection_use">Συλλογή &amp; χρήση δεδομένων</string>
   <string name="preference_category_search">Αναζήτηση</string>
   <string name="preference_search_engine_default">Προεπιλογή</string>
   <string name="preference_state_on">Ενεργό</string>
   <string name="preference_state_off">Ανενεργό</string>
   <string name="preference_subitem_autocomplete">Αυτόματη συμπλήρωση URL</string>
   <string name="preference_switch_autocomplete">Αυτόματη συμπλήρωση</string>
+  <string name="preference_category_autocomplete_custom_urls">Προσαρμοσμένα URLs</string>
   <string name="preference_autocomplete_subitem_customlist">Προσαρμοσμένα URLs</string>
+  <string name="preference_autocomplete_action_add">+ Προσθήκη προσαρμοσμένου URL</string>
+  <string name="preference_autocomplete_title_add">Προσθήκη προσαρμοσμένου URL</string>
+  <string name="custom_autocomplete_quick_add">Προσθήκη προσαρμοσμένου URL</string>
+  <string name="preference_category_cookies">Cookies και δεδομένα ιστοσελίδων</string>
+  <string name="preference_category_data_choices">Επιλογές δεδομένων</string>
+  <string name="preference_autocomplete_title_remove">Αφαίρεση προσαρμοσμένων URLs</string>
   <string name="preference_autocomplete_learn_more">Μάθετε περισσότερα</string>
+  <string name="preference_autocomplete_add_title">URL για προσθήκη</string>
+  <string name="preference_autocomplete_add_hint">Επικόλληση ή εισαγωγή URL</string>
+  <string name="preference_autocomplete_add_example2">Παράδειγμα: mozilla.org</string>
+  <string name="preference_autocomplete_add_example">Παράδειγμα: example.com</string>
+  <string name="preference_autocomplete_menu_remove">Αφαίρεση</string>
+  <string name="preference_autocomplete_action_remove_content_description">Αφαίρεση</string>
   <string name="preference_language">Γλώσσα</string>
   <string name="preference_language_systemdefault">Προεπιλογή συστήματος</string>
   <string name="preference_category_privacy">Απόρρητο</string>
   <string name="preference_privacy_block_ads">Φραγή trackers διαφημίσεων</string>
+  <string name="preference_privacy_block_ads_summary">Ορισμένες διαφημίσεις καταγράφουν επισκέψεις ιστοσελίδων, ακόμη κι αν δεν κάνετε κλικ σε διαφημίσεις</string>
   <string name="preference_privacy_block_analytics">Φραγή trackers αναλύσεων</string>
   <string name="preference_privacy_block_social">Φραγή κοινωνικών trackers</string>
   <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
+  <string name="preference_privacy_block_content_summary2">Η ενεργοποίηση ενδέχεται να προκαλέσει απροσδόκητη συμπεριφορά ορισμένων σελίδων</string>
+  <string name="preference_privacy_category_cookies">Αποκλεισμός cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Όχι</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ναι</string>
   <string name="preference_privacy_secure_mode">Αορατότητα</string>
@@ -49,6 +72,7 @@
   <string name="preference_category_performance">Απόδοση</string>
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
+  <string name="preference_performance_block_javascript">Αποκλεισμός JavaScript</string>
   <string name="preference_default_browser2">Ορισμός του %1$s ως προεπιλεγμένο πρόγραμμα περιήγησης</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Αποστολή δεδομένων χρήσης</string>
@@ -56,6 +80,17 @@
   <string name="preference_mozilla_telemetry_summary2">Η Mozilla αγωνίζεται για να συλλέγει μόνο ό,τι χρειάζεται για να παρέχει και να βελτιώνει το %1$s για όλους.</string>
   <string name="preference_privacy_notice">Σημείωση απορρήτου</string>
   <string name="preference_about">Σχετικά με το %1$s</string>
+  <string name="preference_search_installed_search_engines">Εγκατεστημένες μηχανές αναζήτησης</string>
+  <string name="preference_search_restore">Επαναφορά προεπιλεγμένων μηχανών αναζήτησης</string>
+  <string name="preference_search_add2">+ Προσθήκη άλλης μηχανής αναζήτησης</string>
+  <string name="preference_search_remove_title">Αφαίρεση μηχανών αναζήτησης</string>
+  <string name="preference_search_remove">Αφαίρεση</string>
+  <string name="action_option_add_search_engine">Προσθήκη μηχανής αναζήτησης</string>
+  <string name="search_add_manually_name_hint">Όνομα μηχανής αναζήτησης</string>
+  <string name="search_add_manually_save">Αποθήκευση</string>
+  <string name="search_add_manually_example">Παράδειγμα: example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">Προστέθηκε νέα μηχανή αναζήτησης.</string>
+  <string name="search_add_error_empty_name">Εισάγετε όνομα μηχανής αναζήτησης</string>
   <string name="content_description_clear_input">Εκκαθάριση εισόδου</string>
   <string name="content_description_dismiss_input">Απόρριψη</string>
   <string name="content_description_erase">Διαγραφή ιστορικού περιήγησης</string>
@@ -127,5 +162,22 @@
   <string name="your_rights_content1">Το %1$s είναι δωρεάν και ανοικτού κώδικα λογισμικό, που αναπτύσσεται από τη Mozilla και άλλους συνεισφέροντες.</string>
   <string name="your_rights_content2"><![CDATA["Το %1$s καθίσταται διαθέσιμο σε εσάς υπό τους όρους της "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#916;&#951;&#956;&#972;&#963;&#953;&#945;&#962; &#902;&#948;&#949;&#953;&#945;&#962; Mozilla</a>" και άλλων αδειών ανοικτού κώδικα."]]></string>
   <string name="your_rights_content4"><![CDATA["Επιπρόσθετος πηγαίος κώδικας για το %1$s είναι διαθέσιμος υπό διάφορες άλλες ελεύθερες και ανοικτού κώδικα "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#940;&#948;&#949;&#953;&#949;&#962;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Όνομα χρήστη</string>
+  <string name="gv_prompt_password_hint">Κωδικός πρόσβασης</string>
   <string name="gv_prompt_clear">Εκκαθάριση</string>
+  <string name="security_popup_secure_connection">Ασφαλής σύνδεση</string>
+  <string name="security_popup_insecure_connection">Μη ασφαλής σύνδεση</string>
+  <string name="security_popup_security_verified">Επαληθεύτηκε από: %1$s</string>
+  <string name="site_security_icon_content_description">Ασφάλεια ιστοσελίδας</string>
+  <string name="preference_autocomplete_duplicate_url_error">Το URL υπάρχει ήδη</string>
+  <string name="find_in_page">Εύρεση στη σελίδα</string>
+  <string name="find_in_page_input">Εύρεση στη σελίδα</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d από %2$d</string>
+  <string name="accessibility_next_result">Εύρεση επόμενου αποτελέσματος</string>
+  <string name="accessibility_previous_result">Εύρεση προηγούμενου αποτελέσματος</string>
+  <string name="http_auth_dialog_title">Απαιτείται ταυτοποίηση</string>
+  <string name="http_auth_dialog_username">Όνομα χρήστη</string>
+  <string name="http_auth_dialog_password">Κωδικός πρόσβασης</string>
+  <string name="custom_tab_copy_url_action">Το URL αντιγράφτηκε</string>
 </resources>

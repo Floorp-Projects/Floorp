@@ -8,6 +8,9 @@
   <string name="feedback_erase">Daa nnánukunu nnaá.</string>
   <string name="search_hint">Nuku jii %1$s</string>
   <string name="menu_share">Kua´a...</string>
+  <string name="menu_report_site_issue">Iyo iin tixi nuu sitio ya´a</string>
+  <string name="menu_open_with_default_browser2">Síne jii %1$s</string>
+  <string name="menu_open_with_a_browser2">Síne jii…</string>
   <string name="menu_add_to_home_screen">Tee-ma nuu kajie´e</string>
   <string name="menu_whats_new">Nakuvi a jíía íyo</string>
   <string name="menu_settings">Ke´i</string>
@@ -15,6 +18,7 @@
   <string name="menu_help">Chinei</string>
   <string name="menu_rights">Daa tutu nichi no´o</string>
   <string name="menu_trackers_blocked_title">Daa a nita noo´o nxita</string>
+  <string name="menu_custom_tab_branding">Ya´a nsa´a %1$s</string>
   <string name="share_dialog_title">Kua´a jii</string>
   <string name="notification_erase_text">Xiná daa nnánukunu</string>
   <string name="notification_action_open">Síne</string>
@@ -23,6 +27,15 @@
   <string name="shortcut_erase_long_label">Xiná daa nnánukunu</string>
   <string name="text_selection_search_action">Nánuku yɨ´ɨ yu´u</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s taji kajinu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ni&#180;ima kua iin nuu n&#225;nuku privado:\n  "<ul>"\n    "<li>N&#225;nuku jee kaka nuu ka&#225; ya&#180;a</li>"\n    "<li>Chiyu&#180;u daa a nita no&#180;o (a xiin kaji kuvi kuntadaja no&#180;o)</li>"\n    "<li>Xina saa kuvi na&#225; cokies jii daa tu&#180;un nn&#225;nukunu</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kuviji iin nsa&#180;a Mozilla. Nuku-ani iin internet vii jee va&#180;a<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privacidad jii seguridad</string>
+  <string name="preference_privacy_and_security_summary">Kaji kuntada noo´o, cookies jii datos</string>
+  <string name="preference_search_summary">Tee kua predeterminado</string>
+  <string name="preference_mozilla_summary">Jiee ya´a %1$s, chineí</string>
+  <string name="preference_category_tracking_protection">A kumi nkutada-ja</string>
+  <string name="preference_category_web_content">Tu´un Web</string>
+  <string name="preference_category_switching_apps">Sama ka̱a̱</string>
+  <string name="preference_category_general">Ntaka</string>
+  <string name="preference_category_data_collection_use">Nastutu datos jii a ni´i</string>
   <string name="preference_category_search">Nánuku</string>
   <string name="preference_search_engine_default">Kua vaji</string>
   <string name="preference_state_on">Tɨɨn</string>
@@ -31,14 +44,19 @@
   <string name="preference_switch_autocomplete">Tee ntu´u</string>
   <string name="preference_category_autocomplete_preinstalled">Lista URL predeterminada</string>
   <string name="preference_autocomplete_preinstalled_summary">Ke´í saa %1$s kutivi nuu ka̱a̱ direcciones kuaiyo daa 450 URLs a ni´ika.</string>
+  <string name="preference_category_autocomplete_custom_urls">Sa´a vii URLs</string>
   <string name="preference_autocomplete_subitem_customlist">Sá´á vii URLs</string>
-  <string name="preference_autocomplete_action_add">+Tee a Sá´á vii URL</string>
+  <string name="preference_autocomplete_action_add">+Tee a sá´á vii URL</string>
   <string name="preference_autocomplete_title_add">Tee URL vii</string>
+  <string name="custom_autocomplete_quick_add">Tee a sá´á vii URL</string>
+  <string name="preference_category_cookies">Cookies jii datos nuu ya´a</string>
+  <string name="preference_category_data_choices">Kaji datos</string>
   <string name="preference_autocomplete_title_remove">Náxitá URLs a sá´ávii</string>
   <string name="preference_autocomplete_learn_more">Kutu´va-ka</string>
   <string name="preference_autocomplete_custom_summary">Tee jee tetiñu de kuvi tee ntu´u URL sá´á vii.</string>
   <string name="preference_autocomplete_add_title">URL a tee</string>
   <string name="preference_autocomplete_add_hint">Tee a xiin chu´un URL</string>
+  <string name="preference_autocomplete_add_example2">Kua: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Kua: nakuvi.com</string>
   <string name="preference_autocomplete_add_confirmation">A jíía vii URL ntee.</string>
   <string name="preference_autocomplete_menu_remove">Xita</string>
@@ -55,12 +73,17 @@
   <string name="preference_privacy_block_social_summary">Yɨ´ɨ nuu daa web saa kuvi kuntada noo´o jee kutuvi daa botones kuvi kua´a</string>
   <string name="preference_privacy_block_content">Chiyu´u daa ka̱a̱ nita daa inka contenido</string>
   <string name="preference_privacy_block_content_summary2">Dee tee ya´a kuvi sá´á daa web nsatiñu vii</string>
+  <string name="preference_privacy_category_cookies">Kasɨ cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nkuvi</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Nakasɨ ntu xini cookies daa inka</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Kuvi</string>
   <string name="preference_privacy_secure_mode">Ntu tuvi</string>
   <string name="preference_privacy_stealth_summary">Chiyu´u daa tutu web saa sama ka̱a̱</string>
   <string name="preference_category_performance">Naja satiñu</string>
   <string name="preference_performance_block_webfonts">Chiyu´u tu´un web</string>
   <string name="preference_performance_block_webfonts_summary">Kuvi tuvi íconos a xiin nkutuvi tutu natava</string>
+  <string name="preference_performance_block_javascript">Kasɨ JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Daa página kuvi kivu ñama, jee kuvi nsatiñu vii</string>
   <string name="preference_default_browser2">Sá´á %1$s navegador xinañu´u ya´a</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Chu´uichí datos a ni´í</string>
@@ -80,7 +103,9 @@
   <string name="search_add_manually_example">Kua: nakuvi.com/search/?q=</string>
   <string name="search_add_confirmation">A jíía ka̱a̱ nánuku ntee.</string>
   <string name="search_add_error_empty_name">Tee sivɨ ka̱a̱ nánuku</string>
+  <string name="search_add_error_duplicate_name">Iin ka̱a̱ nánuku a ni´i sivɨ ya´a.</string>
   <string name="search_add_error_empty_search">Tee a nánukunu</string>
+  <string name="search_add_error_format">Kune´ya dee tu´un nánukunu íyo kua vají nuu ya´a</string>
   <string name="content_description_clear_input">Xinó tu´u nchu´u</string>
   <string name="content_description_dismiss_input">Chiyu´u</string>
   <string name="content_description_erase">Xinó daa nnánuku noo´o</string>
@@ -118,6 +143,7 @@
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Direcci&#243;n Web ntaka ichi &#237;yo sukuan "<strong>http://www.example.com/</strong></li>"\n  "<li>"Kune&#180;y&#225; de ni&#180;&#237; nijin-nu daa barras sukuan (kua ya&#180;a. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Ntu sá´á vatu redirección página ya´a</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Problema ya&#180;a sa&#817;naan kuvi jiee &#237;yo deshabilitado a xiin ntu sia&#180;anu jia&#180;a cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Ntu kuka\'nuni nuu ya´a</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Nejika chu&#180;un inka ka&#817;a&#817; saa kuvi s&#237;ne nuun ya&#180;a.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Ntu nkuvi sá´á conexión vatu</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Sa&#817;naan kuvi iin problema jii configuraci&#243;n ka&#817;a&#817; servidor a x&#237;&#237;n &#237;yo neva kuvi sa&#180;a xeen.</li>"\n  "<li>Dee a kiv&#616;-nu servidor ya&#180;a &#237;chi yata sa&#817;naan kuvi iin error nkuvi sa&#817;naan, kuvi nakiv&#616;-nu &#237;chika dee nn&#237;n&#237;.</li>\n</ul>]]></string>
@@ -132,6 +158,9 @@
   <string name="contextmenu_image_warning"><![CDATA["Daa tutu nátava "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Nn&#225;</b>" dee náxitá-nu %1$s daa tu´un nnánukunu."]]></string>
   <string name="firstrun_defaultbrowser_title">Sika privacidad noo´o</string>
   <string name="firstrun_search_title">Nánuku, kua kachi noo´o</string>
+  <string name="firstrun_search_text">Nánukunu inka tu´un? Kaji inka ka̱a̱ nánuku nuu daa ke´í.</string>
+  <string name="firstrun_shortcut_title">Tee a kivu ñama nuu kajie´e</string>
+  <string name="firstrun_privacy_title">Kino jii privacidad</string>
   <string name="firstrun_close_button">OK, vatu!</string>
   <string name="firstrun_skip_button">Nava</string>
   <string name="firstrun_next_button">Inka</string>
@@ -142,4 +171,24 @@
   <string name="notification_browsing_session_channel_name">Nánuku yu´u</string>
   <string name="tabs_tray_action_erase">Náxitá sɨ´ɨ nnánuku</string>
   <string name="download_firefox">Xinuun Firefox</string>
+  <string name="gv_prompt_username_hint">Sivɨ</string>
+  <string name="gv_prompt_password_hint">Contraseña</string>
+  <string name="gv_prompt_clear">Xinoo</string>
+  <string name="security_popup_secure_connection">Conexión vatu</string>
+  <string name="security_popup_insecure_connection">Ntu va´a conexion</string>
+  <string name="security_popup_security_verified">Nne´ya: %1$s</string>
+  <string name="site_security_icon_content_description">Seguridad nuu ya´a</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL ya´a a íyo</string>
+  <string name="find_in_page">Nánuku nuu página</string>
+  <string name="find_in_page_input">Nánuku nuu página</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
+  <string name="accessibility_next_result">Nánuku inka tu´un</string>
+  <string name="accessibility_previous_result">Nuku tu´un ichi yata</string>
+  <string name="accessibility_dismiss_find_in_page">Nakasɨ nnánukunu</string>
+  <string name="http_auth_dialog_title">Nejika iin autenticación</string>
+  <string name="http_auth_dialog_username">Sivɨ</string>
+  <string name="http_auth_dialog_password">Contraseña</string>
+  <string name="preference_performance_request_desktop_site">Síne ñama ya´a</string>
+  <string name="custom_tab_copy_url_action">URL ntɨ</string>
 </resources>

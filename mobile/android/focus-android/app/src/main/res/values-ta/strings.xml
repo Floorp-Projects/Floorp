@@ -36,7 +36,7 @@
   <string name="preference_category_switching_apps">செயலிகள் இடமாற்றம்</string>
   <string name="preference_category_general">பொது</string>
   <string name="preference_category_data_collection_use">தரவு சேகரிப்பு மற்றும் பயனளவு</string>
-  <string name="preference_category_search">தேடு</string>
+  <string name="preference_category_search">தேடல்</string>
   <string name="preference_search_engine_default">முன்னிருப்பு</string>
   <string name="preference_state_on">இயக்கு</string>
   <string name="preference_state_off">அணை</string>
