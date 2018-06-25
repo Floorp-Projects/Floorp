@@ -75,15 +75,13 @@ function runTest()
   var button1 = $("button1");
   checkPosition("button1", button1, 9, 53, 99, 88);
 
-  var sbo = box2.boxObject;
-  sbo.scrollTo(7, 16);
+  box2.scrollTo(7, 16);
 
   // clientRect height is offset from root so is 16 pixels vertically less
   checkPosition("button1 scrolled", button1, 9, 37, 99, 72);
 
   var box3 = $("box3");
-  sbo = box3.boxObject;
-  sbo.scrollTo(1, 2);
+  box3.scrollTo(1, 2);
 
   checkPosition("button1 scrolled", button1, 9, 35, 99, 70);
 
