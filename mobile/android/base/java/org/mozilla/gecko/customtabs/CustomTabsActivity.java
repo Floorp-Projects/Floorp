@@ -654,6 +654,10 @@ public class CustomTabsActivity extends AppCompatActivity
         throw new IllegalStateException("Unexpected new session");
     }
 
+    public void onLoadError(final GeckoSession session, final String urlStr,
+                            final int category, final int error) {
+    }
+
     /* GeckoSession.ProgressDelegate */
     @Override
     public void onPageStart(GeckoSession session, String url) {
