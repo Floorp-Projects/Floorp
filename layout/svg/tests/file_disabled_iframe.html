@@ -1,0 +1,52 @@
+<!doctype html>
+<script>
+  window.is = window.parent.is;
+  window.SimpleTest = window.parent.SimpleTest;
+</script>
+<div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
+<script>
+  let t = document.getElementById('testnodes');
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg:svg"));
+  t.firstChild.textContent = "<foo>";
+  is(t.innerHTML, "<svg:svg>&lt;foo&gt;</svg:svg>");
+
+  // This test crashes if the style tags are not handled correctly
+  t.innerHTML = `<svg version="1.1">
+    <style>
+        circle {
+            fill: currentColor;
+        }
+    </style>
+    <g><circle cx="25.8" cy="9.3" r="1.5"/></g>
+  </svg>
+  `;
+  is(t.firstChild.tagName.toLowerCase(), 'svg');
+
+  // This test crashes if the script tags are not handled correctly
+  t.innerHTML = `<svg version="1.1">
+    <scri` + `pt>
+      throw "badment, should never fire.";
+    </scri` + `pt>
+    <g><circle cx="25.8" cy="9.3" r="1.5"/></g>
+  </svg>`;
+  is(t.firstChild.tagName.toLowerCase(), 'svg');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "script"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<svg><script>1&amp;2&lt;3&gt;4&nbsp;\u003C/script></svg>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "style"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<svg><style>1&amp;2&lt;3&gt;4&nbsp;\u003C/style></svg>');
+
+  SimpleTest.finish();
+</script>

@@ -9,7 +9,7 @@
 #include "mozilla/dom/HTMLOListElementBinding.h"
 #include "mozilla/dom/HTMLUListElementBinding.h"
 
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
@@ -81,17 +81,17 @@ HTMLSharedListElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLSharedListElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                             GenericSpecifiedValues* aData)
+                                             MappedDeclarations& aDecls)
 {
-  if (!aData->PropertyIsSet(eCSSProperty_list_style_type)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
     // type: enum
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
     if (value && value->Type() == nsAttrValue::eEnum) {
-      aData->SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
+      aDecls.SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

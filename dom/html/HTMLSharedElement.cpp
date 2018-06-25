@@ -12,7 +12,7 @@
 #include "mozilla/dom/HTMLParamElementBinding.h"
 #include "mozilla/dom/HTMLQuoteElementBinding.h"
 
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
@@ -79,21 +79,21 @@ HTMLSharedElement::ParseAttribute(int32_t aNamespaceID,
 
 static void
 DirectoryMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                               GenericSpecifiedValues* aData)
+                               MappedDeclarations& aDecls)
 {
-  if (!aData->PropertyIsSet(eCSSProperty_list_style_type)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
     // type: enum
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
     if (value) {
       if (value->Type() == nsAttrValue::eEnum) {
-        aData->SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
+        aDecls.SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
       } else {
-        aData->SetKeywordValue(eCSSProperty_list_style_type, NS_STYLE_LIST_STYLE_DISC);
+        aDecls.SetKeywordValue(eCSSProperty_list_style_type, NS_STYLE_LIST_STYLE_DISC);
       }
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

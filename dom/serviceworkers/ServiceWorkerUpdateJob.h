@@ -18,6 +18,7 @@ enum class OnFailure : uint8_t;
 } // namespace serviceWorkerScriptCache
 
 class ServiceWorkerManager;
+class ServiceWorkerRegistrationInfo;
 
 // A job class that performs the Update and Install algorithms from the
 // service worker spec.  This class is designed to be inherited and customized

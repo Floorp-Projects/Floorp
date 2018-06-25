@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"
@@ -82,7 +82,7 @@ HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLIFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                         GenericSpecifiedValues* aData)
+                                         MappedDeclarations& aDecls)
 {
   // frameborder: 0 | 1 (| NO | YES in quirks mode)
   // If frameborder is 0 or No, set border to 0
@@ -93,16 +93,16 @@ HTMLIFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (NS_STYLE_FRAME_0 == frameborder ||
         NS_STYLE_FRAME_NO == frameborder ||
         NS_STYLE_FRAME_OFF == frameborder) {
-      aData->SetPixelValueIfUnset(eCSSProperty_border_top_width, 0.0f);
-      aData->SetPixelValueIfUnset(eCSSProperty_border_right_width, 0.0f);
-      aData->SetPixelValueIfUnset(eCSSProperty_border_bottom_width, 0.0f);
-      aData->SetPixelValueIfUnset(eCSSProperty_border_left_width, 0.0f);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width, 0.0f);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width, 0.0f);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, 0.0f);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width, 0.0f);
     }
   }
 
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

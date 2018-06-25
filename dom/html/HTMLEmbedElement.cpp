@@ -238,28 +238,28 @@ HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID,
 
 static void
 MapAttributesIntoRuleBase(const nsMappedAttributes *aAttributes,
-                          GenericSpecifiedValues* aData)
+                          MappedDeclarations& aDecls)
 {
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aDecls);
 }
 
 static void
 MapAttributesIntoRuleExceptHidden(const nsMappedAttributes *aAttributes,
-                                  GenericSpecifiedValues* aData)
+                                  MappedDeclarations& aDecls)
 {
-  MapAttributesIntoRuleBase(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes, aData);
+  MapAttributesIntoRuleBase(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes, aDecls);
 }
 
 void
 HTMLEmbedElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
-                                        GenericSpecifiedValues* aData)
+                                        MappedDeclarations& aDecls)
 {
-  MapAttributesIntoRuleBase(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  MapAttributesIntoRuleBase(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

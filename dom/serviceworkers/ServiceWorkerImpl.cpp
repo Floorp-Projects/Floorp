@@ -37,7 +37,7 @@ ServiceWorkerImpl::RemoveServiceWorker(ServiceWorker* aWorker)
 }
 
 void
-ServiceWorkerImpl::PostMessage(ipc::StructuredCloneData&& aData,
+ServiceWorkerImpl::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
                                const ClientInfo& aClientInfo,
                                const ClientState& aClientState)
 {

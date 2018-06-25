@@ -243,7 +243,7 @@ ServiceWorkerInfo::RemoveListener(Listener* aListener)
 }
 
 void
-ServiceWorkerInfo::PostMessage(ipc::StructuredCloneData&& aData,
+ServiceWorkerInfo::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
                                const ClientInfo& aClientInfo,
                                const ClientState& aClientState)
 {
