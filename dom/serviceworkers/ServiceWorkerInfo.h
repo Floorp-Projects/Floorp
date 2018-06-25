@@ -18,6 +18,7 @@ namespace dom {
 
 class ClientInfoAndState;
 class ClientState;
+class ServiceWorkerCloneData;
 class ServiceWorkerPrivate;
 
 /*
@@ -98,7 +99,7 @@ public:
   RemoveListener(Listener* aListener);
 
   void
-  PostMessage(ipc::StructuredCloneData&& aData,
+  PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
               const ClientInfo& aClientInfo,
               const ClientState& aClientState);
 

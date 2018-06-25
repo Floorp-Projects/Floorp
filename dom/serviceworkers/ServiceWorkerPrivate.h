@@ -23,6 +23,7 @@ namespace dom {
 
 class ClientInfoAndState;
 class KeepAliveToken;
+class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
 class ServiceWorkerRegistrationInfo;
 
@@ -89,7 +90,7 @@ public:
   explicit ServiceWorkerPrivate(ServiceWorkerInfo* aInfo);
 
   nsresult
-  SendMessageEvent(ipc::StructuredCloneData&& aData,
+  SendMessageEvent(RefPtr<ServiceWorkerCloneData>&& aData,
                    const ClientInfoAndState& aClientInfoAndState);
 
   // This is used to validate the worker script and continue the installation
