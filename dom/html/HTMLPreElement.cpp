@@ -7,7 +7,7 @@
 #include "mozilla/dom/HTMLPreElement.h"
 #include "mozilla/dom/HTMLPreElementBinding.h"
 
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -43,15 +43,15 @@ HTMLPreElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLPreElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                      GenericSpecifiedValues* aData)
+                                      MappedDeclarations& aDecls)
 {
-  if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_white_space)) {
     // wrap: empty
     if (aAttributes->GetAttr(nsGkAtoms::wrap))
-      aData->SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::PreWrap);
+      aDecls.SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::PreWrap);
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

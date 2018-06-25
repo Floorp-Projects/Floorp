@@ -1,0 +1,33 @@
+<!doctype html>
+<script>
+window.is = window.parent.is;
+window.SimpleTest = window.parent.SimpleTest;
+</script>
+<div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
+<pre id="test">
+<script>
+  let t = document.getElementById('testnodes');
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math:math"));
+  t.firstChild.textContent = "<foo>";
+  is(t.innerHTML, "<math:math>&lt;foo&gt;</math:math>");
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "script"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<math><script>1&amp;2&lt;3&gt;4&nbsp;\u003C/script></math>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "style"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<math><style>1&amp;2&lt;3&gt;4&nbsp;\u003C/style></math>');
+
+  SimpleTest.finish();
+</script>
+</pre>

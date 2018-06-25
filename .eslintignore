@@ -127,10 +127,6 @@ devtools/client/commandline/**
 # Soon to be removed, the new/ directory is explicitly excluded below due to
 # also being an imported repository.
 devtools/client/debugger/**
-# Soon to be removed
-devtools/client/webconsole/old/net/**
-devtools/client/webconsole/old/test/**
-devtools/client/webconsole/old/webconsole.js
 
 # Ignore devtools imported repositories
 devtools/client/debugger/new/**

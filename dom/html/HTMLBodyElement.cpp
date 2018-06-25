@@ -6,7 +6,7 @@
 
 #include "HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/TextEditor.h"
 #include "nsAttrValueInlines.h"
@@ -74,7 +74,7 @@ HTMLBodyElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                       GenericSpecifiedValues* aData)
+                                       MappedDeclarations& aDecls)
 {
   // This is the one place where we try to set the same property
   // multiple times in presentation attributes. Servo does not support
@@ -99,8 +99,8 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (bodyMarginWidth < 0) {
       bodyMarginWidth = 0;
     }
-    aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyMarginWidth);
-    aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyMarginWidth);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyMarginWidth);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyMarginWidth);
   }
 
   value = aAttributes->GetAttr(nsGkAtoms::marginheight);
@@ -109,8 +109,8 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (bodyMarginHeight < 0) {
       bodyMarginHeight = 0;
     }
-    aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyMarginHeight);
-    aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyMarginHeight);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyMarginHeight);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyMarginHeight);
   }
 
     // topmargin (IE-attribute)
@@ -121,7 +121,7 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (bodyTopMargin < 0) {
         bodyTopMargin = 0;
       }
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyTopMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyTopMargin);
     }
   }
     // bottommargin (IE-attribute)
@@ -133,7 +133,7 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (bodyBottomMargin < 0) {
         bodyBottomMargin = 0;
       }
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyBottomMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyBottomMargin);
     }
   }
 
@@ -145,7 +145,7 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (bodyLeftMargin < 0) {
         bodyLeftMargin = 0;
       }
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyLeftMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyLeftMargin);
     }
   }
     // rightmargin (IE-attribute)
@@ -156,14 +156,14 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (bodyRightMargin < 0) {
         bodyRightMargin = 0;
       }
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyRightMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyRightMargin);
     }
   }
 
   // if marginwidth or marginheight is set in the <frame> and not set in the <body>
   // reflect them as margin in the <body>
   if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-    nsCOMPtr<nsIDocShell> docShell(aData->Document()->GetDocShell());
+    nsCOMPtr<nsIDocShell> docShell(aDecls.Document()->GetDocShell());
     if (docShell) {
       nscoord frameMarginWidth=-1;  // default value
       nscoord frameMarginHeight=-1; // default value
@@ -172,26 +172,26 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
       if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
         if (bodyLeftMargin == -1) {
-          aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)frameMarginWidth);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, (float)frameMarginWidth);
         }
         if (bodyRightMargin == -1) {
-          aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)frameMarginWidth);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, (float)frameMarginWidth);
         }
       }
 
       if (bodyMarginHeight == -1 && frameMarginHeight >= 0) {
         if (bodyTopMargin == -1) {
-          aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)frameMarginHeight);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top, (float)frameMarginHeight);
         }
         if (bodyBottomMargin == -1) {
-          aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)frameMarginHeight);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)frameMarginHeight);
         }
       }
     }
   }
 
   // When display if first asked for, go ahead and get our colors set up.
-  if (nsHTMLStyleSheet* styleSheet = aData->Document()->GetAttributeStyleSheet()) {
+  if (nsHTMLStyleSheet* styleSheet = aDecls.Document()->GetAttributeStyleSheet()) {
     nscolor color;
     value = aAttributes->GetAttr(nsGkAtoms::link);
     if (value && value->GetColorValue(color)) {
@@ -209,17 +209,17 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  if (!aData->PropertyIsSet(eCSSProperty_color)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_color)) {
     // color: color
     nscolor color;
     value = aAttributes->GetAttr(nsGkAtoms::text);
     if (value && value->GetColorValue(color)) {
-      aData->SetColorValue(eCSSProperty_color, color);
+      aDecls.SetColorValue(eCSSProperty_color, color);
     }
   }
 
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 nsMapRuleToAttributesFunc
