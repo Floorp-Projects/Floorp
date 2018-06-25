@@ -182,6 +182,8 @@ public:
   CreateError(const GlobalObject& global, const nsAString& message,
               JS::Handle<JSObject*> stack,
               JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv);
+
+  static void RequestIOActivity(GlobalObject& aGlobal);
 };
 
 } // namespace dom
