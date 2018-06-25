@@ -157,6 +157,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'MOZ_AUTOMATION': '1',
+        'PYTHONUNBUFFERED': '1',
     })
 
     if 'actions' in run:
