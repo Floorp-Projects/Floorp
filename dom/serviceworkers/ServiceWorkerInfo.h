@@ -17,6 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class ClientInfoAndState;
+class ClientState;
 class ServiceWorkerPrivate;
 
 /*
