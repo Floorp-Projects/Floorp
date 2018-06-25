@@ -603,9 +603,11 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
 
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
     // If the key event should be dispatched as consumed event, marking it here.
-    // This is useful to prevent double action.  E.g., when the key was already
-    // handled by system, our chrome shouldn't handle it.
-    keyEvent.PreventDefaultBeforeDispatch();
+    // This is useful to prevent double action.  This is intended to the system
+    // has already consumed the event but we need to dispatch the event for
+    // compatibility with older version and other browsers.  So, we should not
+    // stop cross process forwarding of them.
+    keyEvent.PreventDefaultBeforeDispatch(CrossProcessForwarding::eAllow);
   }
 
   // Corrects each member for the specific key event type.
