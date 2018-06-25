@@ -1120,24 +1120,11 @@ GetFunctionExport(JSContext* cx,
 }
 
 static bool
-GetGlobalExport(JSContext* cx,
-                const GlobalDescVector& globals,
-                uint32_t globalIndex,
-                const ValVector& globalImportValues,
-                const WasmGlobalObjectVector& globalObjs,
-                MutableHandleValue jsval)
-{
-    jsval.setObject(*globalObjs[globalIndex]);
-    return true;
-}
-
-static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
                    Handle<FunctionVector> funcImports,
                    HandleWasmTableObject tableObj,
                    HandleWasmMemoryObject memoryObj,
-                   const ValVector& globalImportValues,
                    const WasmGlobalObjectVector& globalObjs,
                    const ExportVector& exports)
 {
@@ -1179,11 +1166,7 @@ CreateExportObject(JSContext* cx,
             val = ObjectValue(*memoryObj);
             break;
           case DefinitionKind::Global:
-            if (!GetGlobalExport(cx, metadata.globals, exp.globalIndex(), globalImportValues,
-                                 globalObjs, &val))
-            {
-                return false;
-            }
+            val.setObject(*globalObjs[exp.globalIndex()]);
             break;
         }
 
@@ -1306,11 +1289,8 @@ Module::instantiate(JSContext* cx,
     if (!instance)
         return false;
 
-    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalImportValues,
-                            globalObjs, exports_))
-    {
+    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalObjs, exports_))
         return false;
-    }
 
     // Register the instance with the Realm so that it can find out about global
     // events like profiling being enabled in the realm. Registration does not

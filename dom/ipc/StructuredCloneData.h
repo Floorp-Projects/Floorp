@@ -297,6 +297,9 @@ public:
 protected:
   explicit StructuredCloneData(TransferringSupport aSupportsTransferring);
 
+  already_AddRefed<SharedJSAllocatedData>
+  TakeSharedData();
+
 private:
   JSStructuredCloneData mExternalData;
   RefPtr<SharedJSAllocatedData> mSharedData;
