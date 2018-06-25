@@ -1199,33 +1199,38 @@ KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const
   // Unless we are newly in-effect, we can throttle the animation if the
   // animation is paint only and the target frame is out of view or the document
   // is in background tabs.
-  if (mInEffectOnLastAnimationTimingUpdate && CanIgnoreIfNotVisible()) {
-    nsIPresShell* presShell = GetPresShell();
-    if (presShell && !presShell->IsActive()) {
-      return true;
-    }
-
-    const bool isVisibilityHidden =
-      !aFrame.IsVisibleOrMayHaveVisibleDescendants();
-    if ((isVisibilityHidden && !HasVisibilityChange()) ||
-        aFrame.IsScrolledOutOfView()) {
-      // Unthrottle the animation if there is a change hint that might affect
-      // the overflow region.
-      if (HasPropertiesThatMightAffectOverflow()) {
-        // Don't throttle finite animations since the animation might suddenly
-        // come into view and if it was throttled it will be out-of-sync.
-        if (HasFiniteActiveDuration()) {
-          return false;
-        }
-
-        return isVisibilityHidden
-          ? CanThrottleOverflowChangesInScrollable(aFrame)
-          : CanThrottleOverflowChanges(aFrame);
-      }
-      return true;
-    }
+  if (!mInEffectOnLastAnimationTimingUpdate || !CanIgnoreIfNotVisible()) {
+    return false;
   }
-  return false;
+
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell && !presShell->IsActive()) {
+    return true;
+  }
+
+  const bool isVisibilityHidden =
+    !aFrame.IsVisibleOrMayHaveVisibleDescendants();
+  if ((!isVisibilityHidden || HasVisibilityChange()) &&
+      !aFrame.IsScrolledOutOfView()) {
+    return false;
+  }
+
+  // If there are no overflow change hints, we don't need to worry about
+  // unthrottling the animation periodically to update scrollbar positions for
+  // the overflow region.
+  if (!HasPropertiesThatMightAffectOverflow()) {
+    return true;
+  }
+
+  // Don't throttle finite animations since the animation might suddenly
+  // come into view and if it was throttled it will be out-of-sync.
+  if (HasFiniteActiveDuration()) {
+    return false;
+  }
+
+  return isVisibilityHidden
+    ? CanThrottleOverflowChangesInScrollable(aFrame)
+    : CanThrottleOverflowChanges(aFrame);
 }
 
 bool
