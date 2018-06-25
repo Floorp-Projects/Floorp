@@ -21,7 +21,9 @@
       "js": ["measure.js"]
     },
     {
-      "matches": ["*://*/Speedometer/index.html*"],
+      "matches": ["*://*/Speedometer/index.html*",
+                  "*://*/StyleBench/*",
+                  "*://*/MotionMark/*"],
       "js": ["benchmark-relay.js"]
     }
   ],

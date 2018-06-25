@@ -189,7 +189,7 @@ def main(args=sys.argv[1:]):
 
     # if a test name specified on command line, and it exists, just run that one
     # otherwise run all available raptor tests that are found for this browser
-    raptor_test_list = get_raptor_test_list(args)
+    raptor_test_list = get_raptor_test_list(args, mozinfo.os)
 
     # ensure we have at least one valid test to run
     if len(raptor_test_list) == 0:
