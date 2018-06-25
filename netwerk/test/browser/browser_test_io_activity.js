@@ -7,34 +7,41 @@
 const TEST_URL = "http://example.com/browser/dom/tests/browser/dummy.html";
 
 
-add_task(async function test() {
+var gotSocket = false;
+var gotFile = false;
+var gotSqlite = false;
+var gotEmptyData = false;
+var networkActivity = function(subject, topic, value) {
+    subject.QueryInterface(Ci.nsIMutableArray);
+    let enumerator = subject.enumerate();
+    while (enumerator.hasMoreElements()) {
+        let data = enumerator.getNext();
+        data = data.QueryInterface(Ci.nsIIOActivityData);
+        gotEmptyData = data.rx == 0 && data.tx == 0 && !gotEmptyData
+        gotSocket = data.location.startsWith("socket://127.0.0.1:") || gotSocket;
+        gotFile = data.location.endsWith(".js") || gotFile;
+        gotSqlite = data.location.endsWith("places.sqlite") || gotSqlite;
+    }
+};
 
-    SpecialPowers.setIntPref('io.activity.intervalMilliseconds', 50);
-    waitForExplicitFinish();
 
-    // grab events..
-    let gotSocket = false;
-    let gotFile = false;
-    let gotSqlite = false;
-    let gotEmptyData = false;
-
-    let networkActivity = function(subject, topic, value) {
-        subject.QueryInterface(Ci.nsIMutableArray);
-        let enumerator = subject.enumerate();
-        while (enumerator.hasMoreElements()) {
-            let data = enumerator.getNext();
-            data = data.QueryInterface(Ci.nsIIOActivityData);
-            gotEmptyData = data.rx == 0 && data.tx == 0 && !gotEmptyData
-            gotSocket = data.location.startsWith("socket://127.0.0.1:") || gotSocket;
-            gotFile = data.location.endsWith(".js") || gotFile;
-            gotSqlite = data.location.endsWith("places.sqlite") || gotSqlite;
-        }
-    };
-
+function startObserver() {
+    gotSocket = gotFile = gotSqlite = gotEmptyData = false;
     Services.obs.addObserver(networkActivity, "io-activity");
-
     // why do I have to do this ??
     Services.obs.notifyObservers(null, "profile-initial-state", null);
+}
+
+// this test activates the timer and checks the results as they come in
+add_task(async function testWithTimer() {
+    await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["io.activity.enabled", true],
+        ["io.activity.intervalMilliseconds", 50]
+      ]
+    });
+    waitForExplicitFinish();
+    startObserver();
 
     await BrowserTestUtils.withNewTab({ gBrowser, url: "http://example.com" },
       async function(browser) {
@@ -48,6 +55,29 @@ add_task(async function test() {
         ok(gotSqlite, "A sqlite DB was used");
         ok(!gotEmptyData, "Every I/O event had data");
     });
+});
 
-    SpecialPowers.clearUserPref('io.activity.intervalMilliseconds');
+// this test manually triggers notifications via ChromeUtils.requestIOActivity()
+add_task(async function testWithManualCall() {
+    await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["io.activity.enabled", true],
+      ]
+    });
+    waitForExplicitFinish();
+    startObserver();
+
+    await BrowserTestUtils.withNewTab({ gBrowser, url: "http://example.com" },
+      async function(browser) {
+        // wait until we get the events back
+        await BrowserTestUtils.waitForCondition(() => {
+          ChromeUtils.requestIOActivity();
+          return gotSocket && gotFile && gotSqlite && !gotEmptyData;
+        }, "wait for events to come in", 250);
+
+        ok(gotSocket, "A socket was used");
+        ok(gotFile, "A file was used");
+        ok(gotSqlite, "A sqlite DB was used");
+        ok(!gotEmptyData, "Every I/O event had data");
+    });
 });

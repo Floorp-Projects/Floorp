@@ -13,11 +13,13 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/PerformanceUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h" // For IdleRequestCallback/Options
+#include "IOActivityMonitor.h"
 #include "nsThreadUtils.h"
 #include "mozJSComponentLoader.h"
 #include "GeckoProfiler.h"
@@ -765,6 +767,14 @@ ChromeUtils::CreateError(const GlobalObject& aGlobal, const nsAString& aMessage,
 
   cleanup.release();
   aRetVal.set(retVal);
+}
+
+/* static */ void
+ChromeUtils::RequestIOActivity(GlobalObject&)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false));
+  mozilla::Unused << mozilla::net::IOActivityMonitor::NotifyActivities();
 }
 
 } // namespace dom
