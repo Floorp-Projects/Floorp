@@ -1617,9 +1617,25 @@ KeyframeEffect::CalculateCumulativeChangeHint(const ComputedStyle* aComputedStyl
       // on invisible elements because we can't calculate the change hint for
       // such properties until we compose it.
       if (!segment.HasReplaceableValues()) {
-        mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
-        return;
+        if (property.mProperty != eCSSProperty_transform) {
+          mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
+          return;
+        }
+        // We try a little harder to optimize transform animations simply
+        // because they are so common (the second-most commonly animated
+        // property at the time of writing).  So if we encounter a transform
+        // segment that needs composing with the underlying value, we just add
+        // all the change hints a transform animation is known to be able to
+        // generate.
+        mCumulativeChangeHint |= nsChangeHint_AddOrRemoveTransform |
+                                 nsChangeHint_RepaintFrame |
+                                 nsChangeHint_UpdateContainingBlock |
+                                 nsChangeHint_UpdateOverflow |
+                                 nsChangeHint_UpdatePostTransformOverflow |
+                                 nsChangeHint_UpdateTransformLayer;
+        continue;
       }
+
       RefPtr<ComputedStyle> fromContext =
         CreateComputedStyleForAnimationValue(property.mProperty,
                                              segment.mFromValue,
