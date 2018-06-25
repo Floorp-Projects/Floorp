@@ -464,28 +464,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                    aFile);
 #endif
 
-    case OS_DriveDirectory:
-#if defined (XP_WIN)
-    {
-      int32_t len = ::GetWindowsDirectoryW(path, MAX_PATH);
-      if (len == 0) {
-        break;
-      }
-      if (path[1] == char16_t(':') && path[2] == char16_t('\\')) {
-        path[3] = 0;
-      }
-
-      return NS_NewLocalFile(nsDependentString(path),
-                             true,
-                             aFile);
-    }
-#else
-    return NS_NewNativeLocalFile(nsDependentCString("/"),
-                                 true,
-                                 aFile);
-
-#endif
-
     case OS_TemporaryDirectory:
 #if defined (XP_WIN)
     {
@@ -607,9 +585,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                aFile);
       }
     }
-    case Win_Desktop: {
-      return GetWindowsFolder(CSIDL_DESKTOP, aFile);
-    }
     case Win_Programs: {
       return GetWindowsFolder(CSIDL_PROGRAMS, aFile);
     }
@@ -629,56 +604,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       return rv;
     }
 
-    case Win_Controls: {
-      return GetWindowsFolder(CSIDL_CONTROLS, aFile);
-    }
-    case Win_Printers: {
-      return GetWindowsFolder(CSIDL_PRINTERS, aFile);
-    }
-    case Win_Personal: {
-      return GetWindowsFolder(CSIDL_PERSONAL, aFile);
-    }
     case Win_Favorites: {
       return GetWindowsFolder(CSIDL_FAVORITES, aFile);
     }
-    case Win_Recent: {
-      return GetWindowsFolder(CSIDL_RECENT, aFile);
-    }
-    case Win_Sendto: {
-      return GetWindowsFolder(CSIDL_SENDTO, aFile);
-    }
-    case Win_Bitbucket: {
-      return GetWindowsFolder(CSIDL_BITBUCKET, aFile);
-    }
     case Win_Desktopdirectory: {
       return GetWindowsFolder(CSIDL_DESKTOPDIRECTORY, aFile);
-    }
-    case Win_Drives: {
-      return GetWindowsFolder(CSIDL_DRIVES, aFile);
-    }
-    case Win_Network: {
-      return GetWindowsFolder(CSIDL_NETWORK, aFile);
-    }
-    case Win_Nethood: {
-      return GetWindowsFolder(CSIDL_NETHOOD, aFile);
-    }
-    case Win_Fonts: {
-      return GetWindowsFolder(CSIDL_FONTS, aFile);
-    }
-    case Win_Templates: {
-      return GetWindowsFolder(CSIDL_TEMPLATES, aFile);
-    }
-    case Win_Common_Programs: {
-      return GetWindowsFolder(CSIDL_COMMON_PROGRAMS, aFile);
-    }
-    case Win_Common_Desktopdirectory: {
-      return GetWindowsFolder(CSIDL_COMMON_DESKTOPDIRECTORY, aFile);
-    }
-    case Win_Common_AppData: {
-      return GetWindowsFolder(CSIDL_COMMON_APPDATA, aFile);
-    }
-    case Win_Printhood: {
-      return GetWindowsFolder(CSIDL_PRINTHOOD, aFile);
     }
     case Win_Cookies: {
       return GetWindowsFolder(CSIDL_COOKIES, aFile);
@@ -703,49 +633,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       return GetKnownFolder(&localAppDataLowGuid, aFile);
     }
 #endif
-    case Win_Documents: {
-      return GetLibrarySaveToPath(CSIDL_MYDOCUMENTS,
-                                  FOLDERID_DocumentsLibrary,
-                                  aFile);
-    }
-    case Win_Pictures: {
-      return GetLibrarySaveToPath(CSIDL_MYPICTURES,
-                                  FOLDERID_PicturesLibrary,
-                                  aFile);
-    }
-    case Win_Music: {
-      return GetLibrarySaveToPath(CSIDL_MYMUSIC,
-                                  FOLDERID_MusicLibrary,
-                                  aFile);
-    }
-    case Win_Videos: {
-      return GetLibrarySaveToPath(CSIDL_MYVIDEO,
-                                  FOLDERID_VideosLibrary,
-                                  aFile);
-    }
 #endif  // XP_WIN
 
 #if defined(XP_UNIX)
-    case Unix_LocalDirectory:
-      return NS_NewNativeLocalFile(nsDependentCString("/usr/local/netscape/"),
-                                   true,
-                                   aFile);
-    case Unix_LibDirectory:
-      return NS_NewNativeLocalFile(nsDependentCString("/usr/local/lib/netscape/"),
-                                   true,
-                                   aFile);
-
     case Unix_HomeDirectory:
       return GetUnixHomeDir(aFile);
 
     case Unix_XDG_Desktop:
-    case Unix_XDG_Documents:
     case Unix_XDG_Download:
-    case Unix_XDG_Music:
-    case Unix_XDG_Pictures:
-    case Unix_XDG_PublicShare:
-    case Unix_XDG_Templates:
-    case Unix_XDG_Videos:
       return GetUnixXDGUserDirectory(aSystemSystemDirectory, aFile);
 #endif
 
