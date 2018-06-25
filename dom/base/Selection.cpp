@@ -1038,7 +1038,8 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
         if (dispatchEvent) {
           nsContentUtils::DispatchTrustedEvent(GetParentObject(), target,
                                                NS_LITERAL_STRING("selectstart"),
-                                               true, true, &defaultAction);
+                                               CanBubble::eYes, Cancelable::eYes,
+                                               &defaultAction);
 
           if (!defaultAction) {
             return NS_OK;

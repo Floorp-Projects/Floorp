@@ -145,7 +145,8 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
 
 void
 MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
-                               bool aCanBubble, bool aCancelable,
+                               mozilla::CanBubble aCanBubble,
+                               mozilla::Cancelable aCancelable,
                                JS::Handle<JS::Value> aData,
                                const nsAString& aOrigin,
                                const nsAString& aLastEventId,

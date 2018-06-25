@@ -552,8 +552,9 @@ HTMLTextAreaElement::FireChangeEventIfNeeded()
   mFocusedValue = value;
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("change"), true,
-                                       false);
+                                       NS_LITERAL_STRING("change"),
+                                       CanBubble::eYes,
+                                       Cancelable::eNo);
 }
 
 nsresult

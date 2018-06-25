@@ -1189,7 +1189,9 @@ nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow, bool aActive)
                                               aActive ?
                                                 NS_LITERAL_STRING("activate") :
                                                 NS_LITERAL_STRING("deactivate"),
-                                              true, true, nullptr);
+                                              CanBubble::eYes,
+                                              Cancelable::eYes,
+                                              nullptr);
   }
 
   // Look for any remote child frames, iterate over them and send the activation notification.

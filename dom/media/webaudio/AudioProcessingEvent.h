@@ -31,7 +31,7 @@ public:
                  uint32_t aNumberOfInputChannels,
                  double aPlaybackTime)
   {
-    InitEvent(NS_LITERAL_STRING("audioprocess"), false, false);
+    InitEvent(NS_LITERAL_STRING("audioprocess"), CanBubble::eNo, Cancelable::eNo);
     mInputBuffer = aInputBuffer;
     mNumberOfInputChannels = aNumberOfInputChannels;
     mPlaybackTime = aPlaybackTime;

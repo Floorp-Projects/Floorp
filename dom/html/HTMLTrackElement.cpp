@@ -454,7 +454,7 @@ HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName)
     return;
   }
   nsContentUtils::DispatchTrustedEvent(doc, static_cast<nsIContent*>(this),
-                                       aName, false, false);
+                                       aName, CanBubble::eNo, Cancelable::eNo);
 }
 
 void

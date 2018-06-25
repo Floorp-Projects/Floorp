@@ -15,7 +15,7 @@ MediaKeyError::MediaKeyError(EventTarget* aOwner, uint32_t aSystemCode)
   : Event(aOwner, nullptr, nullptr)
   , mSystemCode(aSystemCode)
 {
-  InitEvent(NS_LITERAL_STRING("error"), false, false);
+  InitEvent(NS_LITERAL_STRING("error"), CanBubble::eNo, Cancelable::eNo);
 }
 
 MediaKeyError::~MediaKeyError()

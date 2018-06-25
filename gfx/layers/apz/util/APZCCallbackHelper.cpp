@@ -862,7 +862,8 @@ APZCCallbackHelper::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrol
   nsContentUtils::DispatchTrustedEvent(
     ownerDoc, targetContent,
     aEvent,
-    true, true);
+    CanBubble::eYes,
+    Cancelable::eYes);
 }
 
 void

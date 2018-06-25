@@ -56,7 +56,7 @@ already_AddRefed<MediaEncryptedEvent>
 MediaEncryptedEvent::Constructor(EventTarget* aOwner)
 {
   RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
-  e->InitEvent(NS_LITERAL_STRING("encrypted"), false, false);
+  e->InitEvent(NS_LITERAL_STRING("encrypted"), CanBubble::eNo, Cancelable::eNo);
   e->SetTrusted(true);
   return e.forget();
 }
@@ -67,7 +67,7 @@ MediaEncryptedEvent::Constructor(EventTarget* aOwner,
                                  const nsTArray<uint8_t>& aInitData)
 {
   RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
-  e->InitEvent(NS_LITERAL_STRING("encrypted"), false, false);
+  e->InitEvent(NS_LITERAL_STRING("encrypted"), CanBubble::eNo, Cancelable::eNo);
   e->mInitDataType = aInitDataType;
   e->mRawInitData = aInitData;
   e->SetTrusted(true);

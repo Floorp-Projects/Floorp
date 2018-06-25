@@ -493,8 +493,8 @@ Event::EnsureWebAccessibleRelatedTarget(EventTarget* aRelatedTarget)
 
 void
 Event::InitEvent(const nsAString& aEventTypeArg,
-                 bool aCanBubbleArg,
-                 bool aCancelableArg)
+                 mozilla::CanBubble aCanBubbleArg,
+                 mozilla::Cancelable aCancelableArg)
 {
   // Make sure this event isn't already being dispatched.
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
@@ -508,8 +508,8 @@ Event::InitEvent(const nsAString& aEventTypeArg,
 
   SetEventType(aEventTypeArg);
 
-  mEvent->mFlags.mBubbles = aCanBubbleArg;
-  mEvent->mFlags.mCancelable = aCancelableArg;
+  mEvent->mFlags.mBubbles = aCanBubbleArg == CanBubble::eYes;
+  mEvent->mFlags.mCancelable = aCancelableArg == Cancelable::eYes;
 
   mEvent->mFlags.mDefaultPrevented = false;
   mEvent->mFlags.mDefaultPreventedByContent = false;

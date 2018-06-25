@@ -911,8 +911,8 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
       nsContentUtils::DispatchTrustedEvent(doc,
                                            static_cast<nsIContent*>(this),
                                            NS_LITERAL_STRING("select"),
-                                           false,
-                                           true);
+                                           CanBubble::eNo,
+                                           Cancelable::eYes);
     }
 }
 
@@ -1398,7 +1398,7 @@ nsXULElement::LoadSrc()
 
         (new AsyncEventDispatcher(this,
                                   NS_LITERAL_STRING("XULFrameLoaderCreated"),
-                                  /* aBubbles */ true))->RunDOMEventWhenSafe();
+                                  CanBubble::eYes))->RunDOMEventWhenSafe();
     }
 
     frameLoader->LoadFrame(false);

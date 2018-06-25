@@ -160,7 +160,7 @@ PostMessageEvent::Run()
   }
 
   event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
-                          false /*non-bubbling */, false /*cancelable */,
+                          CanBubble::eNo, Cancelable::eNo,
                           messageData, mCallerOrigin,
                           EmptyString(), source, ports);
 
