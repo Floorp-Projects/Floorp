@@ -511,11 +511,11 @@ KeyframeEffect::ComposeStyle(
     ComposeStyleRule(aComposeResult, prop, *segment, computedTiming);
   }
 
-  // If the animation produces a change hint that affects the overflow region,
-  // we need to record the current time to unthrottle the animation
+  // If the animation produces a transform change hint that affects the overflow
+  // region, we need to record the current time to unthrottle the animation
   // periodically when the animation is being throttled because it's scrolled
   // out of view.
-  if (HasPropertiesThatMightAffectOverflow()) {
+  if (HasTransformThatMightAffectOverflow()) {
     nsPresContext* presContext =
       nsContentUtils::GetContextForContent(mTarget->mElement);
     if (presContext) {
@@ -524,7 +524,7 @@ KeyframeEffect::ComposeStyle(
         EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
       MOZ_ASSERT(effectSet, "ComposeStyle should only be called on an effect "
                             "that is part of an effect set");
-      effectSet->UpdateLastOverflowAnimationSyncTime(now);
+      effectSet->UpdateLastTransformSyncTime(now);
     }
   }
 }
@@ -1194,46 +1194,6 @@ KeyframeEffect::OverflowRegionRefreshInterval()
 }
 
 bool
-KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const
-{
-  // Unless we are newly in-effect, we can throttle the animation if the
-  // animation is paint only and the target frame is out of view or the document
-  // is in background tabs.
-  if (!mInEffectOnLastAnimationTimingUpdate || !CanIgnoreIfNotVisible()) {
-    return false;
-  }
-
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell && !presShell->IsActive()) {
-    return true;
-  }
-
-  const bool isVisibilityHidden =
-    !aFrame.IsVisibleOrMayHaveVisibleDescendants();
-  if ((!isVisibilityHidden || HasVisibilityChange()) &&
-      !aFrame.IsScrolledOutOfView()) {
-    return false;
-  }
-
-  // If there are no overflow change hints, we don't need to worry about
-  // unthrottling the animation periodically to update scrollbar positions for
-  // the overflow region.
-  if (!HasPropertiesThatMightAffectOverflow()) {
-    return true;
-  }
-
-  // Don't throttle finite animations since the animation might suddenly
-  // come into view and if it was throttled it will be out-of-sync.
-  if (HasFiniteActiveDuration()) {
-    return false;
-  }
-
-  return isVisibilityHidden
-    ? CanThrottleOverflowChangesInScrollable(aFrame)
-    : CanThrottleOverflowChanges(aFrame);
-}
-
-bool
 KeyframeEffect::CanThrottle() const
 {
   // Unthrottle if we are not in effect or current. This will be the case when
@@ -1258,8 +1218,35 @@ KeyframeEffect::CanThrottle() const
     return true;
   }
 
-  if (CanThrottleIfNotVisible(*frame)) {
-    return true;
+  // Unless we are newly in-effect, we can throttle the animation if the
+  // animation is paint only and the target frame is out of view or the document
+  // is in background tabs.
+  if (mInEffectOnLastAnimationTimingUpdate && CanIgnoreIfNotVisible()) {
+    nsIPresShell* presShell = GetPresShell();
+    if (presShell && !presShell->IsActive()) {
+      return true;
+    }
+
+    const bool isVisibilityHidden =
+      !frame->IsVisibleOrMayHaveVisibleDescendants();
+    if ((isVisibilityHidden && !HasVisibilityChange()) ||
+        frame->IsScrolledOutOfView()) {
+      // If there are transform change hints, unthrottle the animation
+      // periodically since it might affect the overflow region.
+      if (HasTransformThatMightAffectOverflow()) {
+        // Don't throttle finite transform animations since the animation might
+        // suddenly come into view and if it was throttled it will be
+        // out-of-sync.
+        if (HasFiniteActiveDuration()) {
+          return false;
+        }
+
+        return isVisibilityHidden
+          ? CanThrottleTransformChangesInScrollable(*frame)
+          : CanThrottleTransformChanges(*frame);
+      }
+      return true;
+    }
   }
 
   // First we need to check layer generation and transform overflow
@@ -1292,8 +1279,8 @@ KeyframeEffect::CanThrottle() const
 
     // If this is a transform animation that affects the overflow region,
     // we should unthrottle the animation periodically.
-    if (HasPropertiesThatMightAffectOverflow() &&
-        !CanThrottleOverflowChangesInScrollable(*frame)) {
+    if (HasTransformThatMightAffectOverflow() &&
+        !CanThrottleTransformChangesInScrollable(*frame)) {
       return false;
     }
   }
@@ -1308,24 +1295,24 @@ KeyframeEffect::CanThrottle() const
 }
 
 bool
-KeyframeEffect::CanThrottleOverflowChanges(const nsIFrame& aFrame) const
+KeyframeEffect::CanThrottleTransformChanges(const nsIFrame& aFrame) const
 {
   TimeStamp now = aFrame.PresContext()->RefreshDriver()->MostRecentRefresh();
 
   EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
                                                  mTarget->mPseudoType);
-  MOZ_ASSERT(effectSet, "CanOverflowTransformChanges is expected to be called"
+  MOZ_ASSERT(effectSet, "CanThrottleTransformChanges is expected to be called"
                         " on an effect in an effect set");
-  MOZ_ASSERT(mAnimation, "CanOverflowTransformChanges is expected to be called"
+  MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
                          " on an effect with a parent animation");
-  TimeStamp lastSyncTime = effectSet->LastOverflowAnimationSyncTime();
+  TimeStamp lastSyncTime = effectSet->LastTransformSyncTime();
   // If this animation can cause overflow, we can throttle some of the ticks.
   return (!lastSyncTime.IsNull() &&
     (now - lastSyncTime) < OverflowRegionRefreshInterval());
 }
 
 bool
-KeyframeEffect::CanThrottleOverflowChangesInScrollable(nsIFrame& aFrame) const
+KeyframeEffect::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame) const
 {
   // If the target element is not associated with any documents, we don't care
   // it.
@@ -1346,7 +1333,7 @@ KeyframeEffect::CanThrottleOverflowChangesInScrollable(nsIFrame& aFrame) const
     return true;
   }
 
-  if (CanThrottleOverflowChanges(aFrame)) {
+  if (CanThrottleTransformChanges(aFrame)) {
     return true;
   }
 
@@ -1617,25 +1604,9 @@ KeyframeEffect::CalculateCumulativeChangeHint(const ComputedStyle* aComputedStyl
       // on invisible elements because we can't calculate the change hint for
       // such properties until we compose it.
       if (!segment.HasReplaceableValues()) {
-        if (property.mProperty != eCSSProperty_transform) {
-          mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
-          return;
-        }
-        // We try a little harder to optimize transform animations simply
-        // because they are so common (the second-most commonly animated
-        // property at the time of writing).  So if we encounter a transform
-        // segment that needs composing with the underlying value, we just add
-        // all the change hints a transform animation is known to be able to
-        // generate.
-        mCumulativeChangeHint |= nsChangeHint_AddOrRemoveTransform |
-                                 nsChangeHint_RepaintFrame |
-                                 nsChangeHint_UpdateContainingBlock |
-                                 nsChangeHint_UpdateOverflow |
-                                 nsChangeHint_UpdatePostTransformOverflow |
-                                 nsChangeHint_UpdateTransformLayer;
-        continue;
+        mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
+        return;
       }
-
       RefPtr<ComputedStyle> fromContext =
         CreateComputedStyleForAnimationValue(property.mProperty,
                                              segment.mFromValue,
