@@ -937,9 +937,7 @@ void
 GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock)
 {
     arena->zone->usage.removeGCArena();
-    if (isBackgroundSweeping())
-        arena->zone->threshold.updateForRemovedArena(tunables);
-    return arena->chunk()->releaseArena(rt, arena, lock);
+    arena->chunk()->releaseArena(rt, arena, lock);
 }
 
 GCRuntime::GCRuntime(JSRuntime* rt) :
@@ -1004,8 +1002,8 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
 #endif
     lock(mutexid::GCLock),
     allocTask(rt, emptyChunks_.ref()),
+    sweepTask(rt),
     decommitTask(rt),
-    helperState(rt),
     nursery_(rt),
     storeBuffer_(rt, nursery()),
     blocksToFreeAfterMinorGC((size_t) JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE)
@@ -1325,7 +1323,7 @@ GCRuntime::finish()
      * helper thread shuts down before we forcefully release any remaining GC
      * memory.
      */
-    helperState.finish();
+    sweepTask.join();
     allocTask.cancelAndWait();
     decommitTask.cancelAndWait();
 
@@ -2747,7 +2745,7 @@ UpdatePointersTask::updateArenas()
         UpdateArenaPointers(&trc, arena);
 }
 
-/* virtual */ void
+void
 UpdatePointersTask::run()
 {
     // These checks assert when run in parallel.
@@ -3000,7 +2998,10 @@ GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session)
         cache->sweep();
 
     // Type inference may put more blocks here to free.
-    blocksToFreeAfterSweeping.ref().freeAll();
+    {
+        AutoLockHelperThreadState lock;
+        blocksToFreeAfterSweeping.ref().freeAll();
+    }
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
     callWeakPointerZonesCallbacks();
@@ -3519,7 +3520,7 @@ js::gc::BackgroundDecommitTask::setChunksToScan(ChunkVector &chunks)
     Swap(toDecommit.ref(), chunks);
 }
 
-/* virtual */ void
+void
 js::gc::BackgroundDecommitTask::run()
 {
     AutoLockGC lock(runtime());
@@ -3584,6 +3585,11 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks)
         Arena* next;
         for (Arena* arena = emptyArenas; arena; arena = next) {
             next = arena->next;
+
+            // We already calculated the zone's GC trigger after foreground
+            // sweeping finished. Now we must update this value.
+            arena->zone->threshold.updateForRemovedArena(tunables);
+
             rt->gc.releaseArena(arena, lock);
             releaseCount++;
             if (releaseCount % LockReleasePeriod == 0) {
@@ -3598,115 +3604,35 @@ void
 GCRuntime::assertBackgroundSweepingFinished()
 {
 #ifdef DEBUG
-    MOZ_ASSERT(backgroundSweepZones.ref().isEmpty());
+    {
+        AutoLockHelperThreadState lock;
+        MOZ_ASSERT(backgroundSweepZones.ref().isEmpty());
+        MOZ_ASSERT(blocksToFreeAfterSweeping.ref().computedSizeOfExcludingThis() == 0);
+    }
+
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         for (auto i : AllAllocKinds()) {
             MOZ_ASSERT(!zone->arenas.arenaListsToSweep(i));
             MOZ_ASSERT(zone->arenas.doneBackgroundFinalize(i));
         }
     }
-    MOZ_ASSERT(blocksToFreeAfterSweeping.ref().computedSizeOfExcludingThis() == 0);
 #endif
-}
-
-void
-GCHelperState::finish()
-{
-    // Wait for any lingering background sweeping to finish.
-    waitBackgroundSweepEnd();
-}
-
-GCHelperState::State
-GCHelperState::state(const AutoLockGC&)
-{
-    return state_;
-}
-
-void
-GCHelperState::setState(State state, const AutoLockGC&)
-{
-    state_ = state;
-}
-
-void
-GCHelperState::startBackgroundThread(State newState, const AutoLockGC& lock,
-                                     const AutoLockHelperThreadState& helperLock)
-{
-    MOZ_ASSERT(!hasThread && state(lock) == IDLE && newState != IDLE);
-    setState(newState, lock);
-
-    {
-        AutoEnterOOMUnsafeRegion noOOM;
-        if (!HelperThreadState().gcHelperWorklist(helperLock).append(this))
-            noOOM.crash("Could not add to pending GC helpers list");
-    }
-
-    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, helperLock);
-}
-
-void
-GCHelperState::waitForBackgroundThread(js::AutoLockGC& lock)
-{
-    while (isBackgroundSweeping())
-        done.wait(lock.guard());
-}
-
-void
-GCHelperState::work()
-{
-    MOZ_ASSERT(CanUseExtraThreads());
-
-    AutoLockGC lock(rt);
-
-    MOZ_ASSERT(!hasThread);
-    hasThread = true;
-
-#ifdef DEBUG
-    MOZ_ASSERT(!TlsContext.get()->gcHelperStateThread);
-    TlsContext.get()->gcHelperStateThread = true;
-#endif
-
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-
-    switch (state(lock)) {
-
-      case IDLE:
-        MOZ_CRASH("GC helper triggered on idle state");
-        break;
-
-      case SWEEPING: {
-        AutoTraceLog logSweeping(logger, TraceLogger_GCSweeping);
-        doSweep(lock);
-        MOZ_ASSERT(state(lock) == SWEEPING);
-        break;
-      }
-
-    }
-
-    setState(IDLE, lock);
-    hasThread = false;
-
-#ifdef DEBUG
-    TlsContext.get()->gcHelperStateThread = false;
-#endif
-
-    done.notify_all();
 }
 
 void
 GCRuntime::queueZonesForBackgroundSweep(ZoneList& zones)
 {
-    AutoLockHelperThreadState helperLock;
-    AutoLockGC lock(rt);
+    AutoLockHelperThreadState lock;
     backgroundSweepZones.ref().transferFrom(zones);
-    helperState.maybeStartBackgroundSweep(lock, helperLock);
+    if (sweepOnBackgroundThread)
+        sweepTask.startIfIdle(lock);
 }
 
 void
 GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
     MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-    AutoLockGC lock(rt);
+    AutoLockHelperThreadState lock;
     blocksToFreeAfterSweeping.ref().transferUnusedFrom(lifo);
 }
 
@@ -3714,7 +3640,7 @@ void
 GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
     MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-    AutoLockGC lock(rt);
+    AutoLockHelperThreadState lock;
     blocksToFreeAfterSweeping.ref().transferFrom(lifo);
 }
 
@@ -3724,56 +3650,91 @@ GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo)
     blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
 }
 
+BackgroundSweepTask::BackgroundSweepTask(JSRuntime* rt)
+  : GCParallelTaskHelper(rt),
+    done(false)
+{}
+
+inline bool
+BackgroundSweepTask::isRunning() const
+{
+    AutoLockHelperThreadState lock;
+    return isRunningWithLockHeld(lock);
+}
+
+inline bool
+BackgroundSweepTask::isRunningWithLockHeld(const AutoLockHelperThreadState& lock) const
+{
+    return Base::isRunningWithLockHeld(lock) && !done;
+}
+
 void
-GCHelperState::maybeStartBackgroundSweep(const AutoLockGC& lock,
-                                         const AutoLockHelperThreadState& helperLock)
+BackgroundSweepTask::startIfIdle(AutoLockHelperThreadState& lock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
-    if (state(lock) == IDLE)
-        startBackgroundThread(SWEEPING, lock, helperLock);
+    if (isRunningWithLockHeld(lock))
+        return;
+
+    // Join the previous invocation of the task. This will return immediately
+    // if the thread has never been started.
+    joinWithLockHeld(lock);
+
+    done = false;
+    startWithLockHeld(lock);
 }
 
 void
-GCHelperState::waitBackgroundSweepEnd()
+BackgroundSweepTask::runFromMainThread(JSRuntime* rt)
 {
-    AutoLockGC lock(rt);
-    while (state(lock) == SWEEPING)
-        waitForBackgroundThread(lock);
+    {
+        AutoLockHelperThreadState lock;
+        MOZ_ASSERT(!isRunningWithLockHeld(lock));
+        joinWithLockHeld(lock);
+        done = false;
+    }
+
+    Base::runFromMainThread(rt);
+}
+
+void
+BackgroundSweepTask::run()
+{
+    AutoTraceLog logSweeping(TraceLoggerForCurrentThread(), TraceLogger_GCSweeping);
+
+    AutoLockHelperThreadState lock;
+    AutoSetThreadIsSweeping threadIsSweeping;
+
+    MOZ_ASSERT(!done);
+
+    JSRuntime* rt = runtime();
+
+    // The main thread may call queueZonesForBackgroundSweep() while this is
+    // running so we must check there is no more work after releasing the lock.
+    do {
+        ZoneList zones;
+        zones.transferFrom(rt->gc.backgroundSweepZones.ref());
+        LifoAlloc freeLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+        freeLifoAlloc.transferFrom(&rt->gc.blocksToFreeAfterSweeping.ref());
+
+        AutoUnlockHelperThreadState unlock(lock);
+        rt->gc.sweepBackgroundThings(zones, freeLifoAlloc);
+    } while (!rt->gc.backgroundSweepZones.ref().isEmpty());
+
+    // Signal to the main thread that we're finished, because we release the
+    // lock again before GCParallelTask's state is changed to finished.
+    done = true;
+}
+
+void
+GCRuntime::waitBackgroundSweepEnd()
+{
+    sweepTask.join();
+
+    // TODO: Improve assertion to work in incremental GC?
     if (!rt->gc.isIncrementalGCInProgress())
         rt->gc.assertBackgroundSweepingFinished();
 }
-
-void
-GCHelperState::doSweep(AutoLockGC& lock)
-{
-    // The main thread may call queueZonesForBackgroundSweep() while this is
-    // running so we must check there is no more work to do before exiting.
-
-    do {
-        while (!rt->gc.backgroundSweepZones.ref().isEmpty()) {
-            AutoSetThreadIsSweeping threadIsSweeping;
-
-            ZoneList zones;
-            zones.transferFrom(rt->gc.backgroundSweepZones.ref());
-            LifoAlloc freeLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-            freeLifoAlloc.transferFrom(&rt->gc.blocksToFreeAfterSweeping.ref());
-
-            AutoUnlockGC unlock(lock);
-            rt->gc.sweepBackgroundThings(zones, freeLifoAlloc);
-        }
-    } while (!rt->gc.backgroundSweepZones.ref().isEmpty());
-}
-
-#ifdef DEBUG
-
-bool
-GCHelperState::onBackgroundThread()
-{
-    return TlsContext.get()->gcHelperStateThread;
-}
-
-#endif // DEBUG
 
 bool
 GCRuntime::shouldReleaseObservedTypes()
@@ -5872,10 +5833,10 @@ GCRuntime::endSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
     if (sweepAtomsZone)
         zones.append(atomsZone);
 
-    if (sweepOnBackgroundThread)
-        queueZonesForBackgroundSweep(zones);
-    else
-        sweepBackgroundThings(zones, blocksToFreeAfterSweeping.ref());
+    queueZonesForBackgroundSweep(zones);
+
+    if (!sweepOnBackgroundThread)
+        sweepTask.runFromMainThread(rt);
 
     return Finished;
 }
@@ -6921,7 +6882,10 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoGCSession& session)
             zone->arenas.unmarkPreMarkedFreeCells();
         }
 
-        blocksToFreeAfterSweeping.ref().freeAll();
+        {
+            AutoLockHelperThreadState lock;
+            blocksToFreeAfterSweeping.ref().freeAll();
+        }
 
         incrementalState = State::NotActive;
 
@@ -7215,7 +7179,6 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             // Yield until background finalization is done.
             if (!budget.isUnlimited()) {
                 // Poll for end of background sweeping
-                AutoLockGC lock(rt);
                 if (isBackgroundSweeping())
                     break;
             } else {

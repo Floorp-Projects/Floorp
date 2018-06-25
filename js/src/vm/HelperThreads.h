@@ -96,7 +96,6 @@ class GlobalHelperThreadState
     typedef Vector<ParseTask*, 0, SystemAllocPolicy> ParseTaskVector;
     typedef mozilla::LinkedList<ParseTask> ParseTaskList;
     typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy> SourceCompressionTaskVector;
-    typedef Vector<GCHelperState*, 0, SystemAllocPolicy> GCHelperStateVector;
     typedef Vector<GCParallelTask*, 0, SystemAllocPolicy> GCParallelTaskVector;
     typedef Vector<PromiseHelperTask*, 0, SystemAllocPolicy> PromiseHelperTaskVector;
 
@@ -141,9 +140,6 @@ class GlobalHelperThreadState
     // Finished source compression tasks.
     SourceCompressionTaskVector compressionFinishedList_;
 
-    // Runtimes which have sweeping / allocating work to do.
-    GCHelperStateVector gcHelperWorklist_;
-
     // GC tasks needing to be done in parallel.
     GCParallelTaskVector gcParallelWorklist_;
 
@@ -160,7 +156,6 @@ class GlobalHelperThreadState
     size_t maxPromiseHelperThreads() const;
     size_t maxParseThreads() const;
     size_t maxCompressionThreads() const;
-    size_t maxGCHelperThreads() const;
     size_t maxGCParallelThreads() const;
 
     GlobalHelperThreadState();
@@ -263,10 +258,6 @@ class GlobalHelperThreadState
         return compressionFinishedList_;
     }
 
-    GCHelperStateVector& gcHelperWorklist(const AutoLockHelperThreadState&) {
-        return gcHelperWorklist_;
-    }
-
     GCParallelTaskVector& gcParallelWorklist(const AutoLockHelperThreadState&) {
         return gcParallelWorklist_;
     }
@@ -281,7 +272,6 @@ class GlobalHelperThreadState
     bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
     bool canStartParseTask(const AutoLockHelperThreadState& lock);
     bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
-    bool canStartGCHelperTask(const AutoLockHelperThreadState& lock);
     bool canStartGCParallelTask(const AutoLockHelperThreadState& lock);
 
     // Used by a major GC to signal processing enqueued compression tasks.
@@ -364,7 +354,6 @@ typedef mozilla::Variant<jit::IonBuilder*,
                          PromiseHelperTask*,
                          ParseTask*,
                          SourceCompressionTask*,
-                         GCHelperState*,
                          GCParallelTask*> HelperTaskUnion;
 
 /* Individual helper thread, one allocated per core. */
@@ -415,11 +404,6 @@ struct HelperThread
         return maybeCurrentTaskAs<SourceCompressionTask*>();
     }
 
-    /* Any GC state for background sweeping or allocating being performed. */
-    GCHelperState* gcHelperTask() {
-        return maybeCurrentTaskAs<GCHelperState*>();
-    }
-
     /* State required to perform a GC parallel task. */
     GCParallelTask* gcParallelTask() {
         return maybeCurrentTaskAs<GCParallelTask*>();
@@ -466,7 +450,6 @@ struct HelperThread
     void handleIonFreeWorkload(AutoLockHelperThreadState& locked);
     void handleParseWorkload(AutoLockHelperThreadState& locked);
     void handleCompressionWorkload(AutoLockHelperThreadState& locked);
-    void handleGCHelperWorkload(AutoLockHelperThreadState& locked);
     void handleGCParallelWorkload(AutoLockHelperThreadState& locked);
 };
 
