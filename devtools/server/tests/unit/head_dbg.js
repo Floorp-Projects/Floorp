@@ -411,7 +411,7 @@ function initTestDebuggerServer(server = DebuggerServer) {
 function startTestDebuggerServer(title, server = DebuggerServer) {
   initTestDebuggerServer(server);
   addTestGlobal(title);
-  DebuggerServer.registerActors({ tab: true });
+  DebuggerServer.registerActors({ target: true });
 
   const transport = DebuggerServer.connectPipe();
   const client = new DebuggerClient(transport);
