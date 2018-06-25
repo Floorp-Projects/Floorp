@@ -302,14 +302,6 @@ nsPrintSettingsX::SetScaling(double aScaling)
     NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
     [printInfoDict setObject: [NSNumber numberWithFloat: aScaling]
      forKey: NSPrintScalingFactor];
-    NSPrintInfo* newPrintInfo =
-        [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-    if (NS_WARN_IF(!newPrintInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SetCocoaPrintInfo(newPrintInfo);
-    [newPrintInfo release];
   } else {
     nsPrintSettings::SetScaling(aScaling);
   }
@@ -368,15 +360,6 @@ nsPrintSettingsX::SetToFileName(const nsAString& aToFileName)
   } else {
     mToFileName.Truncate();
   }
-
-  NSPrintInfo* newPrintInfo =
-      [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-  if (NS_WARN_IF(!newPrintInfo)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SetCocoaPrintInfo(newPrintInfo);
-  [newPrintInfo release];
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -415,14 +398,6 @@ nsPrintSettingsX::SetOrientation(int32_t aOrientation)
       [printInfoDict setObject: [NSNumber numberWithInt: NS_PAPER_ORIENTATION_LANDSCAPE]
        forKey: NSPrintOrientation];
     }
-    NSPrintInfo* newPrintInfo =
-        [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-    if (NS_WARN_IF(!newPrintInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SetCocoaPrintInfo(newPrintInfo);
-    [newPrintInfo release];
   } else {
     nsPrintSettings::SetOrientation(aOrientation);
   }
@@ -446,14 +421,6 @@ nsPrintSettingsX::SetUnwriteableMarginTop(double aUnwriteableMarginTop)
     [printInfoDict setObject :
         [NSNumber numberWithDouble: aUnwriteableMarginTop]
         forKey : NSPrintTopMargin];
-    NSPrintInfo* newPrintInfo =
-        [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-    if (NS_WARN_IF(!newPrintInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SetCocoaPrintInfo(newPrintInfo);
-    [newPrintInfo release];
   }
 
   return NS_OK;
@@ -474,14 +441,6 @@ nsPrintSettingsX::SetUnwriteableMarginLeft(double aUnwriteableMarginLeft)
     NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
     [printInfoDict setObject : [NSNumber numberWithDouble: aUnwriteableMarginLeft]
      forKey : NSPrintLeftMargin];
-    NSPrintInfo* newPrintInfo =
-        [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-    if (NS_WARN_IF(!newPrintInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SetCocoaPrintInfo(newPrintInfo);
-    [newPrintInfo release];
   }
 
   return NS_OK;
@@ -502,14 +461,6 @@ nsPrintSettingsX::SetUnwriteableMarginBottom(double aUnwriteableMarginBottom)
     NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
     [printInfoDict setObject : [NSNumber numberWithDouble: aUnwriteableMarginBottom]
      forKey : NSPrintBottomMargin];
-    NSPrintInfo* newPrintInfo =
-        [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-    if (NS_WARN_IF(!newPrintInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SetCocoaPrintInfo(newPrintInfo);
-    [newPrintInfo release];
   }
 
   return NS_OK;
@@ -530,14 +481,6 @@ nsPrintSettingsX::SetUnwriteableMarginRight(double aUnwriteableMarginRight)
     NSMutableDictionary* printInfoDict = [mPrintInfo dictionary];
     [printInfoDict setObject : [NSNumber numberWithDouble: aUnwriteableMarginRight]
      forKey : NSPrintRightMargin];
-    NSPrintInfo* newPrintInfo =
-        [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-    if (NS_WARN_IF(!newPrintInfo)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SetCocoaPrintInfo(newPrintInfo);
-    [newPrintInfo release];
   }
 
   return NS_OK;
@@ -570,14 +513,6 @@ nsresult nsPrintSettingsX::SetCocoaPaperSize(double aWidth, double aHeight)
     [printInfoDict setObject: [NSValue valueWithSize: paperSize]
      forKey: NSPrintPaperSize];
   }
-  NSPrintInfo* newPrintInfo =
-      [[NSPrintInfo alloc] initWithDictionary: printInfoDict];
-  if (NS_WARN_IF(!newPrintInfo)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SetCocoaPrintInfo(newPrintInfo);
-  [newPrintInfo release];
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
