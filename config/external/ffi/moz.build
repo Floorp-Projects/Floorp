@@ -98,7 +98,7 @@ else:
             ASFLAGS += ['-safeseh']
     elif CONFIG['FFI_TARGET'] == 'X86_WIN64':
         ffi_srcs = ['ffi.c']
-        if CONFIG['CC_TYPE'] == 'gcc':
+        if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
             ffi_srcs += ['win64.S']
         else:
             # libffi asm needs to be preprocessed for MSVC
