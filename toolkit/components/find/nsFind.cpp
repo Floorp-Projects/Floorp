@@ -902,6 +902,8 @@ nsFind::ResetAll()
 {
   mIterator = nullptr;
   mLastBlockParent = nullptr;
+  mIterNode = nullptr;
+  mIterOffset = -1;
 }
 
 #define NBSP_CHARCODE (CHAR_TO_UNICHAR(160))
