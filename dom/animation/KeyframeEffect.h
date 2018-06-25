@@ -421,8 +421,8 @@ private:
   nsIFrame* GetStyleFrame() const;
 
   bool CanThrottle() const;
-  bool CanThrottleTransformChanges(const nsIFrame& aFrame) const;
-  bool CanThrottleTransformChangesInScrollable(nsIFrame& aFrame) const;
+  bool CanThrottleOverflowChanges(const nsIFrame& aFrame) const;
+  bool CanThrottleOverflowChangesInScrollable(nsIFrame& aFrame) const;
 
   // Returns true if the computedTiming has changed since the last
   // composition.
@@ -440,11 +440,11 @@ private:
 
   void UpdateEffectSet(mozilla::EffectSet* aEffectSet = nullptr) const;
 
-  // Returns true if this effect has transform and the transform might affect
-  // the overflow region.
+  // Returns true if this effect has properties that might affect the overflow
+  // region.
   // This function is used for updating scroll bars or notifying intersection
   // observers reflected by the transform.
-  bool HasTransformThatMightAffectOverflow() const
+  bool HasPropertiesThatMightAffectOverflow() const
   {
     return mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
                                     nsChangeHint_AddOrRemoveTransform |
