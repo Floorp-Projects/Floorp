@@ -34,8 +34,8 @@ var gTabsPanel = {
 
     this.initElements();
 
-    let hiddenTabsMenuButton = this.allTabsView.querySelector(".hidden-tabs-button");
-    let hiddenTabsSeparator = this.allTabsView.querySelector(".hidden-tabs-separator");
+    let hiddenTabsMenuButton = document.getElementById("allTabsMenu-hiddenTabsButton");
+    let hiddenTabsSeparator = document.getElementById("allTabsMenu-hiddenTabsSeparator");
     this.hiddenAudioTabsPopup = new TabsPanel({
       view: this.allTabsView,
       insertBefore: hiddenTabsSeparator,
@@ -47,8 +47,8 @@ var gTabsPanel = {
       filterFn: (tab) => !tab.pinned && !tab.hidden,
     });
 
-    let containerTabsButton = this.allTabsView.querySelector(".container-tabs-button");
-    let containerTabsSeparator = this.allTabsView.querySelector(".container-tabs-separator");
+    let containerTabsButton = document.getElementById("allTabsMenu-containerTabsButton");
+    let containerTabsSeparator = document.getElementById("allTabsMenu-containerTabsSeparator");
     this.allTabsView.addEventListener("ViewShowing", (e) => {
       PanelUI._ensureShortcutsShown(this.allTabsView);
       e.target.querySelector(".undo-close-tab").disabled =
