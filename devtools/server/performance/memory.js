@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "ContentProcessTargetActor", "devtools/server/act
 
 /**
  * A class that returns memory data for a parent actor's window.
- * Using a target-scoped actor with this instance will measure the memory footprint of its
+ * Using a tab-scoped actor with this instance will measure the memory footprint of its
  * parent tab. Using a global-scoped actor instance however, will measure the memory
  * footprint of the chrome window referenced by its root actor.
  *

@@ -11,9 +11,9 @@ const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 
 /**
- * Creates a tab client for the remote debugging protocol server. This client is a front
- * to the target actor for a tab created in the server side, hiding the protocol details
- * in a traditional JavaScript API.
+ * Creates a tab client for the remote debugging protocol server. This client
+ * is a front to the tab actor created in the server side, hiding the protocol
+ * details in a traditional JavaScript API.
  *
  * @param client DebuggerClient
  *        The debugger client parent.
@@ -65,7 +65,7 @@ TabClient.prototype = {
   },
 
   /**
-   * Detach the client from the target actor.
+   * Detach the client from the tab actor.
    */
   detach: DebuggerClient.requester({
     type: "detach"
@@ -123,10 +123,10 @@ TabClient.prototype = {
   }),
 
   /**
-   * Reconfigure the target actor.
+   * Reconfigure the tab actor.
    *
    * @param object options
-   *        A dictionary object of the new options to use in the target actor.
+   *        A dictionary object of the new options to use in the tab actor.
    */
   reconfigure: DebuggerClient.requester({
     type: "reconfigure",

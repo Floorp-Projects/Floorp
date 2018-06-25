@@ -105,7 +105,7 @@ var onConnectionReady = async function([aType, aTraits]) {
 
   const response = await gClient.listTabs();
 
-  parent = document.getElementById("tabTargetActors");
+  parent = document.getElementById("tabActors");
 
   // Add Global Process debugging...
   const globals = Cu.cloneInto(response, {});
@@ -158,7 +158,7 @@ var onConnectionReady = async function([aType, aTraits]) {
 };
 
 /**
- * Build one button for an add-on.
+ * Build one button for an add-on actor.
  */
 function buildAddonLink(addon, parent) {
   const a = document.createElement("a");
@@ -175,7 +175,7 @@ function buildAddonLink(addon, parent) {
 }
 
 /**
- * Build one button for a tab.
+ * Build one button for a tab actor.
  */
 function buildTabLink(tab, parent, selected) {
   const a = document.createElement("a");

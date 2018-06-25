@@ -63,7 +63,7 @@ exports.sendShutdownEvent = sendShutdownEvent;
  * Construct a root actor appropriate for use in a server running in a
  * browser. The returned root actor:
  * - respects the factories registered with DebuggerServer.addGlobalActor,
- * - uses a BrowserTabList to supply target actors for tabs,
+ * - uses a BrowserTabList to supply tab actors,
  * - sends all navigator:browser window documents a Debugger:Shutdown event
  *   when it exits.
  *
@@ -94,7 +94,7 @@ function createRootActor(connection) {
  * list" interface.)
  *
  * @param connection DebuggerServerConnection
- *     The connection in which this list's target actors may participate.
+ *     The connection in which this list's tab actors may participate.
  *
  * Some notes:
  *
@@ -121,14 +121,14 @@ function createRootActor(connection) {
  *   been closed.
  *
  * This means that TabOpen and TabClose events alone are not sufficient to
- * maintain an accurate list of live tabs and mark target actors as closed
+ * maintain an accurate list of live tabs and mark tab actors as closed
  * promptly. Our nsIWindowMediatorListener onCloseWindow handler must find and
  * exit all actors for tabs that were in the closing window.
  *
- * Since this is a bit hairy, we don't make each individual attached target
- * actor responsible for noticing when it has been closed; we watch for that,
- * and promise to call each actor's 'exit' method when it's closed, regardless
- * of how we learn the news.
+ * Since this is a bit hairy, we don't make each individual attached tab actor
+ * responsible for noticing when it has been closed; we watch for that, and
+ * promise to call each actor's 'exit' method when it's closed, regardless of
+ * how we learn the news.
  *
  * - nsIWindowMediator locks
  *
@@ -172,12 +172,12 @@ function BrowserTabList(connection) {
    * window objects.
    *
    * This map's keys are "browser" XUL elements; it maps each browser element
-   * to the target actor we've created for its content window, if we've created
+   * to the tab actor we've created for its content window, if we've created
    * one. This map serves several roles:
    *
    * - During iteration, we use it to find actors we've created previously.
    *
-   * - On a TabClose event, we use it to find the tab's target actor and exit it.
+   * - On a TabClose event, we use it to find the tab's actor and exit it.
    *
    * - When the onCloseWindow handler is called, we iterate over it to find all
    *   tabs belonging to the closing XUL window, and exit them.

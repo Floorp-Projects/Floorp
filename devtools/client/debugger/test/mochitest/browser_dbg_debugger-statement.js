@@ -25,7 +25,7 @@ function test() {
     addTab(TAB_URL)
       .then((aTab) => {
         gTab = aTab;
-        return attachTargetActorForUrl(gClient, TAB_URL);
+        return attachTabActorForUrl(gClient, TAB_URL);
       })
       .then(testEarlyDebuggerStatement)
       .then(testDebuggerStatement)

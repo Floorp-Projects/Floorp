@@ -80,7 +80,7 @@ exports.targetFromURL = async function targetFromURL(url) {
       chrome = true;
       if (id != 0) {
         // Content processes are not exposing browsing context target actors with the full
-        // set of target-scoped actors we would get from a browser tab. Instead, they only
+        // set of tab-scoped actors we would get from a browser tab. Instead, they only
         // support debugger and console.
         isBrowsingContext = false;
       }
