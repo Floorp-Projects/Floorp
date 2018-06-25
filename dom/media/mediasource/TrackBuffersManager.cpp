@@ -1134,12 +1134,7 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
   // 3. If the first initialization segment received flag is true, then run the following steps:
   if (mFirstInitializationSegmentReceived) {
     if (numVideos != mVideoTracks.mNumTracks ||
-        numAudios != mAudioTracks.mNumTracks ||
-        (!mChangeTypeReceived &&
-         ((numVideos &&
-           info.mVideo.mMimeType != mVideoTracks.mInfo->mMimeType) ||
-          (numAudios &&
-           info.mAudio.mMimeType != mAudioTracks.mInfo->mMimeType)))) {
+        numAudios != mAudioTracks.mNumTracks) {
       RejectAppend(NS_ERROR_FAILURE, __func__);
       return;
     }
