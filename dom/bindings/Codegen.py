@@ -56,7 +56,7 @@ def toStringBool(arg):
 
 
 def toBindingNamespace(arg):
-    return arg + "Binding"
+    return arg + "_Binding"
 
 
 def isTypeCopyConstructible(type):
@@ -1743,14 +1743,14 @@ class CGClassFinalizeHook(CGAbstractClassHook):
 def objectMovedHook(descriptor, hookName, obj, old):
     assert descriptor.wrapperCache
     return fill("""
-	if (self) {
-	  UpdateWrapper(self, self, ${obj}, ${old});
-	}
+        if (self) {
+          UpdateWrapper(self, self, ${obj}, ${old});
+        }
 
-	return 0;
-	""",
-	obj=obj,
-	old=old)
+        return 0;
+        """,
+        obj=obj,
+        old=old)
 
 
 class CGClassObjectMovedHook(CGAbstractClassHook):
@@ -13641,13 +13641,13 @@ class CGRegisterGlobalNames(CGAbstractMethod):
         def getCheck(desc):
             if not desc.isExposedConditionally():
                 return "nullptr"
-            return "%sBinding::ConstructorEnabled" % desc.name
+            return "%s_Binding::ConstructorEnabled" % desc.name
 
         define = ""
         currentOffset = 0
         for (name, desc) in getGlobalNames(self.config):
             length = len(name)
-            define += "WebIDLGlobalNameHash::Register(%i, %i, %sBinding::CreateInterfaceObjects, %s, constructors::id::%s);\n" % (
+            define += "WebIDLGlobalNameHash::Register(%i, %i, %s_Binding::CreateInterfaceObjects, %s, constructors::id::%s);\n" % (
                 currentOffset, length, desc.name, getCheck(desc), desc.name)
             currentOffset += length + 1 # Add trailing null.
         return define
@@ -14920,7 +14920,7 @@ class CGExampleClass(CGBindingImplClass):
             ${returnType}
             ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto${reflectorArg})
             {
-              return ${ifaceName}Binding::Wrap(aCx, this, aGivenProto${reflectorPassArg});
+              return ${ifaceName}_Binding::Wrap(aCx, this, aGivenProto${reflectorPassArg});
             }
 
             """)
@@ -15336,7 +15336,7 @@ class CGJSImplClass(CGBindingImplClass):
     def getWrapObjectBody(self):
         return fill(
             """
-            JS::Rooted<JSObject*> obj(aCx, ${name}Binding::Wrap(aCx, this, aGivenProto));
+            JS::Rooted<JSObject*> obj(aCx, ${name}_Binding::Wrap(aCx, this, aGivenProto));
             if (!obj) {
               return nullptr;
             }
@@ -16856,7 +16856,7 @@ class CGIterableMethodGenerator(CGGeneric):
             typedef ${iterClass} itrType;
             RefPtr<itrType> result(new itrType(self,
                                                  itrType::IterableIteratorType::${itrMethod},
-                                                 &${ifaceName}IteratorBinding::Wrap));
+                                                 &${ifaceName}Iterator_Binding::Wrap));
             """,
             iterClass=iteratorNativeType(descriptor),
             ifaceName=descriptor.interface.identifier.name,
@@ -17149,12 +17149,12 @@ class GlobalGenRoots():
     @staticmethod
     def ResolveSystemBinding(config):
         curr = CGList([], "\n")
-        
+
         descriptors = config.getDescriptors(hasInterfaceObject=True,
                                             isExposedInSystemGlobals=True,
                                             register=True)
         properties = [desc.name for desc in descriptors]
-        
+
         curr.append(CGStringTable("IdString", properties, static=True))
 
         initValues = []
@@ -17173,7 +17173,7 @@ class GlobalGenRoots():
               ProtoGetter define;
               PinnedStringId id;
             };
-          
+
             static SystemProperty properties[] = {
               $*{init}
             };
@@ -17638,7 +17638,7 @@ class CGEventClass(CGBindingImplClass):
                          extradeclarations=baseDeclarations)
 
     def getWrapObjectBody(self):
-        return "return %sBinding::Wrap(aCx, this, aGivenProto);\n" % self.descriptor.name
+        return "return %s_Binding::Wrap(aCx, this, aGivenProto);\n" % self.descriptor.name
 
     def needCC(self):
         return (len(self.membersNeedingCC) != 0 or
