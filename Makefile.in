@@ -35,7 +35,13 @@ ifndef MOZ_PROFILE_USE
 # re-linking libxul on every incremental build we do not enforce this for
 # developer builds.  Tests always need a new buildid as well.
 ifneq (,$(MOZ_AUTOMATION)$(MOZ_BUILD_DATE)$(TEST_MOZBUILD))
-buildid.h source-repo.h: FORCE
+$(MDDEPDIR)/buildid.h.stub $(MDDEPDIR)/source-repo.h.stub: FORCE
+endif
+# Additionally, provide a dummy target during tests, because
+# faster/rules.mk will expect these targets to exist.
+ifdef TEST_MOZBUILD
+source-repo.h: $(MDDEPDIR)/source-repo.h.stub
+buildid.h: $(MDDEPDIR)/buildid.h.stub
 endif
 endif
 

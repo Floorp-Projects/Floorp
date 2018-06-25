@@ -219,31 +219,33 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   max-width: @standaloneSubviewWidth@;
 }
 
-#pageActionFeedback > .panel-arrowcontainer > .panel-arrowbox {
+#confirmation-hint {
+  --arrowpanel-background: #058b00;
+  --arrowpanel-border-color: #046b00;
+  --arrowpanel-color: #fff;
+}
+
+#confirmation-hint[hidearrow] > .panel-arrowcontainer > .panel-arrowbox {
   /* Don't display the arrow but keep the popup at the same vertical
      offset as other arrow panels. */
   visibility: hidden;
 }
 
-#pageActionFeedback > .panel-arrowcontainer > .panel-arrowcontent {
-  background-color: #058b00;
-  background-image: none;
-  border-radius: 2px;
-  color: #fff;
+#confirmation-hint > .panel-arrowcontainer > .panel-arrowcontent {
   font-weight: 400;
   font-size: 1.1rem;
   -moz-box-align: center;
   padding: 6px 10px;
 }
 
-#pageActionFeedbackAnimatableBox {
+#confirmation-hint-checkmark-animation-container {
   position: relative;
   overflow: hidden;
   width: 14px;
   height: 14px;
 }
 
-#pageActionFeedbackAnimatableBox[animate] > #pageActionFeedbackAnimatableImage {
+#confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image {
   position: absolute;
   background-image: url(chrome://browser/skin/check-animation.svg);
   background-repeat: no-repeat;
@@ -251,19 +253,19 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   max-width: 266px;
   min-height: 14px;
   max-height: 14px;
-  animation-name: page-action-feedback-animation;
+  animation-name: confirmation-hint-checkmark-animation;
   animation-duration: 300ms;
   animation-delay: 60ms;
   animation-fill-mode: forwards;
   animation-timing-function: steps(18);
 }
 
-#pageActionFeedbackAnimatableBox[animate] > #pageActionFeedbackAnimatableImage:-moz-locale-dir(rtl) {
-  animation-name: page-action-feedback-animation-rtl;
+#confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image:-moz-locale-dir(rtl) {
+  animation-name: confirmation-hint-checkmark-animation-rtl;
   transform: translateX(252px);
 }
 
-@keyframes page-action-feedback-animation {
+@keyframes confirmation-hint-checkmark-animation {
   from {
     transform: translateX(0);
   }
@@ -272,7 +274,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   }
 }
 
-@keyframes page-action-feedback-animation-rtl {
+@keyframes confirmation-hint-checkmark-animation-rtl {
   from {
     transform: translateX(252px);
   }
@@ -281,7 +283,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   }
 }
 
-#pageActionFeedbackMessage {
+#confirmation-hint-message {
   margin-inline-start: 7px;
   margin-inline-end: 0;
   transform: scale(.8);
@@ -290,7 +292,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
               opacity 60ms linear;
 }
 
-#pageActionFeedbackAnimatableBox[animate] + #pageActionFeedbackMessage {
+#confirmation-hint-checkmark-animation-container[animate] + #confirmation-hint-message {
   transform: scale(1);
   opacity: 1;
 }

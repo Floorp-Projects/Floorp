@@ -36,8 +36,12 @@ interface nsITimedChannel : nsISupports {
   attribute uint8_t redirectCount;
   attribute uint8_t internalRedirectCount;
 
-  [noscript] readonly attribute TimeStamp channelCreation;
-  [noscript] readonly attribute TimeStamp asyncOpen;
+  // These properties should only be written externally when they must be
+  // propagated across an internal redirect.  For example, when a service
+  // worker interception falls back to network we need to copy the original
+  // timing values to the new nsHttpChannel.
+  [noscript] attribute TimeStamp channelCreation;
+  [noscript] attribute TimeStamp asyncOpen;
 
   // The following are only set when the request is intercepted by a service
   // worker no matter the response is synthesized.

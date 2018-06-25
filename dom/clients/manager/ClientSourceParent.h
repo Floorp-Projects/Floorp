@@ -48,6 +48,9 @@ class ClientSourceParent final : public PClientSourceParent
   mozilla::ipc::IPCResult
   RecvInheritController(const ClientControlledArgs& aArgs) override;
 
+  mozilla::ipc::IPCResult
+  RecvNoteDOMContentLoaded() override;
+
   void
   ActorDestroy(ActorDestroyReason aReason) override;
 

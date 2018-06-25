@@ -39,36 +39,12 @@ struct unused_t;
 template<class T>
 struct MOZ_TEMPORARY_CLASS MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
 {
-  /*
-   * We want to allow returning nullptr from functions returning
-   * already_AddRefed<T>, for simplicity.  But we also don't want to allow
-   * returning raw T*, instead preferring creation of already_AddRefed<T> from
-   * a reference counting smart pointer.
-   *
-   * We address the latter requirement by making the (T*) constructor explicit.
-   * But |return nullptr| won't consider an explicit constructor, so we need
-   * another constructor to handle it.  Plain old (decltype(nullptr)) doesn't
-   * cut it, because if nullptr is emulated as __null (with type int or long),
-   * passing nullptr to an int/long parameter triggers compiler warnings.  We
-   * need a type that no one can pass accidentally; a pointer-to-member-function
-   * (where no such function exists) does the trick nicely.
-   *
-   * That handles the return-value case.  What about for locals, argument types,
-   * and so on?  |already_AddRefed<T>(nullptr)| considers both overloads (and
-   * the (already_AddRefed<T>&&) overload as well!), so there's an ambiguity.
-   * We can target true nullptr using decltype(nullptr), but we can't target
-   * emulated nullptr the same way, because passing __null to an int/long
-   * parameter triggers compiler warnings.  So just give up on this, and provide
-   * this behavior through the default constructor.
-   *
-   * We can revert to simply explicit (T*) and implicit (decltype(nullptr)) when
-   * nullptr no longer needs to be emulated to support the ancient b2g compiler.
-   * (The () overload could also be removed, if desired, if we changed callers.)
-   */
   already_AddRefed() : mRawPtr(nullptr) {}
 
+  // For simplicity, allow returning nullptr from functions returning
+  // already_AddRefed<T>. Don't permit returning raw T*, though; it's preferred
+  // to create already_AddRefed<T> from a reference-counting smart pointer.
   MOZ_IMPLICIT already_AddRefed(decltype(nullptr)) : mRawPtr(nullptr) {}
-
   explicit already_AddRefed(T* aRawPtr) : mRawPtr(aRawPtr) {}
 
   // Disallow copy constructor and copy assignment operator: move semantics used instead.

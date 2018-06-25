@@ -156,7 +156,7 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
   MOZ_ASSERT(service);
   rv = service->RequestPayment(action);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "nsIPaymentRequestService::RequestPayment failed");
   }
   return IPC_OK();
 }

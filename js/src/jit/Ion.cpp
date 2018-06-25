@@ -9,6 +9,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/Unused.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
@@ -46,6 +47,7 @@
 #include "jit/ValueNumbering.h"
 #include "jit/WasmBCE.h"
 #include "js/Printf.h"
+#include "js/UniquePtr.h"
 #include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
@@ -2045,13 +2047,11 @@ IonCompile(JSContext* cx, JSScript* script,
 
     TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
 
-    LifoAlloc* alloc = cx->new_<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
+    auto alloc = cx->make_unique<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
     if (!alloc)
         return AbortReason::Alloc;
 
-    ScopedJSDeletePtr<LifoAlloc> autoDelete(alloc);
-
-    TempAllocator* temp = alloc->new_<TempAllocator>(alloc);
+    TempAllocator* temp = alloc->new_<TempAllocator>(alloc.get());
     if (!temp)
         return AbortReason::Alloc;
 
@@ -2184,16 +2184,15 @@ IonCompile(JSContext* cx, JSScript* script,
 
         // The allocator and associated data will be destroyed after being
         // processed in the finishedOffThreadCompilations list.
-        autoDelete.forget();
+        mozilla::Unused << alloc.release();
 
         return AbortReason::NoAbort;
     }
 
     bool succeeded = false;
     {
-        ScopedJSDeletePtr<CodeGenerator> codegen;
         AutoEnterAnalysis enter(cx);
-        codegen = CompileBackEnd(builder);
+        UniquePtr<CodeGenerator> codegen(CompileBackEnd(builder));
         if (!codegen) {
             JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
             if (cx->isExceptionPending())
@@ -2201,7 +2200,7 @@ IonCompile(JSContext* cx, JSScript* script,
             return AbortReason::Disable;
         }
 
-        succeeded = LinkCodeGen(cx, builder, codegen);
+        succeeded = LinkCodeGen(cx, builder, codegen.get());
     }
 
     if (succeeded)

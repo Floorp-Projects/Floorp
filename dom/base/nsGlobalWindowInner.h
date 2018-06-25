@@ -365,6 +365,8 @@ public:
 
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
+  void NoteDOMContentLoaded();
+
   virtual nsresult FireDelayedDOMEvents() override;
 
   virtual nsresult SetNewDocument(nsIDocument *aDocument,

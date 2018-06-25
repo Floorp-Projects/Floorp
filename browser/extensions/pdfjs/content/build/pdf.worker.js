@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.602';
-var pdfjsBuild = '3b07147d';
+var pdfjsVersion = '2.0.625';
+var pdfjsBuild = 'e8b50883';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.602';
+    let workerVersion = '2.0.625';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -1363,11 +1363,6 @@ var Util = function UtilClosure() {
     romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
     var romanStr = romanBuf.join('');
     return lowerCase ? romanStr.toLowerCase() : romanStr;
-  };
-  Util.extendObj = function extendObj(obj1, obj2) {
-    for (var key in obj2) {
-      obj1[key] = obj2[key];
-    }
   };
   Util.inherit = function Util_inherit(sub, base, prototype) {
     sub.prototype = Object.create(base.prototype);
@@ -6466,14 +6461,36 @@ var XRef = function XRefClosure() {
       }
       trailerDict.assignXref(this);
       this.trailer = trailerDict;
-      var encrypt = trailerDict.get('Encrypt');
+      let encrypt;
+      try {
+        encrypt = trailerDict.get('Encrypt');
+      } catch (ex) {
+        if (ex instanceof _util.MissingDataException) {
+          throw ex;
+        }
+        (0, _util.warn)(`XRef.parse - Invalid "Encrypt" reference: "${ex}".`);
+      }
       if ((0, _primitives.isDict)(encrypt)) {
         var ids = trailerDict.get('ID');
         var fileId = ids && ids.length ? ids[0] : '';
         encrypt.suppressEncryption = true;
         this.encrypt = new _crypto.CipherTransformFactory(encrypt, fileId, this.pdfManager.password);
       }
-      if (!(this.root = trailerDict.get('Root'))) {
+      let root;
+      try {
+        root = trailerDict.get('Root');
+      } catch (ex) {
+        if (ex instanceof _util.MissingDataException) {
+          throw ex;
+        }
+        (0, _util.warn)(`XRef.parse - Invalid "Root" reference: "${ex}".`);
+      }
+      if ((0, _primitives.isDict)(root) && root.has('Pages')) {
+        this.root = root;
+      } else {
+        if (!recoveryMode) {
+          throw new _util.XRefParseException();
+        }
         throw new _util.FormatError('Invalid root reference');
       }
     },
@@ -6734,7 +6751,7 @@ var XRef = function XRefClosure() {
                 break;
               }
             }
-            startPos += contentLength;
+            startPos = endPos;
           }
           let content = buffer.subarray(position, position + contentLength);
           var xrefTagOffset = skipUntil(content, 0, xrefBytes);
@@ -6755,7 +6772,7 @@ var XRef = function XRefClosure() {
         this.startXRefQueue.push(xrefStms[i]);
         this.readXRef(true);
       }
-      var dict;
+      let trailerDict;
       for (i = 0, ii = trailers.length; i < ii; ++i) {
         stream.pos = trailers[i];
         var parser = new _parser.Parser(new _parser.Lexer(stream), true, this, true);
@@ -6763,16 +6780,29 @@ var XRef = function XRefClosure() {
         if (!(0, _primitives.isCmd)(obj, 'trailer')) {
           continue;
         }
-        dict = parser.getObj();
+        let dict = parser.getObj();
         if (!(0, _primitives.isDict)(dict)) {
+          continue;
+        }
+        let rootDict;
+        try {
+          rootDict = dict.get('Root');
+        } catch (ex) {
+          if (ex instanceof _util.MissingDataException) {
+            throw ex;
+          }
+          continue;
+        }
+        if (!(0, _primitives.isDict)(rootDict) || !rootDict.has('Pages')) {
           continue;
         }
         if (dict.has('ID')) {
           return dict;
         }
+        trailerDict = dict;
       }
-      if (dict) {
-        return dict;
+      if (trailerDict) {
+        return trailerDict;
       }
       throw new _util.InvalidPDFException('Invalid PDF structure');
     },
@@ -8115,7 +8145,7 @@ var Lexer = function LexerClosure() {
       var ch = this.currentChar;
       var eNotation = false;
       var divideBy = 0;
-      var sign = 1;
+      var sign = 0;
       if (ch === 0x2D) {
         sign = -1;
         ch = this.nextChar();
@@ -8123,10 +8153,7 @@ var Lexer = function LexerClosure() {
           ch = this.nextChar();
         }
       } else if (ch === 0x2B) {
-        ch = this.nextChar();
-      }
-      if (ch === 0x2E) {
-        divideBy = 10;
+        sign = 1;
         ch = this.nextChar();
       }
       if (ch === 0x0A || ch === 0x0D) {
@@ -8134,9 +8161,18 @@ var Lexer = function LexerClosure() {
           ch = this.nextChar();
         } while (ch === 0x0A || ch === 0x0D);
       }
+      if (ch === 0x2E) {
+        divideBy = 10;
+        ch = this.nextChar();
+      }
       if (ch < 0x30 || ch > 0x39) {
+        if (divideBy === 10 && sign === 0 && ((0, _util.isSpace)(ch) || ch === -1)) {
+          (0, _util.warn)('Lexer.getNumber - treating a single decimal point as zero.');
+          return 0;
+        }
         throw new _util.FormatError(`Invalid number: ${String.fromCharCode(ch)} (charCode ${ch})`);
       }
+      sign = sign || 1;
       var baseValue = ch - 0x30;
       var powerValue = 0;
       var powerValueSign = 1;
@@ -18802,7 +18838,7 @@ var OperatorList = function OperatorListClosure() {
       }
     },
     addOpList(opList) {
-      _util.Util.extendObj(this.dependencies, opList.dependencies);
+      Object.assign(this.dependencies, opList.dependencies);
       for (var i = 0, ii = opList.length; i < ii; i++) {
         this.addOp(opList.fnArray[i], opList.argsArray[i]);
       }

@@ -611,9 +611,25 @@ NullHttpChannel::GetChannelCreation(mozilla::TimeStamp *aChannelCreation)
 }
 
 NS_IMETHODIMP
+NullHttpChannel::SetChannelCreation(TimeStamp aValue) {
+  MOZ_DIAGNOSTIC_ASSERT(!aValue.IsNull());
+  TimeDuration adjust = aValue - mChannelCreationTimestamp;
+  mChannelCreationTimestamp = aValue;
+  mChannelCreationTime += (PRTime)adjust.ToMicroseconds();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetAsyncOpen(mozilla::TimeStamp *aAsyncOpen)
 {
   *aAsyncOpen = mAsyncOpenTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetAsyncOpen(TimeStamp aValue) {
+  MOZ_DIAGNOSTIC_ASSERT(!aValue.IsNull());
+  mAsyncOpenTime = aValue;
   return NS_OK;
 }
 

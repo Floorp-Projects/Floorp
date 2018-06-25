@@ -24,6 +24,8 @@ class TestTracer : public JS::CallbackTracer
 
     explicit TestTracer(JSContext* cx)
       : JS::CallbackTracer(cx),
+        expectedCell(nullptr),
+        expectedKind(static_cast<JS::TraceKind>(0)),
         found(false)
     { }
 };

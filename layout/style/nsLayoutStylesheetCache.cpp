@@ -756,8 +756,8 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
   nsZipArchive::sFileCorruptedReason = nullptr;
 
   // Note: The parallel parsing code assume that UA sheets are always loaded
-  // synchrously like they are here, and thus that we'll never attempt parallel
-  // parsing on them. If that ever changes, we'll either need to find a
+  // synchronously like they are here, and thus that we'll never attempt
+  // parallel parsing on them. If that ever changes, we'll either need to find a
   // different way to prohibit parallel parsing for UA sheets, or handle
   // -moz-bool-pref and various other things in the parallel parsing code.
   nsresult rv = gCSSLoader->LoadSheetSync(aURI, aParsingMode, true, aSheet);
