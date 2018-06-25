@@ -47,7 +47,6 @@ protected:
 
   struct State;
   class StateRestorer;
-  nsIContent* GetBlockParent(nsINode* aNode);
 
   // Move in the right direction for our search:
   nsresult NextNode(State&,
