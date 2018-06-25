@@ -626,7 +626,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
         'skia/src/ports/SkFontHost_FreeType_common.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    if CONFIG['CC_TYPE'] != 'gcc':
+    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):
         SOURCES += [
             'skia/src/jumper/SkJumper_generated_win.S',
         ]
@@ -742,7 +742,7 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    if CONFIG['CC_TYPE'] == 'gcc':
+    if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
         DEFINES['SK_JUMPER_USE_ASSEMBLY'] = 0
     elif CONFIG['CPU_ARCH'] == 'x86':
         SOURCES['skia/src/jumper/SkJumper_generated_win.S'].flags += ['-safeseh']
