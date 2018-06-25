@@ -1050,16 +1050,10 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
     return nullptr;
 
   nsIContent* content = aNode->AsContent();
-  if (aria::HasDefinedARIAHidden(content)) {
-    if (aIsSubtreeHidden) {
-      *aIsSubtreeHidden = true;
-    }
-    return nullptr;
-  }
+  nsIFrame* frame = content->GetPrimaryFrame();
 
   // Check frame and its visibility. Note, hidden frame allows visible
   // elements in subtree.
-  nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame || !frame->StyleVisibility()->IsVisible()) {
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
