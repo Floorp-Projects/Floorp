@@ -840,7 +840,6 @@ nsFind::PeekNextChar(nsRange* aSearchRange,
   PeekNextCharRestoreState restoreState(this);
 
   nsCOMPtr<nsIContent> tc;
-  nsresult rv;
   const nsTextFragment *frag;
   int32_t fragLen;
 
@@ -853,9 +852,8 @@ nsFind::PeekNextChar(nsRange* aSearchRange,
     tc = do_QueryInterface(mIterNode);
 
     // Get the block parent.
-    nsCOMPtr<nsINode> blockParent;
-    rv = GetBlockParent(mIterNode, getter_AddRefs(blockParent));
-    if (NS_FAILED(rv))
+    nsIContent* blockParent = GetBlockParent(mIterNode);
+    if (!blockParent)
       return L'\0';
 
     // If out of nodes or in new parent.
@@ -881,19 +879,21 @@ nsFind::PeekNextChar(nsRange* aSearchRange,
   return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
 }
 
-nsresult
-nsFind::GetBlockParent(nsINode* aNode, nsINode** aParent)
+nsIContent*
+nsFind::GetBlockParent(nsINode* aNode)
 {
-  nsINode* curNode = aNode;
-  while (curNode) {
-    nsIContent* parent = curNode->GetParent();
-    if (parent && IsBlockNode(parent)) {
-      *aParent = do_AddRef(parent).take();
-      return NS_OK;
-    }
-    curNode = parent;
+  if (!aNode) {
+    return nullptr;
   }
-  return NS_ERROR_FAILURE;
+  // FIXME(emilio): This should use GetFlattenedTreeParent instead to properly
+  // handle Shadow DOM.
+  for (nsIContent* current = aNode->GetParent(); current;
+       current = current->GetParent()) {
+    if (IsBlockNode(current)) {
+      return current;
+    }
+  }
+  return nullptr;
 }
 
 // Call ResetAll before returning, to remove all references to external objects.
@@ -1004,10 +1004,9 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
       // We have a new text content. If its block parent is different from the
       // block parent of the last text content, then we need to clear the match
       // since we don't want to find across block boundaries.
-      nsCOMPtr<nsINode> blockParent;
-      GetBlockParent(mIterNode, getter_AddRefs(blockParent));
+      nsIContent* blockParent = GetBlockParent(mIterNode);
       DEBUG_FIND_PRINTF("New node: old blockparent = %p, new = %p\n",
-                        (void*)mLastBlockParent.get(), (void*)blockParent.get());
+                        (void*)mLastBlockParent.get(), (void*)blockParent);
       if (blockParent != mLastBlockParent) {
         DEBUG_FIND_PRINTF("Different block parent!\n");
         mLastBlockParent = blockParent;
