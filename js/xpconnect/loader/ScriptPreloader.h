@@ -397,11 +397,6 @@ private:
     void MaybeFinishOffThreadDecode();
     void DoFinishOffThreadDecode();
 
-    // Returns the global scope object for off-thread compilation. When global
-    // sharing is enabled in the component loader, this should be the shared
-    // module global. Otherwise, it should be the XPConnect compilation scope.
-    JSObject* CompilationScope(JSContext* cx);
-
     size_t ShallowHeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
     {
         return (mallocSizeOf(this) + mScripts.ShallowSizeOfExcludingThis(mallocSizeOf) +
