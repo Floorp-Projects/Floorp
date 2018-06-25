@@ -205,8 +205,7 @@ function* testRichListbox(id)
 
 function* testArrowScrollbox(id)
 {
-  var scrollbox = document.getElementById(id);
-  var scrollBoxObject = scrollbox.scrollBoxObject;
+  var scrollbox = document.getElementById(id)._scrollbox;
   var orient = scrollbox.getAttribute("orient");
 
   function* helper(aStart, aDelta, aDeltaMode, aExpected)
@@ -214,15 +213,15 @@ function* testArrowScrollbox(id)
     var lineOrPageDelta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? aDelta / 10 : aDelta;
     var orientIsHorizontal = (orient == "horizontal");
 
-    scrollBoxObject.scrollTo(aStart, aStart);
+    scrollbox.scrollTo(aStart, aStart);
     for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
       // Note, vertical mouse scrolling is allowed to scroll horizontal
       // arrowscrollboxes, because many users have no horizontal mouse scroll
       // capability
       let expected = !i ? aExpected : aStart;
       let getPos = ()=>{
-        return orientIsHorizontal ? scrollBoxObject.positionX :
-                                    scrollBoxObject.positionY;
+        return orientIsHorizontal ? scrollbox.scrollLeft :
+                                    scrollbox.scrollTop;
       };
       let oldPos = -1;
       let retry = 0;
@@ -265,14 +264,14 @@ function* testArrowScrollbox(id)
       }
     }
 
-    scrollBoxObject.scrollTo(aStart, aStart);
+    scrollbox.scrollTo(aStart, aStart);
     for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
       // horizontal mouse scrolling is never allowed to scroll vertical
       // arrowscrollboxes
       let expected = (!i && orientIsHorizontal) ? aExpected : aStart;
       let getPos = ()=>{
-        return orientIsHorizontal ? scrollBoxObject.positionX :
-                                    scrollBoxObject.positionY;
+        return orientIsHorizontal ? scrollbox.scrollLeft :
+                                    scrollbox.scrollTop;
       };
       let oldPos = -1;
       let retry = 0;
@@ -316,10 +315,10 @@ function* testArrowScrollbox(id)
     }
   }
 
-  var scrolledWidth = scrollBoxObject.scrolledWidth;
-  var scrolledHeight = scrollBoxObject.scrolledHeight;
-  var scrollMaxX = scrolledWidth - scrollBoxObject.width;
-  var scrollMaxY = scrolledHeight - scrollBoxObject.height;
+  var scrolledWidth = scrollbox.scrollWidth;
+  var scrolledHeight = scrollbox.scrollHeight;
+  var scrollMaxX = scrolledWidth - scrollbox.boxObject.width;
+  var scrollMaxY = scrolledHeight - scrollbox.boxObject.height;
   var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
 
   for (let i = 0; i < deltaModes.length; i++) {
