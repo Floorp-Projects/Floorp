@@ -4488,8 +4488,10 @@ class TabProgressListener {
     if (!this._shouldShowProgress(aRequest))
       return;
 
-    if (this.mTotalProgress && this.mTab.hasAttribute("busy"))
+    if (this.mTotalProgress && this.mTab.hasAttribute("busy")) {
       this.mTab.setAttribute("progress", "true");
+      gBrowser._tabAttrModified(this.mTab, ["progress"]);
+    }
 
     this._callProgressListeners("onProgressChange",
                                 [aWebProgress, aRequest,
@@ -4576,6 +4578,7 @@ class TabProgressListener {
         if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) &&
             aWebProgress && aWebProgress.isTopLevel) {
           this.mTab.setAttribute("busy", "true");
+          gBrowser._tabAttrModified(this.mTab, ["busy"]);
           this.mTab._notselectedsinceload = !this.mTab.selected;
           SchedulePressure.startMonitoring(window, {
             highPressureFn() {
@@ -4613,8 +4616,10 @@ class TabProgressListener {
     } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
 
+      let modifiedAttrs = [];
       if (this.mTab.hasAttribute("busy")) {
         this.mTab.removeAttribute("busy");
+        modifiedAttrs.push("busy");
         if (!document.querySelector(".tabbrowser-tab[busy]")) {
           SchedulePressure.stopMonitoring(window);
           gBrowser.tabContainer.removeAttribute("schedulepressure");
@@ -4634,10 +4639,16 @@ class TabProgressListener {
 
           this.mTab.setAttribute("bursting", "true");
         }
-
-        gBrowser._tabAttrModified(this.mTab, ["busy"]);
       }
-      this.mTab.removeAttribute("progress");
+
+      if (this.mTab.hasAttribute("progress")) {
+        this.mTab.removeAttribute("progress");
+        modifiedAttrs.push("progress");
+      }
+
+      if (modifiedAttrs.length) {
+        gBrowser._tabAttrModified(this.mTab, modifiedAttrs);
+      }
 
       if (aWebProgress.isTopLevel) {
         let isSuccessful = Components.isSuccessCode(aStatus);
