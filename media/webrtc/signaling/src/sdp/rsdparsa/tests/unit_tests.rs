@@ -5,6 +5,7 @@ fn parse_minimal_sdp() {
     let sdp = "v=0\r\n
 o=- 0 0 IN IP4 0.0.0.0\r\n
 s=-\r\n
+c=IN IP4 0.0.0.0\r\n
 t=0 0\r\n
 m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
     let sdp_res = rsdparsa::parse_sdp(sdp, true);
@@ -14,7 +15,7 @@ m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
     let sdp = sdp_opt.unwrap();
     assert_eq!(sdp.version, 0);
     assert_eq!(sdp.session, "-");
-    assert!(sdp.connection.is_none());
+    assert!(sdp.connection.is_some());
     assert_eq!(sdp.attribute.len(), 0);
     assert_eq!(sdp.media.len(), 1);
 
@@ -37,6 +38,7 @@ fn parse_minimal_sdp_with_emtpy_lines() {
 o=- 0 0 IN IP4 0.0.0.0\r\n
  \r\n
 s=-\r\n
+c=IN IP4 0.0.0.0\r\n
 t=0 0\r\n
 m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n";
     let sdp_res = rsdparsa::parse_sdp(sdp, false);
