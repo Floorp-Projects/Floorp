@@ -49,8 +49,8 @@ protected:
   nsCOMPtr<nsINode> mIterNode;
 
   // Last block parent, so that we will notice crossing block boundaries:
-  nsCOMPtr<nsINode> mLastBlockParent;
-  nsresult GetBlockParent(nsINode* aNode, nsINode** aParent);
+  nsCOMPtr<nsIContent> mLastBlockParent;
+  nsIContent* GetBlockParent(nsINode* aNode);
 
   // Move in the right direction for our search:
   nsresult NextNode(nsRange* aSearchRange,
