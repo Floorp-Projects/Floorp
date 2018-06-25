@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check extension-added tab actor lifetimes.
+ * Check target-scoped actor lifetimes.
  */
 
 const ACTORS_URL = CHROME_URL + "testactors.js";
@@ -25,8 +25,8 @@ function test() {
       "Root actor should identify itself as a browser.");
 
     addTab(TAB_URL)
-      .then(() => attachTabActorForUrl(gClient, TAB_URL))
-      .then(testTabActor)
+      .then(() => attachTargetActorForUrl(gClient, TAB_URL))
+      .then(testTargetScopedActor)
       .then(closeTab)
       .then(() => gClient.close())
       .then(finish)
@@ -36,26 +36,40 @@ function test() {
   });
 }
 
-function testTabActor([aGrip, aResponse]) {
+function testTargetScopedActor([aGrip, aResponse]) {
   let deferred = promise.defer();
 
-  ok(aGrip.testTabActor1,
-    "Found the test tab actor.");
-  ok(aGrip.testTabActor1.includes("test_one"),
-    "testTabActor1's actorPrefix should be used.");
+  ok(aGrip.testTargetScopedActor1,
+    "Found the test target-scoped actor.");
+  ok(aGrip.testTargetScopedActor1.includes("test_one"),
+    "testTargetScopedActor1's actorPrefix should be used.");
 
-  gClient.request({ to: aGrip.testTabActor1, type: "ping" }, aResponse => {
+  gClient.request({ to: aGrip.testTargetScopedActor1, type: "ping" }, aResponse => {
     is(aResponse.pong, "pong",
       "Actor should respond to requests.");
 
-    deferred.resolve();
+    deferred.resolve(aResponse.actor);
   });
 
   return deferred.promise;
 }
 
-function closeTab() {
-  return removeTab(gBrowser.selectedTab);
+function closeTab(aTestActor) {
+  return removeTab(gBrowser.selectedTab).then(() => {
+    let deferred = promise.defer();
+
+    try {
+      gClient.request({ to: aTestActor, type: "ping" }, aResponse => {
+        ok(false, "testTargetScopedActor1 didn't go away with the tab.");
+        deferred.reject(aResponse);
+      });
+    } catch (e) {
+      is(e.message, "'ping' request packet has no destination.", "testTargetScopedActor1 went away.");
+      deferred.resolve();
+    }
+
+    return deferred.promise;
+  });
 }
 
 registerCleanupFunction(function () {

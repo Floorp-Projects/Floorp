@@ -13,8 +13,8 @@ loader.lazyRequireGetter(this, "StackFrameCache",
 
 /**
  * An actor that returns memory usage data for its parent actor's window.
- * A tab-scoped instance of this actor will measure the memory footprint of its
- * parent tab. A global-scoped instance however, will measure the memory
+ * A target-scoped instance of this actor will measure the memory footprint of
+ * the target, such as a tab. A global-scoped instance however, will measure the memory
  * footprint of the chrome window referenced by the root actor.
  *
  * This actor wraps the Memory module at devtools/server/performance/memory.js

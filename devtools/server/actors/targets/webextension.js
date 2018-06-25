@@ -47,7 +47,7 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  * process if the extension is running in non-oop mode, or the child extension process
  * if the extension is running in oop-mode).
  *
- * A WebExtensionTargetActor contains all tab actors, like a regular
+ * A WebExtensionTargetActor contains all target-scoped actors, like a regular
  * ParentProcessTargetActor or BrowsingContextTargetActor.
  *
  * History lecture:

@@ -107,10 +107,9 @@ const browsingContextTargetPrototype = {
    * objects are presented to the user".  In Gecko, this means a browsing context
    * is a `docShell`.
    *
-   * TODO: Bug 1465637: Rename "tab" actors to something else.
-   * The main goal of this class is to expose the tab actors being registered via
-   * `DebuggerServer.registerModule` and manage their lifetimes.  In addition,
-   * this class also tracks the lifetime of the targeted browsing context.
+   * The main goal of this class is to expose the target-scoped actors being registered
+   * via `DebuggerServer.registerModule` and manage their lifetimes. In addition, this
+   * class also tracks the lifetime of the targeted browsing context.
    *
    * ### Main requests:
    *
@@ -122,7 +121,7 @@ const browsingContextTargetPrototype = {
    *    Instantiates a ThreadActor that can be later attached to in order to
    *    debug JS sources in the document.
    * `switchToFrame`:
-   *  Change the targeted document of the whole actor, and its child tab actors
+   *  Change the targeted document of the whole actor, and its child target-scoped actors
    *  to an iframe or back to its original document.
    *
    * Most properties (like `chromeEventHandler` or `docShells`) are meant to be
@@ -219,7 +218,6 @@ const browsingContextTargetPrototype = {
   initialize: function(connection) {
     Actor.prototype.initialize.call(this, connection);
 
-    this._tabActorPool = null;
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
     this._exited = false;
@@ -291,15 +289,8 @@ const browsingContextTargetPrototype = {
     return this.conn._getOrCreateActor(form.consoleActor);
   },
 
-  _tabPool: null,
-  get tabActorPool() {
-    return this._tabPool;
-  },
-
+  _targetScopedActorPool: null,
   _contextPool: null,
-  get contextActorPool() {
-    return this._contextPool;
-  },
 
   /**
    * A constant prefix that will be used to form the actor ID by the server.
@@ -491,16 +482,15 @@ const browsingContextTargetPrototype = {
 
     // Always use the same ActorPool, so existing actor instances
     // (created in createExtraActors) are not lost.
-    if (!this._tabActorPool) {
-      this._tabActorPool = new ActorPool(this.conn);
-      this.conn.addActorPool(this._tabActorPool);
+    if (!this._targetScopedActorPool) {
+      this._targetScopedActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._targetScopedActorPool);
     }
 
-    // Walk over tab actor factories and make sure they are all
-    // instantiated and added into the ActorPool. Note that some
-    // factories can be added dynamically by extensions.
-    this._createExtraActors(DebuggerServer.tabActorFactories,
-      this._tabActorPool);
+    // Walk over target-scoped actor factories and make sure they are all
+    // instantiated and added into the ActorPool.
+    this._createExtraActors(DebuggerServer.targetScopedActorFactories,
+      this._targetScopedActorPool);
 
     this._appendExtraActors(response);
     return response;
@@ -576,7 +566,7 @@ const browsingContextTargetPrototype = {
     return false;
   },
 
-  /* Support for DebuggerServer.addTabActor. */
+  /* Support for DebuggerServer.addTargetScopedActor. */
   _createExtraActors: createExtraActors,
   _appendExtraActors: appendExtraActors,
 
@@ -588,12 +578,7 @@ const browsingContextTargetPrototype = {
       return;
     }
 
-    // Create a pool for tab-lifetime actors.
-    assert(!this._tabPool, "Shouldn't have a tab pool if we weren't attached.");
-    this._tabPool = new ActorPool(this.conn);
-    this.conn.addActorPool(this._tabPool);
-
-    // ... and a pool for context-lifetime actors.
+    // Create a pool for context-lifetime actors.
     this._pushContext();
 
     // on xpcshell, there is no document
@@ -928,16 +913,11 @@ const browsingContextTargetPrototype = {
 
     this._popContext();
 
-    // Shut down actors that belong to this tab's pool.
-    for (const sheetActor of this._styleSheetActors.values()) {
-      this._tabPool.removeActor(sheetActor);
-    }
+    // Shut down actors that belong to this target's pool.
     this._styleSheetActors.clear();
-    this.conn.removeActorPool(this._tabPool);
-    this._tabPool = null;
-    if (this._tabActorPool) {
-      this.conn.removeActorPool(this._tabActorPool);
-      this._tabActorPool = null;
+    if (this._targetScopedActorPool) {
+      this.conn.removeActorPool(this._targetScopedActorPool);
+      this._targetScopedActorPool = null;
     }
 
     // Make sure that no more workerListChanged notifications are sent.
@@ -1477,7 +1457,7 @@ const browsingContextTargetPrototype = {
     const actor = new StyleSheetActor(styleSheet, this);
     this._styleSheetActors.set(styleSheet, actor);
 
-    this._tabPool.addActor(actor);
+    this._targetScopedActorPool.addActor(actor);
     this.emit("stylesheet-added", actor);
 
     return actor;
@@ -1486,8 +1466,8 @@ const browsingContextTargetPrototype = {
   removeActorByName(name) {
     if (name in this._extraActors) {
       const actor = this._extraActors[name];
-      if (this._tabActorPool.has(actor)) {
-        this._tabActorPool.removeActor(actor);
+      if (this._targetScopedActorPool.has(actor)) {
+        this._targetScopedActorPool.removeActor(actor);
       }
       delete this._extraActors[name];
     }
