@@ -455,6 +455,10 @@ public class WebAppActivity extends AppCompatActivity
         throw new IllegalStateException("Unexpected new session");
     }
 
+    public void onLoadError(final GeckoSession session, final String urlStr,
+                            final int category, final int error) {
+    }
+
     private void updateFullScreen() {
         boolean fullScreen = mIsFullScreenContent || mIsFullScreenMode;
         if (ActivityUtils.isFullScreen(this) == fullScreen) {
