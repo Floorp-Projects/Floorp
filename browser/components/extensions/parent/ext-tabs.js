@@ -76,7 +76,7 @@ let tabListener = {
   },
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
-    if (webProgress.isTopLevel) {
+    if (webProgress.isTopLevel && locationURI.spec !== "about:blank") {
       let {gBrowser} = browser.ownerGlobal;
       let nativeTab = gBrowser.getTabForBrowser(browser);
 
@@ -596,7 +596,9 @@ this.tabs = class extends ExtensionAPI {
               window.focusAndSelectUrlBar();
             }
 
-            if (createProperties.url && createProperties.url !== window.BROWSER_NEW_TAB_URL) {
+            if (createProperties.url &&
+                createProperties.url !== "about:blank" &&
+                createProperties.url !== window.BROWSER_NEW_TAB_URL) {
               // We can't wait for a location change event for about:newtab,
               // since it may be pre-rendered, in which case its initial
               // location change event has already fired.
