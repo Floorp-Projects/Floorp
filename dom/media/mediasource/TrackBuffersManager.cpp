@@ -286,8 +286,11 @@ TrackBuffersManager::ProcessTasks()
       mType = task->As<ChangeTypeTask>()->mType;
       mChangeTypeReceived = true;
       mInitData = nullptr;
+      // A new input buffer will be created once we receive a new init segment.
+      // The first segment received after a changeType call must be an init
+      // segment.
+      mCurrentInputBuffer = nullptr;
       CompleteResetParserState();
-      CreateDemuxerforMIMEType();
       break;
     default:
       NS_WARNING("Invalid Task");
