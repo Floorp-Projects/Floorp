@@ -14,6 +14,8 @@
 
 namespace js {
 
+class AutoLockHelperThreadState;
+
 // A generic task used to dispatch work to the helper thread system.
 // Users supply a function pointer to call.
 //
