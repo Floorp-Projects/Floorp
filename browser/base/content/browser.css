@@ -206,7 +206,7 @@ panelview[mainview] > .panel-header {
 @supports -moz-bool-pref("browser.tabs.hideThrobber") {
   .tab-throbber,
   .tab-throbber-fallback {
-    display: none;
+    display: none !important;
   }
 }
 %endif
