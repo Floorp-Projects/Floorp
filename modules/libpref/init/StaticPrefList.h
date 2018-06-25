@@ -884,6 +884,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+VARCACHE_PREF(
+  "media.autoplay.block-event.enabled",
+   MediaBlockEventEnabled,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Network prefs
 //---------------------------------------------------------------------------
