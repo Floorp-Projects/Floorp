@@ -7,6 +7,7 @@
 #include "ServiceWorkerRegisterJob.h"
 
 #include "mozilla/dom/WorkerCommon.h"
+#include "ServiceWorkerManager.h"
 
 namespace mozilla {
 namespace dom {

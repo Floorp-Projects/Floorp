@@ -245,7 +245,7 @@ class ADBCommand(object):
 
         start_time = time.time()
         adb_process.exitcode = adb_process.proc.poll()
-        while ((time.time() - start_time) <= timeout and
+        while ((time.time() - start_time) <= float(timeout) and
                adb_process.exitcode is None):
             time.sleep(self._polling_interval)
             adb_process.exitcode = adb_process.proc.poll()
@@ -1060,7 +1060,7 @@ class ADBDevice(ADBCommand):
             line = ''
             default_alarm_handler = signal.getsignal(signal.SIGALRM)
             signal.signal(signal.SIGALRM, _timed_read_line_handler)
-            signal.alarm(timeout)
+            signal.alarm(int(timeout))
             try:
                 line = filehandle.readline()
             finally:
@@ -1105,12 +1105,12 @@ class ADBDevice(ADBCommand):
         start_time = time.time()
         exitcode = adb_process.proc.poll()
         if not stdout_callback:
-            while ((time.time() - start_time) <= timeout) and exitcode is None:
+            while ((time.time() - start_time) <= float(timeout)) and exitcode is None:
                 time.sleep(self._polling_interval)
                 exitcode = adb_process.proc.poll()
         else:
             stdout2 = open(adb_process.stdout_file.name, 'rb')
-            while ((time.time() - start_time) <= timeout) and exitcode is None:
+            while ((time.time() - start_time) <= float(timeout)) and exitcode is None:
                 try:
                     line = _timed_read_line(stdout2)
                     if line and len(line) > 0:

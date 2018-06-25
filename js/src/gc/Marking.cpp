@@ -269,8 +269,7 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
      * IsThingPoisoned would be racy in this case.
      */
     MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy() &&
-                  !zone->isGCCompacting() &&
-                  !rt->gc.isBackgroundSweeping(),
+                  !zone->isGCSweeping() && !zone->isGCFinished() && !zone->isGCCompacting(),
                   !IsThingPoisoned(thing) || !InFreeList(thing->asTenured().arena(), thing));
 #endif
 }

@@ -375,7 +375,7 @@ void
 StructuredCloneData::CopyFromClonedMessageDataForBackgroundParent(const ClonedMessageData& aClonedData)
 {
   MOZ_ASSERT(IsOnBackgroundThread());
-  UnpackClonedMessageData<BorrowMemory, Parent>(aClonedData, *this);
+  UnpackClonedMessageData<CopyMemory, Parent>(aClonedData, *this);
 }
 
 void
@@ -461,6 +461,12 @@ StructuredCloneData::StealExternalData(JSStructuredCloneData& aData)
   mSharedData = new SharedJSAllocatedData(std::move(aData));
   mInitialized = true;
   return true;
+}
+
+already_AddRefed<SharedJSAllocatedData>
+StructuredCloneData::TakeSharedData()
+{
+  return mSharedData.forget();
 }
 
 } // namespace ipc

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTableElement.h"
-#include "mozilla/GenericSpecifiedValuesInlines.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
@@ -932,7 +932,7 @@ HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        GenericSpecifiedValues* aData)
+                                        MappedDeclarations& aDecls)
 {
   // XXX Bug 211636:  This function is used by a single style rule
   // that's used to match two different type of elements -- tables, and
@@ -944,13 +944,13 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 
-  nsCompatibility mode = aData->Document()->GetCompatibilityMode();
+  nsCompatibility mode = aDecls.Document()->GetCompatibilityMode();
 
   // cellspacing
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellspacing);
   if (value && value->Type() == nsAttrValue::eInteger &&
-      !aData->PropertyIsSet(eCSSProperty_border_spacing)) {
-    aData->SetPixelValue(eCSSProperty_border_spacing, float(value->GetIntegerValue()));
+      !aDecls.PropertyIsSet(eCSSProperty_border_spacing)) {
+    aDecls.SetPixelValue(eCSSProperty_border_spacing, float(value->GetIntegerValue()));
   }
   // align; Check for enumerated type (it may be another type if
   // illegal)
@@ -958,8 +958,8 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (value && value->Type() == nsAttrValue::eEnum) {
     if (value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_CENTER ||
         value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
-      aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
-      aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
+      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
+      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
     }
   }
 
@@ -970,25 +970,25 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     value = aAttributes->GetAttr(nsGkAtoms::hspace);
 
     if (value && value->Type() == nsAttrValue::eInteger) {
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)value->GetIntegerValue());
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)value->GetIntegerValue());
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left, (float)value->GetIntegerValue());
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right, (float)value->GetIntegerValue());
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::vspace);
 
     if (value && value->Type() == nsAttrValue::eInteger) {
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)value->GetIntegerValue());
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)value->GetIntegerValue());
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top, (float)value->GetIntegerValue());
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)value->GetIntegerValue());
     }
   }
   // bordercolor
   value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
   nscolor color;
   if (value && value->GetColorValue(color)) {
-    aData->SetColorValueIfUnset(eCSSProperty_border_top_color, color);
-    aData->SetColorValueIfUnset(eCSSProperty_border_left_color, color);
-    aData->SetColorValueIfUnset(eCSSProperty_border_bottom_color, color);
-    aData->SetColorValueIfUnset(eCSSProperty_border_right_color, color);
+    aDecls.SetColorValueIfUnset(eCSSProperty_border_top_color, color);
+    aDecls.SetColorValueIfUnset(eCSSProperty_border_left_color, color);
+    aDecls.SetColorValueIfUnset(eCSSProperty_border_bottom_color, color);
+    aDecls.SetColorValueIfUnset(eCSSProperty_border_right_color, color);
   }
 
   // border
@@ -1001,15 +1001,15 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       borderThickness = borderValue->GetIntegerValue();
 
     // by default, set all border sides to the specified width
-    aData->SetPixelValueIfUnset(eCSSProperty_border_top_width, (float)borderThickness);
-    aData->SetPixelValueIfUnset(eCSSProperty_border_left_width, (float)borderThickness);
-    aData->SetPixelValueIfUnset(eCSSProperty_border_bottom_width, (float)borderThickness);
-    aData->SetPixelValueIfUnset(eCSSProperty_border_right_width, (float)borderThickness);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width, (float)borderThickness);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width, (float)borderThickness);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, (float)borderThickness);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width, (float)borderThickness);
   }
 
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)
@@ -1047,7 +1047,7 @@ HTMLTableElement::GetAttributeMappingFunction() const
 
 static void
 MapInheritedTableAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    GenericSpecifiedValues* aData)
+                                    MappedDeclarations& aDecls)
 {
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellpadding);
   if (value && value->Type() == nsAttrValue::eInteger) {
@@ -1055,10 +1055,10 @@ MapInheritedTableAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // don't have any set.
     float pad = float(value->GetIntegerValue());
 
-    aData->SetPixelValueIfUnset(eCSSProperty_padding_top, pad);
-    aData->SetPixelValueIfUnset(eCSSProperty_padding_right, pad);
-    aData->SetPixelValueIfUnset(eCSSProperty_padding_bottom, pad);
-    aData->SetPixelValueIfUnset(eCSSProperty_padding_left, pad);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_top, pad);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_right, pad);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_bottom, pad);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_left, pad);
   }
 }
 

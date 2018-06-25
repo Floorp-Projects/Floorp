@@ -9,22 +9,6 @@
 
 interface nsIEditorStyleSheets : nsISupports
 {
-  /** Load and apply the style sheet, specified by aURL, to the
-    * editor's document, replacing the last style sheet added (if any).
-    * This is always asynchronous, and may cause network I/O.
-    *
-    * @param aURL The style sheet to be loaded and applied.
-    */
-  void replaceStyleSheet(in AString aURL);
-
-  /** Add the given style sheet to the editor's document,
-    * on top of any that are already there.
-    * This is always asynchronous, and may cause network I/O.
-    *
-    * @param aURL The style sheet to be loaded and applied.
-    */
-  void addStyleSheet(in AString aURL);
-
   /** Load and apply the override style sheet, specified by aURL, to the
     * editor's document, replacing the last override style sheet added (if any).
     * This is always synchronous, so aURL should be a local file with only
@@ -46,13 +30,6 @@ interface nsIEditorStyleSheets : nsISupports
     * @param aURL The style sheet to be loaded and applied.
     */
   void addOverrideStyleSheet(in AString aURL);
-
-  /** Remove the given style sheet from the editor's document
-    * This is always synchronous
-    *
-    * @param aURL The style sheet to be removed
-    */
-  void removeStyleSheet(in AString aURL);
 
   /** Remove the given override style sheet from the editor's document
     * This is always synchronous
