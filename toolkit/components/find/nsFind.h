@@ -53,8 +53,7 @@ protected:
   nsresult NextNode(State&,
                     nsRange* aSearchRange,
                     nsRange* aStartPoint,
-                    nsRange* aEndPoint,
-                    bool aContinueOk);
+                    nsRange* aEndPoint);
 
   // Get the first character from the next node (last if mFindBackward).
   //
