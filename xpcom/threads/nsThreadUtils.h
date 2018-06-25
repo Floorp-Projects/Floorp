@@ -418,7 +418,7 @@ private:
 
 // Cancelable runnable methods implement nsICancelableRunnable, and
 // Idle and IdleWithTimer also nsIIdleRunnable.
-enum RunnableKind
+enum class RunnableKind
 {
   Standard,
   Cancelable,
@@ -675,7 +675,7 @@ protected:
 };
 
 template <>
-class TimerBehaviour<IdleWithTimer>
+class TimerBehaviour<RunnableKind::IdleWithTimer>
 {
 public:
   nsITimer* GetTimer()
@@ -712,20 +712,20 @@ private:
 template<class ClassType,
          typename ReturnType = void,
          bool Owning = true,
-         mozilla::RunnableKind Kind = mozilla::Standard>
+         mozilla::RunnableKind Kind = mozilla::RunnableKind::Standard>
 class nsRunnableMethod
-  : public mozilla::Conditional<Kind == mozilla::Standard,
+  : public mozilla::Conditional<Kind == mozilla::RunnableKind::Standard,
                                 mozilla::Runnable,
                                 typename mozilla::Conditional<
-                                  Kind == mozilla::Cancelable,
+                                  Kind == mozilla::RunnableKind::Cancelable,
                                   mozilla::CancelableRunnable,
                                   mozilla::IdleRunnable>::Type>::Type,
     protected mozilla::detail::TimerBehaviour<Kind>
 {
-  using BaseType = typename mozilla::Conditional<Kind == mozilla::Standard,
+  using BaseType = typename mozilla::Conditional<Kind == mozilla::RunnableKind::Standard,
                                                  mozilla::Runnable,
                                                  typename mozilla::Conditional<
-                                                   Kind == mozilla::Cancelable,
+                                                   Kind == mozilla::RunnableKind::Cancelable,
                                                    mozilla::CancelableRunnable,
                                                    mozilla::IdleRunnable>::Type>::Type;
 public:
@@ -775,7 +775,8 @@ struct nsRunnableMethodReceiver<ClassType, false>
 static inline constexpr bool
 IsIdle(mozilla::RunnableKind aKind)
 {
-  return aKind == mozilla::Idle || aKind == mozilla::IdleWithTimer;
+  return aKind == mozilla::RunnableKind::Idle ||
+         aKind == mozilla::RunnableKind::IdleWithTimer;
 }
 
 template<typename PtrType, typename Method, bool Owning, mozilla::RunnableKind Kind>
@@ -789,7 +790,7 @@ struct nsRunnableMethodTraits<PtrType, R(C::*)(As...), Owning, Kind>
                 "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
-  static const bool can_cancel = Kind == mozilla::Cancelable;
+  static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 template<typename PtrType, class C, typename R, bool Owning, mozilla::RunnableKind Kind, typename... As>
@@ -800,7 +801,7 @@ struct nsRunnableMethodTraits<PtrType, R(C::*)(As...) const, Owning, Kind>
                 "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
-  static const bool can_cancel = Kind == mozilla::Cancelable;
+  static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 #ifdef NS_HAVE_STDCALL
@@ -812,7 +813,7 @@ struct nsRunnableMethodTraits<PtrType, R(__stdcall C::*)(As...), Owning, Kind>
                 "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
-  static const bool can_cancel = Kind == mozilla::Cancelable;
+  static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 template<typename PtrType, class C, typename R, bool Owning, mozilla::RunnableKind Kind>
@@ -823,7 +824,7 @@ struct nsRunnableMethodTraits<PtrType, R(NS_STDCALL C::*)(), Owning, Kind>
                 "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
-  static const bool can_cancel = Kind == mozilla::Cancelable;
+  static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 template<typename PtrType, class C, typename R, bool Owning, mozilla::RunnableKind Kind, typename... As>
@@ -834,7 +835,7 @@ struct nsRunnableMethodTraits<PtrType, R(__stdcall C::*)(As...) const, Owning, K
                 "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
-  static const bool can_cancel = Kind == mozilla::Cancelable;
+  static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 template<typename PtrType, class C, typename R, bool Owning, mozilla::RunnableKind Kind>
@@ -845,7 +846,7 @@ struct nsRunnableMethodTraits<PtrType, R(NS_STDCALL C::*)() const, Owning, Kind>
                 "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
-  static const bool can_cancel = Kind == mozilla::Cancelable;
+  static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 #endif
 
@@ -1221,7 +1222,7 @@ public:
 
   nsresult Cancel()
   {
-    static_assert(Kind >= Cancelable, "Don't use me!");
+    static_assert(Kind >= RunnableKind::Cancelable, "Don't use me!");
     Revoke();
     return NS_OK;
   }
@@ -1258,66 +1259,66 @@ public:
 // Type aliases for NewRunnableMethod.
 template<typename PtrType, typename Method>
 using OwningRunnableMethod = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, true, Standard>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::Standard>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using OwningRunnableMethodImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, true, Standard, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::Standard, Storages...>;
 
 // Type aliases for NewCancelableRunnableMethod.
 template<typename PtrType, typename Method>
 using CancelableRunnableMethod = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, true, Cancelable>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::Cancelable>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using CancelableRunnableMethodImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, true, Cancelable, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::Cancelable, Storages...>;
 
 // Type aliases for NewIdleRunnableMethod.
 template<typename PtrType, typename Method>
 using IdleRunnableMethod = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, true, Idle>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::Idle>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using IdleRunnableMethodImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, true, Idle, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::Idle, Storages...>;
 
 // Type aliases for NewIdleRunnableMethodWithTimer.
 template<typename PtrType, typename Method>
 using IdleRunnableMethodWithTimer = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, true, IdleWithTimer>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::IdleWithTimer>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using IdleRunnableMethodWithTimerImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, true, IdleWithTimer, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, true, RunnableKind::IdleWithTimer, Storages...>;
 
 // Type aliases for NewNonOwningRunnableMethod.
 template<typename PtrType, typename Method>
 using NonOwningRunnableMethod = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, false, Standard>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::Standard>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using NonOwningRunnableMethodImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, false, Standard, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::Standard, Storages...>;
 
 // Type aliases for NonOwningCancelableRunnableMethod
 template<typename PtrType, typename Method>
 using NonOwningCancelableRunnableMethod = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, false, Cancelable>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::Cancelable>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using NonOwningCancelableRunnableMethodImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, false, Cancelable, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::Cancelable, Storages...>;
 
 // Type aliases for NonOwningIdleRunnableMethod
 template<typename PtrType, typename Method>
 using NonOwningIdleRunnableMethod = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, false, Idle>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::Idle>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using NonOwningIdleRunnableMethodImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, false, Idle, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::Idle, Storages...>;
 
 // Type aliases for NewIdleRunnableMethodWithTimer.
 template<typename PtrType, typename Method>
 using NonOwningIdleRunnableMethodWithTimer = typename ::nsRunnableMethodTraits<
-  typename RemoveReference<PtrType>::Type, Method, false, IdleWithTimer>::base_type;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::IdleWithTimer>::base_type;
 template<typename PtrType, typename Method, typename... Storages>
 using NonOwningIdleRunnableMethodWithTimerImpl = RunnableMethodImpl<
-  typename RemoveReference<PtrType>::Type, Method, false, IdleWithTimer, Storages...>;
+  typename RemoveReference<PtrType>::Type, Method, false, RunnableKind::IdleWithTimer, Storages...>;
 
 } // namespace detail
 
