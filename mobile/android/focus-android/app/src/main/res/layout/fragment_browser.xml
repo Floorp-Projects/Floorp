@@ -38,7 +38,8 @@
                     android:id="@+id/webview"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scrollbarThumbVertical="@drawable/scrollbar_thumb" />
+                    android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
             </android.support.v4.widget.SwipeRefreshLayout>
 
@@ -84,6 +85,7 @@
                 android:layout_width="match_parent"
                 android:layout_gravity="bottom"
                 android:visibility="gone"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 app:layout_insetEdge="bottom"/>
         </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>
     </LinearLayout>
