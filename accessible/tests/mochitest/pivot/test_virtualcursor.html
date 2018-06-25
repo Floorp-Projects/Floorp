@@ -44,7 +44,7 @@
       };
 
       queueTraversalSequence(gQueue, docAcc, HeadersTraversalRule, null,
-                             ["heading-1-1", "heading-2-1", "heading-2-2"]);
+                             ["heading-1-1", "heading-2-2"]);
 
       queueTraversalSequence(
         gQueue, docAcc, ObjectTraversalRule, null,
@@ -93,13 +93,7 @@
       gQueue.push(new setModalRootInvoker(docAcc, docAcc.parent,
                                           NS_ERROR_INVALID_ARG));
 
-      // Put cursor in an ignored subtree
-      // set isFromUserInput to false, just to test..
-      gQueue.push(new setVCPosInvoker(docAcc, null, null,
-                                      getAccessible(doc.getElementById("hidden-link")),
-                                      false));
-      // Next item shoud be outside of that subtree
-      gQueue.push(new setVCPosInvoker(docAcc, "moveNext", ObjectTraversalRule, "An "));
+      gQueue.push(new setVCPosInvoker(docAcc, "moveNext", ObjectTraversalRule, "dolor"));
 
       gQueue.invoke();
     }
