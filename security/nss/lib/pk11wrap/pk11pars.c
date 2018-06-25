@@ -109,6 +109,7 @@ secmod_NewModule(void)
                                                  *other flags are set */
 #define SECMOD_FLAG_MODULE_DB_SKIP_FIRST 0x02
 #define SECMOD_FLAG_MODULE_DB_DEFAULT_MODDB 0x04
+#define SECMOD_FLAG_MODULE_DB_POLICY_ONLY 0x08
 
 /* private flags for internal (field in SECMODModule). */
 /* The meaing of these flags is as follows:
@@ -703,6 +704,9 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
         if (NSSUTIL_ArgHasFlag("flags", "defaultModDB", nssc)) {
             flags |= SECMOD_FLAG_MODULE_DB_DEFAULT_MODDB;
         }
+        if (NSSUTIL_ArgHasFlag("flags", "policyOnly", nssc)) {
+            flags |= SECMOD_FLAG_MODULE_DB_POLICY_ONLY;
+        }
         /* additional moduleDB flags could be added here in the future */
         mod->isModuleDB = (PRBool)flags;
     }
@@ -740,6 +744,14 @@ SECMOD_GetDefaultModDBFlag(SECMODModule *mod)
     char flags = (char)mod->isModuleDB;
 
     return (flags & SECMOD_FLAG_MODULE_DB_DEFAULT_MODDB) ? PR_TRUE : PR_FALSE;
+}
+
+PRBool
+secmod_PolicyOnly(SECMODModule *mod)
+{
+    char flags = (char)mod->isModuleDB;
+
+    return (flags & SECMOD_FLAG_MODULE_DB_POLICY_ONLY) ? PR_TRUE : PR_FALSE;
 }
 
 PRBool
@@ -1659,6 +1671,12 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
         PORT_Free(config);
     if (!module) {
         goto loser;
+    }
+
+    /* a policy only stanza doesn't actually get 'loaded'. policy has already
+     * been parsed as a side effect of the CreateModuleEx call */
+    if (secmod_PolicyOnly(module)) {
+        return module;
     }
     if (parent) {
         module->parent = SECMOD_ReferenceModule(parent);
