@@ -828,7 +828,6 @@ private:
   RefPtr<nsIContentChild> mManager;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
-  int32_t mActiveSuppressDisplayport;
   layers::LayersId mLayersId;
   int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;

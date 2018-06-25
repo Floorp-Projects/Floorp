@@ -99,9 +99,9 @@ nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle)
 nsSliderFrame::~nsSliderFrame()
 {
   if (mSuppressionActive) {
-    APZCCallbackHelper::SuppressDisplayport(false, PresContext() ?
-                                                   PresShell() :
-                                                   nullptr);
+    if (nsIPresShell* shell = PresShell()) {
+      shell->SuppressDisplayport(false);
+    }
   }
 }
 
@@ -1618,8 +1618,9 @@ void
 nsSliderFrame::SuppressDisplayport()
 {
   if (!mSuppressionActive) {
-    MOZ_ASSERT(PresShell());
-    APZCCallbackHelper::SuppressDisplayport(true, PresShell());
+    nsIPresShell* shell = PresShell();
+    MOZ_ASSERT(shell);
+    shell->SuppressDisplayport(true);
     mSuppressionActive = true;
   }
 }
@@ -1628,8 +1629,9 @@ void
 nsSliderFrame::UnsuppressDisplayport()
 {
   if (mSuppressionActive) {
-    MOZ_ASSERT(PresShell());
-    APZCCallbackHelper::SuppressDisplayport(false, PresShell());
+    nsIPresShell* shell = PresShell();
+    MOZ_ASSERT(shell);
+    shell->SuppressDisplayport(false);
     mSuppressionActive = false;
   }
 }

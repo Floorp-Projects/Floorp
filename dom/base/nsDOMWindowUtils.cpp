@@ -4178,7 +4178,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::RespectDisplayPortSuppression(bool aEnabled)
 {
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  APZCCallbackHelper::RespectDisplayPortSuppression(aEnabled, shell);
+  shell->RespectDisplayportSuppression(aEnabled);
   return NS_OK;
 }
 

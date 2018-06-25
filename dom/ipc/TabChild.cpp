@@ -402,7 +402,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mManager(aManager)
   , mChromeFlags(aChromeFlags)
   , mMaxTouchPoints(0)
-  , mActiveSuppressDisplayport(0)
   , mLayersId{0}
   , mBeforeUnloadListeners(0)
   , mDidFakeShow(false)
@@ -1343,14 +1342,9 @@ TabChild::UpdateFrame(const FrameMetrics& aFrameMetrics)
 mozilla::ipc::IPCResult
 TabChild::RecvSuppressDisplayport(const bool& aEnabled)
 {
-  if (aEnabled) {
-    mActiveSuppressDisplayport++;
-  } else {
-    mActiveSuppressDisplayport--;
+  if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
+    shell->SuppressDisplayport(aEnabled);
   }
-
-  MOZ_ASSERT(mActiveSuppressDisplayport >= 0);
-  APZCCallbackHelper::SuppressDisplayport(aEnabled, GetPresShell());
   return IPC_OK();
 }
 
@@ -2503,11 +2497,6 @@ TabChild::RecvDestroy()
       child->Destroy();
   }
 
-  while (mActiveSuppressDisplayport > 0) {
-    APZCCallbackHelper::SuppressDisplayport(false, nullptr);
-    mActiveSuppressDisplayport--;
-  }
-
   if (mTabChildGlobal) {
     // Message handlers are called from the event loop, so it better be safe to
     // run script.
@@ -2665,7 +2654,7 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
       // we get back to the event loop again. We suppress the display port so that
       // we only paint what's visible. This ensures that the tab we're switching
       // to paints as quickly as possible.
-      APZCCallbackHelper::SuppressDisplayport(true, presShell);
+      presShell->SuppressDisplayport(true);
       if (nsContentUtils::IsSafeToRunScript()) {
         WebWidget()->PaintNowIfNeeded();
       } else {
@@ -2675,7 +2664,7 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
                            nsIPresShell::PAINT_LAYERS);
         }
       }
-      APZCCallbackHelper::SuppressDisplayport(false, presShell);
+      presShell->SuppressDisplayport(false);
     }
   } else {
     if (sVisibleTabs) {
