@@ -167,11 +167,11 @@ HUD_SERVICE.prototype =
     }
 
     async function connect() {
-      // Ensure that the root actor and the target-scoped actors have been registered on
-      // the DebuggerServer, so that the Browser Console can retrieve the console actors.
+      // Ensure that the root actor and the tab actors have been registered on the
+      // DebuggerServer, so that the Browser Console can retrieve the console actors.
       // (See Bug 1416105 for rationale).
       DebuggerServer.init();
-      DebuggerServer.registerActors({ root: true, target: true });
+      DebuggerServer.registerActors({ root: true, tab: true });
 
       DebuggerServer.allowChromeProcess = true;
 

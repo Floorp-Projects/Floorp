@@ -17,12 +17,12 @@ function getActorInstance(connID, actorID) {
  */
 add_task(async function() {
   DebuggerServer.addActors("resource://test/pre_init_global_actors.js");
-  DebuggerServer.addActors("resource://test/pre_init_target_scoped_actors.js");
+  DebuggerServer.addActors("resource://test/pre_init_tab_actors.js");
 
   const client = await startTestDebuggerServer("example tab");
 
   DebuggerServer.addActors("resource://test/post_init_global_actors.js");
-  DebuggerServer.addActors("resource://test/post_init_target_scoped_actors.js");
+  DebuggerServer.addActors("resource://test/post_init_tab_actors.js");
 
   let actors = await client.listTabs();
   Assert.equal(actors.tabs.length, 1);
@@ -34,7 +34,7 @@ add_task(async function() {
   Assert.equal(reply.message, "pong");
 
   reply = await client.request({
-    to: actors.tabs[0].preInitTargetScopedActor,
+    to: actors.tabs[0].preInitTabActor,
     type: "ping",
   });
   Assert.equal(reply.message, "pong");
@@ -46,7 +46,7 @@ add_task(async function() {
   Assert.equal(reply.message, "pong");
 
   reply = await client.request({
-    to: actors.tabs[0].postInitTargetScopedActor,
+    to: actors.tabs[0].postInitTabActor,
     type: "ping",
   });
   Assert.equal(reply.message, "pong");

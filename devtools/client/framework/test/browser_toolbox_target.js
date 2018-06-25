@@ -37,7 +37,7 @@ add_task(async function() {
   const toolbox = await onToolboxReady;
 
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
-  const onTabDetached = once(toolbox.target.client, "tabDetached");
+  const onTabActorDetached = once(toolbox.target.client, "tabDetached");
 
   info("Removing the iframes");
   toolboxIframe.remove();
@@ -54,7 +54,7 @@ add_task(async function() {
   // of toolbox cleanup. If we do not wait for it and starts removing debugged
   // document, the actor is still considered as being attached and continues
   // processing events.
-  await onTabDetached;
+  await onTabActorDetached;
 
   iframe.remove();
 });

@@ -28,9 +28,9 @@ loader.lazyRequireGetter(this, "ChromeWindowTargetActor",
  *     root actor won't implement the corresponding requests or notifications.
  *     Supported properties:
  *
- *     - tabList: a live list (see below) of target actors for tabs. If present,
- *       the new root actor supports the 'listTabs' request, providing the live
- *       list's elements as its target actors, and sending 'tabListChanged'
+ *     - tabList: a live list (see below) of tab actors. If present, the
+ *       new root actor supports the 'listTabs' request, providing the live
+ *       list's elements as its tab actors, and sending 'tabListChanged'
  *       notifications when the live list's contents change. One actor in
  *       this list must have a true '.selected' property.
  *
@@ -219,7 +219,7 @@ RootActor.prototype = {
     }
     this._extraActors = null;
     this.conn = null;
-    this._tabTargetActorPool = null;
+    this._tabActorPool = null;
     this._globalActorPool = null;
     this._chromeWindowActorPool = null;
     this._parameters = null;
@@ -273,27 +273,27 @@ RootActor.prototype = {
     // listener in order to be notified if the list of tabs changes again in the future.
     tabList.onListChanged = this._onTabListChanged;
 
-    // Walk the tab list, accumulating the array of target actors for the reply, and
-    // moving all the actors to a new ActorPool. We'll replace the old tab target actor
-    // pool with the one we build here, thus retiring any actors that didn't get listed
-    // again, and preparing any new actors to receive packets.
+    // Walk the tab list, accumulating the array of tab actors for the reply, and moving
+    // all the actors to a new ActorPool. We'll replace the old tab actor pool with the
+    // one we build here, thus retiring any actors that didn't get listed again, and
+    // preparing any new actors to receive packets.
     const newActorPool = new ActorPool(this.conn);
-    const targetActorList = [];
+    const tabActorList = [];
     let selected;
 
     const options = request.options || {};
-    const targetActors = await tabList.getList(options);
-    for (const targetActor of targetActors) {
-      if (targetActor.exited) {
-        // Target actor may have exited while we were gathering the list.
+    const tabActors = await tabList.getList(options);
+    for (const tabActor of tabActors) {
+      if (tabActor.exited) {
+        // Tab actor may have exited while we were gathering the list.
         continue;
       }
-      if (targetActor.selected) {
-        selected = targetActorList.length;
+      if (tabActor.selected) {
+        selected = tabActorList.length;
       }
-      targetActor.parentID = this.actorID;
-      newActorPool.addActor(targetActor);
-      targetActorList.push(targetActor);
+      tabActor.parentID = this.actorID;
+      newActorPool.addActor(tabActor);
+      tabActorList.push(tabActor);
     }
 
     // Start with the root reply, which includes the global actors for the whole browser.
@@ -301,16 +301,16 @@ RootActor.prototype = {
 
     // Drop the old actorID -> actor map. Actors that still mattered were added to the
     // new map; others will go away.
-    if (this._tabTargetActorPool) {
-      this.conn.removeActorPool(this._tabTargetActorPool);
+    if (this._tabActorPool) {
+      this.conn.removeActorPool(this._tabActorPool);
     }
-    this._tabTargetActorPool = newActorPool;
-    this.conn.addActorPool(this._tabTargetActorPool);
+    this._tabActorPool = newActorPool;
+    this.conn.addActorPool(this._tabActorPool);
 
     // We'll extend the reply here to also mention all the tabs.
     Object.assign(reply, {
       selected: selected || 0,
-      tabs: targetActorList.map(actor => actor.form()),
+      tabs: tabActorList.map(actor => actor.form()),
     });
 
     return reply;
@@ -322,14 +322,14 @@ RootActor.prototype = {
       return { error: "noTabs",
                message: "This root actor has no browser tabs." };
     }
-    if (!this._tabTargetActorPool) {
-      this._tabTargetActorPool = new ActorPool(this.conn);
-      this.conn.addActorPool(this._tabTargetActorPool);
+    if (!this._tabActorPool) {
+      this._tabActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._tabActorPool);
     }
 
-    let targetActor;
+    let tabActor;
     try {
-      targetActor = await tabList.getTab(options);
+      tabActor = await tabList.getTab(options);
     } catch (error) {
       if (error.error) {
         // Pipe expected errors as-is to the client
@@ -341,10 +341,10 @@ RootActor.prototype = {
       };
     }
 
-    targetActor.parentID = this.actorID;
-    this._tabTargetActorPool.addActor(targetActor);
+    tabActor.parentID = this.actorID;
+    this._tabActorPool.addActor(tabActor);
 
-    return { tab: targetActor.form() };
+    return { tab: tabActor.form() };
   },
 
   onGetWindow: function({ outerWindowID }) {
@@ -565,7 +565,7 @@ RootActor.prototype = {
 
   /**
    * Remove the extra actor (added by DebuggerServer.addGlobalActor or
-   * DebuggerServer.addTargetScopedActor) name |name|.
+   * DebuggerServer.addTabActor) name |name|.
    */
   removeActorByName: function(name) {
     if (name in this._extraActors) {
@@ -573,10 +573,10 @@ RootActor.prototype = {
       if (this._globalActorPool.has(actor)) {
         this._globalActorPool.removeActor(actor);
       }
-      if (this._tabTargetActorPool) {
-        // Iterate over BrowsingContextTargetActor instances to also remove target-scoped
-        // actors created during listTabs for each document.
-        this._tabTargetActorPool.forEach(tab => {
+      if (this._tabActorPool) {
+        // Iterate over BrowsingContextTargetActor instances to also remove tab actors
+        // created during listTabs for each document.
+        this._tabActorPool.forEach(tab => {
           tab.removeActorByName(name);
         });
       }

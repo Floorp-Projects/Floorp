@@ -25,13 +25,13 @@ TestActor1.prototype.requestTypes = {
   "ping": TestActor1.prototype.onPing
 };
 
-DebuggerServer.removeTargetScopedActor("testTargetScopedActor1");
+DebuggerServer.removeTabActor("testTabActor1");
 DebuggerServer.removeGlobalActor("testGlobalActor1");
 
-DebuggerServer.addTargetScopedActor({
+DebuggerServer.addTabActor({
   constructorName: "TestActor1",
   constructorFun: TestActor1,
-}, "testTargetScopedActor1");
+}, "testTabActor1");
 DebuggerServer.addGlobalActor({
   constructorName: "TestActor1",
   constructorFun: TestActor1,

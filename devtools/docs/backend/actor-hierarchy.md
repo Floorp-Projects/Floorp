@@ -28,11 +28,11 @@ RootActor: First one, automatically instantiated when we start connecting.
        FrameTargetActor (for a frame, such as a tab)
        WorkerTargetActor (for various kind of workers)
        |
-       \-- Target-scoped actors:
+       \-- Tab-scoped actors:
            Actors exposing one particular feature set. They are children of a
            given target actor and the data they return is filtered to reflect
            the target.
-           These actors are registered with `target: true` in
+           These actors are registered with `tab: true` in
            devtools/server/main.js.
            Examples include:
            WebConsoleActor
@@ -119,7 +119,7 @@ RootActor (root.js)
 
 Those are the actors exposed by the root actors which are meant to track the
 lifetime of a given target: tab, process, add-on, or worker. It also allows to
-fetch the target-scoped actors connected to this target, which are actors like
+fetch the tab-scoped actors connected to this target, which are actors like
 console, inspector, thread (for debugger), style inspector, etc.
 
 Some target actors inherit from BrowsingContextTargetActor (defined in
@@ -133,10 +133,10 @@ to manage breakpoints in the debugger. Actors inheriting from
 BrowsingContextTargetActor expose `attach`/`detach` requests, that allows to
 start/stop the ThreadActor.
 
-Target-scoped actors are accessed via the target actor's RDP form which contains
-the `actorID` for each target-scoped actor.
+Tab-scoped actors are accessed via the target actor's RDP form which contains
+the `actorID` for each tab-scoped actor.
 
-The target-scoped actors expect to find the following properties on the target
+The tab-scoped actors expect to find the following properties on the target
 actor:
  - threadActor:
    ThreadActor instance for the given target,
@@ -168,7 +168,7 @@ expose many other attributes and events:
 
 See BrowsingContextTargetActor documentation for more details.
 
-## Target-scoped actors
+## Tab-scoped actors
 
 Each of these actors focuses on providing one particular feature set. They are
 children of a given target actor.
@@ -180,8 +180,8 @@ about the markup and styles for only that frame.
 These actors may extend this hierarchy by having their own children, like
 LongStringActor, WalkerActor, etc.
 
-To improve performance, target-scoped actors are created lazily. The target
-actor lists the actor ID for each one, but the actor modules aren't actually
-loaded and instantiated at that point. Once the first request for a given
-target-scoped actor is received by the server, that specific actor is
-instantiated just in time to service the request.
+To improve performance, tab-scoped actors are created lazily. The target actor
+lists the actor ID for each one, but the actor modules aren't actually loaded
+and instantiated at that point. Once the first request for a given tab-scoped
+actor is received by the server, that specific actor is instantiated just in
+time to service the request.
