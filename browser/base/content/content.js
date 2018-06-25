@@ -324,8 +324,67 @@ ClickEventHandler.init();
 ContentLinkHandler.init(this);
 ContentMetaHandler.init(this);
 
-// TODO: Load this lazily so the JSM is run only if a relevant event/message fires.
-void new PluginContent(global);
+var PluginContentStub = {
+  EVENTS: [
+    "PluginCrashed",
+    "PluginOutdated",
+    "PluginInstantiated",
+    "PluginRemoved",
+    "HiddenPlugin",
+  ],
+
+  MESSAGES: [
+    "BrowserPlugins:ActivatePlugins",
+    "BrowserPlugins:NotificationShown",
+    "BrowserPlugins:ContextMenuCommand",
+    "BrowserPlugins:NPAPIPluginProcessCrashed",
+    "BrowserPlugins:CrashReportSubmitted",
+    "BrowserPlugins:Test:ClearCrashData",
+  ],
+
+  _pluginContent: null,
+  get pluginContent() {
+    if (!this._pluginContent) {
+      this._pluginContent = new PluginContent(global);
+    }
+    return this._pluginContent;
+  },
+
+  init() {
+    addEventListener("unload", this);
+
+    addEventListener("PluginBindingAttached", this, true, true);
+
+    for (let event of this.EVENTS) {
+      addEventListener(event, this, true);
+    }
+    for (let msg of this.MESSAGES) {
+      addMessageListener(msg, this);
+    }
+    Services.obs.addObserver(this, "decoder-doctor-notification");
+  },
+
+  uninit() {
+    Services.obs.removeObserver(this, "decoder-doctor-notification");
+  },
+
+  observe(subject, topic, data) {
+    return this.pluginContent.observe(subject, topic, data);
+  },
+
+  handleEvent(event) {
+    if (event.type === "unload") {
+      return this.uninit();
+    }
+    return this.pluginContent.handleEvent(event);
+  },
+
+  receiveMessage(msg) {
+    return this.pluginContent.receiveMessage(msg);
+  },
+};
+
+PluginContentStub.init();
 
 addEventListener("DOMWindowFocus", function(event) {
   sendAsyncMessage("DOMWindowFocus", {});
