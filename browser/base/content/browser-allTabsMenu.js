@@ -45,27 +45,6 @@ var gTabsPanel = {
       view: this.allTabsView,
       containerNode: this.allTabsViewTabs,
       filterFn: (tab) => !tab.pinned && !tab.hidden,
-      onPopulate() {
-        // Set the visible tab status.
-        let tabContainer = gBrowser.tabContainer;
-        // We don't want menu item decoration unless there is overflow.
-        if (tabContainer.getAttribute("overflow") != "true") {
-          return;
-        }
-
-        let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
-        let arrowScrollboxRect = windowUtils.getBoundsWithoutFlushing(tabContainer.arrowScrollbox);
-        for (let row of this.rows) {
-          let curTabRect = windowUtils.getBoundsWithoutFlushing(row.tab);
-          if (curTabRect.left >= arrowScrollboxRect.left &&
-              curTabRect.right <= arrowScrollboxRect.right) {
-            row.setAttribute("tabIsVisible", "true");
-          } else {
-            row.removeAttribute("tabIsVisible");
-          }
-        }
-      },
     });
 
     let containerTabsButton = this.allTabsView.querySelector(".container-tabs-button");
