@@ -54,9 +54,6 @@ using mozilla::ipc::PrincipalInfo;
 NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(ServiceWorkerPrivate)
 NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(ServiceWorkerPrivate)
 NS_IMPL_CYCLE_COLLECTION(ServiceWorkerPrivate, mSupportsArray)
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ServiceWorkerPrivate)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mSandbox)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ServiceWorkerPrivate, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ServiceWorkerPrivate, Release)
 
@@ -115,8 +112,6 @@ ServiceWorkerPrivate::~ServiceWorkerPrivate()
   MOZ_ASSERT(mSupportsArray.IsEmpty());
 
   mIdleWorkerTimer->Cancel();
-
-  DropJSObjects(this);
 }
 
 namespace {
@@ -218,26 +213,6 @@ ServiceWorkerPrivate::CheckScriptEvaluation(LifeCycleEventCallback* aScriptEvalu
   }
 
   return NS_OK;
-}
-
-void
-ServiceWorkerPrivate::GetOrCreateSandbox(JSContext* aCx,
-                                         JS::MutableHandle<JSObject*> aSandbox)
-{
-  AssertIsOnMainThread();
-
-  if (!mSandbox) {
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-
-    JS::Rooted<JSObject*> sandbox(aCx);
-    nsresult rv = xpc->CreateSandbox(aCx, mInfo->Principal(), sandbox.address());
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    mSandbox = sandbox;
-    HoldJSObjects(this);
-  }
-
-  aSandbox.set(mSandbox);
 }
 
 namespace {
