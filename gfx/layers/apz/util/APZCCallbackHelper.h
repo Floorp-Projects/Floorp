@@ -194,27 +194,6 @@ public:
 
     static void CancelAutoscroll(const FrameMetrics::ViewID& aScrollId);
 
-    /* Temporarily ignore the Displayport for better paint performance. If at
-     * all possible, pass in a presShell if you have one at the call site, we
-     * use it to trigger a repaint once suppression is disabled. Without that
-     * the displayport may get left at the suppressed size for an extended
-     * period of time and result in unnecessary checkerboarding (see bug
-     * 1255054). */
-    static void SuppressDisplayport(const bool& aEnabled,
-                                    const nsCOMPtr<nsIPresShell>& aShell);
-
-    /* Whether or not displayport suppression should be turned on. Note that
-     * this only affects the return value of |IsDisplayportSuppressed()|, and
-     * doesn't change the value of the internal counter. As with
-     * SuppressDisplayport, this function should be passed a presShell to trigger
-     * a repaint if suppression is being turned off.
-     */
-    static void RespectDisplayPortSuppression(bool aEnabled,
-                                              const nsCOMPtr<nsIPresShell>& aShell);
-
-    /* Whether or not the displayport is currently suppressed. */
-    static bool IsDisplayportSuppressed();
-
     static void
     AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
                                     const CSSPoint& aActualScrollOffset);

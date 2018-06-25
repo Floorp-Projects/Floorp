@@ -245,6 +245,9 @@ public:
   void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) override;
   void ClearMouseCaptureOnView(nsView* aView) override;
   bool IsVisible() override;
+  void SuppressDisplayport(bool aEnabled) override;
+  void RespectDisplayportSuppression(bool aEnabled) override;
+  bool IsDisplayportSuppressed() override;
 
   already_AddRefed<AccessibleCaretEventHub> GetAccessibleCaretEventHub() const override;
 
@@ -829,6 +832,8 @@ private:
   // Used in case we need re-dispatch event after sending pointer event,
   // when target of pointer event was deleted during executing user handlers.
   nsCOMPtr<nsIContent> mPointerEventTarget;
+
+  int32_t mActiveSuppressDisplayport;
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;

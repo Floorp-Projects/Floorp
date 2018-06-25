@@ -884,48 +884,6 @@ APZCCallbackHelper::NotifyFlushComplete(nsIPresShell* aShell)
   observerService->NotifyObservers(nullptr, "apz-repaints-flushed", nullptr);
 }
 
-static int32_t sActiveSuppressDisplayport = 0;
-static bool sDisplayPortSuppressionRespected = true;
-
-void
-APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled,
-                                        const nsCOMPtr<nsIPresShell>& aShell)
-{
-  if (aEnabled) {
-    sActiveSuppressDisplayport++;
-  } else {
-    bool isSuppressed = IsDisplayportSuppressed();
-    sActiveSuppressDisplayport--;
-    if (isSuppressed && !IsDisplayportSuppressed() &&
-        aShell && aShell->GetRootFrame()) {
-      // We unsuppressed the displayport, trigger a paint
-      aShell->GetRootFrame()->SchedulePaint();
-    }
-  }
-
-  MOZ_ASSERT(sActiveSuppressDisplayport >= 0);
-}
-
-void
-APZCCallbackHelper::RespectDisplayPortSuppression(bool aEnabled,
-                                                  const nsCOMPtr<nsIPresShell>& aShell)
-{
-  bool isSuppressed = IsDisplayportSuppressed();
-  sDisplayPortSuppressionRespected = aEnabled;
-  if (isSuppressed && !IsDisplayportSuppressed() &&
-      aShell && aShell->GetRootFrame()) {
-    // We unsuppressed the displayport, trigger a paint
-    aShell->GetRootFrame()->SchedulePaint();
-  }
-}
-
-bool
-APZCCallbackHelper::IsDisplayportSuppressed()
-{
-  return sDisplayPortSuppressionRespected
-      && sActiveSuppressDisplayport > 0;
-}
-
 /* static */ bool
 APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame)
 {
