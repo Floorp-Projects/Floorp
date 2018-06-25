@@ -871,7 +871,7 @@ var TelemetryStorageImpl = {
         continue;
       }
 
-      // If this archive directory is older than 180 days, remove it.
+      // If this archive directory is older than allowed, remove it.
       if ((startTimeStamp - archiveDate.getTime()) > MAX_ARCHIVED_PINGS_RETENTION_MS) {
         try {
           await OS.File.removeDir(dir.path);
@@ -1029,7 +1029,7 @@ var TelemetryStorageImpl = {
       return;
     }
 
-    // Remove pings older than 180 days.
+    // Remove pings older than allowed.
     try {
       await this._purgeOldPings();
     } catch (ex) {
