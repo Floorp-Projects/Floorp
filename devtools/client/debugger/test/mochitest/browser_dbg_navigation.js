@@ -23,7 +23,7 @@ function test() {
       "Root actor should identify itself as a browser.");
 
     addTab(TAB1_URL)
-      .then(() => attachTabActorForUrl(gClient, TAB1_URL))
+      .then(() => attachTargetActorForUrl(gClient, TAB1_URL))
       .then(testNavigate)
       .then(testDetach)
       .then(finish)

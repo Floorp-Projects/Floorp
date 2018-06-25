@@ -1,7 +1,7 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
 
 /**
  * Make sure the root actor's live tab list implementation works as specified.
@@ -51,9 +51,9 @@ function test() {
 }
 
 function checkSingleTab() {
-  return gTabList.getList().then(aTabActors => {
-    is(aTabActors.length, 1, "initial tab list: contains initial tab");
-    gFirstActor = aTabActors[0];
+  return gTabList.getList().then(targetActors => {
+    is(targetActors.length, 1, "initial tab list: contains initial tab");
+    gFirstActor = targetActors[0];
     is(gFirstActor.url, "about:blank", "initial tab list: initial tab URL is 'about:blank'");
     is(gFirstActor.title, "New Tab", "initial tab list: initial tab title is 'New Tab'");
   });
@@ -68,13 +68,13 @@ function addTabA() {
 function testTabA() {
   is(onListChangedCount, 1, "onListChanged handler call count");
 
-  return gTabList.getList().then(aTabActors => {
-    let tabActors = new Set(aTabActors);
-    is(tabActors.size, 2, "gTabA opened: two tabs in list");
-    ok(tabActors.has(gFirstActor), "gTabA opened: initial tab present");
+  return gTabList.getList().then(targetActors => {
+    targetActors = new Set(targetActors);
+    is(targetActors.size, 2, "gTabA opened: two tabs in list");
+    ok(targetActors.has(gFirstActor), "gTabA opened: initial tab present");
 
-    info("actors: " + [...tabActors].map(a => a.url));
-    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
+    info("actors: " + [...targetActors].map(a => a.url));
+    gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA opened: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA opened: new tab title");
   });
@@ -89,9 +89,9 @@ function addTabB() {
 function testTabB() {
   is(onListChangedCount, 2, "onListChanged handler call count");
 
-  return gTabList.getList().then(aTabActors => {
-    let tabActors = new Set(aTabActors);
-    is(tabActors.size, 3, "gTabB opened: three tabs in list");
+  return gTabList.getList().then(targetActors => {
+    targetActors = new Set(targetActors);
+    is(targetActors.size, 3, "gTabB opened: three tabs in list");
   });
 }
 
@@ -112,13 +112,13 @@ function removeTabA() {
 function testTabClosed() {
   is(onListChangedCount, 3, "onListChanged handler call count");
 
-  gTabList.getList().then(aTabActors => {
-    let tabActors = new Set(aTabActors);
-    is(tabActors.size, 2, "gTabA closed: two tabs in list");
-    ok(tabActors.has(gFirstActor), "gTabA closed: initial tab present");
+  gTabList.getList().then(targetActors => {
+    targetActors = new Set(targetActors);
+    is(targetActors.size, 2, "gTabA closed: two tabs in list");
+    ok(targetActors.has(gFirstActor), "gTabA closed: initial tab present");
 
-    info("actors: " + [...tabActors].map(a => a.url));
-    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
+    info("actors: " + [...targetActors].map(a => a.url));
+    gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA closed: new tab title");
   });
@@ -133,9 +133,9 @@ function addTabC() {
 function testTabC() {
   is(onListChangedCount, 4, "onListChanged handler call count");
 
-  gTabList.getList().then(aTabActors => {
-    let tabActors = new Set(aTabActors);
-    is(tabActors.size, 3, "gTabC opened: three tabs in list");
+  gTabList.getList().then(targetActors => {
+    targetActors = new Set(targetActors);
+    is(targetActors.size, 3, "gTabC opened: three tabs in list");
   });
 }
 
@@ -156,13 +156,13 @@ function removeTabC() {
 function testNewWindow() {
   is(onListChangedCount, 5, "onListChanged handler call count");
 
-  return gTabList.getList().then(aTabActors => {
-    let tabActors = new Set(aTabActors);
-    is(tabActors.size, 3, "gTabC closed: three tabs in list");
-    ok(tabActors.has(gFirstActor), "gTabC closed: initial tab present");
+  return gTabList.getList().then(targetActors => {
+    targetActors = new Set(targetActors);
+    is(targetActors.size, 3, "gTabC closed: three tabs in list");
+    ok(targetActors.has(gFirstActor), "gTabC closed: initial tab present");
 
-    info("actors: " + [...tabActors].map(a => a.url));
-    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
+    info("actors: " + [...targetActors].map(a => a.url));
+    gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabC closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabC closed: new tab title");
   });
@@ -185,13 +185,13 @@ function removeNewWindow() {
 function testWindowClosed() {
   is(onListChangedCount, 6, "onListChanged handler call count");
 
-  return gTabList.getList().then(aTabActors => {
-    let tabActors = new Set(aTabActors);
-    is(tabActors.size, 2, "gNewWindow closed: two tabs in list");
-    ok(tabActors.has(gFirstActor), "gNewWindow closed: initial tab present");
+  return gTabList.getList().then(targetActors => {
+    targetActors = new Set(targetActors);
+    is(targetActors.size, 2, "gNewWindow closed: two tabs in list");
+    ok(targetActors.has(gFirstActor), "gNewWindow closed: initial tab present");
 
-    info("actors: " + [...tabActors].map(a => a.url));
-    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
+    info("actors: " + [...targetActors].map(a => a.url));
+    gActorA = [...targetActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gNewWindow closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gNewWindow closed: new tab title");
   });

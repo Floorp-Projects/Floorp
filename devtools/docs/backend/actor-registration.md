@@ -1,22 +1,22 @@
 # How to register an actor
 
-## Tab actors vs. global actors
+## Target-scoped actors vs. global actors
 
-Tab actors are the most common types of actors. That's the type of actors you will most probably be adding.
+Target-scoped actors are the most common types of actors. That's the type of actors you will most probably be adding.
 
-Tab actors target a document, this could be a tab in Firefox or a remote document in Firefox for Android.
+Target-scoped actors target a document, this could be a tab in Firefox or a remote document in Firefox for Android.
 
 Global actors however are for the rest, for things not related to any particular document but instead for things global to the whole Firefox/Chrome/Safari instance the toolbox is connected to (e.g. the preference actor).
 
 ## The DebuggerServer.registerModule function
 
-To register a tab actor:
+To register a target-scoped actor:
 
 ```
 DebuggerServer.registerModule("devtools/server/actors/webconsole", {
   prefix: "console",
   constructor: "WebConsoleActor",
-  type: { tab: true }
+  type: { target: true }
 });
 ```
 
@@ -30,9 +30,7 @@ DebuggerServer.registerModule("devtools/server/actors/addon/addons", {
 });
 ```
 
-If you are adding a new built-in devtools actor, you should be registering it using `DebuggerServer.registerModule` in `_addBrowserActors` or `addTabActors` in `/devtools/server/main.js`.
-
-If you are adding a new actor from an add-on, you should call `DebuggerServer.registerModule` directly from your add-on code.
+If you are adding a new built-in actor, you should be registering it using `DebuggerServer.registerModule` in `_addBrowserActors` or `_addTargetScopedActors` in `/devtools/server/main.js`.
 
 ## A note about lazy registration
 

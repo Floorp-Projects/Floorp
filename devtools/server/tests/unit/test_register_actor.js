@@ -29,10 +29,10 @@ function test_lazy_api() {
   DebuggerServer.registerModule("xpcshell-test/registertestactors-lazy", {
     prefix: "lazy",
     constructor: "LazyActor",
-    type: { global: true, tab: true }
+    type: { global: true, target: true }
   });
   // The actor is immediatly registered, but not loaded
-  Assert.ok(DebuggerServer.tabActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(DebuggerServer.targetScopedActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(!isActorLoaded);
   Assert.ok(!isActorInstantiated);
@@ -76,7 +76,7 @@ function cleanup() {
   DebuggerServer.destroy();
 
   // Check that all actors are unregistered on server destruction
-  Assert.ok(!DebuggerServer.tabActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(!DebuggerServer.targetScopedActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(!DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
 
   run_next_test();

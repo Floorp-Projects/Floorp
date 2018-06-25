@@ -25,8 +25,8 @@ const noop = () => {};
  * protocol details in a traditional JavaScript API.
  *
  * @param client DebuggerClient|TabClient
- *        The parent of the thread (tab for tab-scoped debuggers, DebuggerClient
- *        for chrome debuggers).
+ *        The parent of the thread (tab for target-scoped debuggers,
+ *        DebuggerClient for chrome debuggers).
  * @param actor string
  *        The actor ID for this thread.
  */

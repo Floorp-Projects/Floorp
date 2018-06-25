@@ -26,28 +26,28 @@ function TestTabList(connection) {
 
   // An array of actors for each global added with
   // DebuggerServer.addTestGlobal.
-  this._tabActors = [];
+  this._targetActors = [];
 
   // A pool mapping those actors' names to the actors.
-  this._tabActorPool = new ActorPool(connection);
+  this._targetActorPool = new ActorPool(connection);
 
   for (const global of gTestGlobals) {
-    const actor = new TestTabActor(connection, global);
+    const actor = new TestTargetActor(connection, global);
     actor.selected = false;
-    this._tabActors.push(actor);
-    this._tabActorPool.addActor(actor);
+    this._targetActors.push(actor);
+    this._targetActorPool.addActor(actor);
   }
-  if (this._tabActors.length > 0) {
-    this._tabActors[0].selected = true;
+  if (this._targetActors.length > 0) {
+    this._targetActors[0].selected = true;
   }
 
-  connection.addActorPool(this._tabActorPool);
+  connection.addActorPool(this._targetActorPool);
 }
 
 TestTabList.prototype = {
   constructor: TestTabList,
   getList: function() {
-    return promise.resolve([...this._tabActors]);
+    return promise.resolve([...this._targetActors]);
   }
 };
 
@@ -60,7 +60,7 @@ function createRootActor(connection) {
   return root;
 }
 
-function TestTabActor(connection, global) {
+function TestTargetActor(connection, global) {
   this.conn = connection;
   this._global = global;
   this._threadActor = new ThreadActor(this, this._global);
@@ -69,9 +69,9 @@ function TestTabActor(connection, global) {
   this._extraActors = {};
 }
 
-TestTabActor.prototype = {
-  constructor: TestTabActor,
-  actorPrefix: "TestTabActor",
+TestTargetActor.prototype = {
+  constructor: TestTargetActor,
+  actorPrefix: "TestTargetActor",
 
   get window() {
     return { wrappedJSObject: this._global };
@@ -84,12 +84,12 @@ TestTabActor.prototype = {
   form: function() {
     const response = { actor: this.actorID, title: this._global.__name };
 
-    // Walk over tab actors added by extensions and add them to a new ActorPool.
+    // Walk over target-scoped actors and add them to a new ActorPool.
     const actorPool = new ActorPool(this.conn);
-    this._createExtraActors(DebuggerServer.tabActorFactories, actorPool);
+    this._createExtraActors(DebuggerServer.targetScopedActorFactories, actorPool);
     if (!actorPool.isEmpty()) {
-      this._tabActorPool = actorPool;
-      this.conn.addActorPool(this._tabActorPool);
+      this._targetActorPool = actorPool;
+      this.conn.addActorPool(this._targetActorPool);
     }
 
     this._appendExtraActors(response);
@@ -113,14 +113,14 @@ TestTabActor.prototype = {
     return { type: "detached" };
   },
 
-  /* Support for DebuggerServer.addTabActor. */
+  /* Support for DebuggerServer.addTargetScopedActor. */
   _createExtraActors: createExtraActors,
   _appendExtraActors: appendExtraActors
 };
 
-TestTabActor.prototype.requestTypes = {
-  "attach": TestTabActor.prototype.onAttach,
-  "detach": TestTabActor.prototype.onDetach
+TestTargetActor.prototype.requestTypes = {
+  "attach": TestTargetActor.prototype.onAttach,
+  "detach": TestTargetActor.prototype.onDetach
 };
 
 exports.register = function(handle) {
