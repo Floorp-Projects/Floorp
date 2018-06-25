@@ -727,7 +727,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
 
         command = [python, run_tests] + options + mozlog_opts
         if launch_in_debug_mode(command):
-            talos_process = subprocess.Popen(command, cwd=self.workdir, env=env)
+            talos_process = subprocess.Popen(command, cwd=self.workdir, env=env, bufsize=0)
             talos_process.wait()
         else:
             self.return_code = self.run_command(command, cwd=self.workdir,
