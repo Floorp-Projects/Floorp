@@ -1057,7 +1057,10 @@ JSScript::initScriptCounts(JSContext* cx)
     // Create realm's scriptCountsMap if necessary.
     if (!realm()->scriptCountsMap) {
         auto map = cx->make_unique<ScriptCountsMap>();
-        if (!map || !map->init()) {
+        if (!map)
+            return false;
+
+        if (!map->init()) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -2698,7 +2701,10 @@ JSScript::initScriptName(JSContext* cx)
     // Create realm's scriptNameMap if necessary.
     if (!realm()->scriptNameMap) {
         auto map = cx->make_unique<ScriptNameMap>();
-        if (!map || !map->init()) {
+        if (!map)
+            return false;
+
+        if (!map->init()) {
             ReportOutOfMemory(cx);
             return false;
         }

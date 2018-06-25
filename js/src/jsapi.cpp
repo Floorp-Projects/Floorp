@@ -6115,10 +6115,8 @@ EncodeLatin1(JSContext* cx, JSString* str)
 
     size_t len = str->length();
     Latin1Char* buf = cx->pod_malloc<Latin1Char>(len + 1);
-    if (!buf) {
-        ReportOutOfMemory(cx);
+    if (!buf)
         return nullptr;
-    }
 
     mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
     buf[len] = '\0';

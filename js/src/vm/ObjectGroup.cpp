@@ -529,7 +529,10 @@ ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             js_delete(table);
             table = nullptr;
             ReportOutOfMemory(cx);
@@ -629,7 +632,10 @@ ObjectGroup::lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm, const Cl
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -855,7 +861,10 @@ ObjectGroup::newArrayObject(JSContext* cx,
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::ArrayObjectTable>();
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -1178,7 +1187,10 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::PlainObjectTable>();
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -1444,7 +1456,10 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* scriptArg, jsbytecode*
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::AllocationSiteTable>(cx->zone());
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
