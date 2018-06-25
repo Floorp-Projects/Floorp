@@ -360,7 +360,7 @@ JSContext::minorGC(JS::gcreason::Reason reason)
 }
 
 inline void
-JSContext::setPendingException(const js::Value& v)
+JSContext::setPendingException(JS::HandleValue v)
 {
 #if defined(NIGHTLY_BUILD)
     do {
