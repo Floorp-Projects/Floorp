@@ -40,7 +40,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     lineOrBytecode_(0),
     fp_(fp ? fp : activation->wasmExitFP()),
     unwoundIonCallerFP_(nullptr),
-    unwind_(Unwind::False)
+    unwind_(Unwind::False),
+    unwoundAddressOfReturnAddress_(nullptr)
 {
     MOZ_ASSERT(fp_);
 

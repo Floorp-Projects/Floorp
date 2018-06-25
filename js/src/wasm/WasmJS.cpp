@@ -2892,6 +2892,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         instantiate_(instantiate),
         importObj_(cx, importObj),
         streamState_(mutexid::WasmStreamStatus, Env),
+        codeSection_{},
         codeStreamEnd_(nullptr),
         exclusiveCodeStreamEnd_(mutexid::WasmCodeStreamEnd, nullptr),
         exclusiveTailBytes_(mutexid::WasmTailBytesPtr, nullptr),

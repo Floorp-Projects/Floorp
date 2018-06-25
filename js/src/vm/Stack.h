@@ -1671,7 +1671,7 @@ class JitActivation : public Activation
   protected:
     // Used to verify that live registers don't change between a VM call and
     // the OsiPoint that follows it. Protected to silence Clang warning.
-    uint32_t checkRegs_;
+    uint32_t checkRegs_ = 0;
     RegisterDump regs_;
 #endif
 

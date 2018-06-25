@@ -1652,6 +1652,7 @@ RegExpCompiler::RegExpCompiler(JSContext* cx, LifoAlloc* alloc, int capture_coun
                                bool ignore_case, bool latin1, bool match_only, bool unicode)
   : next_register_(2 * (capture_count + 1)),
     recursion_depth_(0),
+    macro_assembler_(nullptr),
     ignore_case_(ignore_case),
     latin1_(latin1),
     match_only_(match_only),

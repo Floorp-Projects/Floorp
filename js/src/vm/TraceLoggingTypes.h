@@ -162,7 +162,9 @@ class ContinuousSpace {
 
   public:
     ContinuousSpace ()
-     : data_(nullptr)
+     : data_(nullptr),
+       size_(0),
+       capacity_(0)
     { }
 
     bool init() {

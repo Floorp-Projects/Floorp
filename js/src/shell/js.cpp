@@ -884,7 +884,7 @@ InitModuleLoader(JSContext* cx)
     // the module loader for the current compartment.
 
     uint32_t srcLen = moduleloader::GetRawScriptsSize();
-    ScopedJSFreePtr<char> src(cx->pod_malloc<char>(srcLen));
+    UniqueChars src(cx->pod_malloc<char>(srcLen));
     if (!src || !DecompressString(moduleloader::compressedSources, moduleloader::GetCompressedSize(),
                                   reinterpret_cast<unsigned char*>(src.get()), srcLen))
     {
@@ -900,7 +900,7 @@ InitModuleLoader(JSContext* cx)
     options.strictOption = true;
 
     RootedValue rv(cx);
-    return Evaluate(cx, options, src, srcLen, &rv);
+    return Evaluate(cx, options, src.get(), srcLen, &rv);
 }
 
 static bool

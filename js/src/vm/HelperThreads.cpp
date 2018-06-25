@@ -14,6 +14,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/CpuCount.h"
 #include "util/NativeStack.h"
@@ -826,12 +827,11 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
                               const char16_t* chars, size_t length,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    ScopedJSDeletePtr<ParseTask> task;
-    task = cx->new_<ScriptParseTask>(cx, chars, length, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task, options))
+    auto task = cx->make_unique<ScriptParseTask>(cx, chars, length, callback, callbackData);
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
-    task.forget();
+    Unused << task.release();
     return true;
 }
 
@@ -840,12 +840,11 @@ js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& optio
                               const char16_t* chars, size_t length,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    ScopedJSDeletePtr<ParseTask> task;
-    task = cx->new_<ModuleParseTask>(cx, chars, length, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task, options))
+    auto task = cx->make_unique<ModuleParseTask>(cx, chars, length, callback, callbackData);
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
-    task.forget();
+    Unused << task.release();
     return true;
 }
 
@@ -854,12 +853,11 @@ js::StartOffThreadDecodeScript(JSContext* cx, const ReadOnlyCompileOptions& opti
                                const JS::TranscodeRange& range,
                                JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    ScopedJSDeletePtr<ParseTask> task;
-    task = cx->new_<ScriptDecodeTask>(cx, range, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task, options))
+    auto task = cx->make_unique<ScriptDecodeTask>(cx, range, callback, callbackData);
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
-    task.forget();
+    Unused << task.release();
     return true;
 }
 
@@ -868,12 +866,11 @@ js::StartOffThreadDecodeMultiScripts(JSContext* cx, const ReadOnlyCompileOptions
                                      JS::TranscodeSources& sources,
                                      JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    ScopedJSDeletePtr<ParseTask> task;
-    task = cx->new_<MultiScriptsDecodeTask>(cx, sources, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task, options))
+    auto task = cx->make_unique<MultiScriptsDecodeTask>(cx, sources, callback, callbackData);
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
-    task.forget();
+    Unused << task.release();
     return true;
 }
 
@@ -884,12 +881,11 @@ js::StartOffThreadDecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& opti
                                const uint8_t* buf, size_t length,
                                JS::OffThreadCompileCallback callback, void *callbackData)
 {
-    ScopedJSDeletePtr<ParseTask> task;
-    task = cx->new_<BinASTDecodeTask>(cx, buf, length, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task, options))
+    auto task = cx->make_unique<BinASTDecodeTask>(cx, buf, length, callback, callbackData);
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
         return false;
 
-    task.forget();
+    Unused << task.release();
     return true;
 }
 
@@ -1665,18 +1661,18 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
 {
     MOZ_ASSERT(cx->realm());
 
-    ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
+    Rooted<UniquePtr<ParseTask>> parseTask(cx, removeFinishedParseTask(kind, token));
 
     // Make sure we have all the constructors we need for the prototype
     // remapping below, since we can't GC while that's happening.
     if (!EnsureParserCreatedClasses(cx, kind)) {
-        LeaveParseTaskZone(cx->runtime(), parseTask);
+        LeaveParseTaskZone(cx->runtime(), parseTask.get().get());
         return false;
     }
 
-    mergeParseTaskRealm(cx, parseTask, cx->realm());
+    mergeParseTaskRealm(cx, parseTask.get().get(), cx->realm());
 
-    bool ok = finishCallback(parseTask);
+    bool ok = finishCallback(parseTask.get().get());
 
     for (auto& script : parseTask->scripts)
         releaseAssertSameCompartment(cx, script);
@@ -1690,8 +1686,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
         return false;
     }
 
-    // Report any error or warnings generated during the parse, and inform the
-    // debugger about the compiled scripts.
+    // Report any error or warnings generated during the parse.
     for (size_t i = 0; i < parseTask->errors.length(); i++)
         parseTask->errors[i]->throwError(cx);
     if (parseTask->overRecursed)

@@ -1284,10 +1284,18 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 
     case TOUCHING: {
       ScreenCoord panThreshold = GetTouchStartTolerance();
-      UpdateWithTouchAtDevicePoint(aEvent);
 
-      if (PanDistance() < panThreshold) {
-        return nsEventStatus_eIgnore;
+      // We intentionally skip the UpdateWithTouchAtDevicePoint call when the
+      // panThreshold is zero. This ensures more deterministic behaviour during
+      // testing. If we call that, Axis::mPos gets updated to the point of this
+      // touchmove event, but we "consume" the move to overcome the
+      // panThreshold, so it's hard to pan a specific amount reliably from a
+      // mochitest.
+      if (panThreshold > 0.0f) {
+        UpdateWithTouchAtDevicePoint(aEvent);
+        if (PanDistance() < panThreshold) {
+          return nsEventStatus_eIgnore;
+        }
       }
 
       ParentLayerPoint touchPoint = GetFirstTouchPoint(aEvent);

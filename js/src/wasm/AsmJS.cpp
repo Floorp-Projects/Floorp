@@ -338,6 +338,7 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     AsmJSMetadata()
       : Metadata(ModuleKind::AsmJS),
         cacheResult(CacheResult::Miss),
+        toStringStart(0),
         srcStart(0),
         strict(false)
     {}
@@ -1524,7 +1525,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             // non-trivial constructor and therefore MUST be placement-new'd
             // into existence.
             MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
-            U() {}
+            U() : funcDefIndex_(0) {}
             MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
         } u;
 
@@ -1615,7 +1616,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             AsmJSMathBuiltinFunction func;
         } u;
 
-        MathBuiltin() : kind(Kind(-1)) {}
+        MathBuiltin() : kind(Kind(-1)), u{} {}
         explicit MathBuiltin(double cst) : kind(Constant) {
             u.cst = cst;
         }

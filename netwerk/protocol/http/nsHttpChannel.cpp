@@ -6050,7 +6050,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // don't want it after OnModifyRequest() weighs in. But waiting for
     // that to complete would mean we don't include proxy resolution in the
     // timing.
-    mAsyncOpenTime = TimeStamp::Now();
+    if (!mAsyncOpenTimeOverriden) {
+      mAsyncOpenTime = TimeStamp::Now();
+    }
 
     // Remember we have Authorization header set here.  We need to check on it
     // just once and early, AsyncOpen is the best place.

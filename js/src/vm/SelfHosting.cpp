@@ -2955,14 +2955,14 @@ JSRuntime::initSelfHosting(JSContext* cx)
 
     const unsigned char* compressed = compressedSources;
     uint32_t compressedLen = GetCompressedSize();
-    ScopedJSFreePtr<char> src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
+    UniqueChars src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
     if (!src || !DecompressString(compressed, compressedLen,
                                   reinterpret_cast<unsigned char*>(src.get()), srcLen))
     {
         return false;
     }
 
-    if (!Evaluate(cx, options, src, srcLen, &rv))
+    if (!Evaluate(cx, options, src.get(), srcLen, &rv))
         return false;
 
     if (!VerifyGlobalNames(cx, shg))

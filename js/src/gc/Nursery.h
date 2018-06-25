@@ -433,16 +433,12 @@ class Nursery
     ProfileDurations profileDurations_;
     ProfileDurations totalDurations_;
 
-    /*
-     * This data is initialised only if the nursery is enabled and after at
-     * least one call to Nursery::collect()
-     */
     struct {
-        JS::gcreason::Reason reason;
-        size_t nurseryCapacity;
-        size_t nurseryLazyCapacity;
-        size_t nurseryUsedBytes;
-        size_t tenuredBytes;
+        JS::gcreason::Reason reason = JS::gcreason::NO_REASON;
+        size_t nurseryCapacity = 0;
+        size_t nurseryLazyCapacity = 0;
+        size_t nurseryUsedBytes = 0;
+        size_t tenuredBytes = 0;
     } previousGC;
 
     /*

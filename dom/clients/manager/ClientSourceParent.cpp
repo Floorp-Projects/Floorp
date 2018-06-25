@@ -170,6 +170,24 @@ ClientSourceParent::RecvInheritController(const ClientControlledArgs& aArgs)
   return IPC_OK();
 }
 
+IPCResult
+ClientSourceParent::RecvNoteDOMContentLoaded()
+{
+  if (mController.isSome() && ServiceWorkerParentInterceptEnabled()) {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "ClientSourceParent::RecvNoteDOMContentLoaded",
+      [clientInfo = mClientInfo] () {
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        NS_ENSURE_TRUE_VOID(swm);
+
+        swm->MaybeCheckNavigationUpdate(clientInfo);
+      });
+
+    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  }
+  return IPC_OK();
+}
+
 void
 ClientSourceParent::ActorDestroy(ActorDestroyReason aReason)
 {

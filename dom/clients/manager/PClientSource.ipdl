@@ -26,6 +26,7 @@ parent:
   async Freeze();
   async Thaw();
   async InheritController(ClientControlledArgs aArgs);
+  async NoteDOMContentLoaded();
 
 child:
   async PClientSourceOp(ClientOpConstructorArgs aArgs);

@@ -344,7 +344,8 @@ BinTokenReaderMultipart::AutoBase::init()
 }
 
 BinTokenReaderMultipart::AutoBase::AutoBase(BinTokenReaderMultipart& reader)
-    : reader_(reader)
+    : initialized_(false)
+    , reader_(reader)
 { }
 
 BinTokenReaderMultipart::AutoBase::~AutoBase()

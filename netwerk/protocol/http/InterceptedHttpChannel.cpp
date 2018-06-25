@@ -685,6 +685,16 @@ InterceptedHttpChannel::ResetInterception(void)
   rv = SetupReplacementChannel(mURI, newChannel, true, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsITimedChannel> newTimedChannel = do_QueryInterface(newChannel);
+  if (newTimedChannel) {
+    if (!mAsyncOpenTime.IsNull()) {
+      newTimedChannel->SetAsyncOpen(mAsyncOpenTime);
+    }
+    if (!mChannelCreationTimestamp.IsNull()) {
+      newTimedChannel->SetChannelCreation(mChannelCreationTimestamp);
+    }
+  }
+
   if (mRedirectMode != nsIHttpChannelInternal::REDIRECT_MODE_MANUAL) {
     nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
     rv = newChannel->GetLoadFlags(&loadFlags);

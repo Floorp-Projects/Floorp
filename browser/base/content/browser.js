@@ -8522,3 +8522,71 @@ TabModalPromptBox.prototype = {
     return browser;
   },
 };
+
+var ConfirmationHint = {
+  /**
+   * Shows a transient, non-interactive confirmation hint anchored to an
+   * element, usually used in response to a user action to reaffirm that it was
+   * successful and potentially provide extra context. Examples for such hints:
+   * - "Saved to Library!" after bookmarking a page
+   * - "Sent!" after sending a tab to another device
+   * - "Queued (offline)" when attempting to send a tab to another device
+   *   while offline
+   *
+   * @param  anchor (DOM node, required)
+   *         The anchor for the panel.
+   * @param  messageId (string, required)
+   *         For getting the message string from browser.properties:
+   *         confirmationHint.<messageId>.label
+   * @param  options (object, optional)
+   *         An object with the following optional properties:
+   *         - event (DOM event): The event that triggered the feedback.
+   *         - hideArrow (boolean): Optionally hide the arrow.
+   */
+  show(anchor, messageId, options = {}) {
+    this._message.textContent =
+      gBrowserBundle.GetStringFromName("confirmationHint." + messageId + ".label");
+
+    if (options.hideArrow) {
+      this._panel.setAttribute("hidearrow", "true");
+    }
+
+    this._panel.addEventListener("popupshown", () => {
+      this._animationBox.setAttribute("animate", "true");
+
+      // The timeout value used here allows the panel to stay open for
+      // X second after the text transition (duration=120ms) has finished.
+      const DURATION = 1500;
+      setTimeout(() => {
+        this._panel.hidePopup(true);
+      }, DURATION + 120);
+    }, {once: true});
+
+    this._panel.addEventListener("popuphidden", () => {
+      this._panel.removeAttribute("hidearrow");
+      this._animationBox.removeAttribute("animate");
+    }, {once: true});
+
+    this._panel.hidden = false;
+    this._panel.openPopup(anchor, {
+      position: "bottomcenter topright",
+      triggerEvent: options.event,
+    });
+  },
+
+  get _panel() {
+    delete this._panel;
+    return this._panel = document.getElementById("confirmation-hint");
+  },
+
+  get _animationBox() {
+    delete this._animationBox;
+    return this._animationBox = document.getElementById("confirmation-hint-checkmark-animation-container");
+  },
+
+  get _message() {
+    delete this._message;
+    return this._message = document.getElementById("confirmation-hint-message");
+  },
+};
+

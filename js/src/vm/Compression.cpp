@@ -45,6 +45,13 @@ Compressor::Compressor(const unsigned char* inp, size_t inplen)
     zs.avail_out = 0;
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;
+    zs.total_in = 0;
+    zs.total_out = 0;
+    zs.msg = nullptr;
+    zs.state = nullptr;
+    zs.data_type = 0;
+    zs.adler = 0;
+    zs.reserved = 0;
 
     // Reserve space for the CompressedDataHeader.
     outbytes = sizeof(CompressedDataHeader);

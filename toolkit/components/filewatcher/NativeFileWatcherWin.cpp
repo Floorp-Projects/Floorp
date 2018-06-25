@@ -18,6 +18,7 @@
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Scoped.h"
 
 namespace mozilla {
 
