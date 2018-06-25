@@ -650,7 +650,7 @@ nsFind::InitIterator(State& aState,
                      nsINode* aStartNode,
                      int32_t aStartOffset,
                      nsINode* aEndNode,
-                     int32_t aEndOffset)
+                     int32_t aEndOffset) const
 {
   if (!aState.mIterator) {
     aState.mIterator = new nsFindContentIterator(mFindBackward);
@@ -746,7 +746,7 @@ nsresult
 nsFind::NextNode(State& aState,
                  nsRange* aSearchRange,
                  nsRange* aStartPoint,
-                 nsRange* aEndPoint)
+                 nsRange* aEndPoint) const
 {
   nsresult rv;
 
@@ -867,7 +867,7 @@ char16_t
 nsFind::PeekNextChar(State& aState,
                      nsRange* aSearchRange,
                      nsRange* aStartPoint,
-                     nsRange* aEndPoint)
+                     nsRange* aEndPoint) const
 {
   // We need to restore the necessary state before this function returns.
   StateRestorer restorer(aState);
