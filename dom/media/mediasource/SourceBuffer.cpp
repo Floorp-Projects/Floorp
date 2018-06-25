@@ -375,6 +375,29 @@ SourceBuffer::ChangeType(const nsAString& aType, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // 1. If type is an empty string then throw a TypeError exception and abort
+  //    these steps.
+  if (aType.IsEmpty()) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    return;
+  }
+
+  // 2. If this object has been removed from the sourceBuffers attribute of the
+  //    parent media source , then throw an InvalidStateError exception and
+  //    abort these steps.
+  // 3. If the updating attribute equals true, then throw an InvalidStateError
+  //    exception and abort these steps.
+  if (!IsAttached() || mUpdating) {
+    DDLOG(DDLogCategory::API, "ChangeType", NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // 4. If type contains a MIME type that is not supported or contains a MIME
+  //    type that is not supported with the types specified (currently or
+  //    previously) of SourceBuffer objects in the sourceBuffers attribute of
+  //    the parent media source , then throw a NotSupportedError exception and
+  //    abort these steps.
   DecoderDoctorDiagnostics diagnostics;
   nsresult rv = MediaSource::IsTypeSupported(aType, &diagnostics);
   diagnostics.StoreFormatDiagnostics(mMediaSource->GetOwner()
@@ -389,31 +412,41 @@ SourceBuffer::ChangeType(const nsAString& aType, ErrorResult& aRv)
     aRv.Throw(rv);
     return;
   }
-  if (!mMediaSource->GetDecoder() ||
-      mMediaSource->GetDecoder()->OwnerHasError()) {
-    MSE_DEBUG("HTMLMediaElement.error is not null");
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-  if (!IsAttached() || mUpdating) {
-    DDLOG(DDLogCategory::API, "ChangeType", NS_ERROR_DOM_INVALID_STATE_ERR);
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
 
+  // 5. If the readyState attribute of the parent media source is in the "ended"
+  //    state then run the following steps:
+  //    1. Set the readyState attribute of the parent media source to "open"
+  //    2.   Queue a task to fire a simple event named sourceopen at the parent
+  //         media source .
   MOZ_ASSERT(mMediaSource->ReadyState() != MediaSourceReadyState::Closed);
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  if (mCurrentAttributes.GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
-    DDLOG(DDLogCategory::API, "ChangeType", NS_ERROR_DOM_INVALID_STATE_ERR);
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
   Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
   MOZ_ASSERT(containerType);
   mType = *containerType;
+  // 6. Run the reset parser state algorithm .
   ResetParserState();
+
+  // 7. Update the generate timestamps flag on this SourceBuffer object to the
+  //    value in the "Generate Timestamps Flag" column of the byte stream format
+  //    registry [ MSE-REGISTRY ] entry that is associated with type .
+  if (mType.Type() == MEDIAMIMETYPE("audio/mpeg") ||
+      mType.Type() == MEDIAMIMETYPE("audio/aac")) {
+    mCurrentAttributes.mGenerateTimestamps = true;
+    // 8. If the generate timestamps flag equals true:
+    //    Set the mode attribute on this SourceBuffer object to "sequence" ,
+    //    including running the associated steps for that attribute being set.
+    ErrorResult dummy;
+    SetMode(SourceBufferAppendMode::Sequence, dummy);
+  } else {
+    mCurrentAttributes.mGenerateTimestamps = false;
+    //    Otherwise: Keep the previous value of the mode attribute on this
+    //    SourceBuffer object, without running any associated steps for that
+    //    attribute being set.
+  }
+
+  // 9. Set pending initialization segment for changeType flag to true.
   mTrackBuffersManager->ChangeType(mType);
 }
 
