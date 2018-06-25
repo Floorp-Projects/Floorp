@@ -225,7 +225,18 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
     return;
   }
 
-  UpdateAndRender(aWindowId);
+  TimeStamp startTime;
+
+  { // scope lock
+    MutexAutoLock lock(mFrameCountMapLock);
+    auto it = mWindowInfos.find(AsUint64(aWindowId));
+    MOZ_ASSERT(it != mWindowInfos.end());
+    WindowInfo* info = it->second;
+    MOZ_ASSERT(info->mPendingCount > 0);
+    startTime = info->mStartTimes.front();
+  }
+
+  UpdateAndRender(aWindowId, startTime);
   FrameRenderingComplete(aWindowId);
 }
 
@@ -296,7 +307,9 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
 }
 
 void
-RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
+RenderThread::UpdateAndRender(wr::WindowId aWindowId,
+                              const TimeStamp& aStartTime,
+                              bool aReadback)
 {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
@@ -308,7 +321,6 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
   }
 
   auto& renderer = it->second;
-  TimeStamp start = TimeStamp::Now();
 
   bool ret = renderer->UpdateAndRender(aReadback);
   if (!ret) {
@@ -334,7 +346,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
     &NotifyDidRender,
     renderer->GetCompositorBridge(),
     info,
-    start, end
+    aStartTime, end
   ));
 }
 
