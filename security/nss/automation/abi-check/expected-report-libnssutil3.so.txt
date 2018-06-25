@@ -1,4 +1,0 @@
-
-1 Added function:
-
-  'function SECStatus SECITEM_MakeItem(PLArenaPool*, SECItem*, unsigned char*, unsigned int)'    {SECITEM_MakeItem@@NSSUTIL_3.38}
