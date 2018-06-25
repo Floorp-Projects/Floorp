@@ -79,7 +79,7 @@ describe("Filtering", () => {
       store.dispatch(actions.filterToggle(FILTERS.ERROR));
 
       const messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numUnfilterableMessages + 3);
+      expect(messages.length).toEqual(numUnfilterableMessages + 4);
     });
 
     it("filters css messages", () => {
@@ -372,6 +372,7 @@ function prepareBaseStore() {
     "new Date(0)",
     // PageError
     "ReferenceError: asdf is not defined",
+    "TypeError longString message",
     "console.group('bar')",
     "console.debug('debug message');",
     "console.info('info message');",

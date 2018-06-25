@@ -934,10 +934,10 @@ var filterTests = [
     expected: ["drop-shadow", "rgb(66, 96, 0) 5px 5px 2px"] },
   { start: "blur(25px) drop-shadow(8px 8px)",
     end: "blur(75px)",
-    expected: ["blur", 37.5, "drop-shadow", "rgb(0, 0, 0) 6px 6px 0px"] },
+    expected: ["blur", 37.5, "drop-shadow", "rgba(0, 0, 0, 0.75) 6px 6px 0px"] },
   { start: "blur(75px)",
     end: "blur(25px) drop-shadow(8px 8px)",
-    expected: ["blur", 62.5, "drop-shadow", "rgb(0, 0, 0) 2px 2px 0px"] },
+    expected: ["blur", 62.5, "drop-shadow", "rgba(0, 0, 0, 0.25) 2px 2px 0px"] },
   { start: "drop-shadow(2px 2px blue)",
     end: "none",
     expected: ["drop-shadow", "rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px"] },
@@ -1716,12 +1716,9 @@ function test_shadow_transition(prop) {
      "shadow-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "8px 8px 8px red", "");
-  // Bug 726550 for gecko (can't transition), bug 1390697 for servo (doesn't
-  // work currentColor animation for {text,box}-shadow).
-  todo_is(cs.getPropertyValue(prop),
-          "rgb(66, 0, 0) 3.5px 3.5px 3.5px" + spreadStr,
-          "shadow-valued property " + prop +
-          ": interpolation values with/without color");
+  is(cs.getPropertyValue(prop), "rgb(66, 0, 0) 3.5px 3.5px 3.5px" + spreadStr,
+     "shadow-valued property " + prop +
+     ": interpolation values with/without color");
 
   // Transition beween values without color.
   var defaultColor = cs.getPropertyValue("color") + " ";
@@ -1734,6 +1731,19 @@ function test_shadow_transition(prop) {
   is(cs.getPropertyValue(prop), defaultColor + "3px 5px 4px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation without color");
   check_distance(prop, "2px 2px 2px", "3px 5px 4px", "6px 14px 10px");
+
+  // Transition between values with currentcolor transitioning.
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty("color", "rgb(0, 255, 0)", "");
+  div.style.setProperty(prop, "2px 2px 2px", "");
+  is(cs.getPropertyValue(prop), "rgb(0, 255, 0) 2px 2px 2px" + spreadStr,
+     "shadow-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", "color, " + prop, "");
+  div.style.setProperty("color", "rgb(0, 0, 255)", "");
+  div.style.setProperty(prop, "6px 10px 14px red", "");
+  is(cs.getPropertyValue(prop), "rgb(64, 143, 48) 3px 4px 5px" + spreadStr,
+     "shadow-valued property " + prop + ": interpolation with interpolating" +
+     "currentcolor");
 
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");

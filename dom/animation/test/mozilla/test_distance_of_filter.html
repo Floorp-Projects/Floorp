@@ -90,7 +90,13 @@ test(function(t) {
   var filter1 = 'drop-shadow(10px 10px 10px)';
   var filter2 = 'drop-shadow(5px 5px 1px yellow)';
   var dist = getDistance(target, 'filter', filter1, filter2);
-  assert_equals(dist, 0, filter1 + ' and ' + filter2);
+  // Yellow:      rgba(255, 255, 0, 1.0) = rgba(100%, 100%,   0%, 100%)
+  // Transparent: rgba(0, 0, 0, 0)       = rgba(  0%,   0%,   0%,   0%)
+  // Distance involving `currentcolor` is calculated as distance
+  //   from `transparent` + 1
+  assert_equals(dist,
+                Math.sqrt(5 * 5 * 2 + 9 * 9 + (1 * 1 * 3 + 1)),
+                filter1 + ' and ' + filter2);
 }, 'drop-shadows with color and non-color');
 
 test(function(t) {

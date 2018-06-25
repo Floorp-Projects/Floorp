@@ -1221,8 +1221,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                              std::move(options), static_cast<uint8_t>(mProtocolType), target,
                              false, EventStateManager::IsHandlingUserInput());
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
-      nsContentUtils::ResistFingerprinting(aCallerType)) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     target->Dispatch(ev.forget());
     return NS_OK;
@@ -1305,8 +1304,7 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
                              static_cast<uint8_t>(mProtocolType), target, true,
                              EventStateManager::IsHandlingUserInput(), watchId);
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
-      nsContentUtils::ResistFingerprinting(aCallerType)) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     target->Dispatch(ev.forget());
     return watchId;

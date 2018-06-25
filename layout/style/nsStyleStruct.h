@@ -868,8 +868,7 @@ struct nsCSSShadowItem
   nscoord mRadius;
   nscoord mSpread;
 
-  nscolor      mColor;
-  bool mHasColor; // Whether mColor should be used
+  mozilla::StyleComplexColor mColor;
   bool mInset;
 
   nsCSSShadowItem()
@@ -877,8 +876,7 @@ struct nsCSSShadowItem
     , mYOffset(0)
     , mRadius(0)
     , mSpread(0)
-    , mColor(NS_RGB(0, 0, 0))
-    , mHasColor(false)
+    , mColor(mozilla::StyleComplexColor::CurrentColor())
     , mInset(false)
   {
     MOZ_COUNT_CTOR(nsCSSShadowItem);
@@ -891,10 +889,9 @@ struct nsCSSShadowItem
     return (mXOffset == aOther.mXOffset &&
             mYOffset == aOther.mYOffset &&
             mRadius == aOther.mRadius &&
-            mHasColor == aOther.mHasColor &&
             mSpread == aOther.mSpread &&
             mInset == aOther.mInset &&
-            (!mHasColor || mColor == aOther.mColor));
+            mColor == aOther.mColor);
   }
   bool operator!=(const nsCSSShadowItem& aOther) const {
     return !(*this == aOther);
