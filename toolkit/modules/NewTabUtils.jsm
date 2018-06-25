@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["NewTabUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(["btoa"]);
+Cu.importGlobalProperties(["btoa", "URL"]);
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
@@ -960,6 +960,13 @@ var ActivityStreamProvider = {
                     pocket_id: item.item_id,
                     open_url: item.open_url
                   }));
+
+   // Append the query param to let Pocket know this item came from highlights
+    for (let item of items) {
+      let url = new URL(item.open_url);
+      url.searchParams.append("src", "fx_new_tab");
+      item.open_url = url.href;
+    }
 
     return this._processHighlights(items, aOptions, "pocket");
   },
