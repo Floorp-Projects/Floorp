@@ -715,3 +715,19 @@ function waitForNMutations(inspector, type, count) {
   });
 }
 
+/**
+ * Click on the reveal link the provided slotted container.
+ * Will resolve when selection emits "new-node-front".
+ */
+async function clickOnRevealLink(inspector, container) {
+  const onSelection = inspector.selection.once("new-node-front");
+  const revealLink = container.elt.querySelector(".reveal-link");
+  const tagline = revealLink.closest(".tag-line");
+  const win = inspector.markup.doc.defaultView;
+
+  // First send a mouseover on the tagline to force the link to be displayed.
+  EventUtils.synthesizeMouseAtCenter(tagline, {type: "mouseover"}, win);
+  EventUtils.synthesizeMouseAtCenter(revealLink, {}, win);
+
+  await onSelection;
+}
