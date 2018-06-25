@@ -152,7 +152,7 @@ RenderThread::AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRender
   mRenderers[aWindowId] = std::move(aRenderer);
 
   MutexAutoLock lock(mFrameCountMapLock);
-  mWindowInfos.Put(AsUint64(aWindowId), WindowInfo());
+  mWindowInfos.emplace(AsUint64(aWindowId), new WindowInfo());
 }
 
 void
@@ -171,7 +171,11 @@ RenderThread::RemoveRenderer(wr::WindowId aWindowId)
   }
 
   MutexAutoLock lock(mFrameCountMapLock);
-  mWindowInfos.Remove(AsUint64(aWindowId));
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  MOZ_ASSERT(it != mWindowInfos.end());
+  WindowInfo* toDelete = it->second;
+  mWindowInfos.erase(it);
+  delete toDelete;
 }
 
 RendererOGL*
@@ -370,112 +374,102 @@ RenderThread::TooManyPendingFrames(wr::WindowId aWindowId)
   // or if RenderBackend is still processing a frame.
 
   MutexAutoLock lock(mFrameCountMapLock);
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return true;
   }
+  WindowInfo* info = it->second;
 
-  if (info.mPendingCount > maxFrameCount) {
+  if (info->mPendingCount > maxFrameCount) {
     return true;
   }
-  MOZ_ASSERT(info.mPendingCount >= info.mRenderingCount);
-  return info.mPendingCount > info.mRenderingCount;
+  MOZ_ASSERT(info->mPendingCount >= info->mRenderingCount);
+  return info->mPendingCount > info->mRenderingCount;
 }
 
 bool
 RenderThread::IsDestroyed(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     return true;
   }
 
-  return info.mIsDestroyed;
+  return it->second->mIsDestroyed;
 }
 
 void
 RenderThread::SetDestroyed(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  info.mIsDestroyed = true;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  it->second->mIsDestroyed = true;
 }
 
 void
 RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  // Update pending frame count.
-  info.mPendingCount = info.mPendingCount + 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  it->second->mPendingCount++;
 }
 
 void
 RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  MOZ_ASSERT(info.mPendingCount > 0);
-  if (info.mPendingCount <= 0) {
+  WindowInfo* info = it->second;
+  MOZ_ASSERT(info->mPendingCount > 0);
+  if (info->mPendingCount <= 0) {
     return;
   }
-  // Update pending frame count.
-  info.mPendingCount = info.mPendingCount - 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  info->mPendingCount--;
 }
 
 void
 RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  // Update rendering frame count.
-  info.mRenderingCount = info.mRenderingCount + 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  it->second->mRenderingCount++;
 }
 
 void
 RenderThread::FrameRenderingComplete(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  MOZ_ASSERT(info.mPendingCount > 0);
-  MOZ_ASSERT(info.mRenderingCount > 0);
-  if (info.mPendingCount <= 0) {
+  WindowInfo* info = it->second;
+  MOZ_ASSERT(info->mPendingCount > 0);
+  MOZ_ASSERT(info->mRenderingCount > 0);
+  if (info->mPendingCount <= 0) {
     return;
   }
-  // Update frame counts.
-  info.mPendingCount = info.mPendingCount - 1;
-  info.mRenderingCount = info.mRenderingCount - 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  info->mPendingCount--;
+  info->mRenderingCount--;
 }
 
 void
