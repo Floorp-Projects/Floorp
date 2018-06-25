@@ -52,7 +52,7 @@ protected:
   nsresult NextNode(State&,
                     nsRange* aSearchRange,
                     nsRange* aStartPoint,
-                    nsRange* aEndPoint);
+                    nsRange* aEndPoint) const;
 
   // Get the first character from the next node (last if mFindBackward).
   //
@@ -60,14 +60,14 @@ protected:
   char16_t PeekNextChar(State&,
                         nsRange* aSearchRange,
                         nsRange* aStartPoint,
-                        nsRange* aEndPoint);
+                        nsRange* aEndPoint) const;
 
   // The iterator we use to move through the document:
   nsresult InitIterator(State&,
                         nsINode* aStartNode,
                         int32_t aStartOffset,
                         nsINode* aEndNode,
-                        int32_t aEndOffset);
+                        int32_t aEndOffset) const;
 };
 
 #endif // nsFind_h__
