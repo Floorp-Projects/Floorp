@@ -239,7 +239,7 @@ Touch::Equals(Touch* aTouch)
 JSObject*
 Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TouchBinding::Wrap(aCx, this, aGivenProto);
+  return Touch_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // Parent ourselves to the global of the target. This achieves the desirable

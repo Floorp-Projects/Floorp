@@ -91,7 +91,7 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 JSObject*
 IDBVersionChangeEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBVersionChangeEventBinding::Wrap(aCx, this, aGivenProto);
+  return IDBVersionChangeEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

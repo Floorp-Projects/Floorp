@@ -737,11 +737,11 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
   }
   if (GetPreviousSibling() == &aOtherNode) {
     MOZ_ASSERT(GetParentNode() == aOtherNode.GetParentNode());
-    return NodeBinding::DOCUMENT_POSITION_PRECEDING;
+    return Node_Binding::DOCUMENT_POSITION_PRECEDING;
   }
   if (GetNextSibling() == &aOtherNode) {
     MOZ_ASSERT(GetParentNode() == aOtherNode.GetParentNode());
-    return NodeBinding::DOCUMENT_POSITION_FOLLOWING;
+    return Node_Binding::DOCUMENT_POSITION_FOLLOWING;
   }
 
   AutoTArray<const nsINode*, 32> parents1, parents2;
@@ -772,16 +772,16 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
         if (attrName->Equals(attr1->NodeInfo())) {
           NS_ASSERTION(!attrName->Equals(attr2->NodeInfo()),
                        "Different attrs at same position");
-          return NodeBinding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
-            NodeBinding::DOCUMENT_POSITION_PRECEDING;
+          return Node_Binding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
+            Node_Binding::DOCUMENT_POSITION_PRECEDING;
         }
         if (attrName->Equals(attr2->NodeInfo())) {
-          return NodeBinding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
-            NodeBinding::DOCUMENT_POSITION_FOLLOWING;
+          return Node_Binding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
+            Node_Binding::DOCUMENT_POSITION_FOLLOWING;
         }
       }
       MOZ_ASSERT_UNREACHABLE("neither attribute in the element");
-      return NodeBinding::DOCUMENT_POSITION_DISCONNECTED;
+      return Node_Binding::DOCUMENT_POSITION_DISCONNECTED;
     }
 
     if (elem) {
@@ -812,12 +812,12 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
   const nsINode* top2 = parents2.ElementAt(--pos2);
   if (top1 != top2) {
     return top1 < top2 ?
-      (NodeBinding::DOCUMENT_POSITION_PRECEDING |
-       NodeBinding::DOCUMENT_POSITION_DISCONNECTED |
-       NodeBinding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) :
-      (NodeBinding::DOCUMENT_POSITION_FOLLOWING |
-       NodeBinding::DOCUMENT_POSITION_DISCONNECTED |
-       NodeBinding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+      (Node_Binding::DOCUMENT_POSITION_PRECEDING |
+       Node_Binding::DOCUMENT_POSITION_DISCONNECTED |
+       Node_Binding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) :
+      (Node_Binding::DOCUMENT_POSITION_FOLLOWING |
+       Node_Binding::DOCUMENT_POSITION_DISCONNECTED |
+       Node_Binding::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
   }
 
   // Find where the parent chain differs and check indices in the parent.
@@ -831,8 +831,8 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
       // ComputeIndexOf will return -1 for the attribute making the
       // attribute be considered before any child.
       return parent->ComputeIndexOf(child1) < parent->ComputeIndexOf(child2) ?
-        NodeBinding::DOCUMENT_POSITION_PRECEDING :
-        NodeBinding::DOCUMENT_POSITION_FOLLOWING;
+        Node_Binding::DOCUMENT_POSITION_PRECEDING :
+        Node_Binding::DOCUMENT_POSITION_FOLLOWING;
     }
     parent = child1;
   }
@@ -841,10 +841,10 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
   // between the chains. That must mean that one node is an ancestor of the
   // other. The one with the shortest chain must be the ancestor.
   return pos1 < pos2 ?
-    (NodeBinding::DOCUMENT_POSITION_PRECEDING |
-     NodeBinding::DOCUMENT_POSITION_CONTAINS) :
-    (NodeBinding::DOCUMENT_POSITION_FOLLOWING |
-     NodeBinding::DOCUMENT_POSITION_CONTAINED_BY);
+    (Node_Binding::DOCUMENT_POSITION_PRECEDING |
+     Node_Binding::DOCUMENT_POSITION_CONTAINS) :
+    (Node_Binding::DOCUMENT_POSITION_FOLLOWING |
+     Node_Binding::DOCUMENT_POSITION_CONTAINED_BY);
 }
 
 bool

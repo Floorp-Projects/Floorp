@@ -31,7 +31,7 @@ MediaKeyError::SystemCode() const
 JSObject*
 MediaKeyError::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaKeyErrorBinding::Wrap(aCx, this, aGivenProto);
+  return MediaKeyError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 

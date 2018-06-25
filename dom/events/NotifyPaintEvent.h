@@ -39,7 +39,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return NotifyPaintEventBinding::Wrap(aCx, this, aGivenProto);
+    return NotifyPaintEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   already_AddRefed<DOMRectList> ClientRects(SystemCallerGuarantee aGuarantee);

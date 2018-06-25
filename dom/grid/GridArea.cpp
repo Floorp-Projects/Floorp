@@ -43,7 +43,7 @@ GridArea::~GridArea()
 JSObject*
 GridArea::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return GridAreaBinding::Wrap(aCx, this, aGivenProto);
+  return GridArea_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

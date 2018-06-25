@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace dom {
 
-using namespace SVGTextContentElementBinding;
+using namespace SVGTextContentElement_Binding;
 
 nsSVGEnumMapping SVGTextContentElement::sLengthAdjustMap[] = {
   { &nsGkAtoms::spacing, LENGTHADJUST_SPACING },
@@ -34,7 +34,7 @@ nsSVGElement::EnumInfo SVGTextContentElement::sEnumInfo[1] =
 
 nsSVGElement::LengthInfo SVGTextContentElement::sLengthInfo[1] =
 {
-  { &nsGkAtoms::textLength, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
+  { &nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
 };
 
 SVGTextFrame*

@@ -307,7 +307,7 @@ MessagePort::Initialize(const nsID& aUUID,
 JSObject*
 MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MessagePortBinding::Wrap(aCx, this, aGivenProto);
+  return MessagePort_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

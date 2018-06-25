@@ -3244,7 +3244,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         return;
 #endif
     WidgetWheelEvent wheelEvent(true, eWheel, this);
-    wheelEvent.mDeltaMode = dom::WheelEventBinding::DOM_DELTA_LINE;
+    wheelEvent.mDeltaMode = dom::WheelEvent_Binding::DOM_DELTA_LINE;
     switch (aEvent->direction) {
 #if GTK_CHECK_VERSION(3,4,0)
     case GDK_SCROLL_SMOOTH:

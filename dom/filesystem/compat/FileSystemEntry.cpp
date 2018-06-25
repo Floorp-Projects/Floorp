@@ -66,7 +66,7 @@ FileSystemEntry::~FileSystemEntry()
 JSObject*
 FileSystemEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FileSystemEntryBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemEntry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

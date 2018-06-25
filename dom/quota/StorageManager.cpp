@@ -878,7 +878,7 @@ JSObject*
 StorageManager::WrapObject(JSContext* aCx,
                            JS::Handle<JSObject*> aGivenProto)
 {
-  return StorageManagerBinding::Wrap(aCx, this, aGivenProto);
+  return StorageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

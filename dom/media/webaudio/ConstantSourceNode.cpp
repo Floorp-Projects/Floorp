@@ -183,7 +183,7 @@ ConstantSourceNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 JSObject*
 ConstantSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ConstantSourceNodeBinding::Wrap(aCx, this, aGivenProto);
+  return ConstantSourceNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<ConstantSourceNode>

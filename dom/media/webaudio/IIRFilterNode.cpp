@@ -226,7 +226,7 @@ IIRFilterNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 JSObject*
 IIRFilterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IIRFilterNodeBinding::Wrap(aCx, this, aGivenProto);
+  return IIRFilterNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -47,7 +47,7 @@ FileReaderSync::WrapObject(JSContext* aCx,
                            JS::Handle<JSObject*> aGivenProto,
                            JS::MutableHandle<JSObject*> aReflector)
 {
-  return FileReaderSyncBinding::Wrap(aCx, this, aGivenProto, aReflector);
+  return FileReaderSync_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 void

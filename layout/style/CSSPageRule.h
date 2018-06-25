@@ -67,7 +67,7 @@ public:
   RawServoPageRule* Raw() const { return mRawRule; }
 
   // WebIDL interfaces
-  uint16_t Type() const final { return CSSRuleBinding::PAGE_RULE; }
+  uint16_t Type() const final { return CSSRule_Binding::PAGE_RULE; }
   void GetCssText(nsAString& aCssText) const final;
   nsICSSDeclaration* Style();
 

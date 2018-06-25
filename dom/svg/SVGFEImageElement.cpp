@@ -29,7 +29,7 @@ namespace dom {
 JSObject*
 SVGFEImageElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEImageElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEImageElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGFEImageElement::sStringInfo[3] =

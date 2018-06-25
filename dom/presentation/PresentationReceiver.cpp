@@ -86,7 +86,7 @@ void PresentationReceiver::Shutdown()
 PresentationReceiver::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto)
 {
-  return PresentationReceiverBinding::Wrap(aCx, this, aGivenProto);
+  return PresentationReceiver_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMETHODIMP

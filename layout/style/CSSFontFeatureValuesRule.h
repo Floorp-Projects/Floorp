@@ -26,7 +26,7 @@ public:
   RawServoFontFeatureValuesRule* Raw() const { return mRawRule; }
 
   // WebIDL interfaces
-  uint16_t Type() const final { return CSSRuleBinding::FONT_FEATURE_VALUES_RULE; }
+  uint16_t Type() const final { return CSSRule_Binding::FONT_FEATURE_VALUES_RULE; }
   void GetCssText(nsAString& aCssText) const override;
   void GetFontFamily(nsAString& aFamily);
   void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv);

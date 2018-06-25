@@ -253,7 +253,7 @@ DynamicsCompressorNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 JSObject*
 DynamicsCompressorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DynamicsCompressorNodeBinding::Wrap(aCx, this, aGivenProto);
+  return DynamicsCompressorNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

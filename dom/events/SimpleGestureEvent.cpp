@@ -30,7 +30,7 @@ SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     static_cast<WidgetMouseEventBase*>(mEvent)->inputSource =
-      MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+      MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
 }
 

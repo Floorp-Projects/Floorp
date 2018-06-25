@@ -208,7 +208,7 @@ WebGLTransformFeedback::AddBufferBindCounts(int8_t addVal) const
 JSObject*
 WebGLTransformFeedback::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLTransformFeedbackBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLTransformFeedback_Binding::Wrap(cx, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLTransformFeedback, AddRef)

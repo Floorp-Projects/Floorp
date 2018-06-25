@@ -246,7 +246,7 @@ HTMLSlotElement::FireSlotChangeEvent()
 JSObject*
 HTMLSlotElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLSlotElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLSlotElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

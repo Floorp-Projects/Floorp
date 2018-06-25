@@ -32,7 +32,7 @@ SpeechRecognitionResult::~SpeechRecognitionResult()
 JSObject*
 SpeechRecognitionResult::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SpeechRecognitionResultBinding::Wrap(aCx, this, aGivenProto);
+  return SpeechRecognitionResult_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*

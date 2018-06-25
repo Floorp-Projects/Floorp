@@ -267,8 +267,8 @@ HTMLImageElement::GetAttributeChangeHint(const nsAtom* aAttribute,
       aAttribute == nsGkAtoms::ismap) {
     retval |= nsChangeHint_ReconstructFrame;
   } else if (aAttribute == nsGkAtoms::alt) {
-    if (aModType == MutationEventBinding::ADDITION ||
-        aModType == MutationEventBinding::REMOVAL) {
+    if (aModType == MutationEvent_Binding::ADDITION ||
+        aModType == MutationEvent_Binding::REMOVAL) {
       retval |= nsChangeHint_ReconstructFrame;
     }
   }
@@ -852,7 +852,7 @@ HTMLImageElement::GetCORSMode()
 JSObject*
 HTMLImageElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLImageElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLImageElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 #ifdef DEBUG

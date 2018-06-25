@@ -55,7 +55,7 @@ nsHistory::GetParentObject() const
 JSObject*
 nsHistory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HistoryBinding::Wrap(aCx, this, aGivenProto);
+  return History_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 uint32_t

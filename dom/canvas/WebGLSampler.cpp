@@ -49,7 +49,7 @@ WebGLSampler::GetParentObject() const
 JSObject*
 WebGLSampler::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLSamplerBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLSampler_Binding::Wrap(cx, this, givenProto);
 }
 
 static bool

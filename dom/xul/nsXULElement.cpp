@@ -630,7 +630,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         }
         if (aKeyCausesActivation &&
             !content->IsAnyOfXULElements(nsGkAtoms::textbox, nsGkAtoms::menulist)) {
-          elm->ClickWithInputSource(MouseEventBinding::MOZ_SOURCE_KEYBOARD, aIsTrustedEvent);
+          elm->ClickWithInputSource(MouseEvent_Binding::MOZ_SOURCE_KEYBOARD, aIsTrustedEvent);
         }
     } else {
         return content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
@@ -1216,7 +1216,7 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
         // sourceEvent will be the original command event that we're
         // handling.
         RefPtr<Event> event = aVisitor.mDOMEvent;
-        uint16_t inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+        uint16_t inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
         while (event) {
             NS_ENSURE_STATE(event->GetOriginalTarget() != commandElt);
             RefPtr<XULCommandEvent> commandEvent = event->AsXULCommandEvent();
@@ -1305,8 +1305,8 @@ nsXULElement::GetAttributeChangeHint(const nsAtom* aAttribute,
     nsChangeHint retval(nsChangeHint(0));
 
     if (aAttribute == nsGkAtoms::value &&
-        (aModType == MutationEventBinding::REMOVAL ||
-         aModType == MutationEventBinding::ADDITION)) {
+        (aModType == MutationEvent_Binding::REMOVAL ||
+         aModType == MutationEvent_Binding::ADDITION)) {
       if (IsAnyOfXULElements(nsGkAtoms::label, nsGkAtoms::description))
         // Label and description dynamically morph between a normal
         // block and a cropping single-line XUL text frame.  If the
@@ -1505,7 +1505,7 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 void
 nsXULElement::Click(CallerType aCallerType)
 {
-  ClickWithInputSource(MouseEventBinding::MOZ_SOURCE_UNKNOWN,
+  ClickWithInputSource(MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
                        aCallerType == CallerType::System);
 }
 
@@ -1874,7 +1874,7 @@ nsXULElement::IsEventAttributeNameInternal(nsAtom *aName)
 JSObject*
 nsXULElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::XULElementBinding::Wrap(aCx, this, aGivenProto);
+    return dom::XULElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)

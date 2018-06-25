@@ -467,7 +467,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 PushManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PushManagerBinding::Wrap(aCx, this, aGivenProto);
+  return PushManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // static

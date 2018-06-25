@@ -1333,7 +1333,7 @@ HTMLTextAreaElement::FieldSetDisabledChanged(bool aNotify)
 JSObject*
 HTMLTextAreaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTextAreaElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTextAreaElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -194,19 +194,19 @@ IsDOMObject(JSObject* obj)
 // can be anything that converts to JSObject*.
 #define UNWRAP_OBJECT(Interface, obj, value)                                 \
   mozilla::dom::UnwrapObject<mozilla::dom::prototypes::id::Interface,        \
-    mozilla::dom::Interface##Binding::NativeType>(obj, value)
+    mozilla::dom::Interface##_Binding::NativeType>(obj, value)
 
 // Test whether the given object is an instance of the given interface.
 #define IS_INSTANCE_OF(Interface, obj)                                  \
   mozilla::dom::IsInstanceOf<mozilla::dom::prototypes::id::Interface,   \
-                             mozilla::dom::Interface##Binding::NativeType>(obj)
+                             mozilla::dom::Interface##_Binding::NativeType>(obj)
 
 // Unwrap the given non-wrapper object.  This can be used with any obj that
 // converts to JSObject*; as long as that JSObject* is live the return value
 // will be valid.
 #define UNWRAP_NON_WRAPPER_OBJECT(Interface, obj, value)                        \
   mozilla::dom::UnwrapNonWrapperObject<mozilla::dom::prototypes::id::Interface, \
-    mozilla::dom::Interface##Binding::NativeType>(obj, value)
+    mozilla::dom::Interface##_Binding::NativeType>(obj, value)
 
 // Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort

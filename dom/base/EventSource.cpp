@@ -2034,7 +2034,7 @@ JSObject*
 EventSource::WrapObject(JSContext* aCx,
                         JS::Handle<JSObject*> aGivenProto)
 {
-  return EventSourceBinding::Wrap(aCx, this, aGivenProto);
+  return EventSource_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

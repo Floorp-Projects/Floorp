@@ -25,7 +25,7 @@ JSObject*
 DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(mParent);
-  return DOMRectReadOnlyBinding::Wrap(aCx, this, aGivenProto);
+  return DOMRectReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMRectReadOnly>
@@ -43,7 +43,7 @@ JSObject*
 DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(mParent);
-  return DOMRectBinding::Wrap(aCx, this, aGivenProto);
+  return DOMRect_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMRect>
@@ -71,7 +71,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectList)
 JSObject*
 DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::DOMRectListBinding::Wrap(cx, this, aGivenProto);
+  return mozilla::dom::DOMRectList_Binding::Wrap(cx, this, aGivenProto);
 }
 
 static double

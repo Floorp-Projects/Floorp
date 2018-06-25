@@ -31,7 +31,7 @@ Credential::~Credential()
 JSObject*
 Credential::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CredentialBinding::Wrap(aCx, this, aGivenProto);
+  return Credential_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

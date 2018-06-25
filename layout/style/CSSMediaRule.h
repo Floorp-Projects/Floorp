@@ -31,7 +31,7 @@ public:
   RawServoMediaRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  uint16_t Type() const override { return CSSRuleBinding::MEDIA_RULE; }
+  uint16_t Type() const override { return CSSRule_Binding::MEDIA_RULE; }
   // WebIDL interface
   void GetCssText(nsAString& aCssText) const final;
   void GetConditionText(nsAString& aConditionText) final;

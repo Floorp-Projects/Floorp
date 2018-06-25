@@ -121,7 +121,7 @@ WebGLActiveInfo::IsSampler() const
 JSObject*
 WebGLActiveInfo::WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLActiveInfoBinding::Wrap(js, this, givenProto);
+    return dom::WebGLActiveInfo_Binding::Wrap(js, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLActiveInfo)

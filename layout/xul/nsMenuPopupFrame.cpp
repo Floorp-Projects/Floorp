@@ -2055,7 +2055,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent, bool& doAction)
   DOMTimeStamp keyTime = aKeyEvent->TimeStamp();
 
   if (charCode == 0) {
-    if (keyCode == dom::KeyboardEventBinding::DOM_VK_BACK_SPACE) {
+    if (keyCode == dom::KeyboardEvent_Binding::DOM_VK_BACK_SPACE) {
       if (!isMenu && !mIncrementalString.IsEmpty()) {
         mIncrementalString.SetLength(mIncrementalString.Length() - 1);
         return nullptr;

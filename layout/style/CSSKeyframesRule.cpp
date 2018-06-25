@@ -339,7 +339,7 @@ CSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 /* virtual */ JSObject*
 CSSKeyframesRule::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSKeyframesRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSKeyframesRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

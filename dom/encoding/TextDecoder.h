@@ -53,7 +53,7 @@ public:
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
   {
-    return TextDecoderBinding::Wrap(aCx, this, aGivenProto, aReflector);
+    return TextDecoder_Binding::Wrap(aCx, this, aGivenProto, aReflector);
   }
 
   /**
