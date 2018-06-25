@@ -80,7 +80,7 @@ BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
     if (!binKindMap_.initialized()) {
         // Initialize lazily.
         if (!binKindMap_.init(frontend::BINKIND_LIMIT))
-            return cx->alreadyReportedError();
+            return ReportOutOfMemoryResult(cx);
 
         for (size_t i = 0; i < frontend::BINKIND_LIMIT; ++i) {
             const BinKind variant = static_cast<BinKind>(i);
@@ -88,7 +88,7 @@ BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
             auto ptr = binKindMap_.lookupForAdd(key);
             MOZ_ASSERT(!ptr);
             if (!binKindMap_.add(ptr, key, variant))
-                return cx->alreadyReportedError();
+                return ReportOutOfMemoryResult(cx);
         }
     }
 
@@ -104,7 +104,7 @@ BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key) {
     if (!binVariantMap_.initialized()) {
         // Initialize lazily.
         if (!binVariantMap_.init(frontend::BINVARIANT_LIMIT))
-            return cx->alreadyReportedError();
+            return ReportOutOfMemoryResult(cx);
 
         for (size_t i = 0; i < frontend::BINVARIANT_LIMIT; ++i) {
             const BinVariant variant = static_cast<BinVariant>(i);
@@ -112,7 +112,7 @@ BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key) {
             auto ptr = binVariantMap_.lookupForAdd(key);
             MOZ_ASSERT(!ptr);
             if (!binVariantMap_.add(ptr, key, variant))
-                return cx->alreadyReportedError();
+                return ReportOutOfMemoryResult(cx);
         }
     }
 
