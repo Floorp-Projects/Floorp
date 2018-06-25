@@ -2173,8 +2173,13 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
     ObjectRealm& realm = ObjectRealm::get(this);
     if (!realm.lazyArrayBuffers) {
         auto table = cx->make_unique<ObjectWeakMap>(cx);
-        if (!table || !table->init())
+        if (!table)
             return nullptr;
+
+        if (!table->init()) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
 
         realm.lazyArrayBuffers = std::move(table);
     }

@@ -7011,8 +7011,10 @@ JSErrorNotes::addNoteASCII(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(std::move(note)))
+    if (!notes_.append(std::move(note))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     return true;
 }
 
@@ -7030,8 +7032,10 @@ JSErrorNotes::addNoteLatin1(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(std::move(note)))
+    if (!notes_.append(std::move(note))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     return true;
 }
 
@@ -7049,8 +7053,10 @@ JSErrorNotes::addNoteUTF8(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(std::move(note)))
+    if (!notes_.append(std::move(note))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     return true;
 }
 
