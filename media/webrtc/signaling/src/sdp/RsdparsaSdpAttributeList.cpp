@@ -393,13 +393,6 @@ RsdparsaSdpAttributeList::GetSsrc() const
   return *static_cast<const SdpSsrcAttributeList*>(attr);
 }
 
-const SdpSsrcGroupAttributeList&
-RsdparsaSdpAttributeList::GetSsrcGroup() const
-{
-  // TODO: See Bug 1437166.
-  MOZ_CRASH("Not yet implemented");
-}
-
 void
 RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
                                         AttributeType type)
