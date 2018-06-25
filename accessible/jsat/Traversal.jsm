@@ -177,6 +177,7 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
 
 var gSimplePreFilter = Prefilters.DEFUNCT |
   Prefilters.INVISIBLE |
+  Prefilters.ARIA_HIDDEN |
   Prefilters.TRANSPARENT;
 
 var TraversalRules = { // jshint ignore:line
@@ -184,7 +185,7 @@ var TraversalRules = { // jshint ignore:line
 
   SimpleOnScreen: new BaseTraversalRule(
     gSimpleTraversalRoles, gSimpleMatchFunc,
-    Prefilters.DEFUNCT | Prefilters.INVISIBLE |
+    Prefilters.DEFUNCT | Prefilters.INVISIBLE | Prefilters.ARIA_HIDDEN |
     Prefilters.TRANSPARENT | Prefilters.OFFSCREEN),
 
   Anchor: new BaseTraversalRule(
