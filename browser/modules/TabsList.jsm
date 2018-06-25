@@ -21,11 +21,10 @@ function setAttributes(element, attrs) {
 }
 
 class TabsListBase {
-  constructor({className, filterFn, insertBefore, onPopulate, containerNode}) {
+  constructor({className, filterFn, insertBefore, containerNode}) {
     this.className = className;
     this.filterFn = filterFn;
     this.insertBefore = insertBefore;
-    this.onPopulate = onPopulate;
     this.containerNode = containerNode;
 
     this.doc = containerNode.ownerDocument;
@@ -87,10 +86,6 @@ class TabsListBase {
     }
 
     this._setupListeners();
-
-    if (typeof this.onPopulate == "function") {
-      this.onPopulate(event);
-    }
   }
 
   /*
@@ -151,12 +146,6 @@ class TabsPanel extends TabsListBase {
     super({
       ...opts,
       containerNode: opts.containerNode || opts.view.firstChild,
-      onPopulate: (...args) => {
-        this._onPopulate(...args);
-        if (typeof opts.onPopulate == "function") {
-          opts.onPopulate.call(this, ...args);
-        }
-      },
     });
     this.view = opts.view;
     this.view.addEventListener(TABS_PANEL_EVENTS.show, this);
@@ -188,9 +177,11 @@ class TabsPanel extends TabsListBase {
     }
   }
 
-  _onPopulate(event) {
+  _populate(event) {
+    super._populate(event);
+
     // The loading throbber can't be set until the toolbarbutton is rendered,
-    // so do that on first populate.
+    // so set the image attributes again now that the elements are in the DOM.
     for (let row of this.rows) {
       this._setImageAttributes(row, row.tab);
     }
