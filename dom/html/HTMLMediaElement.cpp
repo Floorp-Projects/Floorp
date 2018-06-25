@@ -4056,6 +4056,9 @@ HTMLMediaElement::Play(ErrorResult& aRv)
   if (AudioChannelAgentBlockedPlay()) {
     LOG(LogLevel::Debug, ("%p play blocked by AudioChannelAgent.", this));
     promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+    if (StaticPrefs::MediaBlockEventEnabled()) {
+      DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
+    }
     return promise.forget();
   }
 
@@ -4070,6 +4073,9 @@ HTMLMediaElement::Play(ErrorResult& aRv)
     case Authorization::Blocked: {
       LOG(LogLevel::Debug, ("%p play not blocked.", this));
       promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+      if (StaticPrefs::MediaBlockEventEnabled()) {
+        DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
+      }
       break;
     }
     case Authorization::Prompt: {
@@ -7881,6 +7887,11 @@ HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError)
 
   if (mShuttingDown) {
     return;
+  }
+
+  if (aError == NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR &&
+      Preferences::GetBool("media.autoplay.block-event.enabled", false)) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("blocked"));
   }
 
   nsCOMPtr<nsIRunnable> event = new nsResolveOrRejectPendingPlayPromisesRunner(
