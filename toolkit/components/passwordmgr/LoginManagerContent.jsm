@@ -163,7 +163,6 @@ function messageManagerFromWindow(win) {
 
 // This object maps to the "child" process (even in the single-process case).
 var LoginManagerContent = {
-
   __formFillService: null, // FormFillController, for username autocompleting
   get _formFillService() {
     if (!this.__formFillService)
@@ -346,6 +345,15 @@ var LoginManagerContent = {
     return this._sendRequest(messageManager, requestData,
                              "RemoteLogins:autoCompleteLogins",
                              messageData);
+  },
+
+  setupEventListeners(global) {
+    global.addEventListener("pageshow", (event) => {
+      this.onPageShow(event, global.content);
+    });
+    global.addEventListener("blur", (event) => {
+      this.onUsernameInput(event);
+    });
   },
 
   setupProgressListener(window) {
