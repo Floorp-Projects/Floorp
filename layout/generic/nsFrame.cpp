@@ -722,7 +722,12 @@ nsFrame::Init(nsIContent*       aContent,
   // Usually we update the state when the frame is restyled and has a
   // VisibilityChange change hint but we don't generate any change hints for
   // newly created frames.
-  UpdateVisibleDescendantsState();
+  // Note: We don't need to do this for placeholders since placeholders have
+  // different styles so that the styles don't have visibility:hidden even if
+  // the parent has visibility:hidden style.
+  if (!IsPlaceholderFrame()) {
+    UpdateVisibleDescendantsState();
+  }
 }
 
 void
