@@ -225,7 +225,6 @@ private:
   bool GetLineHeightCoord(nscoord& aCoord);
 
   already_AddRefed<CSSValue> GetCSSShadowArray(nsCSSShadowArray* aArray,
-                                               const nscolor& aDefaultColor,
                                                bool aIsBoxShadow);
 
   void GetCSSGradientString(const nsStyleGradient* aGradient,

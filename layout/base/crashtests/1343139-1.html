@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+window.onload = () => {
+  let o0 = document.createElement("span"),
+      o1 = document.createElement("div");
+  document.documentElement.appendChild(o0);
+  o0.appendChild(o1);
+  o0.animate([{"filter": "invert(96%)"}], 100);
+  o1.animate([{"mask": "linear-gradient(red,blue)", "transform": "none"}], 100);
+
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+};
+</script>
+</head>
+</html>

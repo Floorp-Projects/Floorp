@@ -374,9 +374,13 @@ MessageManagerTunnel.prototype = {
     "Forms:SelectDropDownItem",
     // Messages sent from SessionStore.jsm
     "SessionStore:flush",
+    "SessionStore:restoreHistory",
+    "SessionStore:restoreTabContent",
   ],
 
   INNER_TO_OUTER_MESSAGES: [
+    // Messages sent to browser.js
+    "Browser:LoadURI",
     // Messages sent to RemoteWebProgress.jsm
     "Content:LoadURIResult",
     "Content:LocationChange",

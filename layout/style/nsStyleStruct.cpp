@@ -1320,11 +1320,6 @@ nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aNewData) const
     hint |= nsChangeHint_RepaintFrame;
   }
 
-  if (HasMask() != aNewData.HasMask()) {
-    // A change from/to being a containing block for position:fixed.
-    hint |= nsChangeHint_UpdateContainingBlock;
-  }
-
   hint |= mMask.CalcDifference(aNewData.mMask,
                                nsStyleImageLayers::LayerType::Mask);
 
@@ -3694,6 +3689,9 @@ CompareTransformValues(const RefPtr<nsCSSValueSharedList>& aList,
                        const RefPtr<nsCSSValueSharedList>& aNewList)
 {
   nsChangeHint result = nsChangeHint(0);
+
+  // Note: If we add a new change hint for transform changes here, we have to
+  // modify KeyframeEffect::CalculateCumulativeChangeHint too!
   if (!aList != !aNewList || (aList && *aList != *aNewList)) {
     result |= nsChangeHint_UpdateTransformLayer;
     if (aList && aNewList) {
@@ -3818,6 +3816,10 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
     // We do not need to apply nsChangeHint_UpdateTransformLayer since
     // nsChangeHint_RepaintFrame will forcibly invalidate the frame area and
     // ensure layers are rebuilt (or removed).
+    //
+    // Note: If we add a new change hint for transform changes here or in
+    // CompareTransformValues(), we have to modify
+    // KeyframeEffect::CalculateCumulativeChangeHint too!
     hint |= nsChangeHint_UpdateContainingBlock |
             nsChangeHint_AddOrRemoveTransform |
             nsChangeHint_UpdateOverflow |

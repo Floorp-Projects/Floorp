@@ -74,6 +74,12 @@ public:
 
   /**
    * Compute the color for this StyleComplexColor, taking into account
+   * the foreground color, aForegroundColor.
+   */
+  nscolor CalcColor(nscolor aForegroundColor) const;
+
+  /**
+   * Compute the color for this StyleComplexColor, taking into account
    * the foreground color from aStyle.
    */
   nscolor CalcColor(mozilla::ComputedStyle* aStyle) const;

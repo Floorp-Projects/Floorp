@@ -1131,8 +1131,7 @@ public:
             staticSink->IsATOK2012ActiveInternal() ||
             staticSink->IsATOK2013ActiveInternal() ||
             staticSink->IsATOK2014ActiveInternal() ||
-            staticSink->IsATOK2015ActiveInternal() ||
-            staticSink->IsATOK2016ActiveInternal());
+            staticSink->IsATOK2015ActiveInternal());
   }
 
 private:
@@ -4512,8 +4511,10 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
              TSFStaticSink::IsATOKActive() &&
              (!TSFStaticSink::IsATOKReferringNativeCaretActive() ||
               !TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) &&
-             mContentForTSF.LatestCompositionStartOffset() == acpStart &&
-             mContentForTSF.LatestCompositionEndOffset() == acpEnd) {
+             acpStart >= mContentForTSF.LatestCompositionStartOffset() &&
+             acpStart <= mContentForTSF.LatestCompositionEndOffset() &&
+             acpEnd >= mContentForTSF.LatestCompositionStartOffset() &&
+             acpEnd <= mContentForTSF.LatestCompositionEndOffset()) {
       dontReturnNoLayoutError = true;
     }
     // Japanist 10 fails to handle TS_E_NOLAYOUT when it decides the position of

@@ -136,25 +136,33 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
     bool IsURL(const nsStaticAtom* const* aURLs, nsAtom* aLocalName);
 
     /**
+     * Struct for what attributes and their values are allowed.
+     */
+    struct AllowedAttributes
+    {
+      // The whitelist of permitted local names to use.
+      AtomsTable* mNames = nullptr;
+      // The local names of URL-valued attributes for URL checking.
+      const nsStaticAtom* const* mURLs = nullptr;
+      // Whether XLink attributes are allowed.
+      bool mXLink = false;
+      // Whether the style attribute is allowed.
+      bool mStyle = false;
+      // Whether to leave the value of the src attribute unsanitized.
+      bool mDangerousSrc = false;
+    };
+
+    /**
      * Removes dangerous attributes from the element. If the style attribute
      * is allowed, its value is sanitized. The values of URL attributes are
      * sanitized, except src isn't sanitized when it is allowed to remain
      * potentially dangerous.
      *
      * @param aElement the element whose attributes should be sanitized
-     * @param aAllowed the whitelist of permitted local names to use
-     * @param aURLs the local names of URL-valued attributes
-     * @param aAllowXLink whether XLink attributes are allowed
-     * @param aAllowStyle whether the style attribute is allowed
-     * @param aAllowDangerousSrc whether to leave the value of the src
-     *                           attribute unsanitized
+     * @param aAllowed options for sanitizing attributes
      */
     void SanitizeAttributes(mozilla::dom::Element* aElement,
-                            AtomsTable* aAllowed,
-                            const nsStaticAtom* const* aURLs,
-                            bool aAllowXLink,
-                            bool aAllowStyle,
-                            bool aAllowDangerousSrc);
+                            AllowedAttributes aAllowed);
 
     /**
      * Remove the named URL attribute from the element if the URL fails a
