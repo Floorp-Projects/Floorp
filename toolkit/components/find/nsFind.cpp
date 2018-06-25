@@ -593,13 +593,11 @@ nsFind::InitIterator(nsINode* aStartNode, int32_t aStartOffset,
   NS_ENSURE_ARG_POINTER(aStartNode);
   NS_ENSURE_ARG_POINTER(aEndNode);
 
-#ifdef DEBUG_FIND
   DEBUG_FIND_PRINTF("InitIterator search range:\n");
   DEBUG_FIND_PRINTF(" -- start %d, ", aStartOffset);
   DumpNode(aStartNode);
   DEBUG_FIND_PRINTF(" -- end %d, ", aEndOffset);
   DumpNode(aEndNode);
-#endif
 
   nsresult rv = mIterator->Init(aStartNode, aStartOffset, aEndNode, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
