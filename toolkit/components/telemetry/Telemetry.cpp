@@ -24,6 +24,7 @@
 #include "mozilla/Unused.h"
 
 #include "base/pickle.h"
+#include "CombinedStacks.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsThreadManager.h"
