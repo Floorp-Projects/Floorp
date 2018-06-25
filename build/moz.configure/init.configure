@@ -230,10 +230,11 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
     if topobjdir.endswith('/js/src'):
         topobjdir = topobjdir[:-7]
 
+    virtualenvs_root = os.path.join(topobjdir, '_virtualenvs')
     with LineIO(lambda l: log.info(l), 'replace') as out:
         manager = VirtualenvManager(
             topsrcdir, topobjdir,
-            os.path.join(topobjdir, '_virtualenvs', 'init'), out,
+            os.path.join(virtualenvs_root, 'init'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
     if python:
@@ -256,7 +257,7 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
 
     python = normsep(manager.python_path)
 
-    if python != normsep(sys.executable):
+    if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
         log.info('Reexecuting in the virtualenv')
         if env_python:
             del os.environ['PYTHON']

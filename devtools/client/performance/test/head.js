@@ -7,8 +7,17 @@
 
 const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
+try {
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
+} catch (e) {
+  ok(false,
+    "MISSING DEPENDENCY ON telemetry-test-helpers.js\n" +
+    "Please add the following line in browser.ini:\n" +
+    "  !/devtools/client/shared/test/telemetry-test-helpers.js\n"
+  );
+  throw e;
+}
 
 /* exported loader, either, click, dblclick, mousedown, rightMousedown, key */
 // All tests are asynchronous.

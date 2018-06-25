@@ -16,8 +16,15 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 add_task(async function() {
+  // Run test with legacy JsTerm
+  await testHistory();
+  // And then run it with the CodeMirror-powered one.
+  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
+  await testHistory();
+});
+
+async function testHistory() {
   const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
-  const { inputNode } = jsterm;
   ui.clearOutput();
 
   for (const command of COMMANDS) {
@@ -28,22 +35,22 @@ add_task(async function() {
 
   for (let x = COMMANDS.length - 1; x != -1; x--) {
     jsterm.historyPeruse(HISTORY_BACK);
-    is(inputNode.value, COMMANDS[x], "check history previous idx:" + x);
+    is(jsterm.getInputValue(), COMMANDS[x], "check history previous idx:" + x);
   }
 
   jsterm.historyPeruse(HISTORY_BACK);
-  is(inputNode.value, COMMANDS[0], "test that item is still index 0");
+  is(jsterm.getInputValue(), COMMANDS[0], "test that item is still index 0");
 
   jsterm.historyPeruse(HISTORY_BACK);
-  is(inputNode.value, COMMANDS[0], "test that item is still still index 0");
+  is(jsterm.getInputValue(), COMMANDS[0], "test that item is still still index 0");
 
   for (let i = 1; i < COMMANDS.length; i++) {
     jsterm.historyPeruse(HISTORY_FORWARD);
-    is(inputNode.value, COMMANDS[i], "check history next idx:" + i);
+    is(jsterm.getInputValue(), COMMANDS[i], "check history next idx:" + i);
   }
 
   jsterm.historyPeruse(HISTORY_FORWARD);
-  is(inputNode.value, "", "check input is empty again");
+  is(jsterm.getInputValue(), "", "check input is empty again");
 
   // Simulate pressing Arrow_Down a few times and then if Arrow_Up shows
   // the previous item from history again.
@@ -51,9 +58,9 @@ add_task(async function() {
   jsterm.historyPeruse(HISTORY_FORWARD);
   jsterm.historyPeruse(HISTORY_FORWARD);
 
-  is(inputNode.value, "", "check input is still empty");
+  is(jsterm.getInputValue(), "", "check input is still empty");
 
   const idxLast = COMMANDS.length - 1;
   jsterm.historyPeruse(HISTORY_BACK);
-  is(inputNode.value, COMMANDS[idxLast], "check history next idx:" + idxLast);
-});
+  is(jsterm.getInputValue(), COMMANDS[idxLast], "check history next idx:" + idxLast);
+}

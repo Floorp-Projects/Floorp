@@ -8598,15 +8598,6 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
   } else if (LayoutFrameType::ImageControl == frameType) {
     newFrame = NS_NewImageControlFrame(shell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
-  } else if (LayoutFrameType::Placeholder == frameType) {
-    // create a continuing out of flow frame
-    nsIFrame* oofFrame = nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
-    nsIFrame* oofContFrame =
-      CreateContinuingFrame(aPresContext, oofFrame, aParentFrame);
-    newFrame =
-      CreatePlaceholderFrameFor(shell, content, oofContFrame,
-                                aParentFrame, aFrame,
-                                aFrame->GetStateBits() & PLACEHOLDER_TYPE_MASK);
   } else if (LayoutFrameType::FieldSet == frameType) {
     nsContainerFrame* fieldset = NS_NewFieldSetFrame(shell, computedStyle);
 

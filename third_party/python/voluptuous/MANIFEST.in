@@ -1,0 +1,4 @@
+include *.md
+include COPYING
+include voluptuous/tests/*.py
+include voluptuous/tests/*.md

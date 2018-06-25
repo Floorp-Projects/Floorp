@@ -130,3 +130,6 @@ fuzzy-if(gtkWidget,3,4) == text-emphasis-line-height-002b.html text-emphasis-lin
 == text-emphasis-line-height-004d.html text-emphasis-line-height-004-ref.html
 # END tests from support/generate-text-emphasis-line-height-tests.py
 fuzzy-if(gtkWidget,3,4) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),43,1) == text-emphasis-line-height-001z.html text-emphasis-line-height-001-ref.html
+
+# text-shadow 'currentcolor' test cases
+== text-shadow-currentcolor.html text-shadow-currentcolor-ref.html
