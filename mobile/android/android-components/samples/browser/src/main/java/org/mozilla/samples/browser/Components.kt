@@ -34,7 +34,7 @@ class Components(private val applicationContext: Context) {
             sessionStorage.restore(engine, this)
 
             if (size == 0) {
-                val initialSession =  Session("https://www.mozilla.org")
+                val initialSession = Session("https://www.mozilla.org")
                 add(initialSession)
             }
         }
