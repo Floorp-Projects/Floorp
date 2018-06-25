@@ -280,32 +280,32 @@ AllocChars(JSString* str, size_t length, CharT** chars, size_t* capacity)
 }
 
 UniquePtr<Latin1Char[], JS::FreePolicy>
-JSRope::copyLatin1CharsZ(JSContext* cx) const
+JSRope::copyLatin1CharsZ(JSContext* maybecx) const
 {
-    return copyCharsInternal<Latin1Char>(cx, true);
+    return copyCharsInternal<Latin1Char>(maybecx, true);
 }
 
 UniqueTwoByteChars
-JSRope::copyTwoByteCharsZ(JSContext* cx) const
+JSRope::copyTwoByteCharsZ(JSContext* maybecx) const
 {
-    return copyCharsInternal<char16_t>(cx, true);
+    return copyCharsInternal<char16_t>(maybecx, true);
 }
 
 UniquePtr<Latin1Char[], JS::FreePolicy>
-JSRope::copyLatin1Chars(JSContext* cx) const
+JSRope::copyLatin1Chars(JSContext* maybecx) const
 {
-    return copyCharsInternal<Latin1Char>(cx, false);
+    return copyCharsInternal<Latin1Char>(maybecx, false);
 }
 
 UniqueTwoByteChars
-JSRope::copyTwoByteChars(JSContext* cx) const
+JSRope::copyTwoByteChars(JSContext* maybecx) const
 {
-    return copyCharsInternal<char16_t>(cx, false);
+    return copyCharsInternal<char16_t>(maybecx, false);
 }
 
 template <typename CharT>
 UniquePtr<CharT[], JS::FreePolicy>
-JSRope::copyCharsInternal(JSContext* cx, bool nullTerminate) const
+JSRope::copyCharsInternal(JSContext* maybecx, bool nullTerminate) const
 {
     // Left-leaning ropes are far more common than right-leaning ropes, so
     // perform a non-destructive traversal of the rope, right node first,
@@ -314,8 +314,8 @@ JSRope::copyCharsInternal(JSContext* cx, bool nullTerminate) const
     size_t n = length();
 
     UniquePtr<CharT[], JS::FreePolicy> out;
-    if (cx)
-        out.reset(cx->pod_malloc<CharT>(n + 1));
+    if (maybecx)
+        out.reset(maybecx->pod_malloc<CharT>(n + 1));
     else
         out.reset(js_pod_malloc<CharT>(n + 1));
 
@@ -327,8 +327,11 @@ JSRope::copyCharsInternal(JSContext* cx, bool nullTerminate) const
     CharT* end = out.get() + str->length();
     while (true) {
         if (str->isRope()) {
-            if (!nodeStack.append(str->asRope().leftChild()))
+            if (!nodeStack.append(str->asRope().leftChild())) {
+                if (maybecx)
+                    ReportOutOfMemory(maybecx);
                 return nullptr;
+            }
             str = str->asRope().rightChild();
         } else {
             end -= str->length();

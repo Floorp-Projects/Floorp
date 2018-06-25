@@ -690,14 +690,14 @@ class JSRope : public JSString
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
                                size_t length, js::gc::InitialHeap = js::gc::DefaultHeap);
 
-    js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1Chars(JSContext* cx) const;
-    JS::UniqueTwoByteChars copyTwoByteChars(JSContext* cx) const;
+    js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1Chars(JSContext* maybecx) const;
+    JS::UniqueTwoByteChars copyTwoByteChars(JSContext* maybecx) const;
 
-    js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1CharsZ(JSContext* cx) const;
-    JS::UniqueTwoByteChars copyTwoByteCharsZ(JSContext* cx) const;
+    js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1CharsZ(JSContext* maybecx) const;
+    JS::UniqueTwoByteChars copyTwoByteCharsZ(JSContext* maybecx) const;
 
     template <typename CharT>
-    js::UniquePtr<CharT[], JS::FreePolicy> copyChars(JSContext* cx) const;
+    js::UniquePtr<CharT[], JS::FreePolicy> copyChars(JSContext* maybecx) const;
 
     // Hash function specific for ropes that avoids allocating a temporary
     // string. There are still allocations internally so it's technically
@@ -1734,16 +1734,16 @@ JSLinearString::chars(const JS::AutoRequireNoGC& nogc) const
 
 template <>
 MOZ_ALWAYS_INLINE js::UniquePtr<JS::Latin1Char[], JS::FreePolicy>
-JSRope::copyChars<JS::Latin1Char>(JSContext* cx) const
+JSRope::copyChars<JS::Latin1Char>(JSContext* maybecx) const
 {
-    return copyLatin1Chars(cx);
+    return copyLatin1Chars(maybecx);
 }
 
 template <>
 MOZ_ALWAYS_INLINE JS::UniqueTwoByteChars
-JSRope::copyChars<char16_t>(JSContext* cx) const
+JSRope::copyChars<char16_t>(JSContext* maybecx) const
 {
-    return copyTwoByteChars(cx);
+    return copyTwoByteChars(maybecx);
 }
 
 template<>
