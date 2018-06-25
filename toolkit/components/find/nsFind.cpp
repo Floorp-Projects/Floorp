@@ -729,51 +729,35 @@ nsresult
 nsFind::NextNode(State& aState,
                  nsRange* aSearchRange,
                  nsRange* aStartPoint,
-                 nsRange* aEndPoint,
-                 bool aContinueOk)
+                 nsRange* aEndPoint)
 {
   nsresult rv;
 
   nsCOMPtr<nsIContent> content;
 
-  if (!aState.mIterator || aContinueOk) {
+  if (!aState.mIterator) {
     // If we are continuing, that means we have a match in progress. In that
     // case, we want to continue from the end point (where we are now) to the
     // beginning/end of the search range.
     nsCOMPtr<nsINode> startNode;
     nsCOMPtr<nsINode> endNode;
     uint32_t startOffset, endOffset;
-    if (aContinueOk) {
-      DEBUG_FIND_PRINTF("Match in progress: continuing past endpoint\n");
-      if (mFindBackward) {
-        startNode = aSearchRange->GetStartContainer();
-        startOffset = aSearchRange->StartOffset();
-        endNode = aEndPoint->GetStartContainer();
-        endOffset = aEndPoint->StartOffset();
-      } else { // forward
-        startNode = aEndPoint->GetEndContainer();
-        startOffset = aEndPoint->EndOffset();
-        endNode = aSearchRange->GetEndContainer();
-        endOffset = aSearchRange->EndOffset();
-      }
-    } else { // Normal, not continuing
-      if (mFindBackward) {
-        startNode = aSearchRange->GetStartContainer();
-        startOffset = aSearchRange->StartOffset();
-        endNode = aStartPoint->GetEndContainer();
-        endOffset = aStartPoint->EndOffset();
-        // XXX Needs work: Problem with this approach: if there is a match which
-        // starts just before the current selection and continues into the
-        // selection, we will miss it, because our search algorithm only starts
-        // searching from the end of the word, so we would have to search the
-        // current selection but discount any matches that fall entirely inside
-        // it.
-      } else { // forward
-        startNode = aStartPoint->GetStartContainer();
-        startOffset = aStartPoint->StartOffset();
-        endNode = aEndPoint->GetEndContainer();
-        endOffset = aEndPoint->EndOffset();
-      }
+    if (mFindBackward) {
+      startNode = aSearchRange->GetStartContainer();
+      startOffset = aSearchRange->StartOffset();
+      endNode = aStartPoint->GetEndContainer();
+      endOffset = aStartPoint->EndOffset();
+      // XXX Needs work: Problem with this approach: if there is a match which
+      // starts just before the current selection and continues into the
+      // selection, we will miss it, because our search algorithm only starts
+      // searching from the end of the word, so we would have to search the
+      // current selection but discount any matches that fall entirely inside
+      // it.
+    } else { // forward
+      startNode = aStartPoint->GetStartContainer();
+      startOffset = aStartPoint->StartOffset();
+      endNode = aEndPoint->GetEndContainer();
+      endOffset = aEndPoint->EndOffset();
     }
 
     rv = InitIterator(aState,
@@ -876,7 +860,7 @@ nsFind::PeekNextChar(State& aState,
 
   // Loop through non-block nodes until we find one that's not empty.
   do {
-    NextNode(aState, aSearchRange, aStartPoint, aEndPoint, false);
+    NextNode(aState, aSearchRange, aStartPoint, aEndPoint);
 
     // Get the text content:
     nsCOMPtr<nsIContent> tc = do_QueryInterface(aState.mIterNode);
@@ -1011,15 +995,8 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
     if (!frag) {
 
       tc = nullptr;
-      NextNode(state, aSearchRange, aStartPoint, aEndPoint, false);
+      NextNode(state, aSearchRange, aStartPoint, aEndPoint);
       if (!state.mIterNode) { // Out of nodes
-        // Are we in the middle of a match? If so, try again with continuation.
-        //
-        // FIXME(emilio): If we return here unconditionally, why is this useful?
-        // Shouldn't we check `state.mIterNode` again?
-        if (matchAnchorNode) {
-          NextNode(state, aSearchRange, aStartPoint, aEndPoint, true);
-        }
         return NS_OK;
       }
 
