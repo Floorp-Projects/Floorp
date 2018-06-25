@@ -688,13 +688,6 @@ RsdparsaSdpAttributeList::LoadRtpmap(RustAttributeList* attributeList)
     std::string name = convertStringView(rtpmap.codecName);
     auto codec = strToCodecType(name);
     uint32_t channels = rtpmap.channels;
-    if (mIsVideo) {
-      // channels is expected to be 0 for video in higher level code,
-      // channels don't make sense, so the value is arbitrary. 1 is
-      // the arbitrary value for that code.
-      // TODO: handle this in Rust parser, see Bug 1436403
-      channels = 0;
-    }
     rtpmapList->PushEntry(payloadType, codec, name,
                           rtpmap.frequency, channels);
   }
