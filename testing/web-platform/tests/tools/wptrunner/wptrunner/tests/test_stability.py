@@ -1,4 +1,9 @@
-from tools.wpt import stability
+import sys
+from os.path import dirname, join
+
+sys.path.insert(0, join(dirname(__file__), "..", ".."))
+
+from wptrunner import stability
 
 def test_is_inconsistent():
     assert stability.is_inconsistent({"PASS": 10}, 10) is False
