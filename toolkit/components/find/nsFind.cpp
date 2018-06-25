@@ -628,6 +628,23 @@ SkipNode(nsIContent* aContent)
   return false;
 }
 
+static nsIContent*
+GetBlockParent(nsINode* aNode)
+{
+  if (!aNode) {
+    return nullptr;
+  }
+  // FIXME(emilio): This should use GetFlattenedTreeParent instead to properly
+  // handle Shadow DOM.
+  for (nsIContent* current = aNode->GetParent(); current;
+       current = current->GetParent()) {
+    if (IsBlockNode(current)) {
+      return current;
+    }
+  }
+  return nullptr;
+}
+
 nsresult
 nsFind::InitIterator(State& aState,
                      nsINode* aStartNode,
@@ -891,23 +908,6 @@ nsFind::PeekNextChar(State& aState,
   int32_t index = mFindBackward ? fragLen - 1 : 0;
 
   return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
-}
-
-nsIContent*
-nsFind::GetBlockParent(nsINode* aNode)
-{
-  if (!aNode) {
-    return nullptr;
-  }
-  // FIXME(emilio): This should use GetFlattenedTreeParent instead to properly
-  // handle Shadow DOM.
-  for (nsIContent* current = aNode->GetParent(); current;
-       current = current->GetParent()) {
-    if (IsBlockNode(current)) {
-      return current;
-    }
-  }
-  return nullptr;
 }
 
 #define NBSP_CHARCODE (CHAR_TO_UNICHAR(160))
