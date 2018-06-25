@@ -1178,7 +1178,7 @@ impl CPPExporter {
             buffer.push_str(&format!("{first_line}
 {{
     MOZ_ASSERT(kind == BinKind::{kind});
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 {check_fields}
 {pre}{fields_implem}
