@@ -455,7 +455,7 @@ window.suitesManager =
         return suites;
     },
 
-    suitesFromQueryString: function(suiteName, testName)
+    suitesFromQueryString: function(suiteName, testName, oskey=null)
     {
         var suites = [];
         var suiteRegExp = new RegExp(suiteName, "i");
@@ -469,6 +469,40 @@ window.suitesManager =
             var test;
             for (var j = 0; j < suite.tests.length; ++j) {
                 suiteTest = suite.tests[j];
+                // MOZILLA: Run all the tests in a given suite
+                if (typeof(testName) === "undefined") {
+                    let complexity = {"HTMLsuite": {
+                        "CSSbouncingcircles": {"win": 322, "linux64": 322, "osx": 218},
+                        "CSSbouncingclippedrects": {"win": 520, "linux64": 520, "osx": 75},
+                        "CSSbouncinggradientcircles": {"win": 402, "linux64": 402, "osx": 97},
+                        "CSSbouncingblendcircles": {"win": 171, "linux64": 171, "osx": 254},
+                        "CSSbouncingfiltercircles": {"win": 189, "linux64": 189, "osx": 189},
+                        "CSSbouncingSVGimages": {"win": 329, "linux64": 329, "osx": 392},
+                        "CSSbouncingtaggedimages": {"win": 255, "linux64": 255, "osx": 351},
+                        "Leaves20": {"win": 262, "linux64": 262, "osx": 191},
+                        "Focus20": {"win": 15, "linux64": 15, "osx": 18},
+                        "DOMparticlesSVGmasks": {"win": 390, "linux64": 390, "osx": 54},
+                        "CompositedTransforms": {"win": 400, "linux64": 400, "osx": 75}
+                      }, "Animometer": {
+                        "Multiply": {"win": 391, "linux64": 391, "osx": 193},
+                        "CanvasArcs": {"win": 1287, "linux64": 1287, "osx": 575},
+                        "Leaves": {"win": 550, "linux64": 550, "osx": 271},
+                        "Paths": {"win": 4070, "linux64": 4070, "osx": 2024},
+                        "CanvasLines": {"win": 4692, "linux64": 4692, "osx": 10932},
+                        "Focus": {"win": 44, "linux64": 44, "osx": 32},
+                        "Images": {"win": 293, "linux64": 293, "osx": 188},
+                        "Design": {"win": 60, "linux64": 60, "osx": 17},
+                        "Suits": {"win": 210, "linux64": 210, "osx": 145}
+                      }
+                    };
+                    if (oskey == null) {
+                        oskey = "linux64";
+                    }
+                    suiteTest.complexity = complexity[suiteName][Utilities.stripNonASCIICharacters(suiteTest.name)][oskey];
+                    suites.push(new Suite(suiteName, [suiteTest]));
+                    continue;
+                }
+
                 if (Utilities.stripNonASCIICharacters(suiteTest.name).match(testRegExp)) {
                     test = suiteTest;
                     break;
@@ -592,7 +626,10 @@ Utilities.extendObject(window.benchmarkController, {
         if (!benchmarkController.options)
             return false;
 
-        benchmarkController.suites = suitesManager.suitesFromQueryString(benchmarkController.options["suite-name"], benchmarkController.options["test-name"]);
+        this.raptor = benchmarkController.options["raptor"];
+        benchmarkController.suites = suitesManager.suitesFromQueryString(benchmarkController.options["suite-name"],
+                                                                         benchmarkController.options["test-name"],
+                                                                         benchmarkController.options["oskey"]);
         if (!benchmarkController.suites.length)
             return false;
 
@@ -639,6 +676,10 @@ Utilities.extendObject(window.benchmarkController, {
         }
         if (typeof tpRecordTime !== "undefined") {
             tpRecordTime(values.join(','), 0, fullNames.join(','));
+        }
+        if (this.raptor) {
+          _data = ['raptor-benchmark', 'motionmark', item['testsResults']];
+          window.postMessage(_data, '*');
         }
 
         var confidence = ((dashboard.scoreLowerBound / score - 1) * 100).toFixed(2) +
