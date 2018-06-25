@@ -789,12 +789,9 @@
   box-shadow: inset 4px 0 var(--blue-40);
 }
 
-.all-tabs-item[tabIsVisible] {
-  box-shadow: inset -4px 0 ThreeDShadow;
-}
-
-.all-tabs-item[selected][tabIsVisible] {
-  box-shadow: inset -4px 0 ThreeDShadow, inset 4px 0 var(--blue-40);
+.all-tabs-button,
+.all-tabs-secondary-button {
+  background-color: transparent !important;
 }
 
 .all-tabs-secondary-button > label {
