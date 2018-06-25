@@ -159,12 +159,12 @@ function removeAddon(aAddon) {
   return deferred.promise;
 }
 
-function getTargetActorForUrl(aClient, aUrl) {
+function getTabActorForUrl(aClient, aUrl) {
   let deferred = promise.defer();
 
   aClient.listTabs().then(aResponse => {
-    let targetActor = aResponse.tabs.filter(aGrip => aGrip.url == aUrl).pop();
-    deferred.resolve(targetActor);
+    let tabActor = aResponse.tabs.filter(aGrip => aGrip.url == aUrl).pop();
+    deferred.resolve(tabActor);
   });
 
   return deferred.promise;
@@ -183,14 +183,14 @@ function getAddonActorForId(aClient, aAddonId) {
   return deferred.promise;
 }
 
-async function attachTargetActorForUrl(aClient, aUrl) {
-  let grip = await getTargetActorForUrl(aClient, aUrl);
+async function attachTabActorForUrl(aClient, aUrl) {
+  let grip = await getTabActorForUrl(aClient, aUrl);
   let [ response ] = await aClient.attachTab(grip.actor);
   return [grip, response];
 }
 
 async function attachThreadActorForUrl(aClient, aUrl) {
-  let [grip, response] = await attachTargetActorForUrl(aClient, aUrl);
+  let [grip, response] = await attachTabActorForUrl(aClient, aUrl);
   let [response2, threadClient] = await aClient.attachThread(response.threadActor);
   await threadClient.resume();
   return threadClient;

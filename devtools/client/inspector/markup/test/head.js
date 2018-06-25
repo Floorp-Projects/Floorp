@@ -13,6 +13,7 @@ Services.scriptloader.loadSubScript(
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("devtools/shared/platform/clipboard");
+var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
 
 // If a test times out we want to see the complete log and not just the last few
 // lines.
@@ -409,6 +410,62 @@ var getAttributesFromEditor = async function(selector, inspector) {
 
   return [...nodeList].map(node => node.getAttribute("data-attr"));
 };
+
+/**
+ * Registers new backend tab actor.
+ *
+ * @param {DebuggerClient} client RDP client object (toolbox.target.client)
+ * @param {Object} options Configuration object with the following options:
+ *
+ * - moduleUrl {String}: URL of the module that contains actor implementation.
+ * - prefix {String}: prefix of the actor.
+ * - actorClass {ActorClassWithSpec}: Constructor object for the actor.
+ * - frontClass {FrontClassWithSpec}: Constructor object for the front part
+ * of the registered actor.
+ *
+ * @returns {Promise} A promise that is resolved when the actor is registered.
+ * The resolved value has two properties:
+ *
+ * - registrar {ActorActor}: A handle to the registered actor that allows
+ * unregistration.
+ * - form {Object}: The JSON actor form provided by the server.
+ */
+function registerTabActor(client, options) {
+  const moduleUrl = options.moduleUrl;
+
+  return client.listTabs().then(response => {
+    const config = {
+      prefix: options.prefix,
+      constructor: options.actorClass,
+      type: { tab: true },
+    };
+
+    // Register the custom actor on the backend.
+    const registry = ActorRegistryFront(client, response);
+    return registry.registerActor(moduleUrl, config).then(registrar => {
+      return client.getTab().then(tabResponse => ({
+        registrar: registrar,
+        form: tabResponse.tab
+      }));
+    });
+  });
+}
+
+/**
+ * A helper for unregistering an existing backend actor.
+ *
+ * @param {ActorActor} registrar A handle to the registered actor
+ * that has been received after registration.
+ * @param {Front} Corresponding front object.
+ *
+ * @returns A promise that is resolved when the unregistration
+ * has finished.
+ */
+function unregisterActor(registrar, front) {
+  return front.detach().then(() => {
+    return registrar.unregister();
+  });
+}
 
 /**
  * Simulate dragging a MarkupContainer by calling its mousedown and mousemove

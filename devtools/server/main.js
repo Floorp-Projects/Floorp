@@ -70,7 +70,7 @@ var gRegisteredModules = Object.create(null);
  * destroyed.
  */
 function ModuleAPI() {
-  let activeTargetScopedActors = new Set();
+  let activeTabActors = new Set();
   let activeGlobalActors = new Set();
 
   return {
@@ -90,24 +90,24 @@ function ModuleAPI() {
       activeGlobalActors.delete(factory);
     },
 
-    // See DebuggerServer.addTargetScopedActor for a description.
-    addTargetScopedActor(factory, name) {
-      DebuggerServer.addTargetScopedActor(factory, name);
-      activeTargetScopedActors.add(factory);
+    // See DebuggerServer.addTabActor for a description.
+    addTabActor(factory, name) {
+      DebuggerServer.addTabActor(factory, name);
+      activeTabActors.add(factory);
     },
-    // See DebuggerServer.removeTargetScopedActor for a description.
-    removeTargetScopedActor(factory) {
-      DebuggerServer.removeTargetScopedActor(factory);
-      activeTargetScopedActors.delete(factory);
+    // See DebuggerServer.removeTabActor for a description.
+    removeTabActor(factory) {
+      DebuggerServer.removeTabActor(factory);
+      activeTabActors.delete(factory);
     },
 
     // Destroy the module API object, unregistering any
     // factories registered by the module.
     destroy() {
-      for (const factory of activeTargetScopedActors) {
-        DebuggerServer.removeTargetScopedActor(factory);
+      for (const factory of activeTabActors) {
+        DebuggerServer.removeTabActor(factory);
       }
-      activeTargetScopedActors = null;
+      activeTabActors = null;
       for (const factory of activeGlobalActors) {
         DebuggerServer.removeGlobalActor(factory);
       }
@@ -124,10 +124,10 @@ var DebuggerServer = {
   _initialized: false,
   // Flag to check if the content process server startup script was already loaded.
   _contentProcessServerStartupScriptLoaded: false,
-  // Map of global actor names to actor constructors.
+  // Map of global actor names to actor constructors provided by extensions.
   globalActorFactories: {},
-  // Map of target-scoped actor names to actor constructors.
-  targetScopedActorFactories: {},
+  // Map of tab actor names to actor constructors provided by extensions.
+  tabActorFactories: {},
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
@@ -199,7 +199,7 @@ var DebuggerServer = {
 
     this.closeAllListeners();
     this.globalActorFactories = {};
-    this.targetScopedActorFactories = {};
+    this.tabActorFactories = {};
     this._initialized = false;
 
     dumpn("Debugger server is shut down.");
@@ -229,11 +229,11 @@ var DebuggerServer = {
    * @param browser boolean
    *        Registers all the parent process actors useful for debugging the
    *        runtime itself, like preferences and addons actors.
-   * @param target boolean
-   *        Registers all the target-scoped actors like console, script, etc.
+   * @param tab boolean
+   *        Registers all the tab actors like console, script, ... all useful
    *        for debugging a target context.
    */
-  registerActors({ root, browser, target }) {
+  registerActors({ root, browser, tab }) {
     if (browser) {
       this._addBrowserActors();
     }
@@ -242,8 +242,8 @@ var DebuggerServer = {
       this.registerModule("devtools/server/actors/webbrowser");
     }
 
-    if (target) {
-      this._addTargetScopedActors();
+    if (tab) {
+      this._addTabActors();
     }
   },
 
@@ -251,7 +251,7 @@ var DebuggerServer = {
    * Register all possible actors for this DebuggerServer.
    */
   registerAllActors() {
-    this.registerActors({ root: true, browser: true, target: true });
+    this.registerActors({ root: true, browser: true, tab: true });
   },
 
   /**
@@ -297,9 +297,9 @@ var DebuggerServer = {
    *          - "global"
    *            registers a global actor instance, if true.
    *            A global actor has the root actor as its parent.
-   *          - "target"
-   *            registers a target-scoped actor instance, if true.
-   *            A new actor will be created for each target, such as a tab.
+   *          - "tab"
+   *            registers a tab actor instance, if true.
+   *            A new actor will be created for each tab and each app.
    */
   registerModule(id, options) {
     if (id in gRegisteredModules) {
@@ -317,9 +317,9 @@ var DebuggerServer = {
         throw new Error(`Lazy actor definition for '${id}' requires a string ` +
                         `'constructor' option.`);
       }
-      if (!("global" in type) && !("target" in type)) {
+      if (!("global" in type) && !("tab" in type)) {
         throw new Error(`Lazy actor definition for '${id}' requires a dictionary ` +
-                        `'type' option whose attributes can be 'global' or 'target'.`);
+                        `'type' option whose attributes can be 'global' or 'tab'.`);
       }
       const name = prefix + "Actor";
       const mod = {
@@ -328,11 +328,11 @@ var DebuggerServer = {
         constructorName: constructor,
         type: type,
         globalActor: type.global,
-        targetScopedActor: type.target
+        tabActor: type.tab
       };
       gRegisteredModules[id] = mod;
-      if (mod.targetScopedActor) {
-        this.addTargetScopedActor(mod, name);
+      if (mod.tabActor) {
+        this.addTabActor(mod, name);
       }
       if (mod.globalActor) {
         this.addGlobalActor(mod, name);
@@ -366,8 +366,8 @@ var DebuggerServer = {
     }
 
     // Lazy actors
-    if (mod.targetScopedActor) {
-      this.removeTargetScopedActor(mod);
+    if (mod.tabActor) {
+      this.removeTabActor(mod);
     }
     if (mod.globalActor) {
       this.removeGlobalActor(mod);
@@ -426,116 +426,116 @@ var DebuggerServer = {
   },
 
   /**
-   * Install target-scoped actors.
+   * Install tab actors.
    */
-  _addTargetScopedActors() {
+  _addTabActors() {
     this.registerModule("devtools/server/actors/webconsole", {
       prefix: "console",
       constructor: "WebConsoleActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/inspector/inspector", {
       prefix: "inspector",
       constructor: "InspectorActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/call-watcher", {
       prefix: "callWatcher",
       constructor: "CallWatcherActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/canvas", {
       prefix: "canvas",
       constructor: "CanvasActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/webgl", {
       prefix: "webgl",
       constructor: "WebGLActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/webaudio", {
       prefix: "webaudio",
       constructor: "WebAudioActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/stylesheets", {
       prefix: "styleSheets",
       constructor: "StyleSheetsActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/storage", {
       prefix: "storage",
       constructor: "StorageActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/gcli", {
       prefix: "gcli",
       constructor: "GcliActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/framerate", {
       prefix: "framerate",
       constructor: "FramerateActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/reflow", {
       prefix: "reflow",
       constructor: "ReflowActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/css-properties", {
       prefix: "cssProperties",
       constructor: "CssPropertiesActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/csscoverage", {
       prefix: "cssUsage",
       constructor: "CSSUsageActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/timeline", {
       prefix: "timeline",
       constructor: "TimelineActor",
-      type: { target: true }
+      type: { tab: true }
     });
     if ("nsIProfiler" in Ci &&
         !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
       this.registerModule("devtools/server/actors/performance", {
         prefix: "performance",
         constructor: "PerformanceActor",
-        type: { target: true }
+        type: { tab: true }
       });
     }
     this.registerModule("devtools/server/actors/animation", {
       prefix: "animations",
       constructor: "AnimationsActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/promises", {
       prefix: "promises",
       constructor: "PromisesActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/emulation", {
       prefix: "emulation",
       constructor: "EmulationActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/addon/webextension-inspected-window", {
       prefix: "webExtensionInspectedWindow",
       constructor: "WebExtensionInspectedWindowActor",
-      type: { target: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/accessibility", {
       prefix: "accessibility",
       constructor: "AccessibilityActor",
-      type: { target: true }
+      type: { tab: true }
     });
   },
 
@@ -737,7 +737,7 @@ var DebuggerServer = {
           childTransport = null;
           connection.cancelForwarding(prefix);
 
-          // ... and notify the child process to clean the target-scoped actors.
+          // ... and notify the child process to clean the tab actors.
           try {
             mm.sendAsyncMessage("debug:content-process-destroy");
           } catch (e) {
@@ -1013,8 +1013,8 @@ var DebuggerServer = {
       // between e10s parent and child processes
       const parentModules = [];
       const onSetupInParent = function(msg) {
-        // We may have multiple connectToFrame instance running for the same frame and
-        // need to filter the messages.
+        // We may have multiple connectToFrame instance running for the same tab
+        // and need to filter the messages.
         if (msg.json.prefix != connPrefix) {
           return false;
         }
@@ -1112,7 +1112,7 @@ var DebuggerServer = {
           childTransport = null;
           connection.cancelForwarding(prefix);
 
-          // ... and notify the child process to clean the target-scoped actors.
+          // ... and notify the child process to clean the tab actors.
           try {
             // Bug 1169643: Ignore any exception as the child process
             // may already be destroyed by now.
@@ -1219,11 +1219,11 @@ var DebuggerServer = {
   },
 
   /**
-   * Registers handlers for new target-scoped request types defined dynamically.
-   *
-   * Note that the name or actorPrefix of the request type is not allowed to clash with
-   * existing protocol packet properties, like 'title', 'url' or 'actor', since that would
-   * break the protocol.
+   * Registers handlers for new tab-scoped request types defined dynamically.
+   * This is used for example by add-ons to augment the functionality of the tab
+   * actor. Note that the name or actorPrefix of the request type is not allowed
+   * to clash with existing protocol packet properties, like 'title', 'url' or
+   * 'actor', since that would break the protocol.
    *
    * @param actor object
    *        - constructorName: (required)
@@ -1236,40 +1236,39 @@ var DebuggerServer = {
    * @param name string
    *        The name of the new request type.
    */
-  addTargetScopedActor(actor, name) {
+  addTabActor(actor, name) {
     if (!name) {
-      throw Error("addTargetScopedActor requires the `name` argument");
+      throw Error("addTabActor requires the `name` argument");
     }
     if (["title", "url", "actor"].includes(name)) {
       throw Error(name + " is not allowed");
     }
-    if (DebuggerServer.targetScopedActorFactories.hasOwnProperty(name)) {
+    if (DebuggerServer.tabActorFactories.hasOwnProperty(name)) {
       throw Error(name + " already exists");
     }
-    DebuggerServer.targetScopedActorFactories[name] =
-      new RegisteredActorFactory(actor, name);
+    DebuggerServer.tabActorFactories[name] = new RegisteredActorFactory(actor, name);
   },
 
   /**
-   * Unregisters the handler for the specified target-scoped request type.
-   *
-   * When unregistering an existing target-scoped actor, we remove the actor factory as
-   * well as all existing instances of the actor.
+   * Unregisters the handler for the specified tab-scoped request type.
+   * This may be used for example by add-ons when shutting down or upgrading.
+   * When unregistering an existing tab actor remove related tab factory
+   * as well as all existing instances of the actor.
    *
    * @param actor object, string
    *        In case of object:
-   *          The `actor` object being given to related addTargetScopedActor call.
+   *          The `actor` object being given to related addTabActor call.
    *        In case of string:
-   *          The `name` string being given to related addTargetScopedActor call.
+   *          The `name` string being given to related addTabActor call.
    */
-  removeTargetScopedActor(actorOrName) {
+  removeTabActor(actorOrName) {
     let name;
     if (typeof actorOrName == "string") {
       name = actorOrName;
     } else {
       const actor = actorOrName;
-      for (const factoryName in DebuggerServer.targetScopedActorFactories) {
-        const handler = DebuggerServer.targetScopedActorFactories[factoryName];
+      for (const factoryName in DebuggerServer.tabActorFactories) {
+        const handler = DebuggerServer.tabActorFactories[factoryName];
         if ((handler.name && handler.name == actor.name) ||
             (handler.id && handler.id == actor.id)) {
           name = factoryName;
@@ -1280,7 +1279,7 @@ var DebuggerServer = {
     if (!name) {
       return;
     }
-    delete DebuggerServer.targetScopedActorFactories[name];
+    delete DebuggerServer.tabActorFactories[name];
     for (const connID of Object.getOwnPropertyNames(this._connections)) {
       // DebuggerServerConnection in child process don't have rootActor
       if (this._connections[connID].rootActor) {
@@ -1290,11 +1289,12 @@ var DebuggerServer = {
   },
 
   /**
-   * Registers handlers for new browser-scoped request types defined dynamically.
-   *
-   * Note that the name or actorPrefix of the request type is not allowed to clash with
-   * existing protocol packet properties, like 'from', 'tabs' or 'selected', since that
-   * would break the protocol.
+   * Registers handlers for new browser-scoped request types defined
+   * dynamically. This is used for example by add-ons to augment the
+   * functionality of the root actor. Note that the name or actorPrefix of the
+   * request type is not allowed to clash with existing protocol packet
+   * properties, like 'from', 'tabs' or 'selected', since that would break the
+   * protocol.
    *
    * @param actor object
    *        - constructorName: (required)
@@ -1322,9 +1322,9 @@ var DebuggerServer = {
 
   /**
    * Unregisters the handler for the specified browser-scoped request type.
-   *
-   * When unregistering an existing global actor, we remove the actor factory as well as
-   * all existing instances of the actor.
+   * This may be used for example by add-ons when shutting down or upgrading.
+   * When unregistering an existing global actor remove related global factory
+   * as well as all existing instances of the actor.
    *
    * @param actor object, string
    *        In case of object:

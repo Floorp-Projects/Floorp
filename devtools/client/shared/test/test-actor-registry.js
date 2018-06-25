@@ -21,7 +21,7 @@
 
     // Then ask to register our test-actor to retrieve its front
     const options = {
-      type: { target: true },
+      type: { tab: true },
       constructor: "TestActor",
       prefix: "testActor"
     };

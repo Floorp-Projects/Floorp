@@ -115,14 +115,14 @@ exports.ObservedActorFactory = ObservedActorFactory;
  * |pool|.
  *
  * The root actor and the target actor use this to instantiate actors that other
- * parts of the browser have specified with DebuggerServer.addTargetScopedActor and
+ * parts of the browser have specified with DebuggerServer.addTabActor and
  * DebuggerServer.addGlobalActor.
  *
  * @param factories
  *     An object whose own property names are the names of properties to add to
  *     some reply packet (say, a target actor grip or the "listTabs" response
  *     form), and whose own property values are actor constructor functions, as
- *     documented for addTargetScopedActor and addGlobalActor.
+ *     documented for addTabActor and addGlobalActor.
  *
  * @param this
  *     The RootActor or BrowsingContextTargetActor with which the new actors
