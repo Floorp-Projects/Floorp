@@ -78,7 +78,7 @@ class FontInspector {
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
-    this.onRuleUpdated = this.onRuleUpdated.bind(this);
+    this.onRuleUpdated = debounce(this.onRuleUpdated, 100, this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
@@ -539,6 +539,7 @@ class FontInspector {
    * Selection 'new-node' event handler.
    */
   onNewNode() {
+    this.ruleView.off("property-value-updated", this.onRuleUpdated);
     if (this.isPanelVisible()) {
       this.update();
       this.refreshFontEditor();
@@ -714,6 +715,8 @@ class FontInspector {
 
     this.store.dispatch(updateFontEditor(fontsUsed, families, properties));
     this.inspector.emit("fonteditor-updated");
+    // Listen to manual changes in the Rule view that could update the Font Editor state
+    this.ruleView.on("property-value-updated", this.onRuleUpdated);
   }
 
   /**
