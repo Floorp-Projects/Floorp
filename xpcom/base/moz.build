@@ -91,7 +91,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += [
         'nsWindowsHelpers.h',
     ]
-    if CONFIG['CC_TYPE'] != 'gcc':
+    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):
         OS_LIBS += [
             'wscapi',
         ]
