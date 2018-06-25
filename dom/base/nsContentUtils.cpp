@@ -8859,7 +8859,7 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                               nsIChannel* aChannel,
                                               nsIURI* aURI)
 {
-  if (!StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
     return false;
   }
 
