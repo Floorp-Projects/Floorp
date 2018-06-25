@@ -324,8 +324,7 @@
       if (!line)
         return;
 
-      var boxObject = document.getElementById("results").parentNode.boxObject;
-      boxObject.scrollToElement(line);
+      line.scrollIntoView();
     }
   ]]></script>
   <button id="runTestsButton" oncommand="runTests();" label="Run All Tests"/>
