@@ -301,7 +301,6 @@ nsresult NS_NewBoxObject(nsIBoxObject** aResult);
 
 #ifdef MOZ_XUL
 nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
@@ -364,7 +363,6 @@ MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
-MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 #endif // MOZ_XUL
 
@@ -507,7 +505,6 @@ NS_DEFINE_NAMED_CID(NS_BOXOBJECT_CID);
 #ifdef MOZ_XUL
 NS_DEFINE_NAMED_CID(NS_LISTBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_MENUBOXOBJECT_CID);
-NS_DEFINE_NAMED_CID(NS_SCROLLBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_TREEBOXOBJECT_CID);
 #endif // MOZ_XUL
 NS_DEFINE_NAMED_CID(IN_DEEPTREEWALKER_CID);
@@ -749,7 +746,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef MOZ_XUL
   { &kNS_LISTBOXOBJECT_CID, false, nullptr, CreateNewListBoxObject },
   { &kNS_MENUBOXOBJECT_CID, false, nullptr, CreateNewMenuBoxObject },
-  { &kNS_SCROLLBOXOBJECT_CID, false, nullptr, CreateNewScrollBoxObject },
   { &kNS_TREEBOXOBJECT_CID, false, nullptr, CreateNewTreeBoxObject },
 #endif // MOZ_XUL
   { &kIN_DEEPTREEWALKER_CID, false, nullptr, inDeepTreeWalkerConstructor },
@@ -857,7 +853,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_XUL
   { "@mozilla.org/layout/xul-boxobject-listbox;1", &kNS_LISTBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-menu;1", &kNS_MENUBOXOBJECT_CID },
-  { "@mozilla.org/layout/xul-boxobject-scrollbox;1", &kNS_SCROLLBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-tree;1", &kNS_TREEBOXOBJECT_CID },
 #endif // MOZ_XUL
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },

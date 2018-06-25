@@ -595,6 +595,10 @@ protected:
   already_AddRefed<ShadowRoot> AttachShadowInternal(
     ShadowRootMode, ErrorResult& aError);
 
+  MOZ_CAN_RUN_SCRIPT
+  nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
+                                     FlushType aFlushType = FlushType::Layout);
+
 private:
   // Need to allow the ESM, nsGlobalWindow, and the focus manager to
   // set our state
