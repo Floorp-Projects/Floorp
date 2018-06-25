@@ -192,7 +192,7 @@ MediaCapabilities::DecodingInfo(
         return decoder->Init()->Then(
           taskQueue,
           __func__,
-          [taskQueue, decoder, config = std::move(config)](
+          [taskQueue, decoder, frameRate, config = std::move(config)](
             const MediaDataDecoder::InitPromise::ResolveOrRejectValue&
               aValue) mutable {
             RefPtr<CapabilitiesPromise> p;
@@ -202,10 +202,32 @@ MediaCapabilities::DecodingInfo(
             } else {
               MOZ_ASSERT(config->IsVideo());
               nsAutoCString reason;
-              bool powerEfficient = decoder->IsHardwareAccelerated(reason);
+              bool powerEfficient = true;
               bool smooth = true;
-              if (!powerEfficient && VPXDecoder::IsVP9(config->mMimeType)) {
-                smooth = VP9Benchmark::IsVP9DecodeFast(true /* default */);
+              if (config->GetAsVideoInfo()->mImage.height > 480) {
+                // Assume that we can do stuff at 480p or less in a power
+                // efficient manner and smoothly. If greater than 480p we assume
+                // that if the video decoding is hardware accelerated it will be
+                // smooth and power efficient, otherwise we use the benchmark to
+                // estimate
+                powerEfficient = decoder->IsHardwareAccelerated(reason);
+                if (!powerEfficient && VPXDecoder::IsVP9(config->mMimeType)) {
+                  smooth = VP9Benchmark::IsVP9DecodeFast(true /* default */);
+                  uint32_t fps = StaticPrefs::MediaBenchmarkVp9Fps();
+                  if (!smooth && fps > 0) {
+                    // The VP9 estimizer decode a 1280x720 video. Let's adjust
+                    // the result for the resolution and frame rate of what we
+                    // actually want. If the result is twice that we need we
+                    // assume it will be smooth.
+                    const auto& videoConfig = *config->GetAsVideoInfo();
+                    double needed =
+                      ((1280.0 * 720.0) /
+                       (videoConfig.mImage.width * videoConfig.mImage.height) *
+                       fps) /
+                      frameRate;
+                    smooth = needed > 2;
+                  }
+                }
               }
               p = CapabilitiesPromise::CreateAndResolve(
                 MediaCapabilitiesInfo(
