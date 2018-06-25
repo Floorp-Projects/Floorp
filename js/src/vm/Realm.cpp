@@ -205,8 +205,13 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObje
 
     if (!nonSyntacticLexicalEnvironments_) {
         auto map = cx->make_unique<ObjectWeakMap>(cx);
-        if (!map || !map->init())
+        if (!map)
             return nullptr;
+
+        if (!map->init()) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
 
         nonSyntacticLexicalEnvironments_ = std::move(map);
     }

@@ -5966,8 +5966,13 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
     }
 
     auto job = cx->make_unique<BufferStreamJob>(consumer);
-    if (!job || !job->bytes.resize(byteLength))
+    if (!job)
         return false;
+
+    if (!job->bytes.resize(byteLength)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
 
     memcpy(job->bytes.begin(), dataPointer.unwrap(), byteLength);
 
@@ -5976,11 +5981,19 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
     {
         auto state = bufferStreamState->lock();
         MOZ_ASSERT(!state->shutdown);
-        if (!state->jobs.append(std::move(job)))
+        if (!state->jobs.append(std::move(job))) {
+            JS_ReportOutOfMemory(cx);
             return false;
+        }
     }
 
-    return jobPtr->thread.init(BufferStreamMain, jobPtr);
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!jobPtr->thread.init(BufferStreamMain, jobPtr))
+            oomUnsafe.crash("ConsumeBufferSource");
+    }
+
+    return true;
 }
 
 static bool
