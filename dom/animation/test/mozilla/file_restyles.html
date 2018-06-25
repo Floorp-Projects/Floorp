@@ -1801,6 +1801,32 @@ waitForAllPaints(() => {
     await ensureElementRemoval(div);
   });
 
+  add_task(
+    async function restyling_transform_aimations_having_abs_pos_child_on_invisible_element() {
+      if (isAndroid) {
+        // FIXME: Bug 1470798: Enable this test on Android.
+        return;
+      }
+      // 'opacity: 0' prevents transform animations to be sent to the compositor.
+      const div = addDiv(null, { style: 'visibility: hidden; opacity: 0' });
+      const child = addDiv(null, { style: 'position: absolute; top: 100px;' });
+      div.appendChild(child);
+
+      const animation =
+        div.animate({ transform: [ 'none',  'rotate(360deg)' ] },
+                    { duration: 100 * MS_PER_SEC,
+                      iterations: Infinity });
+
+      await waitForAnimationReadyToRestyle(animation);
+
+      const markers = await observeStyling(5);
+
+      is(markers.length, 0,
+         'Transform animation having an absolutely positioned child on ' +
+         'visibility hidden element should be throttled');
+      await ensureElementRemoval(div);
+  });
+
 });
 
 </script>
