@@ -81,7 +81,7 @@ types.addDictType("netevent.secinfo", {
   signatureSchemeName: "string",
   protocolVersion: "string",
   cert: "nullable:netevent.cert",
-  certificateTransparency: "nullable:string",
+  certificateTransparency: "number",
   hsts: "boolean",
   hpkp: "boolean",
   errorMessage: "nullable:string",

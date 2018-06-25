@@ -461,6 +461,8 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
                nsChangeHint_NeutralChange |                \
                nsChangeHint_UpdateOpacityLayer |           \
                nsChangeHint_AddOrRemoveTransform |         \
+               nsChangeHint_UpdateContainingBlock |        \
+               nsChangeHint_UpdateOverflow |               \
                nsChangeHint_UpdatePostTransformOverflow  | \
                nsChangeHint_UpdateTransformLayer |         \
                nsChangeHint_UpdateUsesOpacity |            \

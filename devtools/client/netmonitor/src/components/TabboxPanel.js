@@ -146,7 +146,7 @@ TabboxPanel.propTypes = {
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
   sourceMapService: PropTypes.object,
-  hideToggleButton: PropTypes.boolean,
+  hideToggleButton: PropTypes.bool,
 };
 
 module.exports = TabboxPanel;

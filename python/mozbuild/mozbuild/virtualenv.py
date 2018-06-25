@@ -20,9 +20,11 @@ IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
 IS_MSYS2 = (sys.platform == 'win32' and os.sep == '/')
 IS_CYGWIN = (sys.platform == 'cygwin')
 
-# Minimum version of Python required to build.
-MINIMUM_PYTHON_VERSION = LooseVersion('2.7.3')
-MINIMUM_PYTHON_MAJOR = 2
+# Minimum versions of Python required to build.
+MINIMUM_PYTHON_VERSIONS = {
+    2: LooseVersion('2.7.3'),
+    3: LooseVersion('3.5.0')
+}
 
 
 UPGRADE_WINDOWS = '''
@@ -37,6 +39,8 @@ If you still receive this error, your shell environment is likely detecting
 another Python version. Ensure a modern Python can be found in the paths
 defined by the $PATH environment variable and try again.
 '''.lstrip()
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 
 class VirtualenvManager(object):
@@ -87,6 +91,11 @@ class VirtualenvManager(object):
             binary += '.exe'
 
         return os.path.join(self.bin_path, binary)
+
+    @property
+    def version_info(self):
+        return eval(subprocess.check_output([
+            self.python_path, '-c', 'import sys; print(sys.version_info[:])']))
 
     @property
     def activate_path(self):
@@ -207,7 +216,7 @@ class VirtualenvManager(object):
         return self.virtualenv_root
 
     def packages(self):
-        with file(self.manifest_path, 'rU') as fh:
+        with open(self.manifest_path, 'rU') as fh:
             packages = [line.rstrip().split(':')
                         for line in fh]
         return packages
@@ -250,7 +259,6 @@ class VirtualenvManager(object):
         environment is not configured properly, packages could be installed
         into the wrong place. This is how virtualenv's work.
         """
-
         packages = self.packages()
         python_lib = distutils.sysconfig.get_python_lib()
 
@@ -465,13 +473,16 @@ class VirtualenvManager(object):
         if isinstance(os.environ['PATH'], unicode):
             os.environ['PATH'] = os.environ['PATH'].encode('utf-8')
 
-    def install_pip_package(self, package):
+    def install_pip_package(self, package, vendored=False):
         """Install a package via pip.
 
         The supplied package is specified using a pip requirement specifier.
         e.g. 'foo' or 'foo==1.0'.
 
         If the package is already installed, this is a no-op.
+
+        If vendored is True, no package index will be used and no dependencies
+        will be installed.
         """
         from pip.req import InstallRequirement
 
@@ -485,6 +496,12 @@ class VirtualenvManager(object):
             '--use-wheel',
             package,
         ]
+
+        if vendored:
+            args.extend([
+                '--no-deps',
+                '--no-index',
+            ])
 
         return self._run_pip(args)
 
@@ -530,22 +547,34 @@ class VirtualenvManager(object):
         # force the virtualenv's interpreter to be used and all is well.
         # It /might/ be possible to cheat and set sys.executable to
         # self.python_path. However, this seems more risk than it's worth.
-        subprocess.check_call([os.path.join(self.bin_path, 'pip')] + args,
-            stderr=subprocess.STDOUT)
+        pip = os.path.join(self.bin_path, 'pip')
+        subprocess.check_call([pip] + args, stderr=subprocess.STDOUT, cwd=self.topsrcdir)
 
-    def activate_pipenv(self, pipfile, args=None):
-        """Install a Pipfile located at path and activate environment"""
+    def activate_pipenv(self, pipfile=None, args=None, populate=False):
+        """Activate a virtual environment managed by pipenv
+
+        If ``pipfile`` is not ``None`` then the Pipfile located at the path
+        provided will be used to create the virtual environment. If
+        ``populate`` is ``True`` then the virtual environment will be
+        populated from the manifest file. The optional ``args`` list will be
+        passed to the pipenv commands.
+        """
         pipenv = os.path.join(self.bin_path, 'pipenv')
         env = os.environ.copy()
         env.update({
-            'PIPENV_IGNORE_VIRTUALENVS': '1',
-            'PIPENV_PIPFILE': pipfile,
-            'WORKON_HOME': os.path.join(self.topobjdir, '_virtualenvs'),
+            b'PIPENV_IGNORE_VIRTUALENVS': b'1',
+            b'WORKON_HOME': str(os.path.normpath(os.path.join(self.topobjdir, '_virtualenvs'))),
         })
 
         args = args or []
+
+        if pipfile is not None:
+            # Install from Pipfile
+            env[b'PIPENV_PIPFILE'] = str(pipfile)
+            args.append('install')
+
         subprocess.check_call(
-            [pipenv, 'install'] + args,
+            [pipenv] + args,
             stderr=subprocess.STDOUT,
             env=env)
 
@@ -553,6 +582,13 @@ class VirtualenvManager(object):
             [pipenv, '--venv'],
             stderr=subprocess.STDOUT,
             env=env).rstrip()
+
+        if populate:
+            # Populate from the manifest
+            subprocess.check_call([
+                pipenv, 'run', 'python', os.path.join(here, 'virtualenv.py'), 'populate',
+                self.topsrcdir, self.topobjdir, self.virtualenv_root, self.manifest_path],
+                stderr=subprocess.STDOUT, env=env)
 
         self.activate()
 
@@ -563,9 +599,10 @@ def verify_python_version(log_handle):
 
     our = LooseVersion('%d.%d.%d' % (major, minor, micro))
 
-    if major != MINIMUM_PYTHON_MAJOR or our < MINIMUM_PYTHON_VERSION:
-        log_handle.write('Python %s or greater (but not Python 3) is '
-            'required to build. ' % MINIMUM_PYTHON_VERSION)
+    if major not in MINIMUM_PYTHON_VERSIONS or our < MINIMUM_PYTHON_VERSIONS[major]:
+        log_handle.write('One of the following Python versions are required to build:\n')
+        for minver in MINIMUM_PYTHON_VERSIONS.values():
+            log_handle.write('* Python %s or greater\n' % minver)
         log_handle.write('You are running Python %s.\n' % our)
 
         if os.name in ('nt', 'ce'):

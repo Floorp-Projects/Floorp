@@ -3903,7 +3903,6 @@ nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
-                                      const nscolor& aDefaultColor,
                                       bool aIsBoxShadow)
 {
   if (!aArray) {
@@ -3944,13 +3943,7 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
 
     // Color is either the specified shadow color or the foreground color
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    nscolor shadowColor;
-    if (item->mHasColor) {
-      shadowColor = item->mColor;
-    } else {
-      shadowColor = aDefaultColor;
-    }
-    SetToRGBAColor(val, shadowColor);
+    SetValueFromComplexColor(val, item->mColor);
     itemList->AppendCSSValue(val.forget());
 
     // Set the offsets, blur radius, and spread if available
@@ -3988,9 +3981,7 @@ nsComputedDOMStyle::DoGetBoxDecorationBreak()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBoxShadow()
 {
-  return GetCSSShadowArray(StyleEffects()->mBoxShadow,
-                           StyleColor()->mColor,
-                           true);
+  return GetCSSShadowArray(StyleEffects()->mBoxShadow, true);
 }
 
 already_AddRefed<CSSValue>
@@ -4381,9 +4372,7 @@ nsComputedDOMStyle::DoGetTextOverflow()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetTextShadow()
 {
-  return GetCSSShadowArray(StyleText()->mTextShadow,
-                           StyleColor()->mColor,
-                           false);
+  return GetCSSShadowArray(StyleText()->mTextShadow, false);
 }
 
 already_AddRefed<CSSValue>
@@ -6671,9 +6660,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_DROP_SHADOW) {
     // Handle drop-shadow()
     RefPtr<CSSValue> shadowValue =
-      GetCSSShadowArray(aStyleFilter.GetDropShadow(),
-                        StyleColor()->mColor,
-                        false);
+      GetCSSShadowArray(aStyleFilter.GetDropShadow(), false);
     ErrorResult dummy;
     shadowValue->GetCssText(argumentString, dummy);
   } else {

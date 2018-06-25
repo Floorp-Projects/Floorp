@@ -57,22 +57,33 @@ StyleComplexColor::MaybeTransparent() const {
 }
 
 nscolor
+StyleComplexColor::CalcColor(nscolor aForegroundColor) const {
+  switch (mTag) {
+  case eNumeric:
+    return mColor;
+  case eForeground:
+  case eAuto:
+    return aForegroundColor;
+  case eComplex:
+    return LinearBlendColors(mColor, mBgRatio, aForegroundColor, mFgRatio);
+  default:
+    MOZ_ASSERT_UNREACHABLE("StyleComplexColor has invalid mTag");
+    return mColor;
+  }
+}
+
+nscolor
 StyleComplexColor::CalcColor(mozilla::ComputedStyle* aStyle) const {
   // Common case that is numeric color, which is pure background, we
   // can skip resolving StyleColor().
+  // TODO(djg): Is this optimization worth it?
   if (mTag == eNumeric) {
     return mColor;
   }
 
   MOZ_ASSERT(aStyle);
   auto fgColor = aStyle->StyleColor()->mColor;
-
-  if (mTag == eComplex) {
-    return LinearBlendColors(mColor, mBgRatio, fgColor, mFgRatio);
-  }
-
-  // eForeground and eAuto return the currentcolor.
-  return fgColor;
+  return CalcColor(fgColor);
 }
 
 nscolor

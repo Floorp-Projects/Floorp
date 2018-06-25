@@ -6246,8 +6246,8 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   gfx::Point shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
   nscoord blurRadius = std::max(aShadowDetails->mRadius, 0);
 
-  nscolor shadowColor = aShadowDetails->mHasColor ? aShadowDetails->mColor
-                                                  : aParams.foregroundColor;
+  nscolor shadowColor =
+    aShadowDetails->mColor.CalcColor(aParams.foregroundColor);
 
   if (auto* textDrawer = aParams.context->GetTextDrawer()) {
     wr::Shadow wrShadow;

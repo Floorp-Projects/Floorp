@@ -1520,12 +1520,7 @@ nsCSSRendering::GetShadowColor(nsCSSShadowItem* aShadow,
                                float aOpacity)
 {
   // Get the shadow color; if not specified, use the foreground color
-  nscolor shadowColor;
-  if (aShadow->mHasColor)
-    shadowColor = aShadow->mColor;
-  else
-    shadowColor = aFrame->StyleColor()->mColor;
-
+  nscolor shadowColor = aShadow->mColor.CalcColor(aFrame);
   Color color = Color::FromABGR(shadowColor);
   color.a *= aOpacity;
   return color;

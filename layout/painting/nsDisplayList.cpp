@@ -9844,10 +9844,7 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
         }
 
         nsCSSShadowItem* shadow = shadows->ShadowAt(0);
-        nscolor color = shadow->mColor;
-        if (!shadow->mHasColor) {
-          color = mFrame->StyleColor()->mColor;
-        }
+        nscolor color = shadow->mColor.CalcColor(mFrame);
 
         mozilla::wr::WrFilterOp filterOp = {
           wr::ToWrFilterOpType(filter.GetType()),
