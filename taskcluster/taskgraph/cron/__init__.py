@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 def load_jobs(params, root):
     with open(os.path.join(root, '.cron.yml'), 'rb') as f:
-        cron_yml = yaml.load(f)
+        cron_yml = yaml.safe_load(f)
     schema.validate(cron_yml)
 
     # resolve keyed_by fields in each job

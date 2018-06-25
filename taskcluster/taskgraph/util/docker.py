@@ -263,7 +263,7 @@ def image_paths():
     """
     with open(os.path.join(GECKO, 'taskcluster', 'ci', 'docker-image',
                            'kind.yml')) as fh:
-        config = yaml.load(fh)
+        config = yaml.safe_load(fh)
         return {
             k: os.path.join(IMAGE_DIR, v.get('definition', k))
             for k, v in config['jobs'].items()

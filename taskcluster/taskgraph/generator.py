@@ -82,7 +82,7 @@ class Kind(object):
 
         logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
         with open(kind_yml) as f:
-            config = yaml.load(f)
+            config = yaml.safe_load(f)
 
         return cls(kind_name, path, config, graph_config)
 
