@@ -8,6 +8,5 @@
     "network.proxy.type": 1,
     "plugin.disable": true,
     "startup.homepage_override_url": "",
-    "startup.homepage_welcome_url": "",
-    "security.sandbox.content.level": 0
+    "startup.homepage_welcome_url": ""
 }
