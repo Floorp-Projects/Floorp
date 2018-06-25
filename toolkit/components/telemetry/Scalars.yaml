@@ -948,6 +948,50 @@ devtools.inspector:
     record_in_processes:
       - 'main'
 
+devtools.shadowdom:
+  shadow_root_displayed:
+    bug_numbers:
+      - 1470128
+    description: >
+      Whether the markup view displayed any #shadow-root element in the UI.
+    expires: "66"
+    kind: boolean
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  shadow_root_expanded:
+    bug_numbers:
+      - 1470128
+    description: >
+      Whether the user expanded any #shadow-root element.
+    expires: "66"
+    kind: boolean
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  reveal_link_clicked:
+    bug_numbers:
+      - 1470128
+    description: >
+      Whether the user clicked on any "reveal" link. "reveal" links are displayed in
+      shadow dom trees in the markup view.
+    expires: "66"
+    kind: boolean
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools:
   current_theme:
     bug_numbers:
