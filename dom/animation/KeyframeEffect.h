@@ -423,6 +423,7 @@ private:
   bool CanThrottle() const;
   bool CanThrottleOverflowChanges(const nsIFrame& aFrame) const;
   bool CanThrottleOverflowChangesInScrollable(nsIFrame& aFrame) const;
+  bool CanThrottleIfNotVisible(nsIFrame& aFrame) const;
 
   // Returns true if the computedTiming has changed since the last
   // composition.

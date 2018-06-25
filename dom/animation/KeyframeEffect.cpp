@@ -1194,6 +1194,41 @@ KeyframeEffect::OverflowRegionRefreshInterval()
 }
 
 bool
+KeyframeEffect::CanThrottleIfNotVisible(nsIFrame& aFrame) const
+{
+  // Unless we are newly in-effect, we can throttle the animation if the
+  // animation is paint only and the target frame is out of view or the document
+  // is in background tabs.
+  if (mInEffectOnLastAnimationTimingUpdate && CanIgnoreIfNotVisible()) {
+    nsIPresShell* presShell = GetPresShell();
+    if (presShell && !presShell->IsActive()) {
+      return true;
+    }
+
+    const bool isVisibilityHidden =
+      !aFrame.IsVisibleOrMayHaveVisibleDescendants();
+    if ((isVisibilityHidden && !HasVisibilityChange()) ||
+        aFrame.IsScrolledOutOfView()) {
+      // Unthrottle the animation if there is a change hint that might affect
+      // the overflow region.
+      if (HasPropertiesThatMightAffectOverflow()) {
+        // Don't throttle finite animations since the animation might suddenly
+        // come into view and if it was throttled it will be out-of-sync.
+        if (HasFiniteActiveDuration()) {
+          return false;
+        }
+
+        return isVisibilityHidden
+          ? CanThrottleOverflowChangesInScrollable(aFrame)
+          : CanThrottleOverflowChanges(aFrame);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
 KeyframeEffect::CanThrottle() const
 {
   // Unthrottle if we are not in effect or current. This will be the case when
@@ -1218,34 +1253,8 @@ KeyframeEffect::CanThrottle() const
     return true;
   }
 
-  // Unless we are newly in-effect, we can throttle the animation if the
-  // animation is paint only and the target frame is out of view or the document
-  // is in background tabs.
-  if (mInEffectOnLastAnimationTimingUpdate && CanIgnoreIfNotVisible()) {
-    nsIPresShell* presShell = GetPresShell();
-    if (presShell && !presShell->IsActive()) {
-      return true;
-    }
-
-    const bool isVisibilityHidden =
-      !frame->IsVisibleOrMayHaveVisibleDescendants();
-    if ((isVisibilityHidden && !HasVisibilityChange()) ||
-        frame->IsScrolledOutOfView()) {
-      // Unthrottle the animation if there is a change hint that might affect
-      // the overflow region.
-      if (HasPropertiesThatMightAffectOverflow()) {
-        // Don't throttle finite animations since the animation might suddenly
-        // come into view and if it was throttled it will be out-of-sync.
-        if (HasFiniteActiveDuration()) {
-          return false;
-        }
-
-        return isVisibilityHidden
-          ? CanThrottleOverflowChangesInScrollable(*frame)
-          : CanThrottleOverflowChanges(*frame);
-      }
-      return true;
-    }
+  if (CanThrottleIfNotVisible(*frame)) {
+    return true;
   }
 
   // First we need to check layer generation and transform overflow
