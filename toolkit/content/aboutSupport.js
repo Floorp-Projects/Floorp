@@ -94,7 +94,22 @@ var snapshotFormatters = {
           policiesText = strings.GetStringFromName("policies.error");
           break;
       }
-      $("policies-status").textContent = policiesText;
+
+      if (data.policiesStatus == Services.policies.ACTIVE) {
+        let activePolicies = $.new("a", policiesText);
+        activePolicies.addEventListener("click", function(event) {
+          let activePoliciesJson = {};
+          activePoliciesJson.policies = Services.policies.getActivePolicies();
+          let activePoliciesJsonBlob = new Blob([JSON.stringify(activePoliciesJson)],
+                                                {type: "application/json"});
+          let jsonURL = URL.createObjectURL(activePoliciesJsonBlob);
+          window.open(jsonURL);
+          URL.revokeObjectURL(jsonURL);
+        });
+        $("policies-status").appendChild(activePolicies);
+      } else {
+        $("policies-status").textContent = policiesText;
+      }
     } else {
       $("policies-status-row").hidden = true;
     }
