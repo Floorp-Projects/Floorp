@@ -2523,7 +2523,10 @@ DebugEnvironments::ensureRealmData(JSContext* cx)
         return debugEnvs;
 
     auto debugEnvs = cx->make_unique<DebugEnvironments>(cx, cx->zone());
-    if (!debugEnvs || !debugEnvs->init()) {
+    if (!debugEnvs)
+        return nullptr;
+
+    if (!debugEnvs->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
