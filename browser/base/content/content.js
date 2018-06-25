@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   ContentWebRTC: "resource:///modules/ContentWebRTC.jsm",
-  LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
   LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
   PluginContent: "resource:///modules/PluginContent.jsm",
@@ -35,6 +34,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyProxy(this, "contextMenu", () => {
   return new ContextMenu(global);
+});
+
+XPCOMUtils.defineLazyGetter(this, "LoginManagerContent", () => {
+  let tmp = {};
+  ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm", tmp);
+  tmp.LoginManagerContent.setupEventListeners(global);
+  return tmp.LoginManagerContent;
 });
 
 XPCOMUtils.defineLazyProxy(this, "formSubmitObserver", () => {
@@ -56,6 +62,7 @@ Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
 
 addMessageListener("PageInfo:getData", PageInfoListener);
 
+// NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
 addMessageListener("RemoteLogins:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
   message.objects.inputElement = contextMenu.getTarget(message, "inputElement");
@@ -71,13 +78,7 @@ addEventListener("DOMInputPasswordAdded", function(event) {
   let formLike = LoginFormFactory.createFromField(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
-addEventListener("pageshow", function(event) {
-  LoginManagerContent.onPageShow(event, content);
-});
 addEventListener("DOMAutoComplete", function(event) {
-  LoginManagerContent.onUsernameInput(event);
-});
-addEventListener("blur", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
 
