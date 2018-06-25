@@ -381,6 +381,8 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
 
           // Release the document node and all of its children, even retained.
           this._releaseFront(targetFront, true);
+        } else if (change.type === "shadowRootAttached") {
+          targetFront._form.isShadowHost = true;
         } else if (change.type === "unretained") {
           // Retained orphans were force-released without the intervention of
           // client (probably a navigated frame).
@@ -397,6 +399,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
         // mutation types.
         if (change.type === "inlineTextChild" ||
             change.type === "childList" ||
+            change.type === "shadowRootAttached" ||
             change.type === "nativeAnonymousChildList") {
           if (change.inlineTextChild) {
             targetFront.inlineTextChild =

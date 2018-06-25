@@ -1094,7 +1094,7 @@ MarkupView.prototype = {
         || type === "events" || type === "pseudoClassLock") {
         container.update();
       } else if (type === "childList" || type === "nativeAnonymousChildList"
-        || type === "slotchange") {
+        || type === "slotchange" || type === "shadowRootAttached") {
         container.childrenDirty = true;
         // Update the children to take care of changes in the markup view DOM
         // and update container (and its subtree) DOM tree depth level for
