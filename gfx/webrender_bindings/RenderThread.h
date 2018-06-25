@@ -21,6 +21,7 @@
 #include "mozilla/layers/SynchronousTask.h"
 
 #include <list>
+#include <unordered_map>
 
 namespace mozilla {
 namespace wr {
@@ -199,7 +200,7 @@ private:
   };
 
   Mutex mFrameCountMapLock;
-  nsDataHashtable<nsUint64HashKey, WindowInfo> mWindowInfos;
+  std::unordered_map<uint64_t, WindowInfo*> mWindowInfos;
 
   Mutex mRenderTextureMapLock;
   nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;
