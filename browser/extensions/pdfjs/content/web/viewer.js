@@ -3206,10 +3206,6 @@ const defaultOptions = {
     value: './images/',
     kind: OptionKind.VIEWER
   },
-  locale: {
-    value: typeof navigator !== 'undefined' ? navigator.language : 'en-US',
-    kind: OptionKind.VIEWER
-  },
   maxCanvasPixels: {
     value: _viewer_compatibility.viewerCompatibilityParams.maxCanvasPixels || 16777216,
     kind: OptionKind.VIEWER
@@ -3263,11 +3259,11 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   disableRange: {
-    value: _pdfjsLib.apiCompatibilityParams.disableRange || false,
+    value: false,
     kind: OptionKind.API
   },
   disableStream: {
-    value: _pdfjsLib.apiCompatibilityParams.disableStream || false,
+    value: false,
     kind: OptionKind.API
   },
   isEvalSupported: {
@@ -3299,6 +3295,7 @@ const defaultOptions = {
     kind: OptionKind.WORKER
   }
 };
+;
 const userOptions = Object.create(null);
 class AppOptions {
   constructor() {
@@ -6349,7 +6346,7 @@ class PDFViewer extends _base_viewer.BaseViewer {
     return (0, _pdfjsLib.shadow)(this, '_setDocumentViewerElement', this.viewer);
   }
   _scrollIntoView({ pageDiv, pageSpot = null }) {
-    if (!pageSpot) {
+    if (!pageSpot && !this.isInPresentationMode) {
       const left = pageDiv.offsetLeft + pageDiv.clientLeft;
       const right = left + pageDiv.clientWidth;
       const { scrollLeft, clientWidth } = this.container;
@@ -6410,15 +6407,57 @@ class PDFViewer extends _base_viewer.BaseViewer {
       location: this._location
     });
   }
-  _regroupSpreads() {
-    const container = this._setDocumentViewerElement,
-          pages = this._pages;
-    while (container.firstChild) {
-      container.firstChild.remove();
+  get _isScrollModeHorizontal() {
+    return this.isInPresentationMode ? false : this.scrollMode === _base_viewer.ScrollMode.HORIZONTAL;
+  }
+  setScrollMode(mode) {
+    if (mode === this.scrollMode) {
+      return;
     }
+    super.setScrollMode(mode);
+    this.eventBus.dispatch('scrollmodechanged', { mode });
+    this._updateScrollModeClasses();
+    if (!this.pdfDocument) {
+      return;
+    }
+    const pageNumber = this._currentPageNumber;
+    if (isNaN(this._currentScaleValue)) {
+      this._setScale(this._currentScaleValue, true);
+    }
+    this.scrollPageIntoView({ pageNumber });
+    this.update();
+  }
+  _updateScrollModeClasses() {
+    const { scrollMode, viewer } = this;
+    if (scrollMode === _base_viewer.ScrollMode.HORIZONTAL) {
+      viewer.classList.add('scrollHorizontal');
+    } else {
+      viewer.classList.remove('scrollHorizontal');
+    }
+    if (scrollMode === _base_viewer.ScrollMode.WRAPPED) {
+      viewer.classList.add('scrollWrapped');
+    } else {
+      viewer.classList.remove('scrollWrapped');
+    }
+  }
+  setSpreadMode(mode) {
+    if (mode === this.spreadMode) {
+      return;
+    }
+    super.setSpreadMode(mode);
+    this.eventBus.dispatch('spreadmodechanged', { mode });
+    this._regroupSpreads();
+  }
+  _regroupSpreads() {
+    if (!this.pdfDocument) {
+      return;
+    }
+    const viewer = this.viewer,
+          pages = this._pages;
+    viewer.textContent = '';
     if (this.spreadMode === _base_viewer.SpreadMode.NONE) {
       for (let i = 0, iMax = pages.length; i < iMax; ++i) {
-        container.appendChild(pages[i].div);
+        viewer.appendChild(pages[i].div);
       }
     } else {
       const parity = this.spreadMode - 1;
@@ -6427,10 +6466,10 @@ class PDFViewer extends _base_viewer.BaseViewer {
         if (spread === null) {
           spread = document.createElement('div');
           spread.className = 'spread';
-          container.appendChild(spread);
+          viewer.appendChild(spread);
         } else if (i % 2 === parity) {
           spread = spread.cloneNode(false);
-          container.appendChild(spread);
+          viewer.appendChild(spread);
         }
         spread.appendChild(pages[i].div);
       }
@@ -6554,7 +6593,9 @@ class BaseViewer {
     if (this.removePageBorders) {
       this.viewer.classList.add('removePageBorders');
     }
-    this._updateScrollModeClasses();
+    if (this.scrollMode !== ScrollMode.VERTICAL) {
+      this._updateScrollModeClasses();
+    }
   }
   get pagesCount() {
     return this._pages.length;
@@ -6858,9 +6899,10 @@ class BaseViewer {
       if (!currentPage) {
         return;
       }
-      let hPadding = this.isInPresentationMode || this.removePageBorders ? 0 : _ui_utils.SCROLLBAR_PADDING;
-      let vPadding = this.isInPresentationMode || this.removePageBorders ? 0 : _ui_utils.VERTICAL_PADDING;
-      if (this.scrollMode === ScrollMode.HORIZONTAL) {
+      const noPadding = this.isInPresentationMode || this.removePageBorders;
+      let hPadding = noPadding ? 0 : _ui_utils.SCROLLBAR_PADDING;
+      let vPadding = noPadding ? 0 : _ui_utils.VERTICAL_PADDING;
+      if (!noPadding && this._isScrollModeHorizontal) {
         const temp = hPadding;
         hPadding = vPadding;
         vPadding = temp;
@@ -7030,6 +7072,9 @@ class BaseViewer {
   focus() {
     this.container.focus();
   }
+  get _isScrollModeHorizontal() {
+    throw new Error('Not implemented: _isScrollModeHorizontal');
+  }
   get isInPresentationMode() {
     return this.presentationModeState === _ui_utils.PresentationModeState.FULLSCREEN;
   }
@@ -7082,7 +7127,7 @@ class BaseViewer {
   }
   forceRendering(currentlyVisiblePages) {
     let visiblePages = currentlyVisiblePages || this._getVisiblePages();
-    let scrollAhead = this.scrollMode === ScrollMode.HORIZONTAL ? this.scroll.right : this.scroll.down;
+    let scrollAhead = this._isScrollModeHorizontal ? this.scroll.right : this.scroll.down;
     let pageView = this.renderingQueue.getHighestPriority(visiblePages, this._pages, scrollAhead);
     if (pageView) {
       this._ensurePdfPageLoaded(pageView).then(() => {
@@ -7156,30 +7201,17 @@ class BaseViewer {
     });
   }
   setScrollMode(mode) {
-    if (mode !== this.scrollMode) {
-      this.scrollMode = mode;
-      this._updateScrollModeClasses();
-      this.eventBus.dispatch('scrollmodechanged', { mode });
-      const pageNumber = this._currentPageNumber;
-      if (isNaN(this._currentScaleValue)) {
-        this._setScale(this._currentScaleValue, this.isInPresentationMode);
-      }
-      this.scrollPageIntoView({ pageNumber });
-      this.update();
+    if (!Number.isInteger(mode) || !Object.values(ScrollMode).includes(mode)) {
+      throw new Error(`Invalid scroll mode: ${mode}`);
     }
+    this.scrollMode = mode;
   }
-  _updateScrollModeClasses() {
-    const mode = this.scrollMode,
-          { classList } = this.viewer;
-    classList.toggle('scrollHorizontal', mode === ScrollMode.HORIZONTAL);
-    classList.toggle('scrollWrapped', mode === ScrollMode.WRAPPED);
-  }
+  _updateScrollModeClasses() {}
   setSpreadMode(mode) {
-    if (mode !== this.spreadMode) {
-      this.spreadMode = mode;
-      this.eventBus.dispatch('spreadmodechanged', { mode });
-      this._regroupSpreads();
+    if (!Number.isInteger(mode) || !Object.values(SpreadMode).includes(mode)) {
+      throw new Error(`Invalid spread mode: ${mode}`);
     }
+    this.spreadMode = mode;
   }
   _regroupSpreads() {}
 }
@@ -8176,16 +8208,38 @@ class SecondaryToolbar {
   }
   _bindScrollModeListener(buttons) {
     this.eventBus.on('scrollmodechanged', function (evt) {
-      buttons.scrollVerticalButton.classList.toggle('toggled', evt.mode === _base_viewer.ScrollMode.VERTICAL);
-      buttons.scrollHorizontalButton.classList.toggle('toggled', evt.mode === _base_viewer.ScrollMode.HORIZONTAL);
-      buttons.scrollWrappedButton.classList.toggle('toggled', evt.mode === _base_viewer.ScrollMode.WRAPPED);
+      buttons.scrollVerticalButton.classList.remove('toggled');
+      buttons.scrollHorizontalButton.classList.remove('toggled');
+      buttons.scrollWrappedButton.classList.remove('toggled');
+      switch (evt.mode) {
+        case _base_viewer.ScrollMode.VERTICAL:
+          buttons.scrollVerticalButton.classList.add('toggled');
+          break;
+        case _base_viewer.ScrollMode.HORIZONTAL:
+          buttons.scrollHorizontalButton.classList.add('toggled');
+          break;
+        case _base_viewer.ScrollMode.WRAPPED:
+          buttons.scrollWrappedButton.classList.add('toggled');
+          break;
+      }
     });
   }
   _bindSpreadModeListener(buttons) {
     this.eventBus.on('spreadmodechanged', function (evt) {
-      buttons.spreadNoneButton.classList.toggle('toggled', evt.mode === _base_viewer.SpreadMode.NONE);
-      buttons.spreadOddButton.classList.toggle('toggled', evt.mode === _base_viewer.SpreadMode.ODD);
-      buttons.spreadEvenButton.classList.toggle('toggled', evt.mode === _base_viewer.SpreadMode.EVEN);
+      buttons.spreadNoneButton.classList.remove('toggled');
+      buttons.spreadOddButton.classList.remove('toggled');
+      buttons.spreadEvenButton.classList.remove('toggled');
+      switch (evt.mode) {
+        case _base_viewer.SpreadMode.NONE:
+          buttons.spreadNoneButton.classList.add('toggled');
+          break;
+        case _base_viewer.SpreadMode.ODD:
+          buttons.spreadOddButton.classList.add('toggled');
+          break;
+        case _base_viewer.SpreadMode.EVEN:
+          buttons.spreadEvenButton.classList.add('toggled');
+          break;
+      }
     });
   }
   open() {
