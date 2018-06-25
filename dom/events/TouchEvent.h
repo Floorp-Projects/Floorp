@@ -94,7 +94,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return TouchEventBinding::Wrap(aCx, this, aGivenProto);
+    return TouchEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   already_AddRefed<TouchList>

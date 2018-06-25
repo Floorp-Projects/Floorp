@@ -55,7 +55,7 @@ nsPluginArray::GetParentObject() const
 JSObject*
 nsPluginArray::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PluginArrayBinding::Wrap(aCx, this, aGivenProto);
+  return PluginArray_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPluginArray)
@@ -435,7 +435,7 @@ nsPluginElement::GetParentObject() const
 JSObject*
 nsPluginElement::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PluginBinding::Wrap(aCx, this, aGivenProto);
+  return Plugin_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

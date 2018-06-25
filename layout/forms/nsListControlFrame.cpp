@@ -1855,7 +1855,7 @@ nsListControlFrame::MouseDown(dom::Event* aMouseEvent)
       }
 
       uint16_t inputSource = mouseEvent->MozInputSource();
-      bool isSourceTouchEvent = inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH;
+      bool isSourceTouchEvent = inputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH;
       if (FireShowDropDownEvent(mContent, !mComboboxFrame->IsDroppedDownOrHasParentPopup(),
                                 isSourceTouchEvent)) {
         return NS_OK;

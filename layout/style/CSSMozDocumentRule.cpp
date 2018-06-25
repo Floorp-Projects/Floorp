@@ -17,7 +17,7 @@ using namespace mozilla::css;
 CSSMozDocumentRule::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSMozDocumentRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSMozDocumentRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

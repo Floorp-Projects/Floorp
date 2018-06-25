@@ -22,7 +22,7 @@ namespace dom {
 JSObject*
 SVGMPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGMPathElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGMPathElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGMPathElement::sStringInfo[2] =

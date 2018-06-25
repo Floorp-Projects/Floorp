@@ -191,7 +191,7 @@ AccessibleCaretManager::OnSelectionChanged(nsIDocument* aDoc,
 
   // For mouse input we don't want to show the carets.
   if (sHideCaretsForMouseInput &&
-      mLastInputSource == MouseEventBinding::MOZ_SOURCE_MOUSE) {
+      mLastInputSource == MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
     HideCarets();
     return NS_OK;
   }
@@ -199,7 +199,7 @@ AccessibleCaretManager::OnSelectionChanged(nsIDocument* aDoc,
   // When we want to hide the carets for mouse input, hide them for select
   // all action fired by keyboard as well.
   if (sHideCaretsForMouseInput &&
-      mLastInputSource == MouseEventBinding::MOZ_SOURCE_KEYBOARD &&
+      mLastInputSource == MouseEvent_Binding::MOZ_SOURCE_KEYBOARD &&
       (aReason & nsISelectionListener::SELECTALL_REASON)) {
     HideCarets();
     return NS_OK;
@@ -677,7 +677,7 @@ AccessibleCaretManager::OnScrollEnd()
 
   // For mouse input we don't want to show the carets.
   if (sHideCaretsForMouseInput &&
-      mLastInputSource == MouseEventBinding::MOZ_SOURCE_MOUSE) {
+      mLastInputSource == MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
     AC_LOG("%s: HideCarets()", __FUNCTION__);
     HideCarets();
     return;
@@ -1073,7 +1073,7 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   if (!startFrame) {
     ErrorResult err;
     RefPtr<TreeWalker> walker = mPresShell->GetDocument()->CreateTreeWalker(
-      *startNode, dom::NodeFilterBinding::SHOW_ALL, nullptr, err);
+      *startNode, dom::NodeFilter_Binding::SHOW_ALL, nullptr, err);
 
     if (!walker) {
       return nullptr;

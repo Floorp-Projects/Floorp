@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGFEOffsetElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEOffsetElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEOffsetElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberInfo SVGFEOffsetElement::sNumberInfo[2] =

@@ -133,7 +133,7 @@ MozQueryInterface::LegacyCall(JSContext* cx, JS::Handle<JS::Value> thisv,
 bool
 MozQueryInterface::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
 {
-  return MozQueryInterfaceBinding::Wrap(aCx, this, aGivenProto, aReflector);
+  return MozQueryInterface_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 } // namespace dom

@@ -156,8 +156,8 @@ using namespace mozilla::image;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::gfx;
-using mozilla::dom::HTMLMediaElementBinding::HAVE_NOTHING;
-using mozilla::dom::HTMLMediaElementBinding::HAVE_METADATA;
+using mozilla::dom::HTMLMediaElement_Binding::HAVE_NOTHING;
+using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
 
 #define INTERCHARACTER_RUBY_ENABLED_PREF_NAME "layout.css.ruby.intercharacter.enabled"
 #define CONTENT_SELECT_ENABLED_PREF_NAME "dom.select_popup_in_content.enabled"

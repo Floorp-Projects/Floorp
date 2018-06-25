@@ -43,7 +43,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 JSObject*
 Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::AnimationBinding::Wrap(aCx, this, aGivenProto);
+  return dom::Animation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // ---------------------------------------------------------------------------

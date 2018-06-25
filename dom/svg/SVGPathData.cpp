@@ -23,7 +23,7 @@
 #include <algorithm>
 
 using namespace mozilla;
-using namespace mozilla::dom::SVGPathSegBinding;
+using namespace mozilla::dom::SVGPathSeg_Binding;
 using namespace mozilla::gfx;
 
 static bool IsMoveto(uint16_t aSegType)

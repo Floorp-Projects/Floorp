@@ -20,7 +20,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 TextTrackRegion::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VTTRegionBinding::Wrap(aCx, this, aGivenProto);
+  return VTTRegion_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<TextTrackRegion>

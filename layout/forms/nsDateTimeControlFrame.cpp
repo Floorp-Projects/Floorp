@@ -421,14 +421,14 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
               &nsIDateTimeInputArea::NotifyInputElementValueChanged));
           }
         } else {
-          if (aModType == MutationEventBinding::REMOVAL) {
+          if (aModType == MutationEvent_Binding::REMOVAL) {
             if (inputAreaContent) {
               nsAtomString name(aAttribute);
               inputAreaContent->RemoveEditAttribute(name);
             }
           } else {
-            MOZ_ASSERT(aModType == MutationEventBinding::ADDITION ||
-                       aModType == MutationEventBinding::MODIFICATION);
+            MOZ_ASSERT(aModType == MutationEvent_Binding::ADDITION ||
+                       aModType == MutationEvent_Binding::MODIFICATION);
             if (inputAreaContent) {
               nsAtomString name(aAttribute);
               nsAutoString value;

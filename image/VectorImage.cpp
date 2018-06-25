@@ -44,7 +44,7 @@
 namespace mozilla {
 
 using namespace dom;
-using namespace dom::SVGPreserveAspectRatioBinding;
+using namespace dom::SVGPreserveAspectRatio_Binding;
 using namespace gfx;
 using namespace layers;
 

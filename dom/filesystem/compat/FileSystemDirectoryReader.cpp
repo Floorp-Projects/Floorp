@@ -150,7 +150,7 @@ JSObject*
 FileSystemDirectoryReader::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto)
 {
-  return FileSystemDirectoryReaderBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemDirectoryReader_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

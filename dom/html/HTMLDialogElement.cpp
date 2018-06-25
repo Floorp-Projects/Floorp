@@ -88,7 +88,7 @@ HTMLDialogElement::ShowModal(ErrorResult& aError)
 JSObject*
 HTMLDialogElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLDialogElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLDialogElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -506,7 +506,7 @@ DOMMediaStream::Destroy()
 JSObject*
 DOMMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::MediaStreamBinding::Wrap(aCx, this, aGivenProto);
+  return dom::MediaStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<DOMMediaStream>
@@ -1526,7 +1526,7 @@ DOMLocalMediaStream::~DOMLocalMediaStream()
 JSObject*
 DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::LocalMediaStreamBinding::Wrap(aCx, this, aGivenProto);
+  return dom::LocalMediaStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

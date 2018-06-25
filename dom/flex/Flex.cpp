@@ -46,7 +46,7 @@ Flex::Flex(Element* aParent,
 JSObject*
 Flex::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FlexBinding::Wrap(aCx, this, aGivenProto);
+  return Flex_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -71,7 +71,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DOMSVGLengthList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::SVGLengthListBinding::Wrap(cx, this, aGivenProto);
+  return mozilla::dom::SVGLengthList_Binding::Wrap(cx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

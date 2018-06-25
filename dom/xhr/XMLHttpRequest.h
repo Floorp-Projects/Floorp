@@ -153,7 +153,7 @@ public:
   virtual JSObject*
   WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return mozilla::dom::XMLHttpRequestBinding::Wrap(aCx, this, aGivenProto);
+    return mozilla::dom::XMLHttpRequest_Binding::Wrap(aCx, this, aGivenProto);
   }
 };
 

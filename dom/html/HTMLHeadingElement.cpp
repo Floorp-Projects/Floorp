@@ -27,7 +27,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 JSObject*
 HTMLHeadingElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLHeadingElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLHeadingElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

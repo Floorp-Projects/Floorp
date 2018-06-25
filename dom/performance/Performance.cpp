@@ -130,7 +130,7 @@ Performance::TimeOrigin()
 JSObject*
 Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceBinding::Wrap(aCx, this, aGivenProto);
+  return Performance_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

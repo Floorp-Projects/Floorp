@@ -629,10 +629,10 @@ JSObject*
 XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mIsPlainDocument) {
-    return DocumentBinding::Wrap(aCx, this, aGivenProto);
+    return Document_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  return XMLDocumentBinding::Wrap(aCx, this, aGivenProto);
+  return XMLDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

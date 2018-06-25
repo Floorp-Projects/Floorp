@@ -38,7 +38,7 @@ DOMPointReadOnly::Constructor(const GlobalObject& aGlobal, double aX, double aY,
 JSObject*
 DOMPointReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMPointReadOnlyBinding::Wrap(aCx, this, aGivenProto);
+  return DOMPointReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMPoint>
@@ -62,5 +62,5 @@ DOMPoint::Constructor(const GlobalObject& aGlobal, double aX, double aY,
 JSObject*
 DOMPoint::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMPointBinding::Wrap(aCx, this, aGivenProto);
+  return DOMPoint_Binding::Wrap(aCx, this, aGivenProto);
 }

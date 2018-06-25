@@ -35,7 +35,7 @@ public:
   RawServoMozDocumentRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRuleBinding::DOCUMENT_RULE; }
+  uint16_t Type() const final { return CSSRule_Binding::DOCUMENT_RULE; }
   void GetCssText(nsAString& aCssText) const final;
   void GetConditionText(nsAString& aConditionText) final;
   void SetConditionText(const nsAString& aConditionText,

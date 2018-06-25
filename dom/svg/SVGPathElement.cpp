@@ -33,7 +33,7 @@ namespace dom {
 JSObject*
 SVGPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGPathElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGPathElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

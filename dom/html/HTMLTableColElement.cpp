@@ -26,7 +26,7 @@ HTMLTableColElement::~HTMLTableColElement()
 JSObject*
 HTMLTableColElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableColElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTableColElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableColElement)

@@ -919,13 +919,13 @@ StyleSheet::Media()
 JSObject*
 StyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::CSSStyleSheetBinding::Wrap(aCx, this, aGivenProto);
+  return dom::CSSStyleSheet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ bool
 StyleSheet::RuleHasPendingChildSheet(css::Rule* aRule)
 {
-  MOZ_ASSERT(aRule->Type() == dom::CSSRuleBinding::IMPORT_RULE);
+  MOZ_ASSERT(aRule->Type() == dom::CSSRule_Binding::IMPORT_RULE);
   auto rule = static_cast<dom::CSSImportRule*>(aRule);
   if (StyleSheet* childSheet = rule->GetStyleSheet()) {
     return !childSheet->IsComplete();
@@ -1154,7 +1154,7 @@ StyleSheet::ReparseSheet(const nsAString& aInput)
     for (uint32_t i = 0; i < ruleCount; ++i) {
       css::Rule* rule = ruleList->GetRule(i);
       MOZ_ASSERT(rule);
-      if (rule->Type() == dom::CSSRuleBinding::IMPORT_RULE &&
+      if (rule->Type() == dom::CSSRule_Binding::IMPORT_RULE &&
           RuleHasPendingChildSheet(rule)) {
         continue; // notify when loaded (see StyleSheetLoaded)
       }
@@ -1180,7 +1180,7 @@ StyleSheet::ReparseSheet(const nsAString& aInput)
     for (uint32_t i = 0; i < ruleCount; ++i) {
       css::Rule* rule = ruleList->GetRule(i);
       MOZ_ASSERT(rule);
-      if (rule->Type() == CSSRuleBinding::IMPORT_RULE &&
+      if (rule->Type() == CSSRule_Binding::IMPORT_RULE &&
           RuleHasPendingChildSheet(rule)) {
         continue; // notify when loaded (see StyleSheetLoaded)
       }
@@ -1268,7 +1268,7 @@ StyleSheet::InsertRuleInternal(const nsAString& aRule,
   // XXX We may not want to get the rule when stylesheet change event
   // is not enabled.
   css::Rule* rule = mRuleList->GetRule(aIndex);
-  if (rule->Type() != CSSRuleBinding::IMPORT_RULE ||
+  if (rule->Type() != CSSRule_Binding::IMPORT_RULE ||
       !RuleHasPendingChildSheet(rule)) {
     RuleAdded(*rule);
   }

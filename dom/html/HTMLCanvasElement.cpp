@@ -246,7 +246,7 @@ HTMLCanvasPrintState::~HTMLCanvasPrintState()
 /* virtual */ JSObject*
 HTMLCanvasPrintState::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozCanvasPrintStateBinding::Wrap(aCx, this, aGivenProto);
+  return MozCanvasPrintState_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*
@@ -428,7 +428,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
 /* virtual */ JSObject*
 HTMLCanvasElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCanvasElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLCanvasElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<nsICanvasRenderingContextInternal>

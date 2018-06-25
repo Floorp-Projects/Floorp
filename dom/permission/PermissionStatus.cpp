@@ -65,7 +65,7 @@ PermissionStatus::~PermissionStatus()
 JSObject*
 PermissionStatus::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PermissionStatusBinding::Wrap(aCx, this, aGivenProto);
+  return PermissionStatus_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

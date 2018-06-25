@@ -60,7 +60,7 @@ nsBaseDragService::nsBaseDragService()
     mDragAction(DRAGDROP_ACTION_NONE),
     mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
-    mSuppressLevel(0), mInputSource(MouseEventBinding::MOZ_SOURCE_MOUSE)
+    mSuppressLevel(0), mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE)
 {
 }
 
@@ -463,7 +463,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
   mImageOffset = CSSIntPoint();
   mScreenPosition = CSSIntPoint();
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
-  mInputSource = MouseEventBinding::MOZ_SOURCE_MOUSE;
+  mInputSource = MouseEvent_Binding::MOZ_SOURCE_MOUSE;
 
   return NS_OK;
 }

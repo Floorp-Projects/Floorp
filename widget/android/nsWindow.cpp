@@ -609,7 +609,7 @@ public:
 
         ScreenPoint origin = ScreenPoint(aX, aY);
 
-        MouseInput input(mouseType, buttonType, MouseEventBinding::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState));
+        MouseInput input(mouseType, buttonType, MouseEvent_Binding::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState));
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
@@ -2006,7 +2006,7 @@ nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
                                  WidgetMouseEvent::eReal);
         hittest.mRefPoint = aEvent.mTouches[0]->mRefPoint;
         hittest.mIgnoreRootScrollFrame = true;
-        hittest.inputSource = MouseEventBinding::MOZ_SOURCE_TOUCH;
+        hittest.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
         nsEventStatus status;
         DispatchEvent(&hittest, status);
 

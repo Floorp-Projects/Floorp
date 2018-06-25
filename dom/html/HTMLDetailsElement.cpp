@@ -80,7 +80,7 @@ HTMLDetailsElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
 JSObject*
 HTMLDetailsElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLDetailsElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLDetailsElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

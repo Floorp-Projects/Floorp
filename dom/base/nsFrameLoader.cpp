@@ -3400,6 +3400,6 @@ JSObject*
 nsFrameLoader::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
   JS::RootedObject result(cx);
-  FrameLoaderBinding::Wrap(cx, this, this, aGivenProto, &result);
+  FrameLoader_Binding::Wrap(cx, this, this, aGivenProto, &result);
   return result;
 }

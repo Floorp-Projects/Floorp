@@ -50,7 +50,7 @@ JSObject*
 AuthenticatorResponse::WrapObject(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto)
 {
-  return AuthenticatorResponseBinding::Wrap(aCx, this, aGivenProto);
+  return AuthenticatorResponse_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

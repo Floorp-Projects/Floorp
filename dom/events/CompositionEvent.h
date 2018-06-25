@@ -35,7 +35,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return CompositionEventBinding::Wrap(aCx, this, aGivenProto);
+    return CompositionEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   void InitCompositionEvent(const nsAString& aType,

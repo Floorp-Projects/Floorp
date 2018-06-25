@@ -28,7 +28,7 @@ ScrollBoxObject::~ScrollBoxObject()
 
 JSObject* ScrollBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ScrollBoxObjectBinding::Wrap(aCx, this, aGivenProto);
+  return ScrollBoxObject_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsIScrollableFrame* ScrollBoxObject::GetScrollFrame()

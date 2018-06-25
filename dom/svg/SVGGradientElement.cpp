@@ -23,8 +23,8 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(RadialGradient)
 namespace mozilla {
 namespace dom {
 
-using namespace SVGGradientElementBinding;
-using namespace SVGUnitTypesBinding;
+using namespace SVGGradientElement_Binding;
+using namespace SVGUnitTypes_Binding;
 
 //--------------------- Gradients------------------------
 
@@ -127,15 +127,15 @@ SVGGradientElement::IsAttributeMapped(const nsAtom* name) const
 JSObject*
 SVGLinearGradientElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGLinearGradientElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGLinearGradientElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x1, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y1, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::x2, 100, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y2, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::x1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::y1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::x2, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::y2, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
 };
 
 //----------------------------------------------------------------------
@@ -201,17 +201,17 @@ SVGLinearGradientElement::GetLengthInfo()
 JSObject*
 SVGRadialGradientElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGRadialGradientElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGRadialGradientElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[6] =
 {
-  { &nsGkAtoms::cx, 50, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::cy, 50, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::r, 50, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
-  { &nsGkAtoms::fx, 50, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::fy, 50, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::fr, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
+  { &nsGkAtoms::cx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::cy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::r, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
+  { &nsGkAtoms::fx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::fy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::fr, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
 };
 
 //----------------------------------------------------------------------

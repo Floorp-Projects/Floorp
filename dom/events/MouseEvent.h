@@ -26,7 +26,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return MouseEventBinding::Wrap(aCx, this, aGivenProto);
+    return MouseEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   virtual MouseEvent* AsMouseEvent() override

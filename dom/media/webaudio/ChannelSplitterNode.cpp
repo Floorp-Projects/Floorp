@@ -107,7 +107,7 @@ ChannelSplitterNode::Create(AudioContext& aAudioContext,
 JSObject*
 ChannelSplitterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ChannelSplitterNodeBinding::Wrap(aCx, this, aGivenProto);
+  return ChannelSplitterNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
