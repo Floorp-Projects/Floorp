@@ -118,7 +118,7 @@ win64-clang-tidy:
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
 
-win64-rust-1.24:
+win64-rust-1.28:
     description: "rust repack"
     treeherder:
         kind: build
@@ -135,7 +135,8 @@ win64-rust-1.24:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.24.0',
+            # 1.28.0-beta.6
+            '--channel', 'beta-2018-06-30',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -167,7 +168,7 @@ win64-rust-nightly:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win32-rust-1.24:
+win32-rust-1.28:
     description: "rust repack"
     treeherder:
         kind: build
@@ -184,14 +185,15 @@ win32-rust-1.24:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.24.0',
+            # 1.28.0-beta.6
+            '--channel', 'beta-2018-06-30',
             '--host', 'i686-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
         ]
         toolchain-alias: win32-rust
         toolchain-artifact: public/build/rustc.tar.bz2
 
-mingw32-rust-1.24:
+mingw32-rust-1.28:
     description: "rust repack"
     treeherder:
         kind: build
@@ -208,7 +210,8 @@ mingw32-rust-1.24:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.24.0',
+            # 1.28.0-beta.6
+            '--channel', 'beta-2018-06-30',
             '--host', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
@@ -236,7 +239,7 @@ win64-sccache:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/sccache2.tar.bz2
     toolchains:
-        - win64-rust-1.24
+        - win64-rust-1.28
 
 win64-rust-size:
     description: "rust-size toolchain build"
@@ -257,7 +260,7 @@ win64-rust-size:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/rust-size.tar.bz2
     toolchains:
-        - win64-rust-1.24
+        - win64-rust-1.28
 
 win32-gn:
     description: "gn toolchain build"
