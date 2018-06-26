@@ -117,11 +117,11 @@ public class SyncAction extends BaseAction {
     }
 
     protected void startStudyAction(Context context) {
-        DownloadContentService.startStudy(context);
+        DlcStudyService.enqueueServiceWork(context);
     }
 
     protected void startCleanupAction(Context context) {
-        DownloadContentService.startCleanup(context);
+        DlcCleanupService.enqueueServiceWork(context);
     }
 
     protected JSONArray fetchRawCatalog(long lastModified)
