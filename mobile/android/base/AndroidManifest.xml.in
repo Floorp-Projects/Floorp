@@ -184,7 +184,23 @@
             </intent-filter>
         </activity-alias>
 
-        <service android:name="org.mozilla.gecko.GeckoService" />
+        <service
+            android:name="org.mozilla.gecko.GeckoStarterService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <service
+            android:name="org.mozilla.gecko.GeckoLoadLibsService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <service
+            android:name="org.mozilla.gecko.GeckoServicesCreatorService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
 
         <activity android:name="org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt"
                   android:launchMode="singleTop"
