@@ -6,8 +6,8 @@ ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
                                "resource://testing-common/PlacesTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
-                               "resource://gre/modules/ExtensionUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionCommon",
+                               "resource://gre/modules/ExtensionCommon.jsm");
 
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
@@ -308,7 +308,7 @@ add_task(async function test_add_url() {
     equal(results.result.title, results.details.title, "URL was added with the correct title");
     if (results.details.visitTime) {
       equal(results.result.lastVisitTime,
-            Number(ExtensionUtils.normalizeTime(results.details.visitTime)),
+            Number(ExtensionCommon.normalizeTime(results.details.visitTime)),
             "URL was added with the correct date");
     }
   }

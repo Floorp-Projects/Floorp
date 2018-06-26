@@ -105,9 +105,19 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {
-  MessageManagerProxy,
-} = ExtensionUtils;
+ChromeUtils.defineModuleGetter(this, "MessageManagerProxy",
+                               "resource://gre/modules/MessageManagerProxy.jsm");
+
+function getMessageManager(target) {
+  if (typeof target.sendAsyncMessage === "function") {
+    return target;
+  }
+  return new MessageManagerProxy(target);
+}
+
+function matches(target, messageManager) {
+  return target === messageManager || target.messageManager === messageManager;
+}
 
 const {DEBUG} = AppConstants;
 
@@ -919,7 +929,7 @@ this.MessageChannel = {
       return;
     }
 
-    let target = new MessageManagerProxy(data.target);
+    let target = getMessageManager(data.target);
 
     let deferred = {
       sender: data.sender,
@@ -930,7 +940,9 @@ this.MessageChannel = {
 
     let cleanup = () => {
       this.pendingResponses.delete(deferred);
-      target.dispose();
+      if (target.dispose) {
+        target.dispose();
+      }
     };
     this.pendingResponses.add(deferred);
 
@@ -1078,7 +1090,7 @@ this.MessageChannel = {
    */
   abortMessageManager(target, reason) {
     for (let response of this.pendingResponses) {
-      if (MessageManagerProxy.matches(response.messageManager, target)) {
+      if (matches(response.messageManager, target)) {
         this.abortedResponses.add(response.channelId);
         response.reject(reason);
       }
