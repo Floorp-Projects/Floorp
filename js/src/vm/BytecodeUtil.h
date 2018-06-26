@@ -35,7 +35,7 @@ FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 } JSOp;
 
 /*
- * JS bytecode formats.
+ * [SMDOC] Bytecode Format flags (JOF_*)
  */
 enum {
     JOF_BYTE            = 0,        /* single bytecode, no immediates */

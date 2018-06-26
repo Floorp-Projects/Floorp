@@ -213,6 +213,8 @@ class HeapTypeSet;
 class TemporaryTypeSet;
 
 /*
+ * [SMDOC] Type-Inference TypeSet
+ *
  * Information about the set of types associated with an lvalue. There are
  * three kinds of type sets:
  *

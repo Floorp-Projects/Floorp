@@ -17,6 +17,8 @@
 namespace js {
 namespace jit {
 
+// [SMDOC] IonMonkey Recover Instructions
+//
 // This file contains all recover instructions.
 //
 // A recover instruction is an equivalent of a MIR instruction which is executed

@@ -27,6 +27,8 @@ class Debugger;
 namespace JS {
 namespace dbg {
 
+// [SMDOC] Debugger builder API
+//
 // Helping embedding code build objects for Debugger
 // -------------------------------------------------
 //

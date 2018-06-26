@@ -2332,6 +2332,8 @@ ScriptSource::setSourceMapURL(JSContext* cx, const char16_t* sourceMapURL)
 }
 
 /*
+ * [SMDOC] JSScript data layout (shared)
+ *
  * Shared script data management.
  *
  * SharedScriptData::data contains data that can be shared within a
@@ -2505,6 +2507,8 @@ js::FreeScriptData(JSRuntime* rt)
 }
 
 /*
+ * [SMDOC] JSScript data layout (unshared)
+ *
  * JSScript::data and SharedScriptData::data have complex,
  * manually-controlled, memory layouts.
  *

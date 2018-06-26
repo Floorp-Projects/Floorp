@@ -37,6 +37,8 @@ class RegExpShared;
 class JS_FRIEND_API(Wrapper);
 
 /*
+ * [SMDOC] Proxy Objects
+ *
  * A proxy is a JSObject with highly customizable behavior. ES6 specifies a
  * single kind of proxy, but the customization mechanisms we use to implement
  * ES6 Proxy objects are also useful wherever an object with weird behavior is

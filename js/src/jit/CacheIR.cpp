@@ -625,7 +625,7 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
     // [[GetOwnProperty]] has no definition of the target property.
     //
     //
-    // Shape Teleporting Optimization
+    // [SMDOC] Shape Teleporting Optimization
     // ------------------------------
     //
     // Starting with the assumption (and guideline to developers) that mutating
