@@ -31,7 +31,6 @@ XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "ANNOS_TO_TRACK", () => [
-  PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
   PlacesUtils.LMANNO_FEEDURI,
   PlacesUtils.LMANNO_SITEURI,
 ]);
