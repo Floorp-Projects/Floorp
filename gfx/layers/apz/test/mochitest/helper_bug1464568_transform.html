@@ -36,8 +36,9 @@ async function test_transform() {
   utils.setDisplayPortForElement(0, 0, 300, 1000, document.documentElement, 1);
   await promiseAllPaintsDone();
 
+  let dpr = window.devicePixelRatio;
   let transform = utils.getOMTCTransform(anim);
-  is(transform, "matrix(1, 0, 0, 1, 200, 0)",
+  is(transform, `matrix(1, 0, 0, 1, ${200 * dpr}, 0)`,
      "The element shouldn't be moved before scrolling");
 
   utils.setAsyncScrollOffset(document.documentElement, 0, 300);
@@ -45,7 +46,7 @@ async function test_transform() {
   await new Promise(resolve => waitForApzFlushedRepaints(resolve));
 
   transform = utils.getOMTCTransform(anim);
-  is(transform, "matrix(1, 0, 0, 1, 200, -300)",
+  is(transform, `matrix(1, 0, 0, 1, ${200 * dpr}, ${-300 * dpr})`,
      "Element should have been moved by the offset");
 }
 
