@@ -20,7 +20,6 @@ BASE_TEST_LIST_PATHSTR = 'checkout/00_test_list.txt'
 GENERATED_PATHSTR = 'generated'
 WEBGL2_TEST_MANGLE = '2_'
 PATH_SEP_MANGLING = '__'
-WEBGL2_SKIP_IF_CONDITION = "(os == 'android' || os == 'linux')"
 
 SUPPORT_DIRS = [
     'checkout',
@@ -33,10 +32,35 @@ EXTRA_SUPPORT_FILES = [
 ]
 
 ACCEPTABLE_ERRATA_KEYS = set([
-  'fail-if',
-  'skip-if',
-  'subsuite',
+    'fail-if',
+    'skip-if',
 ])
+
+def ChooseSubsuite(name):
+    # name: generated/test_2_conformance2__vertex_arrays__vertex-array-object.html
+
+    split = name.split('__')
+
+    version = '1'
+    if '/test_2_' in split[0]:
+        version = '2'
+
+    category = 'core'
+
+    split[0] = split[0].split('/')[1]
+    if 'deqp' in split[0]:
+        if version == '1':
+            # There's few enough that we'll just merge them with webgl1-ext.
+            category = 'ext'
+        else:
+            category = 'deqp'
+    elif 'conformance' in split[0]:
+        if split[1] in ('glsl', 'glsl3', 'ogles'):
+            category = 'ext'
+        elif split[1] == 'textures' and split[2] != 'misc':
+            category = 'ext'
+
+    return 'webgl{}-{}'.format(version, category)
 
 ########################################################################
 # GetTestList
@@ -380,31 +404,15 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
         sectionName = '[' + wrapperManifestPathStr + ']'
         manifestTestLineList.append(sectionName)
 
-        def always_skip():
-            # Skip deqp tests for now because they take too long.
-            if '/test_deqp__' in wrapperPathStr:
-                return True
-            if '/test_2_deqp__' in wrapperPathStr:
-                return True
-            return False
-
         errataLines = []
+
+        subsuite = ChooseSubsuite(wrapperPathStr)
+        errataLines.append('subsuite = ' + subsuite)
+
         if wrapperPathStr in errataMap:
-            errataLines = errataMap[wrapperPathStr]
+            assert subsuite
+            errataLines += errataMap[wrapperPathStr]
             del errataMap[wrapperPathStr]
-        elif always_skip():
-            errataLines.append('skip-if = 1')
-
-        if IsWrapperWebGL2(wrapperPathStr):
-            needsSkip = True
-            for i in range(len(errataLines)):
-                if errataLines[i].startswith('skip-if'):
-                    errataLines[i] += ' || ' + WEBGL2_SKIP_IF_CONDITION
-                    needsSkip = False
-                continue
-
-            if needsSkip:
-                errataLines.append('skip-if = ' + WEBGL2_SKIP_IF_CONDITION)
 
         manifestTestLineList += errataLines
         continue
