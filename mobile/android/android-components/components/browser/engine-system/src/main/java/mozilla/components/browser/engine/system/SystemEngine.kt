@@ -14,17 +14,23 @@ import mozilla.components.concept.engine.EngineView
  * WebView-based implementation of the Engine interface.
  */
 class SystemEngine : Engine {
+
     /**
-     * Create a new WebView-based EngineView implementation.
+     * Createa a new WebView-based EngineView implementation.
      */
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
         return SystemEngineView(context, attrs)
     }
 
     /**
-     * Create a new WebView-based EngineSession implementation.
+     * Createa a new WebView-based EngineSession implementation.
      */
     override fun createSession(): EngineSession {
         return SystemEngineSession()
     }
+
+    /**
+     * See [Engine.name]
+     */
+    override fun name(): String = "System"
 }

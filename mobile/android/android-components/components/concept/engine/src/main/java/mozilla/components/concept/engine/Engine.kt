@@ -11,13 +11,30 @@ import android.util.AttributeSet
  * Entry point for interacting with the engine implementation.
  */
 interface Engine {
+
     /**
-     * Create a new view for rendering web content.
+     * Creates a new view for rendering web content.
+     *
+     * @param context an application context
+     * @param attrs optional set of attributes
+     *
+     * @return new newly created [EngineView].
      */
     fun createView(context: Context, attrs: AttributeSet? = null): EngineView
 
     /**
-     * Create a new engine session.
+     * Creates a new engine session.
+     *
+     * @return the newly created [EngineSession].
      */
     fun createSession(): EngineSession
+
+    /**
+     * Returns the name of this engine. The returned string might be used
+     * in filenames and must therefore only contain valid filename
+     * characters.
+     *
+     * @return the engine name as specified by concrete implementations.
+     */
+    fun name(): String
 }

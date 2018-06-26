@@ -31,7 +31,7 @@ class Components(private val applicationContext: Context) {
 
     val sessionManager by lazy {
         SessionManager(engine).apply {
-            sessionStorage.restore(engine, this)
+            sessionStorage.restore(this)
 
             if (size == 0) {
                 val initialSession = Session("https://www.mozilla.org")

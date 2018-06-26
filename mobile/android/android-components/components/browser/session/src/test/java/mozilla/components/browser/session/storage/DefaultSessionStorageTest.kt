@@ -47,6 +47,7 @@ class DefaultSessionStorageTest {
         `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
         val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
         val sessionManager = SessionManager(engine)
@@ -59,7 +60,7 @@ class DefaultSessionStorageTest {
 
         // Restore session using a fresh SessionManager
         val restoredSessionManager = SessionManager(engine)
-        val restored = storage.restore(engine, restoredSessionManager)
+        val restored = storage.restore(restoredSessionManager)
         assertTrue(restored)
         assertEquals(1, restoredSessionManager.sessions.size)
 
@@ -83,6 +84,7 @@ class DefaultSessionStorageTest {
         `when`(engineSession.saveState()).thenReturn(engineSessionState)
 
         val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
         val sessionManager = SessionManager(engine)
@@ -95,7 +97,7 @@ class DefaultSessionStorageTest {
 
         // Restore session using a fresh SessionManager
         val restoredSessionManager = SessionManager(engine)
-        val restored = storage.restore(engine, restoredSessionManager)
+        val restored = storage.restore(restoredSessionManager)
         assertTrue(restored)
 
         // Nothing to restore as CustomTab sessions should not be persisted
@@ -105,14 +107,16 @@ class DefaultSessionStorageTest {
     @Test
     fun testRestoreReturnsFalseOnIOException() {
         val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+
         val context = spy(RuntimeEnvironment.application)
         val storage = spy(DefaultSessionStorage(context))
         val file = mock(AtomicFile::class.java)
 
-        doReturn(file).`when`(storage).getFile()
+        doReturn(file).`when`(storage).getFile(anyString())
         doThrow(FileNotFoundException::class.java).`when`(file).openRead()
 
-        val restored = storage.restore(engine, SessionManager(engine))
+        val restored = storage.restore(SessionManager(engine))
         assertFalse(restored)
     }
 
@@ -122,6 +126,7 @@ class DefaultSessionStorageTest {
         val engineSession = mock(EngineSession::class.java)
 
         val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(engineSession)
 
         val sessionManager = SessionManager(engine)
@@ -132,13 +137,15 @@ class DefaultSessionStorageTest {
         assertTrue(persisted)
 
         doThrow(JSONException::class.java).`when`(storage).deserializeSession(anyString(), anyJson())
-        val restored = storage.restore(engine, SessionManager(engine))
+        val restored = storage.restore(SessionManager(engine))
         assertFalse(restored)
     }
 
     @Test
     fun testPersistReturnsFalseOnIOException() {
         val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+
         val session = Session("http://mozilla.org")
         val engineSession = mock(EngineSession::class.java)
         val context = spy(RuntimeEnvironment.application)
@@ -148,7 +155,7 @@ class DefaultSessionStorageTest {
         val sessionManager = SessionManager(engine)
         sessionManager.add(session, true, engineSession)
 
-        doReturn(file).`when`(storage).getFile()
+        doReturn(file).`when`(storage).getFile(anyString())
         doThrow(IOException::class.java).`when`(file).startWrite()
 
         val persisted = storage.persist(sessionManager)
@@ -158,6 +165,8 @@ class DefaultSessionStorageTest {
     @Test
     fun testPersistReturnsFalseOnJSONException() {
         val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+
         val session = Session("http://mozilla.org")
         val engineSession = mock(EngineSession::class.java)
         val context = spy(RuntimeEnvironment.application)
@@ -167,7 +176,7 @@ class DefaultSessionStorageTest {
         val sessionManager = SessionManager(engine)
         sessionManager.add(session, true, engineSession)
 
-        doReturn(file).`when`(storage).getFile()
+        doReturn(file).`when`(storage).getFile(anyString())
         doThrow(JSONException::class.java).`when`(storage).serializeSession(session)
 
         val persisted = storage.persist(sessionManager)

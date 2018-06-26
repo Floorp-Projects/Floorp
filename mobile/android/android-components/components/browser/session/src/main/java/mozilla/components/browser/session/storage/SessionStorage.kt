@@ -5,7 +5,6 @@
 package mozilla.components.browser.session.storage
 
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.Engine
 
 /**
  * Storage component for browser and engine sessions.
@@ -23,11 +22,10 @@ interface SessionStorage {
     /**
      * Restores the session storage state by reading from the latest persisted version.
      *
-     * @param engine the engine instance to use when creating new engine sessions.
-     * @param sessionManager the session manager to restore into
+     * @param sessionManager the session manager to restore into.
      * @return map of all restored sessions, and the currently selected session id.
      */
-    fun restore(engine: Engine, sessionManager: SessionManager): Boolean
+    fun restore(sessionManager: SessionManager): Boolean
 
     /**
      * Starts saving the state frequently and automatically.

@@ -25,7 +25,7 @@ const val SESSION_KEY = "session"
 const val ENGINE_SESSION_KEY = "engineSession"
 const val VERSION_KEY = "version"
 const val VERSION = 1
-const val FILE_NAME = "mozilla_components_session_storage.json"
+const val FILE_NAME_FORMAT = "mozilla_components_session_storage_%s.json"
 
 /**
  * Default implementation of [SessionStorage] which persists browser and engine
@@ -68,9 +68,9 @@ class DefaultSessionStorage(
     }
 
     @Synchronized
-    override fun restore(engine: Engine, sessionManager: SessionManager): Boolean {
+    override fun restore(sessionManager: SessionManager): Boolean {
         return try {
-            getFile().openRead().use {
+            getFile(sessionManager.engine.name()).openRead().use {
                 val json = it.bufferedReader().use {
                     it.readText()
                 }
@@ -83,7 +83,9 @@ class DefaultSessionStorage(
                 jsonRoot.keys().forEach {
                     val jsonSession = jsonRoot.getJSONObject(it)
                     val session = deserializeSession(it, jsonSession.getJSONObject(SESSION_KEY))
-                    val engineSession = deserializeEngineSession(engine, jsonSession.getJSONObject(ENGINE_SESSION_KEY))
+                    val engineSession = deserializeEngineSession(
+                        sessionManager.engine,
+                        jsonSession.getJSONObject(ENGINE_SESSION_KEY))
                     sessionManager.add(session, engineSession = engineSession)
                 }
 
@@ -116,7 +118,7 @@ class DefaultSessionStorage(
                 json.put(session.id, sessionJson)
             }
 
-            file = getFile()
+            file = getFile(sessionManager.engine.name())
             outputStream = file.startWrite()
             outputStream.write(json.toString().toByteArray())
             file.finishWrite(outputStream)
@@ -130,8 +132,8 @@ class DefaultSessionStorage(
         }
     }
 
-    internal fun getFile(): AtomicFile {
-        return AtomicFile(File(context.filesDir, FILE_NAME))
+    internal fun getFile(engine: String): AtomicFile {
+        return AtomicFile(File(context.filesDir, String.format(FILE_NAME_FORMAT, engine).toLowerCase()))
     }
 
     @Throws(JSONException::class)

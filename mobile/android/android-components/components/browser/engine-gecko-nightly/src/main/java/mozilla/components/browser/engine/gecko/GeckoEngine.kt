@@ -31,4 +31,6 @@ class GeckoEngine(
     override fun createSession(): EngineSession {
         return GeckoEngineSession(runtime)
     }
+
+    override fun name(): String = "Gecko"
 }

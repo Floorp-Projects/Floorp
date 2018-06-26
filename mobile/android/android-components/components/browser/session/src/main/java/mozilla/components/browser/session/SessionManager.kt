@@ -14,7 +14,7 @@ import mozilla.components.support.utils.observer.ObserverRegistry
  * This class provides access to a centralized registry of all active sessions.
  */
 class SessionManager(
-    private val engine: Engine,
+    val engine: Engine,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
     private val values = mutableListOf<Session>()
