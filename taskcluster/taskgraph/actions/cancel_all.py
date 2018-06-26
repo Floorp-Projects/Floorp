@@ -40,6 +40,8 @@ def list_group(task_group_id, session):
 @register_callback_action(
     title='Cancel All',
     name='cancel-all',
+    kind='hook',
+    generic=True,
     symbol='cAll',
     description=(
         'Cancel all running and pending tasks created by the decision task '
