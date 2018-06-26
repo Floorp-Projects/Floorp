@@ -8,6 +8,7 @@ import os
 import taskcluster
 import re
 import subprocess
+import sys
 
 
 """
@@ -20,7 +21,7 @@ BRANCH = os.environ.get('GITHUB_HEAD_BRANCH')
 COMMIT = os.environ.get('GITHUB_HEAD_SHA')
 
 def fetch_module_names():
-    process = subprocess.Popen(["./gradlew", "printModules"], stdout=subprocess.PIPE)
+    process = subprocess.Popen(["./gradlew", "--no-daemon", "printModules"], stdout=subprocess.PIPE)
     (output, err) = process.communicate()
     exit_code = process.wait()
     
@@ -105,7 +106,13 @@ def create_ktlint_task():
 if __name__ == "__main__":
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
-    for module in fetch_module_names():
+    modules = fetch_module_names()
+
+    if len(modules) == 0:
+        print "Could not get module names from gradle"
+        sys.exit(2)
+
+    for module in modules:
         task = create_module_task(module)
         task_id = taskcluster.slugId()
         schedule_task(queue, task_id, task)
