@@ -458,7 +458,12 @@ JSContext::leaveRealm(JS::Realm* oldRealm)
 {
     // Only call leave() after we've setRealm()-ed away from the current realm.
     JS::Realm* startingRealm = realm_;
+
+    // The current realm should be marked as entered-from-C++ at this point.
+    MOZ_ASSERT_IF(startingRealm, startingRealm->hasBeenEnteredIgnoringJit());
+
     setRealm(oldRealm);
+
     if (startingRealm)
         startingRealm->leave();
 }
@@ -473,11 +478,6 @@ JSContext::leaveAtomsZone(JS::Realm* oldRealm,
 inline void
 JSContext::setRealm(JS::Realm* realm)
 {
-    // Both the current and the new realm should be properly marked as
-    // entered at this point.
-    MOZ_ASSERT_IF(realm_, realm_->hasBeenEnteredIgnoringJit());
-    MOZ_ASSERT_IF(realm, realm->hasBeenEnteredIgnoringJit());
-
     // This thread must have exclusive access to the zone.
     MOZ_ASSERT_IF(realm, CurrentThreadCanAccessZone(realm->zone()));
 
