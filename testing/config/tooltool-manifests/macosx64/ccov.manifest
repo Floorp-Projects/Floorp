@@ -1,8 +1,8 @@
 [
   {
-    "size": 874769,
+    "size": 874832,
     "visibility": "public",
-    "digest": "edab0125906d6258f752cbebb2129e6f0719179c23eb910340f71efb2623f82b55edd525063d9ab39d338b9fa438316ca689de02cee4f284bc459df14b400bbe",
+    "digest": "6e7c495eaed9e30e202f611614e611ee85878be72bffce59d8408fec7be459f86ac6ac00c84787f5d24ad4c30f91819575a6890be0d44add9c4dd526a3059ab4",
     "algorithm": "sha512",
     "filename": "grcov-osx-x86_64.tar.bz2"
   }
