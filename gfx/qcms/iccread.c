@@ -691,18 +691,17 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 	uint16_t num_input_table_entries;
 	uint16_t num_output_table_entries;
 	uint8_t in_chan, grid_points, out_chan;
-	uint32_t clut_offset, output_offset;
+	uint32_t input_offset, clut_offset, output_offset;
 	uint32_t clut_size;
 	size_t entry_size;
 	struct lutType *lut;
 	uint32_t i;
 
-	/* I'm not sure why the spec specifies a fixed number of entries for LUT8 tables even though
-	 * they have room for the num_entries fields */
 	if (type == LUT8_TYPE) {
 		num_input_table_entries = 256;
 		num_output_table_entries = 256;
 		entry_size = 1;
+		input_offset = 48;
 	} else if (type == LUT16_TYPE) {
 		num_input_table_entries  = read_u16(src, offset + 48);
 		num_output_table_entries = read_u16(src, offset + 50);
@@ -711,6 +710,7 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 			return NULL;
 		}
 		entry_size = 2;
+		input_offset = 52;
 	} else {
 		assert(0); // the caller checks that this doesn't happen
 		invalid_source(src, "Unexpected lut type");
@@ -765,13 +765,13 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 
 	for (i = 0; i < (uint32_t)(lut->num_input_table_entries * in_chan); i++) {
 		if (type == LUT8_TYPE) {
-			lut->input_table[i] = uInt8Number_to_float(read_uInt8Number(src, offset + 52 + i * entry_size));
+			lut->input_table[i] = uInt8Number_to_float(read_uInt8Number(src, offset + input_offset + i * entry_size));
 		} else {
-			lut->input_table[i] = uInt16Number_to_float(read_uInt16Number(src, offset + 52 + i * entry_size));
+			lut->input_table[i] = uInt16Number_to_float(read_uInt16Number(src, offset + input_offset + i * entry_size));
 		}
 	}
 
-	clut_offset = offset + 52 + lut->num_input_table_entries * in_chan * entry_size;
+	clut_offset = offset + input_offset + lut->num_input_table_entries * in_chan * entry_size;
 	for (i = 0; i < clut_size * out_chan; i+=3) {
 		if (type == LUT8_TYPE) {
 			lut->clut_table[i+0] = uInt8Number_to_float(read_uInt8Number(src, clut_offset + i*entry_size + 0));
