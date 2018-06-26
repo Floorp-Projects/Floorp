@@ -44,6 +44,11 @@ class TimingPath extends PureComponent {
       }
     }
 
+    if (state.duration === Infinity) {
+      this.renderInfinityDuration(pathList, state, mainIterationStartTime, helper);
+      return pathList;
+    }
+
     // Append 1st section of iterations,
     // This section is only useful in cases where iterationStart has decimals.
     // e.g.
@@ -285,6 +290,32 @@ class TimingPath extends PureComponent {
         )
       );
     }
+  }
+
+  /**
+   * Render infinity duration.
+   *
+   * @param {Array} pathList
+   *        Add rendered <path> elements to this array.
+   * @param {Object} state
+   *        State of animation.
+   * @param {Number} mainIterationStartTime
+   *        Starting time of main iteration.
+   * @param {SummaryGraphHelper} helper
+   *        Instance of SummaryGraphHelper.
+   */
+  renderInfinityDuration(pathList, state, mainIterationStartTime, helper) {
+    const startSegment = helper.getSegment(mainIterationStartTime);
+    const endSegment = { x: helper.totalDuration, y: startSegment.y };
+    const segments = [startSegment, endSegment];
+    pathList.push(
+      dom.path(
+        {
+          className: "animation-iteration-path infinity-duration",
+          d: helper.toPathString(segments),
+        }
+      )
+    );
   }
 
   /**
