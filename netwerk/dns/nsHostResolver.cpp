@@ -508,7 +508,9 @@ static void DnsPrefChanged(const char* aPref, void* aClosure)
     MOZ_ASSERT(self);
 
     if (!strcmp(aPref, kPrefGetTtl)) {
+#ifdef DNSQUERY_AVAILABLE
         sGetTtlEnabled = Preferences::GetBool(kPrefGetTtl);
+#endif
     } else if (!strcmp(aPref, kPrefNativeIsLocalhost)) {
         gNativeIsLocalhost = Preferences::GetBool(kPrefNativeIsLocalhost);
     }
