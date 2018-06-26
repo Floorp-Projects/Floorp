@@ -29,6 +29,7 @@
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -163,7 +164,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
                                              CompositorVsyncScheduler* aScheduler,
                                              RefPtr<wr::WebRenderAPI>&& aApi,
                                              RefPtr<AsyncImagePipelineManager>&& aImageMgr,
-                                             RefPtr<CompositorAnimationStorage>&& aAnimStorage)
+                                             RefPtr<CompositorAnimationStorage>&& aAnimStorage,
+                                             TimeDuration aVsyncRate)
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
@@ -179,6 +181,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mDestroyed(false)
   , mForceRendering(false)
   , mReceivedDisplayList(false)
+  , mVsyncRate(aVsyncRate)
 {
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
@@ -617,6 +620,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           nsTArray<RefCountedShmem>&& aSmallShmems,
                                           nsTArray<ipc::Shmem>&& aLargeShmems,
                                           const wr::IdNamespace& aIdNamespace,
+                                          const TimeStamp& aRefreshStartTime,
                                           const TimeStamp& aTxnStartTime,
                                           const TimeStamp& aFwdTime)
 {
@@ -690,7 +694,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     }
   }
 
-  HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aRefreshStartTime, aTxnStartTime, aFwdTime);
 
   if (mIdNamespace != aIdNamespace) {
     // Pretend we composited since someone is wating for this event,
@@ -717,6 +721,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                             const uint64_t& aFwdTransactionId,
                                             const TransactionId& aTransactionId,
                                             const wr::IdNamespace& aIdNamespace,
+                                            const TimeStamp& aRefreshStartTime,
                                             const TimeStamp& aTxnStartTime,
                                             const TimeStamp& aFwdTime)
 {
@@ -768,7 +773,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     sendDidComposite = false;
   }
 
-  HoldPendingTransactionId(WrEpoch(), aTransactionId, aTxnStartTime, aFwdTime);
+  HoldPendingTransactionId(WrEpoch(), aTransactionId, aRefreshStartTime, aTxnStartTime, aFwdTime);
 
   if (scheduleComposite) {
     ScheduleGenerateFrame();
@@ -1466,11 +1471,16 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 void
 WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                 TransactionId aTransactionId,
+                                                const TimeStamp& aRefreshStartTime,
                                                 const TimeStamp& aTxnStartTime,
                                                 const TimeStamp& aFwdTime)
 {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
-  mPendingTransactionIds.push(PendingTransactionId(aWrEpoch, aTransactionId, aTxnStartTime, aFwdTime));
+  mPendingTransactionIds.push(PendingTransactionId(aWrEpoch,
+                                                   aTransactionId,
+                                                   aRefreshStartTime,
+                                                   aTxnStartTime,
+                                                   aFwdTime));
 }
 
 TransactionId
@@ -1502,13 +1512,21 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
     if (aEpoch.mHandle < mPendingTransactionIds.front().mEpoch.mHandle) {
       break;
     }
+
+    if (!IsRootWebRenderBridgeParent() && !mVsyncRate.IsZero()) {
+      double latencyMs = (aEndTime - mPendingTransactionIds.front().mTxnStartTime).ToMilliseconds();
+      double latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+      int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
+      Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
+    }
+
 #if defined(ENABLE_FRAME_LATENCY_LOG)
-    if (mPendingTransactionIds.front().mTxnStartTime) {
-      uint32_t latencyMs = round((aEndTime - mPendingTransactionIds.front().mTxnStartTime).ToMilliseconds());
+    if (mPendingTransactionIds.front().mRefreshStartTime) {
+      int32_t latencyMs = lround((aEndTime - mPendingTransactionIds.front().mRefreshStartTime).ToMilliseconds());
       printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
     if (mPendingTransactionIds.front().mFwdTime) {
-      uint32_t latencyMs = round((aEndTime - mPendingTransactionIds.front().mFwdTime).ToMilliseconds());
+      int32_t latencyMs = lround((aEndTime - mPendingTransactionIds.front().mFwdTime).ToMilliseconds());
       printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
 #endif
