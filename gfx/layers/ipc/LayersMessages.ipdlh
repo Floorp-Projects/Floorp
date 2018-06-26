@@ -572,6 +572,7 @@ struct TransactionInfo
   bool scheduleComposite;
   uint32_t paintSequenceNumber;
   bool isRepeatTransaction;
+  TimeStamp refreshStart;
   TimeStamp transactionStart;
   TimeStamp fwdTime;
 };
