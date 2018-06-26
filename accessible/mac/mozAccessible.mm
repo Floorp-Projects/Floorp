@@ -720,7 +720,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   switch (mRole) {
 #include "RoleMap.h"
     default:
-      NS_NOTREACHED("Unknown role.");
+      MOZ_ASSERT_UNREACHABLE("Unknown role.");
       return NSAccessibilityUnknownRole;
   }
 

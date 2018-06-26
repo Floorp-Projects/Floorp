@@ -145,9 +145,8 @@ CallObject::createSingleton(JSContext* cx, HandleShape shape)
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-    RootedObjectGroup group(cx, ObjectGroup::lazySingletonGroup(cx, realm, &class_,
-                                                                TaggedProto(nullptr)));
+    RootedObjectGroup group(cx, ObjectGroup::lazySingletonGroup(cx, /* oldGroup = */ nullptr,
+                                                                &class_, TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
@@ -2523,7 +2522,10 @@ DebugEnvironments::ensureRealmData(JSContext* cx)
         return debugEnvs;
 
     auto debugEnvs = cx->make_unique<DebugEnvironments>(cx, cx->zone());
-    if (!debugEnvs || !debugEnvs->init()) {
+    if (!debugEnvs)
+        return nullptr;
+
+    if (!debugEnvs->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }

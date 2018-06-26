@@ -481,8 +481,8 @@ EffectCompositor::GetElementToRestyle(dom::Element* aElement,
     return nsLayoutUtils::GetAfterPseudo(aElement);
   }
 
-  NS_NOTREACHED("Should not try to get the element to restyle for a pseudo "
-                "other that :before or :after");
+  MOZ_ASSERT_UNREACHABLE("Should not try to get the element to restyle for "
+                         "a pseudo other that :before or :after");
   return nullptr;
 }
 

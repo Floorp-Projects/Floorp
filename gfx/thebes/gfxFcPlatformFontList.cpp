@@ -1458,11 +1458,15 @@ already_AddRefed<ScaledFont>
 gfxFontconfigFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
     if (!mAzureScaledFont) {
+        NativeFont nativeFont;
+        nativeFont.mType = NativeFontType::FONTCONFIG_PATTERN;
+        nativeFont.mFont = GetPattern();
+
         mAzureScaledFont =
-            Factory::CreateScaledFontForFontconfigFont(GetCairoScaledFont(),
-                                                       GetPattern(),
-                                                       GetUnscaledFont(),
-                                                       GetAdjustedSize());
+          Factory::CreateScaledFontForNativeFont(nativeFont,
+                                                 GetUnscaledFont(),
+                                                 GetAdjustedSize(),
+                                                 GetCairoScaledFont());
     }
 
     RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
@@ -1841,7 +1845,7 @@ gfxFcPlatformFontList::GetFontList(nsAtom *aLangGroup,
              aGenericFamily.LowerCaseEqualsLiteral("fantasy"))
         serif = sansSerif = true;
     else
-        NS_NOTREACHED("unexpected CSS generic font family");
+        MOZ_ASSERT_UNREACHABLE("unexpected CSS generic font family");
 
     // The first in the list becomes the default in
     // FontBuilder.readFontSelection() if the preference-selected font is not

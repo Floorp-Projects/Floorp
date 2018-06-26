@@ -62,7 +62,7 @@ GetUnitString(nsAString& unit, uint16_t unitType)
     return;
   }
 
-  NS_NOTREACHED("Unknown unit type");
+  MOZ_ASSERT_UNREACHABLE("Unknown unit type");
 }
 
 static uint16_t
@@ -202,7 +202,7 @@ UserSpaceMetricsWithSize::GetAxisLength(uint8_t aCtxType) const
     length = SVGContentUtils::ComputeNormalizedHypotenuse(size.width, size.height);
     break;
   default:
-    NS_NOTREACHED("Unknown axis type");
+    MOZ_ASSERT_UNREACHABLE("Unknown axis type");
     length = 1;
     break;
   }
@@ -263,7 +263,7 @@ nsSVGLength2::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
   case SVGLengthBinding::SVG_LENGTHTYPE_EXS:
     return aMetrics.GetExLength();
   default:
-    NS_NOTREACHED("Unknown unit type");
+    MOZ_ASSERT_UNREACHABLE("Unknown unit type");
     return 0;
   }
 }

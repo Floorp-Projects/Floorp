@@ -1569,7 +1569,7 @@ HTMLInputElement::GetNonFileValueInternal(nsAString& aValue) const
       return;
 
     case VALUE_MODE_FILENAME:
-      NS_NOTREACHED("Someone screwed up here");
+      MOZ_ASSERT_UNREACHABLE("Someone screwed up here");
       // We'll just return empty string if someone does screw up.
       aValue.Truncate();
       return;

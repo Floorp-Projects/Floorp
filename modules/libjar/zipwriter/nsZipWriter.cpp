@@ -224,7 +224,7 @@ nsresult nsZipWriter::ReadFile(nsIFile *aFile)
         seek -= (1024 - ZIP_EOCDR_HEADER_SIZE);
     }
     // Will never reach here in reality
-    NS_NOTREACHED("Loop should never complete");
+    MOZ_ASSERT_UNREACHABLE("Loop should never complete");
     return NS_ERROR_UNEXPECTED;
 }
 

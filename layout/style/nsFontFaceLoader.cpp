@@ -174,7 +174,7 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
       break;
 
     default:
-      NS_NOTREACHED("strange font-display value");
+      MOZ_ASSERT_UNREACHABLE("strange font-display value");
       break;
   }
 

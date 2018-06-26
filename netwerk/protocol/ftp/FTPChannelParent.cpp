@@ -109,7 +109,7 @@ FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs)
     return ConnectChannel(cArgs.channelId());
   }
   default:
-    NS_NOTREACHED("unknown open type");
+    MOZ_ASSERT_UNREACHABLE("unknown open type");
     return false;
   }
 }

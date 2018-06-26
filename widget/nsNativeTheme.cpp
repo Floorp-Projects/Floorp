@@ -599,7 +599,7 @@ nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame)
     case StyleOrient::Block:
       return !aFrame->GetWritingMode().IsVertical();
   }
-  NS_NOTREACHED("unexpected -moz-orient value");
+  MOZ_ASSERT_UNREACHABLE("unexpected -moz-orient value");
   return false;
 }
 

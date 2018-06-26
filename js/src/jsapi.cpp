@@ -6115,10 +6115,8 @@ EncodeLatin1(JSContext* cx, JSString* str)
 
     size_t len = str->length();
     Latin1Char* buf = cx->pod_malloc<Latin1Char>(len + 1);
-    if (!buf) {
-        ReportOutOfMemory(cx);
+    if (!buf)
         return nullptr;
-    }
 
     mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
     buf[len] = '\0';
@@ -7011,8 +7009,10 @@ JSErrorNotes::addNoteASCII(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(std::move(note)))
+    if (!notes_.append(std::move(note))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     return true;
 }
 
@@ -7030,8 +7030,10 @@ JSErrorNotes::addNoteLatin1(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(std::move(note)))
+    if (!notes_.append(std::move(note))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     return true;
 }
 
@@ -7049,8 +7051,10 @@ JSErrorNotes::addNoteUTF8(JSContext* cx,
 
     if (!note)
         return false;
-    if (!notes_.append(std::move(note)))
+    if (!notes_.append(std::move(note))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     return true;
 }
 

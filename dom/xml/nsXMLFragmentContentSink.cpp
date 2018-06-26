@@ -186,7 +186,7 @@ void
 nsXMLFragmentContentSink::SetDocumentCharset(
   NotNull<const Encoding*> aEncoding)
 {
-  NS_NOTREACHED("fragments shouldn't set charset");
+  MOZ_ASSERT_UNREACHABLE("fragments shouldn't set charset");
 }
 
 nsISupports *
@@ -260,7 +260,7 @@ nsXMLFragmentContentSink::HandleDoctypeDecl(const nsAString & aSubset,
                                             const nsAString & aPublicId,
                                             nsISupports* aCatalogData)
 {
-  NS_NOTREACHED("fragments shouldn't have doctype declarations");
+  MOZ_ASSERT_UNREACHABLE("fragments shouldn't have doctype declarations");
 
   return NS_OK;
 }
@@ -286,7 +286,7 @@ nsXMLFragmentContentSink::HandleXMLDeclaration(const char16_t *aVersion,
                                                const char16_t *aEncoding,
                                                int32_t aStandalone)
 {
-  NS_NOTREACHED("fragments shouldn't have XML declarations");
+  MOZ_ASSERT_UNREACHABLE("fragments shouldn't have XML declarations");
   return NS_OK;
 }
 
@@ -337,7 +337,7 @@ nsXMLFragmentContentSink::ProcessStyleLinkFromHeader(
   const nsAString& aReferrerPolicy)
 
 {
-  NS_NOTREACHED("Shouldn't have headers for a fragment sink");
+  MOZ_ASSERT_UNREACHABLE("Shouldn't have headers for a fragment sink");
   return NS_OK;
 }
 
@@ -423,7 +423,7 @@ nsXMLFragmentContentSink::DidProcessATokenImpl()
 NS_IMETHODIMP
 nsXMLFragmentContentSink::IgnoreFirstContainer()
 {
-  NS_NOTREACHED("XML isn't as broken as HTML");
+  MOZ_ASSERT_UNREACHABLE("XML isn't as broken as HTML");
   return NS_ERROR_FAILURE;
 }
 

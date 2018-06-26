@@ -46,7 +46,9 @@ CFISection &CFISection::CIEHeader(uint64_t code_alignment_factor,
                                   unsigned return_address_register,
                                   uint8_t version,
                                   const string &augmentation,
-                                  bool dwarf64) {
+                                  bool dwarf64,
+                                  uint8_t address_size,
+                                  uint8_t segment_size) {
   assert(!entry_length_);
   entry_length_ = new PendingLength();
   in_fde_ = false;
@@ -63,6 +65,10 @@ CFISection &CFISection::CIEHeader(uint64_t code_alignment_factor,
   }
   D8(version);
   AppendCString(augmentation);
+  if (version >= 4) {
+    D8(address_size);
+    D8(segment_size);
+  }
   ULEB128(code_alignment_factor);
   LEB128(data_alignment_factor);
   if (version == 1)

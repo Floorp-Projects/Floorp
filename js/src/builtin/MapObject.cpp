@@ -376,7 +376,8 @@ MapIteratorObject::createResultPair(JSContext* cx)
         return nullptr;
 
     Rooted<TaggedProto> proto(cx, resultPairObj->taggedProto());
-    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, resultPairObj->getClass(), proto);
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, resultPairObj->realm(),
+                                                     resultPairObj->getClass(), proto);
     if (!group)
         return nullptr;
     resultPairObj->setGroup(group);
@@ -651,7 +652,10 @@ MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 {
     auto map = cx->make_unique<ValueMap>(cx->zone(),
                                          cx->realm()->randomHashCodeScrambler());
-    if (!map || !map->init()) {
+    if (!map)
+        return nullptr;
+
+    if (!map->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -1204,7 +1208,8 @@ SetIteratorObject::createResult(JSContext* cx)
         return nullptr;
 
     Rooted<TaggedProto> proto(cx, resultObj->taggedProto());
-    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, resultObj->getClass(), proto);
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, resultObj->realm(),
+                                                     resultObj->getClass(), proto);
     if (!group)
         return nullptr;
     resultObj->setGroup(group);
@@ -1334,7 +1339,10 @@ SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 {
     auto set = cx->make_unique<ValueSet>(cx->zone(),
                                          cx->realm()->randomHashCodeScrambler());
-    if (!set || !set->init()) {
+    if (!set)
+        return nullptr;
+
+    if (!set->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }

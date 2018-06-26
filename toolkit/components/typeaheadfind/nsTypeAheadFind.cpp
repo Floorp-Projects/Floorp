@@ -902,7 +902,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsRange *aRange,
   nsCOMPtr<nsIContent> startContent =
     do_QueryInterface(aRange->GetStartContainer());
   if (!startContent) {
-    NS_NOTREACHED("startContent should never be null");
+    MOZ_ASSERT_UNREACHABLE("startContent should never be null");
     return;
   }
   nsCOMPtr<nsIContent> origContent = startContent;

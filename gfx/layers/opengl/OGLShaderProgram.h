@@ -158,7 +158,7 @@ public:
       return false;
     }
 
-    NS_NOTREACHED("cnt must be 1 2 3 4 9 or 16");
+    MOZ_ASSERT_UNREACHABLE("cnt must be 1 2 3 4 9 or 16");
     return false;
   }
 
@@ -563,7 +563,7 @@ protected:
       case 4: mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v); break;
       case 16: mGL->fUniform4fv(ku.mLocation, 4, ku.mValue.f16v); break;
       default:
-        NS_NOTREACHED("Bogus aLength param");
+        MOZ_ASSERT_UNREACHABLE("Bogus aLength param");
       }
     }
   }

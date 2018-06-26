@@ -683,7 +683,7 @@ nsGIOInputStream::ReadSegments(nsWriteSegmentFun aWriter,
   // There is no way to implement this using GnomeVFS, but fortunately
   // that doesn't matter.  Because we are a blocking input stream, Necko
   // isn't going to call our ReadSegments method.
-  NS_NOTREACHED("nsGIOInputStream::ReadSegments");
+  MOZ_ASSERT_UNREACHABLE("nsGIOInputStream::ReadSegments");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

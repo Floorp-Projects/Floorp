@@ -569,7 +569,7 @@ GetLastIBSplitSibling(nsIFrame* aFrame)
       return static_cast<nsContainerFrame*>(frame);
     }
   }
-  NS_NOTREACHED("unreachable code");
+  MOZ_ASSERT_UNREACHABLE("unreachable code");
   return nullptr;
 }
 
@@ -1814,7 +1814,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
     }
 
     case eStyleContentType_Uninitialized:
-      NS_NOTREACHED("uninitialized content type");
+      MOZ_ASSERT_UNREACHABLE("uninitialized content type");
       return nullptr;
   }
 

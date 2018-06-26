@@ -106,7 +106,7 @@ void
 HTMLLIAccessible::UpdateBullet(bool aHasBullet)
 {
   if (aHasBullet == !!mBullet) {
-    NS_NOTREACHED("Bullet and accessible are in sync already!");
+    MOZ_ASSERT_UNREACHABLE("Bullet and accessible are in sync already!");
     return;
   }
 

@@ -341,7 +341,7 @@ nsTableCellMap::GetEffectiveRowSpan(int32_t aRowIndex,
     rowIndex -= map->GetRowCount();
     map = map->GetNextSibling();
   }
-  NS_NOTREACHED("Bogus row index?");
+  MOZ_ASSERT_UNREACHABLE("Bogus row index?");
   return 0;
 }
 
@@ -358,7 +358,7 @@ nsTableCellMap::GetEffectiveColSpan(int32_t aRowIndex,
     rowIndex -= map->GetRowCount();
     map = map->GetNextSibling();
   }
-  NS_NOTREACHED("Bogus row index?");
+  MOZ_ASSERT_UNREACHABLE("Bogus row index?");
   return 0;
 }
 
@@ -2716,6 +2716,6 @@ nsCellMapColumnIterator::GetNextFrame(int32_t* aRow, int32_t* aColSpan)
     return cellFrame;
   }
 
-  NS_NOTREACHED("Can't get here");
+  MOZ_ASSERT_UNREACHABLE("Can't get here");
   return nullptr;
 }

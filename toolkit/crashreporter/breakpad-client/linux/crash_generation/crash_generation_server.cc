@@ -255,7 +255,7 @@ CrashGenerationServer::ClientEvent(short revents)
   }
 
   if (crashing_pid == -1 || signal_fd == -1) {
-    if (signal_fd)
+    if (signal_fd != -1)
       close(signal_fd);
     return true;
   }

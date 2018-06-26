@@ -99,7 +99,7 @@ NS_IMETHODIMP
 nsBinaryOutputStream::WriteFrom(nsIInputStream* aInStr, uint32_t aCount,
                                 uint32_t* aResult)
 {
-  NS_NOTREACHED("WriteFrom");
+  MOZ_ASSERT_UNREACHABLE("WriteFrom");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -107,7 +107,7 @@ NS_IMETHODIMP
 nsBinaryOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
                                     uint32_t aCount, uint32_t* aResult)
 {
-  NS_NOTREACHED("WriteSegments");
+  MOZ_ASSERT_UNREACHABLE("WriteSegments");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

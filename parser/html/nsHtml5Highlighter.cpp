@@ -233,7 +233,7 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           mAmpersand = CurrentNode();
           break;
         default:
-          NS_NOTREACHED("Impossible transition.");
+          MOZ_ASSERT_UNREACHABLE("Impossible transition.");
           break;
       }
       break;

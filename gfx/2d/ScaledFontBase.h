@@ -45,9 +45,6 @@ public:
   virtual SkTypeface* GetSkTypeface() { return mTypeface; }
 #endif
 
-  // Not true, but required to instantiate a ScaledFontBase.
-  virtual FontType GetType() const override { return FontType::SKIA; }
-
 #ifdef USE_CAIRO_SCALED_FONT
   bool PopulateCairoScaledFont();
   virtual cairo_scaled_font_t* GetCairoScaledFont() override { return mScaledFont; }

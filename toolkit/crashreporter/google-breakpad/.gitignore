@@ -27,6 +27,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Ignore other VCSs.
+.repo/
 .svn/
 
 # Ignore common compiled artifacts.
@@ -47,6 +48,12 @@ lib*.a
 /src/tools/linux/symupload/minidump_upload
 /src/tools/linux/symupload/sym_upload
 /src/tools/mac/dump_syms/dump_syms
+/src/tools/mac/dump_syms/dump_syms_mac
+
+# Ignore unit test artifacts.
+*_unittest
+*.log
+*.trs
 
 # Ignore autotools generated artifacts.
 .deps
@@ -77,7 +84,6 @@ src/Makefile
 
 # Ignore directories gclient syncs.
 src/testing
-src/third_party/glog
 src/third_party/lss
 src/third_party/protobuf
 src/tools/gyp

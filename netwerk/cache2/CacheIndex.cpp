@@ -2906,7 +2906,7 @@ CacheIndex::BuildIndex()
     }
   }
 
-  NS_NOTREACHED("We should never get here");
+  MOZ_ASSERT_UNREACHABLE("We should never get here");
 }
 
 bool
@@ -3171,7 +3171,7 @@ CacheIndex::UpdateIndex()
     }
   }
 
-  NS_NOTREACHED("We should never get here");
+  MOZ_ASSERT_UNREACHABLE("We should never get here");
 }
 
 void

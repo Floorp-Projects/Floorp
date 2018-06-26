@@ -695,7 +695,7 @@ WSRunObject::GetWSNodes()
       for (int32_t pos = mOffset - 1; pos >= 0; pos--) {
         // sanity bounds check the char position.  bug 136165
         if (uint32_t(pos) >= textFrag->GetLength()) {
-          NS_NOTREACHED("looking beyond end of text fragment");
+          MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
           continue;
         }
         char16_t theChar = textFrag->CharAt(pos);
@@ -747,7 +747,7 @@ WSRunObject::GetWSNodes()
           for (int32_t pos = len - 1; pos >= 0; pos--) {
             // sanity bounds check the char position.  bug 136165
             if (uint32_t(pos) >= textFrag->GetLength()) {
-              NS_NOTREACHED("looking beyond end of text fragment");
+              MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
               continue;
             }
             char16_t theChar = textFrag->CharAt(pos);
@@ -802,7 +802,7 @@ WSRunObject::GetWSNodes()
       for (uint32_t pos = mOffset; pos < len; pos++) {
         // sanity bounds check the char position.  bug 136165
         if (pos >= textFrag->GetLength()) {
-          NS_NOTREACHED("looking beyond end of text fragment");
+          MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
           continue;
         }
         char16_t theChar = textFrag->CharAt(pos);
@@ -855,7 +855,7 @@ WSRunObject::GetWSNodes()
           for (uint32_t pos = 0; pos < len; pos++) {
             // sanity bounds check the char position.  bug 136165
             if (pos >= textFrag->GetLength()) {
-              NS_NOTREACHED("looking beyond end of text fragment");
+              MOZ_ASSERT_UNREACHABLE("looking beyond end of text fragment");
               continue;
             }
             char16_t theChar = textFrag->CharAt(pos);

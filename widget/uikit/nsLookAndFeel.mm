@@ -38,7 +38,7 @@ static nscolor GetColorFromUIColor(UIColor* aColor)
         return NS_RGBA(val, val, val,
                        (unsigned int)(components[1] * 255.0));
     }
-    NS_NOTREACHED("Unhandled color space!");
+    MOZ_ASSERT_UNREACHABLE("Unhandled color space!");
     return 0;
 }
 

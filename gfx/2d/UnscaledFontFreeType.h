@@ -14,6 +14,9 @@
 namespace mozilla {
 namespace gfx {
 
+class ScaledFontFreeType;
+class ScaledFontFontconfig;
+
 class UnscaledFontFreeType : public UnscaledFont
 {
 public:
@@ -31,6 +34,20 @@ public:
     , mFile(aFile)
     , mIndex(aIndex)
   {}
+  explicit UnscaledFontFreeType(std::string&& aFile,
+                                uint32_t aIndex = 0)
+    : mFace(nullptr)
+    , mOwnsFace(false)
+    , mFile(std::move(aFile))
+    , mIndex(aIndex)
+  {}
+  UnscaledFontFreeType(FT_Face aFace,
+                       NativeFontResource* aNativeFontResource)
+    : mFace(aFace)
+    , mOwnsFace(false)
+    , mIndex(0)
+    , mNativeFontResource(aNativeFontResource)
+  {}
   ~UnscaledFontFreeType()
   {
     if (mOwnsFace) {
@@ -43,16 +60,42 @@ public:
   FT_Face GetFace() const { return mFace; }
   const char* GetFile() const { return mFile.c_str(); }
   uint32_t GetIndex() const { return mIndex; }
+  const RefPtr<NativeFontResource>& GetNativeFontResource() const { return mNativeFontResource; }
 
   bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 
   bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
+
+  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
+
+#ifdef MOZ_WIDGET_ANDROID
+  already_AddRefed<ScaledFont>
+    CreateScaledFont(Float aGlyphSize,
+                     const uint8_t* aInstanceData,
+                     uint32_t aInstanceDataLength,
+                     const FontVariation* aVariations,
+                     uint32_t aNumVariations) override;
+#endif
 
 protected:
   FT_Face mFace;
   bool mOwnsFace;
   std::string mFile;
   uint32_t mIndex;
+  RefPtr<NativeFontResource> mNativeFontResource;
+
+private:
+  friend class ScaledFontFreeType;
+  friend class ScaledFontFontconfig;
+
+  static void
+    GetVariationSettingsFromFace(std::vector<FontVariation>* aVariations,
+                                 FT_Face aFace);
+
+  static void
+    ApplyVariationsToFace(const FontVariation* aVariations,
+                          uint32_t aNumVariations,
+                          FT_Face aFace);
 };
 
 #ifdef MOZ_WIDGET_GTK
@@ -68,10 +111,13 @@ public:
                                   uint32_t aIndex = 0)
     : UnscaledFontFreeType(aFile, aIndex)
   {}
+  explicit UnscaledFontFontconfig(std::string&& aFile,
+                                  uint32_t aIndex = 0)
+    : UnscaledFontFreeType(std::move(aFile), aIndex)
+  {}
   UnscaledFontFontconfig(FT_Face aFace,
                          NativeFontResource* aNativeFontResource)
-    : UnscaledFontFreeType(aFace, false)
-    , mNativeFontResource(aNativeFontResource)
+    : UnscaledFontFreeType(aFace, aNativeFontResource)
   {}
 
   FontType GetType() const override { return FontType::FONTCONFIG; }
@@ -85,11 +131,6 @@ public:
                      uint32_t aInstanceDataLength,
                      const FontVariation* aVariations,
                      uint32_t aNumVariations) override;
-
-  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
-
-private:
-  RefPtr<NativeFontResource> mNativeFontResource;
 };
 #endif
 

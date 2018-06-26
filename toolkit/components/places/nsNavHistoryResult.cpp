@@ -562,7 +562,7 @@ nsNavHistoryContainerResultNode::AreChildrenVisible()
 {
   nsNavHistoryResult* result = GetResult();
   if (!result) {
-    NS_NOTREACHED("Invalid result");
+    MOZ_ASSERT_UNREACHABLE("Invalid result");
     return false;
   }
 
@@ -952,7 +952,7 @@ nsNavHistoryContainerResultNode::GetSortingComparator(uint16_t aSortType)
     case nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING:
       return &SortComparison_FrecencyGreater;
     default:
-      NS_NOTREACHED("Bad sorting type");
+      MOZ_ASSERT_UNREACHABLE("Bad sorting type");
       return nullptr;
   }
 }
@@ -3448,13 +3448,14 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   // here, try to do something reasonable if the bookmark service gives us
   // a bogus index.
   if (aIndex < 0) {
-    NS_NOTREACHED("Invalid index for item adding: <0");
+    MOZ_ASSERT_UNREACHABLE("Invalid index for item adding: <0");
     aIndex = 0;
   }
   else if (aIndex > mChildren.Count()) {
     if (!excludeItems) {
       // Something wrong happened while updating indexes.
-      NS_NOTREACHED("Invalid index for item adding: greater than count");
+      MOZ_ASSERT_UNREACHABLE("Invalid index for item adding: greater than "
+                             "count");
     }
     aIndex = mChildren.Count();
   }
@@ -3680,7 +3681,7 @@ nsNavHistoryResultNode::OnItemChanged(int64_t aItemId,
       NOTIFY_RESULT_OBSERVERS(result, NodeKeywordChanged(this, aNewValue));
   }
   else
-    NS_NOTREACHED("Unknown bookmark property changing.");
+    MOZ_ASSERT_UNREACHABLE("Unknown bookmark property changing.");
 
   if (!mParent)
     return NS_OK;
@@ -4024,7 +4025,7 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
   if (!mIsAllBookmarksObserver && !mIsBookmarkFolderObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     if (!bookmarks) {
-      NS_NOTREACHED("Can't create bookmark service");
+      MOZ_ASSERT_UNREACHABLE("Can't create bookmark service");
       return;
     }
     bookmarks->AddObserver(this, true);
@@ -4064,7 +4065,7 @@ nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNod
   if (!mIsBookmarkFolderObserver && !mIsAllBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     if (!bookmarks) {
-      NS_NOTREACHED("Can't create bookmark service");
+      MOZ_ASSERT_UNREACHABLE("Can't create bookmark service");
       return;
     }
     bookmarks->AddObserver(this, true);
@@ -4219,7 +4220,7 @@ NS_IMETHODIMP
 nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
 {
   if (!mRootNode) {
-    NS_NOTREACHED("Root is null");
+    MOZ_ASSERT_UNREACHABLE("Root is null");
     *aRoot = nullptr;
     return NS_ERROR_FAILURE;
   }

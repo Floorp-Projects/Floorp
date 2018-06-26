@@ -4779,7 +4779,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
   // behavior as layout when computing percentage heights.
   nsIFrame *f = aFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
   if (!f) {
-    NS_NOTREACHED("top of frame tree not a containing block");
+    MOZ_ASSERT_UNREACHABLE("top of frame tree not a containing block");
     return false;
   }
 
@@ -6237,7 +6237,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     if (fType == LayoutFrameType::Scroll) {
       nsIScrollableFrame *sFrame = do_QueryFrame(const_cast<nsIFrame*>(aFrame));
       if (!sFrame) {
-        NS_NOTREACHED("not scroll frame");
+        MOZ_ASSERT_UNREACHABLE("not scroll frame");
       }
       LinePosition kidPosition;
       if (GetFirstLinePosition(aWM,
@@ -7401,7 +7401,7 @@ nsLayoutUtils::GetTextRunOrientFlagsForStyle(ComputedStyle* aComputedStyle)
     case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS:
       return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
     default:
-      NS_NOTREACHED("unknown text-orientation");
+      MOZ_ASSERT_UNREACHABLE("unknown text-orientation");
       return gfx::ShapedTextFlags();
     }
 
@@ -7412,7 +7412,7 @@ nsLayoutUtils::GetTextRunOrientFlagsForStyle(ComputedStyle* aComputedStyle)
     return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
 
   default:
-    NS_NOTREACHED("unknown writing-mode");
+    MOZ_ASSERT_UNREACHABLE("unknown writing-mode");
     return gfx::ShapedTextFlags();
   }
 }

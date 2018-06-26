@@ -207,7 +207,7 @@ AccGroupInfo::NextItemTo(Accessible* aItem)
     }
   }
 
-  NS_NOTREACHED("Item in the middle of the group but there's no next item!");
+  MOZ_ASSERT_UNREACHABLE("Item in the middle of the group but there's no next item!");
   return nullptr;
 }
 

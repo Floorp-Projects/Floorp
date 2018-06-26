@@ -1839,6 +1839,7 @@ public:
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
   void BeginUpdate();
   virtual void EndUpdate() = 0;
+  uint32_t UpdateNestingLevel() { return mUpdateNestLevel; }
 
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;

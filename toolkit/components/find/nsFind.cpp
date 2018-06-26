@@ -90,24 +90,24 @@ public:
   // nsIContentIterator
   virtual nsresult Init(nsINode* aRoot) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(nsRange* aRange) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(const RawRangeBoundary& aStart,
                         const RawRangeBoundary& aEnd) override
   {
-    NS_NOTREACHED("internal error");
+    MOZ_ASSERT_UNREACHABLE("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   // Not a range because one of the endpoints may be anonymous.
@@ -593,13 +593,11 @@ nsFind::InitIterator(nsINode* aStartNode, int32_t aStartOffset,
   NS_ENSURE_ARG_POINTER(aStartNode);
   NS_ENSURE_ARG_POINTER(aEndNode);
 
-#ifdef DEBUG_FIND
   DEBUG_FIND_PRINTF("InitIterator search range:\n");
   DEBUG_FIND_PRINTF(" -- start %d, ", aStartOffset);
   DumpNode(aStartNode);
   DEBUG_FIND_PRINTF(" -- end %d, ", aEndOffset);
   DumpNode(aEndNode);
-#endif
 
   nsresult rv = mIterator->Init(aStartNode, aStartOffset, aEndNode, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);

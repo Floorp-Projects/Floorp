@@ -2318,7 +2318,8 @@ gfxPlatform::Optimal2DFormatForContent(gfxContentType aContent)
     case SurfaceFormat::R5G6B5_UINT16:
       return mozilla::gfx::SurfaceFormat::R5G6B5_UINT16;
     default:
-      NS_NOTREACHED("unknown gfxImageFormat for gfxContentType::COLOR");
+      MOZ_ASSERT_UNREACHABLE("unknown gfxImageFormat for "
+                             "gfxContentType::COLOR");
       return mozilla::gfx::SurfaceFormat::B8G8R8A8;
     }
   case gfxContentType::ALPHA:
@@ -2326,7 +2327,7 @@ gfxPlatform::Optimal2DFormatForContent(gfxContentType aContent)
   case gfxContentType::COLOR_ALPHA:
     return mozilla::gfx::SurfaceFormat::B8G8R8A8;
   default:
-    NS_NOTREACHED("unknown gfxContentType");
+    MOZ_ASSERT_UNREACHABLE("unknown gfxContentType");
     return mozilla::gfx::SurfaceFormat::B8G8R8A8;
   }
 }
@@ -2342,7 +2343,7 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
   case gfxContentType::COLOR_ALPHA:
     return SurfaceFormat::A8R8G8B8_UINT32;
   default:
-    NS_NOTREACHED("unknown gfxContentType");
+    MOZ_ASSERT_UNREACHABLE("unknown gfxContentType");
     return SurfaceFormat::A8R8G8B8_UINT32;
   }
 }

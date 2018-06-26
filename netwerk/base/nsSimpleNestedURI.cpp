@@ -80,7 +80,7 @@ nsSimpleNestedURI::SetRef(const nsACString &aRef)
 NS_IMETHODIMP
 nsSimpleNestedURI::Read(nsIObjectInputStream *aStream)
 {
-    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

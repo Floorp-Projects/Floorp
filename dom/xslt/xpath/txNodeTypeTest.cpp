@@ -52,7 +52,7 @@ txNodeTypeTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
         }
     }
 
-    NS_NOTREACHED("Didn't deal with all values of the NodeType enum!");
+    MOZ_ASSERT_UNREACHABLE("Didn't deal with all values of the NodeType enum!");
 
     aMatched = false;
     return NS_OK;

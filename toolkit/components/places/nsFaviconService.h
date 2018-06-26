@@ -42,7 +42,7 @@ public:
   UnassociatedIconHashKey(const UnassociatedIconHashKey& aOther)
   : nsURIHashKey(aOther)
   {
-    NS_NOTREACHED("Do not call me!");
+    MOZ_ASSERT_UNREACHABLE("Do not call me!");
   }
   mozilla::places::IconData iconData;
   PRTime created;

@@ -11,17 +11,13 @@ REM README.binaries file to contain
 REM the revision number, and builds the tools.  You must run 'svn commit' to
 REM commit the pending edits to the repository.
 
-pushd %~dp0\..\..\
-call svn update --accept postpone
-cd tools\windows
-devenv symupload\symupload.vcproj /rebuild Release
-copy symupload\Release\symupload.exe binaries\
-REM switch back to top level so that 'svn info' displays useful information.
-cd ..\..\
-echo This checkin of the binaries was created by refresh_binaries.bat. > %TEMP%\checkin.txt
-echo Date: %DATE% %TIME% >> %TEMP%\checkin.txt
-echo Repository information (output of 'svn info') follows: >> %TEMP%\checkin.txt
-call svn info >> %TEMP%\checkin.txt
+pushd %~dp0
+if %VisualStudioVersion% == 14.0 set GYP_MSVS_VERSION=2015
+gyp tools_windows.gyp
+msbuild tools_windows.sln /p:Configuration=Release /t:Clean,Build
+copy Release\symupload.exe binaries\
+copy Release\dump_syms.exe binaries\
+git add binaries
+git commit -m "Built Windows binaries"
 echo Done!
-echo type 'svn commit -F %%TEMP%%\checkin.txt' to commit.
 popd

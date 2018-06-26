@@ -243,7 +243,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
     if (defaultGeneric != eFamily_none) {
       FontFamilyName(defaultGeneric).AppendToString(aResult);
     } else {
-      NS_NOTREACHED("No fonts to serialize");
+      MOZ_ASSERT_UNREACHABLE("No fonts to serialize");
     }
     return;
   }
@@ -285,7 +285,7 @@ nsStyleUtil::AppendAngleValue(const nsStyleCoord& aAngle, nsAString& aResult)
     case eStyleUnit_Grad:   aResult.AppendLiteral("grad"); break;
     case eStyleUnit_Radian: aResult.AppendLiteral("rad");  break;
     case eStyleUnit_Turn:   aResult.AppendLiteral("turn"); break;
-    default: NS_NOTREACHED("unrecognized angle unit");
+    default: MOZ_ASSERT_UNREACHABLE("unrecognized angle unit");
   }
 }
 
@@ -344,7 +344,7 @@ nsStyleUtil::AppendPaintOrderValue(uint8_t aValue,
         break;
 
       default:
-        NS_NOTREACHED("unexpected paint-order component value");
+        MOZ_ASSERT_UNREACHABLE("unexpected paint-order component value");
     }
     aValue >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
   }
@@ -538,7 +538,7 @@ nsStyleUtil::ComputeFunctionalAlternates(const nsCSSValueList* aList,
     if (!nsCSSProps::FindKeyword(key,
                                  nsCSSProps::kFontVariantAlternatesFuncsKTable,
                                  alternate)) {
-      NS_NOTREACHED("keyword not a font-variant-alternates value");
+      MOZ_ASSERT_UNREACHABLE("keyword not a font-variant-alternates value");
       continue;
     }
     v.alternate = alternate;

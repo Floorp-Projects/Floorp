@@ -262,25 +262,6 @@ assertSameCompartment(JSContext* cx,
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool
-CallJSNative(JSContext* cx, Native native, const CallArgs& args)
-{
-    if (!CheckRecursionLimit(cx))
-        return false;
-
-#ifdef DEBUG
-    bool alreadyThrowing = cx->isExceptionPending();
-#endif
-    assertSameCompartment(cx, args);
-    bool ok = native(cx, args.length(), args.base());
-    if (ok) {
-        assertSameCompartment(cx, args.rval());
-        MOZ_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
-    }
-    return ok;
-}
-
-STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
-MOZ_ALWAYS_INLINE bool
 CallNativeImpl(JSContext* cx, NativeImpl impl, const CallArgs& args)
 {
 #ifdef DEBUG
@@ -293,42 +274,6 @@ CallNativeImpl(JSContext* cx, NativeImpl impl, const CallArgs& args)
         MOZ_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
     }
     return ok;
-}
-
-STATIC_PRECONDITION(ubound(args.argv_) >= argc)
-MOZ_ALWAYS_INLINE bool
-CallJSNativeConstructor(JSContext* cx, Native native, const CallArgs& args)
-{
-#ifdef DEBUG
-    RootedObject callee(cx, &args.callee());
-#endif
-
-    MOZ_ASSERT(args.thisv().isMagic());
-    if (!CallJSNative(cx, native, args))
-        return false;
-
-    /*
-     * Native constructors must return non-primitive values on success.
-     * Although it is legal, if a constructor returns the callee, there is a
-     * 99.9999% chance it is a bug. If any valid code actually wants the
-     * constructor to return the callee, the assertion can be removed or
-     * (another) conjunct can be added to the antecedent.
-     *
-     * Exceptions:
-     *
-     * - Proxies are exceptions to both rules: they can return primitives and
-     *   they allow content to return the callee.
-     *
-     * - CallOrConstructBoundFunction is an exception as well because we might
-     *   have used bind on a proxy function.
-     *
-     * - (new Object(Object)) returns the callee.
-     */
-    MOZ_ASSERT_IF(native != js::proxy_Construct &&
-                  (!callee->is<JSFunction>() || callee->as<JSFunction>().native() != obj_construct),
-                  args.rval().isObject() && callee != &args.rval().toObject());
-
-    return true;
 }
 
 MOZ_ALWAYS_INLINE bool
@@ -513,7 +458,12 @@ JSContext::leaveRealm(JS::Realm* oldRealm)
 {
     // Only call leave() after we've setRealm()-ed away from the current realm.
     JS::Realm* startingRealm = realm_;
+
+    // The current realm should be marked as entered-from-C++ at this point.
+    MOZ_ASSERT_IF(startingRealm, startingRealm->hasBeenEnteredIgnoringJit());
+
     setRealm(oldRealm);
+
     if (startingRealm)
         startingRealm->leave();
 }
@@ -528,17 +478,16 @@ JSContext::leaveAtomsZone(JS::Realm* oldRealm,
 inline void
 JSContext::setRealm(JS::Realm* realm)
 {
-    // Both the current and the new realm should be properly marked as
-    // entered at this point.
-    MOZ_ASSERT_IF(realm_, realm_->hasBeenEnteredIgnoringJit());
-    MOZ_ASSERT_IF(realm, realm->hasBeenEnteredIgnoringJit());
-
-    // This thread must have exclusive access to the zone.
-    MOZ_ASSERT_IF(realm, CurrentThreadCanAccessZone(realm->zone()));
-
     realm_ = realm;
-    zone_ = realm ? realm->zone() : nullptr;
-    arenas_ = zone_ ? &zone_->arenas : nullptr;
+    if (realm) {
+        // This thread must have exclusive access to the zone.
+        MOZ_ASSERT(CurrentThreadCanAccessZone(realm->zone()));
+        zone_ = realm->zone();
+        arenas_ = &zone_->arenas;
+    } else {
+        zone_ = nullptr;
+        arenas_ = nullptr;
+    }
 }
 
 inline JSScript*

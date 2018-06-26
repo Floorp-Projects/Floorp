@@ -131,7 +131,7 @@ gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports *aSubject,
     if (!nsCRT::strcmp(aTopic, "quit-application")) {
         mLoader->CancelLoader();
     } else {
-        NS_NOTREACHED("unexpected notification topic");
+        MOZ_ASSERT_UNREACHABLE("unexpected notification topic");
     }
     return NS_OK;
 }

@@ -108,7 +108,8 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
   *aDidMerge=false;
 
   if (mForwarding) {
-    NS_NOTREACHED("tried to merge into a placeholder that was in forwarding mode!");
+    MOZ_ASSERT_UNREACHABLE("tried to merge into a placeholder that was in "
+                           "forwarding mode!");
     return NS_ERROR_FAILURE;
   }
 

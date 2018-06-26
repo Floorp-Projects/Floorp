@@ -55,22 +55,23 @@ StackwalkerMIPS::StackwalkerMIPS(const SystemInfo* system_info,
                                  StackFrameSymbolizer* resolver_helper)
 : Stackwalker(system_info, memory, modules, resolver_helper),
   context_(context) {
-  if (context_->context_flags & MD_CONTEXT_MIPS64 ) {
-    if ((memory_ && memory_->GetBase() + memory_->GetSize() - 1)
-        > 0xffffffffffffffff) {
-      BPLOG(ERROR) << "Memory out of range for stackwalking mips64: "
-          << HexString(memory_->GetBase())
-          << "+"
-          << HexString(memory_->GetSize());
-      memory_ = NULL;
-    }
-  } else {
-    if ((memory_ && memory_->GetBase() + memory_->GetSize() - 1) > 0xffffffff) {
-      BPLOG(ERROR) << "Memory out of range for stackwalking mips32: "
-          << HexString(memory_->GetBase())
-          << "+"
-          << HexString(memory_->GetSize());
-      memory_ = NULL;
+  if (memory_) {
+    if (context_->context_flags & MD_CONTEXT_MIPS64 ) {
+      if (0xffffffffffffffff - memory_->GetBase() < memory_->GetSize() - 1) {
+        BPLOG(ERROR) << "Memory out of range for stackwalking mips64: "
+            << HexString(memory_->GetBase())
+            << "+"
+            << HexString(memory_->GetSize());
+        memory_ = NULL;
+      }
+    } else {
+      if (0xffffffff - memory_->GetBase() < memory_->GetSize() - 1) {
+        BPLOG(ERROR) << "Memory out of range for stackwalking mips32: "
+            << HexString(memory_->GetBase())
+            << "+"
+            << HexString(memory_->GetSize());
+        memory_ = NULL;
+      }
     }
   }
 }
@@ -108,7 +109,7 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByCFIFrameInfo(
   StackFrameMIPS* last_frame = static_cast<StackFrameMIPS*>(frames.back());
 
   if (context_->context_flags & MD_CONTEXT_MIPS) {
-    uint32_t sp = 0, pc = 0;
+    uint32_t pc = 0;
 
     // Populate a dictionary with the valid register values in last_frame.
     CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
@@ -129,7 +130,6 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByCFIFrameInfo(
         caller_registers.find(".cfa");
 
     if (entry != caller_registers.end()) {
-      sp = entry->second;
       caller_registers["$sp"] = entry->second;
     }
 
@@ -176,7 +176,7 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByCFIFrameInfo(
 
     return frame.release();
   } else {
-    uint64_t sp = 0, pc = 0;
+    uint64_t pc = 0;
 
     // Populate a dictionary with the valid register values in last_frame.
     CFIFrameInfo::RegisterValueMap<uint64_t> callee_registers;
@@ -197,7 +197,6 @@ StackFrameMIPS* StackwalkerMIPS::GetCallerByCFIFrameInfo(
         caller_registers.find(".cfa");
 
     if (entry != caller_registers.end()) {
-      sp = entry->second;
       caller_registers["$sp"] = entry->second;
     }
 
@@ -273,16 +272,11 @@ StackFrame* StackwalkerMIPS::GetCallerFrame(const CallStack* stack,
     return NULL;
   }
 
-  // Treat an instruction address of 0 as end-of-stack.
-  if (new_frame->context.epc == 0) {
-    return NULL;
-  }
-
-  // If the new stack pointer is at a lower address than the old, then
-  // that's clearly incorrect. Treat this as end-of-stack to enforce
-  // progress and avoid infinite loops.
-  if (new_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP] <=
-      last_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP]) {
+  // Should we terminate the stack walk? (end-of-stack or broken invariant)
+  if (TerminateWalk(new_frame->context.epc,
+                    new_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP],
+                    last_frame->context.iregs[MD_CONTEXT_MIPS_REG_SP],
+                    frames.size() == 1)) {
     return NULL;
   }
 

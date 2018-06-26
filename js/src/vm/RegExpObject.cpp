@@ -1229,7 +1229,8 @@ RegExpRealm::createMatchResultTemplateObject(JSContext* cx)
 
     // Create a new group for the template.
     Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
-    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, templateObject->getClass(), proto);
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, templateObject->realm(),
+                                                     templateObject->getClass(), proto);
     if (!group)
         return matchResultTemplateObject_; // = nullptr
     templateObject->setGroup(group);

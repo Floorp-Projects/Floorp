@@ -2177,7 +2177,8 @@ BinASTParser<Tok>::parseSumParameter(const size_t start, const BinKind kind, con
         break;
       case BinKind::BindingIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
-        BINJS_TRY(parseContext_->positionalFormalParameterNames().append(result->pn_atom));
+        if (!parseContext_->positionalFormalParameterNames().append(result->pn_atom))
+            return raiseOOM();
         if (parseContext_->isFunctionBox())
             parseContext_->functionBox()->length++;
         break;
@@ -2988,7 +2989,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceArrayExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ArrayExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3034,7 +3035,7 @@ template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceAssertedBlockScope(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::AssertedBlockScope);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3090,7 +3091,7 @@ template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::AssertedParameterScope);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3155,7 +3156,7 @@ template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceAssertedVarScope(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::AssertedVarScope);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3211,7 +3212,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAssignmentExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::AssignmentExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3260,7 +3261,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::AssignmentTargetIdentifier);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3424,7 +3425,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBinaryExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::BinaryExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3570,7 +3571,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBindingIdentifier(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::BindingIdentifier);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3704,7 +3705,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBlock(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::Block);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3757,7 +3758,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceBreakStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::BreakStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3814,7 +3815,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::CallExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -3880,7 +3881,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::CatchClause);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4029,7 +4030,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::CompoundAssignmentExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4123,7 +4124,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ComputedMemberAssignmentTarget);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4173,7 +4174,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceComputedMemberExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ComputedMemberExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4252,7 +4253,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceConditionalExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ConditionalExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4306,7 +4307,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceContinueStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ContinueStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4363,7 +4364,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceDataProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::DataProperty);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4442,7 +4443,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceDirective(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::Directive);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4488,7 +4489,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceDoWhileStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::DoWhileStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4575,7 +4576,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::EagerFunctionDeclaration);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4671,7 +4672,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::EagerFunctionExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4763,7 +4764,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::EagerGetter);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4799,7 +4800,7 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
     BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
 
 
-    ParseNode* params = new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start));
+    BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Getter));
     return result;
@@ -4837,7 +4838,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::EagerMethod);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4930,7 +4931,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::EagerSetter);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -4976,7 +4977,7 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
     BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
 
 
-    ParseNode* params = new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos);
+    BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
     factory_.addList(params, param);
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
@@ -5008,7 +5009,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEmptyStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::EmptyStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
@@ -5241,7 +5242,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceExpressionStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ExpressionStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5286,7 +5287,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceForInOfBinding(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ForInOfBinding);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5345,7 +5346,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceForInStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ForInStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5444,7 +5445,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceForStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ForStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5516,7 +5517,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceFormalParameters(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::FormalParameters);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5570,7 +5571,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceFunctionBody(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::FunctionBody);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5619,7 +5620,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceIdentifierExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::IdentifierExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5668,7 +5669,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceIfStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::IfStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5812,7 +5813,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLabelledStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LabelledStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5863,7 +5864,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LiteralBooleanExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -5933,7 +5934,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralNullExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LiteralNullExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
@@ -5967,7 +5968,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralNumericExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LiteralNumericExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6011,7 +6012,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralPropertyName(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LiteralPropertyName);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6061,7 +6062,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LiteralRegExpExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6131,7 +6132,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralStringExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::LiteralStringExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6206,7 +6207,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::NewExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6341,7 +6342,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceObjectExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ObjectExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6385,7 +6386,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceReturnStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ReturnStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6436,7 +6437,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::Script);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6490,7 +6491,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ShorthandProperty);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6734,7 +6735,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::StaticMemberAssignmentTarget);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6784,7 +6785,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceStaticMemberExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::StaticMemberExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6861,7 +6862,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSwitchCase(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::SwitchCase);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6910,7 +6911,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSwitchDefault(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::SwitchDefault);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -6955,7 +6956,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSwitchStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::SwitchStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7008,7 +7009,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::SwitchStatementWithDefault);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7133,7 +7134,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceThisExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ThisExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
@@ -7178,7 +7179,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceThrowStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::ThrowStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7223,7 +7224,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceTryCatchStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::TryCatchStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7278,7 +7279,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceTryFinallyStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::TryFinallyStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7341,7 +7342,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceUnaryExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::UnaryExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7434,7 +7435,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceUpdateExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::UpdateExpression);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7500,7 +7501,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceVariableDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::VariableDeclaration);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7568,7 +7569,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceVariableDeclarator(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::VariableDeclarator);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7635,7 +7636,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceWhileStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::WhileStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -7685,7 +7686,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceWithStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::WithStatement);
-    CheckRecursionLimit(cx_);
+    BINJS_TRY(CheckRecursionLimit(cx_));
 
 
 #if defined(DEBUG)
@@ -8146,7 +8147,7 @@ BinASTParser<Tok>::parseListOfParameter()
 
     const auto start = tokenizer_->offset();
     MOZ_TRY(tokenizer_->enterList(length, guard));
-    ParseNode* result = new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start));
+    BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseParameter());

@@ -78,7 +78,7 @@ var gSitePermissionsManager = {
     let permissionsDisableDescription = document.getElementById("permissionsDisableDescription");
     let permissionsText = document.getElementById("permissionsText");
 
-    const l10n = sitePermissionsL10n[this._type];
+    let l10n = sitePermissionsL10n[this._type];
     document.l10n.setAttributes(permissionsText, l10n.description);
     document.l10n.setAttributes(this._checkbox, l10n.disableLabel);
     document.l10n.setAttributes(permissionsDisableDescription, l10n.disableDescription);
@@ -112,7 +112,7 @@ var gSitePermissionsManager = {
     }
 
     this._loadPermissions();
-    await this.buildPermissionsList();
+    this.buildPermissionsList();
 
     this._searchBox.focus();
   },
@@ -168,7 +168,7 @@ var gSitePermissionsManager = {
       stringKey = "permissions-capabilities-prompt";
       break;
     default:
-        throw new Error(`Unknown capability: ${capability}`);
+      throw new Error(`Unknown capability: ${capability}`);
     }
     return stringKey;
   },
@@ -335,7 +335,7 @@ var gSitePermissionsManager = {
     window.close();
   },
 
-  async buildPermissionsList(sortCol) {
+  buildPermissionsList(sortCol) {
     // Clear old entries.
     let oldItems = this._list.querySelectorAll("richlistitem");
     for (let item of oldItems) {

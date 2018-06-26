@@ -99,6 +99,10 @@ class CompileRealm
     CompileZone* zone();
     CompileRuntime* runtime();
 
+    const void* realmPtr() {
+        return realm();
+    }
+
     const void* addressOfRandomNumberGenerator();
 
     const JitRealm* jitRealm();

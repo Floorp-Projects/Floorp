@@ -19,7 +19,7 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
     virtual MOZ_MUST_USE nsresult LoadUriInternal(nsIURI *aURI) override;
 #ifdef DEBUG
     virtual MOZ_MUST_USE nsresult LaunchDefaultWithFile(nsIFile* aFile) override {
-      NS_NOTREACHED("do not call this method, use LaunchWithFile");
+      MOZ_ASSERT_UNREACHABLE("do not call this method, use LaunchWithFile");
       return NS_ERROR_UNEXPECTED;
     }
 #endif

@@ -307,7 +307,7 @@ KeyPath::AppendStringWithValidation(const nsAString& aString)
     return true;
   }
 
-  NS_NOTREACHED("What?!");
+  MOZ_ASSERT_UNREACHABLE("What?!");
   return false;
 }
 
@@ -429,7 +429,7 @@ KeyPath::SerializeToString(nsAString& aString) const
     return;
   }
 
-  NS_NOTREACHED("What?");
+  MOZ_ASSERT_UNREACHABLE("What?");
 }
 
 // static

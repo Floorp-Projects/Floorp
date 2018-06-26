@@ -59,7 +59,7 @@ void JustTestingCompilation()
      * when I don't need to.
      */
 
-    NS_NOTREACHED("This test is not intended to run, only to compile!");
+    MOZ_ASSERT_UNREACHABLE("This test is not intended to run, only to compile!");
 
     /* Test CallQueryInterface */
 
