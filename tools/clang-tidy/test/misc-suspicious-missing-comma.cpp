@@ -1,9 +1,9 @@
-
-// misc-suspicious-missing-comma
-const char* software[] = {
-  "Firefox",
-  "Rust"   // There is a missing comma here.
-  "Thunderbird",
-  "kinto"
+const char* Cartoons[] = {
+  "Bugs Bunny",
+  "Homer Simpson",
+  "Mickey Mouse",
+  "Bart Simpson",
+  "Charlie Brown"  // There is a missing comma here.
+  "Fred Flintstone",
+  "Popeye",
 };
-
