@@ -816,12 +816,12 @@ public class AndroidFxAccount {
   }
 
   /**
-   * Populate an intent used for starting FxAccountDeletedService service.
+   * Populate and return an intent used for starting FxAccountDeletedService service.
    *
-   * @param intent Intent to populate with necessary extras
    * @return <code>Intent</code> with a deleted action and account/OAuth information extras
    */
-  /* package-private */ Intent populateDeletedAccountIntent(final Intent intent) {
+  /* package-private */ Intent getIntentToDeleteAccount() {
+    final Intent intent = new Intent();
     final List<String> tokens = new ArrayList<>();
 
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_VERSION_KEY,

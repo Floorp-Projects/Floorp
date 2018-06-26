@@ -12,7 +12,8 @@
 
         <service
             android:exported="false"
-            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedService" >
+            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedService"
+            android:permission="android.permission.BIND_JOB_SERVICE" >
         </service>
 
         <service
