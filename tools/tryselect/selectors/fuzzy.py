@@ -14,6 +14,7 @@ from distutils.spawn import find_executable
 from mozboot.util import get_state_dir
 from mozterm import Terminal
 from moztest.resolve import TestResolver, get_suite_definition
+from six import string_types
 
 from .. import preset as pset
 from ..cli import BaseTryParser
@@ -80,9 +81,11 @@ class FuzzyParser(BaseTryParser):
     arguments = [
         [['-q', '--query'],
          {'metavar': 'STR',
+          'action': 'append',
           'help': "Use the given query instead of entering the selection "
                   "interface. Equivalent to typing <query><ctrl-a><enter> "
-                  "from the interface.",
+                  "from the interface. Specifying multiple times schedules "
+                  "the union of computed tasks.",
           }],
         [['-u', '--update'],
          {'action': 'store_true',
@@ -194,6 +197,18 @@ def filter_by_paths(tasks, paths):
     return filter(match_task, tasks)
 
 
+def run_fzf(cmd, tasks):
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    out = proc.communicate('\n'.join(tasks))[0].splitlines()
+
+    selected = []
+    query = None
+    if out:
+        query = out[0]
+        selected = out[1:]
+    return query, selected
+
+
 def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
                   save=False, preset=None, mod_presets=False, push=True, message='{msg}',
                   paths=None, **kwargs):
@@ -217,7 +232,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
             return 1
 
     key_shortcuts = [k + ':' + v for k, v in fzf_shortcuts.iteritems()]
-    cmd = [
+    base_cmd = [
         fzf, '-m',
         '--bind', ','.join(key_shortcuts),
         '--header', format_header(),
@@ -228,26 +243,34 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         '--print-query',
     ]
 
+    query = query or []
+    if isinstance(query, string_types):
+        query = [query]
+
+    if preset:
+        query.append(pset.load(preset, section='fuzzy')[0])
+
+    commands = []
     if query:
-        cmd.extend(['-f', query])
-    elif preset:
-        value = pset.load(preset, section='fuzzy')[0]
-        cmd.extend(['-f', value])
+        for q in query:
+            commands.append(base_cmd + ['-f', q])
+    else:
+        commands.append(base_cmd)
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    out = proc.communicate('\n'.join(all_tasks))[0].splitlines()
-
-    selected = []
-    if out:
-        query = out[0]
-        selected = out[1:]
+    queries = []
+    selected = set()
+    for command in commands:
+        query, tasks = run_fzf(command, all_tasks)
+        if tasks:
+            queries.append(query)
+            selected.update(tasks)
 
     if not selected:
         print("no tasks selected")
         return
 
     if save:
-        pset.save('fuzzy', save, query)
+        pset.save('fuzzy', save, queries[0])
 
     # build commit message
     msg = "Fuzzy"
@@ -255,7 +278,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
     if paths:
         args.append("paths={}".format(':'.join(paths)))
     if query:
-        args.append("query={}".format(query))
+        args.extend(["query={}".format(q) for q in queries])
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
     return vcs.push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
