@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const osString = Services.appinfo.OS;
-const { Cu } = require("chrome");
 
 // Panels
 loader.lazyGetter(this, "OptionsPanel", () => require("devtools/client/framework/toolbox-options").OptionsPanel);
@@ -15,6 +14,7 @@ loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/client/webcon
 loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/client/debugger/panel").DebuggerPanel);
 loader.lazyGetter(this, "NewDebuggerPanel", () => require("devtools/client/debugger/new/panel").DebuggerPanel);
 loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/client/styleeditor/styleeditor-panel").StyleEditorPanel);
+loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/client/shadereditor/panel").ShaderEditorPanel);
 loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/client/canvasdebugger/panel").CanvasDebuggerPanel);
 loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/client/webaudioeditor/panel").WebAudioEditorPanel);
 loader.lazyGetter(this, "MemoryPanel", () => require("devtools/client/memory/panel").MemoryPanel);
@@ -219,7 +219,7 @@ Tools.shaderEditor = {
   ordinal: 5,
   visibilityswitch: "devtools.shadereditor.enabled",
   icon: "chrome://devtools/skin/images/tool-shadereditor.svg",
-  url: "chrome://devtools/content/shadereditor/index.xul",
+  url: "chrome://devtools/content/shadereditor/shadereditor.xul",
   label: l10n("ToolboxShaderEditor.label"),
   panelLabel: l10n("ToolboxShaderEditor.panelLabel"),
   tooltip: l10n("ToolboxShaderEditor.tooltip"),
@@ -229,13 +229,7 @@ Tools.shaderEditor = {
   },
 
   build: function(iframeWindow, toolbox) {
-    const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
-    const browserRequire = BrowserLoader({
-      baseURI: "resource://devtools/client/shadereditor/",
-      window: iframeWindow
-    }).require;
-    const { ShaderEditorPanel } = browserRequire("devtools/client/shadereditor/panel");
-    return new ShaderEditorPanel(toolbox);
+    return new ShaderEditorPanel(iframeWindow, toolbox);
   }
 };
 
