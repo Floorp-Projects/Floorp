@@ -78,7 +78,7 @@ nsBrowserStatusFilter::RemoveProgressListener(nsIWebProgressListener *aListener)
 NS_IMETHODIMP
 nsBrowserStatusFilter::GetDOMWindow(mozIDOMWindowProxy **aResult)
 {
-    NS_NOTREACHED("nsBrowserStatusFilter::GetDOMWindow");
+    MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetDOMWindow");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -86,7 +86,7 @@ NS_IMETHODIMP
 nsBrowserStatusFilter::GetDOMWindowID(uint64_t *aResult)
 {
     *aResult = 0;
-    NS_NOTREACHED("nsBrowserStatusFilter::GetDOMWindowID");
+    MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetDOMWindowID");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -94,7 +94,7 @@ NS_IMETHODIMP
 nsBrowserStatusFilter::GetInnerDOMWindowID(uint64_t *aResult)
 {
     *aResult = 0;
-    NS_NOTREACHED("nsBrowserStatusFilter::GetInnerDOMWindowID");
+    MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetInnerDOMWindowID");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -102,14 +102,14 @@ NS_IMETHODIMP
 nsBrowserStatusFilter::GetIsTopLevel(bool *aIsTopLevel)
 {
     *aIsTopLevel = false;
-    NS_NOTREACHED("nsBrowserStatusFilter::GetIsTopLevel");
+    MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetIsTopLevel");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsBrowserStatusFilter::GetIsLoadingDocument(bool *aIsLoadingDocument)
 {
-    NS_NOTREACHED("nsBrowserStatusFilter::GetIsLoadingDocument");
+    MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetIsLoadingDocument");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -117,7 +117,7 @@ NS_IMETHODIMP
 nsBrowserStatusFilter::GetLoadType(uint32_t *aLoadType)
 {
     *aLoadType = 0;
-    NS_NOTREACHED("nsBrowserStatusFilter::GetLoadType");
+    MOZ_ASSERT_UNREACHABLE("nsBrowserStatusFilter::GetLoadType");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

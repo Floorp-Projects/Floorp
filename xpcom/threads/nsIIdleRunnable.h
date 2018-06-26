@@ -32,8 +32,8 @@ public:
   virtual void SetDeadline(mozilla::TimeStamp aDeadline) {};
   virtual void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget)
   {
-    NS_NOTREACHED("The nsIIdleRunnable instance does not support "
-                  "idle dispatch with timeout!");
+    MOZ_ASSERT_UNREACHABLE("The nsIIdleRunnable instance does not support "
+                           "idle dispatch with timeout!");
   };
 protected:
   nsIIdleRunnable() { }

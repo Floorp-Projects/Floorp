@@ -196,7 +196,7 @@ ConvertLoadTypeToDocShellInfoLoadType(uint32_t aLoadType)
       docShellLoadType = nsIDocShellLoadInfo::loadReloadMixedContent;
       break;
     default:
-      NS_NOTREACHED("Unexpected load type value");
+      MOZ_ASSERT_UNREACHABLE("Unexpected load type value");
   }
 
   return docShellLoadType;
@@ -278,7 +278,7 @@ ConvertDocShellInfoLoadTypeToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
       loadType = LOAD_RELOAD_ALLOW_MIXED_CONTENT;
       break;
     default:
-      NS_NOTREACHED("Unexpected nsDocShellInfoLoadType value");
+      MOZ_ASSERT_UNREACHABLE("Unexpected nsDocShellInfoLoadType value");
   }
 
   return loadType;

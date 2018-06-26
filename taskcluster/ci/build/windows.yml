@@ -585,7 +585,7 @@ win64-ccov/debug:
     run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - win64-clang-cl
-        - win64-rust
+        - win64-rust-nightly
         - win64-rust-size
         - win64-sccache
 

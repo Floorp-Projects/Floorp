@@ -788,7 +788,7 @@ net_FindStringEnd(const nsCString& flatStr,
 
     } while (true);
 
-    NS_NOTREACHED("How did we get here?");
+    MOZ_ASSERT_UNREACHABLE("How did we get here?");
     return flatStr.Length();
 }
 
@@ -824,7 +824,7 @@ net_FindMediaDelimiter(const nsCString& flatStr,
         // |delimiter| again.
     } while (true);
 
-    NS_NOTREACHED("How did we get here?");
+    MOZ_ASSERT_UNREACHABLE("How did we get here?");
     return flatStr.Length();
 }
 

@@ -176,8 +176,8 @@ nsStyleLinkElement::GetCharset(nsAString& aCharset)
 /* virtual */ void
 nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI)
 {
-  NS_NOTREACHED("Base URI can't be overriden in this implementation "
-                "of nsIStyleSheetLinkingElement.");
+  MOZ_ASSERT_UNREACHABLE("Base URI can't be overriden in this implementation "
+                         "of nsIStyleSheetLinkingElement.");
 }
 
 /* virtual */ void

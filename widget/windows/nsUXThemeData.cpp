@@ -113,7 +113,7 @@ const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
     case eUXWindowFrame:
       return L"Window";
     default:
-      NS_NOTREACHED("unknown uxtheme class");
+      MOZ_ASSERT_UNREACHABLE("unknown uxtheme class");
       return L"";
   }
 }

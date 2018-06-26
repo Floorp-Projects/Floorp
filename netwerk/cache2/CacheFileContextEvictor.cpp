@@ -664,7 +664,7 @@ CacheFileContextEvictor::EvictEntries()
     CacheIndex::RemoveEntry(&hash);
   }
 
-  NS_NOTREACHED("We should never get here");
+  MOZ_ASSERT_UNREACHABLE("We should never get here");
   return NS_OK;
 }
 

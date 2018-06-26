@@ -1826,7 +1826,7 @@ struct nsStyleImageOrientation
       case ANGLE_180: return mozilla::image::Angle::D180;
       case ANGLE_270: return mozilla::image::Angle::D270;
       default:
-        NS_NOTREACHED("Unexpected angle");
+        MOZ_ASSERT_UNREACHABLE("Unexpected angle");
         return mozilla::image::Angle::D0;
     }
   }
@@ -1838,7 +1838,7 @@ struct nsStyleImageOrientation
       case ANGLE_180: return nsStyleCoord(180.0f, eStyleUnit_Degree);
       case ANGLE_270: return nsStyleCoord(270.0f, eStyleUnit_Degree);
       default:
-        NS_NOTREACHED("Unexpected angle");
+        MOZ_ASSERT_UNREACHABLE("Unexpected angle");
         return nsStyleCoord();
     }
   }

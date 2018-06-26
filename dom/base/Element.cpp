@@ -2122,10 +2122,15 @@ Element::GetMappedAttributes() const
   return mAttrsAndChildren.GetMapped();
 }
 
+void
+Element::InlineStyleDeclarationWillChange(MutationClosureData& aData)
+{
+  MOZ_ASSERT_UNREACHABLE("Element::InlineStyleDeclarationWillChange");
+}
+
 nsresult
-Element::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
-                                   const nsAString* aSerialized,
-                                   bool aNotify)
+Element::SetInlineStyleDeclaration(DeclarationBlock& aDeclaration,
+                                   MutationClosureData& aData)
 {
   MOZ_ASSERT_UNREACHABLE("Element::SetInlineStyleDeclaration");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3270,7 +3275,7 @@ Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor)
 
   default:
     // switch not in sync with the optimization switch earlier in this function
-    NS_NOTREACHED("switch statements not in sync");
+    MOZ_ASSERT_UNREACHABLE("switch statements not in sync");
   }
 }
 
@@ -3384,7 +3389,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
 
   default:
     // switch not in sync with the optimization switch earlier in this function
-    NS_NOTREACHED("switch statements not in sync");
+    MOZ_ASSERT_UNREACHABLE("switch statements not in sync");
     return NS_ERROR_UNEXPECTED;
   }
 

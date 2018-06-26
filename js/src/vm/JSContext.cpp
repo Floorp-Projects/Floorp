@@ -1032,7 +1032,11 @@ InternalEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job,
                                   JS::HandleObject incumbentGlobal, void* data)
 {
     MOZ_ASSERT(job);
-    return cx->jobQueue->append(job);
+    if (!cx->jobQueue->append(job)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    return true;
 }
 
 namespace {

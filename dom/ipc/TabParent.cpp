@@ -2517,7 +2517,7 @@ TabParent::RecvSetNativeChildOfShareableWindow(const uintptr_t& aChildWindow)
   }
   return IPC_OK();
 #else
-  NS_NOTREACHED(
+  MOZ_ASSERT_UNREACHABLE(
     "TabParent::RecvSetNativeChildOfShareableWindow not implemented!");
   return IPC_FAIL_NO_REASON(this);
 #endif

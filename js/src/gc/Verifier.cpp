@@ -614,15 +614,21 @@ HeapCheckTracerBase::dumpCellPath()
 class CheckHeapTracer final : public HeapCheckTracerBase
 {
   public:
-    explicit CheckHeapTracer(JSRuntime* rt);
+    enum GCType {
+        Moving,
+        NonMoving
+    };
+
+    explicit CheckHeapTracer(JSRuntime* rt, GCType type);
     void check(AutoTraceSession& session);
 
   private:
     void checkCell(Cell* cell) override;
+    GCType gcType;
 };
 
-CheckHeapTracer::CheckHeapTracer(JSRuntime* rt)
-  : HeapCheckTracerBase(rt, TraceWeakMapKeysValues)
+CheckHeapTracer::CheckHeapTracer(JSRuntime* rt, GCType type)
+  : HeapCheckTracerBase(rt, TraceWeakMapKeysValues), gcType(type)
 {}
 
 inline static bool
@@ -634,7 +640,12 @@ IsValidGCThingPointer(Cell* cell)
 void
 CheckHeapTracer::checkCell(Cell* cell)
 {
-    if (!IsValidGCThingPointer(cell) || !IsGCThingValidAfterMovingGC(cell)) {
+    // Moving
+    if (!IsValidGCThingPointer(cell) ||
+        ((gcType == GCType::Moving) && !IsGCThingValidAfterMovingGC(cell)) ||
+        ((gcType == GCType::NonMoving) &&
+            RelocationOverlay::isCellForwarded(cell)))
+    {
         failures++;
         fprintf(stderr, "Bad pointer %p\n", cell);
         dumpCellPath();
@@ -656,7 +667,14 @@ void
 js::gc::CheckHeapAfterGC(JSRuntime* rt)
 {
     AutoTraceSession session(rt);
-    CheckHeapTracer tracer(rt);
+    CheckHeapTracer::GCType gcType;
+
+    if (rt->gc.nursery().isEmpty())
+        gcType = CheckHeapTracer::GCType::Moving;
+    else
+        gcType = CheckHeapTracer::GCType::NonMoving;
+
+    CheckHeapTracer tracer(rt, gcType);
     if (tracer.init())
         tracer.check(session);
 }

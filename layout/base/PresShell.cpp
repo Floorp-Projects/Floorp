@@ -872,7 +872,7 @@ PresShell::~PresShell()
   MOZ_LOG(gLog, LogLevel::Debug, ("PresShell::~PresShell this=%p", this));
 
   if (!mHaveShutDown) {
-    NS_NOTREACHED("Someone did not call nsIPresShell::destroy");
+    MOZ_ASSERT_UNREACHABLE("Someone did not call nsIPresShell::destroy");
     Destroy();
   }
 
@@ -2632,8 +2632,9 @@ PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame)
 
     aFrame = aFrame->GetParent();
   }
-  NS_NOTREACHED("Frame has dirty bits set but isn't scheduled to be "
-                "reflowed?");
+
+  MOZ_ASSERT_UNREACHABLE("Frame has dirty bits set but isn't scheduled to be "
+                         "reflowed?");
 }
 #endif
 

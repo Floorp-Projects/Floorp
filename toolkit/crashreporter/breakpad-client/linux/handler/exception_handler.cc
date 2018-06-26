@@ -105,12 +105,6 @@
 #define PR_SET_PTRACER 0x59616d61
 #endif
 
-// A wrapper for the tgkill syscall: send a signal to a specific thread.
-static int _tgkill(pid_t tgid, pid_t tid, int sig) {
-  return syscall(__NR_tgkill, tgid, tid, sig);
-  return 0;
-}
-
 namespace google_breakpad {
 
 namespace {
@@ -218,6 +212,7 @@ pthread_mutex_t g_handler_stack_mutex_ = PTHREAD_MUTEX_INITIALIZER;
 // time can use |g_crash_context_|.
 ExceptionHandler::CrashContext g_crash_context_;
 
+FirstChanceHandler g_first_chance_handler_ = nullptr;
 }  // namespace
 
 // Runs before crashing: normal context.
@@ -331,6 +326,18 @@ void ExceptionHandler::RestoreHandlersLocked() {
 // Runs on the crashing thread.
 // static
 void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
+
+  // Give the first chance handler a chance to recover from this signal
+  //
+  // This is primarily used by V8. V8 uses guard regions to guarantee memory
+  // safety in WebAssembly. This means some signals might be expected if they
+  // originate from Wasm code while accessing the guard region. We give V8 the
+  // chance to handle and recover from these signals first.
+  if (g_first_chance_handler_ != nullptr &&
+      g_first_chance_handler_(sig, info, uc)) {
+    return;
+  }
+
   // All the exception signals are blocked at this point.
   pthread_mutex_lock(&g_handler_stack_mutex_);
 
@@ -346,6 +353,7 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
   // will call the function with the right arguments.
   struct sigaction cur_handler;
   if (sigaction(sig, NULL, &cur_handler) == 0 &&
+      cur_handler.sa_sigaction == SignalHandler &&
       (cur_handler.sa_flags & SA_SIGINFO) == 0) {
     // Reset signal handler with the right flags.
     sigemptyset(&cur_handler.sa_mask);
@@ -387,7 +395,7 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
     // In order to retrigger it, we have to queue a new signal by calling
     // kill() ourselves.  The special case (si_pid == 0 && sig == SIGABRT) is
     // due to the kernel sending a SIGABRT from a user request via SysRQ.
-    if (_tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
+    if (sys_tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
       // If we failed to kill ourselves (e.g. because a sandbox disallows us
       // to do so), we instead resort to terminating our process. This will
       // result in an incorrect exit code.
@@ -414,9 +422,14 @@ struct ThreadArgument {
 int ExceptionHandler::ThreadEntry(void *arg) {
   const ThreadArgument *thread_arg = reinterpret_cast<ThreadArgument*>(arg);
 
+  // Close the write end of the pipe. This allows us to fail if the parent dies
+  // while waiting for the continue signal.
+  sys_close(thread_arg->handler->fdes[1]);
+
   // Block here until the crashing process unblocks us when
   // we're allowed to use ptrace
   thread_arg->handler->WaitForContinueSignal();
+  sys_close(thread_arg->handler->fdes[0]);
 
   return thread_arg->handler->DoDump(thread_arg->pid, thread_arg->context,
                                      thread_arg->context_size) == false;
@@ -424,7 +437,7 @@ int ExceptionHandler::ThreadEntry(void *arg) {
 
 // This function runs in a compromised context: see the top of the file.
 // Runs on the crashing thread.
-bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
+bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
   if (filter_ && !filter_(callback_context_))
     return false;
 
@@ -523,8 +536,8 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
   }
 
   const pid_t child = sys_clone(
-      ThreadEntry, stack, CLONE_FILES | CLONE_FS | CLONE_UNTRACED,
-      &thread_arg, NULL, NULL, NULL);
+      ThreadEntry, stack, CLONE_FS | CLONE_UNTRACED, &thread_arg, NULL, NULL,
+      NULL);
   if (child == -1) {
     sys_close(fdes[0]);
     sys_close(fdes[1]);
@@ -548,13 +561,14 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
     logger::write(childMsg, my_strlen(childMsg));
   }
 
+  // Close the read end of the pipe.
+  sys_close(fdes[0]);
   // Allow the child to ptrace us
   sys_prctl(PR_SET_PTRACER, child, 0, 0, 0);
   SendContinueSignalToChild();
-  int status;
+  int status = 0;
   const int r = HANDLE_EINTR(sys_waitpid(child, &status, __WALL));
 
-  sys_close(fdes[0]);
   sys_close(fdes[1]);
 
   if (r == -1) {
@@ -610,12 +624,20 @@ void ExceptionHandler::WaitForContinueSignal() {
 // Runs on the cloned process.
 bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                               size_t context_size) {
+  const bool may_skip_dump =
+      minidump_descriptor_.skip_dump_if_principal_mapping_not_referenced();
+  const uintptr_t principal_mapping_address =
+      minidump_descriptor_.address_within_principal_mapping();
+  const bool sanitize_stacks = minidump_descriptor_.sanitize_stacks();
   if (minidump_descriptor_.IsMicrodumpOnConsole()) {
     return google_breakpad::WriteMicrodump(
         crashing_process,
         context,
         context_size,
         mapping_list_,
+        may_skip_dump,
+        principal_mapping_address,
+        sanitize_stacks,
         *minidump_descriptor_.microdump_extra_info());
   }
   if (minidump_descriptor_.IsFD()) {
@@ -625,7 +647,10 @@ bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                                           context,
                                           context_size,
                                           mapping_list_,
-                                          app_memory_list_);
+                                          app_memory_list_,
+                                          may_skip_dump,
+                                          principal_mapping_address,
+                                          sanitize_stacks);
   }
   return google_breakpad::WriteMinidump(minidump_descriptor_.path(),
                                         minidump_descriptor_.size_limit(),
@@ -633,7 +658,10 @@ bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                                         context,
                                         context_size,
                                         mapping_list_,
-                                        app_memory_list_);
+                                        app_memory_list_,
+                                        may_skip_dump,
+                                        principal_mapping_address,
+                                        sanitize_stacks);
 }
 
 // static
@@ -784,6 +812,10 @@ bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
       return false;
 
   return callback ? callback(descriptor, callback_context, true) : true;
+}
+
+void SetFirstChanceExceptionHandler(FirstChanceHandler callback) {
+  g_first_chance_handler_ = callback;
 }
 
 }  // namespace google_breakpad

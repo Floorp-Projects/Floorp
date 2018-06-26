@@ -60,11 +60,13 @@ BasicSourceLineResolver::Function : public SourceLineResolverBase::Function {
   Function(const string &function_name,
            MemAddr function_address,
            MemAddr code_size,
-           int set_parameter_size) : Base(function_name,
-                                          function_address,
-                                          code_size,
-                                          set_parameter_size),
-                                     lines() { }
+           int set_parameter_size,
+           bool is_mutiple) : Base(function_name,
+                                   function_address,
+                                   code_size,
+                                   set_parameter_size,
+                                   is_mutiple),
+                              lines() { }
   RangeMap< MemAddr, linked_ptr<Line> > lines;
  private:
   typedef SourceLineResolverBase::Function Base;

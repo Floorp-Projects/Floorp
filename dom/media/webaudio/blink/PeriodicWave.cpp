@@ -346,7 +346,7 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
             }
             break;
         default:
-            NS_NOTREACHED("invalid oscillator type");
+            MOZ_ASSERT_UNREACHABLE("invalid oscillator type");
             a = 0;
             b = 0;
             break;

@@ -319,7 +319,7 @@ DocManager::OnProgressChange(nsIWebProgress* aWebProgress,
                              int32_t aCurTotalProgress,
                              int32_t aMaxTotalProgress)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -328,7 +328,7 @@ DocManager::OnLocationChange(nsIWebProgress* aWebProgress,
                              nsIRequest* aRequest, nsIURI* aLocation,
                              uint32_t aFlags)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -337,7 +337,7 @@ DocManager::OnStatusChange(nsIWebProgress* aWebProgress,
                            nsIRequest* aRequest, nsresult aStatus,
                            const char16_t* aMessage)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -346,7 +346,7 @@ DocManager::OnSecurityChange(nsIWebProgress* aWebProgress,
                              nsIRequest* aRequest,
                              uint32_t aState)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 

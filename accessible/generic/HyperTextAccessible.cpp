@@ -1259,7 +1259,7 @@ HyperTextAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
   while (childIdx < static_cast<int32_t>(ChildCount())) {
     nsIFrame* frame = GetChildAt(childIdx++)->GetFrame();
     if (!frame) {
-      NS_NOTREACHED("No frame for a child!");
+      MOZ_ASSERT_UNREACHABLE("No frame for a child!");
       continue;
     }
 
@@ -1505,7 +1505,7 @@ HyperTextAccessible::CaretLineNumber()
     caretFrame = parentFrame;
   }
 
-  NS_NOTREACHED("DOM ancestry had this hypertext but frame ancestry didn't");
+  MOZ_ASSERT_UNREACHABLE("DOM ancestry had this hypertext but frame ancestry didn't");
   return lineNumber;
 }
 

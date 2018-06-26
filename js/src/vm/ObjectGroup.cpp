@@ -324,8 +324,8 @@ JSObject::makeLazyGroup(JSContext* cx, HandleObject obj)
         initialFlags |= OBJECT_FLAG_LENGTH_OVERFLOW;
 
     Rooted<TaggedProto> proto(cx, obj->taggedProto());
-    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, obj->getClass(), proto,
-                                                     initialFlags);
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, obj->nonCCWRealm(), obj->getClass(),
+                                                     proto, initialFlags);
     if (!group)
         return nullptr;
 
@@ -529,7 +529,10 @@ ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             js_delete(table);
             table = nullptr;
             ReportOutOfMemory(cx);
@@ -577,7 +580,8 @@ ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
         initialFlags = OBJECT_FLAG_DYNAMIC_MASK;
 
     Rooted<TaggedProto> protoRoot(cx, proto);
-    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, clasp ? clasp : &PlainObject::class_,
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, cx->realm(),
+                                                     clasp ? clasp : &PlainObject::class_,
                                                      protoRoot, initialFlags);
     if (!group)
         return nullptr;
@@ -620,16 +624,23 @@ ObjectGroup::defaultNewGroup(JSContext* cx, const Class* clasp,
 }
 
 /* static */ ObjectGroup*
-ObjectGroup::lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm, const Class* clasp,
+ObjectGroup::lazySingletonGroup(JSContext* cx, ObjectGroup* oldGroup, const Class* clasp,
                                 TaggedProto proto)
 {
+    ObjectGroupRealm& realm = oldGroup
+                              ? ObjectGroupRealm::get(oldGroup)
+                              : ObjectGroupRealm::getForNewObject(cx);
+
     MOZ_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
 
     ObjectGroupRealm::NewTable*& table = realm.lazyTable;
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -650,7 +661,9 @@ ObjectGroup::lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm, const Cl
 
     Rooted<TaggedProto> protoRoot(cx, proto);
     ObjectGroup* group =
-        ObjectGroupRealm::makeGroup(cx, clasp, protoRoot,
+        ObjectGroupRealm::makeGroup(cx,
+                                    oldGroup ? oldGroup->realm() : cx->realm(),
+                                    clasp, protoRoot,
                                     OBJECT_FLAG_SINGLETON | OBJECT_FLAG_LAZY_SINGLETON);
     if (!group)
         return nullptr;
@@ -855,7 +868,10 @@ ObjectGroup::newArrayObject(JSContext* cx,
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::ArrayObjectTable>();
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -874,7 +890,7 @@ ObjectGroup::newArrayObject(JSContext* cx,
         if (!proto)
             return nullptr;
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-        group = ObjectGroupRealm::makeGroup(cx, &ArrayObject::class_, taggedProto);
+        group = ObjectGroupRealm::makeGroup(cx, cx->realm(), &ArrayObject::class_, taggedProto);
         if (!group)
             return nullptr;
 
@@ -1178,7 +1194,10 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::PlainObjectTable>();
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -1198,7 +1217,8 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
             return nullptr;
 
         Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-        RootedObjectGroup group(cx, ObjectGroupRealm::makeGroup(cx, &PlainObject::class_,
+        RootedObjectGroup group(cx, ObjectGroupRealm::makeGroup(cx, cx->realm(),
+                                                                &PlainObject::class_,
                                                                 tagged));
         if (!group)
             return nullptr;
@@ -1444,7 +1464,10 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* scriptArg, jsbytecode*
 
     if (!table) {
         table = cx->new_<ObjectGroupRealm::AllocationSiteTable>(cx->zone());
-        if (!table || !table->init()) {
+        if (!table)
+            return nullptr;
+
+        if (!table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
@@ -1470,7 +1493,8 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* scriptArg, jsbytecode*
     AutoEnterAnalysis enter(cx);
 
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-    ObjectGroup* res = ObjectGroupRealm::makeGroup(cx, GetClassForProtoKey(kind), tagged,
+    ObjectGroup* res = ObjectGroupRealm::makeGroup(cx, script->realm(),
+                                                   GetClassForProtoKey(kind), tagged,
                                                    OBJECT_FLAG_FROM_ALLOCATION_SITE);
     if (!res)
         return nullptr;
@@ -1674,7 +1698,7 @@ ObjectGroupRealm::replaceDefaultNewGroup(const Class* clasp, TaggedProto proto,
 
 /* static */
 ObjectGroup*
-ObjectGroupRealm::makeGroup(JSContext* cx, const Class* clasp,
+ObjectGroupRealm::makeGroup(JSContext* cx, Realm* realm, const Class* clasp,
                             Handle<TaggedProto> proto,
                             ObjectGroupFlags initialFlags /* = 0 */)
 {
@@ -1683,7 +1707,7 @@ ObjectGroupRealm::makeGroup(JSContext* cx, const Class* clasp,
     ObjectGroup* group = Allocate<ObjectGroup>(cx);
     if (!group)
         return nullptr;
-    new(group) ObjectGroup(clasp, proto, cx->realm(), initialFlags);
+    new(group) ObjectGroup(clasp, proto, realm, initialFlags);
 
     return group;
 }
@@ -1709,7 +1733,7 @@ ObjectGroupRealm::getStringSplitStringGroup(JSContext* cx)
         return nullptr;
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
 
-    group = makeGroup(cx, clasp, tagged, /* initialFlags = */ 0);
+    group = makeGroup(cx, cx->realm(), clasp, tagged, /* initialFlags = */ 0);
     if (!group)
         return nullptr;
 

@@ -702,6 +702,30 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
         if (SECOID_Init() != SECSuccess) {
             goto loser;
         }
+#ifdef POLICY_FILE
+        /* Load the system crypto policy file if it exists,
+         * unless the NSS_IGNORE_SYSTEM_POLICY environment
+         * variable has been set to 1. */
+        ignoreVar = PR_GetEnvSecure("NSS_IGNORE_SYSTEM_POLICY");
+        if (ignoreVar == NULL || strncmp(ignoreVar, "1", sizeof("1")) != 0) {
+            if (PR_Access(POLICY_PATH "/" POLICY_FILE, PR_ACCESS_READ_OK) == PR_SUCCESS) {
+                SECMODModule *module = SECMOD_LoadModule(
+                    "name=\"Policy File\" "
+                    "parameters=\"configdir='sql:" POLICY_PATH "' "
+                    "secmod='" POLICY_FILE "' "
+                    "flags=readOnly,noCertDB,forceSecmodChoice,forceOpen\" "
+                    "NSS=\"flags=internal,moduleDB,skipFirst,moduleDBOnly,critical\"",
+                    parent, PR_TRUE);
+                if (module) {
+                    PRBool isLoaded = module->loaded;
+                    SECMOD_DestroyModule(module);
+                    if (!isLoaded) {
+                        goto loser;
+                    }
+                }
+            }
+        }
+#endif
         if (STAN_LoadDefaultNSS3TrustDomain() != PR_SUCCESS) {
             goto loser;
         }
@@ -730,30 +754,6 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
                 }
             }
         }
-#ifdef POLICY_FILE
-        /* Load the system crypto policy file if it exists,
-         * unless the NSS_IGNORE_SYSTEM_POLICY environment
-         * variable has been set to 1. */
-        ignoreVar = PR_GetEnvSecure("NSS_IGNORE_SYSTEM_POLICY");
-        if (ignoreVar == NULL || strncmp(ignoreVar, "1", sizeof("1")) != 0) {
-            if (PR_Access(POLICY_PATH "/" POLICY_FILE, PR_ACCESS_READ_OK) == PR_SUCCESS) {
-                SECMODModule *module = SECMOD_LoadModule(
-                    "name=\"Policy File\" "
-                    "parameters=\"configdir='sql:" POLICY_PATH "' "
-                    "secmod='" POLICY_FILE "' "
-                    "flags=readOnly,noCertDB,forceSecmodChoice,forceOpen\" "
-                    "NSS=\"flags=internal,moduleDB,skipFirst,moduleDBOnly,critical\"",
-                    parent, PR_TRUE);
-                if (module) {
-                    PRBool isLoaded = module->loaded;
-                    SECMOD_DestroyModule(module);
-                    if (!isLoaded) {
-                        goto loser;
-                    }
-                }
-            }
-        }
-#endif
         pk11sdr_Init();
         cert_CreateSubjectKeyIDHashTable();
 

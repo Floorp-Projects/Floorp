@@ -610,8 +610,8 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
     }
   }
 
-  NS_NOTREACHED("shouldn't complete loop & get here -- if we do, "
-                "then aSimpleProgress was probably out of bounds");
+  MOZ_ASSERT_UNREACHABLE("shouldn't complete loop & get here -- if we do, "
+                         "then aSimpleProgress was probably out of bounds");
   return NS_ERROR_FAILURE;
 }
 

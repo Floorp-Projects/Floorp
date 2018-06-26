@@ -2273,7 +2273,8 @@ void
 nsBaseWidget::RegisterPluginWindowForRemoteUpdates()
 {
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  NS_NOTREACHED("nsBaseWidget::RegisterPluginWindowForRemoteUpdates not implemented!");
+  MOZ_ASSERT_UNREACHABLE("nsBaseWidget::RegisterPluginWindowForRemoteUpdates "
+                         "not implemented!");
   return;
 #else
   MOZ_ASSERT(NS_IsMainThread());
@@ -2291,7 +2292,8 @@ void
 nsBaseWidget::UnregisterPluginWindowForRemoteUpdates()
 {
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  NS_NOTREACHED("nsBaseWidget::UnregisterPluginWindowForRemoteUpdates not implemented!");
+  MOZ_ASSERT_UNREACHABLE("nsBaseWidget::UnregisterPluginWindowForRemoteUpdates "
+                         "not implemented!");
   return;
 #else
   MOZ_ASSERT(NS_IsMainThread());
@@ -2322,7 +2324,8 @@ nsIWidget*
 nsIWidget::LookupRegisteredPluginWindow(uintptr_t aWindowID)
 {
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  NS_NOTREACHED("nsBaseWidget::LookupRegisteredPluginWindow not implemented!");
+  MOZ_ASSERT_UNREACHABLE("nsBaseWidget::LookupRegisteredPluginWindow "
+                         "not implemented!");
   return nullptr;
 #else
   MOZ_ASSERT(NS_IsMainThread());
@@ -2337,7 +2340,8 @@ nsIWidget::UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
                                                   nsTArray<uintptr_t>& aPluginIds)
 {
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  NS_NOTREACHED("nsBaseWidget::UpdateRegisteredPluginWindowVisibility not implemented!");
+  MOZ_ASSERT_UNREACHABLE("nsBaseWidget::UpdateRegisteredPluginWindowVisibility"
+                         " not implemented!");
   return;
 #else
   MOZ_ASSERT(NS_IsMainThread());

@@ -549,22 +549,26 @@ void DumpContext::Print() {
 
     case MD_CONTEXT_ARM: {
       const MDRawContextARM* context_arm = GetContextARM();
+      const char * const names[] = {
+        "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
+        "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",
+      };
       printf("MDRawContextARM\n");
-      printf("  context_flags       = 0x%x\n",
+      printf("  context_flags        = 0x%x\n",
              context_arm->context_flags);
       for (unsigned int ireg_index = 0;
            ireg_index < MD_CONTEXT_ARM_GPR_COUNT;
            ++ireg_index) {
-        printf("  iregs[%2d]            = 0x%x\n",
-               ireg_index, context_arm->iregs[ireg_index]);
+        printf("  %-3s                  = 0x%x\n",
+               names[ireg_index], context_arm->iregs[ireg_index]);
       }
-      printf("  cpsr                = 0x%x\n", context_arm->cpsr);
+      printf("  cpsr                 = 0x%x\n", context_arm->cpsr);
       printf("  float_save.fpscr     = 0x%" PRIx64 "\n",
              context_arm->float_save.fpscr);
       for (unsigned int fpr_index = 0;
            fpr_index < MD_FLOATINGSAVEAREA_ARM_FPR_COUNT;
            ++fpr_index) {
-        printf("  float_save.regs[%2d] = 0x%" PRIx64 "\n",
+        printf("  float_save.regs[%2d]  = 0x%" PRIx64 "\n",
                fpr_index, context_arm->float_save.regs[fpr_index]);
       }
       for (unsigned int fpe_index = 0;

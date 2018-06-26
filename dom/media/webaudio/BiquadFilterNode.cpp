@@ -69,7 +69,7 @@ SetParamsOnBiquad(WebCore::Biquad& aBiquad,
     aBiquad.setAllpassParams(normalizedFrequency, aQ);
     break;
   default:
-    NS_NOTREACHED("We should never see the alternate names here");
+    MOZ_ASSERT_UNREACHABLE("We should never see the alternate names here");
     break;
   }
 }

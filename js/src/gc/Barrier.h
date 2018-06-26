@@ -119,12 +119,12 @@
  * from the tenured generation into the nursery is know as the remembered set.
  * Post barriers are used to track this remembered set.
  *
- * Whenever a slot which could contain such a pointer is written, we use a write
- * barrier to check if the edge created is in the remembered set, and if so we
- * insert it into the store buffer, which is the collector's representation of
- * the remembered set.  This means than when we come to do a minor collection we
- * can examine the contents of the store buffer and mark any edge targets that
- * are in the nursery.
+ * Whenever a slot which could contain such a pointer is written, we check
+ * whether the pointed-to thing is in the nursery (if storeBuffer() returns a
+ * buffer).  If so we add the cell into the store buffer, which is the
+ * collector's representation of the remembered set.  This means that when we
+ * come to do a minor collection we can examine the contents of the store buffer
+ * and mark any edge targets that are in the nursery.
  *
  *                            IMPLEMENTATION DETAILS
  *

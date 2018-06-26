@@ -287,7 +287,8 @@ TaskbarTabPreview::MainWindowHook(void *aContext,
     if (SWP_FRAMECHANGED == (pos->flags & SWP_FRAMECHANGED))
       preview->UpdateProxyWindowStyle();
   } else {
-    NS_NOTREACHED("Style changed hook fired on non-style changed message");
+    MOZ_ASSERT_UNREACHABLE("Style changed hook fired on non-style changed "
+                           "message");
   }
   return false;
 }
@@ -354,4 +355,3 @@ TaskbarTabPreview::UpdateNext() {
 
 } // namespace widget
 } // namespace mozilla
-

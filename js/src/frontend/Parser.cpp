@@ -186,7 +186,7 @@ ParseContext::Scope::addPossibleAnnexBFunctionBox(ParseContext* pc, FunctionBox*
             return false;
     }
 
-    return possibleAnnexBFunctionBoxes_->append(funbox);
+    return maybeReportOOM(pc, possibleAnnexBFunctionBoxes_->append(funbox));
 }
 
 bool

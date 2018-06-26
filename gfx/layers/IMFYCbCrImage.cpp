@@ -44,6 +44,15 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
     return nullptr;
   }
 
+  hr = device->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  if (!mt->GetMultithreadProtected()) {
+     return nullptr;
+   }
+
   if (!gfx::DeviceManagerDx::Get()->CanInitializeKeyedMutexTextures()) {
     return nullptr;
   }
@@ -74,7 +83,6 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
   RefPtr<ID3D11Texture2D> textureCb;
   hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCb));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
 
   RefPtr<ID3D11Texture2D> textureCr;
   hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCr));

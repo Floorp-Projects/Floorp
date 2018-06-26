@@ -198,7 +198,8 @@ PPresentationBuilderParent*
 PresentationParent::AllocPPresentationBuilderParent(const nsString& aSessionId,
                                                     const uint8_t& aRole)
 {
-  NS_NOTREACHED("We should never be manually allocating AllocPPresentationBuilderParent actors");
+  MOZ_ASSERT_UNREACHABLE("We should never be manually allocating "
+                         "AllocPPresentationBuilderParent actors");
   return nullptr;
 }
 

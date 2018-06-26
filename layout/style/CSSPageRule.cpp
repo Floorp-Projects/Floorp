@@ -56,13 +56,15 @@ CSSPageRuleDeclaration::GetParentObject()
 }
 
 DeclarationBlock*
-CSSPageRuleDeclaration::GetCSSDeclaration(Operation aOperation)
+CSSPageRuleDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
+                                                  DeclarationBlock** aCreated)
 {
   return mDecls;
 }
 
 nsresult
-CSSPageRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
+CSSPageRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl,
+                                          MutationClosureData* aClosureData)
 {
   MOZ_ASSERT(aDecl, "must be non-null");
   CSSPageRule* rule = Rule();

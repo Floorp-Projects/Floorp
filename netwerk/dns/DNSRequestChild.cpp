@@ -264,7 +264,7 @@ DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
     break;
   }
   default:
-    NS_NOTREACHED("unknown type");
+    MOZ_ASSERT_UNREACHABLE("unknown type");
     return IPC_FAIL_NO_REASON(this);
   }
 

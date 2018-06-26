@@ -36,7 +36,7 @@ namespace google_breakpad {
 
 // Minidump defines register structures which are different from the raw
 // structures which we get from the kernel. These are platform specific
-// functions to juggle the ucontext and user structures into minidump format.
+// functions to juggle the ucontext_t and user structures into minidump format.
 
 #if defined(__i386__)
 

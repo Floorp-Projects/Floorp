@@ -63,6 +63,7 @@ class nsDOMStringMap;
 
 namespace mozilla {
 class DeclarationBlock;
+struct MutationClosureData;
 class TextEditor;
 namespace css {
   struct URLValue;
@@ -324,12 +325,17 @@ public:
   }
 
   /**
-   * Set the inline style declaration for this element. This will send
-   * an appropriate AttributeChanged notification if aNotify is true.
+   * InlineStyleDeclarationWillChange is called before SetInlineStyleDeclaration
+   * so that the element implementation can access the old style attribute
+   * value.
    */
-  virtual nsresult SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
-                                             const nsAString* aSerialized,
-                                             bool aNotify);
+  virtual void InlineStyleDeclarationWillChange(MutationClosureData& aData);
+
+  /**
+   * Set the inline style declaration for this element.
+   */
+  virtual nsresult SetInlineStyleDeclaration(DeclarationBlock& aDeclaration,
+                                             MutationClosureData& aData);
 
   /**
    * Get the SMIL override style declaration for this element. If the

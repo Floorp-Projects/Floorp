@@ -21,12 +21,12 @@ class nsDisplayXULImage;
 class nsImageBoxListener final : public imgINotificationObserver
 {
 public:
-  nsImageBoxListener();
+  explicit nsImageBoxListener(nsImageBoxFrame *frame);
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
-  void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
+  void ClearFrame() { mFrame = nullptr; }
 
 private:
   virtual ~nsImageBoxListener();

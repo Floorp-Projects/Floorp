@@ -46,9 +46,6 @@ typedef _cairo_surface cairo_surface_t;
 struct _cairo_scaled_font;
 typedef _cairo_scaled_font cairo_scaled_font_t;
 
-struct _FcPattern;
-typedef _FcPattern FcPattern;
-
 struct FT_LibraryRec_;
 typedef FT_LibraryRec_* FT_Library;
 
@@ -1643,17 +1640,6 @@ public:
   static already_AddRefed<DrawTarget>
     CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
 
-  static already_AddRefed<ScaledFont>
-    CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
-                                  const RefPtr<UnscaledFont>& aUnscaledFont,
-                                  Float aSize);
-
-#ifdef MOZ_WIDGET_GTK
-  static already_AddRefed<ScaledFont>
-    CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
-                                      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
-#endif
-
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont>
     CreateScaledFontForMacFont(CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
@@ -1682,15 +1668,17 @@ public:
     CreateUnscaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
   /**
-   * This creates a scaled font with an associated cairo_scaled_font_t, and
-   * must be used when using the Cairo backend. The NativeFont and
-   * cairo_scaled_font_t* parameters must correspond to the same font.
+   * Creates a ScaledFont from the supplied NativeFont.
+   *
+   * If aScaledFont is supplied, this creates a scaled font with an associated
+   * cairo_scaled_font_t. The NativeFont and cairo_scaled_font_t* parameters must
+   * correspond to the same font.
    */
   static already_AddRefed<ScaledFont>
-    CreateScaledFontWithCairo(const NativeFont &aNativeFont,
-                              const RefPtr<UnscaledFont>& aUnscaledFont,
-                              Float aSize,
-                              cairo_scaled_font_t* aScaledFont);
+    CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
+                                  const RefPtr<UnscaledFont>& aUnscaledFont,
+                                  Float aSize,
+                                  cairo_scaled_font_t* aScaledFont = nullptr);
 
   /**
    * This creates a simple data source surface for a certain size. It allocates

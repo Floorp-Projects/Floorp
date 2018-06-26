@@ -248,7 +248,7 @@ txExprParser::createBinaryExpr(nsAutoPtr<Expr>& left, nsAutoPtr<Expr>& right,
             break;
 
         default:
-            NS_NOTREACHED("operator tokens should be already checked");
+            MOZ_ASSERT_UNREACHABLE("operator tokens should be already checked");
             return NS_ERROR_UNEXPECTED;
     }
     NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
@@ -712,7 +712,7 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
 
         expr.forget();
     }
-    NS_NOTREACHED("internal xpath parser error");
+    MOZ_ASSERT_UNREACHABLE("internal xpath parser error");
     return NS_ERROR_UNEXPECTED;
 }
 
@@ -846,7 +846,7 @@ txExprParser::parseParameters(FunctionCall* aFnCall, txExprLexer& lexer,
         }
     }
 
-    NS_NOTREACHED("internal xpath parser error");
+    MOZ_ASSERT_UNREACHABLE("internal xpath parser error");
     return NS_ERROR_UNEXPECTED;
 }
 

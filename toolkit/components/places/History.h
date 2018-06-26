@@ -216,7 +216,7 @@ private:
     KeyClass(const KeyClass& aOther)
     : nsURIHashKey(aOther)
     {
-      NS_NOTREACHED("Do not call me!");
+      MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     {
@@ -240,7 +240,7 @@ private:
     }
     RecentURIKey(const RecentURIKey& aOther) : nsURIHashKey(aOther)
     {
-      NS_NOTREACHED("Do not call me!");
+      MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }
     MOZ_INIT_OUTSIDE_CTOR PRTime time;
   };

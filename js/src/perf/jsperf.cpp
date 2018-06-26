@@ -200,10 +200,8 @@ pm_construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     PerfMeasurement* p = cx->new_<PerfMeasurement>(PerfMeasurement::EventMask(mask));
-    if (!p) {
-        JS_ReportOutOfMemory(cx);
+    if (!p)
         return false;
-    }
 
     JS_SetPrivate(obj, p);
     args.rval().setObject(*obj);

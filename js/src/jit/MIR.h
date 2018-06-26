@@ -4249,6 +4249,7 @@ class MCall
 
     bool needsArgCheck_:1;
     bool needsClassCheck_:1;
+    bool maybeCrossRealm_:1;
 
     MCall(WrappedFunction* target, uint32_t numActualArgs, bool construct, bool ignoresReturnValue)
       : MVariadicInstruction(classOpcode),
@@ -4257,7 +4258,8 @@ class MCall
         construct_(construct),
         ignoresReturnValue_(ignoresReturnValue),
         needsArgCheck_(true),
-        needsClassCheck_(true)
+        needsClassCheck_(true),
+        maybeCrossRealm_(true)
     {
         setResultType(MIRType::Value);
     }
@@ -4284,6 +4286,13 @@ class MCall
     }
     void disableClassCheck() {
         needsClassCheck_ = false;
+    }
+
+    bool maybeCrossRealm() const {
+        return maybeCrossRealm_;
+    }
+    void setNotCrossRealm() {
+        maybeCrossRealm_ = false;
     }
 
     MDefinition* getFunction() const {
