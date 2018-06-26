@@ -37,6 +37,8 @@ using mozilla::Swap;
 using JS::GenericNaN;
 using JS::ToInt32;
 
+// [SMDOC] IonMonkey Range Analysis
+//
 // This algorithm is based on the paper "Eliminating Range Checks Using
 // Static Single Assignment Form" by Gough and Klaren.
 //

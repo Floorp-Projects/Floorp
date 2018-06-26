@@ -15,6 +15,8 @@ namespace js {
 namespace jit {
 
 /*
+ * [SMDOC] Atomic Operations
+ *
  * The atomic operations layer defines types and functions for
  * JIT-compatible atomic operation.
  *

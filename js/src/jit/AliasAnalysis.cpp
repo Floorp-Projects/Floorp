@@ -116,6 +116,8 @@ IonSpewAliasInfo(const char* pre, MInstruction* ins, const char* post)
 #endif
 }
 
+// [SMDOC] IonMonkey Alias Analysis
+//
 // This pass annotates every load instruction with the last store instruction
 // on which it depends. The algorithm is optimistic in that it ignores explicit
 // dependencies and only considers loads and stores.

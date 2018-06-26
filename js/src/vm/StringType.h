@@ -44,7 +44,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 } /* namespace js */
 
 /*
- * JavaScript strings
+ * [SMDOC] JavaScript Strings
  *
  * Conceptually, a JS string is just an array of chars and a length. This array
  * of chars may or may not be null-terminated and, if it is, the null character

@@ -122,6 +122,8 @@ struct HashSymbolsByDescription
 };
 
 /*
+ * [SMDOC] Symbol.for() registry (ES6 GlobalSymbolRegistry)
+ *
  * The runtime-wide symbol registry, used to implement Symbol.for().
  *
  * ES6 draft rev 25 (2014 May 22) calls this the GlobalSymbolRegistry List. In
