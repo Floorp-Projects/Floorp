@@ -9,11 +9,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.v4.app.JobIntentService;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.mozilla.gecko.JobIdsConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -311,10 +313,12 @@ public class CommandProcessor {
     }
 
     final Intent sendTabNotificationIntent = new Intent();
-    sendTabNotificationIntent.setClassName(context, BrowserContract.TAB_RECEIVED_SERVICE_CLASS_NAME);
     sendTabNotificationIntent.setData(Uri.parse(uri));
     sendTabNotificationIntent.putExtra(Intent.EXTRA_TITLE, title);
     sendTabNotificationIntent.putExtra(BrowserContract.EXTRA_CLIENT_GUID, clientId);
-    final ComponentName componentName = context.startService(sendTabNotificationIntent);
+    final ComponentName componentName = new ComponentName(context, BrowserContract.TAB_RECEIVED_SERVICE_CLASS_NAME);
+    final int tabReceivedServiceJobId = JobIdsConstants.getIdForTabReceivedJob();
+
+    JobIntentService.enqueueWork(context, componentName, tabReceivedServiceJobId, sendTabNotificationIntent);
   }
 }
