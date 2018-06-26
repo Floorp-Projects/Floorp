@@ -7,12 +7,12 @@
 
 async function ifWebGLSupported() {
   const { target, debuggee, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  const { EVENTS, front, ShadersListView, ShadersEditorsView } = panel;
+  const { EVENTS, gFront, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
   const [[programActor]] = await promise.all([
-    getPrograms(front, 1),
-    once(panel, EVENTS.SOURCES_SHOWN)
+    getPrograms(gFront, 1),
+    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
   const programItem = ShadersListView.selectedItem;

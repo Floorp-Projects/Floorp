@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { WebGLFront } = require("devtools/shared/fronts/webgl");
-const { EventsHandler, ShadersListView, ShadersEditorsView, EVENTS, $, L10N } =
-  require("./shadereditor");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-function ShaderEditorPanel(toolbox) {
+function ShaderEditorPanel(iframeWindow, toolbox) {
+  this.panelWin = iframeWindow;
   this._toolbox = toolbox;
   this._destroyer = null;
-  this.panelWin = window;
 
   EventEmitter.decorate(this);
 }
@@ -21,36 +21,37 @@ function ShaderEditorPanel(toolbox) {
 exports.ShaderEditorPanel = ShaderEditorPanel;
 
 ShaderEditorPanel.prototype = {
-
-  // Expose symbols for tests:
-  EVENTS,
-  $,
-  L10N,
-
   /**
    * Open is effectively an asynchronous constructor.
    *
    * @return object
    *         A promise that is resolved when the Shader Editor completes opening.
    */
-  async open() {
+  open: function() {
+    let targetPromise;
+
     // Local debugging needs to make the target remote.
     if (!this.target.isRemote) {
-      await this.target.makeRemote();
+      targetPromise = this.target.makeRemote();
+    } else {
+      targetPromise = promise.resolve(this.target);
     }
 
-    this.front = new WebGLFront(this.target.client, this.target.form);
-    this.shadersListView = new ShadersListView();
-    this.eventsHandler = new EventsHandler();
-    this.shadersEditorsView = new ShadersEditorsView();
-    await this.shadersListView.initialize(this._toolbox, this.shadersEditorsView);
-    await this.eventsHandler.initialize(this, this._toolbox, this.target, this.front,
-                                        this.shadersListView);
-    await this.shadersEditorsView.initialize(this, this.shadersListView);
-
-    this.isReady = true;
-    this.emit("ready");
-    return this;
+    return targetPromise
+      .then(() => {
+        this.panelWin.gToolbox = this._toolbox;
+        this.panelWin.gTarget = this.target;
+        this.panelWin.gFront = new WebGLFront(this.target.client, this.target.form);
+        return this.panelWin.startupShaderEditor();
+      })
+      .then(() => {
+        this.isReady = true;
+        this.emit("ready");
+        return this;
+      })
+      .catch(function onError(aReason) {
+        DevToolsUtils.reportException("ShaderEditorPanel.prototype.open", aReason);
+      });
   },
 
   // DevToolPanel API
@@ -59,19 +60,16 @@ ShaderEditorPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy() {
+  destroy: function() {
     // Make sure this panel is not already destroyed.
     if (this._destroyer) {
       return this._destroyer;
     }
 
-    return (this._destroyer = (async () => {
-      await this.shadersListView.destroy();
-      await this.eventsHandler.destroy();
-      await this.shadersEditorsView.destroy();
+    return (this._destroyer = this.panelWin.shutdownShaderEditor().then(() => {
       // Destroy front to ensure packet handler is removed from client
-      this.front.destroy();
+      this.panelWin.gFront.destroy();
       this.emit("destroyed");
-    })());
+    }));
   }
 };

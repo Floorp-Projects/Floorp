@@ -3,8 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* exported startupShaderEditor, shutdownShaderEditor */
+
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {SideMenuWidget} = require("devtools/client/shared/widgets/SideMenuWidget.jsm");
+const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
@@ -15,6 +18,11 @@ const {LocalizationHelper} = require("devtools/shared/l10n");
 const {extend} = require("devtools/shared/extend");
 const {WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
+
+// Use privileged promise in panel documents to prevent having them to freeze
+// during toolbox destruction. See bug 1402779.
+// eslint-disable-next-line no-unused-vars
+const Promise = require("Promise");
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {
@@ -34,7 +42,7 @@ const EVENTS = {
   // When the editor's error markers are all removed
   EDITOR_ERROR_MARKERS_REMOVED: "ShaderEditor:EditorCleaned"
 };
-exports.EVENTS = EVENTS;
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 const STRINGS_URI = "devtools/client/locales/shadereditor.properties";
 const HIGHLIGHT_TINT = [1, 0, 0.25, 1]; // rgba
@@ -49,69 +57,88 @@ const DEFAULT_EDITOR_CONFIG = {
 };
 
 /**
+ * The current target and the WebGL Editor front, set by this tool's host.
+ */
+var gToolbox, gTarget, gFront;
+
+/**
+ * Initializes the shader editor controller and views.
+ */
+function startupShaderEditor() {
+  return promise.all([
+    EventsHandler.initialize(),
+    ShadersListView.initialize(),
+    ShadersEditorsView.initialize()
+  ]);
+}
+
+/**
+ * Destroys the shader editor controller and views.
+ */
+function shutdownShaderEditor() {
+  return promise.all([
+    EventsHandler.destroy(),
+    ShadersListView.destroy(),
+    ShadersEditorsView.destroy()
+  ]);
+}
+
+/**
  * Functions handling target-related lifetime events.
  */
-class EventsHandler {
+var EventsHandler = {
   /**
    * Listen for events emitted by the current tab target.
    */
-  initialize(panel, toolbox, target, front, shadersListView) {
-    this.panel = panel;
-    this.toolbox = toolbox;
-    this.target = target;
-    this.front = front;
-    this.shadersListView = shadersListView;
-
+  initialize: function() {
     this._onHostChanged = this._onHostChanged.bind(this);
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
     this._onProgramLinked = this._onProgramLinked.bind(this);
     this._onProgramsAdded = this._onProgramsAdded.bind(this);
-
-    this.toolbox.on("host-changed", this._onHostChanged);
-    this.target.on("will-navigate", this._onTabWillNavigate);
-    this.target.on("navigate", this._onTabNavigated);
-    this.front.on("program-linked", this._onProgramLinked);
+    gToolbox.on("host-changed", this._onHostChanged);
+    gTarget.on("will-navigate", this._onTabWillNavigate);
+    gTarget.on("navigate", this._onTabNavigated);
+    gFront.on("program-linked", this._onProgramLinked);
     this.reloadButton = $("#requests-menu-reload-notice-button");
-    this._onReloadCommand = this._onReloadCommand.bind(this);
     this.reloadButton.addEventListener("command", this._onReloadCommand);
-  }
+  },
 
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy() {
-    this.toolbox.off("host-changed", this._onHostChanged);
-    this.target.off("will-navigate", this._onTabWillNavigate);
-    this.target.off("navigate", this._onTabNavigated);
-    this.front.off("program-linked", this._onProgramLinked);
+  destroy: function() {
+    gToolbox.off("host-changed", this._onHostChanged);
+    gTarget.off("will-navigate", this._onTabWillNavigate);
+    gTarget.off("navigate", this._onTabNavigated);
+    gFront.off("program-linked", this._onProgramLinked);
     this.reloadButton.removeEventListener("command", this._onReloadCommand);
-  }
+  },
 
   /**
    * Handles a command event on reload button
    */
   _onReloadCommand() {
-    this.front.setup({ reload: true });
-  }
+    gFront.setup({ reload: true });
+  },
 
   /**
    * Handles a host change event on the parent toolbox.
    */
-  _onHostChanged() {
-    if (this.toolbox.hostType == "right" || this.toolbox.hostType == "left") {
+  _onHostChanged: function() {
+    if (gToolbox.hostType == "right" || gToolbox.hostType == "left") {
       $("#shaders-pane").removeAttribute("height");
     }
-  }
+  },
 
-  _onTabWillNavigate({isFrameSwitching}) {
+  _onTabWillNavigate: function({isFrameSwitching}) {
     // Make sure the backend is prepared to handle WebGL contexts.
     if (!isFrameSwitching) {
-      this.front.setup({ reload: false });
+      gFront.setup({ reload: false });
     }
 
     // Reset UI.
-    this.shadersListView.empty();
+    ShadersListView.empty();
     // When switching to an iframe, ensure displaying the reload button.
     // As the document has already been loaded without being hooked.
     if (isFrameSwitching) {
@@ -123,61 +150,55 @@ class EventsHandler {
     }
 
     $("#content").hidden = true;
-    this.panel.emit(EVENTS.UI_RESET);
-  }
+    window.emit(EVENTS.UI_RESET);
+  },
 
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated() {
+  _onTabNavigated: function() {
     // Manually retrieve the list of program actors known to the server,
     // because the backend won't emit "program-linked" notifications
     // in the case of a bfcache navigation (since no new programs are
     // actually linked).
-    this.front.getPrograms().then(this._onProgramsAdded);
-  }
+    gFront.getPrograms().then(this._onProgramsAdded);
+  },
 
   /**
    * Called every time a program was linked in the debugged tab.
    */
-  _onProgramLinked(programActor) {
+  _onProgramLinked: function(programActor) {
     this._addProgram(programActor);
-    this.panel.emit(EVENTS.NEW_PROGRAM);
-  }
+    window.emit(EVENTS.NEW_PROGRAM);
+  },
 
   /**
    * Callback for the front's getPrograms() method.
    */
-  _onProgramsAdded(programActors) {
-    programActors.forEach(this._addProgram.bind(this));
-    this.panel.emit(EVENTS.PROGRAMS_ADDED);
-  }
+  _onProgramsAdded: function(programActors) {
+    programActors.forEach(this._addProgram);
+    window.emit(EVENTS.PROGRAMS_ADDED);
+  },
 
   /**
    * Adds a program to the shaders list and unhides any modal notices.
    */
-  _addProgram(programActor) {
+  _addProgram: function(programActor) {
     $("#waiting-notice").hidden = true;
     $("#reload-notice").hidden = true;
     $("#content").hidden = false;
-    this.shadersListView.addProgram(programActor);
+    ShadersListView.addProgram(programActor);
   }
-}
-exports.EventsHandler = EventsHandler;
+};
 
 /**
  * Functions handling the sources UI.
  */
-function WidgetMethodsClass() {
-}
-WidgetMethodsClass.prototype = WidgetMethods;
-class ShadersListView extends WidgetMethodsClass {
+var ShadersListView = extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize(toolbox, shadersEditorsView) {
-    this.toolbox = toolbox;
-    this.shadersEditorsView = shadersEditorsView;
+  initialize: function() {
     this.widget = new SideMenuWidget(this._pane = $("#shaders-pane"), {
       showArrows: true,
       showItemCheckboxes: true
@@ -192,17 +213,17 @@ class ShadersListView extends WidgetMethodsClass {
     this.widget.addEventListener("check", this._onProgramCheck);
     this.widget.addEventListener("mouseover", this._onProgramMouseOver, true);
     this.widget.addEventListener("mouseout", this._onProgramMouseOut, true);
-  }
+  },
 
   /**
    * Destruction function, called when the tool is closed.
    */
-  destroy() {
+  destroy: function() {
     this.widget.removeEventListener("select", this._onProgramSelect);
     this.widget.removeEventListener("check", this._onProgramCheck);
     this.widget.removeEventListener("mouseover", this._onProgramMouseOver, true);
     this.widget.removeEventListener("mouseout", this._onProgramMouseOut, true);
-  }
+  },
 
   /**
    * Adds a program to this programs container.
@@ -210,7 +231,7 @@ class ShadersListView extends WidgetMethodsClass {
    * @param object programActor
    *        The program actor coming from the active thread.
    */
-  addProgram(programActor) {
+  addProgram: function(programActor) {
     if (this.hasProgram(programActor)) {
       return;
     }
@@ -244,11 +265,11 @@ class ShadersListView extends WidgetMethodsClass {
 
     // Prevent this container from growing indefinitely in height when the
     // toolbox is docked to the side.
-    if ((this.toolbox.hostType == "left" || this.toolbox.hostType == "right") &&
+    if ((gToolbox.hostType == "left" || gToolbox.hostType == "right") &&
         this.itemCount == SHADERS_AUTOGROW_ITEMS) {
       this._pane.setAttribute("height", this._pane.getBoundingClientRect().height);
     }
-  }
+  },
 
   /**
    * Returns whether a program was already added to this programs container.
@@ -258,14 +279,14 @@ class ShadersListView extends WidgetMethodsClass {
    * @param boolean
    *        True if the program was added, false otherwise.
    */
-  hasProgram(programActor) {
+  hasProgram: function(programActor) {
     return !!this.attachments.filter(e => e.programActor == programActor).length;
-  }
+  },
 
   /**
    * The select listener for the programs container.
    */
-  _onProgramSelect({ detail: sourceItem }) {
+  _onProgramSelect: function({ detail: sourceItem }) {
     if (!sourceItem) {
       return;
     }
@@ -284,33 +305,33 @@ class ShadersListView extends WidgetMethodsClass {
         fragmentShaderActor.getText()
       ]);
     }
-    const showSources = ([vertexShaderText, fragmentShaderText]) => {
-      return this.shadersEditorsView.setText({
+    function showSources([vertexShaderText, fragmentShaderText]) {
+      return ShadersEditorsView.setText({
         vs: vertexShaderText,
         fs: fragmentShaderText
       });
-    };
+    }
 
     getShaders()
       .then(getSources)
       .then(showSources)
       .catch(console.error);
-  }
+  },
 
   /**
    * The check listener for the programs container.
    */
-  _onProgramCheck({ detail: { checked }, target }) {
+  _onProgramCheck: function({ detail: { checked }, target }) {
     const sourceItem = this.getItemForElement(target);
     const attachment = sourceItem.attachment;
     attachment.isBlackBoxed = !checked;
     attachment.programActor[checked ? "unblackbox" : "blackbox"]();
-  }
+  },
 
   /**
    * The mouseover listener for the programs container.
    */
-  _onProgramMouseOver(e) {
+  _onProgramMouseOver: function(e) {
     const sourceItem = this.getItemForElement(e.target, { noSiblings: true });
     if (sourceItem && !sourceItem.attachment.isBlackBoxed) {
       sourceItem.attachment.programActor.highlight(HIGHLIGHT_TINT);
@@ -320,12 +341,12 @@ class ShadersListView extends WidgetMethodsClass {
         e.stopPropagation();
       }
     }
-  }
+  },
 
   /**
    * The mouseout listener for the programs container.
    */
-  _onProgramMouseOut(e) {
+  _onProgramMouseOut: function(e) {
     const sourceItem = this.getItemForElement(e.target, { noSiblings: true });
     if (sourceItem && !sourceItem.attachment.isBlackBoxed) {
       sourceItem.attachment.programActor.unhighlight();
@@ -336,42 +357,34 @@ class ShadersListView extends WidgetMethodsClass {
       }
     }
   }
-}
-exports.ShadersListView = ShadersListView;
+});
 
 /**
  * Functions handling the editors displaying the vertex and fragment shaders.
  */
-class ShadersEditorsView {
+var ShadersEditorsView = {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize(panel, shadersListView) {
-    this.panel = panel;
-    this.shadersListView = shadersListView;
+  initialize: function() {
     XPCOMUtils.defineLazyGetter(this, "_editorPromises", () => new Map());
     this._vsFocused = this._onFocused.bind(this, "vs", "fs");
     this._fsFocused = this._onFocused.bind(this, "fs", "vs");
     this._vsChanged = this._onChanged.bind(this, "vs");
     this._fsChanged = this._onChanged.bind(this, "fs");
-
-    this._errors = {
-      vs: [],
-      fs: []
-    };
-  }
+  },
 
   /**
    * Destruction function, called when the tool is closed.
    */
-  async destroy() {
+  destroy: Task.async(function* () {
     this._destroyed = true;
-    await this._toggleListeners("off");
+    yield this._toggleListeners("off");
     for (const p of this._editorPromises.values()) {
-      const editor = await p;
+      const editor = yield p;
       editor.destroy();
     }
-  }
+  }),
 
   /**
    * Sets the text displayed in the vertex and fragment shader editors.
@@ -383,7 +396,7 @@ class ShadersEditorsView {
    * @return object
    *        A promise resolving upon completion of text setting.
    */
-  setText(sources) {
+  setText: function(sources) {
     const view = this;
     function setTextAndClearHistory(editor, text) {
       editor.setText(text);
@@ -397,8 +410,8 @@ class ShadersEditorsView {
         view._getEditor("fs").then(e => setTextAndClearHistory(e, sources.fs))
       ]);
       await view._toggleListeners("on");
-    })().then(() => this.panel.emit(EVENTS.SOURCES_SHOWN, sources));
-  }
+    })().then(() => window.emit(EVENTS.SOURCES_SHOWN, sources));
+  },
 
   /**
    * Lazily initializes and returns a promise for an Editor instance.
@@ -409,7 +422,7 @@ class ShadersEditorsView {
    * @return object
    *        Returns a promise that resolves to an editor instance
    */
-  _getEditor(type) {
+  _getEditor: function(type) {
     if (this._editorPromises.has(type)) {
       return this._editorPromises.get(type);
     }
@@ -430,7 +443,7 @@ class ShadersEditorsView {
     }
 
     return deferred.promise;
-  }
+  },
 
   /**
    * Toggles all the event listeners for the editors either on or off.
@@ -440,14 +453,14 @@ class ShadersEditorsView {
    * @return object
    *        A promise resolving upon completion of toggling the listeners.
    */
-  _toggleListeners(flag) {
+  _toggleListeners: function(flag) {
     return promise.all(["vs", "fs"].map(type => {
       return this._getEditor(type).then(editor => {
         editor[flag]("focus", this["_" + type + "Focused"]);
         editor[flag]("change", this["_" + type + "Changed"]);
       });
     }));
-  }
+  },
 
   /**
    * The focus listener for a source editor.
@@ -457,10 +470,10 @@ class ShadersEditorsView {
    * @param string focused
    *        The corresponding shader type for the other editor (e.g. "fs").
    */
-  _onFocused(focused, unfocused) {
+  _onFocused: function(focused, unfocused) {
     $("#" + focused + "-editor-label").setAttribute("selected", "");
     $("#" + unfocused + "-editor-label").removeAttribute("selected");
-  }
+  },
 
   /**
    * The change listener for a source editor.
@@ -468,12 +481,12 @@ class ShadersEditorsView {
    * @param string type
    *        The corresponding shader type for the focused editor (e.g. "vs").
    */
-  _onChanged(type) {
+  _onChanged: function(type) {
     setNamedTimeout("gl-typed", TYPING_MAX_DELAY, () => this._doCompile(type));
 
     // Remove all the gutter markers and line classes from the editor.
     this._cleanEditor(type);
-  }
+  },
 
   /**
    * Recompiles the source code for the shader being edited.
@@ -482,10 +495,10 @@ class ShadersEditorsView {
    * @param string type
    *        The corresponding shader type for the focused editor (e.g. "vs").
    */
-  _doCompile(type) {
+  _doCompile: function(type) {
     (async function() {
       const editor = await this._getEditor(type);
-      const shaderActor = await this.shadersListView.selectedAttachment[type];
+      const shaderActor = await ShadersListView.selectedAttachment[type];
 
       try {
         await shaderActor.compile(editor.getText());
@@ -494,20 +507,20 @@ class ShadersEditorsView {
         this._onFailedCompilation(type, editor, e);
       }
     }.bind(this))();
-  }
+  },
 
   /**
    * Called uppon a successful shader compilation.
    */
-  _onSuccessfulCompilation() {
+  _onSuccessfulCompilation: function() {
     // Signal that the shader was compiled successfully.
-    this.panel.emit(EVENTS.SHADER_COMPILED, null);
-  }
+    window.emit(EVENTS.SHADER_COMPILED, null);
+  },
 
   /**
    * Called uppon an unsuccessful shader compilation.
    */
-  _onFailedCompilation(type, editor, errors) {
+  _onFailedCompilation: function(type, editor, errors) {
     const lineCount = editor.lineCount();
     const currentLine = editor.getCursor().line;
     const listeners = { mouseover: this._onMarkerMouseOver };
@@ -568,13 +581,13 @@ class ShadersEditorsView {
       .forEach(displayErrors);
 
     // Signal that the shader wasn't compiled successfully.
-    this.panel.emit(EVENTS.SHADER_COMPILED, errors);
-  }
+    window.emit(EVENTS.SHADER_COMPILED, errors);
+  },
 
   /**
    * Event listener for the 'mouseover' event on a marker in the editor gutter.
    */
-  _onMarkerMouseOver(line, node, messages) {
+  _onMarkerMouseOver: function(line, node, messages) {
     if (node._markerErrorsTooltip) {
       return;
     }
@@ -585,30 +598,37 @@ class ShadersEditorsView {
     tooltip.startTogglingOnHover(node, () => true, {
       toggleDelay: GUTTER_ERROR_PANEL_DELAY
     });
-  }
+  },
 
   /**
    * Removes all the gutter markers and line classes from the editor.
    */
-  _cleanEditor(type) {
+  _cleanEditor: function(type) {
     this._getEditor(type).then(editor => {
       editor.removeAllMarkers("errors");
       this._errors[type].forEach(e => editor.removeLineClass(e.line));
       this._errors[type].length = 0;
-      this.panel.emit(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+      window.emit(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
     });
+  },
+
+  _errors: {
+    vs: [],
+    fs: []
   }
-}
-exports.ShadersEditorsView = ShadersEditorsView;
+};
 
 /**
  * Localization convenience methods.
  */
 var L10N = new LocalizationHelper(STRINGS_URI);
-exports.L10N = L10N;
+
+/**
+ * Convenient way of emitting events from the panel window.
+ */
+EventEmitter.decorate(this);
 
 /**
  * DOM query helper.
  */
 var $ = (selector, target = document) => target.querySelector(selector);
-exports.$ = $;
