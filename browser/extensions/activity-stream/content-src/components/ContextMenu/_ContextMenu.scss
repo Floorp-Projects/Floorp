@@ -5,7 +5,7 @@
   display: block;
   font-size: $context-menu-font-size;
   margin-inline-start: 5px;
-  offset-inline-start: 100%;
+  inset-inline-start: 100%;
   position: absolute;
   top: ($context-menu-button-size / 4);
   z-index: 10000;

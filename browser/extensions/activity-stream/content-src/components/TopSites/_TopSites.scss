@@ -173,7 +173,7 @@ $half-base-gutter: $base-gutter / 2;
   .rich-icon {
     background-size: cover;
     height: 100%;
-    offset-inline-start: 0;
+    inset-inline-start: 0;
     top: 0;
     width: 100%;
   }
@@ -182,7 +182,7 @@ $half-base-gutter: $base-gutter / 2;
     background-size: $default-icon-size;
     bottom: -$default-icon-offset;
     height: $default-icon-wrapper-size;
-    offset-inline-end: -$default-icon-offset;
+    inset-inline-end: -$default-icon-offset;
     width: $default-icon-wrapper-size;
 
     // for corner letter fallback
@@ -207,7 +207,7 @@ $half-base-gutter: $base-gutter / 2;
 
     .icon {
       fill: var(--newtab-icon-tertiary-color);
-      offset-inline-start: 0;
+      inset-inline-start: 0;
       position: absolute;
       top: 10px;
     }
@@ -323,7 +323,7 @@ $half-base-gutter: $base-gutter / 2;
         position: absolute;
         transform: translateY(-50%);
         top: 50%;
-        offset-inline-end: 8px;
+        inset-inline-end: 8px;
       }
     }
 
@@ -363,7 +363,7 @@ $half-base-gutter: $base-gutter / 2;
         position: absolute;
         transform: translateY(-50%);
         top: 50%;
-        offset-inline-end: 8px;
+        inset-inline-end: 8px;
       }
 
       // This animation is derived from Firefox's tab loading animation
@@ -427,7 +427,7 @@ $half-base-gutter: $base-gutter / 2;
       background: $red-60;
       border-radius: 2px;
       color: $white;
-      offset-inline-start: 3px;
+      inset-inline-start: 3px;
       padding: 5px 12px;
       position: absolute;
       top: 44px;
@@ -439,7 +439,7 @@ $half-base-gutter: $base-gutter / 2;
         bottom: -8px;
         content: '.';
         height: 16px;
-        offset-inline-start: 12px;
+        inset-inline-start: 12px;
         position: absolute;
         text-indent: -999px;
         top: -7px;

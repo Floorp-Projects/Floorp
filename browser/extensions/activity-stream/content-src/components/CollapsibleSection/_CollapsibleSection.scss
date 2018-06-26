@@ -40,7 +40,7 @@
       cursor: pointer;
       fill: var(--newtab-section-header-text-color);
       height: 100%;
-      offset-inline-end: 0;
+      inset-inline-end: 0;
       opacity: 0;
       position: absolute;
       top: 0;
@@ -116,7 +116,7 @@
       margin-top: 2px;
       max-width: $max-button-width;
       min-height: $min-button-height;
-      offset-inline-end: 0;
+      inset-inline-end: 0;
 
       &:hover:not(.dismiss) {
         box-shadow: $shadow-primary;

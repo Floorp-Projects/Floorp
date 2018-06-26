@@ -92,7 +92,7 @@ It's recommended to use SVG since it keeps the CSS clean when supporting multipl
 ### Text Direction
 * For margins, padding and borders, use `inline-start`/`inline-end` rather than `left`/`right`.
  * Example: Use `margin-inline-start: 3px;` not `margin-left: 3px`.
-* For RTL-aware positioning (left/right), use `offset-inline-start/end`.
+* For RTL-aware positioning (left/right), use `inset-inline-start/end`.
 * When there is no special RTL-aware property (eg. `float: left|right`) available, use the pseudo `:-moz-locale-dir(ltr|rtl)` (for XUL files) or `:dir(ltr|rtl)` (for HTML files).
 * Remember that while a tab content's scrollbar still shows on the right in RTL, an overflow scrollbar will show on the left.
 * Write `padding: 0 3px 4px;` instead of `padding: 0 3px 4px 3px;`. This makes it more obvious that the padding is symmetrical (so RTL won't be an issue).

@@ -546,8 +546,8 @@
   width: 16px;
   height: 16px;
   position: absolute;
-  offset-inline-start: 3px;
-  offset-block-start: 3px;
+  inset-inline-start: 3px;
+  inset-block-start: 3px;
   box-shadow: 0px 0px 0px black;
   border: solid 1px #fff;
 }

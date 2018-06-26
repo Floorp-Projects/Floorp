@@ -150,7 +150,7 @@
     color: var(--newtab-text-secondary-color);
     display: flex;
     font-size: 11px;
-    offset-inline-start: 0;
+    inset-inline-start: 0;
     padding: 9px 16px 9px 14px;
     position: absolute;
   }
@@ -264,8 +264,8 @@
       width: $container-size;
       padding: ($container-size - $icon-size) / 2;
       top: $card-preview-image-height-compact - $icon-size;
-      offset-inline-end: 12px;
-      offset-inline-start: auto;
+      inset-inline-end: 12px;
+      inset-inline-start: auto;
 
       &::after {
         border: 1px solid var(--newtab-card-hairline-color);
