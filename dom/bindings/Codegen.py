@@ -12923,10 +12923,8 @@ class CGDictionary(CGThing):
 
     def assignmentOperator(self):
         body = CGList([])
-        if self.dictionary.parent:
-            body.append(CGGeneric(
-                "%s::operator=(aOther);\n" %
-                self.makeClassName(self.dictionary.parent)))
+        body.append(CGGeneric("%s::operator=(aOther);\n" % self.base()))
+
         for m, _ in self.memberInfo:
             memberName = self.makeMemberName(m.identifier.name)
             if m.canHaveMissingValue():
@@ -17149,12 +17147,12 @@ class GlobalGenRoots():
     @staticmethod
     def ResolveSystemBinding(config):
         curr = CGList([], "\n")
-        
+
         descriptors = config.getDescriptors(hasInterfaceObject=True,
                                             isExposedInSystemGlobals=True,
                                             register=True)
         properties = [desc.name for desc in descriptors]
-        
+
         curr.append(CGStringTable("IdString", properties, static=True))
 
         initValues = []
@@ -17173,7 +17171,7 @@ class GlobalGenRoots():
               ProtoGetter define;
               PinnedStringId id;
             };
-          
+
             static SystemProperty properties[] = {
               $*{init}
             };
