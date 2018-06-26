@@ -29,7 +29,6 @@ if CONFIG['MOZ_PLACES']:
     EXPORTS.mozilla.places = [
         'Database.h',
         'History.h',
-        'INativePlacesEventCallback.h',
         'Shutdown.h',
     ]
 

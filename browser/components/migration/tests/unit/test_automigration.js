@@ -631,6 +631,9 @@ add_task(async function checkUndoVisitsState() {
   let observer = {
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
+    onVisits(visits) {
+      wrongMethodDeferred.reject(new Error("Unexpected call to onVisits " + visits.length));
+    },
     onTitleChanged(uri) {
       wrongMethodDeferred.reject(new Error("Unexpected call to onTitleChanged " + uri.spec));
     },

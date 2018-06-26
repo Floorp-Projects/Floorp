@@ -80,47 +80,48 @@ TitleChangedObserver.prototype = {
 
 /**
  * Listens for a visit notification, and calls aCallback when it gets it.
+ *
+ * @param aURI
+ *        The URI of the page we expect a notification for.
+ * @param aCallback
+ *        The method to call when we have gotten the proper notification about
+ *        being visited.
  */
-class VisitObserver {
-  constructor(aURI,
-              aGUID,
-              aCallback) {
-    this.uri = aURI;
-    this.guid = aGUID;
-    this.callback = aCallback;
-    this.handlePlacesEvent = this.handlePlacesEvent.bind(this);
-    PlacesObservers.addListener(["page-visited"], this.handlePlacesEvent);
-  }
-
-  handlePlacesEvent(aEvents) {
-    info("'page-visited'!!!");
-    Assert.equal(aEvents.length, 1, "Right number of visits notified");
-    Assert.equal(aEvents[0].type, "page-visited");
+function VisitObserver(aURI,
+                       aGUID,
+                       aCallback) {
+  this.uri = aURI;
+  this.guid = aGUID;
+  this.callback = aCallback;
+}
+VisitObserver.prototype = {
+  __proto__: NavHistoryObserver.prototype,
+  onVisits(aVisits) {
+    info("onVisits()!!!");
+    Assert.equal(aVisits.length, 1, "Right number of visits notified");
     let {
-      url,
+      uri,
       visitId,
-      visitTime,
-      referringVisitId,
+      time,
+      referrerId,
       transitionType,
-      pageGuid,
+      guid,
       hidden,
       visitCount,
-      typedCount,
+      typed,
       lastKnownTitle,
-    } = aEvents[0];
+    } = aVisits[0];
     let args = [
-      visitId, visitTime, referringVisitId, transitionType, pageGuid,
-      hidden, visitCount, typedCount, lastKnownTitle,
+      visitId, time, referrerId, transitionType, guid,
+      hidden, visitCount, typed, lastKnownTitle,
     ];
-    info("'page-visited' (" + url + args.join(", ") + ")");
-    if (this.uri.spec != url || this.guid != pageGuid) {
+    info("onVisit(" + uri.spec + args.join(", ") + ")");
+    if (!this.uri.equals(uri) || this.guid != guid) {
       return;
     }
-    this.callback(visitTime * 1000, transitionType, lastKnownTitle);
-
-    PlacesObservers.removeListener(["page-visited"], this.handlePlacesEvent);
-  }
-}
+    this.callback(time, transitionType, lastKnownTitle);
+  },
+};
 
 /**
  * Tests that a title was set properly in the database.
@@ -983,15 +984,15 @@ add_task(async function test_title_change_notifies() {
   });
 
   let visitPromise = new Promise(resolve => {
-    function onVisits(events) {
-      Assert.equal(events.length, 1, "Should only get notified for one visit.");
-      Assert.equal(events[0].type, "page-visited");
-      let {url} = events[0];
-      Assert.equal(url, place.uri.spec, "Should get notified for visiting the new URI.");
-      PlacesObservers.removeListener(["page-visited"], onVisits);
-      resolve();
-    }
-    PlacesObservers.addListener(["page-visited"], onVisits);
+    PlacesUtils.history.addObserver({
+      onVisits(visits) {
+        Assert.equal(visits.length, 1, "Should only get notified for one visit.");
+        let {uri} = visits[0];
+        Assert.equal(uri.spec, place.uri.spec, "Should get notified for visiting the new URI.");
+        PlacesUtils.history.removeObserver(this);
+        resolve();
+      }
+    });
   });
   asyncHistory.updatePlaces(place);
   await visitPromise;
@@ -1027,15 +1028,17 @@ add_task(async function test_visit_notifies() {
           resolve();
         }
       };
-      new VisitObserver(place.uri, place.guid,
+      let visitObserver = new VisitObserver(place.uri, place.guid,
                                             function(aVisitDate,
                                                      aTransitionType) {
         let visit = place.visits[0];
         Assert.equal(visit.visitDate, aVisitDate);
         Assert.equal(visit.transitionType, aTransitionType);
 
+        PlacesUtils.history.removeObserver(visitObserver);
         finisher();
       });
+      PlacesUtils.history.addObserver(visitObserver);
       let observer = function(aSubject, aTopic, aData) {
         info("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
         Assert.ok(aSubject instanceof Ci.nsIURI);
@@ -1266,14 +1269,16 @@ add_task(async function test_title_on_initial_visit() {
     guid: "mnopqrstuvwx",
   };
   let visitPromise = new Promise(resolve => {
-    new VisitObserver(place.uri, place.guid,
-                      function(aVisitDate,
-                               aTransitionType,
-                               aLastKnownTitle) {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
       Assert.equal(place.title, aLastKnownTitle);
 
+      PlacesUtils.history.removeObserver(visitObserver);
       resolve();
     });
+    PlacesUtils.history.addObserver(visitObserver);
   });
   await promiseUpdatePlaces(place);
   await visitPromise;
@@ -1288,14 +1293,16 @@ add_task(async function test_title_on_initial_visit() {
     guid: "fghijklmnopq",
   };
   visitPromise = new Promise(resolve => {
-    new VisitObserver(place.uri, place.guid,
-                      function(aVisitDate,
-                               aTransitionType,
-                               aLastKnownTitle) {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
       Assert.equal(place.title, aLastKnownTitle);
 
+      PlacesUtils.history.removeObserver(visitObserver);
       resolve();
     });
+    PlacesUtils.history.addObserver(visitObserver);
   });
   await promiseUpdatePlaces(place);
   await visitPromise;
@@ -1309,14 +1316,16 @@ add_task(async function test_title_on_initial_visit() {
     guid: "fghijklmnopq",
   };
   visitPromise = new Promise(resolve => {
-    new VisitObserver(place.uri, place.guid,
-                      function(aVisitDate,
-                               aTransitionType,
-                               aLastKnownTitle) {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
       Assert.equal(null, aLastKnownTitle);
 
+      PlacesUtils.history.removeObserver(visitObserver);
       resolve();
     });
+    PlacesUtils.history.addObserver(visitObserver);
   });
   await promiseUpdatePlaces(place);
   await visitPromise;
