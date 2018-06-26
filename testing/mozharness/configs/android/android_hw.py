@@ -1,5 +1,31 @@
 import os
 
+
+def WebglSuite(name):
+    return {
+        "run_filename": "runtestsremote.py",
+        "testsdir": "mochitest",
+        "options": [
+            "--app=%(app)s",
+            "--remote-webserver=%(remote_webserver)s",
+            "--xre-path=%(xre_path)s",
+            "--utility-path=%(utility_path)s",
+            "--http-port=%(http_port)s",
+            "--ssl-port=%(ssl_port)s",
+            "--certificate-path=%(certs_path)s",
+            "--symbols-path=%(symbols_path)s",
+            "--quiet",
+            "--log-raw=%(raw_log_file)s",
+            "--log-raw-level=%(log_raw_level)s",
+            "--log-errorsummary=%(error_summary_file)s",
+            "--log-tbpl-level=%(log_tbpl_level)s",
+            "--screenshot-on-fail",
+            "--subsuite=" + name,
+            "--deviceSerial=%(device_serial)s",
+        ]
+    }
+
+
 config = {
     "robocop_package_name": "org.mozilla.roboexample.test",
     "marionette_address": "%(device_ip)s:2828",
@@ -57,28 +83,11 @@ config = {
                 "--deviceSerial=%(device_serial)s",
             ],
         },
-        "mochitest-gl": {
-            "run_filename": "runtestsremote.py",
-            "testsdir": "mochitest",
-            "options": [
-                "--app=%(app)s",
-                "--remote-webserver=%(remote_webserver)s",
-                "--xre-path=%(xre_path)s",
-                "--utility-path=%(utility_path)s",
-                "--http-port=%(http_port)s",
-                "--ssl-port=%(ssl_port)s",
-                "--certificate-path=%(certs_path)s",
-                "--symbols-path=%(symbols_path)s",
-                "--quiet",
-                "--log-raw=%(raw_log_file)s",
-                "--log-raw-level=%(log_raw_level)s",
-                "--log-errorsummary=%(error_summary_file)s",
-                "--log-tbpl-level=%(log_tbpl_level)s",
-                "--screenshot-on-fail",
-                "--subsuite=webgl",
-                "--deviceSerial=%(device_serial)s",
-            ],
-        },
+        "mochitest-webgl1-core": WebglSuite("webgl1-core"),
+        "mochitest-webgl2-core": WebglSuite("webgl2-core"),
+        "mochitest-webgl1-ext": WebglSuite("webgl1-ext"),
+        "mochitest-webgl2-ext": WebglSuite("webgl2-ext"),
+        "mochitest-webgl2-deqp": WebglSuite("webgl2-deqp"),
         "mochitest-chrome": {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
