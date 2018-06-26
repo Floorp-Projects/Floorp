@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      background-color: lime;
+      height: 100px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="short"></div>
+    <script>
+    "use strict";
+
+    document.querySelector(".short").animate(
+      { opacity: [1, 0] },
+      {
+        duration: 1,
+        iterations: Infinity,
+      }
+    );
+    </script>
+  </body>
+</html>
