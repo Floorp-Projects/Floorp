@@ -26,4 +26,4 @@ def load_yaml(path, name, enforce_order=False):
             if keys != list(sorted(keys)):
                 raise Exception("keys in {} are not sorted".format(filename))
     with open(filename, "rb") as f:
-        return yaml.load(f)
+        return yaml.safe_load(f)

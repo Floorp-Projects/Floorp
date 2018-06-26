@@ -41,7 +41,8 @@ describe("Top Sites Feed", () => {
     fakeNewTabUtils = {
       blockedLinks: {
         links: [],
-        isBlocked: () => false
+        isBlocked: () => false,
+        unblock: sandbox.spy()
       },
       activityStreamLinks: {getTopSites: sandbox.spy(() => Promise.resolve(links))},
       activityStreamProvider: {
@@ -729,6 +730,14 @@ describe("Top Sites Feed", () => {
 
       assert.calledOnce(feed.refresh);
     });
+    it("should unblock a previously blocked top site if we are now adding it manually via 'Add a Top Site' option", async () => {
+      const pinAction = {
+        type: at.TOP_SITES_PIN,
+        data: {site: {url: "foo.com"}, index: -1}
+      };
+      feed.onAction(pinAction);
+      assert.calledWith(fakeNewTabUtils.blockedLinks.unblock, {url: pinAction.data.site.url});
+    });
     it("should call insert on TOP_SITES_INSERT", async () => {
       sinon.stub(feed, "insert");
       const addAction = {type: at.TOP_SITES_INSERT, data: {site: {url: "foo.com"}}};
@@ -759,6 +768,14 @@ describe("Top Sites Feed", () => {
       sandbox.stub(feed, "refresh");
 
       feed.onAction({type: at.PLACES_HISTORY_CLEARED});
+
+      assert.calledOnce(feed.refresh);
+      assert.calledWithExactly(feed.refresh, {broadcast: true});
+    });
+    it("should call refresh without a target if we remove a Topsite from history", () => {
+      sandbox.stub(feed, "refresh");
+
+      feed.onAction({type: at.PLACES_LINK_DELETED});
 
       assert.calledOnce(feed.refresh);
       assert.calledWithExactly(feed.refresh, {broadcast: true});

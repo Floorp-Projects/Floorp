@@ -1494,7 +1494,7 @@ nsIDocument::nsIDocument()
     mChildDocumentUseCounters(0),
     mNotifiedPageForUseCounter(0),
     mUserHasInteracted(false),
-    mUserHasActivatedInteraction(false),
+    mUserGestureActivated(false),
     mStackRefCnt(0),
     mUpdateNestLevel(0),
     mViewportType(Unknown),
@@ -12414,81 +12414,40 @@ nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
 }
 
 void
-nsIDocument::NotifyUserActivation()
+nsIDocument::NotifyUserGestureActivation()
 {
-  ActivateByUserGesture();
-  // Activate parent document which has same principle on the parent chain.
-  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  nsCOMPtr<nsIDocument> parent = GetSameTypeParentDocument();
-  while (parent) {
-    parent->MaybeActivateByUserGesture(principal);
-    parent = parent->GetSameTypeParentDocument();
+  // Activate this document and all documents up to the top level
+  // content document.
+  nsIDocument* doc = this;
+  while (doc && !doc->mUserGestureActivated) {
+    MOZ_LOG(gUserInteractionPRLog,
+            LogLevel::Debug,
+            ("Document %p has been activated by user.", this));
+    doc->mUserGestureActivated = true;
+    doc = doc->GetSameTypeParentDocument();
   }
-}
-
-void
-nsIDocument::MaybeActivateByUserGesture(nsIPrincipal* aPrincipal)
-{
-  bool isEqual = false;
-  nsresult rv = aPrincipal->Equals(NodePrincipal(), &isEqual);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  // If a child frame is actived, it would always activate the top frame and its
-  // parent frames which has same priciple.
-  if (isEqual || IsTopLevelContentDocument()) {
-    ActivateByUserGesture();
-  }
-}
-
-void
-nsIDocument::ActivateByUserGesture()
-{
-  if (mUserHasActivatedInteraction) {
-    return;
-  }
-
-  MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
-          ("Document %p has been activated by user.", this));
-  mUserHasActivatedInteraction = true;
 }
 
 bool
-nsIDocument::HasBeenUserActivated()
+nsIDocument::HasBeenUserGestureActivated()
 {
-  if (!mUserHasActivatedInteraction) {
-    // If one of its parent on the parent chain has been activated and has same
-    // principal, then this child would also be treated as activated.
-    nsIDocument* parent =
-      GetFirstParentDocumentWithSamePrincipal(NodePrincipal());
-    if (parent) {
-      mUserHasActivatedInteraction = parent->HasBeenUserActivated();
-    }
+  if (mUserGestureActivated) {
+    return true;
   }
 
-  return mUserHasActivatedInteraction;
-}
-
-nsIDocument*
-nsIDocument::GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal)
-{
-  MOZ_ASSERT(aPrincipal);
-  nsIDocument* parent = GetSameTypeParentDocument();
-  while (parent) {
-    bool isEqual = false;
-    nsresult rv = aPrincipal->Equals(parent->NodePrincipal(), &isEqual);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
+  // If any ancestor document is activated, so are we.
+  nsIDocument* doc = GetSameTypeParentDocument();
+  while (doc) {
+    if (doc->mUserGestureActivated) {
+      // An ancestor is also activated. Record activation on the unactivated
+      // sub-branch to speed up future queries.
+      NotifyUserGestureActivation();
+      break;
     }
-
-    if (isEqual) {
-      return parent;
-    }
-    parent = parent->GetSameTypeParentDocument();
+    doc = doc->GetSameTypeParentDocument();
   }
-  MOZ_ASSERT(!parent);
-  return nullptr;
+
+  return mUserGestureActivated;
 }
 
 nsIDocument*

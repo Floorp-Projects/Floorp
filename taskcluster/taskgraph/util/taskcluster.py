@@ -56,7 +56,7 @@ def _handle_artifact(path, response):
     if path.endswith('.json'):
         return response.json()
     if path.endswith('.yml'):
-        return yaml.load(response.text)
+        return yaml.safe_load(response.text)
     response.raw.read = functools.partial(response.raw.read,
                                           decode_content=True)
     return response.raw

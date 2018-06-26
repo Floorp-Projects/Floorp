@@ -32,7 +32,7 @@ def run_decision_task(job, params, root):
 def make_decision_task(params, root, symbol, arguments=[], head_rev=None):
     """Generate a basic decision task, based on the root .taskcluster.yml"""
     with open(os.path.join(root, '.taskcluster.yml'), 'rb') as f:
-        taskcluster_yml = yaml.load(f)
+        taskcluster_yml = yaml.safe_load(f)
 
     if not head_rev:
         head_rev = params['head_rev']

@@ -399,9 +399,6 @@ MessageManagerTunnel.prototype = {
     "contextmenu",
     // Messages sent to SelectParentHelper.jsm
     "Forms:UpdateDropDown",
-    // Messages sent to browser.js
-    "PageVisibility:Hide",
-    "PageVisibility:Show",
     // Messages sent to SessionStore.jsm
     "SessionStore:update",
     // Messages sent to BrowserTestUtils.jsm

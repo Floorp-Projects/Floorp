@@ -472,7 +472,7 @@ partial interface Document {
 // by user gesture.
 partial interface Document {
   [ChromeOnly]
-  void notifyUserActivation();
+  void notifyUserGestureActivation();
 };
 
 // Extension to give chrome and XBL JS the ability to determine whether

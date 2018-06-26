@@ -7,6 +7,7 @@ name = "pypi"
 
 [packages]
 attrs = "==18.1.0"
+blessings = "==1.7"
 jsmin = "==2.1.0"
 json-e = "==2.5.0"
 pipenv = "==2018.5.18"

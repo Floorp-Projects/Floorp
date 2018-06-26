@@ -286,8 +286,11 @@ TrackBuffersManager::ProcessTasks()
       mType = task->As<ChangeTypeTask>()->mType;
       mChangeTypeReceived = true;
       mInitData = nullptr;
+      // A new input buffer will be created once we receive a new init segment.
+      // The first segment received after a changeType call must be an init
+      // segment.
+      mCurrentInputBuffer = nullptr;
       CompleteResetParserState();
-      CreateDemuxerforMIMEType();
       break;
     default:
       NS_WARNING("Invalid Task");
@@ -1134,12 +1137,7 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
   // 3. If the first initialization segment received flag is true, then run the following steps:
   if (mFirstInitializationSegmentReceived) {
     if (numVideos != mVideoTracks.mNumTracks ||
-        numAudios != mAudioTracks.mNumTracks ||
-        (!mChangeTypeReceived &&
-         ((numVideos &&
-           info.mVideo.mMimeType != mVideoTracks.mInfo->mMimeType) ||
-          (numAudios &&
-           info.mAudio.mMimeType != mAudioTracks.mInfo->mMimeType)))) {
+        numAudios != mAudioTracks.mNumTracks) {
       RejectAppend(NS_ERROR_FAILURE, __func__);
       return;
     }

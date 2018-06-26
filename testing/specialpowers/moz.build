@@ -18,3 +18,6 @@ FINAL_TARGET_PP_FILES += [
 FINAL_TARGET_FILES += [
     'bootstrap.js',
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")

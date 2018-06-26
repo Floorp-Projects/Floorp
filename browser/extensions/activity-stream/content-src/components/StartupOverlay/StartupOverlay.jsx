@@ -62,10 +62,13 @@ export class _StartupOverlay extends React.PureComponent {
             </div>
             <div className="firstrun-sign-in">
               <p className="form-header"><FormattedMessage id="firstrun_form_header" /><span className="sub-header"><FormattedMessage id="firstrun_form_sub_header" /></span></p>
-              <form method="get" action="https://accounts.firefox.com?entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun" target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
+              <form method="get" action="https://accounts.firefox.com" target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
                 <input name="service" type="hidden" value="sync" />
                 <input name="action" type="hidden" value="email" />
                 <input name="context" type="hidden" value="fx_desktop_v3" />
+                <input name="entrypoint" type="hidden" value="activity-stream-firstrun" />
+                <input name="utm_source" type="hidden" value="activity-stream" />
+                <input name="utm_campaign" type="hidden" value="firstrun" />
                 <input className="email-input" name="email" type="email" required="true" placeholder={this.props.intl.formatMessage({id: "firstrun_email_input_placeholder"})} onChange={this.onInputChange} />
                 <div className="extra-links">
                   <FormattedMessage

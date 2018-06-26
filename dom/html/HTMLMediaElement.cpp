@@ -1996,7 +1996,7 @@ HTMLMediaElement::Load()
        IsAllowedToPlay(),
        OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
-       OwnerDoc() ? OwnerDoc()->HasBeenUserActivated() : 0,
+       OwnerDoc() ? OwnerDoc()->HasBeenUserGestureActivated() : 0,
        mMuted,
        mVolume));
 

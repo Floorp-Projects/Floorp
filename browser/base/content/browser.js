@@ -330,14 +330,6 @@ function* browserWindows() {
     yield windows.getNext();
 }
 
-/**
-* We can avoid adding multiple load event listeners and save some time by adding
-* one listener that calls all real handlers.
-*/
-function pageShowEventHandlers(persisted) {
-  XULBrowserWindow.asyncUpdateUI();
-}
-
 function UpdateBackForwardCommands(aWebNavigation) {
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
@@ -1414,14 +1406,6 @@ var gBrowserInit = {
     // We need to set the OfflineApps message listeners up before we
     // load homepages, which might need them.
     OfflineApps.init();
-
-    // This pageshow listener needs to be registered before we may call
-    // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
-    window.messageManager.addMessageListener("PageVisibility:Show", function(message) {
-      if (message.target == gBrowser.selectedBrowser) {
-        setTimeout(pageShowEventHandlers, 0, message.data.persisted);
-      }
-    });
 
     gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
       let ownerDoc = event.originalTarget;
@@ -6089,41 +6073,6 @@ function UpdateDynamicShortcutTooltipText(aTooltip) {
   aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
 }
 
-var gWebPanelURI;
-function openWebPanel(title, uri) {
-  // Ensure that the web panels sidebar is open.
-  SidebarUI.show("viewWebPanelsSidebar");
-
-  // Set the title of the panel.
-  SidebarUI.title = title;
-
-  // Tell the Web Panels sidebar to load the bookmark.
-  if (SidebarUI.browser.docShell && SidebarUI.browser.contentDocument &&
-      SidebarUI.browser.contentDocument.getElementById("web-panels-browser")) {
-    SidebarUI.browser.contentWindow.loadWebPanel(uri);
-    if (gWebPanelURI) {
-      gWebPanelURI = "";
-      SidebarUI.browser.removeEventListener("load", asyncOpenWebPanel, true);
-    }
-  } else {
-    // The panel is still being constructed.  Attach an onload handler.
-    if (!gWebPanelURI) {
-      SidebarUI.browser.addEventListener("load", asyncOpenWebPanel, true);
-    }
-    gWebPanelURI = uri;
-  }
-}
-
-function asyncOpenWebPanel(event) {
-  if (gWebPanelURI && SidebarUI.browser.contentDocument &&
-      SidebarUI.browser.contentDocument.getElementById("web-panels-browser")) {
-    SidebarUI.browser.contentWindow.loadWebPanel(gWebPanelURI);
-    SidebarUI.setWebPageIcon(gWebPanelURI);
-  }
-  gWebPanelURI = "";
-  SidebarUI.browser.removeEventListener("load", asyncOpenWebPanel, true);
-}
-
 /*
  * - [ Dependencies ] ---------------------------------------------------------
  *  utilityOverlay.js:
@@ -6185,7 +6134,7 @@ function hrefAndLinkNodeForClickEvent(event) {
  * @param event
  *        The click event.
  * @param isPanelClick
- *        Whether the event comes from a web panel.
+ *        Whether the event comes from an extension panel.
  * @note default event is prevented if the click is handled.
  */
 function contentAreaClick(event, isPanelClick) {
@@ -6208,7 +6157,7 @@ function contentAreaClick(event, isPanelClick) {
   // elements, as opposed to XLink).
   if (linkNode && event.button == 0 &&
       !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
-    // A Web panel's links should target the main content area.  Do this
+    // An extension panel's links should target the main content area.  Do this
     // if no modifier keys are down and if there's no target or the target
     // equals _main (the IE convention) or _content (the Mozilla convention).
     let target = linkNode.target;
@@ -6229,22 +6178,6 @@ function contentAreaClick(event, isPanelClick) {
       }
 
       loadURI(href, null, null, false);
-      event.preventDefault();
-      return;
-    }
-
-    if (linkNode.getAttribute("rel") == "sidebar") {
-      // This is the Opera convention for a special link that, when clicked,
-      // allows to add a sidebar panel.  The link's title attribute contains
-      // the title that should be used for the sidebar panel.
-      PlacesUIUtils.showBookmarkDialog({ action: "add",
-                                         type: "bookmark",
-                                         uri: makeURI(href),
-                                         title: linkNode.getAttribute("title"),
-                                         loadBookmarkInSidebar: true,
-                                         hiddenRows: [ "location",
-                                                       "keyword" ]
-                                       }, window);
       event.preventDefault();
       return;
     }
@@ -7386,9 +7319,7 @@ function AddKeywordForSearchField() {
                                        keyword: "",
                                        postData: bookmarkData.postData,
                                        charSet: bookmarkData.charset,
-                                       hiddenRows: [ "location",
-                                                     "tags",
-                                                     "loadInSidebar" ]
+                                       hiddenRows: [ "location", "tags" ]
                                      }, window);
   };
   mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
