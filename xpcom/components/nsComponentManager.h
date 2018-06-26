@@ -190,7 +190,6 @@ public:
     }
   };
 
-  static nsTArray<const mozilla::Module*>* sStaticModules;
   static nsTArray<ComponentLocation>* sModuleLocations;
 
   class KnownModule
