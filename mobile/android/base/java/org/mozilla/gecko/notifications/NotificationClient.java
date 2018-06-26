@@ -8,25 +8,22 @@ package org.mozilla.gecko.notifications;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
-
-import java.util.HashMap;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoActivityMonitor;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.BitmapUtils;
+
+import java.util.HashMap;
 
 /**
  * Client for posting notifications.
@@ -99,7 +96,7 @@ public final class NotificationClient implements NotificationListener {
 
         if (persistentData != null) {
             final Intent persistentIntent = GeckoService.getIntentToCreateServices(
-                    mContext, "persistent-notification-click", persistentData);
+                    "persistent-notification-click", persistentData);
             clickIntent.putExtra(PERSISTENT_INTENT_EXTRA, persistentIntent);
         }
 
@@ -112,7 +109,7 @@ public final class NotificationClient implements NotificationListener {
 
         if (persistentData != null) {
             final Intent persistentIntent = GeckoService.getIntentToCreateServices(
-                    mContext, "persistent-notification-close", persistentData);
+                    "persistent-notification-close", persistentData);
             closeIntent.putExtra(PERSISTENT_INTENT_EXTRA, persistentIntent);
         }
 

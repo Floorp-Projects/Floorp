@@ -5,18 +5,19 @@
 
 package org.mozilla.gecko.notifications;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.mozglue.SafeIntent;
-
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoServicesCreatorService;
+import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.mozglue.SafeIntent;
 
 /**
  *  Broadcast receiver for Notifications. Will forward them to GeckoApp (and start Gecko) if they're clicked.
@@ -88,7 +89,7 @@ public class NotificationReceiver extends BroadcastReceiver {
 
         if (persistentIntent != null) {
             // Go through GeckoService for persistent notifications.
-            context.startService(persistentIntent);
+            GeckoServicesCreatorService.enqueueWork(context, intent);
         }
 
         if (NotificationClient.CLICK_ACTION.equals(action)) {

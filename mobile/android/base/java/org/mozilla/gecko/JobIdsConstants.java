@@ -43,6 +43,10 @@ public class JobIdsConstants {
 
     private static final int JOB_ID_CRASH_REPORTER = 1013;
 
+    private static final int JOB_ID_GECKO_STARTER = 1014;
+    private static final int JOB_ID_GECKO_LIBS_LOADER = 1015;
+    private static final int JOB_ID_GECKO_SERVICES_CREATOR = 1016;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -97,6 +101,18 @@ public class JobIdsConstants {
 
     public static int getIdForCrashReporter() {
         return getIdWithOffset(JOB_ID_CRASH_REPORTER);
+    }
+
+    public static int getIdForGeckoStarter() {
+        return getIdWithOffset(JOB_ID_GECKO_STARTER);
+    }
+
+    public static int getIdForGeckoLibsLoader() {
+        return getIdWithOffset(JOB_ID_GECKO_LIBS_LOADER);
+    }
+
+    public static int getIdForGeckoServicesCreator() {
+        return getIdWithOffset(JOB_ID_GECKO_SERVICES_CREATOR);
     }
 
     private static boolean isReleaseBuild() {
