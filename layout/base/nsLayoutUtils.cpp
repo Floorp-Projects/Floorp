@@ -6204,6 +6204,9 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
                                     const nsIFrame* aFrame,
                                     LinePosition* aResult)
 {
+  if (aFrame->StyleDisplay()->IsContainSize()) {
+    return false;
+  }
   const nsBlockFrame* block = nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
   if (!block) {
     // For the first-line baseline we also have to check for a table, and if
@@ -6302,6 +6305,10 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
 nsLayoutUtils::GetLastLineBaseline(WritingMode aWM,
                                    const nsIFrame* aFrame, nscoord* aResult)
 {
+  if (aFrame->StyleDisplay()->IsContainSize()) {
+    return false;
+  }
+
   const nsBlockFrame* block = nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
   if (!block)
     // No baseline.  (We intentionally don't descend into scroll frames.)
