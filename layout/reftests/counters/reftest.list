@@ -58,8 +58,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counters-09-b-test
 == t120403-display-none-00-c-test.html t120403-display-none-00-c-reference.html
 == t120403-visibility-00-c-test.html t120403-visibility-00-c-reference.html
 == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
-== counter-hebrew-test.html counter-hebrew-reference.html
-== counters-hebrew-test.html counters-hebrew-reference.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-hebrew-test.html counter-hebrew-reference.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counters-hebrew-test.html counters-hebrew-reference.html # Bug 1392106
 == counter-reset-integer-range.html counter-reset-integer-range-ref.html
 == counter-ua-limits-00.html counter-ua-limits-00-ref.html
 == counter-ua-limits-01.html counter-ua-limits-01-ref.html
