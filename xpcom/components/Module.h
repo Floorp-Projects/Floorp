@@ -139,11 +139,11 @@ struct Module
 #    define NSMODULE_SECTION __declspec(allocate(".kPStaticModules$M"), dllexport)
 #  elif defined(__GNUC__)
 #    if defined(__ELF__)
-#      define NSMODULE_SECTION __attribute__((section(".kPStaticModules"), visibility("default")))
+#      define NSMODULE_SECTION __attribute__((section("kPStaticModules"), visibility("default")))
 #    elif defined(__MACH__)
 #      define NSMODULE_SECTION __attribute__((section("__DATA, .kPStaticModules"), visibility("default")))
 #    elif defined (_WIN32)
-#      define NSMODULE_SECTION __attribute__((section(".kPStaticModules"), dllexport))
+#      define NSMODULE_SECTION __attribute__((section("kPStaticModules"), dllexport))
 #    endif
 #  endif
 #  if !defined(NSMODULE_SECTION)
