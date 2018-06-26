@@ -1932,12 +1932,12 @@ CacheIRCompiler::emitTruncateDoubleToUInt32()
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
     Register res = allocator.defineRegister(masm, reader.int32OperandId());
 
+    Label int32, done;
+    masm.branchTestInt32(Assembler::Equal, val, &int32);
+
     Label doneTruncate,  truncateABICall;
     if (mode_ != Mode::Baseline)
         masm.push(FloatReg0);
-
-    Label int32, done;
-    masm.branchTestInt32(Assembler::Equal, val, &int32);
 
     masm.unboxDouble(val, FloatReg0);
     masm.branchTruncateDoubleMaybeModUint32(FloatReg0, res, &truncateABICall);
