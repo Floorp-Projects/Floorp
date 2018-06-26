@@ -18,7 +18,12 @@ const {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-this.EXPORTED_SYMBOLS = ["session"];
+this.EXPORTED_SYMBOLS = [
+  "Capabilities",
+  "PageLoadStrategy",
+  "Proxy",
+  "Timeouts",
+];
 
 // Enable testing this module, as Services.appinfo.* is not available
 // in xpcshell tests.
@@ -26,15 +31,8 @@ const appinfo = {name: "<missing>", version: "<missing>"};
 try { appinfo.name = Services.appinfo.name.toLowerCase(); } catch (e) {}
 try { appinfo.version = Services.appinfo.version; } catch (e) {}
 
-/**
- * State associated with a WebDriver session.
- *
- * @namespace
- */
-this.session = {};
-
 /** Representation of WebDriver session timeouts. */
-session.Timeouts = class {
+class Timeouts {
   constructor() {
     // disabled
     this.implicit = 0;
@@ -44,7 +42,7 @@ session.Timeouts = class {
     this.script = 30000;
   }
 
-  toString() { return "[object session.Timeouts]"; }
+  toString() { return "[object Timeouts]"; }
 
   /** Marshals timeout durations to a JSON Object. */
   toJSON() {
@@ -58,7 +56,7 @@ session.Timeouts = class {
   static fromJSON(json) {
     assert.object(json,
         pprint`Expected "timeouts" to be an object, got ${json}`);
-    let t = new session.Timeouts();
+    let t = new Timeouts();
 
     for (let [type, ms] of Object.entries(json)) {
       switch (type) {
@@ -84,14 +82,14 @@ session.Timeouts = class {
 
     return t;
   }
-};
+}
 
 /**
  * Enum of page loading strategies.
  *
  * @enum
  */
-session.PageLoadStrategy = {
+const PageLoadStrategy = {
   /** No page load strategy.  Navigation will return immediately. */
   None: "none",
   /**
@@ -107,7 +105,7 @@ session.PageLoadStrategy = {
 };
 
 /** Proxy configuration object representation. */
-session.Proxy = class {
+class Proxy {
   /** @class */
   constructor() {
     this.proxyType = null;
@@ -257,7 +255,7 @@ session.Proxy = class {
       return [hostname, port];
     }
 
-    let p = new session.Proxy();
+    let p = new Proxy();
     if (typeof json == "undefined" || json === null) {
       return p;
     }
@@ -356,11 +354,11 @@ session.Proxy = class {
     });
   }
 
-  toString() { return "[object session.Proxy]"; }
-};
+  toString() { return "[object Proxy]"; }
+}
 
 /** WebDriver session capabilities representation. */
-session.Capabilities = class extends Map {
+class Capabilities extends Map {
   /** @class */
   constructor() {
     super([
@@ -369,10 +367,10 @@ session.Capabilities = class extends Map {
       ["browserVersion", appinfo.version],
       ["platformName", Services.sysinfo.getProperty("name").toLowerCase()],
       ["platformVersion", Services.sysinfo.getProperty("version")],
-      ["pageLoadStrategy", session.PageLoadStrategy.Normal],
+      ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["acceptInsecureCerts", false],
-      ["timeouts", new session.Timeouts()],
-      ["proxy", new session.Proxy()],
+      ["timeouts", new Timeouts()],
+      ["proxy", new Proxy()],
 
       // features
       ["rotatable", appinfo.name == "B2G"],
@@ -394,17 +392,16 @@ session.Capabilities = class extends Map {
    *     JSON-safe capability value.
    */
   set(key, value) {
-    if (key === "timeouts" && !(value instanceof session.Timeouts)) {
+    if (key === "timeouts" && !(value instanceof Timeouts)) {
       throw new TypeError();
-    } else if (key === "proxy" && !(value instanceof session.Proxy)) {
+    } else if (key === "proxy" && !(value instanceof Proxy)) {
       throw new TypeError();
     }
 
     return super.set(key, value);
   }
 
-  /** @return {string} */
-  toString() { return "[object session.Capabilities]"; }
+  toString() { return "[object Capabilities]"; }
 
   /**
    * JSON serialisation of capabilities object.
@@ -421,7 +418,7 @@ session.Capabilities = class extends Map {
    * @param {Object.<string, *>=} json
    *     WebDriver capabilities.
    *
-   * @return {session.Capabilities}
+   * @return {Capabilities}
    *     Internal representation of WebDriver capabilities.
    */
   static fromJSON(json) {
@@ -431,12 +428,12 @@ session.Capabilities = class extends Map {
     assert.object(json,
         pprint`Expected "capabilities" to be an object, got ${json}"`);
 
-    return session.Capabilities.match_(json);
+    return Capabilities.match_(json);
   }
 
   // Matches capabilities as described by WebDriver.
   static match_(json = {}) {
-    let matched = new session.Capabilities();
+    let matched = new Capabilities();
 
     for (let [k, v] of Object.entries(json)) {
       switch (k) {
@@ -448,12 +445,12 @@ session.Capabilities = class extends Map {
 
         case "pageLoadStrategy":
           if (v === null) {
-            matched.set("pageLoadStrategy", session.PageLoadStrategy.Normal);
+            matched.set("pageLoadStrategy", PageLoadStrategy.Normal);
           } else {
             assert.string(v,
                 pprint`Expected ${k} to be a string, got ${v}`);
 
-            if (Object.values(session.PageLoadStrategy).includes(v)) {
+            if (Object.values(PageLoadStrategy).includes(v)) {
               matched.set("pageLoadStrategy", v);
             } else {
               throw new InvalidArgumentError(
@@ -464,12 +461,12 @@ session.Capabilities = class extends Map {
           break;
 
         case "proxy":
-          let proxy = session.Proxy.fromJSON(v);
+          let proxy = Proxy.fromJSON(v);
           matched.set("proxy", proxy);
           break;
 
         case "timeouts":
-          let timeouts = session.Timeouts.fromJSON(v);
+          let timeouts = Timeouts.fromJSON(v);
           matched.set("timeouts", timeouts);
           break;
 
@@ -495,7 +492,12 @@ session.Capabilities = class extends Map {
 
     return matched;
   }
-};
+}
+
+this.Capabilities = Capabilities;
+this.PageLoadStrategy = PageLoadStrategy;
+this.Proxy = Proxy;
+this.Timeouts = Timeouts;
 
 // Specialisation of |JSON.stringify| that produces JSON-safe object
 // literals, dropping empty objects and entries which values are undefined
