@@ -236,10 +236,9 @@ class HgRepository(Repository):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._client.close()
 
-    def _run_in_client(self, args):
+    def _run(self, *args, **runargs):
         if not self._client.server:
-            raise Exception('active HgRepository context manager required')
-
+            return super(HgRepository, self)._run(*args, **runargs)
         return self._client.rawcommand(args)
 
     def sparse_checkout_present(self):
@@ -304,8 +303,7 @@ class HgRepository(Repository):
     def get_files_in_working_directory(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
         return list(p.replace('\\', '/') for p in
-                    self._run_in_client([b'files', b'-0']).split(b'\0')
-                    if p)
+                    self._run(b'files', b'-0').split(b'\0') if p)
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = [b'status', b'\0', b'--modified', b'--added', b'--removed',
@@ -317,7 +315,7 @@ class HgRepository(Repository):
 
         # If output is empty, there are no entries of requested status, which
         # means we are clean.
-        return not len(self._run_in_client(args).strip())
+        return not len(self._run(*args).strip())
 
 
 class GitRepository(Repository):
