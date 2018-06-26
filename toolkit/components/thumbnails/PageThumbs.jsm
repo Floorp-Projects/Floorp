@@ -827,6 +827,7 @@ var PageThumbsHistoryObserver = {
   onTitleChanged() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
+  onVisits() {},
   onPageChanged() {},
   onDeleteVisits() {},
 

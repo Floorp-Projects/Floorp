@@ -23,6 +23,7 @@ add_task(async function() {
 
       onBeginUpdateBatch() { },
       onEndUpdateBatch() { },
+      onVisits() { },
       onDeleteURI() { },
       onClearHistory() { },
       onPageChanged() { },
