@@ -1698,7 +1698,7 @@ interface nsIDOMWindowUtils : nsISupports {
                        [optional] in AString aPseudoElement);
 
   /*
-   * Returns the value of the transform value on the compositor thread.
+   * Returns the value of the transform on the compositor, in layer pixels.
    * Unlike the above getOMTAStyle, the transform value returned by this
    * includes both of animating and APZ values.
    * Note: This function doesn't work on WebRender at all.  Also this function

@@ -35,6 +35,7 @@ const utils = SpecialPowers.getDOMWindowUtils(window);
 async function test_opacity() {
   utils.setDisplayPortForElement(0, 0, 300, 1000, document.documentElement, 1);
   await promiseAllPaintsDone();
+  let dpr = window.devicePixelRatio;
 
   let transform = utils.getOMTCTransform(anim);
   is(transform, "matrix(1, 0, 0, 1, 0, 0)",
@@ -45,7 +46,7 @@ async function test_opacity() {
   await new Promise(resolve => waitForApzFlushedRepaints(resolve));
 
   transform = utils.getOMTCTransform(anim);
-  is(transform, "matrix(1, 0, 0, 1, 0, -300)",
+  is(transform, `matrix(1, 0, 0, 1, 0, ${-300 * dpr})`,
      "Element should have been moved by the offset");
 }
 

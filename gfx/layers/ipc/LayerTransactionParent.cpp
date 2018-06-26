@@ -790,6 +790,17 @@ LayerTransactionParent::RecvGetTransform(const LayerHandle& aLayerHandle,
     transform.PostTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
   }
 
+  // This function is supposed to include the APZ transform, but if root scroll
+  // containers are enabled, then the APZ transform might not be on |layer| but
+  // instead would be on the parent of |layer|, if that is the root scrollable
+  // metrics. So we special-case that behaviour.
+  if (gfxPrefs::LayoutUseContainersForRootFrames() &&
+      !layer->HasScrollableFrameMetrics() &&
+      layer->GetParent() &&
+      layer->GetParent()->HasRootScrollableFrameMetrics()) {
+    transform *= layer->GetParent()->AsHostLayer()->GetShadowBaseTransform();
+  }
+
   *aTransform = transform;
 
   return IPC_OK();
