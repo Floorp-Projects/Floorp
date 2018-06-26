@@ -661,13 +661,21 @@ HandleException(ResumeFromException* rfe)
     // iterating, we need a variant here that is automatically updated should
     // on-stack recompilation occur.
     DebugModeOSRVolatileJitFrameIter iter(cx);
-    while (!iter.done()) {
+    while (true) {
+        iter.skipNonScriptedJSFrames();
+        if (iter.done())
+            break;
+
         if (iter.isWasm()) {
             HandleExceptionWasm(cx, &iter.asWasm(), rfe);
             if (!iter.done())
                 ++iter;
             continue;
         }
+
+        // JIT code can enter same-compartment realms, so reset cx->realm to
+        // this frame's realm.
+        cx->setRealmForJitExceptionHandler(iter.realm());
 
         const JSJitFrameIter& frame = iter.asJSJit();
 
