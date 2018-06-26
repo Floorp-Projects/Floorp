@@ -176,17 +176,35 @@ def check_nsmodules(target, binary):
                 # - The MSVC mangling has some type info following `@@`
                 # - Any namespacing that can happen on the symbol appears as a
                 #   suffix, after a `@`.
-                name = data[3].split(' = ')[0].split('@@')[0].split('@')[0]
-                if name.endswith('_NSModule'):
-                    symbols.append((int(data[2], 16), 0, name.lstrip('?')))
+                # - Mangled symbols are prefixed with `?`.
+                name = data[3].split(' = ')[0].split('@@')[0].split('@')[0] \
+                              .lstrip('?')
+                if name.endswith('_NSModule') or name in (
+                        '__start_kPStaticModules',
+                        '__stop_kPStaticModules'):
+                    symbols.append((int(data[2], 16), GUESSED_NSMODULE_SIZE,
+                                    name))
     else:
-        for line in get_output(target['nm'], '-gP', binary):
+        for line in get_output(target['nm'], '-P', binary):
             data = line.split()
-            # NSModules symbols end with _NSModule or _NSModuleE when
-            # C++-mangled.
-            if len(data) == 4 and data[0].endswith(('_NSModule', '_NSModuleE')):
+            # Some symbols may not have a size listed at all.
+            if len(data) == 3:
+                data.append('0')
+            if len(data) == 4:
                 sym, _, addr, size = data
-                symbols.append((int(addr, 16), int(size, 16), sym))
+                # NSModules symbols end with _NSModule or _NSModuleE when
+                # C++-mangled.
+                if sym.endswith(('_NSModule', '_NSModuleE')):
+                    # On mac, nm doesn't actually print anything other than 0
+                    # for the size. So take our best guess.
+                    size = int(size, 16) or GUESSED_NSMODULE_SIZE
+                    symbols.append((int(addr, 16), size, sym))
+                elif sym.endswith(('__start_kPStaticModules',
+                                   '__stop_kPStaticModules')):
+                    # On ELF and mac systems, these symbols have no size, such
+                    # that the first actual NSModule has the same address as
+                    # the start symbol.
+                    symbols.append((int(addr, 16), 0, sym))
     if not symbols:
         raise RuntimeError('Could not find NSModules')
 
@@ -200,18 +218,24 @@ def check_nsmodules(target, binary):
         if next_addr is not None and next_addr != addr:
             print_symbols(symbols)
             raise RuntimeError('NSModules are not adjacent')
-        # On mac, nm doesn't actually print anything other than 0 for the
-        # size. So take our best guess. On Windows, dumpbin doesn't give us
-        # any size at all.
-        if size == 0:
-            size = GUESSED_NSMODULE_SIZE
         next_addr = addr + size
+
+    # The mac linker doesn't emit the start/stop symbols in the symbol table.
+    # We'll just assume it did the job correctly.
+    if get_type(binary) == MACHO:
+        return
+
     first = symbols[0][2]
     last = symbols[-1][2]
     # On some platforms, there are extra underscores on symbol names.
-    if first.lstrip('_') != 'start_kPStaticModules_NSModule' or \
-            last.lstrip('_') != 'end_kPStaticModules_NSModule':
+    if first.lstrip('_') != 'start_kPStaticModules' or \
+            last.lstrip('_') != 'stop_kPStaticModules':
         print_symbols(symbols)
+        syms = set(sym for add, size, sym in symbols)
+        if 'start_kPStaticModules' not in syms:
+            raise RuntimeError('Could not find start_kPStaticModules symbol')
+        if 'stop_kPStaticModules' not in syms:
+            raise RuntimeError('Could not find stop_kPStaticModules symbol')
         raise RuntimeError('NSModules are not ordered appropriately')
 
 
