@@ -211,6 +211,7 @@ private:
   // See equivalent field in ClientLayerManager
   APZTestData mApzTestData;
 
+  TimeStamp mTransactionStart;
   WebRenderCommandBuilder mWebRenderCommandBuilder;
 
   size_t mLastDisplayListSize;
