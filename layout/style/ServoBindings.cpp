@@ -667,6 +667,16 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
   }
 }
 
+size_t
+Gecko_GetAnimationEffectCount(RawGeckoElementBorrowed aElementOrPseudo)
+{
+  CSSPseudoElementType pseudoType =
+    GetPseudoTypeFromElementForAnimation(aElementOrPseudo);
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElementOrPseudo, pseudoType);
+  return effectSet ? effectSet->Count() : 0;
+}
+
 bool
 Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement)
 {
