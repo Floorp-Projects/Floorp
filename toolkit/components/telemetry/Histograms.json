@@ -12801,6 +12801,16 @@
     "n_buckets": 50,
     "description": "Time spent in the paint pipeline for content in milliseconds."
   },
+  "CONTENT_FRAME_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["rhunt@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1470528],
+    "expires_in_version": "66",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 50,
+    "description": "The time, in percentage of a vsync interval, spent from beginning a paint in the content process until that frame is presented in the compositor."
+  },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],

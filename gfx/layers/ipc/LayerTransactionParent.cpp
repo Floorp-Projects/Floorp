@@ -26,6 +26,7 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
@@ -48,13 +49,15 @@ namespace layers {
 LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
                                                CompositorBridgeParentBase* aBridge,
                                                CompositorAnimationStorage* aAnimStorage,
-                                               LayersId aId)
+                                               LayersId aId,
+                                               TimeDuration aVsyncRate)
   : mLayerManager(aManager)
   , mCompositorBridge(aBridge)
   , mAnimStorage(aAnimStorage)
   , mId(aId)
   , mChildEpoch(0)
   , mParentEpoch(0)
+  , mVsyncRate(aVsyncRate)
   , mPendingTransaction{0}
   , mDestroyed(false)
   , mIPCOpen(false)
@@ -959,20 +962,29 @@ bool LayerTransactionParent::IsSameProcess() const
 TransactionId
 LayerTransactionParent::FlushTransactionId(TimeStamp& aCompositeEnd)
 {
+  if (mId.IsValid() && mPendingTransaction.IsValid() && !mVsyncRate.IsZero()) {
+    double latencyMs = (aCompositeEnd - mTxnStartTime).ToMilliseconds();
+    double latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
+    int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
+    Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
+  }
+
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   if (mPendingTransaction.IsValid()) {
-    if (mTxnStartTime) {
-      uint32_t latencyMs = round((aCompositeEnd - mTxnStartTime).ToMilliseconds());
+    if (mRefreshStartTime) {
+      int32_t latencyMs = lround((aCompositeEnd - mRefreshStartTime).ToMilliseconds());
       printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
     if (mFwdTime) {
-      uint32_t latencyMs = round((aCompositeEnd - mFwdTime).ToMilliseconds());
+      int32_t latencyMs = lround((aCompositeEnd - mFwdTime).ToMilliseconds());
       printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
     }
   }
+#endif
+
+  mRefreshStartTime = TimeStamp();
   mTxnStartTime = TimeStamp();
   mFwdTime = TimeStamp();
-#endif
   TransactionId id = mPendingTransaction;
   mPendingTransaction = TransactionId{0};
   return id;

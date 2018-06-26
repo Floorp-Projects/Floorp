@@ -604,6 +604,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
                                      bool aScheduleComposite,
                                      uint32_t aPaintSequenceNumber,
                                      bool aIsRepeatTransaction,
+                                     const mozilla::TimeStamp& aRefreshStart,
                                      const mozilla::TimeStamp& aTransactionStart,
                                      bool* aSent)
 {
@@ -745,6 +746,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   info.scheduleComposite() = aScheduleComposite;
   info.paintSequenceNumber() = aPaintSequenceNumber;
   info.isRepeatTransaction() = aIsRepeatTransaction;
+  info.refreshStart() = aRefreshStart;
   info.transactionStart() = aTransactionStart;
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   info.fwdTime() = TimeStamp::Now();
