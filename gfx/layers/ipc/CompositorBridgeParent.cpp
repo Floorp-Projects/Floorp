@@ -1328,6 +1328,7 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   // Otherwise, it should be continually increasing.
   MOZ_ASSERT(aInfo.id() == TransactionId{1} || aInfo.id() > mPendingTransaction);
   mPendingTransaction = aInfo.id();
+  mRefreshStartTime = aInfo.refreshStart();
   mTxnStartTime = aInfo.transactionStart();
   mFwdTime = aInfo.fwdTime();
 
@@ -1636,14 +1637,14 @@ CompositorBridgeParent::AllocPLayerTransactionParent(const nsTArray<LayersBacken
 
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
-    LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, mRootLayerTreeID);
+    LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, mRootLayerTreeID, mVsyncRate);
     p->AddIPDLReference();
     return p;
   }
 
   mCompositionManager = new AsyncCompositionManager(this, mLayerManager);
 
-  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(), mRootLayerTreeID);
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(), mRootLayerTreeID, mVsyncRate);
   p->AddIPDLReference();
   return p;
 }
@@ -2131,15 +2132,16 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
     NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
 #if defined(ENABLE_FRAME_LATENCY_LOG)
     if (mPendingTransaction.IsValid()) {
-      if (mTxnStartTime) {
-        uint32_t latencyMs = round((aCompositeEnd - mTxnStartTime).ToMilliseconds());
+      if (mRefreshStartTime) {
+        int32_t latencyMs = lround((aCompositeEnd - mRefreshStartTime).ToMilliseconds());
         printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
       }
       if (mFwdTime) {
-        uint32_t latencyMs = round((aCompositeEnd - mFwdTime).ToMilliseconds());
+        int32_t latencyMs = lround((aCompositeEnd - mFwdTime).ToMilliseconds());
         printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
       }
     }
+    mRefreshStartTime = TimeStamp();
     mTxnStartTime = TimeStamp();
     mFwdTime = TimeStamp();
 #endif
