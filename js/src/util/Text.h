@@ -153,17 +153,6 @@ CopyAndInflateChars(char16_t* dst, const JS::Latin1Char* src, size_t srclen)
 }
 
 /*
- * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
- * 'length chars. The buffer is NOT null-terminated. The destination length
- * must to be initialized with the buffer size and will contain on return the
- * number of copied bytes.
- */
-template <typename CharT>
-extern bool
-DeflateStringToBuffer(JSContext* maybecx, const CharT* chars,
-                      size_t charsLength, char* bytes, size_t* length);
-
-/*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 4 bytes long.  Return the number of UTF-8 bytes of data written.
  */
