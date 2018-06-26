@@ -4996,6 +4996,7 @@ UnaryArithIRGenerator::trackAttached(const char* name)
 #ifdef JS_CACHEIR_SPEW
     if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
         sp.valueProperty("val", val_);
+        sp.valueProperty("res", res_);
     }
 #endif
 }
@@ -5045,7 +5046,7 @@ UnaryArithIRGenerator::tryAttachNumber()
         return false;
 
     ValOperandId valId(writer.setInputOperandId(0));
-    writer.guardType(valId, JSVAL_TYPE_DOUBLE);
+    writer.guardIsNumber(valId);
     Int32OperandId truncatedId;
     switch (op_) {
       case JSOP_BITNOT:

@@ -2095,7 +2095,7 @@ nsMathMLChar::PaintForeground(nsIFrame* aForFrame,
       break;
     }
     default:
-      NS_NOTREACHED("Unknown drawing method");
+      MOZ_ASSERT_UNREACHABLE("Unknown drawing method");
       break;
   }
 

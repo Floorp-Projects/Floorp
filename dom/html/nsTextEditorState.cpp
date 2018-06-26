@@ -1794,7 +1794,7 @@ DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirecti
   } else if (dir == nsITextControlFrame::eBackward) {
     aDirection.AssignLiteral("backward");
   } else {
-    NS_NOTREACHED("Invalid SelectionDirection value");
+    MOZ_ASSERT_UNREACHABLE("Invalid SelectionDirection value");
   }
 }
 

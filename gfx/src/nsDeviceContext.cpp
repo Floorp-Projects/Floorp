@@ -18,7 +18,7 @@
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsCRT.h"                      // for nsCRT
-#include "nsDebug.h"                    // for NS_NOTREACHED, NS_ASSERTION, etc
+#include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsFont.h"                     // for nsFont
 #include "nsFontMetrics.h"              // for nsFontMetrics
 #include "nsAtom.h"                    // for nsAtom, NS_Atomize
@@ -702,7 +702,7 @@ bool
 nsDeviceContext::SetFullZoom(float aScale)
 {
     if (aScale <= 0) {
-        NS_NOTREACHED("Invalid full zoom value");
+        MOZ_ASSERT_UNREACHABLE("Invalid full zoom value");
         return false;
     }
     int32_t oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;

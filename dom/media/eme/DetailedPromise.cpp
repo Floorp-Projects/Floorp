@@ -58,7 +58,7 @@ DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
 void
 DetailedPromise::MaybeReject(ErrorResult&, const nsACString& aReason)
 {
-  NS_NOTREACHED("nsresult expected in MaybeReject()");
+  MOZ_ASSERT_UNREACHABLE("nsresult expected in MaybeReject()");
 }
 
 /* static */ already_AddRefed<DetailedPromise>

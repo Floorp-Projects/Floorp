@@ -120,7 +120,7 @@ public:
   }
   CacheIndexEntry(const CacheIndexEntry& aOther)
   {
-    NS_NOTREACHED("CacheIndexEntry copy constructor is forbidden!");
+    MOZ_ASSERT_UNREACHABLE("CacheIndexEntry copy constructor is forbidden!");
   }
   ~CacheIndexEntry()
   {

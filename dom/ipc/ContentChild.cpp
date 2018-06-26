@@ -2958,7 +2958,7 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
       mPolicy->GetSuperWhitelist(getter_AddRefs(set));
       break;
     default:
-      NS_NOTREACHED("Unexpected setType");
+      MOZ_ASSERT_UNREACHABLE("Unexpected setType");
       return IPC_FAIL_NO_REASON(this);
   }
 
@@ -2979,7 +2979,7 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
       set->Clear();
       break;
     default:
-      NS_NOTREACHED("Unexpected changeType");
+      MOZ_ASSERT_UNREACHABLE("Unexpected changeType");
       return IPC_FAIL_NO_REASON(this);
   }
 

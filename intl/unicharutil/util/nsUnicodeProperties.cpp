@@ -26,7 +26,9 @@ GetCharProps2(uint32_t aCh)
                                [aCh & ((1 << kCharProp2CharBits) - 1)];
     }
 
-    NS_NOTREACHED("Getting CharProps for codepoint outside Unicode range");
+    MOZ_ASSERT_UNREACHABLE("Getting CharProps for codepoint outside Unicode "
+                           "range");
+
     // Default values for unassigned
     using namespace mozilla::unicode;
     static const nsCharProps2 undefined = {

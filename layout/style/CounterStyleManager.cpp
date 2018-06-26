@@ -827,7 +827,7 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
       return IsOrdinalInRange(aOrdinal);
 
     default:
-      NS_NOTREACHED("Unknown counter style");
+      MOZ_ASSERT_UNREACHABLE("Unknown counter style");
       return false;
   }
 }
@@ -950,7 +950,7 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
       return EthiopicToText(aOrdinal, aResult);
 
     default:
-      NS_NOTREACHED("Unknown builtin counter style");
+      MOZ_ASSERT_UNREACHABLE("Unknown builtin counter style");
       return false;
   }
 }
@@ -1020,7 +1020,7 @@ DependentBuiltinCounterStyle::GetFallback()
       // not cache it here.
       return mManager->BuildCounterStyle(nsGkAtoms::cjkDecimal);
     default:
-      NS_NOTREACHED("Not a valid dependent builtin style");
+      MOZ_ASSERT_UNREACHABLE("Not a valid dependent builtin style");
       return BuiltinCounterStyle::GetFallback();
   }
 }
@@ -1375,7 +1375,7 @@ CustomCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
     case NS_STYLE_COUNTER_SYSTEM_EXTENDS:
       return GetExtendsRoot()->IsOrdinalInAutoRange(aOrdinal);
     default:
-      NS_NOTREACHED("Invalid system for computing auto value.");
+      MOZ_ASSERT_UNREACHABLE("Invalid system for computing auto value.");
       return false;
   }
 }
@@ -1471,7 +1471,7 @@ CustomCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
       return GetExtendsRoot()->
         GetInitialCounterText(aOrdinal, aWritingMode, aResult, aIsRTL);
     default:
-      NS_NOTREACHED("Invalid system.");
+      MOZ_ASSERT_UNREACHABLE("Invalid system.");
       return false;
   }
 }
@@ -1570,7 +1570,7 @@ CustomCounterStyle::ComputeRawSpeakAs(uint8_t& aSpeakAs,
       break;
     }
     default:
-      NS_NOTREACHED("Invalid speak-as value");
+      MOZ_ASSERT_UNREACHABLE("Invalid speak-as value");
   }
 }
 
@@ -1795,7 +1795,7 @@ AnonymousCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
     case NS_STYLE_COUNTER_SYSTEM_SYMBOLIC:
       return aOrdinal >= 1;
     default:
-      NS_NOTREACHED("Invalid system.");
+      MOZ_ASSERT_UNREACHABLE("Invalid system.");
       return false;
   }
 }
@@ -1849,7 +1849,7 @@ AnonymousCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
     case NS_STYLE_COUNTER_SYSTEM_NUMERIC:
       return GetNumericCounterText(aOrdinal, aResult, mSymbols);
     default:
-      NS_NOTREACHED("Invalid system.");
+      MOZ_ASSERT_UNREACHABLE("Invalid system.");
       return false;
   }
 }
@@ -1966,10 +1966,10 @@ CounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
       break;
     case NS_STYLE_COUNTER_SPEAKAS_OTHER:
       // This should be processed by CustomCounterStyle
-      NS_NOTREACHED("Invalid speak-as value");
+      MOZ_ASSERT_UNREACHABLE("Invalid speak-as value");
       break;
     default:
-      NS_NOTREACHED("Unknown speak-as value");
+      MOZ_ASSERT_UNREACHABLE("Unknown speak-as value");
       break;
   }
 }

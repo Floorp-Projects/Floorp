@@ -52,7 +52,7 @@ struct MappedMemoryRegion {
 
 // Parses /proc/<pid>/maps input data and stores in |regions|. Returns true
 // and updates |regions| if and only if all of |input| was successfully parsed.
-bool ParseProcMaps(const std::string& input,
+bool ParseProcMaps(const string& input,
                    std::vector<MappedMemoryRegion>* regions);
 
 }  // namespace google_breakpad

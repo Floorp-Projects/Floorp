@@ -58,7 +58,7 @@ NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::SetHashCompleter
   (const nsACString&, nsIUrlClassifierHashCompleter*)
 {
-  NS_NOTREACHED("This method should not be called!");
+  MOZ_ASSERT_UNREACHABLE("This method should not be called!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -912,7 +912,7 @@ ExtractByteStreamFromBody(const fetch::OwningBodyInit& aBodyInit,
                             charset);
   }
 
-  NS_NOTREACHED("Should never reach here");
+  MOZ_ASSERT_UNREACHABLE("Should never reach here");
   return NS_ERROR_FAILURE;
 }
 
@@ -964,7 +964,7 @@ ExtractByteStreamFromBody(const fetch::BodyInit& aBodyInit,
                             charset);
   }
 
-  NS_NOTREACHED("Should never reach here");
+  MOZ_ASSERT_UNREACHABLE("Should never reach here");
   return NS_ERROR_FAILURE;
 }
 
@@ -1020,7 +1020,7 @@ ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
                             charset);
   }
 
-  NS_NOTREACHED("Should never reach here");
+  MOZ_ASSERT_UNREACHABLE("Should never reach here");
   return NS_ERROR_FAILURE;
 }
 

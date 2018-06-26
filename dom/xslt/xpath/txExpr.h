@@ -183,7 +183,7 @@ _class::getSubExprAt(uint32_t aPos)                           \
 void                                                          \
 _class::setSubExprAt(uint32_t aPos, Expr* aExpr)              \
 {                                                             \
-    NS_NOTREACHED("setting bad subexpression index");         \
+    MOZ_ASSERT_UNREACHABLE("setting bad subexpression index");\
 }
 
 #define TX_IMPL_EXPR_STUBS_1(_class, _ReturnType, _Expr1)     \

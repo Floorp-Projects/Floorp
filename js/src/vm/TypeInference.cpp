@@ -3476,7 +3476,7 @@ JSFunction::setTypeForScriptedFunction(JSContext* cx, HandleFunction fun,
     } else {
         RootedObject funProto(cx, fun->staticPrototype());
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(funProto));
-        ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, &JSFunction::class_,
+        ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, fun->realm(), &JSFunction::class_,
                                                          taggedProto);
         if (!group)
             return false;
@@ -3995,8 +3995,8 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
     ObjectGroupFlags initialFlags = group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK;
 
     Rooted<TaggedProto> protoRoot(cx, group->proto());
-    ObjectGroup* initialGroup = ObjectGroupRealm::makeGroup(cx, group->clasp(), protoRoot,
-                                                            initialFlags);
+    ObjectGroup* initialGroup = ObjectGroupRealm::makeGroup(cx, group->realm(), group->clasp(),
+                                                            protoRoot, initialFlags);
     if (!initialGroup)
         return false;
 

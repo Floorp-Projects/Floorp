@@ -847,9 +847,14 @@ public:
         case eState_Removed:
           entry->mState = eState_RemainedPresent;
           break;
-        default:
-          NS_NOTREACHED("shouldn't have observed an animation being added "
-                        "twice");
+        case eState_Added:
+          // FIXME bug 1189015
+          NS_ERROR("shouldn't have observed an animation being added twice");
+          break;
+        case eState_RemainedPresent:
+          MOZ_ASSERT_UNREACHABLE("shouldn't have observed an animation "
+                                 "remaining present");
+          break;
       }
     } else {
       entry = sCurrentBatch->AddEntry(aAnimation, aTarget);
@@ -887,9 +892,14 @@ public:
         case eState_Added:
           entry->mState = eState_RemainedAbsent;
           break;
-        default:
-          NS_NOTREACHED("shouldn't have observed an animation being removed "
-                        "twice");
+        case eState_RemainedAbsent:
+          MOZ_ASSERT_UNREACHABLE("shouldn't have observed an animation "
+                                 "remaining absent");
+          break;
+        case eState_Removed:
+          // FIXME bug 1189015
+          NS_ERROR("shouldn't have observed an animation being removed twice");
+          break;
       }
     } else {
       entry = sCurrentBatch->AddEntry(aAnimation, aTarget);

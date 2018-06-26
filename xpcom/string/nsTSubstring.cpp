@@ -896,7 +896,7 @@ nsTStringRepr<T>::Equals(const char_type* aData) const
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
-    NS_NOTREACHED("null data pointer");
+    MOZ_ASSERT_UNREACHABLE("null data pointer");
     return this->mLength == 0;
   }
 
@@ -913,7 +913,7 @@ nsTStringRepr<T>::Equals(const char_type* aData,
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
-    NS_NOTREACHED("null data pointer");
+    MOZ_ASSERT_UNREACHABLE("null data pointer");
     return this->mLength == 0;
   }
 

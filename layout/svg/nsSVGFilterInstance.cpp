@@ -51,7 +51,7 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
   // Get the filter element.
   mFilterElement = mFilterFrame->GetFilterContent();
   if (!mFilterElement) {
-    NS_NOTREACHED("filter frame should have a related element");
+    MOZ_ASSERT_UNREACHABLE("filter frame should have a related element");
     return;
   }
 
@@ -134,7 +134,7 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
     : mFilter.GetURL()->ResolveLocalRef(mTargetContent);
 
   if (!url) {
-    NS_NOTREACHED("an nsStyleFilter of type URL should have a non-null URL");
+    MOZ_ASSERT_UNREACHABLE("an nsStyleFilter of type URL should have a non-null URL");
     return nullptr;
   }
 

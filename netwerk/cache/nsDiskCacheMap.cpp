@@ -508,7 +508,7 @@ NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == GetBucketRank(bucketIndex, 0)
             return NS_OK;
         }
     }
-    NS_NOTREACHED("record not found");
+    MOZ_ASSERT_UNREACHABLE("record not found");
     return NS_ERROR_UNEXPECTED;
 }
 

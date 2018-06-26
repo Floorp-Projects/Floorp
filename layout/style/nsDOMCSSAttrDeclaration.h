@@ -15,6 +15,7 @@
 
 
 class nsSMILValue;
+struct RawServoUnlockedDeclarationBlock;
 namespace mozilla {
 namespace dom {
 class DomGroup;
@@ -32,9 +33,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMCSSAttributeDeclaration,
                                                                    nsICSSDeclaration)
 
-  // If GetCSSDeclaration returns non-null, then the decl it returns
-  // is owned by our current style rule.
-  mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
+  mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
+    Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
 
   nsDOMCSSDeclaration::ParsingEnvironment
     GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
@@ -55,10 +55,23 @@ public:
                             const nsAString& aValue,
                             nsIPrincipal* aSubjectPrincipal) override;
 
+  static void MutationClosureFunction(void* aData);
+
+  void
+  GetPropertyChangeClosure(DeclarationBlockMutationClosure* aClosure,
+                           MutationClosureData* aClosureData) final
+  {
+    aClosure->function = MutationClosureFunction;
+    aClosure->data = aClosureData;
+    aClosureData->mClosure = MutationClosureFunction;
+    aClosureData->mElement = mElement;
+  }
+
 protected:
   ~nsDOMCSSAttributeDeclaration();
 
-  virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;
+  virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl,
+                                     MutationClosureData* aClosureData) override;
   virtual nsIDocument* DocToUpdate() override;
 
   RefPtr<Element> mElement;

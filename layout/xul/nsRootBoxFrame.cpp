@@ -224,7 +224,7 @@ nsRootBoxFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
   if (!mPopupSetFrame || !aPopupSet) {
     mPopupSetFrame = aPopupSet;
   } else {
-    NS_NOTREACHED("Popup set is already defined! Only 1 allowed.");
+    MOZ_ASSERT_UNREACHABLE("Popup set is already defined! Only 1 allowed.");
   }
 }
 

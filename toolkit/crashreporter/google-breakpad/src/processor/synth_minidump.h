@@ -270,6 +270,16 @@ class Module: public Section {
   static const MDVSFixedFileInfo stock_version_info;
 };
 
+class UnloadedModule: public Section {
+ public:
+  UnloadedModule(const Dump &dump,
+                 uint64_t base_of_image,
+                 uint32_t size_of_image,
+                 const String &name,
+                 uint32_t checksum = 0,
+                 uint32_t time_date_stamp = 1262805309);
+};
+
 class Exception : public Stream {
 public:
   Exception(const Dump &dump,
@@ -308,7 +318,18 @@ class List: public Stream {
 
  private:
   size_t count_;
+
+ protected:
+  // This constructor allows derived lists to specify their own layout
+  // rather than starting with count as specified in the public constructor.
+  List(const Dump &dump, uint32_t type, bool) : Stream(dump, type), count_(0) {}
+
   Label count_label_;
+};
+
+class UnloadedModuleList : public List<UnloadedModule> {
+ public:
+  UnloadedModuleList(const Dump &dump, uint32_t type);
 };
 
 class Dump: public test_assembler::Section {
@@ -333,6 +354,7 @@ class Dump: public test_assembler::Section {
   Dump &Add(Memory *object); // append, record in memory list
   Dump &Add(Thread *object); // append, record in thread list
   Dump &Add(Module *object); // append, record in module list
+  Dump &Add(UnloadedModule *object); // append, record in unloaded module list
 
   // Complete the construction of the minidump, given the Add calls
   // we've seen up to this point. After this call, this Dump's
@@ -358,6 +380,10 @@ class Dump: public test_assembler::Section {
   // This minidump's module list. We construct this incrementally from
   // Add(Module *) calls.
   List<Module> module_list_;
+
+  // This minidump's unloaded module list. We construct this incrementally from
+  // Add(UnloadedModule *) calls.
+  UnloadedModuleList unloaded_module_list_;
 
   // This minidump's memory list. We construct this incrementally from
   // Add(Memory *) calls. This is actually a list of MDMemoryDescriptors,

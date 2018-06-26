@@ -885,7 +885,7 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessPerspective(aMatrix, aData);
     break;
   default:
-    NS_NOTREACHED("Unknown transform function!");
+    MOZ_ASSERT_UNREACHABLE("Unknown transform function!");
   }
 }
 

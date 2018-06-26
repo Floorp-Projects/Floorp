@@ -2109,7 +2109,7 @@ SetClassAndProto(JSContext* cx, HandleObject obj,
         // group so we can keep track of the interpreted function for Ion
         // inlining.
         MOZ_ASSERT(obj->is<JSFunction>());
-        newGroup = ObjectGroupRealm::makeGroup(cx, &JSFunction::class_, proto);
+        newGroup = ObjectGroupRealm::makeGroup(cx, oldGroup->realm(), &JSFunction::class_, proto);
         if (!newGroup)
             return false;
         newGroup->setInterpretedFunction(oldGroup->maybeInterpretedFunction());
@@ -2145,8 +2145,7 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
 
     MarkObjectGroupUnknownProperties(cx, obj->group());
 
-    ObjectGroupRealm& realm = ObjectGroupRealm::get(obj->group());
-    ObjectGroup* group = ObjectGroup::lazySingletonGroup(cx, realm, obj->getClass(),
+    ObjectGroup* group = ObjectGroup::lazySingletonGroup(cx, obj->group(), obj->getClass(),
                                                          obj->taggedProto());
     if (!group)
         return false;

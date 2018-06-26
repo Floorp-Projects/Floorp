@@ -85,6 +85,15 @@ class LinuxPtraceDumper : public LinuxDumper {
  private:
   // Set to true if all threads of the crashed process are suspended.
   bool threads_suspended_;
+
+  // Read the tracee's registers on kernel with PTRACE_GETREGSET support.
+  // Returns false if PTRACE_GETREGSET is not defined.
+  // Returns true on success.
+  bool ReadRegisterSet(ThreadInfo* info, pid_t tid);
+
+  // Read the tracee's registers on kernel with PTRACE_GETREGS support.
+  // Returns true on success.
+  bool ReadRegisters(ThreadInfo* info, pid_t tid);
 };
 
 }  // namespace google_breakpad

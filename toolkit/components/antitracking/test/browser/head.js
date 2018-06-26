@@ -22,7 +22,7 @@ this.AntiTracking = {
 
       await SpecialPowers.flushPrefEnv();
       await SpecialPowers.pushPrefEnv({"set": [
-        ["privacy.trackingprotection.storagerestriction.enabled", blocking],
+        ["privacy.restrict3rdpartystorage.enabled", blocking],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", blocking],

@@ -517,7 +517,8 @@ class GCRuntime
   private:
     enum IncrementalResult
     {
-        Reset = 0,
+        ResetIncremental = 0,
+        ReturnToEvictNursery,
         Ok
     };
 
@@ -570,11 +571,27 @@ class GCRuntime
 
     gcstats::ZoneGCStats scanZonesBeforeGC();
     void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason) JS_HAZ_GC_CALL;
-    MOZ_MUST_USE IncrementalResult gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
+
+    /*
+     * Run one GC "cycle" (either a slice of incremental GC or an entire
+     * non-incremental GC).
+     *
+     * Returns:
+     *  * ResetIncremental if we "reset" an existing incremental GC, which would
+     *    force us to run another cycle or
+     *  * ReturnToEvictNursery if the collector needs the nursery to be
+     *    evicted before it can continue or
+     *  * Ok otherwise.
+     */
+    MOZ_MUST_USE IncrementalResult gcCycle(bool nonincrementalByAPI,
+                                           SliceBudget& budget,
                                            JS::gcreason::Reason reason);
     bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
-    void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
-                                 AutoGCSession& session);
+    IncrementalResult incrementalCollectSlice(SliceBudget& budget,
+                                              JS::gcreason::Reason reason,
+                                              AutoGCSession& session);
+    MOZ_MUST_USE bool shouldCollectNurseryForSlice(bool nonincrementalByAPI,
+        SliceBudget& budget);
 
     friend class AutoCallGCCallbacks;
     void maybeCallGCCallback(JSGCStatus status);

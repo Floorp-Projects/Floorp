@@ -685,7 +685,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
         skipIncremental = false;
         break;
       default:
-        NS_NOTREACHED("unknown block direction");
+        MOZ_ASSERT_UNREACHABLE("unknown block direction");
         break;
       }
     }

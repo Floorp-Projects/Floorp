@@ -61,7 +61,7 @@ NPObjectFromVariant(const Variant& aRemoteVariant)
     }
 
     default:
-      NS_NOTREACHED("Shouldn't get here!");
+      MOZ_ASSERT_UNREACHABLE("Shouldn't get here!");
       return nullptr;
   }
 }
