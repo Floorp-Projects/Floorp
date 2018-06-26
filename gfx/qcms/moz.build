@@ -46,3 +46,10 @@ if use_sse2:
 if use_altivec:
     SOURCES += ['transform-altivec.c']
     SOURCES['transform-altivec.c'].flags += ['-maltivec']
+
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
+
+if CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+        'fuzztest'
+    ]
