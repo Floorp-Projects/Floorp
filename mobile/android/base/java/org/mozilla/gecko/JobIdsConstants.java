@@ -47,6 +47,8 @@ public class JobIdsConstants {
     private static final int JOB_ID_GECKO_LIBS_LOADER = 1015;
     private static final int JOB_ID_GECKO_SERVICES_CREATOR = 1016;
 
+    private static final int JOB_ID_GCM_TOKEN_REFRESH = 1017;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -113,6 +115,10 @@ public class JobIdsConstants {
 
     public static int getIdForGeckoServicesCreator() {
         return getIdWithOffset(JOB_ID_GECKO_SERVICES_CREATOR);
+    }
+
+    public static int getIdForGcmTokenRefresher() {
+        return getIdWithOffset(JOB_ID_GCM_TOKEN_REFRESH);
     }
 
     private static boolean isReleaseBuild() {
