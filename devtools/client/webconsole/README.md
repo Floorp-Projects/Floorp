@@ -91,7 +91,7 @@ the browser tab (experimental). The same code base is used to run in both enviro
 Files used to run the WebConsole inside of the DevTools toolbox.
 
 * `main.js` called by devtools toolbox to launch the WebConsole panel.
-* `webconsole.html` panel UI and launch scripts.
+* `index.html` panel UI and launch scripts.
 
 ### Run in the browser tab (experimental)
 
@@ -99,7 +99,7 @@ Files used to run the WebConsole in the browser tab
 
 * `bin/` files to launch test server.
 * `configs/` dev configs.
-* `local-dev/index.js` the entry point, equivalent to `webconsole.html`.
+* `local-dev/index.js` the entry point, equivalent to `index.html`.
 * `webpack.config.js` the webpack config file, including plenty of module aliases map to shims and polyfills.
 * `package.json` declare every required packages and available commands.
 

@@ -12,5 +12,5 @@
         width="900" height="350"
         persist="screenX screenY width height sizemode">
   <popupset></popupset>
-  <iframe src="webconsole.html" flex="1"></iframe>
+  <iframe src="index.html" flex="1"></iframe>
 </window>

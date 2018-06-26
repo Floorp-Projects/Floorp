@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Test that middle click on style sheet doesn't open styleeditor.xul in a new
+// Test that middle click on style sheet doesn't open index.xul in a new
 // tab (bug 851132).
 
 const TESTCASE_URI = TEST_BASE_HTTP + "four.html";

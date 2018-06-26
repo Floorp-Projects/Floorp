@@ -216,6 +216,10 @@ class FontInspector {
 
     // Then, replace with enabled font properties found on any of the rules that apply.
     for (const rule of this.ruleView.rules) {
+      if (rule.inherited) {
+        continue;
+      }
+
       for (const textProp of rule.textProps) {
         if (FONT_PROPERTIES.includes(textProp.name) &&
             !KEYWORD_VALUES.includes(textProp.value) &&
