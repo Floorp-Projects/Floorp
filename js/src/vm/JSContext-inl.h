@@ -478,12 +478,16 @@ JSContext::leaveAtomsZone(JS::Realm* oldRealm,
 inline void
 JSContext::setRealm(JS::Realm* realm)
 {
-    // This thread must have exclusive access to the zone.
-    MOZ_ASSERT_IF(realm, CurrentThreadCanAccessZone(realm->zone()));
-
     realm_ = realm;
-    zone_ = realm ? realm->zone() : nullptr;
-    arenas_ = zone_ ? &zone_->arenas : nullptr;
+    if (realm) {
+        // This thread must have exclusive access to the zone.
+        MOZ_ASSERT(CurrentThreadCanAccessZone(realm->zone()));
+        zone_ = realm->zone();
+        arenas_ = &zone_->arenas;
+    } else {
+        zone_ = nullptr;
+        arenas_ = nullptr;
+    }
 }
 
 inline JSScript*
