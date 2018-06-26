@@ -31,7 +31,7 @@ if test -z "$MOZ_ARCH"; then
     arm-Android)
         MOZ_THUMB=yes
         MOZ_ARCH=armv7-a
-        MOZ_FPU=vfpv3-d16
+        MOZ_FPU=neon
         MOZ_FLOAT_ABI=softfp
         MOZ_ALIGN=no
         ;;
