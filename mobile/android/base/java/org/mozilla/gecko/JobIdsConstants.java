@@ -27,6 +27,8 @@ public class JobIdsConstants {
     private static final int JOB_ID_DLC_SYNCHRONIZE = 1002;
     private static final int JOB_ID_DLC_CLEANUP = 1003;
 
+    private static final int JOB_ID_TAB_RECEIVED = 1004;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -41,6 +43,10 @@ public class JobIdsConstants {
 
     public static int getIdForDlcCleanupJob() {
         return getIdWithOffset(JOB_ID_DLC_CLEANUP);
+    }
+
+    public static int getIdForTabReceivedJob() {
+        return getIdWithOffset(JOB_ID_TAB_RECEIVED);
     }
 
     private static boolean isReleaseBuild() {
