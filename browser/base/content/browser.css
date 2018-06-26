@@ -990,8 +990,8 @@ browser[tabmodalPromptShowing] {
 }
 
 #statuspanel[mirror] {
-  offset-inline-start: auto;
-  offset-inline-end: 0;
+  inset-inline-start: auto;
+  inset-inline-end: 0;
 }
 
 #statuspanel[sizelimit] {

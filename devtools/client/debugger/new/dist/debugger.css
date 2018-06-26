@@ -3118,8 +3118,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .breakpoint .close-btn {
-  offset-inline-end: 15px;
-  offset-inline-start: auto;
+  inset-inline-end: 15px;
+  inset-inline-start: auto;
   position: absolute;
   top: 8px;
   display: none;
@@ -3268,7 +3268,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .expression-container__close-btn {
   position: absolute;
-  offset-inline-end: 0px;
+  inset-inline-end: 0px;
   top: 1px;
 }
 
@@ -3952,8 +3952,8 @@ html[dir="rtl"] .object-node {
 .welcomebox .command-bar-button {
   position: absolute;
   top: auto;
-  offset-inline-end: 0;
-  offset-inline-start: auto;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
   bottom: 0;
 }
 

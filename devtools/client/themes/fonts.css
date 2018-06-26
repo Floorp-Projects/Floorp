@@ -102,7 +102,7 @@
   color: var(--theme-toolbar-color);
   grid-column: span 2;
   position: relative;
-  offset-inline-start: -4px;
+  inset-inline-start: -4px;
 }
 
 .font-css-code-expander::before {
