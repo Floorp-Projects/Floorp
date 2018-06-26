@@ -1,0 +1,15 @@
+[package]
+name = "rustc_version"
+version = "0.2.1"
+authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
+license = "MIT/Apache-2.0"
+
+description = "A library for querying the version of a installed rustc compiler"
+readme = "README.md"
+documentation = "http://kimundi.github.io/rustc-version-rs/rustc_version/index.html"
+
+repository = "https://github.com/Kimundi/rustc-version-rs"
+keywords = ["version", "rustc"]
+
+[dependencies]
+semver = "0.6"
