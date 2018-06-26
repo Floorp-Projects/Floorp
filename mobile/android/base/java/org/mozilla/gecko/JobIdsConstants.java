@@ -34,6 +34,8 @@ public class JobIdsConstants {
 
     private static final int JOB_ID_TELEMETRY_UPLOAD = 1007;
 
+    private static final int JOB_ID_FILE_CLEANUP = 1008;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -64,6 +66,10 @@ public class JobIdsConstants {
 
     public static int getIdForTelemetryUploadJob() {
         return getIdWithOffset(JOB_ID_TELEMETRY_UPLOAD);
+    }
+
+    public static int getIdForFileCleanupJob() {
+        return getIdWithOffset(JOB_ID_FILE_CLEANUP);
     }
 
     private static boolean isReleaseBuild() {
