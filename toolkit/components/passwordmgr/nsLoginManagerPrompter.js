@@ -5,6 +5,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
 const { PromptUtils } = ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
@@ -821,6 +822,7 @@ LoginManagerPrompter.prototype = {
                                                 : "PWMGR_PROMPT_UPDATE_ACTION";
     let histogram = Services.telemetry.getHistogramById(histogramName);
     histogram.add(PROMPT_DISPLAYED);
+    Weave.Service.recordTelemetryHistogram(histogramName);
 
     const promptType = type == "password-save" ? "save" : "update";
     const flow_id = browser.ownerGlobal.gBrowser.getTabForBrowser(browser).linkedPanel;
@@ -957,6 +959,7 @@ LoginManagerPrompter.prototype = {
       accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
       callback: () => {
         histogram.add(PROMPT_ADD_OR_UPDATE);
+        Weave.Service.recordTelemetryHistogram(histogramName);
         const flow_id = browser.ownerGlobal.gBrowser.getTabForBrowser(browser).linkedPanel;
         if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
           Services.obs.notifyObservers(null, "LoginStats:NewSavedPassword");
@@ -983,6 +986,7 @@ LoginManagerPrompter.prototype = {
       accessKey: this._getLocalizedString(initialMsgNames.secondaryButtonAccessKey),
       callback: () => {
         histogram.add(PROMPT_NOTNOW);
+        Weave.Service.recordTelemetryHistogram(histogramName);
         browser.focus();
       }
     }];
@@ -994,6 +998,7 @@ LoginManagerPrompter.prototype = {
         callback: () => {
           histogram.add(PROMPT_NEVER);
           Services.logins.setLoginSavingEnabled(login.hostname, false);
+          Weave.Service.recordTelemetryHistogram(histogramName);
           browser.focus();
         }
       });
