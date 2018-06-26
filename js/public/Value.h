@@ -314,13 +314,7 @@ CanonicalizeNaN(double d)
  */
 union MOZ_NON_PARAM alignas(8) Value
 {
-#if !defined(_MSC_VER) && !defined(__sparc)
-  // Don't expose Value's fields unless we have to: MSVC (bug 689101) and SPARC
-  // (bug 737344) require Value be POD to pass it by value and not in memory.
-  // More precisely, we don't want Value return values compiled as outparams.
   private:
-#endif
-
     uint64_t asBits_;
     double asDouble_;
 
