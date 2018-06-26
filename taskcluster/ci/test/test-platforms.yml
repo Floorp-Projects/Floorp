@@ -135,6 +135,7 @@ windows7-32/opt:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
+        - raptor
 
 windows7-32-pgo/opt:
     build-platform: win32-pgo/opt
@@ -144,6 +145,7 @@ windows7-32-pgo/opt:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
+        - raptor
 
 windows7-32-nightly/opt:
     build-platform: win32-nightly/opt

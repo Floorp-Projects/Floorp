@@ -44,6 +44,7 @@ class Raptor(object):
         self.config['app'] = app
         self.config['binary'] = binary
         self.config['platform'] = mozinfo.os
+        self.config['processor'] = mozinfo.processor
         self.config['run_local'] = run_local
         self.config['obj_path'] = obj_path
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
@@ -100,6 +101,7 @@ class Raptor(object):
         _key = 'playback_pageset_zip_%s' % self.config['platform']
         self.config['playback_pageset_zip'] = test.get(_key, None)
         self.config['playback_recordings'] = test.get('playback_recordings', None)
+        self.config['python3_win_manifest'] = test.get('python3_win_manifest', None)
 
     def run_test(self, test, timeout=None):
         self.log.info("starting raptor test: %s" % test['name'])
@@ -140,6 +142,7 @@ class Raptor(object):
 
         try:
             self.runner.wait(timeout)
+
         finally:
             try:
                 self.runner.check_for_crashes()
