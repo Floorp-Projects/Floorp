@@ -744,9 +744,9 @@ nsFind::SetEntireWord(bool aEntireWord)
 
 nsresult
 nsFind::NextNode(State& aState,
-                 nsRange* aSearchRange,
-                 nsRange* aStartPoint,
-                 nsRange* aEndPoint) const
+                 const nsRange* aSearchRange,
+                 const nsRange* aStartPoint,
+                 const nsRange* aEndPoint) const
 {
   nsresult rv;
 
@@ -865,9 +865,9 @@ nsFind::NextNode(State& aState,
 
 char16_t
 nsFind::PeekNextChar(State& aState,
-                     nsRange* aSearchRange,
-                     nsRange* aStartPoint,
-                     nsRange* aEndPoint) const
+                     const nsRange* aSearchRange,
+                     const nsRange* aStartPoint,
+                     const nsRange* aEndPoint) const
 {
   // We need to restore the necessary state before this function returns.
   StateRestorer restorer(aState);
