@@ -49,7 +49,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'browser-test.js',
     'chrome-harness.js',
     'chunkifyTests.js',
-    'favicon.ico',
     'gen_template.pl',
     'harness.xul',
     'leaks.py',
