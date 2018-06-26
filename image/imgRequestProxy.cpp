@@ -1039,7 +1039,7 @@ NotificationTypeToString(int32_t aType)
     case imgINotificationObserver::IS_ANIMATED: return "IS_ANIMATED";
     case imgINotificationObserver::HAS_TRANSPARENCY: return "HAS_TRANSPARENCY";
     default:
-      NS_NOTREACHED("Notification list should be exhaustive");
+      MOZ_ASSERT_UNREACHABLE("Notification list should be exhaustive");
       return "(unknown notification)";
   }
 }

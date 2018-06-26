@@ -5071,7 +5071,7 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
   AutoTimelineMarker m(aTargetNode->OwnerDoc()->GetDocShell(), "Parse HTML");
 
   if (nsContentUtils::sFragmentParsingActive) {
-    NS_NOTREACHED("Re-entrant fragment parsing attempted.");
+    MOZ_ASSERT_UNREACHABLE("Re-entrant fragment parsing attempted.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
   mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
@@ -5127,7 +5127,7 @@ nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
   AutoTimelineMarker m(aTargetDocument->GetDocShell(), "Parse HTML");
 
   if (nsContentUtils::sFragmentParsingActive) {
-    NS_NOTREACHED("Re-entrant fragment parsing attempted.");
+    MOZ_ASSERT_UNREACHABLE("Re-entrant fragment parsing attempted.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
   mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
@@ -5154,7 +5154,7 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   AutoTimelineMarker m(aDocument->GetDocShell(), "Parse XML");
 
   if (nsContentUtils::sFragmentParsingActive) {
-    NS_NOTREACHED("Re-entrant fragment parsing attempted.");
+    MOZ_ASSERT_UNREACHABLE("Re-entrant fragment parsing attempted.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
   mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
@@ -8859,7 +8859,7 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                               nsIChannel* aChannel,
                                               nsIURI* aURI)
 {
-  if (!StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
     return false;
   }
 

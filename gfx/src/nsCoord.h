@@ -205,7 +205,7 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
       return infMinusInfResult;
     } else {
       // case (b)
-      NS_NOTREACHED("Attempted to subtract [n - nscoord_MAX]");
+      MOZ_ASSERT_UNREACHABLE("Attempted to subtract [n - nscoord_MAX]");
       return 0;
     }
   } else {

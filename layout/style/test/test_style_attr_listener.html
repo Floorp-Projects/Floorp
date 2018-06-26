@@ -8,23 +8,44 @@
 <body>
 <div style=""></div>
 <script>
-let div = document.querySelector('div');
-let expectation;
-let count = 0;
-div.style.color = "red";
-div.addEventListener('DOMAttrModified', function(evt) {
-  count++;
-  is(evt.prevValue, expectation.prevValue, "Previous value for event ${count}");
-  is(evt.newValue, expectation.newValue, "New value for event ${count}");
-});
-expectation = { prevValue: 'color: red;', newValue: 'color: green;' };
-div.style.color = "green";
-expectation = { prevValue: 'color: green;', newValue: '' };
-div.style.color = '';
-if (SpecialPowers.getBoolPref("dom.mutation-events.cssom.disabled")) {
-  is(count, 0, "No DOMAttrModified event should be triggered");
-} else {
-  is(count, 2, "DOMAttrModified events should have been triggered");
+SimpleTest.waitForExplicitFinish();
+
+// Run the test first with mutation events enabled and then disabled.
+SpecialPowers.pushPrefEnv(
+  { 'set': [['dom.mutation-events.cssom.disabled', false]] },
+  runTest
+);
+
+function runTest(stop) {
+  let div = document.querySelector('div');
+  let expectation;
+  let count = 0;
+  div.style.color = "red";
+  div.addEventListener('DOMAttrModified', function(evt) {
+    count++;
+    is(evt.prevValue, expectation.prevValue, `Previous value for event ${count}`);
+    is(evt.newValue, expectation.newValue, `New value for event ${count}`);
+  });
+  expectation = { prevValue: 'color: red;', newValue: 'color: green;' };
+  div.style.color = "green";
+  expectation = { prevValue: 'color: green;', newValue: '' };
+  div.style.color = '';
+  if (SpecialPowers.getBoolPref("dom.mutation-events.cssom.disabled")) {
+    is(count, 0, "No DOMAttrModified event should be triggered");
+  } else {
+    is(count, 2, "DOMAttrModified events should have been triggered");
+  }
+
+  if (!stop) {
+    div.setAttribute("style", "");
+    SpecialPowers.pushPrefEnv(
+      { 'set': [['dom.mutation-events.cssom.disabled', true]] },
+      function() {
+        runTest(true);
+        SimpleTest.finish();
+      }
+    );
+  }
 }
 </script>
 </body>

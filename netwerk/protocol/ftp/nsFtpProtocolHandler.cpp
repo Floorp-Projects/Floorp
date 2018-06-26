@@ -409,7 +409,7 @@ nsFtpProtocolHandler::Observe(nsISupports *aSubject,
         ClearAllConnections();
         mSessionId++;
     } else {
-        NS_NOTREACHED("unexpected topic");
+        MOZ_ASSERT_UNREACHABLE("unexpected topic");
     }
 
     return NS_OK;

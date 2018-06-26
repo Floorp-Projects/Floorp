@@ -2988,10 +2988,8 @@ js::GetCodeCoverageSummary(JSContext* cx, size_t* length)
 
     ptrdiff_t len = out.stringEnd() - out.string();
     char* res = cx->pod_malloc<char>(len + 1);
-    if (!res) {
-        JS_ReportOutOfMemory(cx);
+    if (!res)
         return nullptr;
-    }
 
     js_memcpy(res, out.string(), len);
     res[len] = 0;

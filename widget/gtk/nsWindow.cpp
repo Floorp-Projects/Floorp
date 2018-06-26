@@ -842,8 +842,14 @@ nsWindow::GetDesktopToDeviceScale()
 void
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
-    if (mContainer || !mGdkWindow) {
-        NS_NOTREACHED("nsWindow::SetParent called illegally");
+    if (!mGdkWindow) {
+        MOZ_ASSERT_UNREACHABLE("The native window has already been destroyed");
+        return;
+    }
+
+    if (mContainer) {
+        // FIXME bug 1469183
+        NS_ERROR("nsWindow should not have a container here");
         return;
     }
 

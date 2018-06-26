@@ -144,7 +144,7 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       aExecutor->Preconnect(mUrlOrSizes, mCrossOriginOrMedia);
       break;
     default:
-      NS_NOTREACHED("Bogus speculative load.");
+      MOZ_ASSERT_UNREACHABLE("Bogus speculative load.");
       break;
   }
 }

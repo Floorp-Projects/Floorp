@@ -927,7 +927,7 @@ KeyframeEffect::GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const
       break;
 
     default:
-      NS_NOTREACHED("Animation of unsupported pseudo-type");
+      MOZ_ASSERT_UNREACHABLE("Animation of unsupported pseudo-type");
       aRv.SetNull();
   }
 }

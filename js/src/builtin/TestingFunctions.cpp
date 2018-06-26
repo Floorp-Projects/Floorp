@@ -5183,6 +5183,15 @@ ObjectGlobal(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+AssertCorrectRealm(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_RELEASE_ASSERT(cx->realm() == args.callee().as<JSFunction>().realm());
+    args.rval().setUndefined();
+    return true;
+}
+
 JSScript*
 js::TestingFunctionArgumentToScript(JSContext* cx,
                                     HandleValue v,
@@ -5986,6 +5995,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("objectGlobal", ObjectGlobal, 1, 0,
 "objectGlobal(obj)",
 "  Returns the object's global object or null if the object is a wrapper.\n"),
+
+    JS_FN_HELP("assertCorrectRealm", AssertCorrectRealm, 0, 0,
+"assertCorrectRealm()",
+"  Asserts cx->realm matches callee->raelm.\n"),
 
     JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
 "baselineCompile([fun/code], forceDebugInstrumentation=false)",

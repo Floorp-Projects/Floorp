@@ -1768,7 +1768,7 @@ nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
             atom = nsHttp::ResolveAtom("Public-Key-Pins");
             break;
         default:
-            NS_NOTREACHED("Invalid security header type");
+            MOZ_ASSERT_UNREACHABLE("Invalid security header type");
             return NS_ERROR_FAILURE;
     }
 
@@ -3143,7 +3143,7 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
     if (val.IsEmpty()) {
         // if we hit this code it means mCachedResponseHead->IsResumable() is
         // either broken or not being called.
-        NS_NOTREACHED("no cache validator");
+        MOZ_ASSERT_UNREACHABLE("no cache validator");
         mIsPartialRequest = false;
         return NS_ERROR_FAILURE;
     }
@@ -3325,7 +3325,7 @@ nsHttpChannel::OnDoneReadingPartialCacheEntry(bool *streamDone)
             *streamDone = false;
     }
     else
-        NS_NOTREACHED("no transaction");
+        MOZ_ASSERT_UNREACHABLE("no transaction");
     return rv;
 }
 
@@ -3740,7 +3740,7 @@ nsHttpChannel::OpenCacheEntryInternal(bool isHttps,
         extension.Append("TRR");
     }
 
-    if (StaticPrefs::privacy_trackingprotection_storagerestriction_enabled() &&
+    if (StaticPrefs::privacy_restrict3rdpartystorage_enabled() &&
         mIsTrackingResource) {
         nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
             services::GetThirdPartyUtil();
@@ -6948,7 +6948,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     // avoid crashing if mListener happens to be null...
     if (!mListener) {
-        NS_NOTREACHED("mListener is null");
+        MOZ_ASSERT_UNREACHABLE("mListener is null");
         return NS_OK;
     }
 
@@ -7099,7 +7099,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 MOZ_ASSERT(mConcurrentCacheAccess);
             }
             else
-                NS_NOTREACHED("unexpected request");
+                MOZ_ASSERT_UNREACHABLE("unexpected request");
         }
         // Do not to leave the transaction in a suspended state in error cases.
         if (NS_FAILED(status) && mTransaction) {

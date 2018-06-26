@@ -19,10 +19,7 @@ function openExceptionsDialog() {
 }
 
 function countDisabledHosts(dialog) {
-  let doc = dialog.document;
-  let rejectsTree = doc.getElementById("permissionsTree");
-
-  return rejectsTree.view.rowCount;
+  return dialog.document.getElementById("permissionsBox").itemCount;
 }
 
 function promiseStorageChanged(expectedData) {

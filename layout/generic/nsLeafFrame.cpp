@@ -52,7 +52,7 @@ nsLeafFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
 nscoord
 nsLeafFrame::GetIntrinsicBSize()
 {
-  NS_NOTREACHED("Someone didn't override Reflow or ComputeAutoSize");
+  MOZ_ASSERT_UNREACHABLE("Someone didn't override Reflow or ComputeAutoSize");
   return 0;
 }
 

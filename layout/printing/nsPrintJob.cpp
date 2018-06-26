@@ -1413,7 +1413,7 @@ nsPrintJob::BuildDocTree(nsIDocShell*      aParentNode,
         po->mParent = aPO.get();
         nsresult rv = po->Init(childAsShell, doc, aPO->mPrintPreview);
         if (NS_FAILED(rv))
-          NS_NOTREACHED("Init failed?");
+          MOZ_ASSERT_UNREACHABLE("Init failed?");
         aPO->mKids.AppendElement(std::move(po));
         aDocList->AppendElement(aPO->mKids.LastElement().get());
         BuildDocTree(childAsShell, aDocList, aPO->mKids.LastElement());
@@ -2090,7 +2090,7 @@ nsPrintJob::OnProgressChange(nsIWebProgress* aWebProgress,
                              int32_t aCurTotalProgress,
                              int32_t aMaxTotalProgress)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -2100,7 +2100,7 @@ nsPrintJob::OnLocationChange(nsIWebProgress* aWebProgress,
                              nsIURI* aLocation,
                              uint32_t aFlags)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -2110,7 +2110,7 @@ nsPrintJob::OnStatusChange(nsIWebProgress* aWebProgress,
                            nsresult aStatus,
                            const char16_t* aMessage)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -2119,7 +2119,7 @@ nsPrintJob::OnSecurityChange(nsIWebProgress* aWebProgress,
                              nsIRequest* aRequest,
                              uint32_t aState)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 

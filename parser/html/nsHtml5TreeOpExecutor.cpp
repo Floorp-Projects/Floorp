@@ -137,7 +137,7 @@ nsHtml5TreeOpExecutor::~nsHtml5TreeOpExecutor()
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::WillParse()
 {
-  NS_NOTREACHED("No one should call this");
+  MOZ_ASSERT_UNREACHABLE("No one should call this");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -222,14 +222,14 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::WillInterrupt()
 {
-  NS_NOTREACHED("Don't call. For interface compat only.");
+  MOZ_ASSERT_UNREACHABLE("Don't call. For interface compat only.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::WillResume()
 {
-  NS_NOTREACHED("Don't call. For interface compat only.");
+  MOZ_ASSERT_UNREACHABLE("Don't call. For interface compat only.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

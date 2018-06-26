@@ -566,7 +566,7 @@ gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat)
       return 1;
     case SurfaceFormat::UNKNOWN:
     default:
-      NS_NOTREACHED("Not really sure what you want me to say here");
+      MOZ_ASSERT_UNREACHABLE("Not really sure what you want me to say here");
       return 0;
   }
 }

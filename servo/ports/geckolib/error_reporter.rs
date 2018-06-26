@@ -145,9 +145,7 @@ fn extract_error_params<'a>(err: ErrorKind<'a>) -> Option<ErrorParams<'a>> {
             (Some(ErrorString::Ident(ident)), None)
         }
 
-        ParseErrorKind::Custom(
-            StyleParseErrorKind::ExpectedIdentifier(token)
-        ) |
+        ParseErrorKind::Basic(BasicParseErrorKind::UnexpectedToken(token)) |
         ParseErrorKind::Custom(
             StyleParseErrorKind::ValueError(ValueParseErrorKind::InvalidColor(token))
         ) => {
@@ -342,20 +340,20 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
             }
             ContextualParseError::InvalidMediaRule(_, ref err) => {
                 let err: &CStr = match err.kind {
-                    ParseErrorKind::Custom(StyleParseErrorKind::ExpectedIdentifier(..)) => {
-                        cstr!("PEGatherMediaNotIdent")
-                    },
                     ParseErrorKind::Custom(StyleParseErrorKind::MediaQueryExpectedFeatureName(..)) => {
                         cstr!("PEMQExpectedFeatureName")
                     },
                     ParseErrorKind::Custom(StyleParseErrorKind::MediaQueryExpectedFeatureValue) => {
                         cstr!("PEMQExpectedFeatureValue")
                     },
+                    ParseErrorKind::Custom(StyleParseErrorKind::MediaQueryUnexpectedOperator) => {
+                        cstr!("PEMQUnexpectedOperator")
+                    },
                     ParseErrorKind::Custom(StyleParseErrorKind::RangedExpressionWithNoValue) => {
                         cstr!("PEMQNoMinMaxWithoutValue")
                     },
                     _ => {
-                        cstr!("PEDeclDropped")
+                        cstr!("PEMQUnexpectedToken")
                     },
                 };
                 (err, Action::Nothing)

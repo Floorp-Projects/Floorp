@@ -327,7 +327,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
         // the same size so it doesn't really matter which one we assign
         cont->mValue.mSVGAngle = otherCont->mValue.mSVGAngle;
       } else {
-        NS_NOTREACHED("unknown type stored in MiscContainer");
+        MOZ_ASSERT_UNREACHABLE("unknown type stored in MiscContainer");
       }
       break;
     }
@@ -593,7 +593,7 @@ nsAttrValue::ToString(nsAString& aResult) const
 #ifdef DEBUG
     case eColor:
     {
-      NS_NOTREACHED("color attribute without string data");
+      MOZ_ASSERT_UNREACHABLE("color attribute without string data");
       aResult.Truncate();
       break;
     }
@@ -778,7 +778,7 @@ nsAttrValue::GetEnumString(nsAString& aResult, bool aRealTag) const
     table++;
   }
 
-  NS_NOTREACHED("couldn't find value in EnumTable");
+  MOZ_ASSERT_UNREACHABLE("couldn't find value in EnumTable");
 }
 
 uint32_t
@@ -899,7 +899,7 @@ nsAttrValue::HashValue() const
         // All SVG types are just pointers to classes so we can treat them alike
         return NS_PTR_TO_INT32(cont->mValue.mSVGAngle);
       }
-      NS_NOTREACHED("unknown type stored in MiscContainer");
+      MOZ_ASSERT_UNREACHABLE("unknown type stored in MiscContainer");
       return 0;
     }
   }
@@ -1009,7 +1009,7 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
         MOZ_ASSERT(false, "Comparing nsAttrValues that point to SVG data");
         return false;
       }
-      NS_NOTREACHED("unknown type stored in MiscContainer");
+      MOZ_ASSERT_UNREACHABLE("unknown type stored in MiscContainer");
       return false;
     }
   }
@@ -1331,7 +1331,7 @@ nsAttrValue::SetIntValueAndType(int32_t aValue, ValueType aType,
       }
       default:
       {
-        NS_NOTREACHED("unknown integer type");
+        MOZ_ASSERT_UNREACHABLE("unknown integer type");
         break;
       }
     }

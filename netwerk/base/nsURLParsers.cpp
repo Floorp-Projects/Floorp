@@ -359,7 +359,7 @@ nsNoAuthURLParser::ParseAuthority(const char *auth, int32_t authLen,
                                  uint32_t *hostnamePos, int32_t *hostnameLen,
                                  int32_t *port)
 {
-    NS_NOTREACHED("Shouldn't parse auth in a NoAuthURL!");
+    MOZ_ASSERT_UNREACHABLE("Shouldn't parse auth in a NoAuthURL!");
     return NS_ERROR_UNEXPECTED;
 }
 

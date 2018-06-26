@@ -3008,7 +3008,7 @@ CacheFileIOManager::OverLimitEvictionInternal()
     }
   }
 
-  NS_NOTREACHED("We should never get here");
+  MOZ_ASSERT_UNREACHABLE("We should never get here");
   return NS_OK;
 }
 
@@ -3548,7 +3548,7 @@ CacheFileIOManager::RemoveTrashInternal()
     file->Remove(isDir);
   }
 
-  NS_NOTREACHED("We should never get here");
+  MOZ_ASSERT_UNREACHABLE("We should never get here");
   return NS_OK;
 }
 

@@ -119,7 +119,7 @@ nsNativeThemeGTK::Observe(nsISupports *aSubject, const char *aTopic,
   if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     moz_gtk_shutdown();
   } else {
-    NS_NOTREACHED("unexpected topic");
+    MOZ_ASSERT_UNREACHABLE("unexpected topic");
     return NS_ERROR_UNEXPECTED;
   }
 

@@ -360,7 +360,7 @@ var FindBar = {
       this._passKeyToParent(event);
     } else {
       let key = charCode ? String.fromCharCode(charCode) : null;
-      let manualstartFAYT = (key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY);
+      let manualstartFAYT = (key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY) && RemoteFinder._manualFAYT;
       let autostartFAYT = !manualstartFAYT && RemoteFinder._findAsYouType && key && key != " ";
       if (manualstartFAYT || autostartFAYT) {
         let mode = (key == FAYT_LINKS_KEY || (autostartFAYT && RemoteFinder._typeAheadLinksOnly)) ?

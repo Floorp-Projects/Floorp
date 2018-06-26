@@ -142,7 +142,7 @@ public:
    */
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override
   {
-    NS_NOTREACHED("No one should call this.");
+    MOZ_ASSERT_UNREACHABLE("No one should call this.");
   }
 
   /**

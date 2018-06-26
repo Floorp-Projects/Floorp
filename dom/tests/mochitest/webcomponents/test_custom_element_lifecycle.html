@@ -295,10 +295,7 @@ function testAttributeChangedExtended() {
 function testStyleAttributeChange() {
   var expectedCallbackArguments = [
     // [name, oldValue, newValue]
-    // This is an additional attributeChangedCallback from *first* style
-    // attribute change, see https://bugzilla.mozilla.org/show_bug.cgi?id=1428246.
-    ["style", null, ""],
-    ["style", "", "font-size: 10px;"],
+    ["style", null, "font-size: 10px;"],
     ["style", "font-size: 10px;", "font-size: 20px;"],
     ["style", "font-size: 20px;", "font-size: 30px;"],
   ];

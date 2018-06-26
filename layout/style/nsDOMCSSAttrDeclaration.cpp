@@ -69,13 +69,27 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSAttributeDeclaration)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSAttributeDeclaration)
 
 nsresult
-nsDOMCSSAttributeDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
+nsDOMCSSAttributeDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl,
+                                                MutationClosureData* aClosureData)
 {
   NS_ASSERTION(mElement, "Must have Element to set the declaration!");
+
+  // Whenever changing element.style values, aClosureData must be non-null.
+  // SMIL doesn't update Element's attribute values, so closure data isn't
+  // needed.
+  MOZ_ASSERT_IF(!mIsSMILOverride, aClosureData);
+
+  // If the closure hasn't been called because the declaration wasn't changed,
+  // we need to explicitly call it now to get InlineStyleDeclarationWillChange
+  // notification before SetInlineStyleDeclaration.
+  if (aClosureData && aClosureData->mClosure) {
+    aClosureData->mClosure(aClosureData);
+  }
+
   aDecl->SetDirty();
   return mIsSMILOverride
     ? mElement->SetSMILOverrideStyleDeclaration(aDecl, true)
-    : mElement->SetInlineStyleDeclaration(aDecl, nullptr, true);
+    : mElement->SetInlineStyleDeclaration(*aDecl, *aClosureData);
 }
 
 nsIDocument*
@@ -87,8 +101,11 @@ nsDOMCSSAttributeDeclaration::DocToUpdate()
 }
 
 DeclarationBlock*
-nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
+nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
+                                                        DeclarationBlock** aCreated)
 {
+  MOZ_ASSERT(aOperation != eOperation_Modify || aCreated);
+
   if (!mElement)
     return nullptr;
 
@@ -99,37 +116,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
     declaration = mElement->GetInlineStyleDeclaration();
   }
 
-  // Notify observers that our style="" attribute is going to change
-  // unless:
-  //   * this is a declaration that holds SMIL animation values (which
-  //     aren't reflected in the DOM style="" attribute), or
-  //   * we're getting the declaration for reading, or
-  //   * we're getting it for property removal but we don't currently have
-  //     a declaration.
-
-  // XXXbz this is a bit of a hack, especially doing it before the
-  // BeginUpdate(), but this is a good chokepoint where we know we
-  // plan to modify the CSSDeclaration, so need to notify
-  // AttributeWillChange if this is inline style.
-  if (!mIsSMILOverride &&
-      ((aOperation == eOperation_Modify) ||
-       (aOperation == eOperation_RemoveProperty && declaration))) {
-    nsNodeUtils::AttributeWillChange(mElement, kNameSpaceID_None,
-                                     nsGkAtoms::style,
-                                     dom::MutationEventBinding::MODIFICATION,
-                                     nullptr);
-  }
-
   if (declaration) {
-    if (aOperation != eOperation_Read &&
-        nsContentUtils::HasMutationListeners(
-          mElement, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, mElement)) {
-      // If there is any mutation listener on the element, we need to
-      // ensure that any change would create a new declaration so that
-      // nsStyledElement::SetInlineStyleDeclaration can generate the
-      // correct old value.
-      declaration->SetImmutable();
-    }
     return declaration;
   }
 
@@ -139,20 +126,15 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
 
   // cannot fail
   RefPtr<DeclarationBlock> decl = new DeclarationBlock();
-
-  // this *can* fail (inside SetAttrAndNotify, at least).
-  nsresult rv;
-  if (mIsSMILOverride) {
-    rv = mElement->SetSMILOverrideStyleDeclaration(decl, false);
-  } else {
-    rv = mElement->SetInlineStyleDeclaration(decl, nullptr, false);
-  }
-
-  if (NS_FAILED(rv)) {
-    return nullptr; // the decl will be destroyed along with the style rule
-  }
-
-  return decl;
+  // Mark the declaration dirty so that it can be reused by the caller.
+  // Normally SetDirty is called later in SetCSSDeclaration.
+  decl->SetDirty();
+#ifdef DEBUG
+  RefPtr<DeclarationBlock> mutableDecl = decl->EnsureMutable();
+  MOZ_ASSERT(mutableDecl == decl);
+#endif
+  decl.swap(*aCreated);
+  return *aCreated;
 }
 
 nsDOMCSSDeclaration::ParsingEnvironment
@@ -174,7 +156,9 @@ nsDOMCSSAttributeDeclaration::SetSMILValue(const nsCSSPropertyID aPropID,
   // No need to do the ActiveLayerTracker / ScrollLinkedEffectDetector bits,
   // since we're in a SMIL animation anyway, no need to try to detect we're a
   // scripted animation.
-  DeclarationBlock* olddecl = GetCSSDeclaration(eOperation_Modify);
+  RefPtr<DeclarationBlock> created;
+  DeclarationBlock* olddecl =
+    GetOrCreateCSSDeclaration(eOperation_Modify, getter_AddRefs(created));
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -182,7 +166,9 @@ nsDOMCSSAttributeDeclaration::SetSMILValue(const nsCSSPropertyID aPropID,
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
   bool changed = nsSMILCSSValueType::SetPropertyValues(aValue, *decl);
   if (changed) {
-    SetCSSDeclaration(decl);
+    // We can pass nullptr as the latter param, since this is
+    // mIsSMILOverride == true case.
+    SetCSSDeclaration(decl, nullptr);
   }
   return NS_OK;
 }
@@ -209,4 +195,13 @@ nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
     }
   }
   return nsDOMCSSDeclaration::SetPropertyValue(aPropID, aValue, aSubjectPrincipal);
+}
+
+void
+nsDOMCSSAttributeDeclaration::MutationClosureFunction(void* aData)
+{
+  MutationClosureData* data = static_cast<MutationClosureData*>(aData);
+  // Clear mClosure pointer so that it doesn't get called again.
+  data->mClosure = nullptr;
+  data->mElement->InlineStyleDeclarationWillChange(*data);
 }

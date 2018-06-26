@@ -39,7 +39,7 @@ nsresult
 nsSMILNullType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                     uint32_t aCount) const
 {
-  NS_NOTREACHED("Adding NULL type");
+  MOZ_ASSERT_UNREACHABLE("Adding NULL type");
   return NS_ERROR_FAILURE;
 }
 
@@ -48,7 +48,7 @@ nsSMILNullType::ComputeDistance(const nsSMILValue& aFrom,
                                 const nsSMILValue& aTo,
                                 double& aDistance) const
 {
-  NS_NOTREACHED("Computing distance for NULL type");
+  MOZ_ASSERT_UNREACHABLE("Computing distance for NULL type");
   return NS_ERROR_FAILURE;
 }
 
@@ -58,6 +58,6 @@ nsSMILNullType::Interpolate(const nsSMILValue& aStartVal,
                             double aUnitDistance,
                             nsSMILValue& aResult) const
 {
-  NS_NOTREACHED("Interpolating NULL type");
+  MOZ_ASSERT_UNREACHABLE("Interpolating NULL type");
   return NS_ERROR_FAILURE;
 }

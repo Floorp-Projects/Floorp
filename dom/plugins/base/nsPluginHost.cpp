@@ -790,7 +790,7 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
 #endif
 
   if (aMimeType.IsEmpty()) {
-    NS_NOTREACHED("Attempting to spawn a plugin with no mime type");
+    MOZ_ASSERT_UNREACHABLE("Attempting to spawn a plugin with no mime type");
     return NS_ERROR_FAILURE;
   }
 

@@ -942,6 +942,13 @@ void LineInfo::ReadHeader() {
   header_.min_insn_length = reader_->ReadOneByte(lineptr);
   lineptr += 1;
 
+  if (header_.version >= 4) {
+    __attribute__((unused)) uint8 max_ops_per_insn =
+        reader_->ReadOneByte(lineptr);
+    ++lineptr;
+    assert(max_ops_per_insn == 1);
+  }
+
   header_.default_is_stmt = reader_->ReadOneByte(lineptr);
   lineptr += 1;
 
@@ -1258,12 +1265,12 @@ class CallFrameInfo::Rule {
  public:
   virtual ~Rule() { }
 
-  // Tell HANDLER that, at ADDRESS in the program, REGISTER can be
-  // recovered using this rule. If REGISTER is kCFARegister, then this rule
-  // describes how to compute the canonical frame address. Return what the
-  // HANDLER member function returned.
+  // Tell HANDLER that, at ADDRESS in the program, REG can be recovered using
+  // this rule. If REG is kCFARegister, then this rule describes how to compute
+  // the canonical frame address. Return what the HANDLER member function
+  // returned.
   virtual bool Handle(Handler *handler,
-                      uint64 address, int register) const = 0;
+                      uint64 address, int reg) const = 0;
 
   // Equality on rules. We use these to decide which rules we need
   // to report after a DW_CFA_restore_state instruction.
@@ -2253,11 +2260,11 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
   cursor++;
 
   // If we don't recognize the version, we can't parse any more fields of the
-  // CIE. For DWARF CFI, we handle versions 1 through 3 (there was never a
-  // version 2 of CFI data). For .eh_frame, we handle versions 1 and 3 as well;
+  // CIE. For DWARF CFI, we handle versions 1 through 4 (there was never a
+  // version 2 of CFI data). For .eh_frame, we handle versions 1 and 4 as well;
   // the difference between those versions seems to be the same as for
   // .debug_frame.
-  if (cie->version < 1 || cie->version > 3) {
+  if (cie->version < 1 || cie->version > 4) {
     reporter_->UnrecognizedVersion(cie->offset, cie->version);
     return false;
   }
@@ -2287,16 +2294,36 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
     }
   }
 
+  if (cie->version >= 4) {
+    uint8_t address_size = *cursor++;
+    if (address_size != 8) {
+      // TODO(scottmg): Only supporting x64 for now.
+      reporter_->UnexpectedAddressSize(cie->offset, address_size);
+      return false;
+    }
+
+    uint8_t segment_size = *cursor++;
+    if (segment_size != 0) {
+      // TODO(scottmg): Only supporting x64 for now.
+      // I would have perhaps expected 4 here, but LLVM emits a 0, near
+      // http://llvm.org/docs/doxygen/html/MCDwarf_8cpp_source.html#l00606. As
+      // we are not using the value, only succeed for now if it's the expected
+      // 0.
+      reporter_->UnexpectedSegmentSize(cie->offset, segment_size);
+      return false;
+    }
+  }
+
   // Parse the code alignment factor.
   cie->code_alignment_factor = reader_->ReadUnsignedLEB128(cursor, &len);
   if (size_t(cie->end - cursor) < len) return ReportIncomplete(cie);
   cursor += len;
-  
+
   // Parse the data alignment factor.
   cie->data_alignment_factor = reader_->ReadSignedLEB128(cursor, &len);
   if (size_t(cie->end - cursor) < len) return ReportIncomplete(cie);
   cursor += len;
-  
+
   // Parse the return address register. This is a ubyte in version 1, and
   // a ULEB128 in version 3.
   if (cie->version == 1) {
@@ -2407,7 +2434,7 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
 
   return true;
 }
-  
+
 bool CallFrameInfo::ReadFDEFields(FDE *fde) {
   const uint8_t *cursor = fde->fields;
   size_t size;
@@ -2646,6 +2673,22 @@ void CallFrameInfo::Reporter::BadCIEId(uint64 offset, uint64 cie_offset) {
           "%s: CFI frame description entry at offset 0x%llx in '%s':"
           " CIE pointer does not point to a CIE: 0x%llx\n",
           filename_.c_str(), offset, section_.c_str(), cie_offset);
+}
+
+void CallFrameInfo::Reporter::UnexpectedAddressSize(uint64 offset,
+                                                    uint8_t address_size) {
+  fprintf(stderr,
+          "%s: CFI frame description entry at offset 0x%llx in '%s':"
+          " CIE specifies unexpected address size: %d\n",
+          filename_.c_str(), offset, section_.c_str(), address_size);
+}
+
+void CallFrameInfo::Reporter::UnexpectedSegmentSize(uint64 offset,
+                                                    uint8_t segment_size) {
+  fprintf(stderr,
+          "%s: CFI frame description entry at offset 0x%llx in '%s':"
+          " CIE specifies unexpected segment size: %d\n",
+          filename_.c_str(), offset, section_.c_str(), segment_size);
 }
 
 void CallFrameInfo::Reporter::UnrecognizedVersion(uint64 offset, int version) {

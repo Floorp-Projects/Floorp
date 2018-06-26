@@ -5,6 +5,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/sitePermissions.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
 <window id="PermissionsDialog" class="windowDialog"
@@ -20,7 +21,6 @@
   <link rel="localization" href="browser/preferences/permissions.ftl"/>
   <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
-  <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/preferences/permissions.js"/>
 
   <stringbundle id="bundlePreferences"
@@ -41,26 +41,24 @@
     </hbox>
     <hbox pack="end">
       <button id="btnBlock" disabled="true" data-l10n-id="permissions-block"
-              oncommand="gPermissionManager.addPermission(nsIPermissionManager.DENY_ACTION);"/>
+              oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.DENY_ACTION);"/>
       <button id="btnSession" disabled="true" data-l10n-id="permissions-session"
-              oncommand="gPermissionManager.addPermission(nsICookiePermission.ACCESS_SESSION);"/>
+              oncommand="gPermissionManager.addPermission(Ci.nsICookiePermission.ACCESS_SESSION);"/>
       <button id="btnAllow" disabled="true" data-l10n-id="permissions-allow" default="true"
-              oncommand="gPermissionManager.addPermission(nsIPermissionManager.ALLOW_ACTION);"/>
+              oncommand="gPermissionManager.addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);"/>
     </hbox>
     <separator class="thin"/>
-    <tree id="permissionsTree" flex="1" style="height: 18em;"
-          hidecolumnpicker="true"
-          onkeypress="gPermissionManager.onPermissionKeyPress(event)"
-          onselect="gPermissionManager.onPermissionSelect();">
-      <treecols>
-        <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3"
-                 data-field-name="origin" persist="width"/>
-        <splitter class="tree-splitter"/>
-        <treecol id="statusCol" data-l10n-id="permissions-status" flex="1"
-                 data-field-name="capability" persist="width"/>
-      </treecols>
-      <treechildren/>
-    </tree>
+    <richlistbox id="permissionsBox" flex="1" selected="false"
+                 onkeypress="gPermissionManager.onPermissionKeyPress(event);"
+                 onselect="gPermissionManager.onPermissionSelect();">
+      <listheader>
+        <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3" width="0"
+                 onclick="gPermissionManager.buildPermissionsList(event.target)"/>
+        <treecol id="statusCol" data-l10n-id="permissions-status" flex="1" width="0"
+                 data-isCurrentSortCol="true"
+                 onclick="gPermissionManager.buildPermissionsList(event.target);"/>
+      </listheader>
+    </richlistbox>
   </vbox>
   <vbox>
     <hbox class="actionButtons" align="left" flex="1">

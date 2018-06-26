@@ -1515,6 +1515,8 @@ bool
 CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
                  MutableHandleValue result)
 {
+    AutoRealm ar(cx, callee);
+
     MOZ_ASSERT(callee->isNative());
     JSNative natfun = callee->native();
 
@@ -1532,6 +1534,8 @@ CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
 bool
 CallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj, HandleValue rhs)
 {
+    AutoRealm ar(cx, callee);
+
     MOZ_ASSERT(callee->isNative());
     JSNative natfun = callee->native();
 

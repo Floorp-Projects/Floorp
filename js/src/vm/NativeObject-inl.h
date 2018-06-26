@@ -785,6 +785,7 @@ CallResolveOp(JSContext* cx, HandleNativeObject obj, HandleId id,
     *recursedp = false;
 
     bool resolved = false;
+    AutoRealm ar(cx, obj);
     if (!obj->getClass()->getResolve()(cx, obj, id, &resolved))
         return false;
 

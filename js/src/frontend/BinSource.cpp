@@ -165,14 +165,12 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     // Allocate the function before walking down the tree.
     RootedFunction fun(cx_);
     BINJS_TRY_VAR(fun, AllocNewFunction(cx_, atom, syntax, generatorKind, functionAsyncKind, nullptr));
-    BINJS_TRY_DECL(funbox, alloc_.new_<FunctionBox>(cx_,
-        traceListHead_,
-        fun,
-        /* toStringStart = */ 0,
-        Directives(parseContext_),
-        /* extraWarning = */ false,
-        generatorKind,
-        functionAsyncKind));
+
+    auto* funbox = alloc_.new_<FunctionBox>(cx_, traceListHead_, fun, /* toStringStart = */ 0,
+                                            Directives(parseContext_), /* extraWarning = */ false,
+                                            generatorKind, functionAsyncKind);
+    if (!funbox)
+        return raiseOOM();
 
     traceListHead_ = funbox;
     funbox->initWithEnclosingParseContext(parseContext_, syntax);

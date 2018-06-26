@@ -386,7 +386,8 @@ public:
   explicit InsertCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
   NS_IMETHOD HandleResult(mozIStorageResultSet*) override
   {
-    NS_NOTREACHED("Unexpected call to InsertCookieDBListener::HandleResult");
+    MOZ_ASSERT_UNREACHABLE("Unexpected call to "
+                           "InsertCookieDBListener::HandleResult");
     return NS_OK;
   }
   NS_IMETHOD HandleCompletion(uint16_t aReason) override
@@ -422,7 +423,8 @@ public:
   explicit UpdateCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
   NS_IMETHOD HandleResult(mozIStorageResultSet*) override
   {
-    NS_NOTREACHED("Unexpected call to UpdateCookieDBListener::HandleResult");
+    MOZ_ASSERT_UNREACHABLE("Unexpected call to "
+                           "UpdateCookieDBListener::HandleResult");
     return NS_OK;
   }
   NS_IMETHOD HandleCompletion(uint16_t aReason) override
@@ -450,7 +452,8 @@ public:
   explicit RemoveCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
   NS_IMETHOD HandleResult(mozIStorageResultSet*) override
   {
-    NS_NOTREACHED("Unexpected call to RemoveCookieDBListener::HandleResult");
+    MOZ_ASSERT_UNREACHABLE("Unexpected call to "
+                           "RemoveCookieDBListener::HandleResult");
     return NS_OK;
   }
   NS_IMETHOD HandleCompletion(uint16_t aReason) override
@@ -4182,7 +4185,7 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
   // No cookies allowed if this request comes from a tracker, in a 3rd party
   // context, when anti-tracking protection is enabled.
   if (aIsForeign && aIsTrackingResource &&
-      StaticPrefs::privacy_trackingprotection_storagerestriction_enabled()) {
+      StaticPrefs::privacy_restrict3rdpartystorage_enabled()) {
       return STATUS_REJECTED;
   }
 

@@ -38,8 +38,8 @@ add_task(async function openLoginExceptionsSubDialog() {
 add_task(async function addALoginException() {
   let doc = exceptionsDialog.document;
 
-  let tree = doc.getElementById("permissionsTree");
-  Assert.equal(tree.view.rowCount, 0, "Row count should initially be 0");
+  let richlistbox = doc.getElementById("permissionsBox");
+  Assert.equal(richlistbox.itemCount, 0, "Row count should initially be 0");
 
   let inputBox = doc.getElementById("url");
   inputBox.focus();
@@ -49,19 +49,19 @@ add_task(async function addALoginException() {
   let btnBlock = doc.getElementById("btnBlock");
   btnBlock.click();
 
-  await TestUtils.waitForCondition(() => tree.view.rowCount == 1);
+  await TestUtils.waitForCondition(() => richlistbox.itemCount == 1);
 
-  Assert.equal(tree.view.getCellText(0, tree.treeBoxObject.columns.getColumnAt(0)),
+  Assert.equal(richlistbox.getItemAtIndex(0).getAttribute("origin"),
                "http://www.example.com");
 });
 
 add_task(async function deleteALoginException() {
   let doc = exceptionsDialog.document;
 
-  let tree = doc.getElementById("permissionsTree");
-  Assert.equal(tree.view.rowCount, 1, "Row count should initially be 1");
-  tree.focus();
-  tree.view.selection.select(0);
+  let richlistbox = doc.getElementById("permissionsBox");
+  Assert.equal(richlistbox.itemCount, 1, "Row count should initially be 1");
+  richlistbox.focus();
+  richlistbox.selectedIndex = 0;
 
   if (AppConstants.platform == "macosx") {
     EventUtils.synthesizeKey("KEY_Backspace");
@@ -69,7 +69,7 @@ add_task(async function deleteALoginException() {
     EventUtils.synthesizeKey("KEY_Delete");
   }
 
-  await TestUtils.waitForCondition(() => tree.view.rowCount == 0);
+  await TestUtils.waitForCondition(() => richlistbox.itemCount == 0);
 
   is_element_visible(content.gSubDialog._dialogs[0]._box,
     "Subdialog is visible after deleting an element");

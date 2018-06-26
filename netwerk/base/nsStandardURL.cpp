@@ -3214,7 +3214,7 @@ nsStandardURL::Init(uint32_t urlType,
         mParser = net_GetNoAuthURLParser();
         break;
     default:
-        NS_NOTREACHED("bad urlType");
+        MOZ_ASSERT_UNREACHABLE("bad urlType");
         return NS_ERROR_INVALID_ARG;
     }
     mDefaultPort = defaultPort;
@@ -3273,7 +3273,7 @@ nsStandardURL::SetDefaultPort(int32_t aNewDefaultPort)
 NS_IMETHODIMP
 nsStandardURL::Read(nsIObjectInputStream *stream)
 {
-    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -3299,7 +3299,7 @@ nsStandardURL::ReadPrivate(nsIObjectInputStream *stream)
         mParser = net_GetNoAuthURLParser();
         break;
       default:
-        NS_NOTREACHED("bad urlType");
+        MOZ_ASSERT_UNREACHABLE("bad urlType");
         return NS_ERROR_FAILURE;
     }
 
@@ -3559,7 +3559,7 @@ nsStandardURL::Deserialize(const URIParams& aParams)
             mParser = net_GetNoAuthURLParser();
             break;
         default:
-            NS_NOTREACHED("bad urlType");
+            MOZ_ASSERT_UNREACHABLE("bad urlType");
             return false;
     }
 
