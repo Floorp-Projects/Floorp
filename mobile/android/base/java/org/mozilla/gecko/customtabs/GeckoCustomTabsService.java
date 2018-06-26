@@ -14,6 +14,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoService;
+import org.mozilla.gecko.GeckoStarterService;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -48,11 +49,11 @@ public class GeckoCustomTabsService extends CustomTabsService {
             return true;
         }
 
-        final Intent intent = GeckoService.getIntentToStartGecko(this);
+        final Intent intent = GeckoService.getIntentToStartGecko();
         // Use a default profile for warming up Gecko.
         final GeckoProfile profile = GeckoProfile.get(this);
         GeckoService.setIntentProfile(intent, profile.getName(), profile.getDir().getAbsolutePath());
-        startService(intent);
+        GeckoStarterService.enqueueWork(this, intent);
         return true;
     }
 

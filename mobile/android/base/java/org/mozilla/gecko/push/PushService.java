@@ -19,6 +19,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoService;
+import org.mozilla.gecko.GeckoServicesCreatorService;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -253,9 +254,9 @@ public class PushService implements BundleEventListener {
                 return;
             }
         } else {
-            final Intent intent = GeckoService.getIntentToCreateServices(context, "android-push-service");
+            final Intent intent = GeckoService.getIntentToCreateServices("android-push-service");
             GeckoService.setIntentProfile(intent, profileName, profilePath);
-            context.startService(intent);
+            GeckoServicesCreatorService.enqueueWork(context, intent);
         }
 
         final JSONObject data = new JSONObject();

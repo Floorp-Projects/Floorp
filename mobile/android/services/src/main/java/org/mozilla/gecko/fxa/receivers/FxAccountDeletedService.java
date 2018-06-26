@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.JobIntentService;
 import android.text.TextUtils;
 
+import org.mozilla.gecko.GeckoServicesCreatorService;
 import org.mozilla.gecko.JobIdsConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
@@ -78,12 +79,11 @@ public class FxAccountDeletedService extends JobIntentService {
     // Fire up gecko and unsubscribe push
     final Intent geckoIntent = new Intent();
     geckoIntent.setAction("create-services");
-    geckoIntent.setClassName(context, "org.mozilla.gecko.GeckoService");
     geckoIntent.putExtra("category", "android-push-service");
     geckoIntent.putExtra("data", "android-fxa-unsubscribe");
     geckoIntent.putExtra("org.mozilla.gecko.intent.PROFILE_NAME",
             intent.getStringExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_PROFILE));
-    context.startService(geckoIntent);
+    GeckoServicesCreatorService.enqueueWork(context, geckoIntent);
 
     // Delete client database and non-local tabs.
     Logger.info(LOG_TAG, "Deleting the entire Fennec clients database and non-local tabs");
