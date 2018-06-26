@@ -34,6 +34,7 @@ var LoginHelper = {
   formlessCaptureEnabled: Services.prefs.getBoolPref("signon.formlessCapture.enabled"),
   schemeUpgrades: Services.prefs.getBoolPref("signon.schemeUpgrades"),
   insecureAutofill: Services.prefs.getBoolPref("signon.autofillForms.http"),
+  showInsecureFieldWarning: Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled"),
 
   createLogger(aLogPrefix) {
     let getMaxLogLevel = () => {
@@ -55,6 +56,10 @@ var LoginHelper = {
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
       logger.maxLogLevel = getMaxLogLevel();
+    });
+
+    Services.prefs.addObserver("security.insecure_field_warning.", () => {
+      this.showInsecureFieldWarning = Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled");
     });
 
     return logger;
@@ -771,9 +776,6 @@ var LoginHelper = {
     Services.obs.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
   }
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(LoginHelper, "showInsecureFieldWarning",
-                                      "security.insecure_field_warning.contextual.enabled");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginHelper");
