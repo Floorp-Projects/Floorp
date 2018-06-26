@@ -8,12 +8,12 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { front, ShadersEditorsView, EVENTS } = panel;
+  const { gFront, ShadersEditorsView, EVENTS } = panel.panelWin;
 
   reload(target);
   await promise.all([
-    once(front, "program-linked"),
-    once(panel, EVENTS.SOURCES_SHOWN)
+    once(gFront, "program-linked"),
+    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]);
 
   const vsEditor = await ShadersEditorsView._getEditor("vs");
