@@ -26,7 +26,6 @@
   <string name="shortcut_erase_short_label">Kéntitani</string>
   <string name="shortcut_erase_long_label">Jirinhantskwani kéntita</string>
   <string name="text_selection_search_action">Jirinhakuari</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s puts you in control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use it as a private browser:\n  "<ul>"\n    "<li>Search and browse right in the app</li>"\n    "<li>Block trackers (or update settings to allow trackers)</li>"\n    "<li>Erase to delete cookies as well as search and browsing history</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Kwatakwa &amp; Jískakwa</string>
   <string name="preference_privacy_and_security_summary">Estakupani, exepakwa, erakukwaecha</string>
   <string name="preference_search_summary">Pént\'ani, karakurhikwani</string>
