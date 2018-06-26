@@ -533,7 +533,7 @@ class ObjectGroup : public gc::TenuredCell
     static ObjectGroup* defaultNewGroup(JSContext* cx, const Class* clasp,
                                         TaggedProto proto,
                                         JSObject* associated = nullptr);
-    static ObjectGroup* lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm,
+    static ObjectGroup* lazySingletonGroup(JSContext* cx, ObjectGroup* oldGroup,
                                            const Class* clasp, TaggedProto proto);
 
     static void setDefaultNewGroupUnknown(JSContext* cx, ObjectGroupRealm& realm,
@@ -699,7 +699,7 @@ class ObjectGroupRealm
     void replaceDefaultNewGroup(const Class* clasp, TaggedProto proto, JSObject* associated,
                                 ObjectGroup* group);
 
-    static ObjectGroup* makeGroup(JSContext* cx, const Class* clasp,
+    static ObjectGroup* makeGroup(JSContext* cx, JS::Realm* realm, const Class* clasp,
                                   Handle<TaggedProto> proto,
                                   ObjectGroupFlags initialFlags = 0);
 
