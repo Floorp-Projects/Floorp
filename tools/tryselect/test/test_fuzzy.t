@@ -32,6 +32,24 @@ Test fuzzy selector
   }
   
 
+Test multiple selectors
+
+  $ ./mach try fuzzy $testargs --full -q "'foo" -q "'bar"
+  Commit message:
+  Fuzzy query='foo&query='bar
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+    "tasks":[
+      "test/bar-debug",
+      "test/bar-opt",
+      "test/foo-debug",
+      "test/foo-opt"
+    ]
+  }
+  
+
 Test templates
 
   $ ./mach try fuzzy --no-push --artifact -q "'foo"
