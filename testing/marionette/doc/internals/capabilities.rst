@@ -1,22 +1,22 @@
-session module
-==============
+capabilities module
+===================
 
 Timeouts
 --------
-.. js:autoclass:: session.Timeouts
+.. js:autoclass:: Timeouts
   :members:
 
 PageLoadStrategy
 ----------------
-.. js:autoclass:: session.PageLoadStrategy
+.. js:autoclass:: PageLoadStrategy
   :members:
 
 Proxy
 -----
-.. js:autoclass:: session.Proxy
+.. js:autoclass:: Proxy
   :members:
 
 Capabilities
 ------------
-.. js:autoclass:: session.Capabilities
+.. js:autoclass:: Capabilities
   :members:
