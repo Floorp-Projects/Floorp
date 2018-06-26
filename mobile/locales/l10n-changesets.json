@@ -39,7 +39,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "934544af3aa9"
+        "revision": "612ccf45d829"
     }, 
     "bn-BD": {
         "platforms": [
@@ -489,7 +489,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "603cbdd62314"
+        "revision": "21aa57851d13"
     }, 
     "th": {
         "platforms": [
