@@ -134,7 +134,8 @@ import_referrer_test(
 import_referrer_test(
     { scriptURL: 'static-import-same-origin-referrer-checker-worker.js',
       windowReferrerPolicy: 'same-origin',
-      expectedReferrer: createURLString('resources/referrer-window.html') },
+      expectedReferrer: createURLString(
+          'resources/static-import-same-origin-referrer-checker-worker.js') },
     'Same-origin static import with "same-origin" referrer policy.');
 
 import_referrer_test(
