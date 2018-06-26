@@ -35,6 +35,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.saveButton.addEventListener("click", this);
 
     this.persistCheckbox = new LabelledCheckbox();
+    this.persistCheckbox.className = "persist-checkbox";
 
     this._errorFieldMap = {
       addressLine: "#street-address-container",

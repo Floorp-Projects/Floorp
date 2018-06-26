@@ -108,9 +108,6 @@ const RECOMMENDED_PREFS = new Map([
   // as it is picked up at runtime.
   ["browser.shell.checkDefaultBrowser", false],
 
-  // Do not warn when quitting with multiple tabs
-  ["browser.showQuitWarning", false],
-
   // Do not redirect user when a milstone upgrade of Firefox is detected
   ["browser.startup.homepage_override.mstone", "ignore"],
 

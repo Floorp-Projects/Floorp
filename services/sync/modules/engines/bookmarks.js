@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
 
 XPCOMUtils.defineLazyGetter(this, "ANNOS_TO_TRACK", () => [
   PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
-  PlacesSyncUtils.bookmarks.SIDEBAR_ANNO, PlacesUtils.LMANNO_FEEDURI,
+  PlacesUtils.LMANNO_FEEDURI,
   PlacesUtils.LMANNO_SITEURI,
 ]);
 
@@ -158,7 +158,6 @@ Bookmark.prototype = {
     info.title = this.title;
     info.url = this.bmkUri;
     info.description = this.description;
-    info.loadInSidebar = this.loadInSidebar;
     info.tags = this.tags;
     info.keyword = this.keyword;
     return info;
@@ -169,7 +168,6 @@ Bookmark.prototype = {
     this.title = item.title;
     this.bmkUri = item.url.href;
     this.description = item.description;
-    this.loadInSidebar = item.loadInSidebar;
     this.tags = item.tags;
     this.keyword = item.keyword;
   },
@@ -178,7 +176,7 @@ Bookmark.prototype = {
 Utils.deferGetSet(Bookmark,
                   "cleartext",
                   ["title", "bmkUri", "description",
-                   "loadInSidebar", "tags", "keyword"]);
+                   "tags", "keyword"]);
 
 function BookmarkQuery(collection, id) {
   Bookmark.call(this, collection, id, "query");

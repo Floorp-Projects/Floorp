@@ -217,7 +217,7 @@ var ClickEventHandler = {
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
-                 bookmark: false, frameOuterWindowID, referrerPolicy,
+                 frameOuterWindowID, referrerPolicy,
                  triggeringPrincipal: principal,
                  originAttributes: principal ? principal.originAttributes : {},
                  isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
@@ -232,13 +232,6 @@ var ClickEventHandler = {
       json.href = href;
       if (node) {
         json.title = node.getAttribute("title");
-        if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
-            !event.altKey && !event.metaKey) {
-          json.bookmark = node.getAttribute("rel") == "sidebar";
-          if (json.bookmark) {
-            event.preventDefault(); // Need to prevent the pageload.
-          }
-        }
       }
       json.noReferrer = BrowserUtils.linkHasNoReferrer(node);
 
@@ -340,21 +333,6 @@ addMessageListener("rtcpeer:Deny", ContentWebRTCShim);
 addMessageListener("webrtc:Allow", ContentWebRTCShim);
 addMessageListener("webrtc:Deny", ContentWebRTCShim);
 addMessageListener("webrtc:StopSharing", ContentWebRTCShim);
-
-addEventListener("pageshow", function(event) {
-  if (event.target == content.document) {
-    sendAsyncMessage("PageVisibility:Show", {
-      persisted: event.persisted,
-    });
-  }
-});
-addEventListener("pagehide", function(event) {
-  if (event.target == content.document) {
-    sendAsyncMessage("PageVisibility:Hide", {
-      persisted: event.persisted,
-    });
-  }
-});
 
 var PageMetadataMessenger = {
   init() {

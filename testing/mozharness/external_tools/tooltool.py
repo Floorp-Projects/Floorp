@@ -338,7 +338,7 @@ def digest_file(f, a):
 
 def execute(cmd):
     """Execute CMD, logging its stdout at the info level"""
-    process = Popen(cmd, shell=True, stdout=PIPE)
+    process = Popen(cmd, shell=True, stdout=PIPE, bufsize=0)
     while True:
         line = process.stdout.readline()
         if not line:

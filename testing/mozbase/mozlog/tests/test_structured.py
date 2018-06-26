@@ -23,6 +23,8 @@ from mozlog import (
     handlers,
     formatters,
 )
+import six
+from six import unichr
 
 
 class TestHandler(object):
@@ -62,7 +64,7 @@ class BaseStructuredTest(unittest.TestCase):
         specials = set(["time"])
 
         all_expected.update(expected)
-        for key, value in all_expected.iteritems():
+        for key, value in six.iteritems(all_expected):
             self.assertEqual(actual[key], value)
 
         self.assertEquals(set(all_expected.keys()) |
@@ -1013,7 +1015,7 @@ class TestBuffer(BaseStructuredTest):
         specials = set(["time"])
 
         all_expected.update(expected)
-        for key, value in all_expected.iteritems():
+        for key, value in six.iteritems(all_expected):
             self.assertEqual(actual[key], value)
 
         self.assertEquals(set(all_expected.keys()) |

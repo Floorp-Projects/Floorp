@@ -1056,7 +1056,7 @@ function _parseNativeModifiers(aModifiers, aWindow = window)
     modifiers |= _EU_isMac(aWindow) ? 0x00008000 : 0x00000800;
   }
   if (aModifiers.altGrKey) {
-    modifiers |= _EU_isWin(aWindow) ? 0x00002800 : 0x00001000;
+    modifiers |= _EU_isWin(aWindow) ? 0x00020000 : 0x00001000;
   }
   return modifiers;
 }
@@ -1068,39 +1068,56 @@ function _parseNativeModifiers(aModifiers, aWindow = window)
 //      HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
 
 const KEYBOARD_LAYOUT_ARABIC =
-  { name: "Arabic",             Mac: 6,    Win: 0x00000401 };
+  { name: "Arabic",             Mac: 6,
+                                Win: 0x00000401, hasAltGrOnWin: false };
 const KEYBOARD_LAYOUT_ARABIC_PC =
-  { name: "Arabic - PC",        Mac: 7,    Win: null       };
+  { name: "Arabic - PC",        Mac: 7,
+                                Win: null,       hasAltGrOnWin: false };
 const KEYBOARD_LAYOUT_BRAZILIAN_ABNT =
-  { name: "Brazilian ABNT",     Mac: null, Win: 0x00000416 };
+  { name: "Brazilian ABNT",     Mac: null,
+                                Win: 0x00000416, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_DVORAK_QWERTY =
-  { name: "Dvorak-QWERTY",      Mac: 4,    Win: null       };
+  { name: "Dvorak-QWERTY",      Mac: 4,
+                                Win: null,       hasAltGrOnWin: false };
 const KEYBOARD_LAYOUT_EN_US =
-  { name: "US",                 Mac: 0,    Win: 0x00000409 };
+  { name: "US",                 Mac: 0,
+                                Win: 0x00000409, hasAltGrOnWin: false };
 const KEYBOARD_LAYOUT_FRENCH =
-  { name: "French",             Mac: 8,    Win: 0x0000040C };
+  { name: "French",             Mac: 8,
+                                Win: 0x0000040C, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_GREEK =
-  { name: "Greek",              Mac: 1,    Win: 0x00000408 };
+  { name: "Greek",              Mac: 1,
+                                Win: 0x00000408, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_GERMAN =
-  { name: "German",             Mac: 2,    Win: 0x00000407 };
+  { name: "German",             Mac: 2,
+                                Win: 0x00000407, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_HEBREW =
-  { name: "Hebrew",             Mac: 9,    Win: 0x0000040D };
+  { name: "Hebrew",             Mac: 9,
+                                Win: 0x0000040D, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_JAPANESE =
-  { name: "Japanese",           Mac: null, Win: 0x00000411 };
+  { name: "Japanese",           Mac: null,
+                                Win: 0x00000411, hasAltGrOnWin: false };
 const KEYBOARD_LAYOUT_KHMER =
-  { name: "Khmer",              Mac: null, Win: 0x00000453 }; // available on Win7 or later.
+  { name: "Khmer",              Mac: null,
+                                Win: 0x00000453, hasAltGrOnWin: true  }; // available on Win7 or later.
 const KEYBOARD_LAYOUT_LITHUANIAN =
-  { name: "Lithuanian",         Mac: 10,   Win: 0x00010427 };
+  { name: "Lithuanian",         Mac: 10,
+                                Win: 0x00010427, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_NORWEGIAN =
-  { name: "Norwegian",          Mac: 11,   Win: 0x00000414 };
+  { name: "Norwegian",          Mac: 11,
+                                Win: 0x00000414, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC =
-  { name: "Russian - Mnemonic", Mac: null, Win: 0x00020419 }; // available on Win8 or later.
+  { name: "Russian - Mnemonic", Mac: null,
+                                Win: 0x00020419, hasAltGrOnWin: true  }; // available on Win8 or later.
 const KEYBOARD_LAYOUT_SPANISH =
-  { name: "Spanish",            Mac: 12,   Win: 0x0000040A };
+  { name: "Spanish",            Mac: 12,
+                                Win: 0x0000040A, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_SWEDISH =
-  { name: "Swedish",            Mac: 3,    Win: 0x0000041D };
+  { name: "Swedish",            Mac: 3,
+                                Win: 0x0000041D, hasAltGrOnWin: true  };
 const KEYBOARD_LAYOUT_THAI =
-  { name: "Thai",               Mac: 5,    Win: 0x0002041E };
+  { name: "Thai",               Mac: 5,
+                                Win: 0x0002041E, hasAltGrOnWin: false };
 
 /**
  * synthesizeNativeKey() dispatches native key event on active window.

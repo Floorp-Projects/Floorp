@@ -209,7 +209,6 @@ let InternalFaviconLoader = {
 };
 
 var PlacesUIUtils = {
-  LOAD_IN_SIDEBAR_ANNO: "bookmarkProperties/loadInSidebar",
   DESCRIPTION_ANNO: "bookmarkProperties/description",
   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
 
@@ -657,8 +656,8 @@ var PlacesUIUtils = {
   },
 
   /**
-   * Loads the node's URL in the appropriate tab or window or as a web
-   * panel given the user's preference specified by modifier keys tracked by a
+   * Loads the node's URL in the appropriate tab or window given the
+   * user's preference specified by modifier keys tracked by a
    * DOM mouse/key event.
    * @param   aNode
    *          An uri result node.
@@ -690,8 +689,7 @@ var PlacesUIUtils = {
   },
 
   /**
-   * Loads the node's URL in the appropriate tab or window or as a
-   * web panel.
+   * Loads the node's URL in the appropriate tab or window.
    * see also openUILinkIn
    */
   openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView, aPrivate) {
@@ -709,19 +707,6 @@ var PlacesUIUtils = {
           this.markPageAsFollowedBookmark(aNode.uri);
         else
           this.markPageAsTyped(aNode.uri);
-      }
-
-      // Check whether the node is a bookmark which should be opened as
-      // a web panel
-      if (aWhere == "current" && isBookmark) {
-        if (PlacesUtils.annotations
-                       .itemHasAnnotation(aNode.itemId, this.LOAD_IN_SIDEBAR_ANNO)) {
-          let browserWin = BrowserWindowTracker.getTopWindow();
-          if (browserWin) {
-            browserWin.openWebPanel(aNode.title, aNode.uri);
-            return;
-          }
-        }
       }
 
       aWindow.openTrustedLinkIn(aNode.uri, aWhere, {

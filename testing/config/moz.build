@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("marionette*"):
+    BUG_COMPONENT = ("Testing", "Marionette")
+
+with Files("mozbase*"):
+    BUG_COMPONENT = ("Testing", "Mozbase")
+
+with Files("firefox_ui*"):
+    BUG_COMPONENT = ("Testing", "Firefox UI Tests")
+
+with Files("telemetry*"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("tooltool-manifests/**"):
+    BUG_COMPONENT = ("Release Engineering", "Mozharness")

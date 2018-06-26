@@ -1,5 +1,5 @@
 {
-  "name": "mozilla-normandy-action-argument-schemas",
+  "name": "@mozilla/normandy-action-argument-schemas",
   "version": "0.3.0",
   "description": "Schemas for Normandy action arguments",
   "main": "index.js",
