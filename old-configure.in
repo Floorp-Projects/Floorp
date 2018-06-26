@@ -536,8 +536,12 @@ if test "$GNU_CC"; then
     MKCSHLIB='$(CC) $(COMPUTED_C_LDFLAGS) $(PGO_CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(DSO_SONAME) -o $@'
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
-    DSO_PIC_CFLAGS='-fPIC'
-    ASFLAGS="$ASFLAGS -fPIC"
+
+    if test "$OS_ARCH" != "WINNT" -o -z "$CLANG_CC"; then
+        DSO_PIC_CFLAGS='-fPIC'
+        ASFLAGS="$ASFLAGS -fPIC"
+    fi
+
     AC_MSG_CHECKING([for --noexecstack option to as])
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS -Wa,--noexecstack"
@@ -856,8 +860,6 @@ case "$target" in
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         RC='$(WINDRES)'
-        # Use static libgcc and libstdc++
-        LDFLAGS="$LDFLAGS -static"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
@@ -869,11 +871,19 @@ case "$target" in
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
 
-        # GCC/binutils can't link to a function if we try to include dllexport function
-        # in the same library as dllimport caller. To work around it, we build NSPR
-        # and NSS with -mnop-fun-dllimport flag. The drawback of this solution is that
-        # function thunks need to be generated for cross-DLL calls.
-        MOZ_FOLD_LIBS_FLAGS="-mnop-fun-dllimport"
+        if test -z "$CLANG_CC"; then
+            # Use static libgcc and libstdc++
+            LDFLAGS="$LDFLAGS -static"
+
+            # GCC/binutils can't link to a function if we try to include dllexport function
+            # in the same library as dllimport caller. To work around it, we build NSPR
+            # and NSS with -mnop-fun-dllimport flag. The drawback of this solution is that
+            # function thunks need to be generated for cross-DLL calls.
+            MOZ_FOLD_LIBS_FLAGS="-mnop-fun-dllimport"
+        else
+            # Silence problematic clang warnings
+            CXXFLAGS="$CXXFLAGS -Wno-incompatible-ms-struct"
+        fi
     else
         TARGET_COMPILER_ABI=msvc
         if test "$AS_BIN"; then
@@ -1054,7 +1064,7 @@ case "$target" in
         ;;
     esac
 
-    if test -n "$GNU_CC"; then
+    if test -n "$GNU_CC" -a -z "$CLANG_CC"; then
         CFLAGS="$CFLAGS -fno-keep-inline-dllexport"
         CXXFLAGS="$CXXFLAGS -fno-keep-inline-dllexport"
     fi
