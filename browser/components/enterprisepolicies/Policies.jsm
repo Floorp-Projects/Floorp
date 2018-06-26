@@ -86,7 +86,7 @@ var Policies = {
   "BlockAboutAddons": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        manager.disallowFeature("about:addons", true);
+        blockAboutPage(manager, "about:addons", true);
       }
     }
   },
@@ -94,7 +94,7 @@ var Policies = {
   "BlockAboutConfig": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        manager.disallowFeature("about:config", true);
+        blockAboutPage(manager, "about:config", true);
         setAndLockPref("devtools.chrome.enabled", false);
       }
     }
@@ -103,7 +103,7 @@ var Policies = {
   "BlockAboutProfiles": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        manager.disallowFeature("about:profiles", true);
+        blockAboutPage(manager, "about:profiles", true);
       }
     }
   },
@@ -111,7 +111,7 @@ var Policies = {
   "BlockAboutSupport": {
     onBeforeUIStartup(manager, param) {
       if (param) {
-        manager.disallowFeature("about:support", true);
+        blockAboutPage(manager, "about:support", true);
       }
     }
   },
@@ -210,9 +210,9 @@ var Policies = {
         setAndLockPref("devtools.chrome.enabled", false);
 
         manager.disallowFeature("devtools");
-        manager.disallowFeature("about:devtools");
-        manager.disallowFeature("about:debugging");
-        manager.disallowFeature("about:devtools-toolbox");
+        blockAboutPage(manager, "about:devtools");
+        blockAboutPage(manager, "about:debugging");
+        blockAboutPage(manager, "about:devtools-toolbox");
       }
     }
   },
@@ -285,7 +285,7 @@ var Policies = {
     onBeforeAddons(manager, param) {
       if (param) {
         manager.disallowFeature("privatebrowsing");
-        manager.disallowFeature("about:privatebrowsing", true);
+        blockAboutPage(manager, "about:privatebrowsing", true);
         setAndLockPref("browser.privatebrowsing.autostart", false);
       }
     }
@@ -350,7 +350,7 @@ var Policies = {
       if (param) {
         setAndLockPref("datareporting.healthreport.uploadEnabled", false);
         setAndLockPref("datareporting.policy.dataSubmissionEnabled", false);
-        manager.disallowFeature("about:telemetry");
+        blockAboutPage(manager, "about:telemetry");
       }
     }
   },
@@ -549,7 +549,7 @@ var Policies = {
       if ("Default" in param) {
         setAndLockPref("xpinstall.enabled", param.Default);
         if (!param.Default) {
-          manager.disallowFeature("about:debugging");
+          blockAboutPage(manager, "about:debugging");
         }
       }
     }
@@ -932,4 +932,52 @@ function runOncePerModification(actionName, policyValue, callback) {
   }
   Services.prefs.setStringPref(prefName, policyValue);
   callback();
+}
+
+let gChromeURLSBlocked = false;
+
+// If any about page is blocked, we block the loading of all
+// chrome:// URLs in the browser window.
+function blockAboutPage(manager, feature, neededOnContentProcess = false) {
+  manager.disallowFeature(feature, neededOnContentProcess);
+  if (!gChromeURLSBlocked) {
+    blockAllChromeURLs();
+    gChromeURLSBlocked = true;
+  }
+}
+
+let ChromeURLBlockPolicy = {
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+    let contentType = loadInfo.externalContentPolicyType;
+    if (contentLocation.scheme == "chrome" &&
+        contentType == Ci.nsIContentPolicy.TYPE_DOCUMENT &&
+        loadInfo.loadingContext &&
+        loadInfo.loadingContext.baseURI == "chrome://browser/content/browser.xul" &&
+        contentLocation.host != "mochitests") {
+      return Ci.nsIContentPolicy.REJECT_REQUEST;
+    }
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
+  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
+  classDescription: "Policy Engine Content Policy",
+  contractID: "@mozilla-org/policy-engine-content-policy-service;1",
+  classID: Components.ID("{ba7b9118-cabc-4845-8b26-4215d2a59ed7}"),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPolicy]),
+  createInstance(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+};
+
+
+function blockAllChromeURLs() {
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(ChromeURLBlockPolicy.classID,
+                            ChromeURLBlockPolicy.classDescription,
+                            ChromeURLBlockPolicy.contractID,
+                            ChromeURLBlockPolicy);
+
+  let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+  cm.addCategoryEntry("content-policy", ChromeURLBlockPolicy.contractID, ChromeURLBlockPolicy.contractID, false, true);
 }
