@@ -302,7 +302,7 @@
          Cu.getGlobalForObject(unprivilegedObject),
          "all parent->child CPOWs should live in the same scope");
       let cpowLocation = Cu.getRealmLocation(getUnprivilegedObject);
-      ok(/shared JSM global/.test(cpowLocation),
+      ok(/Privileged Junk/.test(cpowLocation),
          "parent->child CPOWs should live in the privileged junk scope: " + cpowLocation);
 
       // Make sure that parent->child CPOWs point through a privileged scope in the child
