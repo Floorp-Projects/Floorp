@@ -183,7 +183,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
   mAsyncImageManager->AddPipeline(mPipelineId);
-  if (mWidget) {
+  if (IsRootWebRenderBridgeParent()) {
     MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
@@ -501,6 +501,12 @@ WebRenderBridgeParent::RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch)
   }
 }
 
+bool
+WebRenderBridgeParent::IsRootWebRenderBridgeParent() const
+{
+  return !!mWidget;
+}
+
 CompositorBridgeParent*
 WebRenderBridgeParent::GetRootCompositorBridgeParent() const
 {
@@ -508,7 +514,7 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
     return nullptr;
   }
 
-  if (mWidget) {
+  if (IsRootWebRenderBridgeParent()) {
     // This WebRenderBridgeParent is attached to the root
     // CompositorBridgeParent.
     return static_cast<CompositorBridgeParent*>(mCompositorBridge);
@@ -658,7 +664,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   // because the tab just moved to a new window.
   // In that case do not send the commands to webrender.
   if (mIdNamespace == aIdNamespace) {
-    if (mWidget) {
+    if (IsRootWebRenderBridgeParent()) {
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
       LayoutDeviceIntRect docRect(LayoutDeviceIntPoint(), widgetSize);
       txn.SetWindowParameters(widgetSize, docRect);
@@ -894,7 +900,7 @@ void
 WebRenderBridgeParent::FlushFrameGeneration()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  MOZ_ASSERT(mWidget); // This function is only useful on the root WRBP
+  MOZ_ASSERT(IsRootWebRenderBridgeParent()); // This function is only useful on the root WRBP
 
   // This forces a new GenerateFrame transaction to be sent to the render
   // backend thread, if one is pending. This doesn't block on any other threads.
@@ -929,7 +935,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
   // but it will have no effect because CompositeToTarget (which reads the
   // flag) only gets invoked in the root WRBP. So we assert that this is the
   // root WRBP (i.e. has a non-null mWidget) to catch violations of this rule.
-  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
 
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
@@ -1124,7 +1130,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                                        CompositorAnimationStorage* aAnimStorage,
                                        const TextureFactoryIdentifier& aTextureFactoryIdentifier)
 {
-  MOZ_ASSERT(!mWidget);
+  MOZ_ASSERT(!IsRootWebRenderBridgeParent());
   MOZ_ASSERT(aScheduler);
   MOZ_ASSERT(aApi);
   MOZ_ASSERT(aImageMgr);
@@ -1378,7 +1384,7 @@ void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   // This function should only get called in the root WRBP
-  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
 
   // The two arguments are part of the CompositorVsyncSchedulerOwner API but in
   // this implementation they should never be non-null.
@@ -1552,9 +1558,9 @@ WebRenderBridgeParent::FlushRenderingAsync()
 void
 WebRenderBridgeParent::Pause()
 {
-  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
 #ifdef MOZ_WIDGET_ANDROID
-  if (!mWidget || mDestroyed) {
+  if (!IsRootWebRenderBridgeParent() || mDestroyed) {
     return;
   }
   mApi->Pause();
@@ -1565,9 +1571,9 @@ WebRenderBridgeParent::Pause()
 bool
 WebRenderBridgeParent::Resume()
 {
-  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
 #ifdef MOZ_WIDGET_ANDROID
-  if (!mWidget || mDestroyed) {
+  if (!IsRootWebRenderBridgeParent() || mDestroyed) {
     return false;
   }
 
@@ -1623,7 +1629,7 @@ WebRenderBridgeParent::ClearResources()
   mActiveAnimations.clear();
   std::queue<CompositorAnimationIdsForEpoch>().swap(mCompositorAnimationsToDelete); // clear queue
 
-  if (mWidget) {
+  if (IsRootWebRenderBridgeParent()) {
     mCompositorScheduler->Destroy();
   }
 
@@ -1739,7 +1745,7 @@ WebRenderBridgeParent::GetNextWrEpoch()
 void
 WebRenderBridgeParent::ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
 {
-  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
   if (mDestroyed) {
     return;
   }
