@@ -112,12 +112,12 @@ test-verify:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em.*:
-                    - android/android_common.py
-                    - android/androidarm_4_3.py
                 android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
+                android-em.*:
+                    - android/android_common.py
+                    - android/androidarm_4_3.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -156,12 +156,12 @@ test-verify-gpu:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em.*:
-                    - android/android_common.py
-                    - android/androidarm_4_3.py
                 android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
+                android-em.*:
+                    - android/android_common.py
+                    - android/androidarm_4_3.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -193,6 +193,9 @@ test-coverage:
                 default: desktop_unittest.py
         config:
             by-test-platform:
+                android-em-7.0-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
@@ -231,6 +234,9 @@ test-coverage-gpu:
                 default: desktop_unittest.py
         config:
             by-test-platform:
+                android-em-7.0-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
