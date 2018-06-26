@@ -57,7 +57,9 @@ class SummaryGraph extends PureComponent {
 
     // Adding the duration.
     text += getStr("player.animationDurationLabel") + " ";
-    text += getTime(state.duration);
+    text += state.duration === Infinity
+              ? getStr("player.infiniteDurationText")
+              : getTime(state.duration);
     text += "\n";
 
     // Adding the endDelay.
@@ -76,10 +78,11 @@ class SummaryGraph extends PureComponent {
 
     // Adding the iteration start.
     if (state.iterationStart !== 0) {
-      const iterationStartTime = state.iterationStart * state.duration / 1000;
-      text += getFormatStr("player.animationIterationStartLabel",
+      text += getFormatStr("player.animationIterationStartLabel2",
                            state.iterationStart,
-                           numberWithDecimals(iterationStartTime, 2));
+                           state.duration === Infinity
+                             ? getStr("player.infiniteDurationText")
+                             : getTime(state.iterationStart * state.duration));
       text += "\n";
     }
 
