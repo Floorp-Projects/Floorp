@@ -49,11 +49,16 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
 
 %{C++
 /*
- * I/O activity: we send out this topic no more than every
- * intervalMilliseconds (as set by the
- * "io.activity.intervalMilliseconds" preference: if 0 no notifications
- * are sent) if the I/O is currently active (i.e. we're sending/receiving
- * data to/from the socket or writing/reading to/from a file).
+ * I/O activity observer topic. Sends out information about the
+ * amount of data we're sending/receiving via sockets and disk files.
+ *
+ * Activated via the "io.activity.enabled" preference.
+ *
+ * when "io.activity.intervalMilliseconds" is > 0, automatically sends
+ * out this topic no more than every intervalMilliseconds.
+ *
+ * if "io.activity.intervalMilliseconds" is 0, notifications are triggered
+ * manually via IOActivityMonitor::NotifyActivities()
  */
 #define NS_IO_ACTIVITY "io-activity"
 
