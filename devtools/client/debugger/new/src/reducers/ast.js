@@ -103,11 +103,16 @@ function update(state = initialASTState(), action) {
 
         if (!action.value) {
           return state.set("preview", null);
+        } // NOTE: if the preview does not exist, it has been cleared
+
+
+        if (state.get("preview")) {
+          return state.set("preview", _objectSpread({}, action.value, {
+            updating: false
+          }));
         }
 
-        return state.set("preview", _objectSpread({}, action.value, {
-          updating: false
-        }));
+        return state;
       }
 
     case "RESUME":

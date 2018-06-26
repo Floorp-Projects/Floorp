@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.onMouseOver = undefined;
 
 var _sourceDocuments = require("./source-documents");
 
@@ -50,6 +51,15 @@ Object.keys(_ui).forEach(function (key) {
       return _ui[key];
     }
   });
+});
+
+var _tokenEvents = require("./token-events");
+
+Object.defineProperty(exports, "onMouseOver", {
+  enumerable: true,
+  get: function () {
+    return _tokenEvents.onMouseOver;
+  }
 });
 exports.getEditor = getEditor;
 exports.removeEditor = removeEditor;

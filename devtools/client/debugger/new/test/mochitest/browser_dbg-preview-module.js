@@ -5,10 +5,7 @@
 // and doesn't have functions.
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
-  const {
-    selectors: { getSelectedSource },
-    getState
-  } = dbg;
+  const { selectors: { getSelectedSource }, getState } = dbg;
 
   navigate(dbg, "doc-on-load.html");
 
