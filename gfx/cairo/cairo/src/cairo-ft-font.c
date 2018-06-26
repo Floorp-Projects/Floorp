@@ -711,7 +711,20 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 	    if (entry == NULL)
 		break;
 
-	    _font_map_release_face_lock_held (font_map, entry);
+	    /* Must use try-lock here to avoid deadlock on multiple threads trying to
+	     * acquire the font map lock inside the unscaled font mutexes. In the worst
+	     * case, this may just cause a spin in the extremely unlikely circumstance
+	     * that all open faces are currently locked.
+	     */
+	    if (CAIRO_MUTEX_TRY_LOCK (entry->mutex))
+	    {
+		/* Verify the lock count is still actually 0 inside the mutex before
+		 * trying to free the entry.
+		 */
+		if (_has_unlocked_face (entry))
+		    _font_map_release_face_lock_held (font_map, entry);
+		CAIRO_MUTEX_UNLOCK (entry->mutex);
+	    }
 	}
     }
     _cairo_ft_unscaled_font_map_unlock ();
