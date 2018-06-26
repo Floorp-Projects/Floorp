@@ -1050,8 +1050,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchAdd32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
     template <typename T>
     inline void branchSub32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
-    template <typename T>
-    inline void branchMul32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
 
     inline void decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
 

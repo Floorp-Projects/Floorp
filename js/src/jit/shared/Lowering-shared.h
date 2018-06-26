@@ -150,11 +150,8 @@ class LIRGeneratorShared
     inline LDefinition tempDouble();
     inline LDefinition tempCopy(MDefinition* input, uint32_t reusedInput);
 
-    // Note that the fixed register has a GENERAL type,
-    // unless the arg is of FloatRegister type
+    // Note that the fixed register has a GENERAL type.
     inline LDefinition tempFixed(Register reg);
-    inline LDefinition tempFixed(FloatRegister reg);
-
 
     template <size_t Ops, size_t Temps>
     inline void defineFixed(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir,
