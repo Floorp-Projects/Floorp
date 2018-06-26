@@ -40,9 +40,7 @@ TARGET = {
     'nm': '{}nm'.format(buildconfig.substs.get('TOOLCHAIN_PREFIX', '')),
 }
 
-if buildconfig.substs.get('MOZ_ASAN'):
-    GUESSED_NSMODULE_SIZE = 64
-elif buildconfig.substs.get('HAVE_64BIT_BUILD'):
+if buildconfig.substs.get('HAVE_64BIT_BUILD'):
     GUESSED_NSMODULE_SIZE = 8
 else:
     GUESSED_NSMODULE_SIZE = 4

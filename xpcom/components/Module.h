@@ -11,6 +11,7 @@
 #include "nsID.h"
 #include "nsIFactory.h"
 #include "nsCOMPtr.h" // for already_AddRefed
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -148,7 +149,12 @@ struct Module
 #  if !defined(NSMODULE_SECTION)
 #    error Do not know how to define sections.
 #  endif
-#  define NSMODULE_DEFN(_name) extern NSMODULE_SECTION mozilla::Module const *const NSMODULE_NAME(_name)
+#  if defined(MOZ_HAVE_ASAN_BLACKLIST)
+#    define NSMODULE_ASAN_BLACKLIST __attribute__((no_sanitize_address))
+#  else
+#    define NSMODULE_ASAN_BLACKLIST
+#  endif
+#  define NSMODULE_DEFN(_name) extern NSMODULE_SECTION NSMODULE_ASAN_BLACKLIST mozilla::Module const *const NSMODULE_NAME(_name)
 #else
 #  define NSMODULE_NAME(_name) NSModule
 #  define NSMODULE_DEFN(_name) extern "C" NS_EXPORT mozilla::Module const *const NSModule
