@@ -156,8 +156,7 @@ struct Module
 #  endif
 #  define NSMODULE_DEFN(_name) extern NSMODULE_SECTION NSMODULE_ASAN_BLACKLIST mozilla::Module const *const NSMODULE_NAME(_name)
 #else
-#  define NSMODULE_NAME(_name) NSModule
-#  define NSMODULE_DEFN(_name) extern "C" NS_EXPORT mozilla::Module const *const NSModule
+#  error Building binary XPCOM components is not supported anymore.
 #endif
 
 #endif // mozilla_Module_h
