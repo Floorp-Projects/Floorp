@@ -94,7 +94,7 @@ function initTestDebuggerServer() {
   DebuggerServer.registerModule("devtools/server/actors/thread", {
     prefix: "script",
     constructor: "ScriptActor",
-    type: { global: true, tab: true }
+    type: { global: true, target: true }
   });
   DebuggerServer.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.

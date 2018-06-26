@@ -38,7 +38,7 @@ module.exports = async function() {
       DebuggerServer.registerModule("chrome://damp/content/tests/server/actor.js", {
         prefix: "dampTest",
         constructor: "DampTestActor",
-        type: { tab: true }
+        type: { target: true }
       });
     }`
   ) + ")()", true);
