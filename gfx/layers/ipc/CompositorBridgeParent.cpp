@@ -1874,7 +1874,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   txn.SetRootPipeline(aPipelineId);
   api->SendTransaction(txn);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
-  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, std::move(api), std::move(asyncMgr), std::move(animStorage));
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, std::move(api), std::move(asyncMgr), std::move(animStorage), mVsyncRate);
   mWrBridge.get()->AddRef(); // IPDL reference
 
   *aIdNamespace = mWrBridge->GetIdNamespace();
