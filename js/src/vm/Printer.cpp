@@ -223,9 +223,8 @@ Sprinter::putString(JSString* s)
     InvariantChecker ic(this);
 
     size_t length = s->length();
-    size_t size = length;
 
-    char* buffer = reserve(size);
+    char* buffer = reserve(length);
     if (!buffer)
         return false;
 
@@ -234,12 +233,15 @@ Sprinter::putString(JSString* s)
         return false;
 
     JS::AutoCheckCannotGC nogc;
-    if (linear->hasLatin1Chars())
+    if (linear->hasLatin1Chars()) {
         PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc), length);
-    else
-        DeflateStringToBuffer(nullptr, linear->twoByteChars(nogc), length, buffer, &size);
+    } else {
+        const char16_t* src = linear->twoByteChars(nogc);
+        for (size_t i = 0; i < length; i++)
+            buffer[i] = char(src[i]);
+    }
 
-    buffer[size] = 0;
+    buffer[length] = 0;
     return true;
 }
 
