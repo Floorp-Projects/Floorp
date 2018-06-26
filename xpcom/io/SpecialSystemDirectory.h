@@ -31,6 +31,9 @@ enum SystemDirectories {
   Win_LocalAppdata          =   224,
   Win_ProgramFiles          =   225,
   Win_Downloads             =   226,
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  Win_Documents             =   228,
+#endif
 #if defined(MOZ_CONTENT_SANDBOX)
   Win_LocalAppdataLow       =   232,
 #endif

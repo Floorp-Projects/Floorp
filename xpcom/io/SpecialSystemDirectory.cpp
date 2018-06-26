@@ -633,6 +633,13 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       return GetKnownFolder(&localAppDataLowGuid, aFile);
     }
 #endif
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+    case Win_Documents: {
+      return GetLibrarySaveToPath(CSIDL_MYDOCUMENTS,
+                                  FOLDERID_DocumentsLibrary,
+                                  aFile);
+    }
+#endif
 #endif  // XP_WIN
 
 #if defined(XP_UNIX)
