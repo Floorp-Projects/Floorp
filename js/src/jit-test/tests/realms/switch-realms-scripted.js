@@ -64,3 +64,38 @@ function testGenerator() {
     }
 }
 testGenerator();
+
+function testException1() {
+    var g = newGlobal({sameCompartmentAs: this});
+    g.evaluate("function throwEx() { throw this; }");
+    for (var i = 0; i < 20; i++) {
+        var ex;
+        try {
+            g.throwEx();
+        } catch(e) {
+            ex = e;
+        }
+        assertCorrectRealm();
+        assertEq(ex, g);
+    }
+}
+testException1();
+
+function testException2() {
+    var g = newGlobal({sameCompartmentAs: this});
+    g.evaluate("function f1(x) { if (x > 100) throw x; }");
+    g.f2 = function(x) { return g.f1(x); }
+    g.f3 = function(x) { return g.f2(x); }
+    g.evaluate("function f4(x) { try { return f3(x); } finally { assertCorrectRealm(); } }");
+    var ex;
+    try {
+        for (var i = 0; i < 110; i++) {
+            g.f4(i);
+        }
+    } catch (e) {
+        ex = e;
+    }
+    assertCorrectRealm();
+    assertEq(ex, 101);
+}
+testException2();
