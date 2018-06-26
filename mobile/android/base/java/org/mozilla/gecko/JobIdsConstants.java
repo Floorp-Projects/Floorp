@@ -29,6 +29,8 @@ public class JobIdsConstants {
 
     private static final int JOB_ID_TAB_RECEIVED = 1004;
 
+    private static final int JOB_ID_PROFILE_FETCH = 1005;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -47,6 +49,10 @@ public class JobIdsConstants {
 
     public static int getIdForTabReceivedJob() {
         return getIdWithOffset(JOB_ID_TAB_RECEIVED);
+    }
+
+    public static int getIdForProfileFetchJob() {
+        return getIdWithOffset(JOB_ID_PROFILE_FETCH);
     }
 
     private static boolean isReleaseBuild() {

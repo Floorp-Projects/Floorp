@@ -969,11 +969,9 @@ public class AndroidFxAccount {
         }
 
         Logger.info(LOG_TAG, "Intent service launched to fetch profile.");
-        final Intent intent = new Intent(context, FxAccountProfileService.class);
-        intent.putExtra(FxAccountProfileService.KEY_AUTH_TOKEN, authToken);
-        intent.putExtra(FxAccountProfileService.KEY_PROFILE_SERVER_URI, getProfileServerURI());
-        intent.putExtra(FxAccountProfileService.KEY_RESULT_RECEIVER, new ProfileResultReceiver(new Handler()));
-        context.startService(intent);
+        final Intent fetchProfileIntent = FxAccountProfileService.getProfileFetchingIntent(
+                authToken, getProfileServerURI(), new ProfileResultReceiver(new Handler()));
+        FxAccountProfileService.enqueueWork(context, fetchProfileIntent);
       }
     });
   }
