@@ -153,30 +153,6 @@ interface nsIHTMLEditor : nsISupports
   void rebuildDocumentFromSource(in AString aSourceString);
 
   /**
-   * Insert some HTML source, interpreting
-   * the string argument according to the given context.
-   *
-   * @param aInputString   the string to be inserted
-   * @param aContextStr    Context of insertion
-   * @param aInfoStr       Related info to aInputString
-   * @param aFlavor        Transferable flavor, can be ""
-   * @param aSourceDoc          document where input was dragged from (may be null)
-   * @param aDestinationNode    location for insertion (such as when dropped)
-   * @param aDestinationOffset  used with aDestNode to determine insert location
-   * @param aDeleteSelection    used with aDestNode during drag&drop
-   * @param aCollapseSelection  used with aDestNode during drag&drop
-   */
-  void insertHTMLWithContext(in AString aInputString,
-                             in AString aContextStr,
-                             in AString aInfoStr,
-                             in AString aFlavor,
-                             in Document aSourceDoc,
-                             in Node aDestinationNode,
-                             in long aDestinationOffset,
-                             in boolean aDeleteSelection);
-
-
-  /**
     * Insert an element, which may have child nodes, at the selection
     * Used primarily to insert a new element for various insert element dialogs,
     *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
@@ -304,12 +280,6 @@ interface nsIHTMLEditor : nsISupports
    * Document me!
    *
    */
-  void getIndentState(out boolean aCanIndent, out boolean aCanOutdent);
-
-  /**
-   * Document me!
-   *
-   */
   void makeOrChangeList(in AString aListType, in boolean entireList,
                         in AString aBulletType);
 
@@ -415,18 +385,6 @@ interface nsIHTMLEditor : nsISupports
    */
   void setBackgroundColor(in AString aColor);
 
-
-  /**
-   * Set an attribute on the document's <body> element
-   *    such as text, link, background colors
-   *
-   * 8/31/00 THIS ISN'T BEING USED? SHOULD WE DROP IT?
-   *
-   * @param aAttr   The attribute to be set
-   * @param aValue  The value of the attribute
-   */
-  void setBodyAttribute(in AString aAttr, in AString aValue);
-
   /**
    * Find all the nodes in the document which contain references
    * to outside URIs (e.g. a href, img src, script src, etc.)
@@ -443,12 +401,6 @@ interface nsIHTMLEditor : nsISupports
    * @return    true if CSS handled and enabled
    */
   attribute boolean isCSSEnabled;
-
-  /**
-   * returns the deepest container of the selection
-   * @return a DOM Element
-   */
-  Element getSelectionContainer();
 
   /**
    * Checks if the anonymous nodes created by the HTML editor have to be

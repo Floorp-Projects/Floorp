@@ -112,7 +112,6 @@ public:
 
   nsresult GetListState(bool* aMixed, bool* aOL, bool* aUL, bool* aDL);
   nsresult GetListItemState(bool* aMixed, bool* aLI, bool* aDT, bool* aDD);
-  nsresult GetIndentState(bool* aCanIndent, bool* aCanOutdent);
   nsresult GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign);
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
 

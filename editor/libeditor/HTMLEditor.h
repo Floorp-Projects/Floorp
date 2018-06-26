@@ -122,6 +122,10 @@ public:
   virtual void PreDestroy(bool aDestroyingFrames) override;
 
   bool GetReturnInParagraphCreatesNewParagraph();
+
+  /**
+   * Returns the deepest container of the selection
+   */
   Element* GetSelectionContainer();
 
   // TextEditor overrides
