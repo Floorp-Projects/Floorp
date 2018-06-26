@@ -95,7 +95,7 @@ Encode(const SrcT* aSrc, uint32_t aSrcLen, DestT* aDest)
     case 0:
       break;
     default:
-      NS_NOTREACHED("coding error");
+      MOZ_ASSERT_UNREACHABLE("coding error");
   }
 }
 

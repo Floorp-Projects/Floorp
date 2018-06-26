@@ -264,7 +264,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
                "we should've required <canvas> width/height attrs to be "
                "unsigned (non-negative) values");
   } else {
-    NS_NOTREACHED("couldn't get canvas size");
+    MOZ_ASSERT_UNREACHABLE("couldn't get canvas size");
   }
 
   return size;

@@ -1689,7 +1689,7 @@ nsSVGElement::GetAnimatedLengthList(uint8_t aAttrEnum)
   if (aAttrEnum < info.mLengthListCount) {
     return &(info.mLengthLists[aAttrEnum]);
   }
-  NS_NOTREACHED("Bad attrEnum");
+  MOZ_ASSERT_UNREACHABLE("Bad attrEnum");
   return nullptr;
 }
 

@@ -154,11 +154,9 @@ enum class FontType : int8_t {
   DWRITE,
   GDI,
   MAC,
-  SKIA,
-  CAIRO,
-  COREGRAPHICS,
   FONTCONFIG,
-  FREETYPE
+  FREETYPE,
+  UNKNOWN
 };
 
 enum class NativeSurfaceType : int8_t {
@@ -170,11 +168,9 @@ enum class NativeSurfaceType : int8_t {
 };
 
 enum class NativeFontType : int8_t {
-  DWRITE_FONT_FACE,
-  GDI_FONT_FACE,
-  MAC_FONT_FACE,
-  SKIA_FONT_FACE,
-  CAIRO_FONT_FACE
+  GDI_LOGFONT,
+  FREETYPE_FACE,
+  FONTCONFIG_PATTERN,
 };
 
 enum class FontStyle : int8_t {

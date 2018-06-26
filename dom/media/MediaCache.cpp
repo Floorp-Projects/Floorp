@@ -2514,7 +2514,7 @@ MediaCacheStream::GetNextCachedDataInternal(AutoLock&, int64_t aOffset)
     ++blockIndex;
   }
 
-  NS_NOTREACHED("Should return in loop");
+  MOZ_ASSERT_UNREACHABLE("Should return in loop");
   return -1;
 }
 

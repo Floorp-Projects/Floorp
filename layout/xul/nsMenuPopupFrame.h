@@ -607,7 +607,8 @@ protected:
     ReflowCallbackData() :
       mPosted(false),
       mAnchor(nullptr),
-      mSizedToPopup(false)
+      mSizedToPopup(false),
+      mIsOpenChanged(false)
     {}
     void MarkPosted(nsIFrame* aAnchor, bool aSizedToPopup, bool aIsOpenChanged) {
       mPosted = true;

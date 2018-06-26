@@ -503,7 +503,7 @@ LazyIdleThread::HasPendingEvents(bool* aHasPendingEvents)
 {
   // This is only supposed to be called from the thread itself so it's not
   // implemented here.
-  NS_NOTREACHED("Shouldn't ever call this!");
+  MOZ_ASSERT_UNREACHABLE("Shouldn't ever call this!");
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -519,7 +519,7 @@ LazyIdleThread::ProcessNextEvent(bool aMayWait,
 {
   // This is only supposed to be called from the thread itself so it's not
   // implemented here.
-  NS_NOTREACHED("Shouldn't ever call this!");
+  MOZ_ASSERT_UNREACHABLE("Shouldn't ever call this!");
   return NS_ERROR_UNEXPECTED;
 }
 

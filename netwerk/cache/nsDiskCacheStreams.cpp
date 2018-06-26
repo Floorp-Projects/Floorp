@@ -669,7 +669,7 @@ nsDiskCacheStreamIO::Flush()
 NS_IMETHODIMP
 nsDiskCacheStreamIO::WriteFrom(nsIInputStream *inStream, uint32_t count, uint32_t *bytesWritten)
 {
-    NS_NOTREACHED("WriteFrom");
+    MOZ_ASSERT_UNREACHABLE("WriteFrom");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -680,7 +680,7 @@ nsDiskCacheStreamIO::WriteSegments( nsReadSegmentFun reader,
                                         uint32_t         count,
                                         uint32_t *       bytesWritten)
 {
-    NS_NOTREACHED("WriteSegments");
+    MOZ_ASSERT_UNREACHABLE("WriteSegments");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

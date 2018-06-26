@@ -103,7 +103,7 @@ FormData::GetEncodedSubmission(nsIURI* aURI,
                                nsIInputStream** aPostDataStream,
                                nsCOMPtr<nsIURI>& aOutURI)
 {
-  NS_NOTREACHED("Shouldn't call FormData::GetEncodedSubmission");
+  MOZ_ASSERT_UNREACHABLE("Shouldn't call FormData::GetEncodedSubmission");
   return NS_OK;
 }
 

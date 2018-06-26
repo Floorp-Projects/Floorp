@@ -62,6 +62,42 @@ namespace google_breakpad {
 #define strtoull _strtoui64
 #endif
 
+namespace {
+
+// Utility function to tokenize given the presence of an optional initial
+// field. In this case, optional_field is the expected string for the optional
+// field, and max_tokens is the maximum number of tokens including the optional
+// field. Refer to the documentation for Tokenize for descriptions of the other
+// arguments.
+bool TokenizeWithOptionalField(char *line,
+                               const char *optional_field,
+                               const char *separators,
+                               int max_tokens,
+                               vector<char*> *tokens) {
+  // First tokenize assuming the optional field is not present.  If we then see
+  // the optional field, additionally tokenize the last token into two tokens.
+  if (!Tokenize(line, separators, max_tokens - 1, tokens)) {
+    return false;
+  }
+
+  if (strcmp(tokens->front(), optional_field) == 0) {
+    // The optional field is present. Split the last token in two to recover the
+    // field prior to the last.
+    vector<char*> last_tokens;
+    if (!Tokenize(tokens->back(), separators, 2, &last_tokens)) {
+      return false;
+    }
+    // Replace the previous last token with the two new tokens.
+    tokens->pop_back();
+    tokens->push_back(last_tokens[0]);
+    tokens->push_back(last_tokens[1]);
+  }
+
+  return true;
+}
+
+}  // namespace
+
 static const char *kWhitespace = " \r\n";
 static const int kMaxErrorsPrinted = 5;
 static const int kMaxErrorsBeforeBailing = 100;
@@ -323,13 +359,14 @@ bool BasicSourceLineResolver::Module::ParseFile(char *file_line) {
 
 BasicSourceLineResolver::Function*
 BasicSourceLineResolver::Module::ParseFunction(char *function_line) {
+  bool is_multiple;
   uint64_t address;
   uint64_t size;
   long stack_param_size;
   char *name;
-  if (SymbolParseHelper::ParseFunction(function_line, &address, &size,
-                                       &stack_param_size, &name)) {
-    return new Function(name, address, size, stack_param_size);
+  if (SymbolParseHelper::ParseFunction(function_line, &is_multiple, &address,
+                                       &size, &stack_param_size, &name)) {
+    return new Function(name, address, size, stack_param_size, is_multiple);
   }
   return NULL;
 }
@@ -349,11 +386,12 @@ BasicSourceLineResolver::Line* BasicSourceLineResolver::Module::ParseLine(
 }
 
 bool BasicSourceLineResolver::Module::ParsePublicSymbol(char *public_line) {
+  bool is_multiple;
   uint64_t address;
   long stack_param_size;
   char *name;
 
-  if (SymbolParseHelper::ParsePublicSymbol(public_line, &address,
+  if (SymbolParseHelper::ParsePublicSymbol(public_line, &is_multiple, &address,
                                            &stack_param_size, &name)) {
     // A few public symbols show up with an address of 0.  This has been seen
     // in the dumped output of ntdll.pdb for symbols such as _CIlog, _CIpow,
@@ -366,7 +404,8 @@ bool BasicSourceLineResolver::Module::ParsePublicSymbol(char *public_line) {
     }
 
     linked_ptr<PublicSymbol> symbol(new PublicSymbol(name, address,
-                                                     stack_param_size));
+                                                     stack_param_size,
+                                                     is_multiple));
     return public_symbols_.Store(address, symbol);
   }
   return false;
@@ -491,36 +530,39 @@ bool SymbolParseHelper::ParseFile(char *file_line, long *index,
 }
 
 // static
-bool SymbolParseHelper::ParseFunction(char *function_line, uint64_t *address,
-                                      uint64_t *size, long *stack_param_size,
-                                      char **name) {
-  // FUNC <address> <size> <stack_param_size> <name>
+bool SymbolParseHelper::ParseFunction(char *function_line, bool *is_multiple,
+                                      uint64_t *address, uint64_t *size,
+                                      long *stack_param_size, char **name) {
+  // FUNC [<multiple>] <address> <size> <stack_param_size> <name>
   assert(strncmp(function_line, "FUNC ", 5) == 0);
   function_line += 5;  // skip prefix
 
   vector<char*> tokens;
-  if (!Tokenize(function_line, kWhitespace, 4, &tokens)) {
+  if (!TokenizeWithOptionalField(function_line, "m", kWhitespace, 5, &tokens)) {
     return false;
   }
 
+  *is_multiple = strcmp(tokens[0], "m") == 0;
+  int next_token = *is_multiple ? 1 : 0;
+
   char *after_number;
-  *address = strtoull(tokens[0], &after_number, 16);
+  *address = strtoull(tokens[next_token++], &after_number, 16);
   if (!IsValidAfterNumber(after_number) ||
       *address == std::numeric_limits<unsigned long long>::max()) {
     return false;
   }
-  *size = strtoull(tokens[1], &after_number, 16);
+  *size = strtoull(tokens[next_token++], &after_number, 16);
   if (!IsValidAfterNumber(after_number) ||
       *size == std::numeric_limits<unsigned long long>::max()) {
     return false;
   }
-  *stack_param_size = strtol(tokens[2], &after_number, 16);
+  *stack_param_size = strtol(tokens[next_token++], &after_number, 16);
   if (!IsValidAfterNumber(after_number) ||
       *stack_param_size == std::numeric_limits<long>::max() ||
       *stack_param_size < 0) {
     return false;
   }
-  *name = tokens[3];
+  *name = tokens[next_token++];
 
   return true;
 }
@@ -571,32 +613,35 @@ bool SymbolParseHelper::ParseLine(char *line_line, uint64_t *address,
 }
 
 // static
-bool SymbolParseHelper::ParsePublicSymbol(char *public_line,
+bool SymbolParseHelper::ParsePublicSymbol(char *public_line, bool *is_multiple,
                                           uint64_t *address,
                                           long *stack_param_size,
                                           char **name) {
-  // PUBLIC <address> <stack_param_size> <name>
+  // PUBLIC [<multiple>] <address> <stack_param_size> <name>
   assert(strncmp(public_line, "PUBLIC ", 7) == 0);
   public_line += 7;  // skip prefix
 
   vector<char*> tokens;
-  if (!Tokenize(public_line, kWhitespace, 3, &tokens)) {
+  if (!TokenizeWithOptionalField(public_line, "m", kWhitespace, 4, &tokens)) {
     return false;
   }
 
+  *is_multiple = strcmp(tokens[0], "m") == 0;
+  int next_token = *is_multiple ? 1 : 0;
+
   char *after_number;
-  *address = strtoull(tokens[0], &after_number, 16);
+  *address = strtoull(tokens[next_token++], &after_number, 16);
   if (!IsValidAfterNumber(after_number) ||
       *address == std::numeric_limits<unsigned long long>::max()) {
     return false;
   }
-  *stack_param_size = strtol(tokens[1], &after_number, 16);
+  *stack_param_size = strtol(tokens[next_token++], &after_number, 16);
   if (!IsValidAfterNumber(after_number) ||
       *stack_param_size == std::numeric_limits<long>::max() ||
       *stack_param_size < 0) {
     return false;
   }
-  *name = tokens[2];
+  *name = tokens[next_token++];
 
   return true;
 }

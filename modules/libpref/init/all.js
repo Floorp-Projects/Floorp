@@ -955,6 +955,8 @@ pref("accessibility.mouse_focuses_formcontrol", false);
 
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
+// Enable FAYT by pressing / or "
+pref("accessibility.typeaheadfind.manual", true);
 pref("accessibility.typeaheadfind.autostart", true);
 // casesensitive: controls the find bar's case-sensitivity
 //     0 - "never"  (case-insensitive)

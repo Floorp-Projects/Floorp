@@ -2619,7 +2619,7 @@ PluginModuleParent::RecvProcessNativeEventsInInterruptCall()
     ProcessNativeEventsInInterruptCall();
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginModuleParent::RecvProcessNativeEventsInInterruptCall not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2632,7 +2632,7 @@ PluginModuleParent::ProcessRemoteNativeEventsInInterruptCall()
     Unused << SendProcessNativeEventsInInterruptCall();
     return;
 #endif
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginModuleParent::ProcessRemoteNativeEventsInInterruptCall not implemented!");
 }
 
@@ -2647,7 +2647,7 @@ PluginModuleParent::RecvPluginShowWindow(const uint32_t& aWindowId, const bool& 
     mac_plugin_interposing::parent::OnPluginShowWindow(aWindowId, windowBound, aModal);
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginInstanceParent::RecvPluginShowWindow not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2661,7 +2661,7 @@ PluginModuleParent::RecvPluginHideWindow(const uint32_t& aWindowId)
     mac_plugin_interposing::parent::OnPluginHideWindow(aWindowId, OtherPid());
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginInstanceParent::RecvPluginHideWindow not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2675,7 +2675,7 @@ PluginModuleParent::RecvSetCursor(const NSCursorInfo& aCursorInfo)
     mac_plugin_interposing::parent::OnSetCursor(aCursorInfo);
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginInstanceParent::RecvSetCursor not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2689,7 +2689,7 @@ PluginModuleParent::RecvShowCursor(const bool& aShow)
     mac_plugin_interposing::parent::OnShowCursor(aShow);
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginInstanceParent::RecvShowCursor not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2703,7 +2703,7 @@ PluginModuleParent::RecvPushCursor(const NSCursorInfo& aCursorInfo)
     mac_plugin_interposing::parent::OnPushCursor(aCursorInfo);
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginInstanceParent::RecvPushCursor not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2717,7 +2717,7 @@ PluginModuleParent::RecvPopCursor()
     mac_plugin_interposing::parent::OnPopCursor();
     return IPC_OK();
 #else
-    NS_NOTREACHED(
+    MOZ_ASSERT_UNREACHABLE(
         "PluginInstanceParent::RecvPopCursor not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif

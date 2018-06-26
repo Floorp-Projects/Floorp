@@ -1022,7 +1022,7 @@ static void ExchangeMethods(Class target_class,
   if (m1 && m2)
     method_exchangeImplementations(m1, m2);
   else
-    NS_NOTREACHED("Cocoa swizzling failed");
+    MOZ_ASSERT_UNREACHABLE("Cocoa swizzling failed");
 }
 
 namespace mac_plugin_interposing {

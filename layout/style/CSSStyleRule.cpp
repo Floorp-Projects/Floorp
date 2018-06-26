@@ -60,13 +60,15 @@ CSSStyleRuleDeclaration::GetParentObject()
 }
 
 DeclarationBlock*
-CSSStyleRuleDeclaration::GetCSSDeclaration(Operation aOperation)
+CSSStyleRuleDeclaration::GetOrCreateCSSDeclaration(Operation aOperation,
+                                                   DeclarationBlock** aCreated)
 {
   return mDecls;
 }
 
 nsresult
-CSSStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
+CSSStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl,
+                                           MutationClosureData* aClosureData)
 {
   CSSStyleRule* rule = Rule();
   if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {

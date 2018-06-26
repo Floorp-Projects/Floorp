@@ -1803,7 +1803,7 @@ nsContainerFrame::ResolvedOrientationIsVertical()
     case StyleOrient::Block:
       return !GetWritingMode().IsVertical();
   }
-  NS_NOTREACHED("unexpected -moz-orient value");
+  MOZ_ASSERT_UNREACHABLE("unexpected -moz-orient value");
   return false;
 }
 

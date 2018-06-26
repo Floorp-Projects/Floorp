@@ -54,7 +54,8 @@ public:
         LOG(("nsOnStartRequestEvent::HandleEvent [req=%p]\n", mRequest.get()));
 
         if (!mProxy->mObserver) {
-            NS_NOTREACHED("already handled onStopRequest event (observer is null)");
+            MOZ_ASSERT_UNREACHABLE("already handled onStopRequest event "
+                                   "(observer is null)");
             return NS_OK;
         }
 
@@ -95,7 +96,8 @@ public:
 
         nsMainThreadPtrHandle<nsIRequestObserver> observer = mProxy->mObserver;
         if (!observer) {
-            NS_NOTREACHED("already handled onStopRequest event (observer is null)");
+            MOZ_ASSERT_UNREACHABLE("already handled onStopRequest event "
+                                   "(observer is null)");
             return NS_OK;
         }
         // Do not allow any more events to be handled after OnStopRequest

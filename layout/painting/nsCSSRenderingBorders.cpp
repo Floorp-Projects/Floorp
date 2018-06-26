@@ -1384,7 +1384,7 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
       break;
 
     default:
-      NS_NOTREACHED("Unhandled border style!!");
+      MOZ_ASSERT_UNREACHABLE("Unhandled border style!!");
       break;
   }
 
@@ -3890,7 +3890,7 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(nsIFrame* aForFrame,
           NS_lround(coord.GetFactorValue()));
         break;
       default:
-        NS_NOTREACHED("unexpected CSS unit for image slice");
+        MOZ_ASSERT_UNREACHABLE("unexpected CSS unit for image slice");
         value = 0;
         break;
     }
@@ -3915,7 +3915,8 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(nsIFrame* aForFrame,
         value = mSlice.Side(s);
         break;
       default:
-        NS_NOTREACHED("unexpected CSS unit for border image area division");
+        MOZ_ASSERT_UNREACHABLE("unexpected CSS unit for border image area "
+                               "division");
         value = 0;
         break;
     }

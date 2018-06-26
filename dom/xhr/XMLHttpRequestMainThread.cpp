@@ -3415,7 +3415,8 @@ void
 XMLHttpRequestMainThread::HandleTimeoutCallback()
 {
   if (mState == XMLHttpRequestBinding::DONE) {
-    NS_NOTREACHED("XMLHttpRequestMainThread::HandleTimeoutCallback with completed request");
+    MOZ_ASSERT_UNREACHABLE("XMLHttpRequestMainThread::HandleTimeoutCallback "
+                           "with completed request");
     // do nothing!
     return;
   }

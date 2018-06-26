@@ -29,6 +29,7 @@ fi
 
 export CFLAGS="--coverage"
 export CXXFLAGS="--coverage"
+export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads"
 
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.clang-cl"

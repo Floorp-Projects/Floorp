@@ -1057,7 +1057,10 @@ JSScript::initScriptCounts(JSContext* cx)
     // Create realm's scriptCountsMap if necessary.
     if (!realm()->scriptCountsMap) {
         auto map = cx->make_unique<ScriptCountsMap>();
-        if (!map || !map->init()) {
+        if (!map)
+            return false;
+
+        if (!map->init()) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -2698,7 +2701,10 @@ JSScript::initScriptName(JSContext* cx)
     // Create realm's scriptNameMap if necessary.
     if (!realm()->scriptNameMap) {
         auto map = cx->make_unique<ScriptNameMap>();
-        if (!map || !map->init()) {
+        if (!map)
+            return false;
+
+        if (!map->init()) {
             ReportOutOfMemory(cx);
             return false;
         }
@@ -3757,20 +3763,29 @@ JSScript::ensureHasDebugScript(JSContext* cx)
 
     size_t nbytes = offsetof(DebugScript, breakpoints) + length() * sizeof(BreakpointSite*);
     UniqueDebugScript debug(reinterpret_cast<DebugScript*>(zone()->pod_calloc<uint8_t>(nbytes)));
-    if (!debug)
+    if (!debug) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     /* Create realm's debugScriptMap if necessary. */
     if (!realm()->debugScriptMap) {
         auto map = cx->make_unique<DebugScriptMap>();
-        if (!map || !map->init())
+        if (!map)
             return false;
+
+        if (!map->init()) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
 
         realm()->debugScriptMap = std::move(map);
     }
 
-    if (!realm()->debugScriptMap->putNew(this, std::move(debug)))
+    if (!realm()->debugScriptMap->putNew(this, std::move(debug))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     bitFields_.hasDebugScript_ = true; // safe to set this;  we can't fail after this point
 

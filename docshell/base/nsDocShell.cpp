@@ -5585,7 +5585,7 @@ nsDocShell::GetVisibility(bool* aVisibility)
 
     // Null-check for crash in bug 267804
     if (!pPresShell) {
-      NS_NOTREACHED("parent docshell has null pres shell");
+      MOZ_ASSERT_UNREACHABLE("parent docshell has null pres shell");
       return NS_OK;
     }
 
@@ -6875,7 +6875,7 @@ NS_IMETHODIMP
 nsDocShell::OnLocationChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
                              nsIURI* aURI, uint32_t aFlags)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -6985,7 +6985,7 @@ nsDocShell::OnStatusChange(nsIWebProgress* aWebProgress,
                            nsIRequest* aRequest,
                            nsresult aStatus, const char16_t* aMessage)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -6993,7 +6993,7 @@ NS_IMETHODIMP
 nsDocShell::OnSecurityChange(nsIWebProgress* aWebProgress,
                              nsIRequest* aRequest, uint32_t aState)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -10884,7 +10884,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream* aHeadersData,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_NOTREACHED("oops");
+  MOZ_ASSERT_UNREACHABLE("oops");
   return NS_ERROR_UNEXPECTED;
 }
 

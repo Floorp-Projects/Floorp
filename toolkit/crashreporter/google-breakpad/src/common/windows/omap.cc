@@ -449,6 +449,27 @@ void BuildEndpointIndexMap(ImageMap* image_map) {
   }
 }
 
+void BuildSubsequentRVAMap(const OmapData &omap_data,
+                           std::map<DWORD, DWORD> *subsequent) {
+  assert(subsequent->empty());
+  const OmapFromTable &orig2tran =
+      reinterpret_cast<const OmapFromTable &>(omap_data.omap_from);
+
+  if (orig2tran.empty())
+    return;
+
+  for (size_t i = 0; i < orig2tran.size() - 1; ++i) {
+    // Expect that orig2tran is sorted.
+    if (orig2tran[i].rva_original >= orig2tran[i + 1].rva_original) {
+      fprintf(stderr, "OMAP 'from' table unexpectedly unsorted\n");
+      subsequent->clear();
+      return;
+    }
+    subsequent->insert(std::make_pair(orig2tran[i].rva_original,
+                                      orig2tran[i + 1].rva_original));
+  }
+}
+
 // Clips the given mapped range.
 void ClipMappedRangeOriginal(const AddressRange& clip_range,
                              MappedRange* mapped_range) {
@@ -576,6 +597,7 @@ void BuildImageMap(const OmapData& omap_data, ImageMap* image_map) {
 
   BuildMapping(omap_data, &image_map->mapping);
   BuildEndpointIndexMap(image_map);
+  BuildSubsequentRVAMap(omap_data, &image_map->subsequent_rva_block);
 }
 
 void MapAddressRange(const ImageMap& image_map,

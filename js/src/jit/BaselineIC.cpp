@@ -2462,11 +2462,13 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                                   fun->hasJitInfo() &&
                                   fun->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
 
+        bool isCrossRealm = cx->realm() != fun->realm();
+
         JitSpew(JitSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s, spread=%s)",
                 fun.get(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
         ICCall_Native::Compiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                          fun, templateObject, constructing, ignoresReturnValue,
-                                         isSpread, script->pcToOffset(pc));
+                                         isSpread, isCrossRealm, script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -3609,6 +3611,9 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     // Note that this leaves the return address in TailCallReg.
     enterStubFrame(masm, regs.getAny());
 
+    if (isCrossRealm_)
+        masm.switchToObjectRealm(callee, regs.getAny());
+
     // Values are on the stack left-to-right. Calling convention wants them
     // right-to-left so duplicate them on the stack in reverse order.
     // |this| and callee are pushed last.
@@ -3667,6 +3672,13 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     masm.loadValue(Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()), R0);
 
     leaveStubFrame(masm);
+
+    if (isCrossRealm_) {
+        Address envChain(BaselineFrameReg, BaselineFrame::reverseOffsetOfEnvironmentChain());
+        Register scratch = R1.scratchReg();
+        masm.loadPtr(envChain, scratch);
+        masm.switchToObjectRealm(scratch, scratch);
+    }
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);

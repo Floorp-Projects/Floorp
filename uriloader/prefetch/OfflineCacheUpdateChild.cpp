@@ -226,8 +226,8 @@ OfflineCacheUpdateChild::InitPartial(nsIURI *aManifestURI,
                                   nsIURI *aDocumentURI,
                                   nsIPrincipal *aLoadingPrincipal)
 {
-    NS_NOTREACHED("Not expected to do partial offline cache updates"
-                  " on the child process");
+    MOZ_ASSERT_UNREACHABLE("Not expected to do partial offline cache updates"
+                           " on the child process");
     // For now leaving this method, we may discover we need it.
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -237,8 +237,8 @@ OfflineCacheUpdateChild::InitForUpdateCheck(nsIURI *aManifestURI,
                                             nsIPrincipal* aLoadingPrincipal,
                                             nsIObserver *aObserver)
 {
-    NS_NOTREACHED("Not expected to do only update checks"
-                  " from the child process");
+    MOZ_ASSERT_UNREACHABLE("Not expected to do only update checks"
+                           " from the child process");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

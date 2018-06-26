@@ -1438,7 +1438,7 @@ private:
       }
       cur = parent;
     }
-    NS_NOTREACHED("How did we get here?");
+    MOZ_ASSERT_UNREACHABLE("How did we get here?");
   }
 
 public:

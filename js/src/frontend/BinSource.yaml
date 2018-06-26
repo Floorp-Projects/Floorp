@@ -579,7 +579,7 @@ EagerGetter:
                 ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
                 BINJS_TRY(lexicalScope.init(parseContext_));
     build: |
-        ParseNode* params = new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start));
+        BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
         BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
         BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Getter));
 
@@ -609,7 +609,7 @@ EagerSetter:
                 ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
                 BINJS_TRY(lexicalScope.init(parseContext_));
     build: |
-        ParseNode* params = new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos);
+        BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
         factory_.addList(params, param);
         BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
         BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
@@ -729,7 +729,7 @@ ListOfOptionalSpreadElementOrExpression:
 
 ListOfParameter:
     init: |
-        ParseNode* result = new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start));
+        BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* item = */ item);
 
@@ -742,7 +742,7 @@ ListOfStatement:
 
 #ListOfSpreadElementOrExpression:
 #    init:
-#        ParseNode* result = new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos());
+#        BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos()));
 #    append:
 #        result->appendWithoutOrderAssumption(item);
 
@@ -843,7 +843,8 @@ Parameter:
     sum-arms:
         BindingIdentifier:
             after: |
-                BINJS_TRY(parseContext_->positionalFormalParameterNames().append(result->pn_atom));
+                if (!parseContext_->positionalFormalParameterNames().append(result->pn_atom))
+                    return raiseOOM();
                 if (parseContext_->isFunctionBox())
                     parseContext_->functionBox()->length++;
 

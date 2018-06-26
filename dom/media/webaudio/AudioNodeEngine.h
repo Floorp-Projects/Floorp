@@ -329,7 +329,7 @@ public:
                                        GraphTime aFrom,
                                        AudioBlock* aOutput)
   {
-    NS_NOTREACHED("ProduceBlockBeforeInput called on wrong engine\n");
+    MOZ_ASSERT_UNREACHABLE("ProduceBlockBeforeInput called on wrong engine");
   }
 
   /**

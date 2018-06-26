@@ -190,7 +190,7 @@ SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
       break;
 
     default:
-      NS_NOTREACHED("Unexpected transform type");
+      MOZ_ASSERT_UNREACHABLE("Unexpected transform type");
       break;
   }
 }
@@ -228,7 +228,7 @@ SVGTransformSMILData::ToSVGTransform() const
       break;
 
     default:
-      NS_NOTREACHED("Unexpected transform type");
+      MOZ_ASSERT_UNREACHABLE("Unexpected transform type");
       break;
   }
   return result;

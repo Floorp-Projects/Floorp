@@ -47,7 +47,7 @@ nsStyleCoord::nsStyleCoord(float aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
   if (aUnit < eStyleUnit_Percent || aUnit >= eStyleUnit_Coord) {
-    NS_NOTREACHED("not a float value");
+    MOZ_ASSERT_UNREACHABLE("not a float value");
     mUnit = eStyleUnit_Null;
     mValue.mInt = 0;
   } else {
@@ -133,7 +133,7 @@ void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
     mUnit = aUnit;
     mValue.mFloat = aValue;
   } else {
-    NS_NOTREACHED("not an angle value");
+    MOZ_ASSERT_UNREACHABLE("not an angle value");
   }
 }
 
@@ -193,7 +193,7 @@ nsStyleCoord::GetAngleValueInRadians() const
   case eStyleUnit_Grad:   return angle * M_PI / 200.0;
 
   default:
-    NS_NOTREACHED("unrecognized angular unit");
+    MOZ_ASSERT_UNREACHABLE("unrecognized angular unit");
     return 0.0;
   }
 }

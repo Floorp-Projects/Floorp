@@ -88,18 +88,30 @@ class TestAgent {
   }
 
   bool ConnectTcp() {
+    // Try IPv6 first, then IPv4 in case of failure.
+    if (!OpenConnection("::1") && !OpenConnection("127.0.0.1")) {
+      return false;
+    }
+
+    ssl_fd_ = SSL_ImportFD(NULL, pr_fd_);
+    if (!ssl_fd_) {
+      return false;
+    }
+    pr_fd_ = nullptr;
+
+    return true;
+  }
+
+  bool OpenConnection(const char* ip) {
     PRStatus prv;
     PRNetAddr addr;
 
-    // Try IPv6 first.
-    prv = PR_StringToNetAddr("::1", &addr);
+    prv = PR_StringToNetAddr(ip, &addr);
+
     if (prv != PR_SUCCESS) {
-      // If that fails, try IPv4.
-      prv = PR_StringToNetAddr("127.0.0.1", &addr);
-      if (prv != PR_SUCCESS) {
-        return false;
-      }
+      return false;
     }
+
     addr.inet.port = PR_htons(cfg_.get<int>("port"));
 
     pr_fd_ = PR_OpenTCPSocket(addr.raw.family);
@@ -109,11 +121,6 @@ class TestAgent {
     if (prv != PR_SUCCESS) {
       return false;
     }
-
-    ssl_fd_ = SSL_ImportFD(NULL, pr_fd_);
-    if (!ssl_fd_) return false;
-    pr_fd_ = nullptr;
-
     return true;
   }
 
