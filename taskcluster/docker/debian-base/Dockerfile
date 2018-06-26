@@ -51,13 +51,16 @@ RUN /usr/local/sbin/setup_packages.sh $DOCKER_IMAGE_PACKAGES && \
     apt-get update && \
     apt-get install \
       git \
+      less \
       make \
       mercurial \
+      patch \
       python \
       python3.5 \
       python3-minimal \
       python-zstandard \
       python3-zstandard \
+      vim-tiny \
       xz-utils
 
 # %include testing/mozharness/external_tools/robustcheckout.py
