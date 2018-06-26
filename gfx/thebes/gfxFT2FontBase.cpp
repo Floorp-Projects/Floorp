@@ -540,7 +540,7 @@ gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID, int32_t* aAdvance)
     int32_t flags =
         hinting ? FT_LOAD_ADVANCE_ONLY
                 : FT_LOAD_ADVANCE_ONLY | FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
-    FT_Error ftError = FT_Load_Glyph(face.get(), aGID, flags);
+    FT_Error ftError = Factory::LoadFTGlyph(face.get(), aGID, flags);
     if (ftError != FT_Err_Ok) {
         // FT_Face was somehow broken/invalid? Don't try to access glyph slot.
         // This probably shouldn't happen, but does: see bug 1440938.
