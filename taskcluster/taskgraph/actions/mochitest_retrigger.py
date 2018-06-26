@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 @register_callback_action(
     name='retrigger-mochitest-reftest-with-options',
     title='Mochitest/Reftest Retrigger',
+    kind='hook',
+    generic=True,
     symbol='tr',
     description="Retriggers the specified mochitest/reftest job with additional options",
     context=[{'test-type': 'mochitest'},
