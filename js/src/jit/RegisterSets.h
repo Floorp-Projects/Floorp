@@ -466,6 +466,8 @@ class RegisterSet {
     }
 };
 
+// [SMDOC] JIT Register-Set overview
+//
 // There are 2 use cases for register sets:
 //
 //   1. To serve as a pool of allocatable register. This is useful for working
@@ -504,6 +506,8 @@ class AllocatableSet;
 template <typename RegisterSet>
 class LiveSet;
 
+// [SMDOC] JIT Register-Set (Allocatable)
+//
 // Base accessors classes have the minimal set of raw methods to manipulate the register set
 // given as parameter in a consistent manner.  These methods are:
 //
@@ -620,6 +624,8 @@ class AllocatableSetAccessors<RegisterSet>
 };
 
 
+// [SMDOC] JIT Register-Set (Live)
+//
 // The LiveSet accessors are used to collect a list of allocated
 // registers. Taking or adding a register should *not* consider the aliases, as
 // we care about interpreting the registers with the correct type.  For example,

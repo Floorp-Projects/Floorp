@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
+ * [SMDOC] JS::Result
+ *
  * `Result` is used as the return type of many SpiderMonkey functions that
  * can either succeed or fail. See "/mfbt/Result.h".
  *

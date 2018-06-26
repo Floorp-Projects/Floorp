@@ -92,6 +92,8 @@ ArraySetLength(JSContext* cx, Handle<ArrayObject*> obj, HandleId id,
                unsigned attrs, HandleValue value, ObjectOpResult& result);
 
 /*
+ * [SMDOC] NativeObject Elements layout
+ *
  * Elements header used for native objects. The elements component of such objects
  * offers an efficient representation for all or some of the indexed properties
  * of the object, using a flat array of Values rather than a shape hierarchy
@@ -158,6 +160,9 @@ ArraySetLength(JSContext* cx, Handle<ArrayObject*> obj, HandleId id,
  * Elements do not track property creation order, so enumerating the elements
  * of an object does not necessarily visit indexes in the order they were
  * created.
+ *
+ *
+ * [SMDOC] NativeObject shifted elements optimization
  *
  * Shifted elements
  * ----------------
@@ -432,6 +437,8 @@ enum class ShouldUpdateTypes {
 };
 
 /*
+ * [SMDOC] NativeObject layout
+ *
  * NativeObject specifies the internal implementation of a native object.
  *
  * Native objects use ShapedObject::shape to record property information. Two

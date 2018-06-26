@@ -268,6 +268,8 @@ CanonicalizeNaN(double d)
 }
 
 /**
+ * [SMDOC] JS::Value type
+ *
  * JS::Value is the interface for a single JavaScript Engine value.  A few
  * general notes on JS::Value:
  *

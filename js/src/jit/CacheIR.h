@@ -22,6 +22,8 @@ namespace jit {
 
 enum class BaselineCacheIRStubKind;
 
+// [SMDOC] CacheIR
+//
 // CacheIR is an (extremely simple) linear IR language for inline caches.
 // From this IR, we can generate machine code for Baseline or Ion IC stubs.
 //
