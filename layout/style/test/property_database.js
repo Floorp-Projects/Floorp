@@ -5957,8 +5957,68 @@ var gCSSProperties = {
     ],
     invalid_values: [ "none", "5" ]
   },
-  "offset-block-end": {
-    domProp: "offsetBlockEnd",
+  "inset-block-end": {
+    domProp: "insetBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    /* XXX 0 may or may not be equal to auto */
+    initial_values: [ "auto" ],
+    other_values: [ "32px", "-3em", "12%",
+      "calc(2px)",
+      "calc(-2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+    ],
+    invalid_values: []
+  },
+  "inset-block-start": {
+    domProp: "insetBlockStart",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    /* XXX 0 may or may not be equal to auto */
+    initial_values: [ "auto" ],
+    other_values: [ "32px", "-3em", "12%",
+      "calc(2px)",
+      "calc(-2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+    ],
+    invalid_values: []
+  },
+  "inset-inline-end": {
+    domProp: "insetInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    /* FIXME: run tests with multiple prerequisites */
+    prerequisites: { "position": "relative" },
+    /* XXX 0 may or may not be equal to auto */
+    initial_values: [ "auto" ],
+    other_values: [ "32px", "-3em", "12%",
+      "calc(2px)",
+      "calc(-2px)",
+      "calc(50%)",
+      "calc(3*25px)",
+      "calc(25px*3)",
+      "calc(3*25px + 50%)",
+    ],
+    invalid_values: []
+  },
+  "inset-inline-start": {
+    domProp: "insetInlineStart",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
@@ -5980,62 +6040,38 @@ var gCSSProperties = {
   "offset-block-start": {
     domProp: "offsetBlockStart",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
     get_computed: logical_box_prop_get_computed,
-    /* FIXME: run tests with multiple prerequisites */
-    prerequisites: { "position": "relative" },
-    /* XXX 0 may or may not be equal to auto */
-    initial_values: [ "auto" ],
-    other_values: [ "32px", "-3em", "12%",
-      "calc(2px)",
-      "calc(-2px)",
-      "calc(50%)",
-      "calc(3*25px)",
-      "calc(25px*3)",
-      "calc(3*25px + 50%)",
-    ],
-    invalid_values: []
+    alias_for: "inset-block-start",
+    subproperties: [ "inset-block-start" ],
   },
-  "offset-inline-end": {
-    domProp: "offsetInlineEnd",
+  "offset-block-end": {
+    domProp: "offsetBlockEnd",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
     get_computed: logical_box_prop_get_computed,
-    /* FIXME: run tests with multiple prerequisites */
-    prerequisites: { "position": "relative" },
-    /* XXX 0 may or may not be equal to auto */
-    initial_values: [ "auto" ],
-    other_values: [ "32px", "-3em", "12%",
-      "calc(2px)",
-      "calc(-2px)",
-      "calc(50%)",
-      "calc(3*25px)",
-      "calc(25px*3)",
-      "calc(3*25px + 50%)",
-    ],
-    invalid_values: []
+    alias_for: "inset-block-end",
+    subproperties: [ "inset-block-end" ],
   },
   "offset-inline-start": {
     domProp: "offsetInlineStart",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
     get_computed: logical_box_prop_get_computed,
-    /* FIXME: run tests with multiple prerequisites */
-    prerequisites: { "position": "relative" },
-    /* XXX 0 may or may not be equal to auto */
-    initial_values: [ "auto" ],
-    other_values: [ "32px", "-3em", "12%",
-      "calc(2px)",
-      "calc(-2px)",
-      "calc(50%)",
-      "calc(3*25px)",
-      "calc(25px*3)",
-      "calc(3*25px + 50%)",
-    ],
-    invalid_values: []
+    alias_for: "inset-inline-start",
+    subproperties: [ "inset-inline-start" ],
+  },
+  "offset-block-end": {
+    domProp: "offsetInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    alias_for: "inset-inline-end",
+    subproperties: [ "inset-inline-end" ],
   },
   "padding-block-end": {
     domProp: "paddingBlockEnd",
@@ -6195,8 +6231,8 @@ function logical_box_prop_get_computed(cs, property)
 
   if (/^-moz-/.test(property)) {
     property = physicalize(property.substring(5), inlineMapping, "");
-  } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
-    property = property.substring(7);  // we want "top" not "offset-top", e.g.
+  } else if (/^(offset|inset)-(block|inline)-(start|end)/.test(property)) {
+    property = property.replace("offset-", "").replace("inset-", "");  // we want "top" not "offset-top", e.g.
     property = physicalize(property, blockMapping, "block-");
     property = physicalize(property, inlineMapping, "inline-");
   } else if (/-(block|inline)-(start|end)/.test(property)) {

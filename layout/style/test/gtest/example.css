@@ -2278,7 +2278,7 @@ html[dir="rtl"] .editor-mount {
 
 .expression-container .close-btn {
   position: absolute;
-  offset-inline-end: 6px;
+  inset-inline-end: 6px;
   top: 6px;
 }
 
@@ -2411,7 +2411,7 @@ html .breakpoints-list .breakpoint.paused {
 
 .breakpoint .close-btn {
   position: absolute;
-  offset-inline-end: 6px;
+  inset-inline-end: 6px;
   top: 12px;
 }
 
