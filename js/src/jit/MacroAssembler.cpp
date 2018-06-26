@@ -1788,6 +1788,33 @@ MacroAssembler::loadJSContext(Register dest)
 }
 
 void
+MacroAssembler::switchToRealm(Register realm)
+{
+    const uint8_t* realmAddr =
+        static_cast<const uint8_t*>(GetJitContext()->runtime->mainContextPtr()) +
+        JSContext::offsetOfRealm();
+
+    storePtr(realm, AbsoluteAddress(realmAddr));
+}
+
+void
+MacroAssembler::switchToRealm(const void* realm, Register scratch)
+{
+    MOZ_ASSERT(realm);
+
+    movePtr(ImmPtr(realm), scratch);
+    switchToRealm(scratch);
+}
+
+void
+MacroAssembler::switchToObjectRealm(Register obj, Register scratch)
+{
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
+    switchToRealm(scratch);
+}
+
+void
 MacroAssembler::guardGroupHasUnanalyzedNewScript(Register group, Register scratch, Label* fail)
 {
     Label noNewScript;

@@ -3992,6 +3992,11 @@ IonBuilder::makeInliningDecision(JSObject* targetArg, CallInfo& callInfo)
         return InliningDecision_DontInline;
     }
 
+    // Don't inline (native or scripted) cross-realm calls.
+    Realm* targetRealm = JS::GetObjectRealmOrNull(targetArg);
+    if (!targetRealm || targetRealm != script()->realm())
+        return InliningDecision_DontInline;
+
     // Inlining non-function targets is handled by inlineNonFunctionCall().
     if (!targetArg->is<JSFunction>())
         return InliningDecision_Inline;
@@ -5611,14 +5616,19 @@ IonBuilder::makeCallHelper(const Maybe<CallTargets>& targets, CallInfo& callInfo
 
         // Determine whether we can skip the callee's prologue type checks.
         bool needArgCheck = false;
+        bool maybeCrossRealm = false;
         for (JSFunction* target : targets.ref()) {
             if (testNeedsArgumentCheck(target, callInfo)) {
                 needArgCheck = true;
                 break;
             }
+            if (target->realm() != script()->realm())
+                maybeCrossRealm = true;
         }
         if (!needArgCheck)
             call->disableArgCheck();
+        if (!maybeCrossRealm)
+            call->setNotCrossRealm();
     }
 
     call->initFunction(callInfo.fun());

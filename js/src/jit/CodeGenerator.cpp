@@ -4263,6 +4263,11 @@ CodeGenerator::visitCallNative(LCallNative* call)
 
     masm.Push(argUintNReg);
 
+    if (call->mir()->maybeCrossRealm()) {
+        masm.movePtr(ImmGCPtr(target->rawJSFunction()), tempReg);
+        masm.switchToObjectRealm(tempReg, tempReg);
+    }
+
     // Construct native exit frame.
     uint32_t safepointOffset = masm.buildFakeExitFrame(tempReg);
     masm.enterFakeExitFrameForNative(argContextReg, tempReg, call->mir()->isConstructing());
@@ -4289,6 +4294,9 @@ CodeGenerator::visitCallNative(LCallNative* call)
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
+
+    if (call->mir()->maybeCrossRealm())
+        masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()), JSReturnOperand);

@@ -789,6 +789,7 @@ class ICCall_Native : public ICMonitoredStub
         bool isConstructing_;
         bool ignoresReturnValue_;
         bool isSpread_;
+        bool isCrossRealm_;
         RootedFunction callee_;
         RootedObject templateObject_;
         uint32_t pcOffset_;
@@ -799,18 +800,21 @@ class ICCall_Native : public ICMonitoredStub
                   (static_cast<int32_t>(kind) << 1) |
                   (static_cast<int32_t>(isSpread_) << 17) |
                   (static_cast<int32_t>(isConstructing_) << 18) |
-                  (static_cast<int32_t>(ignoresReturnValue_) << 19);
+                  (static_cast<int32_t>(ignoresReturnValue_) << 19) |
+                  (static_cast<int32_t>(isCrossRealm_) << 20);
         }
 
       public:
         Compiler(JSContext* cx, ICStub* firstMonitorStub,
                  HandleFunction callee, HandleObject templateObject,
-                 bool isConstructing, bool ignoresReturnValue, bool isSpread, uint32_t pcOffset)
+                 bool isConstructing, bool ignoresReturnValue, bool isSpread, bool isCrossRealm,
+                 uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_Native),
             firstMonitorStub_(firstMonitorStub),
             isConstructing_(isConstructing),
             ignoresReturnValue_(ignoresReturnValue),
             isSpread_(isSpread),
+            isCrossRealm_(isCrossRealm),
             callee_(cx, callee),
             templateObject_(cx, templateObject),
             pcOffset_(pcOffset)
