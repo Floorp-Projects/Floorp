@@ -234,9 +234,9 @@
       <box class="panel-header">
         <label id="editBookmarkPanelTitle"/>
       </box>
-      <box>
+      <html:div id="editBookmarkPanelFaviconContainer">
         <html:img id="editBookmarkPanelFavicon"/>
-      </box>
+      </html:div>
       <box id="editBookmarkPanelImage"/>
 #include ../../components/places/content/editBookmarkPanel.inc.xul
       <hbox id="editBookmarkPanelBottomButtons" pack="end">
