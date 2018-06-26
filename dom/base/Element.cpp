@@ -2122,10 +2122,15 @@ Element::GetMappedAttributes() const
   return mAttrsAndChildren.GetMapped();
 }
 
+void
+Element::InlineStyleDeclarationWillChange(MutationClosureData& aData)
+{
+  MOZ_ASSERT_UNREACHABLE("Element::InlineStyleDeclarationWillChange");
+}
+
 nsresult
-Element::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
-                                   const nsAString* aSerialized,
-                                   bool aNotify)
+Element::SetInlineStyleDeclaration(DeclarationBlock& aDeclaration,
+                                   MutationClosureData& aData)
 {
   MOZ_ASSERT_UNREACHABLE("Element::SetInlineStyleDeclaration");
   return NS_ERROR_NOT_IMPLEMENTED;

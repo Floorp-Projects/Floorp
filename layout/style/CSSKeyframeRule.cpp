@@ -38,11 +38,13 @@ public:
     mDecls->SetOwningRule(nullptr);
   }
 
-  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final
+  DeclarationBlock* GetOrCreateCSSDeclaration(
+    Operation aOperation, DeclarationBlock** aCreated) final
   {
     return mDecls;
   }
-  nsresult SetCSSDeclaration(DeclarationBlock* aDecls) final
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecls,
+                             MutationClosureData* aClosureData) final
   {
     if (!mRule) {
       return NS_OK;
