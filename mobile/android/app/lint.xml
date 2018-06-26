@@ -53,6 +53,7 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/PrintHelper.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/animation/PropertyAnimator.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/RemotePresentationService.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/VirtualPresentation.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/db/SharedBrowserDatabaseProvider.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/tabs/TabPanelBackButton.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/toolbar/ToolbarEditText.java"/>
