@@ -8,7 +8,7 @@ use mozprofile::preferences::Pref;
 // a Testing :: Marionette peer before you make any changes to this file.
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 54] = [
+    pub static ref DEFAULT: Vec<(&'static str, Pref)> = vec![
         // Make sure Shield doesn't hit the network.
         ("app.normandy.api_url", Pref::new("")),
 
@@ -34,10 +34,6 @@ lazy_static! {
 
         // Skip check for default browser on startup
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
-
-        // Do not warn when quitting with multiple tabs
-        // TODO: Remove once minimum supported Firefox release is 61.
-        ("browser.showQuitWarning", Pref::new(false)),
 
         // Disable Android snippets
         ("browser.snippets.enabled", Pref::new(false)),

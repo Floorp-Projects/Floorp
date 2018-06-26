@@ -1913,7 +1913,9 @@ public:
     }
 
     mCallee = aCallee;
-    APZCCallbackHelper::SuppressDisplayport(true, mCallee->mOuter->PresShell());
+    if (nsIPresShell* shell = mCallee->mOuter->PresShell()) {
+      shell->SuppressDisplayport(true);
+    }
     return true;
   }
 
@@ -1938,7 +1940,9 @@ private:
   void RemoveObserver() {
     if (mCallee) {
       RefreshDriver(mCallee)->RemoveRefreshObserver(this, FlushType::Style);
-      APZCCallbackHelper::SuppressDisplayport(false, mCallee->mOuter->PresShell());
+      if (nsIPresShell* shell = mCallee->mOuter->PresShell()) {
+        shell->SuppressDisplayport(false);
+      }
     }
   }
 };

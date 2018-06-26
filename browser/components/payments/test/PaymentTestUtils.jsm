@@ -130,6 +130,16 @@ var PaymentTestUtils = {
       option.click();
     },
 
+    selectShippingAddressByGuid: guid => {
+      let doc = content.document;
+      let addressPicker =
+        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let select = addressPicker.querySelector("rich-select");
+      let option = select.querySelector(`[guid="${guid}"]`);
+      select.click();
+      option.click();
+    },
+
     selectShippingOptionById: value => {
       let doc = content.document;
       let optionPicker =
@@ -180,6 +190,11 @@ var PaymentTestUtils = {
       } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", {});
       let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
       await ContentTaskUtils.waitForCondition(() => stateCheckFn(requestStore.getState()), msg);
+      return requestStore.getState();
+    },
+
+    getCurrentState: async (content) => {
+      let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
       return requestStore.getState();
     },
   },
@@ -421,6 +436,18 @@ var PaymentTestUtils = {
       "cc-exp-year": (new Date()).getFullYear() + 9,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
+    },
+    JaneMasterCard: {
+      "cc-exp-month": 12,
+      "cc-exp-year": (new Date()).getFullYear() + 9,
+      "cc-name": "Jane McMaster-Card",
+      "cc-number": "5555555555554444",
+    },
+    Temp: {
+      "cc-exp-month": 12,
+      "cc-exp-year": (new Date()).getFullYear() + 9,
+      "cc-name": "Temp Name",
+      "cc-number": "5105105105105100",
     },
   },
 };

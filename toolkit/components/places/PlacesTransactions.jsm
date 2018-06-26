@@ -1355,48 +1355,6 @@ PT.EditUrl.prototype = Object.seal({
 });
 
 /**
- * Transaction for setting annotations for an item.
- *
- * Required Input Properties: guid, annotationObject
- */
-PT.Annotate = DefineTransaction(["guids", "annotations"]);
-PT.Annotate.prototype = {
-  async execute({ guids, annotations }) {
-    let undoAnnosForItemId = new Map();
-    for (let guid of guids) {
-      let itemId = await PlacesUtils.promiseItemId(guid);
-      let currentAnnos = await PlacesUtils.promiseAnnotationsForItem(itemId);
-
-      let undoAnnos = [];
-      for (let newAnno of annotations) {
-        let currentAnno = currentAnnos.find(a => a.name == newAnno.name);
-        if (currentAnno) {
-          undoAnnos.push(currentAnno);
-        } else {
-          // An unset value removes the annotation.
-          undoAnnos.push({ name: newAnno.name });
-        }
-      }
-      undoAnnosForItemId.set(itemId, undoAnnos);
-
-      PlacesUtils.setAnnotationsForItem(itemId, annotations);
-    }
-
-    this.undo = function() {
-      for (let [itemId, undoAnnos] of undoAnnosForItemId) {
-        PlacesUtils.setAnnotationsForItem(itemId, undoAnnos);
-      }
-    };
-    this.redo = async function() {
-      for (let guid of guids) {
-        let itemId = await PlacesUtils.promiseItemId(guid);
-        PlacesUtils.setAnnotationsForItem(itemId, annotations);
-      }
-    };
-  }
-};
-
-/**
  * Transaction for setting the keyword for a bookmark.
  *
  * Required Input Properties: guid, keyword.

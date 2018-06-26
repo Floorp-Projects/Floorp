@@ -38,7 +38,7 @@ FOOTER = """
 
 def process_manifest(output_fp, manifest_filename):
   with codecs.open(manifest_filename, 'r', 'UTF-8') as in_fp:
-    manifest = yaml.load(in_fp)
+    manifest = yaml.safe_load(in_fp)
   shader_folder, _ = os.path.split(manifest_filename)
 
   output_fp.write(HEADER)

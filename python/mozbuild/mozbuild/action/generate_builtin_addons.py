@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
+from mozbuild.util import ensureParentDir
 
 import argparse
 import json
@@ -37,8 +38,13 @@ def main(argv):
     if args.featuresdir:
         listing["system"] = sorted(os.listdir(os.path.join(bindir,
                                                            args.featuresdir)))
+        if len(listing["system"]) == 0:
+            raise IOError("featuresdir is empty, we lost a race")
 
-    with open(os.path.join(bindir, args.outputfile), 'w') as fh:
+    outputfilepath = os.path.join(bindir, args.outputfile)
+    ensureParentDir(outputfilepath)
+
+    with open(outputfilepath, 'w') as fh:
         json.dump(listing, fh, sort_keys=True)
 
 

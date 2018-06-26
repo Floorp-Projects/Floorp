@@ -3366,18 +3366,25 @@ public:
 
   void PropagateUseCounters(nsIDocument* aParentDocument);
 
+  // Called to track whether this document has had any interaction.
+  // This is used to track whether we should permit "beforeunload".
   void SetUserHasInteracted(bool aUserHasInteracted);
   bool UserHasInteracted()
   {
     return mUserHasInteracted;
   }
 
-  // This would be called when document get activated by specific user gestures
-  // and propagate the user activation flag to its parent.
-  void NotifyUserActivation();
+  // This should be called when this document receives events which are likely
+  // to be user interaction with the document, rather than the byproduct of
+  // interaction with the browser (i.e. a keypress to scroll the view port,
+  // keyboard shortcuts, etc). This is used to decide whether we should
+  // permit autoplay audible media. This also gesture activates all other
+  // content documents in this tab.
+  void NotifyUserGestureActivation();
 
-  // Return true if document has interacted by specific user gestures.
-  bool HasBeenUserActivated();
+  // Return true if NotifyUserGestureActivation() has been called on any
+  // document in the document tree.
+  bool HasBeenUserGestureActivated();
 
   bool HasScriptsBlockedBySandbox();
 
@@ -3673,14 +3680,6 @@ protected:
 
   // Return the same type parent docuement if exists, or return null.
   nsIDocument* GetSameTypeParentDocument();
-
-  // Return the first parent document with same pricipal, return nullptr if we
-  // can't find it.
-  nsIDocument* GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal);
-
-  // Activate the flag 'mUserHasActivatedInteraction' by specific user gestures.
-  void ActivateByUserGesture();
-  void MaybeActivateByUserGesture(nsIPrincipal* aPrincipal);
 
   // Helpers for GetElementsByName.
   static bool MatchNameAttribute(mozilla::dom::Element* aElement,
@@ -4221,9 +4220,12 @@ protected:
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;
 
-  // Whether the user has interacted with the document via some specific user
-  // gestures.
-  bool mUserHasActivatedInteraction;
+  // Whether the user has interacted with the document via a restricted
+  // set of gestures which are likely to be interaction with the document,
+  // and not events that are fired as a byproduct of the user interacting
+  // with the browser (events for like scrolling the page, keyboard short
+  // cuts, etc).
+  bool mUserGestureActivated;
 
   mozilla::TimeStamp mPageUnloadingEventTimeStamp;
 

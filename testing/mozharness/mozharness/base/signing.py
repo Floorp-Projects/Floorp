@@ -119,7 +119,8 @@ class AndroidSigningMixin(object):
                                  "-keypass", keypass,
                                  apk, key_alias],
                                  stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
+                                 stderr=subprocess.STDOUT,
+                                 bufsize=0)
         except OSError:
             self.exception("Error while signing %s (missing %s?):" % (apk, jarsigner))
             return -2

@@ -309,6 +309,13 @@ this.TopSitesFeed = class TopSitesFeed {
       await this._pinSiteAt(site, index);
       this._broadcastPinnedSitesUpdated();
     } else {
+      // Bug 1458658. If the top site is being pinned from an 'Add a Top Site' option,
+      // then we want to make sure to unblock that link if it has previously been
+      // blocked. We know if the site has been added because the index will be -1.
+      if (index === -1) {
+        NewTabUtils.blockedLinks.unblock({url: site.url});
+        this.frecentCache.expire();
+      }
       this.insert(action);
     }
   }
@@ -395,6 +402,7 @@ this.TopSitesFeed = class TopSitesFeed {
       // All these actions mean we need new top sites
       case at.MIGRATION_COMPLETED:
       case at.PLACES_HISTORY_CLEARED:
+      case at.PLACES_LINK_DELETED:
         this.frecentCache.expire();
         this.refresh({broadcast: true});
         break;

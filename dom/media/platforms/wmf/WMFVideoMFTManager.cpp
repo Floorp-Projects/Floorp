@@ -46,28 +46,6 @@ using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
 using mozilla::media::TimeUnit;
 
-// AMD
-// Path is appended on to the %ProgramW6432% base path.
-const wchar_t kAMDVPXDecoderDLLPath[] =
-  L"\\Common Files\\ATI Technologies\\Multimedia\\";
-
-const wchar_t kAMDVP9DecoderDLLName[] =
-#if defined(ARCH_CPU_X86)
-  L"amf-mft-decvp9-decoder32.dll";
-#elif defined(ARCH_CPU_X86_64)
-  L"amf-mft-decvp9-decoder64.dll";
-#else
-#error Unsupported Windows CPU Architecture
-#endif
-
-extern const GUID CLSID_AMDWebmMfVp9Dec =
-{
-  0x2d2d728a,
-  0x67d6,
-  0x48ab,
-  { 0x89, 0xfb, 0xa6, 0xec, 0x65, 0x55, 0x49, 0x70 }
-};
-
 #if WINVER_MAXVER < 0x0A00
 // Windows 10+ SDK has VP80 and VP90 defines
 const GUID MFVideoFormat_VP80 =
@@ -177,7 +155,6 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   , mImageContainer(aImageContainer)
   , mKnowsCompositor(aKnowsCompositor)
   , mDXVAEnabled(aDXVAEnabled)
-  , mAMDVP9InUse(false)
   , mFramerate(aFramerate)
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
   // Init().
@@ -591,32 +568,6 @@ WMFVideoMFTManager::ValidateVideoInfo()
   return NS_OK;
 }
 
-already_AddRefed<MFTDecoder>
-WMFVideoMFTManager::LoadAMDVP9Decoder()
-{
-  MOZ_ASSERT(mStreamType == VP9);
-
-  RefPtr<MFTDecoder> decoder = new MFTDecoder();
-
-  HRESULT hr = decoder->Create(CLSID_AMDWebmMfVp9Dec);
-  if (SUCCEEDED(hr)) {
-    return decoder.forget();
-  }
-
-  // Check if we can load the AMD VP9 decoder using the path name.
-  nsString path = GetProgramW6432Path();
-  path.Append(kAMDVPXDecoderDLLPath);
-  path.Append(kAMDVP9DecoderDLLName);
-  HMODULE decoderDLL = ::LoadLibraryEx(path.get(), NULL,
-                                       LOAD_WITH_ALTERED_SEARCH_PATH);
-  if (!decoderDLL) {
-    return nullptr;
-  }
-  hr = decoder->Create(decoderDLL, CLSID_AMDWebmMfVp9Dec);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-  return decoder.forget();
-}
-
 MediaResult
 WMFVideoMFTManager::Init()
 {
@@ -626,16 +577,6 @@ WMFVideoMFTManager::Init()
   }
 
   result = InitInternal();
-  if (NS_FAILED(result) && mAMDVP9InUse) {
-    // Something failed with the AMD VP9 decoder; attempt again defaulting back
-    // to Microsoft MFT.
-    mCheckForAMDDecoder = false;
-    if (mDXVA2Manager) {
-      DeleteOnMainThread(mDXVA2Manager);
-    }
-    result = InitInternal();
-  }
-
   if (NS_SUCCEEDED(result) && mDXVA2Manager) {
     // If we had some failures but eventually made it work,
     // make sure we preserve the messages.
@@ -663,24 +604,11 @@ WMFVideoMFTManager::InitInternal()
                    mVideoInfo.ImageRect().height > MIN_H264_HW_HEIGHT)) &&
                  InitializeDXVA();
 
-  RefPtr<MFTDecoder> decoder;
-
-  HRESULT hr;
-  if (mStreamType == VP9 && useDxva && mCheckForAMDDecoder &&
-      gfxPrefs::PDMWMFAMDVP9DecoderEnabled()) {
-    if ((decoder = LoadAMDVP9Decoder())) {
-      mAMDVP9InUse = true;
-    }
-  }
-  if (!decoder) {
-    mCheckForAMDDecoder = false;
-    mAMDVP9InUse = false;
-    decoder = new MFTDecoder();
-    hr = decoder->Create(GetMFTGUID());
-    NS_ENSURE_TRUE(SUCCEEDED(hr),
-                   MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                               RESULT_DETAIL("Can't create the MFT decoder.")));
-  }
+  RefPtr<MFTDecoder> decoder = new MFTDecoder();
+  HRESULT hr = decoder->Create(GetMFTGUID());
+  NS_ENSURE_TRUE(SUCCEEDED(hr),
+                 MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                             RESULT_DETAIL("Can't create the MFT decoder.")));
 
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
   UINT32 aware = 0;
@@ -1246,9 +1174,6 @@ nsCString
 WMFVideoMFTManager::GetDescriptionName() const
 {
   nsCString failureReason;
-  if (mAMDVP9InUse) {
-      return NS_LITERAL_CSTRING("amd vp9 hardware video decoder");
-  }
   bool hw = IsHardwareAccelerated(failureReason);
   return nsPrintfCString("wmf %s video decoder - %s",
                          hw ? "hardware" : "software",

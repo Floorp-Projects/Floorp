@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import signal
+from six.moves import range
 
 # a dict cache of signal number -> signal name
 _SIG_NAME = None

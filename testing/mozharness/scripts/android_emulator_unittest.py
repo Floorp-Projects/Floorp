@@ -226,7 +226,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                                                suffix='.log', dir=dir, delete=False)
         self.info("Launching the emulator with: %s" % ' '.join(command))
         self.info("Writing log to %s" % tmp_file.name)
-        proc = subprocess.Popen(command, stdout=tmp_file, stderr=tmp_file, env=env)
+        proc = subprocess.Popen(command, stdout=tmp_file, stderr=tmp_file, env=env, bufsize=0)
         return {
             "process": proc,
         }
@@ -268,7 +268,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
 
     def _run_proc(self, cmd, quiet=False):
         self.info('Running %s' % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         out, err = p.communicate()
         if out and not quiet:
             self.info('%s' % str(out.strip()))
@@ -349,7 +349,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         return install_ok
 
     def _kill_processes(self, process_name):
-        p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+        p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE, bufsize=0)
         out, err = p.communicate()
         self.info("Killing every process called %s" % process_name)
         for line in out.splitlines():
