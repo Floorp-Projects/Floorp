@@ -18,7 +18,7 @@
 #include <istream>
 #include <ostream>
 #include <fstream>
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) && defined(__GLIBCXX__)
 #include "mozilla/UniquePtr.h"
 #include <fcntl.h>
 #include <ext/stdio_filebuf.h>
@@ -26,7 +26,7 @@
 
 namespace mozilla {
 
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) && defined(__GLIBCXX__)
 // MinGW does not support wchar_t* overloads that are MSVC extension until
 // C++17, so we have to implement widechar wrappers using a GNU extension.
 class IFStream : public std::istream
