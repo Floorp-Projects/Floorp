@@ -453,16 +453,13 @@ UnwrapReflectorToISupports(JSObject* reflector);
 JSObject*
 UnprivilegedJunkScope();
 
-/**
- * This will generally be the shared JSM global, but callers should not depend
- * on that fact.
- */
 JSObject*
 PrivilegedJunkScope();
 
 /**
  * Shared compilation scope for XUL prototype documents and XBL
- * precompilation.
+ * precompilation. This compartment has a null principal. No code may run, and
+ * it is invisible to the debugger.
  */
 JSObject*
 CompilationScope();
