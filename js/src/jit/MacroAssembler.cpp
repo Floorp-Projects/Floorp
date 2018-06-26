@@ -1787,14 +1787,17 @@ MacroAssembler::loadJSContext(Register dest)
     movePtr(ImmPtr(jcx->runtime->mainContextPtr()), dest);
 }
 
+static const uint8_t*
+ContextRealmPtr()
+{
+    return (static_cast<const uint8_t*>(GetJitContext()->runtime->mainContextPtr()) +
+            JSContext::offsetOfRealm());
+}
+
 void
 MacroAssembler::switchToRealm(Register realm)
 {
-    const uint8_t* realmAddr =
-        static_cast<const uint8_t*>(GetJitContext()->runtime->mainContextPtr()) +
-        JSContext::offsetOfRealm();
-
-    storePtr(realm, AbsoluteAddress(realmAddr));
+    storePtr(realm, AbsoluteAddress(ContextRealmPtr()));
 }
 
 void
@@ -1812,6 +1815,27 @@ MacroAssembler::switchToObjectRealm(Register obj, Register scratch)
     loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
     loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
     switchToRealm(scratch);
+}
+
+void
+MacroAssembler::switchToBaselineFrameRealm(Register scratch)
+{
+    Address envChain(BaselineFrameReg, BaselineFrame::reverseOffsetOfEnvironmentChain());
+    loadPtr(envChain, scratch);
+    switchToObjectRealm(scratch, scratch);
+}
+
+void
+MacroAssembler::debugAssertContextRealm(const void* realm, Register scratch)
+{
+#ifdef DEBUG
+    Label ok;
+    movePtr(ImmPtr(realm), scratch);
+    branchPtr(Assembler::Equal, AbsoluteAddress(ContextRealmPtr()),
+              scratch, &ok);
+    assumeUnreachable("Unexpected context realm");
+    bind(&ok);
+#endif
 }
 
 void

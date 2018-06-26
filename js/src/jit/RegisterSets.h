@@ -125,7 +125,7 @@ class ValueOperand
     Register payloadReg() const {
         return payload_;
     }
-    bool aliases(Register reg) const {
+    constexpr bool aliases(Register reg) const {
         return type_ == reg || payload_ == reg;
     }
     Register payloadOrValueReg() const {
@@ -149,7 +149,7 @@ class ValueOperand
     Register valueReg() const {
         return value_;
     }
-    bool aliases(Register reg) const {
+    constexpr bool aliases(Register reg) const {
         return value_ == reg;
     }
     Register payloadOrValueReg() const {

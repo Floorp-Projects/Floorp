@@ -950,6 +950,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
         addStubField(uintptr_t(setter), StubField::Type::JSObject);
         writeOperandId(rhs);
+        buffer_.writeByte(cx_->realm() != setter->realm());
     }
     void callNativeSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallNativeSetter, obj);
@@ -1132,6 +1133,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
         addStubField(uintptr_t(getter), StubField::Type::JSObject);
+        buffer_.writeByte(cx_->realm() != getter->realm());
     }
     void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
