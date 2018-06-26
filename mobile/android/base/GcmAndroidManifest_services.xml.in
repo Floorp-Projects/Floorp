@@ -7,6 +7,13 @@
             </intent-filter>
         </service>
 
+        <!-- Handle token refresh in background - https://developers.google.com/cloud-messaging/android/client -->
+        <service
+            android:name="org.mozilla.gecko.gcm.GcmTokenRefreshService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false">
+        </service>
+
         <!-- Provided by on-device Google Play Services.  Directs inbound messages to internal listener service. -->
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
