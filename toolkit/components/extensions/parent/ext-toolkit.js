@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
-global.EventEmitter = ExtensionUtils.EventEmitter;
+global.EventEmitter = ExtensionCommon.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
 
 /* globals DEFAULT_STORE, PRIVATE_STORE, CONTAINER_STORE */
