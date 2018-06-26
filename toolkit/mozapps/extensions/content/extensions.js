@@ -240,13 +240,7 @@ function isLegacyExtension(addon) {
     legacy = true;
   }
   if (addon.type == "theme") {
-    // The logic here is kind of clunky but we want to mark complete
-    // themes as legacy.  There's no explicit flag for complete
-    // themes so explicitly check for new style themes (for which
-    // isWebExtension is true) or lightweight themes (which have
-    // ids that end with @personas.mozilla.org)
-    legacy = !(addon.isWebExtension || addon.id.endsWith("@personas.mozilla.org") ||
-               addon.id == "default-theme@mozilla.org");
+    legacy = false;
   }
 
   if (legacy && (addon.hidden || addon.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED)) {
@@ -2583,27 +2577,7 @@ var gDetailView = {
 
     let legacy = false;
     if (!aAddon.install) {
-      if (aAddon.type == "extension" && !aAddon.isWebExtension) {
-        legacy = true;
-      }
-      if (aAddon.type == "theme") {
-        // The logic here is kind of clunky but we want to mark complete
-        // themes as legacy.  There's no explicit flag for complete
-        // themes so explicitly check for new style themes (for which
-        // isWebExtension is true) or lightweight themes (which have
-        // ids that end with @personas.mozilla.org)
-        legacy = !(aAddon.isWebExtension || aAddon.id.endsWith("@personas.mozilla.org"));
-      }
-
-      if (legacy && aAddon.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED) {
-        legacy = false;
-      }
-
-      // Exceptions that can slip through above: the default theme plus
-      // test pilot addons until we get SIGNEDSTATE_PRIVILEGED deployed.
-      if (legacy && legacyWarningExceptions.includes(aAddon.id)) {
-        legacy = false;
-      }
+      legacy = isLegacyExtension(aAddon);
     }
     this.node.setAttribute("legacy", legacy);
     document.getElementById("detail-legacy-warning").href = SUPPORT_URL + "webextensions";
