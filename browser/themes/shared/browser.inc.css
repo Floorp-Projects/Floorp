@@ -153,10 +153,12 @@
 
 /* End private browsing and accessibility indicators */
 
-/* Force background for datepicker popup to white so themes don't override it */
-#DateTimePickerPanel[active="true"] > .panel-arrowcontainer > .panel-arrowbox,
-#DateTimePickerPanel[active="true"] > .panel-arrowcontainer > .panel-arrowcontent {
-  --arrowpanel-background: #fff;
+/* Override theme colors since the picker uses extra colors that
+   themes cannot set */
+#DateTimePickerPanel[active="true"] {
+  --arrowpanel-background: var(--default-arrowpanel-background);
+  --arrowpanel-color: var(--default-arrowpanel-color);
+  --arrowpanel-border-color: var(--default-arrowpanel-border-color);
 }
 
 #widget-overflow .webextension-popup-browser {

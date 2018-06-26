@@ -17,7 +17,7 @@ function test() {
       const options = {
         prefix: "helloActor",
         constructor: "HelloActor",
-        type: { tab: true }
+        type: { target: true }
       };
 
       const registry = ActorRegistryFront(gClient, response);

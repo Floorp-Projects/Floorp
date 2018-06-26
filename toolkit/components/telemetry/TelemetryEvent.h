@@ -38,7 +38,8 @@ void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled);
 nsresult RegisterEvents(const nsACString& aCategory, JS::Handle<JS::Value> aEventData,
                         bool aBuiltin, JSContext* cx);
 
-nsresult CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* aCx,
+nsresult CreateSnapshots(uint32_t aDataset, bool aClear,
+                         uint32_t aEventLimit, JSContext* aCx,
                          uint8_t optional_argc, JS::MutableHandleValue aResult);
 
 // Record events from child processes.

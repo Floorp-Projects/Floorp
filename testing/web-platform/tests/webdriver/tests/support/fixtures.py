@@ -205,6 +205,10 @@ def session(configuration, request):
     return _current_session
 
 
+def current_session():
+    return _current_session
+
+
 def new_session(configuration, request):
     """Return a factory function that will attempt to start a session with a given body.
 

@@ -7,16 +7,16 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, $, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { front, $, EVENTS, shadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
-  const vsEditor = await ShadersEditorsView._getEditor("vs");
-  const fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await shadersEditorsView._getEditor("vs");
+  const fsEditor = await shadersEditorsView._getEditor("fs");
 
   is(vsEditor.getText().indexOf("gl_Position"), 170,
     "The vertex shader editor contains the correct text.");
@@ -28,9 +28,9 @@ async function ifWebGLSupported() {
   is($("#fs-editor-label").hasAttribute("selected"), false,
     "The vertex shader editor shouldn't be initially selected.");
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   vsEditor.focus();
 
@@ -40,13 +40,13 @@ async function ifWebGLSupported() {
     "The vertex shader editor shouldn't still not be selected.");
 
   vsEditor.replaceText("2.0", { line: 7, ch: 44 }, { line: 7, ch: 47 });
-  await once(panel.panelWin, EVENTS.SHADER_COMPILED);
+  await once(panel, EVENTS.SHADER_COMPILED);
 
   ok(true, "Vertex shader was changed.");
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
   ok(true, "The vertex shader was recompiled successfully.");
 
@@ -58,13 +58,13 @@ async function ifWebGLSupported() {
     "The vertex shader editor should now be selected.");
 
   fsEditor.replaceText("0.5", { line: 5, ch: 44 }, { line: 5, ch: 47 });
-  await once(panel.panelWin, EVENTS.SHADER_COMPILED);
+  await once(panel, EVENTS.SHADER_COMPILED);
 
   ok(true, "Fragment shader was changed.");
 
-  await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  await ensurePixelIs(gFront, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
-  await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  await ensurePixelIs(front, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
+  await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
   ok(true, "The fragment shader was recompiled successfully.");
 

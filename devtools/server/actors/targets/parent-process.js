@@ -38,17 +38,8 @@ const parentProcessTargetPrototype = extend({}, browsingContextTargetPrototype);
  * Creates a target actor for debugging all the chrome content in the parent process.
  * Most of the implementation is inherited from BrowsingContextTargetActor.
  * ParentProcessTargetActor is a child of RootActor, it can be instantiated via
- * RootActor.getProcess request. ParentProcessTargetActor exposes all tab actors via its
- * form() request, like BrowsingContextTargetActor.
- *
- * History lecture:
- * All tab actors used to also be registered as global actors, so that the root actor was
- * also exposing tab actors for the main process. Tab actors ended up having RootActor as
- * parent actor, but more and more features of the tab actors were relying on
- * BrowsingContextTargetActor. So we are now exposing a process actor that offers the same
- * API as BrowsingContextTargetActor by inheriting its functionality. Global actors are
- * now only the actors that are meant to be global, and are no longer related to any
- * specific scope/document.
+ * RootActor.getProcess request. ParentProcessTargetActor exposes all target-scoped actors
+ * via its form() request, like BrowsingContextTargetActor.
  *
  * @param connection DebuggerServerConnection
  *        The connection to the client.

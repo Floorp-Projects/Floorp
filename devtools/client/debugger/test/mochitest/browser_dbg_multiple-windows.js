@@ -46,9 +46,9 @@ function testFirstTab(aTab) {
   ok(!!gNewTab, "Second tab created.");
 
   gClient.listTabs().then(aResponse => {
-    let tabActor = aResponse.tabs.filter(aGrip => aGrip.url == TAB1_URL).pop();
-    ok(tabActor,
-      "Should find a tab actor for the first tab.");
+    let targetActor = aResponse.tabs.filter(aGrip => aGrip.url == TAB1_URL).pop();
+    ok(targetActor,
+      "Should find a target actor for the first tab.");
 
     is(aResponse.selected, 1,
       "The first tab is selected.");

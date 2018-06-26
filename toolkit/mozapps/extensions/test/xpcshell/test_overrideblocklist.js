@@ -47,9 +47,10 @@ function clearBlocklists() {
     blocklist.remove(true);
 }
 
-function reloadBlocklist() {
+async function reloadBlocklist() {
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, false);
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, true);
+  await Blocklist._lastUpdate;
 }
 
 function copyToApp(file) {
@@ -97,7 +98,7 @@ add_test(async function test_copy() {
   incrementAppVersion();
   await promiseStartupManager();
 
-  reloadBlocklist();
+  await reloadBlocklist();
   Assert.ok(!(await isBlocklisted(invalidAddon)));
   Assert.ok(!(await isBlocklisted(ancientAddon)));
   Assert.ok(await isBlocklisted(oldAddon));
@@ -117,7 +118,7 @@ add_test(async function test_ancient() {
   incrementAppVersion();
   await promiseStartupManager();
 
-  reloadBlocklist();
+  await reloadBlocklist();
 
   Assert.ok(!(await isBlocklisted(invalidAddon)));
   Assert.ok(!(await isBlocklisted(ancientAddon)));
@@ -138,7 +139,7 @@ add_test(async function test_override() {
   incrementAppVersion();
   await promiseStartupManager();
 
-  reloadBlocklist();
+  await reloadBlocklist();
 
   Assert.ok(!(await isBlocklisted(invalidAddon)));
   Assert.ok(!(await isBlocklisted(ancientAddon)));
@@ -159,7 +160,7 @@ add_test(async function test_retain() {
   incrementAppVersion();
   await promiseStartupManager();
 
-  reloadBlocklist();
+  await reloadBlocklist();
 
   Assert.ok(!(await isBlocklisted(invalidAddon)));
   Assert.ok(!(await isBlocklisted(ancientAddon)));
@@ -185,7 +186,7 @@ add_test(async function test_missing() {
   blocklist.remove(true);
   await promiseStartupManager();
 
-  reloadBlocklist();
+  await reloadBlocklist();
 
   Assert.ok(!(await isBlocklisted(invalidAddon)));
   Assert.ok(!(await isBlocklisted(ancientAddon)));

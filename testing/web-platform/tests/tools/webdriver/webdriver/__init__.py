@@ -1,4 +1,11 @@
-from client import Cookies, Element, Find, Session, Timeouts, Window
+from client import (
+    Cookies,
+    Element,
+    Find,
+    Frame,
+    Session,
+    Timeouts,
+    Window)
 from error import (
     ElementNotSelectableException,
     ElementNotVisibleException,

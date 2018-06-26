@@ -2,11 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from helper_shadowdom.js */
-
 "use strict";
-
-loadHelperScript("helper_shadowdom.js");
 
 // Test that the markup view is correctly updated when elements under a shadow root are
 // deleted or updated.
@@ -46,7 +42,7 @@ add_task(async function() {
         another-div
       div
       div`;
-  await checkTreeFromRootSelector(tree, "test-component", inspector);
+  await assertMarkupViewAsTree(tree, "test-component", inspector);
 
   info("Delete a shadow dom element and check the updated markup view");
   let mutated = waitForMutation(inspector, "childList");
@@ -63,7 +59,7 @@ add_task(async function() {
         another-div
       div
       div`;
-  await checkTreeFromRootSelector(treeAfterDelete, "test-component", inspector);
+  await assertMarkupViewAsTree(treeAfterDelete, "test-component", inspector);
 
   mutated = inspector.once("markupmutation");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
@@ -80,5 +76,5 @@ add_task(async function() {
         random-attribute
       div
       div`;
-  await checkTreeFromRootSelector(treeAfterAttrChange, "test-component", inspector);
+  await assertMarkupViewAsTree(treeAfterAttrChange, "test-component", inspector);
 });

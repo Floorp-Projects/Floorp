@@ -53,7 +53,8 @@ const findCssSelector = function(ele) {
   ele = getRootBindingParent(ele);
   let document = ele.ownerDocument;
   if (!document || !document.contains(ele)) {
-    throw new Error("findCssSelector received element not inside document");
+    // findCssSelector received element not inside document.
+    return "";
   }
 
   let cssEscape = ele.ownerGlobal.CSS.escape;

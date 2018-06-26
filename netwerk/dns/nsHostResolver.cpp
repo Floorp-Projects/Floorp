@@ -508,7 +508,9 @@ static void DnsPrefChanged(const char* aPref, void* aClosure)
     MOZ_ASSERT(self);
 
     if (!strcmp(aPref, kPrefGetTtl)) {
+#ifdef DNSQUERY_AVAILABLE
         sGetTtlEnabled = Preferences::GetBool(kPrefGetTtl);
+#endif
     } else if (!strcmp(aPref, kPrefNativeIsLocalhost)) {
         gNativeIsLocalhost = Preferences::GetBool(kPrefNativeIsLocalhost);
     }
@@ -1862,6 +1864,10 @@ nsHostResolver::ThreadFunc()
         }
     } while(true);
 
+    nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
+    NS_DispatchToMainThread(NS_NewRunnableFunction("nsHostResolver::ThreadFunc::AsyncShutdown", [thread]() {
+        thread->AsyncShutdown();
+    }));
     mThreadCount--;
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
 }

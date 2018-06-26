@@ -2601,6 +2601,15 @@ gfxPlatform::InitWebRenderConfig()
     }
   }
 
+  // If the user set the pref to force-disable, let's do that. This will
+  // override all the other enabling prefs (gfx.webrender.enabled,
+  // gfx.webrender.all, and gfx.webrender.all.qualified).
+  if (gfxPrefs::WebRenderForceDisabled()) {
+    featureWebRender.UserDisable(
+      "User force-disabled WR",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_USER_FORCE_DISABLED"));
+  }
+
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break
   if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     featureWebRender.ForceDisable(

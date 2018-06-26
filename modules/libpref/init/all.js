@@ -852,6 +852,11 @@ pref("gfx.webrender.enabled", false);
 #endif
 #endif
 
+// Also expose a pref to allow users to force-disable WR. This is exposed
+// on all channels because WR can be enabled on qualified hardware on all
+// channels.
+pref("gfx.webrender.force-disabled", false);
+
 #ifdef XP_WIN
 pref("gfx.webrender.force-angle", true);
 pref("gfx.webrender.dcomp-win.enabled", true);
@@ -1998,7 +2003,11 @@ pref("network.dns.ipv4OnlyDomains", "");
 pref("network.dns.disableIPv6", false);
 
 // This is the number of dns cache entries allowed
+#ifdef ANDROID
 pref("network.dnsCacheEntries", 400);
+#else
+pref("network.dnsCacheEntries", 800);
+#endif
 
 // In the absence of OS TTLs, the DNS cache TTL value
 pref("network.dnsCacheExpiration", 60);
@@ -5124,12 +5133,17 @@ pref("memory.blob_report.stack_frames", 0);
 // observers (bug 780507).
 pref("dom.idle-observers-api.fuzz_time.disabled", true);
 
+// Activates the activity monitor
+pref("io.activity.enabled", false);
+
 // Minimum delay in milliseconds between I/O activity notifications (0 means
 // no notifications). I/O activity includes socket and disk files.
 //
 // The delay is the same for both read and write, though
 // they are handled separately. This pref is only read once at startup:
 // a restart is required to enable a new value.
+//
+// io.activity.enabled needs to be set to true
 pref("io.activity.intervalMilliseconds", 0);
 
 // If true, reuse the same global for (almost) everything loaded by the component

@@ -378,7 +378,8 @@ function getCssPath(ele) {
   ele = getRootBindingParent(ele);
   const document = ele.ownerDocument;
   if (!document || !document.contains(ele)) {
-    throw new Error("getCssPath received element not inside document");
+    // getCssPath received element not inside document.
+    return "";
   }
 
   const getElementSelector = element => {
@@ -427,7 +428,8 @@ function getXPath(ele) {
   ele = getRootBindingParent(ele);
   const document = ele.ownerDocument;
   if (!document || !document.contains(ele)) {
-    throw new Error("getXPath received element not inside document");
+    // getXPath received element not inside document.
+    return "";
   }
 
   // Create a short XPath for elements with IDs.

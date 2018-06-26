@@ -19,9 +19,12 @@ from taskgraph.util.schema import (
     validate_schema,
     resolve_keyed_by,
 )
+from taskgraph.util.treeherder import join_symbol, split_symbol
+
 from voluptuous import (
     Any,
     Extra,
+    Optional,
     Required,
     Schema,
 )
@@ -56,6 +59,7 @@ source_test_description_schema = Schema({
         job_description_schema['worker'],
         {'by-platform': {basestring: job_description_schema['worker']}},
     ),
+    Optional('python-version'): [int],
 })
 
 transforms = TransformSequence()
@@ -101,6 +105,27 @@ def expand_platforms(config, jobs):
             else:
                 pjob['label'] = '{}-{}'.format(pjob['label'], platform)
             yield pjob
+
+
+@transforms.add
+def split_python(config, jobs):
+    for job in jobs:
+        key = 'python-version'
+        versions = job.pop(key, [])
+        if not versions:
+            yield job
+            continue
+        for version in versions:
+            group = 'py{0}'.format(version)
+            pyjob = copy.deepcopy(job)
+            if 'name' in pyjob:
+                pyjob['name'] += '-{0}'.format(group)
+            else:
+                pyjob['label'] += '-{0}'.format(group)
+            symbol = split_symbol(pyjob['treeherder']['symbol'])[1]
+            pyjob['treeherder']['symbol'] = join_symbol(group, symbol)
+            pyjob['run'][key] = version
+            yield pyjob
 
 
 def add_build_dependency(config, job):

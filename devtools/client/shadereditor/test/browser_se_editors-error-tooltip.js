@@ -8,26 +8,26 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { front, EVENTS, shadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
-  const vsEditor = await ShadersEditorsView._getEditor("vs");
-  const fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await shadersEditorsView._getEditor("vs");
+  const fsEditor = await shadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  await once(panel.panelWin, EVENTS.SHADER_COMPILED);
+  await once(panel, EVENTS.SHADER_COMPILED);
 
   // Synthesizing 'mouseover' events doesn't work, hack around this by
   // manually calling the event listener with the expected arguments.
   const editorDocument = vsEditor.container.contentDocument;
   const marker = editorDocument.querySelector(".error");
-  const parsed = ShadersEditorsView._errors.vs[0].messages;
-  ShadersEditorsView._onMarkerMouseOver(7, marker, parsed);
+  const parsed = shadersEditorsView._errors.vs[0].messages;
+  shadersEditorsView._onMarkerMouseOver(7, marker, parsed);
 
   const tooltip = marker._markerErrorsTooltip;
   ok(tooltip, "A tooltip was created successfully.");

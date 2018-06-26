@@ -5,7 +5,6 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 Cu.importGlobalProperties(["URLSearchParams"]);
 
-const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const SYNC_PARENT_ANNO = "sync/parent";
 
 var makeGuid = PlacesUtils.history.makeGuid;
@@ -970,45 +969,6 @@ add_task(async function test_conflicting_keywords() {
   await PlacesSyncUtils.bookmarks.reset();
 });
 
-add_task(async function test_update_annos() {
-  let guids = await populateTree(PlacesUtils.bookmarks.menuGuid, {
-    kind: "folder",
-    title: "folder",
-  }, {
-    kind: "bookmark",
-    title: "bmk",
-    url: "https://example.com",
-  });
-
-  info("Add folder description");
-  {
-    let updatedItem = await PlacesSyncUtils.bookmarks.update({
-      recordId: guids.folder,
-      description: "Folder description",
-    });
-    equal(updatedItem.description, "Folder description",
-      "Should return new description");
-    let id = await recordIdToId(updatedItem.recordId);
-    equal(PlacesUtils.annotations.getItemAnnotation(id, DESCRIPTION_ANNO),
-      "Folder description", "Should set description anno");
-  }
-
-  info("Clear folder description");
-  {
-    let updatedItem = await PlacesSyncUtils.bookmarks.update({
-      recordId: guids.folder,
-      description: null,
-    });
-    ok(!updatedItem.description, "Should not return cleared description");
-    let id = await recordIdToId(updatedItem.recordId);
-    ok(!PlacesUtils.annotations.itemHasAnnotation(id, DESCRIPTION_ANNO),
-      "Should remove description anno");
-  }
-
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesSyncUtils.bookmarks.reset();
-});
-
 add_task(async function test_update_move_root() {
   info("Move root to same parent");
   {
@@ -1437,42 +1397,6 @@ add_task(async function test_insert_keyword() {
   await PlacesSyncUtils.bookmarks.reset();
 });
 
-add_task(async function test_insert_annos() {
-  info("Bookmark with description");
-  let descBmk = await PlacesSyncUtils.bookmarks.insert({
-    kind: "bookmark",
-    url: "https://example.com",
-    recordId: makeGuid(),
-    parentRecordId: "menu",
-    description: "Bookmark description",
-  });
-  {
-    equal(descBmk.description, "Bookmark description",
-      "Should return new bookmark description");
-    let id = await recordIdToId(descBmk.recordId);
-    equal(PlacesUtils.annotations.getItemAnnotation(id, DESCRIPTION_ANNO),
-      "Bookmark description", "Should set new bookmark description");
-  }
-
-  info("Folder with description");
-  let descFolder = await PlacesSyncUtils.bookmarks.insert({
-    kind: "folder",
-    recordId: makeGuid(),
-    parentRecordId: "menu",
-    description: "Folder description",
-  });
-  {
-    equal(descFolder.description, "Folder description",
-      "Should return new folder description");
-    let id = await recordIdToId(descFolder.recordId);
-    equal(PlacesUtils.annotations.getItemAnnotation(id, DESCRIPTION_ANNO),
-      "Folder description", "Should set new folder description");
-  }
-
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesSyncUtils.bookmarks.reset();
-});
-
 add_task(async function test_insert_tag_query() {
   info("Use the public tagging API to ensure we added the tag correctly");
   await PlacesUtils.bookmarks.insert({
@@ -1759,14 +1683,12 @@ add_task(async function test_fetch() {
     recordId: makeGuid(),
     parentRecordId: "menu",
     kind: "folder",
-    description: "Folder description",
   });
   let bmk = await PlacesSyncUtils.bookmarks.insert({
     recordId: makeGuid(),
     parentRecordId: "menu",
     kind: "bookmark",
     url: "https://example.com",
-    description: "Bookmark description",
     tags: ["taggy"],
   });
   let folderBmk = await PlacesSyncUtils.bookmarks.insert({
@@ -1798,32 +1720,30 @@ add_task(async function test_fetch() {
     title: "Bookmarks toolbar query",
   });
 
-  info("Fetch empty folder with description");
+  info("Fetch empty folder");
   {
     let item = await PlacesSyncUtils.bookmarks.fetch(folder.recordId);
     deepEqual(item, {
       recordId: folder.recordId,
       kind: "folder",
       parentRecordId: "menu",
-      description: "Folder description",
       childRecordIds: [folderBmk.recordId, folderSep.recordId],
       parentTitle: "menu",
       dateAdded: item.dateAdded,
       title: "",
-    }, "Should include description, children, title, and parent title in folder");
+    }, "Should include children, title, and parent title in folder");
   }
 
-  info("Fetch bookmark with description and tags");
+  info("Fetch bookmark with tags");
   {
     let item = await PlacesSyncUtils.bookmarks.fetch(bmk.recordId);
     deepEqual(Object.keys(item).sort(), ["recordId", "kind", "parentRecordId",
-      "url", "tags", "description", "parentTitle", "title", "dateAdded"].sort(),
+      "url", "tags", "parentTitle", "title", "dateAdded"].sort(),
       "Should include bookmark-specific properties");
     equal(item.recordId, bmk.recordId, "Sync ID should match");
     equal(item.url.href, "https://example.com/", "Should return URL");
     equal(item.parentRecordId, "menu", "Should return parent sync ID");
     deepEqual(item.tags, ["taggy"], "Should return tags");
-    equal(item.description, "Bookmark description", "Should return bookmark description");
     equal(item.parentTitle, "menu", "Should return parent title");
     strictEqual(item.title, "", "Should return empty title");
   }
@@ -1880,15 +1800,12 @@ add_task(async function test_fetch_livemark() {
       siteURI: uri(site),
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     });
-    PlacesUtils.annotations.setItemAnnotation(livemark.id, DESCRIPTION_ANNO,
-      "Livemark description", 0, PlacesUtils.annotations.EXPIRE_NEVER);
 
     info("Fetch livemark");
     let item = await PlacesSyncUtils.bookmarks.fetch(livemark.guid);
     deepEqual(Object.keys(item).sort(), ["recordId", "kind", "parentRecordId",
-      "description", "feed", "site", "parentTitle", "title", "dateAdded"].sort(),
+      "feed", "site", "parentTitle", "title", "dateAdded"].sort(),
       "Should include livemark-specific properties");
-    equal(item.description, "Livemark description", "Should return description");
     equal(item.feed.href, site + "/feed/1", "Should return feed URL");
     equal(item.site.href, site + "/", "Should return site URL");
     strictEqual(item.title, "", "Should include livemark title even if empty");

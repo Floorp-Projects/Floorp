@@ -13,7 +13,6 @@ Services.scriptloader.loadSubScript(
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("devtools/shared/platform/clipboard");
-var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
 
 // If a test times out we want to see the complete log and not just the last few
 // lines.
@@ -412,62 +411,6 @@ var getAttributesFromEditor = async function(selector, inspector) {
 };
 
 /**
- * Registers new backend tab actor.
- *
- * @param {DebuggerClient} client RDP client object (toolbox.target.client)
- * @param {Object} options Configuration object with the following options:
- *
- * - moduleUrl {String}: URL of the module that contains actor implementation.
- * - prefix {String}: prefix of the actor.
- * - actorClass {ActorClassWithSpec}: Constructor object for the actor.
- * - frontClass {FrontClassWithSpec}: Constructor object for the front part
- * of the registered actor.
- *
- * @returns {Promise} A promise that is resolved when the actor is registered.
- * The resolved value has two properties:
- *
- * - registrar {ActorActor}: A handle to the registered actor that allows
- * unregistration.
- * - form {Object}: The JSON actor form provided by the server.
- */
-function registerTabActor(client, options) {
-  const moduleUrl = options.moduleUrl;
-
-  return client.listTabs().then(response => {
-    const config = {
-      prefix: options.prefix,
-      constructor: options.actorClass,
-      type: { tab: true },
-    };
-
-    // Register the custom actor on the backend.
-    const registry = ActorRegistryFront(client, response);
-    return registry.registerActor(moduleUrl, config).then(registrar => {
-      return client.getTab().then(tabResponse => ({
-        registrar: registrar,
-        form: tabResponse.tab
-      }));
-    });
-  });
-}
-
-/**
- * A helper for unregistering an existing backend actor.
- *
- * @param {ActorActor} registrar A handle to the registered actor
- * that has been received after registration.
- * @param {Front} Corresponding front object.
- *
- * @returns A promise that is resolved when the unregistration
- * has finished.
- */
-function unregisterActor(registrar, front) {
-  return front.detach().then(() => {
-    return registrar.unregister();
-  });
-}
-
-/**
  * Simulate dragging a MarkupContainer by calling its mousedown and mousemove
  * handlers.
  * @param {InspectorPanel} inspector The current inspector-panel instance.
@@ -613,3 +556,162 @@ async function checkDeleteAndSelection(inspector, key,
   node = await getNodeFront(selector, inspector);
   ok(node, "The node is back");
 }
+
+/**
+ * Temporarily flip all the preferences needed to enable web components.
+ */
+async function enableWebComponents() {
+  await pushPref("dom.webcomponents.shadowdom.enabled", true);
+  await pushPref("dom.webcomponents.customelements.enabled", true);
+}
+
+/**
+ * Assert whether the provided container is slotted.
+ */
+function assertContainerSlotted(container) {
+  ok(container.isSlotted(), "Container is a slotted container");
+  ok(container.elt.querySelector(".reveal-link"),
+     "Slotted container has a reveal link element");
+}
+
+/**
+ * Check if the provided text can be matched anywhere in the text content for the provided
+ * container.
+ */
+function assertContainerHasText(container, expectedText) {
+  const textContent = container.elt.textContent;
+  ok(textContent.includes(expectedText), "Container has expected text: " + expectedText);
+}
+
+/**
+ * Assert method to compare the current content of the markupview to a text based tree.
+ *
+ * @param {String} tree
+ *        Multiline string representing the markup view tree, for instance:
+ *        `root
+ *           child1
+ *             subchild1
+ *             subchild2
+ *           child2
+ *             subchild3!slotted`
+ *        Each sub level should be indented by 2 spaces.
+ * @param {String} selector
+ *        A CSS selector that will uniquely match the "root" element from the tree
+ * @param {Inspector} inspector
+ *        The inspector instance.
+ */
+async function assertMarkupViewAsTree(tree, selector, inspector) {
+  const {markup} = inspector;
+
+  info(`Find and expand the shadow DOM host matching selector ${selector}.`);
+  const rootFront = await getNodeFront(selector, inspector);
+  const rootContainer = markup.getContainer(rootFront);
+
+  const parsedTree = _parseMarkupViewTree(tree);
+  const treeRoot = parsedTree.children[0];
+  await _checkMarkupViewNode(treeRoot, rootContainer, inspector);
+}
+
+async function _checkMarkupViewNode(treeNode, container, inspector) {
+  const {node, children, path} = treeNode;
+  info("Checking [" + path + "]");
+  info("Checking node: " + node);
+
+  const slotted = node.includes("!slotted");
+  if (slotted) {
+    const nodeName = node.replace("!slotted", "");
+    assertContainerHasText(container, nodeName);
+    assertContainerSlotted(container);
+  } else {
+    assertContainerHasText(container, node);
+  }
+
+  if (!children.length) {
+    ok(!container.canExpand, "Container for [" + path + "] has no children");
+    return;
+  }
+
+  // Expand the container if not already done.
+  if (!container.expanded) {
+    await expandContainer(inspector, container);
+  }
+
+  const containers = container.getChildContainers();
+  is(containers.length, children.length,
+     "Node [" + path + "] has the expected number of children");
+  for (let i = 0; i < children.length; i++) {
+    await _checkMarkupViewNode(children[i], containers[i], inspector);
+  }
+}
+
+/**
+ * Helper designed to parse a tree represented as:
+ * root
+ *   child1
+ *     subchild1
+ *     subchild2
+ *   child2
+ *     subchild3!slotted
+ *
+ * Lines represent a simplified view of the markup, where the trimmed line is supposed to
+ * be included in the text content of the actual markupview container.
+ * This method returns an object that can be passed to _checkMarkupViewNode() to verify
+ * the current markup view displays the expected structure.
+ */
+function _parseMarkupViewTree(inputString) {
+  const tree = {
+    level: 0,
+    children: []
+  };
+  let lines = inputString.split("\n");
+  lines = lines.filter(l => l.trim());
+
+  let currentNode = tree;
+  for (const line of lines) {
+    const nodeString = line.trim();
+    const level = line.split("  ").length;
+
+    let parent;
+    if (level > currentNode.level) {
+      parent = currentNode;
+    } else {
+      parent = currentNode.parent;
+      for (let i = 0; i < currentNode.level - level; i++) {
+        parent = parent.parent;
+      }
+    }
+
+    const node = {
+      node: nodeString,
+      children: [],
+      parent,
+      level,
+      path: parent.path + " " + nodeString
+    };
+
+    parent.children.push(node);
+    currentNode = node;
+  }
+
+  return tree;
+}
+
+function waitForMutation(inspector, type) {
+  return waitForNMutations(inspector, type, 1);
+}
+
+function waitForNMutations(inspector, type, count) {
+  info(`Expecting ${count} markupmutation of type ${type}`);
+  let receivedMutations = 0;
+  return new Promise(resolve => {
+    inspector.on("markupmutation", function onMutation(mutations) {
+      const validMutations = mutations.filter(m => m.type === type).length;
+      receivedMutations = receivedMutations + validMutations;
+      if (receivedMutations == count) {
+        inspector.off("markupmutation", onMutation);
+        resolve();
+      }
+    });
+  });
+}
+

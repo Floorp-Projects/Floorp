@@ -87,6 +87,7 @@ raptor:
     - raptor-firefox-motionmark-animometer
     - raptor-chrome-tp6
     - raptor-chrome-speedometer
+    - raptor-chrome-stylebench
 
 awsy:
     - awsy

@@ -400,12 +400,12 @@ class TabBase {
 
   /**
    * @property {boolean} highlighted
-   *        Alias for `active`.
+   *        Returns true if the tab is highlighted.
    *        @readonly
    *        @abstract
    */
   get highlighted() {
-    return this.active;
+    throw new Error("Not implemented");
   }
 
   /**

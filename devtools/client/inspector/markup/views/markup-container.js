@@ -438,6 +438,7 @@ MarkupContainer.prototype = {
            tagName !== "body" &&
            tagName !== "head" &&
            this.win.getSelection().isCollapsed &&
+           this.node.parentNode() &&
            this.node.parentNode().tagName !== null;
   },
 

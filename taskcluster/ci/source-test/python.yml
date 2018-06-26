@@ -21,10 +21,12 @@ job-defaults:
 
 taskgraph-tests:
     description: taskcluster/taskgraph unit tests
+    python-version: [2]
     treeherder:
-        symbol: py(tg)
+        symbol: tg
     run:
-        mach: python-test --subsuite taskgraph
+        using: python-test
+        subsuite: taskgraph
     when:
         files-changed:
             - 'taskcluster/**/*.py'
@@ -32,10 +34,12 @@ taskgraph-tests:
 
 marionette-harness:
     description: testing/marionette/harness unit tests
+    python-version: [2]
     treeherder:
-        symbol: py(mnh)
+        symbol: mnh
     run:
-        mach: python-test --subsuite marionette-harness
+        using: python-test
+        subsuite: marionette-harness
     when:
         files-changed:
             - 'testing/marionette/harness/**'
@@ -52,7 +56,7 @@ mochitest-harness:
     require-build: true
     always-target: false
     treeherder:
-        symbol: py(mch)
+        symbol: py2(mch)
     worker:
         by-platform:
             linux64.*:
@@ -75,7 +79,7 @@ mochitest-harness:
             export GECKO_BINARY_PATH=$USE_ARTIFACT_PATH/build/firefox/firefox &&
             export TEST_HARNESS_ROOT=$USE_ARTIFACT_PATH/build/tests &&
             cd /builds/worker/checkouts/gecko &&
-            ./mach python-test --subsuite mochitest
+            ./mach python-test --python 2 --subsuite mochitest
     when:
         files-changed:
             - 'testing/mochitest/**'
@@ -87,10 +91,12 @@ mochitest-harness:
 
 mozbase:
     description: testing/mozbase unit tests
+    python-version: [2, 3]
     treeherder:
-        symbol: py(mb)
+        symbol: mb
     run:
-        mach: python-test --subsuite mozbase
+        using: python-test
+        subsuite: mozbase
     when:
         files-changed:
             - 'testing/mozbase/**'
@@ -98,7 +104,7 @@ mozbase:
 mozharness:
     description: mozharness integration tests
     treeherder:
-        symbol: py(mh)
+        symbol: py2(mh)
     run:
         using: run-task
         cache-dotcache: true
@@ -111,10 +117,12 @@ mozharness:
 
 mozlint:
     description: python/mozlint unit tests
+    python-version: [2]
     treeherder:
-        symbol: py(ml)
+        symbol: ml
     run:
-        mach: python-test --subsuite mozlint
+        using: python-test
+        subsuite: mozlint
     when:
         files-changed:
             - 'python/mozlint/**'
@@ -122,30 +130,36 @@ mozlint:
 
 mozterm:
     description: python/mozterm unit tests
+    python-version: [2, 3]
     treeherder:
-        symbol: py(term)
+        symbol: term
     run:
-        mach: python-test --subsuite mozterm
+        using: python-test
+        subsuite: mozterm
     when:
         files-changed:
             - 'python/mozterm/**'
 
 mozversioncontrol:
     description: python/mozversioncontrol unit tests
+    python-version: [2]
     treeherder:
-        symbol: py(vcs)
+        symbol: vcs
     run:
-        mach: python-test --subsuite mozversioncontrol
+        using: python-test
+        subsuite: mozversioncontrol
     when:
         files-changed:
             - 'python/mozversioncontrol/**'
 
 raptor:
     description: testing/raptor unit tests
+    python-version: [2]
     treeherder:
-        symbol: py(rap)
+        symbol: rap
     run:
-        mach: python-test --subsuite raptor
+        using: python-test
+        subsuite: raptor
     when:
         files-changed:
             - 'testing/raptor/**'
@@ -159,7 +173,7 @@ reftest-harness:
     require-build: true
     always-target: false
     treeherder:
-        symbol: py(ref)
+        symbol: py2(ref)
     worker:
         by-platform:
             linux64.*:
@@ -182,7 +196,7 @@ reftest-harness:
             export GECKO_BINARY_PATH=$USE_ARTIFACT_PATH/build/firefox/firefox &&
             export TEST_HARNESS_ROOT=$USE_ARTIFACT_PATH/build/tests &&
             cd /builds/worker/checkouts/gecko &&
-            ./mach python-test --subsuite reftest
+            ./mach python-test --python 2 --subsuite reftest
     when:
         files-changed:
             - 'layout/tools/reftest/**'
@@ -193,10 +207,12 @@ reftest-harness:
 
 tryselect:
     description: tools/tryselect unit tests
+    python-version: [2]
     treeherder:
-        symbol: py(try)
+        symbol: try
     run:
-        mach: python-test --subsuite try
+        using: python-test
+        subsuite: try
     when:
         files-changed:
             - 'tools/tryselect/**'

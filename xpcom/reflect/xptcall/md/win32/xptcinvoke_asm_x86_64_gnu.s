@@ -15,7 +15,7 @@
 
 .globl XPTC__InvokebyIndex
 .def XPTC__InvokebyIndex
-   .scl 3
+   .scl 2
    .type 46
 .endef
 XPTC__InvokebyIndex:

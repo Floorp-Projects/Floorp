@@ -5,6 +5,8 @@ use std::collections::BTreeMap;
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
 pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
+pub static FRAME_KEY: &'static str = "frame-075b-4da1-b6ba-e579c2d3230a";
+pub static WINDOW_KEY: &'static str = "window-fcc6-11e5-b4f8-330a88ab9d7f";
 
 #[derive(Clone, Debug, PartialEq, RustcEncodable)]
 pub struct Date(pub u64);

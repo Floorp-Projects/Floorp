@@ -348,6 +348,11 @@ partial namespace ChromeUtils {
    * Request performance metrics to the current process & all ontent processes.
    */
   void requestPerformanceMetrics();
+
+  /**
+  * Request IOActivityMonitor to send a notification containing I/O activity
+  */
+  void requestIOActivity();
 };
 
 /**

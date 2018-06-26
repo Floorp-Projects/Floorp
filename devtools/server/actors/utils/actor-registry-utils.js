@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,8 +45,8 @@ exports.registerActorInCurrentProcess = function(sourceText, fileName, options) 
     }, prefix);
   }
 
-  if (type.tab && !DebuggerServer.tabActorFactories.hasOwnProperty(prefix)) {
-    DebuggerServer.addTabActor({
+  if (type.target && !DebuggerServer.targetScopedActorFactories.hasOwnProperty(prefix)) {
+    DebuggerServer.addTargetScopedActor({
       constructorName: constructor,
       constructorFun: sandbox[constructor]
     }, prefix);
@@ -67,8 +65,8 @@ exports.unregisterActor = function(options) {
 };
 
 exports.unregisterActorInCurrentProcess = function(options) {
-  if (options.tab) {
-    DebuggerServer.removeTabActor(options);
+  if (options.target) {
+    DebuggerServer.removeTargetScopedActor(options);
   }
 
   if (options.global) {

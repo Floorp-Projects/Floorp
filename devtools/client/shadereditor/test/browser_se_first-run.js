@@ -7,7 +7,7 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, $ } = panel.panelWin;
+  const { front, $ } = panel;
 
   is($("#reload-notice").hidden, false,
     "The 'reload this page' notice should initially be visible.");
@@ -17,7 +17,7 @@ async function ifWebGLSupported() {
     "The tool's content should initially be hidden.");
 
   const navigating = once(target, "will-navigate");
-  const linked = once(gFront, "program-linked");
+  const linked = once(front, "program-linked");
   reload(target);
 
   await navigating;

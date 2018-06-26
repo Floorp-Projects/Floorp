@@ -57,7 +57,6 @@ add_task(async function test_bookmark_create() {
     _("Let's create a new record.");
     let fxrecord = new Bookmark("bookmarks", "get-firefox1");
     fxrecord.bmkUri        = "http://getfirefox.com/";
-    fxrecord.description   = "Firefox is awesome.";
     fxrecord.title         = "Get Firefox!";
     fxrecord.tags          = ["firefox", "awesome", "browser"];
     fxrecord.keyword       = "awesome";
@@ -70,10 +69,6 @@ add_task(async function test_bookmark_create() {
     Assert.equal(item.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
     Assert.equal(item.url.href, "http://getfirefox.com/");
     Assert.equal(item.title, fxrecord.title);
-    let id = await PlacesUtils.promiseItemId(item.guid);
-    let description = PlacesUtils.annotations.getItemAnnotation(id,
-      PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
-    Assert.equal(description, fxrecord.description);
     Assert.equal(item.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
     let keyword = await PlacesUtils.keywords.fetch(fxrecord.keyword);
     Assert.equal(keyword.url.href, "http://getfirefox.com/");
@@ -81,7 +76,7 @@ add_task(async function test_bookmark_create() {
     _("Have the store create a new record object. Verify that it has the same data.");
     let newrecord = await store.createRecord(fxrecord.id);
     Assert.ok(newrecord instanceof Bookmark);
-    for (let property of ["type", "bmkUri", "description", "title",
+    for (let property of ["type", "bmkUri", "title",
                           "keyword", "parentName", "parentid"]) {
       Assert.equal(newrecord[property], fxrecord[property]);
     }
@@ -100,14 +95,9 @@ add_task(async function test_bookmark_create() {
 
     _("Verify it has been created correctly.");
     item = await PlacesUtils.bookmarks.fetch(tbrecord.id);
-    id = await PlacesUtils.promiseItemId(item.guid);
     Assert.equal(item.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
     Assert.equal(item.url.href, "http://getthunderbird.com/");
     Assert.equal(item.title, "");
-    do_check_throws(function() {
-      PlacesUtils.annotations.getItemAnnotation(id,
-        PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
-    }, Cr.NS_ERROR_NOT_AVAILABLE);
     Assert.equal(item.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
     keyword = await PlacesUtils.keywords.fetch({
       url: "http://getthunderbird.com/",
@@ -131,10 +121,6 @@ add_task(async function test_bookmark_update() {
       url: "http://getfirefox.com/",
       title: "Get Firefox!",
     });
-    let bmk1_id = await PlacesUtils.promiseItemId(bmk1.guid);
-    PlacesUtils.annotations.setItemAnnotation(
-      bmk1_id, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
-      "Firefox is awesome.", 0, PlacesUtils.annotations.EXPIRE_NEVER);
     await PlacesUtils.keywords.insert({
       url: "http://getfirefox.com/",
       keyword: "firefox",
@@ -143,16 +129,11 @@ add_task(async function test_bookmark_update() {
     _("Update the record with some null values.");
     let record = await store.createRecord(bmk1.guid);
     record.title = null;
-    record.description = null;
     record.keyword = null;
     record.tags = null;
     await store.applyIncoming(record);
 
     _("Verify that the values have been cleared.");
-    do_check_throws(function() {
-      PlacesUtils.annotations.getItemAnnotation(
-        bmk1_id, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
-    }, Cr.NS_ERROR_NOT_AVAILABLE);
     let item = await PlacesUtils.bookmarks.fetch(bmk1.guid);
     Assert.equal(item.title, "");
     let keyword = await PlacesUtils.keywords.fetch({
@@ -171,7 +152,7 @@ add_task(async function test_bookmark_createRecord() {
   let store = engine._store;
 
   try {
-    _("Create a bookmark without a description or title.");
+    _("Create a bookmark without a title.");
     let bmk1 = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       url: "http://getfirefox.com/",
@@ -180,7 +161,6 @@ add_task(async function test_bookmark_createRecord() {
     _("Verify that the record is created accordingly.");
     let record = await store.createRecord(bmk1.guid);
     Assert.equal(record.title, "");
-    Assert.equal(record.description, null);
     Assert.equal(record.keyword, null);
 
   } finally {

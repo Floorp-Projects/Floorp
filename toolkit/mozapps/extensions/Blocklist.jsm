@@ -13,7 +13,7 @@ var EXPORTED_SYMBOLS = ["Blocklist"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
@@ -29,6 +29,65 @@ ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
+
+  /**
+#    The blocklist XML file looks something like this:
+#
+#    <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+#      <emItems>
+#        <emItem id="item_1@domain" blockID="i1">
+#          <prefs>
+#            <pref>accessibility.accesskeycausesactivation</pref>
+#            <pref>accessibility.blockautorefresh</pref>
+#          </prefs>
+#          <versionRange minVersion="1.0" maxVersion="2.0.*">
+#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#              <versionRange minVersion="1.7" maxVersion="1.7.*"/>
+#            </targetApplication>
+#            <targetApplication id="toolkit@mozilla.org">
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
+#            </targetApplication>
+#          </versionRange>
+#          <versionRange minVersion="3.0" maxVersion="3.0.*">
+#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#            </targetApplication>
+#            <targetApplication id="toolkit@mozilla.org">
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
+#            </targetApplication>
+#          </versionRange>
+#        </emItem>
+#        <emItem id="item_2@domain" blockID="i2">
+#          <versionRange minVersion="3.1" maxVersion="4.*"/>
+#        </emItem>
+#        <emItem id="item_3@domain">
+#          <versionRange>
+#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#            </targetApplication>
+#          </versionRange>
+#        </emItem>
+#        <emItem id="item_4@domain" blockID="i3">
+#          <versionRange>
+#            <targetApplication>
+#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
+#            </targetApplication>
+#          </versionRange>
+#        <emItem id="/@badperson\.com$/"/>
+#      </emItems>
+#      <pluginItems>
+#        <pluginItem blockID="i4">
+#          <!-- All match tags must match a plugin to blocklist a plugin -->
+#          <match name="name" exp="some plugin"/>
+#          <match name="description" exp="1[.]2[.]3"/>
+#        </pluginItem>
+#      </pluginItems>
+#      <gfxItems>
+#        <gfxItem ... />
+#      </gfxItems>
+#    </blocklist>
+   */
 
 // The remote settings updater is the new system in charge of fetching remote data
 // securely and efficiently. It will replace the current XML-based system.
@@ -122,6 +181,14 @@ XPCOMUtils.defineLazyGetter(this, "gApp", function() {
   return appinfo;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gAppID", function() {
+  return gApp.ID;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gAppVersion", function() {
+  return gApp.version;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gABI", function() {
   let abi = null;
   try {
@@ -189,14 +256,16 @@ function restartApp() {
  *        Whether the entry matches the current OS.
  */
 function matchesOSABI(blocklistElement) {
-  if (blocklistElement.hasAttribute("os")) {
-    var choices = blocklistElement.getAttribute("os").split(",");
+  let os = blocklistElement.getAttribute("os");
+  if (os) {
+    let choices = os.split(",");
     if (choices.length > 0 && !choices.includes(gApp.OS))
       return false;
   }
 
-  if (blocklistElement.hasAttribute("xpcomabi")) {
-    choices = blocklistElement.getAttribute("xpcomabi").split(",");
+  let xpcomabi = blocklistElement.getAttribute("xpcomabi");
+  if (xpcomabi) {
+    let choices = xpcomabi.split(",");
     if (choices.length > 0 && !choices.includes(gApp.XPCOMABI))
       return false;
   }
@@ -218,22 +287,6 @@ function getLocale() {
 /* Get the distribution pref values, from defaults only */
 function getDistributionPrefValue(aPrefName) {
   return Services.prefs.getDefaultBranch(null).getCharPref(aPrefName, "default");
-}
-
-/**
- * Parse a string representation of a regular expression. Needed because we
- * use the /pattern/flags form (because it's detectable), which is only
- * supported as a literal in JS.
- *
- * @param {string} aStr
- *         String representation of regexp
- * @return {RegExp} instance
- */
-function parseRegExp(aStr) {
-  let lastSlash = aStr.lastIndexOf("/");
-  let pattern = aStr.slice(1, lastSlash);
-  let flags = aStr.slice(lastSlash + 1);
-  return new RegExp(pattern, flags);
 }
 
 /**
@@ -313,8 +366,20 @@ var Blocklist = {
           break;
         case PREF_BLOCKLIST_ENABLED:
           gBlocklistEnabled = Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true);
-          this._loadBlocklist();
-          this._blocklistUpdated(null, null);
+          // This is a bit messy. Especially in tests, but in principle also by users toggling
+          // this preference repeatedly, plugin loads could race with each other if we don't
+          // enforce that they are applied sequentially.
+          // So we only update once the previous `_blocklistUpdated` call finishes running.
+          let lastUpdate = this._lastUpdate || undefined;
+          let newUpdate = this._lastUpdate = (async () => {
+            await lastUpdate;
+            this._clear();
+            await this.loadBlocklistAsync();
+            await this._blocklistUpdated(null, null);
+            if (newUpdate == this._lastUpdate) {
+              delete this._lastUpdate;
+            }
+          })().catch(Cu.reportError);
           break;
         case PREF_BLOCKLIST_LEVEL:
           gBlocklistLevel = Math.min(Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
@@ -370,11 +435,11 @@ var Blocklist = {
       return null;
 
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (!appVersion && !gApp.version)
+    if (!appVersion && !gAppVersion)
       return null;
 
     if (!appVersion)
-      appVersion = gApp.version;
+      appVersion = gAppVersion;
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
@@ -465,7 +530,7 @@ var Blocklist = {
     // (For every non-null property in entry, the same key must exist in
     // params and value must be the same)
     function checkEntry(entry, params) {
-      for (let [key, value] of entry) {
+      for (let [key, value] of Object.entries(entry)) {
         if (value === null || value === undefined)
           continue;
         if (params[key]) {
@@ -541,27 +606,33 @@ var Blocklist = {
     if (pingCountTotal < 1)
       pingCountTotal = 1;
 
-    dsURI = dsURI.replace(/%APP_ID%/g, gApp.ID);
-    // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (gApp.version)
-      dsURI = dsURI.replace(/%APP_VERSION%/g, gApp.version);
-    dsURI = dsURI.replace(/%PRODUCT%/g, gApp.name);
-    // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (gApp.version)
-      dsURI = dsURI.replace(/%VERSION%/g, gApp.version);
-    dsURI = dsURI.replace(/%BUILD_ID%/g, gApp.appBuildID);
-    dsURI = dsURI.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
-    dsURI = dsURI.replace(/%OS_VERSION%/g, gOSVersion);
-    dsURI = dsURI.replace(/%LOCALE%/g, getLocale());
-    dsURI = dsURI.replace(/%CHANNEL%/g, UpdateUtils.UpdateChannel);
-    dsURI = dsURI.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
-    dsURI = dsURI.replace(/%DISTRIBUTION%/g,
-                      getDistributionPrefValue(PREF_APP_DISTRIBUTION));
-    dsURI = dsURI.replace(/%DISTRIBUTION_VERSION%/g,
-                      getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
-    dsURI = dsURI.replace(/%PING_COUNT%/g, pingCountVersion);
-    dsURI = dsURI.replace(/%TOTAL_PING_COUNT%/g, pingCountTotal);
-    dsURI = dsURI.replace(/%DAYS_SINCE_LAST_PING%/g, daysSinceLastPing);
+    let replacements = {
+      APP_ID: gAppID,
+      PRODUCT: gApp.name,
+      BUILD_ID: gApp.appBuildID,
+      BUILD_TARGET: gApp.OS + "_" + gABI,
+      OS_VERSION: gOSVersion,
+      LOCALE: getLocale(),
+      CHANNEL: UpdateUtils.UpdateChannel,
+      PLATFORM_VERSION: gApp.platformVersion,
+      DISTRIBUTION: getDistributionPrefValue(PREF_APP_DISTRIBUTION),
+      DISTRIBUTION_VERSION: getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION),
+      PING_COUNT: pingCountVersion,
+      TOTAL_PING_COUNT: pingCountTotal,
+      DAYS_SINCE_LAST_PING: daysSinceLastPing,
+    };
+    dsURI = dsURI.replace(/%([A-Z_]+)%/g, function(fullMatch, name) {
+      // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
+      if (gAppVersion && (name == "APP_VERSION" || name == "VERSION")) {
+        return gAppVersion;
+      }
+      // Some items, like DAYS_SINCE_LAST_PING, can be undefined, so we can't just
+      // `return replacements[name] || fullMatch` or something like that.
+      if (!replacements.hasOwnProperty(name)) {
+        return fullMatch;
+      }
+      return replacements[name];
+    });
     dsURI = dsURI.replace(/\+/g, "%2B");
 
     // Under normal operations it will take around 5,883,516 years before the
@@ -615,11 +686,6 @@ var Blocklist = {
     request.addEventListener("load", event => this.onXMLLoad(event));
     request.send(null);
 
-    // When the blocklist loads we need to compare it to the current copy so
-    // make sure we have loaded it.
-    if (!this.isLoaded)
-      this._loadBlocklist();
-
     // If blocklist update via Kinto is enabled, poll for changes and sync.
     // Currently certificates blocklist relies on it by default.
     if (Services.prefs.getBoolPref(PREF_BLOCKLIST_UPDATE_ENABLED)) {
@@ -659,10 +725,14 @@ var Blocklist = {
     const lastModified = request.getResponseHeader("Last-Modified") || "";
     Services.prefs.setCharPref(PREF_BLOCKLIST_LAST_MODIFIED, lastModified);
 
+    if (!this.isLoaded) {
+      await this.loadBlocklistAsync();
+    }
+
     var oldAddonEntries = this._addonEntries;
     var oldPluginEntries = this._pluginEntries;
 
-    this._loadBlocklistFromXML(responseXML);
+    await this._loadBlocklistFromXML(responseXML);
     // We don't inform the users when the graphics blocklist changed at runtime.
     // However addons and plugins blocking status is refreshed.
     this._blocklistUpdated(oldAddonEntries, oldPluginEntries);
@@ -697,135 +767,6 @@ var Blocklist = {
   },
 
   /**
-   * Finds the newest blocklist file from the application and the profile and
-   * load it or does nothing if neither exist.
-   */
-  _loadBlocklist() {
-    this._addonEntries = [];
-    this._gfxEntries = [];
-    this._pluginEntries = [];
-
-    Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(true);
-
-    var profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-    try {
-      this._loadBlocklistFromFile(profFile);
-    } catch (ex) {
-      LOG("Blocklist::_loadBlocklist: couldn't load file from profile, trying app dir");
-      try {
-        var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-        this._loadBlocklistFromFile(appFile);
-      } catch (ex) {
-        LOG("Blocklist::_loadBlocklist: no XML File found");
-      }
-    }
-  },
-
-  /**
-#    The blocklist XML file looks something like this:
-#
-#    <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
-#      <emItems>
-#        <emItem id="item_1@domain" blockID="i1">
-#          <prefs>
-#            <pref>accessibility.accesskeycausesactivation</pref>
-#            <pref>accessibility.blockautorefresh</pref>
-#          </prefs>
-#          <versionRange minVersion="1.0" maxVersion="2.0.*">
-#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#              <versionRange minVersion="1.7" maxVersion="1.7.*"/>
-#            </targetApplication>
-#            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
-#            </targetApplication>
-#          </versionRange>
-#          <versionRange minVersion="3.0" maxVersion="3.0.*">
-#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#            </targetApplication>
-#            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
-#            </targetApplication>
-#          </versionRange>
-#        </emItem>
-#        <emItem id="item_2@domain" blockID="i2">
-#          <versionRange minVersion="3.1" maxVersion="4.*"/>
-#        </emItem>
-#        <emItem id="item_3@domain">
-#          <versionRange>
-#            <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#            </targetApplication>
-#          </versionRange>
-#        </emItem>
-#        <emItem id="item_4@domain" blockID="i3">
-#          <versionRange>
-#            <targetApplication>
-#              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-#            </targetApplication>
-#          </versionRange>
-#        <emItem id="/@badperson\.com$/"/>
-#      </emItems>
-#      <pluginItems>
-#        <pluginItem blockID="i4">
-#          <!-- All match tags must match a plugin to blocklist a plugin -->
-#          <match name="name" exp="some plugin"/>
-#          <match name="description" exp="1[.]2[.]3"/>
-#        </pluginItem>
-#      </pluginItems>
-#      <gfxItems>
-#        <gfxItem ... />
-#      </gfxItems>
-#    </blocklist>
-   */
-
-  _loadBlocklistFromFile(file) {
-    if (!gBlocklistEnabled) {
-      LOG("Blocklist::_loadBlocklistFromFile: blocklist is disabled");
-      return;
-    }
-
-    let text = "";
-    let fstream = null;
-    let cstream = null;
-
-    try {
-      fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-      cstream = Cc["@mozilla.org/intl/converter-input-stream;1"]
-                  .createInstance(Ci.nsIConverterInputStream);
-
-      fstream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-      cstream.init(fstream, "UTF-8", 0, 0);
-
-      let str = {};
-      let read = 0;
-
-      do {
-        read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-        text += str.value;
-      } while (read != 0);
-    } finally {
-      // There's no catch block because the callers will catch exceptions,
-      // and may try to read another file if reading this file failed.
-      if (cstream) {
-        try {
-          cstream.close();
-        } catch (ex) {}
-      }
-      if (fstream) {
-        try {
-          fstream.close();
-        } catch (ex) {}
-      }
-    }
-
-    if (text)
-      this._loadBlocklistFromString(text);
-  },
-
-  /**
    * Whether or not we've finished loading the blocklist.
    */
   get isLoaded() {
@@ -837,7 +778,7 @@ var Blocklist = {
     this._addonEntries = null;
     this._gfxEntries = null;
     this._pluginEntries = null;
-    delete this._preloadPromise;
+    delete this._loadPromise;
   },
 
   /**
@@ -847,17 +788,17 @@ var Blocklist = {
     if (this.isLoaded) {
       return;
     }
-    if (!this._preloadPromise) {
-      this._preloadPromise = this._loadBlocklistAsyncInternal();
+    if (!this._loadPromise) {
+      this._loadPromise = this._loadBlocklistAsyncInternal();
     }
-    await this._preloadPromise;
+    await this._loadPromise;
   },
 
   async _loadBlocklistAsyncInternal() {
     try {
       // Get the path inside the try...catch because there's no profileDir in e.g. xpcshell tests.
-      let profPath = OS.Path.join(OS.Constants.Path.profileDir, FILE_BLOCKLIST);
-      await this._preloadBlocklistFile(profPath);
+      let profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
+      await this._loadFileInternal(profFile);
       return;
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
@@ -865,7 +806,7 @@ var Blocklist = {
 
     var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
     try {
-      await this._preloadBlocklistFile(appFile.path);
+      await this._loadFileInternal(appFile);
       return;
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
@@ -879,68 +820,71 @@ var Blocklist = {
     this._pluginEntries = [];
   },
 
-  async _preloadBlocklistFile(path) {
+  async _loadFileInternal(file) {
     if (this.isLoaded) {
       return;
     }
 
     if (!gBlocklistEnabled) {
-      LOG("Blocklist::_preloadBlocklistFile: blocklist is disabled");
+      LOG("Blocklist::_loadFileInternal: blocklist is disabled");
       return;
     }
 
-    let text = await OS.File.read(path, { encoding: "utf-8" });
+    let xmlDoc = await new Promise((resolve, reject) => {
+      let request = new XMLHttpRequest();
+      request.open("GET", Services.io.newFileURI(file).spec, true);
+      request.overrideMimeType("text/xml");
+      request.addEventListener("error", reject);
+      request.addEventListener("load", function() {
+        let {status} = request;
+        if (status != 200 && status != 0) {
+          LOG("_loadFileInternal: there was an error during load, got status: " + status);
+          reject(new Error("Couldn't load blocklist file"));
+          return;
+        }
+        let doc = request.responseXML;
+        if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
+          LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
+              "XML Namespace.\nExpected: " + XMLURI_BLOCKLIST + "\n" +
+              "Received: " + doc.documentElement.namespaceURI);
+          reject(new Error("Local blocklist file has the wrong namespace!"));
+          return;
+        }
+        resolve(doc);
+      });
+      request.send(null);
+    });
 
-    await new Promise((resolve, reject) => {
-      ChromeUtils.idleDispatch(() => {
+    await new Promise(resolve => {
+      ChromeUtils.idleDispatch(async () => {
         if (!this.isLoaded) {
-          Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(false);
-          try {
-            this._loadBlocklistFromString(text);
-          } catch (ex) {
-            // Loading the blocklist failed. Ensure the caller knows.
-            reject(ex);
-          }
+          await this._loadBlocklistFromXML(xmlDoc);
         }
         resolve();
       });
     });
   },
 
-  _loadBlocklistFromString(text) {
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(text, "text/xml");
-    if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
-      LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
-          "XML Namespace.\r\nExpected: " + XMLURI_BLOCKLIST + "\r\n" +
-          "Received: " + doc.documentElement.namespaceURI);
-      throw new Error("Couldn't find an XML doc with the right namespace!");
-    }
-    this._loadBlocklistFromXML(doc);
-  },
-
-  _loadBlocklistFromXML(doc) {
+  async _loadBlocklistFromXML(doc) {
     this._addonEntries = [];
     this._gfxEntries = [];
     this._pluginEntries = [];
     try {
-      var childNodes = doc.documentElement.childNodes;
-      for (let element of childNodes) {
-        if (element.nodeType != doc.ELEMENT_NODE)
-          continue;
+      var children = doc.documentElement.children;
+      for (let element of children) {
         switch (element.localName) {
         case "emItems":
-          this._addonEntries = this._processItemNodes(element.childNodes, "emItem",
-                                                      this._handleEmItemNode);
+          this._addonEntries = await this._processItemNodes(element.children, "emItem",
+                                                            this._handleEmItemNode);
           break;
         case "pluginItems":
-          this._pluginEntries = this._processItemNodes(element.childNodes, "pluginItem",
-                                                       this._handlePluginItemNode);
+          this._pluginEntries = await this._processItemNodes(element.children, "pluginItem",
+                                                             this._handlePluginItemNode);
           break;
         case "gfxItems":
           // Parse as simple list of objects.
-          this._gfxEntries = this._processItemNodes(element.childNodes, "gfxBlacklistEntry",
-                                                    this._handleGfxBlacklistNode);
+          this._gfxEntries = await this._processItemNodes(element.children, "gfxBlacklistEntry",
+                                                          this._handleGfxBlacklistNode);
           break;
         default:
           LOG("Blocklist::_loadBlocklistFromXML: ignored entries " + element.localName);
@@ -960,15 +904,16 @@ var Blocklist = {
     });
   },
 
-  _processItemNodes(itemNodes, itemName, handler) {
+  async _processItemNodes(items, itemName, handler) {
     var result = [];
-    for (var i = 0; i < itemNodes.length; ++i) {
-      var blocklistElement = itemNodes.item(i);
-      if (blocklistElement.nodeType != blocklistElement.ELEMENT_NODE ||
-          blocklistElement.localName != itemName)
-        continue;
-
-      handler(blocklistElement, result);
+    let deadline = await new Promise(ChromeUtils.idleDispatch);
+    for (let item of items) {
+      if (item.localName == itemName) {
+        handler(item, result);
+      }
+      if (!deadline || deadline.didTimeout || deadline.timeRemaining() < 1) {
+        deadline = await new Promise(ChromeUtils.idleDispatch);
+      }
     }
     return result;
   },
@@ -981,39 +926,40 @@ var Blocklist = {
       versions: [],
       prefs: [],
       blockID: null,
-      attributes: new Map()
+      attributes: {},
       // Atleast one of EXTENSION_BLOCK_FILTERS must get added to attributes
     };
 
-    // Any filter starting with '/' is interpreted as a regex. So if an attribute
-    // starts with a '/' it must be checked via a regex.
-    function regExpCheck(attr) {
-      return attr.startsWith("/") ? parseRegExp(attr) : attr;
-    }
-
     for (let filter of EXTENSION_BLOCK_FILTERS) {
       let attr = blocklistElement.getAttribute(filter);
-      if (attr)
-        blockEntry.attributes.set(filter, regExpCheck(attr));
+      if (attr) {
+        // Any filter starting with '/' is interpreted as a regex. So if an attribute
+        // starts with a '/' it must be checked via a regex.
+        if (attr.startsWith("/")) {
+          let lastSlash = attr.lastIndexOf("/");
+          let pattern = attr.slice(1, lastSlash);
+          let flags = attr.slice(lastSlash + 1);
+          blockEntry.attributes[filter] = new RegExp(pattern, flags);
+        } else {
+          blockEntry.attributes[filter] = attr;
+        }
+      }
     }
 
-    var childNodes = blocklistElement.childNodes;
+    var children = blocklistElement.children;
 
-    for (let x = 0; x < childNodes.length; x++) {
-      var childElement = childNodes.item(x);
-      if (childElement.nodeType != childElement.ELEMENT_NODE)
-        continue;
-      if (childElement.localName === "prefs") {
-        let prefElements = childElement.childNodes;
-        for (let i = 0; i < prefElements.length; i++) {
-          let prefElement = prefElements.item(i);
-          if (prefElement.nodeType != prefElement.ELEMENT_NODE ||
-              prefElement.localName !== "pref")
-            continue;
-          blockEntry.prefs.push(prefElement.textContent);
+    for (let childElement of children) {
+      let localName = childElement.localName;
+      if (localName == "prefs" && childElement.hasChildNodes) {
+        let prefElements = childElement.children;
+        for (let prefElement of prefElements) {
+          if (prefElement.localName == "pref") {
+            blockEntry.prefs.push(prefElement.textContent);
+          }
         }
-      } else if (childElement.localName === "versionRange")
+      } else if (localName == "versionRange") {
         blockEntry.versions.push(new BlocklistItemData(childElement));
+      }
     }
     // if only the extension ID is specified block all versions of the
     // extension for the current application.
@@ -1029,7 +975,7 @@ var Blocklist = {
     if (!matchesOSABI(blocklistElement))
       return;
 
-    var matchNodes = blocklistElement.childNodes;
+    let children = blocklistElement.children;
     var blockEntry = {
       matches: {},
       versions: [],
@@ -1037,24 +983,24 @@ var Blocklist = {
       infoURL: null,
     };
     var hasMatch = false;
-    for (var x = 0; x < matchNodes.length; ++x) {
-      var matchElement = matchNodes.item(x);
-      if (matchElement.nodeType != matchElement.ELEMENT_NODE)
-        continue;
-      if (matchElement.localName == "match") {
-        var name = matchElement.getAttribute("name");
-        var exp = matchElement.getAttribute("exp");
-        try {
-          blockEntry.matches[name] = new RegExp(exp, "m");
-          hasMatch = true;
-        } catch (e) {
-          // Ignore invalid regular expressions
-        }
-      }
-      if (matchElement.localName == "versionRange") {
-        blockEntry.versions.push(new BlocklistItemData(matchElement));
-      } else if (matchElement.localName == "infoURL") {
-        blockEntry.infoURL = matchElement.textContent;
+    for (let childElement of children) {
+      switch (childElement.localName) {
+        case "match":
+          var name = childElement.getAttribute("name");
+          var exp = childElement.getAttribute("exp");
+          try {
+            blockEntry.matches[name] = new RegExp(exp, "m");
+            hasMatch = true;
+          } catch (e) {
+            // Ignore invalid regular expressions
+          }
+          break;
+        case "versionRange":
+          blockEntry.versions.push(new BlocklistItemData(childElement));
+          break;
+        case "infoURL":
+          blockEntry.infoURL = childElement.textContent;
+          break;
       }
     }
     // Plugin entries require *something* to match to an actual plugin
@@ -1098,20 +1044,12 @@ var Blocklist = {
       blockEntry.blockID = blocklistElement.getAttribute("blockID");
     }
 
-    // Trim helper (spaces, tabs, no-break spaces..)
-    const trim = (s) => (s || "").replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
-
-    for (let i = 0; i < blocklistElement.childNodes.length; ++i) {
-      var matchElement = blocklistElement.childNodes.item(i);
-      if (matchElement.nodeType != matchElement.ELEMENT_NODE)
-        continue;
-
+    for (let matchElement of blocklistElement.children) {
       let value;
       if (matchElement.localName == "devices") {
         value = [];
-        for (let j = 0; j < matchElement.childNodes.length; j++) {
-          const childElement = matchElement.childNodes.item(j);
-          const childValue = trim(childElement.textContent);
+        for (let childElement of matchElement.children) {
+          const childValue = (childElement.textContent || "").trim();
           // Make sure no empty value is added.
           if (childValue) {
             if (/,/.test(childValue)) {
@@ -1125,10 +1063,10 @@ var Blocklist = {
           }
         }
       } else if (matchElement.localName == "versionRange") {
-        value = {minVersion: trim(matchElement.getAttribute("minVersion")) || "0",
-                 maxVersion: trim(matchElement.getAttribute("maxVersion")) || "*"};
+        value = {minVersion: (matchElement.getAttribute("minVersion") || "").trim() || "0",
+                 maxVersion: (matchElement.getAttribute("maxVersion") || "").trim() || "*"};
       } else {
-        value = trim(matchElement.textContent);
+        value = (matchElement.textContent || "").trim();
       }
       if (value) {
         blockEntry[matchElement.localName] = value;
@@ -1170,11 +1108,11 @@ var Blocklist = {
       return null;
 
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (!appVersion && !gApp.version)
+    if (!appVersion && !gAppVersion)
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
 
     if (!appVersion)
-      appVersion = gApp.version;
+      appVersion = gAppVersion;
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
@@ -1266,21 +1204,31 @@ var Blocklist = {
   },
 
   _notifyObserversBlocklistGFX() {
+    let sortedProps = [
+      "blockID", "devices", "driverVersion", "driverVersionComparator", "driverVersionMax",
+      "feature", "featureStatus", "hardware", "manufacturer", "model", "os", "osversion",
+      "product", "vendor", "versionRange",
+    ];
     // Notify `GfxInfoBase`, by passing a string serialization.
     // This way we avoid spreading XML structure logics there.
-    const payload = this._gfxEntries.map((r) => {
-      return Object.keys(r).sort().filter((k) => !/id|last_modified/.test(k)).map((key) => {
-        let value = r[key];
-        if (Array.isArray(value)) {
-          value = value.join(",");
-        } else if (value.hasOwnProperty("minVersion")) {
-          // When XML is parsed, both minVersion and maxVersion are set.
-          value = `${value.minVersion},${value.maxVersion}`;
+    let payload = [];
+    for (let gfxEntry of this._gfxEntries) {
+      let entryLines = [];
+      for (let key of sortedProps) {
+        if (gfxEntry[key]) {
+          let value = gfxEntry[key];
+          if (Array.isArray(value)) {
+            value = value.join(",");
+          } else if (value.maxVersion) {
+            // When XML is parsed, both minVersion and maxVersion are set.
+            value = value.minVersion + "," + value.maxVersion;
+          }
+          entryLines.push(key + ":" + value);
         }
-        return `${key}:${value}`;
-      }).join("\t");
-    }).join("\n");
-    Services.obs.notifyObservers(null, "blocklist-data-gfxItems", payload);
+      }
+      payload.push(entryLines.join("\t"));
+    }
+    Services.obs.notifyObservers(null, "blocklist-data-gfxItems", payload.join("\n"));
   },
 
   _notifyObserversBlocklistUpdated() {
@@ -1474,37 +1422,35 @@ var Blocklist = {
  * Helper for constructing a blocklist.
  */
 function BlocklistItemData(versionRangeElement) {
-  var versionRange = this.getBlocklistVersionRange(versionRangeElement);
-  this.minVersion = versionRange.minVersion;
-  this.maxVersion = versionRange.maxVersion;
-  if (versionRangeElement && versionRangeElement.hasAttribute("severity"))
-    this.severity = versionRangeElement.getAttribute("severity");
-  else
-    this.severity = DEFAULT_SEVERITY;
-  if (versionRangeElement && versionRangeElement.hasAttribute("vulnerabilitystatus")) {
-    this.vulnerabilityStatus = versionRangeElement.getAttribute("vulnerabilitystatus");
-  } else {
-    this.vulnerabilityStatus = VULNERABILITYSTATUS_NONE;
-  }
-  this.targetApps = { };
-  var found = false;
-
+  this.targetApps = {};
+  let foundTarget = false;
+  this.severity = DEFAULT_SEVERITY;
+  this.vulnerabilityStatus = VULNERABILITYSTATUS_NONE;
   if (versionRangeElement) {
-    for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
-      var targetAppElement = versionRangeElement.childNodes.item(i);
-      if (targetAppElement.nodeType != targetAppElement.ELEMENT_NODE ||
-          targetAppElement.localName != "targetApplication")
-        continue;
-      found = true;
-      // default to the current application if id is not provided.
-      var appID = targetAppElement.hasAttribute("id") ? targetAppElement.getAttribute("id") : gApp.ID;
-      this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
+    let versionRange = this.getBlocklistVersionRange(versionRangeElement);
+    this.minVersion = versionRange.minVersion;
+    this.maxVersion = versionRange.maxVersion;
+    if (versionRangeElement.hasAttribute("severity"))
+      this.severity = versionRangeElement.getAttribute("severity");
+    if (versionRangeElement.hasAttribute("vulnerabilitystatus")) {
+      this.vulnerabilityStatus = versionRangeElement.getAttribute("vulnerabilitystatus");
     }
+    for (let targetAppElement of versionRangeElement.children) {
+      if (targetAppElement.localName == "targetApplication") {
+        foundTarget = true;
+        // default to the current application if id is not provided.
+        let appID = targetAppElement.id || gAppID;
+        this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
+      }
+    }
+  } else {
+    this.minVersion = this.maxVersion = null;
   }
+
   // Default to all versions of the current application when no targetApplication
   // elements were found
-  if (!found)
-    this.targetApps[gApp.ID] = this.getBlocklistAppVersions(null);
+  if (!foundTarget)
+    this.targetApps[gAppID] = [{minVersion: null, maxVersion: null}];
 }
 
 BlocklistItemData.prototype = {
@@ -1533,7 +1479,7 @@ BlocklistItemData.prototype = {
       return false;
 
     // Check if the application version matches
-    if (this.matchesTargetRange(gApp.ID, appVersion))
+    if (this.matchesTargetRange(gAppID, appVersion))
       return true;
 
     // Check if the toolkit version matches
@@ -1599,18 +1545,16 @@ BlocklistItemData.prototype = {
     var appVersions = [ ];
 
     if (targetAppElement) {
-      for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
-        var versionRangeElement = targetAppElement.childNodes.item(i);
-        if (versionRangeElement.nodeType != versionRangeElement.ELEMENT_NODE ||
-            versionRangeElement.localName != "versionRange")
-          continue;
-        appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
+      for (let versionRangeElement of targetAppElement.children) {
+        if (versionRangeElement.localName == "versionRange") {
+          appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
+        }
       }
     }
     // return minVersion = null and maxVersion = null if no specific versionRange
     // elements were found
     if (appVersions.length == 0)
-      appVersions.push(this.getBlocklistVersionRange(null));
+      appVersions.push({minVersion: null, maxVersion: null});
     return appVersions;
   },
 
@@ -1627,15 +1571,9 @@ BlocklistItemData.prototype = {
    *          "maxVersion"  The maximum version in a version range (default = null).
    */
   getBlocklistVersionRange(versionRangeElement) {
-    var minVersion = null;
-    var maxVersion = null;
-    if (!versionRangeElement)
-      return { minVersion, maxVersion };
-
-    if (versionRangeElement.hasAttribute("minVersion"))
-      minVersion = versionRangeElement.getAttribute("minVersion");
-    if (versionRangeElement.hasAttribute("maxVersion"))
-      maxVersion = versionRangeElement.getAttribute("maxVersion");
+    // getAttribute returns null if the attribute is not present.
+    let minVersion = versionRangeElement.getAttribute("minVersion");
+    let maxVersion = versionRangeElement.getAttribute("maxVersion");
 
     return { minVersion, maxVersion };
   }

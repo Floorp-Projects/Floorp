@@ -1,6 +1,9 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
+
+const gParser = new DOMParser();
 
 const EVENT_NAME = "blocklist-data-gfxItems";
 
@@ -24,6 +27,14 @@ function getBlocklist() {
   return Blocklist;
 }
 
+async function updateBlocklistWithInput(input) {
+  let blocklist = getBlocklist();
+  let promiseObserved = TestUtils.topicObserved(EVENT_NAME);
+  blocklist._loadBlocklistFromXML(gParser.parseFromString(input, "text/xml"));
+  let [, received] = await promiseObserved;
+  return [blocklist, received];
+}
+
 
 add_task(async function test_sends_serialized_data() {
   const blocklist = getBlocklist();
@@ -33,12 +44,10 @@ add_task(async function test_sends_serialized_data() {
                    "driverVersionComparator:LESS_THAN_OR_EQUAL\tfeature:DIRECT3D_9_LAYERS\t" +
                    "featureStatus:BLOCKED_DRIVER_VERSION\tos:WINNT 6.1\tvendor:0x10de\t" +
                    "versionRange:0,*";
-  let received;
-  const observe = (subject, topic, data) => { received = data; };
-  Services.obs.addObserver(observe, EVENT_NAME);
+  let promiseObserved = TestUtils.topicObserved(EVENT_NAME);
   blocklist._notifyObserversBlocklistGFX();
+  let [, received] = await promiseObserved;
   equal(received, expected);
-  Services.obs.removeObserver(observe, EVENT_NAME);
 });
 
 
@@ -53,8 +62,8 @@ add_task(async function test_parsing_fails_if_devices_contains_comma() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = getBlocklist();
-  blocklist._loadBlocklistFromString(input);
+  let [blocklist] = await updateBlocklistWithInput(input);
+
   equal(blocklist._gfxEntries[0].devices.length, 1);
   equal(blocklist._gfxEntries[0].devices[0], "0x2782");
 });
@@ -68,13 +77,8 @@ add_task(async function test_empty_values_are_ignored() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = getBlocklist();
-  let received;
-  const observe = (subject, topic, data) => { received = data; };
-  Services.obs.addObserver(observe, EVENT_NAME);
-  blocklist._loadBlocklistFromString(input);
+  let [, received] = await updateBlocklistWithInput(input);
   ok(received.indexOf("os" < 0));
-  Services.obs.removeObserver(observe, EVENT_NAME);
 });
 
 add_task(async function test_empty_devices_are_ignored() {
@@ -85,13 +89,8 @@ add_task(async function test_empty_devices_are_ignored() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = getBlocklist();
-  let received;
-  const observe = (subject, topic, data) => { received = data; };
-  Services.obs.addObserver(observe, EVENT_NAME);
-  blocklist._loadBlocklistFromString(input);
+  let [, received] = await updateBlocklistWithInput(input);
   ok(received.indexOf("devices" < 0));
-  Services.obs.removeObserver(observe, EVENT_NAME);
 });
 
 add_task(async function test_version_range_default_values() {
@@ -114,8 +113,7 @@ add_task(async function test_version_range_default_values() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = getBlocklist();
-  blocklist._loadBlocklistFromString(input);
+  let [blocklist] = await updateBlocklistWithInput(input);
   equal(blocklist._gfxEntries[0].versionRange.minVersion, "13.0b2");
   equal(blocklist._gfxEntries[0].versionRange.maxVersion, "42.0");
   equal(blocklist._gfxEntries[1].versionRange.minVersion, "0");
@@ -139,8 +137,7 @@ add_task(async function test_blockid_attribute() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = getBlocklist();
-  blocklist._loadBlocklistFromString(input);
+  let [blocklist] = await updateBlocklistWithInput(input);
   equal(blocklist._gfxEntries[0].blockID, "g60");
   ok(!blocklist._gfxEntries[1].hasOwnProperty("blockID"));
 });

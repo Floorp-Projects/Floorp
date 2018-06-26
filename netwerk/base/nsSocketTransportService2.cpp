@@ -49,7 +49,6 @@ static Atomic<PRThread*, Relaxed> gSocketThread;
 #define KEEPALIVE_PROBE_COUNT_PREF "network.tcp.keepalive.probe_count"
 #define SOCKET_LIMIT_TARGET 1000U
 #define SOCKET_LIMIT_MIN      50U
-#define IO_ACTIVITY_INTERVAL_PREF "io.activity.intervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
 #define POLL_BUSY_WAIT_PERIOD "network.sts.poll_busy_wait_period"
 #define POLL_BUSY_WAIT_PERIOD_TIMEOUT "network.sts.poll_busy_wait_period_timeout"
@@ -1446,12 +1445,10 @@ nsSocketTransportService::Observe(nsISupports *subject,
     }
 
     if (!strcmp(topic, "profile-initial-state")) {
-        int32_t interval = Preferences::GetInt(IO_ACTIVITY_INTERVAL_PREF, 0);
-        if (interval <= 0) {
-            return NS_OK;
+        if (!Preferences::GetBool(IO_ACTIVITY_ENABLED_PREF, false)) {
+          return NS_OK;
         }
-
-        return net::IOActivityMonitor::Init(interval);
+        return net::IOActivityMonitor::Init(Preferences::GetInt(IO_ACTIVITY_INTERVAL_PREF, 0));
     }
 
     if (!strcmp(topic, "last-pb-context-exited")) {

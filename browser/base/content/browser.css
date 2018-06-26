@@ -251,10 +251,6 @@ panelview[mainview] > .panel-header {
   pointer-events: auto;
 }
 
-.new-tab-popup {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-newtab-popup");
-}
-
 toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }

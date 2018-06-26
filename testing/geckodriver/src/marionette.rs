@@ -45,7 +45,7 @@ use webdriver::command::{
 use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
                           ElementRectResponse, NewSessionResponse, TimeoutsResponse,
                           ValueResponse, WebDriverResponse, WindowRectResponse};
-use webdriver::common::{Date, ELEMENT_KEY, FrameId, Nullable, WebElement};
+use webdriver::common::{Date, ELEMENT_KEY, FrameId, FRAME_KEY, Nullable, WebElement, WINDOW_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
@@ -651,6 +651,10 @@ impl MarionetteSession {
         Ok(())
     }
 
+    /// Converts a Marionette JSON response into a `WebElement`.
+    ///
+    /// Note that it currently coerces all chrome elements, web frames, and web
+    /// windows also into web elements.  This will change at a later point.
     fn to_web_element(&self, json_data: &Json) -> WebDriverResult<WebElement> {
         let data = try_opt!(
             json_data.as_object(),
@@ -658,12 +662,18 @@ impl MarionetteSession {
             "Failed to convert data to an object"
         );
 
-        let web_element = data.get(ELEMENT_KEY);
         let chrome_element = data.get(CHROME_ELEMENT_KEY);
+        let element = data.get(ELEMENT_KEY);
+        let frame = data.get(FRAME_KEY);
         let legacy_element = data.get(LEGACY_ELEMENT_KEY);
+        let window = data.get(WINDOW_KEY);
 
         let value = try_opt!(
-            web_element.or(chrome_element).or(legacy_element),
+            element
+                .or(legacy_element)
+                .or(chrome_element)
+                .or(frame)
+                .or(window),
             ErrorStatus::UnknownError,
             "Failed to extract web element from Marionette response"
         );

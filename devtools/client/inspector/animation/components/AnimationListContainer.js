@@ -16,6 +16,7 @@ const CurrentTimeScrubber = createFactory(require("./CurrentTimeScrubber"));
 const ProgressInspectionPanel = createFactory(require("./ProgressInspectionPanel"));
 
 const { findOptimalTimeInterval } = require("../utils/utils");
+const { getStr } = require("../utils/l10n");
 
 // The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;
@@ -59,20 +60,24 @@ class AnimationListContainer extends PureComponent {
   }
 
   updateState(props) {
-    const { timeScale } = props;
+    const { animations, timeScale } = props;
     const tickLinesEl = ReactDOM.findDOMNode(this).querySelector(".tick-lines");
     const width = tickLinesEl.offsetWidth;
     const animationDuration = timeScale.getDuration();
     const minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
     const intervalLength = findOptimalTimeInterval(minTimeInterval);
     const intervalWidth = intervalLength * width / animationDuration;
-    const tickCount = width / intervalWidth;
+    const tickCount = parseInt(width / intervalWidth, 10);
+    const isAllDurationInfinity =
+      animations.every(animation => animation.state.duration === Infinity);
 
     const ticks = [];
 
     for (let i = 0; i <= tickCount; i++) {
       const position = i * intervalWidth * 100 / width;
-      const label = timeScale.formatTime(timeScale.distanceToRelativeTime(position));
+      const label = isAllDurationInfinity && i === tickCount
+                      ? getStr("player.infiniteTimeLabel")
+                      : timeScale.formatTime(timeScale.distanceToRelativeTime(position));
       ticks.push({ position, label });
     }
 

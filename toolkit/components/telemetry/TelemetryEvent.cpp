@@ -6,14 +6,17 @@
 
 #include <prtime.h>
 #include <limits>
+#include "nsIObserverService.h"
 #include "nsITelemetry.h"
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Pair.h"
 #include "jsapi.h"
@@ -101,10 +104,6 @@ const uint32_t kExpiredEventId = std::numeric_limits<uint32_t>::max();
 static_assert(kExpiredEventId > kEventCount,
               "Built-in event count should be less than the expired event id.");
 
-// This is the hard upper limit on the number of event records we keep in storage.
-// If we cross this limit, we will drop any further event recording until elements
-// are removed from storage.
-const uint32_t kMaxEventRecords = 1000;
 // Maximum length of any passed value string, in UTF8 byte sequence length.
 const uint32_t kMaxValueByteLength = 80;
 // Maximum length of any string value in the extra dictionary, in UTF8 byte sequence length.
@@ -474,14 +473,6 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
     processType = ProcessID::Dynamic;
   }
 
-  EventRecordArray* eventRecords =
-    GetEventRecordsForProcess(lock, processType, *eventKey);
-
-  // Apply hard limit on event count in storage.
-  if (eventRecords->Length() >= kMaxEventRecords) {
-    return RecordEventResult::StorageLimitReached;
-  }
-
   // Check whether the extra keys passed are valid.
   if (!CheckExtraKeysValid(*eventKey, extra)) {
     return RecordEventResult::InvalidExtraKey;
@@ -502,8 +493,17 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
     return RecordEventResult::Ok;
   }
 
-  // Add event record.
+  EventRecordArray* eventRecords =
+    GetEventRecordsForProcess(lock, processType, *eventKey);
   eventRecords->AppendElement(EventRecord(timestamp, *eventKey, value, extra));
+
+  // Notify observers when we hit the "event" ping event record limit.
+  static uint32_t sEventPingLimit =
+    mozilla::Preferences::GetUint("toolkit.telemetry.eventping.eventLimit", 1000);
+  if (eventRecords->Length() == sEventPingLimit) {
+    return RecordEventResult::StorageLimitReached;
+  }
+
   return RecordEventResult::Ok;
 }
 
@@ -918,10 +918,15 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
       LogToBrowserConsole(nsIScriptError::warningFlag, NS_ConvertUTF8toUTF16(msg));
       return NS_OK;
     }
-    case RecordEventResult::StorageLimitReached:
+    case RecordEventResult::StorageLimitReached: {
       LogToBrowserConsole(nsIScriptError::warningFlag,
                           NS_LITERAL_STRING("Event storage limit reached."));
+      nsCOMPtr<nsIObserverService> serv = mozilla::services::GetObserverService();
+      if (serv) {
+        serv->NotifyObservers(nullptr, "event-telemetry-storage-limit-reached", nullptr);
+      }
       return NS_OK;
+    }
     default:
       return NS_OK;
   }
@@ -1112,7 +1117,8 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
 }
 
 nsresult
-TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
+TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear,
+                                uint32_t aEventLimit, JSContext* cx,
                                 uint8_t optional_argc, JS::MutableHandleValue aResult)
 {
   if (!XRE_IsParentProcess()) {
@@ -1127,6 +1133,7 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
 
   // (1) Extract the events from storage with a lock held.
   nsTArray<mozilla::Pair<const char*, EventRecordArray>> processEvents;
+  nsTArray<mozilla::Pair<uint32_t, EventRecordArray>> leftovers;
   {
     StaticMutexAutoLock locker(gTelemetryEventsMutex);
 
@@ -1136,35 +1143,51 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
 
     // The snapshotting function is the same for both static and dynamic builtin events.
     // We can use the same function and store the events in the same output storage.
-    auto snapshotter = [aDataset, &locker, &processEvents]
+    auto snapshotter = [aDataset, &locker, &processEvents, &leftovers, aClear, optional_argc, aEventLimit]
                        (EventRecordsMapType& aProcessStorage)
     {
 
       for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
         const EventRecordArray* eventStorage = static_cast<EventRecordArray*>(iter.Data());
         EventRecordArray events;
+        EventRecordArray leftoverEvents;
 
         const uint32_t len = eventStorage->Length();
         for (uint32_t i = 0; i < len; ++i) {
           const EventRecord& record = (*eventStorage)[i];
           if (IsInDataset(GetDataset(locker, record.GetEventKey()), aDataset)) {
-            events.AppendElement(record);
+            // If we have a limit, adhere to it. If we have a limit and are
+            // going to clear, save the leftovers for later.
+            if (optional_argc < 2 || events.Length() < aEventLimit) {
+              events.AppendElement(record);
+            } else if (aClear) {
+              leftoverEvents.AppendElement(record);
+            }
           }
         }
 
         if (events.Length()) {
           const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
           processEvents.AppendElement(mozilla::MakePair(processName, std::move(events)));
+          if (leftoverEvents.Length()) {
+            leftovers.AppendElement(mozilla::MakePair(iter.Key(),
+                                                      std::move(leftoverEvents)));
+          }
         }
       }
     };
 
     // Take a snapshot of the plain and dynamic builtin events.
     snapshotter(gEventRecords);
-
     if (aClear) {
       gEventRecords.Clear();
+      for (auto pair : leftovers) {
+        gEventRecords.Put(pair.first(),
+                          new EventRecordArray(std::move(pair.second())));
+      }
+      leftovers.Clear();
     }
+
   }
 
   // (2) Serialize the events to a JS object.

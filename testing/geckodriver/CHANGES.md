@@ -4,6 +4,15 @@ Change log
 All notable changes to this program is documented in this file.
 
 
+Unreleased
+----------
+
+### Added
+
+- Support for WebDriver web element, web frame, and web window
+  identifiers from Firefox.
+
+
 0.21.0 (2018-06-15)
 -------------------
 

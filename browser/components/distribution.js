@@ -152,15 +152,6 @@ DistributionCustomizer.prototype = {
 
         await this._parseBookmarksSection(folder.guid,
                                           "BookmarksFolder-" + item.folderId);
-
-        if (item.description) {
-          let folderId = await PlacesUtils.promiseItemId(folder.guid);
-          PlacesUtils.annotations.setItemAnnotation(folderId,
-                                                    "bookmarkProperties/description",
-                                                    item.description, 0,
-                                                    PlacesUtils.annotations.EXPIRE_NEVER);
-        }
-
         break;
 
       case "separator":
@@ -191,17 +182,9 @@ DistributionCustomizer.prototype = {
         if (itemIndex < defaultIndex)
           index = prependIndex++;
 
-        let bm = await PlacesUtils.bookmarks.insert({
+        await PlacesUtils.bookmarks.insert({
           parentGuid, index, title: item.title, url: item.link
         });
-
-        if (item.description) {
-          let bmId = await PlacesUtils.promiseItemId(bm.guid);
-          PlacesUtils.annotations.setItemAnnotation(bmId,
-                                                    "bookmarkProperties/description",
-                                                    item.description, 0,
-                                                    PlacesUtils.annotations.EXPIRE_NEVER);
-        }
 
         if (item.icon && item.iconData) {
           try {
