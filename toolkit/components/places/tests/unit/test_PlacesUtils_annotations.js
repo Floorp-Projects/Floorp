@@ -4,12 +4,12 @@
 "use strict";
 
 const TEST_ANNOTATIONS = [{
-  name: "fake/annotation1",
+  name: PlacesUtils.LMANNO_FEEDURI,
   value: "test",
   flags: 0,
   expires: Ci.nsIAnnotationService.EXPIRE_MONTHS,
 }, {
-  name: "fake/annotation2",
+  name: PlacesUtils.LMANNO_SITEURI,
   value: "test2",
   flags: 0,
   expires: Ci.nsIAnnotationService.EXPIRE_DAYS,
