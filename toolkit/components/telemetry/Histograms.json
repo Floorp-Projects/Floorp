@@ -12205,24 +12205,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Graphics Crash Reason (...)"
   },
-  "TOTAL_SCROLL_Y": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1297867],
-    "expires_in_version": "58",
-    "kind": "count",
-    "description": "Count of the total number of CSS pixels scrolled up or down in the vertical axis of the root frame of all the pages visited in a subsession. This doesn't include any scrolling of nested scroll frames such as inputs, iframes, or scrollable divs."
-  },
-  "PAGE_MAX_SCROLL_Y": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1312881],
-    "expires_in_version": "58",
-    "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 50,
-    "description": "Maximum distance in CSS pixels a user scrolls down the vertical axis of the root frame of a page. This doesn't include any scrolling of nested scroll frames such as inputs, iframes, or scrollable divs."
-  },
   "WEB_NOTIFICATION_CLICKED": {
     "record_in_processes": ["main", "content"],
     "releaseChannelCollection": "opt-out",

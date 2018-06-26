@@ -4988,7 +4988,6 @@ ScrollFrameHelper::FireScrollEvent()
   if (mIsRoot) {
     nsIDocument* doc = content->GetUncomposedDoc();
     if (doc) {
-      prescontext->SetTelemetryScrollY(GetScrollPosition().y);
       EventDispatcher::Dispatch(doc, prescontext, &event, nullptr,  &status);
     }
   } else {
