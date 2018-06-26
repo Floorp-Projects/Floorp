@@ -32,3 +32,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 ]
 
 FINAL_LIBRARY = 'browsercomps'
+
+JAR_MANIFESTS += ['jar.mn']
