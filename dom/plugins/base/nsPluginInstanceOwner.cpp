@@ -2003,7 +2003,7 @@ void nsPluginInstanceOwner::PerformDelayedBlurs()
   nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(),
                                        windowRoot,
                                        NS_LITERAL_STRING("MozPerformDelayedBlur"),
-                                       CanBuble::No, Cancelable::eNo, nullptr);
+                                       CanBubble::eNo, Cancelable::eNo, nullptr);
 }
 
 #endif
