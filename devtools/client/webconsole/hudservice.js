@@ -192,7 +192,7 @@ HUD_SERVICE.prototype =
 
       win.document.title = l10n.getStr("browserConsole.title");
 
-      // With a XUL wrapper doc, we host webconsole.html in an iframe.
+      // With a XUL wrapper doc, we host index.html in an iframe.
       // Wait for that to be ready before resolving:
       if (!Tools.webConsole.browserConsoleUsesHTML) {
         const iframe = win.document.querySelector("iframe");

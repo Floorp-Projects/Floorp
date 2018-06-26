@@ -176,23 +176,6 @@ HTMLEditor::InsertHTML(const nsAString& aInString)
                                  nullptr,  nullptr, 0, true, true, false);
 }
 
-NS_IMETHODIMP
-HTMLEditor::InsertHTMLWithContext(const nsAString& aInputString,
-                                  const nsAString& aContextStr,
-                                  const nsAString& aInfoStr,
-                                  const nsAString& aFlavor,
-                                  nsIDocument* aSourceDoc,
-                                  nsINode* aDestNode,
-                                  int32_t aDestOffset,
-                                  bool aDeleteSelection)
-{
-  return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
-                                 aFlavor, aSourceDoc, aDestNode, aDestOffset,
-                                 aDeleteSelection,
-                                 /* trusted input */ true,
-                                 /* clear style */ false);
-}
-
 nsresult
 HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                     const nsAString& aContextStr,

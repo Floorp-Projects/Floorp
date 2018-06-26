@@ -7,7 +7,7 @@
 
 this.EXPORTED_SYMBOLS = ["ScratchpadManager"];
 
-const SCRATCHPAD_WINDOW_URL = "chrome://devtools/content/scratchpad/scratchpad.xul";
+const SCRATCHPAD_WINDOW_URL = "chrome://devtools/content/scratchpad/index.xul";
 const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
