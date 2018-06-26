@@ -108,6 +108,7 @@ static setLcdFilterFunc setLcdFilter;
 extern FT_Face mozilla_NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex);
 extern FT_Face mozilla_NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex);
 extern void mozilla_ReleaseFTFace(FT_Face aFace);
+extern FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
 extern void mozilla_LockFTLibrary(FT_Library aFTLibrary);
 extern void mozilla_UnlockFTLibrary(FT_Library aFTLibrary);
 
@@ -2344,7 +2345,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     load_flags |= FT_LOAD_COLOR;
 #endif
 
-    error = FT_Load_Glyph (scaled_font->unscaled->face,
+    error = mozilla_LoadFTGlyph (scaled_font->unscaled->face,
 			   _cairo_scaled_glyph_index(scaled_glyph),
 			   load_flags);
     /* XXX ignoring all other errors for now.  They are not fatal, typically
@@ -2498,7 +2499,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	 * so reload it. This will probably never occur though
 	 */
 	if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
-	    error = FT_Load_Glyph (face,
+	    error = mozilla_LoadFTGlyph (face,
 				   _cairo_scaled_glyph_index(scaled_glyph),
 				   load_flags | FT_LOAD_NO_BITMAP);
 	    /* XXX ignoring all other errors for now.  They are not fatal, typically
