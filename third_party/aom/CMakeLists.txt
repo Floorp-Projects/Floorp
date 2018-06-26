@@ -186,9 +186,11 @@ list(APPEND AOM_ENCODER_APP_UTIL_SOURCES
             "${AOM_ROOT}/examples/encoder_util.h"
             "${AOM_ROOT}/examples/encoder_util.c")
 
-list(APPEND AOM_ENCODER_STATS_SOURCES "${AOM_ROOT}/stats/aomstats.c"
-            "${AOM_ROOT}/stats/aomstats.h" "${AOM_ROOT}/stats/rate_hist.c"
-            "${AOM_ROOT}/stats/rate_hist.h")
+if (ENABLE_EXAMPLES)
+  list(APPEND AOM_ENCODER_STATS_SOURCES "${AOM_ROOT}/stats/aomstats.c"
+              "${AOM_ROOT}/stats/aomstats.h" "${AOM_ROOT}/stats/rate_hist.c"
+              "${AOM_ROOT}/stats/rate_hist.h")
+endif ()
 
 list(APPEND AOM_PKG_CONFIG_SOURCES "${AOM_CONFIG_DIR}/aom.pc")
 
