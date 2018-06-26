@@ -36,6 +36,7 @@ add_task(async function testInitPastMessages() {
   );
   ok(errorWasLogged, "Reporter collects errors logged before initialization.");
 
+  reporter.uninit();
 });
 
 add_task(async function testNonErrorLogs() {
