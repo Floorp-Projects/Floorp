@@ -15,4 +15,5 @@ DevToolsModules(
     'source-documents.js',
     'source-editor.js',
     'source-search.js',
+    'token-events.js',
 )
