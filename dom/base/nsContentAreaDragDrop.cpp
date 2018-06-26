@@ -28,7 +28,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
 #include "nsIImageLoadingContent.h"
 #include "nsITextControlElement.h"
 #include "nsUnicharUtils.h"
