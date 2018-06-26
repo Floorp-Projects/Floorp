@@ -4,13 +4,6 @@
 
 package org.mozilla.gecko.tabqueue;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract;
-
-import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,34 +11,37 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
+import android.support.v4.app.JobIntentService;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
+
 /**
- * An IntentService that displays a notification for a tab sent to this device.
+ * A JobIntentService that displays a notification for a tab sent to this device.
  *
  * The expected Intent should contain:
  *   * Data: URI to open in the notification
  *   * EXTRA_TITLE: Page title of the URI to open
  */
-public class TabReceivedService extends IntentService {
+public class TabReceivedService extends JobIntentService {
     private static final String LOGTAG = "Gecko" + TabReceivedService.class.getSimpleName();
 
     private static final String PREF_NOTIFICATION_ID = "tab_received_notification_id";
 
     private static final int MAX_NOTIFICATION_COUNT = 1000;
 
-    public TabReceivedService() {
-        super(LOGTAG);
-        setIntentRedelivery(true);
-    }
-
     @Override
-    protected void onHandleIntent(final Intent intent) {
-        // IntentServices don't keep the process alive so
+    protected void onHandleWork(@NonNull Intent intent) {
+        // JobIntentServices doesn't keep the process alive so
         // we need to do this every time. Ideally, we wouldn't.
         final Resources res = getResources();
         BrowserLocaleManager.getInstance().correctLocale(this, res, res.getConfiguration());
@@ -86,6 +82,12 @@ public class TabReceivedService extends IntentService {
         // This would prevent two identical notifications from appearing if the
         // notification was shown during the previous Intent processing attempt.
         prefs.edit().putInt(PREF_NOTIFICATION_ID, notificationId).apply();
+    }
+
+    @Override
+    public boolean onStopCurrentWork() {
+        // Reschedule the work if it has been stopped before completing (shouldn't)
+        return true;
     }
 
     /**
