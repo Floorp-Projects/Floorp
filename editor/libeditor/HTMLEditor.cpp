@@ -1993,19 +1993,6 @@ HTMLEditor::GetAlignment(bool* aMixed,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetIndentState(bool* aCanIndent,
-                           bool* aCanOutdent)
-{
-  if (!mRules) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  NS_ENSURE_TRUE(aCanIndent && aCanOutdent, NS_ERROR_NULL_POINTER);
-
-  RefPtr<HTMLEditRules> htmlRules(mRules->AsHTMLEditRules());
-  return htmlRules->GetIndentState(aCanIndent, aCanOutdent);
-}
-
-NS_IMETHODIMP
 HTMLEditor::MakeOrChangeList(const nsAString& aListType,
                              bool entireList,
                              const nsAString& aBulletType)
@@ -2852,25 +2839,6 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
   return setColor ?
            SetAttributeWithTransaction(*element, *bgColorAtom, aColor) :
            RemoveAttributeWithTransaction(*element, *bgColorAtom);
-}
-
-NS_IMETHODIMP
-HTMLEditor::SetBodyAttribute(const nsAString& aAttribute,
-                             const nsAString& aValue)
-{
-  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
-
-  MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
-
-  // Set the background color attribute on the body tag
-  RefPtr<Element> rootElement = GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Use the editor method that goes through the transaction system
-  RefPtr<nsAtom> attributeAtom = NS_Atomize(aAttribute);
-  return SetAttributeWithTransaction(*rootElement, *attributeAtom, aValue);
 }
 
 NS_IMETHODIMP
@@ -4619,14 +4587,6 @@ HTMLEditor::EndUpdateViewBatch()
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
   return CheckSelectionStateForAnonymousButtons(selection);
-}
-
-NS_IMETHODIMP
-HTMLEditor::GetSelectionContainer(Element** aReturn)
-{
-  RefPtr<Element> container = GetSelectionContainer();
-  container.forget(aReturn);
-  return NS_OK;
 }
 
 Element*
