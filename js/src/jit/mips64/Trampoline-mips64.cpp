@@ -725,7 +725,6 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
     // Copy any arguments.
     for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
-        MoveOperand from;
         switch (f.argProperties(explicitArg)) {
           case VMFunction::WordByValue:
             if (f.argPassedInFloatReg(explicitArg))
