@@ -419,7 +419,8 @@
         <!-- DON'T EXPORT THIS, please! An attacker could delete arbitrary files. -->
         <service
             android:exported="false"
-            android:name="org.mozilla.gecko.cleanup.FileCleanupService">
+            android:name="org.mozilla.gecko.cleanup.FileCleanupService"
+            android:permission="android.permission.BIND_JOB_SERVICE" >
         </service>
 
         <receiver

@@ -7,6 +7,7 @@
 package org.mozilla.gecko.cleanup;
 
 import android.content.Intent;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -18,7 +19,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the methods of {@link FileCleanupService}.
@@ -42,9 +44,8 @@ public class TestFileCleanupService {
 
     private void onHandleIntent(final ArrayList<String> filePaths) {
         final FileCleanupService service = new FileCleanupService();
-        final Intent intent = new Intent(FileCleanupService.ACTION_DELETE_FILES);
-        intent.putExtra(FileCleanupService.EXTRA_FILE_PATHS_TO_DELETE, filePaths);
-        service.onHandleIntent(intent);
+        final Intent fileCleanupIntent = FileCleanupService.getFileCleanupIntent(filePaths);
+        service.onHandleWork(fileCleanupIntent);
     }
 
     @Test
