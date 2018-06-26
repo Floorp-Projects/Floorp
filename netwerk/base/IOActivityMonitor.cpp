@@ -383,23 +383,6 @@ IOActivityMonitor::IOActivityMonitor()
 NS_IMETHODIMP
 IOActivityMonitor::Notify(nsITimer* aTimer)
 {
-  return NotifyActivities();
-}
-
-// static
-nsresult
-IOActivityMonitor::NotifyActivities()
-{
-  RefPtr<IOActivityMonitor> mon(gInstance);
-  if (!IsActive()) {
-    return NS_ERROR_FAILURE;
-  }
-  return mon->NotifyActivities_Internal();
-}
-
-nsresult
-IOActivityMonitor::NotifyActivities_Internal()
-{
   mozilla::MutexAutoLock lock(mLock);
   nsCOMPtr<nsIRunnable> ev = NotifyIOActivity::Create(mActivities, lock);
   nsresult rv = SystemGroup::EventTargetFor(TaskCategory::Performance)->Dispatch(ev.forget());
@@ -468,15 +451,8 @@ IOActivityMonitor::Init_Internal(int32_t aInterval)
     sNetActivityMonitorLayerMethodsPtr = &sNetActivityMonitorLayerMethods;
   }
 
-  mInterval = aInterval;
-
-  // if the interval is 0, the timer is not fired
-  // and calls are done explicitely via NotifyActivities
-  if (mInterval == 0) {
-    return NS_OK;
-  }
-
   // create and fire the timer
+  mInterval = aInterval;
   mTimer = NS_NewTimer();
   if (!mTimer) {
     return NS_ERROR_FAILURE;
@@ -498,9 +474,7 @@ nsresult
 IOActivityMonitor::Shutdown_Internal()
 {
   mozilla::MutexAutoLock lock(mLock);
-  if (mTimer) {
-    mTimer->Cancel();
-  }
+  mTimer->Cancel();
   mActivities.Clear();
   gInstance = nullptr;
   return NS_OK;
