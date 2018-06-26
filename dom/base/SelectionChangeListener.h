@@ -9,11 +9,6 @@
 
 #include "nsISelectionListener.h"
 #include "mozilla/Attributes.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
-
-class nsRange;
 
 namespace mozilla {
 namespace dom {
