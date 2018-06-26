@@ -1,7 +1,6 @@
 "use strict";
 
-const TEST_ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
-const TEST_URL = TEST_ROOT + "file_favicon_change_not_in_document.html";
+const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_favicon_change_not_in_document.html";
 
 /*
  * This test tests a link element won't fire DOMLinkChanged/DOMLinkAdded unless
@@ -23,14 +22,19 @@ add_task(async function() {
   const linkChangedhandler = event => domLinkChangedFired++;
   BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "DOMLinkAdded", linkAddedHandler);
   BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "DOMLinkChanged", linkChangedhandler);
-
-  let expectedFavicon = TEST_ROOT + "file_generic_favicon.ico";
-  let faviconPromise = waitForFavicon(extraTab.linkedBrowser, expectedFavicon);
-
   extraTab.linkedBrowser.loadURI(TEST_URL);
-  await BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
+  let expectedFavicon = "http://example.org/yet-another-icon";
+  await promiseTabLoaded(extraTab);
 
-  await faviconPromise;
+  // Make sure the new added favicon link gets loaded.
+  try {
+    await BrowserTestUtils.waitForCondition(() => {
+      return gBrowser.getIcon(extraTab) === expectedFavicon;
+    }, "wait for favicon load to finish", 1000, 5);
+    ok(true, "Should load the added favicon");
+  } catch (e) {
+    ok(false, "Should've loaded the new added favicon.");
+  }
 
   is(domLinkAddedFired, 2, "Should fire the correct number of DOMLinkAdded event.");
   is(domLinkChangedFired, 0, "Should not fire any DOMLinkChanged event.");

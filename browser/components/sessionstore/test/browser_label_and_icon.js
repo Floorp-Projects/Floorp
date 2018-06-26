@@ -39,6 +39,13 @@ add_task(async function test_label_and_icon() {
   is(gBrowser.getIcon(tab), "chrome://browser/content/robot.ico", "icon is set");
   is(tab.label, "Gort! Klaatu barada nikto!", "label is set");
 
+  let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                    .getService(Ci.nsISerializationHelper);
+  let serializedPrincipal = tab.getAttribute("iconloadingprincipal");
+  let iconLoadingPrincipal = serhelper.deserializeObject(serializedPrincipal)
+                                      .QueryInterface(Ci.nsIPrincipal);
+  is(iconLoadingPrincipal.origin, "about:robots", "correct loadingPrincipal used");
+
   // Cleanup.
   BrowserTestUtils.removeTab(tab);
 });

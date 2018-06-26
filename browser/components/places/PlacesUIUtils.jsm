@@ -163,7 +163,7 @@ let InternalFaviconLoader = {
     });
   },
 
-  loadFavicon(browser, principal, uri, expiration = null, iconURI = null) {
+  loadFavicon(browser, principal, uri, requestContextID) {
     this.ensureInitialized();
     let win = browser.ownerGlobal;
     if (!gFaviconLoadDataMap.has(win)) {
@@ -186,15 +186,9 @@ let InternalFaviconLoader = {
       ? PlacesUtils.favicons.FAVICON_LOAD_PRIVATE
       : PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE;
     let callback = this._makeCompletionCallback(win, innerWindowID);
-
-    if (iconURI && iconURI.schemeIs("data")) {
-      expiration = PlacesUtils.toPRTime(expiration || 0);
-      PlacesUtils.favicons.replaceFaviconDataFromDataURL(uri, iconURI.spec,
-                                                         expiration, principal);
-    }
-
     let request = PlacesUtils.favicons.setAndFetchFaviconForPage(currentURI, uri, false,
-                                                                 loadType, callback, principal);
+                                                                 loadType, callback, principal,
+                                                                 requestContextID);
 
     // Now register the result so we can cancel it if/when necessary.
     if (!request) {
