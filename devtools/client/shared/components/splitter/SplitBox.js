@@ -166,6 +166,7 @@ class SplitBox extends Component {
    */
   onMove(x, y) {
     const node = ReactDOM.findDOMNode(this);
+    const nodeBounds = node.getBoundingClientRect();
 
     let size;
     let { endPanelControl, vert } = this.state;
@@ -182,16 +183,16 @@ class SplitBox extends Component {
       }
 
       size = endPanelControl ?
-        (node.offsetLeft + node.offsetWidth) - x :
-        x - node.offsetLeft;
+        (nodeBounds.left + nodeBounds.width) - x :
+        x - nodeBounds.left;
 
       this.setState({
         width: size
       });
     } else {
       size = endPanelControl ?
-        (node.offsetTop + node.offsetHeight) - y :
-        y - node.offsetTop;
+        (nodeBounds.top + nodeBounds.height) - y :
+        y - nodeBounds.top;
 
       this.setState({
         height: size
