@@ -389,6 +389,14 @@ FontFaceSet::Check(const nsAString& aFont,
   return true;
 }
 
+bool
+FontFaceSet::ReadyPromiseIsPending() const
+{
+  return mReady
+    ? mReady->State() == Promise::PromiseState::Pending
+    : !mResolveLazilyCreatedReadyPromise;
+}
+
 Promise*
 FontFaceSet::GetReady(ErrorResult& aRv)
 {
@@ -398,7 +406,7 @@ FontFaceSet::GetReady(ErrorResult& aRv)
   // new fonts.  We need to flush layout to initiate any such loads so that
   // if mReady is currently resolved we replace it with a new pending Promise.
   // (That replacement will happen under this flush call.)
-  if (mDocument) {
+  if (!ReadyPromiseIsPending() && mDocument) {
     mDocument->FlushPendingNotifications(FlushType::Layout);
   }
 
@@ -1770,8 +1778,7 @@ FontFaceSet::CheckLoadingFinished()
     return;
   }
 
-  if ((mReady && mReady->State() != Promise::PromiseState::Pending) ||
-      mResolveLazilyCreatedReadyPromise) {
+  if (!ReadyPromiseIsPending()) {
     // We've already resolved mReady (or set the flag to do that lazily) and
     // dispatched the loadingdone/loadingerror events.
     return;
