@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.Size
 import android.util.SizeF
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -81,7 +81,7 @@ class MapTest {
         assertEquals(char, resultBundle.getChar("char"))
         assertEquals(charArray, resultBundle.getCharArray("charArray"))
         assertEquals(charSequence, resultBundle.getCharSequence("charSequence"))
-        assertEquals(double, resultBundle.getDouble("double"))
+        assertEquals(double, resultBundle.getDouble("double"), Double.MIN_VALUE)
         assertEquals(doubleArray, resultBundle.getDoubleArray("doubleArray"))
         assertEquals(float, resultBundle.getFloat("float"))
         assertEquals(floatArray, resultBundle.getFloatArray("floatArray"))
