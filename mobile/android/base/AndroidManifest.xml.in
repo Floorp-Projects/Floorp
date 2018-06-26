@@ -394,7 +394,26 @@
 
         <service
             android:exported="false"
-            android:name="org.mozilla.gecko.dlc.DownloadContentService">
+            android:name="org.mozilla.gecko.dlc.DlcStudyService"
+            android:permission="android.permission.BIND_JOB_SERVICE" >
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.dlc.DlcSyncService"
+            android:permission="android.permission.BIND_JOB_SERVICE" >
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.dlc.DlcDownloadService"
+            android:permission="android.permission.BIND_JOB_SERVICE" >
+        </service>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.dlc.DlcCleanupService"
+            android:permission="android.permission.BIND_JOB_SERVICE" >
         </service>
 
         <!-- DON'T EXPORT THIS, please! An attacker could delete arbitrary files. -->

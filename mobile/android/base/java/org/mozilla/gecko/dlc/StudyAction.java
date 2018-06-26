@@ -76,6 +76,6 @@ public class StudyAction extends BaseAction {
     }
 
     protected void startDownloads(Context context) {
-        DownloadContentService.startDownloads(context);
+        DlcDownloadService.enqueueServiceWork(context);
     }
 }
