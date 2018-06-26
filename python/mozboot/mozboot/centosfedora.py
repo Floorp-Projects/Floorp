@@ -107,9 +107,11 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
         self.dnf_install(*self.browser_packages)
 
         if self.distro in ('CentOS', 'CentOS Linux'):
-            yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.i686.rpm'
+            yasm = ('http://dl.fedoraproject.org/pub/epel/6/i386/'
+                    'Packages/y/yasm-1.2.0-1.el6.i686.rpm')
             if platform.architecture()[0] == '64bit':
-                yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.x86_64.rpm'
+                yasm = ('http://dl.fedoraproject.org/pub/epel/6/x86_64/'
+                        'Packages/y/yasm-1.2.0-1.el6.x86_64.rpm')
 
             self.run_as_root(['rpm', '-ivh', yasm])
 
