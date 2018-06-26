@@ -245,6 +245,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .animation-computed-timing-path path {
   fill: var(--graph-color);
   fill-opacity: var(--graph-opacity);
+  stroke: var(--graph-color);
   vector-effect: non-scaling-stroke;
   transform: scale(1, -1);
 }
@@ -263,6 +264,13 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .animation-effect-timing-path path.infinity:nth-child(n+2) {
   opacity: 0.3;
+}
+
+.animation-computed-timing-path path.infinity-duration,
+.animation-effect-timing-path path.infinity-duration {
+  mask-clip: stroke-box;
+  mask-image: linear-gradient(90deg, black, transparent);
+  mask-origin: stroke-box;
 }
 
 .animation-negative-delay-path path,

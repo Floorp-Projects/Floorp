@@ -1,27 +1,29 @@
-#META: timeout=long
-
 import pytest
-from webdriver import error
 
+from tests.support.asserts import assert_error
 from conftest import product, flatten
 
 
 @pytest.mark.parametrize("value", [None, 1, "{}", []])
 def test_invalid_capabilites(new_session, value):
-    with pytest.raises(error.InvalidArgumentException):
-        new_session({"capabilities": value})
+    response, _ = new_session({"capabilities": value})
+    assert_error(response, "invalid argument")
 
 
 @pytest.mark.parametrize("value", [None, 1, "{}", []])
 def test_invalid_always_match(new_session, add_browser_capabilites, value):
-    with pytest.raises(error.InvalidArgumentException):
-        new_session({"capabilities": {"alwaysMatch": value, "firstMatch": [add_browser_capabilites({})]}})
+    capabilities = {"alwaysMatch": value, "firstMatch": [add_browser_capabilites({})]}
+
+    response, _ = new_session({"capabilities": capabilities})
+    assert_error(response, "invalid argument")
 
 
 @pytest.mark.parametrize("value", [None, 1, "[]", {}])
 def test_invalid_first_match(new_session, add_browser_capabilites, value):
-    with pytest.raises(error.InvalidArgumentException):
-        new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({}), "firstMatch": value}})
+    capabilities = {"alwaysMatch": add_browser_capabilites({}), "firstMatch": value}
+
+    response, _ = new_session({"capabilities": capabilities})
+    assert_error(response, "invalid argument")
 
 
 invalid_data = [
@@ -46,6 +48,7 @@ invalid_data = [
                                  " dismiss", "dismiss "])
 ]
 
+
 @pytest.mark.parametrize("body", [lambda key, value: {"alwaysMatch": {key: value}},
                                   lambda key, value: {"firstMatch": [{key: value}]}])
 @pytest.mark.parametrize("key,value", flatten(product(*item) for item in invalid_data))
@@ -55,8 +58,9 @@ def test_invalid_values(new_session, add_browser_capabilites, body, key, value):
         capabilities["alwaysMatch"] = add_browser_capabilites(capabilities["alwaysMatch"])
     else:
         capabilities["firstMatch"][0] = add_browser_capabilites(capabilities["firstMatch"][0])
-    with pytest.raises(error.InvalidArgumentException):
-        resp = new_session({"capabilities": capabilities})
+
+    response, _ = new_session({"capabilities": capabilities})
+    assert_error(response, "invalid argument")
 
 
 invalid_extensions = [
@@ -93,6 +97,6 @@ def test_invalid_extensions(new_session, add_browser_capabilites, body, key):
         capabilities["alwaysMatch"] = add_browser_capabilites(capabilities["alwaysMatch"])
     else:
         capabilities["firstMatch"][0] = add_browser_capabilites(capabilities["firstMatch"][0])
-    with pytest.raises(error.InvalidArgumentException):
-        resp = new_session({"capabilities": capabilities})
 
+    response, _ = new_session({"capabilities": capabilities})
+    assert_error(response, "invalid argument")

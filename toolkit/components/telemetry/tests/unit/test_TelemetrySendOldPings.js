@@ -16,19 +16,10 @@ ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {OS: {File, Path, Constants}} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-// We increment TelemetryStorage's MAX_PING_FILE_AGE and
-// OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed
-// those points in time, even taking into account file system imprecision.
-const ONE_MINUTE_MS = 60 * 1000;
-const OVERDUE_PING_FILE_AGE = TelemetrySend.OVERDUE_PING_FILE_AGE + ONE_MINUTE_MS;
-
 const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const PING_TIMEOUT_LENGTH = 5000;
-const OVERDUE_PINGS = 6;
 const OLD_FORMAT_PINGS = 4;
 const RECENT_PINGS = 4;
-
-const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
 var gCreatedPings = 0;
 var gSeenPings = 0;
@@ -185,7 +176,7 @@ add_task(async function test_recent_pings_sent() {
 /**
  * Create an overdue ping in the old format and try to send it.
  */
-add_task(async function test_overdue_old_format() {
+add_task(async function test_old_formats() {
   // A test ping in the old, standard format.
   const PING_OLD_FORMAT = {
     slug: "1234567abcd",
@@ -230,15 +221,11 @@ add_task(async function test_overdue_old_format() {
     getSavePathForPingId("no-slug-file"),
   ];
 
-  // Write the ping to file and make it overdue.
+  // Write the ping to file
   await TelemetryStorage.savePing(PING_OLD_FORMAT, true);
   await TelemetryStorage.savePing(PING_NO_INFO, true);
   await TelemetryStorage.savePing(PING_NO_PAYLOAD, true);
   await TelemetryStorage.savePingToFile(PING_NO_SLUG, PING_FILES_PATHS[3], true);
-
-  for (let f in PING_FILES_PATHS) {
-    await File.setDates(PING_FILES_PATHS[f], null, Date.now() - OVERDUE_PING_FILE_AGE);
-  }
 
   gSeenPings = 0;
   await TelemetryController.testReset();
@@ -306,31 +293,6 @@ add_task(async function test_corrupted_pending_pings() {
 });
 
 /**
- * Create some recent and overdue pings and verify that they get sent.
- */
-add_task(async function test_overdue_pings_trigger_send() {
-  let pingTypes = [
-    { num: RECENT_PINGS },
-    { num: OVERDUE_PINGS, age: OVERDUE_PING_FILE_AGE },
-  ];
-  let pings = await createSavedPings(pingTypes);
-  let recentPings = pings.slice(0, RECENT_PINGS);
-  let overduePings = pings.slice(-OVERDUE_PINGS);
-
-  await TelemetryController.testReset();
-  await TelemetrySend.testWaitOnOutgoingPings();
-  assertReceivedPings(TOTAL_EXPECTED_PINGS);
-
-  await assertNotSaved(recentPings);
-  await assertNotSaved(overduePings);
-
-  Assert.equal(TelemetrySend.overduePingsCount, overduePings.length,
-               "Should have tracked the correct amount of overdue pings");
-
-  await TelemetryStorage.testClearPendingPings();
-});
-
-/**
  * Create a ping in the old format, send it, and make sure the request URL contains
  * the correct version query parameter.
  */
@@ -353,12 +315,8 @@ add_task(async function test_overdue_old_format() {
     },
   };
 
-  const filePath =
-    Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, PING_OLD_FORMAT.slug);
-
-  // Write the ping to file and make it overdue.
+  // Write the ping to file
   await TelemetryStorage.savePing(PING_OLD_FORMAT, true);
-  await File.setDates(filePath, null, Date.now() - OVERDUE_PING_FILE_AGE);
 
   let receivedPings = 0;
   // Register a new prefix handler to validate the URL.

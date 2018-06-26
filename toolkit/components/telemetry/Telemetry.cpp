@@ -24,6 +24,7 @@
 #include "mozilla/Unused.h"
 
 #include "base/pickle.h"
+#include "CombinedStacks.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsThreadManager.h"
@@ -1665,10 +1666,12 @@ TelemetryImpl::RecordEvent(const nsACString & aCategory, const nsACString & aMet
 }
 
 NS_IMETHODIMP
-TelemetryImpl::SnapshotEvents(uint32_t aDataset, bool aClear, JSContext* aCx,
-                                     uint8_t optional_argc, JS::MutableHandleValue aResult)
+TelemetryImpl::SnapshotEvents(uint32_t aDataset, bool aClear,
+                              uint32_t aEventLimit, JSContext* aCx,
+                              uint8_t optional_argc, JS::MutableHandleValue aResult)
 {
-  return TelemetryEvent::CreateSnapshots(aDataset, aClear, aCx, optional_argc, aResult);
+  return TelemetryEvent::CreateSnapshots(aDataset, aClear,
+                                         aEventLimit, aCx, optional_argc, aResult);
 }
 
 NS_IMETHODIMP

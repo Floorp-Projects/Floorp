@@ -1,0 +1,18 @@
+<html>
+<body>
+  <template>
+    <p>template content</p>
+  </template>
+  <div></div>
+  <script>
+    "use strict";
+
+    const template = document.querySelector("template");
+    const clone = document.importNode(template.content, true);
+    document.querySelector("div").appendChild(clone);
+
+    window.opener.postMessage("ready", "*");
+  </script>
+</body>
+</html>
+

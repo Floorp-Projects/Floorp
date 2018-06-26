@@ -184,7 +184,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   get isShadowHost() {
-    const shadowRoot = this.rawNode.shadowRoot;
+    const shadowRoot = this.rawNode.openOrClosedShadowRoot;
     return shadowRoot && shadowRoot.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
   },
 
@@ -195,7 +195,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     const parentNode = this.rawNode.parentNode;
-    return parentNode && !!parentNode.shadowRoot;
+    return parentNode && !!parentNode.openOrClosedShadowRoot;
+  },
+
+  get isTemplateElement() {
+    return this.rawNode instanceof this.rawNode.ownerGlobal.HTMLTemplateElement;
   },
 
   // Estimate the number of children that the walker will return without making

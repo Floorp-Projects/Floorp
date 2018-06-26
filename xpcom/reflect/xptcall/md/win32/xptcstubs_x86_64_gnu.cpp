@@ -257,26 +257,26 @@ asm(".intel_syntax noprefix\n" /* this is in intel syntax */ \
     ".text\n" \
     ".align 2\n" \
     ".if        " #n " < 10\n" \
-    ".globl       _ZN14nsXPTCStubBase5Stub" #n "Ev@4\n" \
-    ".def         _ZN14nsXPTCStubBase5Stub" #n "Ev@4\n" \
-    ".scl         3\n" /* private */ \
+    ".globl       _ZN14nsXPTCStubBase5Stub" #n "Ev\n" \
+    ".def         _ZN14nsXPTCStubBase5Stub" #n "Ev\n" \
+    ".scl         2\n" /* external */ \
     ".type        46\n" /* function returning unsigned int */ \
     ".endef\n" \
-    "_ZN14nsXPTCStubBase5Stub" #n "Ev@4:\n" \
+    "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n" \
     ".elseif    " #n " < 100\n" \
-    ".globl       _ZN14nsXPTCStubBase6Stub" #n "Ev@4\n" \
-    ".def         _ZN14nsXPTCStubBase6Stub" #n "Ev@4\n" \
-    ".scl         3\n" /* private */\
+    ".globl       _ZN14nsXPTCStubBase6Stub" #n "Ev\n" \
+    ".def         _ZN14nsXPTCStubBase6Stub" #n "Ev\n" \
+    ".scl         2\n" /* external */\
     ".type        46\n" /* function returning unsigned int */ \
     ".endef\n" \
-    "_ZN14nsXPTCStubBase6Stub" #n "Ev@4:\n" \
+    "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n" \
     ".elseif    " #n " < 1000\n" \
-    ".globl       _ZN14nsXPTCStubBase7Stub" #n "Ev@4\n" \
-    ".def         _ZN14nsXPTCStubBase7Stub" #n "Ev@4\n" \
-    ".scl         3\n" /* private */ \
+    ".globl       _ZN14nsXPTCStubBase7Stub" #n "Ev\n" \
+    ".def         _ZN14nsXPTCStubBase7Stub" #n "Ev\n" \
+    ".scl         2\n" /* external */ \
     ".type        46\n" /* function returning unsigned int */ \
     ".endef\n" \
-    "_ZN14nsXPTCStubBase7Stub" #n "Ev@4:\n" \
+    "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n" \
     ".else\n" \
     ".err       \"stub number " #n " >= 1000 not yet supported\"\n" \
     ".endif\n" \
