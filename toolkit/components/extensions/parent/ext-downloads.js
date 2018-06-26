@@ -13,10 +13,6 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
 
 var {
   EventEmitter,
-  normalizeTime,
-} = ExtensionUtils;
-
-var {
   ignoreEvent,
 } = ExtensionCommon;
 
@@ -262,7 +258,7 @@ const downloadQuery = query => {
     if (arg == null) {
       return before ? Number.MAX_VALUE : 0;
     }
-    return normalizeTime(arg).getTime();
+    return ExtensionCommon.normalizeTime(arg).getTime();
   }
 
   const startedBefore = normalizeDownloadTime(query.startedBefore, true);

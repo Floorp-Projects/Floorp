@@ -26,6 +26,7 @@ EXTRA_JS_MODULES += [
     'FindContent.jsm',
     'LegacyExtensionsUtils.jsm',
     'MessageChannel.jsm',
+    'MessageManagerProxy.jsm',
     'NativeManifests.jsm',
     'NativeMessaging.jsm',
     'ProxyScriptContext.jsm',

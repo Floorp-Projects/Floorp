@@ -21,6 +21,7 @@ var EXPORTED_SYMBOLS = ["ExtensionControlledPopup"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
@@ -32,7 +33,9 @@ ChromeUtils.defineModuleGetter(this, "CustomizableUI",
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
 
-let {makeWidgetId} = ExtensionUtils;
+let {
+  makeWidgetId,
+} = ExtensionCommon;
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   return Services.strings.createBundle("chrome://global/locale/extensions.properties");
