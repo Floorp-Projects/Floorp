@@ -2018,6 +2018,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void switchToRealm(Register realm);
     void switchToRealm(const void* realm, Register scratch);
     void switchToObjectRealm(Register obj, Register scratch);
+    void switchToBaselineFrameRealm(Register scratch);
+    void debugAssertContextRealm(const void* realm, Register scratch);
 
     void loadJitActivation(Register dest) {
         loadJSContext(dest);

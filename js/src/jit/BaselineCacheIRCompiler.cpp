@@ -574,6 +574,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
+    bool isCrossRealm = reader.readBool();
 
     AutoScratchRegister code(allocator, masm);
     AutoScratchRegister callee(allocator, masm);
@@ -594,6 +595,9 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
+
+    if (isCrossRealm)
+        masm.switchToObjectRealm(callee, scratch);
 
     // Align the stack such that the JitFrameLayout is aligned on
     // JitStackAlignment.
@@ -623,6 +627,10 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     masm.callJit(code);
 
     stubFrame.leave(masm, true);
+
+    if (isCrossRealm)
+        masm.switchToBaselineFrameRealm(R1.scratchReg());
+
     return true;
 }
 
@@ -1735,6 +1743,7 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address setterAddr(stubAddress(reader.stubOffset()));
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    bool isCrossRealm = reader.readBool();
 
     // First, ensure our setter is non-lazy. This also loads the callee in
     // scratch1.
@@ -1751,6 +1760,9 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
 
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch2);
+
+    if (isCrossRealm)
+        masm.switchToObjectRealm(scratch1, scratch2);
 
     // Align the stack such that the JitFrameLayout is aligned on
     // JitStackAlignment.
@@ -1789,6 +1801,10 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     masm.callJit(scratch1);
 
     stubFrame.leave(masm, true);
+
+    if (isCrossRealm)
+        masm.switchToBaselineFrameRealm(R1.scratchReg());
+
     return true;
 }
 

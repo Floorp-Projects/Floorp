@@ -977,6 +977,9 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
     JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
     AutoScratchRegister scratch(allocator, masm);
 
+    bool isCrossRealm = reader.readBool();
+    MOZ_ASSERT(isCrossRealm == (cx_->realm() != target->realm()));
+
     allocator.discardStack(masm);
 
     uint32_t framePushedBefore = masm.framePushed();
@@ -1001,6 +1004,9 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
         masm.Push(UndefinedValue());
     masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
 
+    if (isCrossRealm)
+        masm.switchToRealm(target->realm(), scratch);
+
     masm.movePtr(ImmGCPtr(target), scratch);
 
     descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
@@ -1018,8 +1024,14 @@ IonCacheIRCompiler::emitCallScriptedGetterResult()
     MOZ_ASSERT(target->hasJitEntry());
     masm.loadJitCodeRaw(scratch, scratch);
     masm.callJit(scratch);
-    masm.storeCallResultValue(output);
 
+    if (isCrossRealm) {
+        static_assert(!JSReturnOperand.aliases(ReturnReg),
+                      "ReturnReg available as scratch after scripted calls");
+        masm.switchToRealm(cx_->realm(), ReturnReg);
+    }
+
+    masm.storeCallResultValue(output);
     masm.freeStack(masm.framePushed() - framePushedBefore);
     return true;
 }
@@ -2116,6 +2128,9 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
     ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
 
+    bool isCrossRealm = reader.readBool();
+    MOZ_ASSERT(isCrossRealm == (cx_->realm() != target->realm()));
+
     AutoScratchRegister scratch(allocator, masm);
 
     allocator.discardStack(masm);
@@ -2144,6 +2159,9 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     masm.Push(val);
     masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
 
+    if (isCrossRealm)
+        masm.switchToRealm(target->realm(), scratch);
+
     masm.movePtr(ImmGCPtr(target), scratch);
 
     descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
@@ -2161,6 +2179,9 @@ IonCacheIRCompiler::emitCallScriptedSetter()
     MOZ_ASSERT(target->hasJitEntry());
     masm.loadJitCodeRaw(scratch, scratch);
     masm.callJit(scratch);
+
+    if (isCrossRealm)
+        masm.switchToRealm(cx_->realm(), ReturnReg);
 
     masm.freeStack(masm.framePushed() - framePushedBefore);
     return true;

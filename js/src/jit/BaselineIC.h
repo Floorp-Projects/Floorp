@@ -696,6 +696,7 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     ICStub* firstMonitorStub_;
     bool isConstructing_;
     bool isSpread_;
+    bool maybeCrossRealm_;
     RootedFunction callee_;
     RootedObject templateObject_;
     uint32_t pcOffset_;
@@ -705,17 +706,20 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
         return static_cast<int32_t>(engine_) |
               (static_cast<int32_t>(kind) << 1) |
               (static_cast<int32_t>(isConstructing_) << 17) |
-              (static_cast<int32_t>(isSpread_) << 18);
+              (static_cast<int32_t>(isSpread_) << 18) |
+              (static_cast<int32_t>(maybeCrossRealm_) << 19);
     }
 
   public:
     ICCallScriptedCompiler(JSContext* cx, ICStub* firstMonitorStub,
                            JSFunction* callee, JSObject* templateObject,
-                           bool isConstructing, bool isSpread, uint32_t pcOffset)
+                           bool isConstructing, bool isSpread, bool maybeCrossRealm,
+                           uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_Scripted),
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
         isSpread_(isSpread),
+        maybeCrossRealm_(maybeCrossRealm),
         callee_(cx, callee),
         templateObject_(cx, templateObject),
         pcOffset_(pcOffset)
@@ -727,6 +731,7 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
         isSpread_(isSpread),
+        maybeCrossRealm_(true),
         callee_(cx, nullptr),
         templateObject_(cx, nullptr),
         pcOffset_(pcOffset)
