@@ -265,6 +265,11 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   opacity: 0.3;
 }
 
+.animation-computed-timing-path path.infinity-duration,
+.animation-effect-timing-path path.infinity-duration {
+  mask-image: linear-gradient(90deg, black, transparent);
+}
+
 .animation-negative-delay-path path,
 .animation-negative-end-delay-path path {
   fill: none;

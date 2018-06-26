@@ -40,10 +40,22 @@ class TimeScale {
 
       const toRate = v => v / playbackRate;
       const startTime = createdTime + toRate(Math.min(delay, 0));
-      const endTime = createdTime +
-                      toRate(delay +
-                             duration * (iterationCount || 1) +
-                             Math.max(endDelay, 0));
+      let endTime = 0;
+
+      if (duration === Infinity) {
+        // Set endTime so as to enable the scrubber with keeping the consinstency of UI
+        // even the duration was Infinity. In case of delay is longer than zero, handle
+        // the graph duration as double of the delay amount. In case of no delay, handle
+        // the duration as 1ms which is short enough so as to make the scrubber movable
+        // and the limited duration is prioritized.
+        endTime = createdTime + (delay > 0 ? delay * 2 : 1);
+      } else {
+        endTime = createdTime +
+                  toRate(delay +
+                         duration * (iterationCount || 1) +
+                         Math.max(endDelay, 0));
+      }
+
       minStartTime = Math.min(minStartTime, startTime);
       maxEndTime = Math.max(maxEndTime, endTime);
       animationsCurrentTime =
