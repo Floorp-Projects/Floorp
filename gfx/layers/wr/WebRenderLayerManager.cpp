@@ -266,13 +266,18 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize, mLastDisplayListSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
 
-  mWebRenderCommandBuilder.BuildWebRenderCommands(builder,
-                                                  resourceUpdates,
-                                                  aDisplayList,
-                                                  aDisplayListBuilder,
-                                                  mScrollData,
-                                                  contentSize,
-                                                  aFilters);
+  { // Record the time spent "layerizing". WR doesn't actually layerize but
+    // generating the WR display list is the closest equivalent
+    PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
+
+    mWebRenderCommandBuilder.BuildWebRenderCommands(builder,
+                                                    resourceUpdates,
+                                                    aDisplayList,
+                                                    aDisplayListBuilder,
+                                                    mScrollData,
+                                                    contentSize,
+                                                    aFilters);
+  }
 
   DiscardCompositorAnimations();
 
