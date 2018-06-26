@@ -549,18 +549,15 @@ async function serverForFoo(engine, callback) {
 async function promiseVisit(expectedType, expectedURI) {
   return new Promise(resolve => {
     function done(type, uri) {
-      if (uri == expectedURI.spec && type == expectedType) {
+      if (uri.equals(expectedURI) && type == expectedType) {
         PlacesUtils.history.removeObserver(observer);
-        PlacesObservers.removeListener(["page-visited"],
-                                       observer.handlePlacesEvents);
         resolve();
       }
     }
     let observer = {
-      handlePlacesEvents(events) {
-        Assert.equal(events.length, 1);
-        Assert.equal(events[0].type, "page-visited");
-        done("added", events[0].url);
+      onVisits(visits) {
+        Assert.equal(visits.length, 1);
+        done("added", visits[0].uri);
       },
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
@@ -568,15 +565,13 @@ async function promiseVisit(expectedType, expectedURI) {
       onFrecencyChanged() {},
       onManyFrecenciesChanged() {},
       onDeleteURI(uri) {
-        done("removed", uri.spec);
+        done("removed", uri);
       },
       onClearHistory() {},
       onPageChanged() {},
       onDeleteVisits() {},
     };
     PlacesUtils.history.addObserver(observer, false);
-    PlacesObservers.addListener(["page-visited"],
-                                observer.handlePlacesEvents);
   });
 }
 
