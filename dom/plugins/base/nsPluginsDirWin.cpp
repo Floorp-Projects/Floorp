@@ -42,7 +42,7 @@ static char* GetKeyValue(void* verbuf, const WCHAR* key,
   if (_snwprintf_s(keybuf, ArrayLength(keybuf), _TRUNCATE,
                    keyFormat, language, codepage, key) < 0)
   {
-    NS_NOTREACHED("plugin info key too long for buffer!");
+    MOZ_ASSERT_UNREACHABLE("plugin info key too long for buffer!");
     return nullptr;
   }
 

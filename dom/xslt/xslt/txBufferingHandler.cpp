@@ -432,7 +432,7 @@ flushTransaction(txOutputTransaction* aTransaction,
         }
         default:
         {
-            NS_NOTREACHED("Unexpected transaction type");
+            MOZ_ASSERT_UNREACHABLE("Unexpected transaction type");
         }
     }
 

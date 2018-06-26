@@ -2473,7 +2473,7 @@ HTMLMediaElement::LoadFromSourceChildren()
     // If we fail to load, loop back and try loading the next resource.
     DispatchAsyncSourceError(child);
   }
-  NS_NOTREACHED("Execution should not reach here!");
+  MOZ_ASSERT_UNREACHABLE("Execution should not reach here!");
 }
 
 void
@@ -6703,7 +6703,7 @@ HTMLMediaElement::GetNextSource()
       return child->AsElement();
     }
   }
-  NS_NOTREACHED("Execution should not reach here!");
+  MOZ_ASSERT_UNREACHABLE("Execution should not reach here!");
   return nullptr;
 }
 

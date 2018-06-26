@@ -1223,7 +1223,8 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                                          getter_AddRefs(secinfo));
 
                 if (NS_SUCCEEDED(rv) && !fd) {
-                    NS_NOTREACHED("NewSocket succeeded but failed to create a PRFileDesc");
+                    MOZ_ASSERT_UNREACHABLE("NewSocket succeeded but failed to "
+                                           "create a PRFileDesc");
                     rv = NS_ERROR_UNEXPECTED;
                 }
             } else {

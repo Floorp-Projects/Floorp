@@ -112,7 +112,7 @@ _class::getSubExprAt(uint32_t aPos)                           \
 void                                                          \
 _class::setSubExprAt(uint32_t aPos, Expr* aExpr)              \
 {                                                             \
-    NS_NOTREACHED("setting bad subexpression index");         \
+    MOZ_ASSERT_UNREACHABLE("setting bad subexpression index");\
 }
 
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(_class)          \
@@ -124,7 +124,7 @@ _class::getSubPatternAt(uint32_t aPos)                        \
 void                                                          \
 _class::setSubPatternAt(uint32_t aPos, txPattern* aPattern)   \
 {                                                             \
-    NS_NOTREACHED("setting bad subexpression index");         \
+    MOZ_ASSERT_UNREACHABLE("setting bad subexpression index");\
 }
 
 class txUnionPattern : public txPattern

@@ -2012,6 +2012,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadStringIndexValue(Register str, Register dest, Label* fail);
 
     void loadJSContext(Register dest);
+
+    void switchToRealm(Register realm);
+    void switchToRealm(const void* realm, Register scratch);
+    void switchToObjectRealm(Register obj, Register scratch);
+
     void loadJitActivation(Register dest) {
         loadJSContext(dest);
         loadPtr(Address(dest, offsetof(JSContext, activation_)), dest);

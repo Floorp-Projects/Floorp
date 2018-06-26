@@ -572,7 +572,8 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     // slot accesses later on for sites that see converted objects from this
     // group and objects that were allocated using the replacement new group.
     if (layout.newScript()) {
-        replacementGroup = ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto);
+        replacementGroup = ObjectGroupRealm::makeGroup(cx, group->realm(), &PlainObject::class_,
+                                                       proto);
         if (!replacementGroup)
             return false;
 
@@ -597,7 +598,8 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
         RootedScript script(cx, layout.allocationScript());
         jsbytecode* pc = layout.allocationPc();
 
-        replacementGroup = ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto);
+        replacementGroup = ObjectGroupRealm::makeGroup(cx, group->realm(), &PlainObject::class_,
+                                                       proto);
         if (!replacementGroup)
             return false;
 
@@ -638,7 +640,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     }
 
     ObjectGroup* nativeGroup =
-        ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto,
+        ObjectGroupRealm::makeGroup(cx, group->realm(), &PlainObject::class_, proto,
                                     group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK);
     if (!nativeGroup)
         return false;

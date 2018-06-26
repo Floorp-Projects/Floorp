@@ -200,7 +200,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
             }
             break;
         } else {
-            NS_NOTREACHED("Unexpected prototype node type");
+            MOZ_ASSERT_UNREACHABLE("Unexpected prototype node type");
             return NS_ERROR_FAILURE;
         }
     }

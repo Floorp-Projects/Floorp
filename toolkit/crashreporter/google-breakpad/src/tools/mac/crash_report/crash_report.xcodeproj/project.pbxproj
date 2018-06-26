@@ -50,7 +50,7 @@
 		9BDF175D0B1B8C1B00F8391B /* process_state.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF175B0B1B8C1B00F8391B /* process_state.cc */; };
 		9BDF176E0B1B8CB100F8391B /* on_demand_symbol_supplier.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF176C0B1B8CB100F8391B /* on_demand_symbol_supplier.mm */; };
 		9BDF1A280B1BD58200F8391B /* pathname_stripper.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF1A270B1BD58200F8391B /* pathname_stripper.cc */; };
-		9BDF21A70B1E825400F8391B /* dump_syms.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF192E0B1BC15D00F8391B /* dump_syms.mm */; };
+		9BDF21A70B1E825400F8391B /* dump_syms.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF192E0B1BC15D00F8391B /* dump_syms.cc */; };
 		9BE650B20B52FE3000611104 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650AC0B52FE3000611104 /* file_id.cc */; };
 		9BE650B40B52FE3000611104 /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650AE0B52FE3000611104 /* macho_id.cc */; };
 		9BE650B60B52FE3000611104 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650B00B52FE3000611104 /* macho_walker.cc */; };
@@ -64,6 +64,9 @@
 		F44DDD8719C85CD50047280E /* dump_context.cc in Sources */ = {isa = PBXBuildFile; fileRef = F44DDD8419C85CD50047280E /* dump_context.cc */; };
 		F44DDD8819C85CD50047280E /* dump_object.cc in Sources */ = {isa = PBXBuildFile; fileRef = F44DDD8519C85CD50047280E /* dump_object.cc */; };
 		F44DDD8919C85CD50047280E /* microdump_processor.cc in Sources */ = {isa = PBXBuildFile; fileRef = F44DDD8619C85CD50047280E /* microdump_processor.cc */; };
+		F47180561D745DEF0032F208 /* elf_reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F47180541D745DEF0032F208 /* elf_reader.cc */; };
+		F47180581D7467630032F208 /* proc_maps_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = F47180571D7467630032F208 /* proc_maps_linux.cc */; };
+		F471805A1D7468A40032F208 /* symbolic_constants_win.cc in Sources */ = {isa = PBXBuildFile; fileRef = F47180591D7468A40032F208 /* symbolic_constants_win.cc */; };
 		F4D43B2F1A38490700C290B2 /* microdump.cc in Sources */ = {isa = PBXBuildFile; fileRef = F4D43B2E1A38490700C290B2 /* microdump.cc */; };
 		F9C7ECE50E8ABCA600E953AD /* bytereader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE20E8ABCA600E953AD /* bytereader.cc */; };
 		F9C7ECE60E8ABCA600E953AD /* dwarf2reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */; };
@@ -151,7 +154,7 @@
 		9BDF176B0B1B8CB100F8391B /* on_demand_symbol_supplier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = on_demand_symbol_supplier.h; sourceTree = "<group>"; };
 		9BDF176C0B1B8CB100F8391B /* on_demand_symbol_supplier.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = on_demand_symbol_supplier.mm; sourceTree = "<group>"; };
 		9BDF192D0B1BC15D00F8391B /* dump_syms.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = dump_syms.h; path = ../../../common/mac/dump_syms.h; sourceTree = SOURCE_ROOT; };
-		9BDF192E0B1BC15D00F8391B /* dump_syms.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = dump_syms.mm; path = ../../../common/mac/dump_syms.mm; sourceTree = SOURCE_ROOT; };
+		9BDF192E0B1BC15D00F8391B /* dump_syms.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = dump_syms.cc; path = ../../../common/mac/dump_syms.cc; sourceTree = SOURCE_ROOT; };
 		9BDF1A270B1BD58200F8391B /* pathname_stripper.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = pathname_stripper.cc; path = ../../../processor/pathname_stripper.cc; sourceTree = SOURCE_ROOT; };
 		9BDF1A7A0B1BE30100F8391B /* range_map-inl.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "range_map-inl.h"; path = "../../../processor/range_map-inl.h"; sourceTree = SOURCE_ROOT; };
 		9BDF1A7B0B1BE30100F8391B /* range_map.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = range_map.h; path = ../../../processor/range_map.h; sourceTree = SOURCE_ROOT; };
@@ -180,6 +183,10 @@
 		F44DDD8B19C85CFB0047280E /* dump_object.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = dump_object.h; path = ../../../google_breakpad/processor/dump_object.h; sourceTree = "<group>"; };
 		F44DDD8C19C85CFC0047280E /* microdump_processor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = microdump_processor.h; path = ../../../google_breakpad/processor/microdump_processor.h; sourceTree = "<group>"; };
 		F44DDD8D19C85CFC0047280E /* process_result.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = process_result.h; path = ../../../google_breakpad/processor/process_result.h; sourceTree = "<group>"; };
+		F47180541D745DEF0032F208 /* elf_reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = elf_reader.cc; path = ../../../common/dwarf/elf_reader.cc; sourceTree = "<group>"; };
+		F47180551D745DEF0032F208 /* elf_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = elf_reader.h; path = ../../../common/dwarf/elf_reader.h; sourceTree = "<group>"; };
+		F47180571D7467630032F208 /* proc_maps_linux.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = proc_maps_linux.cc; path = ../../../processor/proc_maps_linux.cc; sourceTree = "<group>"; };
+		F47180591D7468A40032F208 /* symbolic_constants_win.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = symbolic_constants_win.cc; path = ../../../processor/symbolic_constants_win.cc; sourceTree = "<group>"; };
 		F4D43B2E1A38490700C290B2 /* microdump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = microdump.cc; path = ../../../processor/microdump.cc; sourceTree = "<group>"; };
 		F4D43B301A38492000C290B2 /* microdump.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = microdump.h; path = ../../../google_breakpad/processor/microdump.h; sourceTree = "<group>"; };
 		F9C7ECE20E8ABCA600E953AD /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
@@ -219,7 +226,7 @@
 				8B31FF7211F0C6E000FCF3E4 /* macho_reader.cc */,
 				8B31FF7311F0C6E000FCF3E4 /* macho_reader.h */,
 				9BDF192D0B1BC15D00F8391B /* dump_syms.h */,
-				9BDF192E0B1BC15D00F8391B /* dump_syms.mm */,
+				9BDF192E0B1BC15D00F8391B /* dump_syms.cc */,
 				08FB7796FE84155DC02AAC07 /* crash_report.mm */,
 				F44DDD8D19C85CFC0047280E /* process_result.h */,
 				9BDF176B0B1B8CB100F8391B /* on_demand_symbol_supplier.h */,
@@ -371,6 +378,7 @@
 				9BDF173F0B1B8B9A00F8391B /* minidump.cc */,
 				9BDF172B0B1B8B2400F8391B /* minidump_processor.cc */,
 				9BDF1A270B1BD58200F8391B /* pathname_stripper.cc */,
+				F47180571D7467630032F208 /* proc_maps_linux.cc */,
 				9BDF175B0B1B8C1B00F8391B /* process_state.cc */,
 				9BDF1A7A0B1BE30100F8391B /* range_map-inl.h */,
 				9BDF1A7B0B1BE30100F8391B /* range_map.h */,
@@ -381,6 +389,7 @@
 				FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */,
 				FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */,
 				FD6625C50CF4D438004AC844 /* stackwalker_amd64.h */,
+				F47180591D7468A40032F208 /* symbolic_constants_win.cc */,
 			);
 			name = processor;
 			sourceTree = "<group>";
@@ -405,6 +414,8 @@
 				F9C7ECE30E8ABCA600E953AD /* dwarf2reader.cc */,
 				8B31FFC311F0C8AB00FCF3E4 /* dwarf2diehandler.cc */,
 				8B31FFC411F0C8AB00FCF3E4 /* dwarf2diehandler.h */,
+				F47180541D745DEF0032F208 /* elf_reader.cc */,
+				F47180551D745DEF0032F208 /* elf_reader.h */,
 				F9C7ECE40E8ABCA600E953AD /* functioninfo.cc */,
 			);
 			name = DWARF;
@@ -460,6 +471,7 @@
 			files = (
 				162F64FE161C5ECB00CD68D5 /* arch_utilities.cc in Sources */,
 				8DD76F9A0486AA7600D96B5E /* crash_report.mm in Sources */,
+				F47180581D7467630032F208 /* proc_maps_linux.cc in Sources */,
 				9BDF172C0B1B8B2400F8391B /* call_stack.cc in Sources */,
 				9BDF172D0B1B8B2400F8391B /* minidump_processor.cc in Sources */,
 				9BDF17410B1B8B9A00F8391B /* minidump.cc in Sources */,
@@ -468,9 +480,10 @@
 				9BDF17550B1B8BF900F8391B /* stackwalker_x86.cc in Sources */,
 				9BDF17560B1B8BF900F8391B /* stackwalker.cc in Sources */,
 				9BDF175D0B1B8C1B00F8391B /* process_state.cc in Sources */,
+				F47180561D745DEF0032F208 /* elf_reader.cc in Sources */,
 				9BDF176E0B1B8CB100F8391B /* on_demand_symbol_supplier.mm in Sources */,
 				9BDF1A280B1BD58200F8391B /* pathname_stripper.cc in Sources */,
-				9BDF21A70B1E825400F8391B /* dump_syms.mm in Sources */,
+				9BDF21A70B1E825400F8391B /* dump_syms.cc in Sources */,
 				9B35FEEA0B26761C008DE8C7 /* basic_code_modules.cc in Sources */,
 				9B3904990B2E52FD0059FABE /* basic_source_line_resolver.cc in Sources */,
 				9BE650B20B52FE3000611104 /* file_id.cc in Sources */,
@@ -498,6 +511,7 @@
 				8B31FF8911F0C6FB00FCF3E4 /* module.cc in Sources */,
 				8B31FFC511F0C8AB00FCF3E4 /* dwarf2diehandler.cc in Sources */,
 				F407DC49185773C10064622B /* stack_frame_symbolizer.cc in Sources */,
+				F471805A1D7468A40032F208 /* symbolic_constants_win.cc in Sources */,
 				4D2C721B126F9ACC00B43EAF /* source_line_resolver_base.cc in Sources */,
 				4D2C721F126F9ADE00B43EAF /* exploitability.cc in Sources */,
 				4D2C7223126F9AF900B43EAF /* exploitability_win.cc in Sources */,
@@ -530,6 +544,7 @@
 		1DEB927508733DD40010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				HEADER_SEARCH_PATHS = ../../../../src;
 				PRODUCT_NAME = crash_report;
 			};
@@ -538,6 +553,7 @@
 		1DEB927608733DD40010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				HEADER_SEARCH_PATHS = ../../../../src;
 				PRODUCT_NAME = crash_report;
 			};

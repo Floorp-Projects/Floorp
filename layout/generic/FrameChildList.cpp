@@ -50,7 +50,7 @@ ChildListName(FrameChildListID aListID)
     case kNoReflowPrincipalList: return "NoReflowPrincipalList";
   }
 
-  NS_NOTREACHED("unknown list");
+  MOZ_ASSERT_UNREACHABLE("unknown list");
   return "UNKNOWN_FRAME_CHILD_LIST";
 }
 #endif

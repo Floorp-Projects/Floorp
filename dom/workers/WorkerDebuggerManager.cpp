@@ -172,7 +172,7 @@ WorkerDebuggerManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  NS_NOTREACHED("Unknown observer topic!");
+  MOZ_ASSERT_UNREACHABLE("Unknown observer topic!");
   return NS_OK;
 }
 

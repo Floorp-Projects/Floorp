@@ -36,9 +36,9 @@ def perfile_number_of_chunks(try_task_config, head_repository, head_rev, type):
         file_patterns = ['**/test_*',
                          '**/browser_*',
                          '**/crashtest*/**',
-                         'js/src/test/test/**',
-                         'js/src/test/non262/**',
-                         'js/src/test/test262/**']
+                         'js/src/tests/test/**',
+                         'js/src/tests/non262/**',
+                         'js/src/tests/test262/**']
     else:
         # Returning 0 means no tests to run, this captures non test-verify tasks
         return 1
@@ -66,6 +66,8 @@ def perfile_number_of_chunks(try_task_config, head_repository, head_rev, type):
         for path in changed_files:
             # TODO: consider running tests if a manifest changes
             if path.endswith('.list') or path.endswith('.ini'):
+                continue
+            if path.endswith('^headers^'):
                 continue
 
             if mozpackmatch(path, pattern):

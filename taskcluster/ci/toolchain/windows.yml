@@ -143,6 +143,30 @@ win64-rust-1.24:
         toolchain-alias: win64-rust
         toolchain-artifact: public/build/rustc.tar.bz2
 
+win64-rust-nightly:
+    description: "rust nightly repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(rust-nightly)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: toolchain-build}
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', 'nightly-2018-06-23',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-artifact: public/build/rustc.tar.bz2
+
 win32-rust-1.24:
     description: "rust repack"
     treeherder:

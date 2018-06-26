@@ -112,7 +112,12 @@ protected:
             nsPrototypeArray    mChildren;
             State               mState;
             Entry*              mNext;
-            Entry() : mChildren(8) {}
+            Entry(nsXULPrototypeNode* aNode, State aState, Entry* aNext)
+                : mNode(aNode)
+                , mChildren(8)
+                , mState(aState)
+                , mNext(aNext)
+            {}
         };
 
         Entry* mTop;

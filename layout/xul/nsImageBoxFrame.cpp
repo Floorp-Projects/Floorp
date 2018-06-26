@@ -187,7 +187,7 @@ nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
   }
 
   if (mListener)
-    reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nullptr); // set the frame to null so we don't send messages to a dead object.
+    reinterpret_cast<nsImageBoxListener*>(mListener.get())->ClearFrame(); // set the frame to null so we don't send messages to a dead object.
 
   nsLeafBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -199,8 +199,7 @@ nsImageBoxFrame::Init(nsIContent*       aContent,
                       nsIFrame*         aPrevInFlow)
 {
   if (!mListener) {
-    RefPtr<nsImageBoxListener> listener = new nsImageBoxListener();
-    listener->SetFrame(this);
+    RefPtr<nsImageBoxListener> listener = new nsImageBoxListener(this);
     mListener = listener.forget();
   }
 
@@ -908,7 +907,8 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
 
 NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver)
 
-nsImageBoxListener::nsImageBoxListener()
+nsImageBoxListener::nsImageBoxListener(nsImageBoxFrame *frame)
+  : mFrame(frame)
 {
 }
 

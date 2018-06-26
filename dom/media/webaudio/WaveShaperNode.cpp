@@ -41,7 +41,7 @@ static uint32_t ValueOf(OverSampleType aType)
   case OverSampleType::_2x:  return 2;
   case OverSampleType::_4x:  return 4;
   default:
-    NS_NOTREACHED("We should never reach here");
+    MOZ_ASSERT_UNREACHABLE("We should never reach here");
     return 1;
   }
 }
@@ -283,7 +283,7 @@ public:
         mResampler.DownSample(i, outputBuffer, 4);
         break;
       default:
-        NS_NOTREACHED("We should never reach here");
+        MOZ_ASSERT_UNREACHABLE("We should never reach here");
       }
     }
   }

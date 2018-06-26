@@ -589,7 +589,7 @@ protected:
     VisitHashKey(const VisitHashKey& aOther)
     : nsURIHashKey(aOther)
     {
-      NS_NOTREACHED("Do not call me!");
+      MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }
     PRTime visitTime;
   };

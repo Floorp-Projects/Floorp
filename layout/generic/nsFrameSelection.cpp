@@ -587,7 +587,7 @@ nsAtom *GetTag(nsINode *aNode)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (!content)
   {
-    NS_NOTREACHED("bad node passed to GetTag()");
+    MOZ_ASSERT_UNREACHABLE("bad node passed to GetTag()");
     return nullptr;
   }
 

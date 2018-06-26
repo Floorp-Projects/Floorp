@@ -320,7 +320,7 @@ mozInlineSpellStatus::FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil)
       // everything should be initialized already in this case
       break;
     default:
-      NS_NOTREACHED("Bad operation");
+      MOZ_ASSERT_UNREACHABLE("Bad operation");
       return NS_ERROR_NOT_INITIALIZED;
   }
   return NS_OK;

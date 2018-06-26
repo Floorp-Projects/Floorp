@@ -195,7 +195,7 @@ void DwarfCFIToModule::Record(Module::Address address, int reg,
 
   // Place the name in our global set of strings, and then use the string
   // from the set. Even though the assignment looks like a copy, all the
-  // major std::string implementations use reference counting internally,
+  // major string implementations use reference counting internally,
   // so the effect is to have all our data structures share copies of rules
   // whenever possible. Since register names are drawn from a
   // vector<string>, register names are already shared.

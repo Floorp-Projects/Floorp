@@ -1037,7 +1037,9 @@ GetOutlineInnerRect(nsIFrame* aFrame)
     aFrame->GetProperty(nsIFrame::OutlineInnerRectProperty());
   if (savedOutlineInnerRect)
     return *savedOutlineInnerRect;
-  NS_NOTREACHED("we should have saved a frame property");
+
+  // FIXME bug 1221888
+  NS_ERROR("we should have saved a frame property");
   return nsRect(nsPoint(0, 0), aFrame->GetSize());
 }
 

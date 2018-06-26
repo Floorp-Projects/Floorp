@@ -138,7 +138,7 @@ gfxFontCache::Observer::Observe(nsISupports *aSubject,
             fontCache->FlushShapedWordCaches();
         }
     } else {
-        NS_NOTREACHED("unexpected notification topic");
+        MOZ_ASSERT_UNREACHABLE("unexpected notification topic");
     }
     return NS_OK;
 }

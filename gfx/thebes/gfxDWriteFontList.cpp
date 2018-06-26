@@ -737,7 +737,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
                                DWRITE_FONT_SIMULATIONS_NONE,
                                getter_AddRefs(mFontFace));
         } else {
-            NS_NOTREACHED("invalid font entry");
+            MOZ_ASSERT_UNREACHABLE("invalid font entry");
             return NS_ERROR_FAILURE;
         }
         if (FAILED(hr)) {

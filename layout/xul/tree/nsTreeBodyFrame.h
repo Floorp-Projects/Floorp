@@ -507,7 +507,13 @@ protected: // Data Members
 
   class Slots {
     public:
-      Slots() {
+      Slots()
+        : mDropAllowed(false)
+        , mIsDragging(false)
+        , mDropRow(-1)
+        , mDropOrient(-1)
+        , mScrollLines(0)
+        , mDragAction(0) {
       }
 
       ~Slots() {

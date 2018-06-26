@@ -1484,7 +1484,7 @@ nsHtml5StreamParser::ParseAvailableData()
             FlushTreeOpsAndDisarmTimer();
             return; // no more data and not expecting more
           default:
-            NS_NOTREACHED("It should be impossible to reach this.");
+            MOZ_ASSERT_UNREACHABLE("It should be impossible to reach this.");
             return;
         }
       }
@@ -1572,9 +1572,11 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
   {
     mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
     if (mSpeculations.IsEmpty()) {
-      NS_NOTREACHED("ContinueAfterScripts called without speculations.");
+      MOZ_ASSERT_UNREACHABLE("ContinueAfterScripts called without "
+                             "speculations.");
       return;
     }
+
     nsHtml5Speculation* speculation = mSpeculations.ElementAt(0);
     if (aLastWasCR || !aTokenizer->isInDataState() ||
         !aTreeBuilder->snapshotMatches(speculation->GetSnapshot())) {

@@ -755,7 +755,7 @@ nsEditingSession::OnProgressChange(nsIWebProgress *aWebProgress,
                                    int32_t aCurTotalProgress,
                                    int32_t aMaxTotalProgress)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 
@@ -804,7 +804,7 @@ nsEditingSession::OnStatusChange(nsIWebProgress *aWebProgress,
                                  nsresult aStatus,
                                  const char16_t *aMessage)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 
@@ -817,7 +817,7 @@ NS_IMETHODIMP
 nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress,
                                    nsIRequest *aRequest, uint32_t state)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 

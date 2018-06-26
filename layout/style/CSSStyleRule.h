@@ -30,8 +30,10 @@ public:
   nsINode* GetParentObject() final;
 
 protected:
-  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
-  nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
+  mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
+    Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
+                             MutationClosureData* aClosureData) final;
   nsIDocument* DocToUpdate() final;
   ParsingEnvironment
   GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
