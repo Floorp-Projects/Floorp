@@ -1998,7 +1998,7 @@ HTMLMediaElement::Load()
        HasSourceChildren(this),
        EventStateManager::IsHandlingUserInput(),
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
-       IsAllowedToPlay(),
+       AutoplayPolicy::IsAllowedToPlay(*this) == Authorization::Allowed,
        OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
        OwnerDoc() ? OwnerDoc()->HasBeenUserGestureActivated() : 0,
@@ -2520,7 +2520,7 @@ HTMLMediaElement::UpdatePreloadAction()
   PreloadAction nextAction = PRELOAD_UNDEFINED;
   // If autoplay is set, or we're playing, we should always preload data,
   // as we'll need it to play.
-  if ((AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this)) &&
+  if ((AutoplayPolicy::IsAllowedToPlay(*this) == Authorization::Allowed &&
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
       !mPaused) {
     nextAction = HTMLMediaElement::PRELOAD_ENOUGH;
@@ -3053,7 +3053,7 @@ HTMLMediaElement::PauseIfShouldNotBePlaying()
   if (GetPaused()) {
     return;
   }
-  if (!AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this))) {
+  if (AutoplayPolicy::IsAllowedToPlay(*this) != Authorization::Allowed) {
     ErrorResult rv;
     Pause(rv);
   }
@@ -4053,26 +4053,32 @@ HTMLMediaElement::Play(ErrorResult& aRv)
     return promise.forget();
   }
 
-  const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
-  if (IsAllowedToPlay()) {
-    mPendingPlayPromises.AppendElement(promise);
-    PlayInternal(handlingUserInput);
-    UpdateCustomPolicyAfterPlayed();
-    return promise.forget();
-  }
-
-  // Otherwise, not allowed to play. We may still be allowed to play if we
-  // ask for and are granted permission by the user.
-
-  if (!Preferences::GetBool("media.autoplay.ask-permission", false)) {
-    LOG(LogLevel::Debug, ("%p play not allowed and prompting disabled.", this));
+  if (AudioChannelAgentBlockedPlay()) {
+    LOG(LogLevel::Debug, ("%p play blocked by AudioChannelAgent.", this));
     promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
     return promise.forget();
   }
 
-  // Prompt the user for permission to play.
-  mPendingPlayPromises.AppendElement(promise);
-  EnsureAutoplayRequested(handlingUserInput);
+  const bool handlingUserInput = EventStateManager::IsHandlingUserInput();
+  switch (AutoplayPolicy::IsAllowedToPlay(*this)) {
+    case Authorization::Allowed: {
+      mPendingPlayPromises.AppendElement(promise);
+      PlayInternal(handlingUserInput);
+      UpdateCustomPolicyAfterPlayed();
+      break;
+    }
+    case Authorization::Blocked: {
+      LOG(LogLevel::Debug, ("%p play not blocked.", this));
+      promise->MaybeReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+      break;
+    }
+    case Authorization::Prompt: {
+      // Prompt the user for permission to play.
+      mPendingPlayPromises.AppendElement(promise);
+      EnsureAutoplayRequested(handlingUserInput);
+      break;
+    }
+  }
   return promise.forget();
 }
 
@@ -4089,8 +4095,7 @@ HTMLMediaElement::EnsureAutoplayRequested(bool aHandlingUserInput)
     return;
   }
 
-  RefPtr<AutoplayRequest> request =
-    AutoplayPolicy::RequestFor(WrapNotNull(OwnerDoc()));
+  RefPtr<AutoplayRequest> request = AutoplayPolicy::RequestFor(*OwnerDoc());
   if (!request) {
     AsyncRejectPendingPlayPromises(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -6114,7 +6119,8 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
       if (mDecoder && !mPausedForInactiveDocumentOrChannel) {
-        MOZ_ASSERT(IsAllowedToPlay());
+        MOZ_ASSERT(AutoplayPolicy::IsAllowedToPlay(*this) ==
+                   Authorization::Allowed);
         mDecoder->Play();
       }
       NotifyAboutPlaying();
@@ -7017,48 +7023,22 @@ HTMLMediaElement::UpdateAudioChannelPlayingState(bool aForcePlaying)
 }
 
 bool
-HTMLMediaElement::IsAllowedToPlay()
+HTMLMediaElement::AudioChannelAgentBlockedPlay()
 {
-  if (!AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this))) {
-#if defined(MOZ_WIDGET_ANDROID)
-    nsContentUtils::DispatchChromeEvent(
-      OwnerDoc(),
-      static_cast<nsIContent*>(this),
-      NS_LITERAL_STRING("MozAutoplayMediaBlocked"),
-      CanBubble::eNo,
-      Cancelable::eNo);
-#endif
+  if (!mAudioChannelWrapper) {
+    // If the mAudioChannelWrapper doesn't exist that means the CC happened.
     LOG(LogLevel::Debug,
-        ("%p %s AutoplayPolicy blocked autoplay.", this, __func__));
-    return false;
-  }
-
-  LOG(LogLevel::Debug,
-      ("%p %s AutoplayPolicy did not block autoplay.", this, __func__));
-
-  // Check our custom playback policy.
-  if (mAudioChannelWrapper) {
-    // Note: SUSPENDED_PAUSE and SUSPENDED_BLOCK will be merged into one single
-    // state.
-    if (mAudioChannelWrapper->GetSuspendType() ==
-          nsISuspendedTypes::SUSPENDED_PAUSE ||
-        mAudioChannelWrapper->GetSuspendType() ==
-          nsISuspendedTypes::SUSPENDED_BLOCK) {
-      LOG(LogLevel::Debug,
-          ("%p IsAllowedToPlay() returning false due to AudioChannelAgent.",
-           this));
-      return false;
-    }
-
-    LOG(LogLevel::Debug, ("%p IsAllowedToPlay() returning true.", this));
+        ("%p AudioChannelAgentBlockedPlay() returning true due to null "
+         "AudioChannelAgent.",
+         this));
     return true;
   }
 
-  // If the mAudioChannelWrapper doesn't exist that means the CC happened.
-  LOG(LogLevel::Debug,
-      ("%p IsAllowedToPlay() returning false due to null AudioChannelAgent.",
-       this));
-  return false;
+  // Note: SUSPENDED_PAUSE and SUSPENDED_BLOCK will be merged into one single
+  // state.
+  const auto suspendType = mAudioChannelWrapper->GetSuspendType();
+  return suspendType == nsISuspendedTypes::SUSPENDED_PAUSE ||
+         suspendType == nsISuspendedTypes::SUSPENDED_BLOCK;
 }
 
 static const char*

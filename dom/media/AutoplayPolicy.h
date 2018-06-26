@@ -20,6 +20,13 @@ namespace dom {
 class HTMLMediaElement;
 class AudioContext;
 
+enum class Authorization
+{
+  Allowed,
+  Blocked,
+  Prompt
+};
+
 /**
  * AutoplayPolicy is used to manage autoplay logic for all kinds of media,
  * including MediaElement, Web Audio and Web Speech.
@@ -36,7 +43,7 @@ class AutoplayPolicy
 {
 public:
   // Returns whether a given media element is allowed to play.
-  static bool IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement);
+  static Authorization IsAllowedToPlay(const HTMLMediaElement& aElement);
 
   // Returns whether a given AudioContext is allowed to play.
   static bool IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext);
