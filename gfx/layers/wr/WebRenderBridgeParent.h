@@ -230,6 +230,8 @@ private:
   bool SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                         nsTArray<wr::WrTransformProperty>& aTransformArray);
 
+  bool IsRootWebRenderBridgeParent() const;
+
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
   RefPtr<WebRenderBridgeParent> GetRootWebRenderBridgeParent() const;
