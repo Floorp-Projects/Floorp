@@ -33,7 +33,10 @@ common-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -109,7 +112,8 @@ linux-qr-tests:
     - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
+    - mochitest-webgl1-core
+    - mochitest-webgl2-core
     - reftest
     - xpcshell
 
@@ -140,7 +144,8 @@ windows-qr-tests:
     - mochitest
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
+    - mochitest-webgl1-core
+    - mochitest-webgl2-core
     - reftest
 
 jsdcov-code-coverage-tests:
@@ -170,7 +175,10 @@ windows-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
     - test-coverage
@@ -239,7 +247,10 @@ macosx64-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
     - test-verify
     - test-verify-gpu
@@ -307,7 +318,10 @@ linux32-tests:
     - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
-    - mochitest-webgl
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
     - web-platform-tests
@@ -337,6 +351,8 @@ android-common-tests:
     - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
+    # - mochitest-webgl1-core
+    # - mochitest-webgl1-ext
     - reftest
     - test-verify
     - xpcshell

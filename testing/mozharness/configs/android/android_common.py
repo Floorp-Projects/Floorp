@@ -5,6 +5,27 @@
 
 import os
 
+
+def WebglSuite(name):
+    return {
+        "run_filename": "runtestsremote.py",
+        "testsdir": "mochitest",
+        "options": [
+            "--app=%(app)s",
+            "--remote-webserver=%(remote_webserver)s",
+            "--xre-path=%(xre_path)s",
+            "--utility-path=%(utility_path)s",
+            "--certificate-path=%(certs_path)s",
+            "--symbols-path=%(symbols_path)s",
+            "--quiet",
+            "--log-raw=%(raw_log_file)s",
+            "--log-errorsummary=%(error_summary_file)s",
+            "--screenshot-on-fail",
+            "--subsuite=" + name,
+        ],
+    }
+
+
 config = {
     "default_actions": [
         'clobber',
@@ -44,23 +65,11 @@ config = {
                 "--screenshot-on-fail",
             ],
         },
-        "mochitest-gl": {
-            "run_filename": "runtestsremote.py",
-            "testsdir": "mochitest",
-            "options": [
-                "--app=%(app)s",
-                "--remote-webserver=%(remote_webserver)s",
-                "--xre-path=%(xre_path)s",
-                "--utility-path=%(utility_path)s",
-                "--certificate-path=%(certs_path)s",
-                "--symbols-path=%(symbols_path)s",
-                "--quiet",
-                "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
-                "--screenshot-on-fail",
-                "--subsuite=webgl",
-            ],
-        },
+        "mochitest-webgl1-core": WebglSuite("webgl1-core"),
+        "mochitest-webgl2-core": WebglSuite("webgl2-core"),
+        "mochitest-webgl1-ext": WebglSuite("webgl1-ext"),
+        "mochitest-webgl2-ext": WebglSuite("webgl2-ext"),
+        "mochitest-webgl2-deqp": WebglSuite("webgl2-deqp"),
         "mochitest-chrome": {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
