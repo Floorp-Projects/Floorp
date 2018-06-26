@@ -250,12 +250,6 @@ nsTArray<const mozilla::Module*>* nsComponentManagerImpl::sStaticModules;
 NSMODULE_DEFN(start_kPStaticModules);
 NSMODULE_DEFN(end_kPStaticModules);
 
-/* The content between start_kPStaticModules and end_kPStaticModules is gathered
- * by the linker from various objects containing symbols in a specific section.
- * ASAN considers (rightfully) the use of this content as a global buffer
- * overflow. But this is a deliberate and well-considered choice, with no proper
- * way to make ASAN happy. */
-MOZ_ASAN_BLACKLIST
 /* static */ void
 nsComponentManagerImpl::InitializeStaticModules()
 {
@@ -267,9 +261,7 @@ nsComponentManagerImpl::InitializeStaticModules()
   for (const mozilla::Module * const* staticModules =
          &NSMODULE_NAME(start_kPStaticModules) + 1;
        staticModules < &NSMODULE_NAME(end_kPStaticModules); ++staticModules)
-    if (*staticModules) { // ASAN adds padding
-      sStaticModules->AppendElement(*staticModules);
-    }
+    sStaticModules->AppendElement(*staticModules);
 }
 
 nsTArray<nsComponentManagerImpl::ComponentLocation>*
