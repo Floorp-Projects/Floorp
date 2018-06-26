@@ -6958,8 +6958,7 @@ HTMLMediaElement::IsAllowedToPlay()
 {
   if (!AutoplayPolicy::IsMediaElementAllowedToPlay(WrapNotNull(this))) {
 #if defined(MOZ_WIDGET_ANDROID)
-    // FIXME: This should be chrome-only.
-    nsContentUtils::DispatchTrustedEvent(
+    nsContentUtils::DispatchChromeEvent(
       OwnerDoc(),
       static_cast<nsIContent*>(this),
       NS_LITERAL_STRING("MozAutoplayMediaBlocked"),
