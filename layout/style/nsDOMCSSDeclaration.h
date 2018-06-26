@@ -12,7 +12,9 @@
 #include "nsICSSDeclaration.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/URLExtraData.h"
+#include "nsAttrValue.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCompatibility.h"
@@ -21,6 +23,7 @@ class nsIPrincipal;
 class nsIDocument;
 struct JSContext;
 class JSObject;
+struct DeclarationBlockMutationClosure;
 
 namespace mozilla {
 class DeclarationBlock;
@@ -28,6 +31,29 @@ namespace css {
 class Loader;
 class Rule;
 } // namespace css
+namespace dom {
+class Element;
+}
+
+struct MutationClosureData
+{
+  MutationClosureData()
+    : mClosure(nullptr)
+    , mElement(nullptr)
+    , mModType(0)
+  {
+  }
+
+  // mClosure is non-null as long as the closure hasn't been called.
+  // This is needed so that it can be guaranteed that
+  // InlineStyleDeclarationWillChange is always called before
+  // SetInlineStyleDeclaration.
+  void (*mClosure)(void*);
+  mozilla::dom::Element* mElement;
+  Maybe<nsAttrValue> mOldValue;
+  uint8_t mModType;
+};
+
 } // namespace mozilla
 
 class nsDOMCSSDeclaration : public nsICSSDeclaration
@@ -135,27 +161,32 @@ public:
   };
 
 protected:
-  // The reason for calling GetCSSDeclaration.
+  // The reason for calling GetOrCreateCSSDeclaration.
   enum Operation {
-    // We are calling GetCSSDeclaration so that we can read from it.  Does not
-    // allocate a new declaration if we don't have one yet; returns nullptr in
-    // this case.
+    // We are calling GetOrCreateCSSDeclaration so that we can read from it.
+    // Does not allocate a new declaration if we don't have one yet; returns
+    // nullptr in this case.
     eOperation_Read,
 
-    // We are calling GetCSSDeclaration so that we can set a property on it
-    // or re-parse the whole declaration.  Allocates a new declaration if we
-    // don't have one yet and calls AttributeWillChange.  A nullptr return value
-    // indicates an error allocating the declaration.
+    // We are calling GetOrCreateCSSDeclaration so that we can set a property on
+    // it or re-parse the whole declaration.  Allocates a new declaration if we
+    // don't have one yet. A nullptr return value indicates an error allocating
+    // the declaration.
     eOperation_Modify,
 
-    // We are calling GetCSSDeclaration so that we can remove a property from
-    // it.  Does not allocates a new declaration if we don't have one yet;
-    // returns nullptr in this case.  If we do have a declaration, calls
-    // AttributeWillChange.
+    // We are calling GetOrCreateCSSDeclaration so that we can remove a property
+    // from it. Does not allocate a new declaration if we don't have one yet;
+    // returns nullptr in this case.
     eOperation_RemoveProperty
   };
-  virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) = 0;
-  virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) = 0;
+
+  // If aOperation is eOperation_Modify, aCreated must be non-null and
+  // the call may set it to point to the newly created object.
+  virtual mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
+    Operation aOperation, mozilla::DeclarationBlock** aCreated) = 0;
+
+  virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl,
+                                     mozilla::MutationClosureData* aClosureData) = 0;
   // Document that we must call BeginUpdate/EndUpdate on around the
   // calls to SetCSSDeclaration and the style rule mutation that leads
   // to it.
@@ -187,12 +218,19 @@ protected:
   nsresult RemovePropertyInternal(nsCSSPropertyID aPropID);
   nsresult RemovePropertyInternal(const nsAString& aProperty);
 
+  virtual void
+  GetPropertyChangeClosure(DeclarationBlockMutationClosure* aClosure,
+                           mozilla::MutationClosureData* aClosureData)
+  {
+  }
+
 protected:
   virtual ~nsDOMCSSDeclaration();
 
 private:
   template<typename ServoFunc>
   inline nsresult ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
+                                    mozilla::MutationClosureData* aClosureData,
                                     ServoFunc aServoFunc);
 };
 
