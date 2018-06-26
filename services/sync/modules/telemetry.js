@@ -601,7 +601,6 @@ class SyncTelemetryImpl {
 
   _addHistogram(hist) {
       let id = hist.histId;
-      console.log(id);
       let histogram = Telemetry.getHistogramById(id);
       this.histograms[id] = histogram.snapshot();
   }
