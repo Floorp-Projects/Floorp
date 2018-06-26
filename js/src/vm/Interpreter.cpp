@@ -523,6 +523,7 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
             if (jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
                 native = jitInfo->ignoresReturnValueMethod;
         }
+        AutoRealm ar(cx, fun);
         return CallJSNative(cx, native, args);
     }
 
@@ -617,8 +618,10 @@ InternalConstruct(JSContext* cx, const AnyConstructArgs& args)
     if (callee.is<JSFunction>()) {
         RootedFunction fun(cx, &callee.as<JSFunction>());
 
-        if (fun->isNative())
+        if (fun->isNative()) {
+            AutoRealm ar(cx, fun);
             return CallJSNativeConstructor(cx, fun->native(), args);
+        }
 
         if (!InternalCallOrConstruct(cx, args, CONSTRUCT))
             return false;
