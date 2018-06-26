@@ -2448,6 +2448,20 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            !IsInternalTableStyleExceptCell();
   }
 
+  bool IsContainSize() const {
+    // Note: The spec for size containment says it should
+    // have no effect on non-atomic, inline-level boxes. We
+    // don't check for these here because we don't know
+    // what type of element is involved. Callers are
+    // responsible for checking if the box in question is
+    // non-atomic and inline-level, and creating an
+    // exemption as necessary.
+    return (NS_STYLE_CONTAIN_SIZE & mContain) &&
+           !IsInternalRubyDisplayType() &&
+           (mozilla::StyleDisplay::Table != mDisplay) &&
+           !IsInnerTableStyle();
+  }
+
   /* Returns whether the element has the -moz-transform property
    * or a related property. */
   bool HasTransformStyle() const {
