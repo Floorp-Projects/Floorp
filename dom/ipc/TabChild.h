@@ -87,7 +87,7 @@ class TabChildGlobal : public ContentFrameMessageManager,
 {
 public:
   explicit TabChildGlobal(TabChild* aTabChild);
-  void Init();
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, DOMEventTargetHelper)
 
