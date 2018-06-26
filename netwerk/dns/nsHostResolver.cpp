@@ -1864,6 +1864,10 @@ nsHostResolver::ThreadFunc()
         }
     } while(true);
 
+    nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
+    NS_DispatchToMainThread(NS_NewRunnableFunction("nsHostResolver::ThreadFunc::AsyncShutdown", [thread]() {
+        thread->AsyncShutdown();
+    }));
     mThreadCount--;
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
 }
