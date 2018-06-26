@@ -22,6 +22,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"
+#include "nsITimer.h"
 
 #include "jsapi.h"
 #include "js/GCAnnotations.h"
@@ -379,6 +380,8 @@ private:
 
     void PrepareCacheWriteInternal();
 
+    void FinishContentStartup();
+
     // Returns a file pointer for the cache file with the given name in the
     // current profile.
     Result<nsCOMPtr<nsIFile>, nsresult>
@@ -459,6 +462,7 @@ private:
 
     nsCOMPtr<nsIFile> mProfD;
     nsCOMPtr<nsIThread> mSaveThread;
+    nsCOMPtr<nsITimer> mSaveTimer;
 
     // The mmapped cache data from this session's cache file.
     AutoMemMap mCacheData;
