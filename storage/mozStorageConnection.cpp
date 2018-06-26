@@ -260,9 +260,7 @@ basicFunctionHelper(sqlite3_context *aCtx,
     return;
   }
   int retcode = variantToSQLiteT(aCtx, result);
-  if (retcode == SQLITE_IGNORE) {
-    ::sqlite3_result_int(aCtx, SQLITE_IGNORE);
-  } else if (retcode != SQLITE_OK) {
+  if (retcode != SQLITE_OK) {
     NS_WARNING("User function returned invalid data type!");
     ::sqlite3_result_error(aCtx,
                            "User function returned invalid data type",
