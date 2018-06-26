@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      background-color: lime;
+      height: 100px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="infinity"></div>
+    <div class="infinity-delay-iteration-start"></div>
+    <div class="limited"></div>
+    <script>
+    "use strict";
+
+    document.querySelector(".infinity").animate(
+      { opacity: [1, 0] },
+      { duration: Infinity }
+    );
+
+    document.querySelector(".infinity-delay-iteration-start").animate(
+      { opacity: [1, 0] },
+      {
+        delay: 100000,
+        duration: Infinity,
+        iterationStart: 0.5,
+      }
+    );
+
+    document.querySelector(".limited").animate(
+      { opacity: [1, 0] },
+      {
+        duration: 100000,
+      }
+    );
+    </script>
+  </body>
+</html>
