@@ -139,7 +139,7 @@ fails != underline-offset-change-1-ref.html underline-offset-change-2-ref.html #
 != font-familiy-whitespace-1.html font-familiy-whitespace-1-notref.html
 
 skip-if(Android) == ivs-1.html ivs-1-ref.html # Android bug 1250229
-skip-if(Android) == cjkcisvs-1.html cjkcisvs-1-ref.html # Android bug 1250229
+skip-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == cjkcisvs-1.html cjkcisvs-1-ref.html # Android bug 1250229, Bug 1392106
 
 == missing-names.html missing-names-ref.html
 

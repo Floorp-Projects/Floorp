@@ -155,7 +155,7 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-true.html munderover-align-accent-true-ref.html # Bug 1392106
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
-== mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml # Bug 1392106
 == mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
@@ -163,7 +163,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-
 != link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
 == positive-namedspace.html positive-namedspace-ref.html
-== mtable-align-whitespace.html mtable-align-whitespace-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mtable-align-whitespace.html mtable-align-whitespace-ref.html # Bug 1392106
 == mtable-width.html mtable-width-ref.html
 == mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
 == mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
@@ -347,7 +347,7 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 == mfrac-A-2.html mfrac-A-2-ref.html
 == mfrac-A-3.html mfrac-A-3-ref.html
 == mfrac-A-4.html mfrac-A-4-ref.html
-== mfrac-A-5.html mfrac-A-5-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-A-5.html mfrac-A-5-ref.html # bug 1309426
 == mfrac-A-6.html mfrac-A-6-ref.html
 == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
