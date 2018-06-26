@@ -2,11 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from helper_shadowdom.js */
-
 "use strict";
-
-loadHelperScript("helper_shadowdom.js");
 
 // Test that the corresponding non-slotted node container gets selected when clicking on
 // the reveal link for a slotted node.

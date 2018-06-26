@@ -5,7 +5,8 @@
 "use strict";
 
 /**
- * Test that the PromisesActor exists in the TabActors and ParentProcessTargetActors.
+ * Test that the PromisesActor exists in the BrowsingContextTargetActors and
+ * ParentProcessTargetActors.
  */
 
 add_task(async function() {

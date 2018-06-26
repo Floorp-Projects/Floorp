@@ -49,29 +49,14 @@ addTest(function findCssSelectorNotContainedInDocument() {
 
   var unattached = document.createElement("div");
   unattached.id = "unattached";
-  try {
-    findCssSelector(unattached);
-    ok(false, "Unattached node did not throw");
-  } catch (e) {
-    ok(e, "Unattached node throws an exception");
-  }
+  is(findCssSelector(unattached), "", "Unattached node returns empty string");
 
   var unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
-  try {
-    findCssSelector(unattachedChild);
-    ok(false, "Unattached child node did not throw");
-  } catch (e) {
-    ok(e, "Unattached child node throws an exception");
-  }
+  is(findCssSelector(unattachedChild), "", "Unattached child returns empty string");
 
   var unattachedBody = document.createElement("body");
-  try {
-    findCssSelector(unattachedBody);
-    ok(false, "Unattached body node did not throw");
-  } catch (e) {
-    ok(e, "Unattached body node throws an exception");
-  }
+  is(findCssSelector(unattachedBody), "", "Unattached body returns empty string");
 
   runNextTest();
 });

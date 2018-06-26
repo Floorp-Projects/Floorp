@@ -7,15 +7,15 @@
 
 async function ifWebGLSupported() {
   const { target, debuggee, panel } = await initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  const { EVENTS, gFront, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { EVENTS, front, shadersListView, shadersEditorsView } = panel;
 
   reload(target);
   const [[programActor]] = await promise.all([
-    getPrograms(gFront, 1),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    getPrograms(front, 1),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
-  const programItem = ShadersListView.selectedItem;
+  const programItem = shadersListView.selectedItem;
 
   is(programItem.attachment.programActor, programActor,
     "The correct program actor is cached for the selected item.");
@@ -29,11 +29,11 @@ async function ifWebGLSupported() {
     "The cached fragment shader promise returns the correct actor.");
 
   is((await (await programActor.getVertexShader()).getText()),
-     (await (await ShadersEditorsView._getEditor("vs")).getText()),
+     (await (await shadersEditorsView._getEditor("vs")).getText()),
     "The cached vertex shader promise returns the correct text.");
 
   is((await (await programActor.getFragmentShader()).getText()),
-     (await (await ShadersEditorsView._getEditor("fs")).getText()),
+     (await (await shadersEditorsView._getEditor("fs")).getText()),
     "The cached fragment shader promise returns the correct text.");
 
   await teardown(panel);

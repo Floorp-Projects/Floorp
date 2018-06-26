@@ -22,6 +22,9 @@
 
 namespace mozilla { namespace net {
 
+#define IO_ACTIVITY_ENABLED_PREF "io.activity.enabled"
+#define IO_ACTIVITY_INTERVAL_PREF "io.activity.intervalMilliseconds"
+
 //
 // IOActivity keeps track of the amount of data
 // sent and received for an FD / Location
@@ -98,6 +101,10 @@ public:
   static nsresult Write(PRFileDesc *fd, uint32_t aAmount);
 
   static bool IsActive();
+
+  // collects activities and notifies observers
+  // this method can be called manually or via the timer callback
+  static nsresult NotifyActivities();
 private:
   virtual ~IOActivityMonitor() = default;
   nsresult Init_Internal(int32_t aInterval);
@@ -106,6 +113,7 @@ private:
   IOActivity* GetActivity(const nsACString& location);
   nsresult Write_Internal(const nsACString& location, uint32_t aAmount);
   nsresult Read_Internal(const nsACString& location, uint32_t aAmount);
+  nsresult NotifyActivities_Internal();
 
   Activities mActivities;
 

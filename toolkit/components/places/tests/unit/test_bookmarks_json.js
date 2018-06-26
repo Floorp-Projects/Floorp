@@ -4,8 +4,6 @@
 
 ChromeUtils.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
-const DESCRIPTION_ANNO = "bookmarkProperties/description";
-
 // An object representing the contents of bookmarks.json.
 var test_bookmarks = {
   menu: [
@@ -45,13 +43,11 @@ var test_bookmarks = {
     {
       guid: "OCyeUO5uu9FL",
       title: "test",
-      description: "folder test comment",
       dateAdded: 1177541020000000,
       lastModified: 1177541050000000,
       children: [
         { guid: "OCyeUO5uu9GX",
           title: "test post keyword",
-          description: "item description",
           dateAdded: 1177375336000000,
           lastModified: 1177375423000000,
           keyword: "test",
@@ -184,10 +180,6 @@ async function checkItem(aExpected, aNode) {
         break;
       case "title":
         Assert.equal(aNode.title, aExpected.title);
-        break;
-      case "description":
-        Assert.equal(PlacesUtils.annotations.getItemAnnotation(
-                     id, DESCRIPTION_ANNO), aExpected.description);
         break;
       case "dateAdded":
         Assert.equal(PlacesUtils.toPRTime(bookmark.dateAdded),

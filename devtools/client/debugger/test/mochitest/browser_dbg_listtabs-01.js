@@ -39,8 +39,8 @@ function testFirstTab() {
   return addTab(TAB1_URL).then(aTab => {
     gTab1 = aTab;
 
-    return getTabActorForUrl(gClient, TAB1_URL).then(aGrip => {
-      ok(aGrip, "Should find a tab actor for the first tab.");
+    return getTargetActorForUrl(gClient, TAB1_URL).then(aGrip => {
+      ok(aGrip, "Should find a target actor for the first tab.");
       gTab1Actor = aGrip.actor;
     });
   });
@@ -50,10 +50,10 @@ function testSecondTab() {
   return addTab(TAB2_URL).then(aTab => {
     gTab2 = aTab;
 
-    return getTabActorForUrl(gClient, TAB1_URL).then(aFirstGrip => {
-      return getTabActorForUrl(gClient, TAB2_URL).then(aSecondGrip => {
+    return getTargetActorForUrl(gClient, TAB1_URL).then(aFirstGrip => {
+      return getTargetActorForUrl(gClient, TAB2_URL).then(aSecondGrip => {
         is(aFirstGrip.actor, gTab1Actor, "First tab's actor shouldn't have changed.");
-        ok(aSecondGrip, "Should find a tab actor for the second tab.");
+        ok(aSecondGrip, "Should find a target actor for the second tab.");
         gTab2Actor = aSecondGrip.actor;
       });
     });
@@ -62,8 +62,8 @@ function testSecondTab() {
 
 function testRemoveTab() {
   return removeTab(gTab1).then(() => {
-    return getTabActorForUrl(gClient, TAB1_URL).then(aGrip => {
-      ok(!aGrip, "Shouldn't find a tab actor for the first tab anymore.");
+    return getTargetActorForUrl(gClient, TAB1_URL).then(aGrip => {
+      ok(!aGrip, "Shouldn't find a target actor for the first tab anymore.");
     });
   });
 }
@@ -73,7 +73,7 @@ function testAttachRemovedTab() {
     let deferred = promise.defer();
 
     gClient.addListener("paused", (aEvent, aPacket) => {
-      ok(false, "Attaching to an exited tab actor shouldn't generate a pause.");
+      ok(false, "Attaching to an exited target actor shouldn't generate a pause.");
       deferred.reject();
     });
 

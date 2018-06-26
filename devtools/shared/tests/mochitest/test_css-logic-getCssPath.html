@@ -35,29 +35,14 @@ window.onload = function() {
 addTest(function getCssPathForUnattachedElement() {
   var unattached = document.createElement("div");
   unattached.id = "unattached";
-  try {
-    CssLogic.getCssPath(unattached);
-    ok(false, "Unattached node did not throw")
-  } catch(e) {
-    ok(e, "Unattached node throws an exception");
-  }
+  is(CssLogic.getCssPath(unattached), "", "Unattached node returns empty string");
 
   var unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
-  try {
-    CssLogic.getCssPath(unattachedChild);
-    ok(false, "Unattached child node did not throw")
-  } catch(e) {
-    ok(e, "Unattached child node throws an exception");
-  }
+  is(CssLogic.getCssPath(unattachedChild), "", "Unattached child returns empty string");
 
   var unattachedBody = document.createElement("body");
-  try {
-    CssLogic.getCssPath(unattachedBody);
-    ok(false, "Unattached body node did not throw")
-  } catch(e) {
-    ok(e, "Unattached body node throws an exception");
-  }
+  is(CssLogic.getCssPath(unattachedBody), "", "Unattached body returns empty string");
 
   runNextTest();
 });

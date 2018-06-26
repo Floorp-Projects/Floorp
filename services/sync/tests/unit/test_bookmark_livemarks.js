@@ -8,8 +8,6 @@ ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://services-sync/service.js");
 
-const DESCRIPTION_ANNO = "bookmarkProperties/description";
-
 // Record borrowed from Bug 631361.
 const record631361 = {
   id: "M5bwUKK8hPyF",
@@ -58,34 +56,6 @@ function makeLivemark(p, mintGUID) {
 
   return b;
 }
-
-add_task(async function test_livemark_descriptions() {
-  let engine = new BookmarksEngine(Service);
-  await engine.initialize();
-  let store = engine._store;
-
-  let record = record631361.payload;
-
-  async function doRecord(r) {
-    store._childrenToOrder = {};
-    await store.applyIncoming(r);
-    await store._orderChildren();
-    delete store._childrenToOrder;
-  }
-
-  // Attempt to provoke an error by messing around with the description.
-  record.description = null;
-  await doRecord(makeLivemark(record));
-  record.description = "";
-  await doRecord(makeLivemark(record));
-
-  // Attempt to provoke an error by adding a bad description anno.
-  let id = await PlacesUtils.promiseItemId(record.id);
-  PlacesUtils.annotations.setItemAnnotation(id, DESCRIPTION_ANNO, "", 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
-
-  await engine.finalize();
-});
 
 add_task(async function test_livemark_invalid() {
   let engine = new BookmarksEngine(Service);

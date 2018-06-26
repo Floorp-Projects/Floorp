@@ -8,64 +8,64 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, EVENTS, ShadersEditorsView } = panel.panelWin;
+  const { front, EVENTS, shadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
-  const vsEditor = await ShadersEditorsView._getEditor("vs");
-  const fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await shadersEditorsView._getEditor("vs");
+  const fsEditor = await shadersEditorsView._getEditor("fs");
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  let vertError = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  let vertError = await panel.once(EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   info("Error marks added in the vertex shader editor.");
 
   vsEditor.insertText(" ", { line: 1, ch: 0 });
-  await panel.panelWin.once(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+  await panel.once(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
   is(vsEditor.getText(1), "       precision lowp float;", "Typed space.");
   checkHasVertFirstError(false, vertError);
   checkHasVertSecondError(false, vertError);
   info("Error marks removed while typing in the vertex shader editor.");
 
-  vertError = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  vertError = await panel.once(EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   info("Error marks were re-added after recompiling the vertex shader.");
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  let fragError = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  let fragError = await panel.once(EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(true, fragError);
   info("Error marks added in the fragment shader editor.");
 
   fsEditor.insertText(" ", { line: 1, ch: 0 });
-  await panel.panelWin.once(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+  await panel.once(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
   is(fsEditor.getText(1), "       precision lowp float;", "Typed space.");
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(false, fragError);
   info("Error marks removed while typing in the fragment shader editor.");
 
-  fragError = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  fragError = await panel.once(EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(true, fragError);
   info("Error marks were re-added after recompiling the fragment shader.");
 
   vsEditor.replaceText("2", { line: 3, ch: 19 }, { line: 3, ch: 20 });
-  await panel.panelWin.once(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
+  await panel.once(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
   checkHasVertFirstError(false, vertError);
   checkHasVertSecondError(false, vertError);
   checkHasFragError(true, fragError);
   info("Error marks removed while typing in the vertex shader editor again.");
 
-  vertError = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
+  vertError = await panel.once(EVENTS.SHADER_COMPILED);
   checkHasVertFirstError(true, vertError);
   checkHasVertSecondError(true, vertError);
   checkHasFragError(true, fragError);
@@ -86,7 +86,7 @@ async function ifWebGLSupported() {
     is(vsEditor.hasLineClass(line, "error-line"), bool,
       "Error style is " + (bool ? "" : "not ") + "applied to the faulty line.");
 
-    const parsed = ShadersEditorsView._errors.vs;
+    const parsed = shadersEditorsView._errors.vs;
     is(parsed.length >= 1, bool,
       "There's " + (bool ? ">= 1" : "< 1") + " parsed vertex shader error(s).");
 
@@ -116,7 +116,7 @@ async function ifWebGLSupported() {
     is(vsEditor.hasLineClass(line, "error-line"), bool,
       "Error style is " + (bool ? "" : "not ") + "applied to the faulty line.");
 
-    const parsed = ShadersEditorsView._errors.vs;
+    const parsed = shadersEditorsView._errors.vs;
     is(parsed.length >= 2, bool,
       "There's " + (bool ? ">= 2" : "< 2") + " parsed vertex shader error(s).");
 
@@ -144,7 +144,7 @@ async function ifWebGLSupported() {
     is(fsEditor.hasLineClass(line, "error-line"), bool,
       "Error style is " + (bool ? "" : "not ") + "applied to the faulty line.");
 
-    const parsed = ShadersEditorsView._errors.fs;
+    const parsed = shadersEditorsView._errors.fs;
     is(parsed.length >= 1, bool,
       "There's " + (bool ? ">= 2" : "< 1") + " parsed fragment shader error(s).");
 

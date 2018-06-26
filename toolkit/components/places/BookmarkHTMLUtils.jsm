@@ -685,25 +685,10 @@ BookmarkImporter.prototype = {
   _closeContainer: function closeContainer(aElt) {
     let frame = this._curFrame;
 
-    // see the comment for the definition of inDescription. Basically, we commit
-    // any text in previousText to the description of the node/folder if there
-    // is any.
+    // Although we no longer support importing descriptions, we still need to
+    // clear any previous text, so that it doesn't get swallowed into other elements.
     if (frame.inDescription) {
-      // NOTE ES5 trim trims more than the previous C++ trim.
-      frame.previousText = frame.previousText.trim(); // important
-      if (frame.previousText) {
-        let item = frame.previousLink ? frame.previousItem : frame.folder;
-        if (!item.hasOwnProperty("annos")) {
-          item.annos = [];
-        }
-        item.annos.push({
-          "name": DESCRIPTION_ANNO,
-          "flags": 0,
-          "expires": 4,
-          "value": frame.previousText
-        });
-        frame.previousText = "";
-      }
+      frame.previousText = "";
       frame.inDescription = false;
     }
 

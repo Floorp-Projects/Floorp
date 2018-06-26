@@ -25,7 +25,7 @@ function test() {
 
     gClient.listTabs().then(aResponse => {
       let globalActor = aResponse.testGlobalActor1;
-      ok(globalActor, "Found the test tab actor.");
+      ok(globalActor, "Found the test global actor.");
       ok(globalActor.includes("test_one"),
         "testGlobalActor1's actorPrefix should be used.");
 
@@ -49,7 +49,7 @@ function test() {
           }
 
           is(count, 2,
-            "Only two actor exists in all pools. One tab actor and one global.");
+            "Only two actor exists in all pools. One target-scoped actor and one global.");
 
           gClient.close().then(finish);
         });

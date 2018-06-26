@@ -2,11 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from helper_shadowdom.js */
-
 "use strict";
-
-loadHelperScript("helper_shadowdom.js");
 
 // Test that the markup view is correctly displayed when a component has children but no
 // slots are available under the shadow root.
@@ -74,7 +70,7 @@ add_task(async function() {
       class="nested"
         class="has-before"
           ::before`;
-  await checkTreeFromRootSelector(beforeTree, ".root", inspector);
+  await assertMarkupViewAsTree(beforeTree, ".root", inspector);
 
   info("Move the non-slotted element with class has-before and check the pseudo appears");
   const mutated = waitForNMutations(inspector, "childList", 2);
@@ -108,5 +104,5 @@ add_task(async function() {
             ::before
       class="has-before"
         ::before`;
-  await checkTreeFromRootSelector(afterTree, ".root", inspector);
+  await assertMarkupViewAsTree(afterTree, ".root", inspector);
 });

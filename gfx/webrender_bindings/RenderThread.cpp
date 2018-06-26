@@ -15,6 +15,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -152,7 +153,7 @@ RenderThread::AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRender
   mRenderers[aWindowId] = std::move(aRenderer);
 
   MutexAutoLock lock(mFrameCountMapLock);
-  mWindowInfos.Put(AsUint64(aWindowId), WindowInfo());
+  mWindowInfos.emplace(AsUint64(aWindowId), new WindowInfo());
 }
 
 void
@@ -171,7 +172,11 @@ RenderThread::RemoveRenderer(wr::WindowId aWindowId)
   }
 
   MutexAutoLock lock(mFrameCountMapLock);
-  mWindowInfos.Remove(AsUint64(aWindowId));
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  MOZ_ASSERT(it != mWindowInfos.end());
+  WindowInfo* toDelete = it->second;
+  mWindowInfos.erase(it);
+  delete toDelete;
 }
 
 RendererOGL*
@@ -220,7 +225,18 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
     return;
   }
 
-  UpdateAndRender(aWindowId);
+  TimeStamp startTime;
+
+  { // scope lock
+    MutexAutoLock lock(mFrameCountMapLock);
+    auto it = mWindowInfos.find(AsUint64(aWindowId));
+    MOZ_ASSERT(it != mWindowInfos.end());
+    WindowInfo* info = it->second;
+    MOZ_ASSERT(info->mPendingCount > 0);
+    startTime = info->mStartTimes.front();
+  }
+
+  UpdateAndRender(aWindowId, startTime);
   FrameRenderingComplete(aWindowId);
 }
 
@@ -291,7 +307,9 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
 }
 
 void
-RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
+RenderThread::UpdateAndRender(wr::WindowId aWindowId,
+                              const TimeStamp& aStartTime,
+                              bool aReadback)
 {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
@@ -303,7 +321,6 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
   }
 
   auto& renderer = it->second;
-  TimeStamp start = TimeStamp::Now();
 
   bool ret = renderer->UpdateAndRender(aReadback);
   if (!ret) {
@@ -329,7 +346,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
     &NotifyDidRender,
     renderer->GetCompositorBridge(),
     info,
-    start, end
+    aStartTime, end
   ));
 }
 
@@ -370,112 +387,117 @@ RenderThread::TooManyPendingFrames(wr::WindowId aWindowId)
   // or if RenderBackend is still processing a frame.
 
   MutexAutoLock lock(mFrameCountMapLock);
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return true;
   }
+  WindowInfo* info = it->second;
 
-  if (info.mPendingCount > maxFrameCount) {
+  if (info->mPendingCount > maxFrameCount) {
     return true;
   }
-  MOZ_ASSERT(info.mPendingCount >= info.mRenderingCount);
-  return info.mPendingCount > info.mRenderingCount;
+  MOZ_ASSERT(info->mPendingCount >= info->mRenderingCount);
+  return info->mPendingCount > info->mRenderingCount;
 }
 
 bool
 RenderThread::IsDestroyed(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     return true;
   }
 
-  return info.mIsDestroyed;
+  return it->second->mIsDestroyed;
 }
 
 void
 RenderThread::SetDestroyed(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  info.mIsDestroyed = true;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  it->second->mIsDestroyed = true;
 }
 
 void
-RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
+RenderThread::IncPendingFrameCount(wr::WindowId aWindowId, const TimeStamp& aStartTime)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  // Update pending frame count.
-  info.mPendingCount = info.mPendingCount + 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  it->second->mPendingCount++;
+  it->second->mStartTimes.push(aStartTime);
 }
 
 void
 RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  MOZ_ASSERT(info.mPendingCount > 0);
-  if (info.mPendingCount <= 0) {
+  WindowInfo* info = it->second;
+  MOZ_ASSERT(info->mPendingCount > 0);
+  if (info->mPendingCount <= 0) {
     return;
   }
-  // Update pending frame count.
-  info.mPendingCount = info.mPendingCount - 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  info->mPendingCount--;
+  // This function gets called for "nop frames" where nothing was rendered or
+  // composited. But we count this time because the non-WR codepath equivalent
+  // in CompositorBridgeParent::ComposeToTarget also counts such frames. And
+  // anyway this should be relatively infrequent so it shouldn't skew the
+  // numbers much.
+  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
+                                          info->mStartTimes.front());
+  info->mStartTimes.pop();
 }
 
 void
 RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  // Update rendering frame count.
-  info.mRenderingCount = info.mRenderingCount + 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  it->second->mRenderingCount++;
 }
 
 void
 RenderThread::FrameRenderingComplete(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
-  // Get the old count.
-  WindowInfo info;
-  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+  auto it = mWindowInfos.find(AsUint64(aWindowId));
+  if (it == mWindowInfos.end()) {
     MOZ_ASSERT(false);
     return;
   }
-  MOZ_ASSERT(info.mPendingCount > 0);
-  MOZ_ASSERT(info.mRenderingCount > 0);
-  if (info.mPendingCount <= 0) {
+  WindowInfo* info = it->second;
+  MOZ_ASSERT(info->mPendingCount > 0);
+  MOZ_ASSERT(info->mRenderingCount > 0);
+  if (info->mPendingCount <= 0) {
     return;
   }
-  // Update frame counts.
-  info.mPendingCount = info.mPendingCount - 1;
-  info.mRenderingCount = info.mRenderingCount - 1;
-  mWindowInfos.Put(AsUint64(aWindowId), info);
+  info->mPendingCount--;
+  info->mRenderingCount--;
+  // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
+  // point until now (when the frame is finally pushed to the screen) is
+  // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
+  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
+                                          info->mStartTimes.front());
+  info->mStartTimes.pop();
 }
 
 void

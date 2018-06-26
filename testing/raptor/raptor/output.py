@@ -120,41 +120,29 @@ class Output(object):
         # u'http://localhost:55019/Speedometer/index.html?raptor', u'unit': u'score',
         # u'alert_threshold': 2}
 
-        subtests = []
-        vals = []
+        _subtests = {}
         data = test.measurements['speedometer']
         for page_cycle in data:
-            page_cycle_results = page_cycle[0]
-
-            for sub, replicates in page_cycle_results.iteritems():
-                # for each pagecycle, replicates are appended to each subtest
-                # so if it doesn't exist the first time create the subtest entry
-                existing = False
-                for existing_sub in subtests:
-                    if existing_sub['name'] == sub:
-                        # pagecycle, subtest already there, so append the replicates
-                        existing_sub['replicates'].extend(replicates)
-                        # update the value now that we have more replicates
-                        existing_sub['value'] = filter.median(existing_sub['replicates'])
-                        # now need to update our vals list too since have new subtest value
-                        for existing_val in vals:
-                            if existing_val[1] == sub:
-                                existing_val[0] = existing_sub['value']
-                                break
-                        existing = True
-                        break
-
-                if not existing:
+            for sub, replicates in page_cycle[0].iteritems():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests.keys():
                     # subtest not added yet, first pagecycle, so add new one
-                    new_subtest = {}
-                    new_subtest['name'] = sub
-                    new_subtest['replicates'] = replicates
-                    new_subtest['lowerIsBetter'] = test.lower_is_better
-                    new_subtest['alertThreshold'] = float(test.alert_threshold)
-                    new_subtest['value'] = filter.median(replicates)
-                    new_subtest['unit'] = test.unit
-                    subtests.append(new_subtest)
-                    vals.append([new_subtest['value'], sub])
+                    _subtests[sub] = {'unit': test.unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].extend([round(x, 3) for x in replicates])
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = filter.median(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]['value'], name])
+
         return subtests, vals
 
     def parseMotionmarkOutput(self, test):
@@ -181,8 +169,7 @@ class Output(object):
         #                                  u'segment2': [[300, 300], [300, 300]], u'stdev': None}
         #  }}}]]}}
 
-        subtests = {}
-        vals = []
+        _subtests = {}
         data = test.measurements['motionmark']
         for page_cycle in data:
             page_cycle_results = page_cycle[0]
@@ -192,30 +179,25 @@ class Output(object):
             for sub in page_cycle_results[suite].keys():
                 replicate = round(page_cycle_results[suite][sub]['frameLength']['average'], 3)
 
-                # for each pagecycle, replicates are appended to each subtest
-                if sub in subtests.keys():
-                    subtests[sub]['replicates'].append(replicate)
-                    subtests[sub]['value'] = filter.median(subtests[sub]['replicates'])
-                    continue
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {'unit': test.unit,
+                                      'alertThreshold': float(test.alert_threshold),
+                                      'lowerIsBetter': test.lower_is_better,
+                                      'name': sub,
+                                      'replicates': []}
+                _subtests[sub]['replicates'].extend([replicate])
 
-                # subtest not added yet, first pagecycle, so add new one
-                new_subtest = {}
-                new_subtest['name'] = sub
-                new_subtest['replicates'] = [replicate]
-                new_subtest['lowerIsBetter'] = test.lower_is_better
-                new_subtest['alertThreshold'] = float(test.alert_threshold)
-                new_subtest['unit'] = test.unit
-                subtests[sub] = new_subtest
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = filter.median(_subtests[name]['replicates'])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]['value'], name])
 
-        retVal = []
-        subtest_names = subtests.keys()
-        subtest_names.sort(reverse=True)
-        for name in subtest_names:
-            subtests[name]['value'] = filter.median(subtests[name]['replicates'])
-            vals.append([subtests[name]['value'], name])
-            retVal.append(subtests[name])
-
-        return retVal, vals
+        return subtests, vals
 
     def output(self):
         """output to file and perfherder data json """

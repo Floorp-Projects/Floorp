@@ -683,41 +683,6 @@ add_task(async function test_async_onItemKeywordDeleted() {
   }
 });
 
-add_task(async function test_onItemAnnoChanged() {
-  _("Item annotations should be tracked");
-
-  try {
-    await tracker.stop();
-    let folder = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    _("Track changes to annos.");
-    let b = PlacesUtils.bookmarks.insertBookmark(
-      folder, CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bGUID = await PlacesUtils.promiseItemGuid(b);
-    _("New item is " + b);
-    _("GUID: " + bGUID);
-
-    await startTracking();
-    PlacesUtils.annotations.setItemAnnotation(
-      b, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
-      PlacesUtils.annotations.EXPIRE_NEVER);
-    // bookmark should be tracked, folder should not.
-    await verifyTrackedItems([bGUID]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-    await resetTracker();
-
-    PlacesUtils.annotations.removeItemAnnotation(b,
-      PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
-    await verifyTrackedItems([bGUID]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-  } finally {
-    _("Clean up.");
-    await cleanup();
-  }
-});
-
 add_task(async function test_onItemAdded_filtered_root() {
   _("Items outside the change roots should not be tracked");
 

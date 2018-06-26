@@ -24,12 +24,18 @@ from .geckoinstance import GeckoInstance
 from .keys import Keys
 from .timeout import Timeouts
 
-WEBELEMENT_KEY = "ELEMENT"
-W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
+CHROME_ELEMENT_KEY = "chromeelement-9fc5-4b51-a3c8-01716eedeb04"
+FRAME_KEY = "frame-075b-4da1-b6ba-e579c2d3230a"
+LEGACY_ELEMENT_KEY = "ELEMENT"
+WEB_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
+WINDOW_KEY = "window-fcc6-11e5-b4f8-330a88ab9d7f"
 
 
 class HTMLElement(object):
     """Represents a DOM Element."""
+
+    identifiers = (CHROME_ELEMENT_KEY, FRAME_KEY, WINDOW_KEY,
+                   LEGACY_ELEMENT_KEY, WEB_ELEMENT_KEY)
 
     def __init__(self, marionette, id):
         self.marionette = marionette
@@ -175,6 +181,21 @@ class HTMLElement(object):
         body = {"id": self.id, "propertyName": property_name}
         return self.marionette._send_message("WebDriver:GetElementCSSValue",
                                              body, key="value")
+
+    @classmethod
+    def _from_json(cls, json, marionette):
+        if isinstance(json, dict):
+            if WEB_ELEMENT_KEY in json:
+                return cls(marionette, json[WEB_ELEMENT_KEY])
+            elif LEGACY_ELEMENT_KEY in json:
+                return cls(marionette, json[LEGACY_ELEMENT_KEY])
+            elif CHROME_ELEMENT_KEY in json:
+                return cls(marionette, json[CHROME_ELEMENT_KEY])
+            elif FRAME_KEY in json:
+                return cls(marionette, json[FRAME_KEY])
+            elif WINDOW_KEY in json:
+                return cls(marionette, json[WINDOW_KEY])
+        raise ValueError("Unrecognised web element")
 
 
 class MouseButton(object):
@@ -745,12 +766,8 @@ class Marionette(object):
             return self._unwrap_response(res)
 
     def _unwrap_response(self, value):
-        if isinstance(value, dict) and (WEBELEMENT_KEY in value or
-                                        W3C_WEBELEMENT_KEY in value):
-            if value.get(WEBELEMENT_KEY):
-                return HTMLElement(self, value.get(WEBELEMENT_KEY))
-            else:
-                return HTMLElement(self, value.get(W3C_WEBELEMENT_KEY))
+        if isinstance(value, dict) and any(k in value.keys() for k in HTMLElement.identifiers):
+            return HTMLElement._from_json(value, self)
         elif isinstance(value, list):
             return list(self._unwrap_response(item) for item in value)
         else:
@@ -1593,8 +1610,8 @@ class Marionette(object):
             for arg in args:
                 wrapped[arg] = self._to_json(args[arg])
         elif type(args) == HTMLElement:
-            wrapped = {W3C_WEBELEMENT_KEY: args.id,
-                       WEBELEMENT_KEY: args.id}
+            wrapped = {WEB_ELEMENT_KEY: args.id,
+                       LEGACY_ELEMENT_KEY: args.id}
         elif (isinstance(args, bool) or isinstance(args, basestring) or
               isinstance(args, int) or isinstance(args, float) or args is None):
             wrapped = args
@@ -1605,20 +1622,17 @@ class Marionette(object):
             unwrapped = []
             for item in value:
                 unwrapped.append(self._from_json(item))
+            return unwrapped
         elif isinstance(value, dict):
             unwrapped = {}
             for key in value:
-                if key == W3C_WEBELEMENT_KEY:
-                    unwrapped = HTMLElement(self, value[key])
-                    break
-                elif key == WEBELEMENT_KEY:
-                    unwrapped = HTMLElement(self, value[key])
-                    break
+                if key in HTMLElement.identifiers:
+                    return HTMLElement._from_json(value[key], self)
                 else:
                     unwrapped[key] = self._from_json(value[key])
+            return unwrapped
         else:
-            unwrapped = value
-        return unwrapped
+            return value
 
     def execute_script(self, script, script_args=(), new_sandbox=True,
                        sandbox="default", script_timeout=None):

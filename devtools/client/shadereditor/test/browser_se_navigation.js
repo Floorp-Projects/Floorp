@@ -7,12 +7,12 @@
 
 async function ifWebGLSupported() {
   const { target, panel } = await initShaderEditor(SIMPLE_CANVAS_URL);
-  const { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  const { front, $, EVENTS, shadersListView, shadersEditorsView } = panel;
 
   reload(target);
   await promise.all([
-    once(gFront, "program-linked"),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+    once(front, "program-linked"),
+    once(panel, EVENTS.SOURCES_SHOWN)
   ]);
 
   is($("#reload-notice").hidden, true,
@@ -22,15 +22,15 @@ async function ifWebGLSupported() {
   is($("#content").hidden, false,
     "The tool's content should not be hidden anymore.");
 
-  is(ShadersListView.itemCount, 1,
+  is(shadersListView.itemCount, 1,
     "The shaders list contains one entry.");
-  is(ShadersListView.selectedItem, ShadersListView.items[0],
+  is(shadersListView.selectedItem, shadersListView.items[0],
     "The shaders list has a correct item selected.");
-  is(ShadersListView.selectedIndex, 0,
+  is(shadersListView.selectedIndex, 0,
     "The shaders list has a correct index selected.");
 
-  const vsEditor = await ShadersEditorsView._getEditor("vs");
-  const fsEditor = await ShadersEditorsView._getEditor("fs");
+  const vsEditor = await shadersEditorsView._getEditor("vs");
+  const fsEditor = await shadersEditorsView._getEditor("fs");
 
   is(vsEditor.getText().indexOf("gl_Position"), 170,
     "The vertex shader editor contains the correct text.");
@@ -41,7 +41,7 @@ async function ifWebGLSupported() {
   const navigated = once(target, "will-navigate");
   navigate(target, "about:blank");
 
-  await promise.all([navigating, once(panel.panelWin, EVENTS.UI_RESET) ]);
+  await promise.all([navigating, once(panel, EVENTS.UI_RESET) ]);
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden while navigating.");
@@ -50,11 +50,11 @@ async function ifWebGLSupported() {
   is($("#content").hidden, true,
     "The tool's content should be hidden now that there's no WebGL content.");
 
-  is(ShadersListView.itemCount, 0,
+  is(shadersListView.itemCount, 0,
     "The shaders list should be empty.");
-  is(ShadersListView.selectedItem, null,
+  is(shadersListView.selectedItem, null,
     "The shaders list has no correct item.");
-  is(ShadersListView.selectedIndex, -1,
+  is(shadersListView.selectedIndex, -1,
     "The shaders list has a negative index.");
 
   await navigated;

@@ -605,7 +605,20 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       maxNodes = Number.MAX_VALUE;
     }
 
-    const { isShadowHost, isShadowRoot, isDirectShadowHostChild } = node;
+    const {
+      isDirectShadowHostChild,
+      isShadowHost,
+      isShadowRoot,
+      isTemplateElement,
+    } = node;
+
+    if (isTemplateElement) {
+      // <template> tags should have a single child pointing to the element's template
+      // content.
+      const documentFragment = node.rawNode.content;
+      const nodes = [this._ref(documentFragment)];
+      return { hasFirst: true, hasLast: true, nodes };
+    }
 
     // Detect special case of unslotted shadow host children that cannot rely on a
     // regular anonymous walker.
@@ -627,8 +640,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // in case this one is incompatible with the walker's filter function.
       const skipTo = SKIP_TO_SIBLING;
 
-      const useAnonymousWalker = !(isShadowRoot || isShadowHost || isUnslottedHostChild);
-      if (!useAnonymousWalker) {
+      const useNonAnonymousWalker = isShadowRoot || isShadowHost || isUnslottedHostChild;
+      if (useNonAnonymousWalker) {
         // Do not use an anonymous walker for :
         // - shadow roots: if the host element has an ::after pseudo element, a walker on
         //   the last child of the shadow root will jump to the ::after element, which is
@@ -715,7 +728,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       nodes = [
         // #shadow-root
-        this._ref(node.rawNode.shadowRoot),
+        this._ref(node.rawNode.openOrClosedShadowRoot),
         // ::before
         ...(hasBefore ? [this._ref(first)] : []),
         // shadow host direct children

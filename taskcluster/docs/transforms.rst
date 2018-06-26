@@ -147,6 +147,7 @@ following ``run-using`` are available
   * ``toolchain-script``
   * ``always-optimized``
   * ``fetch-url``
+  * ``python-test``
 
 
 Task Descriptions

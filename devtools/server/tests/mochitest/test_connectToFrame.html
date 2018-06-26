@@ -67,7 +67,7 @@ function runTests() {
     TestActor.prototype.requestTypes = {
       "hello": TestActor.prototype.hello
     };
-    DebuggerServer.addTabActor({
+    DebuggerServer.addTargetScopedActor({
       constructorName: "TestActor",
       constructorFun: TestActor,
     }, "testActor");
@@ -109,7 +109,7 @@ function runTests() {
   }
 
   function secondClient(firstActor) {
-    // Then fake a second one, that should spawn a new set of tab actors
+    // Then fake a second one, that should spawn a new set of target-scoped actors
     const transport = DebuggerServer.connectPipe();
     const conn = transport._serverConnection;
     const client = new DebuggerClient(transport);

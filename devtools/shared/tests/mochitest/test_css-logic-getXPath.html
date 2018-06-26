@@ -36,29 +36,14 @@ window.onload = function () {
 addTest(function getXPathForUnattachedElement() {
   let unattached = document.createElement("div");
   unattached.id = "unattached";
-  try {
-    CssLogic.getXPath(unattached);
-    ok(false, "Unattached node did not throw");
-  } catch (e) {
-    ok(e, "Unattached node throws an exception");
-  }
+  is(CssLogic.getXPath(unattached), "", "Unattached node returns empty string");
 
   let unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
-  try {
-    CssLogic.getXPath(unattachedChild);
-    ok(false, "Unattached child node did not throw");
-  } catch (e) {
-    ok(e, "Unattached child node throws an exception");
-  }
+  is(CssLogic.getXPath(unattachedChild), "", "Unattached child returns empty string");
 
   let unattachedBody = document.createElement("body");
-  try {
-    CssLogic.getXPath(unattachedBody);
-    ok(false, "Unattached body node did not throw");
-  } catch (e) {
-    ok(e, "Unattached body node throws an exception");
-  }
+  is(CssLogic.getXPath(unattachedBody), "", "Unattached body returns empty string");
 
   runNextTest();
 });

@@ -949,6 +949,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
     return IPC_FAIL_NO_REASON(this);
   }
 
+  TimeStamp start = TimeStamp::Now();
   MOZ_ASSERT(bufferTexture->GetBufferDescriptor().type() == BufferDescriptor::TRGBDescriptor);
   DebugOnly<uint32_t> stride = ImageDataSerializer::GetRGBStride(bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
   uint8_t* buffer = bufferTexture->GetBuffer();
@@ -964,7 +965,7 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 
   FlushSceneBuilds();
   FlushFrameGeneration();
-  mApi->Readback(size, buffer, buffer_size);
+  mApi->Readback(start, size, buffer, buffer_size);
 
   return IPC_OK();
 }
@@ -1397,7 +1398,8 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+  TimeStamp start = TimeStamp::Now();
+  mAsyncImageManager->SetCompositionTime(start);
 
   {
     // TODO: We can improve upon this by using two transactions: one for everything that
@@ -1442,7 +1444,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   SetAPZSampleTime();
 
-  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId());
+  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), start);
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   auto startTime = TimeStamp::Now();

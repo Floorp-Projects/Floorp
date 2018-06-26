@@ -209,7 +209,6 @@ let InternalFaviconLoader = {
 };
 
 var PlacesUIUtils = {
-  DESCRIPTION_ANNO: "bookmarkProperties/description",
   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
 
   /**
