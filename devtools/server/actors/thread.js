@@ -536,6 +536,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // When pause points are specified for the source,
       // we should pause when we are at a stepOver pause point
       const pausePoint = findPausePointForLocation(pausePoints, newLocation);
+
       if (pausePoint) {
         if (pausePoint.step) {
           return pauseAndRespond(this);

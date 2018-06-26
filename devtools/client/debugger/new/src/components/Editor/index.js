@@ -261,6 +261,7 @@ class Editor extends _react.PureComponent {
     codeMirrorWrapper.tabIndex = 0;
     codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
     codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
+    codeMirrorWrapper.addEventListener("mouseover", (0, _editor.onMouseOver)(codeMirror));
 
     const toggleFoldMarkerVisibility = e => {
       if (node instanceof HTMLElement) {
