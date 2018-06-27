@@ -7,6 +7,7 @@
     "osx_cross_compile": true,
     "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_600/final",
     "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_600/final",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_600/final",
     "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_600/final",
     "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_600/final",
     "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_600/final",
