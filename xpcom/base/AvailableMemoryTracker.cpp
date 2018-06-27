@@ -84,16 +84,14 @@ volatile PRIntervalTime sLastLowMemoryNotificationTime;
 
 // These are function pointers to the functions we wrap in Init().
 
-void* (WINAPI* sVirtualAllocOrig)(LPVOID aAddress, SIZE_T aSize,
-                                  DWORD aAllocationType, DWORD aProtect);
+static WindowsDllInterceptor::FuncHookType<decltype(&VirtualAlloc)>
+  sVirtualAllocOrig;
 
-void* (WINAPI* sMapViewOfFileOrig)(HANDLE aFileMappingObject,
-                                   DWORD aDesiredAccess, DWORD aFileOffsetHigh,
-                                   DWORD aFileOffsetLow, SIZE_T aNumBytesToMap);
+static WindowsDllInterceptor::FuncHookType<decltype(&MapViewOfFile)>
+  sMapViewOfFileOrig;
 
-HBITMAP(WINAPI* sCreateDIBSectionOrig)(HDC aDC, const BITMAPINFO* aBitmapInfo,
-                                       UINT aUsage, VOID** aBits,
-                                       HANDLE aSection, DWORD aOffset);
+static WindowsDllInterceptor::FuncHookType<decltype(&CreateDIBSection)>
+  sCreateDIBSectionOrig;
 
 /**
  * Fire a memory pressure event if we were not under memory pressure yet, or
@@ -645,17 +643,12 @@ Init()
   // VirtualAllocHook from reentering itself.
   if (!PR_GetEnv("MOZ_PGO_INSTRUMENTED")) {
     sKernel32Intercept.Init("Kernel32.dll");
-    sKernel32Intercept.AddHook("VirtualAlloc",
-                               reinterpret_cast<intptr_t>(VirtualAllocHook),
-                               reinterpret_cast<void**>(&sVirtualAllocOrig));
-    sKernel32Intercept.AddHook("MapViewOfFile",
-                               reinterpret_cast<intptr_t>(MapViewOfFileHook),
-                               reinterpret_cast<void**>(&sMapViewOfFileOrig));
+    sVirtualAllocOrig.Set(sKernel32Intercept, "VirtualAlloc", &VirtualAllocHook);
+    sMapViewOfFileOrig.Set(sKernel32Intercept, "MapViewOfFile", &MapViewOfFileHook);
 
     sGdi32Intercept.Init("Gdi32.dll");
-    sGdi32Intercept.AddHook("CreateDIBSection",
-                            reinterpret_cast<intptr_t>(CreateDIBSectionHook),
-                            reinterpret_cast<void**>(&sCreateDIBSectionOrig));
+    sCreateDIBSectionOrig.Set(sGdi32Intercept, "CreateDIBSection",
+                              &CreateDIBSectionHook);
   }
 
   sInitialized = true;
