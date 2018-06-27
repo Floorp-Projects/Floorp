@@ -1439,14 +1439,14 @@ nsSVGUtils::GetFallbackOrPaintColor(ComputedStyle *aComputedStyle,
     case eStyleSVGPaintType_Server:
     case eStyleSVGPaintType_ContextStroke:
       color = paint.GetFallbackType() == eStyleSVGFallbackType_Color ?
-                paint.GetFallbackColor() : NS_RGBA(0, 0, 0, 0);
+                paint.GetFallbackColor(aComputedStyle) : NS_RGBA(0, 0, 0, 0);
       break;
     case eStyleSVGPaintType_ContextFill:
       color = paint.GetFallbackType() == eStyleSVGFallbackType_Color ?
-                paint.GetFallbackColor() : NS_RGB(0, 0, 0);
+                paint.GetFallbackColor(aComputedStyle) : NS_RGB(0, 0, 0);
       break;
     default:
-      color = paint.GetColor();
+      color = paint.GetColor(aComputedStyle);
       break;
   }
   if (styleIfVisited) {
@@ -1461,7 +1461,7 @@ nsSVGUtils::GetFallbackOrPaintColor(ComputedStyle *aComputedStyle,
     // another simple color.
     if (paintIfVisited.Type() == eStyleSVGPaintType_Color &&
         paint.Type() == eStyleSVGPaintType_Color) {
-      nscolor colors[2] = { color, paintIfVisited.GetColor() };
+      nscolor colors[2] = { color, paintIfVisited.GetColor(aComputedStyle) };
       return ComputedStyle::CombineVisitedColors(
                colors, aComputedStyle->RelevantLinkVisited());
     }
