@@ -1590,6 +1590,12 @@ SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t lengt
 /*** Conversions *********************************************************************************/
 
 /*
+ * Convert a string to a printable C string.
+ */
+UniqueChars
+EncodeLatin1(JSContext* cx, JSString* str);
+
+/*
  * Convert a value to a printable C string.
  *
  * As the function name implies, any characters in a converted printable string will be Latin1
