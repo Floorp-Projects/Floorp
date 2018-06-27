@@ -460,12 +460,28 @@ WritableSharedMap::Flush()
 }
 
 void
+WritableSharedMap::IdleFlush()
+{
+  mPendingFlush = false;
+  Flush();
+}
+
+nsresult
 WritableSharedMap::KeyChanged(const nsACString& aName)
 {
   if (!mChangedKeys.ContainsSorted(aName)) {
     mChangedKeys.InsertElementSorted(aName);
   }
   mEntryArray.reset();
+
+  if (!mPendingFlush) {
+      MOZ_TRY(NS_IdleDispatchToCurrentThread(
+        NewRunnableMethod("WritableSharedMap::IdleFlush",
+                          this,
+                          &WritableSharedMap::IdleFlush)));
+      mPendingFlush = true;
+  }
+  return NS_OK;
 }
 
 
