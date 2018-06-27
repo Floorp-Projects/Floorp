@@ -78,10 +78,6 @@ EnterprisePoliciesManagerContent.prototype = {
 
   isAllowed(feature) {
     return !this._disallowedFeatures.includes(feature);
-  },
-
-  getActivePolicies() {
-    throw Cr.NS_ERROR_NOT_AVAILABLE;
   }
 };
 
