@@ -33,13 +33,17 @@ function configureTest() {
   var cl = new consoleListener();
 
   return SpecialPowers.pushPrefEnv(
-    {"set": [["dom.audioWorklet.enabled", true],
+    {"set": [["dom.audioworklet.enabled", true],
              ["dom.worklet.enabled", true]]});
 }
 
 // This function is called into an iframe.
 function runTestInIframe() {
-  audioWorklet.import("worklet_audioWorklet.js")
+  ok(window.isSecureContext, "Test should run in secure context");
+  var audioContext = new AudioContext();
+  ok(audioContext.audioWorklet instanceof AudioWorklet,
+     "AudioContext.audioWorklet should be an instance of AudioWorklet");
+  audioContext.audioWorklet.import("worklet_audioWorklet.js")
 }
 </script>
 </body>
