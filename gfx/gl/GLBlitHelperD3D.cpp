@@ -184,12 +184,12 @@ GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
     const auto& desc = data->SD();
     const auto& subdescUnion = desc.subdesc();
     switch (subdescUnion.type()) {
-    case layers::SurfaceDescriptor::TSurfaceDescriptorD3D10:
+    case subdescUnion.TSurfaceDescriptorD3D10:
         {
             const auto& subdesc = subdescUnion.get_SurfaceDescriptorD3D10();
             return BlitDescriptor(subdesc, destSize, destOrigin);
         }
-    case layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr:
+    case subdescUnion.TSurfaceDescriptorDXGIYCbCr:
         {
             const auto& subdesc = subdescUnion.get_SurfaceDescriptorDXGIYCbCr();
 
@@ -223,6 +223,9 @@ GLBlitHelper::BlitImage(layers::D3D11YCbCrImage* const srcImage,
     const auto& data = srcImage->GetData();
     if (!data)
         return false;
+
+    const auto& clipRect = srcImage->mPictureRect;
+    const auto& colorSpace = srcImage->mColorSpace;
 
     const WindowsHandle handles[3] = {
         (WindowsHandle)data->mHandles[0],
