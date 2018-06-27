@@ -16,7 +16,10 @@
         // Tests that origins with "autoplay-media" permission can autoplay.
 
         gTestPrefs.push(["media.autoplay.enabled", false],
-          ["media.autoplay.enabled.user-gestures-needed", true]);
+          ["media.autoplay.enabled.user-gestures-needed", true],
+          // Note: permission prompt disabled, as we want immediate
+          // notification in this test that an origin is blocked.
+          ["media.autoplay.ask-permission", false]);
 
         SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {
           runTest();
@@ -25,10 +28,13 @@
         async function testPlayInOrigin(testCase) {
           // Run test in a new window, to ensure its user gesture
           // activation state isn't tainted by preceeding tests.
-          let child = window.open("file_autoplay_policy_permission.html", "", "width=500,height=500");
-          await once(child, "load");
-          child.postMessage(testCase, "*");
-          await nextWindowMessage();
+          let url = testCase.origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html";
+          let child = window.open(url, "", "width=500,height=500");
+          is((await nextWindowMessage()).data, "ready", "Expected a 'ready' message");
+          child.postMessage("play-audible", testCase.origin);
+          // Wait for the window to tell us whether it could play video.
+          let result = await nextWindowMessage();
+          is(result.data.played, testCase.shouldPlay, testCase.message);
           child.close();
         }
 
