@@ -579,6 +579,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         windowFocusChangeListener?.invoke(hasFocus)
     }
 
+    @Suppress("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return if (android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.M &&
                 event.actionMasked == MotionEvent.ACTION_UP) {
