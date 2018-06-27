@@ -28,10 +28,6 @@ static constexpr Entry kEntries[] = {
     def method(p):
         if p.id.startswith("margin_"):
             return "{}Width".format(p.method)
-        if p.id == "ime_mode":
-            return "IMEMode"
-        if p.id == "float":
-            return "Float"
         if p.id.startswith("_moz_"):
             method = p.method[3:]
         else:
@@ -45,8 +41,13 @@ static constexpr Entry kEntries[] = {
     properties = filter(exposed_on_getcs, properties)
     properties.sort(key=order_key)
 
-    TEMPLATE = "  {{ eCSSProperty_{}, &nsComputedDOMStyle::DoGet{} }},\n"
+    TEMPLATE = "  {{ eCSSProperty_{}, &nsComputedDOMStyle::{} }},\n"
     for p in properties:
-        output.write(TEMPLATE.format(p.id, method(p)))
+        m = "DoGet" + method(p)
+        # Put a dummy getter here instead of nullptr because MSVC seems
+        # to have bug which ruins the table when we put nullptr for
+        # pointer-to-member-function. See bug 1471426.
+        m = "DummyGetter" if "SerializedByServo" in p.flags else m
+        output.write(TEMPLATE.format(p.id, m))
 
     output.write("};\n")
