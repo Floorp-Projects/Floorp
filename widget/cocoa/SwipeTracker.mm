@@ -71,7 +71,7 @@ SwipeTracker::~SwipeTracker()
 double
 SwipeTracker::SwipeSuccessTargetValue() const
 {
-  return (mSwipeDirection == dom::SimpleGestureEventBinding::DIRECTION_RIGHT) ?
+  return (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT) ?
     -1.0 : 1.0;
 }
 
@@ -81,10 +81,10 @@ SwipeTracker::ClampToAllowedRange(double aGestureAmount) const
   // gestureAmount needs to stay between -1 and 0 when swiping right and
   // between 0 and 1 when swiping left.
   double min =
-    (mSwipeDirection == dom::SimpleGestureEventBinding::DIRECTION_RIGHT) ?
+    (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT) ?
       -1.0 : 0.0;
   double max =
-    (mSwipeDirection == dom::SimpleGestureEventBinding::DIRECTION_LEFT) ?
+    (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_LEFT) ?
       1.0 : 0.0;
   return clamped(aGestureAmount, min, max);
 }

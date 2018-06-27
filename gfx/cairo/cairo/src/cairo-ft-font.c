@@ -108,6 +108,7 @@ static setLcdFilterFunc setLcdFilter;
 extern FT_Face mozilla_NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex);
 extern FT_Face mozilla_NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex);
 extern void mozilla_ReleaseFTFace(FT_Face aFace);
+extern FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
 extern void mozilla_LockFTLibrary(FT_Library aFTLibrary);
 extern void mozilla_UnlockFTLibrary(FT_Library aFTLibrary);
 
@@ -711,7 +712,20 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 	    if (entry == NULL)
 		break;
 
-	    _font_map_release_face_lock_held (font_map, entry);
+	    /* Must use try-lock here to avoid deadlock on multiple threads trying to
+	     * acquire the font map lock inside the unscaled font mutexes. In the worst
+	     * case, this may just cause a spin in the extremely unlikely circumstance
+	     * that all open faces are currently locked.
+	     */
+	    if (CAIRO_MUTEX_TRY_LOCK (entry->mutex))
+	    {
+		/* Verify the lock count is still actually 0 inside the mutex before
+		 * trying to free the entry.
+		 */
+		if (_has_unlocked_face (entry))
+		    _font_map_release_face_lock_held (font_map, entry);
+		CAIRO_MUTEX_UNLOCK (entry->mutex);
+	    }
 	}
     }
     _cairo_ft_unscaled_font_map_unlock ();
@@ -2331,7 +2345,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     load_flags |= FT_LOAD_COLOR;
 #endif
 
-    error = FT_Load_Glyph (scaled_font->unscaled->face,
+    error = mozilla_LoadFTGlyph (scaled_font->unscaled->face,
 			   _cairo_scaled_glyph_index(scaled_glyph),
 			   load_flags);
     /* XXX ignoring all other errors for now.  They are not fatal, typically
@@ -2485,7 +2499,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	 * so reload it. This will probably never occur though
 	 */
 	if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
-	    error = FT_Load_Glyph (face,
+	    error = mozilla_LoadFTGlyph (face,
 				   _cairo_scaled_glyph_index(scaled_glyph),
 				   load_flags | FT_LOAD_NO_BITMAP);
 	    /* XXX ignoring all other errors for now.  They are not fatal, typically

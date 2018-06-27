@@ -54,7 +54,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DataTransferItem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DataTransferItemBinding::Wrap(aCx, this, aGivenProto);
+  return DataTransferItem_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DataTransferItem>

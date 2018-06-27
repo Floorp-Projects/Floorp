@@ -16,12 +16,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(ClipPath)
 namespace mozilla {
 namespace dom {
 
-using namespace SVGUnitTypesBinding;
+using namespace SVGUnitTypes_Binding;
 
 JSObject*
 SVGClipPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGClipPathElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGClipPathElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] =

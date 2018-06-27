@@ -171,7 +171,7 @@ U2F::Init(ErrorResult& aRv)
 /* virtual */ JSObject*
 U2F::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return U2FBinding::Wrap(aCx, this, aGivenProto);
+  return U2F_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 template<typename T, typename C>

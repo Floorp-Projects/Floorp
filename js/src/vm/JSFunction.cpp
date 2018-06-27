@@ -1575,6 +1575,8 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 {
     MOZ_ASSERT(fun->isInterpretedLazy());
 
+    AutoRealm ar(cx, fun);
+
     Rooted<LazyScript*> lazy(cx, fun->lazyScriptOrNull());
     if (lazy) {
         RootedScript script(cx, lazy->maybeScript());

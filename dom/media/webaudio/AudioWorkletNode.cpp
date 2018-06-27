@@ -83,7 +83,7 @@ MessagePort* AudioWorkletNode::GetPort(ErrorResult& aRv) const
 JSObject*
 AudioWorkletNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AudioWorkletNodeBinding::Wrap(aCx, this, aGivenProto);
+  return AudioWorkletNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 size_t

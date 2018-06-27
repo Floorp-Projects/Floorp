@@ -35,7 +35,7 @@ WebGL1Context::CreateFormatUsage(gl::GLContext* gl) const
 JSObject*
 WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLRenderingContextBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLRenderingContext_Binding::Wrap(cx, this, givenProto);
 }
 
 } // namespace mozilla

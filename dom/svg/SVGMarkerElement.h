@@ -34,8 +34,8 @@ class nsSVGOrientType
 {
 public:
   nsSVGOrientType()
-   : mAnimVal(SVGMarkerElementBinding::SVG_MARKER_ORIENT_ANGLE),
-     mBaseVal(SVGMarkerElementBinding::SVG_MARKER_ORIENT_ANGLE) {}
+   : mAnimVal(SVGMarkerElement_Binding::SVG_MARKER_ORIENT_ANGLE),
+     mBaseVal(SVGMarkerElement_Binding::SVG_MARKER_ORIENT_ANGLE) {}
 
   nsresult SetBaseValue(uint16_t aValue,
                         nsSVGElement *aSVGElement);
@@ -52,10 +52,10 @@ public:
   // Web content
   uint16_t GetBaseValue() const
     { return mAnimVal == SVG_MARKER_ORIENT_AUTO_START_REVERSE ?
-               SVGMarkerElementBinding::SVG_MARKER_ORIENT_UNKNOWN : mBaseVal; }
+               SVGMarkerElement_Binding::SVG_MARKER_ORIENT_UNKNOWN : mBaseVal; }
   uint16_t GetAnimValue() const
     { return mAnimVal == SVG_MARKER_ORIENT_AUTO_START_REVERSE ?
-               SVGMarkerElementBinding::SVG_MARKER_ORIENT_UNKNOWN : mAnimVal; }
+               SVGMarkerElement_Binding::SVG_MARKER_ORIENT_UNKNOWN : mAnimVal; }
   uint16_t GetAnimValueInternal() const
     { return mAnimVal; }
 

@@ -33,8 +33,8 @@
 
     <label id="sendto-message" value="&SendMsg.label;" control="app-picker-listbox"/>
 
-    <listbox id="app-picker-listbox" rows="5"
-             ondblclick="g_dialog.appDoubleClick();"/>
+    <richlistbox id="app-picker-listbox"
+                 ondblclick="g_dialog.appDoubleClick();"/>
 
     <label id="app-picker-notfound" value="&NoAppFound.label;" hidden="true"/>
   </dialog>

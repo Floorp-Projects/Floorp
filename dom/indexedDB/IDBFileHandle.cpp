@@ -796,7 +796,7 @@ IDBFileHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   AssertIsOnOwningThread();
 
-  return IDBFileHandleBinding::Wrap(aCx, this, aGivenProto);
+  return IDBFileHandle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

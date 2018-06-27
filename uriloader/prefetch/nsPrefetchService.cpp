@@ -532,7 +532,7 @@ nsPrefetchService::DispatchEvent(nsPrefetchNode *node, bool aSuccess)
                                    aSuccess ?
                                     NS_LITERAL_STRING("load") :
                                     NS_LITERAL_STRING("error"),
-                                   /* aCanBubble = */ false);
+                                   CanBubble::eNo);
         dispatcher->RequireNodeInDocument();
         dispatcher->PostDOMEvent();
       }
@@ -731,11 +731,10 @@ nsPrefetchService::Preload(nsIURI *aURI,
         nsCOMPtr<nsINode> domNode = do_QueryInterface(aSource);
         if (domNode && domNode->IsInComposedDoc()) {
             RefPtr<AsyncEventDispatcher> asyncDispatcher =
-                new AsyncEventDispatcher(//domNode->OwnerDoc(),
-                                         domNode,
+                new AsyncEventDispatcher(domNode,
                                          NS_LITERAL_STRING("error"),
-                                         /* aCanBubble = */ false,
-                                         /* aCancelable = */ false);
+                                         CanBubble::eNo,
+                                         ChromeOnlyDispatch::eNo);
             asyncDispatcher->RunDOMEventWhenSafe();
         }
         return NS_OK;
@@ -778,8 +777,8 @@ nsPrefetchService::Preload(nsIURI *aURI,
             RefPtr<AsyncEventDispatcher> asyncDispatcher =
                 new AsyncEventDispatcher(domNode,
                                          NS_LITERAL_STRING("error"),
-                                         /* aCanBubble = */ false,
-                                         /* aCancelable = */ false);
+                                         CanBubble::eNo,
+                                         ChromeOnlyDispatch::eNo);
             asyncDispatcher->RunDOMEventWhenSafe();
         }
     }

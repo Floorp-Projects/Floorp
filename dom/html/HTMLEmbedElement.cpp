@@ -332,7 +332,7 @@ JSObject*
 HTMLEmbedElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   JSObject* obj;
-  obj = HTMLEmbedElementBinding::Wrap(aCx, this, aGivenProto);
+  obj = HTMLEmbedElement_Binding::Wrap(aCx, this, aGivenProto);
 
   if (!obj) {
     return nullptr;

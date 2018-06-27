@@ -470,11 +470,13 @@ TabParent::ActorDestroy(ActorDestroyReason why)
           if (channel && !channel->DoBuildIDsMatch()) {
             nsContentUtils::DispatchTrustedEvent(
               frameElement->OwnerDoc(), frameElement,
-              NS_LITERAL_STRING("oop-browser-buildid-mismatch"), true, true);
+              NS_LITERAL_STRING("oop-browser-buildid-mismatch"),
+              CanBubble::eYes, Cancelable::eYes);
           } else {
             nsContentUtils::DispatchTrustedEvent(
               frameElement->OwnerDoc(), frameElement,
-              NS_LITERAL_STRING("oop-browser-crashed"), true, true);
+              NS_LITERAL_STRING("oop-browser-crashed"),
+              CanBubble::eYes, Cancelable::eYes);
           }
         }
       }

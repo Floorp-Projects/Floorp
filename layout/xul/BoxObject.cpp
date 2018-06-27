@@ -472,7 +472,7 @@ BoxObject::GetParentObject() const
 JSObject*
 BoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return BoxObjectBinding::Wrap(aCx, this, aGivenProto);
+  return BoxObject_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 Element*

@@ -41,7 +41,7 @@ Crypto::~Crypto()
 /* virtual */ JSObject*
 Crypto::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CryptoBinding::Wrap(aCx, this, aGivenProto);
+  return Crypto_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

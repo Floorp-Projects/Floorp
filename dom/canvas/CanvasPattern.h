@@ -54,7 +54,7 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return CanvasPatternBinding::Wrap(aCx, this, aGivenProto);
+    return CanvasPattern_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   CanvasRenderingContext2D* GetParentObject()

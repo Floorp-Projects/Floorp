@@ -20,27 +20,27 @@
 #include "SVGContentUtils.h"
 
 using namespace mozilla::gfx;
-using namespace mozilla::dom::SVGMarkerElementBinding;
+using namespace mozilla::dom::SVGMarkerElement_Binding;
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Marker)
 
 namespace mozilla {
 namespace dom {
 
-using namespace SVGAngleBinding;
+using namespace SVGAngle_Binding;
 
 JSObject*
 SVGMarkerElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGMarkerElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGMarkerElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::LengthInfo SVGMarkerElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::refX, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::refY, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::markerWidth, 3, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::markerHeight, 3, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::refX, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::refY, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { &nsGkAtoms::markerWidth, 3, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { &nsGkAtoms::markerHeight, 3, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
 nsSVGEnumMapping SVGMarkerElement::sUnitsMap[] = {

@@ -1518,8 +1518,9 @@ EventSourceImpl::DispatchAllMessageEvents()
     RefPtr<MessageEvent> event = new MessageEvent(mEventSource, nullptr,
                                                   nullptr);
 
-    event->InitMessageEvent(nullptr, message->mEventName, false, false, jsData,
-                            mOrigin, message->mLastEventID, nullptr,
+    event->InitMessageEvent(nullptr, message->mEventName, CanBubble::eNo,
+                            Cancelable::eNo, jsData, mOrigin,
+                            message->mLastEventID, nullptr,
                             Sequence<OwningNonNull<MessagePort>>());
     event->SetTrusted(true);
 
@@ -2033,7 +2034,7 @@ JSObject*
 EventSource::WrapObject(JSContext* aCx,
                         JS::Handle<JSObject*> aGivenProto)
 {
-  return EventSourceBinding::Wrap(aCx, this, aGivenProto);
+  return EventSource_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -673,7 +673,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 JSObject*
 IDBIndex::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBIndexBinding::Wrap(aCx, this, aGivenProto);
+  return IDBIndex_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

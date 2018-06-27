@@ -30,13 +30,13 @@ PositionError::GetMessage(nsAString& aMessage) const
 {
   switch (mCode)
   {
-    case PositionErrorBinding::PERMISSION_DENIED:
+    case PositionError_Binding::PERMISSION_DENIED:
       aMessage = NS_LITERAL_STRING("User denied geolocation prompt");
       break;
-    case PositionErrorBinding::POSITION_UNAVAILABLE:
+    case PositionError_Binding::POSITION_UNAVAILABLE:
       aMessage = NS_LITERAL_STRING("Unknown error acquiring position");
       break;
-    case PositionErrorBinding::TIMEOUT:
+    case PositionError_Binding::TIMEOUT:
       aMessage = NS_LITERAL_STRING("Position acquisition timed out");
       break;
     default:
@@ -53,7 +53,7 @@ PositionError::GetParentObject() const
 JSObject*
 PositionError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PositionErrorBinding::Wrap(aCx, this, aGivenProto);
+  return PositionError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

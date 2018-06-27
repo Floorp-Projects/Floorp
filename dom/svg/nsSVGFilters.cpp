@@ -53,10 +53,10 @@ using namespace mozilla::gfx;
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y, 0, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 100, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::height, 100, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y }
+  { &nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::height, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y }
 };
 
 //----------------------------------------------------------------------
@@ -361,7 +361,7 @@ SVGComponentTransferFunctionElement::GetNumberInfo()
 /* virtual */ JSObject*
 SVGFEFuncRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEFuncRElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEFuncRElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
@@ -377,7 +377,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 /* virtual */ JSObject*
 SVGFEFuncGElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEFuncGElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEFuncGElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
@@ -393,7 +393,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 /* virtual */ JSObject*
 SVGFEFuncBElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEFuncBElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEFuncBElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
@@ -409,7 +409,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 /* virtual */ JSObject*
 SVGFEFuncAElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEFuncAElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEFuncAElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -138,7 +138,7 @@ CSSFontFaceRuleDecl::GetParentObject()
 JSObject*
 CSSFontFaceRuleDecl::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSStyleDeclarationBinding::Wrap(cx, this, aGivenProto);
+  return CSSStyleDeclaration_Binding::Wrap(cx, this, aGivenProto);
 }
 
 // -------------------------------------------
@@ -200,7 +200,7 @@ CSSFontFaceRule::List(FILE* out, int32_t aIndent) const
 uint16_t
 CSSFontFaceRule::Type() const
 {
-  return CSSRuleBinding::FONT_FACE_RULE;
+  return CSSRule_Binding::FONT_FACE_RULE;
 }
 
 void
@@ -226,5 +226,5 @@ CSSFontFaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSFontFaceRule::WrapObject(JSContext* aCx,
                             JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSFontFaceRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSFontFaceRule_Binding::Wrap(aCx, this, aGivenProto);
 }

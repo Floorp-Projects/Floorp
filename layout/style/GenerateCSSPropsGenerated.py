@@ -13,7 +13,7 @@ class PropertyWrapper(object):
     def __init__(self, index, prop):
         self.index = index
         self.prop = prop
-        if "CSSPropFlags::Internal" in prop.flags:
+        if "Internal" in prop.flags:
             self.idlname = None
         else:
             idl_name = prop.method

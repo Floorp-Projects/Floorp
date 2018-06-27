@@ -25,7 +25,7 @@ static const int32_t MAX_OCTAVES = 10;
 JSObject*
 SVGFETurbulenceElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFETurbulenceElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFETurbulenceElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberInfo SVGFETurbulenceElement::sNumberInfo[1] =

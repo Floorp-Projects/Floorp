@@ -36,7 +36,7 @@ public:
   RawServoKeyframe* Raw() const { return mRaw; }
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRuleBinding::KEYFRAME_RULE; }
+  uint16_t Type() const final { return CSSRule_Binding::KEYFRAME_RULE; }
   void GetCssText(nsAString& aCssText) const final;
   void GetKeyText(nsAString& aKey);
   void SetKeyText(const nsAString& aKey);

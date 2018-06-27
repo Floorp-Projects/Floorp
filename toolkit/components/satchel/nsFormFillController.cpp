@@ -1078,15 +1078,15 @@ nsFormFillController::KeyPress(Event* aEvent)
 
   uint32_t k = keyEvent->KeyCode();
   switch (k) {
-  case KeyboardEventBinding::DOM_VK_DELETE:
+  case KeyboardEvent_Binding::DOM_VK_DELETE:
 #ifndef XP_MACOSX
     mController->HandleDelete(&cancel);
     break;
-  case KeyboardEventBinding::DOM_VK_BACK_SPACE:
+  case KeyboardEvent_Binding::DOM_VK_BACK_SPACE:
     mController->HandleText(&unused);
     break;
 #else
-  case KeyboardEventBinding::DOM_VK_BACK_SPACE:
+  case KeyboardEvent_Binding::DOM_VK_BACK_SPACE:
     {
       if (keyEvent->ShiftKey()) {
         mController->HandleDelete(&cancel);
@@ -1097,8 +1097,8 @@ nsFormFillController::KeyPress(Event* aEvent)
       break;
     }
 #endif
-  case KeyboardEventBinding::DOM_VK_PAGE_UP:
-  case KeyboardEventBinding::DOM_VK_PAGE_DOWN:
+  case KeyboardEvent_Binding::DOM_VK_PAGE_UP:
+  case KeyboardEvent_Binding::DOM_VK_PAGE_DOWN:
     {
       if (keyEvent->CtrlKey() ||
           keyEvent->AltKey() ||
@@ -1107,10 +1107,10 @@ nsFormFillController::KeyPress(Event* aEvent)
       }
     }
     MOZ_FALLTHROUGH;
-  case KeyboardEventBinding::DOM_VK_UP:
-  case KeyboardEventBinding::DOM_VK_DOWN:
-  case KeyboardEventBinding::DOM_VK_LEFT:
-  case KeyboardEventBinding::DOM_VK_RIGHT:
+  case KeyboardEvent_Binding::DOM_VK_UP:
+  case KeyboardEvent_Binding::DOM_VK_DOWN:
+  case KeyboardEvent_Binding::DOM_VK_LEFT:
+  case KeyboardEvent_Binding::DOM_VK_RIGHT:
     {
       // Get the writing-mode of the relevant input element,
       // so that we can remap arrow keys if necessary.
@@ -1123,33 +1123,33 @@ nsFormFillController::KeyPress(Event* aEvent)
       }
       if (wm.IsVertical()) {
         switch (k) {
-        case KeyboardEventBinding::DOM_VK_LEFT:
-          k = wm.IsVerticalLR() ? KeyboardEventBinding::DOM_VK_UP
-                                : KeyboardEventBinding::DOM_VK_DOWN;
+        case KeyboardEvent_Binding::DOM_VK_LEFT:
+          k = wm.IsVerticalLR() ? KeyboardEvent_Binding::DOM_VK_UP
+                                : KeyboardEvent_Binding::DOM_VK_DOWN;
           break;
-        case KeyboardEventBinding::DOM_VK_RIGHT:
-          k = wm.IsVerticalLR() ? KeyboardEventBinding::DOM_VK_DOWN
-                                : KeyboardEventBinding::DOM_VK_UP;
+        case KeyboardEvent_Binding::DOM_VK_RIGHT:
+          k = wm.IsVerticalLR() ? KeyboardEvent_Binding::DOM_VK_DOWN
+                                : KeyboardEvent_Binding::DOM_VK_UP;
           break;
-        case KeyboardEventBinding::DOM_VK_UP:
-          k = KeyboardEventBinding::DOM_VK_LEFT;
+        case KeyboardEvent_Binding::DOM_VK_UP:
+          k = KeyboardEvent_Binding::DOM_VK_LEFT;
           break;
-        case KeyboardEventBinding::DOM_VK_DOWN:
-          k = KeyboardEventBinding::DOM_VK_RIGHT;
+        case KeyboardEvent_Binding::DOM_VK_DOWN:
+          k = KeyboardEvent_Binding::DOM_VK_RIGHT;
           break;
         }
       }
     }
     mController->HandleKeyNavigation(k, &cancel);
     break;
-  case KeyboardEventBinding::DOM_VK_ESCAPE:
+  case KeyboardEvent_Binding::DOM_VK_ESCAPE:
     mController->HandleEscape(&cancel);
     break;
-  case KeyboardEventBinding::DOM_VK_TAB:
+  case KeyboardEvent_Binding::DOM_VK_TAB:
     mController->HandleTab();
     cancel = false;
     break;
-  case KeyboardEventBinding::DOM_VK_RETURN:
+  case KeyboardEvent_Binding::DOM_VK_RETURN:
     mController->HandleEnter(false, aEvent, &cancel);
     break;
   }
@@ -1160,7 +1160,7 @@ nsFormFillController::KeyPress(Event* aEvent)
     // (indicated by cancel=true) so sites don't manually submit forms
     // (e.g. via submit.click()) without the autocompleted value being filled.
     // Bug 286933 will fix this for other key events.
-    if (k == KeyboardEventBinding::DOM_VK_RETURN) {
+    if (k == KeyboardEvent_Binding::DOM_VK_RETURN) {
       aEvent->StopPropagation();
     }
   }
@@ -1224,7 +1224,7 @@ nsFormFillController::ShowPopup()
     // Show the popup with the complete result set.  Can't use HandleText()
     // because it doesn't display the popup if the input is blank.
     bool cancel = false;
-    mController->HandleKeyNavigation(KeyboardEventBinding::DOM_VK_DOWN, &cancel);
+    mController->HandleKeyNavigation(KeyboardEvent_Binding::DOM_VK_DOWN, &cancel);
   }
 
   return NS_OK;

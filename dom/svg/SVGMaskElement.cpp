@@ -18,22 +18,22 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Mask)
 namespace mozilla {
 namespace dom {
 
-using namespace SVGUnitTypesBinding;
+using namespace SVGUnitTypes_Binding;
 
 JSObject*
 SVGMaskElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGMaskElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGMaskElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //--------------------- Masks ------------------------
 
 nsSVGElement::LengthInfo SVGMaskElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, -10, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y, -10, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 120, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::height, 120, SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::x, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::y, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { &nsGkAtoms::width, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { &nsGkAtoms::height, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
 };
 
 nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] =

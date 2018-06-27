@@ -21,7 +21,7 @@ namespace dom {
 JSObject*
 SVGFEFloodElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEFloodElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEFloodElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGFEFloodElement::sStringInfo[1] =

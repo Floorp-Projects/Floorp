@@ -33,7 +33,7 @@ PerformanceObserverEntryList::~PerformanceObserverEntryList()
 JSObject*
 PerformanceObserverEntryList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceObserverEntryListBinding::Wrap(aCx, this, aGivenProto);
+  return PerformanceObserverEntryList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

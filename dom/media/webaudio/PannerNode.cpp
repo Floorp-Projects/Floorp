@@ -391,7 +391,7 @@ PannerNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 JSObject*
 PannerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PannerNodeBinding::Wrap(aCx, this, aGivenProto);
+  return PannerNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void PannerNode::DestroyMediaStream()

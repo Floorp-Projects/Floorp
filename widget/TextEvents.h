@@ -43,10 +43,10 @@ namespace mozilla {
 
 enum : uint32_t
 {
-  eKeyLocationStandard = dom::KeyboardEventBinding::DOM_KEY_LOCATION_STANDARD,
-  eKeyLocationLeft     = dom::KeyboardEventBinding::DOM_KEY_LOCATION_LEFT,
-  eKeyLocationRight    = dom::KeyboardEventBinding::DOM_KEY_LOCATION_RIGHT,
-  eKeyLocationNumpad   = dom::KeyboardEventBinding::DOM_KEY_LOCATION_NUMPAD
+  eKeyLocationStandard = dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_STANDARD,
+  eKeyLocationLeft     = dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_LEFT,
+  eKeyLocationRight    = dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_RIGHT,
+  eKeyLocationNumpad   = dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD
 };
 
 const nsCString GetDOMKeyCodeName(uint32_t aKeyCode);

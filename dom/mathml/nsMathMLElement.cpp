@@ -1084,5 +1084,5 @@ nsMathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 JSObject*
 nsMathMLElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ElementBinding::Wrap(aCx, this, aGivenProto);
+  return Element_Binding::Wrap(aCx, this, aGivenProto);
 }

@@ -26,14 +26,14 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
     // device pixels.  However, JS contents need the delta values in CSS pixels.
     // We should store the value of mAppUnitsPerDevPixel here because
     // it might be changed by changing zoom or something.
-    if (aWheelEvent->mDeltaMode == WheelEventBinding::DOM_DELTA_PIXEL) {
+    if (aWheelEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL) {
       mAppUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
     }
   } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mEvent->AsWheelEvent()->inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+    mEvent->AsWheelEvent()->inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
 }
 

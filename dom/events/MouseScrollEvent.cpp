@@ -26,7 +26,7 @@ MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     static_cast<WidgetMouseEventBase*>(mEvent)->inputSource =
-      MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+      MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
 
   mDetail = mEvent->AsMouseScrollEvent()->mDelta;
@@ -57,15 +57,15 @@ MouseScrollEvent::InitMouseScrollEvent(const nsAString& aType,
                              aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
                              aRelatedTarget);
   mEvent->AsMouseScrollEvent()->mIsHorizontal =
-    (aAxis == MouseScrollEventBinding::HORIZONTAL_AXIS);
+    (aAxis == MouseScrollEvent_Binding::HORIZONTAL_AXIS);
 }
 
 int32_t
 MouseScrollEvent::Axis()
 {
   return mEvent->AsMouseScrollEvent()->mIsHorizontal ?
-    MouseScrollEventBinding::HORIZONTAL_AXIS :
-    MouseScrollEventBinding::VERTICAL_AXIS;
+    MouseScrollEvent_Binding::HORIZONTAL_AXIS :
+    MouseScrollEvent_Binding::VERTICAL_AXIS;
 }
 
 } // namespace dom

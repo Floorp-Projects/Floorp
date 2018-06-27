@@ -658,7 +658,7 @@ public:
   virtual JSObject* WrapObject(JSContext *aCx,
                                JS::Handle<JSObject*> aGivenProto) override
   {
-    return HTMLCollectionBinding::Wrap(aCx, this, aGivenProto);
+    return HTMLCollection_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   using nsBaseContentList::Item;
@@ -4137,13 +4137,13 @@ nsIDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
     init.mStylesheet = aSheet;                                                \
     init.memberName = argName;                                                \
                                                                               \
-    RefPtr<className> event =                                               \
+    RefPtr<className> event =                                                 \
       className::Constructor(this, NS_LITERAL_STRING(type), init);            \
     event->SetTrusted(true);                                                  \
     event->SetTarget(this);                                                   \
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =                          \
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =                            \
       new AsyncEventDispatcher(this, event);                                  \
-    asyncDispatcher->mOnlyChromeDispatch = true;                              \
+    asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;           \
     asyncDispatcher->PostDOMEvent();                                          \
   } while (0);
 
@@ -4967,7 +4967,7 @@ nsIDocument::DispatchContentLoadedEvents()
   // document).
   nsContentUtils::DispatchTrustedEvent(this, this,
                                        NS_LITERAL_STRING("DOMContentLoaded"),
-                                       true, false);
+                                       CanBubble::eYes, Cancelable::eNo);
 
   if (MayStartLayout()) {
     MaybeResolveReadyForIdle();
@@ -5046,7 +5046,7 @@ nsIDocument::DispatchContentLoadedEvents()
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
     nsContentUtils::DispatchChromeEvent(this, this,
                                         NS_LITERAL_STRING("MozApplicationManifest"),
-                                        true, true);
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 
   nsPIDOMWindowInner* inner = GetInnerWindow();
@@ -6296,7 +6296,7 @@ nsIDocument::DoNotifyPossibleTitleChange()
   // Fire a DOM event for the title change.
   nsContentUtils::DispatchChromeEvent(this, static_cast<nsIDocument*>(this),
                                       NS_LITERAL_STRING("DOMTitleChanged"),
-                                      true, true);
+                                      CanBubble::eYes, Cancelable::eYes);
 }
 
 already_AddRefed<BoxObject>
@@ -8184,8 +8184,8 @@ nsDocument::UnblockOnload(bool aFireSync)
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this,
                                  NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"),
-                                 false,
-                                 false);
+                                 CanBubble::eNo,
+                                 ChromeOnlyDispatch::eNo);
       asyncDispatcher->PostDOMEvent();
     }
   }
@@ -8726,8 +8726,10 @@ nsIDocument::SetReadyStateInternal(ReadyState rs)
   RecordNavigationTiming(rs);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("readystatechange"),
-                             false, false);
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("readystatechange"),
+                             CanBubble::eNo,
+                             ChromeOnlyDispatch::eNo);
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
@@ -10282,8 +10284,7 @@ AskWindowToExitFullscreen(nsIDocument* aDoc)
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     nsContentUtils::DispatchEventOnlyToChrome(
       aDoc, ToSupports(aDoc), NS_LITERAL_STRING("MozDOMFullscreen:Exit"),
-      /* Bubbles */ true, /* Cancelable */ false,
-      /* DefaultAction */ nullptr);
+      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
   } else {
     if (nsPIDOMWindowOuter* win = aDoc->GetWindow()) {
       win->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, false);
@@ -10392,7 +10393,7 @@ public:
     nsContentUtils::DispatchEventOnlyToChrome(
       lastDocument, ToSupports(lastDocument),
       NS_LITERAL_STRING("MozDOMFullscreen:Exited"),
-      /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
     // Ensure the window exits fullscreen.
     if (nsPIDOMWindowOuter* win = mDocuments[0]->GetWindow()) {
       win->SetFullscreenInternal(FullscreenReason::ForForceExitFullscreen, false);
@@ -10609,8 +10610,8 @@ nsIDocument::DispatchFullscreenError(const char* aMessage)
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this,
                              NS_LITERAL_STRING("fullscreenerror"),
-                             true,
-                             false);
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eNo);
   asyncDispatcher->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("DOM"), this,
@@ -11082,7 +11083,7 @@ nsIDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
     // our parent process go fullscreen first.
     nsContentUtils::DispatchEventOnlyToChrome(
       this, ToSupports(this), NS_LITERAL_STRING("MozDOMFullscreen:Request"),
-      /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
   } else {
     // Make the window fullscreen.
     rootWin->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, true);
@@ -11190,7 +11191,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   if (!previousFullscreenDoc) {
     nsContentUtils::DispatchEventOnlyToChrome(
       this, ToSupports(elem), NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
-      /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
   }
 
   // The origin which is fullscreen gets changed. Trigger an event so
@@ -11238,8 +11239,8 @@ DispatchPointerLockChange(nsIDocument* aTarget)
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(aTarget,
                              NS_LITERAL_STRING("pointerlockchange"),
-                             true,
-                             false);
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eNo);
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -11253,8 +11254,8 @@ DispatchPointerLockError(nsIDocument* aTarget, const char* aMessage)
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(aTarget,
                              NS_LITERAL_STRING("pointerlockerror"),
-                             true,
-                             false);
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eNo);
   asyncDispatcher->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("DOM"), aTarget,
@@ -11410,7 +11411,7 @@ PointerLockRequest::Run()
   ChangePointerLockedElement(e, d, nullptr);
   nsContentUtils::DispatchEventOnlyToChrome(
     doc, ToSupports(e), NS_LITERAL_STRING("MozDOMPointerLock:Entered"),
-    /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+    CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
   return NS_OK;
 }
 
@@ -11516,7 +11517,8 @@ nsIDocument::UnlockPointer(nsIDocument* aDoc)
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(pointerLockedElement,
                              NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
-                             true, true);
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eYes);
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
@@ -11528,8 +11530,8 @@ nsIDocument::UpdateVisibilityState()
   if (oldState != mVisibilityState) {
     nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                          NS_LITERAL_STRING("visibilitychange"),
-                                         /* bubbles = */ true,
-                                         /* cancelable = */ false);
+                                         CanBubble::eYes,
+                                         Cancelable::eNo);
     EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   }
 

@@ -35,7 +35,7 @@ MIDIInput::Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
 JSObject*
 MIDIInput::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MIDIInputBinding::Wrap(aCx, this, aGivenProto);
+  return MIDIInput_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

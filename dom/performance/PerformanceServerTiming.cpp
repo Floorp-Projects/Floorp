@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 PerformanceServerTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::PerformanceServerTimingBinding::Wrap(aCx, this, aGivenProto);
+  return mozilla::dom::PerformanceServerTiming_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

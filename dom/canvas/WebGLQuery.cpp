@@ -235,7 +235,7 @@ WebGLQuery::QueryCounter(const char* funcName, GLenum target)
 JSObject*
 WebGLQuery::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLQueryBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLQuery_Binding::Wrap(cx, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLQuery)

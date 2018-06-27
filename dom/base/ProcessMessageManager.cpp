@@ -34,7 +34,7 @@ ProcessMessageManager::WrapObject(JSContext* aCx,
 {
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
-  return ProcessMessageManagerBinding::Wrap(aCx, this, aGivenProto);
+  return ProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

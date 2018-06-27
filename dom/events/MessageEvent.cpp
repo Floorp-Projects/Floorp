@@ -61,7 +61,7 @@ MessageEvent::~MessageEvent()
 JSObject*
 MessageEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::MessageEventBinding::Wrap(aCx, this, aGivenProto);
+  return mozilla::dom::MessageEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -145,7 +145,8 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
 
 void
 MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
-                               bool aCanBubble, bool aCancelable,
+                               mozilla::CanBubble aCanBubble,
+                               mozilla::Cancelable aCancelable,
                                JS::Handle<JS::Value> aData,
                                const nsAString& aOrigin,
                                const nsAString& aLastEventId,
@@ -176,7 +177,7 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
 
   mPorts.Clear();
   mPorts.AppendElements(aPorts);
-  MessageEventBinding::ClearCachedPortsValue(this);
+  MessageEvent_Binding::ClearCachedPortsValue(this);
 }
 
 void

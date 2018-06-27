@@ -122,7 +122,7 @@ PeriodicWave::SizeOfIncludingThisIfNotShared(MallocSizeOf aMallocSizeOf) const
 JSObject*
 PeriodicWave::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PeriodicWaveBinding::Wrap(aCx, this, aGivenProto);
+  return PeriodicWave_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

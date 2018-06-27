@@ -27,7 +27,7 @@ DragEvent::DragEvent(EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mEvent->AsMouseEvent()->inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+    mEvent->AsMouseEvent()->inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
 }
 

@@ -671,7 +671,22 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *        }
    */
   setPausePoints: function(pausePoints) {
-    this.pausePoints = pausePoints;
+    const uncompressed = {};
+    const points = {
+      0: {},
+      1: { break: true },
+      2: { step: true },
+      3: { break: true, step: true }
+    };
+
+    for (const line in pausePoints) {
+      uncompressed[line] = {};
+      for (const col in pausePoints[line]) {
+        uncompressed[line][col] = points[pausePoints[line][col]];
+      }
+    }
+
+    this.pausePoints = uncompressed;
   },
 
   /**

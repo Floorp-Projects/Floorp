@@ -42,51 +42,8 @@ PluginContent.prototype = {
     // Cache of plugin crash information sent from the parent
     this.pluginCrashData = new Map();
 
-    // Note that the XBL binding is untrusted
-    global.addEventListener("PluginBindingAttached", this, true, true);
-    global.addEventListener("PluginCrashed", this, true);
-    global.addEventListener("PluginOutdated", this, true);
-    global.addEventListener("PluginInstantiated", this, true);
-    global.addEventListener("PluginRemoved", this, true);
     global.addEventListener("pagehide", this, true);
     global.addEventListener("pageshow", this, true);
-    global.addEventListener("unload", this);
-    global.addEventListener("HiddenPlugin", this, true);
-
-    global.addMessageListener("BrowserPlugins:ActivatePlugins", this);
-    global.addMessageListener("BrowserPlugins:NotificationShown", this);
-    global.addMessageListener("BrowserPlugins:ContextMenuCommand", this);
-    global.addMessageListener("BrowserPlugins:NPAPIPluginProcessCrashed", this);
-    global.addMessageListener("BrowserPlugins:CrashReportSubmitted", this);
-    global.addMessageListener("BrowserPlugins:Test:ClearCrashData", this);
-
-    Services.obs.addObserver(this, "decoder-doctor-notification");
-  },
-
-  uninit() {
-    let global = this.global;
-
-    global.removeEventListener("PluginBindingAttached", this, true);
-    global.removeEventListener("PluginCrashed", this, true);
-    global.removeEventListener("PluginOutdated", this, true);
-    global.removeEventListener("PluginInstantiated", this, true);
-    global.removeEventListener("PluginRemoved", this, true);
-    global.removeEventListener("pagehide", this, true);
-    global.removeEventListener("pageshow", this, true);
-    global.removeEventListener("unload", this);
-    global.removeEventListener("HiddenPlugin", this, true);
-
-    global.removeMessageListener("BrowserPlugins:ActivatePlugins", this);
-    global.removeMessageListener("BrowserPlugins:NotificationShown", this);
-    global.removeMessageListener("BrowserPlugins:ContextMenuCommand", this);
-    global.removeMessageListener("BrowserPlugins:NPAPIPluginProcessCrashed", this);
-    global.removeMessageListener("BrowserPlugins:CrashReportSubmitted", this);
-    global.removeMessageListener("BrowserPlugins:Test:ClearCrashData", this);
-
-    Services.obs.removeObserver(this, "decoder-doctor-notification");
-
-    delete this.global;
-    delete this.content;
   },
 
   receiveMessage(msg) {
@@ -443,11 +400,6 @@ PluginContent.prototype = {
 
   handleEvent(event) {
     let eventType = event.type;
-
-    if (eventType == "unload") {
-      this.uninit();
-      return;
-    }
 
     if (eventType == "pagehide") {
       this.onPageHide(event);

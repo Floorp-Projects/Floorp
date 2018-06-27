@@ -43,7 +43,7 @@ namespace dom {
 JSObject*
 DocumentType::WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DocumentTypeBinding::Wrap(cx, this, aGivenProto);
+  return DocumentType_Binding::Wrap(cx, this, aGivenProto);
 }
 
 DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,

@@ -37,10 +37,20 @@ var gAppManagerDialog = {
         continue;
 
       app.QueryInterface(Ci.nsIHandlerApp);
-      var item = list.appendItem(app.name);
-      item.setAttribute("image", gMainPane._getIconURLForHandlerApp(app));
-      item.className = "listitem-iconic";
+
+      // Ensure the XBL binding is created eagerly.
+      // eslint-disable-next-line no-undef
+      list.appendChild(MozXULElement.parseXULToFragment("<richlistitem/>"));
+      var item = list.lastChild;
       item.app = app;
+
+      var image = document.createElement("image");
+      image.setAttribute("src", gMainPane._getIconURLForHandlerApp(app));
+      item.appendChild(image);
+
+      var label = document.createElement("label");
+      label.setAttribute("value", app.name);
+      item.appendChild(label);
     }
 
     // Triggers onSelect which populates label
@@ -74,14 +84,16 @@ var gAppManagerDialog = {
     var list = document.getElementById("appList");
     this._removed.push(list.selectedItem.app);
     var index = list.selectedIndex;
-    list.selectedItem.remove();
-    if (list.getRowCount() == 0) {
+    var element = list.selectedItem;
+    list.removeItemFromSelection(element);
+    element.remove();
+    if (list.itemCount == 0) {
       // The list is now empty, make the bottom part disappear
       document.getElementById("appDetails").hidden = true;
     } else {
       // Select the item at the same index, if we removed the last
       // item of the list, select the previous item
-      if (index == list.getRowCount())
+      if (index == list.itemCount)
         --index;
       list.selectedIndex = index;
     }

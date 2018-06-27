@@ -108,7 +108,7 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x-ref.html
 == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x-ref.html
 == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x-ref.html
-== image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html # Bug 1392106
 == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x-ref.html
 == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x-ref.html
 == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html

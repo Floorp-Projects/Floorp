@@ -38,7 +38,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DOMSVGAnimatedNumberList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::SVGAnimatedNumberListBinding::Wrap(aCx, this, aGivenProto);
+  return mozilla::dom::SVGAnimatedNumberList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMSVGNumberList>
