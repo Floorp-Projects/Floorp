@@ -26,6 +26,18 @@
           "items": {
             "type": "string"
           }
+        },
+        "AllowNonFQDN": {
+          "type": "object",
+          "properties": {
+            "SPNEGO": {
+              "type": "boolean"
+            },
+
+            "NTLM": {
+              "type": "boolean"
+            }
+          }
         }
       }
     },
