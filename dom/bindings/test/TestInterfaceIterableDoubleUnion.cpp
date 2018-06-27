@@ -52,7 +52,7 @@ TestInterfaceIterableDoubleUnion::Constructor(const GlobalObject& aGlobal,
 JSObject*
 TestInterfaceIterableDoubleUnion::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TestInterfaceIterableDoubleUnionBinding::Wrap(aCx, this, aGivenProto);
+  return TestInterfaceIterableDoubleUnion_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsPIDOMWindowInner*

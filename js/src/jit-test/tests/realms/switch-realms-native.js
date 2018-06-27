@@ -30,3 +30,18 @@ function testAccessor() {
     }
 }
 testAccessor();
+
+function testException1() {
+    var g = newGlobal({sameCompartmentAs: this});
+    for (var i = 0; i < 20; i++) {
+        var ex;
+        try {
+            g.throwOutOfMemory();
+        } catch(e) {
+            ex = e;
+        }
+        assertCorrectRealm();
+        assertEq(typeof ex, "string");
+    }
+}
+testException1();

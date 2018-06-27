@@ -512,7 +512,8 @@ if __name__ == "__main__":
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
         extra_cflags2 = ["-fPIC"]
-        extra_cxxflags2 = ["-fPIC", "-static-libstdc++"]
+        # Silence clang's warnings about arguments not being used in compilation.
+        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++"]
         extra_asmflags = []
         extra_ldflags = []
 

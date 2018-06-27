@@ -1939,7 +1939,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
 JSObject*
 WebGLFramebuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLFramebufferBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLFramebuffer_Binding::Wrap(cx, this, givenProto);
 }
 
 inline void

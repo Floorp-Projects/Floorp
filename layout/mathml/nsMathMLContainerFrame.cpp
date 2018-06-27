@@ -739,7 +739,7 @@ nsMathMLContainerFrame::AppendFrames(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.AppendFrames(this, aFrameList);
-  ChildListChanged(dom::MutationEventBinding::ADDITION);
+  ChildListChanged(dom::MutationEvent_Binding::ADDITION);
 }
 
 void
@@ -749,7 +749,7 @@ nsMathMLContainerFrame::InsertFrames(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-  ChildListChanged(dom::MutationEventBinding::ADDITION);
+  ChildListChanged(dom::MutationEvent_Binding::ADDITION);
 }
 
 void
@@ -758,7 +758,7 @@ nsMathMLContainerFrame::RemoveFrame(ChildListID     aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.DestroyFrame(aOldFrame);
-  ChildListChanged(dom::MutationEventBinding::REMOVAL);
+  ChildListChanged(dom::MutationEvent_Binding::REMOVAL);
 }
 
 nsresult

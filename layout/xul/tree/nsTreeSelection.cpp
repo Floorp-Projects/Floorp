@@ -652,7 +652,7 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex)
     new AsyncEventDispatcher(treeElt,
                              (aIndex != -1 ? DOMMenuItemActive :
                                              DOMMenuItemInactive),
-                             true, false);
+                             CanBubble::eYes, ChromeOnlyDispatch::eNo);
   return asyncDispatcher->PostDOMEvent();
 }
 
@@ -835,7 +835,8 @@ nsTreeSelection::FireOnSelectHandler()
   NS_ENSURE_STATE(elt);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(elt, NS_LITERAL_STRING("select"), true, false);
+    new AsyncEventDispatcher(elt, NS_LITERAL_STRING("select"),
+                             CanBubble::eYes, ChromeOnlyDispatch::eNo);
   asyncDispatcher->RunDOMEventWhenSafe();
   return NS_OK;
 }

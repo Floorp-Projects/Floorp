@@ -168,6 +168,10 @@ wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
     RootedWasmInstanceObject keepAlive(cx, iter.instance()->object());
 
     for (; !iter.done(); ++iter) {
+        // Wasm code can enter same-compartment realms, so reset cx->realm to
+        // this frame's realm.
+        cx->setRealmForJitExceptionHandler(iter.instance()->realm());
+
         if (!iter.debugEnabled())
             continue;
 

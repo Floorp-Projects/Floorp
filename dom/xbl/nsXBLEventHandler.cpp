@@ -37,7 +37,7 @@ nsXBLEventHandler::HandleEvent(Event* aEvent)
 
   uint8_t phase = mProtoHandler->GetPhase();
   if (phase == NS_PHASE_TARGET) {
-    if (aEvent->EventPhase() != EventBinding::AT_TARGET) {
+    if (aEvent->EventPhase() != Event_Binding::AT_TARGET) {
       return NS_OK;
     }
   }
@@ -128,7 +128,7 @@ nsXBLKeyEventHandler::HandleEvent(Event* aEvent)
     return NS_ERROR_FAILURE;
 
   if (mPhase == NS_PHASE_TARGET) {
-    if (aEvent->EventPhase() != EventBinding::AT_TARGET) {
+    if (aEvent->EventPhase() != Event_Binding::AT_TARGET) {
       return NS_OK;
     }
   }

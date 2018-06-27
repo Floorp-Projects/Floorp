@@ -508,7 +508,7 @@ JSObject*
 Worklet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return WorkletBinding::Wrap(aCx, this, aGivenProto);
+  return Worklet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

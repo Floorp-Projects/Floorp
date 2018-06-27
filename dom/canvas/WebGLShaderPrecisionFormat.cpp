@@ -15,7 +15,7 @@ WebGLShaderPrecisionFormat::WrapObject(JSContext* cx,
                                        JS::Handle<JSObject*> givenProto,
                                        JS::MutableHandle<JSObject*> reflector)
 {
-    return dom::WebGLShaderPrecisionFormatBinding::Wrap(cx, this, givenProto, reflector);
+    return dom::WebGLShaderPrecisionFormat_Binding::Wrap(cx, this, givenProto, reflector);
 }
 
 } // namespace mozilla

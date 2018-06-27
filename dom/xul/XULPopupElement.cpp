@@ -31,7 +31,7 @@ NS_NewXULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 JSObject*
 XULPopupElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return XULPopupElementBinding::Wrap(aCx, this, aGivenProto);
+  return XULPopupElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsIFrame*

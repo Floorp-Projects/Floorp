@@ -350,14 +350,14 @@ WaveShaperNode::Create(AudioContext& aAudioContext,
 JSObject*
 WaveShaperNode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WaveShaperNodeBinding::Wrap(aCx, this, aGivenProto);
+  return WaveShaperNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
 WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve, ErrorResult& aRv)
 {
   // Let's purge the cached value for the curve attribute.
-  WaveShaperNodeBinding::ClearCachedCurveValue(this);
+  WaveShaperNode_Binding::ClearCachedCurveValue(this);
 
   if (aCurve.IsNull()) {
     CleanCurveInternal();

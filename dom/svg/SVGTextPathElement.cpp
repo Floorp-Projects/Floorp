@@ -17,23 +17,23 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
 namespace mozilla {
 namespace dom {
 
-using namespace SVGTextContentElementBinding;
-using namespace SVGTextPathElementBinding;
+using namespace SVGTextContentElement_Binding;
+using namespace SVGTextPathElement_Binding;
 
 class SVGAnimatedLength;
 
 JSObject*
 SVGTextPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGTextPathElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGTextPathElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::LengthInfo SVGTextPathElement::sLengthInfo[2] =
 {
   // from SVGTextContentElement:
-  { &nsGkAtoms::textLength, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY },
+  { &nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY },
   // from SVGTextPathElement:
-  { &nsGkAtoms::startOffset, 0, SVGLengthBinding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X }
+  { &nsGkAtoms::startOffset, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X }
 };
 
 nsSVGEnumMapping SVGTextPathElement::sMethodMap[] = {

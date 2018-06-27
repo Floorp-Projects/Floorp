@@ -651,7 +651,7 @@ PerformanceTiming::ResponseEnd()
 JSObject*
 PerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceTimingBinding::Wrap(cx, this, aGivenProto);
+  return PerformanceTiming_Binding::Wrap(cx, this, aGivenProto);
 }
 
 bool

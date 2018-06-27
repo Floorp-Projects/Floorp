@@ -603,7 +603,7 @@ class JSString : public js::gc::Cell
         return kind;
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dump(); // Debugger-friendly stderr dump.
     void dump(js::GenericPrinter& out);
     void dumpNoNewline(js::GenericPrinter& out);
@@ -718,7 +718,7 @@ class JSRope : public JSString
 
     void traceChildren(JSTracer* trc);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 
@@ -814,7 +814,7 @@ class JSLinearString : public JSString
         return hasLatin1Chars() ? latin1Chars(nogc)[index] : twoByteChars(nogc)[index];
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentationChars(js::GenericPrinter& out, int indent) const;
 #endif
 };
@@ -856,7 +856,7 @@ class JSDependentString : public JSLinearString
     static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                        size_t start, size_t length);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 
@@ -950,7 +950,7 @@ class JSFlatString : public JSLinearString
 
     inline void finalize(js::FreeOp* fop);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
@@ -971,7 +971,7 @@ class JSExtensibleString : public JSFlatString
         return d.s.u3.capacity;
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
@@ -999,7 +999,7 @@ class JSInlineString : public JSFlatString
     template<typename CharT>
     static bool lengthFits(size_t length);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 
@@ -1126,7 +1126,7 @@ class JSExternalString : public JSLinearString
      */
     JSFlatString* ensureFlat(JSContext* cx);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 };
@@ -1185,7 +1185,7 @@ class JSAtom : public JSFlatString
     inline js::HashNumber hash() const;
     inline void initHash(js::HashNumber hash);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dump(js::GenericPrinter& out);
     void dump();
 #endif

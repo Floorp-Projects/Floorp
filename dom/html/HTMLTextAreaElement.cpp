@@ -552,8 +552,9 @@ HTMLTextAreaElement::FireChangeEventIfNeeded()
   mFocusedValue = value;
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("change"), true,
-                                       false);
+                                       NS_LITERAL_STRING("change"),
+                                       CanBubble::eYes,
+                                       Cancelable::eNo);
 }
 
 nsresult
@@ -1332,7 +1333,7 @@ HTMLTextAreaElement::FieldSetDisabledChanged(bool aNotify)
 JSObject*
 HTMLTextAreaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTextAreaElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTextAreaElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

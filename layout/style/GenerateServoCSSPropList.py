@@ -63,13 +63,17 @@ def generate_header(output, data):
 
 """)
 
+    # Some flags are only used for code generation, so we don't need to
+    # expose them to runtime.
+    COMPILE_TIME_FLAGS = {"ExposedOnGetCS"}
+
     MACRO_NAMES = {
         "longhand": "CSS_PROP_LONGHAND",
         "shorthand": "CSS_PROP_SHORTHAND",
         "alias": "CSS_PROP_ALIAS",
     }
     for prop in data:
-        is_internal = "CSSPropFlags::Internal" in prop.flags
+        is_internal = "Internal" in prop.flags
         pref = '"' + prop.pref + '"'
         if prop.type() == "alias":
             params = [prop.name, prop.alias_id, prop.prop_id, prop.method, pref]
@@ -79,9 +83,10 @@ def generate_header(output, data):
                 method = "CSS_PROP_PUBLIC_OR_PRIVATE(CssFloat, Float)"
             elif method.startswith("Moz"):
                 method = "CSS_PROP_DOMPROP_PREFIXED({})".format(method[3:])
-            if prop.flags:
-                flags = " | ".join(prop.flags)
-            else:
+            flags = " | ".join("CSSPropFlags::{}".format(flag)
+                               for flag in prop.flags
+                               if flag not in COMPILE_TIME_FLAGS)
+            if not flags:
                 flags = "CSSPropFlags(0)"
             params = [prop.name, prop.id, method, flags, pref]
 

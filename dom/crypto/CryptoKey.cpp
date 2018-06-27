@@ -163,7 +163,7 @@ CryptoKey::CryptoKey(nsIGlobalObject* aGlobal)
 JSObject*
 CryptoKey::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CryptoKeyBinding::Wrap(aCx, this, aGivenProto);
+  return CryptoKey_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

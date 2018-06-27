@@ -354,7 +354,7 @@ HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 /* virtual */ JSObject*
 HTMLFormControlsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLFormControlsCollectionBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLFormControlsCollection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

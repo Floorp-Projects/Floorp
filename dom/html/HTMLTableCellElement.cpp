@@ -25,7 +25,7 @@ HTMLTableCellElement::~HTMLTableCellElement()
 JSObject*
 HTMLTableCellElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableCellElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTableCellElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableCellElement)

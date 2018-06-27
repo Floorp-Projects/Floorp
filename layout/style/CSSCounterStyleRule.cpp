@@ -36,7 +36,7 @@ CSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
 uint16_t
 CSSCounterStyleRule::Type() const
 {
-  return CSSRuleBinding::COUNTER_STYLE_RULE;
+  return CSSRule_Binding::COUNTER_STYLE_RULE;
 }
 
 void
@@ -97,7 +97,7 @@ CSSCounterStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSCounterStyleRule::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSCounterStyleRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSCounterStyleRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

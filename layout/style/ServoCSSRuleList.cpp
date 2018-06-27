@@ -83,7 +83,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
     RefPtr<css::Rule> ruleObj = nullptr;
     switch (rule) {
 #define CASE_RULE(const_, name_)                                            \
-      case CSSRuleBinding::const_##_RULE: {                                 \
+      case CSSRule_Binding::const_##_RULE: {                                 \
         uint32_t line = 0, column = 0;                                      \
         RefPtr<RawServo##name_##Rule> rule =                                \
           Servo_CssRules_Get##name_##RuleAt(                                \
@@ -105,7 +105,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(FONT_FACE, FontFace)
       CASE_RULE(COUNTER_STYLE, CounterStyle)
 #undef CASE_RULE
-      case CSSRuleBinding::KEYFRAME_RULE:
+      case CSSRule_Binding::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
         return nullptr;
       default:

@@ -5187,7 +5187,6 @@ BrowserTabsRemoteAutostart()
 
   gBrowserTabsRemoteStatus = status;
 
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STATUS, status);
   return gBrowserTabsRemoteAutostart;
 }
 

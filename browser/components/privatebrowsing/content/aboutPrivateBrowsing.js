@@ -33,13 +33,13 @@ document.addEventListener("DOMContentLoaded", function() {
     document.documentElement.classList.add("normal");
     document.getElementById("favicon").setAttribute("href", FAVICON_QUESTION);
     document.getElementById("startPrivateBrowsing").addEventListener("click", function() {
-      sendAsyncMessage("OpenPrivateWindow");
+      RPMSendAsyncMessage("OpenPrivateWindow");
     });
     return;
   }
 
   document.getElementById("startTour").addEventListener("click", function() {
-    sendAsyncMessage("DontShowIntroPanelAgain");
+    RPMSendAsyncMessage("DontShowIntroPanelAgain");
   });
   document.getElementById("startTour").setAttribute("href",
     RPMGetFormatURLPref("privacy.trackingprotection.introURL"));

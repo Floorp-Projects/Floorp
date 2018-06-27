@@ -184,7 +184,7 @@ CSSPageRule::Style()
 JSObject*
 CSSPageRule::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSPageRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSPageRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

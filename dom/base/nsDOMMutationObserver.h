@@ -52,7 +52,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return mozilla::dom::MutationRecordBinding::Wrap(aCx, this, aGivenProto);
+    return mozilla::dom::MutationRecord_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -411,7 +411,7 @@ public:
   {
     // We can reuse AttributeWillChange implementation.
     AttributeWillChange(aElement, aNameSpaceID, aAttribute,
-                        mozilla::dom::MutationEventBinding::MODIFICATION, nullptr);
+                        mozilla::dom::MutationEvent_Binding::MODIFICATION, nullptr);
   }
 
 protected:
@@ -508,7 +508,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return mozilla::dom::MutationObserverBinding::Wrap(aCx, this, aGivenProto);
+    return mozilla::dom::MutationObserver_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   nsISupports* GetParentObject() const

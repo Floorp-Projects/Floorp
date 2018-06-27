@@ -42,7 +42,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLElement)
 JSObject*
 HTMLElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::HTMLElementBinding::Wrap(aCx, this, aGivenProto);
+  return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

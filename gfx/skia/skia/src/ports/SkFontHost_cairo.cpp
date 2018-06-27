@@ -64,6 +64,13 @@ static bool gFontHintingEnabled = true;
 static FT_Error (*gSetLcdFilter)(FT_Library, FT_LcdFilter) = nullptr;
 static void (*gGlyphSlotEmbolden)(FT_GlyphSlot) = nullptr;
 
+extern "C"
+{
+    void mozilla_LockFTLibrary(FT_Library aLibrary);
+    void mozilla_UnlockFTLibrary(FT_Library aLibrary);
+    FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
+}
+
 void SkInitCairoFT(bool fontHintingEnabled)
 {
     gFontHintingEnabled = fontHintingEnabled;
@@ -635,7 +642,7 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
     CairoLockedFTFace faceLock(fScaledFont);
     FT_Face face = faceLock.getFace();
 
-    FT_Error err = FT_Load_Glyph( face, glyph->getGlyphID(), fLoadGlyphFlags );
+    FT_Error err = mozilla_LoadFTGlyph( face, glyph->getGlyphID(), fLoadGlyphFlags );
     if (err != 0) {
         return;
     }
@@ -739,7 +746,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
     CairoLockedFTFace faceLock(fScaledFont);
     FT_Face face = faceLock.getFace();
 
-    FT_Error err = FT_Load_Glyph(face, glyph.getGlyphID(), fLoadGlyphFlags);
+    FT_Error err = mozilla_LoadFTGlyph(face, glyph.getGlyphID(), fLoadGlyphFlags);
 
     if (err != 0) {
         memset(glyph.fImage, 0, glyph.rowBytes() * glyph.fHeight);
@@ -753,6 +760,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
         isLCD(glyph) &&
         gSetLcdFilter;
     if (useLcdFilter) {
+        mozilla_LockFTLibrary(face->glyph->library);
         gSetLcdFilter(face->glyph->library, fLcdFilter);
     }
 
@@ -767,6 +775,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
 
     if (useLcdFilter) {
         gSetLcdFilter(face->glyph->library, FT_LCD_FILTER_NONE);
+        mozilla_UnlockFTLibrary(face->glyph->library);
     }
 }
 
@@ -782,7 +791,7 @@ void SkScalerContext_CairoFT::generatePath(const SkGlyphID glyphID, SkPath* path
     flags |= FT_LOAD_NO_BITMAP; // ignore embedded bitmaps so we're sure to get the outline
     flags &= ~FT_LOAD_RENDER;   // don't scan convert (we just want the outline)
 
-    FT_Error err = FT_Load_Glyph(face, glyphID, flags);
+    FT_Error err = mozilla_LoadFTGlyph(face, glyphID, flags);
 
     if (err != 0) {
         path->reset();

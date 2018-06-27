@@ -26,7 +26,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return ClipboardEventBinding::Wrap(aCx, this, aGivenProto);
+    return ClipboardEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   static already_AddRefed<ClipboardEvent>

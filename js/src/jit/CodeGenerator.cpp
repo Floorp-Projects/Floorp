@@ -4528,6 +4528,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
                                 &invoke);
     }
 
+    if (call->mir()->maybeCrossRealm())
+        masm.switchToObjectRealm(calleereg, objreg);
+
     if (call->mir()->needsArgCheck())
         masm.loadJitCodeRaw(calleereg, objreg);
     else
@@ -4563,6 +4566,12 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     masm.bind(&makeCall);
     uint32_t callOffset = masm.callJit(objreg);
     markSafepointAt(callOffset, call);
+
+    if (call->mir()->maybeCrossRealm()) {
+        static_assert(!JSReturnOperand.aliases(ReturnReg),
+                      "ReturnReg available as scratch after scripted calls");
+        masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
+    }
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
@@ -4641,6 +4650,9 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
         masm.branchIfFunctionHasNoJitEntry(calleereg, call->isConstructing(), &uncompiled);
     }
 
+    if (call->mir()->maybeCrossRealm())
+        masm.switchToObjectRealm(calleereg, objreg);
+
     if (call->mir()->needsArgCheck())
         masm.loadJitCodeRaw(calleereg, objreg);
     else
@@ -4659,6 +4671,12 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     // Finally call the function in objreg.
     uint32_t callOffset = masm.callJit(objreg);
     markSafepointAt(callOffset, call);
+
+    if (call->mir()->maybeCrossRealm()) {
+        static_assert(!JSReturnOperand.aliases(ReturnReg),
+                      "ReturnReg available as scratch after scripted calls");
+        masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
+    }
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
@@ -4948,11 +4966,14 @@ CodeGenerator::emitApplyGeneric(T* apply)
     masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
                             calleereg, objreg, &invoke);
 
-    // Knowing that calleereg is a non-native function, load jitcode.
-    masm.loadJitCodeRaw(calleereg, objreg);
-
     // Call with an Ion frame or a rectifier frame.
     {
+        if (apply->mir()->maybeCrossRealm())
+            masm.switchToObjectRealm(calleereg, objreg);
+
+        // Knowing that calleereg is a non-native function, load jitcode.
+        masm.loadJitCodeRaw(calleereg, objreg);
+
         // Create the frame descriptor.
         unsigned pushed = masm.framePushed();
         Register stackSpace = extraStackSpace;
@@ -4993,6 +5014,12 @@ CodeGenerator::emitApplyGeneric(T* apply)
         // Finally call the function in objreg, as assigned by one of the paths above.
         uint32_t callOffset = masm.callJit(objreg);
         markSafepointAt(callOffset, apply);
+
+        if (apply->mir()->maybeCrossRealm()) {
+            static_assert(!JSReturnOperand.aliases(ReturnReg),
+                          "ReturnReg available as scratch after scripted calls");
+            masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
+        }
 
         // Recover the number of arguments from the frame descriptor.
         masm.loadPtr(Address(masm.getStackPointer(), 0), stackSpace);
@@ -5143,6 +5170,8 @@ CodeGenerator::generateArgumentsChecks(bool assert)
     AllocatableGeneralRegisterSet temps(GeneralRegisterSet::All());
     Register temp1 = temps.takeAny();
     Register temp2 = temps.takeAny();
+
+    masm.debugAssertContextRealm(gen->realm->realmPtr(), temp1);
 
     const CompileInfo& info = gen->info();
 

@@ -32,7 +32,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return DeviceRotationRateBinding::Wrap(aCx, this, aGivenProto);
+    return DeviceRotationRate_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   Nullable<double> GetAlpha() const { return mAlpha; }
@@ -65,7 +65,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return DeviceAccelerationBinding::Wrap(aCx, this, aGivenProto);
+    return DeviceAcceleration_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   Nullable<double> GetX() const { return mX; }
@@ -97,7 +97,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return DeviceMotionEventBinding::Wrap(aCx, this, aGivenProto);
+    return DeviceMotionEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   DeviceAcceleration* GetAcceleration() const

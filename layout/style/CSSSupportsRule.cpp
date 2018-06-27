@@ -73,7 +73,7 @@ CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSSupportsRule::WrapObject(JSContext* aCx,
                             JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSSupportsRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSSupportsRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

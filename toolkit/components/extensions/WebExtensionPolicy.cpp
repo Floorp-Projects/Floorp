@@ -242,7 +242,7 @@ WebExtensionPolicy::RegisterContentScript(WebExtensionContentScript& script,
     return;
   }
 
-  WebExtensionPolicyBinding::ClearCachedContentScriptsValue(this);
+  WebExtensionPolicy_Binding::ClearCachedContentScriptsValue(this);
 }
 
 void
@@ -254,7 +254,7 @@ WebExtensionPolicy::UnregisterContentScript(const WebExtensionContentScript& scr
     return;
   }
 
-  WebExtensionPolicyBinding::ClearCachedContentScriptsValue(this);
+  WebExtensionPolicy_Binding::ClearCachedContentScriptsValue(this);
 }
 
 /* static */ bool
@@ -402,7 +402,7 @@ WebExtensionPolicy::Localize(const nsAString& aInput, nsString& aOutput) const
 JSObject*
 WebExtensionPolicy::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
 {
-  return WebExtensionPolicyBinding::Wrap(aCx, this, aGivenProto);
+  return WebExtensionPolicy_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -537,7 +537,7 @@ WebExtensionContentScript::MatchesURI(const URLInfo& aURL) const
 JSObject*
 WebExtensionContentScript::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
 {
-  return WebExtensionContentScriptBinding::Wrap(aCx, this, aGivenProto);
+  return WebExtensionContentScript_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 

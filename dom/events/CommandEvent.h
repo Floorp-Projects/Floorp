@@ -25,7 +25,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return CommandEventBinding::Wrap(aCx, this, aGivenProto);
+    return CommandEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   void GetCommand(nsAString& aCommand);

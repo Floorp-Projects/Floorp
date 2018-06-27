@@ -49,7 +49,7 @@ FlexItem::FlexItem(FlexLine* aParent,
 JSObject*
 FlexItem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FlexItemBinding::Wrap(aCx, this, aGivenProto);
+  return FlexItem_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsINode*

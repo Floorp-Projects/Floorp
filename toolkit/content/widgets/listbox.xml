@@ -1030,15 +1030,6 @@
     </handlers>
   </binding>
 
-  <binding id="listitem-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listitem">
-    <content>
-      <children>
-        <xul:listcell class="listcell-iconic" xbl:inherits="label,image,crop,disabled,flexlabel"/>
-      </children>
-    </content>
-  </binding>
-
   <binding id="listitem-checkbox"
            extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
@@ -1084,16 +1075,6 @@
 
     <content>
       <children>
-        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
-      </children>
-    </content>
-  </binding>
-
-  <binding id="listcell-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listcell">
-    <content>
-      <children>
-        <xul:image class="listcell-icon" xbl:inherits="src=image"/>
         <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>

@@ -118,7 +118,7 @@ NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
 JSObject*
 nsSimpleContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this, aGivenProto);
+  return NodeList_Binding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsEmptyContentList, nsBaseContentList, mRoot)
@@ -134,7 +134,7 @@ NS_IMPL_RELEASE_INHERITED(nsEmptyContentList, nsBaseContentList)
 JSObject*
 nsEmptyContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
+  return HTMLCollection_Binding::Wrap(cx, this, aGivenProto);
 }
 
 mozilla::dom::Element*
@@ -461,7 +461,7 @@ nsContentList::~nsContentList()
 JSObject*
 nsContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
+  return HTMLCollection_Binding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsContentList, nsBaseContentList,
@@ -1037,7 +1037,7 @@ nsContentList::AssertInSync()
 JSObject*
 nsCachableElementsByNameNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this, aGivenProto);
+  return NodeList_Binding::Wrap(cx, this, aGivenProto);
 }
 
 void
@@ -1064,7 +1064,7 @@ nsCachableElementsByNameNodeList::AttributeChanged(Element* aElement,
 JSObject*
 nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
+  return HTMLCollection_Binding::Wrap(cx, this, aGivenProto);
 }
 
 //-----------------------------------------------------
@@ -1073,7 +1073,7 @@ nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObje
 JSObject*
 nsLabelsNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this, aGivenProto);
+  return NodeList_Binding::Wrap(cx, this, aGivenProto);
 }
 
 void

@@ -1123,15 +1123,15 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
         didSanitize = true;
         // Ignore these rule types.
         break;
-      case CSSRuleBinding::NAMESPACE_RULE:
-      case CSSRuleBinding::FONT_FACE_RULE: {
+      case CSSRule_Binding::NAMESPACE_RULE:
+      case CSSRule_Binding::FONT_FACE_RULE: {
         // Append @namespace and @font-face rules verbatim.
         nsAutoString cssText;
         rule->GetCssText(cssText);
         aSanitized.Append(cssText);
         break;
       }
-      case CSSRuleBinding::STYLE_RULE: {
+      case CSSRule_Binding::STYLE_RULE: {
         // For style rules, we will just look for and remove the
         // -moz-binding properties.
         auto styleRule = static_cast<BindingStyleRule*>(rule);

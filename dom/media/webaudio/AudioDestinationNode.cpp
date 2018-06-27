@@ -493,7 +493,7 @@ AudioDestinationNode::OfflineShutdown()
 JSObject*
 AudioDestinationNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AudioDestinationNodeBinding::Wrap(aCx, this, aGivenProto);
+  return AudioDestinationNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

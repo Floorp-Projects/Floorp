@@ -238,14 +238,15 @@ HTMLSlotElement::FireSlotChangeEvent()
 {
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("slotchange"), true,
-                                       false);
+                                       NS_LITERAL_STRING("slotchange"),
+                                       CanBubble::eYes,
+                                       Cancelable::eNo);
 }
 
 JSObject*
 HTMLSlotElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLSlotElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLSlotElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

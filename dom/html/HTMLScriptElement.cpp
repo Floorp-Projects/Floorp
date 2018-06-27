@@ -32,7 +32,7 @@ namespace dom {
 JSObject*
 HTMLScriptElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLScriptElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLScriptElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 HTMLScriptElement::HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,

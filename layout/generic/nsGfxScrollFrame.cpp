@@ -4537,8 +4537,8 @@ ScrollFrameHelper::FireScrollEndEvent()
   nsContentUtils::DispatchEventOnlyToChrome(mOuter->GetContent()->OwnerDoc(),
                                             mOuter->GetContent(),
                                             NS_LITERAL_STRING("scrollend"),
-                                            true /* aCanBubble */,
-                                            false /* aCancelable */);
+                                            CanBubble::eYes,
+                                            Cancelable::eNo);
 }
 
 void

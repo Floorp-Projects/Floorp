@@ -372,7 +372,7 @@ nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent)
       colType = col->Type();
     }
     if (row >= 0 && obj.EqualsLiteral("text") &&
-        colType != TreeColumnBinding::TYPE_PASSWORD) {
+        colType != TreeColumn_Binding::TYPE_PASSWORD) {
       obx->IsCellCropped(row, col, &mNeedTitletip);
     }
 

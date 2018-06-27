@@ -25,7 +25,7 @@ PerformanceMark::~PerformanceMark()
 JSObject*
 PerformanceMark::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceMarkBinding::Wrap(aCx, this, aGivenProto);
+  return PerformanceMark_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 size_t

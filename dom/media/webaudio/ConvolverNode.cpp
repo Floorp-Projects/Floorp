@@ -232,7 +232,7 @@ ConvolverNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 JSObject*
 ConvolverNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ConvolverNodeBinding::Wrap(aCx, this, aGivenProto);
+  return ConvolverNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

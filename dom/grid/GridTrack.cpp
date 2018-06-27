@@ -37,7 +37,7 @@ GridTrack::~GridTrack()
 JSObject*
 GridTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return GridTrackBinding::Wrap(aCx, this, aGivenProto);
+  return GridTrack_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 double

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
+  --markup-badge-active-background-color: var(--blue-50);
   --markup-badge-background-color: var(--grey-20);
   --markup-badge-border-color: #CACAD1;
   --markup-badge-color: var(--grey-90);
@@ -15,6 +16,7 @@
 }
 
 .theme-dark:root {
+  --markup-badge-active-background-color: var(--blue-60);
   --markup-badge-background-color: var(--grey-70);
   --markup-badge-border-color: var(--grey-50);
   --markup-badge-color: var(--grey-30);
@@ -394,9 +396,8 @@ ul.children + .tag-line::before {
   font-style: italic;
 }
 
-/* Display and Event Badges */
-.markupview-display-badge,
-.markupview-event-badge {
+/* Markup Badges */
+.markup-badge {
   display: none;
   font-size: 9px;
   font-weight: normal;
@@ -411,11 +412,20 @@ ul.children + .tag-line::before {
   color: var(--markup-badge-color);
 }
 
-.markupview-event-badge {
+.markup-badge.active {
+  background-color: var(--markup-badge-active-background-color);
+  border-color: var(--theme-selection-color);
+  color: var(--theme-selection-color);
+}
+
+.markup-badge[data-display="grid"],
+.markup-badge[data-event] {
   cursor: pointer;
 }
 
-.markupview-event-badge:focus,
-.markupview-event-badge:hover {
+.markup-badge[data-display="grid"]:focus,
+.markup-badge[data-display="grid"]:hover,
+.markup-badge[data-event]:focus,
+.markup-badge[data-event]:hover {
   background-color: var(--markup-badge-hover-background-color);
 }

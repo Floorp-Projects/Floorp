@@ -49,7 +49,7 @@ StreamFilterDataEvent::Constructor(EventTarget* aEventTarget,
 JSObject*
 StreamFilterDataEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return StreamFilterDataEventBinding::Wrap(aCx, this, aGivenProto);
+  return StreamFilterDataEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace extensions

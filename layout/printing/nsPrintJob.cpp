@@ -1641,7 +1641,7 @@ nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError)
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(doc, event);
-  asyncDispatcher->mOnlyChromeDispatch = true;
+  asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
   asyncDispatcher->RunDOMEventWhenSafe();
 
   // Inform any progress listeners of the Error.
@@ -1992,8 +1992,9 @@ nsPrintJob::FirePrintPreviewUpdateEvent()
   if (mIsDoingPrintPreview && !mIsDoingPrinting) {
     nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
     (new AsyncEventDispatcher(
-       cv->GetDocument(), NS_LITERAL_STRING("printPreviewUpdate"), true, true)
-    )->RunDOMEventWhenSafe();
+       cv->GetDocument(), NS_LITERAL_STRING("printPreviewUpdate"),
+       CanBubble::eYes, ChromeOnlyDispatch::eYes
+    ))->RunDOMEventWhenSafe();
   }
 }
 

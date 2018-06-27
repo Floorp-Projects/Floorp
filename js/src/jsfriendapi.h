@@ -239,7 +239,7 @@ RemoveRawValueRoot(JSContext* cx, JS::Value* vp);
 JS_FRIEND_API(JSAtom*)
 GetPropertyNameFromPC(JSScript* script, jsbytecode* pc);
 
-#ifdef JS_DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 
 /*
  * Routines to print out values during debugging. These are FRIEND_API to help

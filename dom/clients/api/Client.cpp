@@ -74,9 +74,9 @@ JSObject*
 Client::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mData->info().type() == ClientType::Window) {
-    return WindowClientBinding::Wrap(aCx, this, aGivenProto);
+    return WindowClient_Binding::Wrap(aCx, this, aGivenProto);
   }
-  return ClientBinding::Wrap(aCx, this, aGivenProto);
+  return Client_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsIGlobalObject*

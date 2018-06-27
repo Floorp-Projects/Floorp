@@ -42,7 +42,7 @@ StatementParams::StatementParams(nsPIDOMWindowInner* aWindow, Statement *aStatem
 JSObject*
 StatementParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::MozStorageStatementParamsBinding::Wrap(aCx, this, aGivenProto);
+  return dom::MozStorageStatementParams_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

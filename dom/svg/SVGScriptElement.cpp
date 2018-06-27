@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGScriptElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGScriptElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGScriptElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGScriptElement::sStringInfo[2] =

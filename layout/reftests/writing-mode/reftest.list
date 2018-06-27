@@ -103,7 +103,7 @@ fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-in
 == 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
 == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
 == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
-== 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1-ref.html # bug 1392106
 == 1130907-intrinsic-sizing-2.html 1130907-intrinsic-sizing-2-ref.html
 == 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
 == 1133945-1-vertical-align.html 1133945-1-vertical-align-ref.html

@@ -17,7 +17,7 @@ def generate(output, idlFilename, dataFile):
     propList = runpy.run_path(dataFile)["data"]
     props = ""
     for p in propList:
-        if "CSSPropFlags::Internal" in p.flags:
+        if "Internal" in p.flags:
             continue
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).

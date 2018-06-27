@@ -24,7 +24,7 @@ NS_NewXMLElement(Element** aInstancePtrResult,
 JSObject*
 nsXMLElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ElementBinding::Wrap(aCx, this, aGivenProto);
+  return Element_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

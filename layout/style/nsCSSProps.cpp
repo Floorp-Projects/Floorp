@@ -269,215 +269,9 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kAnimationDirectionKTable[] = {
-  { eCSSKeyword_normal, static_cast<uint32_t>(dom::PlaybackDirection::Normal) },
-  { eCSSKeyword_reverse, static_cast<uint32_t>(dom::PlaybackDirection::Reverse) },
-  { eCSSKeyword_alternate, static_cast<uint32_t>(dom::PlaybackDirection::Alternate) },
-  { eCSSKeyword_alternate_reverse, static_cast<uint32_t>(dom::PlaybackDirection::Alternate_reverse) },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kAnimationFillModeKTable[] = {
-  { eCSSKeyword_none, static_cast<uint32_t>(dom::FillMode::None) },
-  { eCSSKeyword_forwards, static_cast<uint32_t>(dom::FillMode::Forwards) },
-  { eCSSKeyword_backwards, static_cast<uint32_t>(dom::FillMode::Backwards) },
-  { eCSSKeyword_both, static_cast<uint32_t>(dom::FillMode::Both) },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kAnimationPlayStateKTable[] = {
-  { eCSSKeyword_running, NS_STYLE_ANIMATION_PLAY_STATE_RUNNING },
-  { eCSSKeyword_paused, NS_STYLE_ANIMATION_PLAY_STATE_PAUSED },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kAppearanceKTable[] = {
-  { eCSSKeyword_none,                   NS_THEME_NONE },
-  { eCSSKeyword_button,                 NS_THEME_BUTTON },
-  { eCSSKeyword_radio,                  NS_THEME_RADIO },
-  { eCSSKeyword_checkbox,               NS_THEME_CHECKBOX },
-  { eCSSKeyword_button_bevel,           NS_THEME_BUTTON_BEVEL },
-  { eCSSKeyword_toolbox,                NS_THEME_TOOLBOX },
-  { eCSSKeyword_toolbar,                NS_THEME_TOOLBAR },
-  { eCSSKeyword_toolbarbutton,          NS_THEME_TOOLBARBUTTON },
-  { eCSSKeyword_toolbargripper,         NS_THEME_TOOLBARGRIPPER },
-  { eCSSKeyword_dualbutton,             NS_THEME_DUALBUTTON },
-  { eCSSKeyword_toolbarbutton_dropdown, NS_THEME_TOOLBARBUTTON_DROPDOWN },
-  { eCSSKeyword_button_arrow_up,        NS_THEME_BUTTON_ARROW_UP },
-  { eCSSKeyword_button_arrow_down,      NS_THEME_BUTTON_ARROW_DOWN },
-  { eCSSKeyword_button_arrow_next,      NS_THEME_BUTTON_ARROW_NEXT },
-  { eCSSKeyword_button_arrow_previous,  NS_THEME_BUTTON_ARROW_PREVIOUS },
-  { eCSSKeyword_meterbar,               NS_THEME_METERBAR },
-  { eCSSKeyword_meterchunk,             NS_THEME_METERCHUNK },
-  { eCSSKeyword_number_input,           NS_THEME_NUMBER_INPUT },
-  { eCSSKeyword_separator,              NS_THEME_SEPARATOR },
-  { eCSSKeyword_splitter,               NS_THEME_SPLITTER },
-  { eCSSKeyword_statusbar,              NS_THEME_STATUSBAR },
-  { eCSSKeyword_statusbarpanel,         NS_THEME_STATUSBARPANEL },
-  { eCSSKeyword_resizerpanel,           NS_THEME_RESIZERPANEL },
-  { eCSSKeyword_resizer,                NS_THEME_RESIZER },
-  { eCSSKeyword_listbox,                NS_THEME_LISTBOX },
-  { eCSSKeyword_listitem,               NS_THEME_LISTITEM },
-  { eCSSKeyword_treeview,               NS_THEME_TREEVIEW },
-  { eCSSKeyword_treeitem,               NS_THEME_TREEITEM },
-  { eCSSKeyword_treetwisty,             NS_THEME_TREETWISTY },
-  { eCSSKeyword_treetwistyopen,         NS_THEME_TREETWISTYOPEN },
-  { eCSSKeyword_treeline,               NS_THEME_TREELINE },
-  { eCSSKeyword_treeheader,             NS_THEME_TREEHEADER },
-  { eCSSKeyword_treeheadercell,         NS_THEME_TREEHEADERCELL },
-  { eCSSKeyword_treeheadersortarrow,    NS_THEME_TREEHEADERSORTARROW },
-  { eCSSKeyword_progressbar,            NS_THEME_PROGRESSBAR },
-  { eCSSKeyword_progresschunk,          NS_THEME_PROGRESSCHUNK },
-  { eCSSKeyword_progressbar_vertical,   NS_THEME_PROGRESSBAR_VERTICAL },
-  { eCSSKeyword_progresschunk_vertical, NS_THEME_PROGRESSCHUNK_VERTICAL },
-  { eCSSKeyword_tab,                    NS_THEME_TAB },
-  { eCSSKeyword_tabpanels,              NS_THEME_TABPANELS },
-  { eCSSKeyword_tabpanel,               NS_THEME_TABPANEL },
-  { eCSSKeyword_tab_scroll_arrow_back,  NS_THEME_TAB_SCROLL_ARROW_BACK },
-  { eCSSKeyword_tab_scroll_arrow_forward, NS_THEME_TAB_SCROLL_ARROW_FORWARD },
-  { eCSSKeyword_tooltip,                NS_THEME_TOOLTIP },
-  { eCSSKeyword_inner_spin_button,      NS_THEME_INNER_SPIN_BUTTON },
-  { eCSSKeyword_spinner,                NS_THEME_SPINNER },
-  { eCSSKeyword_spinner_upbutton,       NS_THEME_SPINNER_UPBUTTON },
-  { eCSSKeyword_spinner_downbutton,     NS_THEME_SPINNER_DOWNBUTTON },
-  { eCSSKeyword_spinner_textfield,      NS_THEME_SPINNER_TEXTFIELD },
-  { eCSSKeyword_scrollbar,              NS_THEME_SCROLLBAR },
-  { eCSSKeyword_scrollbar_small,        NS_THEME_SCROLLBAR_SMALL },
-  { eCSSKeyword_scrollbar_horizontal,   NS_THEME_SCROLLBAR_HORIZONTAL },
-  { eCSSKeyword_scrollbar_vertical,     NS_THEME_SCROLLBAR_VERTICAL },
-  { eCSSKeyword_scrollbarbutton_up,     NS_THEME_SCROLLBARBUTTON_UP },
-  { eCSSKeyword_scrollbarbutton_down,   NS_THEME_SCROLLBARBUTTON_DOWN },
-  { eCSSKeyword_scrollbarbutton_left,   NS_THEME_SCROLLBARBUTTON_LEFT },
-  { eCSSKeyword_scrollbarbutton_right,  NS_THEME_SCROLLBARBUTTON_RIGHT },
-  { eCSSKeyword_scrollbartrack_horizontal,    NS_THEME_SCROLLBARTRACK_HORIZONTAL },
-  { eCSSKeyword_scrollbartrack_vertical,      NS_THEME_SCROLLBARTRACK_VERTICAL },
-  { eCSSKeyword_scrollbarthumb_horizontal,    NS_THEME_SCROLLBARTHUMB_HORIZONTAL },
-  { eCSSKeyword_scrollbarthumb_vertical,      NS_THEME_SCROLLBARTHUMB_VERTICAL },
-  { eCSSKeyword_scrollcorner,           NS_THEME_SCROLLCORNER },
-  { eCSSKeyword_textfield,              NS_THEME_TEXTFIELD },
-  { eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE },
-  { eCSSKeyword_caret,                  NS_THEME_CARET },
-  { eCSSKeyword_searchfield,            NS_THEME_SEARCHFIELD },
-  { eCSSKeyword_menulist,               NS_THEME_MENULIST },
-  { eCSSKeyword_menulist_button,        NS_THEME_MENULIST_BUTTON },
-  { eCSSKeyword_menulist_text,          NS_THEME_MENULIST_TEXT },
-  { eCSSKeyword_menulist_textfield,     NS_THEME_MENULIST_TEXTFIELD },
-  { eCSSKeyword_range,                  NS_THEME_RANGE },
-  { eCSSKeyword_range_thumb,            NS_THEME_RANGE_THUMB },
-  { eCSSKeyword_scale_horizontal,       NS_THEME_SCALE_HORIZONTAL },
-  { eCSSKeyword_scale_vertical,         NS_THEME_SCALE_VERTICAL },
-  { eCSSKeyword_scalethumb_horizontal,  NS_THEME_SCALETHUMB_HORIZONTAL },
-  { eCSSKeyword_scalethumb_vertical,    NS_THEME_SCALETHUMB_VERTICAL },
-  { eCSSKeyword_scalethumbstart,        NS_THEME_SCALETHUMBSTART },
-  { eCSSKeyword_scalethumbend,          NS_THEME_SCALETHUMBEND },
-  { eCSSKeyword_scalethumbtick,         NS_THEME_SCALETHUMBTICK },
-  { eCSSKeyword_groupbox,               NS_THEME_GROUPBOX },
-  { eCSSKeyword_checkbox_container,     NS_THEME_CHECKBOX_CONTAINER },
-  { eCSSKeyword_radio_container,        NS_THEME_RADIO_CONTAINER },
-  { eCSSKeyword_checkbox_label,         NS_THEME_CHECKBOX_LABEL },
-  { eCSSKeyword_radio_label,            NS_THEME_RADIO_LABEL },
-  { eCSSKeyword_button_focus,           NS_THEME_BUTTON_FOCUS },
-  // Even though window is meant for OS window styling, web developers use
-  // `window` on <select> to remove the dropmarker. Care should be taken when
-  // changing -moz-appearance:window to avoid web compatibility regressions.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1466715#c10
-  { eCSSKeyword_window,                 NS_THEME_WINDOW },
-  { eCSSKeyword_dialog,                 NS_THEME_DIALOG },
-  { eCSSKeyword_menubar,                NS_THEME_MENUBAR },
-  { eCSSKeyword_menupopup,              NS_THEME_MENUPOPUP },
-  { eCSSKeyword_menuitem,               NS_THEME_MENUITEM },
-  { eCSSKeyword_checkmenuitem,          NS_THEME_CHECKMENUITEM },
-  { eCSSKeyword_radiomenuitem,          NS_THEME_RADIOMENUITEM },
-  { eCSSKeyword_menucheckbox,           NS_THEME_MENUCHECKBOX },
-  { eCSSKeyword_menuradio,              NS_THEME_MENURADIO },
-  { eCSSKeyword_menuseparator,          NS_THEME_MENUSEPARATOR },
-  { eCSSKeyword_menuarrow,              NS_THEME_MENUARROW },
-  { eCSSKeyword_menuimage,              NS_THEME_MENUIMAGE },
-  { eCSSKeyword_menuitemtext,           NS_THEME_MENUITEMTEXT },
-  { eCSSKeyword__moz_win_media_toolbox, NS_THEME_WIN_MEDIA_TOOLBOX },
-  { eCSSKeyword__moz_win_communications_toolbox, NS_THEME_WIN_COMMUNICATIONS_TOOLBOX },
-  { eCSSKeyword__moz_win_browsertabbar_toolbox,  NS_THEME_WIN_BROWSERTABBAR_TOOLBOX },
-  { eCSSKeyword__moz_win_glass,         NS_THEME_WIN_GLASS },
-  { eCSSKeyword__moz_win_borderless_glass,      NS_THEME_WIN_BORDERLESS_GLASS },
-  { eCSSKeyword__moz_mac_fullscreen_button,     NS_THEME_MAC_FULLSCREEN_BUTTON },
-  { eCSSKeyword__moz_mac_help_button,           NS_THEME_MAC_HELP_BUTTON },
-  { eCSSKeyword__moz_window_titlebar,           NS_THEME_WINDOW_TITLEBAR },
-  { eCSSKeyword__moz_window_titlebar_maximized, NS_THEME_WINDOW_TITLEBAR_MAXIMIZED },
-  { eCSSKeyword__moz_window_frame_left,         NS_THEME_WINDOW_FRAME_LEFT },
-  { eCSSKeyword__moz_window_frame_right,        NS_THEME_WINDOW_FRAME_RIGHT },
-  { eCSSKeyword__moz_window_frame_bottom,       NS_THEME_WINDOW_FRAME_BOTTOM },
-  { eCSSKeyword__moz_window_button_close,       NS_THEME_WINDOW_BUTTON_CLOSE },
-  { eCSSKeyword__moz_window_button_minimize,    NS_THEME_WINDOW_BUTTON_MINIMIZE },
-  { eCSSKeyword__moz_window_button_maximize,    NS_THEME_WINDOW_BUTTON_MAXIMIZE },
-  { eCSSKeyword__moz_window_button_restore,     NS_THEME_WINDOW_BUTTON_RESTORE },
-  { eCSSKeyword__moz_window_button_box,         NS_THEME_WINDOW_BUTTON_BOX },
-  { eCSSKeyword__moz_window_button_box_maximized, NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED },
-  { eCSSKeyword__moz_win_exclude_glass,         NS_THEME_WIN_EXCLUDE_GLASS },
-  { eCSSKeyword__moz_mac_vibrancy_light,        NS_THEME_MAC_VIBRANCY_LIGHT },
-  { eCSSKeyword__moz_mac_vibrancy_dark,         NS_THEME_MAC_VIBRANCY_DARK },
-  { eCSSKeyword__moz_mac_vibrant_titlebar_light, NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT },
-  { eCSSKeyword__moz_mac_vibrant_titlebar_dark,  NS_THEME_MAC_VIBRANT_TITLEBAR_DARK },
-  { eCSSKeyword__moz_mac_disclosure_button_open,   NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN },
-  { eCSSKeyword__moz_mac_disclosure_button_closed, NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED },
-  { eCSSKeyword__moz_gtk_info_bar,              NS_THEME_GTK_INFO_BAR },
-  { eCSSKeyword__moz_mac_source_list,           NS_THEME_MAC_SOURCE_LIST },
-  { eCSSKeyword__moz_mac_source_list_selection, NS_THEME_MAC_SOURCE_LIST_SELECTION },
-  { eCSSKeyword__moz_mac_active_source_list_selection, NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION },
-  { eCSSKeyword_UNKNOWN,                        -1 }
-};
-
-const KTableEntry nsCSSProps::kBackfaceVisibilityKTable[] = {
-  { eCSSKeyword_visible, NS_STYLE_BACKFACE_VISIBILITY_VISIBLE },
-  { eCSSKeyword_hidden, NS_STYLE_BACKFACE_VISIBILITY_HIDDEN },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kTransformStyleKTable[] = {
   { eCSSKeyword_flat, NS_STYLE_TRANSFORM_STYLE_FLAT },
   { eCSSKeyword_preserve_3d, NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageLayerAttachmentKTable[] = {
-  { eCSSKeyword_fixed, StyleImageLayerAttachment::Fixed },
-  { eCSSKeyword_scroll, StyleImageLayerAttachment::Scroll },
-  { eCSSKeyword_local, StyleImageLayerAttachment::Local },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBackgroundOriginKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
-  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
-  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  { eCSSKeyword_text, StyleGeometryBox::Text },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kMaskOriginKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
-  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
-  { eCSSKeyword_stroke_box, StyleGeometryBox::StrokeBox },
-  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kMaskClipKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
-  { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
-  { eCSSKeyword_stroke_box, StyleGeometryBox::StrokeBox },
-  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
-  { eCSSKeyword_no_clip, StyleGeometryBox::NoClip },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -489,47 +283,6 @@ const KTableEntry nsCSSProps::kImageLayerRepeatKTable[] = {
   { eCSSKeyword_round,      StyleImageLayerRepeat::Round},
   { eCSSKeyword_space,      StyleImageLayerRepeat::Space},
   { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageLayerModeKTable[] = {
-  { eCSSKeyword_alpha, NS_STYLE_MASK_MODE_ALPHA },
-  { eCSSKeyword_luminance, NS_STYLE_MASK_MODE_LUMINANCE },
-  { eCSSKeyword_match_source, NS_STYLE_MASK_MODE_MATCH_SOURCE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageLayerCompositeKTable[] = {
-  { eCSSKeyword_add, NS_STYLE_MASK_COMPOSITE_ADD },
-  { eCSSKeyword_subtract, NS_STYLE_MASK_COMPOSITE_SUBTRACT },
-  { eCSSKeyword_intersect, NS_STYLE_MASK_COMPOSITE_INTERSECT },
-  { eCSSKeyword_exclude, NS_STYLE_MASK_COMPOSITE_EXCLUDE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBlendModeKTable[] = {
-    { eCSSKeyword_normal,      NS_STYLE_BLEND_NORMAL },
-    { eCSSKeyword_multiply,    NS_STYLE_BLEND_MULTIPLY },
-    { eCSSKeyword_screen,      NS_STYLE_BLEND_SCREEN },
-    { eCSSKeyword_overlay,     NS_STYLE_BLEND_OVERLAY },
-    { eCSSKeyword_darken,      NS_STYLE_BLEND_DARKEN },
-    { eCSSKeyword_lighten,     NS_STYLE_BLEND_LIGHTEN },
-    { eCSSKeyword_color_dodge, NS_STYLE_BLEND_COLOR_DODGE },
-    { eCSSKeyword_color_burn,  NS_STYLE_BLEND_COLOR_BURN },
-    { eCSSKeyword_hard_light,  NS_STYLE_BLEND_HARD_LIGHT },
-    { eCSSKeyword_soft_light,  NS_STYLE_BLEND_SOFT_LIGHT },
-    { eCSSKeyword_difference,  NS_STYLE_BLEND_DIFFERENCE },
-    { eCSSKeyword_exclusion,   NS_STYLE_BLEND_EXCLUSION },
-    { eCSSKeyword_hue,         NS_STYLE_BLEND_HUE },
-    { eCSSKeyword_saturation,  NS_STYLE_BLEND_SATURATION },
-    { eCSSKeyword_color,       NS_STYLE_BLEND_COLOR },
-    { eCSSKeyword_luminosity,  NS_STYLE_BLEND_LUMINOSITY },
-    { eCSSKeyword_UNKNOWN,     -1 }
-};
-
-const KTableEntry nsCSSProps::kBorderCollapseKTable[] = {
-  { eCSSKeyword_collapse,  NS_STYLE_BORDER_COLLAPSE },
-  { eCSSKeyword_separate,  NS_STYLE_BORDER_SEPARATE },
-  { eCSSKeyword_UNKNOWN,   -1 }
 };
 
 const KTableEntry nsCSSProps::kBorderImageRepeatKTable[] = {
@@ -554,40 +307,8 @@ const KTableEntry nsCSSProps::kBorderStyleKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kBoxDecorationBreakKTable[] = {
-  { eCSSKeyword_slice, StyleBoxDecorationBreak::Slice },
-  { eCSSKeyword_clone, StyleBoxDecorationBreak::Clone },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kBoxShadowTypeKTable[] = {
   { eCSSKeyword_inset, uint8_t(StyleBoxShadowType::Inset) },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBoxSizingKTable[] = {
-  { eCSSKeyword_content_box,  StyleBoxSizing::Content },
-  { eCSSKeyword_border_box,   StyleBoxSizing::Border },
-  { eCSSKeyword_UNKNOWN,      -1 }
-};
-
-const KTableEntry nsCSSProps::kCaptionSideKTable[] = {
-  { eCSSKeyword_top,                  NS_STYLE_CAPTION_SIDE_TOP },
-  { eCSSKeyword_right,                NS_STYLE_CAPTION_SIDE_RIGHT },
-  { eCSSKeyword_bottom,               NS_STYLE_CAPTION_SIDE_BOTTOM },
-  { eCSSKeyword_left,                 NS_STYLE_CAPTION_SIDE_LEFT },
-  { eCSSKeyword_top_outside,          NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE },
-  { eCSSKeyword_bottom_outside,       NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE },
-  { eCSSKeyword_UNKNOWN,              -1 }
-};
-
-const KTableEntry nsCSSProps::kClearKTable[] = {
-  { eCSSKeyword_none, StyleClear::None },
-  { eCSSKeyword_left, StyleClear::Left },
-  { eCSSKeyword_right, StyleClear::Right },
-  { eCSSKeyword_inline_start, StyleClear::InlineStart },
-  { eCSSKeyword_inline_end, StyleClear::InlineEnd },
-  { eCSSKeyword_both, StyleClear::Both },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -650,12 +371,6 @@ const KTableEntry nsCSSProps::kCursorKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kDirectionKTable[] = {
-  { eCSSKeyword_ltr,      NS_STYLE_DIRECTION_LTR },
-  { eCSSKeyword_rtl,      NS_STYLE_DIRECTION_RTL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 KTableEntry nsCSSProps::kDisplayKTable[] = {
   { eCSSKeyword_none,                StyleDisplay::None },
   { eCSSKeyword_inline,              StyleDisplay::Inline },
@@ -704,12 +419,6 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
   { eCSSKeyword_contents,            StyleDisplay::Contents },
   { eCSSKeyword_flow_root,           StyleDisplay::FlowRoot },
   { eCSSKeyword_UNKNOWN,             -1 }
-};
-
-const KTableEntry nsCSSProps::kEmptyCellsKTable[] = {
-  { eCSSKeyword_show,                 NS_STYLE_TABLE_EMPTY_CELLS_SHOW },
-  { eCSSKeyword_hide,                 NS_STYLE_TABLE_EMPTY_CELLS_HIDE },
-  { eCSSKeyword_UNKNOWN,              -1 }
 };
 
 const KTableEntry nsCSSProps::kAlignAllKeywords[] = {
@@ -867,56 +576,6 @@ const KTableEntry nsCSSProps::kAutoCompletionAlignJustifyContent[] = {
 };
 // </NOTE>
 
-const KTableEntry nsCSSProps::kFlexDirectionKTable[] = {
-  { eCSSKeyword_row,            NS_STYLE_FLEX_DIRECTION_ROW },
-  { eCSSKeyword_row_reverse,    NS_STYLE_FLEX_DIRECTION_ROW_REVERSE },
-  { eCSSKeyword_column,         NS_STYLE_FLEX_DIRECTION_COLUMN },
-  { eCSSKeyword_column_reverse, NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE },
-  { eCSSKeyword_UNKNOWN,        -1 }
-};
-
-const KTableEntry nsCSSProps::kFlexWrapKTable[] = {
-  { eCSSKeyword_nowrap,       NS_STYLE_FLEX_WRAP_NOWRAP },
-  { eCSSKeyword_wrap,         NS_STYLE_FLEX_WRAP_WRAP },
-  { eCSSKeyword_wrap_reverse, NS_STYLE_FLEX_WRAP_WRAP_REVERSE },
-  { eCSSKeyword_UNKNOWN,      -1 }
-};
-
-const KTableEntry nsCSSProps::kHyphensKTable[] = {
-  { eCSSKeyword_none, StyleHyphens::None },
-  { eCSSKeyword_manual, StyleHyphens::Manual },
-  { eCSSKeyword_auto, StyleHyphens::Auto },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFloatKTable[] = {
-  { eCSSKeyword_none, StyleFloat::None },
-  { eCSSKeyword_left, StyleFloat::Left },
-  { eCSSKeyword_right, StyleFloat::Right },
-  { eCSSKeyword_inline_start, StyleFloat::InlineStart },
-  { eCSSKeyword_inline_end, StyleFloat::InlineEnd },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFloatEdgeKTable[] = {
-  { eCSSKeyword_content_box, uint8_t(StyleFloatEdge::ContentBox) },
-  { eCSSKeyword_margin_box, uint8_t(StyleFloatEdge::MarginBox) },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFontKerningKTable[] = {
-  { eCSSKeyword_auto, NS_FONT_KERNING_AUTO },
-  { eCSSKeyword_none, NS_FONT_KERNING_NONE },
-  { eCSSKeyword_normal, NS_FONT_KERNING_NORMAL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFontOpticalSizingKTable[] = {
-  { eCSSKeyword_auto, NS_FONT_OPTICAL_SIZING_AUTO },
-  { eCSSKeyword_none, NS_FONT_OPTICAL_SIZING_NONE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
   { eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO },
   { eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE },
@@ -941,16 +600,6 @@ const KTableEntry nsCSSProps::kFontVariantAlternatesFuncsKTable[] = {
   { eCSSKeyword_swash, NS_FONT_VARIANT_ALTERNATES_SWASH },
   { eCSSKeyword_ornaments, NS_FONT_VARIANT_ALTERNATES_ORNAMENTS },
   { eCSSKeyword_annotation, NS_FONT_VARIANT_ALTERNATES_ANNOTATION },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFontVariantCapsKTable[] = {
-  { eCSSKeyword_small_caps, NS_FONT_VARIANT_CAPS_SMALLCAPS },
-  { eCSSKeyword_all_small_caps, NS_FONT_VARIANT_CAPS_ALLSMALL },
-  { eCSSKeyword_petite_caps, NS_FONT_VARIANT_CAPS_PETITECAPS },
-  { eCSSKeyword_all_petite_caps, NS_FONT_VARIANT_CAPS_ALLPETITE },
-  { eCSSKeyword_titling_caps, NS_FONT_VARIANT_CAPS_TITLING },
-  { eCSSKeyword_unicase, NS_FONT_VARIANT_CAPS_UNICASE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -991,12 +640,6 @@ const KTableEntry nsCSSProps::kFontVariantNumericKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kFontVariantPositionKTable[] = {
-  { eCSSKeyword_super, NS_FONT_VARIANT_POSITION_SUPER },
-  { eCSSKeyword_sub, NS_FONT_VARIANT_POSITION_SUB },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kGridAutoFlowKTable[] = {
   { eCSSKeyword_row, NS_STYLE_GRID_AUTO_FLOW_ROW },
   { eCSSKeyword_column, NS_STYLE_GRID_AUTO_FLOW_COLUMN },
@@ -1010,30 +653,9 @@ const KTableEntry nsCSSProps::kGridTrackBreadthKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kIsolationKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_ISOLATION_AUTO },
-  { eCSSKeyword_isolate, NS_STYLE_ISOLATION_ISOLATE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kIMEModeKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_IME_MODE_NORMAL },
-  { eCSSKeyword_auto, NS_STYLE_IME_MODE_AUTO },
-  { eCSSKeyword_active, NS_STYLE_IME_MODE_ACTIVE },
-  { eCSSKeyword_disabled, NS_STYLE_IME_MODE_DISABLED },
-  { eCSSKeyword_inactive, NS_STYLE_IME_MODE_INACTIVE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kLineHeightKTable[] = {
   // -moz- prefixed, intended for internal use for single-line controls
   { eCSSKeyword__moz_block_height, NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kListStylePositionKTable[] = {
-  { eCSSKeyword_inside, NS_STYLE_LIST_STYLE_POSITION_INSIDE },
-  { eCSSKeyword_outside, NS_STYLE_LIST_STYLE_POSITION_OUTSIDE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1046,23 +668,6 @@ const KTableEntry nsCSSProps::kContainKTable[] = {
   { eCSSKeyword_paint,   NS_STYLE_CONTAIN_PAINT },
   { eCSSKeyword_size,    NS_STYLE_CONTAIN_SIZE },
   { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kObjectFitKTable[] = {
-  { eCSSKeyword_fill,       NS_STYLE_OBJECT_FIT_FILL },
-  { eCSSKeyword_contain,    NS_STYLE_OBJECT_FIT_CONTAIN },
-  { eCSSKeyword_cover,      NS_STYLE_OBJECT_FIT_COVER },
-  { eCSSKeyword_none,       NS_STYLE_OBJECT_FIT_NONE },
-  { eCSSKeyword_scale_down, NS_STYLE_OBJECT_FIT_SCALE_DOWN },
-  { eCSSKeyword_UNKNOWN,    -1 }
-};
-
-const KTableEntry nsCSSProps::kOrientKTable[] = {
-  { eCSSKeyword_inline,     StyleOrient::Inline },
-  { eCSSKeyword_block,      StyleOrient::Block },
-  { eCSSKeyword_horizontal, StyleOrient::Horizontal },
-  { eCSSKeyword_vertical,   StyleOrient::Vertical },
-  { eCSSKeyword_UNKNOWN,    -1 }
 };
 
 // Same as kBorderStyleKTable except 'hidden'.
@@ -1109,71 +714,12 @@ const KTableEntry nsCSSProps::kOverflowSubKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kPageBreakInsideKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO },
-  { eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kPointerEventsKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_POINTER_EVENTS_NONE },
-  { eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED },
-  { eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL },
-  { eCSSKeyword_visiblestroke, NS_STYLE_POINTER_EVENTS_VISIBLESTROKE },
-  { eCSSKeyword_visible, NS_STYLE_POINTER_EVENTS_VISIBLE },
-  { eCSSKeyword_painted, NS_STYLE_POINTER_EVENTS_PAINTED },
-  { eCSSKeyword_fill, NS_STYLE_POINTER_EVENTS_FILL },
-  { eCSSKeyword_stroke, NS_STYLE_POINTER_EVENTS_STROKE },
-  { eCSSKeyword_all, NS_STYLE_POINTER_EVENTS_ALL },
-  { eCSSKeyword_auto, NS_STYLE_POINTER_EVENTS_AUTO },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kPositionKTable[] = {
-  { eCSSKeyword_static, NS_STYLE_POSITION_STATIC },
-  { eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE },
-  { eCSSKeyword_absolute, NS_STYLE_POSITION_ABSOLUTE },
-  { eCSSKeyword_fixed, NS_STYLE_POSITION_FIXED },
-  { eCSSKeyword_sticky, NS_STYLE_POSITION_STICKY },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kRadialGradientSizeKTable[] = {
   { eCSSKeyword_closest_side,    NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE },
   { eCSSKeyword_closest_corner,  NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER },
   { eCSSKeyword_farthest_side,   NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE },
   { eCSSKeyword_farthest_corner, NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER },
   { eCSSKeyword_UNKNOWN,         -1 }
-};
-
-const KTableEntry nsCSSProps::kResizeKTable[] = {
-  { eCSSKeyword_none,       NS_STYLE_RESIZE_NONE },
-  { eCSSKeyword_both,       NS_STYLE_RESIZE_BOTH },
-  { eCSSKeyword_horizontal, NS_STYLE_RESIZE_HORIZONTAL },
-  { eCSSKeyword_vertical,   NS_STYLE_RESIZE_VERTICAL },
-  { eCSSKeyword_UNKNOWN,    -1 }
-};
-
-const KTableEntry nsCSSProps::kRubyAlignKTable[] = {
-  { eCSSKeyword_start, NS_STYLE_RUBY_ALIGN_START },
-  { eCSSKeyword_center, NS_STYLE_RUBY_ALIGN_CENTER },
-  { eCSSKeyword_space_between, NS_STYLE_RUBY_ALIGN_SPACE_BETWEEN },
-  { eCSSKeyword_space_around, NS_STYLE_RUBY_ALIGN_SPACE_AROUND },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kRubyPositionKTable[] = {
-  { eCSSKeyword_over, NS_STYLE_RUBY_POSITION_OVER },
-  { eCSSKeyword_under, NS_STYLE_RUBY_POSITION_UNDER },
-  // bug 1055672 for 'inter-character' support
-  // { eCSSKeyword_inter_character, NS_STYLE_RUBY_POSITION_INTER_CHARACTER },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kScrollBehaviorKTable[] = {
-  { eCSSKeyword_auto,       NS_STYLE_SCROLL_BEHAVIOR_AUTO },
-  { eCSSKeyword_smooth,     NS_STYLE_SCROLL_BEHAVIOR_SMOOTH },
-  { eCSSKeyword_UNKNOWN,    -1 }
 };
 
 const KTableEntry nsCSSProps::kOverscrollBehaviorKTable[] = {
@@ -1190,20 +736,6 @@ const KTableEntry nsCSSProps::kScrollSnapTypeKTable[] = {
   { eCSSKeyword_UNKNOWN,   -1 }
 };
 
-const KTableEntry nsCSSProps::kStackSizingKTable[] = {
-  { eCSSKeyword_ignore, StyleStackSizing::Ignore },
-  { eCSSKeyword_stretch_to_fit, StyleStackSizing::StretchToFit },
-  { eCSSKeyword_ignore_horizontal, StyleStackSizing::IgnoreHorizontal },
-  { eCSSKeyword_ignore_vertical, StyleStackSizing::IgnoreVertical },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTableLayoutKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_TABLE_LAYOUT_AUTO },
-  { eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 KTableEntry nsCSSProps::kTextAlignKTable[] = {
   { eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT },
   { eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT },
@@ -1216,35 +748,6 @@ KTableEntry nsCSSProps::kTextAlignKTable[] = {
   { eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END },
   { eCSSKeyword_unsafe, NS_STYLE_TEXT_ALIGN_UNSAFE },
   { eCSSKeyword_match_parent, NS_STYLE_TEXT_ALIGN_MATCH_PARENT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-KTableEntry nsCSSProps::kTextAlignLastKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_TEXT_ALIGN_AUTO },
-  { eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT },
-  { eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT },
-  { eCSSKeyword_center, NS_STYLE_TEXT_ALIGN_CENTER },
-  { eCSSKeyword_justify, NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_START },
-  { eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END },
-  { eCSSKeyword_unsafe, NS_STYLE_TEXT_ALIGN_UNSAFE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTextJustifyKTable[] = {
-  { eCSSKeyword_none, StyleTextJustify::None },
-  { eCSSKeyword_auto, StyleTextJustify::Auto },
-  { eCSSKeyword_inter_word, StyleTextJustify::InterWord },
-  { eCSSKeyword_inter_character, StyleTextJustify::InterCharacter },
-  // For legacy reasons, UAs must also support the keyword "distribute" with
-  // the exact same meaning and behavior as "inter-character".
-  { eCSSKeyword_distribute, StyleTextJustify::InterCharacter },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTextCombineUprightKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE },
-  { eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1267,14 +770,6 @@ const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kTextOrientationKTable[] = {
-  { eCSSKeyword_mixed, NS_STYLE_TEXT_ORIENTATION_MIXED },
-  { eCSSKeyword_upright, NS_STYLE_TEXT_ORIENTATION_UPRIGHT },
-  { eCSSKeyword_sideways, NS_STYLE_TEXT_ORIENTATION_SIDEWAYS },
-  { eCSSKeyword_sideways_right, NS_STYLE_TEXT_ORIENTATION_SIDEWAYS },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kTextEmphasisStyleShapeKTable[] = {
   { eCSSKeyword_dot, NS_STYLE_TEXT_EMPHASIS_STYLE_DOT },
   { eCSSKeyword_circle, NS_STYLE_TEXT_EMPHASIS_STYLE_CIRCLE },
@@ -1290,21 +785,6 @@ const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kTextSizeAdjustKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_TEXT_SIZE_ADJUST_NONE },
-  { eCSSKeyword_auto, NS_STYLE_TEXT_SIZE_ADJUST_AUTO },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTextTransformKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_TEXT_TRANSFORM_NONE },
-  { eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE },
-  { eCSSKeyword_lowercase, NS_STYLE_TEXT_TRANSFORM_LOWERCASE },
-  { eCSSKeyword_uppercase, NS_STYLE_TEXT_TRANSFORM_UPPERCASE },
-  { eCSSKeyword_full_width, NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kTouchActionKTable[] = {
   { eCSSKeyword_none,         NS_STYLE_TOUCH_ACTION_NONE },
   { eCSSKeyword_auto,         NS_STYLE_TOUCH_ACTION_AUTO },
@@ -1312,13 +792,6 @@ const KTableEntry nsCSSProps::kTouchActionKTable[] = {
   { eCSSKeyword_pan_y,        NS_STYLE_TOUCH_ACTION_PAN_Y },
   { eCSSKeyword_manipulation, NS_STYLE_TOUCH_ACTION_MANIPULATION },
   { eCSSKeyword_UNKNOWN,      -1 }
-};
-
-const KTableEntry nsCSSProps::kTransformBoxKTable[] = {
-  { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
-  { eCSSKeyword_fill_box, StyleGeometryBox::FillBox },
-  { eCSSKeyword_view_box, StyleGeometryBox::ViewBox },
-  { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kTransitionTimingFunctionKTable[] = {
@@ -1332,56 +805,6 @@ const KTableEntry nsCSSProps::kTransitionTimingFunctionKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kUnicodeBidiKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_UNICODE_BIDI_NORMAL },
-  { eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED },
-  { eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE },
-  { eCSSKeyword_isolate, NS_STYLE_UNICODE_BIDI_ISOLATE },
-  { eCSSKeyword_isolate_override, NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE },
-  { eCSSKeyword_plaintext, NS_STYLE_UNICODE_BIDI_PLAINTEXT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kUserFocusKTable[] = {
-  { eCSSKeyword_none,           uint8_t(StyleUserFocus::None) },
-  { eCSSKeyword_normal,         uint8_t(StyleUserFocus::Normal) },
-  { eCSSKeyword_ignore,         uint8_t(StyleUserFocus::Ignore) },
-  { eCSSKeyword_select_all,     uint8_t(StyleUserFocus::SelectAll) },
-  { eCSSKeyword_select_before,  uint8_t(StyleUserFocus::SelectBefore) },
-  { eCSSKeyword_select_after,   uint8_t(StyleUserFocus::SelectAfter) },
-  { eCSSKeyword_select_same,    uint8_t(StyleUserFocus::SelectSame) },
-  { eCSSKeyword_select_menu,    uint8_t(StyleUserFocus::SelectMenu) },
-  { eCSSKeyword_UNKNOWN,        -1 }
-};
-
-const KTableEntry nsCSSProps::kUserInputKTable[] = {
-  { eCSSKeyword_none,     StyleUserInput::None },
-  { eCSSKeyword_auto,     StyleUserInput::Auto },
-  { eCSSKeyword_UNKNOWN,  -1 }
-};
-
-const KTableEntry nsCSSProps::kUserModifyKTable[] = {
-  { eCSSKeyword_read_only,  StyleUserModify::ReadOnly },
-  { eCSSKeyword_read_write, StyleUserModify::ReadWrite },
-  { eCSSKeyword_write_only, StyleUserModify::WriteOnly },
-  { eCSSKeyword_UNKNOWN,    -1 }
-};
-
-const KTableEntry nsCSSProps::kUserSelectKTable[] = {
-  { eCSSKeyword_none,       StyleUserSelect::None },
-  { eCSSKeyword_auto,       StyleUserSelect::Auto },
-  { eCSSKeyword_text,       StyleUserSelect::Text },
-  { eCSSKeyword_element,    StyleUserSelect::Element },
-  { eCSSKeyword_elements,   StyleUserSelect::Elements },
-  { eCSSKeyword_all,        StyleUserSelect::All },
-  { eCSSKeyword_toggle,     StyleUserSelect::Toggle },
-  { eCSSKeyword_tri_state,  StyleUserSelect::TriState },
-  { eCSSKeyword__moz_all,   StyleUserSelect::MozAll },
-  { eCSSKeyword__moz_none,  StyleUserSelect::None },
-  { eCSSKeyword__moz_text,  StyleUserSelect::MozText },
-  { eCSSKeyword_UNKNOWN,    -1 }
-};
-
 const KTableEntry nsCSSProps::kVerticalAlignKTable[] = {
   { eCSSKeyword_baseline, NS_STYLE_VERTICAL_ALIGN_BASELINE },
   { eCSSKeyword_sub, NS_STYLE_VERTICAL_ALIGN_SUB },
@@ -1393,23 +816,6 @@ const KTableEntry nsCSSProps::kVerticalAlignKTable[] = {
   { eCSSKeyword_bottom, NS_STYLE_VERTICAL_ALIGN_BOTTOM },
   { eCSSKeyword_text_bottom, NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM },
   { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kVisibilityKTable[] = {
-  { eCSSKeyword_visible, NS_STYLE_VISIBILITY_VISIBLE },
-  { eCSSKeyword_hidden, NS_STYLE_VISIBILITY_HIDDEN },
-  { eCSSKeyword_collapse, NS_STYLE_VISIBILITY_COLLAPSE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kWhitespaceKTable[] = {
-  { eCSSKeyword_normal,         StyleWhiteSpace::Normal },
-  { eCSSKeyword_pre,            StyleWhiteSpace::Pre },
-  { eCSSKeyword_nowrap,         StyleWhiteSpace::Nowrap },
-  { eCSSKeyword_pre_wrap,       StyleWhiteSpace::PreWrap },
-  { eCSSKeyword_pre_line,       StyleWhiteSpace::PreLine },
-  { eCSSKeyword__moz_pre_space, StyleWhiteSpace::PreSpace },
-  { eCSSKeyword_UNKNOWN,        -1 }
 };
 
 const KTableEntry nsCSSProps::kWidthKTable[] = {
@@ -1434,105 +840,9 @@ static_assert(ArrayLength(nsCSSProps::kFlexBasisKTable) ==
               "kFlexBasisKTable should have the same entries as "
               "kWidthKTable, plus one more for 'content'");
 
-const KTableEntry nsCSSProps::kWindowDraggingKTable[] = {
-  { eCSSKeyword_default, StyleWindowDragging::Default },
-  { eCSSKeyword_drag, StyleWindowDragging::Drag },
-  { eCSSKeyword_no_drag, StyleWindowDragging::NoDrag },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kWindowShadowKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_WINDOW_SHADOW_NONE },
-  { eCSSKeyword_default, NS_STYLE_WINDOW_SHADOW_DEFAULT },
-  { eCSSKeyword_menu, NS_STYLE_WINDOW_SHADOW_MENU },
-  { eCSSKeyword_tooltip, NS_STYLE_WINDOW_SHADOW_TOOLTIP },
-  { eCSSKeyword_sheet, NS_STYLE_WINDOW_SHADOW_SHEET },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kWordBreakKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_WORDBREAK_NORMAL },
-  { eCSSKeyword_break_all, NS_STYLE_WORDBREAK_BREAK_ALL },
-  { eCSSKeyword_keep_all, NS_STYLE_WORDBREAK_KEEP_ALL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kOverflowWrapKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_OVERFLOWWRAP_NORMAL },
-  { eCSSKeyword_break_word, NS_STYLE_OVERFLOWWRAP_BREAK_WORD },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kWritingModeKTable[] = {
-  { eCSSKeyword_horizontal_tb, NS_STYLE_WRITING_MODE_HORIZONTAL_TB },
-  { eCSSKeyword_vertical_lr, NS_STYLE_WRITING_MODE_VERTICAL_LR },
-  { eCSSKeyword_vertical_rl, NS_STYLE_WRITING_MODE_VERTICAL_RL },
-  { eCSSKeyword_sideways_lr, NS_STYLE_WRITING_MODE_SIDEWAYS_LR },
-  { eCSSKeyword_sideways_rl, NS_STYLE_WRITING_MODE_SIDEWAYS_RL },
-  { eCSSKeyword_lr, NS_STYLE_WRITING_MODE_HORIZONTAL_TB },
-  { eCSSKeyword_lr_tb, NS_STYLE_WRITING_MODE_HORIZONTAL_TB },
-  { eCSSKeyword_rl, NS_STYLE_WRITING_MODE_HORIZONTAL_TB },
-  { eCSSKeyword_rl_tb, NS_STYLE_WRITING_MODE_HORIZONTAL_TB },
-  { eCSSKeyword_tb, NS_STYLE_WRITING_MODE_VERTICAL_RL },
-  { eCSSKeyword_tb_rl, NS_STYLE_WRITING_MODE_VERTICAL_RL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 // Specific keyword tables for XUL.properties
-const KTableEntry nsCSSProps::kBoxAlignKTable[] = {
-  { eCSSKeyword_stretch, StyleBoxAlign::Stretch },
-  { eCSSKeyword_start, StyleBoxAlign::Start },
-  { eCSSKeyword_center, StyleBoxAlign::Center },
-  { eCSSKeyword_baseline, StyleBoxAlign::Baseline },
-  { eCSSKeyword_end, StyleBoxAlign::End },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBoxDirectionKTable[] = {
-  { eCSSKeyword_normal, StyleBoxDirection::Normal },
-  { eCSSKeyword_reverse, StyleBoxDirection::Reverse },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBoxOrientKTable[] = {
-  { eCSSKeyword_horizontal, StyleBoxOrient::Horizontal },
-  { eCSSKeyword_vertical, StyleBoxOrient::Vertical },
-  { eCSSKeyword_inline_axis, StyleBoxOrient::Horizontal },
-  { eCSSKeyword_block_axis, StyleBoxOrient::Vertical },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBoxPackKTable[] = {
-  { eCSSKeyword_start, StyleBoxPack::Start },
-  { eCSSKeyword_center, StyleBoxPack::Center },
-  { eCSSKeyword_end, StyleBoxPack::End },
-  { eCSSKeyword_justify, StyleBoxPack::Justify },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
 
 // keyword tables for SVG properties
-
-const KTableEntry nsCSSProps::kDominantBaselineKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_DOMINANT_BASELINE_AUTO },
-  { eCSSKeyword_use_script, NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT },
-  { eCSSKeyword_no_change, NS_STYLE_DOMINANT_BASELINE_NO_CHANGE },
-  { eCSSKeyword_reset_size, NS_STYLE_DOMINANT_BASELINE_RESET_SIZE },
-  { eCSSKeyword_alphabetic, NS_STYLE_DOMINANT_BASELINE_ALPHABETIC },
-  { eCSSKeyword_hanging, NS_STYLE_DOMINANT_BASELINE_HANGING },
-  { eCSSKeyword_ideographic, NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC },
-  { eCSSKeyword_mathematical, NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL },
-  { eCSSKeyword_central, NS_STYLE_DOMINANT_BASELINE_CENTRAL },
-  { eCSSKeyword_middle, NS_STYLE_DOMINANT_BASELINE_MIDDLE },
-  { eCSSKeyword_text_after_edge, NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE },
-  { eCSSKeyword_text_before_edge, NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFillRuleKTable[] = {
-  { eCSSKeyword_nonzero, StyleFillRule::Nonzero },
-  { eCSSKeyword_evenodd, StyleFillRule::Evenodd },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
 
 const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
   { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
@@ -1565,93 +875,11 @@ const KTableEntry nsCSSProps::kFilterFunctionKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kImageRenderingKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_IMAGE_RENDERING_AUTO },
-  { eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED },
-  { eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY },
-  { eCSSKeyword__moz_crisp_edges, NS_STYLE_IMAGE_RENDERING_CRISPEDGES },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kMaskTypeKTable[] = {
-  { eCSSKeyword_luminance, NS_STYLE_MASK_TYPE_LUMINANCE },
-  { eCSSKeyword_alpha, NS_STYLE_MASK_TYPE_ALPHA },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kShapeOutsideShapeBoxKTable[] = {
   { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
   { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
   { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
   { eCSSKeyword_margin_box, StyleGeometryBox::MarginBox },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kShapeRenderingKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_SHAPE_RENDERING_AUTO },
-  { eCSSKeyword_optimizespeed, NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED },
-  { eCSSKeyword_crispedges, NS_STYLE_SHAPE_RENDERING_CRISPEDGES },
-  { eCSSKeyword_geometricprecision, NS_STYLE_SHAPE_RENDERING_GEOMETRICPRECISION },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kStrokeLinecapKTable[] = {
-  { eCSSKeyword_butt, NS_STYLE_STROKE_LINECAP_BUTT },
-  { eCSSKeyword_round, NS_STYLE_STROKE_LINECAP_ROUND },
-  { eCSSKeyword_square, NS_STYLE_STROKE_LINECAP_SQUARE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kStrokeLinejoinKTable[] = {
-  { eCSSKeyword_miter, NS_STYLE_STROKE_LINEJOIN_MITER },
-  { eCSSKeyword_round, NS_STYLE_STROKE_LINEJOIN_ROUND },
-  { eCSSKeyword_bevel, NS_STYLE_STROKE_LINEJOIN_BEVEL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTextAnchorKTable[] = {
-  { eCSSKeyword_start, NS_STYLE_TEXT_ANCHOR_START },
-  { eCSSKeyword_middle, NS_STYLE_TEXT_ANCHOR_MIDDLE },
-  { eCSSKeyword_end, NS_STYLE_TEXT_ANCHOR_END },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTextRenderingKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_TEXT_RENDERING_AUTO },
-  { eCSSKeyword_optimizespeed, NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED },
-  { eCSSKeyword_optimizelegibility, NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY },
-  { eCSSKeyword_geometricprecision, NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kVectorEffectKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_VECTOR_EFFECT_NONE },
-  { eCSSKeyword_non_scaling_stroke, NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kColorAdjustKTable[] = {
-  { eCSSKeyword_economy, NS_STYLE_COLOR_ADJUST_ECONOMY },
-  { eCSSKeyword_exact, NS_STYLE_COLOR_ADJUST_EXACT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kColorInterpolationKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_COLOR_INTERPOLATION_AUTO },
-  { eCSSKeyword_srgb, NS_STYLE_COLOR_INTERPOLATION_SRGB },
-  { eCSSKeyword_linearrgb, NS_STYLE_COLOR_INTERPOLATION_LINEARRGB },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kColumnFillKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_COLUMN_FILL_AUTO },
-  { eCSSKeyword_balance, NS_STYLE_COLUMN_FILL_BALANCE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kColumnSpanKTable[] = {
-  { eCSSKeyword_all, NS_STYLE_COLUMN_SPAN_ALL },
-  { eCSSKeyword_none, NS_STYLE_COLUMN_SPAN_NONE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

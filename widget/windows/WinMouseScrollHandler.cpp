@@ -697,14 +697,14 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindowBase* aWidget
       delta = -1.0;
       lineOrPageDelta = -1;
     case SB_PAGEDOWN:
-      wheelEvent.mDeltaMode = dom::WheelEventBinding::DOM_DELTA_PAGE;
+      wheelEvent.mDeltaMode = dom::WheelEvent_Binding::DOM_DELTA_PAGE;
       break;
 
     case SB_LINEUP:
       delta = -1.0;
       lineOrPageDelta = -1;
     case SB_LINEDOWN:
-      wheelEvent.mDeltaMode = dom::WheelEventBinding::DOM_DELTA_LINE;
+      wheelEvent.mDeltaMode = dom::WheelEvent_Binding::DOM_DELTA_LINE;
       break;
 
     default:
@@ -853,8 +853,8 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
   // Use orienter for computing our delta value with native delta value.
   int32_t orienter = mIsVertical ? -1 : 1;
 
-  aWheelEvent.mDeltaMode = mIsPage ? dom::WheelEventBinding::DOM_DELTA_PAGE :
-                                     dom::WheelEventBinding::DOM_DELTA_LINE;
+  aWheelEvent.mDeltaMode = mIsPage ? dom::WheelEvent_Binding::DOM_DELTA_PAGE :
+                                     dom::WheelEvent_Binding::DOM_DELTA_LINE;
 
   double& delta = mIsVertical ? aWheelEvent.mDeltaY : aWheelEvent.mDeltaX;
   int32_t& lineOrPageDelta = mIsVertical ? aWheelEvent.mLineOrPageDeltaY :
@@ -871,7 +871,7 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
   mAccumulatedDelta -=
     lineOrPageDelta * orienter * RoundDelta(nativeDeltaPerUnit);
 
-  if (aWheelEvent.mDeltaMode != dom::WheelEventBinding::DOM_DELTA_LINE) {
+  if (aWheelEvent.mDeltaMode != dom::WheelEvent_Binding::DOM_DELTA_LINE) {
     // If the scroll delta mode isn't per line scroll, we shouldn't allow to
     // override the system scroll speed setting.
     aWheelEvent.mAllowToOverrideSystemScrollSpeed = false;

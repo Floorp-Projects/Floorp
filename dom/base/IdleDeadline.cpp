@@ -51,7 +51,7 @@ IdleDeadline::~IdleDeadline()
 JSObject*
 IdleDeadline::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IdleDeadlineBinding::Wrap(aCx, this, aGivenProto);
+  return IdleDeadline_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 DOMHighResTimeStamp

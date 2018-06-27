@@ -64,3 +64,23 @@ menuitem[appHandlerIcon="plugin"] {
 .actionsMenu > menupopup > menuitem {
   padding-inline-start: 3px;
 }
+
+#appList {
+  min-height: 212px;
+}
+
+#appList > richlistitem {
+  -moz-box-align: center;
+}
+
+#appList > richlistitem > image {
+  margin: 5px;
+  width: 32px;
+  height: 32px;
+}
+
+#appList > richlistitem > label {
+  margin: 0px;
+  padding: 5px;
+  white-space: nowrap;
+}

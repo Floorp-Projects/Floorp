@@ -71,7 +71,7 @@ add_task(async function() {
 
   dialogDoc = dialog.document;
   dialogList = dialogDoc.getElementById("appList");
-  let itemToRemove = dialogList.querySelector('listitem[label="' + selectedApp.name + '"]');
+  let itemToRemove = dialogList.querySelector('richlistitem > label[value="' + selectedApp.name + '"]').parentNode;
   dialogList.selectItem(itemToRemove);
   let itemsBefore = dialogList.children.length;
   dialogDoc.getElementById("remove").click();

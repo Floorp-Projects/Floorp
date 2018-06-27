@@ -8,9 +8,7 @@ from ConfigParser import (
 import datetime
 import os
 import posixpath
-import re
 import shutil
-import subprocess
 import tempfile
 import time
 
@@ -175,15 +173,8 @@ class Device(object):
         active = False
         time_out = 0
         while not active and time_out < 40:
-            proc = subprocess.Popen([self.app_ctx.adb, 'shell', '/system/bin/netcfg'],
-                                    stdout=subprocess.PIPE)
-            proc.stdout.readline()  # ignore first line
-            line = proc.stdout.readline()
-            while line != "":
-                if (re.search(r'UP\s+[1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3}', line)):
-                    active = True
-                    break
-                line = proc.stdout.readline()
+            if self.device.get_ip_address() is not None:
+                active = True
             time_out += 1
             time.sleep(1)
         return active

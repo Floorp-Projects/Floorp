@@ -3,24 +3,24 @@
 <html>
 <head>
 <script type="text/javascript">
-/* global addMessageListener, sendAsyncMessage, removeMessageListener */
+/* global RPMAddMessageListener, RPMSendAsyncMessage, RPMRemoveMessageListener */
 
-addMessageListener("Ping", function(message) {
-  sendAsyncMessage("Pong", {
+RPMAddMessageListener("Ping", function(message) {
+  RPMSendAsyncMessage("Pong", {
     str: message.data.str,
     counter: message.data.counter + 1
   });
 });
 
-addMessageListener("Ping2", function(message) {
-  sendAsyncMessage("Pong2", message.data);
+RPMAddMessageListener("Ping2", function(message) {
+  RPMSendAsyncMessage("Pong2", message.data);
 });
 
 function neverCalled() {
-  sendAsyncMessage("Pong3");
+  RPMSendAsyncMessage("Pong3");
 }
-addMessageListener("Pong3", neverCalled);
-removeMessageListener("Pong3", neverCalled);
+RPMAddMessageListener("Pong3", neverCalled);
+RPMRemoveMessageListener("Pong3", neverCalled);
 
 function testData(data) {
   var response = {
@@ -45,21 +45,21 @@ function testData(data) {
   return response;
 }
 
-addMessageListener("SendData", function(message) {
-  sendAsyncMessage("ReceivedData", testData(message.data));
+RPMAddMessageListener("SendData", function(message) {
+  RPMSendAsyncMessage("ReceivedData", testData(message.data));
 });
 
-addMessageListener("SendData2", function(message) {
-  sendAsyncMessage("ReceivedData2", testData(message.data.data));
+RPMAddMessageListener("SendData2", function(message) {
+  RPMSendAsyncMessage("ReceivedData2", testData(message.data.data));
 });
 
 var cookie = "nom";
-addMessageListener("SetCookie", function(message) {
+RPMAddMessageListener("SetCookie", function(message) {
   cookie = message.data.value;
 });
 
-addMessageListener("GetCookie", function(message) {
-  sendAsyncMessage("Cookie", { value: cookie });
+RPMAddMessageListener("GetCookie", function(message) {
+  RPMSendAsyncMessage("Cookie", { value: cookie });
 });
 </script>
 </head>

@@ -3,10 +3,10 @@
 <html>
 <head>
 <script type="text/javascript">
-/* global addMessageListener, sendAsyncMessage */
+/* global RPMAddMessageListener, RPMSendAsyncMessage */
 
-addMessageListener("Ping", function(message) {
-  sendAsyncMessage("Pong", {
+RPMAddMessageListener("Ping", function(message) {
+  RPMSendAsyncMessage("Pong", {
     str: message.data.str,
     counter: message.data.counter + 1
   });

@@ -144,7 +144,9 @@ void
 MediaTrackList::CreateAndDispatchChangeEvent()
 {
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), false);
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("change"),
+                             CanBubble::eNo);
   asyncDispatcher->PostDOMEvent();
 }
 

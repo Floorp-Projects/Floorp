@@ -34,6 +34,11 @@ function MarkupElementContainer(markupView, node) {
   MarkupContainer.prototype.initialize.call(this, markupView, node,
     "elementcontainer");
 
+  this.onGridHighlighterChange = this.onGridHighlighterChange.bind(this);
+
+  this.markup.highlighters.on("grid-highlighter-hidden", this.onGridHighlighterChange);
+  this.markup.highlighters.on("grid-highlighter-shown", this.onGridHighlighterChange);
+
   if (node.nodeType === nodeConstants.ELEMENT_NODE) {
     this.editor = new ElementEditor(this, node);
   } else {
@@ -44,12 +49,29 @@ function MarkupElementContainer(markupView, node) {
 }
 
 MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
+  destroy: function() {
+    this.markup.highlighters.off("grid-highlighter-hidden", this.onGridHighlighterChange);
+    this.markup.highlighters.off("grid-highlighter-shown", this.onGridHighlighterChange);
+
+    MarkupContainer.prototype.destroy.call(this);
+  },
+
   onContainerClick: function(event) {
     if (!event.target.hasAttribute("data-event")) {
       return;
     }
 
     this._buildEventTooltipContent(event.target);
+  },
+
+  /**
+   * Handler for "grid-highlighter-hidden" and "grid-highlighter-shown" event emitted from
+   * the HighlightersOverlay. Toggles the active state of the display badge if it matches
+   * the highlighted grid node.
+   */
+  onGridHighlighterChange: function() {
+    this.editor.displayBadge.classList.toggle("active",
+      this.markup.highlighters.gridHighlighterShown === this.node);
   },
 
   async _buildEventTooltipContent(target) {

@@ -1,10 +1,11 @@
 <html>
   <head>
     <script>
+      /* global RPMAddMessageListener, RPMSendAsyncMessage */
       function do_test(override) {
         if (override || document.location.hash.indexOf("#auto") == 0) {
-          sendAsyncMessage("tabswitch-do-test");
-          addMessageListener("tabswitch-test-results", function onMessage(msg) {
+          RPMSendAsyncMessage("tabswitch-do-test");
+          RPMAddMessageListener("tabswitch-test-results", function onMessage(msg) {
             let data = msg.data;
             tpRecordTime(data.times.join(","), 0, data.urls.join(","));
           });

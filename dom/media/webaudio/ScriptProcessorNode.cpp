@@ -537,7 +537,7 @@ ScriptProcessorNode::EventListenerRemoved(nsAtom* aType)
 JSObject*
 ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ScriptProcessorNodeBinding::Wrap(aCx, this, aGivenProto);
+  return ScriptProcessorNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

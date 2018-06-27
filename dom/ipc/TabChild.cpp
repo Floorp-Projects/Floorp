@@ -1540,7 +1540,7 @@ TabChild::RecvMouseEvent(const nsString& aType,
   APZCCallbackHelper::DispatchMouseEvent(GetPresShell(), aType,
                                          CSSPoint(aX, aY), aButton, aClickCount,
                                          aModifiers, aIgnoreRootScrollFrame,
-                                         MouseEventBinding::MOZ_SOURCE_UNKNOWN,
+                                         MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
                                          0 /* Use the default value here. */);
   return IPC_OK();
 }
@@ -3543,9 +3543,9 @@ TabChildGlobal::WrapGlobalObject(JSContext* aCx,
                                  JS::RealmOptions& aOptions,
                                  JS::MutableHandle<JSObject*> aReflector)
 {
-  bool ok = ContentFrameMessageManagerBinding::Wrap(aCx, this, this, aOptions,
-                                                    nsJSPrincipals::get(mTabChild->GetPrincipal()),
-                                                    true, aReflector);
+  bool ok = ContentFrameMessageManager_Binding::Wrap(aCx, this, this, aOptions,
+                                                       nsJSPrincipals::get(mTabChild->GetPrincipal()),
+                                                       true, aReflector);
   if (ok) {
     // Since we can't rewrap we have to preserve the global's wrapper here.
     PreserveWrapper(ToSupports(this));
