@@ -176,7 +176,6 @@ public:
     sensorData.values().AppendElement(0.5f);
     sensorData.values().AppendElement(0.5f);
     sensorData.values().AppendElement(0.5f);
-    sensorData.accuracy() = SENSOR_ACCURACY_UNRELIABLE;
     mTarget->Notify(sensorData);
     return NS_OK;
   }
