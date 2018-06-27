@@ -122,6 +122,7 @@ public:
    * changed (UTF-8-encoded) keys.
    */
   void Update(const FileDescriptor& aMapFile, size_t aMapSize,
+              nsTArray<RefPtr<BlobImpl>>&& aBlobs,
               nsTArray<nsCString>&& aChangedKeys);
 
 
@@ -156,6 +157,8 @@ protected:
       buffer.codeString(mName);
       buffer.codeUint32(DataOffset());
       buffer.codeUint32(mSize);
+      buffer.codeUint16(mBlobOffset);
+      buffer.codeUint16(mBlobCount);
 
       MOZ_ASSERT(buffer.cursor() == startOffset + HeaderSize());
     }
@@ -168,7 +171,9 @@ protected:
     {
       return (sizeof(uint16_t) + mName.Length() +
               sizeof(DataOffset()) +
-              sizeof(mSize));
+              sizeof(mSize) +
+              sizeof(mBlobOffset) +
+              sizeof(mBlobCount));
     }
 
     /**
@@ -193,7 +198,7 @@ protected:
      * snapshot, and must not be accessed again until the SharedMap mMap has been
      * updated to point to it.
      */
-    void ExtractData(char* aDestPtr, uint32_t aNewOffset);
+    void ExtractData(char* aDestPtr, uint32_t aNewOffset, uint16_t aNewBlobOffset);
 
     // Returns the UTF-8-encoded name of the entry, which is used as its key in
     // the map.
@@ -228,6 +233,19 @@ protected:
       return mData.as<uint32_t>();
     }
 
+  public:
+    uint16_t BlobOffset() const { return mBlobOffset; }
+    uint16_t BlobCount() const { return mBlobCount; }
+
+    Span<const RefPtr<BlobImpl>> Blobs()
+    {
+      if (mData.is<StructuredCloneData>()) {
+        return mData.as<StructuredCloneData>().BlobImpls();
+      }
+      return {&mMap.mBlobImpls[mBlobOffset], BlobCount()};
+    }
+
+  private:
     // Returns the temporary StructuredCloneData object containing the entry's
     // value. This is *only* value when mData contains a StructuredCloneDAta
     // object.
@@ -258,9 +276,14 @@ protected:
 
     // The size, in bytes, of the entry's structured clone data.
     uint32_t mSize = 0;
+
+    uint16_t mBlobOffset = 0;
+    uint16_t mBlobCount = 0;
   };
 
   const nsTArray<Entry*>& EntryArray() const;
+
+  nsTArray<RefPtr<BlobImpl>> mBlobImpls;
 
   // Rebuilds the entry hashtable mEntries from the values serialized in the
   // current snapshot, if necessary. The hashtable is rebuilt lazily after
