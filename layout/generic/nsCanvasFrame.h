@@ -13,7 +13,7 @@
 #include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
 #include "nsIScrollPositionListener.h"
-#include "nsIRootBox.h"
+#include "nsIPopupContainer.h"
 #include "nsDisplayList.h"
 #include "nsIAnonymousContentCreator.h"
 #include "gfxPrefs.h"
@@ -34,7 +34,7 @@ class nsPopupSetFrame;
 class nsCanvasFrame final : public nsContainerFrame,
                             public nsIScrollPositionListener,
                             public nsIAnonymousContentCreator,
-                            public nsIRootBox
+                            public nsIPopupContainer
 {
 public:
   explicit nsCanvasFrame(ComputedStyle* aStyle)
