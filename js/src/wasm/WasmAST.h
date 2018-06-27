@@ -41,6 +41,8 @@ using AstVector = mozilla::Vector<T, 0, LifoAllocPolicy<Fallible>>;
 template <class K, class V, class HP>
 using AstHashMap = HashMap<K, V, HP, LifoAllocPolicy<Fallible>>;
 
+typedef AstVector<bool> AstBoolVector;
+
 class AstName
 {
     const char16_t* begin_;
@@ -383,23 +385,27 @@ class AstStructType : public AstTypeDef
 {
     AstName          name_;
     AstNameVector    fieldNames_;
+    AstBoolVector    fieldMutability_;
     AstValTypeVector fieldTypes_;
 
   public:
     explicit AstStructType(LifoAlloc& lifo)
       : AstTypeDef(Which::IsStructType),
         fieldNames_(lifo),
+        fieldMutability_(lifo),
         fieldTypes_(lifo)
     {}
-    AstStructType(AstNameVector&& names, AstValTypeVector&& types)
+    AstStructType(AstNameVector&& names, AstBoolVector&& mutability, AstValTypeVector&& types)
       : AstTypeDef(Which::IsStructType),
         fieldNames_(std::move(names)),
+        fieldMutability_(std::move(mutability)),
         fieldTypes_(std::move(types))
     {}
     AstStructType(AstName name, AstStructType&& rhs)
       : AstTypeDef(Which::IsStructType),
         name_(name),
         fieldNames_(std::move(rhs.fieldNames_)),
+        fieldMutability_(std::move(rhs.fieldMutability_)),
         fieldTypes_(std::move(rhs.fieldTypes_))
     {}
     AstName name() const {
@@ -407,6 +413,9 @@ class AstStructType : public AstTypeDef
     }
     const AstNameVector& fieldNames() const {
         return fieldNames_;
+    }
+    const AstBoolVector& fieldMutability() const {
+        return fieldMutability_;
     }
     const AstValTypeVector& fieldTypes() const {
         return fieldTypes_;

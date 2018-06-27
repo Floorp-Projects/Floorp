@@ -1200,27 +1200,29 @@ DecodeStructType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState,
     if (numFields > MaxStructFields)
         return d.fail("too many fields in structure");
 
-    ValTypeVector fields;
+    StructFieldVector fields;
     if (!fields.resize(numFields))
-        return false;
-
-    Uint32Vector fieldOffsets;
-    if (!fieldOffsets.resize(numFields))
         return false;
 
     // TODO (subsequent patch): lay out the fields.
 
     for (uint32_t i = 0; i < numFields; i++) {
-        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled, &fields[i]))
+        uint8_t flags;
+        if (!d.readFixedU8(&flags))
+            return d.fail("expected flag");
+        if ((flags & ~uint8_t(FieldFlags::AllowedMask)) != 0)
+            return d.fail("garbage flag bits");
+        fields[i].isMutable = flags & uint8_t(FieldFlags::Mutable);
+        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled, &fields[i].type))
             return false;
-        if (!ValidateRefType(d, typeState, fields[i]))
+        if (!ValidateRefType(d, typeState, fields[i].type))
             return false;
     }
 
     if ((*typeState)[typeIndex] != TypeState::None && (*typeState)[typeIndex] != TypeState::ForwardStruct)
         return d.fail("struct type entry referenced as function");
 
-    env->types[typeIndex] = TypeDef(StructType(std::move(fields), std::move(fieldOffsets)));
+    env->types[typeIndex] = TypeDef(StructType(std::move(fields)));
     (*typeState)[typeIndex] = TypeState::Struct;
 
     return true;

@@ -333,15 +333,13 @@ FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 size_t
 StructType::serializedSize() const
 {
-    return SerializedPodVectorSize(fields_) +
-           SerializedPodVectorSize(fieldOffsets_);
+    return SerializedPodVectorSize(fields_);
 }
 
 uint8_t*
 StructType::serialize(uint8_t* cursor) const
 {
     cursor = SerializePodVector(cursor, fields_);
-    cursor = SerializePodVector(cursor, fieldOffsets_);
     return cursor;
 }
 
@@ -349,15 +347,13 @@ const uint8_t*
 StructType::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializePodVector(cursor, &fields_));
-    (cursor = DeserializePodVector(cursor, &fieldOffsets_));
     return cursor;
 }
 
 size_t
 StructType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return fields_.sizeOfExcludingThis(mallocSizeOf) +
-           fieldOffsets_.sizeOfExcludingThis(mallocSizeOf);
+    return fields_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
