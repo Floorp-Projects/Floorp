@@ -537,8 +537,9 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getCodePoint(int32_t* cp)
 
 template<class AnyCharsAccess>
 bool
-TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(char16_t lead, int32_t* codePoint)
+TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, int32_t* codePoint)
 {
+    MOZ_ASSERT(lead != EOF);
     MOZ_ASSERT(!isAsciiCodePoint(lead),
                "ASCII code unit/point must be handled separately");
     MOZ_ASSERT(lead == sourceUnits.previousCodeUnit(),
@@ -1685,7 +1686,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::regexpLiteral(TokenStart start, Toke
     MOZ_ASSERT(sourceUnits.previousCodeUnit() == '/');
     charBuffer.clear();
 
-    auto ProcessNonAsciiCodePoint = [this](CharT lead) {
+    auto ProcessNonAsciiCodePoint = [this](int32_t lead) {
+        MOZ_ASSERT(lead != EOF);
+
         int32_t codePoint;
         if (!this->getNonAsciiCodePoint(lead, &codePoint))
             return false;
