@@ -10,6 +10,7 @@ const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
+const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { debounce } = require("devtools/shared/debounce");
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
@@ -55,8 +56,11 @@ const REGISTERED_AXES = Object.keys(REGISTERED_AXES_TO_FONT_PROPERTIES);
 
 class FontInspector {
   constructor(inspector, window) {
+    this.cssProperties = getCssProperties(inspector.toolbox);
     this.document = window.document;
     this.inspector = inspector;
+    // Set of unique keyword values supported by designated font properties.
+    this.keywordValues = new Set(this.getFontPropertyValueKeywords());
     this.nodeComputedStyle = {};
     this.pageStyle = this.inspector.pageStyle;
     this.ruleView = this.inspector.getPanel("ruleview").view;
@@ -198,12 +202,11 @@ class FontInspector {
 
   /**
    * Get all expected CSS font properties and values from the node's matching rules and
-   * fallback to computed style.
+   * fallback to computed style. Skip CSS Custom Properties, `calc()` and keyword values.
    *
    * @return {Object}
    */
   getFontProperties() {
-    const KEYWORD_VALUES = ["initial", "inherit", "unset", "none"];
     const properties = {};
 
     // First, get all expected font properties from computed styles, if available.
@@ -222,7 +225,7 @@ class FontInspector {
 
       for (const textProp of rule.textProps) {
         if (FONT_PROPERTIES.includes(textProp.name) &&
-            !KEYWORD_VALUES.includes(textProp.value) &&
+            !this.keywordValues.has(textProp.value) &&
             !textProp.value.includes("calc(") &&
             !textProp.value.includes("var(") &&
             !textProp.overridden &&
@@ -233,6 +236,23 @@ class FontInspector {
     }
 
     return properties;
+  }
+
+  /**
+   * Get an array of keyword values supported by the following CSS properties:
+   * - font-size
+   * - font-weight
+   * - font-stretch
+   *
+   * This list is used to filter out values when reading CSS font properties from rules.
+   * Computed styles will be used instead of any of these values.
+   *
+   * @return {Array}
+   */
+  getFontPropertyValueKeywords() {
+    return ["font-size", "font-weight", "font-stretch"].reduce((acc, property) => {
+      return acc.concat(this.cssProperties.getValues(property));
+    }, []);
   }
 
   async getFontsForNode(node, options) {
@@ -415,8 +435,7 @@ class FontInspector {
     const familiesUsedLowercase = families.used.map(family => family.toLowerCase());
     // Font family names declared but not used.
     families.notUsed = fontFamilies
-      .map(family => family.toLowerCase())
-      .filter(family => !familiesUsedLowercase.includes(family));
+      .filter(family => !familiesUsedLowercase.includes(family.toLowerCase()));
 
     return families;
   }

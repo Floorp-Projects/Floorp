@@ -384,25 +384,22 @@ nsImageFrame::GetSourceToDestTransform(nsTransform2D& aTransform)
   // XXXbz does this introduce rounding errors because of the cast to
   // float?  Should we just manually add that stuff in every time
   // instead?
-  aTransform.SetToTranslate(float(destRect.x),
-                            float(destRect.y));
+  aTransform.SetToTranslate(float(destRect.x), float(destRect.y));
 
-  // Set the scale factors, based on destRect and intrinsic size.
-  if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
-      mIntrinsicSize.width.GetCoordValue() != 0 &&
-      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
-      mIntrinsicSize.height.GetCoordValue() != 0 &&
-      mIntrinsicSize.width.GetCoordValue() != destRect.width &&
-      mIntrinsicSize.height.GetCoordValue() != destRect.height) {
 
-    aTransform.SetScale(float(destRect.width)  /
-                        float(mIntrinsicSize.width.GetCoordValue()),
-                        float(destRect.height) /
-                        float(mIntrinsicSize.height.GetCoordValue()));
-    return true;
+  // NOTE(emilio): This intrinsicSize is not the same as the layout intrinsic
+  // size (mIntrinsicSize), which can be scaled due to ResponsiveImageSelector,
+  // see ScaleIntrinsicSizeForDensity.
+  nsSize intrinsicSize;
+  if (!mImage ||
+      !NS_SUCCEEDED(mImage->GetIntrinsicSize(&intrinsicSize)) ||
+      intrinsicSize.IsEmpty()) {
+    return false;
   }
 
-  return false;
+  aTransform.SetScale(float(destRect.width)  / float(intrinsicSize.width),
+                      float(destRect.height) / float(intrinsicSize.height));
+  return true;
 }
 
 // This function checks whether the given request is the current request for our

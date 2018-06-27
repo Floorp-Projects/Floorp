@@ -6,6 +6,7 @@
 
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { PluralForm } = require("devtools/shared/plural-form");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FontMeta = createFactory(require("./FontMeta"));
@@ -79,16 +80,49 @@ class FontEditor extends PureComponent {
       });
     });
   }
+
+  renderFamilesNotUsed(familiesNotUsed = []) {
+    if (!familiesNotUsed.length) {
+      return null;
+    }
+
+    const familiesNotUsedLabel = PluralForm
+      .get(familiesNotUsed.length, getStr("fontinspector.familiesNotUsedLabel"))
+      .replace("#1", familiesNotUsed.length);
+
+    const familiesList = familiesNotUsed.map(family => {
+      return dom.div(
+        {
+          className: "font-family-unused",
+        },
+        family
+      );
+    });
+
+    return dom.details(
+      {},
+      dom.summary(
+        {
+          className: "font-family-unused-header",
+        },
+        familiesNotUsedLabel
+      ),
+      familiesList
+    );
+  }
+
   /**
    * Render font family, font name, and metadata for all fonts used on selected node.
    *
    * @param {Array} fonts
    *        Fonts used on selected node.
+   * @param {Array} families
+   *        Font familes declared on selected node.
    * @param {Function} onToggleFontHighlight
    *        Callback to trigger in-context highlighting of text that uses a font.
    * @return {DOMNode}
    */
-  renderFontFamily(fonts, onToggleFontHighlight) {
+  renderFontFamily(fonts, families, onToggleFontHighlight) {
     if (!fonts.length) {
       return null;
     }
@@ -119,7 +153,8 @@ class FontEditor extends PureComponent {
         {
           className: "font-control-box",
         },
-        fontList
+        fontList,
+        this.renderFamilesNotUsed(families.notUsed)
       )
     );
   }
@@ -215,7 +250,7 @@ class FontEditor extends PureComponent {
 
   render() {
     const { fontEditor, onToggleFontHighlight } = this.props;
-    const { fonts, axes, instance, properties } = fontEditor;
+    const { fonts, families, axes, instance, properties } = fontEditor;
     // Pick the first font to show editor controls regardless of how many fonts are used.
     const font = fonts[0];
     const hasFontAxes = font && font.variationAxes;
@@ -237,7 +272,7 @@ class FontEditor extends PureComponent {
       // Render empty state message for nodes that don't have font properties.
       !hasWeight && this.renderWarning(),
       // Always render UI for font family, format and font file URL.
-      this.renderFontFamily(fonts, onToggleFontHighlight),
+      this.renderFontFamily(fonts, families, onToggleFontHighlight),
       // Render UI for font variation instances if they are defined.
       hasFontInstances && this.renderInstances(font.variationInstances, instance),
       // Always render UI for font size.

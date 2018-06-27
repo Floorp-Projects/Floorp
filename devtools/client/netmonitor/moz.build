@@ -7,6 +7,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'initializer.js',
     'panel.js'
 )
 

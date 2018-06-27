@@ -10,7 +10,7 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'dom-panel.js',
+    'panel.js',
 )
 
 with Files('**'):

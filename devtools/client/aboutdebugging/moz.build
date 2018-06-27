@@ -9,6 +9,10 @@ DIRS += [
     'modules',
 ]
 
+DevToolsModules(
+    'initializer.js'
+)
+
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini'
 ]
