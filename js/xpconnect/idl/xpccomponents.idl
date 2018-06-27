@@ -19,6 +19,7 @@ interface nsIJSCID;
 interface nsIJSIID;
 interface nsIPrincipal;
 interface nsIStackFrame;
+webidl Element;
 
 /**
 * interface of Components.interfacesByID
@@ -174,6 +175,13 @@ interface nsIXPCComponents_Utils : nsISupports
                         [optional] in jsval version,
                         [optional] in AUTF8String filename,
                         [optional] in long lineNo);
+
+    /*
+     * Get the sandbox for running JS-implemented UA widgets (video controls etc.),
+     * hosted inside UA-created Shadow DOM.
+     */
+    [implicit_jscontext]
+    jsval getUAWidgetScope(in nsIPrincipal principal);
 
     /*
      * getSandboxMetadata is designed to be called from JavaScript only.
