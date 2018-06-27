@@ -240,28 +240,30 @@ public final class GeckoRuntimeSettings implements Parcelable {
     private class Pref<T> {
         public final String name;
         public final T defaultValue;
-        private T value;
+        private T mValue;
+        private boolean mIsSet;
 
         public Pref(final String name, final T defaultValue) {
             GeckoRuntimeSettings.this.prefCount++;
 
             this.name = name;
             this.defaultValue = defaultValue;
-            value = defaultValue;
+            mValue = defaultValue;
         }
 
         public void set(T newValue) {
-            value = newValue;
+            mValue = newValue;
+            mIsSet = true;
             flush();
         }
 
         public T get() {
-            return value;
+            return mValue;
         }
 
         public void flush() {
             if (GeckoRuntimeSettings.this.runtime != null) {
-                GeckoRuntimeSettings.this.runtime.setPref(name, value);
+                GeckoRuntimeSettings.this.runtime.setPref(name, mValue, mIsSet);
             }
         }
     }
@@ -313,6 +315,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mExtras = new Bundle(settings.getExtras());
 
         for (int i = 0; i < mPrefs.length; i++) {
+            if (!settings.mPrefs[i].mIsSet) {
+                continue;
+            }
             // We know this is safe.
             @SuppressWarnings("unchecked")
             final Pref<Object> uncheckedPref = (Pref<Object>) mPrefs[i];
