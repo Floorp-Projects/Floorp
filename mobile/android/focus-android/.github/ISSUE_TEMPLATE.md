@@ -18,7 +18,7 @@
 
 ### Device information
 
-* Fire TV device: ?
-* Firefox version: ?
+* Android device: ?
+* Focus version: ?
 
 -->
