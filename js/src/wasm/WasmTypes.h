@@ -920,18 +920,25 @@ struct FuncTypeHashPolicy
 // types that the module knows about.  It is created from the sparse array of
 // types in the ModuleEnvironment when the Module is created.
 
+struct StructField
+{
+    ValType  type;
+    uint32_t offset;
+    bool     isMutable;
+};
+
+typedef Vector<StructField, 0, SystemAllocPolicy> StructFieldVector;
+
 class StructType
 {
   public:
-    ValTypeVector fields_;       // Scalar types of fields
-    Uint32Vector  fieldOffsets_; // Byte offsets into an object for corresponding field
+    StructFieldVector fields_;
 
   public:
-    StructType() : fields_(), fieldOffsets_() {}
+    StructType() : fields_() {}
 
-    StructType(ValTypeVector&& fields, Uint32Vector&& fieldOffsets)
-      : fields_(std::move(fields)),
-        fieldOffsets_(std::move(fieldOffsets))
+    explicit StructType(StructFieldVector&& fields)
+      : fields_(std::move(fields))
     {}
 
     WASM_DECLARE_SERIALIZABLE(StructType)
