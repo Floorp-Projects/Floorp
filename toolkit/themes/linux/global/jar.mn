@@ -29,7 +29,7 @@ toolkit.jar:
    skin/classic/global/toolbar.css
    skin/classic/global/toolbarbutton.css
    skin/classic/global/tooltip.css
-   skin/classic/global/tree.css
+*  skin/classic/global/tree.css
 *  skin/classic/global/alerts/alert.css                        (alerts/alert.css)
 
    skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
@@ -42,6 +42,3 @@ toolkit.jar:
 
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
 *  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)
-   skin/classic/global/tree/twisty-collapsed.svg               (tree/twisty-collapsed.svg)
-   skin/classic/global/tree/twisty-collapsed-rtl.svg           (tree/twisty-collapsed-rtl.svg)
-   skin/classic/global/tree/twisty-expanded.svg                (tree/twisty-expanded.svg)
