@@ -413,7 +413,6 @@ NS_IMPL_ISUPPORTS(myDownloadObserver, nsIDownloadObserver)
 NS_IMPL_ISUPPORTS(AsyncFaviconDataReady, nsIFaviconDataCallback)
 #endif
 NS_IMPL_ISUPPORTS(AsyncEncodeAndWriteIcon, nsIRunnable)
-NS_IMPL_ISUPPORTS(AsyncDeleteIconFromDisk, nsIRunnable)
 NS_IMPL_ISUPPORTS(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
 
 
@@ -1402,42 +1401,6 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
 }
 
 AsyncEncodeAndWriteIcon::~AsyncEncodeAndWriteIcon()
-{
-}
-
-AsyncDeleteIconFromDisk::AsyncDeleteIconFromDisk(const nsAString &aIconPath)
-  : mIconPath(aIconPath)
-{
-}
-
-NS_IMETHODIMP AsyncDeleteIconFromDisk::Run()
-{
-  // Construct the parent path of the passed in path
-  nsCOMPtr<nsIFile> icoFile = do_CreateInstance("@mozilla.org/file/local;1");
-  NS_ENSURE_TRUE(icoFile, NS_ERROR_FAILURE);
-  nsresult rv = icoFile->InitWithPath(mIconPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check if the cached ICO file exists
-  bool exists;
-  rv = icoFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check that we aren't deleting some arbitrary file that is not an icon
-  if (StringTail(mIconPath, 4).LowerCaseEqualsASCII(".ico")) {
-    // Check if the cached ICO file exists
-    bool exists;
-    if (NS_FAILED(icoFile->Exists(&exists)) || !exists)
-      return NS_ERROR_FAILURE;
-
-    // We found an ICO file that exists, so we should remove it
-    icoFile->Remove(false);
-  }
-
-  return NS_OK;
-}
-
-AsyncDeleteIconFromDisk::~AsyncDeleteIconFromDisk()
 {
 }
 

@@ -21,6 +21,7 @@
 #include "nsIJumpListItem.h"
 #include "JumpListItem.h"
 #include "nsIObserver.h"
+#include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 
@@ -37,7 +38,7 @@ class JumpListBuilder : public nsIJumpListBuilder,
   virtual ~JumpListBuilder();
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIJUMPLISTBUILDER
   NS_DECL_NSIOBSERVER
 
@@ -54,10 +55,11 @@ private:
   ReentrantMonitor mMonitor;
 
   bool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
-  nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
-  nsresult RemoveIconCacheForItems(nsIMutableArray *removedItems);
+  void RemoveIconCacheAndGetJumplistShortcutURIs(IObjectArray *aObjArray, nsTArray<nsString>& aURISpecs);
+  void DeleteIconFromDisk(const nsAString& aPath);
   nsresult RemoveIconCacheForAllItems();
   void DoCommitListBuild(RefPtr<detail::DoneCommitListBuildCallback> aCallback);
+  void DoInitListBuild(RefPtr<dom::Promise>&& aPromise);
 
   friend class WinTaskbar;
 };
