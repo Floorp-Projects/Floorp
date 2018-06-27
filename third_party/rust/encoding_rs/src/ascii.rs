@@ -493,7 +493,7 @@ macro_rules! latin1_simd_check_align_unrolled {
                     until_alignment -= 1;
                 }
                 let len_minus_stride = len - SIMD_STRIDE_SIZE;
-                if SIMD_STRIDE_SIZE * 2 <= len {
+                if offset + SIMD_STRIDE_SIZE * 2 <= len {
                     let len_minus_stride_times_two = len_minus_stride - SIMD_STRIDE_SIZE;
                     if (dst.offset(offset as isize) as usize) & SIMD_ALIGNMENT_MASK == 0 {
                         loop {
