@@ -7,9 +7,7 @@
 #include "Tracing.h"
 
 #include <inttypes.h>
-#include <cstdio>
 
-#include "AsyncLogger.h"
 #include "mozilla/TimeStamp.h"
 
 using namespace mozilla;
