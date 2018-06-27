@@ -60,6 +60,7 @@ function ElementEditor(container, node) {
   this.node = node;
   this.markup = this.container.markup;
   this.doc = this.markup.doc;
+  this.highlighters = this.markup.highlighters;
   this._cssProperties = getCssProperties(this.markup.toolbox);
 
   this.attrElements = new Map();
@@ -172,14 +173,14 @@ ElementEditor.prototype = {
     close.appendChild(this.doc.createTextNode(">"));
 
     this.eventNode = this.doc.createElement("div");
-    this.eventNode.classList.add("markupview-event-badge");
+    this.eventNode.classList.add("markup-badge");
     this.eventNode.dataset.event = "true";
     this.eventNode.textContent = "event";
     this.eventNode.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
     this.elt.appendChild(this.eventNode);
 
     this.displayNode = this.doc.createElement("div");
-    this.displayNode.classList.add("markupview-display-badge");
+    this.displayNode.classList.add("markup-badge");
     this.elt.appendChild(this.displayNode);
   },
 
@@ -280,6 +281,8 @@ ElementEditor.prototype = {
     this.displayNode.dataset.display = showDisplayNode ? this.node.displayType : "";
     this.displayNode.style.display = showDisplayNode ? "inline-block" : "none";
     this.displayNode.title = showDisplayNode ? DISPLAY_TYPES[this.node.displayType] : "";
+    this.displayNode.classList.toggle("active",
+      this.highlighters.gridHighlighterShown === this.node);
 
     this.updateTextEditor();
   },

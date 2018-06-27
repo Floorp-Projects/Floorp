@@ -27,10 +27,10 @@ add_task(async function() {
   await inspector.markup.expandAll();
 
   const container1 = await getContainerForSelector("#d1", inspector);
-  const evHolder1 = container1.elt.querySelector(".markupview-event-badge");
+  const evHolder1 = container1.elt.querySelector(".markup-badge[data-event]");
 
   const container2 = await getContainerForSelector("#d2", inspector);
-  const evHolder2 = container2.elt.querySelector(".markupview-event-badge");
+  const evHolder2 = container2.elt.querySelector(".markup-badge[data-event]");
 
   const tooltip = inspector.markup.eventDetailsTooltip;
 
