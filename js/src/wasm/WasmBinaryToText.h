@@ -16,22 +16,30 @@
  * limitations under the License.
  */
 
-#ifndef wasm_text_to_binary_h
-#define wasm_text_to_binary_h
+#ifndef wasm_binary_to_text_h
+#define wasm_binary_to_text_h
 
-#include "wasm/WasmTypes.h"
+#include "NamespaceImports.h"
+
+#include "gc/Rooting.h"
+#include "js/Class.h"
+#include "wasm/WasmCode.h"
 
 namespace js {
+
+class StringBuffer;
+
 namespace wasm {
 
-// Translate the textual representation of a wasm module (given by a
-// null-terminated char16_t array) into serialized bytes. If there is an error
-// other than out-of-memory an error message string will be stored in 'error'.
+// Translate the given binary representation of a wasm module into the module's textual
+// representation.
 
-extern MOZ_MUST_USE bool
-TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, UniqueChars* error);
+MOZ_MUST_USE bool
+BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
+             GeneratedSourceMap* sourceMap = nullptr);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
 
-#endif // wasm_text_to_binary_h
+}  // namespace js
+
+#endif // namespace wasm_binary_to_text_h
