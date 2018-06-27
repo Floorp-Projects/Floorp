@@ -8,6 +8,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
+#include "xpcpublic.h"
 
 static const char16_t kInterfaceName[] = u"captive-portal-inteface";
 
@@ -135,6 +136,11 @@ CaptivePortalService::Start()
 {
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (xpc::AreNonLocalConnectionsDisabled()
+      && !Preferences::GetBool("network.captive-portal-service.testMode", false)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
