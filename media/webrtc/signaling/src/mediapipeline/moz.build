@@ -26,4 +26,6 @@ UNIFIED_SOURCES += [
     'TransportLayerPacketDumper.cpp',
 ]
 
+DEFINES['TRACING'] = True
+
 FINAL_LIBRARY = 'xul'
