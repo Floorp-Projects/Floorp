@@ -113,7 +113,7 @@ def flags(prop):
         result.append("CanAnimateOnCompositor")
     if serialized_by_servo(prop):
         result.append("SerializedByServo")
-    return ", ".join('"CSSPropFlags::{}"'.format(flag) for flag in result)
+    return ", ".join('"{}"'.format(flag) for flag in result)
 
 def pref(prop):
     if prop.gecko_pref:
