@@ -214,12 +214,6 @@ if CONFIG['MOZ_ANDROID_GOOGLE_VR']:
 OS_LIBS += CONFIG['MOZ_CAIRO_OSLIBS']
 OS_LIBS += CONFIG['MOZ_WEBRTC_X11_LIBS']
 
-if CONFIG['SERVO_TARGET_DIR']:
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-        OS_LIBS += ['%s/geckoservo' % CONFIG['SERVO_TARGET_DIR']]
-    else:
-        OS_LIBS += ['-L%s' % CONFIG['SERVO_TARGET_DIR'], '-lgeckoservo']
-
 if CONFIG['MOZ_SYSTEM_JPEG']:
     OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
 
