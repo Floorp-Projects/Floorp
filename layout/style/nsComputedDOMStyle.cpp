@@ -197,16 +197,9 @@ struct ComputedStyleMap
     }
   };
 
-  // We define this enum just to count the total number of properties that can
-  // be exposed on an nsComputedDOMStyle, including properties that may be
-  // disabled.
-  enum {
-#define COMPUTED_STYLE_PROP(prop_, method_) \
-    eComputedStyleProperty_##prop_,
-#include "nsComputedDOMStylePropertyList.h"
-#undef COMPUTED_STYLE_PROP
-    eComputedStyleProperty_COUNT
-  };
+  // This generated file includes definition of kEntries which is typed
+  // Entry[] and used below, so this #include has to be put here.
+#include "nsComputedDOMStyleGenerated.cpp"
 
   /**
    * Returns the number of properties that should be exposed on an
@@ -257,11 +250,6 @@ struct ComputedStyleMap
   // above to get information from this object.
 
   /**
-   * An entry for each property that can be exposed on an nsComputedDOMStyle.
-   */
-  const Entry kEntries[eComputedStyleProperty_COUNT];
-
-  /**
    * The number of properties that should be exposed on an nsComputedDOMStyle.
    * This will be less than eComputedStyleProperty_COUNT if some property
    * prefs are disabled.  A value of 0 indicates that it and mIndexMap are out
@@ -272,7 +260,7 @@ struct ComputedStyleMap
   /**
    * A map of indexes on the nsComputedDOMStyle object to indexes into kEntries.
    */
-  uint32_t mIndexMap[eComputedStyleProperty_COUNT];
+  uint32_t mIndexMap[ArrayLength(kEntries)];
 
 private:
   /**
@@ -296,6 +284,9 @@ private:
   }
 };
 
+constexpr ComputedStyleMap::Entry
+ComputedStyleMap::kEntries[ArrayLength(kEntries)];
+
 void
 ComputedStyleMap::Update()
 {
@@ -304,7 +295,7 @@ ComputedStyleMap::Update()
   }
 
   uint32_t index = 0;
-  for (uint32_t i = 0; i < eComputedStyleProperty_COUNT; i++) {
+  for (uint32_t i = 0; i < ArrayLength(kEntries); i++) {
     if (kEntries[i].IsEnabled()) {
       mIndexMap[index++] = i;
     }
@@ -7180,14 +7171,7 @@ nsComputedDOMStyle::ParentChainChanged(nsIContent* aContent)
 /* static */ ComputedStyleMap*
 nsComputedDOMStyle::GetComputedStyleMap()
 {
-  static ComputedStyleMap map = {
-    {
-#define COMPUTED_STYLE_PROP(prop_, method_) \
-  { eCSSProperty_##prop_, &nsComputedDOMStyle::DoGet##method_ },
-#include "nsComputedDOMStylePropertyList.h"
-#undef COMPUTED_STYLE_PROP
-    }
-  };
+  static ComputedStyleMap map{};
   return &map;
 }
 

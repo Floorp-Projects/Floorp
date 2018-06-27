@@ -54,13 +54,12 @@ function isNotCustom(aProp) {
 }
 
 var styleList = window.getComputedStyle(document.documentElement);
-    cssA = [], mozA = [], webkitA = [], svgA = [], customA = [];
+    cssA = [], mozA = [], webkitA = [], customA = [];
 
 // Partition the list of property names into four lists:
 //
-//   cssA: regular, non-SVG properties
+//   cssA: regular properties
 //   mozA: '-moz-' prefixed properties
-//   svgA: SVG properties
 //   customA: '--' prefixed custom properties
 
 var list = cssA;
@@ -79,12 +78,6 @@ for (var i = 0, j = styleList.length; i < j; i++) {
       }
       // fall through
     case webkitA:
-      // Assume that the first SVG property is 'clip-path'.
-      if (prop == "clip-path") {
-        list = svgA;
-      }
-      // fall through
-    case svgA:
       if (isCustom(prop)) {
         list = customA;
       }
@@ -96,13 +89,11 @@ for (var i = 0, j = styleList.length; i < j; i++) {
 
 var cssB = cssA.slice(0).sort(),
     mozB = mozA.slice(0).sort(),
-    webkitB = webkitA.slice(0).sort(),
-    svgB = svgA.slice(0).sort();
+    webkitB = webkitA.slice(0).sort();
 
 is(cssA.toString(), cssB.toString(), 'CSS property list should be alphabetical');
 is(mozA.toString(), mozB.toString(), 'Experimental -moz- CSS property list should be alphabetical');
 is(webkitA.toString(), webkitB.toString(), 'Compatible -webkit- CSS property list should be alphabetical');
-is(svgA.toString(), svgB.toString(), 'SVG property list should be alphabetical');
 
 // We don't test that the custom property list is sorted, as the CSSOM
 // specification does not yet require it, and we don't return them
@@ -121,9 +112,6 @@ ok(!webkitA.find(isNotWebkitPrefixed), 'Compatible -webkit- CSS properties shoul
 ok(!webkitA.find(isMozPrefixed), 'Experimental -moz- CSS properties should not be in the compatible -webkit- CSS '
                                   + 'property list');
 ok(!webkitA.find(isCustom), 'Custom CSS properties should not be in the compatible -webkit- CSS property list');
-ok(!svgA.find(isWebkitPrefixed), 'Compatible -webkit- CSS properties should not be in the SVG property list'); 
-ok(!svgA.find(isMozPrefixed), 'Experimental -moz- CSS properties should not be in the SVG property list');
-ok(!svgA.find(isCustom), 'Custom CSS properties should not be in the SVG property list');
 ok(!customA.find(isNotCustom), 'Non-custom CSS properties should not be in the custom property list');
 
 </script>
