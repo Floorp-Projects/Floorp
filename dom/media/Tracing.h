@@ -47,6 +47,10 @@
   #define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)                    \
     AutoTracer budget(gMSGTraceLogger, "Real-time budget", getpid(), 1,        \
                       AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
+  #define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)                              \
+    AutoTracer trace(gMSGTraceLogger, FUNCTION_SIGNATURE, getpid(), 0,         \
+                     AutoTracer::EventType::DURATION,                          \
+                     aFmt, ##__VA_ARGS__);
   #define TRACE()                                                              \
     AutoTracer trace(gMSGTraceLogger, FUNCTION_SIGNATURE, getpid(),            \
                      std::hash<std::thread::id>{}(std::this_thread::get_id()));
@@ -58,6 +62,7 @@
 #else
   #define TRACE_AUDIO_CALLBACK()
   #define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
+  #define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)
   #define TRACE()
   #define TRACE_COMMENT(aFmt, ...)
 #endif
