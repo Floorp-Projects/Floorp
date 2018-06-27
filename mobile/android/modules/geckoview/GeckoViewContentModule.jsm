@@ -45,9 +45,7 @@ class GeckoViewContentModule {
       "GeckoView:UpdateSettings",
       aMsg => {
         Object.assign(this.settings, aMsg.data);
-        if (this.enabled) {
-          this.onSettingsUpdate();
-        }
+        this.onSettingsUpdate();
       }
     );
 
