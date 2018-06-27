@@ -483,17 +483,11 @@ HistoryTracker.prototype = {
   onStart() {
     this._log.info("Adding Places observer.");
     PlacesUtils.history.addObserver(this, true);
-    this._placesObserver =
-      new PlacesWeakCallbackWrapper(this.handlePlacesEvents.bind(this));
-    PlacesObservers.addListener(["page-visited"], this._placesObserver);
   },
 
   onStop() {
     this._log.info("Removing Places observer.");
     PlacesUtils.history.removeObserver(this);
-    if (this._placesObserver) {
-      PlacesObservers.removeListener(["page-visited"], this._placesObserver);
-    }
   },
 
   QueryInterface: ChromeUtils.generateQI([
@@ -524,20 +518,19 @@ HistoryTracker.prototype = {
     );
   },
 
-  handlePlacesEvents(aEvents) {
-    this.asyncObserver.enqueueCall(() => this._handlePlacesEvents(aEvents));
+  onVisits(aVisits) {
+    this.asyncObserver.enqueueCall(() => this._onVisits(aVisits));
   },
 
-  async _handlePlacesEvents(aEvents) {
+  async _onVisits(aVisits) {
     if (this.ignoreAll) {
       this._log.trace("ignoreAll: ignoring visits [" +
-                      aEvents.map(v => v.guid).join(",") + "]");
+                      aVisits.map(v => v.guid).join(",") + "]");
       return;
     }
-    for (let event of aEvents) {
-      this._log.trace("'page-visited': " + event.url);
-      if (this.engine.shouldSyncURL(event.url) &&
-          await this.addChangedID(event.pageGuid)) {
+    for (let {uri, guid} of aVisits) {
+      this._log.trace("onVisits: " + uri.spec);
+      if (this.engine.shouldSyncURL(uri.spec) && (await this.addChangedID(guid))) {
         this.score += SCORE_INCREMENT_SMALL;
       }
     }

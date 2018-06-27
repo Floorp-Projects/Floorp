@@ -24,8 +24,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::dom::DocGroup;
-using mozilla::dom::HTMLSlotElement;
 
 AutoTArray<RefPtr<nsDOMMutationObserver>, 4>*
   nsDOMMutationObserver::sScheduledMutationObservers = nullptr;

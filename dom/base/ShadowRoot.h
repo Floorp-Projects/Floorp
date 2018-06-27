@@ -10,12 +10,9 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/NameSpaceConstants.h"
-#include "mozilla/dom/ShadowRootBinding.h"
-#include "mozilla/ServoBindings.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIdentifierMapEntry.h"
-#include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"
 
 class nsAtom;
