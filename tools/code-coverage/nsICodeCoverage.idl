@@ -19,12 +19,10 @@ interface nsICodeCoverage : nsISupports
   /**
    * Write the coverage counters to disk.
    */
-  [implicit_jscontext]
-  Promise dumpCounters();
+  void dumpCounters();
 
   /**
    * Reset the coverage counters to 0 (as if nothing was executed).
    */
-  [implicit_jscontext]
-  Promise resetCounters();
+  void resetCounters();
 };
