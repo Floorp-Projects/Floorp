@@ -476,6 +476,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
+  MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
   Servo_GetPropertyValue(mComputedStyle, prop, &aReturn);
   return NS_OK;
 }
@@ -7149,6 +7150,12 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
   } while (++i < display->mAnimationPlayStateCount);
 
   return valueList.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DummyGetter()
+{
+  MOZ_CRASH("DummyGetter is not supposed to be invoked");
 }
 
 static void
