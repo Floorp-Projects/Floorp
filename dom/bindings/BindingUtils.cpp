@@ -184,7 +184,7 @@ struct TErrorResult<CleanupPolicy>::Message {
     return GetErrorArgCount(mErrorNumber) == mArgs.Length();
   }
 
-  bool operator==(const TErrorResult<CleanupPolicy>::Message& aRight)
+  bool operator==(const TErrorResult<CleanupPolicy>::Message& aRight) const
   {
     return mErrorNumber == aRight.mErrorNumber &&
            mArgs == aRight.mArgs;
@@ -341,7 +341,7 @@ struct TErrorResult<CleanupPolicy>::DOMExceptionInfo {
   nsCString mMessage;
   nsresult mRv;
 
-  bool operator==(const TErrorResult<CleanupPolicy>::DOMExceptionInfo& aRight)
+  bool operator==(const TErrorResult<CleanupPolicy>::DOMExceptionInfo& aRight) const
   {
     return mRv == aRight.mRv &&
            mMessage == aRight.mMessage;
@@ -507,6 +507,32 @@ TErrorResult<CleanupPolicy>::operator=(TErrorResult<CleanupPolicy>&& aRHS)
   mResult = aRHS.mResult;
   aRHS.mResult = NS_OK;
   return *this;
+}
+
+template<typename CleanupPolicy>
+bool
+TErrorResult<CleanupPolicy>::operator==(const ErrorResult& aRight) const
+{
+  auto right = reinterpret_cast<const TErrorResult<CleanupPolicy>*>(&aRight);
+
+  if (mResult != right->mResult) {
+    return false;
+  }
+
+  if (IsJSException()) {
+    // js exceptions are always non-equal
+    return false;
+  }
+
+  if (IsErrorWithMessage()) {
+    return *mExtra.mMessage == *right->mExtra.mMessage;
+  }
+
+  if (IsDOMException()) {
+    return *mExtra.mDOMExceptionInfo == *right->mExtra.mDOMExceptionInfo;
+  }
+
+  return true;
 }
 
 template<typename CleanupPolicy>
