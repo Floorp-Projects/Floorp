@@ -1886,6 +1886,9 @@ private:
 
   // For debugging bug 1407148.
   void AssertReadyStateIsNothing();
+
+  // Attach UA Shadow Root if it is not attached.
+  void AttachAndSetUAShadowRoot();
 };
 
 // Check if the context is chrome or has the debugger or tabs permission

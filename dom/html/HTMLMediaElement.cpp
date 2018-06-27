@@ -4510,6 +4510,17 @@ HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID,
       if (mDecoder) {
         mDecoder->SetLooping(!!aValue);
       }
+    } else if (nsContentUtils::IsUAWidgetEnabled() &&
+               aName == nsGkAtoms::controls &&
+               IsInComposedDoc()) {
+      AsyncEventDispatcher* dispatcher =
+        new AsyncEventDispatcher(this,
+                                 NS_LITERAL_STRING("UAWidgetAttributeChanged"),
+                                 CanBubble::eYes,
+                                 ChromeOnlyDispatch::eYes);
+      // This has to happen at this tick so that UA Widget could respond
+      // before returning to content script.
+      dispatcher->RunDOMEventWhenSafe();
     }
   }
 
@@ -4554,6 +4565,34 @@ HTMLMediaElement::BindToTree(nsIDocument* aDocument,
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(
     aDocument, aParent, aBindingParent);
+
+  if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
+    // Construct Shadow Root so web content can be hidden in the DOM.
+    AttachAndSetUAShadowRoot();
+#ifdef ANDROID
+    AsyncEventDispatcher* dispatcher =
+      new AsyncEventDispatcher(this,
+                               NS_LITERAL_STRING("UAWidgetBindToTree"),
+                               CanBubble::eYes,
+                               ChromeOnlyDispatch::eYes);
+    dispatcher->RunDOMEventWhenSafe();
+#else
+    // We don't want to call into JS if the website never asks for native
+    // video controls.
+    // If controls attribute is set later, controls is constructed lazily
+    // with the UAWidgetAttributeChanged event.
+    // This only applies to Desktop because on Fennec we would need to show
+    // an UI if the video is blocked.
+    if (Controls()) {
+      AsyncEventDispatcher* dispatcher =
+        new AsyncEventDispatcher(this,
+                                 NS_LITERAL_STRING("UAWidgetBindToTree"),
+                                 CanBubble::eYes,
+                                 ChromeOnlyDispatch::eYes);
+      dispatcher->RunDOMEventWhenSafe();
+    }
+#endif
+  }
 
   mUnboundFromTree = false;
 
@@ -4804,6 +4843,13 @@ HTMLMediaElement::UnbindFromTree(bool aDeep, bool aNullParent)
   MOZ_ASSERT(IsHidden());
   NotifyDecoderActivityChanges();
 
+  AsyncEventDispatcher* dispatcher =
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eYes);
+  dispatcher->RunDOMEventWhenSafe();
+
   RefPtr<HTMLMediaElement> self(this);
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableFunction("dom::HTMLMediaElement::UnbindFromTree", [self]() {
@@ -4890,6 +4936,17 @@ HTMLMediaElement::AssertReadyStateIsNothing()
     MOZ_CRASH_UNSAFE_PRINTF("ReadyState should be HAVE_NOTHING! %s", buf);
   }
 #endif
+}
+
+void
+HTMLMediaElement::AttachAndSetUAShadowRoot()
+{
+  if (GetShadowRoot()) {
+    return;
+  }
+
+  // Add a closed shadow root to host video controls
+  AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
 }
 
 nsresult
