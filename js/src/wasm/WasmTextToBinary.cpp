@@ -3404,6 +3404,7 @@ static bool
 ParseStructFields(WasmParseContext& c, AstStructType* st)
 {
     AstNameVector    names(c.lifo);
+    AstBoolVector    mutability(c.lifo);
     AstValTypeVector types(c.lifo);
 
     while (true) {
@@ -3424,11 +3425,13 @@ ParseStructFields(WasmParseContext& c, AstStructType* st)
 
         if (!names.append(name))
             return false;
+        if (!mutability.append(isMutable))
+            return false;
         if (!types.append(type))
             return false;
     }
 
-    *st = AstStructType(std::move(names), std::move(types));
+    *st = AstStructType(std::move(names), std::move(mutability), std::move(types));
     return true;
 }
 
@@ -5416,8 +5419,12 @@ EncodeTypeSection(Encoder& e, AstModule& module)
             if (!e.writeVarU32(st->fieldTypes().length()))
                 return false;
 
-            for (AstValType vt : st->fieldTypes()) {
-                if (!e.writeValType(vt.type()))
+            const AstValTypeVector& fieldTypes = st->fieldTypes();
+            const AstBoolVector& fieldMutables = st->fieldMutability();
+            for (uint32_t i = 0; i < fieldTypes.length(); i++) {
+                if (!e.writeFixedU8(fieldMutables[i] ? uint8_t(FieldFlags::Mutable) : 0))
+                    return false;
+                if (!e.writeValType(fieldTypes[i].type()))
                     return false;
             }
         } else {
