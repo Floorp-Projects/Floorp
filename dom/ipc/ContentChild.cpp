@@ -2573,10 +2573,18 @@ ContentChild::RecvRegisterStringBundles(nsTArray<mozilla::dom::StringBundleDescr
 mozilla::ipc::IPCResult
 ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
                                    const uint32_t& aMapSize,
+                                   nsTArray<IPCBlob>&& aBlobs,
                                    nsTArray<nsCString>&& aChangedKeys)
 {
   if (mSharedData) {
-    mSharedData->Update(aMapFile, aMapSize, std::move(aChangedKeys));
+    nsTArray<RefPtr<BlobImpl>> blobImpls(aBlobs.Length());
+    for (auto& ipcBlob : aBlobs) {
+      blobImpls.AppendElement(IPCBlobUtils::Deserialize(ipcBlob));
+    }
+
+    mSharedData->Update(aMapFile, aMapSize,
+                        std::move(blobImpls),
+                        std::move(aChangedKeys));
   }
 
   return IPC_OK();

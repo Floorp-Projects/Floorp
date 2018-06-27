@@ -11,6 +11,7 @@
 #include "ScriptPreloader-inl.h"
 
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -97,8 +98,11 @@ SharedMap::Entry::Read(JSContext* aCx,
   StructuredCloneData holder;
   if (!holder.CopyExternalData(Data(), Size())) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
   }
-
+  if (mBlobCount) {
+    holder.BlobImpls().AppendElements(Blobs());
+  }
   holder.Read(aCx, aRetVal, aRv);
 }
 
@@ -113,6 +117,7 @@ SharedMap::CloneMapFile()
 
 void
 SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
+                  nsTArray<RefPtr<BlobImpl>>&& aBlobs,
                   nsTArray<nsCString>&& aChangedKeys)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mWritable);
@@ -126,6 +131,8 @@ SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
   mMapSize = aMapSize;
   mEntries.Clear();
   mEntryArray.reset();
+
+  mBlobImpls = std::move(aBlobs);
 
 
   AutoEntryScript aes(GetParentObject(), "SharedMap change event");
@@ -198,10 +205,11 @@ SharedMap::Entry::TakeData(StructuredCloneData&& aHolder)
   mData = AsVariant(std::move(aHolder));
 
   mSize = Holder().Data().Size();
+  mBlobCount = Holder().BlobImpls().Length();
 }
 
 void
-SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset)
+SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset, uint16_t aNewBlobOffset)
 {
   if (mData.is<StructuredCloneData>()) {
     char* ptr = aDestPtr;
@@ -216,6 +224,7 @@ SharedMap::Entry::ExtractData(char* aDestPtr, uint32_t aNewOffset)
   }
 
   mData = AsVariant(aNewOffset);
+  mBlobOffset = aNewBlobOffset;
 }
 
 Result<Ok, nsresult>
@@ -320,9 +329,11 @@ WritableSharedMap::Serialize()
 
   size_t dataSize = 0;
   size_t headerSize = sizeof(count);
+  size_t blobCount = 0;
 
   for (auto& entry : IterHash(mEntries)) {
     headerSize += entry->HeaderSize();
+    blobCount += entry->BlobCount();
 
     dataSize += entry->Size();
     AlignTo(&dataSize, kStructuredCloneAlign);
@@ -339,18 +350,30 @@ WritableSharedMap::Serialize()
 
   auto ptr = mem.Get<char>();
 
+  // We need to build the new array of blobs before we overwrite the existing
+  // one, since previously-serialized entries will store their blob references
+  // as indexes into our blobs array.
+  nsTArray<RefPtr<BlobImpl>> blobImpls(blobCount);
+
   for (auto& entry : IterHash(mEntries)) {
     AlignTo(&offset, kStructuredCloneAlign);
 
-    entry->ExtractData(&ptr[offset], offset);
+    entry->ExtractData(&ptr[offset], offset, blobImpls.Length());
     entry->Code(header);
 
     offset += entry->Size();
+
+    if (entry->BlobCount()) {
+      mBlobImpls.AppendElements(entry->Blobs());
+    }
   }
+
+  mBlobImpls = std::move(blobImpls);
 
   // FIXME: We should create a separate OutputBuffer class which can encode to
   // a static memory region rather than dynamically allocating and then
   // copying.
+  MOZ_ASSERT(header.cursor() == headerSize);
   memcpy(ptr.get(), header.Get(), header.cursor());
 
   // We've already updated offsets at this point. We need this to succeed.
@@ -374,12 +397,24 @@ WritableSharedMap::BroadcastChanges()
   nsTArray<ContentParent*> parents;
   ContentParent::GetAll(parents);
   for (auto& parent : parents) {
+    nsTArray<IPCBlob> blobs(mBlobImpls.Length());
+
+    for (auto& blobImpl : mBlobImpls) {
+      nsresult rv = IPCBlobUtils::Serialize(blobImpl, parent,
+                                            *blobs.AppendElement());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+    }
+
     Unused << parent->SendUpdateSharedData(CloneMapFile(), mMap.size(),
-                                           mChangedKeys);
+                                           blobs, mChangedKeys);
   }
 
   if (mReadOnly) {
+    nsTArray<RefPtr<BlobImpl>> blobImpls(mBlobImpls);
     mReadOnly->Update(CloneMapFile(), mMap.size(),
+                      std::move(blobImpls),
                       std::move(mChangedKeys));
   }
 
@@ -407,8 +442,7 @@ WritableSharedMap::Set(JSContext* aCx,
     return;
   }
 
-  if (!holder.BlobImpls().IsEmpty() ||
-      !holder.InputStreams().IsEmpty()) {
+  if (!holder.InputStreams().IsEmpty()) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }

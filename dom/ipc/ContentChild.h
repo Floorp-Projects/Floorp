@@ -406,6 +406,7 @@ public:
 
   mozilla::ipc::IPCResult RecvUpdateSharedData(const FileDescriptor& aMapFile,
                                                const uint32_t& aMapSize,
+                                               nsTArray<IPCBlob>&& aBlobs,
                                                nsTArray<nsCString>&& aChangedKeys) override;
 
   virtual mozilla::ipc::IPCResult RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition) override;
