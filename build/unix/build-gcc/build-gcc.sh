@@ -38,7 +38,10 @@ build_binutils() {
   then
     # gold is disabled because we don't use it on automation, and also we ran into
     # some issues with it using this script in build-clang.py.
-    binutils_configure_flags="--disable-gold --enable-plugins --disable-nls --with-sysroot=/"
+    #
+    # --enable-targets builds extra target support in ld.
+    # Enabling aarch64 support brings in arm support, so we don't need to specify that too.
+    binutils_configure_flags="--enable-targets=aarch64-unknown-linux-gnu --disable-gold --enable-plugins --disable-nls --with-sysroot=/"
   fi
 
   mkdir $root_dir/binutils-objdir
