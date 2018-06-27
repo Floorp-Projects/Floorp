@@ -12,9 +12,9 @@
 
 var global = this;
 
-ChromeUtils.import("chrome://specialpowers/content/MockFilePicker.jsm");
-ChromeUtils.import("chrome://specialpowers/content/MockColorPicker.jsm");
-ChromeUtils.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");
+ChromeUtils.import("resource://specialpowers/MockFilePicker.jsm");
+ChromeUtils.import("resource://specialpowers/MockColorPicker.jsm");
+ChromeUtils.import("resource://specialpowers/MockPermissionPrompt.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
