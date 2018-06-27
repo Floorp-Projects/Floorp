@@ -392,64 +392,20 @@ def possible_makes(make, host):
 
 check_prog('GMAKE', possible_makes)
 
-# tup detection
-# ==============================================================
-@depends(build_backends)
-def tup_progs(build_backends):
+@depends(build_backends, build_project)
+def tup_include(build_backends, build_project):
+    # We need to check the rustc version when building with tup, but
+    # rustc_info isn't available when configuring js (and build_backends isn't
+    # available from project-specific configure), so as a workaround we only
+    # include the file when we know we'll need it. This can be removed when
+    # we globally require a rustc recent enough to build with tup.
+    if build_project not in ('browser', 'mobile/android'):
+        return None
     for backend in build_backends:
         if 'Tup' in backend:
-            return ['tup']
-    return None
+            return 'build/moz.configure/tup.configure'
 
-tup = check_prog('TUP', tup_progs)
-
-@depends_if(tup)
-@checking('for tup version')
-@imports('re')
-def tup_version(tup):
-    tup_min_version = '0.7.6'
-    out = check_cmd_output(tup, '--version',
-                           onerror=lambda: die('Failed to get tup version'))
-    m = re.search(r'tup v?([0-9]+\.[0-9]+\.[0-9]+)', out)
-
-    if not m:
-        raise FatalCheckError('Unknown version of tup: %s' % out)
-    ver = Version(m.group(1))
-
-    if ver < tup_min_version:
-        raise FatalCheckError('To use the tup backend you must have tup version '
-                              '%s or greater in your path' % tup_min_version)
-    return ver
-
-@depends_if(tup)
-@checking('for tup ldpreload dependency checker')
-def tup_is_ldpreload(tup):
-    out = check_cmd_output(tup, 'server',
-                           onerror=lambda: die('Failed to get tup dependency checker'))
-    if out.rstrip() != 'ldpreload':
-        raise FatalCheckError('To use the tup backend, please use a version '
-                              'of tup compiled with the ldpreload dependency '
-                              'checker. Either compile tup locally with '
-                              'CONFIG_TUP_SERVER=ldpreload in your tup.config '
-                              'file, or use the version from the toolchain '
-                              'task via |./mach artifact toolchain '
-                              '--from-build linux64-tup|')
-    return True
-
-@depends_if(tup, using_sccache)
-def tup_and_sccache(tup, using_sccache):
-    if tup and using_sccache:
-        die('Cannot use sccache with tup yet. Please disable sccache or use '
-            'the make backend until it is supported.')
-
-option('--upload-tup-db', help= 'Upload the tup database from an automated build.')
-
-@depends('--upload-tup-db')
-def upload_tdb(value):
-    if value:
-        return True
-
-set_config('UPLOAD_TUP_DB', upload_tdb)
+include(tup_include)
 
 # watchman detection
 # ==============================================================
