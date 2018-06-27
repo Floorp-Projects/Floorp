@@ -26,10 +26,8 @@ namespace gfx {
 class StrokeOptionsCommand : public DrawingCommand
 {
 public:
-  StrokeOptionsCommand(CommandType aType,
-                       const StrokeOptions& aStrokeOptions)
-    : DrawingCommand(aType)
-    , mStrokeOptions(aStrokeOptions)
+  StrokeOptionsCommand(const StrokeOptions& aStrokeOptions)
+    : mStrokeOptions(aStrokeOptions)
   {
     // Stroke Options dashes are owned by the caller.
     // Have to copy them here so they don't get freed
@@ -129,11 +127,15 @@ public:
   DrawSurfaceCommand(SourceSurface *aSurface, const Rect& aDest,
                      const Rect& aSource, const DrawSurfaceOptions& aSurfOptions,
                      const DrawOptions& aOptions)
-    : DrawingCommand(DrawSurfaceCommand::Type)
-    , mSurface(aSurface), mDest(aDest)
+    : mSurface(aSurface), mDest(aDest)
     , mSource(aSource), mSurfOptions(aSurfOptions)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return DrawSurfaceCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -176,14 +178,18 @@ public:
                                const Point &aOffset,
                                Float aSigma,
                                CompositionOp aOperator)
-    : DrawingCommand(DrawSurfaceWithShadowCommand::Type),
-      mSurface(aSurface),
+    : mSurface(aSurface),
       mDest(aDest),
       mColor(aColor),
       mOffset(aOffset),
       mSigma(aSigma),
       mOperator(aOperator)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return DrawSurfaceWithShadowCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -224,10 +230,14 @@ class DrawFilterCommand : public DrawingCommand
 public:
   DrawFilterCommand(FilterNode* aFilter, const Rect& aSourceRect,
                     const Point& aDestPoint, const DrawOptions& aOptions)
-    : DrawingCommand(DrawFilterCommand::Type)
-    , mFilter(aFilter), mSourceRect(aSourceRect)
+    : mFilter(aFilter), mSourceRect(aSourceRect)
     , mDestPoint(aDestPoint), mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return DrawFilterCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -274,9 +284,13 @@ class ClearRectCommand : public DrawingCommand
 {
 public:
   explicit ClearRectCommand(const Rect& aRect)
-    : DrawingCommand(ClearRectCommand::Type)
-    , mRect(aRect)
+    : mRect(aRect)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return ClearRectCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -307,11 +321,15 @@ public:
   CopySurfaceCommand(SourceSurface* aSurface,
                      const IntRect& aSourceRect,
                      const IntPoint& aDestination)
-    : DrawingCommand(CopySurfaceCommand::Type)
-    , mSurface(aSurface)
+    : mSurface(aSurface)
     , mSourceRect(aSourceRect)
     , mDestination(aDestination)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return CopySurfaceCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -352,11 +370,15 @@ public:
   FillRectCommand(const Rect& aRect,
                   const Pattern& aPattern,
                   const DrawOptions& aOptions)
-    : DrawingCommand(FillRectCommand::Type)
-    , mRect(aRect)
+    : mRect(aRect)
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return FillRectCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -393,11 +415,16 @@ public:
                     const Pattern& aPattern,
                     const StrokeOptions& aStrokeOptions,
                     const DrawOptions& aOptions)
-    : StrokeOptionsCommand(StrokeRectCommand::Type, aStrokeOptions)
+    : StrokeOptionsCommand(aStrokeOptions)
     , mRect(aRect)
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return StrokeRectCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -435,12 +462,17 @@ public:
                     const Pattern& aPattern,
                     const StrokeOptions& aStrokeOptions,
                     const DrawOptions& aOptions)
-    : StrokeOptionsCommand(StrokeLineCommand::Type, aStrokeOptions)
+    : StrokeOptionsCommand(aStrokeOptions)
     , mStart(aStart)
     , mEnd(aEnd)
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return StrokeLineCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -478,11 +510,15 @@ public:
   FillCommand(const Path* aPath,
               const Pattern& aPattern,
               const DrawOptions& aOptions)
-    : DrawingCommand(FillCommand::Type)
-    , mPath(const_cast<Path*>(aPath))
+    : mPath(const_cast<Path*>(aPath))
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return FillCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -519,11 +555,16 @@ public:
                 const Pattern& aPattern,
                 const StrokeOptions& aStrokeOptions,
                 const DrawOptions& aOptions)
-    : StrokeOptionsCommand(StrokeCommand::Type, aStrokeOptions)
+    : StrokeOptionsCommand(aStrokeOptions)
     , mPath(const_cast<Path*>(aPath))
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return StrokeCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -561,13 +602,17 @@ public:
                     const GlyphBuffer& aBuffer,
                     const Pattern& aPattern,
                     const DrawOptions& aOptions)
-    : DrawingCommand(FillGlyphsCommand::Type)
-    , mFont(aFont)
+    : mFont(aFont)
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
     mGlyphs.resize(aBuffer.mNumGlyphs);
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
+  }
+
+  CommandType GetType() const override
+  {
+    return FillGlyphsCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -615,13 +660,18 @@ public:
                       const Pattern& aPattern,
                       const StrokeOptions& aStrokeOptions,
                       const DrawOptions& aOptions)
-    : StrokeOptionsCommand(StrokeGlyphsCommand::Type, aStrokeOptions)
+    : StrokeOptionsCommand(aStrokeOptions)
     , mFont(aFont)
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
     mGlyphs.resize(aBuffer.mNumGlyphs);
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
+  }
+
+  CommandType GetType() const override
+  {
+    return StrokeGlyphsCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -666,11 +716,15 @@ public:
   MaskCommand(const Pattern& aSource,
               const Pattern& aMask,
               const DrawOptions& aOptions)
-    : DrawingCommand(MaskCommand::Type)
-    , mSource(aSource)
+    : mSource(aSource)
     , mMask(aMask)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return MaskCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -707,12 +761,16 @@ public:
                      const SourceSurface* aMask,
                      const Point& aOffset,
                      const DrawOptions& aOptions)
-    : DrawingCommand(MaskSurfaceCommand::Type)
-    , mSource(aSource)
+    : mSource(aSource)
     , mMask(const_cast<SourceSurface*>(aMask))
     , mOffset(aOffset)
     , mOptions(aOptions)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return MaskSurfaceCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -748,9 +806,13 @@ class PushClipCommand : public DrawingCommand
 {
 public:
   explicit PushClipCommand(const Path* aPath)
-    : DrawingCommand(PushClipCommand::Type)
-    , mPath(const_cast<Path*>(aPath))
+    : mPath(const_cast<Path*>(aPath))
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return PushClipCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -779,9 +841,13 @@ class PushClipRectCommand : public DrawingCommand
 {
 public:
   explicit PushClipRectCommand(const Rect& aRect)
-    : DrawingCommand(PushClipRectCommand::Type)
-    , mRect(aRect)
+    : mRect(aRect)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return PushClipRectCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -815,14 +881,18 @@ public:
                    const Matrix& aMaskTransform,
                    const IntRect& aBounds,
                    bool aCopyBackground)
-    : DrawingCommand(PushLayerCommand::Type)
-    , mOpaque(aOpaque)
+    : mOpaque(aOpaque)
     , mOpacity(aOpacity)
     , mMask(aMask)
     , mMaskTransform(aMaskTransform)
     , mBounds(aBounds)
     , mCopyBackground(aCopyBackground)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return PushLayerCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -862,9 +932,11 @@ private:
 class PopClipCommand : public DrawingCommand
 {
 public:
-  PopClipCommand()
-    : DrawingCommand(PopClipCommand::Type)
+  PopClipCommand() {}
+
+  CommandType GetType() const override
   {
+    return PopClipCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -889,9 +961,11 @@ public:
 class PopLayerCommand : public DrawingCommand
 {
 public:
-  PopLayerCommand()
-    : DrawingCommand(PopLayerCommand::Type)
+  PopLayerCommand() {}
+
+  CommandType GetType() const override
   {
+    return PopLayerCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -918,9 +992,13 @@ class SetTransformCommand : public DrawingCommand
   friend class DrawTargetCaptureImpl;
 public:
   explicit SetTransformCommand(const Matrix& aTransform)
-    : DrawingCommand(SetTransformCommand::Type)
-    , mTransform(aTransform)
+    : mTransform(aTransform)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return SetTransformCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -954,9 +1032,13 @@ class SetPermitSubpixelAACommand : public DrawingCommand
   friend class DrawTargetCaptureImpl;
 public:
   explicit SetPermitSubpixelAACommand(bool aPermitSubpixelAA)
-    : DrawingCommand(SetPermitSubpixelAACommand::Type)
-    , mPermitSubpixelAA(aPermitSubpixelAA)
+    : mPermitSubpixelAA(aPermitSubpixelAA)
   {
+  }
+
+  CommandType GetType() const override
+  {
+    return SetPermitSubpixelAACommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -984,9 +1066,11 @@ private:
 class FlushCommand : public DrawingCommand
 {
 public:
-  explicit FlushCommand()
-    : DrawingCommand(FlushCommand::Type)
+  explicit FlushCommand() {}
+
+  CommandType GetType() const override
   {
+    return FlushCommand::Type;
   }
 
   void CloneInto(CaptureCommandList* aList) override
@@ -1012,9 +1096,13 @@ class BlurCommand : public DrawingCommand
 {
 public:
   explicit BlurCommand(const AlphaBoxBlur& aBlur)
-   : DrawingCommand(BlurCommand::Type)
-   , mBlur(aBlur)
+   : mBlur(aBlur)
   {}
+
+  CommandType GetType() const override
+  {
+    return BlurCommand::Type;
+  }
 
   void CloneInto(CaptureCommandList* aList) override
   {
