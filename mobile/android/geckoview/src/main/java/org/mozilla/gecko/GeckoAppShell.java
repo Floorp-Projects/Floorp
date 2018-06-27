@@ -397,7 +397,7 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
     /* package */ static native void onSensorChanged(int hal_type, float x, float y, float z,
-                                                     float w, int accuracy, long time);
+                                                     float w, long time);
 
     @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
     /* package */ static native void onLocationChanged(double latitude, double longitude,
@@ -415,26 +415,11 @@ public class GeckoAppShell
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
 
-        private static int HalSensorAccuracyFor(int androidAccuracy) {
-            switch (androidAccuracy) {
-            case SensorManager.SENSOR_STATUS_UNRELIABLE:
-                return GeckoHalDefines.SENSOR_ACCURACY_UNRELIABLE;
-            case SensorManager.SENSOR_STATUS_ACCURACY_LOW:
-                return GeckoHalDefines.SENSOR_ACCURACY_LOW;
-            case SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM:
-                return GeckoHalDefines.SENSOR_ACCURACY_MED;
-            case SensorManager.SENSOR_STATUS_ACCURACY_HIGH:
-                return GeckoHalDefines.SENSOR_ACCURACY_HIGH;
-            }
-            return GeckoHalDefines.SENSOR_ACCURACY_UNKNOWN;
-        }
-
         @Override
         public void onSensorChanged(SensorEvent s) {
             int sensor_type = s.sensor.getType();
             int hal_type = 0;
             float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
-            final int accuracy = HalSensorAccuracyFor(s.accuracy);
             // SensorEvent timestamp is in nanoseconds, Gecko expects microseconds.
             final long time = s.timestamp / 1000;
 
@@ -493,7 +478,7 @@ public class GeckoAppShell
                 break;
             }
 
-            GeckoAppShell.onSensorChanged(hal_type, x, y, z, w, accuracy, time);
+            GeckoAppShell.onSensorChanged(hal_type, x, y, z, w, time);
         }
 
         // Geolocation.

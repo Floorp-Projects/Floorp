@@ -73,8 +73,7 @@ UpdateHandler(nsITimer *aTimer, void *aClosure)
 
     hal::SensorData sdata(sensor,
                           PR_Now(),
-                          values,
-                          hal::SENSOR_ACCURACY_UNKNOWN);
+                          values);
     hal::NotifySensorChange(sdata);
   }
 }

@@ -104,7 +104,7 @@ class SplayTree
         int cmp = C::compare(v, last->item);
 
         // Don't tolerate duplicate elements.
-        MOZ_ASSERT(cmp);
+        MOZ_DIAGNOSTIC_ASSERT(cmp);
 
         Node*& parentPointer = (cmp < 0) ? last->left : last->right;
         MOZ_ASSERT(!parentPointer);

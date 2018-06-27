@@ -2736,10 +2736,10 @@ exports.CSS_PROPERTIES = {
       "padding-block-end",
       "padding-inline-start",
       "padding-inline-end",
-      "offset-block-start",
-      "offset-block-end",
-      "offset-inline-start",
-      "offset-inline-end",
+      "inset-block-start",
+      "inset-block-end",
+      "inset-inline-start",
+      "inset-inline-end",
       "block-size",
       "min-block-size",
       "max-block-size",
@@ -6254,6 +6254,58 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "inset-block-end": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "inset-block-start": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-block-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "inset-inline-end": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-inline-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "inset-inline-start": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-inline-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "isolation": {
     "isInherited": false,
     "subproperties": [
@@ -7224,7 +7276,7 @@ exports.CSS_PROPERTIES = {
   "offset-block-end": {
     "isInherited": false,
     "subproperties": [
-      "offset-block-end"
+      "inset-block-end"
     ],
     "supports": [],
     "values": [
@@ -7237,7 +7289,7 @@ exports.CSS_PROPERTIES = {
   "offset-block-start": {
     "isInherited": false,
     "subproperties": [
-      "offset-block-start"
+      "inset-block-start"
     ],
     "supports": [],
     "values": [
@@ -7250,7 +7302,7 @@ exports.CSS_PROPERTIES = {
   "offset-inline-end": {
     "isInherited": false,
     "subproperties": [
-      "offset-inline-end"
+      "inset-inline-end"
     ],
     "supports": [],
     "values": [
@@ -7263,7 +7315,7 @@ exports.CSS_PROPERTIES = {
   "offset-inline-start": {
     "isInherited": false,
     "subproperties": [
-      "offset-inline-start"
+      "inset-inline-start"
     ],
     "supports": [],
     "values": [
@@ -9611,5 +9663,21 @@ exports.PREFERENCES = [
   [
     "-webkit-user-select",
     "layout.css.prefixes.webkit"
+  ],
+  [
+    "offset-block-end",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "offset-block-start",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "offset-inline-end",
+    "layout.css.offset-logical-properties.enabled"
+  ],
+  [
+    "offset-inline-start",
+    "layout.css.offset-logical-properties.enabled"
   ]
 ];

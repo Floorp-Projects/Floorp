@@ -11,7 +11,6 @@ include "mozilla/GfxMessageUtils.h";
 
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using mozilla::hal::SensorType from "mozilla/HalSensor.h";
-using mozilla::hal::SensorAccuracyType from "mozilla/HalSensor.h";
 using mozilla::hal::WakeLockControl from "mozilla/HalTypes.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using nsIntRect from "nsRect.h";
@@ -30,7 +29,6 @@ struct SensorData {
   SensorType sensor;
   PRTime timestamp;
   float[] values;
-  SensorAccuracyType accuracy;
 };
 
 struct NetworkInformation {

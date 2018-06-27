@@ -94,7 +94,7 @@ function init() {
          type == CSS_TYPE_LONGHAND && gCSSProperties[p].logical) &&
         /-inline-end/.test(p)) {
       var valueType;
-      if (/margin|padding|width|offset/.test(p)) {
+      if (/margin|padding|width|inset|offset/.test(p)) {
         valueType = "length";
       } else if (/color/.test(p)) {
         valueType = "color";
@@ -110,7 +110,7 @@ function init() {
         blockEnd:    p.replace("-inline-end", "-block-end"),
         type:        valueType
       };
-      if (/^offset/.test(p)) {
+      if (/^(offset|inset)/.test(p)) {
         group.left   = "left";
         group.right  = "right";
         group.top    = "top";

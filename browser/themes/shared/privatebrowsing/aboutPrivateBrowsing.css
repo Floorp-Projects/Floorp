@@ -149,7 +149,7 @@ a.button {
 }
 
 .toggle:checked + .toggle-btn::after {
-  offset-inline-start: 21px;
+  inset-inline-start: 21px;
 }
 
 .toggle:-moz-focusring + .toggle-btn {
