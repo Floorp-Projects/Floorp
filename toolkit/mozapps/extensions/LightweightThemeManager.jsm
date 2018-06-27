@@ -140,8 +140,15 @@ var LightweightThemeManager = {
 
   get currentThemeForDisplay() {
     var data = this.currentTheme;
-    if ((!data || data.id == DEFAULT_THEME_ID) && _fallbackThemeData)
-      data = _fallbackThemeData;
+
+    if (!data || data.id == DEFAULT_THEME_ID) {
+      if (_fallbackThemeData) {
+        return _fallbackThemeData;
+      }
+      if (_defaultThemeIsInDarkMode) {
+        return this.getUsedTheme(DARK_THEME_ID);
+      }
+    }
 
     if (data && PERSIST_ENABLED) {
       for (let key in PERSIST_FILES) {
