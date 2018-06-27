@@ -5957,8 +5957,8 @@ var gCSSProperties = {
     ],
     invalid_values: [ "none", "5" ]
   },
-  "offset-block-end": {
-    domProp: "offsetBlockEnd",
+  "inset-block-end": {
+    domProp: "insetBlockEnd",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
@@ -5977,8 +5977,8 @@ var gCSSProperties = {
     ],
     invalid_values: []
   },
-  "offset-block-start": {
-    domProp: "offsetBlockStart",
+  "inset-block-start": {
+    domProp: "insetBlockStart",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
@@ -5997,8 +5997,8 @@ var gCSSProperties = {
     ],
     invalid_values: []
   },
-  "offset-inline-end": {
-    domProp: "offsetInlineEnd",
+  "inset-inline-end": {
+    domProp: "insetInlineEnd",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
@@ -6017,8 +6017,8 @@ var gCSSProperties = {
     ],
     invalid_values: []
   },
-  "offset-inline-start": {
-    domProp: "offsetInlineStart",
+  "inset-inline-start": {
+    domProp: "insetInlineStart",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
@@ -6195,8 +6195,8 @@ function logical_box_prop_get_computed(cs, property)
 
   if (/^-moz-/.test(property)) {
     property = physicalize(property.substring(5), inlineMapping, "");
-  } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
-    property = property.substring(7);  // we want "top" not "offset-top", e.g.
+  } else if (/^(offset|inset)-(block|inline)-(start|end)/.test(property)) {
+    property = property.replace("offset-", "").replace("inset-", "");  // we want "top" not "offset-top", e.g.
     property = physicalize(property, blockMapping, "block-");
     property = physicalize(property, inlineMapping, "inline-");
   } else if (/-(block|inline)-(start|end)/.test(property)) {
@@ -8085,6 +8085,45 @@ if (IsCSSPropertyPrefEnabled("layout.css.webkit-appearance.enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     alias_for: "-moz-appearance",
+  };
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
+  gCSSProperties["offset-block-start"] = {
+    domProp: "offsetBlockStart",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    alias_for: "inset-block-start",
+    subproperties: [ "inset-block-start" ],
+  };
+  gCSSProperties["offset-block-end"] = {
+    domProp: "offsetBlockEnd",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    alias_for: "inset-block-end",
+    subproperties: [ "inset-block-end" ],
+  };
+  gCSSProperties["offset-inline-start"] = {
+    domProp: "offsetInlineStart",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    alias_for: "inset-inline-start",
+    subproperties: [ "inset-inline-start" ],
+  };
+  gCSSProperties["offset-inline-end"] = {
+    domProp: "offsetInlineEnd",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    logical: true,
+    get_computed: logical_box_prop_get_computed,
+    alias_for: "inset-inline-end",
+    subproperties: [ "inset-inline-end" ],
   };
 }
 

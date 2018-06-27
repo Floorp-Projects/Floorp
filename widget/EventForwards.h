@@ -57,6 +57,13 @@ enum class Trusted
   eNo
 };
 
+enum class Composed
+{
+  eYes,
+  eNo,
+  eDefault
+};
+
 /**
  * Event messages
  */

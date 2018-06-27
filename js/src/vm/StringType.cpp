@@ -2007,6 +2007,29 @@ JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
 
 /*** Conversions *********************************************************************************/
 
+UniqueChars
+js::EncodeLatin1(JSContext* cx, JSString* str)
+{
+    JSLinearString* linear = str->ensureLinear(cx);
+    if (!linear)
+        return nullptr;
+
+    JS::AutoCheckCannotGC nogc;
+    if (linear->hasTwoByteChars()) {
+        Latin1CharsZ chars = JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->twoByteRange(nogc));
+        return UniqueChars(chars.c_str());
+    }
+
+    size_t len = str->length();
+    Latin1Char* buf = cx->pod_malloc<Latin1Char>(len + 1);
+    if (!buf)
+        return nullptr;
+
+    mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
+    buf[len] = '\0';
+    return UniqueChars(reinterpret_cast<char*>(buf));
+}
+
 const char*
 js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, JSAutoByteString* bytes,
                            bool asSource)
