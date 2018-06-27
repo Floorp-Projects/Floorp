@@ -43,12 +43,13 @@ AutoTracer::PrintBudget(const char* aName,
                         uint64_t aDuration,
                         uint64_t aPID,
                         uint64_t aThread,
-                        uint64_t aFrames)
+                        uint64_t aFrames,
+                        uint64_t aSampleRate)
 {
   mLogger.Log("{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"X\","
               "\"ts\": %" PRIu64 ", \"dur\": %" PRIu64 ", \"pid\": %" PRIu64 ","
-              "\"tid\": %" PRIu64 ", \"args\": { \"comment\": %" PRIu64 "}},",
-              aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames);
+              "\"tid\": %" PRIu64 ", \"args\": { \"comment\": \"%" PRIu64 "/%" PRIu64 "\"}},",
+              aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames, aSampleRate);
 }
 
 AutoTracer::AutoTracer(AsyncLogger& aLogger,
