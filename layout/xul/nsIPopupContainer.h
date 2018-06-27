@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#ifndef nsIRootBox_h___
-#define nsIRootBox_h___
+#ifndef nsIPopupContainer_h___
+#define nsIPopupContainer_h___
 
 #include "nsQueryFrame.h"
 class nsPopupSetFrame;
@@ -19,10 +19,10 @@ class Element;
 }
 }
 
-class nsIRootBox
+class nsIPopupContainer
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIRootBox)
+  NS_DECL_QUERYFRAME_TARGET(nsIPopupContainer)
 
   virtual nsPopupSetFrame* GetPopupSetFrame() = 0;
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) = 0;
@@ -30,7 +30,7 @@ public:
   virtual mozilla::dom::Element* GetDefaultTooltip() = 0;
   virtual void SetDefaultTooltip(mozilla::dom::Element* aTooltip) = 0;
 
-  static nsIRootBox* GetRootBox(nsIPresShell* aShell);
+  static nsIPopupContainer* GetPopupContainer(nsIPresShell* aShell);
 };
 
 #endif

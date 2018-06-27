@@ -21,7 +21,7 @@
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
-#include "nsIRootBox.h"
+#include "nsIPopupContainer.h"
 #include "nsIBoxObject.h"
 #include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
@@ -584,9 +584,10 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
   }
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShell());
-    NS_ENSURE_STATE(rootBox);
-    if (RefPtr<Element> tooltip = rootBox->GetDefaultTooltip()) {
+    nsIPopupContainer* popupContainer =
+      nsIPopupContainer::GetPopupContainer(document->GetShell());
+    NS_ENSURE_STATE(popupContainer);
+    if (RefPtr<Element> tooltip = popupContainer->GetDefaultTooltip()) {
       tooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::label, tooltipText, true);
       tooltip.forget(aTooltip);
     }
@@ -625,9 +626,10 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 #ifdef MOZ_XUL
   // titletips should just use the default tooltip
   if (mIsSourceTree && mNeedTitletip) {
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShell());
-    NS_ENSURE_STATE(rootBox);
-    NS_IF_ADDREF(*aTooltip = rootBox->GetDefaultTooltip());
+    nsIPopupContainer* popupContainer =
+      nsIPopupContainer::GetPopupContainer(document->GetShell());
+    NS_ENSURE_STATE(popupContainer);
+    NS_IF_ADDREF(*aTooltip = popupContainer->GetDefaultTooltip());
   }
 #endif
 
