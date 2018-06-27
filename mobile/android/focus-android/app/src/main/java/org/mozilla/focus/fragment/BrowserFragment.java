@@ -926,7 +926,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             webView.cleanup();
         }
 
-        SessionManager.getInstance().removeCurrentSession();
+        if (session.isCustomTab()) {
+            SessionManager.getInstance().removeCustomTabSession(session.getUUID());
+        } else {
+            SessionManager.getInstance().removeCurrentSession();
+        }
     }
 
     private void shareCurrentUrl() {
