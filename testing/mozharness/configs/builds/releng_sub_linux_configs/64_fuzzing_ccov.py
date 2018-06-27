@@ -7,7 +7,7 @@ config = {
         'check-test',
         # 'update',
     ],
-    'stage_platform': 'linux64-fuzzing-cov',
+    'stage_platform': 'linux64-fuzzing-ccov',
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
@@ -25,6 +25,6 @@ config = {
         'PATH': '/usr/local/bin:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
-    'mozconfig_variant': 'nightly-fuzzing-cov',
+    'mozconfig_variant': 'nightly-fuzzing-ccov',
     #######################
 }
