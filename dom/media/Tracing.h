@@ -79,8 +79,8 @@ public:
              uint64_t aPID,
              uint64_t aTID,
              EventType aEventType,
-             uint64_t aSampleRate,
-             uint64_t aFrames);
+             uint64_t aFrames,
+             uint64_t aSampleRate);
   ~AutoTracer();
 private:
   uint64_t NowInUs();
@@ -108,7 +108,6 @@ private:
 
   void PrintBudget(const char* aName,
                    const char* aCategory,
-                   const char* aComment,
                    uint64_t aDuration,
                    uint64_t aPID,
                    uint64_t aThread,

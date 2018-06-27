@@ -40,7 +40,6 @@ AutoTracer::PrintEvent(const char* aName,
 void
 AutoTracer::PrintBudget(const char* aName,
                         const char* aCategory,
-                        const char* aComment,
                         uint64_t aDuration,
                         uint64_t aPID,
                         uint64_t aThread,
@@ -70,7 +69,7 @@ AutoTracer::AutoTracer(AsyncLogger& aLogger,
 
   if (aLogger.Enabled()) {
     float durationUS = (static_cast<float>(aFrames) / aSampleRate) * 1e6;
-    PrintBudget(aLocation, "perf", mComment, durationUS, mPID, mTID, aFrames);
+    PrintBudget(aLocation, "perf", durationUS, mPID, mTID, aFrames, aSampleRate);
   }
 }
 
