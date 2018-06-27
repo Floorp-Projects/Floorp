@@ -614,6 +614,10 @@ private:
 
   already_AddRefed<CSSValue> DoGetContextProperties();
 
+  // For working around a MSVC bug. See related comment in
+  // GenerateComputedDOMStyleGenerated.py.
+  already_AddRefed<CSSValue> DummyGetter();
+
   /* Helper functions */
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   void SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
