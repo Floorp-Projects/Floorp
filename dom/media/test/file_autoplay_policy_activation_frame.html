@@ -24,6 +24,8 @@
             playAndPostResult(true, event.source);
           }
         }, false);
+      let w = window.opener || window.parent;
+      w.postMessage("ready", "*");
     </script>
   </body>
 </html>

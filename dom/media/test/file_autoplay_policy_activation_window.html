@@ -31,7 +31,7 @@
           frame.src = origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html";
           // Wait for it to load...
           document.body.appendChild(frame);
-          await once(frame, "load");
+          is((await nextWindowMessage()).data, "ready", "Expected a 'ready' message");
           // Click the iframe to activate if appropriate.
           if (test_case.activated_child) {
             frame.contentWindow.postMessage("click", "*");
