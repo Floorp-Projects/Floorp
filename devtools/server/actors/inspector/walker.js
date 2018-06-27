@@ -580,6 +580,19 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
+   * Return the number of children under the provided NodeActor.
+   *
+   * @param NodeActor node
+   *    See JSDoc for children()
+   * @param object options
+   *    See JSDoc for children()
+   * @return Number the number of children
+   */
+  countChildren: function(node, options = {}) {
+    return this._getChildren(node, options).nodes.length;
+  },
+
+  /**
    * Return children of the given node.  By default this method will return
    * all children of the node, but there are options that can restrict this
    * to a more manageable subset.
@@ -601,9 +614,34 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @returns an object with three items:
    *    hasFirst: true if the first child of the node is included in the list.
    *    hasLast: true if the last child of the node is included in the list.
-   *    nodes: Child nodes returned by the request.
+   *    nodes: Array of NodeActor representing the nodes returned by the request.
    */
   children: function(node, options = {}) {
+    const { hasFirst, hasLast, nodes } = this._getChildren(node, options);
+    return {
+      hasFirst,
+      hasLast,
+      nodes: nodes.map(n => this._ref(n))
+    };
+  },
+
+  /**
+   * Return chidlren of the given node. Contrary to children children(), this method only
+   * returns DOMNodes. Therefore it will not create NodeActor wrappers and will not
+   * update the refMap for the discovered nodes either. This makes this method safe to
+   * call when you are not sure if the discovered nodes will be communicated to the
+   * client.
+   *
+   * @param NodeActor node
+   *    See JSDoc for children()
+   * @param object options
+   *    See JSDoc for children()
+   * @return  an object with three items:
+   *    hasFirst: true if the first child of the node is included in the list.
+   *    hasLast: true if the last child of the node is included in the list.
+   *    nodes: Array of DOMNodes.
+   */
+  _getChildren: function(node, options = {}) {
     if (isNodeDead(node)) {
       return { hasFirst: true, hasLast: true, nodes: [] };
     }
@@ -627,7 +665,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // <template> tags should have a single child pointing to the element's template
       // content.
       const documentFragment = node.rawNode.content;
-      const nodes = [this._ref(documentFragment)];
+      const nodes = [documentFragment];
       return { hasFirst: true, hasLast: true, nodes };
     }
 
@@ -719,8 +757,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     if (nodes.length > 0) {
       // Compare first/last with expected nodes before modifying the nodes array in case
       // this is a shadow host.
-      hasFirst = nodes[0].rawNode == firstChild;
-      hasLast = nodes[nodes.length - 1].rawNode == lastChild;
+      hasFirst = nodes[0] == firstChild;
+      hasLast = nodes[nodes.length - 1] == lastChild;
     } else {
       // If nodes is still an empty array, we are on a host element with a shadow root but
       // no direct children.
@@ -739,13 +777,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       nodes = [
         // #shadow-root
-        this._ref(node.rawNode.openOrClosedShadowRoot),
+        node.rawNode.openOrClosedShadowRoot,
         // ::before
-        ...(hasBefore ? [this._ref(first)] : []),
+        ...(hasBefore ? [first] : []),
         // shadow host direct children
         ...nodes,
         // ::after
-        ...(hasAfter ? [this._ref(last)] : []),
+        ...(hasAfter ? [last] : []),
       ];
     }
 
@@ -802,7 +840,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       if (!walker.isSkippedNode(node)) {
         // The walker can be on a node that would be filtered out if it didn't find any
         // other node to fallback to.
-        ret.push(this._ref(node));
+        ret.push(node);
       }
       node = walker.nextSibling();
     } while (node && --count);
@@ -821,7 +859,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       if (!walker.isSkippedNode(node)) {
         // The walker can be on a node that would be filtered out if it didn't find any
         // other node to fallback to.
-        ret.push(this._ref(node));
+        ret.push(node);
       }
       node = walker.previousSibling();
     } while (node && --count);
