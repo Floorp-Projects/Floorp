@@ -75,7 +75,7 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
                     win.*: 6
                     default: 12
 
-    a call to `resolve_keyed_by(item, 'job.chunks', item['thing-name'])
+    a call to `resolve_keyed_by(item, 'job.chunks', item['thing-name'])`
     would mutate item in-place to::
 
         job:

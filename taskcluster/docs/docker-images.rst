@@ -27,13 +27,13 @@ pushed to vcs.
 Task Images (build-on-push)
 :::::::::::::::::::::::::::
 
-Images can be uploaded as a task artifact, [indexed](#task-image-index-namespace) under
+Images can be uploaded as a task artifact, :ref:`indexed <task-image-index-namespace>` under
 a given namespace, and used in other tasks by referencing the task ID.
 
 Important to note, these images do not require building and pushing to a docker registry, and are
 built per push (if necessary) and uploaded as task artifacts.
 
-The decision task that is run per push will [determine](#context-directory-hashing)
+The decision task that is run per push will :ref:`determine <context-directory-hashing>`
 if the image needs to be built based on the hash of the context directory and if the image
 exists under the namespace for a given branch.
 
@@ -45,12 +45,14 @@ pushes to any branch will use that already built image.
 
 To use within an in-tree task definition, the format is:
 
-```yaml
-image:
-  type: 'task-image'
-  path: 'public/image.tar.zst'
-  taskId: '{{#task_id_for_image}}builder{{/task_id_for_image}}'
-```
+.. code-block:: yaml
+
+    image:
+        type: 'task-image'
+        path: 'public/image.tar.zst'
+        taskId: '<task_id_for_image_builder>'
+
+.. _context-directory-hashing:
 
 Context Directory Hashing
 .........................
@@ -63,14 +65,17 @@ Note: this is the contents of *only* the context directory, not the
 image contents.
 
 The decision task will:
+
 1. Recursively collect the paths of all files within the context directory
 2. Sort the filenames alphabetically to ensure the hash is consistently calculated
-3. Generate a sha256 hash of the contents of each file.
-4. All file hashes will then be combined with their path and used to update the hash
-of the context directory.
+3. Generate a sha256 hash of the contents of each file
+4. All file hashes will then be combined with their path and used to update the
+   hash of the context directory
 
 This ensures that the hash is consistently calculated and path changes will result
 in different hashes being generated.
+
+.. _task-image-index-namespace:
 
 Task Image Index Namespace
 ..........................
@@ -105,7 +110,7 @@ Example:
 Each image has a repo digest, an image hash, and a version. The repo digest is
 stored in the ``HASH`` file in the image directory  and used to refer to the
 image as above.  The version is in ``VERSION``.  The image hash is used in
-`chain-of-trust verification <http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`
+`chain-of-trust verification <https://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`_
 in `scriptworker <https://github.com/mozilla-releng/scriptworker>`_.
 
 The version file only serves to provide convenient names, such that old
@@ -168,7 +173,7 @@ task definitions.
 
 The change is now safe to use in Try pushes.  However, if the image is used in
 building releases then it is *not* safe to land to an integration branch until
-the whitelists in `scriptworker
+the whitelists in `scriptworker's constants.py
 <https://github.com/mozilla-releng/scriptworker/blob/master/scriptworker/constants.py>`_
 have also been updated. These whitelists use the image hash, not the repo
 digest.

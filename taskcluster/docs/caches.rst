@@ -87,7 +87,7 @@ Workspace Caches
 Other
 :::::
 
-``level-{{level}}-tooltool-cache-{{hash}}
+``level-{{level}}-tooltool-cache-{{hash}}``
    Tooltool invocations should use this cache. Tooltool will store files here
    indexed by their hash.
 
