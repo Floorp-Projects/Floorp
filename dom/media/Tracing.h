@@ -111,7 +111,8 @@ private:
                    uint64_t aDuration,
                    uint64_t aPID,
                    uint64_t aThread,
-                   uint64_t aFrames);
+                   uint64_t aFrames,
+                   uint64_t aSampleRate);
 
   // The logger to use. It musdt have a lifetime longer than the block an
   // instance of this class traces.
