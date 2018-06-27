@@ -47,13 +47,9 @@
   -moz-appearance: none !important;
 }
 
-*|*:root[platform="win"] > scrollbar scrollbarbutton,
 *|*:root[platform="linux"] > scrollbar scrollbarbutton,
-*|*:root[platform="win"] > scrollbar gripper,
 *|*:root[platform="linux"] > scrollbar gripper,
-*|*:root[platform="win"] *|*:not(html|select) > scrollbar scrollbarbutton,
 *|*:root[platform="linux"] *|*:not(html|select) > scrollbar scrollbarbutton,
-*|*:root[platform="win"] *|*:not(html|select) > scrollbar gripper,
 *|*:root[platform="linux"] *|*:not(html|select) > scrollbar gripper {
   display: none;
 }

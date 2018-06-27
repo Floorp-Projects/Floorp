@@ -5,9 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'panel.js',
     'scratchpad-commands.js',
     'scratchpad-manager.jsm',
-    'scratchpad-panel.js',
+    'scratchpad.js',
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

@@ -41,10 +41,14 @@ def dependentlibs_dumpbin(lib):
     return deps
 
 def dependentlibs_mingw_objdump(lib):
-    proc = subprocess.Popen(['objdump', '-x', lib], stdout = subprocess.PIPE)
+    try:
+        proc = subprocess.Popen(['objdump', '-x', lib], stdout = subprocess.PIPE)
+    except OSError:
+        # objdump is missing, try using llvm-objdump.
+        proc = subprocess.Popen(['llvm-objdump', '-private-headers', lib], stdout = subprocess.PIPE)
     deps = []
     for line in proc.stdout:
-        match = re.match('\tDLL Name: (\S+)', line)
+        match = re.match('\s+DLL Name: (\S+)', line)
         if match:
             deps.append(match.group(1))
     proc.wait()

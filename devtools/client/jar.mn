@@ -11,12 +11,10 @@ devtools.jar:
     content/webconsole/index.html (webconsole/index.html)
     content/webconsole/browserconsole.xul (webconsole/browserconsole.xul)
 *   content/scratchpad/index.xul (scratchpad/index.xul)
-    content/scratchpad/scratchpad.js (scratchpad/scratchpad.js)
     content/shared/splitview.css (shared/splitview.css)
     content/shared/theme-switching.js (shared/theme-switching.js)
 *   content/styleeditor/index.xul (styleeditor/index.xul)
 *   content/storage/index.xul (storage/index.xul)
-    content/inspector/inspector.js (inspector/inspector.js)
     content/inspector/markup/markup.xhtml (inspector/markup/markup.xhtml)
     content/inspector/animation-old/animation-controller.js (inspector/animation-old/animation-controller.js)
     content/inspector/animation-old/animation-panel.js (inspector/animation-old/animation-panel.js)
@@ -63,7 +61,6 @@ devtools.jar:
     content/performance/performance-view.js (performance/performance-view.js)
     content/performance-new/index.xhtml (performance-new/index.xhtml)
     content/performance-new/frame-script.js (performance-new/frame-script.js)
-    content/performance-new/initializer.js (performance-new/initializer.js)
     content/performance/views/overview.js (performance/views/overview.js)
     content/performance/views/toolbar.js (performance/views/toolbar.js)
     content/performance/views/details.js (performance/views/details.js)
@@ -92,9 +89,7 @@ devtools.jar:
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)
     content/aboutdebugging/aboutdebugging.xhtml (aboutdebugging/aboutdebugging.xhtml)
     content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
-    content/aboutdebugging/initializer.js (aboutdebugging/initializer.js)
     content/responsive.html/index.xhtml (responsive.html/index.xhtml)
-    content/responsive.html/index.js (responsive.html/index.js)
     content/dom/index.html (dom/index.html)
     content/dom/main.js (dom/main.js)
     content/accessibility/index.html (accessibility/index.html)
@@ -292,11 +287,9 @@ devtools.jar:
     content/netmonitor/src/assets/icons/play.svg (netmonitor/src/assets/icons/play.svg)
     content/netmonitor/src/assets/icons/drop-down.svg (netmonitor/src/assets/icons/drop-down.svg)
     content/netmonitor/index.html (netmonitor/index.html)
-    content/netmonitor/initializer.js (netmonitor/initializer.js)
 
     # Application panel
     content/application/index.html (application/index.html)
-    content/application/initializer.js (application/initializer.js)
 
     # Devtools-components
     skin/images/devtools-components/arrow.svg (themes/images/devtools-components/arrow.svg)

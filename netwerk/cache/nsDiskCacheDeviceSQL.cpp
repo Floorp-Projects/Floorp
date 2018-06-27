@@ -48,7 +48,6 @@
 
 #include "mozilla/Telemetry.h"
 
-#include "sqlite3.h"
 #include "mozilla/storage.h"
 #include "nsVariant.h"
 #include "mozilla/BasePrincipal.h"
@@ -218,7 +217,9 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
 
   // If the key is currently locked, refuse to delete this row.
   if (mDevice->IsLocked(fullKey)) {
-    NS_ADDREF(*_retval = new IntegerVariant(SQLITE_IGNORE));
+    // This code thought it was performing the equivalent of invoking the SQL
+    // "RAISE(IGNORE)" function.  It was not.  Please see bug 1470961 and any
+    // follow-ups to understand the plan for correcting this bug.
     return NS_OK;
   }
 
