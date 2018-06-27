@@ -365,6 +365,10 @@ TestRunner.runTests = function (/*url...*/) {
         coverageCollector = new CoverageCollector(TestRunner.jscovDirPrefix);
     }
 
+    let reset = false;
+    SpecialPowers.requestResetCoverageCounters(() => reset = true);
+    SpecialPowers.Services.tm.spinEventLoopUntil(() => reset);
+
     TestRunner._urls = flattenArguments(arguments);
 
     var singleTestRun = this._urls.length <= 1 && TestRunner.repeat <= 1;
@@ -528,6 +532,10 @@ TestRunner.testFinished = function(tests) {
     if (TestRunner.jscovDirPrefix != "") {
         coverageCollector.recordTestCoverage(TestRunner.currentTestURL);
     }
+
+    let dumped = false;
+    SpecialPowers.requestDumpCoverageCounters(() => dumped = true);
+    SpecialPowers.Services.tm.spinEventLoopUntil(() => dumped);
 
     TestRunner._lastTestFinished = TestRunner._currentTest;
     TestRunner._loopIsRestarting = false;
