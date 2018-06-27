@@ -1177,7 +1177,7 @@
             # Enable Keystone auto-update support.
             'mac_keystone%': 1,
           }, { # else: branding!="Chrome" or buildtype!="Official"
-            'mac_sdk%': '<!(<(PYTHON) <(DEPTH)/build/mac/find_sdk.py <(mac_sdk_min))',
+            'mac_sdk%': '', #'<!(<(PYTHON) <(DEPTH)/build/mac/find_sdk.py <(mac_sdk_min))',
             'mac_breakpad_uploads%': 0,
             'mac_breakpad%': 0,
             'mac_keystone%': 0,
