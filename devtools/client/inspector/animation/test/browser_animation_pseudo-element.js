@@ -9,10 +9,18 @@ const TEST_DATA = [
   {
     expectedTargetLabel: "::before",
     expectedAnimationNameLabel: "body",
+    expectedKeyframsGraphPathSegments: [
+      { x: 0, y: 0 },
+      { x: 1000, y: 100 },
+    ],
   },
   {
     expectedTargetLabel: "::before",
     expectedAnimationNameLabel: "div-before",
+    expectedKeyframsGraphPathSegments: [
+      { x: 0, y: 100 },
+      { x: 1000, y: 0 },
+    ],
   },
   {
     expectedTargetLabel: "::after",
@@ -51,15 +59,9 @@ add_task(async function() {
   info("Checking whether node is selected correctly " +
        "when click on the first inspector icon on Reps component");
   await clickOnTargetNode(animationInspector, panel, 0);
-
-  info("Checking count of animation item");
-  is(panel.querySelectorAll(".animation-list .animation-item").length, 1,
-    "Count of animation item should be 1");
-
-  info("Checking content of animation item");
-  is(panel.querySelector(".animation-list .animation-item .animation-name").textContent,
-     TEST_DATA[0].expectedAnimationNameLabel,
-     `The animation name should be ${ TEST_DATA[0].expectedAnimationNameLabel }`);
+  assertAnimationCount(panel, 1);
+  assertAnimationNameLabel(panel, TEST_DATA[0].expectedAnimationNameLabel);
+  assertKeyframesGraphPathSegments(panel, TEST_DATA[0].expectedKeyframsGraphPathSegments);
 
   info("Select <body> again to reset the animation list");
   await selectNodeAndWaitForAnimations("body", inspector);
@@ -67,13 +69,26 @@ add_task(async function() {
   info("Checking whether node is selected correctly " +
        "when click on the second inspector icon on Reps component");
   await clickOnTargetNode(animationInspector, panel, 1);
-
-  info("Checking count of animation item");
-  is(panel.querySelectorAll(".animation-list .animation-item").length, 1,
-     "Count of animation item should be 1");
-
-  info("Checking content of animation item");
-  is(panel.querySelector(".animation-list .animation-item .animation-name").textContent,
-     TEST_DATA[1].expectedAnimationNameLabel,
-     `The animation name should be ${ TEST_DATA[1].expectedAnimationNameLabel }`);
+  assertAnimationCount(panel, 1);
+  assertAnimationNameLabel(panel, TEST_DATA[1].expectedAnimationNameLabel);
+  assertKeyframesGraphPathSegments(panel, TEST_DATA[1].expectedKeyframsGraphPathSegments);
 });
+
+function assertAnimationCount(panel, expectedCount) {
+  info("Checking count of animation item");
+  is(panel.querySelectorAll(".animation-list .animation-item").length, expectedCount,
+     `Count of animation item should be ${ expectedCount }`);
+}
+
+function assertAnimationNameLabel(panel, expectedAnimationNameLabel) {
+  info("Checking the animation name label");
+  is(panel.querySelector(".animation-list .animation-item .animation-name").textContent,
+     expectedAnimationNameLabel,
+     `The animation name should be ${ expectedAnimationNameLabel }`);
+}
+
+function assertKeyframesGraphPathSegments(panel, expectedPathSegments) {
+  info("Checking the keyframes graph path segments");
+  const pathEl = panel.querySelector(".keyframes-graph-path path");
+  assertPathSegments(pathEl, true, expectedPathSegments);
+}
