@@ -292,6 +292,9 @@ function getObserverPromise(bookmarkedUri) {
     observer = {
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
+      onVisits() {
+        reject(new Error("Unexpected call to onVisits"));
+      },
       onTitleChanged(aUri) {
         reject(new Error("Unexpected call to onTitleChanged"));
       },

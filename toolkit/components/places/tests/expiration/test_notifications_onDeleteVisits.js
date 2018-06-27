@@ -102,6 +102,7 @@ add_task(async function test_notifications_onDeleteVisits() {
       onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
       onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
       onClearHistory() {},
+      onVisits() {},
       onTitleChanged() {},
       onDeleteURI(aURI, aGUID, aReason) {
         // Check this uri was not bookmarked.

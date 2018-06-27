@@ -11,11 +11,11 @@ var visit_count = 0;
 async function task_add_visit(aURI, aVisitType) {
   // Wait for a visits notification and get the visitId.
   let visitId;
-  let visitsPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
+  let visitsPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
     visitId = visits[0].visitId;
-    let {url} = visits[0];
-    return url == aURI.spec;
-  }, "places");
+    let {uri} = visits[0];
+    return uri.equals(aURI);
+  }, "history");
 
   // Add visits.
   await PlacesTestUtils.addVisits([{
