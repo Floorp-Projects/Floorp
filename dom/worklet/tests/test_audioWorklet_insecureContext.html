@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for No AudioWorklet in insecure context</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  ok(!window.isSecureContext, "Test should run in an insecure context");
+  var audioContext = new AudioContext();
+  ok(!("audioWorklet" in audioContext),
+     "AudioWorklet shouldn't be defined in AudioContext in a insecure context");
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>

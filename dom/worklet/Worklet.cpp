@@ -10,6 +10,7 @@
 #include "PaintWorkletGlobalScope.h"
 
 #include "mozilla/dom/WorkletBinding.h"
+#include "mozilla/dom/AudioWorkletBinding.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Fetch.h"
@@ -508,7 +509,11 @@ JSObject*
 Worklet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return Worklet_Binding::Wrap(aCx, this, aGivenProto);
+  if (mWorkletType == eAudioWorklet) {
+    return AudioWorklet_Binding::Wrap(aCx, this, aGivenProto);
+  } else {
+    return Worklet_Binding::Wrap(aCx, this, aGivenProto);
+  }
 }
 
 already_AddRefed<Promise>
