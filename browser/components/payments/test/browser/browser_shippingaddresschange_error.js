@@ -92,6 +92,7 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       eventName: "shippingaddresschange",
       details: Object.assign({},
                              PTU.Details.fieldSpecificErrors,
+                             PTU.Details.noShippingOptions,
                              PTU.Details.total2USD),
     }, PTU.ContentTasks.updateWith);
 
@@ -194,4 +195,4 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
-}).skip();
+});

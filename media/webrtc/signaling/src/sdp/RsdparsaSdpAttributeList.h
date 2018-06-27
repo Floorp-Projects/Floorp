@@ -136,6 +136,7 @@ private:
   void LoadGroup(RustAttributeList* attributeList);
   void LoadRtcp(RustAttributeList* attributeList);
   void LoadRtcpFb(RustAttributeList* attributeList);
+  void LoadSimulcast(RustAttributeList* attributeList);
   void LoadImageattr(RustAttributeList* attributeList);
   void LoadSctpmaps(RustAttributeList* attributeList);
   void LoadDirection(RustAttributeList* attributeList);

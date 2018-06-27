@@ -25,15 +25,3 @@ if (CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android') or CONFIG
 
 if CONFIG['MOZ_MEMORY']:
     gkrust_features += ['moz_memory']
-
-# See details in toolkit/library/rust/shared/lib.rs
-# A string test is not the best thing, but it works well enough here.
-if CONFIG['RUSTC_VERSION'] < "1.27":
-    gkrust_features += ['oom_with_global_alloc']
-elif CONFIG['RUSTC_VERSION'] >= "1.28" and CONFIG['RUSTC_VERSION'] < "1.29":
-    gkrust_features += ['oom_with_hook']
-elif CONFIG['MOZ_AUTOMATION']:
-    # We don't want builds on automation to unwittingly stop annotating OOM
-    # crash reports from rust.
-    error('Builds on automation must use a version of rust that supports OOM '
-          'hooking')
