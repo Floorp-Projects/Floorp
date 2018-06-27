@@ -7,6 +7,7 @@
 #include "VideoFrameContainer.h"
 #include "mozilla/Telemetry.h"
 #include "MediaDecoderOwner.h"
+#include "Tracing.h"
 
 using namespace mozilla::layers;
 
@@ -118,6 +119,8 @@ private:
 
 void VideoFrameContainer::SetCurrentFrames(const VideoSegment& aSegment)
 {
+  TRACE();
+
   if (aSegment.IsEmpty()) {
     return;
   }
