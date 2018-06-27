@@ -75,35 +75,3 @@
   background-repeat: no-repeat;
   background-position: center;
 }
-
-.item-twisty-container {
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  min-width: 9px; /* The image's width is 9 pixels */
-  height: 9px;
-  margin: auto;
-}
-
-.item.client .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/twisty-expanded.svg");
-  -moz-context-properties: fill;
-  fill: #636363;
-}
-
-.item.client.closed .item-twisty-container {
-  background-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
-  fill: #b6b6b6;
-}
-
-.item.client.closed .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/tree/twisty-collapsed-rtl.svg");
-}
-
-.item.client .item-twisty-container:hover {
-  fill: #4ed0f9;
-}
-
-.item.client.selected .item-twisty-container:not(:hover) {
-  fill: currentColor;
-}
