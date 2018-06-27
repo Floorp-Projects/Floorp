@@ -95,7 +95,8 @@ Compatibility::IsModuleVersionLessThan(HMODULE aModuleHandle,
 ////////////////////////////////////////////////////////////////////////////////
 
 static WindowsDllInterceptor sUser32Interceptor;
-static decltype(&InSendMessageEx) sInSendMessageExStub = nullptr;
+static WindowsDllInterceptor::FuncHookType<decltype(&InSendMessageEx)>
+  sInSendMessageExStub;
 static bool sInSendMessageExHackEnabled = false;
 static PVOID sVectoredExceptionHandler = nullptr;
 
@@ -267,11 +268,9 @@ Compatibility::Init()
   if ((sConsumers & (~(UIAUTOMATION | NVDA))) &&
       BrowserTabsRemoteAutostart()) {
     sUser32Interceptor.Init("user32.dll");
-    if (!sInSendMessageExStub) {
-      sUser32Interceptor.AddHook("InSendMessageEx",
-                                 reinterpret_cast<intptr_t>(&InSendMessageExHook),
-                                 (void**)&sInSendMessageExStub);
-    }
+    sInSendMessageExStub.Set(sUser32Interceptor, "InSendMessageEx",
+                             &InSendMessageExHook);
+
     // The vectored exception handler allows us to catch exceptions ahead of any
     // SEH handlers.
     if (!sVectoredExceptionHandler) {
