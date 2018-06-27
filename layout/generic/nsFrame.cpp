@@ -10962,12 +10962,12 @@ nsIFrame::IsStackingContext()
 }
 
 static bool
-IsFrameScrolledOutOfView(nsIFrame* aTarget,
+IsFrameScrolledOutOfView(const nsIFrame* aTarget,
                          const nsRect& aTargetRect,
-                         nsIFrame* aParent)
+                         const nsIFrame* aParent)
 {
   nsIScrollableFrame* scrollableFrame =
-    nsLayoutUtils::GetNearestScrollableFrame(aParent,
+    nsLayoutUtils::GetNearestScrollableFrame(const_cast<nsIFrame*>(aParent),
       nsLayoutUtils::SCROLLABLE_SAME_DOC |
       nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT |
       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
@@ -11011,7 +11011,7 @@ IsFrameScrolledOutOfView(nsIFrame* aTarget,
 }
 
 bool
-nsIFrame::IsScrolledOutOfView()
+nsIFrame::IsScrolledOutOfView() const
 {
   nsRect rect = GetVisualOverflowRectRelativeToSelf();
   return IsFrameScrolledOutOfView(this, rect, this);

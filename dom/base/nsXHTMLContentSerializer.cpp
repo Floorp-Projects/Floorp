@@ -12,6 +12,7 @@
 
 #include "nsXHTMLContentSerializer.h"
 
+#include "mozilla/dom/Element.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsElementTable.h"
@@ -30,7 +31,6 @@
 #include "nsStubMutationObserver.h"
 #include "nsAttrName.h"
 #include "nsComputedDOMStyle.h"
-#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 

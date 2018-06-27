@@ -435,9 +435,10 @@ public:
   }
 
   /**
-   * Fires onVisits event to nsINavHistoryService observers
+   * Updates and invalidates the mDaysOfHistory cache. Should be
+   * called whenever a visit is added.
    */
-  void NotifyOnVisits(nsIVisitData** aVisits, uint32_t aVisitsCount);
+  void UpdateDaysOfHistory(PRTime visitTime);
 
   /**
    * Fires onTitleChanged event to nsINavHistoryService observers

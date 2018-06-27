@@ -150,7 +150,6 @@ if CONFIG['MOZ_PREF_EXTENSIONS']:
 DIRS += [
     '/devtools',
     '/toolkit/library',
-    '/toolkit/library/StaticXULComponentsEnd',
     '/services',
     '/startupcache',
     '/js/ductwork/debugger',

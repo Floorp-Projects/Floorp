@@ -108,6 +108,13 @@ IsMatchForCompositor(const KeyframeEffect& aEffect,
     return MatchForCompositor::No;
   }
 
+  // If we know that the animation is not visible, we don't need to send the
+  // animation to the compositor.
+  if (!aFrame->IsVisibleOrMayHaveVisibleDescendants() ||
+      aFrame->IsScrolledOutOfView()) {
+    return MatchForCompositor::NoAndBlockThisProperty;
+  }
+
   return animation->IsPlaying()
          ? MatchForCompositor::Yes
          : MatchForCompositor::IfNeeded;

@@ -88,20 +88,6 @@ FORCE_STATIC_LIB = True
 
 STATIC_LIBRARY_NAME = 'xul_s'
 
-SOURCES += [
-    'StaticXULComponentsStart.cpp',
-]
-
-# This, combined with the fact the file is first, makes the start pointer
-# it contains first in Windows PGO builds.
-SOURCES['StaticXULComponentsStart.cpp'].no_pgo = True
-
-# Don't let LTO reorder StaticXULComponentsStart.o.
-for f in CONFIG['OS_CXXFLAGS']:
-    if f.startswith('-flto'):
-        SOURCES['StaticXULComponentsStart.cpp'].flags += ['-fno-lto']
-        break
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsDllMain.cpp',
@@ -364,10 +350,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         GENERATED_FILES['symverscript'].inputs = ['symverscript.in']
         SYMBOLS_FILE = '!symverscript'
 
-# This library needs to be last to make XPCOM module registration work.
-USE_LIBS += ['StaticXULComponentsEnd']
-
-# The above library needs to be last for C++ purposes.  This library,
-# however, is entirely composed of Rust code, and needs to come after
+# This library is entirely composed of Rust code, and needs to come after
 # all the C++ code so any possible C++ -> Rust calls can be resolved.
 USE_LIBS += ['gkrust']

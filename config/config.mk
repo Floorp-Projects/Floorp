@@ -416,58 +416,6 @@ ifdef MOZ_DEBUG
 JAVAC_FLAGS += -g
 endif
 
-# $(call CHECK_SYMBOLS,lib,PREFIX,dep_name,test)
-# Checks that the given `lib` doesn't contain dependency on symbols with a
-# version starting with `PREFIX`_ and matching the `test`. `dep_name` is only
-# used for the error message.
-# `test` is an awk expression using the information in the variable `v` which
-# contains a list of version items ([major, minor, ...]).
-define CHECK_SYMBOLS
-@$(TOOLCHAIN_PREFIX)readelf -sW $(1) | \
-awk '$$8 ~ /@$(2)_/ { \
-	split($$8,a,"@"); \
-	split(a[2],b,"_"); \
-	split(b[2],v,"."); \
-	if ($(4)) { \
-		if (!found) { \
-			print "TEST-UNEXPECTED-FAIL | check_stdcxx | We do not want these $(3) symbol versions to be used:" \
-		} \
-		print " ",$$8; \
-		found=1 \
-	} \
-} \
-END { \
-	if (found) { \
-		exit(1) \
-	} \
-}'
-endef
-
-ifneq (,$(MOZ_LIBSTDCXX_TARGET_VERSION)$(MOZ_LIBSTDCXX_HOST_VERSION))
-CHECK_STDCXX = $(call CHECK_SYMBOLS,$(1),GLIBCXX,libstdc++,v[1] > 3 || (v[1] == 3 && v[2] == 4 && v[3] > 16))
-CHECK_GLIBC = $(call CHECK_SYMBOLS,$(1),GLIBC,libc,v[1] > 2 || (v[1] == 2 && v[2] > 12))
-endif
-
-ifeq (,$(filter $(OS_TARGET),WINNT Darwin))
-CHECK_TEXTREL = @$(TOOLCHAIN_PREFIX)readelf -d $(1) | grep TEXTREL > /dev/null && echo 'TEST-UNEXPECTED-FAIL | check_textrel | We do not want text relocations in libraries and programs' || true
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-# While this is very unlikely (libc being added by the compiler at the end
-# of the linker command line), if libmozglue.so ends up after libc.so, all
-# hell breaks loose, so better safe than sorry, and check it's actually the
-# case.
-CHECK_MOZGLUE_ORDER = @$(TOOLCHAIN_PREFIX)readelf -d $(1) | grep NEEDED | awk '{ libs[$$NF] = ++n } END { if (libs["[libmozglue.so]"] && libs["[libc.so]"] < libs["[libmozglue.so]"]) { print "libmozglue.so must be linked before libc.so"; exit 1 } }'
-endif
-
-define CHECK_BINARY
-$(call CHECK_GLIBC,$(1))
-$(call CHECK_STDCXX,$(1))
-$(call CHECK_TEXTREL,$(1))
-$(call LOCAL_CHECKS,$(1))
-$(call CHECK_MOZGLUE_ORDER,$(1))
-endef
-
 # autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including
 # this file
 OBJ_SUFFIX := $(_OBJ_SUFFIX)
