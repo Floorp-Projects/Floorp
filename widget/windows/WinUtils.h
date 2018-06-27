@@ -557,21 +557,6 @@ private:
   uint32_t mHeight;
 };
 
-
-class AsyncDeleteIconFromDisk : public nsIRunnable
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  explicit AsyncDeleteIconFromDisk(const nsAString &aIconPath);
-
-private:
-  virtual ~AsyncDeleteIconFromDisk();
-
-  nsAutoString mIconPath;
-};
-
 class AsyncDeleteAllFaviconsFromDisk : public nsIRunnable
 {
 public:

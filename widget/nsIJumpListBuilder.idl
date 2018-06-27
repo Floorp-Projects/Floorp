@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIArray;
-interface nsIMutableArray;
 
 [scriptable, function, uuid(5131a62a-e99f-4631-9138-751f8aad1ae4)]
 interface nsIJumpListCommittedCallback : nsISupports
@@ -103,17 +102,17 @@ interface nsIJumpListBuilder : nsISupports
   readonly attribute short maxListItems;
 
   /**
-   * Initializes a jump list build and returns a list of items the user removed
-   * since the last time a jump list was committed. Removed items can become state
-   * after initListBuild is called, lists should be built in single-shot fasion.
+   * Initializes a jump list build and returns a promise with the list of
+   * items the user removed since the last time a jump list was committed.
+   * Removed items can become state after initListBuild is called, lists
+   * should be built in single-shot fasion.
    *
-   * @param removedItems
-   *        A list of items that were removed by the user since the last commit.
-   *
-   * @returns true if the operation completed successfully.
+   * @returns a promise with the list of items that were removed by the user
+   * since the last commit.
    */
-  boolean initListBuild(in nsIMutableArray removedItems);
-  
+  [implicit_jscontext]
+  Promise initListBuild();
+
   /**
    * Adds a list and if required, a set of items for the list.
    *
