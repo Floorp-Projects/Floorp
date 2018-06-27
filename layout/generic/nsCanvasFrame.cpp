@@ -53,7 +53,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
 NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsIRootBox)
+  NS_QUERYFRAME_ENTRY(nsIPopupContainer)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
