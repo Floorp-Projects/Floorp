@@ -277,8 +277,10 @@ const clickOnTargetNode = async function(animationInspector, panel, index) {
   const targetEl = panel.querySelectorAll(".animation-target .objectBox")[index];
   targetEl.scrollIntoView(false);
   const onHighlight = animationInspector.inspector.toolbox.once("node-highlight");
+  const onAnimationTargetUpdated = animationInspector.once("animation-target-rendered");
   EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.ownerGlobal);
-  await waitForRendering(animationInspector);
+  await onAnimationTargetUpdated;
+  await waitForSummaryAndDetail(animationInspector);
   await onHighlight;
 };
 
