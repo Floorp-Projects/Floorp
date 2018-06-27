@@ -303,7 +303,7 @@ nsFileStreamBase::MaybeOpen(nsIFile* aFile, int32_t aIoFlags,
         nsresult rv = aFile->Clone(getter_AddRefs(file));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        mOpenParams.localFile = do_QueryInterface(file);
+        mOpenParams.localFile = file.forget();
         NS_ENSURE_TRUE(mOpenParams.localFile, NS_ERROR_UNEXPECTED);
 
         mState = eDeferredOpen;
