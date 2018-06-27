@@ -18,10 +18,4 @@ public class GeckoHalDefines
     public static final int SENSOR_LIGHT = 5;
     public static final int SENSOR_ROTATION_VECTOR = 6;
     public static final int SENSOR_GAME_ROTATION_VECTOR = 7;
-
-    public static final int SENSOR_ACCURACY_UNKNOWN = -1;
-    public static final int SENSOR_ACCURACY_UNRELIABLE = 0;
-    public static final int SENSOR_ACCURACY_LOW = 1;
-    public static final int SENSOR_ACCURACY_MED = 2;
-    public static final int SENSOR_ACCURACY_HIGH = 3;
 };

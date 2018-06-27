@@ -92,8 +92,7 @@ public:
 
     hal::SensorData sdata(hal::SENSOR_ACCELERATION,
                           PR_Now(),
-                          values,
-                          hal::SENSOR_ACCURACY_UNKNOWN);
+                          values);
     hal::NotifySensorChange(sdata);
 
     return S_OK;
