@@ -1751,8 +1751,7 @@ waitForAllPaints(() => {
       // FIXME: Bug 1470798: Enable this test on Android.
       return;
     }
-    // 'opacity: 0' prevents transform animations to be sent to the compositor.
-    const div = addDiv(null, { style: 'visibility: hidden; opacity: 0' });
+    const div = addDiv(null, { style: 'visibility: hidden;' });
 
     const animation =
       div.animate({ transform: [ 'none', 'rotate(360deg)' ] },
@@ -1760,6 +1759,8 @@ waitForAllPaints(() => {
                     iterations: Infinity });
 
     await waitForAnimationReadyToRestyle(animation);
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     const markers = await observeStyling(5);
 
@@ -1773,8 +1774,7 @@ waitForAllPaints(() => {
       // FIXME: Bug 1470798: Enable this test on Android.
       return;
     }
-    // 'opacity: 0' prevents transform animations to be sent to the compositor.
-    const div = addDiv(null, { style: 'visibility: hidden; opacity: 0' });
+    const div = addDiv(null, { style: 'visibility: hidden;' });
 
     const animation =
       div.animate([ { transform: 'rotate(360deg)' } ],
@@ -1782,6 +1782,8 @@ waitForAllPaints(() => {
                     iterations: Infinity });
 
     await waitForAnimationReadyToRestyle(animation);
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     const markers = await observeStyling(5);
 
@@ -1797,8 +1799,7 @@ waitForAllPaints(() => {
         // FIXME: Bug 1470798: Enable this test on Android.
         return;
       }
-      // 'opacity: 0' prevents transform animations to be sent to the compositor.
-      const div = addDiv(null, { style: 'visibility: hidden; opacity: 0' });
+      const div = addDiv(null, { style: 'visibility: hidden;' });
       const child = addDiv(null, { style: 'position: absolute; top: 100px;' });
       div.appendChild(child);
 
@@ -1808,6 +1809,8 @@ waitForAllPaints(() => {
                       iterations: Infinity });
 
       await waitForAnimationReadyToRestyle(animation);
+
+      ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
       const markers = await observeStyling(5);
 
