@@ -277,7 +277,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
   event.mTime = mTime;
   event.button = WidgetMouseEvent::eLeftButton;
-  event.inputSource = MouseEventBinding::MOZ_SOURCE_TOUCH;
+  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
@@ -551,7 +551,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
     RoundedToInt(ViewAs<LayoutDevicePixel>(mPanStartPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   wheelEvent.buttons = 0;
-  wheelEvent.mDeltaMode = WheelEventBinding::DOM_DELTA_PIXEL;
+  wheelEvent.mDeltaMode = WheelEvent_Binding::DOM_DELTA_PIXEL;
   wheelEvent.mMayHaveMomentum = true; // pan inputs may have momentum
   wheelEvent.mIsMomentum = IsMomentum();
   wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
@@ -756,11 +756,11 @@ ScrollWheelInput::ScrollDeltaType
 ScrollWheelInput::DeltaTypeForDeltaMode(uint32_t aDeltaMode)
 {
   switch (aDeltaMode) {
-  case WheelEventBinding::DOM_DELTA_LINE:
+  case WheelEvent_Binding::DOM_DELTA_LINE:
     return SCROLLDELTA_LINE;
-  case WheelEventBinding::DOM_DELTA_PAGE:
+  case WheelEvent_Binding::DOM_DELTA_PAGE:
     return SCROLLDELTA_PAGE;
-  case WheelEventBinding::DOM_DELTA_PIXEL:
+  case WheelEvent_Binding::DOM_DELTA_PIXEL:
     return SCROLLDELTA_PIXEL;
   default:
     MOZ_CRASH();
@@ -773,12 +773,12 @@ ScrollWheelInput::DeltaModeForDeltaType(ScrollDeltaType aDeltaType)
 {
   switch (aDeltaType) {
   case ScrollWheelInput::SCROLLDELTA_LINE:
-    return WheelEventBinding::DOM_DELTA_LINE;
+    return WheelEvent_Binding::DOM_DELTA_LINE;
   case ScrollWheelInput::SCROLLDELTA_PAGE:
-    return WheelEventBinding::DOM_DELTA_PAGE;
+    return WheelEvent_Binding::DOM_DELTA_PAGE;
   case ScrollWheelInput::SCROLLDELTA_PIXEL:
   default:
-    return WheelEventBinding::DOM_DELTA_PIXEL;
+    return WheelEvent_Binding::DOM_DELTA_PIXEL;
   }
 }
 

@@ -48,7 +48,7 @@ TestInterfaceIterableSingle::Constructor(const GlobalObject& aGlobal,
 JSObject*
 TestInterfaceIterableSingle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TestInterfaceIterableSingleBinding::Wrap(aCx, this, aGivenProto);
+  return TestInterfaceIterableSingle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsPIDOMWindowInner*

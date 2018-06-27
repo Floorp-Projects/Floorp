@@ -32,7 +32,7 @@ GamepadHapticActuator::GamepadHapticActuator(nsISupports* aParent, uint32_t aGam
 /* virtual */ JSObject*
 GamepadHapticActuator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return GamepadHapticActuatorBinding::Wrap(aCx, this, aGivenProto);
+  return GamepadHapticActuator_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*

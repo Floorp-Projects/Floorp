@@ -19,8 +19,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::SVGAngleBinding;
-using namespace mozilla::dom::SVGMarkerElementBinding;
+using namespace mozilla::dom::SVGAngle_Binding;
+using namespace mozilla::dom::SVGMarkerElement_Binding;
 
 static nsStaticAtom** const unitMap[] =
 {

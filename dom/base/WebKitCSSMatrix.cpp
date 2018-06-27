@@ -52,7 +52,7 @@ WebKitCSSMatrix::Constructor(const GlobalObject& aGlobal,
 JSObject*
 WebKitCSSMatrix::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WebKitCSSMatrixBinding::Wrap(aCx, this, aGivenProto);
+  return WebKitCSSMatrix_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 WebKitCSSMatrix*

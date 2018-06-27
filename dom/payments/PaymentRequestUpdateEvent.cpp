@@ -140,7 +140,7 @@ JSObject*
 PaymentRequestUpdateEvent::WrapObjectInternal(JSContext* aCx,
                                               JS::Handle<JSObject*> aGivenProto)
 {
-  return PaymentRequestUpdateEventBinding::Wrap(aCx, this, aGivenProto);
+  return PaymentRequestUpdateEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 

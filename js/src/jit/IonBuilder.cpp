@@ -5021,8 +5021,8 @@ IonBuilder::createThisScriptedBaseline(MDefinition* callee)
 MDefinition*
 IonBuilder::createThis(JSFunction* target, MDefinition* callee, MDefinition* newTarget)
 {
-    // Create |this| for unknown target.
-    if (!target) {
+    // Create |this| for unknown target or cross-realm target.
+    if (!target || target->realm() != script()->realm()) {
         if (MDefinition* createThis = createThisScriptedBaseline(callee))
             return createThis;
 
@@ -5227,6 +5227,9 @@ IonBuilder::jsop_spreadcall()
     current->push(apply);
     MOZ_TRY(resumeAfter(apply));
 
+    if (target && target->realm() == script()->realm())
+        apply->setNotCrossRealm();
+
     // TypeBarrier the call result
     TemporaryTypeSet* types = bytecodeTypes(pc);
     return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
@@ -5264,6 +5267,9 @@ IonBuilder::jsop_funapplyarray(uint32_t argc)
     current->add(apply);
     current->push(apply);
     MOZ_TRY(resumeAfter(apply));
+
+    if (target && target->realm() == script()->realm())
+        apply->setNotCrossRealm();
 
     TemporaryTypeSet* types = bytecodeTypes(pc);
     return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
@@ -5325,6 +5331,9 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
         current->add(apply);
         current->push(apply);
         MOZ_TRY(resumeAfter(apply));
+
+        if (target && target->realm() == script()->realm())
+            apply->setNotCrossRealm();
 
         TemporaryTypeSet* types = bytecodeTypes(pc);
         return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
@@ -5614,14 +5623,13 @@ IonBuilder::makeCallHelper(const Maybe<CallTargets>& targets, CallInfo& callInfo
         // Class check.
         call->disableClassCheck();
 
-        // Determine whether we can skip the callee's prologue type checks.
+        // Determine whether we can skip the callee's prologue type checks and
+        // whether we have to switch realms.
         bool needArgCheck = false;
         bool maybeCrossRealm = false;
         for (JSFunction* target : targets.ref()) {
-            if (testNeedsArgumentCheck(target, callInfo)) {
+            if (testNeedsArgumentCheck(target, callInfo))
                 needArgCheck = true;
-                break;
-            }
             if (target->realm() != script()->realm())
                 maybeCrossRealm = true;
         }

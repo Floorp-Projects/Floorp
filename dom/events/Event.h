@@ -148,8 +148,18 @@ public:
   }
 
   void InitEvent(const nsAString& aEventTypeArg,
-                 bool aCanBubbleArg,
-                 bool aCancelableArg);
+                 bool aCanBubble,
+                 bool aCancelable)
+  {
+    InitEvent(aEventTypeArg,
+              aCanBubble ? CanBubble::eYes : CanBubble::eNo,
+              aCancelable ? Cancelable::eYes : Cancelable::eNo);
+  }
+
+  void InitEvent(const nsAString& aEventTypeArg,
+                 mozilla::CanBubble,
+                 mozilla::Cancelable);
+
   void SetTarget(EventTarget* aTarget);
   virtual void DuplicatePrivateData();
   bool IsDispatchStopped();

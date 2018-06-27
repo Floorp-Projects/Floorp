@@ -1814,7 +1814,7 @@ HTMLSelectElement::SetPreviewValue(const nsAString& aValue)
 JSObject*
 HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLSelectElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLSelectElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

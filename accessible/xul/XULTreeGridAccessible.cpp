@@ -431,7 +431,7 @@ XULTreeGridCellAccessible::
 
   NS_ASSERTION(mTreeView, "mTreeView is null");
 
-  if (mColumn->Type() == dom::TreeColumnBinding::TYPE_CHECKBOX)
+  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX)
     mTreeView->GetCellValue(mRow, mColumn, mCachedTextEquiv);
   else
     mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
@@ -538,7 +538,7 @@ XULTreeGridCellAccessible::ActionCount() const
   if (mColumn->Cycler())
     return 1;
 
-  if (mColumn->Type() == dom::TreeColumnBinding::TYPE_CHECKBOX && IsEditable())
+  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX && IsEditable())
     return 1;
 
   return 0;
@@ -557,7 +557,7 @@ XULTreeGridCellAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
     return;
   }
 
-  if (mColumn->Type() == dom::TreeColumnBinding::TYPE_CHECKBOX &&
+  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX &&
       IsEditable()) {
     nsAutoString value;
     mTreeView->GetCellValue(mRow, mColumn, value);
@@ -579,7 +579,7 @@ XULTreeGridCellAccessible::DoAction(uint8_t aIndex) const
     return true;
   }
 
-  if (mColumn->Type() == dom::TreeColumnBinding::TYPE_CHECKBOX &&
+  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX &&
       IsEditable()) {
     DoCommand();
     return true;
@@ -691,7 +691,7 @@ XULTreeGridCellAccessible::NativeState() const
   }
 
   // checked state
-  if (mColumn->Type() == dom::TreeColumnBinding::TYPE_CHECKBOX) {
+  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX) {
     states |= states::CHECKABLE;
     nsAutoString checked;
     mTreeView->GetCellValue(mRow, mColumn, checked);
@@ -729,7 +729,7 @@ XULTreeGridCellAccessible::CellInvalidated()
 
   nsAutoString textEquiv;
 
-  if (mColumn->Type() == dom::TreeColumnBinding::TYPE_CHECKBOX) {
+  if (mColumn->Type() == dom::TreeColumn_Binding::TYPE_CHECKBOX) {
     mTreeView->GetCellValue(mRow, mColumn, textEquiv);
     if (mCachedTextEquiv != textEquiv) {
       bool isEnabled = textEquiv.EqualsLiteral("true");

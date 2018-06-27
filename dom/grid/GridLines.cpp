@@ -36,7 +36,7 @@ GridLines::~GridLines()
 JSObject*
 GridLines::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return GridLinesBinding::Wrap(aCx, this, aGivenProto);
+  return GridLines_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 uint32_t

@@ -73,7 +73,7 @@ JSObject*
 FileSystemFileEntry::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto)
 {
-  return FileSystemFileEntryBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemFileEntry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

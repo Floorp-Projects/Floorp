@@ -13,7 +13,7 @@ namespace mozilla {
 BindingStyleRule::WrapObject(JSContext* aCx,
 			     JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::CSSStyleRuleBinding::Wrap(aCx, this, aGivenProto);
+  return dom::CSSStyleRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

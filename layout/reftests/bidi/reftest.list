@@ -1,10 +1,10 @@
 include dirAuto/reftest.list
 include numeral/reftest.list
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bdi-element.html bdi-element-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bdi-element.html bdi-element-ref.html # Bug 1392106
 == bidi-000.html bidi-000-ref.html
-== bidi-001.html bidi-001-ref.html
-== bidi-001-j.html bidi-001-ref.html
-== bidi-001-v.html bidi-001-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidi-001.html bidi-001-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidi-001-j.html bidi-001-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bidi-001-v.html bidi-001-ref.html # Bug 1392106
 == bidi-002.html bidi-002-ref.html
 == bidi-003.html bidi-003-ref.html
 fuzzy-if(gtkWidget,255,17) == bidi-004.html bidi-004-ref.html # inconsistency in the Hebrew font that gets used
@@ -65,16 +65,16 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 151407-3-rtl.html 151407-3-rtl-ref.html
 == 151407-3-auto.html 151407-3-auto-ref.html
 == 151407-3-foopy.html 151407-3-empty-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-1.html 229367-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-2.html 229367-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-3.html 229367-3-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-1.html 229367-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-2.html 229367-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-3.html 229367-3-ref.html # Bug 1392106
 == 258928-1.html 258928-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-1.html 263359-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-1a.html 263359-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != 263359-1b.html 263359-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-2.html 263359-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-3.html 263359-3-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-4.html 263359-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-1.html 263359-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-1a.html 263359-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != 263359-1b.html 263359-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-2.html 263359-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-3.html 263359-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-4.html 263359-4-ref.html # Bug 1392106
 random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 fuzzy-if(skiaContent,1,1100) == 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
@@ -111,11 +111,11 @@ fuzzy-if(webrender,122,1) == 562169-1a.html 562169-1-ref.html
 == 612843-1.html 612843-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1a.html 613149-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1b.html 613149-1-ref.html # Bug 1392106
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,36,2) == 613149-2a.html 613149-2-ref.html
-fuzzy-if(Android,24,1) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,36,2) == 613149-2b.html 613149-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-2a.html 613149-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(Android,24,1) == 613149-2b.html 613149-2-ref.html # Bug 1392106
 == 613157-1.html 613157-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,255,6) == 613157-2.html 613157-2-ref.html
-== 662288-1.html 662288-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 662288-1.html 662288-1-ref.html # Bug 1392106
 == 670226-1.html 670226-1-ref.html
 == 676245-1.html 676245-1-ref.html
 fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html
@@ -123,7 +123,7 @@ fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html
 == 704837-1.html 704837-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 712600-1.html 712600-1-ref.html # Bug 1392106
 == 712600-2.html 712600-2-ref.html
-== 712600-2-dyn.html 712600-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 712600-2-dyn.html 712600-2-ref.html # Bug 1392106
 == 712600-3.html 712600-3-ref.html
 == 718236-1.html 718236-1-ref.html
 == 718236-2.html 718236-2-ref.html

@@ -211,7 +211,7 @@ nsTreeColumn::Invalidate(ErrorResult& aRv)
                           nsGkAtoms::_true, eCaseMatters);
 
   // Figure out our column type. Default type is text.
-  mType = TreeColumnBinding::TYPE_TEXT;
+  mType = TreeColumn_Binding::TYPE_TEXT;
   static Element::AttrValuesArray typestrings[] =
     {&nsGkAtoms::checkbox, &nsGkAtoms::password,
      nullptr};
@@ -219,8 +219,8 @@ nsTreeColumn::Invalidate(ErrorResult& aRv)
                                     nsGkAtoms::type,
                                     typestrings,
                                     eCaseMatters)) {
-    case 0: mType = TreeColumnBinding::TYPE_CHECKBOX; break;
-    case 1: mType = TreeColumnBinding::TYPE_PASSWORD; break;
+    case 0: mType = TreeColumn_Binding::TYPE_CHECKBOX; break;
+    case 1: mType = TreeColumn_Binding::TYPE_PASSWORD; break;
   }
 
   // Fetch the crop style.
@@ -249,7 +249,7 @@ nsTreeColumn::GetParentObject() const
 /* virtual */ JSObject*
 nsTreeColumn::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::TreeColumnBinding::Wrap(aCx, this, aGivenProto);
+  return dom::TreeColumn_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 Element*
@@ -312,7 +312,7 @@ nsTreeColumns::GetParentObject() const
 /* virtual */ JSObject*
 nsTreeColumns::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::TreeColumnsBinding::Wrap(aCx, this, aGivenProto);
+  return dom::TreeColumns_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 dom::TreeBoxObject*
@@ -378,7 +378,7 @@ nsTreeColumns::GetKeyColumn()
       continue;
 
     // Skip non-text column
-    if (currCol->GetType() != TreeColumnBinding::TYPE_TEXT)
+    if (currCol->GetType() != TreeColumn_Binding::TYPE_TEXT)
       continue;
 
     if (!first)

@@ -1078,12 +1078,12 @@ WinUtils::GetNativeMessage(UINT aInternalMessage)
 uint16_t
 WinUtils::GetMouseInputSource()
 {
-  int32_t inputSource = dom::MouseEventBinding::MOZ_SOURCE_MOUSE;
+  int32_t inputSource = dom::MouseEvent_Binding::MOZ_SOURCE_MOUSE;
   LPARAM lParamExtraInfo = ::GetMessageExtraInfo();
   if ((lParamExtraInfo & TABLET_INK_SIGNATURE) == TABLET_INK_CHECK) {
     inputSource = (lParamExtraInfo & TABLET_INK_TOUCH) ?
-      dom::MouseEventBinding::MOZ_SOURCE_TOUCH :
-      dom::MouseEventBinding::MOZ_SOURCE_PEN;
+      dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH :
+      dom::MouseEvent_Binding::MOZ_SOURCE_PEN;
   }
   return static_cast<uint16_t>(inputSource);
 }

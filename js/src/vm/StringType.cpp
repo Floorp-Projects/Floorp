@@ -108,7 +108,7 @@ JS::ubi::Concrete<JSString>::size(mozilla::MallocSizeOf mallocSizeOf) const
 
 const char16_t JS::ubi::Concrete<JSString>::concreteTypeName[] = u"JSString";
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 
 template <typename CharT>
 /*static */ void
@@ -250,7 +250,7 @@ JSString::equals(const char* s)
 
     return StringEqualsAscii(linear, s);
 }
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool
@@ -397,7 +397,7 @@ JSRope::hash(uint32_t* outHash) const
     return true;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 void
 JSRope::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
@@ -820,7 +820,7 @@ JSDependentString::undepend(JSContext* cx)
            : undependInternal<char16_t>(cx);
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 void
 JSDependentString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
@@ -1389,7 +1389,7 @@ JSExternalString::ensureFlat(JSContext* cx)
     return &this->asFlat();
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 void
 JSAtom::dump(js::GenericPrinter& out)
 {
@@ -1413,7 +1413,7 @@ JSExternalString::dumpRepresentation(js::GenericPrinter& out, int indent) const
     out.printf("%*sfinalizer: ((JSStringFinalizer*) %p)\n", indent, "", externalFinalizer());
     dumpRepresentationChars(out, indent);
 }
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 JSLinearString*
 js::NewDependentString(JSContext* cx, JSString* baseArg, size_t start, size_t length)
@@ -1776,7 +1776,7 @@ NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStrin
 
 } /* namespace js */
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 void
 JSExtensibleString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {

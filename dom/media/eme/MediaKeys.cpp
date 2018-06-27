@@ -120,7 +120,7 @@ MediaKeys::GetParentObject() const
 JSObject*
 MediaKeys::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaKeysBinding::Wrap(aCx, this, aGivenProto);
+  return MediaKeys_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

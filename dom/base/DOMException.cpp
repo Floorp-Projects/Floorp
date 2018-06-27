@@ -24,29 +24,29 @@ using namespace mozilla::dom;
 
 enum DOM4ErrorTypeCodeMap {
   /* DOM4 errors from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
-  IndexSizeError             = DOMExceptionBinding::INDEX_SIZE_ERR,
-  HierarchyRequestError      = DOMExceptionBinding::HIERARCHY_REQUEST_ERR,
-  WrongDocumentError         = DOMExceptionBinding::WRONG_DOCUMENT_ERR,
-  InvalidCharacterError      = DOMExceptionBinding::INVALID_CHARACTER_ERR,
-  NoModificationAllowedError = DOMExceptionBinding::NO_MODIFICATION_ALLOWED_ERR,
-  NotFoundError              = DOMExceptionBinding::NOT_FOUND_ERR,
-  NotSupportedError          = DOMExceptionBinding::NOT_SUPPORTED_ERR,
+  IndexSizeError             = DOMException_Binding::INDEX_SIZE_ERR,
+  HierarchyRequestError      = DOMException_Binding::HIERARCHY_REQUEST_ERR,
+  WrongDocumentError         = DOMException_Binding::WRONG_DOCUMENT_ERR,
+  InvalidCharacterError      = DOMException_Binding::INVALID_CHARACTER_ERR,
+  NoModificationAllowedError = DOMException_Binding::NO_MODIFICATION_ALLOWED_ERR,
+  NotFoundError              = DOMException_Binding::NOT_FOUND_ERR,
+  NotSupportedError          = DOMException_Binding::NOT_SUPPORTED_ERR,
   // Can't remove until setNamedItem is removed
-  InUseAttributeError        = DOMExceptionBinding::INUSE_ATTRIBUTE_ERR,
-  InvalidStateError          = DOMExceptionBinding::INVALID_STATE_ERR,
-  SyntaxError                = DOMExceptionBinding::SYNTAX_ERR,
-  InvalidModificationError   = DOMExceptionBinding::INVALID_MODIFICATION_ERR,
-  NamespaceError             = DOMExceptionBinding::NAMESPACE_ERR,
-  InvalidAccessError         = DOMExceptionBinding::INVALID_ACCESS_ERR,
-  TypeMismatchError          = DOMExceptionBinding::TYPE_MISMATCH_ERR,
-  SecurityError              = DOMExceptionBinding::SECURITY_ERR,
-  NetworkError               = DOMExceptionBinding::NETWORK_ERR,
-  AbortError                 = DOMExceptionBinding::ABORT_ERR,
-  URLMismatchError           = DOMExceptionBinding::URL_MISMATCH_ERR,
-  QuotaExceededError         = DOMExceptionBinding::QUOTA_EXCEEDED_ERR,
-  TimeoutError               = DOMExceptionBinding::TIMEOUT_ERR,
-  InvalidNodeTypeError       = DOMExceptionBinding::INVALID_NODE_TYPE_ERR,
-  DataCloneError             = DOMExceptionBinding::DATA_CLONE_ERR,
+  InUseAttributeError        = DOMException_Binding::INUSE_ATTRIBUTE_ERR,
+  InvalidStateError          = DOMException_Binding::INVALID_STATE_ERR,
+  SyntaxError                = DOMException_Binding::SYNTAX_ERR,
+  InvalidModificationError   = DOMException_Binding::INVALID_MODIFICATION_ERR,
+  NamespaceError             = DOMException_Binding::NAMESPACE_ERR,
+  InvalidAccessError         = DOMException_Binding::INVALID_ACCESS_ERR,
+  TypeMismatchError          = DOMException_Binding::TYPE_MISMATCH_ERR,
+  SecurityError              = DOMException_Binding::SECURITY_ERR,
+  NetworkError               = DOMException_Binding::NETWORK_ERR,
+  AbortError                 = DOMException_Binding::ABORT_ERR,
+  URLMismatchError           = DOMException_Binding::URL_MISMATCH_ERR,
+  QuotaExceededError         = DOMException_Binding::QUOTA_EXCEEDED_ERR,
+  TimeoutError               = DOMException_Binding::TIMEOUT_ERR,
+  InvalidNodeTypeError       = DOMException_Binding::INVALID_NODE_TYPE_ERR,
+  DataCloneError             = DOMException_Binding::DATA_CLONE_ERR,
   InvalidPointerId           = 0,
   EncodingError              = 0,
 
@@ -295,7 +295,7 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
 JSObject*
 Exception::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ExceptionBinding::Wrap(cx, this, aGivenProto);
+  return Exception_Binding::Wrap(cx, this, aGivenProto);
 }
 
 void
@@ -424,7 +424,7 @@ DOMException::Constructor(GlobalObject& /* unused */,
 JSObject*
 DOMException::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMExceptionBinding::Wrap(aCx, this, aGivenProto);
+  return DOMException_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */already_AddRefed<DOMException>

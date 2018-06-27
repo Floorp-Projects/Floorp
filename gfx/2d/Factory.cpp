@@ -189,6 +189,12 @@ mozilla_ReleaseFTFace(FT_Face aFace)
   mozilla::gfx::Factory::ReleaseFTFace(aFace);
 }
 
+FT_Error
+mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags)
+{
+  return mozilla::gfx::Factory::LoadFTGlyph(aFace, aGlyphIndex, aFlags);
+}
+
 void
 mozilla_LockFTLibrary(FT_Library aFTLibrary)
 {
@@ -778,6 +784,14 @@ Factory::ReleaseFTFace(FT_Face aFace)
   if (mFTLock) {
     mFTLock->Unlock();
   }
+}
+
+FT_Error
+Factory::LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags)
+{
+  MOZ_ASSERT(mFTLock);
+  MutexAutoLock lock(*mFTLock);
+  return FT_Load_Glyph(aFace, aGlyphIndex, aFlags);
 }
 #endif
 

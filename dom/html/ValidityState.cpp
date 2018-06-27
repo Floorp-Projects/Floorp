@@ -29,7 +29,7 @@ ValidityState::ValidityState(nsIConstraintValidation* aConstraintValidation)
 JSObject*
 ValidityState::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ValidityStateBinding::Wrap(aCx, this, aGivenProto);
+  return ValidityState_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

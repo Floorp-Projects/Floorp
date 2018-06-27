@@ -3338,7 +3338,7 @@ GetObjectSlotNameFunctor::operator()(JS::CallbackTracer* trc, char* buf, size_t 
 
 /*** Debugging routines **************************************************************************/
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
@@ -3389,7 +3389,6 @@ dumpValue(const Value& v, js::GenericPrinter& out)
             out.put("false");
     } else if (v.isMagic()) {
         out.put("<invalid");
-#ifdef DEBUG
         switch (v.whyMagic()) {
           case JS_ELEMENTS_HOLE:     out.put(" elements hole");      break;
           case JS_NO_ITER_VALUE:     out.put(" no iter value");      break;
@@ -3397,7 +3396,6 @@ dumpValue(const Value& v, js::GenericPrinter& out)
           case JS_OPTIMIZED_OUT:     out.put(" optimized out");      break;
           default:                   out.put(" ?!");                 break;
         }
-#endif
         out.putChar('>');
     } else {
         out.put("unexpected value");
@@ -3687,7 +3685,7 @@ js::DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out, InterpreterFram
     }
 }
 
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 namespace js {
 

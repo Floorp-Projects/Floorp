@@ -20,7 +20,7 @@ namespace dom {
 JSObject*
 SVGFEComponentTransferElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEComponentTransferElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEComponentTransferElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] =

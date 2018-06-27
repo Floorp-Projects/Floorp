@@ -47,7 +47,7 @@ CSSPseudoElement::GetParentObject() const
 JSObject*
 CSSPseudoElement::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSPseudoElementBinding::Wrap(aCx, this, aGivenProto);
+  return CSSPseudoElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

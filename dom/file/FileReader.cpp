@@ -234,7 +234,7 @@ FileReader::OnLoadEndArrayBuffer()
   // XXX Code selected arbitrarily
   mError =
     new DOMException(NS_ERROR_DOM_INVALID_STATE_ERR, errorMsg,
-                     errorNameC, DOMExceptionBinding::INVALID_STATE_ERR);
+                     errorNameC, DOMException_Binding::INVALID_STATE_ERR);
 
   FreeDataAndDispatchError();
 }
@@ -527,7 +527,7 @@ FileReader::GetAsDataURL(Blob *aBlob,
 /* virtual */ JSObject*
 FileReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FileReaderBinding::Wrap(aCx, this, aGivenProto);
+  return FileReader_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

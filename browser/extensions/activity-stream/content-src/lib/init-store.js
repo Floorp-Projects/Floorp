@@ -40,7 +40,7 @@ function mergeStateReducer(mainReducer) {
 const messageMiddleware = store => next => action => {
   const skipLocal = action.meta && action.meta.skipLocal;
   if (au.isSendToMain(action)) {
-    sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+    RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
   }
   if (!skipLocal) {
     next(action);
@@ -118,14 +118,14 @@ export function initStore(reducers, initialState) {
   const store = createStore(
     mergeStateReducer(combineReducers(reducers)),
     initialState,
-    global.addMessageListener && applyMiddleware(rehydrationMiddleware, queueEarlyMessageMiddleware, messageMiddleware)
+    global.RPMAddMessageListener && applyMiddleware(rehydrationMiddleware, queueEarlyMessageMiddleware, messageMiddleware)
   );
 
   store._didRehydrate = false;
   store._didRequestInitialState = false;
 
-  if (global.addMessageListener) {
-    global.addMessageListener(INCOMING_MESSAGE_NAME, msg => {
+  if (global.RPMAddMessageListener) {
+    global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {
       try {
         store.dispatch(msg.data);
       } catch (ex) {

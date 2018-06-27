@@ -13,7 +13,6 @@ UNIFIED_SOURCES += [
     'XULListboxAccessible.cpp',
     'XULMenuAccessible.cpp',
     'XULSelectControlAccessible.cpp',
-    'XULSliderAccessible.cpp',
     'XULTabAccessible.cpp',
     'XULTreeAccessible.cpp',
     'XULTreeGridAccessible.cpp',

@@ -81,7 +81,6 @@
 #include "XULFormControlAccessible.h"
 #include "XULListboxAccessibleWrap.h"
 #include "XULMenuAccessibleWrap.h"
-#include "XULSliderAccessible.h"
 #include "XULTabAccessible.h"
 #include "XULTreeGridAccessibleWrap.h"
 #endif

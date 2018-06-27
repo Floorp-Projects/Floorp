@@ -129,11 +129,11 @@ LocationEvent::OnStatusChanged(REFIID aReportType,
   uint16_t err;
   switch (aStatus) {
   case REPORT_ACCESS_DENIED:
-    err = PositionErrorBinding::PERMISSION_DENIED;
+    err = PositionError_Binding::PERMISSION_DENIED;
     break;
   case REPORT_NOT_SUPPORTED:
   case REPORT_ERROR:
-    err = PositionErrorBinding::POSITION_UNAVAILABLE;
+    err = PositionError_Binding::POSITION_UNAVAILABLE;
     break;
   default:
     return S_OK;

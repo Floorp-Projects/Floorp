@@ -207,7 +207,7 @@ SourceBufferList::HighestEndTime()
 JSObject*
 SourceBufferList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SourceBufferListBinding::Wrap(aCx, this, aGivenProto);
+  return SourceBufferList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SourceBufferList, DOMEventTargetHelper,

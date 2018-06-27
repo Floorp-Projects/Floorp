@@ -151,8 +151,7 @@ private:
     }
 
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
-                            false /* non-bubbling */,
-                            false /* cancelable */, value, EmptyString(),
+                            CanBubble::eNo, Cancelable::eNo, value, EmptyString(),
                             EmptyString(), nullptr, ports);
     event->SetTrusted(true);
 
@@ -308,7 +307,7 @@ MessagePort::Initialize(const nsID& aUUID,
 JSObject*
 MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MessagePortBinding::Wrap(aCx, this, aGivenProto);
+  return MessagePort_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

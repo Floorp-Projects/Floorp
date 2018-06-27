@@ -65,7 +65,7 @@ PaymentResponse::~PaymentResponse()
 JSObject*
 PaymentResponse::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PaymentResponseBinding::Wrap(aCx, this, aGivenProto);
+  return PaymentResponse_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

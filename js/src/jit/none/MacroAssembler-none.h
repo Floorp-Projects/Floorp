@@ -16,7 +16,7 @@ namespace jit {
 
 static constexpr Register StackPointer { Registers::invalid_reg };
 static constexpr Register FramePointer { Registers::invalid_reg };
-static constexpr Register ReturnReg { Registers::invalid_reg };
+static constexpr Register ReturnReg { Registers::invalid_reg2 };
 static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::invalid_reg };
 static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::invalid_reg };
 static constexpr FloatRegister ReturnSimd128Reg = { FloatRegisters::invalid_reg };

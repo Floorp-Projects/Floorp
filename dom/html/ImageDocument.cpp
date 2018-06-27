@@ -143,7 +143,7 @@ ImageListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt, nsresult 
   ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
   nsContentUtils::DispatchChromeEvent(imgDoc, static_cast<nsIDocument*>(imgDoc),
                                       NS_LITERAL_STRING("ImageContentLoaded"),
-                                      true, true);
+                                      CanBubble::eYes, Cancelable::eYes);
   return MediaDocumentStreamListener::OnStopRequest(aRequest, aCtxt, aStatus);
 }
 
@@ -200,7 +200,7 @@ ImageDocument::Init()
 JSObject*
 ImageDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ImageDocumentBinding::Wrap(aCx, this, aGivenProto);
+  return ImageDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

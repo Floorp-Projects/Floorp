@@ -307,7 +307,8 @@ nsSimplePluginEvent::Run()
     LOG(("OBJLC [%p]: nsSimplePluginEvent firing event \"%s\"", mTarget.get(),
          NS_ConvertUTF16toUTF8(mEvent).get()));
     nsContentUtils::DispatchTrustedEvent(mDocument, mTarget,
-                                         mEvent, true, true);
+                                         mEvent, CanBubble::eYes,
+                                         Cancelable::eYes);
   }
   return NS_OK;
 }
@@ -3784,7 +3785,8 @@ nsObjectLoadingContent::MaybeFireErrorEvent()
     RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
       new LoadBlockingAsyncEventDispatcher(thisContent,
                                            NS_LITERAL_STRING("error"),
-                                           false, false);
+                                           CanBubble::eNo,
+                                           ChromeOnlyDispatch::eNo);
     loadBlockingAsyncDispatcher->PostDOMEvent();
   }
 }

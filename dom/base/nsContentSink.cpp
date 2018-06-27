@@ -1663,7 +1663,7 @@ nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
 
   nsContentUtils::DispatchChromeEvent(aDoc, aDoc,
                                       NS_LITERAL_STRING("DOMDocElementInserted"),
-                                      true, false);
+                                      CanBubble::eYes, Cancelable::eNo);
 }
 
 NS_IMETHODIMP

@@ -76,10 +76,6 @@ listheader {
   white-space: nowrap;
 }
 
-.listcell-icon {
-  margin-inline-end: 2px;
-}
-
 .listcell-label[disabled="true"] {
   color: GrayText;
 }

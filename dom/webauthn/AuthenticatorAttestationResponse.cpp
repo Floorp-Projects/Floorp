@@ -48,7 +48,7 @@ JSObject*
 AuthenticatorAttestationResponse::WrapObject(JSContext* aCx,
                                              JS::Handle<JSObject*> aGivenProto)
 {
-  return AuthenticatorAttestationResponseBinding::Wrap(aCx, this, aGivenProto);
+  return AuthenticatorAttestationResponse_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

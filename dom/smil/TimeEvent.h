@@ -28,7 +28,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return TimeEventBinding::Wrap(aCx, this, aGivenProto);
+    return TimeEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   void InitTimeEvent(const nsAString& aType, nsGlobalWindowInner* aView,

@@ -59,8 +59,8 @@ SVGLength::SetValueFromString(const nsAString &aString)
 inline static bool
 IsAbsoluteUnit(uint8_t aUnit)
 {
-  return aUnit >= SVGLengthBinding::SVG_LENGTHTYPE_CM &&
-         aUnit <= SVGLengthBinding::SVG_LENGTHTYPE_PC;
+  return aUnit >= SVGLength_Binding::SVG_LENGTHTYPE_CM &&
+         aUnit <= SVGLength_Binding::SVG_LENGTHTYPE_PC;
 }
 
 /**
@@ -71,8 +71,8 @@ IsAbsoluteUnit(uint8_t aUnit)
  *
  * Example usage: to find out how many centimeters there are per inch:
  *
- *   GetAbsUnitsPerAbsUnit(SVGLengthBinding::SVG_LENGTHTYPE_CM,
- *                         SVGLengthBinding::SVG_LENGTHTYPE_IN)
+ *   GetAbsUnitsPerAbsUnit(SVGLength_Binding::SVG_LENGTHTYPE_CM,
+ *                         SVGLength_Binding::SVG_LENGTHTYPE_IN)
  */
 inline static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit)
 {
@@ -104,10 +104,10 @@ SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
   if (aUnit == mUnit) {
     return mValue;
   }
-  if ((aUnit == SVGLengthBinding::SVG_LENGTHTYPE_NUMBER &&
-       mUnit == SVGLengthBinding::SVG_LENGTHTYPE_PX) ||
-      (aUnit == SVGLengthBinding::SVG_LENGTHTYPE_PX &&
-       mUnit == SVGLengthBinding::SVG_LENGTHTYPE_NUMBER)) {
+  if ((aUnit == SVGLength_Binding::SVG_LENGTHTYPE_NUMBER &&
+       mUnit == SVGLength_Binding::SVG_LENGTHTYPE_PX) ||
+      (aUnit == SVGLength_Binding::SVG_LENGTHTYPE_PX &&
+       mUnit == SVGLength_Binding::SVG_LENGTHTYPE_NUMBER)) {
     return mValue;
   }
   if (IsAbsoluteUnit(aUnit) && IsAbsoluteUnit(mUnit)) {
@@ -146,24 +146,24 @@ float
 SVGLength::GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) const
 {
   switch (mUnit) {
-    case SVGLengthBinding::SVG_LENGTHTYPE_NUMBER:
-    case SVGLengthBinding::SVG_LENGTHTYPE_PX:
+    case SVGLength_Binding::SVG_LENGTHTYPE_NUMBER:
+    case SVGLength_Binding::SVG_LENGTHTYPE_PX:
       return 1.0f;
-    case SVGLengthBinding::SVG_LENGTHTYPE_MM:
+    case SVGLength_Binding::SVG_LENGTHTYPE_MM:
       return INCHES_PER_MM_FLOAT * GetUserUnitsPerInch();
-    case SVGLengthBinding::SVG_LENGTHTYPE_CM:
+    case SVGLength_Binding::SVG_LENGTHTYPE_CM:
       return INCHES_PER_CM_FLOAT * GetUserUnitsPerInch();
-    case SVGLengthBinding::SVG_LENGTHTYPE_IN:
+    case SVGLength_Binding::SVG_LENGTHTYPE_IN:
       return GetUserUnitsPerInch();
-    case SVGLengthBinding::SVG_LENGTHTYPE_PT:
+    case SVGLength_Binding::SVG_LENGTHTYPE_PT:
       return (1.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
-    case SVGLengthBinding::SVG_LENGTHTYPE_PC:
+    case SVGLength_Binding::SVG_LENGTHTYPE_PC:
       return (12.0f/POINTS_PER_INCH_FLOAT) * GetUserUnitsPerInch();
-    case SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE:
+    case SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE:
       return GetUserUnitsPerPercent(aElement, aAxis);
-    case SVGLengthBinding::SVG_LENGTHTYPE_EMS:
+    case SVGLength_Binding::SVG_LENGTHTYPE_EMS:
       return SVGContentUtils::GetFontSize(const_cast<nsSVGElement*>(aElement));
-    case SVGLengthBinding::SVG_LENGTHTYPE_EXS:
+    case SVGLength_Binding::SVG_LENGTHTYPE_EXS:
       return SVGContentUtils::GetFontXHeight(const_cast<nsSVGElement*>(aElement));
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown unit type");
@@ -218,7 +218,7 @@ static uint16_t
 GetUnitTypeForString(const nsAString& unitStr)
 {
   if (unitStr.IsEmpty())
-    return SVGLengthBinding::SVG_LENGTHTYPE_NUMBER;
+    return SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
 
   nsAtom* unitAtom = NS_GetStaticAtom(unitStr);
 
@@ -229,7 +229,7 @@ GetUnitTypeForString(const nsAString& unitStr)
       }
     }
   }
-  return SVGLengthBinding::SVG_LENGTHTYPE_UNKNOWN;
+  return SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
 }
 
 } // namespace mozilla

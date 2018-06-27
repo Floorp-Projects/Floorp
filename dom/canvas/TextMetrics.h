@@ -32,7 +32,7 @@ public:
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
   {
-    return TextMetricsBinding::Wrap(aCx, this, aGivenProto, aReflector);
+    return TextMetrics_Binding::Wrap(aCx, this, aGivenProto, aReflector);
   }
 
 private:

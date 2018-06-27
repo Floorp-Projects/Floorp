@@ -39,7 +39,7 @@ NS_INTERFACE_MAP_END_INHERITING(MediaTrack)
 JSObject*
 VideoTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VideoTrackBinding::Wrap(aCx, this, aGivenProto);
+  return VideoTrack_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void VideoTrack::SetSelected(bool aSelected)

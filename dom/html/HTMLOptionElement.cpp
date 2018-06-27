@@ -404,7 +404,7 @@ HTMLOptionElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 JSObject*
 HTMLOptionElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLOptionElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLOptionElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

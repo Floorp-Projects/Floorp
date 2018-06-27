@@ -308,6 +308,9 @@ private:
    */
   bool HasLoadingFontFaces();
 
+  // Whether mReady is pending, or would be when created.
+  bool ReadyPromiseIsPending() const;
+
   // Helper function for HasLoadingFontFaces.
   void UpdateHasLoadingFontFaces();
 

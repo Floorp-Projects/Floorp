@@ -546,7 +546,7 @@ JSObject*
 HTMLObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   JS::Rooted<JSObject*> obj(aCx,
-    HTMLObjectElementBinding::Wrap(aCx, this, aGivenProto));
+    HTMLObjectElement_Binding::Wrap(aCx, this, aGivenProto));
   if (!obj) {
     return nullptr;
   }

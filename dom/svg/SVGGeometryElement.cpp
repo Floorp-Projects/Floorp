@@ -85,7 +85,7 @@ SVGGeometryElement::GeometryDependsOnCoordCtx()
   LengthAttributesInfo info = const_cast<SVGGeometryElement*>(this)->GetLengthInfo();
   for (uint32_t i = 0; i < info.mLengthCount; i++) {
     if (info.mLengths[i].GetSpecifiedUnitType() ==
-          SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE) {
+          SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE) {
       return true;
     }
   }

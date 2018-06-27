@@ -107,9 +107,11 @@ nsIConstraintValidation::CheckValidity()
   nsCOMPtr<nsIContent> content = do_QueryInterface(this);
   NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
 
-  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(),
+                                       content,
                                        NS_LITERAL_STRING("invalid"),
-                                       false, true);
+                                       CanBubble::eNo,
+                                       Cancelable::eYes);
   return false;
 }
 
@@ -136,7 +138,9 @@ nsIConstraintValidation::ReportValidity()
   bool defaultAction = true;
   nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
                                        NS_LITERAL_STRING("invalid"),
-                                       false, true, &defaultAction);
+                                       CanBubble::eNo,
+                                       Cancelable::eYes,
+                                       &defaultAction);
   if (!defaultAction) {
     return false;
   }

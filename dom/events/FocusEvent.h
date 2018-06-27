@@ -20,7 +20,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return FocusEventBinding::Wrap(aCx, this, aGivenProto);
+    return FocusEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   FocusEvent(EventTarget* aOwner,

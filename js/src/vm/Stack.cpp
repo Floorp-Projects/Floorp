@@ -203,6 +203,7 @@ InterpreterFrame::prologue(JSContext* cx)
     RootedScript script(cx, this->script());
 
     MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
+    MOZ_ASSERT(cx->realm() == script->realm());
 
     if (isEvalFrame()) {
         if (!script->bodyScope()->hasEnvironment()) {
@@ -252,6 +253,7 @@ void
 InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc)
 {
     RootedScript script(cx, this->script());
+    MOZ_ASSERT(cx->realm() == script->realm());
     probes::ExitScript(cx, script, script->functionNonDelazifying(), hasPushedGeckoProfilerFrame());
 
     // Check that the scope matches the environment at the point of leaving

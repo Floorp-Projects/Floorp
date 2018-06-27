@@ -60,6 +60,8 @@ function ElementEditor(container, node) {
   this.node = node;
   this.markup = this.container.markup;
   this.doc = this.markup.doc;
+  this.inspector = this.markup.inspector;
+  this.highlighters = this.markup.highlighters;
   this._cssProperties = getCssProperties(this.markup.toolbox);
 
   this.attrElements = new Map();
@@ -71,6 +73,9 @@ function ElementEditor(container, node) {
   this.attrList = null;
   this.newAttr = null;
   this.closeElt = null;
+
+  this.onDisplayBadgeClick = this.onDisplayBadgeClick.bind(this);
+  this.onTagEdit = this.onTagEdit.bind(this);
 
   // Create the main editor
   this.buildMarkup();
@@ -86,7 +91,7 @@ function ElementEditor(container, node) {
       maxWidth: () => getAutocompleteMaxWidth(this.tag, this.container.elt),
       trigger: "dblclick",
       stopOnReturn: true,
-      done: this.onTagEdit.bind(this),
+      done: this.onTagEdit,
       cssProperties: this._cssProperties
     });
   }
@@ -171,16 +176,17 @@ ElementEditor.prototype = {
 
     close.appendChild(this.doc.createTextNode(">"));
 
-    this.eventNode = this.doc.createElement("div");
-    this.eventNode.classList.add("markupview-event-badge");
-    this.eventNode.dataset.event = "true";
-    this.eventNode.textContent = "event";
-    this.eventNode.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
-    this.elt.appendChild(this.eventNode);
+    this.eventBadge = this.doc.createElement("div");
+    this.eventBadge.classList.add("markup-badge");
+    this.eventBadge.dataset.event = "true";
+    this.eventBadge.textContent = "event";
+    this.eventBadge.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
+    this.elt.appendChild(this.eventBadge);
 
-    this.displayNode = this.doc.createElement("div");
-    this.displayNode.classList.add("markupview-display-badge");
-    this.elt.appendChild(this.displayNode);
+    this.displayBadge = this.doc.createElement("div");
+    this.displayBadge.classList.add("markup-badge");
+    this.displayBadge.addEventListener("click", this.onDisplayBadgeClick);
+    this.elt.appendChild(this.displayBadge);
   },
 
   set selected(value) {
@@ -272,16 +278,24 @@ ElementEditor.prototype = {
     }
 
     // Update the event bubble display
-    this.eventNode.style.display = this.node.hasEventListeners ? "inline-block" : "none";
+    this.eventBadge.style.display = this.node.hasEventListeners ? "inline-block" : "none";
 
-    // Update the display type node
-    const showDisplayNode = this.node.displayType in DISPLAY_TYPES;
-    this.displayNode.textContent = this.node.displayType;
-    this.displayNode.dataset.display = showDisplayNode ? this.node.displayType : "";
-    this.displayNode.style.display = showDisplayNode ? "inline-block" : "none";
-    this.displayNode.title = showDisplayNode ? DISPLAY_TYPES[this.node.displayType] : "";
-
+    this.updateDisplayBadge();
     this.updateTextEditor();
+  },
+
+  /**
+   * Update the markup display badge.
+   */
+  updateDisplayBadge: function() {
+    const showDisplayBadge = this.node.displayType in DISPLAY_TYPES;
+    this.displayBadge.textContent = this.node.displayType;
+    this.displayBadge.dataset.display = showDisplayBadge ? this.node.displayType : "";
+    this.displayBadge.style.display = showDisplayBadge ? "inline-block" : "none";
+    this.displayBadge.title = showDisplayBadge ?
+      DISPLAY_TYPES[this.node.displayType] : "";
+    this.displayBadge.classList.toggle("active",
+      this.highlighters.gridHighlighterShown === this.node);
   },
 
   /**
@@ -627,6 +641,21 @@ ElementEditor.prototype = {
   },
 
   /**
+   * Called when the display badge is clicked. Toggles on the grid highlighter for the
+   * selected node if it is a grid container.
+   */
+  onDisplayBadgeClick: function(event) {
+    event.stopPropagation();
+
+    const target = event.target;
+    if (target.dataset.display !== "grid" || target.dataset.display !== "inline-grid") {
+      return;
+    }
+
+    this.highlighters.toggleGridHighlighter(this.inspector.selection.nodeFront, "markup");
+  },
+
+  /**
    * Called when the tag name editor has is done editing.
    */
   onTagEdit: function(newTagName, isCommit) {
@@ -646,6 +675,8 @@ ElementEditor.prototype = {
   },
 
   destroy: function() {
+    this.displayBadge.removeEventListener("click", this.onDisplayBadgeClick);
+
     for (const key in this.animationTimers) {
       clearTimeout(this.animationTimers[key]);
     }
