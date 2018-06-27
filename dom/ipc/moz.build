@@ -175,6 +175,7 @@ JAR_MANIFESTS += ['jar.mn']
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
 
