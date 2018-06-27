@@ -146,16 +146,32 @@ function promiseTimeout(aTime) {
  */
 function promiseWaitForVisit(aUrl) {
   return new Promise(resolve => {
-    function listener(aEvents) {
-      Assert.equal(aEvents.length, 1);
-      let event = aEvents[0];
-      Assert.equal(event.type, "page-visited");
-      if (event.url == aUrl) {
-        PlacesObservers.removeListener(["page-visited"], listener);
-        resolve([event.visitTime, event.transitionType]);
-      }
-    }
-    PlacesObservers.addListener(["page-visited"], listener);
+
+    let uri = NetUtil.newURI(aUrl);
+
+    PlacesUtils.history.addObserver({
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onVisits(aVisits) {
+        Assert.equal(aVisits.length, 1);
+        let {
+          uri: visitUri,
+          time,
+          transitionType,
+        } = aVisits[0];
+        if (visitUri.equals(uri)) {
+          PlacesUtils.history.removeObserver(this);
+          resolve([time, transitionType]);
+        }
+      },
+      onTitleChanged() {},
+      onDeleteURI() {},
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
+    });
+
   });
 }
 

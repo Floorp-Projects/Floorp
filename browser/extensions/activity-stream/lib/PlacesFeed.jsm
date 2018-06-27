@@ -60,6 +60,7 @@ class HistoryObserver extends Observer {
 
   onEndUpdateBatch() {}
 
+  onVisits() {}
 
   onTitleChanged() {}
 
