@@ -1,7 +1,6 @@
 import pytest
 
 from tests.support.asserts import assert_error, assert_success, assert_dialog_handled
-from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
 
 
@@ -15,11 +14,11 @@ def get_title(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
-def test_title_handle_prompt_dismiss(session):
+def test_title_handle_prompt_dismiss(session, create_dialog):
     session.url = inline("<title>WD doc title</title>")
 
     expected_title = read_global(session, "document.title")
-    create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
+    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
     result = get_title(session)
     assert_success(result, expected_title)
@@ -27,7 +26,7 @@ def test_title_handle_prompt_dismiss(session):
     assert read_global(session, "dismiss1") is None
 
     expected_title = read_global(session, "document.title")
-    create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
+    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
 
     result = get_title(session)
     assert_success(result, expected_title)
@@ -35,7 +34,7 @@ def test_title_handle_prompt_dismiss(session):
     assert read_global(session, "dismiss2") is False
 
     expected_title = read_global(session, "document.title")
-    create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
+    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
 
     result = get_title(session)
     assert_success(result, expected_title)
@@ -44,9 +43,9 @@ def test_title_handle_prompt_dismiss(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
-def test_title_handle_prompt_accept(session):
+def test_title_handle_prompt_accept(session, create_dialog):
     session.url = inline("<title>WD doc title</title>")
-    create_dialog(session)("alert", text="accept #1", result_var="accept1")
+    create_dialog("alert", text="accept #1", result_var="accept1")
 
     expected_title = read_global(session, "document.title")
 
@@ -56,7 +55,7 @@ def test_title_handle_prompt_accept(session):
     assert read_global(session, "accept1") is None
 
     expected_title = read_global(session, "document.title")
-    create_dialog(session)("confirm", text="accept #2", result_var="accept2")
+    create_dialog("confirm", text="accept #2", result_var="accept2")
 
     result = get_title(session)
     assert_success(result, expected_title)
@@ -64,7 +63,7 @@ def test_title_handle_prompt_accept(session):
     assert read_global(session, "accept2") is True
 
     expected_title = read_global(session, "document.title")
-    create_dialog(session)("prompt", text="accept #3", result_var="accept3")
+    create_dialog("prompt", text="accept #3", result_var="accept3")
 
     result = get_title(session)
     assert_success(result, expected_title)
