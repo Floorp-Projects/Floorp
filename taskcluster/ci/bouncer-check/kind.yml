@@ -4,18 +4,14 @@
 
 loader: taskgraph.loader.transform:loader
 
-kind-dependencies:
-    - release-beetmover-push-to-release
-
 transforms:
-    - taskgraph.transforms.release_deps:transforms
     - taskgraph.transforms.bouncer_check:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 job-defaults:
-    name: release-bouncer-check
-    description: release bouncer check
+    name: bouncer-check
+    description: bouncer check
     run-on-projects: []  # to make sure this never runs as part of CI
     shipping-phase: push
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -29,7 +25,7 @@ job-defaults:
         build_platform: linux64
         build_type: opt
     treeherder:
-        symbol: Rel(BncChk)
+        symbol: Rel(ckbouncer)
         kind: test
         tier: 1
 
@@ -38,7 +34,7 @@ jobs:
         shipping-product: firefox
         index:
             product: firefox
-            job-name: firefox-release-bouncer-check
+            job-name: firefox-bouncer-check
         run:
             config:
                 by-project:
@@ -59,7 +55,7 @@ jobs:
         shipping-product: devedition
         index:
             product: devedition
-            job-name: devedition-release-bouncer-check
+            job-name: devedition-bouncer-check
         run:
             config:
                 by-project:
