@@ -141,7 +141,7 @@ public:
     CLONE_INTO(DrawSurfaceCommand)(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
@@ -191,7 +191,7 @@ public:
     CLONE_INTO(DrawSurfaceWithShadowCommand)(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
   }
@@ -235,7 +235,7 @@ public:
     CLONE_INTO(DrawFilterCommand)(mFilter, mSourceRect, mDestPoint, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     RefPtr<FilterNode> filter = mFilter;
     if (mFilter->GetBackendType() == FilterBackend::FILTER_BACKEND_CAPTURE) {
@@ -284,7 +284,7 @@ public:
     CLONE_INTO(ClearRectCommand)(mRect);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->ClearRect(mRect);
   }
@@ -364,15 +364,9 @@ public:
     CLONE_INTO(FillRectCommand)(mRect, mPattern, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->FillRect(mRect, mPattern, mOptions);
-  }
-
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const override
-  {
-    aDeviceRect = aTransform.TransformBounds(mRect);
-    return true;
   }
 
   void Log(TreeLog& aStream) const override
@@ -411,7 +405,7 @@ public:
     CLONE_INTO(StrokeRectCommand)(mRect, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
@@ -454,7 +448,7 @@ public:
     CLONE_INTO(StrokeLineCommand)(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
@@ -496,15 +490,9 @@ public:
     CLONE_INTO(FillCommand)(mPath, mPattern, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Fill(mPath, mPattern, mOptions);
-  }
-
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const override
-  {
-    aDeviceRect = mPath->GetBounds(aTransform);
-    return true;
   }
 
   void Log(TreeLog& aStream) const override
@@ -523,47 +511,6 @@ private:
   StoredPattern mPattern;
   DrawOptions mOptions;
 };
-
-#ifndef M_SQRT2
-#define M_SQRT2 1.41421356237309504880
-#endif
-
-#ifndef M_SQRT1_2
-#define M_SQRT1_2 0.707106781186547524400844362104849039
-#endif
-
-// The logic for this comes from _cairo_stroke_style_max_distance_from_path
-static Rect
-PathExtentsToMaxStrokeExtents(const StrokeOptions &aStrokeOptions,
-                              const Rect &aRect,
-                              const Matrix &aTransform)
-{
-  double styleExpansionFactor = 0.5f;
-
-  if (aStrokeOptions.mLineCap == CapStyle::SQUARE) {
-    styleExpansionFactor = M_SQRT1_2;
-  }
-
-  if (aStrokeOptions.mLineJoin == JoinStyle::MITER &&
-      styleExpansionFactor < M_SQRT2 * aStrokeOptions.mMiterLimit) {
-    styleExpansionFactor = M_SQRT2 * aStrokeOptions.mMiterLimit;
-  }
-
-  styleExpansionFactor *= aStrokeOptions.mLineWidth;
-
-  double dx = styleExpansionFactor * hypot(aTransform._11, aTransform._21);
-  double dy = styleExpansionFactor * hypot(aTransform._22, aTransform._12);
-
-  // Even if the stroke only partially covers a pixel, it must still render to
-  // full pixels. Round up to compensate for this.
-  dx = ceil(dx);
-  dy = ceil(dy);
-
-  Rect result = aRect;
-  result.Inflate(dx, dy);
-  return result;
-}
-
 
 class StrokeCommand : public StrokeOptionsCommand
 {
@@ -584,15 +531,9 @@ public:
     CLONE_INTO(StrokeCommand)(mPath, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
-  }
-
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const override
-  {
-    aDeviceRect = PathExtentsToMaxStrokeExtents(mStrokeOptions, mPath->GetBounds(aTransform), aTransform);
-    return true;
   }
 
   void Log(TreeLog& aStream) const override
@@ -638,7 +579,7 @@ public:
     CLONE_INTO(FillGlyphsCommand)(mFont, glyphs, mPattern, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -692,7 +633,7 @@ public:
     CLONE_INTO(StrokeGlyphsCommand)(mFont, glyphs, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -737,7 +678,7 @@ public:
     CLONE_INTO(MaskCommand)(mSource, mMask, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
@@ -779,7 +720,7 @@ public:
     CLONE_INTO(MaskSurfaceCommand)(mSource, mMask, mOffset, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
@@ -817,7 +758,7 @@ public:
     CLONE_INTO(PushClipCommand)(mPath);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushClip(mPath);
   }
@@ -848,7 +789,7 @@ public:
     CLONE_INTO(PushClipRectCommand)(mRect);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushClipRect(mRect);
   }
@@ -889,7 +830,7 @@ public:
     CLONE_INTO(PushLayerCommand)(mOpaque, mOpacity, mMask, mMaskTransform, mBounds, mCopyBackground);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushLayer(mOpaque, mOpacity, mMask,
                    mMaskTransform, mBounds, mCopyBackground);
@@ -931,7 +872,7 @@ public:
     CLONE_INTO(PopClipCommand)();
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PopClip();
   }
@@ -958,7 +899,7 @@ public:
     CLONE_INTO(PopLayerCommand)();
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PopLayer();
   }
@@ -1053,7 +994,7 @@ public:
     CLONE_INTO(FlushCommand)();
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Flush();
   }
@@ -1080,7 +1021,7 @@ public:
     CLONE_INTO(BlurCommand)(mBlur);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Blur(mBlur);
   }
