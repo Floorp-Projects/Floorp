@@ -225,16 +225,6 @@ def current_session():
     return _current_session
 
 
-def add_browser_capabilites(configuration):
-    def update_capabilities(capabilities):
-        # Make sure there aren't keys in common.
-        assert not set(configuration["capabilities"]).intersection(set(capabilities))
-        result = dict(configuration["capabilities"])
-        result.update(capabilities)
-        return result
-    return update_capabilities
-
-
 def url(server_config):
     def inner(path, protocol="http", query="", fragment=""):
         port = server_config["ports"][protocol][0]
