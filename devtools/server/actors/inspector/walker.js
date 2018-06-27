@@ -769,11 +769,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // Use anonymous walkers to fetch ::before / ::after pseudo elements
       const firstChildWalker = this.getDocumentWalker(node.rawNode);
       const first = firstChildWalker.firstChild();
-      const hasBefore = first && this._ref(first).isBeforePseudoElement;
+      const hasBefore = first && first.nodeName === "_moz_generated_content_before";
 
       const lastChildWalker = this.getDocumentWalker(node.rawNode);
       const last = lastChildWalker.lastChild();
-      const hasAfter = last && this._ref(last).isAfterPseudoElement;
+      const hasAfter = last && last.nodeName === "_moz_generated_content_after";
 
       nodes = [
         // #shadow-root
