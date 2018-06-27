@@ -13,11 +13,26 @@ const TIMESTAMP3 = (Date.now() - 123894) * 1000;
 
 function promiseOnVisitObserved() {
   return new Promise(res => {
-    let listener = new PlacesWeakCallbackWrapper((events) => {
-      PlacesObservers.removeListener(["page-visited"], listener);
-      res();
-    });
-    PlacesObservers.addListener(["page-visited"], listener);
+    PlacesUtils.history.addObserver({
+      onBeginUpdateBatch: function onBeginUpdateBatch() {},
+      onEndUpdateBatch: function onEndUpdateBatch() {},
+      onPageChanged: function onPageChanged() {},
+      onTitleChanged: function onTitleChanged() {
+      },
+      onVisits: function onVisits() {
+        PlacesUtils.history.removeObserver(this);
+        res();
+      },
+      onDeleteVisits: function onDeleteVisits() {},
+      onPageExpired: function onPageExpired() {},
+      onDeleteURI: function onDeleteURI() {},
+      onClearHistory: function onClearHistory() {},
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsINavHistoryObserver,
+        Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS,
+        Ci.nsISupportsWeakReference
+      ])
+    }, true);
   });
 }
 

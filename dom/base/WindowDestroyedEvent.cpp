@@ -8,7 +8,6 @@
 #include "nsIAppStartup.h"
 #include "nsToolkitCompsCID.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 
 namespace mozilla {
 

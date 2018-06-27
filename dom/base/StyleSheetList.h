@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_StyleSheetList_h
 #define mozilla_dom_StyleSheetList_h
 
-#include "nsContentUtils.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsStubMutationObserver.h"
 #include "nsWrapperCache.h"
