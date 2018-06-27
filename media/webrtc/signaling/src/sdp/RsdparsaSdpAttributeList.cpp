@@ -478,6 +478,9 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kExtmapAttribute:
         LoadExtmap(attributeList);
         return;
+      case SdpAttribute::kSimulcastAttribute:
+        LoadSimulcast(attributeList);
+        return;
 
       case SdpAttribute::kDtlsMessageAttribute:
       case SdpAttribute::kLabelAttribute:
@@ -487,7 +490,6 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kRtcpRsizeAttribute:
       case SdpAttribute::kSctpPortAttribute:
       case SdpAttribute::kCandidateAttribute:
-      case SdpAttribute::kSimulcastAttribute:
       case SdpAttribute::kConnectionAttribute:
       case SdpAttribute::kIceMismatchAttribute:
         // TODO: Not implemented, or not applicable.
@@ -950,6 +952,57 @@ RsdparsaSdpAttributeList::LoadRtcpFb(RustAttributeList* attributeList)
   SetAttribute(rtcpfbList.release());
 }
 
+SdpSimulcastAttribute::Versions
+LoadSimulcastVersions(const RustSdpAttributeSimulcastVersionVec*
+                      rustVersionList)
+{
+  size_t rustVersionCount = sdp_simulcast_get_version_count(rustVersionList);
+  auto rustVersionArray = MakeUnique<RustSdpAttributeSimulcastVersion[]>
+                                   (rustVersionCount);
+  sdp_simulcast_get_versions(rustVersionList, rustVersionCount,
+                             rustVersionArray.get());
+
+  SdpSimulcastAttribute::Versions versions;
+  versions.type = SdpSimulcastAttribute::Versions::kRid;
+
+  for(size_t i = 0; i < rustVersionCount; i++) {
+    const RustSdpAttributeSimulcastVersion& rustVersion = rustVersionArray[i];
+    size_t rustIdCount = sdp_simulcast_get_ids_count(rustVersion.ids);
+    if (!rustIdCount) {
+      continue;
+    }
+
+    SdpSimulcastAttribute::Version version;
+    auto rustIdArray = MakeUnique<RustSdpAttributeSimulcastId[]>(rustIdCount);
+    sdp_simulcast_get_ids(rustVersion.ids, rustIdCount, rustIdArray.get());
+
+    for(size_t j = 0; j < rustIdCount; j++){
+      const RustSdpAttributeSimulcastId& rustId = rustIdArray[j];
+      std::string id = convertStringView(rustId.id);
+      // TODO: Bug 1225877. Added support for 'paused'-state
+      version.choices.push_back(id);
+    }
+
+    versions.push_back(version);
+  }
+
+  return versions;
+}
+
+void
+RsdparsaSdpAttributeList::LoadSimulcast(RustAttributeList* attributeList)
+{
+  RustSdpAttributeSimulcast rustSimulcast;
+  if (NS_SUCCEEDED(sdp_get_simulcast(attributeList, &rustSimulcast))) {
+    auto simulcast = MakeUnique<SdpSimulcastAttribute>();
+
+    simulcast->sendVersions = LoadSimulcastVersions(rustSimulcast.send);
+    simulcast->recvVersions = LoadSimulcastVersions(rustSimulcast.recv);
+
+    SetAttribute(simulcast.release());
+  }
+}
+
 void
 RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList)
 {
@@ -1044,19 +1097,32 @@ RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList)
   if (numRids == 0) {
     return;
   }
-  auto rustRids = MakeUnique<StringView[]>(numRids);
-  sdp_get_rids(attributeList, numRids,
-               rustRids.get());
-  auto rids = MakeUnique<SdpRidAttributeList>();
+
+  auto rustRids = MakeUnique<RustSdpAttributeRid[]>(numRids);
+  sdp_get_rids(attributeList, numRids, rustRids.get());
+
+  auto ridList = MakeUnique<SdpRidAttributeList>();
   for(size_t i = 0; i < numRids; i++) {
-    std::string rid = convertStringView(rustRids[i]);
-    std::string error;
-    size_t errorPos;
-    if (!rids->PushEntry(rid, &error, &errorPos)) {
-      // TODO: handle error, see Bug 1438237
-    }
+    const RustSdpAttributeRid& rid = rustRids[i];
+
+    std::string id = convertStringView(rid.id);
+    auto direction = static_cast<sdp::Direction>(rid.direction);
+    std::vector<uint16_t> formats = convertU16Vec(rid.formats);
+
+    EncodingConstraints parameters;
+    parameters.maxWidth = rid.params.max_width;
+    parameters.maxHeight = rid.params.max_height;
+    parameters.maxFps = rid.params.max_fps;
+    parameters.maxFs = rid.params.max_fs;
+    parameters.maxBr = rid.params.max_br;
+    parameters.maxPps = rid.params.max_pps;
+
+    std::vector<std::string> depends = convertStringVec(rid.depends);
+
+    ridList->PushEntry(id, direction, formats, parameters, depends);
   }
-  SetAttribute(rids.release());
+
+  SetAttribute(ridList.release());
 }
 
 void

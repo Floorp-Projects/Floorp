@@ -90,6 +90,21 @@ Test preset with fuzzy subcommand
     ]
   }
   
+
+  $ ./mach try fuzzy $testargs --preset baz -q "'foo"
+  Commit message:
+  Fuzzy query='foo&query='baz
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+    "tasks":[
+      "build-baz",
+      "test/foo-debug",
+      "test/foo-opt"
+    ]
+  }
+  
   $ ./mach try $testargs --preset baz
   Commit message:
   Fuzzy query='baz
@@ -102,9 +117,6 @@ Test preset with fuzzy subcommand
     ]
   }
   
-  $ ./mach try fuzzy $testargs --list-presets
-  baz: 'baz
-
   $ ./mach try fuzzy $testargs --list-presets
   baz: 'baz
   $ ./mach try fuzzy $testargs --edit-presets

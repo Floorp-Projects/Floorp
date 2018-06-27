@@ -32,15 +32,15 @@ async function check_uri(uri, frecency, hidden) {
 
 async function waitVisitedNotifications() {
   let redirectNotified = false;
-  await PlacesTestUtils.waitForNotification("onVisits", visits => {
+  await PlacesTestUtils.waitForNotification("page-visited", visits => {
     is(visits.length, 1, "Was notified for the right number of visits.");
-    let {uri} = visits[0];
-    info("Received onVisits: " + uri.spec);
-    if (uri.equals(REDIRECT_URI)) {
+    let {url} = visits[0];
+    info("Received 'page-visited': " + url);
+    if (url == REDIRECT_URI.spec) {
       redirectNotified = true;
     }
-    return uri.equals(TARGET_URI);
-  }, "history");
+    return url == TARGET_URI.spec;
+  }, "places");
   return redirectNotified;
 }
 

@@ -44,9 +44,6 @@ add_task(async function test_remove_single() {
       observer = {
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
-        onVisits(aVisits) {
-          reject(new Error("Unexpected call to onVisits " + aVisits.length));
-        },
         onTitleChanged(aUri) {
           reject(new Error("Unexpected call to onTitleChanged " + aUri.spec));
         },

@@ -6047,40 +6047,18 @@ nsComputedDOMStyle::RegisterPrefChangeCallbacks()
   // easy to grab specific property data from ServoCSSPropList.h based on the
   // entries iterated in nsComputedDOMStylePropertyList.h.
   ComputedStyleMap* data = GetComputedStyleMap();
-#define REGISTER_CALLBACK(pref_)                                             \
-  if (pref_[0]) {                                                            \
-    Preferences::RegisterCallback(MarkComputedStyleMapDirty, pref_, data);   \
+  for (const auto* p = nsCSSProps::kPropertyPrefTable;
+       p->mPropID != eCSSProperty_UNKNOWN; p++) {
+    Preferences::RegisterCallback(MarkComputedStyleMapDirty, p->mPref, data);
   }
-#define CSS_PROP_LONGHAND(prop_, id_, method_, flags_, pref_) \
-  REGISTER_CALLBACK(pref_)
-#define CSS_PROP_SHORTHAND(prop_, id_, method_, flags_, pref_) \
-  REGISTER_CALLBACK(pref_)
-#define CSS_PROP_ALIAS(prop_, aliasid_, id_, method_, pref_) \
-  REGISTER_CALLBACK(pref_)
-#include "mozilla/ServoCSSPropList.h"
-#undef CSS_PROP_ALIAS
-#undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_LONGHAND
-#undef REGISTER_CALLBACK
 }
 
 /* static */ void
 nsComputedDOMStyle::UnregisterPrefChangeCallbacks()
 {
   ComputedStyleMap* data = GetComputedStyleMap();
-#define UNREGISTER_CALLBACK(pref_)                                             \
-  if (pref_[0]) {                                                              \
-    Preferences::UnregisterCallback(MarkComputedStyleMapDirty, pref_, data);   \
+  for (const auto* p = nsCSSProps::kPropertyPrefTable;
+       p->mPropID != eCSSProperty_UNKNOWN; p++) {
+    Preferences::UnregisterCallback(MarkComputedStyleMapDirty, p->mPref, data);
   }
-#define CSS_PROP_LONGHAND(prop_, id_, method_, flags_, pref_) \
-  UNREGISTER_CALLBACK(pref_)
-#define CSS_PROP_SHORTHAND(prop_, id_, method_, flags_, pref_) \
-  UNREGISTER_CALLBACK(pref_)
-#define CSS_PROP_ALIAS(prop_, aliasid_, id_, method_, pref_) \
-  UNREGISTER_CALLBACK(pref_)
-#include "mozilla/ServoCSSPropList.h"
-#undef CSS_PROP_ALIAS
-#undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_LONGHAND
-#undef UNREGISTER_CALLBACK
 }

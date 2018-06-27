@@ -48,7 +48,6 @@ function test() {
 
     onBeginUpdateBatch: function() { },
     onEndUpdateBatch: function() { },
-    onVisits: function() { },
     onTitleChanged: function() { },
     onDeleteURI: function() { },
     onClearHistory: function() { },

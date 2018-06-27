@@ -46,3 +46,9 @@ WEBIDL_FILES = [
     'WebExtensionContentScript.webidl',
     'WebExtensionPolicy.webidl',
 ]
+
+if CONFIG['MOZ_PLACES']:
+    WEBIDL_FILES += [
+        'PlacesEvent.webidl',
+        'PlacesObservers.webidl',
+    ]

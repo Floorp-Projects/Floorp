@@ -144,7 +144,7 @@ class ArtifactJob(object):
 
     # We can tell our input is a test archive by this suffix, which happens to
     # be the same across platforms.
-    _test_archive_suffix = '.common.tests.zip'
+    _test_archive_suffixes = ('.common.tests.zip', '.common.tests.tar.gz')
 
     def __init__(self, package_re, tests_re, log=None,
                  download_symbols=False,
@@ -190,7 +190,7 @@ class ArtifactJob(object):
                              'found none!'.format(re=self._tests_re))
 
     def process_artifact(self, filename, processed_filename):
-        if filename.endswith(ArtifactJob._test_archive_suffix) and self._tests_re:
+        if filename.endswith(ArtifactJob._test_archive_suffixes) and self._tests_re:
             return self.process_tests_artifact(filename, processed_filename)
         if self._symbols_archive_suffix and filename.endswith(self._symbols_archive_suffix):
             return self.process_symbols_archive(filename, processed_filename)
@@ -497,31 +497,41 @@ class WinArtifactJob(ArtifactJob):
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
     'android-api-16-opt': (AndroidArtifactJob, (r'(public/build/fennec-(.*)\.android-arm.apk|public/build/target\.apk)',
-                                                r'public/build/fennec-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
+                                                r'public/build/fennec-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                                r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'android-api-16-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                                  r'public/build/target\.common\.tests\.zip')),
+                                                  r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'android-x86-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
-                                             r'public/build/target\.common\.tests\.zip')),
+                                             r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux-opt': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                     r'public/build/target\.common\.tests\.zip')),
+                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                       r'public/build/target\.common\.tests\.zip')),
+                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux64-opt': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                       r'public/build/target\.common\.tests\.zip')),
+                                       r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'linux64-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
-                                         r'public/build/target\.common\.tests\.zip')),
+                                         r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'macosx64-opt': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg|public/build/target\.dmg',
-                                      r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
+                                      r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
     'macosx64-debug': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg|public/build/target\.dmg',
-                                        r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
-    'win32-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.zip|public/build/target\.zip',
-                                   r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
-    'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.zip|public/build/target\.zip',
-                                     r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
-    'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.zip|public/build/target\.zip',
-                                   r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
-    'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.zip|public/build/target\.zip',
-                                     r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
+                                        r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                        r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win32-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
+                                   r'public/build/target\.(zip|tar\.gz)',
+                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.(zip|tar\.gz)|'
+                                     r'public/build/target\.(zip|tar\.gz)',
+                                     r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
+                                   r'public/build/target\.(zip|tar\.gz)',
+                                   r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                   r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|public/build/target\.(zip|tar\.gz)',
+                                     r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                     r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
 }
 
 

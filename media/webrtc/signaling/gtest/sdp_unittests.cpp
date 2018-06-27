@@ -34,6 +34,7 @@ extern "C" {
 #define CRLF "\r\n"
 
 #define SKIP_TEST_WITH_RUST_PARSER if (!::testing::get<1>(GetParam())) {return;}
+#define SKIP_TEST_WITH_SIPCC_PARSER if (IsParsingWithSipccParser()) {return;}
 
 using namespace mozilla;
 
@@ -1905,8 +1906,9 @@ const std::string kBasicAudioVideoOffer =
 "a=ssrc:1111 foo:bar" CRLF
 "a=imageattr:120 send * recv *" CRLF
 "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
-"a=simulcast:recv pt=120;121" CRLF
-"a=rid:bar recv pt=96;max-width=800;max-height=600" CRLF
+"a=rid:bar recv pt=120;max-width=800;max-height=600" CRLF
+"a=rid:bar123 recv max-width=1920;max-height=1080" CRLF
+"a=simulcast:recv rid=bar;bar123" CRLF
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
 "a=rtpmap:0 PCMU/8000" CRLF
@@ -2895,8 +2897,7 @@ TEST_P(NewSdpTest, CheckMsid) {
   ASSERT_EQ("", msids3.mMsids[0].appdata);
 }
 
-TEST_P(NewSdpTest, CheckRid)
-{
+TEST_P(NewSdpTest, CheckRid) {
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -2913,13 +2914,20 @@ TEST_P(NewSdpTest, CheckRid)
   const SdpRidAttributeList& rids =
     mSdp->GetMediaSection(1).GetAttributeList().GetRid();
 
-  ASSERT_EQ(1U, rids.mRids.size());
+  ASSERT_EQ(2U, rids.mRids.size());
+
   ASSERT_EQ("bar", rids.mRids[0].id);
   ASSERT_EQ(sdp::kRecv, rids.mRids[0].direction);
   ASSERT_EQ(1U, rids.mRids[0].formats.size());
-  ASSERT_EQ(96U, rids.mRids[0].formats[0]);
+  ASSERT_EQ(120U, rids.mRids[0].formats[0]);
   ASSERT_EQ(800U, rids.mRids[0].constraints.maxWidth);
   ASSERT_EQ(600U, rids.mRids[0].constraints.maxHeight);
+
+  ASSERT_EQ("bar123", rids.mRids[1].id);
+  ASSERT_EQ(sdp::kRecv, rids.mRids[1].direction);
+  ASSERT_EQ(0U, rids.mRids[1].formats.size());
+  ASSERT_EQ(1920U, rids.mRids[1].constraints.maxWidth);
+  ASSERT_EQ(1080U, rids.mRids[1].constraints.maxHeight);
 }
 
 TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
@@ -3217,9 +3225,7 @@ TEST_P(NewSdpTest, CheckImageattr)
   ASSERT_EQ(480U, imageattr_1.recvSets[0].yRange.discreteValues.front());
 }
 
-TEST_P(NewSdpTest, CheckSimulcast)
-{
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432920
+TEST_P(NewSdpTest, CheckSimulcast) {
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3239,10 +3245,10 @@ TEST_P(NewSdpTest, CheckSimulcast)
   ASSERT_EQ(2U, simulcast.recvVersions.size());
   ASSERT_EQ(0U, simulcast.sendVersions.size());
   ASSERT_EQ(1U, simulcast.recvVersions[0].choices.size());
-  ASSERT_EQ("120", simulcast.recvVersions[0].choices[0]);
+  ASSERT_EQ("bar", simulcast.recvVersions[0].choices[0]);
   ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
-  ASSERT_EQ("121", simulcast.recvVersions[1].choices[0]);
-  ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
+  ASSERT_EQ("bar123", simulcast.recvVersions[1].choices[0]);
+  ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid,
             simulcast.recvVersions.type);
 }
 
@@ -3764,13 +3770,13 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
            "m=video 56436 RTP/SAVPF 120" CRLF
            "a=rtpmap:120 VP8/90000" CRLF
            "a=sendrecv" CRLF
-           "a=simulcast: send rid=9" CRLF,
+           "a=simulcast: send rid=9" CRLF
+           "a=rid:9 recv max-width=800;max-height=600" CRLF,
            false);
   ASSERT_NE("", GetParseErrors());
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432932
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3780,23 +3786,8 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
            "m=video 56436 RTP/SAVPF 120" CRLF
            "a=rtpmap:120 VP8/90000" CRLF
            "a=sendrecv" CRLF
-           "a=simulcast: recv rid=9" CRLF,
-           false);
-  ASSERT_NE("", GetParseErrors());
-}
-
-TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchPt) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432933
-  ParseSdp("v=0" CRLF
-           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
-           "s=SIP Call" CRLF
-           "c=IN IP4 198.51.100.7" CRLF
-           "b=CT:5000" CRLF
-           "t=0 0" CRLF
-           "m=video 56436 RTP/SAVPF 120" CRLF
-           "a=rtpmap:120 VP8/90000" CRLF
-           "a=sendrecv" CRLF
-           "a=simulcast: send pt=9" CRLF,
+           "a=simulcast: recv rid=9" CRLF
+           "a=rid:9 send max-width=800;max-height=600" CRLF,
            false);
   ASSERT_NE("", GetParseErrors());
 }
@@ -3811,7 +3802,7 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
            "m=video 56436 RTP/SAVPF 120" CRLF
            "a=rtpmap:120 VP8/90000" CRLF
            "a=recvonly" CRLF
-           "a=simulcast: send pt=120" CRLF,
+           "a=simulcast: send rid=120" CRLF,
            false);
   ASSERT_NE("", GetParseErrors());
 }
@@ -3826,7 +3817,24 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNotReceiving) {
            "m=video 56436 RTP/SAVPF 120" CRLF
            "a=rtpmap:120 VP8/90000" CRLF
            "a=sendonly" CRLF
-           "a=simulcast: recv pt=120" CRLF,
+           "a=simulcast: recv rid=120" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidRidNoSuchPt) {
+  SKIP_TEST_WITH_SIPCC_PARSER
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: recv rid=9" CRLF
+           "a=rid:9 recv pt=101;max-width=800;max-height=600" CRLF,
            false);
   ASSERT_NE("", GetParseErrors());
 }
@@ -4983,18 +4991,18 @@ TEST(NewSdpTestNoFixture, CheckSimulcastSerialize)
   std::ostringstream os;
 
   SdpSimulcastAttribute simulcast;
-  simulcast.recvVersions.type = SdpSimulcastAttribute::Versions::kPt;
+  simulcast.recvVersions.type = SdpSimulcastAttribute::Versions::kRid;
   simulcast.recvVersions.push_back(SdpSimulcastAttribute::Version());
   simulcast.recvVersions.back().choices.push_back("8");
   simulcast.Serialize(os);
-  ASSERT_EQ("a=simulcast: recv pt=8" CRLF, os.str());
+  ASSERT_EQ("a=simulcast: recv rid=8" CRLF, os.str());
   os.str("");
 
+  simulcast.sendVersions.type = SdpSimulcastAttribute::Versions::kRid;
   simulcast.sendVersions.push_back(SdpSimulcastAttribute::Version());
   simulcast.sendVersions.back().choices.push_back("9");
   simulcast.Serialize(os);
-  ASSERT_EQ("a=simulcast: send rid=9 recv pt=8" CRLF, os.str());
-  os.str("");
+  ASSERT_EQ("a=simulcast: send rid=9 recv rid=8" CRLF, os.str());
 }
 
 static SdpSimulcastAttribute

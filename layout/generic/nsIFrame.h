@@ -4016,7 +4016,7 @@ public:
   /**
    * Returns true if the frame is scrolled out of view.
    */
-  bool IsScrolledOutOfView();
+  bool IsScrolledOutOfView() const;
 
   /**
    * Computes a 2D matrix from the -moz-window-transform and

@@ -59,4 +59,18 @@ std::vector<uint8_t> convertU8Vec(U8Vec* vec)
   return ret;
 }
 
+std::vector<uint16_t> convertU16Vec(U16Vec* vec)
+{
+  std::vector<std::uint16_t> ret;
+
+  size_t len = u16_vec_len(vec);
+  for (size_t i = 0; i < len; i++) {
+    uint16_t word;
+    u16_vec_get(vec, i, &word);
+    ret.push_back(word);
+  }
+
+  return ret;
+}
+
 }

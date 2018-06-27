@@ -338,6 +338,7 @@ var PlacesUtils = {
   TOPIC_BOOKMARKS_RESTORE_FAILED: "bookmarks-restore-failed",
 
   ACTION_SCHEME: "moz-action:",
+  observers: PlacesObservers,
 
   /**
     * GUIDs associated with virtual queries that are used for displaying the
