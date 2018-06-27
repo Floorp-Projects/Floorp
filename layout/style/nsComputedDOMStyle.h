@@ -782,6 +782,8 @@ private:
 #ifdef DEBUG
   bool mFlushedPendingReflows;
 #endif
+
+  friend struct ComputedStyleMap;
 };
 
 already_AddRefed<nsComputedDOMStyle>
