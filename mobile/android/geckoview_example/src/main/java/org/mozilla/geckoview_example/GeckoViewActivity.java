@@ -143,7 +143,8 @@ public class GeckoViewActivity extends AppCompatActivity {
         GeckoSession session = new GeckoSession();
         session.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, mUseMultiprocess);
         session.getSettings().setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, mUsePrivateBrowsing);
-        session.getSettings().setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true);
+        session.getSettings().setBoolean(
+            GeckoSessionSettings.USE_TRACKING_PROTECTION, mUseTrackingProtection);
 
         connectSession(session);
 
@@ -180,11 +181,8 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     private void updateTrackingProtection(GeckoSession session) {
-        int categories = mUseTrackingProtection ?
-                TrackingProtectionDelegate.CATEGORY_ALL :
-                TrackingProtectionDelegate.CATEGORY_NONE;
-
-        sGeckoRuntime.getSettings().setTrackingProtectionCategories(categories);
+        session.getSettings().setBoolean(
+            GeckoSessionSettings.USE_TRACKING_PROTECTION, mUseTrackingProtection);
     }
 
     @Override
