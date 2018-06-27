@@ -882,6 +882,7 @@ $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleane
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
 	RUSTDOC=$(RUSTDOC) \
+	RUSTFMT=$(RUSTFMT) \
 	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
