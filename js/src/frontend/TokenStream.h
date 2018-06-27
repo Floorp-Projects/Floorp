@@ -1096,6 +1096,15 @@ class TokenStreamCharsShared
     MOZ_MUST_USE bool copyCharBufferTo(JSContext* cx,
                                        UniquePtr<char16_t[], JS::FreePolicy>* destination);
 
+    /**
+     * Determine whether a code unit constitutes a complete ASCII code point.
+     * (The code point's exact value might not be used, however, if subsequent
+     * code observes that |unit| is part of a LineTerminatorSequence.)
+     */
+    static constexpr MOZ_ALWAYS_INLINE MOZ_MUST_USE bool isAsciiCodePoint(int32_t unit) {
+        return mozilla::IsAscii(unit);
+    }
+
   public:
     CharBuffer& getCharBuffer() { return charBuffer; }
 };
@@ -1163,15 +1172,6 @@ class TokenStreamCharsBase
         }
 
         return true;
-    }
-
-    /**
-     * Determine whether a code unit constitutes a complete ASCII code point.
-     * (The code point's exact value might not be used, however, if subsequent
-     * code observes that |unit| is part of a LineTerminatorSequence.)
-     */
-    static constexpr MOZ_ALWAYS_INLINE MOZ_MUST_USE bool isAsciiCodePoint(CharT unit) {
-        return mozilla::IsAscii(unit);
     }
 
   protected:
@@ -1360,7 +1360,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
   protected:
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
-    using CharsBase::isAsciiCodePoint;
+    using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::sourceUnits;
     using GeneralCharsBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
@@ -1392,7 +1392,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      *
      * This may change the current |sourceUnits| offset.
      */
-    MOZ_MUST_USE bool getFullAsciiCodePoint(char16_t lead, int32_t* codePoint) {
+    MOZ_MUST_USE bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
         MOZ_ASSERT(isAsciiCodePoint(lead),
                    "non-ASCII code units must be handled separately");
         MOZ_ASSERT(lead == sourceUnits.previousCodeUnit(),
@@ -1427,7 +1427,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      *
      * This may change the current |sourceUnits| offset.
      */
-    MOZ_MUST_USE bool getNonAsciiCodePoint(char16_t lead, int32_t* cp);
+    MOZ_MUST_USE bool getNonAsciiCodePoint(int32_t lead, int32_t* cp);
 
     /**
      * Unget a full code point (ASCII or not) without altering line/column
@@ -1446,7 +1446,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
      * line/column updates that were performed for it.  Don't use this if the
      * code point was gotten *without* line/column state being updated!
      */
-    void ungetNonAsciiNormalizedCodePoint(uint32_t codePoint) {
+    void ungetNonAsciiNormalizedCodePoint(int32_t codePoint) {
         MOZ_ASSERT_IF(isAsciiCodePoint(codePoint),
                       codePoint == '\n');
         MOZ_ASSERT(codePoint != unicode::LINE_SEPARATOR,
@@ -1552,7 +1552,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::getCodeUnit;
     using SpecializedCharsBase::getFullAsciiCodePoint;
     using SpecializedCharsBase::getNonAsciiCodePoint;
-    using CharsBase::isAsciiCodePoint;
+    using TokenStreamCharsShared::isAsciiCodePoint;
     using CharsBase::matchCodeUnit;
     using GeneralCharsBase::matchUnicodeEscapeIdent;
     using GeneralCharsBase::matchUnicodeEscapeIdStart;
