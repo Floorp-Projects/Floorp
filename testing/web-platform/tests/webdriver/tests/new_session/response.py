@@ -5,15 +5,15 @@ import uuid
 from tests.support.asserts import assert_success
 
 
-def test_sessionid(new_session, add_browser_capabilites):
-    response, _ = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({})}})
+def test_sessionid(new_session, add_browser_capabilities):
+    response, _ = new_session({"capabilities": {"alwaysMatch": add_browser_capabilities({})}})
     value = assert_success(response)
     assert isinstance(value["sessionId"], basestring)
     uuid.UUID(hex=value["sessionId"])
 
 
-def test_capabilites(new_session, add_browser_capabilites):
-    response, _ = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({})}})
+def test_capabilites(new_session, add_browser_capabilities):
+    response, _ = new_session({"capabilities": {"alwaysMatch": add_browser_capabilities({})}})
     value = assert_success(response)
     assert isinstance(value["capabilities"], dict)
 
@@ -34,8 +34,8 @@ def test_capabilites(new_session, add_browser_capabilites):
             list(expected_capabilities - all_capabilities), all_capabilities))
 
 
-def test_data(new_session, add_browser_capabilites, platform_name):
-    response, _ = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({})}})
+def test_data(new_session, add_browser_capabilities, platform_name):
+    response, _ = new_session({"capabilities": {"alwaysMatch": add_browser_capabilities({})}})
     value = assert_success(response)
 
     assert isinstance(value["capabilities"]["browserName"], basestring)
@@ -53,9 +53,9 @@ def test_data(new_session, add_browser_capabilites, platform_name):
     assert value["capabilities"]["pageLoadStrategy"] == "normal"
 
 
-def test_timeouts(new_session, add_browser_capabilites, platform_name):
+def test_timeouts(new_session, add_browser_capabilities, platform_name):
     response, _ = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilites({"timeouts": {"implicit": 1000}}),
+        "alwaysMatch": add_browser_capabilities({"timeouts": {"implicit": 1000}}),
     }})
     value = assert_success(response)
 
@@ -66,9 +66,9 @@ def test_timeouts(new_session, add_browser_capabilites, platform_name):
     }
 
 
-def test_pageLoadStrategy(new_session, add_browser_capabilites, platform_name):
+def test_pageLoadStrategy(new_session, add_browser_capabilities, platform_name):
     response, _ = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilites({"pageLoadStrategy": "eager"})}})
+        "alwaysMatch": add_browser_capabilities({"pageLoadStrategy": "eager"})}})
     value = assert_success(response)
 
     assert value["capabilities"]["pageLoadStrategy"] == "eager"

@@ -1,7 +1,6 @@
 import pytest
 
 from tests.support.fixtures import (
-    add_browser_capabilites,
     add_event_listeners,
     configuration,
     create_dialog,
@@ -27,7 +26,6 @@ def pytest_generate_tests(metafunc):
             metafunc.parametrize("capabilities", marker.args, ids=None)
 
 
-pytest.fixture()(add_browser_capabilites)
 pytest.fixture()(add_event_listeners)
 pytest.fixture(scope="session")(configuration)
 pytest.fixture()(create_dialog)
