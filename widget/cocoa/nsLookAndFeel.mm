@@ -541,6 +541,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ContextMenuOffsetHorizontal:
       aResult = 1;
       break;
+    case eIntID_SystemUsesDarkTheme:
+      aResult = SystemWantsDarkTheme();
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
@@ -587,6 +590,14 @@ bool nsLookAndFeel::SystemWantsOverlayScrollbars()
 bool nsLookAndFeel::AllowOverlayScrollbarsOverlap()
 {
   return (UseOverlayScrollbars());
+}
+
+bool nsLookAndFeel::SystemWantsDarkTheme()
+{
+  // This returns true if the macOS system appearance is set to dark mode, false
+  // otherwise.
+  return !![[NSUserDefaults standardUserDefaults]
+             stringForKey:@"AppleInterfaceStyle"];
 }
 
 bool
