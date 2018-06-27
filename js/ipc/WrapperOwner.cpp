@@ -1233,7 +1233,9 @@ JSObject*
 WrapperOwner::fromLocalObjectVariant(JSContext* cx, const LocalObject& objVar)
 {
     Maybe<ObjectId> id(ObjectId::deserialize(objVar.serializedId()));
-    MOZ_RELEASE_ASSERT(id.isSome());
+    if (id.isNothing()) {
+        return nullptr;
+    }
     Rooted<JSObject*> obj(cx, findObjectById(cx, id.value()));
     if (!obj)
         return nullptr;
