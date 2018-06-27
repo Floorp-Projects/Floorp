@@ -17,6 +17,7 @@ const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 
+const DARK_THEME_ID    = "firefox-compact-dark@mozilla.org";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
@@ -71,6 +72,10 @@ var _themeIDBeingDisabled = null;
 // Holds optional fallback theme data that will be returned when no data for an
 // active theme can be found. This the case for WebExtension Themes, for example.
 var _fallbackThemeData = null;
+
+// Holds whether or not the default theme should display in dark mode. This is
+// typically the case when the OS has a dark system appearance.
+var _defaultThemeIsInDarkMode = false;
 
 // Convert from the old storage format (in which the order of usedThemes
 // was combined with isThemeSelected to determine which theme was selected)
@@ -362,23 +367,29 @@ var LightweightThemeManager = {
     }
 
     if (aData) {
-      let usedThemes = _usedThemesExceptId(aData.id);
-      usedThemes.unshift(aData);
+      _prefs.setCharPref("selectedThemeID", aData.id);
+    } else {
+      _prefs.setCharPref("selectedThemeID", "");
+    }
+
+    let themeToSwitchTo = aData;
+    if (aData && aData.id == DEFAULT_THEME_ID && _defaultThemeIsInDarkMode) {
+      themeToSwitchTo = LightweightThemeManager.getUsedTheme(DARK_THEME_ID);
+    }
+
+    if (themeToSwitchTo) {
+      let usedThemes = _usedThemesExceptId(themeToSwitchTo.id);
+      usedThemes.unshift(themeToSwitchTo);
       _updateUsedThemes(usedThemes);
       if (PERSIST_ENABLED) {
         LightweightThemeImageOptimizer.purge();
-        _persistImages(aData, () => {
+        _persistImages(themeToSwitchTo, () => {
           _notifyWindows(this.currentThemeForDisplay);
         });
       }
     }
 
-    if (aData)
-      _prefs.setCharPref("selectedThemeID", aData.id);
-    else
-      _prefs.setCharPref("selectedThemeID", "");
-
-    _notifyWindows(aData);
+    _notifyWindows(themeToSwitchTo);
     Services.obs.notifyObservers(null, "lightweight-theme-changed");
   },
 
@@ -444,6 +455,58 @@ var LightweightThemeManager = {
       AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
 
       _themeIDBeingEnabled = null;
+    }
+  },
+
+  /**
+   * Called when the system has either switched to, or switched away from a dark
+   * theme.
+   *
+   * @param  aEvent
+   *         The MediaQueryListEvent associated with the system theme change.
+   */
+  systemThemeChanged(aEvent) {
+    let themeToSwitchTo = null;
+    if (aEvent.matches && !_defaultThemeIsInDarkMode) {
+      themeToSwitchTo = this.getUsedTheme(DARK_THEME_ID);
+      _defaultThemeIsInDarkMode = true;
+    } else if (!aEvent.matches && _defaultThemeIsInDarkMode) {
+      themeToSwitchTo = this.getUsedTheme(DEFAULT_THEME_ID);
+      _defaultThemeIsInDarkMode = false;
+    } else {
+      // We are already set to the correct mode. Bail out early.
+      return;
+    }
+
+    if (_prefs.getStringPref("selectedThemeID", "") != DEFAULT_THEME_ID) {
+      return;
+    }
+
+    if (themeToSwitchTo) {
+      let usedThemes = _usedThemesExceptId(themeToSwitchTo.id);
+      usedThemes.unshift(themeToSwitchTo);
+      _updateUsedThemes(usedThemes);
+      if (PERSIST_ENABLED) {
+        LightweightThemeImageOptimizer.purge();
+        _persistImages(themeToSwitchTo, () => {
+          _notifyWindows(this.currentThemeForDisplay);
+        });
+      }
+    }
+
+    _notifyWindows(themeToSwitchTo);
+    Services.obs.notifyObservers(null, "lightweight-theme-changed");
+  },
+
+  /**
+   * Handles system theme changes.
+   *
+   * @param  aEvent
+   *         The MediaQueryListEvent associated with the system theme change.
+   */
+  handleEvent(aEvent) {
+    if (aEvent.media == "(-moz-system-dark-theme)") {
+      this.systemThemeChanged(aEvent);
     }
   },
 
