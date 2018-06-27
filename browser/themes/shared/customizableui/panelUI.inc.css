@@ -611,6 +611,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   transition: padding .2s ease;
 }
 
+/* Don't resize the toggle in touch mode. */
+#appMenu-popup[touchmode] #appMenu-tp-toggle {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
 #appMenu-tp-toggle::before {
   position: relative;
   display: block;
