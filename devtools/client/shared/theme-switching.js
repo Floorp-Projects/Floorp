@@ -89,22 +89,24 @@
       loadEvents.push(loadPromise);
     }
 
-    try {
-      const StylesheetUtils = require("devtools/shared/layout/utils");
-      const SCROLLBARS_URL = "chrome://devtools/skin/floating-scrollbars-dark-theme.css";
-
-      // TODO: extensions might want to customize scrollbar styles too.
-      if (!Services.appShell.hiddenDOMWindow
-        .matchMedia("(-moz-overlay-scrollbars)").matches) {
-        if (newTheme == "dark") {
-          StylesheetUtils.loadSheet(window, SCROLLBARS_URL, "agent");
-        } else if (oldTheme == "dark") {
-          StylesheetUtils.removeSheet(window, SCROLLBARS_URL, "agent");
+    if (os !== "win") {
+      // Windows always uses native scrollbars, other platforms still use custom floating
+      // scrollbar implementation.
+      try {
+        const StylesheetUtils = require("devtools/shared/layout/utils");
+        const SCROLLBARS_URL = "chrome://devtools/skin/floating-scrollbars-dark-theme.css";
+        if (!Services.appShell.hiddenDOMWindow
+          .matchMedia("(-moz-overlay-scrollbars)").matches) {
+          if (newTheme == "dark") {
+            StylesheetUtils.loadSheet(window, SCROLLBARS_URL, "agent");
+          } else if (oldTheme == "dark") {
+            StylesheetUtils.removeSheet(window, SCROLLBARS_URL, "agent");
+          }
+          forceStyle();
         }
-        forceStyle();
+      } catch (e) {
+        console.warn("customize scrollbar styles is only supported in firefox");
       }
-    } catch (e) {
-      console.warn("customize scrollbar styles is only supported in firefox");
     }
 
     Promise.all(loadEvents).then(() => {

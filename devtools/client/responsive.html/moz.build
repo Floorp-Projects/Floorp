@@ -18,6 +18,7 @@ DevToolsModules(
     'commands.js',
     'constants.js',
     'index.css',
+    'index.js',
     'manager.js',
     'reducers.js',
     'responsive-ua.css',
