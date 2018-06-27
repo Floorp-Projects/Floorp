@@ -188,4 +188,13 @@
   <string name="security_popup_security_verified">%1$s द्वारा सत्यापित</string>
   <string name="site_security_icon_content_description">साइट सुरक्षा</string>
   <string name="preference_autocomplete_duplicate_url_error">URL पहले से मौजूद छै</string>
+  <string name="find_in_page">पेज मs खोजिइयै</string>
+  <string name="find_in_page_input">पेज मs खोजिइयै</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%2$d सs %1$d</string>
+  <string name="accessibility_next_result">अगलो परिणाम जानिइयै</string>
+  <string name="accessibility_previous_result">पिछ्लो परिणाम जानिइयै</string>
+  <string name="http_auth_dialog_title">प्रमाणीकरण जरुरी छs</string>
+  <string name="http_auth_dialog_username">उपयोगकर्ता कs नाम</string>
+  <string name="http_auth_dialog_password">पासवर्ड</string>
 </resources>
