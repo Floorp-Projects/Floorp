@@ -805,16 +805,6 @@ with only_when('--enable-compile-environment'):
     set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
     set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
 
-option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
-       help='Absolute path of the target directory where libgeckoservo can '
-            'be found. This is generally servo_src_dir/target/release.')
-
-@depends_if('--with-servo')
-def servo_target_dir(value):
-    return value[0]
-
-set_config('SERVO_TARGET_DIR', servo_target_dir)
-
 # WebRender integration
 option('--enable-webrender', nargs='?', choices=('build',),
        help='Include WebRender in the build and/or enable it at runtime')
