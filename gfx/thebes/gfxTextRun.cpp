@@ -1908,7 +1908,7 @@ gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh)
         if (fe->mIsUserFontContainer) {
             gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
             if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
-                ufe->CharacterInUnicodeRange(aCh) &&
+                ufe->CharacterInUnicodeRange(aCh) && !mSkipDrawing &&
                 !FontLoadingForFamily(ff.Family(), aCh)) {
                 ufe->Load();
                 ff.CheckState(mSkipDrawing);
@@ -2091,7 +2091,8 @@ gfxFontGroup::GetFirstValidFont(uint32_t aCh, FontFamilyType* aGeneric)
                 static_cast<gfxUserFontEntry*>(mFonts[i].FontEntry());
             bool inRange = ufe->CharacterInUnicodeRange(aCh);
             if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
-                inRange && !FontLoadingForFamily(ff.Family(), aCh)) {
+                inRange && !mSkipDrawing &&
+                !FontLoadingForFamily(ff.Family(), aCh)) {
                 ufe->Load();
                 ff.CheckState(mSkipDrawing);
             }
@@ -2988,7 +2989,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
             // load if not already loaded but only if no other font in similar
             // range within family is loading
             if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
-                !FontLoadingForFamily(ff.Family(), aCh)) {
+                !mSkipDrawing && !FontLoadingForFamily(ff.Family(), aCh)) {
                 ufe->Load();
                 ff.CheckState(mSkipDrawing);
             }
