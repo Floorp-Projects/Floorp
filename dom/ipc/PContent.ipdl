@@ -467,6 +467,7 @@ child:
     async RegisterStringBundles(StringBundleDescriptor[] stringBundles);
 
     async UpdateSharedData(FileDescriptor mapFile, uint32_t aSize,
+                           IPCBlob[] blobs,
                            nsCString[] changedKeys);
 
     // nsIPermissionManager messages
