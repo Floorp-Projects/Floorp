@@ -168,7 +168,7 @@ nsDirEnumeratorUnix::GetNext(nsISupports** aResult)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  NS_IF_ADDREF(*aResult = file);
+  file.forget(aResult);
   return NS_OK;
 }
 
