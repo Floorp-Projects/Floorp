@@ -2177,6 +2177,21 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::GetUAWidgetScope(nsIPrincipal* principal,
+                                        JSContext* cx,
+                                        MutableHandleValue rval)
+{
+    rval.set(UndefinedValue());
+
+    JSObject* scope = XPCJSRuntime::Get()->GetUAWidgetScope(cx, principal);
+    NS_ENSURE_TRUE(scope, NS_ERROR_OUT_OF_MEMORY); // See bug 858642.
+
+    rval.set(JS::ObjectValue(*scope));
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::GetSandboxMetadata(HandleValue sandboxVal,
                                           JSContext* cx, MutableHandleValue rval)
 {
