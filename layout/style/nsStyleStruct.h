@@ -116,8 +116,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
 
   void EnableZoom(nsPresContext* aContext, bool aEnable);
 
-  nsFont  mFont;        // [inherited]
-  nscoord mSize;        // [inherited] Our "computed size". Can be different
+  nsFont  mFont;
+  nscoord mSize;        // Our "computed size". Can be different
                         // from mFont.size which is our "actual size" and is
                         // enforced to be >= the user's preferred min-size.
                         // mFont.size should be used for display purposes
@@ -131,31 +131,31 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
   uint8_t mFontSizeKeyword; // NS_STYLE_FONT_SIZE_*, is NS_STYLE_FONT_SIZE_NO_KEYWORD
                             // when not keyword-derived
 
-  uint8_t mGenericID;   // [inherited] generic CSS font family, if any;
+  uint8_t mGenericID;   // generic CSS font family, if any;
                         // value is a kGenericFont_* constant, see nsFont.h.
 
   // MathML scriptlevel support
-  int8_t  mScriptLevel;          // [inherited]
+  int8_t  mScriptLevel;
   // MathML  mathvariant support
-  uint8_t mMathVariant;          // [inherited]
+  uint8_t mMathVariant;
   // MathML displaystyle support
-  uint8_t mMathDisplay;         // [inherited]
+  uint8_t mMathDisplay;
 
   // allow different min font-size for certain cases
-  uint8_t mMinFontSizeRatio;     // [inherited] percent * 100
+  uint8_t mMinFontSizeRatio;     // percent * 100
 
   // was mLanguage set based on a lang attribute in the document?
-  bool mExplicitLanguage;        // [inherited]
+  bool mExplicitLanguage;
 
   // should calls to ZoomText() and UnZoomText() be made to the font
   // size on this nsStyleFont?
-  bool mAllowZoom;               // [inherited]
+  bool mAllowZoom;
 
   // The value mSize would have had if scriptminsize had never been applied
   nscoord mScriptUnconstrainedSize;
-  nscoord mScriptMinSize;        // [inherited] length
-  float   mScriptSizeMultiplier; // [inherited]
-  RefPtr<nsAtom> mLanguage;   // [inherited]
+  nscoord mScriptMinSize;        // length
+  float   mScriptSizeMultiplier;
+  RefPtr<nsAtom> mLanguage;
 };
 
 struct nsStyleGradientStop
@@ -508,7 +508,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColor
 
   // Don't add ANY members to this struct!  We can achieve caching in the rule
   // tree (rather than the style tree) by letting color stay by itself! -dwh
-  nscolor mColor;                 // [inherited]
+  nscolor mColor;
 };
 
 struct nsStyleImageLayers {
@@ -637,38 +637,38 @@ struct nsStyleImageLayers {
     typedef mozilla::StyleGeometryBox StyleGeometryBox;
     typedef mozilla::StyleImageLayerAttachment StyleImageLayerAttachment;
 
-    nsStyleImage  mImage;         // [reset]
-    mozilla::Position mPosition;  // [reset]
-    Size          mSize;          // [reset]
-    StyleGeometryBox  mClip;      // [reset] See nsStyleConsts.h
+    nsStyleImage  mImage;
+    mozilla::Position mPosition;
+    Size          mSize;
+    StyleGeometryBox  mClip;      // See nsStyleConsts.h
     MOZ_INIT_OUTSIDE_CTOR
-      StyleGeometryBox mOrigin;   // [reset] See nsStyleConsts.h
+      StyleGeometryBox mOrigin;   // See nsStyleConsts.h
     StyleImageLayerAttachment mAttachment;
-                                  // [reset] See nsStyleConsts.h
+                                  // See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer
                                   // only. For a mask layer, it should always
                                   // be the initial value, which is
                                   // StyleImageLayerAttachment::Scroll.
-    uint8_t       mBlendMode;     // [reset] See nsStyleConsts.h
+    uint8_t       mBlendMode;     // See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer
                                   // only. For a mask layer, it should always
                                   // be the initial value, which is
                                   // NS_STYLE_BLEND_NORMAL.
-    uint8_t       mComposite;     // [reset] See nsStyleConsts.h
+    uint8_t       mComposite;     // See nsStyleConsts.h
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
                                   // be the initial value, which is
                                   // NS_STYLE_COMPOSITE_MODE_ADD.
-    uint8_t       mMaskMode;      // [reset] See nsStyleConsts.h
+    uint8_t       mMaskMode;      // See nsStyleConsts.h
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
                                   // be the initial value, which is
                                   // NS_STYLE_MASK_MODE_MATCH_SOURCE.
-    Repeat        mRepeat;        // [reset] See nsStyleConsts.h
+    Repeat        mRepeat;        // See nsStyleConsts.h
 
     // This constructor does not initialize mRepeat or mOrigin and Initialize()
     // must be called to do that.
@@ -794,7 +794,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   const nsStyleImageLayers::Layer& BottomLayer() const { return mImage.BottomLayer(); }
 
   nsStyleImageLayers mImage;
-  mozilla::StyleComplexColor mBackgroundColor;       // [reset]
+  mozilla::StyleComplexColor mBackgroundColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
@@ -826,7 +826,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
   inline bool HasBlockAxisAuto(mozilla::WritingMode aWM) const;
   inline bool HasInlineAxisAuto(mozilla::WritingMode aWM) const;
 
-  nsStyleSides  mMargin; // [reset] coord, percent, calc, auto
+  nsStyleSides  mMargin; // coord, percent, calc, auto
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
@@ -841,7 +841,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   nsChangeHint CalcDifference(const nsStylePadding& aNewData) const;
 
-  nsStyleSides  mPadding;         // [reset] coord, percent, calc
+  nsStyleSides  mPadding;         // coord, percent, calc
 
   bool IsWidthDependent() const {
     return !mPadding.ConvertsToLength();
@@ -1079,23 +1079,23 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   }
 
 public:
-  nsStyleCorners mBorderRadius;       // [reset] coord, percent
-  nsStyleImage   mBorderImageSource;  // [reset]
-  nsStyleSides   mBorderImageSlice;   // [reset] factor, percent
-  nsStyleSides   mBorderImageWidth;   // [reset] length, factor, percent, auto
-  nsStyleSides   mBorderImageOutset;  // [reset] length, factor
+  nsStyleCorners mBorderRadius;       // coord, percent
+  nsStyleImage   mBorderImageSource;
+  nsStyleSides   mBorderImageSlice;   // factor, percent
+  nsStyleSides   mBorderImageWidth;   // length, factor, percent, auto
+  nsStyleSides   mBorderImageOutset;  // length, factor
 
-  uint8_t        mBorderImageFill;    // [reset]
-  mozilla::StyleBorderImageRepeat mBorderImageRepeatH; // [reset]
-  mozilla::StyleBorderImageRepeat mBorderImageRepeatV; // [reset]
-  mozilla::StyleFloatEdge mFloatEdge; // [reset]
-  mozilla::StyleBoxDecorationBreak mBoxDecorationBreak; // [reset]
+  uint8_t        mBorderImageFill;
+  mozilla::StyleBorderImageRepeat mBorderImageRepeatH;
+  mozilla::StyleBorderImageRepeat mBorderImageRepeatV;
+  mozilla::StyleFloatEdge mFloatEdge;
+  mozilla::StyleBoxDecorationBreak mBoxDecorationBreak;
 
 protected:
-  uint8_t       mBorderStyle[4];  // [reset] See nsStyleConsts.h
+  uint8_t       mBorderStyle[4];  // See nsStyleConsts.h
 
 public:
-  // [reset] the colors to use for a simple border.
+  // the colors to use for a simple border.
   // not used for -moz-border-colors
   mozilla::StyleComplexColor mBorderTopColor;
   mozilla::StyleComplexColor mBorderRightColor;
@@ -1183,17 +1183,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleOutline& aNewData) const;
 
-  nsStyleCorners  mOutlineRadius; // [reset] coord, percent, calc
+  nsStyleCorners  mOutlineRadius; // coord, percent, calc
 
   // This is the specified value of outline-width, but with length values
   // computed to absolute.  mActualOutlineWidth stores the outline-width
   // value used by layout.  (We must store mOutlineWidth for the same
   // style struct resolution reasons that we do nsStyleBorder::mBorder;
   // see that field's comment.)
-  nscoord       mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
-  nscoord       mOutlineOffset;   // [reset]
-  mozilla::StyleComplexColor mOutlineColor; // [reset]
-  uint8_t       mOutlineStyle;    // [reset] See nsStyleConsts.h
+  nscoord       mOutlineWidth;    // coord, enum (see nsStyleConsts.h)
+  nscoord       mOutlineOffset;
+  mozilla::StyleComplexColor mOutlineColor;
+  uint8_t       mOutlineStyle;    // See nsStyleConsts.h
 
   nscoord GetOutlineWidth() const
   {
@@ -1263,16 +1263,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   void SetQuotesNone();
   void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
 
-  uint8_t mListStylePosition;                  // [inherited]
-  RefPtr<nsStyleImageRequest> mListStyleImage; // [inherited]
+  uint8_t mListStylePosition;
+  RefPtr<nsStyleImageRequest> mListStyleImage;
 
-  mozilla::CounterStylePtr mCounterStyle;      // [inherited]
+  mozilla::CounterStylePtr mCounterStyle;
 
 private:
-  RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
+  RefPtr<nsStyleQuoteValues> mQuotes;
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:
-  nsRect        mImageRegion;           // [inherited] the rect to use within an image
+  nsRect        mImageRegion;           // the rect to use within an image
 
 private:
   // nsStyleQuoteValues objects representing two common values, for sharing.
@@ -1447,26 +1447,26 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
    */
   uint8_t UsedJustifySelf(mozilla::ComputedStyle* aParent) const;
 
-  mozilla::Position mObjectPosition;    // [reset]
-  nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
-  nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
-  nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum, calc
-  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, enum, calc, none
-  nsStyleCoord  mHeight;                // [reset] coord, percent, calc, auto
-  nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
-  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
-  nsStyleCoord  mFlexBasis;             // [reset] coord, percent, enum, calc, auto
-  nsStyleCoord  mGridAutoColumnsMin;    // [reset] coord, percent, enum, calc, flex
-  nsStyleCoord  mGridAutoColumnsMax;    // [reset] coord, percent, enum, calc, flex
-  nsStyleCoord  mGridAutoRowsMin;       // [reset] coord, percent, enum, calc, flex
-  nsStyleCoord  mGridAutoRowsMax;       // [reset] coord, percent, enum, calc, flex
-  uint8_t       mGridAutoFlow;          // [reset] enumerated. See nsStyleConsts.h
-  mozilla::StyleBoxSizing mBoxSizing;   // [reset] see nsStyleConsts.h
+  mozilla::Position mObjectPosition;
+  nsStyleSides  mOffset;                // coord, percent, calc, auto
+  nsStyleCoord  mWidth;                 // coord, percent, enum, calc, auto
+  nsStyleCoord  mMinWidth;              // coord, percent, enum, calc
+  nsStyleCoord  mMaxWidth;              // coord, percent, enum, calc, none
+  nsStyleCoord  mHeight;                // coord, percent, calc, auto
+  nsStyleCoord  mMinHeight;             // coord, percent, calc
+  nsStyleCoord  mMaxHeight;             // coord, percent, calc, none
+  nsStyleCoord  mFlexBasis;             // coord, percent, enum, calc, auto
+  nsStyleCoord  mGridAutoColumnsMin;    // coord, percent, enum, calc, flex
+  nsStyleCoord  mGridAutoColumnsMax;    // coord, percent, enum, calc, flex
+  nsStyleCoord  mGridAutoRowsMin;       // coord, percent, enum, calc, flex
+  nsStyleCoord  mGridAutoRowsMax;       // coord, percent, enum, calc, flex
+  uint8_t       mGridAutoFlow;          // enumerated. See nsStyleConsts.h
+  mozilla::StyleBoxSizing mBoxSizing;   // see nsStyleConsts.h
 
-  uint16_t      mAlignContent;          // [reset] fallback value in the high byte
-  uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
-  uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
-  uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
+  uint16_t      mAlignContent;          // fallback value in the high byte
+  uint8_t       mAlignItems;            // see nsStyleConsts.h
+  uint8_t       mAlignSelf;             // see nsStyleConsts.h
+  uint16_t      mJustifyContent;        // fallback value in the high byte
   // We cascade mSpecifiedJustifyItems, to handle the auto value, but store the
   // computed value in mJustifyItems.
   //
@@ -1476,16 +1476,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   // mJustifyItems if it has the legacy flag.
   //
   // This last part happens in ComputedStyle::ApplyStyleFixups.
-  uint8_t       mSpecifiedJustifyItems; // [reset] see nsStyleConsts.h
-  uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
-  uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
-  uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
-  uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
-  uint8_t       mObjectFit;             // [reset] see nsStyleConsts.h
-  int32_t       mOrder;                 // [reset] integer
-  float         mFlexGrow;              // [reset] float
-  float         mFlexShrink;            // [reset] float
-  nsStyleCoord  mZIndex;                // [reset] integer, auto
+  uint8_t       mSpecifiedJustifyItems; // see nsStyleConsts.h
+  uint8_t       mJustifyItems;          // see nsStyleConsts.h
+  uint8_t       mJustifySelf;           // see nsStyleConsts.h
+  uint8_t       mFlexDirection;         // see nsStyleConsts.h
+  uint8_t       mFlexWrap;              // see nsStyleConsts.h
+  uint8_t       mObjectFit;             // see nsStyleConsts.h
+  int32_t       mOrder;                 // integer
+  float         mFlexGrow;              // float
+  float         mFlexShrink;            // float
+  nsStyleCoord  mZIndex;                // integer, auto
   mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateColumns;
   mozilla::UniquePtr<nsStyleGridTemplate> mGridTemplateRows;
 
@@ -1496,8 +1496,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   nsStyleGridLine mGridColumnEnd;
   nsStyleGridLine mGridRowStart;
   nsStyleGridLine mGridRowEnd;
-  nsStyleCoord    mColumnGap;       // [reset] normal, coord, percent, calc
-  nsStyleCoord    mRowGap;          // [reset] normal, coord, percent, calc
+  nsStyleCoord    mColumnGap;       // normal, coord, percent, calc
+  nsStyleCoord    mRowGap;          // normal, coord, percent, calc
 
   // FIXME: Logical-coordinate equivalents to these WidthDepends... and
   // HeightDepends... methods have been introduced (see below); we probably
@@ -1655,14 +1655,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset
 
   nsChangeHint CalcDifference(const nsStyleTextReset& aNewData) const;
 
-  nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
+  nsStyleTextOverflow mTextOverflow;    // enum, string
 
-  uint8_t mTextDecorationLine;          // [reset] see nsStyleConsts.h
-  uint8_t mTextDecorationStyle;         // [reset] see nsStyleConsts.h
-  uint8_t mUnicodeBidi;                 // [reset] see nsStyleConsts.h
-  nscoord mInitialLetterSink;           // [reset] 0 means normal
-  float mInitialLetterSize;             // [reset] 0.0f means normal
-  mozilla::StyleComplexColor mTextDecorationColor; // [reset]
+  uint8_t mTextDecorationLine;          // see nsStyleConsts.h
+  uint8_t mTextDecorationStyle;         // see nsStyleConsts.h
+  uint8_t mUnicodeBidi;                 // see nsStyleConsts.h
+  nscoord mInitialLetterSink;           // 0 means normal
+  float mInitialLetterSize;             // 0.0f means normal
+  mozilla::StyleComplexColor mTextDecorationColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
@@ -1675,38 +1675,38 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
 
   nsChangeHint CalcDifference(const nsStyleText& aNewData) const;
 
-  uint8_t mTextAlign;                   // [inherited] see nsStyleConsts.h
-  uint8_t mTextAlignLast;               // [inherited] see nsStyleConsts.h
-  bool mTextAlignTrue : 1;              // [inherited] see nsStyleConsts.h
-  bool mTextAlignLastTrue : 1;          // [inherited] see nsStyleConsts.h
-  mozilla::StyleTextJustify mTextJustify;   // [inherited]
-  uint8_t mTextTransform;               // [inherited] see nsStyleConsts.h
-  mozilla::StyleWhiteSpace mWhiteSpace;     // [inherited] see nsStyleConsts.h
-  uint8_t mWordBreak;                   // [inherited] see nsStyleConsts.h
-  uint8_t mOverflowWrap;                // [inherited] see nsStyleConsts.h
-  mozilla::StyleHyphens mHyphens;       // [inherited] see nsStyleConsts.h
-  uint8_t mRubyAlign;                   // [inherited] see nsStyleConsts.h
-  uint8_t mRubyPosition;                // [inherited] see nsStyleConsts.h
-  uint8_t mTextSizeAdjust;              // [inherited] see nsStyleConsts.h
-  uint8_t mTextCombineUpright;          // [inherited] see nsStyleConsts.h
-  uint8_t mControlCharacterVisibility;  // [inherited] see nsStyleConsts.h
-  uint8_t mTextEmphasisPosition;        // [inherited] see nsStyleConsts.h
-  uint8_t mTextEmphasisStyle;           // [inherited] see nsStyleConsts.h
-  uint8_t mTextRendering;               // [inherited] see nsStyleConsts.h
-  mozilla::StyleComplexColor mTextEmphasisColor;      // [inherited]
-  mozilla::StyleComplexColor mWebkitTextFillColor;    // [inherited]
-  mozilla::StyleComplexColor mWebkitTextStrokeColor;  // [inherited]
+  uint8_t mTextAlign;                   // see nsStyleConsts.h
+  uint8_t mTextAlignLast;               // see nsStyleConsts.h
+  bool mTextAlignTrue : 1;              // see nsStyleConsts.h
+  bool mTextAlignLastTrue : 1;          // see nsStyleConsts.h
+  mozilla::StyleTextJustify mTextJustify;
+  uint8_t mTextTransform;               // see nsStyleConsts.h
+  mozilla::StyleWhiteSpace mWhiteSpace;     // see nsStyleConsts.h
+  uint8_t mWordBreak;                   // see nsStyleConsts.h
+  uint8_t mOverflowWrap;                // see nsStyleConsts.h
+  mozilla::StyleHyphens mHyphens;       // see nsStyleConsts.h
+  uint8_t mRubyAlign;                   // see nsStyleConsts.h
+  uint8_t mRubyPosition;                // see nsStyleConsts.h
+  uint8_t mTextSizeAdjust;              // see nsStyleConsts.h
+  uint8_t mTextCombineUpright;          // see nsStyleConsts.h
+  uint8_t mControlCharacterVisibility;  // see nsStyleConsts.h
+  uint8_t mTextEmphasisPosition;        // see nsStyleConsts.h
+  uint8_t mTextEmphasisStyle;           // see nsStyleConsts.h
+  uint8_t mTextRendering;               // see nsStyleConsts.h
+  mozilla::StyleComplexColor mTextEmphasisColor;
+  mozilla::StyleComplexColor mWebkitTextFillColor;
+  mozilla::StyleComplexColor mWebkitTextStrokeColor;
 
-  nsStyleCoord mTabSize;                // [inherited] coord, factor, calc
-  nsStyleCoord mWordSpacing;            // [inherited] coord, percent, calc
-  nsStyleCoord mLetterSpacing;          // [inherited] coord, normal
-  nsStyleCoord mLineHeight;             // [inherited] coord, factor, normal
-  nsStyleCoord mTextIndent;             // [inherited] coord, percent, calc
-  nscoord mWebkitTextStrokeWidth;       // [inherited] coord
+  nsStyleCoord mTabSize;                // coord, factor, calc
+  nsStyleCoord mWordSpacing;            // coord, percent, calc
+  nsStyleCoord mLetterSpacing;          // coord, normal
+  nsStyleCoord mLineHeight;             // coord, factor, normal
+  nsStyleCoord mTextIndent;             // coord, percent, calc
+  nscoord mWebkitTextStrokeWidth;       // coord
 
-  RefPtr<nsCSSShadowArray> mTextShadow; // [inherited] nullptr in case of a zero-length
+  RefPtr<nsCSSShadowArray> mTextShadow; // nullptr in case of a zero-length
 
-  nsString mTextEmphasisStyleString;    // [inherited]
+  nsString mTextEmphasisStyleString;
 
   bool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
@@ -1884,13 +1884,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility
 
   nsChangeHint CalcDifference(const nsStyleVisibility& aNewData) const;
 
-  nsStyleImageOrientation mImageOrientation;  // [inherited]
-  uint8_t mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
-  uint8_t mVisible;                    // [inherited]
-  uint8_t mImageRendering;             // [inherited] see nsStyleConsts.h
-  uint8_t mWritingMode;                // [inherited] see nsStyleConsts.h
-  uint8_t mTextOrientation;            // [inherited] see nsStyleConsts.h
-  uint8_t mColorAdjust;                // [inherited] see nsStyleConsts.h
+  nsStyleImageOrientation mImageOrientation;
+  uint8_t mDirection;                  // see nsStyleConsts.h NS_STYLE_DIRECTION_*
+  uint8_t mVisible;
+  uint8_t mImageRendering;             // see nsStyleConsts.h
+  uint8_t mWritingMode;                // see nsStyleConsts.h
+  uint8_t mTextOrientation;            // see nsStyleConsts.h
+  uint8_t mColorAdjust;                // see nsStyleConsts.h
 
   bool IsVisible() const {
     return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
@@ -2172,35 +2172,35 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
-  RefPtr<mozilla::css::URLValue> mBinding; // [reset]
-  mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h StyleDisplay
-  mozilla::StyleDisplay mOriginalDisplay;  // [reset] saved mDisplay for
+  RefPtr<mozilla::css::URLValue> mBinding;
+  mozilla::StyleDisplay mDisplay;          // see nsStyleConsts.h StyleDisplay
+  mozilla::StyleDisplay mOriginalDisplay;  // saved mDisplay for
                                            //         position:absolute/fixed
                                            //         and float:left/right;
                                            //         otherwise equal to
                                            //         mDisplay
-  uint8_t mContain;             // [reset] see nsStyleConsts.h NS_STYLE_CONTAIN_*
-  uint8_t mAppearance;          // [reset]
-  uint8_t mPosition;            // [reset] see nsStyleConsts.h
+  uint8_t mContain;             // see nsStyleConsts.h NS_STYLE_CONTAIN_*
+  uint8_t mAppearance;
+  uint8_t mPosition;            // see nsStyleConsts.h
 
-  // [reset] See StyleFloat in nsStyleConsts.h.
+  // See StyleFloat in nsStyleConsts.h.
   mozilla::StyleFloat mFloat;
-  // [reset] Save mFloat for position:absolute/fixed; otherwise equal to mFloat.
+  // Save mFloat for position:absolute/fixed; otherwise equal to mFloat.
   mozilla::StyleFloat mOriginalFloat;
 
-  mozilla::StyleClear mBreakType;  // [reset]
-  uint8_t mBreakInside;         // [reset] NS_STYLE_PAGE_BREAK_AUTO/AVOID
-  bool mBreakBefore;    // [reset]
-  bool mBreakAfter;     // [reset]
-  uint8_t mOverflowX;           // [reset] see nsStyleConsts.h
-  uint8_t mOverflowY;           // [reset] see nsStyleConsts.h
-  uint8_t mOverflowClipBoxBlock;     // [reset] see nsStyleConsts.h
-  uint8_t mOverflowClipBoxInline;    // [reset] see nsStyleConsts.h
-  uint8_t mResize;              // [reset] see nsStyleConsts.h
-  mozilla::StyleOrient mOrient; // [reset] see nsStyleConsts.h
-  uint8_t mIsolation;           // [reset] see nsStyleConsts.h
-  uint8_t mTopLayer;            // [reset] see nsStyleConsts.h
-  uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a
+  mozilla::StyleClear mBreakType;
+  uint8_t mBreakInside;         // NS_STYLE_PAGE_BREAK_AUTO/AVOID
+  bool mBreakBefore;
+  bool mBreakAfter;
+  uint8_t mOverflowX;           // see nsStyleConsts.h
+  uint8_t mOverflowY;           // see nsStyleConsts.h
+  uint8_t mOverflowClipBoxBlock;     // see nsStyleConsts.h
+  uint8_t mOverflowClipBoxInline;    // see nsStyleConsts.h
+  uint8_t mResize;              // see nsStyleConsts.h
+  mozilla::StyleOrient mOrient; // see nsStyleConsts.h
+  uint8_t mIsolation;           // see nsStyleConsts.h
+  uint8_t mTopLayer;            // see nsStyleConsts.h
+  uint8_t mWillChangeBitField;  // see nsStyleConsts.h. Stores a
                                 // bitfield representation of the properties
                                 // that are frequently queried. This should
                                 // match mWillChange. Also tracks if any of the
@@ -2208,16 +2208,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
                                 // a stacking context.
   nsTArray<RefPtr<nsAtom>> mWillChange;
 
-  uint8_t mTouchAction;         // [reset] see nsStyleConsts.h
-  uint8_t mScrollBehavior;      // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_BEHAVIOR_*
-  mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;  // [reset] see nsStyleConsts.h
-  mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;  // [reset] see nsStyleConsts.h
-  uint8_t mScrollSnapTypeX;     // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
-  uint8_t mScrollSnapTypeY;     // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
-  nsStyleCoord mScrollSnapPointsX; // [reset]
-  nsStyleCoord mScrollSnapPointsY; // [reset]
-  mozilla::Position mScrollSnapDestination; // [reset]
-  nsTArray<mozilla::Position> mScrollSnapCoordinate; // [reset]
+  uint8_t mTouchAction;         // see nsStyleConsts.h
+  uint8_t mScrollBehavior;      // see nsStyleConsts.h NS_STYLE_SCROLL_BEHAVIOR_*
+  mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;  // see nsStyleConsts.h
+  mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;  // see nsStyleConsts.h
+  uint8_t mScrollSnapTypeX;     // see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
+  uint8_t mScrollSnapTypeY;     // see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
+  nsStyleCoord mScrollSnapPointsX;
+  nsStyleCoord mScrollSnapPointsY;
+  mozilla::Position mScrollSnapDestination;
+  nsTArray<mozilla::Position> mScrollSnapCoordinate;
 
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or
@@ -2225,11 +2225,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // null, as appropriate.)
   uint8_t mBackfaceVisibility;
   uint8_t mTransformStyle;
-  StyleGeometryBox mTransformBox; // [reset] see nsStyleConsts.h
-  RefPtr<nsCSSValueSharedList> mSpecifiedTransform; // [reset]
-  RefPtr<nsCSSValueSharedList> mSpecifiedRotate; // [reset]
-  RefPtr<nsCSSValueSharedList> mSpecifiedTranslate; // [reset]
-  RefPtr<nsCSSValueSharedList> mSpecifiedScale; // [reset]
+  StyleGeometryBox mTransformBox; // see nsStyleConsts.h
+  RefPtr<nsCSSValueSharedList> mSpecifiedTransform;
+  RefPtr<nsCSSValueSharedList> mSpecifiedRotate;
+  RefPtr<nsCSSValueSharedList> mSpecifiedTranslate;
+  RefPtr<nsCSSValueSharedList> mSpecifiedScale;
 
   // Used to store the final combination of mSpecifiedTranslate,
   // mSpecifiedRotate, mSpecifiedScale and mSpecifiedTransform.
@@ -2237,13 +2237,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // accessing mCombinedTransform directly.
   RefPtr<nsCSSValueSharedList> mCombinedTransform;
 
-  nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
-  nsStyleCoord mChildPerspective; // [reset] none, coord
-  nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
+  nsStyleCoord mTransformOrigin[3]; // percent, coord, calc, 3rd param is coord, calc only
+  nsStyleCoord mChildPerspective; // none, coord
+  nsStyleCoord mPerspectiveOrigin[2]; // percent, coord, calc
 
-  nsStyleCoord mVerticalAlign;  // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
+  nsStyleCoord mVerticalAlign;  // coord, percent, calc, enum (see nsStyleConsts.h)
 
-  nsStyleAutoArray<mozilla::StyleTransition> mTransitions; // [reset]
+  nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
 
   // The number of elements in mTransitions that are not from repeating
   // a list due to another property being longer.
@@ -2277,7 +2277,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
         + mTransitions[aIndex % mTransitionDelayCount].GetDelay();
   }
 
-  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations; // [reset]
+  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
 
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
@@ -2324,12 +2324,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   }
 
   // The threshold used for extracting a shape from shape-outside: <image>.
-  float mShapeImageThreshold = 0.0f; // [reset]
+  float mShapeImageThreshold = 0.0f;
 
   // The margin around a shape-outside: <image>.
   nsStyleCoord mShapeMargin;
 
-  mozilla::StyleShapeSource mShapeOutside; // [reset]
+  mozilla::StyleShapeSource mShapeOutside;
 
   bool IsBlockInsideStyle() const {
     return mozilla::StyleDisplay::Block == mDisplay ||
@@ -2581,8 +2581,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable
 
   nsChangeHint CalcDifference(const nsStyleTable& aNewData) const;
 
-  uint8_t       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
-  int32_t       mSpan;          // [reset] the number of columns spanned by a colgroup or col
+  uint8_t       mLayoutStrategy;// see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
+  int32_t       mSpan;          // the number of columns spanned by a colgroup or col
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder
@@ -2595,11 +2595,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder
 
   nsChangeHint CalcDifference(const nsStyleTableBorder& aNewData) const;
 
-  nscoord       mBorderSpacingCol;// [inherited]
-  nscoord       mBorderSpacingRow;// [inherited]
-  uint8_t       mBorderCollapse;// [inherited]
-  uint8_t       mCaptionSide;   // [inherited]
-  uint8_t       mEmptyCells;    // [inherited]
+  nscoord       mBorderSpacingCol;
+  nscoord       mBorderSpacingRow;
+  uint8_t       mBorderCollapse;
+  uint8_t       mCaptionSide;
+  uint8_t       mEmptyCells;
 };
 
 enum nsStyleContentType {
@@ -2776,7 +2776,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent
 
   nsChangeHint CalcDifference(const nsStyleContent& aNewData) const;
 
-  uint32_t ContentCount() const { return mContents.Length(); } // [reset]
+  uint32_t ContentCount() const { return mContents.Length(); }
 
   const nsStyleContentData& ContentAt(uint32_t aIndex) const {
     return mContents[aIndex];
@@ -2794,7 +2794,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent
     mContents.SetLength(aCount);
   }
 
-  uint32_t CounterIncrementCount() const { return mIncrements.Length(); }  // [reset]
+  uint32_t CounterIncrementCount() const { return mIncrements.Length(); }
   const nsStyleCounterData& CounterIncrementAt(uint32_t aIndex) const {
     return mIncrements[aIndex];
   }
@@ -2809,7 +2809,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent
     mIncrements[aIndex].mValue = aIncrement;
   }
 
-  uint32_t CounterResetCount() const { return mResets.Length(); }  // [reset]
+  uint32_t CounterResetCount() const { return mResets.Length(); }
   const nsStyleCounterData& CounterResetAt(uint32_t aIndex) const {
     return mResets[aIndex];
   }
@@ -2841,13 +2841,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset
   nsChangeHint CalcDifference(const nsStyleUIReset& aNewData) const;
 
   mozilla::StyleUserSelect     mUserSelect;     // [reset](selection-style)
-  uint8_t mForceBrokenImageIcon; // [reset] (0 if not forcing, otherwise forcing)
-  uint8_t                      mIMEMode;        // [reset]
-  mozilla::StyleWindowDragging mWindowDragging; // [reset]
-  uint8_t                      mWindowShadow;   // [reset]
-  float                        mWindowOpacity;  // [reset]
-  RefPtr<nsCSSValueSharedList> mSpecifiedWindowTransform; // [reset]
-  nsStyleCoord                 mWindowTransformOrigin[2]; // [reset] percent, coord, calc
+  uint8_t mForceBrokenImageIcon; // (0 if not forcing, otherwise forcing)
+  uint8_t                      mIMEMode;
+  mozilla::StyleWindowDragging mWindowDragging;
+  uint8_t                      mWindowShadow;
+  float                        mWindowOpacity;
+  RefPtr<nsCSSValueSharedList> mSpecifiedWindowTransform;
+  nsStyleCoord                 mWindowTransformOrigin[2]; // percent, coord, calc
 };
 
 struct nsCursorImage
@@ -2883,17 +2883,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
 
   nsChangeHint CalcDifference(const nsStyleUserInterface& aNewData) const;
 
-  mozilla::StyleUserInput   mUserInput;       // [inherited]
-  mozilla::StyleUserModify  mUserModify;      // [inherited] (modify-content)
-  mozilla::StyleUserFocus   mUserFocus;       // [inherited] (auto-select)
-  uint8_t                   mPointerEvents;   // [inherited] see nsStyleConsts.h
+  mozilla::StyleUserInput   mUserInput;
+  mozilla::StyleUserModify  mUserModify;      // (modify-content)
+  mozilla::StyleUserFocus   mUserFocus;       // (auto-select)
+  uint8_t                   mPointerEvents;   // see nsStyleConsts.h
 
-  uint8_t mCursor;                            // [inherited] See nsStyleConsts.h
-  nsTArray<nsCursorImage> mCursorImages;      // [inherited] images and coords
-  mozilla::StyleComplexColor mCaretColor;     // [inherited]
+  uint8_t mCursor;                            // See nsStyleConsts.h
+  nsTArray<nsCursorImage> mCursorImages;      // images and coords
+  mozilla::StyleComplexColor mCaretColor;
 
-  mozilla::StyleComplexColor mScrollbarFaceColor;   // [inherited]
-  mozilla::StyleComplexColor mScrollbarTrackColor;  // [inherited]
+  mozilla::StyleComplexColor mScrollbarFaceColor;
+  mozilla::StyleComplexColor mScrollbarTrackColor;
 
   inline uint8_t GetEffectivePointerEvents(nsIFrame* aFrame) const;
 
@@ -2913,13 +2913,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL
 
   nsChangeHint CalcDifference(const nsStyleXUL& aNewData) const;
 
-  float         mBoxFlex;               // [reset] see nsStyleConsts.h
-  uint32_t      mBoxOrdinal;            // [reset] see nsStyleConsts.h
-  mozilla::StyleBoxAlign mBoxAlign;         // [reset]
-  mozilla::StyleBoxDirection mBoxDirection; // [reset]
-  mozilla::StyleBoxOrient mBoxOrient;       // [reset]
-  mozilla::StyleBoxPack mBoxPack;           // [reset]
-  mozilla::StyleStackSizing mStackSizing;   // [reset] see nsStyleConsts.h
+  float         mBoxFlex;               // see nsStyleConsts.h
+  uint32_t      mBoxOrdinal;            // see nsStyleConsts.h
+  mozilla::StyleBoxAlign mBoxAlign;
+  mozilla::StyleBoxDirection mBoxDirection;
+  mozilla::StyleBoxOrient mBoxOrient;
+  mozilla::StyleBoxPack mBoxPack;
+  mozilla::StyleStackSizing mStackSizing;   // see nsStyleConsts.h
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
@@ -2938,13 +2938,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
    */
   static const uint32_t kMaxColumnCount = 1000;
 
-  uint32_t     mColumnCount; // [reset] see nsStyleConsts.h
-  nsStyleCoord mColumnWidth; // [reset] coord, auto
+  uint32_t     mColumnCount; // see nsStyleConsts.h
+  nsStyleCoord mColumnWidth; // coord, auto
 
-  mozilla::StyleComplexColor mColumnRuleColor; // [reset]
-  uint8_t      mColumnRuleStyle;  // [reset]
-  uint8_t      mColumnFill;  // [reset] see nsStyleConsts.h
-  uint8_t      mColumnSpan;  // [reset] see nsStyleConsts.h
+  mozilla::StyleComplexColor mColumnRuleColor;
+  uint8_t      mColumnRuleStyle;
+  uint8_t      mColumnFill;  // see nsStyleConsts.h
+  uint8_t      mColumnSpan;  // see nsStyleConsts.h
 
   void SetColumnRuleWidth(nscoord aWidth) {
     mColumnRuleWidth = NS_ROUND_BORDER_TO_PIXELS(aWidth, mTwipsPerPixel);
@@ -2955,7 +2955,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
   }
 
 protected:
-  nscoord mColumnRuleWidth;  // [reset] coord
+  nscoord mColumnRuleWidth;  // coord
   nscoord mTwipsPerPixel;
 };
 
@@ -3055,31 +3055,31 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
 
   nsChangeHint CalcDifference(const nsStyleSVG& aNewData) const;
 
-  nsStyleSVGPaint  mFill;             // [inherited]
-  nsStyleSVGPaint  mStroke;           // [inherited]
-  RefPtr<mozilla::css::URLValue> mMarkerEnd;   // [inherited]
-  RefPtr<mozilla::css::URLValue> mMarkerMid;   // [inherited]
-  RefPtr<mozilla::css::URLValue> mMarkerStart; // [inherited]
-  nsTArray<nsStyleCoord> mStrokeDasharray;  // [inherited] coord, percent, factor
+  nsStyleSVGPaint  mFill;
+  nsStyleSVGPaint  mStroke;
+  RefPtr<mozilla::css::URLValue> mMarkerEnd;
+  RefPtr<mozilla::css::URLValue> mMarkerMid;
+  RefPtr<mozilla::css::URLValue> mMarkerStart;
+  nsTArray<nsStyleCoord> mStrokeDasharray;  // coord, percent, factor
   nsTArray<RefPtr<nsAtom>> mContextProps;
 
-  nsStyleCoord     mStrokeDashoffset; // [inherited] coord, percent, factor
-  nsStyleCoord     mStrokeWidth;      // [inherited] coord, percent, factor
+  nsStyleCoord     mStrokeDashoffset; // coord, percent, factor
+  nsStyleCoord     mStrokeWidth;      // coord, percent, factor
 
-  float            mFillOpacity;      // [inherited]
-  float            mStrokeMiterlimit; // [inherited]
-  float            mStrokeOpacity;    // [inherited]
+  float            mFillOpacity;
+  float            mStrokeMiterlimit;
+  float            mStrokeOpacity;
 
-  mozilla::StyleFillRule    mClipRule;  // [inherited]
-  uint8_t          mColorInterpolation; // [inherited] see nsStyleConsts.h
-  uint8_t          mColorInterpolationFilters; // [inherited] see nsStyleConsts.h
-  mozilla::StyleFillRule    mFillRule;         // [inherited] see nsStyleConsts.h
-  uint8_t          mPaintOrder;       // [inherited] see nsStyleConsts.h
-  uint8_t          mShapeRendering;   // [inherited] see nsStyleConsts.h
-  uint8_t          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
-  uint8_t          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
-  uint8_t          mTextAnchor;       // [inherited] see nsStyleConsts.h
-  uint8_t          mContextPropsBits; // [inherited] see nsStyleConsts.h.
+  mozilla::StyleFillRule    mClipRule;
+  uint8_t          mColorInterpolation; // see nsStyleConsts.h
+  uint8_t          mColorInterpolationFilters; // see nsStyleConsts.h
+  mozilla::StyleFillRule    mFillRule;         // see nsStyleConsts.h
+  uint8_t          mPaintOrder;       // see nsStyleConsts.h
+  uint8_t          mShapeRendering;   // see nsStyleConsts.h
+  uint8_t          mStrokeLinecap;    // see nsStyleConsts.h
+  uint8_t          mStrokeLinejoin;   // see nsStyleConsts.h
+  uint8_t          mTextAnchor;       // see nsStyleConsts.h
+  uint8_t          mContextPropsBits; // see nsStyleConsts.h.
                                       // Stores a bitfield representation of
                                       // the specified properties.
 
@@ -3168,7 +3168,7 @@ private:
   static const uint8_t FILL_OPACITY_SOURCE_SHIFT   = 0;
   static const uint8_t STROKE_OPACITY_SOURCE_SHIFT = 2;
 
-  uint8_t          mContextFlags;     // [inherited]
+  uint8_t          mContextFlags;
 };
 
 struct nsStyleFilter
@@ -3254,17 +3254,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   nsStyleImageLayers    mMask;
-  mozilla::StyleShapeSource mClipPath;// [reset]
-  mozilla::StyleComplexColor mStopColor;     // [reset]
-  mozilla::StyleComplexColor mFloodColor;    // [reset]
-  mozilla::StyleComplexColor mLightingColor; // [reset]
+  mozilla::StyleShapeSource mClipPath;
+  mozilla::StyleComplexColor mStopColor;
+  mozilla::StyleComplexColor mFloodColor;
+  mozilla::StyleComplexColor mLightingColor;
 
-  float            mStopOpacity;      // [reset]
-  float            mFloodOpacity;     // [reset]
+  float            mStopOpacity;
+  float            mFloodOpacity;
 
-  uint8_t          mDominantBaseline; // [reset] see nsStyleConsts.h
-  uint8_t          mVectorEffect;     // [reset] see nsStyleConsts.h
-  uint8_t          mMaskType;         // [reset] see nsStyleConsts.h
+  uint8_t          mDominantBaseline; // see nsStyleConsts.h
+  uint8_t          mVectorEffect;     // see nsStyleConsts.h
+  uint8_t          mMaskType;         // see nsStyleConsts.h
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects
@@ -3281,12 +3281,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects
     return !mFilters.IsEmpty();
   }
 
-  nsTArray<nsStyleFilter>  mFilters;   // [reset]
-  RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
-  nsRect  mClip;                       // [reset] offsets from UL border edge
-  float   mOpacity;                    // [reset]
-  uint8_t mClipFlags;                  // [reset] see nsStyleConsts.h
-  uint8_t mMixBlendMode;               // [reset] see nsStyleConsts.h
+  nsTArray<nsStyleFilter>  mFilters;
+  RefPtr<nsCSSShadowArray> mBoxShadow; // nullptr for 'none'
+  nsRect  mClip;                       // offsets from UL border edge
+  float   mOpacity;
+  uint8_t mClipFlags;                  // see nsStyleConsts.h
+  uint8_t mMixBlendMode;               // see nsStyleConsts.h
 };
 
 #define STATIC_ASSERT_TYPE_LAYOUTS_MATCH(T1, T2)                               \
