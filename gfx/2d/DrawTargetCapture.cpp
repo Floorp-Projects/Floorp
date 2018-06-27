@@ -352,62 +352,6 @@ DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransf
   }
 }
 
-bool
-DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont,
-                                                 Color& aColor,
-                                                 std::vector<Glyph>& aGlyphs)
-{
-  bool result = false;
-
-  for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
-    DrawingCommand* command = iter.Get();
-
-    if (command->GetType() != CommandType::FILLGLYPHS &&
-        command->GetType() != CommandType::SETTRANSFORM) {
-      return false;
-    }
-
-    if (command->GetType() == CommandType::SETTRANSFORM) {
-      SetTransformCommand* transform = static_cast<SetTransformCommand*>(command);
-      if (!transform->mTransform.IsIdentity()) {
-        return false;
-      }
-      continue;
-    }
-
-    FillGlyphsCommand* fillGlyphs = static_cast<FillGlyphsCommand*>(command);
-    if (aScaledFont && fillGlyphs->mFont != aScaledFont) {
-      return false;
-    }
-    aScaledFont = fillGlyphs->mFont;
-
-    Pattern& pat = fillGlyphs->mPattern;
-
-    if (pat.GetType() != PatternType::COLOR) {
-      return false;
-    }
-
-    ColorPattern* colorPat = static_cast<ColorPattern*>(&pat);
-    if (aColor != Color() && colorPat->mColor != aColor) {
-      return false;
-    }
-    aColor = colorPat->mColor;
-
-    if (fillGlyphs->mOptions.mCompositionOp != CompositionOp::OP_OVER ||
-        fillGlyphs->mOptions.mAlpha != 1.0f) {
-      return false;
-    }
-
-    //TODO: Deal with AA on the DrawOptions
-
-    aGlyphs.insert(aGlyphs.end(),
-                   fillGlyphs->mGlyphs.begin(),
-                   fillGlyphs->mGlyphs.end());
-    result = true;
-  }
-  return result;
-}
-
 void
 DrawTargetCaptureImpl::MarkChanged()
 {
