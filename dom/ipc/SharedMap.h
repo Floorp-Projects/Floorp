@@ -38,9 +38,11 @@ namespace ipc {
  * they are updated, and lazily decoded each time they're read.
  *
  * Updates are batched. Rather than each key change triggering an immediate
- * update, combined updates are broadcast after a delay. Currently, this
- * requires an explicit flush() call, or spawning a new content process. In the
- * future, it will happen automatically in idle tasks.
+ * update, combined updates are broadcast after a delay. Changes are flushed
+ * immediately any time a new process is created. Additionally, any time a key
+ * is changed, a flush task is scheduled for the next time the event loop
+ * becomes idle. Changes can be flushed immediately by calling the flush()
+ * method.
  *
  *
  * Whenever a read-only SharedMap is updated, it dispatches a "change" event.
@@ -366,18 +368,22 @@ private:
 
   RefPtr<SharedMap> mReadOnly;
 
+  bool mPendingFlush = false;
+
   // Creates a new snapshot of the map, and updates all Entry instance to
   // reference its data.
   Result<Ok, nsresult> Serialize();
+
+  void IdleFlush();
 
   // If there have been any changes since the last snapshot, creates a new
   // serialization and broadcasts it to all child SharedMap instances.
   void BroadcastChanges();
 
   // Marks the given (UTF-8 encoded) key as having changed. This adds it to
-  // mChangedKeys, if not already present. In the future, it will also schedule
-  // a flush the next time the event loop is idle.
-  void KeyChanged(const nsACString& aName);
+  // mChangedKeys, if not already present, and schedules a flush for the next
+  // time the event loop is idle.
+  nsresult KeyChanged(const nsACString& aName);
 };
 
 } // ipc
