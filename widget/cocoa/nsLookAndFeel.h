@@ -37,6 +37,8 @@ protected:
   static bool SystemWantsOverlayScrollbars();
   static bool AllowOverlayScrollbarsOverlap();
 
+  static bool SystemWantsDarkTheme();
+
 private:
   int32_t mUseOverlayScrollbars;
   bool mUseOverlayScrollbarsCached;
