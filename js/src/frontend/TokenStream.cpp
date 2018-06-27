@@ -1373,7 +1373,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInCharBuffer(const CharT* id
 
         uint32_t codePoint;
         if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-            if (MOZ_LIKELY(unicode::IsIdentifierPart(char16_t(unit)))) {
+            if (unicode::IsIdentifierPart(char16_t(unit))) {
                 if (!charBuffer.append(unit))
                     return false;
 
@@ -1388,19 +1388,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInCharBuffer(const CharT* id
                 return false;
 
             codePoint = AssertedCast<uint32_t>(cp);
-        }
 
-        if (!unicode::IsIdentifierPart(codePoint)) {
-            if (MOZ_UNLIKELY(codePoint == unicode::LINE_SEPARATOR ||
-                             codePoint == unicode::PARA_SEPARATOR))
-            {
-                // |restoreNextRawCharAddress| undoes all gets, but it doesn't
-                // revert line/column updates.  The ASCII code path never
-                // updates line/column state, so only Unicode separators gotten
-                // by |getNonAsciiCodePoint| require this.
-                anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+            if (!unicode::IsIdentifierPart(codePoint)) {
+                if (MOZ_UNLIKELY(codePoint == '\n')) {
+                    // |restoreNextRawCharAddress| will undo all gets, but we
+                    // have to revert a line/column update manually.
+                    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+                }
+                break;
             }
-            break;
         }
 
         if (!appendCodePointToCharBuffer(codePoint))
@@ -1834,12 +1830,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 return badToken();
 
             if (unicode::IsSpaceOrBOM2(codePoint)) {
-                if (codePoint == unicode::LINE_SEPARATOR || codePoint == unicode::PARA_SEPARATOR) {
-                    if (!updateLineInfoForEOL())
-                        return badToken();
-
+                if (codePoint == '\n')
                     anyCharsAccess().updateFlagsForEOL();
-                }
 
                 continue;
             }
@@ -2039,9 +2031,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (!getNonAsciiCodePoint(unit, &codePoint))
                     return badToken();
 
-                ungetCodePointIgnoreEOL(codePoint);
-                if (codePoint == unicode::LINE_SEPARATOR || codePoint == unicode::PARA_SEPARATOR)
-                    anyCharsAccess().undoInternalUpdateLineInfoForEOL();
+                ungetNonAsciiNormalizedCodePoint(codePoint);
 
                 if (unicode::IsIdentifierStart(uint32_t(codePoint))) {
                     error(JSMSG_IDSTART_AFTER_NUMBER);
