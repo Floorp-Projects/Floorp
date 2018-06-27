@@ -138,7 +138,7 @@ $textbox-shadow-size: 4px;
     cursor: pointer;
     fill: var(--newtab-icon-primary-color);
     height: $context-menu-button-size;
-    offset-inline-end: -($context-menu-button-size / 2);
+    inset-inline-end: -($context-menu-button-size / 2);
     opacity: 0;
     position: absolute;
     top: -($context-menu-button-size / 2);
@@ -165,8 +165,8 @@ $textbox-shadow-size: 4px;
   .context-menu {
     margin-inline-end: auto;
     margin-inline-start: auto;
-    offset-inline-end: auto;
-    offset-inline-start: -$base-gutter;
+    inset-inline-end: auto;
+    inset-inline-start: -$base-gutter;
   }
 }
 
@@ -174,8 +174,8 @@ $textbox-shadow-size: 4px;
   .context-menu {
     margin-inline-end: 5px;
     margin-inline-start: auto;
-    offset-inline-end: 0;
-    offset-inline-start: auto;
+    inset-inline-end: 0;
+    inset-inline-start: auto;
   }
 }
 

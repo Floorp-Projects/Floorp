@@ -181,7 +181,7 @@
 
 #tools-chevron-menu-button::before {
   top: 0;
-  offset-inline-end: 0;
+  inset-inline-end: 0;
   background-image: var(--command-chevron-image);
   background-position: center;
 }

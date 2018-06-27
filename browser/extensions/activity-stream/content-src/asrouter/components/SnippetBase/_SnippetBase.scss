@@ -36,7 +36,7 @@
     border: 0;
     position: absolute;
     top: 50%;
-    offset-inline-end: 12px;
+    inset-inline-end: 12px;
     height: 16px;
     width: 16px;
     background-image: url('resource://activity-stream/data/content/assets/glyph-dismiss-16.svg');
@@ -48,7 +48,7 @@
     cursor: pointer;
 
     @media (min-width: 766px) {
-      offset-inline-end: 24px;
+      inset-inline-end: 24px;
     }
   }
 

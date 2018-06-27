@@ -39,13 +39,15 @@ public:
   AsyncEventDispatcher(nsINode* aTarget,
                        const nsAString& aEventType,
                        CanBubble aCanBubble,
-                       ChromeOnlyDispatch aOnlyChromeDispatch)
+                       ChromeOnlyDispatch aOnlyChromeDispatch,
+                       Composed aComposed = Composed::eDefault)
     : CancelableRunnable("AsyncEventDispatcher")
     , mTarget(aTarget)
     , mEventType(aEventType)
     , mEventMessage(eUnidentifiedEvent)
     , mCanBubble(aCanBubble)
     , mOnlyChromeDispatch(aOnlyChromeDispatch)
+    , mComposed(aComposed)
   {
   }
 
@@ -121,6 +123,7 @@ public:
   EventMessage          mEventMessage;
   CanBubble             mCanBubble = CanBubble::eNo;
   ChromeOnlyDispatch    mOnlyChromeDispatch = ChromeOnlyDispatch::eNo;
+  Composed              mComposed = Composed::eDefault;
   bool                  mCanceled = false;
   bool                  mCheckStillInDoc = false;
 };

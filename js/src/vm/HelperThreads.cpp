@@ -297,6 +297,11 @@ CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discar
     for (size_t i = 0; i < worklist.length(); i++) {
         jit::IonBuilder* builder = worklist[i];
         if (IonBuilderMatches(selector, builder)) {
+            // Once finished, builders are handled by a Linked list which is
+            // allocated with the IonBuilder class which is contained in the
+            // LifoAlloc-ated structure. Thus we need it to be mutable.
+            worklist[i]->alloc().lifoAlloc()->setReadWrite();
+
             FinishOffThreadIonCompile(builder, lock);
             HelperThreadState().remove(worklist, &i);
         }
@@ -2262,8 +2267,11 @@ void
 GlobalHelperThreadState::trace(JSTracer* trc)
 {
     AutoLockHelperThreadState lock;
-    for (auto builder : ionWorklist(lock))
+    for (auto builder : ionWorklist(lock)) {
+        builder->alloc().lifoAlloc()->setReadWrite();
         builder->trace(trc);
+        builder->alloc().lifoAlloc()->setReadOnly();
+    }
     for (auto builder : ionFinishedList(lock))
         builder->trace(trc);
 
