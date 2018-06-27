@@ -62,6 +62,7 @@ toolkit.jar:
 #ifndef MOZ_FENNEC
    content/global/viewZoomOverlay.js
 #endif
+   content/global/widgets.css
    content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
    content/global/bindings/browser.xml         (widgets/browser.xml)
    content/global/bindings/button.xml          (widgets/button.xml)
