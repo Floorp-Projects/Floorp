@@ -123,13 +123,15 @@ for (var prop in gCSSProperties) {
 }
 
 /*
- * Test that only longhand properties are listed as logical properties.
+ * Test that only longhand properties or its aliases are listed as logical
+ * properties.
  */
 for (var prop in gCSSProperties) {
   var entry = gCSSProperties[prop];
   if (entry.logical) {
-    is(entry.type, CSS_TYPE_LONGHAND,
-       "property '" + prop + "' is listed as CSS_TYPE_LONGHAND due to its " +
+    ok(entry.type == CSS_TYPE_LONGHAND ||
+       (entry.alias_for && gCSSProperties[entry.alias_for].logical),
+       "property '" + prop + "' is listed as CSS_TYPE_LONGHAND or is an alias due to it " +
        "being a logical property");
   }
 }
