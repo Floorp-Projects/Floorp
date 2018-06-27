@@ -266,59 +266,22 @@ public:
     if (nsCSSProps::IsEnabled(*it_, (mozilla::CSSEnabledState) es_))
 
   // Keyword/Enum value tables
-  static const KTableEntry kAnimationDirectionKTable[];
-  static const KTableEntry kAnimationFillModeKTable[];
-  static const KTableEntry kAnimationPlayStateKTable[];
-  static const KTableEntry kAppearanceKTable[];
-  static const KTableEntry kBackfaceVisibilityKTable[];
   static const KTableEntry kTransformStyleKTable[];
-  static const KTableEntry kImageLayerAttachmentKTable[];
-  static const KTableEntry kBackgroundOriginKTable[];
-  static const KTableEntry kMaskOriginKTable[];
   static const KTableEntry kImageLayerRepeatKTable[];
-  static const KTableEntry kImageLayerCompositeKTable[];
-  static const KTableEntry kImageLayerModeKTable[];
   // Not const because we modify its entries when the pref
   // "layout.css.background-clip.text" changes:
-  static KTableEntry kBackgroundClipKTable[];
-  static const KTableEntry kMaskClipKTable[];
-  static const KTableEntry kBlendModeKTable[];
-  static const KTableEntry kBorderCollapseKTable[];
   static const KTableEntry kBorderImageRepeatKTable[];
   static const KTableEntry kBorderStyleKTable[];
-  static const KTableEntry kBoxAlignKTable[];
-  static const KTableEntry kBoxDecorationBreakKTable[];
-  static const KTableEntry kBoxDirectionKTable[];
-  static const KTableEntry kBoxOrientKTable[];
-  static const KTableEntry kBoxPackKTable[];
   static const KTableEntry kClipPathGeometryBoxKTable[];
   static const KTableEntry kCounterSystemKTable[];
-  static const KTableEntry kDominantBaselineKTable[];
   static const KTableEntry kShapeRadiusKTable[];
-  static const KTableEntry kFillRuleKTable[];
   static const KTableEntry kFilterFunctionKTable[];
-  static const KTableEntry kImageRenderingKTable[];
   static const KTableEntry kShapeOutsideShapeBoxKTable[];
-  static const KTableEntry kShapeRenderingKTable[];
-  static const KTableEntry kStrokeLinecapKTable[];
-  static const KTableEntry kStrokeLinejoinKTable[];
-  static const KTableEntry kVectorEffectKTable[];
-  static const KTableEntry kTextAnchorKTable[];
-  static const KTableEntry kTextRenderingKTable[];
-  static const KTableEntry kColorAdjustKTable[];
-  static const KTableEntry kColorInterpolationKTable[];
-  static const KTableEntry kColumnFillKTable[];
-  static const KTableEntry kColumnSpanKTable[];
   static const KTableEntry kBoxShadowTypeKTable[];
-  static const KTableEntry kBoxSizingKTable[];
-  static const KTableEntry kCaptionSideKTable[];
-  static const KTableEntry kClearKTable[];
   static const KTableEntry kCursorKTable[];
-  static const KTableEntry kDirectionKTable[];
   // Not const because we modify its entries when various
   // "layout.css.*.enabled" prefs changes:
   static KTableEntry kDisplayKTable[];
-  static const KTableEntry kEmptyCellsKTable[];
   // -- tables for parsing the {align,justify}-{content,items,self} properties --
   static const KTableEntry kAlignAllKeywords[];
   static const KTableEntry kAlignOverflowPosition[]; // <overflow-position>
@@ -335,79 +298,36 @@ public:
   static const KTableEntry kAutoCompletionAlignItems[];
   static const KTableEntry kAutoCompletionAlignJustifyContent[];
   // ------------------------------------------------------------------
-  static const KTableEntry kFlexDirectionKTable[];
-  static const KTableEntry kFlexWrapKTable[];
-  static const KTableEntry kFloatKTable[];
-  static const KTableEntry kFloatEdgeKTable[];
-  static const KTableEntry kFontKerningKTable[];
-  static const KTableEntry kFontOpticalSizingKTable[];
   static const KTableEntry kFontSmoothingKTable[];
   static const KTableEntry kFontSynthesisKTable[];
   static const KTableEntry kFontVariantAlternatesKTable[];
   static const KTableEntry kFontVariantAlternatesFuncsKTable[];
-  static const KTableEntry kFontVariantCapsKTable[];
   static const KTableEntry kFontVariantEastAsianKTable[];
   static const KTableEntry kFontVariantLigaturesKTable[];
   static const KTableEntry kFontVariantNumericKTable[];
-  static const KTableEntry kFontVariantPositionKTable[];
   static const KTableEntry kGridAutoFlowKTable[];
   static const KTableEntry kGridTrackBreadthKTable[];
-  static const KTableEntry kHyphensKTable[];
-  static const KTableEntry kIsolationKTable[];
-  static const KTableEntry kIMEModeKTable[];
   static const KTableEntry kLineHeightKTable[];
-  static const KTableEntry kListStylePositionKTable[];
-  static const KTableEntry kMaskTypeKTable[];
   static const KTableEntry kContainKTable[];
-  static const KTableEntry kObjectFitKTable[];
-  static const KTableEntry kOrientKTable[];
   static const KTableEntry kOutlineStyleKTable[];
   static const KTableEntry kOverflowKTable[];
   static const KTableEntry kOverflowSubKTable[];
   static const KTableEntry kOverflowClipBoxKTable[];
-  static const KTableEntry kOverflowWrapKTable[];
-  static const KTableEntry kPageBreakInsideKTable[];
-  static const KTableEntry kPointerEventsKTable[];
-  static const KTableEntry kPositionKTable[];
   static const KTableEntry kRadialGradientSizeKTable[];
-  static const KTableEntry kResizeKTable[];
-  static const KTableEntry kRubyAlignKTable[];
-  static const KTableEntry kRubyPositionKTable[];
-  static const KTableEntry kScrollBehaviorKTable[];
   static const KTableEntry kOverscrollBehaviorKTable[];
   static const KTableEntry kScrollSnapTypeKTable[];
-  static const KTableEntry kStackSizingKTable[];
-  static const KTableEntry kTableLayoutKTable[];
   // Not const because we modify its entries when the pref
   // "layout.css.text-align-unsafe-value.enabled" changes:
   static KTableEntry kTextAlignKTable[];
-  static KTableEntry kTextAlignLastKTable[];
-  static const KTableEntry kTextCombineUprightKTable[];
   static const KTableEntry kTextDecorationLineKTable[];
   static const KTableEntry kTextDecorationStyleKTable[];
   static const KTableEntry kTextEmphasisStyleShapeKTable[];
-  static const KTableEntry kTextJustifyKTable[];
-  static const KTableEntry kTextOrientationKTable[];
   static const KTableEntry kTextOverflowKTable[];
-  static const KTableEntry kTextSizeAdjustKTable[];
-  static const KTableEntry kTextTransformKTable[];
   static const KTableEntry kTouchActionKTable[];
-  static const KTableEntry kTransformBoxKTable[];
   static const KTableEntry kTransitionTimingFunctionKTable[];
-  static const KTableEntry kUnicodeBidiKTable[];
-  static const KTableEntry kUserFocusKTable[];
-  static const KTableEntry kUserInputKTable[];
-  static const KTableEntry kUserModifyKTable[];
-  static const KTableEntry kUserSelectKTable[];
   static const KTableEntry kVerticalAlignKTable[];
-  static const KTableEntry kVisibilityKTable[];
-  static const KTableEntry kWhitespaceKTable[];
   static const KTableEntry kWidthKTable[]; // also min-width, max-width
   static const KTableEntry kFlexBasisKTable[];
-  static const KTableEntry kWindowDraggingKTable[];
-  static const KTableEntry kWindowShadowKTable[];
-  static const KTableEntry kWordBreakKTable[];
-  static const KTableEntry kWritingModeKTable[];
 };
 
 #endif /* nsCSSProps_h___ */
