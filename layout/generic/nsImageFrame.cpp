@@ -572,8 +572,7 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
    *   one frame = 1
    *   one loop = 2
    */
-  nsPresContext *presContext = PresContext();
-  aImage->SetAnimationMode(presContext->ImageAnimationMode());
+  aImage->SetAnimationMode(PresContext()->ImageAnimationMode());
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
@@ -1866,8 +1865,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 bool
 nsImageFrame::ShouldDisplaySelection()
 {
-  nsPresContext* presContext = PresContext();
-  int16_t displaySelection = presContext->PresShell()->GetSelectionFlags();
+  int16_t displaySelection = PresShell()->GetSelectionFlags();
   if (!(displaySelection & nsISelectionDisplay::DISPLAY_IMAGES))
     return false;//no need to check the blue border, we cannot be drawn selected
 

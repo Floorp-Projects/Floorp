@@ -1263,6 +1263,17 @@ Element::AttachShadowWithoutNameChecks(ShadowRootMode aMode)
    */
   SetShadowRoot(shadowRoot);
 
+  // Dispatch a "shadowrootattached" event for devtools.
+  {
+    AsyncEventDispatcher* dispatcher =
+      new AsyncEventDispatcher(this,
+                               NS_LITERAL_STRING("shadowrootattached"),
+                               CanBubble::eYes,
+                               ChromeOnlyDispatch::eYes,
+                               Composed::eYes);
+    dispatcher->PostDOMEvent();
+  }
+
   /**
    * 6. Return shadow.
    */

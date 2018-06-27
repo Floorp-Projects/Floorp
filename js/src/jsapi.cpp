@@ -6102,34 +6102,13 @@ JS_DecodeBytes(JSContext* cx, const char* src, size_t srclen, char16_t* dst, siz
     return true;
 }
 
-static char*
-EncodeLatin1(JSContext* cx, JSString* str)
-{
-    JSLinearString* linear = str->ensureLinear(cx);
-    if (!linear)
-        return nullptr;
-
-    JS::AutoCheckCannotGC nogc;
-    if (linear->hasTwoByteChars())
-        return JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->twoByteRange(nogc)).c_str();
-
-    size_t len = str->length();
-    Latin1Char* buf = cx->pod_malloc<Latin1Char>(len + 1);
-    if (!buf)
-        return nullptr;
-
-    mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
-    buf[len] = '\0';
-    return reinterpret_cast<char*>(buf);
-}
-
 JS_PUBLIC_API(char*)
 JS_EncodeString(JSContext* cx, JSString* str)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    return EncodeLatin1(cx, str);
+    return js::EncodeLatin1(cx, str).release();
 }
 
 JS_PUBLIC_API(char*)

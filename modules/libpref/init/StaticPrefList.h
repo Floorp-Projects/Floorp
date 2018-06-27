@@ -242,6 +242,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether the offset-* logical property aliases are enabled.
+VARCACHE_PREF(
+  "layout.css.offset-logical-properties.enabled",
+   layout_css_offset_logical_properties_enabled,
+  bool, true
+)
+
 // Should stray control characters be rendered visibly?
 #ifdef RELEASE_OR_BETA
 # define PREF_VALUE false

@@ -50,6 +50,7 @@ AsyncEventDispatcher::Run()
   }
   mTarget->AsyncEventRunning(this);
   if (mEventMessage != eUnidentifiedEvent) {
+    MOZ_ASSERT(mComposed == Composed::eDefault);
     return nsContentUtils::DispatchTrustedEvent<WidgetEvent>
       (node->OwnerDoc(), mTarget, mEventMessage, mCanBubble,
        Cancelable::eNo, nullptr /* aDefaultAction */, mOnlyChromeDispatch);
@@ -59,6 +60,10 @@ AsyncEventDispatcher::Run()
     event = NS_NewDOMEvent(mTarget, nullptr, nullptr);
     event->InitEvent(mEventType, mCanBubble, Cancelable::eNo);
     event->SetTrusted(true);
+  }
+  if (mComposed != Composed::eDefault) {
+    event->WidgetEventPtr()->mFlags.mComposed =
+      mComposed == Composed::eYes;
   }
   if (mOnlyChromeDispatch == ChromeOnlyDispatch::eYes) {
     MOZ_ASSERT(event->IsTrusted());
