@@ -98,12 +98,18 @@ const POLICIES_TESTS = [
         "SPNEGO": ["a.com", "b.com"],
         "Delegated": ["a.com", "b.com"],
         "NTLM": ["a.com", "b.com"],
+        "AllowNonFQDN": {
+          "SPNEGO": true,
+          "NTLM": true,
+        },
       }
     },
     lockedPrefs: {
       "network.negotiate-auth.trusted-uris": "a.com, b.com",
       "network.negotiate-auth.delegation-uris": "a.com, b.com",
       "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
+      "network.automatic-ntlm-auth.allow-non-fqdn": true,
+      "network.negotiate-auth.allow-non-fqdn": true,
     }
   },
 
