@@ -640,11 +640,9 @@ struct nsStyleImageLayers {
     nsStyleImage  mImage;
     mozilla::Position mPosition;
     Size          mSize;
-    StyleGeometryBox  mClip;      // See nsStyleConsts.h
-    MOZ_INIT_OUTSIDE_CTOR
-      StyleGeometryBox mOrigin;   // See nsStyleConsts.h
+    StyleGeometryBox  mClip;
+    MOZ_INIT_OUTSIDE_CTOR StyleGeometryBox mOrigin;
     StyleImageLayerAttachment mAttachment;
-                                  // See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer
                                   // only. For a mask layer, it should always
@@ -668,7 +666,7 @@ struct nsStyleImageLayers {
                                   // For a background layer, it should always
                                   // be the initial value, which is
                                   // NS_STYLE_MASK_MODE_MATCH_SOURCE.
-    Repeat        mRepeat;        // See nsStyleConsts.h
+    Repeat        mRepeat;
 
     // This constructor does not initialize mRepeat or mOrigin and Initialize()
     // must be called to do that.
@@ -1461,7 +1459,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   nsStyleCoord  mGridAutoRowsMin;       // coord, percent, enum, calc, flex
   nsStyleCoord  mGridAutoRowsMax;       // coord, percent, enum, calc, flex
   uint8_t       mGridAutoFlow;          // enumerated. See nsStyleConsts.h
-  mozilla::StyleBoxSizing mBoxSizing;   // see nsStyleConsts.h
+  mozilla::StyleBoxSizing mBoxSizing;
 
   uint16_t      mAlignContent;          // fallback value in the high byte
   uint8_t       mAlignItems;            // see nsStyleConsts.h
@@ -1681,10 +1679,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
   bool mTextAlignLastTrue : 1;          // see nsStyleConsts.h
   mozilla::StyleTextJustify mTextJustify;
   uint8_t mTextTransform;               // see nsStyleConsts.h
-  mozilla::StyleWhiteSpace mWhiteSpace;     // see nsStyleConsts.h
+  mozilla::StyleWhiteSpace mWhiteSpace;
   uint8_t mWordBreak;                   // see nsStyleConsts.h
   uint8_t mOverflowWrap;                // see nsStyleConsts.h
-  mozilla::StyleHyphens mHyphens;       // see nsStyleConsts.h
+  mozilla::StyleHyphens mHyphens;
   uint8_t mRubyAlign;                   // see nsStyleConsts.h
   uint8_t mRubyPosition;                // see nsStyleConsts.h
   uint8_t mTextSizeAdjust;              // see nsStyleConsts.h
@@ -2173,7 +2171,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;
-  mozilla::StyleDisplay mDisplay;          // see nsStyleConsts.h StyleDisplay
+  mozilla::StyleDisplay mDisplay;
   mozilla::StyleDisplay mOriginalDisplay;  // saved mDisplay for
                                            //         position:absolute/fixed
                                            //         and float:left/right;
@@ -2183,7 +2181,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mAppearance;
   uint8_t mPosition;            // see nsStyleConsts.h
 
-  // See StyleFloat in nsStyleConsts.h.
   mozilla::StyleFloat mFloat;
   // Save mFloat for position:absolute/fixed; otherwise equal to mFloat.
   mozilla::StyleFloat mOriginalFloat;
@@ -2197,7 +2194,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mOverflowClipBoxBlock;     // see nsStyleConsts.h
   uint8_t mOverflowClipBoxInline;    // see nsStyleConsts.h
   uint8_t mResize;              // see nsStyleConsts.h
-  mozilla::StyleOrient mOrient; // see nsStyleConsts.h
+  mozilla::StyleOrient mOrient;
   uint8_t mIsolation;           // see nsStyleConsts.h
   uint8_t mTopLayer;            // see nsStyleConsts.h
   uint8_t mWillChangeBitField;  // see nsStyleConsts.h. Stores a
@@ -2210,8 +2207,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   uint8_t mTouchAction;         // see nsStyleConsts.h
   uint8_t mScrollBehavior;      // see nsStyleConsts.h NS_STYLE_SCROLL_BEHAVIOR_*
-  mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;  // see nsStyleConsts.h
-  mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;  // see nsStyleConsts.h
+  mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
+  mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
   uint8_t mScrollSnapTypeX;     // see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
   uint8_t mScrollSnapTypeY;     // see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
   nsStyleCoord mScrollSnapPointsX;
@@ -2225,7 +2222,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   // null, as appropriate.)
   uint8_t mBackfaceVisibility;
   uint8_t mTransformStyle;
-  StyleGeometryBox mTransformBox; // see nsStyleConsts.h
+  StyleGeometryBox mTransformBox;
   RefPtr<nsCSSValueSharedList> mSpecifiedTransform;
   RefPtr<nsCSSValueSharedList> mSpecifiedRotate;
   RefPtr<nsCSSValueSharedList> mSpecifiedTranslate;
@@ -2919,7 +2916,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL
   mozilla::StyleBoxDirection mBoxDirection;
   mozilla::StyleBoxOrient mBoxOrient;
   mozilla::StyleBoxPack mBoxPack;
-  mozilla::StyleStackSizing mStackSizing;   // see nsStyleConsts.h
+  mozilla::StyleStackSizing mStackSizing;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
@@ -3073,7 +3070,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   mozilla::StyleFillRule    mClipRule;
   uint8_t          mColorInterpolation; // see nsStyleConsts.h
   uint8_t          mColorInterpolationFilters; // see nsStyleConsts.h
-  mozilla::StyleFillRule    mFillRule;         // see nsStyleConsts.h
+  mozilla::StyleFillRule    mFillRule;
   uint8_t          mPaintOrder;       // see nsStyleConsts.h
   uint8_t          mShapeRendering;   // see nsStyleConsts.h
   uint8_t          mStrokeLinecap;    // see nsStyleConsts.h
