@@ -219,7 +219,7 @@ Event::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 JSObject*
 Event::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return EventBinding::Wrap(aCx, this, aGivenProto);
+  return Event_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -357,15 +357,15 @@ Event::EventPhase() const
   if ((mEvent->mCurrentTarget &&
        mEvent->mCurrentTarget == mEvent->mTarget) ||
        mEvent->mFlags.InTargetPhase()) {
-    return EventBinding::AT_TARGET;
+    return Event_Binding::AT_TARGET;
   }
   if (mEvent->mFlags.mInCapturePhase) {
-    return EventBinding::CAPTURING_PHASE;
+    return Event_Binding::CAPTURING_PHASE;
   }
   if (mEvent->mFlags.mInBubblingPhase) {
-    return EventBinding::BUBBLING_PHASE;
+    return Event_Binding::BUBBLING_PHASE;
   }
-  return EventBinding::NONE;
+  return Event_Binding::NONE;
 }
 
 void
@@ -493,8 +493,8 @@ Event::EnsureWebAccessibleRelatedTarget(EventTarget* aRelatedTarget)
 
 void
 Event::InitEvent(const nsAString& aEventTypeArg,
-                 bool aCanBubbleArg,
-                 bool aCancelableArg)
+                 mozilla::CanBubble aCanBubbleArg,
+                 mozilla::Cancelable aCancelableArg)
 {
   // Make sure this event isn't already being dispatched.
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
@@ -508,8 +508,8 @@ Event::InitEvent(const nsAString& aEventTypeArg,
 
   SetEventType(aEventTypeArg);
 
-  mEvent->mFlags.mBubbles = aCanBubbleArg;
-  mEvent->mFlags.mCancelable = aCancelableArg;
+  mEvent->mFlags.mBubbles = aCanBubbleArg == CanBubble::eYes;
+  mEvent->mFlags.mCancelable = aCancelableArg == Cancelable::eYes;
 
   mEvent->mFlags.mDefaultPrevented = false;
   mEvent->mFlags.mDefaultPreventedByContent = false;

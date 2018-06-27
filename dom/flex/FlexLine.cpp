@@ -65,7 +65,7 @@ FlexLine::FlexLine(Flex* aParent,
 JSObject*
 FlexLine::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FlexLineBinding::Wrap(aCx, this, aGivenProto);
+  return FlexLine_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 FlexLineGrowthState

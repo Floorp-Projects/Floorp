@@ -217,6 +217,8 @@ struct JSContext : public JS::RootingContext,
     inline void enterRealmOf(js::ObjectGroup* target);
     inline void enterNullRealm();
 
+    inline void setRealmForJitExceptionHandler(JS::Realm* realm);
+
     inline void leaveRealm(JS::Realm* oldRealm);
     inline void leaveAtomsZone(JS::Realm* oldRealm,
                                const js::AutoLockForExclusiveAccess& lock);

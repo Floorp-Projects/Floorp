@@ -69,7 +69,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(ProcessingInstruction, CharacterData)
 JSObject*
 ProcessingInstruction::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ProcessingInstructionBinding::Wrap(aCx, this, aGivenProto);
+  return ProcessingInstruction_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

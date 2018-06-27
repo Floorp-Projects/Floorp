@@ -106,7 +106,7 @@ ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return ServiceWorkerBinding::Wrap(aCx, this, aGivenProto);
+  return ServiceWorker_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 ServiceWorkerState

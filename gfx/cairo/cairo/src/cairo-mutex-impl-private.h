@@ -236,6 +236,7 @@
 # define CAIRO_MUTEX_IMPL_INIT(mutex) pthread_mutex_init (&(mutex), NULL)
 #endif
 # define CAIRO_MUTEX_IMPL_LOCK(mutex) pthread_mutex_lock (&(mutex))
+# define CAIRO_MUTEX_IMPL_TRY_LOCK(mutex) (! pthread_mutex_trylock (&(mutex)))
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
 #if HAVE_LOCKDEP
 # define CAIRO_MUTEX_IS_LOCKED(mutex) LOCKDEP_IS_LOCKED (&(mutex))

@@ -33,9 +33,9 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
 /* static */ Maybe<APZWheelAction>
 APZInputBridge::ActionForWheelEvent(WidgetWheelEvent* aEvent)
 {
-  if (!(aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_LINE ||
-        aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PIXEL ||
-        aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PAGE)) {
+  if (!(aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_LINE ||
+        aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_PIXEL ||
+        aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_PAGE)) {
     return Nothing();
   }
   return EventStateManager::APZWheelActionFor(aEvent);
@@ -111,9 +111,9 @@ APZInputBridge::ReceiveInputEvent(
 
         ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
         if (gfxPrefs::SmoothScrollEnabled() &&
-            ((wheelEvent.mDeltaMode == dom::WheelEventBinding::DOM_DELTA_LINE &&
+            ((wheelEvent.mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_LINE &&
               gfxPrefs::WheelSmoothScrollEnabled()) ||
-             (wheelEvent.mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PAGE &&
+             (wheelEvent.mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_PAGE &&
               gfxPrefs::PageSmoothScrollEnabled())))
         {
           scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;

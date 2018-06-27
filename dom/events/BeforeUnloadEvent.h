@@ -30,7 +30,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return BeforeUnloadEventBinding::Wrap(aCx, this, aGivenProto);
+    return BeforeUnloadEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(BeforeUnloadEvent, Event)

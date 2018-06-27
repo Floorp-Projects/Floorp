@@ -207,7 +207,7 @@ TableRowsCollection::CleanUp()
 JSObject*
 TableRowsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCollectionBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLCollection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TableRowsCollection, mRows)
@@ -557,7 +557,7 @@ HTMLTableElement::~HTMLTableElement()
 JSObject*
 HTMLTableElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTableElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableElement)

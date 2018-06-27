@@ -60,7 +60,7 @@ protected:
 #define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType, WebGLBindingType)\
     JSObject*                                                    \
     WebGLExtensionType::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) {              \
-        return dom::WebGLBindingType##Binding::Wrap(cx, this, givenProto); \
+        return dom::WebGLBindingType##_Binding::Wrap(cx, this, givenProto); \
     }
 
 ////

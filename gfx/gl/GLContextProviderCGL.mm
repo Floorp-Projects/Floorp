@@ -206,26 +206,6 @@ static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel_webrende
     0
 };
 
-static const NSOpenGLPixelFormatAttribute kAttribs_offscreen[] = {
-    0
-};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_allow_offline[] = {
-    NSOpenGLPFAAllowOfflineRenderers,
-    0
-};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_accel[] = {
-    NSOpenGLPFAAccelerated,
-    0
-};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_coreProfile[] = {
-    NSOpenGLPFAAccelerated,
-    NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
-    0
-};
-
 static NSOpenGLContext*
 CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs)
 {
@@ -307,23 +287,33 @@ CreateOffscreenFBOContext(CreateContextFlags flags)
 
     NSOpenGLContext* context = nullptr;
 
-    if (!(flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE)) {
-        context = CreateWithFormat(kAttribs_offscreen_coreProfile);
-    }
-    if (!context) {
-        if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER) {
-          if (gfxPrefs::RequireHardwareGL())
-              context = CreateWithFormat(kAttribs_singleBuffered);
-          else
-              context = CreateWithFormat(kAttribs_offscreen_allow_offline);
+    std::vector<NSOpenGLPixelFormatAttribute> attribs;
 
-        } else {
-          if (gfxPrefs::RequireHardwareGL())
-              context = CreateWithFormat(kAttribs_offscreen_accel);
-          else
-              context = CreateWithFormat(kAttribs_offscreen);
-        }
+    if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER ||
+        !(flags & CreateContextFlags::HIGH_POWER))
+    {
+        // This is really poorly named on Apple's part, but "AllowOfflineRenderers" means
+        // that we want to allow running on the iGPU instead of requiring the dGPU.
+        attribs.push_back(NSOpenGLPFAAllowOfflineRenderers);
     }
+
+    if (gfxPrefs::RequireHardwareGL()) {
+        attribs.push_back(NSOpenGLPFAAccelerated);
+    }
+
+    if (!(flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE)) {
+        auto coreAttribs = attribs;
+        coreAttribs.push_back(NSOpenGLPFAOpenGLProfile);
+        coreAttribs.push_back(NSOpenGLProfileVersion3_2Core);
+        coreAttribs.push_back(0);
+        context = CreateWithFormat(coreAttribs.data());
+    }
+
+    if (!context) {
+        attribs.push_back(0);
+        context = CreateWithFormat(attribs.data());
+    }
+
     if (!context) {
         NS_WARNING("Failed to create NSOpenGLContext.");
         return nullptr;

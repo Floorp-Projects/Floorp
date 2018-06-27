@@ -94,7 +94,7 @@ Symbol::for_(JSContext* cx, HandleString description)
     return sym;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 void
 Symbol::dump()
 {
@@ -124,7 +124,7 @@ Symbol::dump(js::GenericPrinter& out)
         out.printf("<Invalid Symbol code=%u>", unsigned(code_));
     }
 }
-#endif  // DEBUG
+#endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
 bool
 js::SymbolDescriptiveString(JSContext* cx, Symbol* sym, MutableHandleValue result)

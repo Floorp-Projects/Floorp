@@ -135,7 +135,7 @@ HTMLLegendElement::GetForm()
 JSObject*
 HTMLLegendElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLLegendElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLLegendElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

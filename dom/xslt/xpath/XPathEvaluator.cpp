@@ -124,7 +124,7 @@ XPathEvaluator::WrapObject(JSContext* aCx,
                            JS::Handle<JSObject*> aGivenProto,
                            JS::MutableHandle<JSObject*> aReflector)
 {
-    return dom::XPathEvaluatorBinding::Wrap(aCx, this, aGivenProto, aReflector);
+    return dom::XPathEvaluator_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 /* static */ XPathEvaluator*

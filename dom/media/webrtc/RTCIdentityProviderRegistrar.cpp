@@ -44,7 +44,7 @@ RTCIdentityProviderRegistrar::GetParentObject() const
 JSObject*
 RTCIdentityProviderRegistrar::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return RTCIdentityProviderRegistrarBinding::Wrap(aCx, this, aGivenProto);
+  return RTCIdentityProviderRegistrar_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

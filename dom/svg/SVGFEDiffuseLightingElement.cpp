@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGFEDiffuseLightingElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEDiffuseLightingElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEDiffuseLightingElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

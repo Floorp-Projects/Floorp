@@ -26,7 +26,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(StyleSheetList)
 /* virtual */ JSObject*
 StyleSheetList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return StyleSheetListBinding::Wrap(aCx, this, aGivenProto);
+  return StyleSheetList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

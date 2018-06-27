@@ -120,7 +120,7 @@ PaymentAddress::~PaymentAddress()
 JSObject*
 PaymentAddress::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PaymentAddressBinding::Wrap(aCx, this, aGivenProto);
+  return PaymentAddress_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 

@@ -271,7 +271,7 @@ PeerConnectionImpl::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto,
                                JS::MutableHandle<JSObject*> aReflector)
 {
-  return PeerConnectionImplBinding::Wrap(aCx, this, aGivenProto, aReflector);
+  return PeerConnectionImpl_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 bool PCUuidGenerator::Generate(std::string* idp) {

@@ -2187,7 +2187,7 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
 }
 
 static bool
-IsOptimizableConstStringSplit(const Value& callee, int argc, Value* args)
+IsOptimizableConstStringSplit(Realm* callerRealm, const Value& callee, int argc, Value* args)
 {
     if (argc != 2 || !args[0].isString() || !args[1].isString())
         return false;
@@ -2199,6 +2199,8 @@ IsOptimizableConstStringSplit(const Value& callee, int argc, Value* args)
         return false;
 
     JSFunction& calleeFun = callee.toObject().as<JSFunction>();
+    if (calleeFun.realm() != callerRealm)
+        return false;
     if (!calleeFun.isNative() || calleeFun.native() != js::intrinsic_StringSplitString)
         return false;
 
@@ -2226,8 +2228,11 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
     // Don't attach an optimized call stub if we could potentially attach an
     // optimized ConstStringSplit stub.
-    if (stub->numOptimizedStubs() == 0 && IsOptimizableConstStringSplit(callee, argc, vp + 2))
+    if (stub->numOptimizedStubs() == 0 &&
+        IsOptimizableConstStringSplit(cx->realm(), callee, argc, vp + 2))
+    {
         return true;
+    }
 
     stub->unlinkStubsWithKind(cx, ICStub::Call_ConstStringSplit);
 
@@ -2367,12 +2372,14 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                 }
             }
 
-            JSObject* thisObject = CreateThisForFunction(cx, fun, newTarget, TenuredObject);
-            if (!thisObject)
-                return false;
+            if (cx->realm() == fun->realm()) {
+                JSObject* thisObject = CreateThisForFunction(cx, fun, newTarget, TenuredObject);
+                if (!thisObject)
+                    return false;
 
-            if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>())
-                templateObject = thisObject;
+                if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>())
+                    templateObject = thisObject;
+            }
         }
 
         if (nativeWithJitEntry) {
@@ -2386,9 +2393,11 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                     constructing ? "yes" : "no", isSpread ? "yes" : "no");
         }
 
+        bool isCrossRealm = cx->realm() != fun->realm();
         ICCallScriptedCompiler compiler(cx, typeMonitorFallback->firstMonitorStub(),
                                         fun, templateObject,
-                                        constructing, isSpread, script->pcToOffset(pc));
+                                        constructing, isSpread, isCrossRealm,
+                                        script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -2443,8 +2452,10 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             return true;
         }
 
+        bool isCrossRealm = cx->realm() != fun->realm();
+
         RootedObject templateObject(cx);
-        if (MOZ_LIKELY(!isSpread && !isSuper)) {
+        if (MOZ_LIKELY(!isSpread && !isSuper && !isCrossRealm)) {
             bool skipAttach = false;
             CallArgs args = CallArgsFromVp(argc, vp);
             if (!GetTemplateObjectForNative(cx, fun, args, &templateObject, &skipAttach))
@@ -2461,8 +2472,6 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                                   fun->isNative() &&
                                   fun->hasJitInfo() &&
                                   fun->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
-
-        bool isCrossRealm = cx->realm() != fun->realm();
 
         JitSpew(JitSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s, spread=%s)",
                 fun.get(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
@@ -2508,7 +2517,7 @@ TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript scr
 
     Value* args = vp + 2;
 
-    if (!IsOptimizableConstStringSplit(callee, argc, args))
+    if (!IsOptimizableConstStringSplit(cx->realm(), callee, argc, args))
         return true;
 
     RootedString str(cx, args[0].toString());
@@ -3238,6 +3247,9 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     if (canUseTailCallReg)
         regs.add(ICTailCallReg);
 
+    if (maybeCrossRealm_)
+        masm.switchToObjectRealm(callee, regs.getAny());
+
     if (isConstructing_) {
         // Save argc before call.
         masm.push(argcReg);
@@ -3413,6 +3425,9 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     }
 
     leaveStubFrame(masm, true);
+
+    if (maybeCrossRealm_)
+        masm.switchToBaselineFrameRealm(R1.scratchReg());
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -3673,12 +3688,8 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
 
     leaveStubFrame(masm);
 
-    if (isCrossRealm_) {
-        Address envChain(BaselineFrameReg, BaselineFrame::reverseOffsetOfEnvironmentChain());
-        Register scratch = R1.scratchReg();
-        masm.loadPtr(envChain, scratch);
-        masm.switchToObjectRealm(scratch, scratch);
-    }
+    if (isCrossRealm_)
+        masm.switchToBaselineFrameRealm(R1.scratchReg());
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -3842,6 +3853,8 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
     masm.Push(target);
     masm.Push(scratch);
 
+    masm.switchToObjectRealm(target, scratch);
+
     // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
     masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), scratch);
     masm.loadJitCodeRaw(target, target);
@@ -3860,6 +3873,8 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
     // Do call.
     masm.callJit(target);
     leaveStubFrame(masm, true);
+
+    masm.switchToBaselineFrameRealm(R1.scratchReg());
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -3930,6 +3945,8 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
     masm.Push(target);
     masm.Push(scratch);
 
+    masm.switchToObjectRealm(target, scratch);
+
     // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
     masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), scratch);
     masm.loadJitCodeRaw(target, target);
@@ -3948,6 +3965,8 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
     // Do call
     masm.callJit(target);
     leaveStubFrame(masm, true);
+
+    masm.switchToBaselineFrameRealm(R1.scratchReg());
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -4045,6 +4064,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
     callee = masm.extractObject(val, ExtractTemp0);
 
     Register scratch = regs.takeAny();
+    masm.switchToObjectRealm(callee, scratch);
     EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
 
     // Note that we use Push, not push, so that callJit will align the stack
@@ -4067,6 +4087,8 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
     masm.callJit(code);
 
     leaveStubFrame(masm, true);
+
+    masm.switchToBaselineFrameRealm(R1.scratchReg());
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);

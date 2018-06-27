@@ -302,23 +302,23 @@ public:
 
   // XXXbz Maybe we should codegen a class holding these constants and
   // inherit from it...
-  static const auto ELEMENT_NODE = mozilla::dom::NodeBinding::ELEMENT_NODE;
-  static const auto ATTRIBUTE_NODE = mozilla::dom::NodeBinding::ATTRIBUTE_NODE;
-  static const auto TEXT_NODE = mozilla::dom::NodeBinding::TEXT_NODE;
+  static const auto ELEMENT_NODE = mozilla::dom::Node_Binding::ELEMENT_NODE;
+  static const auto ATTRIBUTE_NODE = mozilla::dom::Node_Binding::ATTRIBUTE_NODE;
+  static const auto TEXT_NODE = mozilla::dom::Node_Binding::TEXT_NODE;
   static const auto CDATA_SECTION_NODE =
-    mozilla::dom::NodeBinding::CDATA_SECTION_NODE;
+    mozilla::dom::Node_Binding::CDATA_SECTION_NODE;
   static const auto ENTITY_REFERENCE_NODE =
-    mozilla::dom::NodeBinding::ENTITY_REFERENCE_NODE;
-  static const auto ENTITY_NODE = mozilla::dom::NodeBinding::ENTITY_NODE;
+    mozilla::dom::Node_Binding::ENTITY_REFERENCE_NODE;
+  static const auto ENTITY_NODE = mozilla::dom::Node_Binding::ENTITY_NODE;
   static const auto PROCESSING_INSTRUCTION_NODE =
-    mozilla::dom::NodeBinding::PROCESSING_INSTRUCTION_NODE;
-  static const auto COMMENT_NODE = mozilla::dom::NodeBinding::COMMENT_NODE;
-  static const auto DOCUMENT_NODE = mozilla::dom::NodeBinding::DOCUMENT_NODE;
+    mozilla::dom::Node_Binding::PROCESSING_INSTRUCTION_NODE;
+  static const auto COMMENT_NODE = mozilla::dom::Node_Binding::COMMENT_NODE;
+  static const auto DOCUMENT_NODE = mozilla::dom::Node_Binding::DOCUMENT_NODE;
   static const auto DOCUMENT_TYPE_NODE =
-    mozilla::dom::NodeBinding::DOCUMENT_TYPE_NODE;
+    mozilla::dom::Node_Binding::DOCUMENT_TYPE_NODE;
   static const auto DOCUMENT_FRAGMENT_NODE =
-    mozilla::dom::NodeBinding::DOCUMENT_FRAGMENT_NODE;
-  static const auto NOTATION_NODE = mozilla::dom::NodeBinding::NOTATION_NODE;
+    mozilla::dom::Node_Binding::DOCUMENT_FRAGMENT_NODE;
+  static const auto NOTATION_NODE = mozilla::dom::Node_Binding::NOTATION_NODE;
 
   template<class T>
   using Sequence = mozilla::dom::Sequence<T>;

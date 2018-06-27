@@ -9,7 +9,7 @@ use std::path::Path;
 use syn;
 use syn::fold::Fold;
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 
 struct MatchByteParser {
 }
@@ -21,7 +21,7 @@ pub fn expand(from: &Path, to: &Path) {
     let mut m = MatchByteParser {};
     let ast = m.fold_file(ast);
 
-    let code = ast.into_tokens().to_string().replace("{ ", "{\n").replace(" }", "\n}");
+    let code = ast.into_token_stream().to_string().replace("{ ", "{\n").replace(" }", "\n}");
     File::create(to).unwrap().write_all(code.as_bytes()).unwrap();
 }
 
@@ -82,7 +82,7 @@ fn expand_match_byte(body: &TokenStream) -> syn::Expr {
     for (i, ref arm) in match_byte.arms.iter().enumerate() {
         let case_id = i + 1;
         let index = case_id as isize;
-        let name = syn::Ident::from(format!("Case{}", case_id));
+        let name = syn::Ident::new(&format!("Case{}", case_id), Span::call_site());
 
         for pat in &arm.pats {
             match pat {
@@ -111,7 +111,7 @@ fn expand_match_byte(body: &TokenStream) -> syn::Expr {
                         }
                     }
                 },
-                &syn::Pat::Ident(syn::PatIdent { ident, .. }) => {
+                &syn::Pat::Ident(syn::PatIdent { ref ident, .. }) => {
                     assert_eq!(wildcard, None);
                     wildcard = Some(ident);
                     for byte in table.iter_mut() {

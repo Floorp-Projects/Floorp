@@ -31,7 +31,7 @@ HTMLLabelElement::~HTMLLabelElement()
 JSObject*
 HTMLLabelElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLLabelElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLLabelElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIDOMHTMLLabelElement
@@ -157,8 +157,8 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               // pass FLAG_BYMOUSE so that we get correct focus ring behavior,
               // but we don't want to pass FLAG_BYMOUSE if this click event was
               // caused by the user pressing an accesskey.
-              bool byMouse = (mouseEvent->inputSource != MouseEventBinding::MOZ_SOURCE_KEYBOARD);
-              bool byTouch = (mouseEvent->inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH);
+              bool byMouse = (mouseEvent->inputSource != MouseEvent_Binding::MOZ_SOURCE_KEYBOARD);
+              bool byTouch = (mouseEvent->inputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH);
               fm->SetFocus(content,
                            nsIFocusManager::FLAG_BYMOVEFOCUS |
                            (byMouse ? nsIFocusManager::FLAG_BYMOUSE : 0) |
@@ -210,7 +210,7 @@ HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
     // Click on it if the users prefs indicate to do so.
     WidgetMouseEvent event(aIsTrustedEvent, eMouseClick,
                            nullptr, WidgetMouseEvent::eReal);
-    event.inputSource = MouseEventBinding::MOZ_SOURCE_KEYBOARD;
+    event.inputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
 
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);

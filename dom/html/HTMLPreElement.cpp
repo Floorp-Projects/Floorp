@@ -87,7 +87,7 @@ HTMLPreElement::GetAttributeMappingFunction() const
 JSObject*
 HTMLPreElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLPreElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLPreElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

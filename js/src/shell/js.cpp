@@ -2648,7 +2648,7 @@ PCToLine(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 
 static void
 UpdateSwitchTableBounds(JSContext* cx, HandleScript script, unsigned offset,
@@ -2761,7 +2761,7 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
 
           case SRC_TABLESWITCH: {
-            JSOp op = JSOp(script->code()[offset]);
+            mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_TABLESWITCH);
             if (!sp->jsprintf(" length %u", unsigned(GetSrcNoteOffset(sn, 0))))
                 return false;
@@ -2770,7 +2770,7 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             break;
           }
           case SRC_CONDSWITCH: {
-            JSOp op = JSOp(script->code()[offset]);
+            mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_CONDSWITCH);
             if (!sp->jsprintf(" length %u", unsigned(GetSrcNoteOffset(sn, 0))))
                 return false;
@@ -3252,7 +3252,7 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 /* Pretend we can always preserve wrappers for dummy DOM objects. */
 static bool
@@ -4137,7 +4137,7 @@ ClearLastWarning(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 static bool
 StackDump(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -6879,7 +6879,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "throwError()",
 "  Throw an error from JS_ReportError."),
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     JS_FN_HELP("disassemble", DisassembleToString, 1, 0,
 "disassemble([fun/code])",
 "  Return the disassembly for the given function or code.\n"

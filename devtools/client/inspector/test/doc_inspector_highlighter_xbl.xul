@@ -4,6 +4,6 @@
 <window title="Test that the picker works correctly with XBL anonymous nodes"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<scale id="scale" style="background:red"/>
+<tree id="tree" style="background:red"/>
 
 </window>

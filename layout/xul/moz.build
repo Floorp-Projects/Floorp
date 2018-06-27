@@ -18,7 +18,6 @@ if CONFIG['ENABLE_TESTS']:
 XPIDL_SOURCES += [
     'nsIBoxObject.idl',
     'nsIListBoxObject.idl',
-    'nsISliderListener.idl',
 ]
 
 XPIDL_MODULE = 'layout_xul'

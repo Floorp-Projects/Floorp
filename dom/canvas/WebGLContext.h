@@ -30,10 +30,6 @@
 #include "ScopedGLHelpers.h"
 #include "TexUnpackBlob.h"
 
-#ifdef XP_MACOSX
-#include "ForceDiscreteGPUHelperCGL.h"
-#endif
-
 // Local
 #include "CacheMap.h"
 #include "WebGLContextLossHandler.h"
@@ -117,30 +113,17 @@ void AssertUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint shadow);
 
 struct WebGLContextOptions
 {
-    // these are defaults
+    bool alpha = true;
+    bool depth = true;
+    bool stencil = false;
+    bool premultipliedAlpha = true;
+    bool antialias = true;
+    bool preserveDrawingBuffer = false;
+    bool failIfMajorPerformanceCaveat = false;
+    dom::WebGLPowerPreference powerPreference = dom::WebGLPowerPreference::Default;
+
     WebGLContextOptions();
-
-    bool operator==(const WebGLContextOptions& other) const {
-        return
-            alpha == other.alpha &&
-            depth == other.depth &&
-            stencil == other.stencil &&
-            premultipliedAlpha == other.premultipliedAlpha &&
-            antialias == other.antialias &&
-            preserveDrawingBuffer == other.preserveDrawingBuffer;
-    }
-
-    bool operator!=(const WebGLContextOptions& other) const {
-        return !operator==(other);
-    }
-
-    bool alpha;
-    bool depth;
-    bool stencil;
-    bool premultipliedAlpha;
-    bool antialias;
-    bool preserveDrawingBuffer;
-    bool failIfMajorPerformanceCaveat;
+    bool operator==(const WebGLContextOptions&) const;
 };
 
 // From WebGLContextUtils
@@ -2041,16 +2024,6 @@ public:
     template <typename WebGLObjectType>
     JSObject* WebGLObjectAsJSObject(JSContext* cx, const WebGLObjectType*,
                                     ErrorResult& rv) const;
-
-#ifdef XP_MACOSX
-    // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
-    // Debouncing note: we don't want to switch GPUs too frequently, so try to not create and destroy
-    // these objects at high frequency. Having WebGLContext's hold one such object seems fine,
-    // because WebGLContext objects only go away during GC, which shouldn't happen too frequently.
-    // If in the future GC becomes much more frequent, we may have to revisit then (maybe use a timer).
-    ForceDiscreteGPUHelperCGL mForceDiscreteGPUHelper;
-#endif
-
 public:
     // console logging helpers
     void GenerateWarning(const char* fmt, ...) const MOZ_FORMAT_PRINTF(2, 3);

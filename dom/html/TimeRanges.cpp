@@ -185,7 +185,7 @@ TimeRanges::Find(double aTime, double aTolerance /* = 0 */)
 JSObject*
 TimeRanges::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TimeRangesBinding::Wrap(aCx, this, aGivenProto);
+  return TimeRanges_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*

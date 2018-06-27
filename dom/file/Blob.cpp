@@ -230,7 +230,7 @@ Blob::SetMutable(bool aMutable)
 JSObject*
 Blob::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return BlobBinding::Wrap(aCx, this, aGivenProto);
+  return Blob_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<Blob>

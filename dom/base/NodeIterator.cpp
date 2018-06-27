@@ -202,7 +202,7 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
             return nullptr;
         }
 
-        if (filtered == NodeFilterBinding::FILTER_ACCEPT) {
+        if (filtered == NodeFilter_Binding::FILTER_ACCEPT) {
             mPointer = mWorkingPointer;
             return testNode.forget();
         }
@@ -235,7 +235,7 @@ void NodeIterator::ContentRemoved(nsIContent* aChild,
 bool
 NodeIterator::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
 {
-    return NodeIteratorBinding::Wrap(cx, this, aGivenProto, aReflector);
+    return NodeIterator_Binding::Wrap(cx, this, aGivenProto, aReflector);
 }
 
 } // namespace dom

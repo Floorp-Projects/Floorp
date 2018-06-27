@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGFEMergeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEMergeElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEMergeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGFEMergeElement::sStringInfo[1] =

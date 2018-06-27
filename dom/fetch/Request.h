@@ -38,7 +38,7 @@ public:
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return RequestBinding::Wrap(aCx, this, aGivenProto);
+    return Request_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   void

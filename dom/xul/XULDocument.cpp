@@ -2649,8 +2649,8 @@ XULDocument::DoneWalking()
             this,
             static_cast<nsIDocument*>(this),
             NS_LITERAL_STRING("MozBeforeInitialXULLayout"),
-            true,
-            false);
+            CanBubble::eYes,
+            Cancelable::eNo);
 
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, setup some state so that we don't have to restyle
@@ -4086,7 +4086,7 @@ XULDocument::ThreadSafeGetDocumentLWTheme() const
 JSObject*
 XULDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return XULDocumentBinding::Wrap(aCx, this, aGivenProto);
+  return XULDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -25,7 +25,7 @@ ImageBitmapRenderingContext::~ImageBitmapRenderingContext()
 JSObject*
 ImageBitmapRenderingContext::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ImageBitmapRenderingContextBinding::Wrap(aCx, this, aGivenProto);
+  return ImageBitmapRenderingContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<layers::Image>

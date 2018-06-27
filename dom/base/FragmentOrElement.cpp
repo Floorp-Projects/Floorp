@@ -503,7 +503,7 @@ JSObject*
 nsAttrChildContentList::WrapObject(JSContext *cx,
                                    JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this, aGivenProto);
+  return NodeList_Binding::Wrap(cx, this, aGivenProto);
 }
 
 uint32_t

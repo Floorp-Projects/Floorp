@@ -25,7 +25,7 @@ namespace dom {
 JSObject*
 SVGAElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGAElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGAElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGAElement::sStringInfo[3] =

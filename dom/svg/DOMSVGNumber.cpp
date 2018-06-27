@@ -194,7 +194,7 @@ DOMSVGNumber::IndexIsValid()
 JSObject*
 DOMSVGNumber::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::SVGNumberBinding::Wrap(aCx, this, aGivenProto);
+  return dom::SVGNumber_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

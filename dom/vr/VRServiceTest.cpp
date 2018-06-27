@@ -51,7 +51,7 @@ VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
 JSObject*
 VRMockDisplay::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRMockDisplayBinding::Wrap(aCx, this, aGivenProto);
+  return VRMockDisplay_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void VRMockDisplay::SetEyeResolution(unsigned long aRenderWidth, unsigned long aRenderHeight)
@@ -175,7 +175,7 @@ VRMockController::VRMockController(const nsCString& aID, uint32_t aDeviceID)
 JSObject*
 VRMockController::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRMockControllerBinding::Wrap(aCx, this, aGivenProto);
+  return VRMockController_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -281,7 +281,7 @@ NS_IMPL_RELEASE_INHERITED(VRServiceTest, DOMEventTargetHelper)
 JSObject*
 VRServiceTest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRServiceTestBinding::Wrap(aCx, this, aGivenProto);
+  return VRServiceTest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // static

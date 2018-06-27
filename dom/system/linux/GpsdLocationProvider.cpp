@@ -185,7 +185,7 @@ public:
         err = PollLoop5();
         break;
       default:
-        err = PositionErrorBinding::POSITION_UNAVAILABLE;
+        err = PositionError_Binding::POSITION_UNAVAILABLE;
         break;
     }
 
@@ -303,7 +303,7 @@ protected:
 
     return err;
 #else
-    return PositionErrorBinding::POSITION_UNAVAILABLE;
+    return PositionError_Binding::POSITION_UNAVAILABLE;
 #endif // GPSD_MAJOR_API_VERSION
   }
 
@@ -315,13 +315,13 @@ protected:
       case EPERM:
           MOZ_FALLTHROUGH;
       case EROFS:
-        return PositionErrorBinding::PERMISSION_DENIED;
+        return PositionError_Binding::PERMISSION_DENIED;
       case ETIME:
           MOZ_FALLTHROUGH;
       case ETIMEDOUT:
-        return PositionErrorBinding::TIMEOUT;
+        return PositionError_Binding::TIMEOUT;
       default:
-        return PositionErrorBinding::POSITION_UNAVAILABLE;
+        return PositionError_Binding::POSITION_UNAVAILABLE;
     }
   }
 

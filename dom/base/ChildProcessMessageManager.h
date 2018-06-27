@@ -26,7 +26,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return ChildProcessMessageManagerBinding::Wrap(aCx, this, aGivenProto);
+    return ChildProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
   }
 
 protected:

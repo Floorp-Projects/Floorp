@@ -55,7 +55,7 @@ var AboutTabCrashed = {
   },
 
   init() {
-    this.MESSAGES.forEach((msg) => addMessageListener(msg, this.receiveMessage.bind(this)));
+    this.MESSAGES.forEach((msg) => RPMAddMessageListener(msg, this.receiveMessage.bind(this)));
     addEventListener("DOMContentLoaded", this);
 
     document.title = this.pageData.title;
@@ -108,7 +108,7 @@ var AboutTabCrashed = {
     let event = new CustomEvent("AboutTabCrashedLoad", {bubbles: true});
     document.dispatchEvent(event);
 
-    sendAsyncMessage("Load");
+    RPMSendAsyncMessage("Load");
   },
 
   onClick(event) {
@@ -295,7 +295,7 @@ var AboutTabCrashed = {
       autoSubmit = document.getElementById("autoSubmit").checked;
     }
 
-    sendAsyncMessage(messageName, {
+    RPMSendAsyncMessage(messageName, {
       sendReport,
       comments,
       email,

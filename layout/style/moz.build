@@ -27,7 +27,6 @@ EXPORTS += [
     'AnimationCommon.h',
     'CounterStyleManager.h',
     'nsAnimationManager.h',
-    'nsComputedDOMStylePropertyList.h',
     'nsCSSAnonBoxes.h',
     'nsCSSAnonBoxList.h',
     'nsCSSCounterDescList.h',
@@ -274,7 +273,14 @@ servo_props.inputs = [
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [
+        'nsComputedDOMStyleGenerated.cpp',
         'nsCSSPropsGenerated.inc',
+    ]
+
+    computed = GENERATED_FILES['nsComputedDOMStyleGenerated.cpp']
+    computed.script = 'GenerateComputedDOMStyleGenerated.py:generate'
+    computed.inputs = [
+        '!ServoCSSPropList.py',
     ]
 
     css_props = GENERATED_FILES['nsCSSPropsGenerated.inc']

@@ -11177,22 +11177,6 @@
     "kind": "boolean",
     "description": "Intercepted fetch sending back same Request object. File bugs in Core::DOM in case of a Telemetry regression."
   },
-  "E10S_STATUS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 12,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1241294],
-    "description": "Why e10s is enabled or disabled (0=ENABLED_BY_USER, 1=ENABLED_BY_DEFAULT, 2=DISABLED_BY_USER, 3=DISABLED_IN_SAFE_MODE, 4=DISABLED_FOR_ACCESSIBILITY, 5=DISABLED_FOR_MAC_GFX, 6=DISABLED_FOR_BIDI, 7=DISABLED_FOR_ADDONS, 8=FORCE_DISABLED, 9=DISABLED_FOR_XPLAYERS, 10=DISABLED_FOR_OS_VERSION)"
-  },
-  "E10S_BLOCKED_FROM_RUNNING": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
-  },
   "ONBEFOREUNLOAD_PROMPT_ACTION" : {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "45",

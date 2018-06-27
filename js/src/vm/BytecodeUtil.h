@@ -561,7 +561,7 @@ StackDefs(jsbytecode* pc)
     return ndefs;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 /*
  * Given bytecode address pc in script's main program code, compute the operand
  * stack depth just before (JSOp) *pc executes.  If *pc is not reachable, return
@@ -912,7 +912,7 @@ GetNextPc(jsbytecode* pc)
     return pc + GetBytecodeLength(pc);
 }
 
-#if defined(DEBUG)
+#if defined(DEBUG) || defined(JS_JITSPEW)
 /*
  * Disassemblers, for debugging only.
  */

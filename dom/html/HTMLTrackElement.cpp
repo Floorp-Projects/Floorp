@@ -167,7 +167,7 @@ HTMLTrackElement::OnChannelRedirect(nsIChannel* aChannel,
 JSObject*
 HTMLTrackElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTrackElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLTrackElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 TextTrack*
@@ -454,7 +454,7 @@ HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName)
     return;
   }
   nsContentUtils::DispatchTrustedEvent(doc, static_cast<nsIContent*>(this),
-                                       aName, false, false);
+                                       aName, CanBubble::eNo, Cancelable::eNo);
 }
 
 void

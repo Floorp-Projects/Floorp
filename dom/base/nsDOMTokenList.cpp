@@ -435,6 +435,6 @@ nsDOMTokenList::GetDocGroup() const
 JSObject*
 nsDOMTokenList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMTokenListBinding::Wrap(cx, this, aGivenProto);
+  return DOMTokenList_Binding::Wrap(cx, this, aGivenProto);
 }
 

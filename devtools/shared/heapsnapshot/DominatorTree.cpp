@@ -133,7 +133,7 @@ NS_INTERFACE_MAP_END
 /* virtual */ JSObject*
 DominatorTree::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
 {
-  return dom::DominatorTreeBinding::Wrap(aCx, this, aGivenProto);
+  return dom::DominatorTree_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace devtools

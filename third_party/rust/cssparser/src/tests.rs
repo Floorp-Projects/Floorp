@@ -785,13 +785,21 @@ impl<'i> AtRuleParser<'i> for JsonParser {
         }
     }
 
-    fn rule_without_block(&mut self, mut prelude: Vec<Json>) -> Json {
+    fn rule_without_block(
+        &mut self,
+        mut prelude: Vec<Json>,
+        _location: SourceLocation,
+    ) -> Json {
         prelude.push(Json::Null);
         Json::Array(prelude)
     }
 
-    fn parse_block<'t>(&mut self, mut prelude: Vec<Json>, input: &mut Parser<'i, 't>)
-                       -> Result<Json, ParseError<'i, ()>> {
+    fn parse_block<'t>(
+        &mut self,
+        mut prelude: Vec<Json>,
+        _location: SourceLocation,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Json, ParseError<'i, ()>> {
         prelude.push(Json::Array(component_values_to_json(input)));
         Ok(Json::Array(prelude))
     }
@@ -806,8 +814,12 @@ impl<'i> QualifiedRuleParser<'i> for JsonParser {
         Ok(component_values_to_json(input))
     }
 
-    fn parse_block<'t>(&mut self, prelude: Vec<Json>, input: &mut Parser<'i, 't>)
-                       -> Result<Json, ParseError<'i, ()>> {
+    fn parse_block<'t>(
+        &mut self,
+        prelude: Vec<Json>,
+        _location: SourceLocation,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Json, ParseError<'i, ()>> {
         Ok(JArray![
             "qualified rule",
             prelude,

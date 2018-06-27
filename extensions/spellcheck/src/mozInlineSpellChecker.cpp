@@ -1866,18 +1866,18 @@ mozInlineSpellChecker::OnKeyPress(Event* aKeyEvent)
   // we only care about navigation keys that moved selection
   switch (keyCode)
   {
-    case KeyboardEventBinding::DOM_VK_RIGHT:
-    case KeyboardEventBinding::DOM_VK_LEFT:
+    case KeyboardEvent_Binding::DOM_VK_RIGHT:
+    case KeyboardEvent_Binding::DOM_VK_LEFT:
       HandleNavigationEvent(false,
-                            keyCode == KeyboardEventBinding::DOM_VK_RIGHT ?
+                            keyCode == KeyboardEvent_Binding::DOM_VK_RIGHT ?
                               1 : -1);
       break;
-    case KeyboardEventBinding::DOM_VK_UP:
-    case KeyboardEventBinding::DOM_VK_DOWN:
-    case KeyboardEventBinding::DOM_VK_HOME:
-    case KeyboardEventBinding::DOM_VK_END:
-    case KeyboardEventBinding::DOM_VK_PAGE_UP:
-    case KeyboardEventBinding::DOM_VK_PAGE_DOWN:
+    case KeyboardEvent_Binding::DOM_VK_UP:
+    case KeyboardEvent_Binding::DOM_VK_DOWN:
+    case KeyboardEvent_Binding::DOM_VK_HOME:
+    case KeyboardEvent_Binding::DOM_VK_END:
+    case KeyboardEvent_Binding::DOM_VK_PAGE_UP:
+    case KeyboardEvent_Binding::DOM_VK_PAGE_DOWN:
       HandleNavigationEvent(true /* force a spelling correction */);
       break;
   }

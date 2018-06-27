@@ -27,7 +27,7 @@ PerformanceMeasure::~PerformanceMeasure()
 JSObject*
 PerformanceMeasure::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceMeasureBinding::Wrap(aCx, this, aGivenProto);
+  return PerformanceMeasure_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 size_t

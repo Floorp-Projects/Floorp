@@ -181,7 +181,7 @@ StructuredCloneBlob::WriteStructuredClone(JSContext* aCx, JSStructuredCloneWrite
 bool
 StructuredCloneBlob::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto, JS::MutableHandleObject aResult)
 {
-    return StructuredCloneHolderBinding::Wrap(aCx, this, aGivenProto, aResult);
+    return StructuredCloneHolder_Binding::Wrap(aCx, this, aGivenProto, aResult);
 }
 
 

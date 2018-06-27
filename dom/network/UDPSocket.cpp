@@ -138,7 +138,7 @@ UDPSocket::~UDPSocket()
 JSObject*
 UDPSocket::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return UDPSocketBinding::Wrap(aCx, this, aGivenProto);
+  return UDPSocket_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

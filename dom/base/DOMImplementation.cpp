@@ -30,7 +30,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMImplementation)
 JSObject*
 DOMImplementation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMImplementationBinding::Wrap(aCx, this, aGivenProto);
+  return DOMImplementation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DocumentType>

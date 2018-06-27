@@ -28,7 +28,7 @@ public:
   RawServoSupportsRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  uint16_t Type() const override { return CSSRuleBinding::SUPPORTS_RULE; }
+  uint16_t Type() const override { return CSSRule_Binding::SUPPORTS_RULE; }
   void GetCssText(nsAString& aCssText) const final;
   void GetConditionText(nsAString& aConditionText) final;
   void SetConditionText(const nsAString& aConditionText,

@@ -1038,7 +1038,8 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
         if (dispatchEvent) {
           nsContentUtils::DispatchTrustedEvent(GetParentObject(), target,
                                                NS_LITERAL_STRING("selectstart"),
-                                               true, true, &defaultAction);
+                                               CanBubble::eYes, Cancelable::eYes,
+                                               &defaultAction);
 
           if (!defaultAction) {
             return NS_OK;
@@ -3862,7 +3863,7 @@ Selection::ResetColors(ErrorResult& aRv)
 JSObject*
 Selection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::SelectionBinding::Wrap(aCx, this, aGivenProto);
+  return mozilla::dom::Selection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // AutoHideSelectionChanges

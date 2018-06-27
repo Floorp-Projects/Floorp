@@ -43,7 +43,7 @@ AbortController::AbortController(nsIGlobalObject* aGlobal)
 JSObject*
 AbortController::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AbortControllerBinding::Wrap(aCx, this, aGivenProto);
+  return AbortController_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsIGlobalObject*
