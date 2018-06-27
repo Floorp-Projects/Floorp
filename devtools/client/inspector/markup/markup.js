@@ -65,6 +65,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   EventEmitter.decorate(this);
 
   this.inspector = inspector;
+  this.highlighters = inspector.highlighters;
   this.walker = this.inspector.walker;
   this._frame = frame;
   this.win = this._frame.contentWindow;
@@ -1914,6 +1915,7 @@ MarkupView.prototype = {
     this.imagePreviewTooltip = null;
 
     this.doc = null;
+    this.highlighters = null;
     this.win = null;
 
     this._lastDropTarget = null;
