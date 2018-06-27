@@ -515,13 +515,13 @@ UnprivilegedJunkScope()
 JSObject*
 PrivilegedJunkScope()
 {
-    return XPCJSRuntime::Get()->LoaderGlobal();
+    return XPCJSRuntime::Get()->PrivilegedJunkScope();
 }
 
 JSObject*
 CompilationScope()
 {
-    return XPCJSRuntime::Get()->LoaderGlobal();
+    return XPCJSRuntime::Get()->CompilationScope();
 }
 
 nsGlobalWindowInner*
@@ -2821,7 +2821,8 @@ void
 XPCJSRuntime::Initialize(JSContext* cx)
 {
     mUnprivilegedJunkScope.init(cx, nullptr);
-    mLoaderGlobal.init(cx, nullptr);
+    mPrivilegedJunkScope.init(cx, nullptr);
+    mCompilationScope.init(cx, nullptr);
 
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
@@ -3071,6 +3072,24 @@ XPCJSRuntime::InitSingletonScopes()
     rv = CreateSandboxObject(cx, &v, nullptr, unprivilegedJunkScopeOptions);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     mUnprivilegedJunkScope = js::UncheckedUnwrap(&v.toObject());
+
+    // Create the Privileged Junk Scope.
+    SandboxOptions privilegedJunkScopeOptions;
+    privilegedJunkScopeOptions.sandboxName.AssignLiteral("XPConnect Privileged Junk Compartment");
+    privilegedJunkScopeOptions.invisibleToDebugger = true;
+    privilegedJunkScopeOptions.wantComponents = false;
+    rv = CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), privilegedJunkScopeOptions);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    mPrivilegedJunkScope = js::UncheckedUnwrap(&v.toObject());
+
+    // Create the Compilation Scope.
+    SandboxOptions compilationScopeOptions;
+    compilationScopeOptions.sandboxName.AssignLiteral("XPConnect Compilation Compartment");
+    compilationScopeOptions.invisibleToDebugger = true;
+    compilationScopeOptions.discardSource = ShouldDiscardSystemSource();
+    rv = CreateSandboxObject(cx, &v, /* principal = */ nullptr, compilationScopeOptions);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    mCompilationScope = js::UncheckedUnwrap(&v.toObject());
 }
 
 void
@@ -3081,20 +3100,10 @@ XPCJSRuntime::DeleteSingletonScopes()
     RefPtr<SandboxPrivate> sandbox = SandboxPrivate::GetPrivate(mUnprivilegedJunkScope);
     sandbox->ReleaseWrapper(sandbox);
     mUnprivilegedJunkScope = nullptr;
-    mLoaderGlobal = nullptr;
-}
-
-JSObject*
-XPCJSRuntime::LoaderGlobal()
-{
-    if (!mLoaderGlobal) {
-        RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::GetOrCreate();
-
-        dom::AutoJSAPI jsapi;
-        jsapi.Init();
-
-        mLoaderGlobal = loader->GetSharedGlobal(jsapi.cx());
-        MOZ_RELEASE_ASSERT(!JS_IsExceptionPending(jsapi.cx()));
-    }
-    return mLoaderGlobal;
+    sandbox = SandboxPrivate::GetPrivate(mPrivilegedJunkScope);
+    sandbox->ReleaseWrapper(sandbox);
+    mPrivilegedJunkScope = nullptr;
+    sandbox = SandboxPrivate::GetPrivate(mCompilationScope);
+    sandbox->ReleaseWrapper(sandbox);
+    mCompilationScope = nullptr;
 }

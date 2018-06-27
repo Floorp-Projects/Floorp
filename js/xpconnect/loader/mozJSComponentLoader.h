@@ -89,7 +89,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
  protected:
     virtual ~mozJSComponentLoader();
 
-    friend class XPCJSRuntime;
+    friend class mozilla::ScriptPreloader;
 
     JSObject* CompilationScope(JSContext* aCx)
     {
