@@ -45,14 +45,6 @@ class Telemetry {
   }
 
   /**
-   * The number of milliseconds since process start using monotonic
-   * timestamps (unaffected by system clock changes).
-   */
-  msSinceProcessStart() {
-    return Services.telemetry.msSinceProcessStart();
-  }
-
-  /**
    * Starts a timer associated with a telemetry histogram. The timer can be
    * directly associated with a histogram, or with a pair of a histogram and
    * an object.
