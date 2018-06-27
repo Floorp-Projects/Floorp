@@ -15,12 +15,4 @@ interface nsIEnterprisePolicies : nsISupports
   readonly attribute short status;
 
   bool isAllowed(in ACString feature);
-
-  /**
-   * Get the active policies that have been successfully parsed.
-   *
-   * @returns A JS object that contains the policies names and
-   *          their corresponding parameters.
-   */
-  jsval getActivePolicies();
 };
