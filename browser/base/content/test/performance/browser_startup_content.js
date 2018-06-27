@@ -17,25 +17,80 @@
 /* Set this to true only for debugging purpose; it makes the output noisy. */
 const kDumpAllStacks = false;
 
-const blacklist = {
+const whitelist = {
   components: new Set([
-    "PushComponents.js",
-    "TelemetryStartup.js",
+    "ContentProcessSingleton.js",
+    "EnterprisePoliciesContent.js", // bug 1470324
+    "extension-process-script.js",
   ]),
   modules: new Set([
-    "resource:///modules/ContentWebRTC.jsm",
-    "resource://gre/modules/InlineSpellChecker.jsm",
-    "resource://gre/modules/InlineSpellCheckerContent.jsm",
-    "resource://gre/modules/LoginHelper.jsm",
-    "resource://gre/modules/LoginManagerContent.jsm",
-    "resource://gre/modules/Promise.jsm",
-    "resource://gre/modules/Task.jsm",
-    "resource://gre/modules/osfile.jsm",
-    "resource://pdf.js/PdfJs.jsm",
-    "resource://pdf.js/PdfStreamConverter.jsm",
+    // From the test harness
+    "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
+    "chrome://specialpowers/content/MockColorPicker.jsm",
+    "chrome://specialpowers/content/MockFilePicker.jsm",
+    "chrome://specialpowers/content/MockPermissionPrompt.jsm",
+
+    // General utilities
+    "resource://gre/modules/AppConstants.jsm",
+    "resource://gre/modules/AsyncShutdown.jsm",
+    "resource://gre/modules/DeferredTask.jsm",
+    "resource://gre/modules/FileUtils.jsm",
+    "resource://gre/modules/NetUtil.jsm",
+    "resource://gre/modules/PromiseUtils.jsm",
+    "resource://gre/modules/Services.jsm", // bug 1464542
+    "resource://gre/modules/Timer.jsm",
+    "resource://gre/modules/XPCOMUtils.jsm",
+
+    // Logging related
+    "resource://gre/modules/Console.jsm", // bug 1470333
+    "resource://gre/modules/Log.jsm",
+
+    // Session store
+    "resource:///modules/sessionstore/ContentRestore.jsm",
+    "resource://gre/modules/sessionstore/SessionHistory.jsm",
+
+    // Forms and passwords
+    "resource://formautofill/FormAutofillContent.jsm",
+    "resource://formautofill/FormAutofillUtils.jsm",
+
+    // Browser front-end
+    "resource:///modules/ContentLinkHandler.jsm",
+    "resource:///modules/ContentMetaHandler.jsm",
+    "resource:///modules/PageStyleHandler.jsm",
+    "resource://gre/modules/BrowserUtils.jsm",
+    "resource://gre/modules/E10SUtils.jsm",
+    "resource://gre/modules/PrivateBrowsingUtils.jsm",
+    "resource://gre/modules/ReaderMode.jsm",
+    "resource://gre/modules/RemotePageManager.jsm",
+
+    // Pocket
+    "chrome://pocket/content/AboutPocket.jsm",
+
+    // Telemetry
+    "resource://gre/modules/TelemetryController.jsm", // bug 1470339
+    "resource://gre/modules/TelemetrySession.jsm", // bug 1470339
+    "resource://gre/modules/TelemetryUtils.jsm", // bug 1470339
+
+    // PDF.js
+    "resource://pdf.js/PdfJsRegistration.jsm",
+    "resource://pdf.js/PdfjsContentUtils.jsm",
+
+    // Extensions
+    "resource://gre/modules/ExtensionUtils.jsm",
+    "resource://gre/modules/MessageChannel.jsm",
+
+    // Service workers
+    "resource://gre/modules/ServiceWorkerCleanUp.jsm",
+
+    // Shield
+    "resource://normandy-content/AboutPages.jsm",
   ]),
+};
+
+const blacklist = {
   services: new Set([
     "@mozilla.org/base/telemetry-startup;1",
+    "@mozilla.org/embedcomp/default-tooltiptextprovider;1",
     "@mozilla.org/push/Service;1",
   ])
 };
@@ -69,28 +124,63 @@ add_task(async function() {
       modules[module] = collectStacks ? loader.getModuleImportStack(module) : "";
     }
     let services = {};
-    for (let contractID in Object.keys(Cc)) {
+    for (let contractID of Object.keys(Cc)) {
       try {
-        if (Cm.isServiceInstantiatedByContractID(contractID, Ci.nsISupports))
+        if (Cm.isServiceInstantiatedByContractID(contractID, Ci.nsISupports)) {
           services[contractID] = "";
+        }
       } catch (e) {}
     }
     sendAsyncMessage("Test:LoadedScripts", {components, modules, services});
   } + ")()", false);
 
-  let loadedList = await promise;
-  for (let scriptType in blacklist) {
-    info(scriptType);
-    for (let file of blacklist[scriptType]) {
-      let loaded = file in loadedList[scriptType];
-      ok(!loaded, `${file} is not allowed`);
-      if (loaded && loadedList[scriptType][file])
-        info(loadedList[scriptType][file]);
+  let loadedInfo = await promise;
+  let loadedList = {};
+
+  for (let scriptType in whitelist) {
+    loadedList[scriptType] = Object.keys(loadedInfo[scriptType]).filter(c => {
+      if (!whitelist[scriptType].has(c))
+        return true;
+      whitelist[scriptType].delete(c);
+      return false;
+    });
+
+    is(loadedList[scriptType].length, 0,
+       `should have no unexpected ${scriptType} loaded on content process startup`);
+
+    for (let script of loadedList[scriptType]) {
+      ok(false, `Unexpected ${scriptType} loaded during content process startup: ${script}`);
+      info(`Stack that loaded ${script}:\n`);
+      info(loadedInfo[scriptType][script]);
     }
-    for (let file in loadedList[scriptType]) {
-      info(file);
-      if (kDumpAllStacks && loadedList[scriptType][file])
-        info(loadedList[scriptType][file]);
+
+    is(whitelist[scriptType].size, 0,
+       `all ${scriptType} whitelist entries should have been used`);
+
+    for (let script of whitelist[scriptType]) {
+      ok(false, `${scriptType} is whitelisted for content process startup but wasn't used: ${script}`);
+    }
+
+    if (kDumpAllStacks) {
+      info(`Stacks for all loaded ${scriptType}:`);
+      for (let file in loadedInfo[scriptType]) {
+        if (loadedInfo[scriptType][file]) {
+          info(`${file}\n------------------------------------\n` + loadedInfo[scriptType][file] + "\n");
+        }
+      }
+    }
+  }
+
+  for (let scriptType in blacklist) {
+    for (let script of blacklist[scriptType]) {
+      let loaded = script in loadedInfo[scriptType];
+      if (loaded) {
+        ok(false, `Unexpected ${scriptType} loaded during content process startup: ${script}`);
+        if (loadedInfo[scriptType][script]) {
+          info(`Stack that loaded ${script}:\n`);
+          info(loadedInfo[scriptType][script]);
+        }
+      }
     }
   }
 
