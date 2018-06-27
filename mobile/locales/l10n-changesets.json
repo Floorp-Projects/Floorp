@@ -249,13 +249,13 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "d47b971dd3d4"
+        "revision": "31803c577a9f"
     }, 
     "hu": {
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "393d2c911f37"
+        "revision": "cfd543f9a63f"
     }, 
     "hy-AM": {
         "platforms": [
@@ -267,7 +267,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "7858f6f05db3"
+        "revision": "93642af8f6d0"
     }, 
     "is": {
         "platforms": [
