@@ -2641,7 +2641,13 @@ public:
 
   void SetBuildingRect(const nsRect& aBuildingRect)
   {
+    if (aBuildingRect == mBuildingRect) {
+      // Avoid unnecessary paint rect recompution when the
+      // building rect is staying the same.
+      return;
+    }
     mPaintRect = mBuildingRect = aBuildingRect;
+    mPaintRectValid = false;
   }
 
   void SetPaintRect(const nsRect& aPaintRect) {
