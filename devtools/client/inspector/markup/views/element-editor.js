@@ -172,16 +172,16 @@ ElementEditor.prototype = {
 
     close.appendChild(this.doc.createTextNode(">"));
 
-    this.eventNode = this.doc.createElement("div");
-    this.eventNode.classList.add("markup-badge");
-    this.eventNode.dataset.event = "true";
-    this.eventNode.textContent = "event";
-    this.eventNode.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
-    this.elt.appendChild(this.eventNode);
+    this.eventBadge = this.doc.createElement("div");
+    this.eventBadge.classList.add("markup-badge");
+    this.eventBadge.dataset.event = "true";
+    this.eventBadge.textContent = "event";
+    this.eventBadge.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
+    this.elt.appendChild(this.eventBadge);
 
-    this.displayNode = this.doc.createElement("div");
-    this.displayNode.classList.add("markup-badge");
-    this.elt.appendChild(this.displayNode);
+    this.displayBadge = this.doc.createElement("div");
+    this.displayBadge.classList.add("markup-badge");
+    this.elt.appendChild(this.displayBadge);
   },
 
   set selected(value) {
@@ -273,15 +273,16 @@ ElementEditor.prototype = {
     }
 
     // Update the event bubble display
-    this.eventNode.style.display = this.node.hasEventListeners ? "inline-block" : "none";
+    this.eventBadge.style.display = this.node.hasEventListeners ? "inline-block" : "none";
 
     // Update the display type node
-    const showDisplayNode = this.node.displayType in DISPLAY_TYPES;
-    this.displayNode.textContent = this.node.displayType;
-    this.displayNode.dataset.display = showDisplayNode ? this.node.displayType : "";
-    this.displayNode.style.display = showDisplayNode ? "inline-block" : "none";
-    this.displayNode.title = showDisplayNode ? DISPLAY_TYPES[this.node.displayType] : "";
-    this.displayNode.classList.toggle("active",
+    const showDisplayBadge = this.node.displayType in DISPLAY_TYPES;
+    this.displayBadge.textContent = this.node.displayType;
+    this.displayBadge.dataset.display = showDisplayBadge ? this.node.displayType : "";
+    this.displayBadge.style.display = showDisplayBadge ? "inline-block" : "none";
+    this.displayBadge.title = showDisplayBadge ?
+      DISPLAY_TYPES[this.node.displayType] : "";
+    this.displayBadge.classList.toggle("active",
       this.highlighters.gridHighlighterShown === this.node);
 
     this.updateTextEditor();
