@@ -575,7 +575,8 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     JSObject* UnprivilegedJunkScope() { return mUnprivilegedJunkScope; }
-    JSObject* LoaderGlobal();
+    JSObject* PrivilegedJunkScope() { return mPrivilegedJunkScope; }
+    JSObject* CompilationScope() { return mCompilationScope; }
 
     void InitSingletonScopes();
     void DeleteSingletonScopes();
@@ -610,7 +611,8 @@ private:
     JS::GCSliceCallback mPrevGCSliceCallback;
     JS::DoCycleCollectionCallback mPrevDoCycleCollectionCallback;
     JS::PersistentRootedObject mUnprivilegedJunkScope;
-    JS::PersistentRootedObject mLoaderGlobal;
+    JS::PersistentRootedObject mPrivilegedJunkScope;
+    JS::PersistentRootedObject mCompilationScope;
     RefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
     friend class XPCJSContext;
