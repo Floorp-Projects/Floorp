@@ -14,7 +14,7 @@
 
 {
   'variables': {
-    'gflags_root': '/media/webrtc/trunk/third_party/gflags',
+    'gflags_root': '<(DEPTH)/third_party/gflags',
     'conditions': [
       ['OS=="win"', {
         'gflags_gen_arch_root': '<(gflags_root)/gen/win',
