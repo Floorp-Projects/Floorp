@@ -28,7 +28,7 @@
   position: fixed;
   cursor: pointer;
   top: 4px;
-  offset-inline-start: 12px;
+  inset-inline-start: 12px;
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
@@ -119,7 +119,7 @@
 .onboarding-close-btn {
   position: absolute;
   top: 15px;
-  offset-inline-end: 15px;
+  inset-inline-end: 15px;
   cursor: pointer;
   width: 16px;
   height: 16px;
@@ -228,7 +228,7 @@
 #onboarding-tour-list .onboarding-tour-item.onboarding-complete::before {
   content: url("img/icons_tour-complete.svg");
   position: relative;
-  offset-inline-start: 3px;
+  inset-inline-start: 3px;
   top: -10px;
   float: inline-start;
 }
@@ -243,7 +243,7 @@
   width: 48px;
   height: 48px;
   position: absolute;
-  offset-inline-start: 0px;
+  inset-inline-start: 0px;
   top: 0px;
   background-color: #3E3D40;
   mask-repeat: no-repeat;
@@ -487,8 +487,8 @@ a#onboarding-tour-screenshots-button:visited {
 
 #onboarding-notification-close-btn {
   position: absolute;
-  offset-block-start: 50%;
-  offset-inline-end: 24px;
+  inset-block-start: 50%;
+  inset-inline-end: 24px;
   transform: translateY(-50%);
 }
 

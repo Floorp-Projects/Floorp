@@ -646,32 +646,6 @@ binding_danger::TErrorResult<CleanupPolicy>::operator const ErrorResult&() const
      reinterpret_cast<const TErrorResult<AssertAndSuppressCleanupPolicy>*>(this));
 }
 
-template<typename CleanupPolicy>
-bool
-binding_danger::TErrorResult<CleanupPolicy>::operator==(const ErrorResult& aRight) const
-{
-  auto right = reinterpret_cast<const TErrorResult<CleanupPolicy>*>(&aRight);
-
-  if (mResult != right->mResult) {
-    return false;
-  }
-
-  if (IsJSException()) {
-    // js exceptions are always non-equal
-    return false;
-  }
-
-  if (IsErrorWithMessage()) {
-    return *mExtra.mMessage == *right->mExtra.mMessage;
-  }
-
-  if (IsDOMException()) {
-    return *mExtra.mDOMExceptionInfo == *right->mExtra.mDOMExceptionInfo;
-  }
-
-  return true;
-}
-
 // A class for use when an ErrorResult should just automatically be ignored.
 // This doesn't inherit from ErrorResult so we don't make two separate calls to
 // SuppressException.

@@ -121,7 +121,8 @@ js::AtomToPrintableString(JSContext* cx, JSAtom* atom, JSAutoByteString* bytes)
     JSString* str = QuoteString(cx, atom, 0);
     if (!str)
         return nullptr;
-    return bytes->encodeLatin1(cx, str);
+    bytes->initBytes(EncodeLatin1(cx, str));
+    return bytes->ptr();
 }
 
 #define DEFINE_PROTO_STRING(name,init,clasp) const char js_##name##_str[] = #name;

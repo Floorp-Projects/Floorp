@@ -296,7 +296,7 @@ public:
     }
 
     static void OnSensorChanged(int32_t aType, float aX, float aY, float aZ,
-                                float aW, int32_t aAccuracy, int64_t aTime)
+                                float aW, int64_t aTime)
     {
         AutoTArray<float, 4> values;
 
@@ -336,8 +336,7 @@ public:
                                 "Unknown sensor type %d", aType);
         }
 
-        hal::SensorData sdata(hal::SensorType(aType), aTime, values,
-                              hal::SensorAccuracyType(aAccuracy));
+        hal::SensorData sdata(hal::SensorType(aType), aTime, values);
         hal::NotifySensorChange(sdata);
     }
 

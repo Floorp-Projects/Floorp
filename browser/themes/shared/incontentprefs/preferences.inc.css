@@ -811,7 +811,7 @@ button > hbox > label {
   border: 7px solid transparent;
   border-top-color: #d7b600;
   top: 100%;
-  offset-inline-start: calc(50% - 7px);
+  inset-inline-start: calc(50% - 7px);
 }
 
 .search-tooltip::after {
@@ -820,7 +820,7 @@ button > hbox > label {
   border: 6px solid transparent;
   border-top-color: #ffe900;
   top: 100%;
-  offset-inline-start: calc(50% - 6px);
+  inset-inline-start: calc(50% - 6px);
 }
 
 .search-tooltip-parent {
