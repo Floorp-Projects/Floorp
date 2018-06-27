@@ -34,63 +34,67 @@ def ignore_exceptions(f):
     return inner
 
 
-@ignore_exceptions
-def _ensure_valid_window(session):
-    """If current window is not open anymore, ensure to have a valid
-    one selected.
+def cleanup_session(session):
+    """Clean-up the current session for a clean state."""
+    @ignore_exceptions
+    def _dismiss_user_prompts(session):
+        """Dismiss any open user prompts in windows."""
+        current_window = session.window_handle
 
-    """
-    try:
-        session.window_handle
-    except webdriver.NoSuchWindowException:
-        session.window_handle = session.handles[0]
+        for window in _windows(session):
+            session.window_handle = window
+            try:
+                session.alert.dismiss()
+            except webdriver.NoSuchAlertException:
+                pass
 
+        session.window_handle = current_window
 
-@ignore_exceptions
-def _dismiss_user_prompts(session):
-    """Dismisses any open user prompts in windows."""
-    current_window = session.window_handle
-
-    for window in _windows(session):
-        session.window_handle = window
+    @ignore_exceptions
+    def _ensure_valid_window(session):
+        """If current window was closed, ensure to have a valid one selected."""
         try:
-            session.alert.dismiss()
-        except webdriver.NoSuchAlertException:
-            pass
+            session.window_handle
+        except webdriver.NoSuchWindowException:
+            session.window_handle = session.handles[0]
 
-    session.window_handle = current_window
+    @ignore_exceptions
+    def _restore_timeouts(session):
+        """Restore modified timeouts to their default values."""
+        session.timeouts.implicit = default_implicit_wait_timeout
+        session.timeouts.page_load = default_page_load_timeout
+        session.timeouts.script = default_script_timeout
 
+    @ignore_exceptions
+    def _restore_window_state(session):
+        """Reset window to an acceptable size.
 
-@ignore_exceptions
-def _restore_timeouts(session):
-    """Restores modified timeouts to their default values"""
-    session.timeouts.implicit = default_implicit_wait_timeout
-    session.timeouts.page_load = default_page_load_timeout
-    session.timeouts.script = default_script_timeout
+        This also includes bringing it out of maximized, minimized,
+        or fullscreened state.
+        """
+        session.window.size = (800, 600)
 
+    @ignore_exceptions
+    def _restore_windows(session):
+        """Close superfluous windows opened by the test.
 
-@ignore_exceptions
-def _restore_window_state(session):
-    """Reset window to an acceptable size, bringing it out of maximized,
-    minimized, or fullscreened state
+        It will not end the session implicitly by closing the last window.
+        """
+        current_window = session.window_handle
 
-    """
-    session.window.size = (800, 600)
+        for window in _windows(session, exclude=[current_window]):
+            session.window_handle = window
+            if len(session.handles) > 1:
+                session.close()
 
+        session.window_handle = current_window
 
-@ignore_exceptions
-def _restore_windows(session):
-    """Closes superfluous windows opened by the test without ending
-    the session implicitly by closing the last window.
-    """
-    current_window = session.window_handle
-
-    for window in _windows(session, exclude=[current_window]):
-        session.window_handle = window
-        if len(session.handles) > 1:
-            session.close()
-
-    session.window_handle = current_window
+    _restore_timeouts(session)
+    _ensure_valid_window(session)
+    _dismiss_user_prompts(session)
+    _restore_windows(session)
+    _restore_window_state(session)
+    _switch_to_top_level_browsing_context(session)
 
 
 @ignore_exceptions
@@ -209,16 +213,9 @@ def session(capabilities, configuration, request):
         if not _current_session.session_id:
             raise
 
-    # finalisers are popped off a stack,
-    # making their ordering reverse
-    request.addfinalizer(lambda: _switch_to_top_level_browsing_context(_current_session))
-    request.addfinalizer(lambda: _restore_window_state(_current_session))
-    request.addfinalizer(lambda: _restore_windows(_current_session))
-    request.addfinalizer(lambda: _dismiss_user_prompts(_current_session))
-    request.addfinalizer(lambda: _ensure_valid_window(_current_session))
-    request.addfinalizer(lambda: _restore_timeouts(_current_session))
+    yield _current_session
 
-    return _current_session
+    cleanup_session(_current_session)
 
 
 def current_session():
