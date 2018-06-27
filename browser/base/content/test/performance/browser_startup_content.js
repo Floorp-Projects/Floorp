@@ -26,9 +26,9 @@ const whitelist = {
   modules: new Set([
     // From the test harness
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
-    "chrome://specialpowers/content/MockColorPicker.jsm",
-    "chrome://specialpowers/content/MockFilePicker.jsm",
-    "chrome://specialpowers/content/MockPermissionPrompt.jsm",
+    "resource://specialpowers/MockColorPicker.jsm",
+    "resource://specialpowers/MockFilePicker.jsm",
+    "resource://specialpowers/MockPermissionPrompt.jsm",
 
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
