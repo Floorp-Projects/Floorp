@@ -549,9 +549,6 @@ var PlacesProvider = {
    */
   init: function PlacesProvider_init() {
     PlacesUtils.history.addObserver(this, true);
-    this._placesObserver =
-      new PlacesWeakCallbackWrapper(this.handlePlacesEvents.bind(this));
-    PlacesObservers.addListener(["page-visited"], this._placesObserver);
   },
 
   /**
@@ -659,11 +656,11 @@ var PlacesProvider = {
     }
   },
 
-  handlePlacesEvents(aEvents) {
+  onVisits(aVisits) {
     if (!this._batchProcessingDepth) {
-      for (let event of aEvents) {
-        if (event.visitCount == 1 && event.lastKnownTitle) {
-          this.onTitleChanged(event.url, event.lastKnownTitle, event.pageGuid);
+      for (let visit of aVisits) {
+        if (visit.visitCount == 1 && visit.lastKnownTitle) {
+          this.onTitleChanged(visit.uri, visit.lastKnownTitle, visit.guid);
         }
       }
     }
@@ -714,11 +711,8 @@ var PlacesProvider = {
    * Called by the history service.
    */
   onTitleChanged: function PlacesProvider_onTitleChanged(aURI, aNewTitle, aGUID) {
-    if (aURI instanceof Ci.nsIURI) {
-      aURI = aURI.spec;
-    }
     this._callObservers("onLinkChanged", {
-      url: aURI,
+      url: aURI.spec,
       title: aNewTitle
     });
   },

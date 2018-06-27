@@ -12,12 +12,8 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
                                "resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "history", function() {
-  let livemarks = PlacesUtils.livemarks;
   // Lazily add an history observer when it's actually needed.
-  PlacesUtils.history.addObserver(livemarks, true);
-  let listener = new PlacesWeakCallbackWrapper(
-    livemarks.handlePlacesEvents.bind(livemarks));
-  PlacesObservers.addListener(["page-visited"], listener);
+  PlacesUtils.history.addObserver(PlacesUtils.livemarks, true);
   return PlacesUtils.history;
 });
 
@@ -340,21 +336,6 @@ LivemarkService.prototype = {
     return this._invalidateCachedLivemarks();
   },
 
-  handlePlacesEvents(aEvents) {
-    if (!aEvents) {
-      throw new Components.Exception("Invalid arguments",
-                                     Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    this._withLivemarksMap(livemarksMap => {
-      for (let event of aEvents) {
-        for (let livemark of livemarksMap.values()) {
-          livemark.updateURIVisitedStatus(event.url, true);
-        }
-      }
-    });
-  },
-
   // nsINavBookmarkObserver
 
   onBeginUpdateBatch() {},
@@ -427,6 +408,16 @@ LivemarkService.prototype = {
     this._withLivemarksMap(livemarksMap => {
       for (let livemark of livemarksMap.values()) {
         livemark.updateURIVisitedStatus(aURI, false);
+      }
+    });
+  },
+
+  onVisits(aVisits) {
+    this._withLivemarksMap(livemarksMap => {
+      for (let {uri} of aVisits) {
+        for (let livemark of livemarksMap.values()) {
+          livemark.updateURIVisitedStatus(uri, true);
+        }
       }
     });
   },
@@ -701,18 +692,18 @@ Livemark.prototype = {
   /**
    * Updates the visited status of nodes observing this livemark.
    *
-   * @param href
+   * @param aURI
    *        If provided will update nodes having the given uri,
    *        otherwise any node.
-   * @param visitedStatus
+   * @param aVisitedStatus
    *        Whether the nodes should be set as visited.
    */
-  updateURIVisitedStatus(href, visitedStatus) {
+  updateURIVisitedStatus(aURI, aVisitedStatus) {
     let wasVisited = false;
     for (let child of this.children) {
-      if (!href || child.uri.spec == href) {
+      if (!aURI || child.uri.equals(aURI)) {
         wasVisited = child.visited;
-        child.visited = visitedStatus;
+        child.visited = aVisitedStatus;
       }
     }
 
@@ -720,7 +711,7 @@ Livemark.prototype = {
       if (this._nodes.has(container)) {
         let nodes = this._nodes.get(container);
         for (let node of nodes) {
-          if (!href || node.uri == href) {
+          if (!aURI || node.uri == aURI.spec) {
             Services.tm.dispatchToMainThread(() => {
               observer.nodeHistoryDetailsChanged(node, node.time, wasVisited);
             });
@@ -827,7 +818,6 @@ LivemarkLoadListener.prototype = {
 
       this._livemark.children = livemarkChildren;
     } catch (ex) {
-      Cu.reportError(ex);
       this.abort(ex);
     } finally {
       this._processor.listener = null;
