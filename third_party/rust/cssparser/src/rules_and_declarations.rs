@@ -7,7 +7,8 @@
 use cow_rc_str::CowRcStr;
 use parser::{parse_until_before, parse_until_after, parse_nested_block, ParserState};
 #[allow(unused_imports)] use std::ascii::AsciiExt;
-use super::{Token, Parser, Delimiter, ParseError, BasicParseError, BasicParseErrorKind};
+use super::{BasicParseError, BasicParseErrorKind, Delimiter};
+use super::{ParseError, Parser, SourceLocation, Token};
 
 /// Parse `!important`.
 ///
@@ -116,16 +117,25 @@ pub trait AtRuleParser<'i> {
     /// End an at-rule which doesn't have block. Return the finished
     /// representation of the at-rule.
     ///
+    /// The location passed in is source location of the start of the prelude.
+    ///
     /// This is only called when `parse_prelude` returned `WithoutBlock`, and
     /// either the `;` semicolon indeed follows the prelude, or parser is at
     /// the end of the input.
-    fn rule_without_block(&mut self, prelude: Self::PreludeNoBlock) -> Self::AtRule {
+    fn rule_without_block(
+        &mut self,
+        prelude: Self::PreludeNoBlock,
+        location: SourceLocation,
+    ) -> Self::AtRule {
         let _ = prelude;
+        let _ = location;
         panic!("The `AtRuleParser::rule_without_block` method must be overriden \
                 if `AtRuleParser::parse_prelude` ever returns `AtRuleType::WithoutBlock`.")
     }
 
     /// Parse the content of a `{ /* ... */ }` block for the body of the at-rule.
+    ///
+    /// The location passed in is source location of the start of the prelude.
     ///
     /// Return the finished representation of the at-rule
     /// as returned by `RuleListParser::next` or `DeclarationListParser::next`,
@@ -133,9 +143,14 @@ pub trait AtRuleParser<'i> {
     ///
     /// This is only called when `parse_prelude` returned `WithBlock`, and a block
     /// was indeed found following the prelude.
-    fn parse_block<'t>(&mut self, prelude: Self::PreludeBlock, input: &mut Parser<'i, 't>)
-                       -> Result<Self::AtRule, ParseError<'i, Self::Error>> {
+    fn parse_block<'t>(
+        &mut self,
+        prelude: Self::PreludeBlock,
+        location: SourceLocation,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self::AtRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
+        let _ = location;
         let _ = input;
         Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid))
     }
@@ -178,12 +193,19 @@ pub trait QualifiedRuleParser<'i> {
 
     /// Parse the content of a `{ /* ... */ }` block for the body of the qualified rule.
     ///
+    /// The location passed in is source location of the start of the prelude.
+    ///
     /// Return the finished representation of the qualified rule
     /// as returned by `RuleListParser::next`,
     /// or `Err(())` to ignore the entire at-rule as invalid.
-    fn parse_block<'t>(&mut self, prelude: Self::Prelude, input: &mut Parser<'i, 't>)
-                       -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>> {
+    fn parse_block<'t>(
+        &mut self,
+        prelude: Self::Prelude,
+        location: SourceLocation,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
+        let _ = location;
         let _ = input;
         Err(input.new_error(BasicParseErrorKind::QualifiedRuleInvalid))
     }
@@ -421,11 +443,16 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
     })
 }
 
-fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
-                                   input: &mut Parser<'i, 't>, parser: &mut P)
-                                   -> Result<<P as AtRuleParser<'i>>::AtRule,
-                                             (ParseError<'i, E>, &'i str)>
-                                   where P: AtRuleParser<'i, Error = E> {
+fn parse_at_rule<'i: 't, 't, P, E>(
+    start: &ParserState,
+    name: CowRcStr<'i>,
+    input: &mut Parser<'i, 't>,
+    parser: &mut P,
+) -> Result<<P as AtRuleParser<'i>>::AtRule, (ParseError<'i, E>, &'i str)>
+where
+    P: AtRuleParser<'i, Error = E>
+{
+    let location = input.current_source_location();
     let delimiters = Delimiter::Semicolon | Delimiter::CurlyBracketBlock;
     // FIXME: https://github.com/rust-lang/rust/issues/42508
     let result = parse_until_before::<'i, 't, _, _, _>(input, delimiters, |input| {
@@ -434,7 +461,7 @@ fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
     match result {
         Ok(AtRuleType::WithoutBlock(prelude)) => {
             match input.next() {
-                Ok(&Token::Semicolon) | Err(_) => Ok(parser.rule_without_block(prelude)),
+                Ok(&Token::Semicolon) | Err(_) => Ok(parser.rule_without_block(prelude, location)),
                 Ok(&Token::CurlyBracketBlock) => Err((
                     input.new_unexpected_token_error(Token::CurlyBracketBlock),
                     input.slice_from(start.position()),
@@ -446,8 +473,10 @@ fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
             match input.next() {
                 Ok(&Token::CurlyBracketBlock) => {
                     // FIXME: https://github.com/rust-lang/rust/issues/42508
-                    parse_nested_block::<'i, 't, _, _, _>(input, move |input| parser.parse_block(prelude, input))
-                        .map_err(|e| (e, input.slice_from(start.position())))
+                    parse_nested_block::<'i, 't, _, _, _>(
+                        input,
+                        move |input| parser.parse_block(prelude, location, input)
+                    ).map_err(|e| (e, input.slice_from(start.position())))
                 }
                 Ok(&Token::Semicolon) => Err((
                     input.new_unexpected_token_error(Token::Semicolon),
@@ -469,9 +498,14 @@ fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
 }
 
 
-fn parse_qualified_rule<'i, 't, P, E>(input: &mut Parser<'i, 't>, parser: &mut P)
-                                      -> Result<<P as QualifiedRuleParser<'i>>::QualifiedRule, ParseError<'i, E>>
-                                      where P: QualifiedRuleParser<'i, Error = E> {
+fn parse_qualified_rule<'i, 't, P, E>(
+    input: &mut Parser<'i, 't>,
+    parser: &mut P,
+) -> Result<<P as QualifiedRuleParser<'i>>::QualifiedRule, ParseError<'i, E>>
+where
+    P: QualifiedRuleParser<'i, Error = E>
+{
+    let location = input.current_source_location();
     // FIXME: https://github.com/rust-lang/rust/issues/42508
     let prelude = parse_until_before::<'i, 't, _, _, _>(input, Delimiter::CurlyBracketBlock, |input| {
         parser.parse_prelude(input)
@@ -481,7 +515,10 @@ fn parse_qualified_rule<'i, 't, P, E>(input: &mut Parser<'i, 't>, parser: &mut P
             // Do this here so that we consume the `{` even if the prelude is `Err`.
             let prelude = prelude?;
             // FIXME: https://github.com/rust-lang/rust/issues/42508
-            parse_nested_block::<'i, 't, _, _, _>(input, move |input| parser.parse_block(prelude, input))
+            parse_nested_block::<'i, 't, _, _, _>(
+                input,
+                move |input| parser.parse_block(prelude, location, input),
+            )
         }
         _ => unreachable!()
     }
