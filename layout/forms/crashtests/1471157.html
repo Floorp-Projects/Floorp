@@ -1,0 +1,11 @@
+<!doctype html>
+<input type="file">
+<script>
+  onload = function() {
+    var input = document.querySelector("input");
+    console.log(input.offsetWidth);  // Force layout flush and hence layout box
+                                     // creation.
+    input.dispatchEvent(new DragEvent("drop"));
+  }
+</script>
+
