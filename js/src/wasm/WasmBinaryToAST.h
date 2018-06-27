@@ -16,22 +16,22 @@
  * limitations under the License.
  */
 
-#ifndef wasm_text_to_binary_h
-#define wasm_text_to_binary_h
+#ifndef wasmbinarytoast_h
+#define wasmbinarytoast_h
 
+#include "ds/LifoAlloc.h"
+
+#include "wasm/WasmAST.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
 namespace wasm {
 
-// Translate the textual representation of a wasm module (given by a
-// null-terminated char16_t array) into serialized bytes. If there is an error
-// other than out-of-memory an error message string will be stored in 'error'.
+bool
+BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length, LifoAlloc& lifo,
+            AstModule** module);
 
-extern MOZ_MUST_USE bool
-TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, UniqueChars* error);
+} // end wasm namespace
+} // end js namespace
 
-} // namespace wasm
-} // namespace js
-
-#endif // wasm_text_to_binary_h
+#endif // namespace wasmbinarytoast_h
