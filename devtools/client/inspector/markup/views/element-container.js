@@ -70,7 +70,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
    * the highlighted grid node.
    */
   onGridHighlighterChange: function() {
-    this.editor.displayNode.classList.toggle("active",
+    this.editor.displayBadge.classList.toggle("active",
       this.markup.highlighters.gridHighlighterShown === this.node);
   },
 
