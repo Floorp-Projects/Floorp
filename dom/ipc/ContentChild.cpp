@@ -3696,11 +3696,10 @@ ContentChild::RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle)
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvDumpCodeCoverageCounters(DumpCodeCoverageCountersResolver&& aResolver)
+ContentChild::RecvDumpCodeCoverageCounters()
 {
 #ifdef MOZ_CODE_COVERAGE
-  CodeCoverageHandler::DumpCounters();
-  aResolver(/* unused */ true);
+  CodeCoverageHandler::DumpCounters(0);
   return IPC_OK();
 #else
   MOZ_CRASH("Shouldn't receive this message in non-code coverage builds!");
@@ -3708,11 +3707,10 @@ ContentChild::RecvDumpCodeCoverageCounters(DumpCodeCoverageCountersResolver&& aR
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvResetCodeCoverageCounters(ResetCodeCoverageCountersResolver&& aResolver)
+ContentChild::RecvResetCodeCoverageCounters()
 {
 #ifdef MOZ_CODE_COVERAGE
-  CodeCoverageHandler::ResetCounters();
-  aResolver(/* unused */ true);
+  CodeCoverageHandler::ResetCounters(0);
   return IPC_OK();
 #else
   MOZ_CRASH("Shouldn't receive this message in non-code coverage builds!");
