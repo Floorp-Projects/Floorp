@@ -159,11 +159,7 @@ The tasks to generate each docker image have predictable labels:
 Docker images are built from subdirectories of ``taskcluster/docker``, using
 ``docker build``.  There is currently no capability for one Docker image to
 depend on another in-tree docker image, without uploading the latter to a
-Docker repository
-
-The task definition used to create the image-building tasks is given in
-``image.yml`` in the kind directory, and is interpreted as a :doc:`YAML
-Template <yaml-templates>`.
+Docker repository.
 
 balrog
 ------

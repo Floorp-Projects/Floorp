@@ -32,4 +32,4 @@ You can test your patches with something like this, assuming ``.`` is a checkout
   ci-admin diff --ci-configuration-directory .
 
 .. _ci-configuration: https://hg.mozilla.org/build/ci-configuration/file
-.. _ci-configuration: https://hg.mozilla.org/build/ci-admin/file
+.. _ci-admin: https://hg.mozilla.org/build/ci-admin/file

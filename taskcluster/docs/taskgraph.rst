@@ -97,7 +97,7 @@ Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
    The result is the "target task graph".
 #. Optimize the target task graph using task-specific optimization methods.
    The result is the "optimized task graph" with fewer nodes than the target
-   task graph.  See :ref:`optimization`.
+   task graph.  See :doc:`optimization`.
 #. Morph the graph. Morphs are like syntactic sugar: they keep the same meaning,
    but express it in a lower-level way. These generally work around limitations
    in the TaskCluster platform, such as number of dependencies or routes in
@@ -137,7 +137,7 @@ Action Tasks are tasks which help you to schedule new jobs via Treeherder's
 task ID of the push and a comma separated list of task labels which need to be
 scheduled.
 
-This task invokes ``mach taskgraph action-task`` which builds up a task graph of
+This task invokes ``mach taskgraph action-callback`` which builds up a task graph of
 the requested tasks. This graph is optimized using the tasks running initially in
 the same push, due to the decision task.
 
@@ -183,7 +183,7 @@ Graph Configuration
 
 There are several configuration settings that are pertain to the entire
 taskgraph. These are specified in :file:`config.yml` at the root of the
-taskgraph configuration (typically :file:`taskcluster/ci`). The available
+taskgraph configuration (typically :file:`taskcluster/ci/`). The available
 settings are documented inline in `taskcluster/taskgraph/config.py
 <https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/config.py>`_.
 
@@ -194,7 +194,7 @@ Trust Domain
 
 When publishing and signing releases, that tasks verify their definition and
 all upstream tasks come from a decision task based on a trusted tree. (see
-`chain-of-trust verification <http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`_).
+`chain-of-trust verification <https://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`_).
 Firefox and Thunderbird share the taskgraph code and in particular, they have
 separate taskgraph configurations and in particular distinct decision tasks.
 Although they use identical docker images and toolchains, in order to track the

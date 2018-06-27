@@ -22,7 +22,7 @@ graph-generation process and output the results.
    Get the optimized task graph
 
 ``mach taskgraph morphed``
-   Get the morhped task graph
+   Get the morphed task graph
 
 See :doc:`how-tos` for further practical tips on debugging task-graph mechanics
 locally.
