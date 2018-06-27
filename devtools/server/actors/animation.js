@@ -530,8 +530,8 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
         const value1 = property.values[i].value;
         for (let j = i + 1; j < property.values.length; j++) {
           const value2 = property.values[j].value;
-          const distance = this.getDistance(this.player.effect.target, propertyName,
-                                            value1, value2, DOMWindowUtils);
+          const distance =
+            this.getDistance(this.node, propertyName, value1, value2, DOMWindowUtils);
           if (maxObject.distance >= distance) {
             continue;
           }
@@ -555,8 +555,8 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
         maxObject.value1 < maxObject.value2 ? maxObject.value1 : maxObject.value2;
       for (const values of property.values) {
         const value = values.value;
-        const distance = this.getDistance(this.player.effect.target, propertyName,
-                                          baseValue, value, DOMWindowUtils);
+        const distance =
+          this.getDistance(this.node, propertyName, baseValue, value, DOMWindowUtils);
         values.distance = distance / maxObject.distance;
       }
     }
