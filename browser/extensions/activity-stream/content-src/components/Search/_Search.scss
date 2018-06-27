@@ -49,7 +49,7 @@
     -moz-context-properties: fill;
     fill: var(--newtab-search-icon-color);
     height: 100%;
-    offset-inline-end: 0;
+    inset-inline-end: 0;
     position: absolute;
     width: $search-button-width;
 

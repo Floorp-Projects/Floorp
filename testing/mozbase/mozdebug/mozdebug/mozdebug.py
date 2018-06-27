@@ -82,7 +82,7 @@ def _windbg_installation_paths():
                                          'Windows Kits')
         for version in windowsKitsVersions:
             yield os.path.join(windowsKitsPrefix, version,
-                               'Debuggers', 'x86', 'windbg.exe')
+                               'Debuggers', 'x64', 'windbg.exe')
 
 
 def get_debugger_path(debugger):

@@ -44,19 +44,19 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-unset-contained
 == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-setRTL-Auto1.html dynamicDirAuto-refRTL-RTL.html
-== dynamicDirAuto-setRTL-Auto2.html dynamicDirAuto-refRTL-RTL.html
+fuzzy-if(Android,1,1) == dynamicDirAuto-setRTL-Auto2.html dynamicDirAuto-refRTL-RTL.html # android fuzz: bug 1461573
 == dynamicDirAuto-setRTL-Auto3.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-setRTL-Auto4.html dynamicDirAuto-refRTL-RTL.html
-== dynamicDirAuto-setRTL-Auto5.html dynamicDirAuto-refRTL-RTL.html
+fuzzy-if(Android,1,1) == dynamicDirAuto-setRTL-Auto5.html dynamicDirAuto-refRTL-RTL.html # android fuzz: bug 1459239
 == dynamicDirAuto-setRTL-Auto6.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-setRTL-LTR1.html dynamicDirAuto-refRTL-LTR.html
 == dynamicDirAuto-setRTL-LTR2.html dynamicDirAuto-refRTL-LTR.html
 == dynamicDirAuto-setRTL-LTR3.html dynamicDirAuto-refRTL-LTR.html
-== dynamicDirAuto-setRTL-LTR4.html dynamicDirAuto-refRTL-LTR.html
+fuzzy-if(Android,4,2) == dynamicDirAuto-setRTL-LTR4.html dynamicDirAuto-refRTL-LTR.html # android fuzz: bug 1356818
 == dynamicDirAuto-setRTL-LTR5.html dynamicDirAuto-refRTL-LTR.html
 == dynamicDirAuto-setRTL-LTR6.html dynamicDirAuto-refRTL-LTR.html
 == dynamicDirAuto-setRTL-LTR7.html dynamicDirAuto-refRTL-LTR.html
-== dynamicDirAuto-setRTL-LTR8.html dynamicDirAuto-refRTL-LTR.html
+fuzzy-if(Android,4,2) == dynamicDirAuto-setRTL-LTR8.html dynamicDirAuto-refRTL-LTR.html # android fuzz: bug 1468922
 == dynamicDirAuto-setRTL-RTL1.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-setRTL-RTL2.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-setRTL-RTL3.html dynamicDirAuto-refRTL-RTL.html
@@ -105,7 +105,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == dynamicDirAuto-ChangeText-RTL10.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-LTR1.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-DeleteText-LTR2.html dynamicDirAuto-refLTR-LTR.html
-== dynamicDirAuto-DeleteText-LTR3.html dynamicDirAuto-refLTR-LTR.html
+fuzzy-if(Android,3,2) == dynamicDirAuto-DeleteText-LTR3.html dynamicDirAuto-refLTR-LTR.html # android fuzz: bug 1467675
 == dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-RTL2.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-RTL3.html dynamicDirAuto-refRTL-RTL.html

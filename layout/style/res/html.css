@@ -819,8 +819,8 @@ details > summary:first-of-type > *|* {
 
 dialog {
   position: absolute;
-  offset-inline-start: 0;
-  offset-inline-end: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   color: black;
   margin: auto;
   border-width: initial;

@@ -750,7 +750,7 @@ public:
         return rv;
       }
 
-      mNext = do_QueryInterface(file);
+      mNext = file.forget();
     }
     *aResult = mNext != nullptr;
     if (!*aResult) {
@@ -768,10 +768,7 @@ public:
       return rv;
     }
 
-    *aResult = mNext;        // might return nullptr
-    NS_IF_ADDREF(*aResult);
-
-    mNext = nullptr;
+    mNext.forget(aResult);
     return NS_OK;
   }
 
@@ -783,9 +780,7 @@ public:
     if (NS_FAILED(rv) || !hasMore) {
       return rv;
     }
-    *aResult = mNext;
-    NS_IF_ADDREF(*aResult);
-    mNext = nullptr;
+    mNext.forget(aResult);
     return NS_OK;
   }
 

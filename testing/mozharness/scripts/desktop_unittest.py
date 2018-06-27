@@ -15,6 +15,7 @@ import re
 import sys
 import copy
 import shutil
+import tempfile
 import glob
 import imp
 
@@ -890,6 +891,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
                     if self.per_test_coverage:
                         gcov_dir, jsvm_dir = self.set_coverage_env(env)
+                        # Per-test reset/dump is only supported for xpcshell and
+                        # Linux for the time being.
+                        if not is_baseline_test and suite == 'xpcshell' and self._is_linux():
+                            env['GCOV_RESULTS_DIR'] = gcov_dir = tempfile.mkdtemp()
 
                     return_code = self.run_command(final_cmd, cwd=dirs['abs_work_dir'],
                                                    output_timeout=cmd_timeout,
