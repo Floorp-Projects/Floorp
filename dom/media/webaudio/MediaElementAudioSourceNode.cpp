@@ -52,7 +52,7 @@ MediaElementAudioSourceNode::Create(AudioContext& aAudioContext,
 JSObject*
 MediaElementAudioSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaElementAudioSourceNodeBinding::Wrap(aCx, this, aGivenProto);
+  return MediaElementAudioSourceNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -35,7 +35,7 @@ HTMLBodyElement::~HTMLBodyElement()
 JSObject*
 HTMLBodyElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLBodyElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLBodyElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)

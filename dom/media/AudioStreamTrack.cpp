@@ -15,7 +15,7 @@ namespace dom {
 JSObject*
 AudioStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AudioStreamTrackBinding::Wrap(aCx, this, aGivenProto);
+  return AudioStreamTrack_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

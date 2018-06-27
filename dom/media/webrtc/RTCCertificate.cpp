@@ -321,7 +321,7 @@ RTCCertificate::CreateDtlsIdentity() const
 JSObject*
 RTCCertificate::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return RTCCertificateBinding::Wrap(aCx, this, aGivenProto);
+  return RTCCertificate_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

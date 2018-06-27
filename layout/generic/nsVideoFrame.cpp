@@ -269,7 +269,7 @@ public:
   NS_IMETHOD Run() override {
     nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent,
                                          NS_LITERAL_STRING("resizevideocontrols"),
-                                         false, false);
+                                         CanBubble::eNo, Cancelable::eNo);
     return NS_OK;
   }
   nsCOMPtr<nsIContent> mContent;

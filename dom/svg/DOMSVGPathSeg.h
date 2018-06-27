@@ -22,7 +22,7 @@ namespace mozilla {
 #define CHECK_ARG_COUNT_IN_SYNC(segType)                                      \
   MOZ_ASSERT(ArrayLength(mArgs) ==                                            \
                SVGPathSegUtils::ArgCountForType(uint32_t(segType)) ||         \
-             uint32_t(segType) == dom::SVGPathSegBinding::PATHSEG_CLOSEPATH,  \
+             uint32_t(segType) == dom::SVGPathSeg_Binding::PATHSEG_CLOSEPATH,  \
              "Arg count/array size out of sync")
 
 #define IMPL_SVGPATHSEG_SUBCLASS_COMMON(segName, segType)                     \
@@ -62,7 +62,7 @@ namespace mozilla {
   virtual JSObject*                                                           \
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override      \
   {                                                                           \
-    return dom::SVGPathSeg##segName##Binding::Wrap(aCx, this, aGivenProto);   \
+    return dom::SVGPathSeg##segName##_Binding::Wrap(aCx, this, aGivenProto);   \
   }
 
 
@@ -234,7 +234,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    ClosePath, dom::SVGPathSegBinding::PATHSEG_CLOSEPATH)
+    ClosePath, dom::SVGPathSeg_Binding::PATHSEG_CLOSEPATH)
 
 protected:
   // To allow IMPL_SVGPATHSEG_SUBCLASS_COMMON above to compile we need an
@@ -255,7 +255,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    MovetoAbs, dom::SVGPathSegBinding::PATHSEG_MOVETO_ABS)
+    MovetoAbs, dom::SVGPathSeg_Binding::PATHSEG_MOVETO_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -278,7 +278,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    MovetoRel, dom::SVGPathSegBinding::PATHSEG_MOVETO_REL)
+    MovetoRel, dom::SVGPathSeg_Binding::PATHSEG_MOVETO_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -301,7 +301,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    LinetoAbs, dom::SVGPathSegBinding::PATHSEG_LINETO_ABS)
+    LinetoAbs, dom::SVGPathSeg_Binding::PATHSEG_LINETO_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -324,7 +324,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    LinetoRel, dom::SVGPathSegBinding::PATHSEG_LINETO_REL)
+    LinetoRel, dom::SVGPathSeg_Binding::PATHSEG_LINETO_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -366,7 +366,7 @@ public:
   void SetY2(float aY2, ErrorResult& rv);
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoCubicAbs, dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_ABS)
+    CurvetoCubicAbs, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_CUBIC_ABS)
 
 protected:
   float mArgs[6];
@@ -390,7 +390,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoCubicRel, dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_REL)
+    CurvetoCubicRel, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_CUBIC_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -424,7 +424,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoQuadraticAbs, dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_ABS)
+    CurvetoQuadraticAbs, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_QUADRATIC_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -454,7 +454,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoQuadraticRel, dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_REL)
+    CurvetoQuadraticRel, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_QUADRATIC_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -488,7 +488,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    ArcAbs, dom::SVGPathSegBinding::PATHSEG_ARC_ABS)
+    ArcAbs, dom::SVGPathSeg_Binding::PATHSEG_ARC_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -528,7 +528,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    ArcRel, dom::SVGPathSegBinding::PATHSEG_ARC_REL)
+    ArcRel, dom::SVGPathSeg_Binding::PATHSEG_ARC_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -560,7 +560,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    LinetoHorizontalAbs, dom::SVGPathSegBinding::PATHSEG_LINETO_HORIZONTAL_ABS)
+    LinetoHorizontalAbs, dom::SVGPathSeg_Binding::PATHSEG_LINETO_HORIZONTAL_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -580,7 +580,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    LinetoHorizontalRel, dom::SVGPathSegBinding::PATHSEG_LINETO_HORIZONTAL_REL)
+    LinetoHorizontalRel, dom::SVGPathSeg_Binding::PATHSEG_LINETO_HORIZONTAL_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -600,7 +600,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    LinetoVerticalAbs, dom::SVGPathSegBinding::PATHSEG_LINETO_VERTICAL_ABS)
+    LinetoVerticalAbs, dom::SVGPathSeg_Binding::PATHSEG_LINETO_VERTICAL_ABS)
 
   float Y();
   void SetY(float aY, ErrorResult& rv);
@@ -620,7 +620,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    LinetoVerticalRel, dom::SVGPathSegBinding::PATHSEG_LINETO_VERTICAL_REL)
+    LinetoVerticalRel, dom::SVGPathSeg_Binding::PATHSEG_LINETO_VERTICAL_REL)
 
   float Y();
   void SetY(float aY, ErrorResult& rv);
@@ -644,7 +644,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoCubicSmoothAbs, dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS)
+    CurvetoCubicSmoothAbs, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -674,7 +674,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoCubicSmoothRel, dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_SMOOTH_REL)
+    CurvetoCubicSmoothRel, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_CUBIC_SMOOTH_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -701,7 +701,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoQuadraticSmoothAbs, dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS)
+    CurvetoQuadraticSmoothAbs, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS)
 
   float X();
   void SetX(float aX, ErrorResult& rv);
@@ -724,7 +724,7 @@ public:
   }
 
   IMPL_SVGPATHSEG_SUBCLASS_COMMON(
-    CurvetoQuadraticSmoothRel, dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL)
+    CurvetoQuadraticSmoothRel, dom::SVGPathSeg_Binding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL)
 
   float X();
   void SetX(float aX, ErrorResult& rv);

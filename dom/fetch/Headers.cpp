@@ -86,7 +86,7 @@ Headers::Create(nsIGlobalObject* aGlobal,
 JSObject*
 Headers::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::HeadersBinding::Wrap(aCx, this, aGivenProto);
+  return mozilla::dom::Headers_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 Headers::~Headers()

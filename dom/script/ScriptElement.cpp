@@ -48,8 +48,8 @@ ScriptElement::FireErrorEvent()
   return nsContentUtils::DispatchTrustedEvent(cont->OwnerDoc(),
                                               cont,
                                               NS_LITERAL_STRING("error"),
-                                              false /* bubbles */,
-                                              false /* cancelable */);
+                                              CanBubble::eNo,
+                                              Cancelable::eNo);
 }
 
 NS_IMETHODIMP

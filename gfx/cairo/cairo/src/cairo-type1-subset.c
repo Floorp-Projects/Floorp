@@ -61,6 +61,8 @@
 
 #include <ctype.h>
 
+extern FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
+
 typedef struct _cairo_type1_font_subset {
     cairo_scaled_font_subset_t *scaled_font_subset;
 
@@ -555,7 +557,7 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 	if (font->glyphs[i].name != NULL)
 	    continue;
 
-	error = FT_Load_Glyph (font->face, i,
+	error = mozilla_LoadFTGlyph (font->face, i,
 			       FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING |
 			       FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
 	if (error != FT_Err_Ok) {

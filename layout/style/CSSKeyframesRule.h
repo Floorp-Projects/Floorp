@@ -34,7 +34,7 @@ public:
   void SetStyleSheet(StyleSheet* aSheet) final;
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRuleBinding::KEYFRAMES_RULE; }
+  uint16_t Type() const final { return CSSRule_Binding::KEYFRAMES_RULE; }
   void GetCssText(nsAString& aCssText) const final;
   void GetName(nsAString& aName) const;
   void SetName(const nsAString& aName);

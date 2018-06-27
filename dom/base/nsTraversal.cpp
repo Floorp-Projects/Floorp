@@ -50,12 +50,12 @@ nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult)
     uint16_t nodeType = aNode->NodeType();
 
     if (nodeType <= 12 && !((1 << (nodeType-1)) & mWhatToShow)) {
-        return NodeFilterBinding::FILTER_SKIP;
+        return NodeFilter_Binding::FILTER_SKIP;
     }
 
     if (!mFilter) {
         // No filter, just accept
-        return NodeFilterBinding::FILTER_ACCEPT;
+        return NodeFilter_Binding::FILTER_ACCEPT;
     }
 
     AutoRestore<bool> inAcceptNode(mInAcceptNode);

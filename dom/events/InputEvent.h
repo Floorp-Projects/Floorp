@@ -30,7 +30,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return InputEventBinding::Wrap(aCx, this, aGivenProto);
+    return InputEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   bool IsComposing();

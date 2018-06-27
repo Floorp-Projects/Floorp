@@ -18,7 +18,7 @@ ChromeMessageBroadcaster::WrapObject(JSContext* aCx,
 {
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
-  return ChromeMessageBroadcasterBinding::Wrap(aCx, this, aGivenProto);
+  return ChromeMessageBroadcaster_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

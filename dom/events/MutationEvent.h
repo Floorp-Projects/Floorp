@@ -26,7 +26,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return MutationEventBinding::Wrap(aCx, this, aGivenProto);
+    return MutationEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   void GetPrevValue(nsAString& aPrevValue) const;

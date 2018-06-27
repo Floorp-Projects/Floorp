@@ -45,32 +45,29 @@ protected:
   // disable "entire words" mode.
   RefPtr<mozilla::intl::WordBreaker> mWordBreaker;
 
-  int32_t mIterOffset;
-  nsCOMPtr<nsINode> mIterNode;
-
-  // Last block parent, so that we will notice crossing block boundaries:
-  nsCOMPtr<nsINode> mLastBlockParent;
-  nsresult GetBlockParent(nsINode* aNode, nsINode** aParent);
+  struct State;
+  class StateRestorer;
 
   // Move in the right direction for our search:
-  nsresult NextNode(nsRange* aSearchRange,
-                    nsRange* aStartPoint, nsRange* aEndPoint,
-                    bool aContinueOk);
+  nsresult NextNode(State&,
+                    const nsRange* aSearchRange,
+                    const nsRange* aStartPoint,
+                    const nsRange* aEndPoint) const;
 
   // Get the first character from the next node (last if mFindBackward).
-  char16_t PeekNextChar(nsRange* aSearchRange,
-                        nsRange* aStartPoint,
-                        nsRange* aEndPoint);
-
-  // Reset variables before returning -- don't hold any references.
-  void ResetAll();
+  //
+  // This will mutate the state, but then restore it afterwards.
+  char16_t PeekNextChar(State&,
+                        const nsRange* aSearchRange,
+                        const nsRange* aStartPoint,
+                        const nsRange* aEndPoint) const;
 
   // The iterator we use to move through the document:
-  nsresult InitIterator(nsINode* aStartNode, int32_t aStartOffset,
-                        nsINode* aEndNode, int32_t aEndOffset);
-  RefPtr<nsFindContentIterator> mIterator;
-
-  friend class PeekNextCharRestoreState;
+  nsresult InitIterator(State&,
+                        nsINode* aStartNode,
+                        int32_t aStartOffset,
+                        nsINode* aEndNode,
+                        int32_t aEndOffset) const;
 };
 
 #endif // nsFind_h__

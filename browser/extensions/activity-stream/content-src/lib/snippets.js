@@ -74,10 +74,10 @@ export class SnippetsMap extends Map {
   getTotalBookmarksCount() {
     return new Promise(resolve => {
       this._dispatch(ac.OnlyToMain({type: at.TOTAL_BOOKMARKS_REQUEST}));
-      global.addMessageListener("ActivityStream:MainToContent", function onMessage({data: action}) {
+      global.RPMAddMessageListener("ActivityStream:MainToContent", function onMessage({data: action}) {
         if (action.type === at.TOTAL_BOOKMARKS_RESPONSE) {
           resolve(action.data);
-          global.removeMessageListener("ActivityStream:MainToContent", onMessage);
+          global.RPMRemoveMessageListener("ActivityStream:MainToContent", onMessage);
         }
       });
     });
@@ -86,10 +86,10 @@ export class SnippetsMap extends Map {
   getAddonsInfo() {
     return new Promise(resolve => {
       this._dispatch(ac.OnlyToMain({type: at.ADDONS_INFO_REQUEST}));
-      global.addMessageListener("ActivityStream:MainToContent", function onMessage({data: action}) {
+      global.RPMAddMessageListener("ActivityStream:MainToContent", function onMessage({data: action}) {
         if (action.type === at.ADDONS_INFO_RESPONSE) {
           resolve(action.data);
-          global.removeMessageListener("ActivityStream:MainToContent", onMessage);
+          global.RPMRemoveMessageListener("ActivityStream:MainToContent", onMessage);
         }
       });
     });
@@ -318,8 +318,8 @@ export class SnippetsProvider {
     }, options);
 
     // Add listener so we know when snippets are blocked on other pages
-    if (global.addMessageListener) {
-      global.addMessageListener("ActivityStream:MainToContent", this._onAction);
+    if (global.RPMAddMessageListener) {
+      global.RPMAddMessageListener("ActivityStream:MainToContent", this._onAction);
     }
 
     // TODO: Requires enabling indexedDB on newtab
@@ -360,8 +360,8 @@ export class SnippetsProvider {
   uninit() {
     window.dispatchEvent(new Event(SNIPPETS_DISABLED_EVENT));
     this._forceOnboardingVisibility(false);
-    if (global.removeMessageListener) {
-      global.removeMessageListener("ActivityStream:MainToContent", this._onAction);
+    if (global.RPMRemoveMessageListener) {
+      global.RPMRemoveMessageListener("ActivityStream:MainToContent", this._onAction);
     }
     this.initialized = false;
   }

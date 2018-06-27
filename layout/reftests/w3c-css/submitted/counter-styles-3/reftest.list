@@ -32,4 +32,4 @@ fails-if(webrender&&cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.os
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == redefine-attr-mapping.html       redefine-attr-mapping-ref.html # Bug 1392106
 == disclosure-styles.html           disclosure-styles-ref.html
 == symbols-function.html            symbols-function-ref.html
-== symbols-function-invalid.html    symbols-function-invalid-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == symbols-function-invalid.html    symbols-function-invalid-ref.html # Bug 1392106

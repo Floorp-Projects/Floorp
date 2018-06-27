@@ -42,7 +42,6 @@
                                  new focusChecker(getNode("textbox").inputField)));
       gQueue.push(new synthFocus("textbox_multiline",
                                  new focusChecker(getNode("textbox_multiline").inputField)));
-      gQueue.push(new synthFocus("scale"));
       gQueue.push(new synthFocusOnFrame("editabledoc"));
       gQueue.push(new synthFocus("radioclothes",
                                  new focusChecker("radiosweater")));
@@ -119,11 +118,6 @@ if (!MAC) {
   <hbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
       <a target="_blank"
-         href="https://bugzilla.mozilla.org/show_bug.cgi?id=492518"
-         title="xul:slider accessible of xul:scale is accessible illegally">
-        Mozilla Bug 492518
-      </a>
-      <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=552368"
          title=" fire focus event on document accessible whenever the root or body element is focused">
         Mozilla Bug 552368
@@ -137,7 +131,6 @@ if (!MAC) {
     <vbox flex="1">
       <textbox id="textbox" value="hello"/>
       <textbox id="textbox_multiline" multiline="true" value="hello"/>
-      <scale id="scale" min="0" max="9" value="5"/>
       <iframe id="editabledoc" src="focus.html"/>
       <radiogroup id="radioclothes">
         <radio id="radiosweater" label="radiosweater"/>

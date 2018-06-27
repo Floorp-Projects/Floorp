@@ -101,8 +101,8 @@ nsStyledElement::InlineStyleDeclarationWillChange(MutationClosureData& aData)
   }
 
   aData.mModType = modification ?
-    static_cast<uint8_t>(MutationEventBinding::MODIFICATION) :
-    static_cast<uint8_t>(MutationEventBinding::ADDITION);
+    static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION) :
+    static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
   nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None,
                                    nsGkAtoms::style,
                                    aData.mModType, nullptr);

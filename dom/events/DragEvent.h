@@ -27,7 +27,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return DragEventBinding::Wrap(aCx, this, aGivenProto);
+    return DragEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   DragEvent* AsDragEvent() override

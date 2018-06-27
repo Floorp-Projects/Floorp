@@ -28,7 +28,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return XULCommandEventBinding::Wrap(aCx, this, aGivenProto);
+    return XULCommandEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   virtual XULCommandEvent* AsXULCommandEvent() override

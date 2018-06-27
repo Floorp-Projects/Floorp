@@ -27,7 +27,6 @@ XULMAP_TYPE(radio, XULRadioButtonAccessible)
 XULMAP_TYPE(radiogroup, XULRadioGroupAccessible)
 XULMAP_TYPE(richlistbox, XULListboxAccessibleWrap)
 XULMAP_TYPE(richlistitem, XULListitemAccessible)
-XULMAP_TYPE(scale, XULSliderAccessible)
 XULMAP_TYPE(statusbar, XULStatusBarAccessible)
 XULMAP_TYPE(tab, XULTabAccessible)
 XULMAP_TYPE(tabpanels, XULTabpanelsAccessible)
@@ -146,16 +145,6 @@ XULMAP(
     }
 
     return new EnumRoleAccessible<roles::SECTION>(aElement, aContext->Document());
-  }
-)
-
-XULMAP(
-  thumb,
-  [](Element* aElement, Accessible* aContext) -> Accessible* {
-    if (aElement->ClassList()->Contains(NS_LITERAL_STRING("scale-thumb"))) {
-      return new XULThumbAccessible(aElement, aContext->Document());
-    }
-    return nullptr;
   }
 )
 

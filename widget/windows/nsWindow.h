@@ -236,7 +236,7 @@ public:
                             int16_t aButton =
                               mozilla::WidgetMouseEvent::eLeftButton,
                             uint16_t aInputSource =
-                              mozilla::dom::MouseEventBinding::MOZ_SOURCE_MOUSE,
+                              mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_MOUSE,
                             WinPointerInfo* aPointerInfo = nullptr);
   virtual bool            DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
                                               nsEventStatus& aStatus);

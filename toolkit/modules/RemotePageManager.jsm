@@ -512,14 +512,14 @@ function ChildMessagePort(contentFrame, window) {
 
   // Add functionality to the content page
   Cu.exportFunction(this.sendAsyncMessage.bind(this), window, {
-    defineAs: "sendAsyncMessage",
+    defineAs: "RPMSendAsyncMessage",
   });
   Cu.exportFunction(this.addMessageListener.bind(this), window, {
-    defineAs: "addMessageListener",
+    defineAs: "RPMAddMessageListener",
     allowCallbacks: true,
   });
   Cu.exportFunction(this.removeMessageListener.bind(this), window, {
-    defineAs: "removeMessageListener",
+    defineAs: "RPMRemoveMessageListener",
     allowCallbacks: true,
   });
   Cu.exportFunction(this.getBoolPref.bind(this), window, {

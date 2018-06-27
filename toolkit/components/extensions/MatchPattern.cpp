@@ -504,7 +504,7 @@ MatchPattern::Overlaps(const MatchPattern& aPattern) const
 JSObject*
 MatchPattern::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
 {
-  return MatchPatternBinding::Wrap(aCx, this, aGivenProto);
+  return MatchPattern_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ bool
@@ -641,7 +641,7 @@ MatchPatternSet::OverlapsAll(const MatchPatternSet& aPatternSet) const
 JSObject*
 MatchPatternSet::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
 {
-  return MatchPatternSetBinding::Wrap(aCx, this, aGivenProto);
+  return MatchPatternSet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 
@@ -767,7 +767,7 @@ MatchGlob::Matches(const nsAString& aString) const
 JSObject*
 MatchGlob::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
 {
-  return MatchGlobBinding::Wrap(aCx, this, aGivenProto);
+  return MatchGlob_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 

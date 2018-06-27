@@ -38,7 +38,7 @@ MIDIOutput::Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
 JSObject*
 MIDIOutput::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MIDIOutputBinding::Wrap(aCx, this, aGivenProto);
+  return MIDIOutput_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

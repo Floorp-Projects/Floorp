@@ -12,12 +12,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(View)
 namespace mozilla {
 namespace dom {
 
-using namespace SVGViewElementBinding;
+using namespace SVGViewElement_Binding;
 
 JSObject*
 SVGViewElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGViewElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGViewElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGEnumMapping SVGViewElement::sZoomAndPanMap[] = {

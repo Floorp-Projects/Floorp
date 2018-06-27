@@ -139,7 +139,7 @@ thumb {
   display: -moz-box !important;
 }
 
-scrollbar, scrollbarbutton, scrollcorner, slider, thumb, scale {
+scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
   -moz-user-select: none;
 }
 

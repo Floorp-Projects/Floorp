@@ -51,7 +51,7 @@ WebGLSync::MarkSignaled() const
 JSObject*
 WebGLSync::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLSyncBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLSync_Binding::Wrap(cx, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLSync)

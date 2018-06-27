@@ -386,6 +386,8 @@ js::RunScript(JSContext* cx, RunState& state)
     // Since any script can conceivably GC, make sure it's safe to do so.
     cx->verifyIsSafeToGC();
 
+    MOZ_ASSERT(cx->realm() == state.script()->realm());
+
     MOZ_DIAGNOSTIC_ASSERT(cx->realm()->isSystem() ||
                           cx->runtime()->allowContentJS());
 
@@ -533,7 +535,9 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
     /* Run function until JSOP_RETRVAL, JSOP_RETURN or error. */
     InvokeState state(cx, args, construct);
 
-    // Check to see if createSingleton flag should be set for this frame.
+    // Create |this| if we're constructing. Switch to the callee's realm to
+    // ensure this object has the correct realm.
+    AutoRealm ar(cx, state.script());
     if (construct) {
         bool createSingleton = false;
         jsbytecode* pc;
@@ -1947,6 +1951,7 @@ Interpret(JSContext* cx, RunState& state)
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
+        MOZ_ASSERT(cx->realm() == script->realm());                           \
         if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts()) \
             activation.enableInterruptsUnconditionally();                     \
     JS_END_MACRO
@@ -2237,7 +2242,12 @@ CASE(JSOP_RETRVAL)
   jit_return_pop_frame:
 
         activation.popInlineFrame(REGS.fp());
-        SET_SCRIPT(REGS.fp()->script());
+        {
+            JSScript* callerScript = REGS.fp()->script();
+            if (cx->realm() != callerScript->realm())
+                cx->leaveRealm(callerScript->realm());
+            SET_SCRIPT(callerScript);
+        }
 
   jit_return:
 
@@ -3193,10 +3203,11 @@ CASE(JSOP_FUNCALL)
         if (!funScript)
             goto error;
 
-        bool createSingleton = false;
-        if (construct) {
-            createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
+        if (cx->realm() != funScript->realm())
+            cx->enterRealmOf(funScript);
 
+        if (construct) {
+            bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
             if (!MaybeCreateThisForConstructor(cx, funScript, args, createSingleton))
                 goto error;
         }
@@ -4192,7 +4203,11 @@ CASE(JSOP_RESUME)
 
         GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(REGS.pc);
         bool ok = GeneratorObject::resume(cx, activation, gen, val, resumeKind);
-        SET_SCRIPT(REGS.fp()->script());
+
+        JSScript* generatorScript = REGS.fp()->script();
+        if (cx->realm() != generatorScript->realm())
+            cx->enterRealmOf(generatorScript);
+        SET_SCRIPT(generatorScript);
 
         TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
         TraceLoggerEvent scriptEvent(TraceLogger_Scripts, script);

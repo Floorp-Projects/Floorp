@@ -263,7 +263,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Following modifiers are for sent*Event() except sendNative*Event().
    * NOTE: MODIFIER_ALT, MODIFIER_CONTROL, MODIFIER_SHIFT and MODIFIER_META
-   *       are must be same values as EventBinding::*_MASK for backward
+   *       are must be same values as Event_Binding::*_MASK for backward
    *       compatibility.
    */
   const long MODIFIER_ALT        = 0x0001;

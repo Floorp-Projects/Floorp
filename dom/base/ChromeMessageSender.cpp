@@ -16,7 +16,7 @@ ChromeMessageSender::WrapObject(JSContext* aCx,
 {
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
-  return ChromeMessageSenderBinding::Wrap(aCx, this, aGivenProto);
+  return ChromeMessageSender_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

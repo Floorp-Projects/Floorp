@@ -248,7 +248,7 @@ DelayNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 JSObject*
 DelayNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DelayNodeBinding::Wrap(aCx, this, aGivenProto);
+  return DelayNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

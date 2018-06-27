@@ -72,7 +72,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 JSObject*
 HTMLAnchorElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLAnchorElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLAnchorElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 int32_t

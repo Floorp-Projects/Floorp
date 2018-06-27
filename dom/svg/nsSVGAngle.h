@@ -37,7 +37,7 @@ public:
   void Init(uint8_t aAttrEnum = 0xff,
             float aValue = 0,
             uint8_t aUnitType =
-              mozilla::dom::SVGAngleBinding::SVG_ANGLETYPE_UNSPECIFIED) {
+              mozilla::dom::SVGAngle_Binding::SVG_ANGLETYPE_UNSPECIFIED) {
     mAnimVal = mBaseVal = aValue;
     mAnimValUnit = mBaseValUnit = aUnitType;
     mAttrEnum = aAttrEnum;

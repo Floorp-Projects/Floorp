@@ -26,7 +26,7 @@ public:
     , mAngle(0.f)
     , mOriginX(0.f)
     , mOriginY(0.f)
-    , mType(dom::SVGTransformBinding::SVG_TRANSFORM_MATRIX)
+    , mType(dom::SVGTransform_Binding::SVG_TRANSFORM_MATRIX)
   { }
 
   explicit nsSVGTransform(const gfxMatrix& aMatrix)
@@ -34,7 +34,7 @@ public:
     , mAngle(0.f)
     , mOriginX(0.f)
     , mOriginY(0.f)
-    , mType(dom::SVGTransformBinding::SVG_TRANSFORM_MATRIX)
+    , mType(dom::SVGTransform_Binding::SVG_TRANSFORM_MATRIX)
   { }
 
   bool operator==(const nsSVGTransform& rhs) const {
@@ -119,8 +119,8 @@ public:
   explicit SVGTransformSMILData(uint16_t aType)
   : mTransformType(aType)
   {
-    MOZ_ASSERT(aType >=dom::SVGTransformBinding:: SVG_TRANSFORM_MATRIX &&
-               aType <= dom::SVGTransformBinding::SVG_TRANSFORM_SKEWY,
+    MOZ_ASSERT(aType >=dom::SVGTransform_Binding:: SVG_TRANSFORM_MATRIX &&
+               aType <= dom::SVGTransform_Binding::SVG_TRANSFORM_SKEWY,
                "Unexpected transform type");
     for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
       mParams[i] = 0.f;
@@ -130,8 +130,8 @@ public:
   SVGTransformSMILData(uint16_t aType, float (&aParams)[NUM_SIMPLE_PARAMS])
   : mTransformType(aType)
   {
-    MOZ_ASSERT(aType >= dom::SVGTransformBinding::SVG_TRANSFORM_TRANSLATE &&
-               aType <= dom::SVGTransformBinding::SVG_TRANSFORM_SKEWY,
+    MOZ_ASSERT(aType >= dom::SVGTransform_Binding::SVG_TRANSFORM_TRANSLATE &&
+               aType <= dom::SVGTransform_Binding::SVG_TRANSFORM_SKEWY,
                "Expected 'simple' transform type");
     for (uint32_t i = 0; i < NUM_SIMPLE_PARAMS; ++i) {
       mParams[i] = aParams[i];

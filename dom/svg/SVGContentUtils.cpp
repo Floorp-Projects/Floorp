@@ -35,7 +35,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::SVGPreserveAspectRatioBinding;
+using namespace mozilla::dom::SVGPreserveAspectRatio_Binding;
 using namespace mozilla::gfx;
 
 SVGSVGElement*

@@ -5,13 +5,14 @@
 
 config = {
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86_7_0/releng.manifest",
+    "tooltool_servers": ['http://taskcluster/relengapi/tooltool/'],
     "emulator_manifest": """
         [
         {
-        "size": "237849484",
-        "digest": "596db3063758aea49f441ed3dccc5429408e037ba953ab8ea676969c12ed267416a7b1f7d61ad5a06fd2c0fe234131843bd9c57a33b8dd8677aa0b25bbb799d7",
+        "size": 135064025,
+        "digest": "125678c5b0d93ead8bbf01ba94253e532909417b40637460624cfca34e92f431534fc77a0225e9c4728dcbcf2884a8f7fa1ee059efdfa82d827ca20477d41705",
         "algorithm": "sha512",
-        "filename": "android-sdk_r26b-linux.tar.gz",
+        "filename": "android-sdk_r27.1.12-linux-x86emu.tar.gz",
         "unpack": "True"
         }
         ] """,

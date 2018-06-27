@@ -163,14 +163,14 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-01.svg dyna
 fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 776038 for Win7 # bug 1392106
-== dynamic-text-05.svg pass.svg
-== dynamic-text-06.svg pass.svg
-== dynamic-text-07.svg dynamic-text-07-ref.svg
-== dynamic-text-08.svg dynamic-text-08-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-05.svg pass.svg # bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-06.svg pass.svg # bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-07.svg dynamic-text-07-ref.svg # bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-08.svg dynamic-text-08-ref.svg # bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-attr-01.svg dynamic-text-attr-01-ref.svg # bug 1392106
-== dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
-== dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
-== dynamic-textPath-03.svg dynamic-textPath-03-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg # bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-02.svg dynamic-textPath-02-ref.svg # bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-textPath-03.svg dynamic-textPath-03-ref.svg # bug 1392106
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
 == dynamic-use-03.svg pass.svg

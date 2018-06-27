@@ -112,7 +112,7 @@ CSSImportRule::IsCCLeaf() const
 CSSImportRule::WrapObject(JSContext* aCx,
                           JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSImportRuleBinding::Wrap(aCx, this, aGivenProto);
+  return CSSImportRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

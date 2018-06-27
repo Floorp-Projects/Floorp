@@ -82,7 +82,7 @@ skip-if(winWidget) == annotations.html annotations-ref.html # bug 1447257
 != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
 
 # OpenType features should work across inter-word spaces
-== font-features-across-space-1.html font-features-across-space-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-features-across-space-1.html font-features-across-space-1-ref.html # bug 1392106
 == spacelookups.html spacelookups-ref.html
 # tests whether word cache is in use by testing for ignored space kerns
 == spacelookups-wordcache.html spacelookups-wordcache-ref.html

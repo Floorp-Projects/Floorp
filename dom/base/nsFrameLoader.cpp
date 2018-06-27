@@ -301,10 +301,11 @@ nsFrameLoader::FireErrorEvent()
   if (!mOwnerContent) {
     return;
   }
-  RefPtr<AsyncEventDispatcher > loadBlockingAsyncDispatcher =
+  RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
     new LoadBlockingAsyncEventDispatcher(mOwnerContent,
                                          NS_LITERAL_STRING("error"),
-                                         false, false);
+                                         CanBubble::eNo,
+                                         ChromeOnlyDispatch::eNo);
   loadBlockingAsyncDispatcher->PostDOMEvent();
 }
 
@@ -3399,6 +3400,6 @@ JSObject*
 nsFrameLoader::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
   JS::RootedObject result(cx);
-  FrameLoaderBinding::Wrap(cx, this, this, aGivenProto, &result);
+  FrameLoader_Binding::Wrap(cx, this, this, aGivenProto, &result);
   return result;
 }

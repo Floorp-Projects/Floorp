@@ -43,7 +43,7 @@ GridLine::GetNames(nsTArray<nsString>& aNames) const
 JSObject*
 GridLine::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return GridLineBinding::Wrap(aCx, this, aGivenProto);
+  return GridLine_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 double

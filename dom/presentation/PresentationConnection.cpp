@@ -151,7 +151,7 @@ PresentationConnection::DisconnectFromOwner()
 PresentationConnection::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto)
 {
-  return PresentationConnectionBinding::Wrap(aCx, this, aGivenProto);
+  return PresentationConnection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -463,7 +463,9 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
       }
 
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("connect"), false);
+        new AsyncEventDispatcher(this,
+                                 NS_LITERAL_STRING("connect"),
+                                 CanBubble::eNo);
       return asyncDispatcher->PostDOMEvent();
     }
     case PresentationConnectionState::Closed: {
@@ -494,7 +496,9 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
       if (!nsContentUtils::ShouldResistFingerprinting()) {
         // Ensure onterminate event is fired.
         RefPtr<AsyncEventDispatcher> asyncDispatcher =
-          new AsyncEventDispatcher(this, NS_LITERAL_STRING("terminate"), false);
+          new AsyncEventDispatcher(this,
+                                   NS_LITERAL_STRING("terminate"),
+                                   CanBubble::eNo);
         Unused << NS_WARN_IF(NS_FAILED(asyncDispatcher->PostDOMEvent()));
       }
 
@@ -644,7 +648,7 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
 
   messageEvent->InitMessageEvent(nullptr,
                                  NS_LITERAL_STRING("message"),
-                                 false, false, aData, origin,
+                                 CanBubble::eNo, Cancelable::eNo, aData, origin,
                                  EmptyString(), nullptr,
                                  Sequence<OwningNonNull<MessagePort>>());
   messageEvent->SetTrusted(true);

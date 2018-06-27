@@ -173,16 +173,16 @@ XULMenuitemAccessible::AccessKey() const
       }
 
       switch (gMenuAccesskeyModifier) {
-        case dom::KeyboardEventBinding::DOM_VK_CONTROL:
+        case dom::KeyboardEvent_Binding::DOM_VK_CONTROL:
           modifierKey = KeyBinding::kControl;
           break;
-        case dom::KeyboardEventBinding::DOM_VK_ALT:
+        case dom::KeyboardEvent_Binding::DOM_VK_ALT:
           modifierKey = KeyBinding::kAlt;
           break;
-        case dom::KeyboardEventBinding::DOM_VK_META:
+        case dom::KeyboardEvent_Binding::DOM_VK_META:
           modifierKey = KeyBinding::kMeta;
           break;
-        case dom::KeyboardEventBinding::DOM_VK_WIN:
+        case dom::KeyboardEvent_Binding::DOM_VK_WIN:
           modifierKey = KeyBinding::kOS;
           break;
       }

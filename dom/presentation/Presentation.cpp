@@ -57,7 +57,7 @@ Presentation::~Presentation()
 Presentation::WrapObject(JSContext* aCx,
                          JS::Handle<JSObject*> aGivenProto)
 {
-  return PresentationBinding::Wrap(aCx, this, aGivenProto);
+  return Presentation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

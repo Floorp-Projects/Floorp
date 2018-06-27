@@ -1141,8 +1141,10 @@ HTMLFormElement::PostPasswordEvent()
   }
 
   mFormPasswordEventDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("DOMFormHasPassword"),
-                             true, true);
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("DOMFormHasPassword"),
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eYes);
   mFormPasswordEventDispatcher->PostDOMEvent();
 }
 
@@ -1871,7 +1873,8 @@ HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
       nsContentUtils::DispatchTrustedEvent(sortedControls[i]->OwnerDoc(),
                                            static_cast<nsIContent*>(sortedControls[i]),
                                            NS_LITERAL_STRING("invalid"),
-                                           false, true, &defaultAction);
+                                           CanBubble::eNo, Cancelable::eYes,
+                                           &defaultAction);
 
       // Add all unhandled invalid controls to aInvalidElements if the caller
       // requested them.
@@ -2545,7 +2548,7 @@ HTMLFormElement::RemoveElementFromPastNamesMap(Element* aElement)
 JSObject*
 HTMLFormElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLFormElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLFormElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

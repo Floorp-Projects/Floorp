@@ -57,7 +57,7 @@ HTMLFrameElement::ParseAttribute(int32_t aNamespaceID,
 JSObject*
 HTMLFrameElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLFrameElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLFrameElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

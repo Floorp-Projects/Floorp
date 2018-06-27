@@ -281,7 +281,7 @@ MediaDevices::EventListenerAdded(nsAtom* aType)
 JSObject*
 MediaDevices::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaDevicesBinding::Wrap(aCx, this, aGivenProto);
+  return MediaDevices_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

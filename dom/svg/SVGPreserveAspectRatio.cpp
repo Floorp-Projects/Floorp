@@ -13,7 +13,7 @@
 
 using namespace mozilla;
 using namespace dom;
-using namespace SVGPreserveAspectRatioBinding;
+using namespace SVGPreserveAspectRatio_Binding;
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGPreserveAspectRatio, mSVGElement)
 
@@ -119,7 +119,7 @@ SVGPreserveAspectRatio::operator==(const SVGPreserveAspectRatio& aOther) const
 JSObject*
 DOMSVGPreserveAspectRatio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::SVGPreserveAspectRatioBinding::Wrap(aCx, this, aGivenProto);
+  return mozilla::dom::SVGPreserveAspectRatio_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 uint16_t

@@ -40,7 +40,6 @@ function startup() {
       var tooltiptext =
         gProfileManagerBundle.getFormattedString("profileTooltip", [profile.name, profile.rootDir.path]);
       listitem.setAttribute("tooltiptext", tooltiptext);
-      listitem.setAttribute("class", "listitem-iconic");
       listitem.profile = profile;
       try {
         if (profile === gProfileService.selectedProfile) {
@@ -159,7 +158,6 @@ function CreateProfile(aProfile) {
   var tooltiptext =
     gProfileManagerBundle.getFormattedString("profileTooltip", [aProfile.name, aProfile.rootDir.path]);
   listitem.setAttribute("tooltiptext", tooltiptext);
-  listitem.setAttribute("class", "listitem-iconic");
   listitem.profile = aProfile;
 
   profilesElement.ensureElementIsVisible(listitem);

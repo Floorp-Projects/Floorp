@@ -24,7 +24,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 JSObject*
 HTMLDivElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::HTMLDivElementBinding::Wrap(aCx, this, aGivenProto);
+  return dom::HTMLDivElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

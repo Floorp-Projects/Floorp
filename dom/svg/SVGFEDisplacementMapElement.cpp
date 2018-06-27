@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGFEDisplacementMapElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEDisplacementMapElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEDisplacementMapElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] =

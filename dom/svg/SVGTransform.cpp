@@ -22,7 +22,7 @@ namespace {
 namespace mozilla {
 namespace dom {
 
-using namespace SVGTransformBinding;
+using namespace SVGTransform_Binding;
 
 static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix>&
 SVGMatrixTearoffTable()
@@ -65,7 +65,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGTransform, Release)
 JSObject*
 SVGTransform::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGTransformBinding::Wrap(aCx, this, aGivenProto);
+  return SVGTransform_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

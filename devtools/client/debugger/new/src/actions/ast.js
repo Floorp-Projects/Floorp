@@ -100,6 +100,19 @@ function setOutOfScopeLocations() {
   };
 }
 
+function compressPausePoints(pausePoints) {
+  const compressed = {}
+  for (const line in pausePoints) {
+    compressed[line] = {}
+    for (const col in pausePoints[line]) {
+      const point = pausePoints[line][col]
+      compressed[line][col] = (point.break && 1) | (point.step && 2)
+    }
+  }
+
+  return compressed;
+}
+
 function setPausePoints(sourceId) {
   return async ({
     dispatch,
@@ -113,9 +126,10 @@ function setPausePoints(sourceId) {
     }
 
     const pausePoints = await (0, _parser.getPausePoints)(sourceId);
+    const compressed = compressPausePoints(pausePoints);
 
     if ((0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
-      await client.setPausePoints(sourceId, pausePoints);
+      await client.setPausePoints(sourceId, compressed);
     }
 
     dispatch({

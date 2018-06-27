@@ -490,6 +490,15 @@ JSContext::setRealm(JS::Realm* realm)
     }
 }
 
+inline void
+JSContext::setRealmForJitExceptionHandler(JS::Realm* realm)
+{
+    // JIT code enters (same-compartment) realms without calling realm->enter()
+    // so we don't call realm->leave() here.
+    MOZ_ASSERT(realm->compartment() == compartment());
+    realm_ = realm;
+}
+
 inline JSScript*
 JSContext::currentScript(jsbytecode** ppc, AllowCrossRealm allowCrossRealm) const
 {

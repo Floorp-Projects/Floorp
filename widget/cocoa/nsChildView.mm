@@ -2712,8 +2712,8 @@ nsChildView::SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent)
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
   uint32_t direction = (aSwipeStartEvent.mPanDisplacement.x > 0.0)
-    ? (uint32_t)dom::SimpleGestureEventBinding::DIRECTION_RIGHT
-    : (uint32_t)dom::SimpleGestureEventBinding::DIRECTION_LEFT;
+    ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
+    : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
 
   // We're ready to start the animation. Tell Gecko about it, and at the same
   // time ask it if it really wants to start an animation for this event.
@@ -2746,8 +2746,8 @@ nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStart
   }
 
   uint32_t direction = (aSwipeStartEvent.mPanDisplacement.x > 0.0)
-    ? (uint32_t)dom::SimpleGestureEventBinding::DIRECTION_RIGHT
-    : (uint32_t)dom::SimpleGestureEventBinding::DIRECTION_LEFT;
+    ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
+    : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
 
   mSwipeTracker = new SwipeTracker(*this, aSwipeStartEvent,
                                    aAllowedDirections, direction);
@@ -4173,15 +4173,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // Record the left/right direction.
   if (deltaX > 0.0)
-    geckoEvent.mDirection |= dom::SimpleGestureEventBinding::DIRECTION_LEFT;
+    geckoEvent.mDirection |= dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
   else if (deltaX < 0.0)
-    geckoEvent.mDirection |= dom::SimpleGestureEventBinding::DIRECTION_RIGHT;
+    geckoEvent.mDirection |= dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT;
 
   // Record the up/down direction.
   if (deltaY > 0.0)
-    geckoEvent.mDirection |= dom::SimpleGestureEventBinding::DIRECTION_UP;
+    geckoEvent.mDirection |= dom::SimpleGestureEvent_Binding::DIRECTION_UP;
   else if (deltaY < 0.0)
-    geckoEvent.mDirection |= dom::SimpleGestureEventBinding::DIRECTION_DOWN;
+    geckoEvent.mDirection |= dom::SimpleGestureEvent_Binding::DIRECTION_DOWN;
 
   // Send the event.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -4372,9 +4372,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   geckoEvent.mDelta = -rotation;
   if (rotation > 0.0) {
     geckoEvent.mDirection =
-      dom::SimpleGestureEventBinding::ROTATION_COUNTERCLOCKWISE;
+      dom::SimpleGestureEvent_Binding::ROTATION_COUNTERCLOCKWISE;
   } else {
-    geckoEvent.mDirection = dom::SimpleGestureEventBinding::ROTATION_CLOCKWISE;
+    geckoEvent.mDirection = dom::SimpleGestureEvent_Binding::ROTATION_CLOCKWISE;
   }
 
   // Send the event.
@@ -4465,10 +4465,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
       geckoEvent.mDelta = -mCumulativeRotation;
       if (mCumulativeRotation > 0.0) {
         geckoEvent.mDirection =
-          dom::SimpleGestureEventBinding::ROTATION_COUNTERCLOCKWISE;
+          dom::SimpleGestureEvent_Binding::ROTATION_COUNTERCLOCKWISE;
       } else {
         geckoEvent.mDirection =
-          dom::SimpleGestureEventBinding::ROTATION_CLOCKWISE;
+          dom::SimpleGestureEvent_Binding::ROTATION_CLOCKWISE;
       }
 
       // Send the event.
@@ -5289,8 +5289,8 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
   outWheelEvent->mDeltaMode =
-    usePreciseDeltas ? dom::WheelEventBinding::DOM_DELTA_PIXEL
-                     : dom::WheelEventBinding::DOM_DELTA_LINE;
+    usePreciseDeltas ? dom::WheelEvent_Binding::DOM_DELTA_PIXEL
+                     : dom::WheelEvent_Binding::DOM_DELTA_LINE;
   outWheelEvent->mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
@@ -5367,7 +5367,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     MOZ_ASSERT(aOutGeckoEvent->pressure >= 0.0 &&
                aOutGeckoEvent->pressure <= 1.0);
   }
-  aOutGeckoEvent->inputSource = dom::MouseEventBinding::MOZ_SOURCE_PEN;
+  aOutGeckoEvent->inputSource = dom::MouseEvent_Binding::MOZ_SOURCE_PEN;
   aOutGeckoEvent->tiltX = lround([aPointerEvent tilt].x * 90);
   aOutGeckoEvent->tiltY = lround([aPointerEvent tilt].y * 90);
   aOutGeckoEvent->tangentialPressure = [aPointerEvent tangentialPressure];
