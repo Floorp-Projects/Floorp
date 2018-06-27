@@ -40,9 +40,10 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
     }
 
     const selection = this.markup.inspector.selection;
-    this.markup.inspector.selection.setNodeFront(this.node, {
-      reason: "reveal-from-slot"
-    });
+    if (selection.nodeFront != this.node || selection.isSlotted()) {
+      const reason = "reveal-from-slot";
+      this.markup.inspector.selection.setNodeFront(this.node, { reason });
+    }
   },
 
   isDraggable: function() {
