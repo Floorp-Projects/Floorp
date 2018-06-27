@@ -2764,7 +2764,7 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
 bool
 SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime)
 {
-  TRACE_AUDIO_CALLBACK();
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p", this);
   MutexAutoLock lock(mMutex);
   if (!mPullEnabled || mFinished) {
     return false;
