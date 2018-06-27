@@ -18,6 +18,7 @@
 #include "nsError.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
+#include "nsIThreadManager.h"
 #include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 #include "prthread.h"
@@ -1051,7 +1052,8 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
 
         // dispatch new worker thread
         nsCOMPtr<nsIThread> thread;
-        nsresult rv = NS_NewNamedThread(name, getter_AddRefs(thread), nullptr);
+        nsresult rv = NS_NewNamedThread(name, getter_AddRefs(thread), nullptr,
+                                        nsIThreadManager::kThreadPoolStackSize);
         if (NS_WARN_IF(NS_FAILED(rv)) || !thread) {
             return rv;
         }
