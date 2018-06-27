@@ -47,7 +47,7 @@ typedef mozilla::ComputedTiming::AnimationPhase AnimationPhase;
 JSObject*
 CSSAnimation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::CSSAnimationBinding::Wrap(aCx, this, aGivenProto);
+  return dom::CSSAnimation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 mozilla::dom::Promise*

@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 VideoStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VideoStreamTrackBinding::Wrap(aCx, this, aGivenProto);
+  return VideoStreamTrack_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

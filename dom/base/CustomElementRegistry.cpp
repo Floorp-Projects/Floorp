@@ -658,7 +658,7 @@ CustomElementRegistry::UpgradeCandidates(nsAtom* aKey,
 JSObject*
 CustomElementRegistry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CustomElementRegistryBinding::Wrap(aCx, this, aGivenProto);
+  return CustomElementRegistry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports* CustomElementRegistry::GetParentObject() const

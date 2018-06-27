@@ -185,6 +185,8 @@ BrowserCLH.prototype = {
       mozSystemGroup: true,
     };
 
+    // NOTE: Much of this logic is duplicated in browser/base/content/content.js
+    // for desktop.
     aWindow.addEventListener("DOMFormHasPassword", event => {
       this.LoginManagerContent.onDOMFormHasPassword(event, event.target.ownerGlobal.top);
     }, options);

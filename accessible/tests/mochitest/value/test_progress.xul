@@ -23,10 +23,6 @@
       testValue("pm2", "50%", 500, 0, 1000, 0);
       testValue("pm3", "", 0, 0, 100, 0);
 
-      // scale
-      testValue("sc1", "500", 500, 0, 1000, 10);
-      testValue("sc2", "", 0, 0, 0, 0);
-
       // aria progressbar
       testValue("ariapb1", "500", 500, 0, 1000, 0);
       testValue("ariapb2", "", 0, 0, 0, 0);
@@ -57,10 +53,6 @@
     <progressmeter id="pm1" value="50"/>
     <progressmeter id="pm2" value="500" max="1000"/>
     <progressmeter id="pm3"/>
-
-    <!-- scale -->
-    <scale id="sc1" value="500" max="1000" increment="10"/>
-    <scale id="sc2"/>
 
     <!-- aria -->
     <description id="ariapb1" role="progressbar"

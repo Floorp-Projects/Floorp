@@ -25,7 +25,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::dom::SVGUnitTypesBinding;
+using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 
 nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
@@ -164,7 +164,7 @@ nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
 {
   nsSVGLength2 val;
   val.Init(aCtxType, 0xff, aValue,
-           SVGLengthBinding::SVG_LENGTHTYPE_NUMBER);
+           SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
   float value;
   if (mPrimitiveUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
@@ -191,14 +191,14 @@ nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const
 {
   nsSVGLength2 val[4];
   val[0].Init(SVGContentUtils::X, 0xff, aPoint.x,
-              SVGLengthBinding::SVG_LENGTHTYPE_NUMBER);
+              SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
   val[1].Init(SVGContentUtils::Y, 0xff, aPoint.y,
-              SVGLengthBinding::SVG_LENGTHTYPE_NUMBER);
+              SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
   // Dummy width/height values
   val[2].Init(SVGContentUtils::X, 0xff, 0,
-              SVGLengthBinding::SVG_LENGTHTYPE_NUMBER);
+              SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
   val[3].Init(SVGContentUtils::Y, 0xff, 0,
-              SVGLengthBinding::SVG_LENGTHTYPE_NUMBER);
+              SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
   gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
     val, mTargetBBox, mMetrics);

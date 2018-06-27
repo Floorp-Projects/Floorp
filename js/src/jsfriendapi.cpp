@@ -669,7 +669,7 @@ JS_CloneObject(JSContext* cx, HandleObject obj, HandleObject protoArg)
     return CloneObject(cx, obj, proto);
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 
 // We don't want jsfriendapi.h to depend on GenericPrinter,
 // so these functions are declared directly in the cpp.

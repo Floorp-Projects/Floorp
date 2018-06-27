@@ -96,6 +96,17 @@ def serialized_by_servo(prop):
     # TODO(emilio): Enable the rest of the longhands.
     return False
 
+def exposed_on_getcs(prop):
+    if prop.type() == "longhand":
+        if is_internal(prop):
+            return False
+        # We currently don't expose logical properties in GetCS.
+        # See bug 1116638.
+        if prop.logical:
+            return False
+        return True
+    if prop.type() == "shorthand":
+        return "SHORTHAND_IN_GETCS" in prop.flags
 
 def flags(prop):
     result = []
@@ -111,9 +122,11 @@ def flags(prop):
         result.append("GetCSNeedsLayoutFlush")
     if "CAN_ANIMATE_ON_COMPOSITOR" in prop.flags:
         result.append("CanAnimateOnCompositor")
+    if exposed_on_getcs(prop):
+        result.append("ExposedOnGetCS")
     if serialized_by_servo(prop):
         result.append("SerializedByServo")
-    return ", ".join('"CSSPropFlags::{}"'.format(flag) for flag in result)
+    return ", ".join('"{}"'.format(flag) for flag in result)
 
 def pref(prop):
     if prop.gecko_pref:

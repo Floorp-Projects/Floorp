@@ -41,7 +41,7 @@ TextClause::TextClause(nsPIDOMWindowInner* aOwner, const TextRange& aRange,
 JSObject*
 TextClause::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TextClauseBinding::Wrap(aCx, this, aGivenProto);
+  return TextClause_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 TextClause::~TextClause() {}

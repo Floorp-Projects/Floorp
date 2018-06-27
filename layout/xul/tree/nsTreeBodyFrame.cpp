@@ -1975,7 +1975,7 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
     if (aCol->IsPrimary())
       mScratchArray.AppendElement(nsGkAtoms::primary);
 
-    if (aCol->GetType() == TreeColumnBinding::TYPE_CHECKBOX) {
+    if (aCol->GetType() == TreeColumn_Binding::TYPE_CHECKBOX) {
       mScratchArray.AppendElement(nsGkAtoms::checkbox);
 
       if (aRowIndex != -1) {
@@ -3347,12 +3347,12 @@ nsTreeBodyFrame::PaintCell(int32_t               aRowIndex,
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
       switch (aColumn->GetType()) {
-        case TreeColumnBinding::TYPE_TEXT:
-        case TreeColumnBinding::TYPE_PASSWORD:
+        case TreeColumn_Binding::TYPE_TEXT:
+        case TreeColumn_Binding::TYPE_PASSWORD:
           result &= PaintText(aRowIndex, aColumn, elementRect, aPresContext,
                               aRenderingContext, aDirtyRect, currX);
           break;
-        case TreeColumnBinding::TYPE_CHECKBOX:
+        case TreeColumn_Binding::TYPE_CHECKBOX:
           result &= PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext,
                                   aRenderingContext, aDirtyRect);
           break;
@@ -3665,7 +3665,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   nsAutoString text;
   mView->GetCellText(aRowIndex, aColumn, text);
 
-  if (aColumn->Type() == TreeColumnBinding::TYPE_PASSWORD) {
+  if (aColumn->Type() == TreeColumn_Binding::TYPE_PASSWORD) {
     TextEditRules::FillBufWithPWChars(&text, text.Length());
   }
 

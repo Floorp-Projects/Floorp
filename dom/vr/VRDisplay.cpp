@@ -124,7 +124,7 @@ JSObject*
 VRFieldOfView::WrapObject(JSContext* aCx,
                           JS::Handle<JSObject*> aGivenProto)
 {
-  return VRFieldOfViewBinding::Wrap(aCx, this, aGivenProto);
+  return VRFieldOfView_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(VREyeParameters)
@@ -187,7 +187,7 @@ VREyeParameters::GetOffset(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
 JSObject*
 VREyeParameters::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VREyeParametersBinding::Wrap(aCx, this, aGivenProto);
+  return VREyeParameters_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 VRStageParameters::VRStageParameters(nsISupports* aParent,
@@ -209,7 +209,7 @@ VRStageParameters::~VRStageParameters()
 JSObject*
 VRStageParameters::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRStageParametersBinding::Wrap(aCx, this, aGivenProto);
+  return VRStageParameters_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(VRStageParameters)
@@ -256,7 +256,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRDisplayCapabilities, Release)
 JSObject*
 VRDisplayCapabilities::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRDisplayCapabilitiesBinding::Wrap(aCx, this, aGivenProto);
+  return VRDisplayCapabilities_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 VRPose::VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState)
@@ -344,13 +344,13 @@ VRPose::GetAngularAcceleration(JSContext* aCx,
 JSObject*
 VRPose::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRPoseBinding::Wrap(aCx, this, aGivenProto);
+  return VRPose_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 /* virtual */ JSObject*
 VRDisplay::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VRDisplayBinding::Wrap(aCx, this, aGivenProto);
+  return VRDisplay_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 VRDisplay::VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient)
@@ -803,7 +803,7 @@ JSObject*
 VRFrameData::WrapObject(JSContext* aCx,
                         JS::Handle<JSObject*> aGivenProto)
 {
-  return VRFrameDataBinding::Wrap(aCx, this, aGivenProto);
+  return VRFrameData_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 VRPose*
@@ -970,7 +970,7 @@ JSObject*
 VRSubmitFrameResult::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto)
 {
-  return VRSubmitFrameResultBinding::Wrap(aCx, this, aGivenProto);
+  return VRSubmitFrameResult_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

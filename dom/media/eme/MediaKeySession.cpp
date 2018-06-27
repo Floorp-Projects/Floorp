@@ -114,7 +114,7 @@ MediaKeySession::GetSessionId() const
 JSObject*
 MediaKeySession::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaKeySessionBinding::Wrap(aCx, this, aGivenProto);
+  return MediaKeySession_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 double
@@ -607,7 +607,9 @@ MediaKeySession::DispatchKeyStatusesChange()
   UpdateKeyStatusMap();
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("keystatuseschange"), false);
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("keystatuseschange"),
+                             CanBubble::eNo);
   asyncDispatcher->PostDOMEvent();
 }
 

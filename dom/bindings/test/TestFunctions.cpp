@@ -144,7 +144,7 @@ bool
 TestFunctions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                           JS::MutableHandle<JSObject*> aWrapper)
 {
-  return TestFunctionsBinding::Wrap(aCx, this, aGivenProto, aWrapper);
+  return TestFunctions_Binding::Wrap(aCx, this, aGivenProto, aWrapper);
 }
 
 }

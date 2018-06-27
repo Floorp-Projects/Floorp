@@ -249,7 +249,7 @@ CanvasCaptureMediaStream::~CanvasCaptureMediaStream()
 JSObject*
 CanvasCaptureMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::CanvasCaptureMediaStreamBinding::Wrap(aCx, this, aGivenProto);
+  return dom::CanvasCaptureMediaStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void

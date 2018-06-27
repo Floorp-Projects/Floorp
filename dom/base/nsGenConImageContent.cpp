@@ -161,6 +161,6 @@ nsGenConImageContent::IntrinsicState() const
 JSObject*
 nsGenConImageContent::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::HTMLElementBinding::Wrap(aCx, this, aGivenProto);
+  return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 

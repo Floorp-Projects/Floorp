@@ -13,7 +13,7 @@ namespace dom {
 JSObject*
 VideoTrackList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VideoTrackListBinding::Wrap(aCx, this, aGivenProto);
+  return VideoTrackList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 VideoTrack*

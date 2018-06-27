@@ -94,17 +94,25 @@ using namespace mozilla::gl;
 using namespace mozilla::layers;
 
 WebGLContextOptions::WebGLContextOptions()
-    : alpha(true)
-    , depth(true)
-    , stencil(false)
-    , premultipliedAlpha(true)
-    , antialias(true)
-    , preserveDrawingBuffer(false)
-    , failIfMajorPerformanceCaveat(false)
 {
     // Set default alpha state based on preference.
     if (gfxPrefs::WebGLDefaultNoAlpha())
         alpha = false;
+}
+
+bool
+WebGLContextOptions::operator==(const WebGLContextOptions& r) const
+{
+    bool eq = true;
+    eq &= (alpha == r.alpha);
+    eq &= (depth == r.depth);
+    eq &= (stencil == r.stencil);
+    eq &= (premultipliedAlpha == r.premultipliedAlpha);
+    eq &= (antialias == r.antialias);
+    eq &= (preserveDrawingBuffer == r.preserveDrawingBuffer);
+    eq &= (failIfMajorPerformanceCaveat == r.failIfMajorPerformanceCaveat);
+    eq &= (powerPreference == r.powerPreference);
+    return eq;
 }
 
 WebGLContext::WebGLContext()
@@ -368,6 +376,7 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
     newOpts.antialias = attributes.mAntialias;
     newOpts.preserveDrawingBuffer = attributes.mPreserveDrawingBuffer;
     newOpts.failIfMajorPerformanceCaveat = attributes.mFailIfMajorPerformanceCaveat;
+    newOpts.powerPreference = attributes.mPowerPreference;
 
     if (attributes.mAlpha.WasPassed())
         newOpts.alpha = attributes.mAlpha.Value();
@@ -386,7 +395,7 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
                newOpts.preserveDrawingBuffer ? 1 : 0);
 #endif
 
-    if (mOptionsFrozen && newOpts != mOptions) {
+    if (mOptionsFrozen && !(newOpts == mOptions)) {
         // Error if the options are already frozen, and the ones that were asked for
         // aren't the same as what they were originally.
         return NS_ERROR_FAILURE;
@@ -665,6 +674,22 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
         flags |= gl::CreateContextFlags::PREFER_ES3;
     } else if (!gfxPrefs::WebGL1AllowCoreProfile()) {
         flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+    }
+
+    switch (mOptions.powerPreference) {
+    case dom::WebGLPowerPreference::Low_power:
+        break;
+        
+        // Eventually add a heuristic, but for now default to high-performance.
+        // We can even make it dynamic by holding on to a ForceDiscreteGPUHelperCGL iff
+        // we decide it's a high-performance application:
+        // - Non-trivial canvas size
+        // - Many draw calls
+        // - Same origin with root page (try to stem bleeding from WebGL ads/trackers)
+    case dom::WebGLPowerPreference::High_performance:
+    default:
+        flags |= gl::CreateContextFlags::HIGH_POWER;
+        break;
     }
 
 #ifdef XP_MACOSX
@@ -1410,6 +1435,7 @@ WebGLContext::GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& r
     result.mPremultipliedAlpha = mOptions.premultipliedAlpha;
     result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
     result.mFailIfMajorPerformanceCaveat = mOptions.failIfMajorPerformanceCaveat;
+    result.mPowerPreference = mOptions.powerPreference;
 }
 
 void
@@ -1778,8 +1804,8 @@ WebGLContext::UpdateContextLossStatus()
         // The context has been lost and we haven't yet triggered the
         // callback, so do that now.
         const auto kEventName = NS_LITERAL_STRING("webglcontextlost");
-        const bool kCanBubble = true;
-        const bool kIsCancelable = true;
+        const auto kCanBubble = CanBubble::eYes;
+        const auto kIsCancelable = Cancelable::eYes;
         bool useDefaultHandler;
 
         if (mCanvasElement) {
@@ -1857,11 +1883,13 @@ WebGLContext::UpdateContextLossStatus()
                 mCanvasElement->OwnerDoc(),
                 static_cast<nsIContent*>(mCanvasElement),
                 NS_LITERAL_STRING("webglcontextrestored"),
-                true,
-                true);
+                CanBubble::eYes,
+                Cancelable::eYes);
         } else {
             RefPtr<Event> event = new Event(mOffscreenCanvas, nullptr, nullptr);
-            event->InitEvent(NS_LITERAL_STRING("webglcontextrestored"), true, true);
+            event->InitEvent(NS_LITERAL_STRING("webglcontextrestored"),
+                             CanBubble::eYes,
+                             Cancelable::eYes);
             event->SetTrusted(true);
             mOffscreenCanvas->DispatchEvent(*event);
         }

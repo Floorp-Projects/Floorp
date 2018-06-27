@@ -68,7 +68,7 @@ Comment::Constructor(const GlobalObject& aGlobal,
 JSObject*
 Comment::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CommentBinding::Wrap(aCx, this, aGivenProto);
+  return Comment_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

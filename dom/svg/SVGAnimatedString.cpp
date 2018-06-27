@@ -13,7 +13,7 @@ namespace dom {
 JSObject*
 SVGAnimatedString::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGAnimatedStringBinding::Wrap(aCx, this, aGivenProto);
+  return SVGAnimatedString_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -134,7 +134,7 @@ PresentationRequest::Init()
 PresentationRequest::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto)
 {
-  return PresentationRequestBinding::Wrap(aCx, this, aGivenProto);
+  return PresentationRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

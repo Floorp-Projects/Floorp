@@ -2188,7 +2188,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBObjectStore)
 JSObject*
 IDBObjectStore::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBObjectStoreBinding::Wrap(aCx, this, aGivenProto);
+  return IDBObjectStore_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsPIDOMWindowInner*

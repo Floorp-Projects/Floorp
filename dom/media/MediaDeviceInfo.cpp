@@ -30,7 +30,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 MediaDeviceInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaDeviceInfoBinding::Wrap(aCx, this, aGivenProto);
+  return MediaDeviceInfo_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports* MediaDeviceInfo::GetParentObject()

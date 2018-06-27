@@ -77,12 +77,17 @@ AppPicker.prototype =
             continue;
           }
 
-          var item = document.createElement("listitem");
-          item.className = "listitem-iconic";
+          var item = document.createElement("richlistitem");
           item.handlerApp = file;
-          item.setAttribute("label", this.getFileDisplayName(file.executable));
-          item.setAttribute("image", this.getFileIconURL(file.executable));
           list.appendChild(item);
+
+          var image = document.createElement("image");
+          image.setAttribute("src", this.getFileIconURL(file.executable));
+          item.appendChild(image);
+
+          var label = document.createElement("label");
+          label.setAttribute("value", this.getFileDisplayName(file.executable));
+          item.appendChild(label);
 
           primaryCount++;
         }

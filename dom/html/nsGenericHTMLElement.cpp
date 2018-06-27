@@ -2442,7 +2442,7 @@ nsGenericHTMLElement::Click(CallerType aCallerType)
   WidgetMouseEvent event(aCallerType == CallerType::System,
                          eMouseClick, nullptr, WidgetMouseEvent::eReal);
   event.mFlags.mIsPositionless = true;
-  event.inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
 
   EventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
 
@@ -2565,7 +2565,7 @@ nsGenericHTMLElement::DispatchSimulatedClick(nsGenericHTMLElement* aElement,
 {
   WidgetMouseEvent event(aIsTrusted, eMouseClick, nullptr,
                          WidgetMouseEvent::eReal);
-  event.inputSource = MouseEventBinding::MOZ_SOURCE_KEYBOARD;
+  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
   event.mFlags.mIsPositionless = true;
   return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
 }

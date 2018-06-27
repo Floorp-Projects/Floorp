@@ -29,7 +29,7 @@ MenuBoxObject::~MenuBoxObject()
 
 JSObject* MenuBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MenuBoxObjectBinding::Wrap(aCx, this, aGivenProto);
+  return MenuBoxObject_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void MenuBoxObject::OpenMenu(bool aOpenFlag)
@@ -101,10 +101,10 @@ bool MenuBoxObject::HandleKeyPress(KeyboardEvent& keyEvent)
 
   uint32_t keyCode = keyEvent.KeyCode();
   switch (keyCode) {
-    case KeyboardEventBinding::DOM_VK_UP:
-    case KeyboardEventBinding::DOM_VK_DOWN:
-    case KeyboardEventBinding::DOM_VK_HOME:
-    case KeyboardEventBinding::DOM_VK_END:
+    case KeyboardEvent_Binding::DOM_VK_UP:
+    case KeyboardEvent_Binding::DOM_VK_DOWN:
+    case KeyboardEvent_Binding::DOM_VK_HOME:
+    case KeyboardEvent_Binding::DOM_VK_END:
     {
       nsNavigationDirection theDirection;
       theDirection = NS_DIRECTION_FROM_KEY_CODE(popupFrame, keyCode);

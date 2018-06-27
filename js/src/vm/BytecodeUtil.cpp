@@ -329,12 +329,12 @@ class BytecodeParser
           : parsed(false),
             stackDepth(0),
             offsetStack(nullptr)
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
             ,
             stackDepthAfter(0),
             offsetStackAfter(nullptr),
             jumpOrigins(alloc)
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
         {}
 
         // Whether this instruction has been analyzed to get its output defines
@@ -350,7 +350,7 @@ class BytecodeParser
         // |stackDepth - 1|.
         OffsetAndDefIndex* offsetStack;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
         // stack depth after this opcode.
         uint32_t stackDepthAfter;
 
@@ -370,7 +370,7 @@ class BytecodeParser
         // A list of offsets of the bytecode that jumps to this bytecode,
         // exclusing previous bytecode.
         Vector<JumpInfo, 0, LifoAllocPolicy<Fallible>> jumpOrigins;
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
         bool captureOffsetStack(LifoAlloc& alloc, const OffsetAndDefIndex* stack, uint32_t depth) {
             stackDepth = depth;
@@ -384,7 +384,7 @@ class BytecodeParser
             return true;
         }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
         bool captureOffsetStackAfter(LifoAlloc& alloc, const OffsetAndDefIndex* stack,
                                      uint32_t depth) {
             stackDepthAfter = depth;
@@ -401,7 +401,7 @@ class BytecodeParser
         bool addJump(uint32_t from, JumpKind kind) {
             return jumpOrigins.append(JumpInfo(from, kind));
         }
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
         // When control-flow merges, intersect the stacks, marking slots that
         // are defined by different offsets and/or defIndices merged.
@@ -427,12 +427,12 @@ class BytecodeParser
 
     Bytecode** codeArray_;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     // Dedicated mode for stack dump.
     // Capture stack after each opcode, and also enable special handling for
     // some opcodes to make stack transition clearer.
     bool isStackDump;
-#endif /* DEBUG */
+#endif
 
   public:
     BytecodeParser(JSContext* cx, JSScript* script)
@@ -443,14 +443,14 @@ class BytecodeParser
 #ifdef DEBUG
         ,
         isStackDump(false)
-#endif /* DEBUG */
+#endif
     {}
 
     bool parse();
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     bool isReachable(const jsbytecode* pc) { return maybeCode(pc); }
-#endif /* DEBUG */
+#endif
 
     uint32_t stackDepthAtPC(uint32_t offset) {
         // Sometimes the code generator in debug mode asks about the stack depth
@@ -462,7 +462,7 @@ class BytecodeParser
         return stackDepthAtPC(script_->pcToOffset(pc));
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     uint32_t stackDepthAfterPC(uint32_t offset) {
         return getCode(offset).stackDepthAfter;
     }
@@ -489,7 +489,7 @@ class BytecodeParser
         return script_->offsetToPC(offsetAndDefIndex.offset());
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     const OffsetAndDefIndex& offsetForStackOperandAfterPC(uint32_t offset, int operand) {
         Bytecode& code = getCode(offset);
         if (operand < 0) {
@@ -515,7 +515,7 @@ class BytecodeParser
     void setStackDump() {
         isStackDump = true;
     }
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
   private:
     LifoAlloc& alloc() {
@@ -542,7 +542,7 @@ class BytecodeParser
         return codeArray_[offset];
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     Bytecode* maybeCode(const jsbytecode* pc) { return maybeCode(script_->pcToOffset(pc)); }
 #endif
 
@@ -971,7 +971,7 @@ BytecodeParser::parse()
     return true;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 
 bool
 js::ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc, uint32_t* depth, bool* reachablePC)
@@ -1149,7 +1149,11 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
         return true;
     }
 
-    if (JS::RuntimeHeapIsBusy() || !cx->isAllocAllowed()) {
+    if (JS::RuntimeHeapIsBusy()
+#ifdef DEBUG
+        || !cx->isAllocAllowed()
+#endif
+        ) {
         UniqueChars source = JS_smprintf("<value>");
         if (!source) {
             ReportOutOfMemory(cx);
@@ -1581,7 +1585,7 @@ js::Disassemble1(JSContext* cx, JS::Handle<JSScript*> script, jsbytecode* pc, un
     return Disassemble1(cx, script, pc, loc, lines, nullptr, sp);
 }
 
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 namespace {
 /*
@@ -1622,22 +1626,22 @@ struct ExpressionDecompiler
     BytecodeParser parser;
     Sprinter sprinter;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     // Dedicated mode for stack dump.
     // Generates an expression for stack dump, including internal state,
     // and also disables special handling for self-hosted code.
     bool isStackDump;
-#endif /* DEBUG */
+#endif
 
     ExpressionDecompiler(JSContext* cx, JSScript* script)
         : cx(cx),
           script(cx, script),
           parser(cx, script),
           sprinter(cx)
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
           ,
           isStackDump(false)
-#endif /* DEBUG */
+#endif
     {}
     bool init();
     bool decompilePCForStackOperand(jsbytecode* pc, int i);
@@ -1649,12 +1653,12 @@ struct ExpressionDecompiler
     bool write(const char* s);
     bool write(JSString* str);
     bool getOutput(char** out);
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void setStackDump() {
         isStackDump = true;
         parser.setStackDump();
     }
-#endif /* DEBUG */
+#endif
 };
 
 bool
@@ -2170,7 +2174,7 @@ ExpressionDecompiler::getOutput(char** res)
 
 }  // anonymous namespace
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 static bool
 DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
                           const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp)
@@ -2191,7 +2195,7 @@ DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
     js_free(result);
     return ok;
 }
-#endif /* DEBUG */
+#endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 static bool
 FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits, const Value& v,

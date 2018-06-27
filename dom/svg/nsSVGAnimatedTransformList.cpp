@@ -124,9 +124,9 @@ nsSVGAnimatedTransformList::SetAnimValue(const SVGTransformList& aValue,
   }
   int32_t modType;
   if(prevSet) {
-    modType = MutationEventBinding::MODIFICATION;
+    modType = MutationEvent_Binding::MODIFICATION;
   } else {
-    modType = MutationEventBinding::ADDITION;
+    modType = MutationEvent_Binding::ADDITION;
   }
   aElement->DidAnimateTransformList(modType);
   return NS_OK;
@@ -148,9 +148,9 @@ nsSVGAnimatedTransformList::ClearAnimValue(nsSVGElement *aElement)
   mAnimVal = nullptr;
   int32_t modType;
   if (HasTransform() || aElement->GetAnimateMotionTransform()) {
-    modType = MutationEventBinding::MODIFICATION;
+    modType = MutationEvent_Binding::MODIFICATION;
   } else {
-    modType = MutationEventBinding::REMOVAL;
+    modType = MutationEvent_Binding::REMOVAL;
   }
   aElement->DidAnimateTransformList(modType);
 }

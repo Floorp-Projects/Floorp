@@ -40,7 +40,7 @@ ImageCaptureError::GetParentObject() const
 JSObject*
 ImageCaptureError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ImageCaptureErrorBinding::Wrap(aCx, this, aGivenProto);
+  return ImageCaptureError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 uint16_t

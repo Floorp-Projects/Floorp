@@ -241,7 +241,7 @@ APZEventState::FireContextmenuEvents(const nsCOMPtr<nsIPresShell>& aPresShell,
   bool eventHandled =
       APZCCallbackHelper::DispatchMouseEvent(aPresShell, NS_LITERAL_STRING("contextmenu"),
                          aPoint, 2, 1, WidgetModifiersToDOMModifiers(aModifiers), true,
-                         dom::MouseEventBinding::MOZ_SOURCE_TOUCH,
+                         dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH,
                          0 /* Use the default value here. */);
 
   APZES_LOG("Contextmenu event handled: %d\n", eventHandled);

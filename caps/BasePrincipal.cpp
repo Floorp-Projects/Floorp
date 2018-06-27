@@ -336,7 +336,8 @@ BasePrincipal::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserEle
 nsresult
 BasePrincipal::GetAddonPolicy(nsISupports** aResult)
 {
-  *aResult = AddonPolicy();
+  RefPtr<extensions::WebExtensionPolicy> policy(AddonPolicy());
+  policy.forget(aResult);
   return NS_OK;
 }
 

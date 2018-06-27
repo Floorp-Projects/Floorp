@@ -360,7 +360,7 @@ KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType)
       mEvent->mFlags.mInSystemGroup ||
       !nsContentUtils::ShouldResistFingerprinting() ||
       mEvent->AsKeyboardEvent()->mLocation ==
-        KeyboardEventBinding::DOM_KEY_LOCATION_NUMPAD) {
+        KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD) {
     return false;
   }
 

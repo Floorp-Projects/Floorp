@@ -36,7 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMatrixReadOnly, Release)
 JSObject*
 DOMMatrixReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMMatrixReadOnlyBinding::Wrap(aCx, this, aGivenProto);
+  return DOMMatrixReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMMatrixReadOnly>
@@ -739,7 +739,7 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
 JSObject*
 DOMMatrix::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMMatrixBinding::Wrap(aCx, this, aGivenProto);
+  return DOMMatrix_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

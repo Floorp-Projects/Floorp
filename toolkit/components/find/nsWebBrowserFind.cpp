@@ -720,15 +720,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
 
   RefPtr<nsRange> foundRange;
 
-  // If !aWrapping, search from selection to end
-  if (!aWrapping)
-    rv = GetSearchLimits(searchRange, startPt, endPt, theDoc, sel, false);
-
-  // If aWrapping, search the part of the starting frame
-  // up to the point where we left off.
-  else
-    rv = GetSearchLimits(searchRange, startPt, endPt, theDoc, sel, true);
-
+  rv = GetSearchLimits(searchRange, startPt, endPt, theDoc, sel, aWrapping);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = find->Find(mSearchString.get(), searchRange, startPt, endPt,

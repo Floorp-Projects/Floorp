@@ -70,8 +70,6 @@
       testStates("menubar", 0, 0, STATE_FOCUSABLE);
       testStates("menu", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
       testStates("menu-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
-      testStates("scale", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
-      testStates("scale-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE);
       testStates("tab", STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED, 0, STATE_UNAVAILABLE);
       testStates("tab-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED);
 
@@ -159,9 +157,6 @@
         </menu>
       </menubar>
     </toolbox>
-
-    <scale id="scale" min="1" max="10"/>
-    <scale id="scale-disabled" min="1" max="10" disabled="true"/>
 
     <tabbox>
       <tabs>

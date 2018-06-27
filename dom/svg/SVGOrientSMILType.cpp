@@ -13,8 +13,8 @@
 
 namespace mozilla {
 
-using namespace dom::SVGAngleBinding;
-using namespace dom::SVGMarkerElementBinding;
+using namespace dom::SVGAngle_Binding;
+using namespace dom::SVGMarkerElement_Binding;
 
 /*static*/ SVGOrientSMILType SVGOrientSMILType::sSingleton;
 

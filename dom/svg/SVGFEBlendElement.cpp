@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGFEBlendElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEBlendElementBinding::Wrap(aCx, this, aGivenProto);
+  return SVGFEBlendElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGEnumMapping SVGFEBlendElement::sModeMap[] = {

@@ -248,13 +248,13 @@ IDBKeyRange::DropJSObjects()
 bool
 IDBKeyRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
 {
-  return IDBKeyRangeBinding::Wrap(aCx, this, aGivenProto, aReflector);
+  return IDBKeyRange_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 bool
 IDBLocaleAwareKeyRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
 {
-  return IDBLocaleAwareKeyRangeBinding::Wrap(aCx, this, aGivenProto, aReflector);
+  return IDBLocaleAwareKeyRange_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 void

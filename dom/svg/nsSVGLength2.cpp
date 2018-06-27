@@ -45,8 +45,8 @@ static nsSVGAttrTearoffTable<nsSVGLength2, SVGAnimatedLength>
 static bool
 IsValidUnitType(uint16_t unit)
 {
-  if (unit > SVGLengthBinding::SVG_LENGTHTYPE_UNKNOWN &&
-      unit <= SVGLengthBinding::SVG_LENGTHTYPE_PC)
+  if (unit > SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
+      unit <= SVGLength_Binding::SVG_LENGTHTYPE_PC)
     return true;
 
   return false;
@@ -69,7 +69,7 @@ static uint16_t
 GetUnitTypeForString(const nsAString& unitStr)
 {
   if (unitStr.IsEmpty())
-    return SVGLengthBinding::SVG_LENGTHTYPE_NUMBER;
+    return SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
 
   nsAtom *unitAtom = NS_GetStaticAtom(unitStr);
   if (unitAtom) {
@@ -80,7 +80,7 @@ GetUnitTypeForString(const nsAString& unitStr)
     }
   }
 
-  return SVGLengthBinding::SVG_LENGTHTYPE_UNKNOWN;
+  return SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
 }
 
 static void
@@ -243,24 +243,24 @@ nsSVGLength2::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
                                uint8_t aUnitType) const
 {
   switch (aUnitType) {
-  case SVGLengthBinding::SVG_LENGTHTYPE_NUMBER:
-  case SVGLengthBinding::SVG_LENGTHTYPE_PX:
+  case SVGLength_Binding::SVG_LENGTHTYPE_NUMBER:
+  case SVGLength_Binding::SVG_LENGTHTYPE_PX:
     return 1;
-  case SVGLengthBinding::SVG_LENGTHTYPE_MM:
+  case SVGLength_Binding::SVG_LENGTHTYPE_MM:
     return DPI / MM_PER_INCH_FLOAT;
-  case SVGLengthBinding::SVG_LENGTHTYPE_CM:
+  case SVGLength_Binding::SVG_LENGTHTYPE_CM:
     return 10.0f * DPI / MM_PER_INCH_FLOAT;
-  case SVGLengthBinding::SVG_LENGTHTYPE_IN:
+  case SVGLength_Binding::SVG_LENGTHTYPE_IN:
     return DPI;
-  case SVGLengthBinding::SVG_LENGTHTYPE_PT:
+  case SVGLength_Binding::SVG_LENGTHTYPE_PT:
     return DPI / POINTS_PER_INCH_FLOAT;
-  case SVGLengthBinding::SVG_LENGTHTYPE_PC:
+  case SVGLength_Binding::SVG_LENGTHTYPE_PC:
     return 12.0f * DPI / POINTS_PER_INCH_FLOAT;
-  case SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE:
+  case SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE:
     return aMetrics.GetAxisLength(mCtxType) / 100.0f;
-  case SVGLengthBinding::SVG_LENGTHTYPE_EMS:
+  case SVGLength_Binding::SVG_LENGTHTYPE_EMS:
     return aMetrics.GetEmLength();
-  case SVGLengthBinding::SVG_LENGTHTYPE_EXS:
+  case SVGLength_Binding::SVG_LENGTHTYPE_EXS:
     return aMetrics.GetExLength();
   default:
     MOZ_ASSERT_UNREACHABLE("Unknown unit type");
@@ -518,9 +518,9 @@ nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
   val.mU.mDouble = value * mVal->GetPixelsPerUnit(mSVGElement, unitType);
   aValue = val;
   aPreventCachingOfSandwich =
-              (unitType == SVGLengthBinding::SVG_LENGTHTYPE_PERCENTAGE ||
-               unitType == SVGLengthBinding::SVG_LENGTHTYPE_EMS ||
-               unitType == SVGLengthBinding::SVG_LENGTHTYPE_EXS);
+              (unitType == SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE ||
+               unitType == SVGLength_Binding::SVG_LENGTHTYPE_EMS ||
+               unitType == SVGLength_Binding::SVG_LENGTHTYPE_EXS);
 
   return NS_OK;
 }

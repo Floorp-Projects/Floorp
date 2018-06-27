@@ -616,7 +616,7 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   JS::RealmCreationOptions& creationOptions = options.creationOptions();
   creationOptions.setSharedMemoryAndAtomicsEnabled(sharedMemoryEnabled);
 
-  return DedicatedWorkerGlobalScopeBinding::Wrap(aCx, this, this,
+  return DedicatedWorkerGlobalScope_Binding::Wrap(aCx, this, this,
                                                  options,
                                                  GetWorkerPrincipal(),
                                                  true, aReflector);
@@ -655,7 +655,7 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   JS::RealmOptions options;
   mWorkerPrivate->CopyJSRealmOptions(options);
 
-  return SharedWorkerGlobalScopeBinding::Wrap(aCx, this, this, options,
+  return SharedWorkerGlobalScope_Binding::Wrap(aCx, this, this, options,
                                               GetWorkerPrincipal(),
                                               true, aReflector);
 }
@@ -701,7 +701,7 @@ ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   JS::RealmOptions options;
   mWorkerPrivate->CopyJSRealmOptions(options);
 
-  return ServiceWorkerGlobalScopeBinding::Wrap(aCx, this, this, options,
+  return ServiceWorkerGlobalScope_Binding::Wrap(aCx, this, this, options,
                                                GetWorkerPrincipal(),
                                                true, aReflector);
 }
@@ -957,7 +957,7 @@ WorkerDebuggerGlobalScope::WrapGlobalObject(JSContext* aCx,
   JS::RealmOptions options;
   mWorkerPrivate->CopyJSRealmOptions(options);
 
-  return WorkerDebuggerGlobalScopeBinding::Wrap(aCx, this, this, options,
+  return WorkerDebuggerGlobalScope_Binding::Wrap(aCx, this, this, options,
                                                 GetWorkerPrincipal(), true,
                                                 aReflector);
 }

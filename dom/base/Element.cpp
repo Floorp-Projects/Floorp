@@ -2275,7 +2275,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
     inputSource = sourceMouseEvent->inputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     event.mFlags.mIsPositionless = true;
-    inputSource = MouseEventBinding::MOZ_SOURCE_KEYBOARD;
+    inputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
   event.mClickCount = clickCount;
@@ -2424,8 +2424,8 @@ Element::MaybeCheckSameAttrVal(int32_t aNamespaceID,
     }
   }
   *aModType = modification ?
-    static_cast<uint8_t>(MutationEventBinding::MODIFICATION) :
-    static_cast<uint8_t>(MutationEventBinding::ADDITION);
+    static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION) :
+    static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
   return false;
 }
 
@@ -2473,7 +2473,7 @@ Element::SetSingleClassFromParser(nsAtom* aSingleClassName)
                           nullptr, // old value
                           value,
                           nullptr,
-                          static_cast<uint8_t>(MutationEventBinding::ADDITION),
+                          static_cast<uint8_t>(MutationEvent_Binding::ADDITION),
                           false, // hasListeners
                           false, // notify
                           kCallAfterSetAttr,
@@ -2689,7 +2689,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
 
       LifecycleCallbackArgs args = {
         nsDependentAtomString(aName),
-        aModType == MutationEventBinding::ADDITION ?
+        aModType == MutationEvent_Binding::ADDITION ?
           VoidString() : nsDependentAtomString(oldValueAtom),
         nsDependentAtomString(newValueAtom),
         (ns.IsEmpty() ? VoidString() : ns)
@@ -2924,7 +2924,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
-                                     MutationEventBinding::REMOVAL,
+                                     MutationEvent_Binding::REMOVAL,
                                      nullptr);
   }
 
@@ -3007,7 +3007,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
     // We can always pass oldValue here since there is no new value which could
     // have corrupted it.
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                  MutationEventBinding::REMOVAL, &oldValue);
+                                  MutationEvent_Binding::REMOVAL, &oldValue);
   }
 
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {
@@ -3024,7 +3024,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
     oldValue.ToString(value);
     if (!value.IsEmpty())
       mutation.mPrevAttrValue = NS_Atomize(value);
-    mutation.mAttrChange = MutationEventBinding::REMOVAL;
+    mutation.mAttrChange = MutationEvent_Binding::REMOVAL;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
     (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();

@@ -216,7 +216,7 @@ gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch, CachedGlyphData *gd)
     FT_Int32 flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                      FT_LOAD_DEFAULT :
                      (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-    FT_Error err = FT_Load_Glyph(face, gid, flags);
+    FT_Error err = Factory::LoadFTGlyph(face, gid, flags);
 
     if (err) {
         // hmm, this is weird, we failed to load a glyph that we had?

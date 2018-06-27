@@ -104,7 +104,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(nsTextNode, CharacterData)
 JSObject*
 nsTextNode::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TextBinding::Wrap(aCx, this, aGivenProto);
+  return Text_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

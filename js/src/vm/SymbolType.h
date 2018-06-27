@@ -97,7 +97,7 @@ class Symbol : public js::gc::TenuredCell
         return mallocSizeOf(this);
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
     void dump(); // Debugger-friendly stderr dump.
     void dump(js::GenericPrinter& out);
 #endif

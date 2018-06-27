@@ -188,5 +188,5 @@ TCPServerSocket::SetServerBridgeParent(TCPServerSocketParent* aBridgeParent)
 JSObject*
 TCPServerSocket::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TCPServerSocketBinding::Wrap(aCx, this, aGivenProto);
+  return TCPServerSocket_Binding::Wrap(aCx, this, aGivenProto);
 }

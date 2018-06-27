@@ -88,7 +88,7 @@ HTMLPictureElement::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
 JSObject*
 HTMLPictureElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLPictureElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLPictureElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

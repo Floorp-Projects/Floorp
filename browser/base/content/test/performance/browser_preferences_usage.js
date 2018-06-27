@@ -116,20 +116,20 @@ add_task(async function open_10_tabs() {
       max: 25,
     },
     "security.insecure_connection_icon.pbmode.enabled": {
-      min: 17,
-      max: 25,
+      min: 10,
+      max: 18,
     },
     "security.insecure_connection_icon.enabled": {
-      min: 17,
-      max: 25,
+      min: 10,
+      max: 18,
     },
     "security.insecure_connection_text.enabled": {
-      min: 17,
-      max: 25,
+      min: 10,
+      max: 18,
     },
     "security.insecure_connection_text.pbmode.enabled": {
-      min: 17,
-      max: 25,
+      min: 10,
+      max: 18,
     },
     "dom.ipc.processCount": {
       min: 10,
@@ -171,20 +171,20 @@ add_task(async function navigate_around() {
       max: 110,
     },
     "security.insecure_connection_icon.pbmode.enabled": {
-      min: 50,
-      max: 55,
+      min: 20,
+      max: 30,
     },
     "security.insecure_connection_icon.enabled": {
-      min: 50,
-      max: 55,
+      min: 20,
+      max: 30,
     },
     "security.insecure_connection_text.enabled": {
-      min: 50,
-      max: 55,
+      min: 20,
+      max: 30,
     },
     "security.insecure_connection_text.pbmode.enabled": {
-      min: 50,
-      max: 55,
+      min: 20,
+      max: 30,
     },
     "browser.chrome.favicons": {
       min: 50,

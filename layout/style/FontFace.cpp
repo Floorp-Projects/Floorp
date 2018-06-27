@@ -130,7 +130,7 @@ FontFace::~FontFace()
 JSObject*
 FontFace::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FontFaceBinding::Wrap(aCx, this, aGivenProto);
+  return FontFace_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 static FontFaceLoadStatus

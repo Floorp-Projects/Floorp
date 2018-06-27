@@ -53,7 +53,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return mozilla::dom::IntersectionObserverEntryBinding::Wrap(aCx, this, aGivenProto);
+    return mozilla::dom::IntersectionObserverEntry_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   DOMHighResTimeStamp Time()
@@ -135,7 +135,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return mozilla::dom::IntersectionObserverBinding::Wrap(aCx, this, aGivenProto);
+    return mozilla::dom::IntersectionObserver_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   nsISupports* GetParentObject() const

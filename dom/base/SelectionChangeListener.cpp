@@ -156,7 +156,7 @@ SelectionChangeListener::NotifySelectionChanged(nsIDocument* aDoc,
 
     if (target) {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(target, eSelectionChange, false);
+        new AsyncEventDispatcher(target, eSelectionChange, CanBubble::eNo);
       asyncDispatcher->PostDOMEvent();
     }
   } else {
@@ -170,7 +170,7 @@ SelectionChangeListener::NotifySelectionChanged(nsIDocument* aDoc,
 
     if (aDoc) {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(aDoc, eSelectionChange, false);
+        new AsyncEventDispatcher(aDoc, eSelectionChange, CanBubble::eNo);
       asyncDispatcher->PostDOMEvent();
     }
   }

@@ -1068,7 +1068,7 @@ nsRFPService::GetSpoofedCode(const nsIDocument* aDoc,
   // We need to change the 'Left' with 'Right' if the location indicates
   // it's a right key.
   if (aKeyboardEvent->mLocation ==
-        dom::KeyboardEventBinding::DOM_KEY_LOCATION_RIGHT &&
+        dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_RIGHT &&
       StringEndsWith(aOut, NS_LITERAL_STRING("Left"))) {
     aOut.ReplaceLiteral(aOut.Length() - 4, 4, u"Right");
   }

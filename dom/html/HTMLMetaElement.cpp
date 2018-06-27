@@ -156,14 +156,17 @@ HTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
     return;
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, aEventName, true, true);
+    new AsyncEventDispatcher(this,
+                             aEventName,
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eYes);
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
 JSObject*
 HTMLMetaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLMetaElementBinding::Wrap(aCx, this, aGivenProto);
+  return HTMLMetaElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

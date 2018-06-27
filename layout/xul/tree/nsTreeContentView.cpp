@@ -127,7 +127,7 @@ JSObject*
 nsTreeContentView::WrapObject(JSContext* aCx,
                               JS::Handle<JSObject*> aGivenProto)
 {
-  return TreeContentViewBinding::Wrap(aCx, this, aGivenProto);
+  return TreeContentView_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*

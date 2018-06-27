@@ -159,7 +159,7 @@ WinPointerInfo*
 WinPointerEvents::GetCachedPointerInfo(UINT aMsg, WPARAM aWParam)
 {
   if (!sLibraryHandle || !sPointerEventEnabled ||
-      MOUSE_INPUT_SOURCE() != dom::MouseEventBinding::MOZ_SOURCE_PEN ||
+      MOUSE_INPUT_SOURCE() != dom::MouseEvent_Binding::MOZ_SOURCE_PEN ||
       ShouldFirePointerEventByWinPointerMessages()) {
     return nullptr;
   }

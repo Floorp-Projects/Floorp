@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
 
 <dialog id="appManager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -38,7 +39,7 @@
   <description id="appDescription"/>
   <separator class="thin"/>
   <hbox flex="1">
-    <listbox id="appList" onselect="gAppManagerDialog.onSelect();" flex="1"/>
+    <richlistbox id="appList" onselect="gAppManagerDialog.onSelect();" flex="1"/>
     <vbox>
       <button id="remove"
               data-l10n-id="app-manager-remove"
