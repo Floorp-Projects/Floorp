@@ -668,14 +668,14 @@ def set_gecko_property(ffi_name, expr):
             SVGPaintKind::Color(color) => {
                 paint.mType = nsStyleSVGPaintType::eStyleSVGPaintType_Color;
                 unsafe {
-                    *paint.mPaint.mColor.as_mut() = convert_rgba_to_nscolor(&color);
+                    *paint.mPaint.mColor.as_mut() = color.into();
                 }
             }
         }
 
         paint.mFallbackType = match fallback {
             Some(Either::First(color)) => {
-                paint.mFallbackColor = convert_rgba_to_nscolor(&color);
+                paint.mFallbackColor = color.into();
                 nsStyleSVGFallbackType::eStyleSVGFallbackType_Color
             },
             Some(Either::Second(_)) => {
@@ -710,7 +710,7 @@ def set_gecko_property(ffi_name, expr):
 
         let fallback = match paint.mFallbackType {
             nsStyleSVGFallbackType::eStyleSVGFallbackType_Color => {
-                Some(Either::First(convert_nscolor_to_rgba(paint.mFallbackColor)))
+                Some(Either::First(paint.mFallbackColor.into()))
             },
             nsStyleSVGFallbackType::eStyleSVGFallbackType_None => {
                 Some(Either::Second(None_))
@@ -729,7 +729,8 @@ def set_gecko_property(ffi_name, expr):
                 })
             }
             nsStyleSVGPaintType::eStyleSVGPaintType_Color => {
-                unsafe { SVGPaintKind::Color(convert_nscolor_to_rgba(*paint.mPaint.mColor.as_ref())) }
+                let col = unsafe { *paint.mPaint.mColor.as_ref() };
+                SVGPaintKind::Color(col.into())
             }
         };
         SVGPaint {

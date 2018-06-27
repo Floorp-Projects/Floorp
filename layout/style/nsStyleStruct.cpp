@@ -1230,9 +1230,9 @@ nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
 //
 nsStyleSVGReset::nsStyleSVGReset(const nsPresContext* aContext)
   : mMask(nsStyleImageLayers::LayerType::Mask)
-  , mStopColor(StyleComplexColor::FromColor(NS_RGB(0, 0, 0)))
-  , mFloodColor(StyleComplexColor::FromColor(NS_RGB(0, 0, 0)))
-  , mLightingColor(StyleComplexColor::FromColor(NS_RGB(255, 255, 255)))
+  , mStopColor(StyleComplexColor::Black())
+  , mFloodColor(StyleComplexColor::Black())
+  , mLightingColor(StyleComplexColor::White())
   , mStopOpacity(1.0f)
   , mFloodOpacity(1.0f)
   , mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO)
@@ -1340,14 +1340,14 @@ nsStyleSVGReset::HasMask() const
 
 // nsStyleSVGPaint implementation
 nsStyleSVGPaint::nsStyleSVGPaint(nsStyleSVGPaintType aType)
-  : mType(aType)
+  : mPaint(StyleComplexColor::Black())
+  , mType(aType)
   , mFallbackType(eStyleSVGFallbackType_NotSet)
-  , mFallbackColor(NS_RGB(0, 0, 0))
+  , mFallbackColor(StyleComplexColor::Black())
 {
   MOZ_ASSERT(aType == nsStyleSVGPaintType(0) ||
              aType == eStyleSVGPaintType_None ||
              aType == eStyleSVGPaintType_Color);
-  mPaint.mColor = NS_RGB(0, 0, 0);
 }
 
 nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
@@ -1368,7 +1368,7 @@ nsStyleSVGPaint::Reset()
     case eStyleSVGPaintType_None:
       break;
     case eStyleSVGPaintType_Color:
-      mPaint.mColor = NS_RGB(0, 0, 0);
+      mPaint.mColor = StyleComplexColor::Black();
       break;
     case eStyleSVGPaintType_Server:
       mPaint.mPaintServer->Release();
@@ -1377,7 +1377,7 @@ nsStyleSVGPaint::Reset()
     case eStyleSVGPaintType_ContextFill:
     case eStyleSVGPaintType_ContextStroke:
       mFallbackType = eStyleSVGFallbackType_NotSet;
-      mFallbackColor = NS_RGB(0, 0, 0);
+      mFallbackColor = StyleComplexColor::Black();
       break;
   }
   mType = nsStyleSVGPaintType(0);
@@ -1429,7 +1429,7 @@ nsStyleSVGPaint::SetNone()
 void
 nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
                                  nsStyleSVGFallbackType aFallbackType,
-                                 nscolor aFallbackColor)
+                                 StyleComplexColor aFallbackColor)
 {
   MOZ_ASSERT(aType == eStyleSVGPaintType_ContextFill ||
              aType == eStyleSVGPaintType_ContextStroke);
@@ -1440,7 +1440,7 @@ nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
 }
 
 void
-nsStyleSVGPaint::SetColor(nscolor aColor)
+nsStyleSVGPaint::SetColor(StyleComplexColor aColor)
 {
   Reset();
   mType = eStyleSVGPaintType_Color;
@@ -1450,7 +1450,7 @@ nsStyleSVGPaint::SetColor(nscolor aColor)
 void
 nsStyleSVGPaint::SetPaintServer(css::URLValue* aPaintServer,
                                 nsStyleSVGFallbackType aFallbackType,
-                                nscolor aFallbackColor)
+                                StyleComplexColor aFallbackColor)
 {
   MOZ_ASSERT(aPaintServer);
   Reset();
@@ -3286,7 +3286,7 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
 
 nsStyleBackground::nsStyleBackground(const nsPresContext* aContext)
   : mImage(nsStyleImageLayers::LayerType::Background)
-  , mBackgroundColor(StyleComplexColor::FromColor(NS_RGBA(0, 0, 0, 0)))
+  , mBackgroundColor(StyleComplexColor::Transparent())
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
 }
