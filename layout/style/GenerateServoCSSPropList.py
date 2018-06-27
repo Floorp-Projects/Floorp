@@ -69,7 +69,7 @@ def generate_header(output, data):
         "alias": "CSS_PROP_ALIAS",
     }
     for prop in data:
-        is_internal = "CSSPropFlags::Internal" in prop.flags
+        is_internal = "Internal" in prop.flags
         pref = '"' + prop.pref + '"'
         if prop.type() == "alias":
             params = [prop.name, prop.alias_id, prop.prop_id, prop.method, pref]
@@ -80,7 +80,8 @@ def generate_header(output, data):
             elif method.startswith("Moz"):
                 method = "CSS_PROP_DOMPROP_PREFIXED({})".format(method[3:])
             if prop.flags:
-                flags = " | ".join(prop.flags)
+                flags = " | ".join("CSSPropFlags::{}".format(flag)
+                                   for flag in prop.flags)
             else:
                 flags = "CSSPropFlags(0)"
             params = [prop.name, prop.id, method, flags, pref]
