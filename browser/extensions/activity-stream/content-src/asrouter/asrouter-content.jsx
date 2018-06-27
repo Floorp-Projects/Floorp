@@ -14,13 +14,13 @@ const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
 
 export const ASRouterUtils = {
   addListener(listener) {
-    global.addMessageListener(INCOMING_MESSAGE_NAME, listener);
+    global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, listener);
   },
   removeListener(listener) {
-    global.removeMessageListener(INCOMING_MESSAGE_NAME, listener);
+    global.RPMRemoveMessageListener(INCOMING_MESSAGE_NAME, listener);
   },
   sendMessage(action) {
-    global.sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+    global.RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
   },
   blockById(id) {
     ASRouterUtils.sendMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id}});
@@ -47,7 +47,7 @@ export const ASRouterUtils = {
   },
   sendTelemetry(ping) {
     const payload = ac.ASRouterUserEvent(ping);
-    global.sendAsyncMessage(AS_GENERAL_OUTGOING_MESSAGE_NAME, payload);
+    global.RPMSendAsyncMessage(AS_GENERAL_OUTGOING_MESSAGE_NAME, payload);
   }
 };
 

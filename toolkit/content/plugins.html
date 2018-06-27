@@ -62,7 +62,7 @@
    */
   navigator.plugins.refresh(false);
 
-  addMessageListener("PluginList", function({ data: aPlugins }) {
+  RPMAddMessageListener("PluginList", function({ data: aPlugins }) {
     var fragment = document.createDocumentFragment();
 
     // "Installed plugins"
@@ -215,7 +215,7 @@
     document.getElementById("outside").appendChild(fragment);
   });
 
-  sendAsyncMessage("RequestPlugins");
+  RPMSendAsyncMessage("RequestPlugins");
 </script>
 </div>
 </body>
