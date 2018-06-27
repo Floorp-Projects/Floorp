@@ -40,7 +40,7 @@ sys.modules['gyp.generator.mozbuild'] = sys.modules[__name__]
 # chrome_src for the default includes, so go backwards from the pylib
 # directory, which is the parent directory of gyp module.
 chrome_src = mozpath.abspath(mozpath.join(mozpath.dirname(gyp.__file__),
-    '../../../../..'))
+    '../../../..'))
 script_dir = mozpath.join(chrome_src, 'build')
 
 
@@ -377,7 +377,13 @@ class GypProcessor(object):
             # to override the registry detection of VC++ in gyp.
             os.environ['GYP_MSVS_OVERRIDE_PATH'] = 'fake_path'
 
-            os.environ['GYP_MSVS_VERSION'] = config.substs['MSVS_VERSION']
+            # TODO bug 1371485 upgrade vendored version of GYP to something that
+            # doesn't barf when MSVS_VERSION==2017.
+            msvs_version = config.substs['MSVS_VERSION']
+            if msvs_version == '2017':
+                warnings.warn('MSVS_VERSION being set to 2015 to appease GYP')
+                msvs_version = '2015'
+            os.environ['GYP_MSVS_VERSION'] = msvs_version
 
         params = {
             b'parallel': False,
@@ -392,8 +398,7 @@ class GypProcessor(object):
         else:
             depth = chrome_src
             # Files that gyp_chromium always includes
-            includes = [encode(mozpath.join(script_dir, 'gyp_includes',
-                                            'common.gypi'))]
+            includes = [encode(mozpath.join(script_dir, 'common.gypi'))]
             finder = FileFinder(chrome_src)
             includes.extend(encode(mozpath.join(chrome_src, name))
                             for name, _ in finder.find('*/supplement.gypi'))
