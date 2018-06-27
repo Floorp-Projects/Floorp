@@ -46,25 +46,25 @@ UNIFIED_SOURCES = [
     'ipc/GamepadTestChannelParent.cpp'
 ]
 
-if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
-    UNIFIED_SOURCES += [
-        'fallback/FallbackGamepad.cpp'
-    ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'cocoa':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'cocoa/CocoaGamepad.cpp'
     ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'windows':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
         'windows/WindowsGamepad.cpp'
     ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'linux':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    UNIFIED_SOURCES += [
+        'android/AndroidGamepad.cpp'
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     UNIFIED_SOURCES += [
         'linux/LinuxGamepad.cpp'
     ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'android':
+else:
     UNIFIED_SOURCES += [
-        'android/AndroidGamepad.cpp'
+        'fallback/FallbackGamepad.cpp'
     ]
 
 LOCAL_INCLUDES += [
