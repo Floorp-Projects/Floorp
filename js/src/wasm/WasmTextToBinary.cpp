@@ -5544,7 +5544,7 @@ EncodeTableSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeFunctionBody(Encoder& e, Uint32Vector* offsets, AstFunc& func)
+EncodeFunctionBody(Encoder& e, AstFunc& func)
 {
     size_t bodySizeAt;
     if (!e.writePatchableVarU32(&bodySizeAt))
@@ -5559,14 +5559,10 @@ EncodeFunctionBody(Encoder& e, Uint32Vector* offsets, AstFunc& func)
         return false;
 
     for (AstExpr* expr : func.body()) {
-        if (!offsets->append(e.currentOffset()))
-            return false;
         if (!EncodeExpr(e, *expr))
             return false;
     }
 
-    if (!offsets->append(e.currentOffset()))
-        return false;
     if (!e.writeOp(Op::End))
         return false;
 
@@ -5592,7 +5588,7 @@ EncodeStartSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeCodeSection(Encoder& e, Uint32Vector* offsets, AstModule& module)
+EncodeCodeSection(Encoder& e, AstModule& module)
 {
     if (module.funcs().empty())
         return true;
@@ -5605,7 +5601,7 @@ EncodeCodeSection(Encoder& e, Uint32Vector* offsets, AstModule& module)
         return false;
 
     for (AstFunc* func : module.funcs()) {
-        if (!EncodeFunctionBody(e, offsets, *func))
+        if (!EncodeFunctionBody(e, *func))
             return false;
     }
 
@@ -5712,7 +5708,7 @@ EncodeElemSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeModule(AstModule& module, Uint32Vector* offsets, Bytes* bytes)
+EncodeModule(AstModule& module, Bytes* bytes)
 {
     Encoder e(*bytes);
 
@@ -5749,7 +5745,7 @@ EncodeModule(AstModule& module, Uint32Vector* offsets, Bytes* bytes)
     if (!EncodeElemSection(e, module))
         return false;
 
-    if (!EncodeCodeSection(e, offsets, module))
+    if (!EncodeCodeSection(e, module))
         return false;
 
     if (!EncodeDataSection(e, module))
@@ -5783,8 +5779,7 @@ EncodeBinaryModule(const AstModule& module, Bytes* bytes)
 /*****************************************************************************/
 
 bool
-wasm::TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, Uint32Vector* offsets,
-                   UniqueChars* error)
+wasm::TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 
@@ -5799,5 +5794,5 @@ wasm::TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, Uin
     if (!ResolveModule(lifo, module, error))
         return false;
 
-    return EncodeModule(*module, offsets, bytes);
+    return EncodeModule(*module, bytes);
 }
