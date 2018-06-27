@@ -12,12 +12,7 @@ android {
         minSdkVersion rootProject.ext.build['minSdkVersion']
         targetSdkVersion rootProject.ext.build['targetSdkVersion']
     }
-
-    lintOptions {
-        warningsAsErrors true
-        abortOnError true
-    }
-
+    
     buildTypes {
         release {
             minifyEnabled false

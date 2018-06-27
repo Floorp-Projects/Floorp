@@ -147,6 +147,11 @@ subprojects {
                     }
                 }
 
+                lintOptions {
+                    warningsAsErrors true
+                    abortOnError true
+                }
+
                 task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
                     outputFormat = 'javadoc'
                     reportUndocumented = false
