@@ -8,8 +8,6 @@
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource:///modules/BrowserErrorReporter.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 
 /* global sinon */
 Services.scriptloader.loadSubScript(new URL("head_BrowserErrorReporter.js", gTestPath).href, this);
@@ -99,10 +97,15 @@ add_task(async function testScalars() {
       sourceName: "resource://gre/modules/long/long/long/long/long/long/long/long/long/long/",
     }),
     {message: "Not a scripterror instance."},
-    createScriptError({message: "Whatever", stack: [frame()]}),
+
+    // No easy way to create an nsIScriptError with a stack, so let's pretend.
+    Object.create(
+      createScriptError({message: "Whatever"}),
+      {stack: {value: new Error().stack}},
+    ),
   ];
 
-  // Use handleMessage to avoid errors from other code messing up our counts.
+  // Use observe to avoid errors from other code messing up our counts.
   for (const message of messages) {
     await reporter.handleMessage(message);
   }
@@ -163,7 +166,7 @@ add_task(async function testCollectedFilenameScalar() {
   for (const [filename, shouldMatch] of testCases) {
     Services.telemetry.clearScalars();
 
-    // Use handleMessage to avoid errors from other code messing up our counts.
+    // Use observe to avoid errors from other code messing up our counts.
     await reporter.handleMessage(createScriptError({
       message: "Fine",
       sourceName: filename,
