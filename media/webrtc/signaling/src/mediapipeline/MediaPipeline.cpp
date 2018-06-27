@@ -1730,6 +1730,8 @@ MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
     return;
   }
 
+  TRACE_AUDIO_CALLBACK_COMMENT("Audio");
+
   if (mDirectConnect) {
     // ignore non-direct data if we're also getting direct data
     return;
