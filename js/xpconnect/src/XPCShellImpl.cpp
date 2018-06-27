@@ -1079,6 +1079,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
     profiler_init(&aLocal);
 #endif
 
+#ifdef MOZ_ASAN_REPORTER
+    PR_SetEnv("MOZ_DISABLE_ASAN_REPORTER=1");
+#endif
+
     if (PR_GetEnv("MOZ_CHAOSMODE")) {
         ChaosFeature feature = ChaosFeature::Any;
         long featureInt = strtol(PR_GetEnv("MOZ_CHAOSMODE"), nullptr, 16);
