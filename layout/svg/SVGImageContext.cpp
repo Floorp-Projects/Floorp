@@ -53,12 +53,12 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
   if ((style->mContextPropsBits & NS_STYLE_CONTEXT_PROPERTY_FILL) &&
       style->mFill.Type() == eStyleSVGPaintType_Color) {
     haveContextPaint = true;
-    contextPaint->SetFill(style->mFill.GetColor());
+    contextPaint->SetFill(style->mFill.GetColor(aFromComputedStyle));
   }
   if ((style->mContextPropsBits & NS_STYLE_CONTEXT_PROPERTY_STROKE) &&
       style->mStroke.Type() == eStyleSVGPaintType_Color) {
     haveContextPaint = true;
-    contextPaint->SetStroke(style->mStroke.GetColor());
+    contextPaint->SetStroke(style->mStroke.GetColor(aFromComputedStyle));
   }
   if (style->mContextPropsBits & NS_STYLE_CONTEXT_PROPERTY_FILL_OPACITY) {
     haveContextPaint = true;
