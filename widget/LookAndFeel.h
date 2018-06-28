@@ -431,7 +431,13 @@ public:
       * A boolean value indicating whether client-side decorations should
       * contain a close button.
       */
-     eIntID_GTKCSDCloseButton
+     eIntID_GTKCSDCloseButton,
+
+     /*
+      * A boolean value indicating whether or not the OS is using a dark theme,
+      * which we may want to switch to as well if not overridden by the user.
+      */
+     eIntID_SystemUsesDarkTheme
   };
 
   /**

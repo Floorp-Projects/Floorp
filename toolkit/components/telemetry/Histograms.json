@@ -12216,24 +12216,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Graphics Crash Reason (...)"
   },
-  "TOTAL_SCROLL_Y": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1297867],
-    "expires_in_version": "58",
-    "kind": "count",
-    "description": "Count of the total number of CSS pixels scrolled up or down in the vertical axis of the root frame of all the pages visited in a subsession. This doesn't include any scrolling of nested scroll frames such as inputs, iframes, or scrollable divs."
-  },
-  "PAGE_MAX_SCROLL_Y": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1312881],
-    "expires_in_version": "58",
-    "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 50,
-    "description": "Maximum distance in CSS pixels a user scrolls down the vertical axis of the root frame of a page. This doesn't include any scrolling of nested scroll frames such as inputs, iframes, or scrollable divs."
-  },
   "WEB_NOTIFICATION_CLICKED": {
     "record_in_processes": ["main", "content"],
     "releaseChannelCollection": "opt-out",
@@ -13807,25 +13789,25 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors whose inline table editing UI is actually used by users."
   },
-  "ACTIVE_DOCGROUPS_PER_TABGROUP": {
+  "ACTIVE_HTTP_DOCGROUPS_PER_TABGROUP": {
     "record_in_processes": ["content"],
     "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1441972],
+    "bug_numbers": [1441972, 1468843],
     "expires_in_version": "67",
     "kind": "exponential",
     "high": 50,
     "n_buckets": 20,
-    "description": "Number of active doc groups per tab group. Collected at the point when the top level document of the tab group is unloaded."
+    "description": "Number of active http:// and https:// doc groups per tab group. Collected at the point when the top level document of the tab group is unloaded."
   },
-  "TOTAL_DOCGROUPS_PER_TABGROUP": {
+  "TOTAL_HTTP_DOCGROUPS_PER_TABGROUP": {
     "record_in_processes": ["content"],
     "alert_emails": ["farre@mozilla.com"],
-    "bug_numbers": [1441972],
+    "bug_numbers": [1441972, 1468843],
     "expires_in_version": "67",
     "kind": "exponential",
     "high": 50,
     "n_buckets": 20,
-    "description": "Total number of doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
+    "description": "Total number of http:// and https:// doc groups per tab group, including docgroups fully in bfcache. Collected at the point when the top level document of the tab group is unloaded."
   },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
     "record_in_processes": ["content"],

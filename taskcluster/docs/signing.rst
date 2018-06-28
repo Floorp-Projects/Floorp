@@ -1,8 +1,6 @@
 Signing
 =======
 
-.. _overview
-
 Overview
 --------
 
@@ -13,8 +11,6 @@ In general, the binary-to-be-signed is generated in one task, and the request
 to sign it is in a second task. We verify the request via the `chain of trust`_,
 sign the binary, then upload the signed binary or original binary + detached
 signature as artifacts.
-
-.. _how the task works
 
 How the Task Works
 ------------------
@@ -86,7 +82,7 @@ in `60.0`_. To generate these, we have the checksums signing kinds, including
 `release-generate-checksums-signing`, `checksums-signing`, and
 `release-source-checksums-signing`
 
-.. _signing formats
+.. _signing formats:
 
 Signing formats
 ---------------
@@ -114,7 +110,7 @@ is a ``tar.gz``.
 
 ``signcode`` signing takes individual binaries or a zipfile. We sign the
 individual file or internals of the zipfile, skipping any already-signed files
-and a select few blocklisted files (using the `_should_sign_windows`_ function).
+and a select few blocklisted files (using the `should_sign_windows`_ function).
 It returns a signed individual binary or zipfile with signed internals, depending
 on the input. This format includes ``signcode``, ``osslsigncode``,
 ``sha2signcode``, and ``sha2signcodestub``.
@@ -179,7 +175,7 @@ any other team.
 .. _code signing: https://en.wikipedia.org/wiki/Code_signing
 .. _chain of trust: https://scriptworker.readthedocs.io/en/latest/chain_of_trust.html
 .. _depsigning: https://tools.taskcluster.net/provisioners/scriptworker-prov-v1/worker-types/depsigning
-.. __should_sign_windows: https://github.com/mozilla-releng/signingscript/blob/65cbb99ea53896fda9f4844e050a9695c762d24f/signingscript/sign.py#L369
+.. _should_sign_windows: https://github.com/mozilla-releng/signingscript/blob/65cbb99ea53896fda9f4844e050a9695c762d24f/signingscript/sign.py#L369
 .. _Encrypted Media Extensions: https://hacks.mozilla.org/2014/05/reconciling-mozillas-mission-and-w3c-eme/
 .. _signing password files: https://github.com/mozilla/build-puppet/tree/feff5e12ab70f2c060b29940464e77208c7f0ef2/modules/signing_scriptworker/templates
 .. _signingscript: https://github.com/mozilla-releng/signingscript/
