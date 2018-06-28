@@ -1504,7 +1504,7 @@ NewStringDeflated(JSContext* cx, const char16_t* s, size_t n)
     if (JSInlineString::lengthFits<Latin1Char>(n))
         return NewInlineStringDeflated<allowGC>(cx, mozilla::Range<const char16_t>(s, n));
 
-    UniquePtr<Latin1Char[], JS::FreePolicy> news(cx->pod_malloc<Latin1Char>(n + 1));
+    auto news = cx->make_pod_array<Latin1Char>(n + 1);
     if (!news)
         return nullptr;
 
@@ -1606,7 +1606,7 @@ NewStringCopyNDontDeflate(JSContext* cx, const CharT* s, size_t n)
     if (JSInlineString::lengthFits<CharT>(n))
         return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
 
-    UniquePtr<CharT[], JS::FreePolicy> news(cx->pod_malloc<CharT>(n + 1));
+    auto news = cx->make_pod_array<CharT>(n + 1);
     if (!news) {
         if (!allowGC)
             cx->recoverFromOutOfMemory();
