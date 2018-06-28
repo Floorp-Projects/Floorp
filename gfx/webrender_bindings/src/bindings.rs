@@ -514,7 +514,8 @@ impl RenderNotifier for CppNotifier {
     fn new_frame_ready(&self,
                        _: DocumentId,
                        _scrolled: bool,
-                       composite_needed: bool) {
+                       composite_needed: bool,
+                       _render_time_ns: Option<u64>) {
         unsafe {
             if composite_needed {
                 wr_notifier_new_frame_ready(self.window_id);
@@ -717,11 +718,11 @@ impl SceneBuilderHooks for APZCallbacks {
         unsafe { apz_register_updater(self.window_id) }
     }
 
-    fn pre_scene_swap(&self) {
+    fn pre_scene_swap(&self, _scenebuild_time: u64) {
         unsafe { apz_pre_scene_swap(self.window_id) }
     }
 
-    fn post_scene_swap(&self, info: PipelineInfo) {
+    fn post_scene_swap(&self, info: PipelineInfo, _sceneswap_time: u64) {
         let info = WrPipelineInfo::new(info);
         unsafe { apz_post_scene_swap(self.window_id, info) }
 
