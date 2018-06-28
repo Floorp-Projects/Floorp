@@ -12,8 +12,7 @@ use device::{FrameId, Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
 use gpu_cache::{GpuCache};
-use gpu_types::{BorderInstance, BlurDirection, BlurInstance};
-use gpu_types::{ClipScrollNodeData, ZBufferIdGenerator};
+use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, TransformData, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
@@ -48,7 +47,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub resource_cache: &'rc mut ResourceCache,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub use_dual_source_blending: bool,
-    pub node_data: &'a [ClipScrollNodeData],
+    pub transforms: &'a TransformPalette,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -103,6 +102,7 @@ pub trait RenderTarget {
         _gpu_cache: &mut GpuCache,
         _render_tasks: &mut RenderTaskTree,
         _deferred_resolves: &mut Vec<DeferredResolve>,
+        _prim_headers: &mut PrimitiveHeaders,
     ) {
     }
     // TODO(gw): It's a bit odd that we need the deferred resolves and mutable
@@ -166,12 +166,19 @@ impl<T: RenderTarget> RenderTargetList<T> {
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
         saved_index: Option<SavedTargetIndex>,
+        prim_headers: &mut PrimitiveHeaders,
     ) {
         debug_assert_eq!(None, self.saved_index);
         self.saved_index = saved_index;
 
         for target in &mut self.targets {
-            target.build(ctx, gpu_cache, render_tasks, deferred_resolves);
+            target.build(
+                ctx,
+                gpu_cache,
+                render_tasks,
+                deferred_resolves,
+                prim_headers,
+            );
         }
     }
 
@@ -333,9 +340,9 @@ impl RenderTarget for ColorRenderTarget {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
+        prim_headers: &mut PrimitiveHeaders,
     ) {
         let mut merged_batches = AlphaBatchContainer::new(None);
-        let mut z_generator = ZBufferIdGenerator::new();
 
         for task_id in &self.alpha_tasks {
             let task = &render_tasks[*task_id];
@@ -358,7 +365,7 @@ impl RenderTarget for ColorRenderTarget {
                                 gpu_cache,
                                 render_tasks,
                                 deferred_resolves,
-                                &mut z_generator,
+                                prim_headers,
                             );
 
                             if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
@@ -594,6 +601,7 @@ impl RenderTarget for AlphaRenderTarget {
                     ctx.resource_cache,
                     gpu_cache,
                     clip_store,
+                    ctx.transforms,
                 );
             }
             RenderTaskKind::ClipRegion(ref task) => {
@@ -795,6 +803,7 @@ impl RenderPass {
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
         clip_store: &ClipStore,
+        prim_headers: &mut PrimitiveHeaders,
     ) {
         profile_scope!("RenderPass::build");
 
@@ -811,7 +820,13 @@ impl RenderPass {
                         deferred_resolves,
                     );
                 }
-                target.build(ctx, gpu_cache, render_tasks, deferred_resolves);
+                target.build(
+                    ctx,
+                    gpu_cache,
+                    render_tasks,
+                    deferred_resolves,
+                    prim_headers,
+                );
             }
             RenderPassKind::OffScreen { ref mut color, ref mut alpha, ref mut texture_cache } => {
                 let is_shared_alpha = self.tasks.iter().any(|&task_id| {
@@ -911,8 +926,22 @@ impl RenderPass {
                     }
                 }
 
-                color.build(ctx, gpu_cache, render_tasks, deferred_resolves, saved_color);
-                alpha.build(ctx, gpu_cache, render_tasks, deferred_resolves, saved_alpha);
+                color.build(
+                    ctx,
+                    gpu_cache,
+                    render_tasks,
+                    deferred_resolves,
+                    saved_color,
+                    prim_headers,
+                );
+                alpha.build(
+                    ctx,
+                    gpu_cache,
+                    render_tasks,
+                    deferred_resolves,
+                    saved_alpha,
+                    prim_headers,
+                );
                 alpha.is_shared = is_shared_alpha;
             }
         }
@@ -956,9 +985,9 @@ pub struct Frame {
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
     pub profile_counters: FrameProfileCounters,
 
-    pub node_data: Vec<ClipScrollNodeData>,
-    pub clip_chain_local_clip_rects: Vec<LayoutRect>,
+    pub transform_palette: Vec<TransformData>,
     pub render_tasks: RenderTaskTree,
+    pub prim_headers: PrimitiveHeaders,
 
     /// The GPU cache frame that the contents of Self depend on
     pub gpu_cache_frame_id: FrameId,

@@ -276,7 +276,7 @@ impl PicturePrimitive {
         self.can_draw_directly_to_parent_surface()
     }
 
-    pub fn prepare_for_render_inner(
+    pub fn prepare_for_render(
         &mut self,
         prim_index: PrimitiveIndex,
         prim_metadata: &mut PrimitiveMetadata,
@@ -489,16 +489,9 @@ impl PicturePrimitive {
                     //           that writes a brush primitive header.
 
                     // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
-                    //  local_rect
-                    //  clip_rect
                     //  [brush specific data]
                     //  [segment_rect, segment data]
                     let shadow_rect = prim_metadata.local_rect.translate(&offset);
-                    let shadow_clip_rect = prim_metadata.local_clip_rect.translate(&offset);
-
-                    // local_rect, clip_rect
-                    request.push(shadow_rect);
-                    request.push(shadow_clip_rect);
 
                     // ImageBrush colors
                     request.push(color.premultiplied());
@@ -591,27 +584,6 @@ impl PicturePrimitive {
                 self.surface = Some(PictureSurface::RenderTask(render_task_id));
             }
         }
-    }
-
-    pub fn prepare_for_render(
-        &mut self,
-        prim_index: PrimitiveIndex,
-        prim_metadata: &mut PrimitiveMetadata,
-        prim_run_context: &PrimitiveRunContext,
-        pic_state_for_children: PictureState,
-        pic_state: &mut PictureState,
-        frame_context: &FrameBuildingContext,
-        frame_state: &mut FrameBuildingState,
-    ) {
-        self.prepare_for_render_inner(
-            prim_index,
-            prim_metadata,
-            prim_run_context,
-            pic_state_for_children,
-            pic_state,
-            frame_context,
-            frame_state,
-        );
     }
 }
 

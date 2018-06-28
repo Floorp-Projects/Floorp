@@ -7,11 +7,11 @@ use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D, L
 use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle};
 use border::{ensure_no_corner_overlap};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
+use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId, TransformIndex};
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
-use gpu_types::{BoxShadowStretchMode, ClipScrollNodeIndex};
+use gpu_types::{BoxShadowStretchMode};
 use prim_store::{ClipData, ImageMaskData};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
@@ -625,7 +625,7 @@ impl Iterator for ClipChainNodeIter {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipWorkItem {
-    pub scroll_node_data_index: ClipScrollNodeIndex,
+    pub transform_index: TransformIndex,
     pub clip_sources: ClipSourcesWeakHandle,
     pub coordinate_system_id: CoordinateSystemId,
 }
