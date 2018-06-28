@@ -1451,7 +1451,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
             return true;
         }
 
-        atom = atomizeChars(anyCharsAccess().cx, chars, length);
+        atom = atomizeSourceChars(anyCharsAccess().cx, chars, length);
     }
     if (!atom)
         return false;
