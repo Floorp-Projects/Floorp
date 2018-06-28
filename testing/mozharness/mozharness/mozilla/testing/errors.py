@@ -28,11 +28,7 @@ _mochitest_summary = {
 TinderBoxPrintRe = {
     "mochitest_summary": _mochitest_summary,
     "mochitest-chrome_summary": _mochitest_summary,
-    "mochitest-webgl1-core_summary": _mochitest_summary,
-    "mochitest-webgl1-ext_summary": _mochitest_summary,
-    "mochitest-webgl2-core_summary": _mochitest_summary,
-    "mochitest-webgl2-ext_summary": _mochitest_summary,
-    "mochitest-webgl2-deqp_summary": _mochitest_summary,
+    "mochitest-gl_summary": _mochitest_summary,
     "mochitest-media_summary": _mochitest_summary,
     "mochitest-plain-clipboard_summary": _mochitest_summary,
     "mochitest-plain-gpu_summary": _mochitest_summary,
