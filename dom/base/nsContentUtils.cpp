@@ -9924,9 +9924,6 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
   int32_t tag = eHTMLTag_unknown;
   bool isCustomElementName = false;
   if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
-    if (aIsAtom && !nsContentUtils::IsNameWithDash(aIsAtom)) {
-      aIsAtom = nullptr;
-    }
     tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
     isCustomElementName = (tag == eHTMLTag_userdefined &&
                            nsContentUtils::IsCustomElementName(name, kNameSpaceID_XHTML));
@@ -10042,6 +10039,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
         } else {
           NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
         }
+        (*aResult)->SetDefined(false);
       }
       return NS_OK;
     }
