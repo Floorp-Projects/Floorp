@@ -16,7 +16,7 @@ phase tasks (compilation, packaging, and related tests) from the promotion
 phase tasks, we can schedule each phase at their own independent cadence, as
 needed, and the end-to-end time for promotion is reduced significantly.
 
-.. _release promotion phases
+.. _release promotion phases:
 
 Release Promotion Phases
 ------------------------

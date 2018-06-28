@@ -2,9 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== components.css =================================================
-  == Styles ported from XBL <resources>, loaded as UA styles in every XUL doc
-  ======================================================================= */
+/* ===== components.css ==================================================
+   ==
+   == THESE STYLES WILL BE MOVED TO "widgets.css".
+   ==
+   == These are loaded as UA syles, but eventually they will become
+   == document styles in "widgets.css". See bug 1463820 for details.
+   ==
+   ======================================================================= */
 
 @import url("chrome://global/skin/dropmarker.css");
 @import url("chrome://global/skin/groupbox.css");

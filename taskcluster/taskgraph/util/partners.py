@@ -54,26 +54,23 @@ MANIFEST_QUERY = """query {
   }
 }
 """
-
-r"""
-Example response:
-{
-  "data": {
-    "repository": {
-      "object": {
-        "text": "<?xml version=\"1.0\" ?>\n<manifest>\n  " +
-        "<remote fetch=\"git@github.com:mozilla-partners/\" name=\"mozilla-partners\"/>\n  " +
-        "<remote fetch=\"git@github.com:mozilla/\" name=\"mozilla\"/>\n\n  " +
-        "<project name=\"repack-scripts\" path=\"scripts\" remote=\"mozilla-partners\" " +
-        "revision=\"master\"/>\n  <project name=\"build-tools\" path=\"scripts/tools\" " +
-        "remote=\"mozilla\" revision=\"master\"/>\n  <project name=\"mozilla-EME-free\" " +
-        "path=\"partners/mozilla-EME-free\" remote=\"mozilla-partners\" " +
-        "revision=\"master\"/>\n</manifest>\n"
-      }
-    }
-  }
-}
-"""
+# Example response:
+# {
+#   "data": {
+#     "repository": {
+#       "object": {
+#         "text": "<?xml version=\"1.0\" ?>\n<manifest>\n  " +
+#           "<remote fetch=\"git@github.com:mozilla-partners/\" name=\"mozilla-partners\"/>\n  " +
+#           "<remote fetch=\"git@github.com:mozilla/\" name=\"mozilla\"/>\n\n  " +
+#           "<project name=\"repack-scripts\" path=\"scripts\" remote=\"mozilla-partners\" " +
+#           "revision=\"master\"/>\n  <project name=\"build-tools\" path=\"scripts/tools\" " +
+#           "remote=\"mozilla\" revision=\"master\"/>\n  <project name=\"mozilla-EME-free\" " +
+#           "path=\"partners/mozilla-EME-free\" remote=\"mozilla-partners\" " +
+#           "revision=\"master\"/>\n</manifest>\n"
+#       }
+#     }
+#   }
+# }
 
 # Returns the contents of desktop/*/repack.cfg for a partner repository
 REPACK_CFG_QUERY = """query{
@@ -100,41 +97,39 @@ REPACK_CFG_QUERY = """query{
   }
 }
 """
-r"""
-Example response:
-{
-  "data": {
-    "repository": {
-      "object": {
-        "entries": [
-          {
-            "name": "mozilla-EME-free",
-            "object": {
-              "entries": [
-                {
-                  "name": "distribution",
-                  "object": {}
-                },
-                {
-                  "name": "repack.cfg",
-                  "object": {
-                    "text": "aus=\"mozilla-EMEfree\"\ndist_id=\"mozilla-EMEfree\"\n" +
-                            "dist_version=\"1.0\"\nlinux-i686=true\nlinux-x86_64=true\n" +
-                            " locales=\"ach af de en-US\"\nmac=true\nwin32=true\nwin64=true\n" +
-                            "output_dir=\"%(platform)s-EME-free/%(locale)s\"\n\n" +
-                            "# Upload params\nbucket=\"net-mozaws-prod-delivery-firefox\"\n" +
-                            "upload_to_candidates=true\n"
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
-  }
-}
-"""
+# Example response:
+# {
+#   "data": {
+#     "repository": {
+#       "object": {
+#         "entries": [
+#           {
+#             "name": "mozilla-EME-free",
+#             "object": {
+#               "entries": [
+#                 {
+#                   "name": "distribution",
+#                   "object": {}
+#                 },
+#                 {
+#                   "name": "repack.cfg",
+#                   "object": {
+#                     "text": "aus=\"mozilla-EMEfree\"\ndist_id=\"mozilla-EMEfree\"\n" +
+#                             "dist_version=\"1.0\"\nlinux-i686=true\nlinux-x86_64=true\n" +
+#                             " locales=\"ach af de en-US\"\nmac=true\nwin32=true\nwin64=true\n" +
+#                             "output_dir=\"%(platform)s-EME-free/%(locale)s\"\n\n" +
+#                             "# Upload params\nbucket=\"net-mozaws-prod-delivery-firefox\"\n" +
+#                             "upload_to_candidates=true\n"
+#                   }
+#                 }
+#               ]
+#             }
+#           }
+#         ]
+#       }
+#     }
+#   }
+# }
 
 # Map platforms in repack.cfg into their equivalents in taskcluster
 TC_PLATFORM_PER_FTP = {
