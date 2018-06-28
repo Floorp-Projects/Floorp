@@ -80,9 +80,6 @@ public:
   GetController() const;
 
   void
-  ClearController();
-
-  void
   AttachHandle(ClientHandleParent* aClientSource);
 
   void
