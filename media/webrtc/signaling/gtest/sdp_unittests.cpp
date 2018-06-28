@@ -3737,7 +3737,6 @@ TEST_P(NewSdpTest, CheckMalformedImageattr)
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432931
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
