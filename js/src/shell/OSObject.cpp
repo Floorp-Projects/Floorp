@@ -774,7 +774,7 @@ ReportSysError(JSContext* cx, const char* prefix)
         errstr = "unknown error";
 
     size_t nbytes = strlen(prefix) + strlen(errstr) + 3;
-    char* final = (char*) js_malloc(nbytes);
+    char* final = js_pod_malloc<char>(nbytes);
     if (!final) {
         JS_ReportOutOfMemory(cx);
         return;

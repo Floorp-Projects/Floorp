@@ -16,6 +16,7 @@
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
+#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
 
@@ -124,7 +125,7 @@ bool
 Sprinter::init()
 {
     MOZ_ASSERT(!initialized);
-    base = (char*) js_malloc(DefaultSize);
+    base = js_pod_malloc<char>(DefaultSize);
     if (!base) {
         reportOutOfMemory();
         return false;
@@ -447,13 +448,11 @@ Fprinter::put(const char* s, size_t len)
     }
 #ifdef XP_WIN32
     if ((file_ == stderr) && (IsDebuggerPresent())) {
-        UniqueChars buf(static_cast<char*>(js_malloc(len + 1)));
+        UniqueChars buf = DuplicateString(s, len);
         if (!buf) {
             reportOutOfMemory();
             return false;
         }
-        PodCopy(buf.get(), s, len);
-        buf[len] = '\0';
         OutputDebugStringA(buf.get());
     }
 #endif

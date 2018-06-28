@@ -2128,7 +2128,7 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
         return nullptr;
     }
 
-    UniqueChars buf(static_cast<char*>(js_malloc(len + 1)));
+    UniqueChars buf(js_pod_malloc<char>(len + 1));
     if (!buf)
         return nullptr;
 
@@ -3694,7 +3694,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     JSLinearString* str = &args[0].toString()->asLinear();
 
-    char16_t* chars = (char16_t*) js_malloc(str->length() * sizeof(char16_t));
+    char16_t* chars = js_pod_malloc<char16_t>(str->length());
     if (!chars) {
         ReportOutOfMemory(cx);
         return false;

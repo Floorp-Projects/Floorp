@@ -1413,7 +1413,7 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
 
         // Lazily initialize the cache. The allocation may safely fail and will not GC.
         if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
-            cx->ionPcScriptCache = (PcScriptCache*)js_malloc(sizeof(struct PcScriptCache));
+            cx->ionPcScriptCache = js_pod_malloc<PcScriptCache>();
             if (cx->ionPcScriptCache)
                 cx->ionPcScriptCache->clear(cx->runtime()->gc.gcNumber());
         }
