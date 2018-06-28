@@ -7,7 +7,8 @@
 
 const {Toolbox} = require("devtools/client/framework/toolbox");
 
-// Use simple URL in order to prevent displacing the left positon of frames menu.
+// Use a simple URL in order to prevent displacing the left position of the
+// frames menu.
 const TEST_URL = "data:text/html;charset=utf-8,<iframe/>";
 
 add_task(async function() {
@@ -36,10 +37,12 @@ add_task(async function() {
   });
 
   info("Resizing and moving the toolbox window in order to display the chevron menu.");
-  // If window is displayed bottom of screen, menu might be displayed above of button.
+  // If the window is displayed bottom of screen, the menu might be displayed
+  // above the button so move it to the top of the screen first.
   hostWindow.moveTo(0, 0);
 
-  // This size will display inspector's tabs menu button and chevron menu button of toolbox.
+  // Shrink the width of the window such that the inspector's tab menu button
+  // and chevron button are visible.
   const prevTabs = toolbox.doc.querySelectorAll(".devtools-tab").length;
   hostWindow.resizeTo(400, hostWindow.outerHeight);
   await waitUntil(() => {
@@ -58,15 +61,35 @@ add_task(async function() {
      inspector.panelDoc.querySelector(".all-tabs-menu")];
 
   for (const menu of menuList) {
-    const [btnRect, menuRect] = await getButtonAndMenuRects(toolbox, menu);
+    const { buttonBounds, menuType, menuBounds, arrowBounds } =
+      await getButtonAndMenuInfo(toolbox.doc, menu);
 
-    // Allow rounded error and platform offset value.
-    // horizontal : eIntID_ContextMenuOffsetHorizontal of GTK and Windows uses 2.
-    // vertical: eIntID_ContextMenuOffsetVertical of macOS uses -6.
-    const xDelta = Math.abs(menuRect.left - btnRect.left);
-    const yDelta = Math.abs(menuRect.top - btnRect.bottom);
-    ok(xDelta < 2, "xDelta is lower than 2: " + xDelta + ". #" + menu.id);
-    ok(yDelta < 6, "yDelta is lower than 6: " + yDelta + ". #" + menu.id);
+    switch (menuType) {
+      case "native":
+        {
+          // Allow rounded error and platform offset value.
+          // horizontal : eIntID_ContextMenuOffsetHorizontal of GTK and Windows
+          //              uses 2.
+          // vertical: eIntID_ContextMenuOffsetVertical of macOS uses -6.
+          const xDelta = Math.abs(menuBounds.left - buttonBounds.left);
+          const yDelta = Math.abs(menuBounds.top - buttonBounds.bottom);
+          ok(xDelta < 2, "xDelta is lower than 2: " + xDelta + ". #" + menu.id);
+          ok(yDelta < 6, "yDelta is lower than 6: " + yDelta + ". #" + menu.id);
+        }
+        break;
+
+      case "doorhanger":
+        {
+          // Calculate the center of the button and center of the arrow and
+          // check they align.
+          const buttonCenter = buttonBounds.left + buttonBounds.width / 2;
+          const arrowCenter = arrowBounds.left + arrowBounds.width / 2;
+          const delta = Math.abs(arrowCenter - buttonCenter);
+          ok(delta < 1, "Center of arrow is within 1px of button center" +
+             ` (delta: ${delta})`);
+        }
+        break;
+    }
   }
 
   const onResize = once(hostWindow, "resize");
@@ -78,30 +101,62 @@ add_task(async function() {
 });
 
 /**
- * Getting the rectangle of the menu button and popup menu.
- *  - The menu button rectangle will be calculated from specified button.
- *  - The popup menu rectangle will be calculated from displayed popup menu
- *    which clicking the specified button.
+ * Get the bounds of a menu button and its popup panel. The popup panel is
+ * measured by clicking the menu button and looking for its panel (and then
+ * hiding it again).
+ *
+ * @param {Object} doc
+ *        The toolbox document to query.
+ * @param {Object} menuButton
+ *        The button whose size and popup size we should measure.
+ * @return {Object}
+ *         An object with the following properties:
+ *         - buttonBounds {DOMRect} Bounds of the button.
+ *         - menuType {string} Type of the menu, "native" or "doorhanger".
+ *         - menuBounds {DOMRect} Bounds of the menu panel.
+ *         - arrowBounds {DOMRect|null} Bounds of the arrow. Only set when
+ *                       menuType is "doorhanger", null otherwise.
  */
-async function getButtonAndMenuRects(toolbox, menuButton) {
+async function getButtonAndMenuInfo(doc, menuButton) {
   info("Show popup menu with click event.");
   menuButton.click();
 
-  const popupset = toolbox.doc.querySelector("popupset");
   let menuPopup;
-  await waitUntil(() => {
-    menuPopup = popupset.querySelector("menupopup[menu-api=\"true\"]");
-    return !!menuPopup && menuPopup.state === "open";
-  });
+  let menuType;
+  let arrowBounds = null;
+  if (menuButton.hasAttribute("aria-controls")) {
+    menuType = "doorhanger";
+    menuPopup = doc.getElementById(menuButton.getAttribute("aria-controls"));
+    await waitUntil(() => menuPopup.classList.contains("tooltip-visible"));
+  } else {
+    menuType = "native";
+    const popupset = doc.querySelector("popupset");
+    await waitUntil(() => {
+      menuPopup = popupset.querySelector("menupopup[menu-api=\"true\"]");
+      return !!menuPopup && menuPopup.state === "open";
+    });
+  }
   ok(menuPopup, "Menu popup is displayed.");
 
-  const btnRect = menuButton.getBoxQuads({relativeTo: toolbox.doc})[0].getBounds();
-  const menuRect = menuPopup.getBoxQuads({relativeTo: toolbox.doc})[0].getBounds();
+  const buttonBounds = menuButton
+    .getBoxQuads({ relativeTo: doc })[0]
+    .getBounds();
+  const menuBounds = menuPopup.getBoxQuads({ relativeTo: doc })[0].getBounds();
+
+  if (menuType === "doorhanger") {
+    const arrow = menuPopup.querySelector(".tooltip-arrow");
+    arrowBounds = arrow.getBoxQuads({ relativeTo: doc })[0].getBounds();
+  }
 
   info("Hide popup menu.");
-  const onPopupHidden = once(menuPopup, "popuphidden");
-  menuPopup.hidePopup();
-  await onPopupHidden;
+  if (menuType === "doorhanger") {
+    EventUtils.sendKey("Escape", doc.defaultView);
+    await waitUntil(() => !menuPopup.classList.contains("tooltip-visible"));
+  } else {
+    const popupHidden = once(menuPopup, "popuphidden");
+    menuPopup.hidePopup();
+    await popupHidden;
+  }
 
-  return [btnRect, menuRect];
+  return { buttonBounds, menuType, menuBounds, arrowBounds };
 }
