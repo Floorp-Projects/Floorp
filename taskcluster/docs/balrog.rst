@@ -1,8 +1,6 @@
 Balrog in Release Promotion
 ===========================
 
-.. _overview
-
 Overview
 --------
 Balrog is Mozilla's update server. It is responsible for delivering newer versions of Firefox to existing Firefox installations. If you are not already, it would be useful to be familiar with Balrog's core concepts before continuing with this doc. You can find that information on `Balrog's official documentation`_.
@@ -39,9 +37,9 @@ When we're ready to ship a release we need to let Balrog know about it by schedu
 This step is done by the ``release-balrog-scheduling`` task in the ``ship`` phase.
 
 ``secondary`` tasks
------------------
+-------------------
 You may have noticed ``secondary`` variants of the ``release-balrog-submit-toplevel``, ``release-update-verify``, ``release-final-verify``, and ``release-balrog-scheduling`` tasks. These fulfill the same function as their primary counterparts, but for the "beta" update channel. They are only used when we build Release Candidates.
 
 
 .. _Balrog's official documentation: http://mozilla-balrog.readthedocs.io/en/latest/
-S  _balrogscript workers: https://github.com/mozilla-releng/balrogscript
+.. _balrogscript workers: https://github.com/mozilla-releng/balrogscript

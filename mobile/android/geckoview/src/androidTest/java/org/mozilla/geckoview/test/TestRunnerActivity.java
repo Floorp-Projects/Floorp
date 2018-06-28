@@ -98,10 +98,6 @@ public class TestRunnerActivity extends Activity {
     private GeckoSession createSession(GeckoSessionSettings settings) {
         if (settings == null) {
             settings = new GeckoSessionSettings();
-
-            // We can't use e10s because we get deadlocked when quickly creating and
-            // destroying sessions. Bug 1348361.
-            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
         }
 
         final GeckoSession session = new GeckoSession(settings);
@@ -126,7 +122,8 @@ public class TestRunnerActivity extends Activity {
 
             runtimeSettingsBuilder
                     .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true);
+                    .javaCrashReportingEnabled(true)
+                    .consoleOutput(true);
 
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
             sRuntime.setDelegate(new GeckoRuntime.Delegate() {

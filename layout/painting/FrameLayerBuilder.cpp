@@ -6170,6 +6170,12 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
                  NSIntPixelsToAppUnits(aOffset.y, aAppUnitsPerDevPixel));
   visible.ScaleInverseRoundOut(aXScale, aYScale);
 
+  // We're going to read from previousRectToDraw for every iteration, let's do
+  // that on the stack, and just update the heap allocated one now. By the end
+  // of this function {visible} will have been modified by occlusion culling.
+  nsRect previousRectToDraw = aPreviousRectToDraw;
+  aPreviousRectToDraw = visible.GetBounds();
+
   for (i = aItems.Length(); i > 0; --i) {
     AssignedDisplayItem* cdi = &aItems[i - 1];
     if (!cdi->mItem) {
@@ -6178,7 +6184,7 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
 
     if (cdi->mHasPaintRect &&
         !cdi->mContentRect.Intersects(visible.GetBounds()) &&
-        !cdi->mContentRect.Intersects(aPreviousRectToDraw)) {
+        !cdi->mContentRect.Intersects(previousRectToDraw)) {
       continue;
     }
 
@@ -6223,8 +6229,6 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
       }
     }
   }
-
-  aPreviousRectToDraw = visible.GetBounds();
 }
 
 /**

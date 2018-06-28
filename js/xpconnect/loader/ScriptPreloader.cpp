@@ -27,6 +27,7 @@
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsJSUtils.h"
+#include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -38,6 +39,10 @@
 #define CLEANUP_TOPIC "xpcom-shutdown"
 #define SHUTDOWN_TOPIC "quit-application-granted"
 #define CACHE_INVALIDATE_TOPIC "startupcache-invalidate"
+
+// The maximum time we'll wait for a child process to finish starting up before
+// we send its script data back to the parent.
+constexpr uint32_t CHILD_STARTUP_TIMEOUT_MS = 8000;
 
 namespace mozilla {
 namespace {
@@ -359,15 +364,22 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
                                         getter_AddRefs(mSaveThread), this);
         }
     } else if (!strcmp(topic, DOC_ELEM_INSERTED_TOPIC)) {
-        obs->RemoveObserver(this, DOC_ELEM_INSERTED_TOPIC);
+        // If this is an uninitialized about:blank viewer or a chrome: document
+        // (which should always be an XBL binding document), ignore it. We don't
+        // have to worry about it loading malicious content.
+        if (nsCOMPtr<nsIDocument> doc = do_QueryInterface(subject)) {
+            nsCOMPtr<nsIURI> uri = doc->GetDocumentURI();
 
-        MOZ_ASSERT(XRE_IsContentProcess());
-
-        mStartupFinished = true;
-
-        if (mChildActor) {
-            mChildActor->SendScriptsAndFinalize(mScripts);
+            bool schemeIs;
+            if ((NS_IsAboutBlank(uri) &&
+                 doc->GetReadyStateEnum() == doc->READYSTATE_UNINITIALIZED) ||
+                (NS_SUCCEEDED(uri->SchemeIs("chrome", &schemeIs)) && schemeIs)) {
+                return NS_OK;
+            }
         }
+        FinishContentStartup();
+    } else if (!strcmp(topic, "timer-callback")) {
+        FinishContentStartup();
     } else if (!strcmp(topic, SHUTDOWN_TOPIC)) {
         ForceWriteCacheFile();
     } else if (!strcmp(topic, CLEANUP_TOPIC)) {
@@ -379,6 +391,22 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
     return NS_OK;
 }
 
+void
+ScriptPreloader::FinishContentStartup()
+{
+    MOZ_ASSERT(XRE_IsContentProcess());
+
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    obs->RemoveObserver(this, DOC_ELEM_INSERTED_TOPIC);
+
+    mSaveTimer = nullptr;
+
+    mStartupFinished = true;
+
+    if (mChildActor) {
+        mChildActor->SendScriptsAndFinalize(mScripts);
+    }
+}
 
 Result<nsCOMPtr<nsIFile>, nsresult>
 ScriptPreloader::GetCacheFile(const nsAString& suffix)
@@ -460,6 +488,19 @@ ScriptPreloader::InitCache(const Maybe<ipc::FileDescriptor>& cacheFile, ScriptCa
     mChildActor = cacheChild;
 
     RegisterWeakMemoryReporter(this);
+
+    auto cleanup = MakeScopeExit([&] {
+        // If the parent is expecting cache data from us, make sure we send it
+        // before it writes out its cache file. For normal proceses, this isn't
+        // a concern, since they begin loading documents quite early. For the
+        // preloaded process, we may end up waiting a long time (or, indeed,
+        // never loading a document), so we need an additional timeout.
+        if (cacheChild) {
+            NS_NewTimerWithObserver(getter_AddRefs(mSaveTimer),
+                                    this, CHILD_STARTUP_TIMEOUT_MS,
+                                    nsITimer::TYPE_ONE_SHOT);
+        }
+    });
 
     if (cacheFile.isNothing()){
         return Ok();
@@ -777,21 +818,6 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
-    }
-
-    // If we don't already have bytecode for this script, and it doesn't already
-    // exist in the child cache, encode it now, before it's ever executed.
-    //
-    // Ideally, we would like to do the encoding lazily, during idle slices.
-    // There are subtle issues with encoding scripts which have already been
-    // executed, though, which makes that somewhat risky. So until that
-    // situation is improved, and thoroughly tested, we need to encode eagerly.
-    //
-    // (See also the TranscodeResult_Failure_RunOnceNotSupported failure case in
-    // js::XDRScript)
-    if (!script->mSize && !(mChildCache && mChildCache->mScripts.Get(cachePath))) {
-        AutoSafeJSAPI jsapi;
-        Unused << script->XDREncode(jsapi.cx());
     }
 
     script->UpdateLoadTime(TimeStamp::Now());
