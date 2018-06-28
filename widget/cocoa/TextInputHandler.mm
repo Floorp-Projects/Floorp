@@ -12,6 +12,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 
@@ -830,6 +831,14 @@ TISInputSourceWrapper::IsForRTLLanguage()
     mIsRTL = UTF16_CODE_UNIT_IS_BIDI(ch);
   }
   return mIsRTL != 0;
+}
+
+bool
+TISInputSourceWrapper::IsForJapaneseLanguage()
+{
+  nsAutoString lang;
+  GetPrimaryLanguage(lang);
+  return lang.EqualsLiteral("ja");
 }
 
 bool
@@ -3050,6 +3059,35 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
   tis.InitByCurrentInputSource();
   if (tis.IsOpenedIMEMode()) {
     tis.GetInputSourceID(sLatestIMEOpenedModeInputSourceID);
+    // Collect Input Source ID which includes input mode in most cases.
+    // However, if it's Japanese IME, collecting input mode (e.g.,
+    // "HiraganaKotei") does not make sense because in most languages,
+    // input mode changes "how to input", but Japanese IME changes
+    // "which type of characters to input".  I.e., only Japanese IME
+    // users may use multiple input modes.  If we'd collect each type of
+    // input mode of Japanese IMEs, it'd be difficult to count actual
+    // users of each IME from the result.  So, only when active IME is
+    // a Japanese IME, we should use Bundle ID which does not contain
+    // input mode instead.
+    nsAutoString key;
+    if (tis.IsForJapaneseLanguage()) {
+      tis.GetBundleID(key);
+    } else {
+      tis.GetInputSourceID(key);
+    }
+    // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
+    if (key.Length() > 72) {
+      if (NS_IS_LOW_SURROGATE(key[72 - 1]) &&
+          NS_IS_HIGH_SURROGATE(key[72 - 2])) {
+        key.Truncate(72 - 2);
+      } else {
+        key.Truncate(72 - 1);
+      }
+      // U+2026 is "..."
+      key.Append(char16_t(0x2026));
+    }
+    Telemetry::ScalarSet(Telemetry::ScalarID::WIDGET_IME_NAME_ON_MAC,
+                         key, true);
   }
 
   if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
@@ -3145,15 +3183,18 @@ IMEInputHandler::DebugPrintAllIMEModes()
       TISInputSourceRef inputSource = static_cast<TISInputSourceRef>(
         const_cast<void *>(::CFArrayGetValueAtIndex(list, i)));
       tis.InitByTISInputSourceRef(inputSource);
-      nsAutoString name, isid;
+      nsAutoString name, isid, bundleID;
       tis.GetLocalizedName(name);
       tis.GetInputSourceID(isid);
+      tis.GetBundleID(bundleID);
       MOZ_LOG(gLog, LogLevel::Info,
-        ("  %s\t<%s>%s%s\n",
+        ("  %s\t<%s>%s%s\n"
+         "    bundled in <%s>\n",
          NS_ConvertUTF16toUTF8(name).get(),
          NS_ConvertUTF16toUTF8(isid).get(),
          tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
-         tis.IsEnabled() ? "" : "\t(Isn't Enabled)"));
+         tis.IsEnabled() ? "" : "\t(Isn't Enabled)",
+         NS_ConvertUTF16toUTF8(bundleID).get()));
     }
     ::CFRelease(list);
   }

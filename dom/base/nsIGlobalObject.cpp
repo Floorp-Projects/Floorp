@@ -15,6 +15,7 @@
 using mozilla::MallocSizeOf;
 using mozilla::Maybe;
 using mozilla::DOMEventTargetHelper;
+using mozilla::dom::BlobURLProtocolHandler;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::ServiceWorker;
 using mozilla::dom::ServiceWorkerDescriptor;

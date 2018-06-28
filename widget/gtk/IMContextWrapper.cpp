@@ -14,6 +14,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "WritingModes.h"
@@ -314,6 +315,46 @@ IsFcitxInSyncMode()
            GetFcitxBoolEnv("FCITX_ENABLE_SYNC_MODE");
 }
 
+nsDependentCSubstring
+IMContextWrapper::GetIMName() const
+{
+    const char* contextIDChar =
+        gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(mContext));
+    if (!contextIDChar) {
+        return nsDependentCSubstring();
+    }
+
+    nsDependentCSubstring im(contextIDChar, strlen(contextIDChar));
+
+    // If the context is XIM, actual engine must be specified with
+    // |XMODIFIERS=@im=foo|.
+    const char* xmodifiersChar = PR_GetEnv("XMODIFIERS");
+    if (!im.EqualsLiteral("xim") || !xmodifiersChar) {
+        return im;
+    }
+
+    nsDependentCString xmodifiers(xmodifiersChar);
+    int32_t atIMValueStart = xmodifiers.Find("@im=") + 4;
+    if (atIMValueStart < 4 ||
+        xmodifiers.Length() <= static_cast<size_t>(atIMValueStart)) {
+        return im;
+    }
+
+    int32_t atIMValueEnd =
+        xmodifiers.Find("@", false, atIMValueStart);
+    if (atIMValueEnd > atIMValueStart) {
+         return nsDependentCSubstring(xmodifiersChar + atIMValueStart,
+                                      atIMValueEnd - atIMValueStart);
+    }
+
+    if (atIMValueEnd == kNotFound) {
+        return nsDependentCSubstring(xmodifiersChar + atIMValueStart,
+                                     strlen(xmodifiersChar) - atIMValueStart);
+    }
+
+    return im;
+}
+
 void
 IMContextWrapper::Init()
 {
@@ -339,31 +380,7 @@ IMContextWrapper::Init()
         G_CALLBACK(IMContextWrapper::OnStartCompositionCallback), this);
     g_signal_connect(mContext, "preedit_end",
         G_CALLBACK(IMContextWrapper::OnEndCompositionCallback), this);
-    nsDependentCSubstring im;
-    const char* contextIDChar =
-        gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(mContext));
-    const char* xmodifiersChar = PR_GetEnv("XMODIFIERS");
-    if (contextIDChar) {
-        im.Rebind(contextIDChar, strlen(contextIDChar));
-        // If the context is XIM, actual engine must be specified with
-        // |XMODIFIERS=@im=foo|.
-        if (im.EqualsLiteral("xim") && xmodifiersChar) {
-            nsDependentCString xmodifiers(xmodifiersChar);
-            int32_t atIMValueStart = xmodifiers.Find("@im=") + 4;
-            if (atIMValueStart >= 4 &&
-                xmodifiers.Length() > static_cast<size_t>(atIMValueStart)) {
-                int32_t atIMValueEnd =
-                    xmodifiers.Find("@", false, atIMValueStart);
-                if (atIMValueEnd > atIMValueStart) {
-                    im.Rebind(xmodifiersChar + atIMValueStart,
-                              atIMValueEnd - atIMValueStart);
-                } else if (atIMValueEnd == kNotFound) {
-                    im.Rebind(xmodifiersChar + atIMValueStart,
-                              strlen(xmodifiersChar) - atIMValueStart);
-                }
-            }
-        }
-    }
+    nsDependentCSubstring im = GetIMName();
     if (im.EqualsLiteral("ibus")) {
         mIMContextID = IMContextID::eIBus;
         mIsIMInAsyncKeyHandlingMode = !IsIBusInSyncMode();
@@ -436,11 +453,14 @@ IMContextWrapper::Init()
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("0x%p Init(), mOwnerWindow=%p, mContext=%p (im=\"%s\"), "
          "mIsIMInAsyncKeyHandlingMode=%s, mIsKeySnooped=%s, "
-         "mSimpleContext=%p, mDummyContext=%p, contextIDChar=\"%s\", "
-         "xmodifiersChar=\"%s\"",
+         "mSimpleContext=%p, mDummyContext=%p, "
+         "gtk_im_multicontext_get_context_id()=\"%s\", "
+         "PR_GetEnv(\"XMODIFIERS\")=\"%s\"",
          this, mOwnerWindow, mContext, nsAutoCString(im).get(),
          ToChar(mIsIMInAsyncKeyHandlingMode), ToChar(mIsKeySnooped),
-         mSimpleContext, mDummyContext, contextIDChar, xmodifiersChar));
+         mSimpleContext, mDummyContext,
+         gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(mContext)),
+         PR_GetEnv("XMODIFIERS")));
 }
 
 IMContextWrapper::~IMContextWrapper()
@@ -1974,6 +1994,25 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
              "due to BeginNativeInputTransaction() failure",
              this));
         return false;
+    }
+
+    static bool sHasSetTelemetry = false;
+    if (!sHasSetTelemetry) {
+        sHasSetTelemetry = true;
+        NS_ConvertUTF8toUTF16 im(GetIMName());
+        // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
+        if (im.Length() > 72) {
+            if (NS_IS_LOW_SURROGATE(im[72 - 1]) &&
+                NS_IS_HIGH_SURROGATE(im[72 - 2])) {
+                im.Truncate(72 - 2);
+            } else {
+                im.Truncate(72 - 1);
+            }
+            // U+2026 is "..."
+            im.Append(char16_t(0x2026));
+        }
+        Telemetry::ScalarSet(Telemetry::ScalarID::WIDGET_IME_NAME_ON_LINUX,
+                             im, true);
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,

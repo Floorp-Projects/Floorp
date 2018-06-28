@@ -22,23 +22,35 @@ const { getCurrentZoom } = require("devtools/shared/layout/utils");
  *           width of the the accessible object
  *         - {Number} h
  *           height of the the accessible object
+ *         - {Number} zoom
+ *           zoom level of the accessible object's parent window
  * @return {Object|null} Returns, if available, positioning and bounds information for
  *                 the accessible object.
  */
-function getBounds(win, { x, y, w, h }) {
-  const { mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
-  const zoom = getCurrentZoom(win);
+function getBounds(win, { x, y, w, h, zoom }) {
+  let { mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
+  let zoomFactor = getCurrentZoom(win);
   let left = x, right = x + w, top = y, bottom = y + h;
+
+  // For a XUL accessible, normalize the top-level window with its current zoom level.
+  // We need to do this because top-level browser content does not allow zooming.
+  if (zoom) {
+    zoomFactor = zoom;
+    mozInnerScreenX /= zoomFactor;
+    mozInnerScreenY /= zoomFactor;
+    scrollX /= zoomFactor;
+    scrollY /= zoomFactor;
+  }
 
   left -= mozInnerScreenX - scrollX;
   right -= mozInnerScreenX - scrollX;
   top -= mozInnerScreenY - scrollY;
   bottom -= mozInnerScreenY - scrollY;
 
-  left *= zoom;
-  right *= zoom;
-  top *= zoom;
-  bottom *= zoom;
+  left *= zoomFactor;
+  right *= zoomFactor;
+  top *= zoomFactor;
+  bottom *= zoomFactor;
 
   const width = right - left;
   const height = bottom - top;

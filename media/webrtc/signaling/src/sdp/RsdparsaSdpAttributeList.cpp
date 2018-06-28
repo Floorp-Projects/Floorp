@@ -442,6 +442,9 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kEndOfCandidatesAttribute:
         LoadFlags(attributeList);
         return;
+      case SdpAttribute::kMaxMessageSizeAttribute:
+        LoadMaxMessageSize(attributeList);
+        return ;
       case SdpAttribute::kMidAttribute:
         LoadMid(attributeList);
         return;
@@ -475,6 +478,9 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kRidAttribute:
         LoadRids(attributeList);
         return;
+      case SdpAttribute::kSctpPortAttribute:
+        LoadSctpPort(attributeList);
+        return ;
       case SdpAttribute::kExtmapAttribute:
         LoadExtmap(attributeList);
         return;
@@ -486,9 +492,7 @@ RsdparsaSdpAttributeList::LoadAttribute(RustAttributeList *attributeList,
       case SdpAttribute::kLabelAttribute:
       case SdpAttribute::kMaxptimeAttribute:
       case SdpAttribute::kSsrcGroupAttribute:
-      case SdpAttribute::kMaxMessageSizeAttribute:
       case SdpAttribute::kRtcpRsizeAttribute:
-      case SdpAttribute::kSctpPortAttribute:
       case SdpAttribute::kCandidateAttribute:
       case SdpAttribute::kConnectionAttribute:
       case SdpAttribute::kIceMismatchAttribute:
@@ -810,6 +814,16 @@ RsdparsaSdpAttributeList::LoadFlags(RustAttributeList* attributeList)
 }
 
 void
+RsdparsaSdpAttributeList::LoadMaxMessageSize(RustAttributeList* attributeList)
+{
+  int64_t max_msg_size = sdp_get_max_msg_size(attributeList);
+  if (max_msg_size >= 0) {
+    SetAttribute(new SdpNumberAttribute(SdpAttribute::kMaxMessageSizeAttribute,
+                                        static_cast<uint32_t>(max_msg_size)));
+  }
+}
+
+void
 RsdparsaSdpAttributeList::LoadMid(RustAttributeList* attributeList)
 {
   StringView rustMid;
@@ -1123,6 +1137,16 @@ RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList)
   }
 
   SetAttribute(ridList.release());
+}
+
+void
+RsdparsaSdpAttributeList::LoadSctpPort(RustAttributeList* attributeList)
+{
+  int64_t port = sdp_get_sctp_port(attributeList);
+  if (port >= 0) {
+    SetAttribute(new SdpNumberAttribute(SdpAttribute::kSctpPortAttribute,
+                                        static_cast<uint32_t>(port)));
+  }
 }
 
 void

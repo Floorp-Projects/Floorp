@@ -44,62 +44,21 @@ treechildren::-moz-tree-row(selected, focus) {
   color: HighlightText;
 }
 
-tree[seltype="cell"] > treechildren::-moz-tree-row,
-tree[seltype="text"] > treechildren::-moz-tree-row {
-  border-top: none;
-  background-color: transparent;
-}
-
 /* ::::: tree cells ::::: */
 
 treechildren::-moz-tree-cell {
   padding: 0px 2px 0px 2px;
 }
 
-tree[seltype="cell"] > treechildren::-moz-tree-cell-text,
-tree[seltype="text"] > treechildren::-moz-tree-cell-text,
 treechildren::-moz-tree-cell-text {
   color: inherit;
-}
-
-tree[seltype="cell"] > treechildren::-moz-tree-cell {
-  padding: 0px 1px 0px 1px;
-}
-
-tree[seltype="text"] > treechildren::-moz-tree-cell-text {
-  padding: 0px 1px 1px 1px;
 }
 
 treechildren::-moz-tree-cell-text(selected) {
   color: -moz-DialogText;
 }
 
-tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected) {
-  background-color: -moz-mac-secondaryhighlight;
-
-}
-tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected) {
-  color: -moz-DialogText;
-}
-
-tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected) {
-  background-color: -moz-mac-secondaryhighlight;
-  color: -moz-DialogText;
-}
-
 treechildren::-moz-tree-cell-text(selected, focus) {
-  color: HighlightText;
-}
-
-tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, focus) {
-  background-color: Highlight;
-}
-tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
-  color: HighlightText;
-}
-
-tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
-  background-color: Highlight;
   color: HighlightText;
 }
 
@@ -124,15 +83,12 @@ treechildren::-moz-tree-separator {
 
 /* ::::: drop feedback ::::: */
 
-tree[seltype="cell"] > treechildren::-moz-tree-cell(primary, dropOn),
-tree[seltype="text"] > treechildren::-moz-tree-cell(primary, dropOn),
 treechildren::-moz-tree-cell(primary, dropOn) {
   background-color: #A1A1A1 !important;
   color: #FFF !important;
   background-image: none;
 }
-tree[seltype="cell"] > treechildren::-moz-tree-cell-text(primary, dropOn),
-tree[seltype="text"] > treechildren::-moz-tree-cell-text(primary, dropOn),
+
 treechildren::-moz-tree-cell-text(primary, dropOn) {
   color: #FFF !important;
 }
@@ -220,9 +176,7 @@ treechildren::-moz-tree-indentation {
   padding: 2px 1px 1px;
 }
 
-treechildren::-moz-tree-cell(active, selected, focus, editing),
-tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, focus, editing),
-tree[seltype="text"] > treechildren::-moz-tree-cell(active, selected, focus, editing) {
+treechildren::-moz-tree-cell(active, selected, focus, editing) {
   background-color: transparent;
   border: none;
 }

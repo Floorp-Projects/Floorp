@@ -871,7 +871,7 @@ wasapi_stream_render_loop(LPVOID stream)
      the timeout error handling only when the timeout_limit is reached, which is
      reset on each successful loop. */
   unsigned timeout_count = 0;
-  const unsigned timeout_limit = 5;
+  const unsigned timeout_limit = 3;
   while (is_playing) {
     // We want to check the emergency bailout variable before a
     // and after the WaitForMultipleObject, because the handles WaitForMultipleObjects

@@ -50,3 +50,4 @@ In-depth relpro guide
     partials
     pushapk
     signing
+    partner-repacks

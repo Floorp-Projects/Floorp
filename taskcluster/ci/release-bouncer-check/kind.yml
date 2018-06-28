@@ -14,8 +14,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 job-defaults:
-    name: bouncer-check
-    description: bouncer check
+    name: release-bouncer-check
+    description: release bouncer check
     run-on-projects: []  # to make sure this never runs as part of CI
     shipping-phase: push
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -38,7 +38,7 @@ jobs:
         shipping-product: firefox
         index:
             product: firefox
-            job-name: firefox-bouncer-check
+            job-name: firefox-release-bouncer-check
         run:
             config:
                 by-project:
@@ -59,7 +59,7 @@ jobs:
         shipping-product: devedition
         index:
             product: devedition
-            job-name: devedition-bouncer-check
+            job-name: devedition-release-bouncer-check
         run:
             config:
                 by-project:

@@ -809,3 +809,71 @@ nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
   }
   return false;
 }
+
+bool
+nsNativeTheme::IsWidgetScrollbarPart(uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR_SMALL:
+    case NS_THEME_SCROLLBAR_VERTICAL:
+    case NS_THEME_SCROLLBAR_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case NS_THEME_SCROLLCORNER:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static nscolor
+GetOpaqueBackgroundColor(ComputedStyle* aStyle)
+{
+  nscolor color = aStyle->StyleBackground()->BackgroundColor(aStyle);
+  if (NS_GET_A(color) == 255) {
+    return color;
+  }
+  // Compose white background with the background color.
+  return NS_ComposeColors(NS_RGB(255, 255, 255), color);
+}
+
+nscolor
+nsNativeTheme::GetScrollbarFaceColor(ComputedStyle* aStyle,
+                                     AutoColorGetter aAutoGetter)
+{
+  StyleComplexColor complexColor =
+    aStyle->StyleUserInterface()->mScrollbarFaceColor;
+  if (complexColor.IsAuto()) {
+    return aAutoGetter(aStyle);
+  }
+  nscolor color = complexColor.CalcColor(aStyle);
+  if (NS_GET_A(color) == 255) {
+    return color;
+  }
+  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
+  return NS_ComposeColors(bgColor, color);
+}
+
+nscolor
+nsNativeTheme::GetScrollbarTrackColor(ComputedStyle* aStyle,
+                                      AutoColorGetter aAutoGetter)
+{
+  StyleComplexColor complexColor =
+    aStyle->StyleUserInterface()->mScrollbarTrackColor;
+  nscolor color;
+  if (complexColor.IsAuto()) {
+    color = aAutoGetter(aStyle);
+  } else {
+    color = complexColor.CalcColor(aStyle);
+  }
+  if (NS_GET_A(color) == 255) {
+    return color;
+  }
+  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
+  return NS_ComposeColors(bgColor, color);
+}

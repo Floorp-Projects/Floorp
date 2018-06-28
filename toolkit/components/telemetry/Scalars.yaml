@@ -1732,6 +1732,59 @@ browser.errors:
     record_in_processes:
       - 'main'
 
+widget:
+  ime_name_on_windows:
+    bug_numbers:
+      - 1215818
+    description: >
+      Locale ID and name of IME which was selected by users on Windows.  This
+      does NOT collect legacy IMM-IME names since we cannot get readable names
+      and we do not support IMM-IME so aggressively because IME vendors
+      should've already released TIP for TSF for supporting Windows 8 or later
+      completely.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  ime_name_on_mac:
+    bug_numbers:
+      - 1215818
+    description: >
+      Name of IME which was selected by users on macOS.  The value is Input
+      Source ID if non-Japanese IME was open.  Otherwise, if Japanese IME was
+      open, the value is Bundle ID.  Input Source ID includes input mode, but
+      Bundle ID does not include input mode.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  ime_name_on_linux:
+    bug_numbers:
+      - 1215818
+    description: >
+      Name of active IM (e.g., xim, fcitx, ibus, etc) which was actually set by
+      env on Linux.  Different from Windows and macOS, this value includes
+      non-IME users even though this is recoded when first compositionstart
+      event because dead key is also implemented by IME on Linux.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains memory reporter counters.
 memoryreporter:
   max_ghost_windows:

@@ -109,6 +109,20 @@ var PermissionPromptPrototype = {
   },
 
   /**
+   * Provides the preferred name to use in the permission popups,
+   * based on the principal URI (the URI.hostPort for any URI scheme
+   * besides the moz-extension one which should default to the
+   * extension name).
+   */
+  get principalName() {
+    if (this.principal.addonPolicy) {
+      return this.principal.addonPolicy.name;
+    }
+
+    return this.principal.URI.hostPort;
+  },
+
+  /**
    * If the nsIPermissionManager is being queried and written
    * to for this permission request, set this to the key to be
    * used. If this is undefined, user permissions will not be
@@ -427,7 +441,7 @@ GeolocationPermissionPrompt.prototype = {
     let options = {
       learnMoreURL: Services.urlFormatter.formatURLPref(pref),
       displayURI: false,
-      name: this.principal.URI.hostPort,
+      name: this.principalName,
     };
 
     if (this.principal.URI.schemeIs("file")) {
@@ -460,7 +474,7 @@ GeolocationPermissionPrompt.prototype = {
     }
 
     return gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
-                                                  ["<>"], 1);
+                                               ["<>"], 1);
   },
 
   get promptActions() {
@@ -535,7 +549,7 @@ DesktopNotificationPermissionPrompt.prototype = {
     return {
       learnMoreURL,
       displayURI: false,
-      name: this.principal.URI.hostPort,
+      name: this.principalName,
     };
   },
 
@@ -617,7 +631,7 @@ PersistentStoragePermissionPrompt.prototype = {
       checkbox,
       learnMoreURL,
       displayURI: false,
-      name: this.principal.URI.hostPort,
+      name: this.principalName,
     };
   },
 
@@ -684,7 +698,7 @@ MIDIPermissionPrompt.prototype = {
     // TODO (bug 1433235) We need a security/permissions explanation URL for this
     let options = {
       displayURI: false,
-      name: this.principal.URI.hostPort,
+      name: this.principalName,
     };
 
     if (this.principal.URI.schemeIs("file")) {

@@ -4,7 +4,6 @@
   "properties": {
     "Authentication": {
       "description": "Sites that support integrated authentication. See https://developer.mozilla.org/en-US/docs/Mozilla/Integrated_authentication",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "object",
@@ -32,35 +31,30 @@
 
     "BlockAboutAddons": {
       "description": "Block access to the Add-ons Mananger (about:addons).",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "BlockAboutConfig": {
       "description": "Blocks access to the about:config page.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "BlockAboutProfiles": {
       "description": "Blocks access to the about:profiles page.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "BlockAboutSupport": {
       "description": "Blocks access to the about:support page.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "Bookmarks": {
       "description": "Allows the creation of bookmarks in the Bookmarks bar, Bookmarks menu, or a specified folder inside them.",
-      "first_available": "60.0",
 
       "type": "array",
       "items": {
@@ -93,7 +87,6 @@
 
     "Certificates": {
       "description": "Whether or not to use built in certs. This policy is Windows only at this time.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -105,7 +98,6 @@
 
     "Cookies": {
       "description": "Allow or deny websites to set cookies.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -144,7 +136,6 @@
 
     "DisableAppUpdate": {
       "description": "Prevent the browser from updating.",
-      "first_available": "60.0",
       "machine_only": true,
 
       "type": "boolean"
@@ -152,105 +143,90 @@
 
     "DisableBuiltinPDFViewer": {
       "description": "Disables PDF.js, which displays PDFs within Firefox.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableDeveloperTools": {
       "description": "Prevents access to developer tools.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableFeedbackCommands": {
       "description": "Prevents ability to send feedback from the help menu (\"Submit Feedback\" and \"Report Deceptive Site\").",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableFirefoxAccounts": {
       "description": "Disables Firefox Account based services, including Sync.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableFirefoxScreenshots": {
       "description": "Prevents usage of the Firefox Screenshots feature.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableFirefoxStudies": {
       "description": "Prevents Firefox from running studies.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableForgetButton": {
       "description": "Prevents access to the \"Forget\" button.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableFormHistory": {
       "description": "Don't remember search and form history.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableMasterPasswordCreation": {
       "description": "If true, removes access to create a master password.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisablePocket": {
       "description": "Prevents ability to save webpages to Pocket.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisablePrivateBrowsing": {
       "description": "Disables private browsing.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableProfileImport": {
       "description": "Disables the Firefox \"Import data from another browser\" button",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableProfileRefresh": {
       "description": "Disables the \"Refresh Firefox\" button in about:support",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableSafeMode": {
       "description": "Prevents ability to restart in safe mode. You can only prevent the Shift key by using GPO on Windows.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableSecurityBypass": {
       "description": "Prevents the user from bypassing certain security warnings.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -266,14 +242,12 @@
 
     "DisableSetDesktopBackground": {
       "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisableSystemAddonUpdate": {
       "description": "Prevent the browser from installing and updating system addons.",
-      "first_available": "60.0",
       "machine_only": true,
 
       "type": "boolean"
@@ -281,7 +255,6 @@
 
     "DisableTelemetry": {
       "description": "Turns off telemetry.",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "boolean"
@@ -289,28 +262,24 @@
 
     "DisplayBookmarksToolbar": {
       "description": "Causes the bookmarks toolbar to be displayed by default.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DisplayMenuBar": {
       "description": "Causes the menu bar to be displayed by default.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "DontCheckDefaultBrowser": {
       "description": "Don't check for the default browser on startup.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "EnableTrackingProtection": {
       "description": "Enables or disables tracking protection and optionally locks it.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -326,7 +295,6 @@
 
     "Extensions": {
       "description": "Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "object",
@@ -354,7 +322,6 @@
 
     "FlashPlugin": {
       "description": "Allow or deny flash plugin usage.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -384,14 +351,12 @@
 
     "HardwareAcceleration": {
       "description": "If false, prevents ability to turn on hardware acceleration.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "Homepage": {
       "description": "Set and optionally lock the homepage.",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "object",
@@ -414,7 +379,6 @@
 
     "InstallAddonsPermission": {
       "description": "Allow webites to install add-ons.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -432,21 +396,18 @@
 
     "NoDefaultBookmarks": {
       "description": "Don't create the default bookmarks bundled with Firefox, nor the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "OfferToSaveLogins": {
       "description": "Enforces the setting to allow Firefox to offer to remember saved logins and passwords. Both true and false values are accepted.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "OverrideFirstRunPage": {
       "description": "Override the first run page. Set this policy to blank if you want to disable the first run page.",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "URLorEmpty"
@@ -454,7 +415,6 @@
 
     "OverridePostUpdatePage": {
       "description": "Override the post-update \"What's New\" page. Set this policy to blank if you want to disable the post-update page.",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "URLorEmpty"
@@ -462,7 +422,6 @@
 
     "Permissions": {
       "description": "Configure permissions for camera, microphone, location and notifications.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -578,7 +537,6 @@
 
     "PopupBlocking": {
       "description": "Allow or deny popup usage.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -601,7 +559,6 @@
 
     "Proxy": {
       "description": "Configure Proxy settings.",
-      "first_available": "60.0",
 
       "type": "object",
       "properties": {
@@ -659,14 +616,12 @@
 
     "SanitizeOnShutdown": {
       "description": "Clears ALL browser data on shutdown.",
-      "first_available": "60.0",
 
       "type": "boolean"
     },
 
     "SearchBar": {
       "description": "Sets the default location of the search bar. Only applies on firtrun, but can be changed.",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "string",
@@ -675,7 +630,6 @@
 
     "SearchEngines": {
       "description": "Modifies the list of search engines built into Firefox",
-      "first_available": "60.0",
       "enterprise_only": true,
 
       "type": "object",
@@ -729,7 +683,6 @@
 
     "WebsiteFilter": {
       "description": "Blocks websites from being visited. The parameters take an array of Match Patterns, as documented in https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Match_patterns. Only http/https accesses are supported at the moment. The arrays are limited to 1000 entries each.",
-      "first_available": "60.0",
       "enterprise_only": "true",
 
       "type": "object",
