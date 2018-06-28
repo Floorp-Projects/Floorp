@@ -248,6 +248,11 @@ function jumpToMappedSelectedLocation() {
     getState
   }) {
     const location = (0, _selectors.getSelectedLocation)(getState());
+
+    if (!location) {
+      return;
+    }
+
     await dispatch(jumpToMappedLocation(location));
   };
 }

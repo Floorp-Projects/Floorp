@@ -154,7 +154,7 @@ function hasSymbols(state, source) {
     return false;
   }
 
-  return !symbols.hasOwnProperty("loading");
+  return !symbols.loading;
 }
 
 function isSymbolsLoading(state, source) {
@@ -164,7 +164,7 @@ function isSymbolsLoading(state, source) {
     return false;
   }
 
-  return symbols.hasOwnProperty("loading");
+  return symbols.loading;
 }
 
 function isEmptyLineInSource(state, line, selectedSourceId) {

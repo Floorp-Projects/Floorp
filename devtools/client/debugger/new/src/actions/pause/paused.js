@@ -88,7 +88,7 @@ function paused(pauseInfo) {
 
     if (selectedFrame) {
       const visibleFrame = (0, _selectors.getVisibleSelectedFrame)(getState());
-      const location = (0, _devtoolsSourceMap.isGeneratedId)(visibleFrame.location.sourceId) ? selectedFrame.generatedLocation : selectedFrame.location;
+      const location = visibleFrame && (0, _devtoolsSourceMap.isGeneratedId)(visibleFrame.location.sourceId) ? selectedFrame.generatedLocation : selectedFrame.location;
       await dispatch((0, _sources.selectLocation)(location));
     }
 
