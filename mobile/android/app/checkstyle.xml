@@ -21,7 +21,6 @@
        (I spent too much time already)
 
      Maybe add:
-       - OneTopLevelClass
        - OverloadMethodsDeclarationOrder
        - Empty*Block // better to catch errors!
        (I spent too much time already)
@@ -58,6 +57,7 @@
             <property name="allowEmptyMethods" value="true"/>
             <property name="allowEmptyTypes" value="true"/>
         </module>
+        <module name="OneTopLevelClass"/>
     </module>
 
 </module>
