@@ -358,7 +358,7 @@ checkbox:-moz-focusring {
 }
 
 .devtools-toolbarbutton:not([label]):hover,
-.devtools-button:empty:not(:disabled):hover {
+.devtools-button:empty:not(:disabled):not([aria-expanded="true"]):hover {
   background: var(--toolbarbutton-background);
 }
 
@@ -371,7 +371,8 @@ checkbox:-moz-focusring {
 .devtools-button:not(:empty):not(:disabled):not(.checked):hover,
 .devtools-toolbarbutton[label]:not(:-moz-any([checked=true],[disabled])):hover,
 .devtools-button:empty:not(:disabled):-moz-any(:hover:active,.checked),
-.devtools-toolbarbutton:not([label]):-moz-any([checked],[open],:hover:active) {
+.devtools-toolbarbutton:not([label]):-moz-any([checked],[open],:hover:active),
+.devtools-button[aria-haspopup="menu"][aria-expanded="true"] {
   background: var(--toolbarbutton-hover-background);
   border-color: var(--toolbarbutton-hover-border-color);
 }
