@@ -363,7 +363,10 @@ nsComponentManagerImpl::Init()
   RegisterModule(&kXPCOMModule, nullptr);
 
   for (auto module : AllStaticModules()) {
-    RegisterModule(module, nullptr);
+    if (module) { // On local Windows builds, the list may contain null
+                  // pointers from padding.
+      RegisterModule(module, nullptr);
+    }
   }
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {

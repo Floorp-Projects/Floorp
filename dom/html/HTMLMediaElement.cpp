@@ -6052,7 +6052,7 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   if (oldState < HAVE_FUTURE_DATA && mReadyState >= HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
-      if (mDecoder) {
+      if (mDecoder && !mPausedForInactiveDocumentOrChannel) {
         mDecoder->Play();
       }
       NotifyAboutPlaying();
@@ -6178,6 +6178,7 @@ HTMLMediaElement::CheckAutoplayDataReady()
     if (mCurrentPlayRangeStart == -1.0) {
       mCurrentPlayRangeStart = CurrentTime();
     }
+    MOZ_ASSERT(!mPausedForInactiveDocumentOrChannel);
     mDecoder->Play();
   } else if (mSrcStream) {
     SetPlayedOrSeeked(true);

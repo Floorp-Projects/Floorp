@@ -4,6 +4,7 @@ export LLVM_CONFIG="${TOOLTOOL_DIR}/clang/bin/llvm-config"
 CARGO="${TOOLTOOL_DIR}/rustc/bin/cargo"
 RUSTC="${TOOLTOOL_DIR}/rustc/bin/rustc"
 RUSTDOC="${TOOLTOOL_DIR}/rustc/bin/rustdoc"
+RUSTFMT="${TOOLTOOL_DIR}/rustc/bin/rustfmt"
 
 CC="${TOOLTOOL_DIR}/gcc/bin/gcc"
 CXX="${TOOLTOOL_DIR}/gcc/bin/g++"

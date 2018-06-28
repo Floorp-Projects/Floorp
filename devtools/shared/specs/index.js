@@ -148,6 +148,11 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/node",
   },
   {
+    types: ["obj", "object.descriptor"],
+    spec: "devtools/shared/specs/object",
+    front: null,
+  },
+  {
     types: ["perf"],
     spec: "devtools/shared/specs/perf",
     front: "devtools/shared/fronts/perf",

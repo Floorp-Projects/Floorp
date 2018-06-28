@@ -12,7 +12,7 @@ const {
 
 // Teach protocol.js how to deal with legacy actor types
 types.addType("ObjectActor", {
-  write: actor => actor.grip(),
+  write: actor => actor.form(),
   read: grip => grip
 });
 

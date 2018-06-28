@@ -276,6 +276,9 @@ def rust_tests(enable_rust_tests, rustdoc):
 
 set_config('MOZ_RUST_TESTS', rust_tests)
 
+# Bindgen can use rustfmt to format Rust file, but it's not required.
+rustfmt = check_prog('RUSTFMT', add_rustup_path('rustfmt'), allow_missing=True)
+
 option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
 option(env='WIN64_LIB', nargs=1, help='Paths to libraries for the win64 linker')
 

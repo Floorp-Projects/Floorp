@@ -62,7 +62,6 @@ File Annotation
 
 Files are annotated with their affected components in ``moz.build`` files with stanzas like ::
 
-    
     with Files('**/*.py'):
         SCHEDULES.inclusive += ['py-lint']
 
@@ -78,7 +77,8 @@ For cases where an inclusive component is affected exclusively (such as the pyth
     with Files('**/pep8rc'):
         SCHEDULES.exclusive = ['py-lint']
 
-If multiple stanzas set ``SCHEDULES.exclusive``, the last one will take precedence.  Thus the following will set ``SCHEDULES.exclusive`` to ``hpux`` for all files except those under ``docs/``.
+If multiple stanzas set ``SCHEDULES.exclusive``, the last one will take precedence.  Thus the following
+will set ``SCHEDULES.exclusive`` to ``hpux`` for all files except those under ``docs/``. ::
 
     with Files('**'):
         SCHEDULES.exclusive = ['hpux']

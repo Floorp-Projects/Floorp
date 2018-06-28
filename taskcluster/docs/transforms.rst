@@ -23,7 +23,7 @@ Transform Functions
 
 Each transformation looks like this:
 
-.. code-block::
+.. code-block:: python
 
     @transforms.add
     def transform_an_item(config, items):

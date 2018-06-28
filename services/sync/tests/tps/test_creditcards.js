@@ -14,26 +14,26 @@ var phases = {
 
 const cc1 = [{
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4716179744040592",
   "cc-exp-month": 4,
-  "cc-exp-year": 2017,
+  "cc-exp-year": 2050,
   "changes": {
-    "cc-exp-year": 2018
+    "cc-exp-year": 2051
   }
 }];
 
 const cc1_after = [{
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4716179744040592",
   "cc-exp-month": 4,
-  "cc-exp-year": 2018,
+  "cc-exp-year": 2051,
 }];
 
 const cc2 = [{
   "cc-name": "Timothy Berners-Lee",
-  "cc-number": "1111222233334444",
+  "cc-number": "2221000374457678",
   "cc-exp-month": 12,
-  "cc-exp-year": 2022,
+  "cc-exp-year": 2050,
 }];
 
 Phase("phase1", [

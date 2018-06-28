@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 Transform the upload-generated-files task description template,
-  taskcluster/ci/upload-generated-sources/kind.yml
-into an actual task description.
+taskcluster/ci/upload-generated-sources/kind.yml, into an actual task description.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals

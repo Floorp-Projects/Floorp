@@ -481,9 +481,9 @@ WebConsoleActor.prototype =
         Error("sources not yet implemented")),
       createEnvironmentActor: (env) => this.createEnvironmentActor(env),
       getGlobalDebugObject: () => this.globalDebugObject
-    });
+    }, this.conn);
     pool.addActor(actor);
-    return actor.grip();
+    return actor.form();
   },
 
   /**

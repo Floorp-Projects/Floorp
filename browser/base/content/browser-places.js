@@ -95,10 +95,9 @@ var StarUI = {
             this.quitEditMode();
           }
 
-          if (this._anchorToolbarButton) {
-            this._anchorToolbarButton.removeAttribute("open");
-            this._anchorToolbarButton = null;
-          }
+          this._anchorElement.removeAttribute("open");
+          this._anchorElement = null;
+
           this._restoreCommandsState();
           let removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
           this._removeBookmarksOnPopupHidden = false;
@@ -215,7 +214,7 @@ var StarUI = {
     }
   },
 
-  async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark, aUrl, aIsCurrentBrowser = true) {
+  async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl, aIsCurrentBrowser = true) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
     if (this.panel.state != "closed") {
@@ -261,12 +260,8 @@ var StarUI = {
 
     this.beginBatch();
 
-    if (aAnchorElement && aAnchorElement.closest("#urlbar")) {
-      this._anchorToolbarButton = aAnchorElement;
-      aAnchorElement.setAttribute("open", "true");
-    } else {
-      this._anchorToolbarButton = null;
-    }
+    this._anchorElement = BookmarkingUI.anchor;
+    this._anchorElement.setAttribute("open", "true");
 
     let onPanelReady = fn => {
       let target = this.panel;
@@ -285,7 +280,7 @@ var StarUI = {
                                  hiddenRows: ["location", "keyword"],
                                  focusedElement: "preferred"});
 
-    this.panel.openPopup(aAnchorElement, aPosition);
+    this.panel.openPopup(this._anchorElement, "bottomcenter topright");
   },
 
   _setIconAndPreviewImage(aIsCurrentBrowser) {
@@ -481,16 +476,7 @@ var PlacesCommandHook = {
 
     let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
 
-    let anchor = BookmarkingUI.anchor;
-    if (anchor) {
-      await StarUI.showEditBookmarkPopup(node, anchor, "bottomcenter topright",
-                                         isNewBookmark, url, isCurrentBrowser);
-      return;
-    }
-
-    // Fall back to showing the panel over the content area.
-    await StarUI.showEditBookmarkPopup(node, aBrowser, "overlap", isNewBookmark,
-                                       url, isCurrentBrowser);
+    await StarUI.showEditBookmarkPopup(node, isNewBookmark, url, isCurrentBrowser);
   },
 
   /**

@@ -992,7 +992,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         }
         continue;
       }
-      actor.onRelease();
+
+      // We can still have old-style actors (e.g. object/long-string) in the pool, so we
+      // need to check onRelease existence.
+      if (actor.onRelease) {
+        actor.onRelease();
+      } else if (actor.destroy) {
+        actor.destroy();
+      }
     }
     return res ? res : {};
   },
@@ -1384,28 +1391,27 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     if (pool.objectActors.has(value)) {
-      return pool.objectActors.get(value).grip();
-    } else if (this.threadLifetimePool.objectActors.has(value)) {
-      return this.threadLifetimePool.objectActors.get(value).grip();
+      return pool.objectActors.get(value).form();
+    }
+
+    if (this.threadLifetimePool.objectActors.has(value)) {
+      return this.threadLifetimePool.objectActors.get(value).form();
     }
 
     const actor = new PauseScopedObjectActor(value, {
       getGripDepth: () => this._gripDepth,
       incrementGripDepth: () => this._gripDepth++,
       decrementGripDepth: () => this._gripDepth--,
-      createValueGrip: v => createValueGrip(v, this._pausePool,
-        this.pauseObjectGrip),
+      createValueGrip: v => createValueGrip(v, this._pausePool, this.pauseObjectGrip),
       sources: () => this.sources,
-      createEnvironmentActor: (e, p) =>
-        this.createEnvironmentActor(e, p),
+      createEnvironmentActor: (e, p) => this.createEnvironmentActor(e, p),
       promote: () => this.threadObjectGrip(actor),
-      isThreadLifetimePool: () =>
-        actor.registeredPool !== this.threadLifetimePool,
+      isThreadLifetimePool: () => actor.registeredPool !== this.threadLifetimePool,
       getGlobalDebugObject: () => this.globalDebugObject
-    });
+    }, this.conn);
     pool.addActor(actor);
     pool.objectActors.set(value, actor);
-    return actor.grip();
+    return actor.form();
   },
 
   /**
@@ -1735,7 +1741,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return { from: this.actorID,
                  error: "noSuchActor" };
       }
-      const handler = actor.onPrototypeAndProperties;
+      const handler = actor.prototypeAndProperties;
       if (!handler) {
         return { from: this.actorID,
                  error: "unrecognizedPacketType",
