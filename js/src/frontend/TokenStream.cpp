@@ -1008,17 +1008,10 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* cod
         return 0;
     }
 
-    CharT cp[3];
+    char16_t v;
     unit = getCodeUnit();
-    if (JS7_ISHEX(unit) &&
-        sourceUnits.peekCodeUnits(3, cp) &&
-        JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
-    {
-        *codePoint = (JS7_UNHEX(unit) << 12) |
-                     (JS7_UNHEX(cp[0]) << 8) |
-                     (JS7_UNHEX(cp[1]) << 4) |
-                     JS7_UNHEX(cp[2]);
-        sourceUnits.skipCodeUnits(3);
+    if (JS7_ISHEX(unit) && sourceUnits.matchHexDigits(3, &v)) {
+        *codePoint = (JS7_UNHEX(unit) << 12) | v;
         return 5;
     }
 
@@ -2450,16 +2443,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 // If it isn't, this is usually an error -- but if this is a
                 // template literal, we must defer error reporting because
                 // malformed escapes are okay in *tagged* template literals.
-                CharT cp[3];
-                if (JS7_ISHEX(c2) &&
-                    sourceUnits.peekCodeUnits(3, cp) &&
-                    JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
-                {
-                    unit = (JS7_UNHEX(c2) << 12) |
-                           (JS7_UNHEX(cp[0]) << 8) |
-                           (JS7_UNHEX(cp[1]) << 4) |
-                           JS7_UNHEX(cp[2]);
-                    sourceUnits.skipCodeUnits(3);
+                char16_t v;
+                if (JS7_ISHEX(c2) && sourceUnits.matchHexDigits(3, &v)) {
+                    unit = (JS7_UNHEX(c2) << 12) | v;
                 } else {
                     // Beware: |c2| may not be an ASCII code point here!
                     ungetCodeUnit(c2);
@@ -2477,12 +2463,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
               // Hexadecimal character specification.
               case 'x': {
-                CharT cp[2];
-                if (sourceUnits.peekCodeUnits(2, cp) &&
-                    JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]))
-                {
-                    unit = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
-                    sourceUnits.skipCodeUnits(2);
+                char16_t v;
+                if (sourceUnits.matchHexDigits(2, &v)) {
+                    unit = v;
                 } else {
                     uint32_t start = sourceUnits.offset() - 2;
                     if (parsingTemplate) {
