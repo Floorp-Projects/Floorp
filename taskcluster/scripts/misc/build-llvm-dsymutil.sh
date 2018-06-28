@@ -56,6 +56,9 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_TARGETS_TO_BUILD=X86 \
   -DCMAKE_C_COMPILER=$HOME_DIR/src/gcc/bin/gcc \
+  -DCMAKE_CXX_COMPILER=$HOME_DIR/src/gcc/bin/g++ \
+  -DCMAKE_C_FLAGS="-B $HOME_DIR/src/gcc/bin" \
+  -DCMAKE_CXX_FLAGS="-B $HOME_DIR/src/gcc/bin" \
   ..
 
 export LD_LIBRARY_PATH=$HOME_DIR/src/gcc/lib64
