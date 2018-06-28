@@ -485,12 +485,6 @@ TokenStreamAnyChars::undoInternalUpdateLineInfoForEOL()
     lineno--;
 }
 
-MOZ_ALWAYS_INLINE void
-TokenStreamAnyChars::updateFlagsForEOL()
-{
-    flags.isDirtyLine = false;
-}
-
 // This gets a full code point, starting from an already-consumed leading code
 // unit, normalizing EOL sequences to '\n', also updating line/column info as
 // needed.
