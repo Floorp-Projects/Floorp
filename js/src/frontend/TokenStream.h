@@ -946,6 +946,11 @@ class SourceUnits
         return ptr >= limit_;
     }
 
+    size_t remaining() const {
+        MOZ_ASSERT(ptr, "can't get a count of remaining code units if poisoned");
+        return mozilla::PointerRangeSize(ptr, limit_);
+    }
+
     size_t startOffset() const {
         return startOffset_;
     }
@@ -980,7 +985,7 @@ class SourceUnits
 
     bool peekCodeUnits(uint8_t n, CharT* out) const {
         MOZ_ASSERT(ptr, "shouldn't peek into poisoned SourceUnits");
-        if (n > mozilla::PointerRangeSize(ptr, limit_))
+        if (n > remaining())
             return false;
 
         std::copy_n(ptr, n, out);
@@ -989,7 +994,7 @@ class SourceUnits
 
     void skipCodeUnits(uint32_t n) {
         MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
-        MOZ_ASSERT(n <= mozilla::PointerRangeSize(ptr, limit_),
+        MOZ_ASSERT(n <= remaining(),
                    "shouldn't skip beyond end of SourceUnits");
         ptr += n;
     }
@@ -997,7 +1002,7 @@ class SourceUnits
     void unskipCodeUnits(uint32_t n) {
         MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
         MOZ_ASSERT(n <= mozilla::PointerRangeSize(base_, ptr),
-                   "shouldn't skip beyond start of SourceUnits");
+                   "shouldn't unskip beyond start of SourceUnits");
         ptr -= n;
     }
 
