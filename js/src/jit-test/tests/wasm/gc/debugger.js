@@ -22,14 +22,19 @@ if (!wasmGcEnabled() || !wasmDebuggingIsSupported()) {
 
     g.eval(`
         var obj = { somekey: 'somevalue' };
-
         Debugger(parent).onEnterFrame = function(frame) {
             let v = frame.environment.getVariable('var0');
-            assertEq(typeof v === 'object', true);
-            assertEq(typeof v.somekey === 'string', true);
-            assertEq(v.somekey === 'somevalue', true);
-        };
+            assertEq(typeof v, 'object');
 
-        new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(\`${src}\`))).exports.func(obj);
+            let prop = v.unwrap().getOwnPropertyDescriptor('somekey');
+            assertEq(typeof prop, 'object');
+            assertEq(typeof prop.value, 'string');
+            assertEq(prop.value, 'somevalue');
+
+            // Disable onEnterFrame hook.
+            Debugger(parent).onEnterFrame = undefined;
+        };
     `);
+
+    new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`${src}`))).exports.func(g.obj);
 })();
