@@ -24,24 +24,41 @@ module.exports.POSITION = POSITION;
 const TYPE = {
   NORMAL: "normal",
   ARROW: "arrow",
+  DOORHANGER: "doorhanger",
 };
 
 module.exports.TYPE = TYPE;
 
-const ARROW_WIDTH = 32;
+const ARROW_WIDTH = {
+  "normal": 0,
+  "arrow": 32,
+  // This is the value calculated for the .tooltip-arrow element in tooltip.css
+  // which includes the arrow width (20px) plus the extra margin added so that
+  // the drop shadow is not cropped (2px each side).
+  "doorhanger": 24,
+};
 
-// Default offset between the tooltip's left edge and the tooltip arrow.
-const ARROW_OFFSET = 20;
+const ARROW_OFFSET = {
+  "normal": 0,
+  // Default offset between the tooltip's edge and the tooltip arrow.
+  "arrow": 20,
+  // Match other Firefox menus which use 10px from edge (but subtract the 2px
+  // margin included in the ARROW_WIDTH above).
+  "doorhanger": 8,
+};
 
 const EXTRA_HEIGHT = {
   "normal": 0,
   // The arrow is 16px tall, but merges on 3px with the panel border
   "arrow": 13,
+  // The doorhanger arrow is 10px tall, but merges on 1px with the panel border
+  "doorhanger": 9,
 };
 
 const EXTRA_BORDER = {
   "normal": 0,
   "arrow": 3,
+  "doorhanger": 0,
 };
 
 /**
@@ -120,12 +137,20 @@ const calculateVerticalPosition = (
  *        Bounding rectangle for the viewport. top/left can be different from
  *        0 if some space should not be used by tooltips (for instance OS
  *        toolbars, taskbars etc.).
+ * @param {DOMRect} windowRect
+ *        Bounding rectangle for the window. Used to determine which direction
+ *        doorhangers should hang.
  * @param {Number} width
  *        Preferred width for the tooltip.
  * @param {String} type
  *        The tooltip type (e.g. "arrow").
  * @param {Number} offset
  *        Horizontal offset in pixels.
+ * @param {Number} borderRadius
+ *        The border radius of the panel. This is added to ARROW_OFFSET to
+ *        calculate the distance from the edge of the tooltip to the start
+ *        of arrow. It is separate from ARROW_OFFSET since it will vary by
+ *        platform.
  * @param {Boolean} isRtl
  *        If the anchor is in RTL, the tooltip should be aligned to the right.
  * @return {Object}
@@ -136,13 +161,38 @@ const calculateVerticalPosition = (
 const calculateHorizontalPosition = (
   anchorRect,
   viewportRect,
+  windowRect,
   width,
   type,
   offset,
+  borderRadius,
   isRtl
 ) => {
   // Which direction should the tooltip go?
-  const hangDirection = isRtl ? "left" : "right";
+  //
+  // For tooltips we follow the writing direction but for doorhangers the
+  // guidelines[1] say that,
+  //
+  //   "Doorhangers opening on the right side of the view show the directional
+  //   arrow on the right.
+  //
+  //   Doorhangers opening on the left side of the view show the directional
+  //   arrow on the left.
+  //
+  //   Never place the directional arrow at the center of doorhangers."
+  //
+  // [1] https://design.firefox.com/photon/components/doorhangers.html#directional-arrow
+  //
+  // So for those we need to check if the anchor is more right or left.
+  let hangDirection;
+  if (type === TYPE.DOORHANGER) {
+    const anchorCenter = anchorRect.left + anchorRect.width / 2;
+    const viewCenter = windowRect.left + windowRect.width / 2;
+    hangDirection = anchorCenter >= viewCenter ? "left" : "right";
+  } else {
+    hangDirection = isRtl ? "left" : "right";
+  }
+
   const anchorWidth = anchorRect.width;
 
   // Calculate logical start of anchor relative to the viewport.
@@ -160,12 +210,14 @@ const calculateHorizontalPosition = (
   tooltipStart = Math.max(0, tooltipStart);
 
   // Calculate arrow start (tooltip's start might be updated)
-  const arrowWidth = type === TYPE.ARROW ? ARROW_WIDTH : 0;
+  const arrowWidth = ARROW_WIDTH[type];
   let arrowStart;
-  // Arrow style tooltips may need to be shifted
-  if (type === TYPE.ARROW) {
+  // Arrow and doorhanger style tooltips may need to be shifted
+  if (type === TYPE.ARROW || type === TYPE.DOORHANGER) {
+    const arrowOffset = ARROW_OFFSET[type] + borderRadius;
+
     // Where will the point of the arrow be if we apply the standard offset?
-    const arrowCenter = tooltipStart + ARROW_OFFSET + arrowWidth / 2;
+    const arrowCenter = tooltipStart + arrowOffset + arrowWidth / 2;
 
     // How does that compare to the center of the anchor?
     const anchorCenter = anchorStart + anchorWidth / 2;
@@ -175,12 +227,12 @@ const calculateHorizontalPosition = (
       tooltipStart = Math.max(0, tooltipStart - (arrowCenter - anchorCenter));
     }
     // Arrow's start offset relative to the anchor.
-    arrowStart = Math.min(ARROW_OFFSET, (anchorWidth - arrowWidth) / 2) | 0;
+    arrowStart = Math.min(arrowOffset, (anchorWidth - arrowWidth) / 2) | 0;
     // Translate the coordinate to tooltip container
     arrowStart += anchorStart - tooltipStart;
     // Make sure the arrow remains in the tooltip container.
-    arrowStart = Math.min(arrowStart, tooltipWidth - arrowWidth);
-    arrowStart = Math.max(arrowStart, 0);
+    arrowStart = Math.min(arrowStart, tooltipWidth - arrowWidth - borderRadius);
+    arrowStart = Math.max(arrowStart, borderRadius);
   }
 
   // Convert from logical coordinates to physical
@@ -232,7 +284,8 @@ const getRelativeRect = function(node, relativeTo) {
  *        The toolbox document to attach the HTMLTooltip popup.
  * @param {Object}
  *        - {String} type
- *          Display type of the tooltip. Possible values: "normal", "arrow"
+ *          Display type of the tooltip. Possible values: "normal", "arrow", and
+ *          "doorhanger".
  *        - {Boolean} autofocus
  *          Defaults to false. Should the tooltip be focused when opening it.
  *        - {Boolean} consumeOutsideClicks
@@ -375,8 +428,7 @@ HTMLTooltip.prototype = {
       anchorRect = this._convertToScreenRect(anchorRect);
     }
 
-    // Get viewport size
-    const viewportRect = this._getViewportRect();
+    const { viewportRect, windowRect } = this._getBoundingRects();
 
     // Calculate the horizonal position and width
     let preferredWidth;
@@ -399,9 +451,29 @@ HTMLTooltip.prototype = {
     }
 
     const anchorWin = anchor.ownerDocument.defaultView;
-    const isRtl = anchorWin.getComputedStyle(anchor).direction === "rtl";
+    const anchorCS = anchorWin.getComputedStyle(anchor);
+    const isRtl = anchorCS.direction === "rtl";
+
+    let borderRadius = 0;
+    if (this.type === TYPE.DOORHANGER) {
+      borderRadius = parseFloat(
+        anchorCS.getPropertyValue("--theme-arrowpanel-border-radius")
+      );
+      if (Number.isNaN(borderRadius)) {
+        borderRadius = 0;
+      }
+    }
+
     const {left, width, arrowLeft} = calculateHorizontalPosition(
-      anchorRect, viewportRect, preferredWidth, this.type, x, isRtl);
+      anchorRect,
+      viewportRect,
+      windowRect,
+      preferredWidth,
+      this.type,
+      x,
+      borderRadius,
+      isRtl
+    );
 
     // If we constrained the width, then any measured height we have is no
     // longer valid.
@@ -411,9 +483,21 @@ HTMLTooltip.prototype = {
 
     // Apply width and arrow positioning
     this.container.style.width = width + "px";
-    if (this.type === TYPE.ARROW) {
+    if (this.type === TYPE.ARROW || this.type === TYPE.DOORHANGER) {
       this.arrow.style.left = arrowLeft + "px";
     }
+
+    // Work out how much vertical margin we have.
+    //
+    // This relies on us having set either .tooltip-top or .tooltip-bottom
+    // and on the margins for both being symmetrical. Fortunately the call to
+    // _measureContainerSize above will set .tooltip-top for us and it also
+    // assumes these styles are symmetrical so this should be ok.
+    const panelWindow = this.panel.ownerDocument.defaultView;
+    const panelComputedStyle = panelWindow.getComputedStyle(this.panel);
+    const verticalMargin =
+      parseFloat(panelComputedStyle.marginTop) +
+      parseFloat(panelComputedStyle.marginBottom);
 
     // Calculate the vertical position and height
     let preferredHeight;
@@ -424,8 +508,12 @@ HTMLTooltip.prototype = {
       } else {
         ({ height: preferredHeight } = this._measureContainerSize());
       }
+      preferredHeight += verticalMargin;
     } else {
-      const themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
+      const themeHeight =
+        EXTRA_HEIGHT[this.type] +
+        verticalMargin +
+        2 * EXTRA_BORDER[this.type];
       preferredHeight = this.preferredHeight + themeHeight;
     }
 
@@ -467,22 +555,47 @@ HTMLTooltip.prototype = {
   },
 
   /**
-   * Calculate the rect of the viewport that limits the tooltip dimensions. When using a
-   * XUL panel wrapper, the viewport will be able to use the whole screen (excluding space
-   * reserved by the OS for toolbars etc.). Otherwise, the viewport is limited to the
-   * tooltip's document.
+   * Calculate the following boundary rectangles:
    *
-   * @return {Object} DOMRect-like object with the Number properties: top, right, bottom,
-   *         left, width, height
+   * - Viewport rect: This is the region that limits the tooltip dimensions.
+   *   When using a XUL panel wrapper, the tooltip will be able to use the whole
+   *   screen (excluding space reserved by the OS for toolbars etc.) and hence
+   *   the result will be in screen coordinates.
+   *   Otherwise, the tooltip is limited to the tooltip's document.
+   *
+   * - Window rect: This is the bounds of the view in which the tooltip is
+   *   presented. It is reported in the same coordinates as the viewport
+   *   rect and is used for determining in which direction a doorhanger-type
+   *   tooltip should "hang".
+   *   When using the XUL panel wrapper this will be the dimensions of the
+   *   window in screen coordinates. Otherwise it will be the same as the
+   *   viewport rect.
+   *
+   * @return {Object} An object with the following properties
+   *         viewportRect {Object} DOMRect-like object with the Number
+   *                      properties: top, right, bottom, left, width, height
+   *                      representing the viewport rect.
+   *         windowRect   {Object} DOMRect-like object with the Number
+   *                      properties: top, right, bottom, left, width, height
+   *                      representing the viewport rect.
    */
-  _getViewportRect: function() {
+  _getBoundingRects: function() {
+    let viewportRect;
+    let windowRect;
+
     if (this.useXulWrapper) {
-      // availLeft/Top are the coordinates first pixel available on the screen for
-      // applications (excluding space dedicated for OS toolbars, menus etc...)
-      // availWidth/Height are the dimensions available to applications excluding all
-      // the OS reserved space
-      const {availLeft, availTop, availHeight, availWidth} = this.doc.defaultView.screen;
-      return {
+      // availLeft/Top are the coordinates first pixel available on the screen
+      // for applications (excluding space dedicated for OS toolbars, menus
+      // etc...)
+      // availWidth/Height are the dimensions available to applications
+      // excluding all the OS reserved space
+      const {
+        availLeft,
+        availTop,
+        availHeight,
+        availWidth,
+      } = this.doc.defaultView.screen;
+      viewportRect = {
         top: availTop,
         right: availLeft + availWidth,
         bottom: availTop + availHeight,
@@ -490,9 +603,27 @@ HTMLTooltip.prototype = {
         width: availWidth,
         height: availHeight,
       };
+
+      const {
+        screenX,
+        screenY,
+        outerWidth,
+        outerHeight,
+      } = this.doc.defaultView;
+      windowRect = {
+        top: screenY,
+        right: screenX + outerWidth,
+        bottom: screenY + outerHeight,
+        left: screenX,
+        width: outerWidth,
+        height: outerHeight,
+      };
+    } else {
+      viewportRect = windowRect =
+        this.doc.documentElement.getBoundingClientRect();
     }
 
-    return this.doc.documentElement.getBoundingClientRect();
+    return { viewportRect, windowRect };
   },
 
   _measureContainerSize: function() {
@@ -573,7 +704,7 @@ HTMLTooltip.prototype = {
     let html = '<div class="tooltip-filler"></div>';
     html += '<div class="tooltip-panel"></div>';
 
-    if (this.type === TYPE.ARROW) {
+    if (this.type === TYPE.ARROW || this.type === TYPE.DOORHANGER) {
       html += '<div class="tooltip-arrow"></div>';
     }
     // eslint-disable-next-line no-unsanitized/property
