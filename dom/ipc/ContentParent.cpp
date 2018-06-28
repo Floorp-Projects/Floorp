@@ -1896,6 +1896,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 #if defined(XP_WIN32) && defined(ACCESSIBILITY)
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
 #endif
+
+  BrowsingContext::CleanupContexts(ChildID());
 }
 
 bool

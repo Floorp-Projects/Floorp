@@ -42,6 +42,7 @@ class BrowsingContext
 public:
   static void Init();
   static LogModule* GetLog();
+  static void CleanupContexts(uint64_t aProcessId);
 
   static already_AddRefed<BrowsingContext> Get(uint64_t aId);
 
@@ -78,6 +79,7 @@ public:
 
   uint64_t Id() const { return mBrowsingContextId; }
   uint64_t OwnerProcessId() const;
+  bool IsOwnedByProcess() const { return mProcessId.isSome(); }
 
   BrowsingContext* Parent() const { return mParent; }
 
