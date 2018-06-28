@@ -442,9 +442,22 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       Element* cloneElem = clone->AsElement();
       RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
       CustomElementData* data = elem->GetCustomElementData();
-      RefPtr<nsAtom> typeAtom = data ? data->GetCustomElementType() : nullptr;
 
-      if (typeAtom) {
+      // Check if node may be custom element by type extension.
+      // ex. <button is="x-button">
+      nsAutoString extension;
+      if (!data || data->GetCustomElementType() != tagAtom) {
+        cloneElem->GetAttr(kNameSpaceID_None, nsGkAtoms::is, extension);
+      }
+
+      if ((data && data->GetCustomElementType() == tagAtom) ||
+          !extension.IsEmpty()) {
+        // The typeAtom can be determined by extension, because we only need to
+        // consider two cases: 1) Original node is a autonomous custom element
+        // which has CustomElementData. 2) Original node is a built-in custom
+        // element or normal element, but it has `is` attribute when it is being
+        // cloned.
+        RefPtr<nsAtom> typeAtom = extension.IsEmpty() ? tagAtom : NS_Atomize(extension);
         cloneElem->SetCustomElementData(new CustomElementData(typeAtom));
 
         MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));

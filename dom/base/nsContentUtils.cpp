@@ -9380,16 +9380,6 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
     aBuilder.Append(aContent->NodeName());
   }
 
-  CustomElementData* ceData = aContent->GetCustomElementData();
-  if (ceData) {
-    nsAtom* isAttr = ceData->GetIs(aContent);
-    if (isAttr && !aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::is)) {
-      aBuilder.Append(R"( is=")");
-      aBuilder.Append(nsDependentAtomString(isAttr));
-      aBuilder.Append(R"(")");
-    }
-  }
-
   int32_t count = aContent->GetAttrCount();
   for (int32_t i = 0; i < count; i++) {
     const nsAttrName* name = aContent->GetAttrNameAt(i);

@@ -520,10 +520,6 @@ public:
    */
   inline CustomElementData* GetCustomElementData() const
   {
-    if (!HasCustomElementData()) {
-      return nullptr;
-    }
-
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mCustomElementData.get() : nullptr;
   }
