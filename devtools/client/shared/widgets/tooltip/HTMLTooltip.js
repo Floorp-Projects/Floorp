@@ -284,6 +284,11 @@ const getRelativeRect = function(node, relativeTo) {
  * @param {Document} toolboxDoc
  *        The toolbox document to attach the HTMLTooltip popup.
  * @param {Object}
+ *        - {String} id
+ *          The ID to assign to the tooltip container elment.
+ *        - {String} className
+ *          A string separated list of classes to add to the tooltip container
+ *          element.
  *        - {String} type
  *          Display type of the tooltip. Possible values: "normal", "arrow", and
  *          "doorhanger".
@@ -297,6 +302,8 @@ const getRelativeRect = function(node, relativeTo) {
  *          in order to use all the screen viewport available.
  */
 function HTMLTooltip(toolboxDoc, {
+    id = "",
+    className = "",
     type = "normal",
     autofocus = false,
     consumeOutsideClicks = true,
@@ -305,6 +312,8 @@ function HTMLTooltip(toolboxDoc, {
   EventEmitter.decorate(this);
 
   this.doc = toolboxDoc;
+  this.id = id;
+  this.className = className;
   this.type = type;
   this.autofocus = autofocus;
   this.consumeOutsideClicks = consumeOutsideClicks;
@@ -702,7 +711,15 @@ HTMLTooltip.prototype = {
   _createContainer: function() {
     const container = this.doc.createElementNS(XHTML_NS, "div");
     container.setAttribute("type", this.type);
+
+    if (this.id) {
+      container.setAttribute("id", this.id);
+    }
+
     container.classList.add("tooltip-container");
+    if (this.className) {
+      container.classList.add(...this.className.split(" "));
+    }
 
     let html = '<div class="tooltip-filler"></div>';
     html += '<div class="tooltip-panel"></div>';
