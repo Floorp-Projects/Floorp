@@ -378,13 +378,11 @@ class TagFilter(object):
 
 
 class ManifestLoader(object):
-    def __init__(self, test_paths, force_manifest_update=False, manifest_download=False, types=None, meta_filters=None):
+    def __init__(self, test_paths, force_manifest_update=False, manifest_download=False):
         do_delayed_imports()
         self.test_paths = test_paths
         self.force_manifest_update = force_manifest_update
         self.manifest_download = manifest_download
-        self.types = types
-        self.meta_filters = meta_filters or []
         self.logger = structured.get_default_logger()
         if self.logger is None:
             self.logger = structured.structuredlog.StructuredLogger("ManifestLoader")
@@ -439,7 +437,7 @@ class ManifestLoader(object):
         if (not os.path.exists(manifest_path) or
             self.force_manifest_update):
             self.update_manifest(manifest_path, tests_path, url_base, download=self.manifest_download)
-        manifest_file = manifest.load(tests_path, manifest_path, types=self.types, meta_filters=self.meta_filters)
+        manifest_file = manifest.load(tests_path, manifest_path)
         if manifest_file.url_base != url_base:
             self.logger.info("Updating url_base in manifest from %s to %s" % (manifest_file.url_base,
                                                                               url_base))
