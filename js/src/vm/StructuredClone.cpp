@@ -1187,7 +1187,7 @@ JSStructuredCloneWriter::writeBigInt(uint32_t tag, BigInt* bi)
         return false;
     uint32_t lengthAndSign = length | (static_cast<uint32_t>(signBit) << 31);
 
-    js::UniquePtr<uint8_t> buf(static_cast<uint8_t*>(js_malloc(length)));
+    js::UniquePtr<uint8_t> buf(js_pod_malloc<uint8_t>(length));
     if (!buf)
         return false;
 
@@ -1967,7 +1967,7 @@ JSStructuredCloneReader::readBigInt(uint32_t data)
     if (nbytes == 0)
         return BigInt::create(context());
 
-    UniquePtr<uint8_t> buf(static_cast<uint8_t*>(js_malloc(nbytes)));
+    UniquePtr<uint8_t> buf(js_pod_malloc<uint8_t>(nbytes));
     if (!buf)
         return nullptr;
     if (!in.readBytes(buf.get(), nbytes))

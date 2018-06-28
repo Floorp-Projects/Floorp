@@ -28,6 +28,7 @@
 # define getpid _getpid
 #endif
 
+#include "util/Text.h"
 #include "vm/Probes.h"
 
 #include "vm/JSContext-inl.h"
@@ -547,10 +548,9 @@ bool js_StartPerf()
             flags = "--call-graph";
         }
 
-        UniqueChars flags2((char*)js_malloc(strlen(flags) + 1));
+        UniqueChars flags2 = DuplicateString(flags);
         if (!flags2)
             return false;
-        strcpy(flags2.get(), flags);
 
         // Split |flags2| on spaces.
         char* toksave;

@@ -2927,7 +2927,7 @@ class CloneBufferObject : public NativeObject {
             return false;
 
         size_t size = data->Size();
-        UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        UniqueChars buffer(js_pod_malloc<char>(size));
         if (!buffer) {
             ReportOutOfMemory(cx);
             return false;
@@ -2957,7 +2957,7 @@ class CloneBufferObject : public NativeObject {
             return false;
 
         size_t size = data->Size();
-        UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        UniqueChars buffer(js_pod_malloc<char>(size));
         if (!buffer) {
             ReportOutOfMemory(cx);
             return false;
