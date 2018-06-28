@@ -183,8 +183,8 @@ def run_job_using(worker_implementation, run_using, schema=None, defaults={}):
     jobs with the given worker implementation and `run.using` property.  If
     `schema` is given, the job's run field will be verified to match it.
 
-    The decorated function should have the signature `using_foo(config, job,
-    taskdesc) and should modify the task description in-place.  The skeleton of
+    The decorated function should have the signature `using_foo(config, job, taskdesc)`
+    and should modify the task description in-place.  The skeleton of
     the task description is already set up, but without a payload."""
     def wrap(func):
         for_run_using = registry.setdefault(run_using, {})

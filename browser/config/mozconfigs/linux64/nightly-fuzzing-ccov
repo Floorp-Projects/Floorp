@@ -32,7 +32,7 @@ unset MOZ_STDCXX_COMPAT
 export MOZ_PACKAGE_JSSHELL=1
 
 # Need this to prevent name conflicts with the normal nightly build packages
-export MOZ_PKG_SPECIAL=asan-cov
+export MOZ_PKG_SPECIAL=asan-ccov
 
 . "$topsrcdir/build/mozconfig.common.override"
 

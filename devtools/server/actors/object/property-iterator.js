@@ -40,8 +40,8 @@ loader.lazyRequireGetter(this, "ObjectUtils", "devtools/server/actors/object/uti
  *          of the property value.
  */
 const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec, {
-  initialize(objectActor, options) {
-    protocol.Actor.prototype.initialize.call(this);
+  initialize(objectActor, options, conn) {
+    protocol.Actor.prototype.initialize.call(this, conn);
     if (!DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
       this.iterator = {
         size: 0,

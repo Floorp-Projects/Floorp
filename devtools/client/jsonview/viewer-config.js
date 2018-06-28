@@ -11,6 +11,12 @@
 JSONView.readyState = "loading";
 window.dispatchEvent(new CustomEvent("AppReadyStateChange"));
 
+// Services is required in the Reps bundle but can't be loaded in the json-viewer.
+// Since it's only used for the ObjectInspector, that the json-viewer does not use, we
+// can mock it. The mock should be removed when we un-bundle reps, (i.e. land individual
+// files instead of a big bundle).
+define("ServicesMock", () => ({ appinfo: {} }));
+
 /**
  * RequireJS configuration for JSON Viewer.
  *
@@ -45,6 +51,12 @@ require.config({
       JSONView.debugJsModules
       ? "resource://devtools-client-shared/vendor/react-dom-test-utils-dev"
       : "resource://devtools-client-shared/vendor/react-dom-test-utils",
+    "Services": "resource://devtools-client-shared/vendor/react-prop-types",
+  },
+  map: {
+    "*": {
+      "Services": "ServicesMock"
+    }
   }
 });
 

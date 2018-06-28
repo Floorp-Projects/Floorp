@@ -9558,6 +9558,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "How long has the platform accessibility been active (seconds) in accessibility panel."
   },
+  "DEVTOOLS_APPLICATION_TIME_ACTIVE_SECONDS": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "66",
+    "kind": "exponential",
+    "high": 86400,
+    "n_buckets": 100,
+    "bug_numbers": [1451734],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jdescottes@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the application panel been active (seconds)."
+  },
   "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
