@@ -4284,18 +4284,18 @@ void
 Element::SetCustomElementData(CustomElementData* aData)
 {
   SetHasCustomElementData();
+
+  if (aData->mState != CustomElementData::State::eCustom) {
+    SetDefined(false);
+  }
+
   nsExtendedDOMSlots *slots = ExtendedDOMSlots();
   MOZ_ASSERT(!slots->mCustomElementData, "Custom element data may not be changed once set.");
   #if DEBUG
-    nsAtom* name = NodeInfo()->NameAtom();
-    nsAtom* type = aData->GetCustomElementType();
-    if (NodeInfo()->NamespaceID() == kNameSpaceID_XHTML) {
-      if (nsContentUtils::IsCustomElementName(name, kNameSpaceID_XHTML)) {
-        MOZ_ASSERT(type == name);
-      } else {
-        MOZ_ASSERT(type != name);
-      }
-    } else { // kNameSpaceID_XUL
+    // We assert only XUL usage, since web may pass whatever as 'is' value
+    if (NodeInfo()->NamespaceID() == kNameSpaceID_XUL) {
+      nsAtom* name = NodeInfo()->NameAtom();
+      nsAtom* type = aData->GetCustomElementType();
       // Check to see if the tag name is a dashed name.
       if (nsContentUtils::IsNameWithDash(name)) {
         // Assert that a tag name with dashes is always an autonomous custom
