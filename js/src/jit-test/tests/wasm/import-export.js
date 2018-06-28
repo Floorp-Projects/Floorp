@@ -726,3 +726,44 @@ assertEq(e.call(), 1090);
     // Test the error path in the arguments rectifier.
     assertErrorMessage(() => i.missTwo(1337), Error, "a FFI to believe in");
 })();
+
+(function testCrossRealmImport() {
+    var g = newGlobal({sameCompartmentAs: this});
+    g.evaluate("function f1() { assertCorrectRealm(); return 123; }");
+    g.mem = new Memory({initial:8});
+
+    // The current_memory builtin asserts cx->realm matches instance->realm so
+    // we call it here.
+    var i1 = new Instance(new Module(wasmTextToBinary(`
+        (module
+            (import $imp1 "a" "f1" (result i32))
+            (import $imp2 "a" "f2" (result i32))
+            (import "a" "m" (memory 1))
+            (func $test (result i32)
+                (i32.add
+                    (i32.add
+                        (i32.add (current_memory) (call $imp1))
+                        (current_memory))
+                    (call $imp2)))
+            (export "impstub" $imp1)
+            (export "test" $test))
+    `)), {a:{m:g.mem, f1:g.f1, f2:g.Math.abs}});
+
+    for (var i = 0; i < 20; i++) {
+        assertEq(i1.exports.impstub(), 123);
+        assertEq(i1.exports.test(), 139);
+    }
+
+    // Inter-module/inter-realm wasm => wasm calls.
+    var src = `
+        (module
+            (import $imp "a" "othertest" (result i32))
+            (import "a" "m" (memory 1))
+            (func (result i32) (i32.add (call $imp) (current_memory)))
+            (export "test" 1))
+    `;
+    g.i1 = i1;
+    g.evaluate("i2 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`" + src + "`)), {a:{m:mem,othertest:i1.exports.test}})");
+    for (var i = 0; i < 20; i++)
+        assertEq(g.i2.exports.test(), 147);
+})();

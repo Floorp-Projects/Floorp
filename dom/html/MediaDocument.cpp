@@ -23,23 +23,30 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIMultiPartChannel.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {
 
 MediaDocumentStreamListener::MediaDocumentStreamListener(MediaDocument *aDocument)
+  : mDocument(aDocument)
 {
-  mDocument = aDocument;
 }
 
 MediaDocumentStreamListener::~MediaDocumentStreamListener()
 {
+  if (mDocument && !NS_IsMainThread()) {
+    nsCOMPtr<nsIEventTarget> mainTarget(do_GetMainThread());
+    NS_ProxyRelease("MediaDocumentStreamListener::mDocument",
+                    mainTarget, mDocument.forget());
+  }
 }
 
 
 NS_IMPL_ISUPPORTS(MediaDocumentStreamListener,
                   nsIRequestObserver,
-                  nsIStreamListener)
+                  nsIStreamListener,
+                  nsIThreadRetargetableStreamListener)
 
 
 void
@@ -97,6 +104,17 @@ MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaDocumentStreamListener::CheckListenerChain()
+{
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
+    do_QueryInterface(mNextStream);
+  if (retargetable) {
+    return retargetable->CheckListenerChain();
+  }
+  return NS_ERROR_NO_INTERFACE;
 }
 
 // default format names for MediaDocument.

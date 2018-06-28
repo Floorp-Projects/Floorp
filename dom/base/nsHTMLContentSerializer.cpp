@@ -70,6 +70,8 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(Element* aElement,
                                                  int32_t aNamespace,
                                                  nsAString& aStr)
 {
+  MaybeSerializeIsValue(aElement, aStr);
+
   int32_t count = aElement->GetAttrCount();
   if (!count)
     return true;

@@ -5,15 +5,15 @@
 load(libdir + "asserts.js");
 
 if (!wasmDebuggingIsSupported())
-     quit();
+    quit();
 
 // Checking if experimental format generates internal source map to binary file
 // by querying debugger scripts getAllColumnOffsets.
-// (Notice that the source map will not be produced by wasmBinaryToText)
 function getAllOffsets(wast) {
   var sandbox = newGlobal('');
   var dbg = new Debugger();
   dbg.addDebuggee(sandbox);
+  dbg.allowWasmBinarySource = true;
   sandbox.eval(`
     var wasm = wasmTextToBinary('${wast}');
     var m = new WebAssembly.Instance(new WebAssembly.Module(wasm));
@@ -28,8 +28,10 @@ var offsets1 = getAllOffsets('(module \
 )');
 
 // There shall be total 8 lines with single and unique offset per line.
-var usedOffsets = Object.create(null), usedLines = Object.create(null);
+var usedOffsets = Object.create(null),
+    usedLines = Object.create(null);
 assertEq(offsets1.length, 8);
+
 offsets1.forEach(({offset, lineNumber, columnNumber}) => {
   assertEq(offset > 0, true);
   assertEq(lineNumber > 0, true);

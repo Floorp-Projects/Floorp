@@ -1858,6 +1858,9 @@ struct TlsData
     // Pointer to the Instance that contains this TLS data.
     Instance* instance;
 
+    // Equal to instance->realm_.
+    JS::Realm* realm;
+
     // The containing JSContext.
     JSContext* cx;
 
@@ -1926,6 +1929,9 @@ struct FuncImportTls
     // The callee's TlsData pointer, which must be loaded to WasmTlsReg (along
     // with any pinned registers) before calling 'code'.
     TlsData* tls;
+
+    // The callee function's realm.
+    JS::Realm* realm;
 
     // If 'code' points into a JIT code thunk, the BaselineScript of the callee,
     // for bidirectional registration purposes.

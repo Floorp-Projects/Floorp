@@ -23,6 +23,7 @@
 typedef struct {
   guint8 active;
   guint8 focused;
+  guint8 selected;
   guint8 inHover;
   guint8 disabled;
   guint8 isDefault;

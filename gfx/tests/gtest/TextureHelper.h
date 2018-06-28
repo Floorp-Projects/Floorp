@@ -16,6 +16,7 @@
 #ifdef XP_WIN
 #include "IMFYCbCrImage.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureDIB.h"
 #endif
@@ -74,11 +75,12 @@ CreateYCbCrTextureClientWithBackend(LayersBackend aLayersBackend)
   }
 
 #ifdef XP_WIN
-  RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetContentDevice();
+  RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetImageDevice();
 
   if (device && aLayersBackend == LayersBackend::LAYERS_D3D11) {
-    // Create YCbCrD3D11TextureData
-    data = IMFYCbCrImage::GetD3D11TextureData(clientData, size);
+    DXGIYCbCrTextureAllocationHelper helper(clientData, TextureFlags::DEFAULT, device);
+    RefPtr<TextureClient> texture = helper.Allocate(nullptr);
+    return texture.forget();
   }
 #endif
 
