@@ -9,12 +9,13 @@ import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import org.mozilla.geckoview.GeckoRuntime
 
 /**
  * Gecko-based implementation of Engine interface.
  */
 class GeckoEngine(
-    private val context: Context
+    private val runtime: GeckoRuntime
 ) : Engine {
 
     /**
@@ -28,7 +29,7 @@ class GeckoEngine(
      * Creates a new Gecko-based EngineSession.
      */
     override fun createSession(): EngineSession {
-        return GeckoEngineSession(context)
+        return GeckoEngineSession(runtime)
     }
 
     /**

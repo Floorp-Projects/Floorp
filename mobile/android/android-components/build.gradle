@@ -42,8 +42,8 @@ buildscript {
     ]
 
     ext.geckoRelease = [
-        revision: 'a0b222c551f586904f51228c49149d9b6b7e2a81',
-        version: '60.0.2'
+        revision: '785d242a5b01d5f1094882aa2144d8e5e2791e06',
+        version: '61.0.20180621125625'
     ]
 
     repositories {
