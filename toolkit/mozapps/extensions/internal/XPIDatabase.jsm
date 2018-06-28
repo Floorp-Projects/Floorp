@@ -1602,7 +1602,7 @@ this.XPIDatabase = {
    * @param {string} aType
    *        The type of the newly enabled add-on
    */
-  async addonChanged(aId, aType) {
+  addonChanged(aId, aType) {
     // We only care about themes in this provider
     if (!isTheme(aType))
       return;
@@ -1610,7 +1610,7 @@ this.XPIDatabase = {
     let addons = this.getAddonsByType("webextension-theme");
     for (let theme of addons) {
       if (theme.visible && theme.id != aId)
-        await this.updateAddonDisabledState(theme, true, undefined, true);
+        this.updateAddonDisabledState(theme, true, undefined, true);
     }
 
     if (!aId && (!LightweightThemeManager.currentTheme ||
