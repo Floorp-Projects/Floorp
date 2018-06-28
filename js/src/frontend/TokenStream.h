@@ -803,7 +803,9 @@ class TokenStreamAnyChars
      */
     bool fillExcludingContext(ErrorMetadata* err, uint32_t offset);
 
-    void updateFlagsForEOL();
+    MOZ_ALWAYS_INLINE void updateFlagsForEOL() {
+        flags.isDirtyLine = false;
+    }
 
   private:
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool internalUpdateLineInfoForEOL(uint32_t lineStartOffset);
