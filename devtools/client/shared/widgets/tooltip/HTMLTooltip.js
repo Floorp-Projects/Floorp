@@ -8,8 +8,8 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
+const {getCurrentZoom} = require("devtools/shared/layout/utils");
 const {listenOnce} = require("devtools/shared/async-utils");
-const Services = require("Services");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -620,10 +620,7 @@ HTMLTooltip.prototype = {
   _showXulWrapperAt: function(left, top) {
     this.xulPanelWrapper.addEventListener("popuphidden", this._onXulPanelHidden);
     const onPanelShown = listenOnce(this.xulPanelWrapper, "popupshown");
-    let zoom = parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));
-    if (!zoom || isNaN(zoom)) {
-      zoom = 1.0;
-    }
+    const zoom = getCurrentZoom(this.xulPanelWrapper);
     this.xulPanelWrapper.openPopupAtScreen(left * zoom, top * zoom, false);
     return onPanelShown;
   },
