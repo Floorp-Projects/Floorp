@@ -268,6 +268,7 @@ pref("browser.aboutHomeSnippets.updateUrl", "https://snippets.cdn.mozilla.net/%S
 
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.chrome.site_icons", true);
+pref("browser.chrome.favicons", true);
 // browser.warnOnQuit == false will override all other possible prompts when quitting or restarting
 pref("browser.warnOnQuit", true);
 pref("browser.fullscreen.autohide", true);

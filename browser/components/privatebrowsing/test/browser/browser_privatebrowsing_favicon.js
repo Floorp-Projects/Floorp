@@ -44,6 +44,8 @@ function clearAllPlacesFavicons() {
 }
 
 function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
+  let faviconReqXUL = false;
+  let faviconReqPlaces = false;
   let attr = {};
 
   if (aIsPrivate) {
@@ -68,6 +70,7 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
           let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
           let reqLoadInfo = httpChannel.loadInfo;
           let loadingPrincipal = reqLoadInfo.loadingPrincipal;
+          let triggeringPrincipal = reqLoadInfo.triggeringPrincipal;
 
           // Make sure this is a favicon request.
           if (httpChannel.URI.spec !== FAVICON_URI) {
@@ -81,8 +84,15 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
             is(reqLoadInfo.originAttributes.privateBrowsingId, 0, "The loadInfo has correct privateBrowsingId");
           }
 
-          ok(loadingPrincipal.equals(expectedPrincipal),
-            "The loadingPrincipal of favicon loading from Places should be the content prinicpal");
+          if (loadingPrincipal.equals(systemPrincipal)) {
+            faviconReqXUL = true;
+            ok(triggeringPrincipal.equals(expectedPrincipal),
+              "The triggeringPrincipal of favicon loading from XUL should be the content principal.");
+          } else {
+            faviconReqPlaces = true;
+            ok(loadingPrincipal.equals(expectedPrincipal),
+              "The loadingPrincipal of favicon loading from Places should be the content prinicpal");
+          }
 
           let faviconCookie = httpChannel.getRequestHeader("cookie");
 
@@ -91,8 +101,10 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
           ok(false, "Received unexpected topic: ", aTopic);
         }
 
-        resolve();
-        Services.obs.removeObserver(observer, "http-on-modify-request");
+        if (faviconReqXUL && faviconReqPlaces) {
+          resolve();
+          Services.obs.removeObserver(observer, "http-on-modify-request");
+        }
       }
     };
 

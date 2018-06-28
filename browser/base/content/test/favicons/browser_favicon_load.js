@@ -70,6 +70,14 @@ FaviconObserver.prototype = {
         return;
       }
 
+      let loadingPrincipal = reqLoadInfo.loadingPrincipal;
+
+      if (loadingPrincipal.equals(systemPrincipal)) {
+        this._faviconReqXUL = true;
+      } else {
+        this._faviconReqPlaces = true;
+      }
+
       let haveTailFlag = !!(cos.classFlags & Ci.nsIClassOfService.Tail);
       info("classFlags=" + cos.classFlags);
       is(haveTailFlag, this._tailingEnabled, "Should have correct cos flag.");
@@ -77,10 +85,14 @@ FaviconObserver.prototype = {
       ok(false, "Received unexpected topic: ", aTopic);
     }
 
-    this._faviconLoaded.resolve();
+    if (this._faviconReqXUL && this._faviconReqPlaces) {
+      this._faviconLoaded.resolve();
+    }
   },
 
   reset(aPageURI, aFaviconURL, aTailingEnabled) {
+    this._faviconReqXUL = false;
+    this._faviconReqPlaces = false;
     this._faviconURL = aFaviconURL;
     this._faviconLoaded = PromiseUtils.defer();
     this._tailingEnabled = aTailingEnabled;

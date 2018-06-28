@@ -59,11 +59,6 @@ function background(events) {
     let url = new URL(details.url);
     let filename;
     if (url.protocol == "data:") {
-      // See bug 1471387
-      if (details.originUrl == "about:newtab") {
-        return;
-      }
-
       // pathname is everything after protocol.
       filename = url.pathname;
     } else {
@@ -262,6 +257,10 @@ function background(events) {
       browser.test.assertTrue(expectedEvent, `received ${name}`);
       browser.test.assertEq(expected.type, details.type, "resource type is correct");
       browser.test.assertEq(expected.origin || defaultOrigin, details.originUrl, "origin is correct");
+      // ignore origin test for generated background page
+      if (!details.originUrl || !details.originUrl.endsWith("_generated_background_page.html")) {
+        browser.test.assertEq(expected.origin || defaultOrigin, details.originUrl, "origin is correct");
+      }
 
       if (name != "onBeforeRequest") {
         // On events after onBeforeRequest, check the previous values.

@@ -762,38 +762,43 @@ window._gBrowser = {
     }
   },
 
-  setIcon(aTab, aIconURL = "", aOriginalURL = aIconURL) {
-    let makeString = (url) => url instanceof Ci.nsIURI ? url.spec : url;
-
-    aIconURL = makeString(aIconURL);
-    aOriginalURL = makeString(aOriginalURL);
-
-    let LOCAL_PROTOCOLS = [
-      "chrome:",
-      "about:",
-      "resource:",
-      "data:",
-    ];
-
-    if (aIconURL && !LOCAL_PROTOCOLS.some(protocol => aIconURL.startsWith(protocol))) {
-      console.error(`Attempt to set a remote URL ${aIconURL} as a tab icon.`);
-      return;
+  storeIcon(aBrowser, aURI, aLoadingPrincipal, aRequestContextID) {
+    try {
+      if (!(aURI instanceof Ci.nsIURI)) {
+        aURI = makeURI(aURI);
+      }
+      PlacesUIUtils.loadFavicon(aBrowser, aLoadingPrincipal, aURI, aRequestContextID);
+    } catch (ex) {
+      Cu.reportError(ex);
     }
+  },
 
+  setIcon(aTab, aURI, aLoadingPrincipal, aRequestContextID) {
     let browser = this.getBrowserForTab(aTab);
-    browser.mIconURL = aIconURL;
-
-    if (aIconURL != aTab.getAttribute("image")) {
-      if (aIconURL) {
-        aTab.setAttribute("image", aIconURL);
+    browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+    let loadingPrincipal = aLoadingPrincipal ||
+      Services.scriptSecurityManager.getSystemPrincipal();
+    let requestContextID = aRequestContextID || 0;
+    let sizedIconUrl = browser.mIconURL || "";
+    if (sizedIconUrl != aTab.getAttribute("image")) {
+      if (sizedIconUrl) {
+        if (!browser.mIconLoadingPrincipal ||
+          !browser.mIconLoadingPrincipal.equals(loadingPrincipal)) {
+          aTab.setAttribute("iconloadingprincipal",
+            this.serializationHelper.serializeToString(loadingPrincipal));
+          aTab.setAttribute("requestcontextid", requestContextID);
+          browser.mIconLoadingPrincipal = loadingPrincipal;
+        }
+        aTab.setAttribute("image", sizedIconUrl);
       } else {
+        aTab.removeAttribute("iconloadingprincipal");
+        delete browser.mIconLoadingPrincipal;
         aTab.removeAttribute("image");
       }
       this._tabAttrModified(aTab, ["image"]);
     }
 
-    // The aOriginalURL argument is currently only used by tests.
-    this._callProgressListeners(browser, "onLinkIconAvailable", [aIconURL, aOriginalURL]);
+    this._callProgressListeners(browser, "onLinkIconAvailable", [browser.mIconURL]);
   },
 
   getIcon(aTab) {
@@ -806,6 +811,51 @@ window._gBrowser = {
       let pageInfo = { url: aURL, description: aDescription, previewImageURL: aPreviewImage };
       PlacesUtils.history.update(pageInfo).catch(Cu.reportError);
     }
+  },
+
+  shouldLoadFavIcon(aURI) {
+    return (aURI &&
+            Services.prefs.getBoolPref("browser.chrome.site_icons") &&
+            Services.prefs.getBoolPref("browser.chrome.favicons") &&
+            ("schemeIs" in aURI) && (aURI.schemeIs("http") || aURI.schemeIs("https")));
+  },
+
+  useDefaultIcon(aTab) {
+    let browser = this.getBrowserForTab(aTab);
+    let documentURI = browser.documentURI;
+    let requestContextID = browser.contentRequestContextID;
+    let loadingPrincipal = browser.contentPrincipal;
+    let icon = null;
+
+    if (browser.imageDocument) {
+      if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
+        let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
+        if (browser.imageDocument.width <= sz &&
+            browser.imageDocument.height <= sz) {
+          // Don't try to store the icon in Places, regardless it would
+          // be skipped (see Bug 403651).
+          icon = browser.currentURI;
+        }
+      }
+    }
+
+    // Use documentURIObject in the check for shouldLoadFavIcon so that we
+    // do the right thing with about:-style error pages.  Bug 453442
+    if (!icon && this.shouldLoadFavIcon(documentURI)) {
+      let url = documentURI.prePath + "/favicon.ico";
+      if (!this.isFailedIcon(url)) {
+        icon = url;
+        this.storeIcon(browser, icon, loadingPrincipal, requestContextID);
+      }
+    }
+
+    this.setIcon(aTab, icon, loadingPrincipal, requestContextID);
+  },
+
+  isFailedIcon(aURI) {
+    if (!(aURI instanceof Ci.nsIURI))
+      aURI = makeURI(aURI);
+    return PlacesUtils.favicons.isFailedFavicon(aURI);
   },
 
   getWindowTitleForBrowser(aBrowser) {
@@ -3102,7 +3152,7 @@ window._gBrowser = {
       // Workarounds for bug 458697
       // Icon might have been set on DOMLinkAdded, don't override that.
       if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
-        this.setIcon(aOurTab, otherBrowser.mIconURL);
+        this.setIcon(aOurTab, otherBrowser.mIconURL, otherBrowser.contentPrincipal, otherBrowser.contentRequestContextID);
       var isBusy = aOtherTab.hasAttribute("busy");
       if (isBusy) {
         aOurTab.setAttribute("busy", "true");
@@ -4201,7 +4251,7 @@ window._gBrowser = {
       }
 
       tab.removeAttribute("soundplaying");
-      this.setIcon(tab, icon);
+      this.setIcon(tab, icon, browser.contentPrincipal, browser.contentRequestContextID);
     });
 
     this.addEventListener("oop-browser-buildid-mismatch", (event) => {
@@ -4539,6 +4589,21 @@ class TabProgressListener {
           }
         } else if (isSuccessful) {
           this.mBrowser.urlbarChangeTracker.finishedLoad();
+        }
+
+        // Ignore initial about:blank to prevent flickering.
+        if (!this.mBrowser.mIconURL && !ignoreBlank) {
+          // Don't switch to the default icon on about:home, about:newtab,
+          // about:privatebrowsing, or about:welcome since these pages get
+          // their favicon set in browser code to improve perceived performance.
+          let isNewTab = originalLocation &&
+             (originalLocation.spec == "about:newtab" ||
+              originalLocation.spec == "about:privatebrowsing" ||
+              originalLocation.spec == "about:home" ||
+              originalLocation.spec == "about:welcome");
+          if (!isNewTab) {
+            gBrowser.useDefaultIcon(this.mTab);
+          }
         }
       }
 

@@ -3740,8 +3740,8 @@ const DOMEventHandler = {
         break;
 
       case "Link:SetIcon":
-        this.setIconFromLink(aMsg.target, aMsg.data.originalURL, aMsg.data.canUseForTab,
-                             aMsg.data.expiration, aMsg.data.iconURL);
+        this.setIcon(aMsg.target, aMsg.data.url, aMsg.data.loadingPrincipal,
+                     aMsg.data.requestContextID, aMsg.data.canUseForTab);
         break;
 
       case "Link:AddSearch":
@@ -3760,20 +3760,21 @@ const DOMEventHandler = {
     return true;
   },
 
-  setIconFromLink(aBrowser, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
+  setIcon(aBrowser, aURL, aLoadingPrincipal, aRequestContextID = 0, aCanUseForTab = true) {
+    if (gBrowser.isFailedIcon(aURL))
+      return false;
+
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (!tab)
       return false;
 
-    try {
-      PlacesUIUtils.loadFavicon(aBrowser, Services.scriptSecurityManager.getSystemPrincipal(),
-                                makeURI(aOriginalURL), aExpiration, makeURI(aIconURL));
-    } catch (ex) {
-      Cu.reportError(ex);
+    let loadingPrincipal = aLoadingPrincipal ||
+                           Services.scriptSecurityManager.getSystemPrincipal();
+    if (aURL) {
+      gBrowser.storeIcon(aBrowser, aURL, loadingPrincipal, aRequestContextID);
     }
-
     if (aCanUseForTab) {
-      gBrowser.setIcon(tab, aIconURL, aOriginalURL);
+      gBrowser.setIcon(tab, aURL, loadingPrincipal, aRequestContextID);
     }
     return true;
   },
