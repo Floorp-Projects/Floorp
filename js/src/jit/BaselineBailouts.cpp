@@ -118,7 +118,7 @@ struct BaselineStackBuilder
     MOZ_MUST_USE bool init() {
         MOZ_ASSERT(!buffer_);
         MOZ_ASSERT(bufferUsed_ == 0);
-        buffer_ = reinterpret_cast<uint8_t*>(js_calloc(bufferTotal_));
+        buffer_ = js_pod_calloc<uint8_t>(bufferTotal_);
         if (!buffer_)
             return false;
         bufferAvail_ = bufferTotal_ - HeaderSize();
@@ -148,7 +148,7 @@ struct BaselineStackBuilder
         if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value)
             return false;
         size_t newSize = bufferTotal_ * 2;
-        uint8_t* newBuffer = reinterpret_cast<uint8_t*>(js_calloc(newSize));
+        uint8_t* newBuffer = js_pod_calloc<uint8_t>(newSize);
         if (!newBuffer)
             return false;
         memcpy((newBuffer + newSize) - bufferUsed_, header_->copyStackBottom, bufferUsed_);

@@ -124,7 +124,7 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   ResetState();
 
   // Allocate and set up the simulator stack.
-  stack_ = (byte*)js_malloc(stack_size_);
+  stack_ = js_pod_malloc<byte>(stack_size_);
   if (!stack_) {
     oom_ = true;
     return;
@@ -392,7 +392,7 @@ class Redirection
     }
 
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
-    Redirection* redir = (Redirection*)js_malloc(sizeof(Redirection));
+    Redirection* redir = js_pod_malloc<Redirection>();
     if (!redir)
         oomUnsafe.crash("Simulator redirection");
     new(redir) Redirection(nativeFunction, type);

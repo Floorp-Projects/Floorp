@@ -136,7 +136,7 @@ class IdentifierToken : public ValueToken<char*> {
  public:
   explicit IdentifierToken(const char* name) {
     size_t size = strlen(name) + 1;
-    value_ = (char*)js_malloc(size);
+    value_ = js_pod_malloc<char>(size);
     strncpy(value_, name, size);
   }
   virtual ~IdentifierToken() { js_free(value_); }
@@ -244,7 +244,7 @@ class UnknownToken : public Token {
  public:
   explicit UnknownToken(const char* arg) {
     size_t size = strlen(arg) + 1;
-    unknown_ = (char*)js_malloc(size);
+    unknown_ = js_pod_malloc<char>(size);
     strncpy(unknown_, arg, size);
   }
   virtual ~UnknownToken() { js_free(unknown_); }
