@@ -511,21 +511,9 @@ function _execute_test() {
     this[func] = Assert[func].bind(Assert);
   }
 
-  let perTestCoverageEnabled = false;
-  try {
-    ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm");
-    perTestCoverageEnabled = true;
-  } catch (e) {
-    // If the module doesn't exist, code coverage is disabled.
-    // Otherwise, rethrow the exception.
-    if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
-      throw e;
-    }
-  }
+  const {PerTestCoverageUtils} = ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm", {});
 
-  if (perTestCoverageEnabled) {
-    PerTestCoverageUtils.beforeTest();
-  }
+  PerTestCoverageUtils.beforeTestSync();
 
   try {
     do_test_pending("MAIN run_test");
@@ -546,9 +534,7 @@ function _execute_test() {
       coverageCollector.recordTestCoverage(_TEST_FILE[0]);
     }
 
-    if (perTestCoverageEnabled) {
-      PerTestCoverageUtils.afterTest();
-    }
+    PerTestCoverageUtils.afterTestSync();
   } catch (e) {
     _passed = false;
     // do_check failures are already logged and set _quit to true and throw

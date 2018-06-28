@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TESTING_JS_MODULES += ['PerTestCoverageUtils.jsm']
+
 if CONFIG['MOZ_CODE_COVERAGE']:
     XPIDL_MODULE = 'code-coverage'
 
@@ -30,7 +32,5 @@ if CONFIG['MOZ_CODE_COVERAGE']:
 
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
     MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
-
-    TESTING_JS_MODULES += ['PerTestCoverageUtils.jsm']
 
     FINAL_LIBRARY = 'xul'
