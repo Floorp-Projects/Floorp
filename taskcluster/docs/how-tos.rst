@@ -57,7 +57,7 @@ If you are working on an action task and wish to test it out locally, use the
 
    .. code-block:: none
 
-        ./mach taskgraph test-action-task \
+        ./mach taskgraph test-action-callback \
             --task-id I4gu9KDmSZWu3KHx6ba6tw --task-group-id sMO4ybV9Qb2tmcI1sDHClQ \
             --input input.yml hello_world_action
 

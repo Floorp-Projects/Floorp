@@ -6,9 +6,6 @@
 
 "use strict";
 
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
-
 loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 
@@ -41,60 +38,47 @@ WebConsolePanel.prototype = {
    * @return object
    *         A promise that is resolved when the Web Console completes opening.
    */
-  open: function() {
-    const parentDoc = this._toolbox.doc;
-    const iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
+  open: async function() {
+    try {
+      const parentDoc = this._toolbox.doc;
+      const iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
 
-    // Make sure the iframe content window is ready.
-    const deferredIframe = defer();
-    let win, doc;
-    if ((win = iframe.contentWindow) &&
-        (doc = win.document) &&
-        doc.readyState == "complete") {
-      deferredIframe.resolve(null);
-    } else {
-      iframe.addEventListener("load", function() {
-        deferredIframe.resolve(null);
-      }, {capture: true, once: true});
-    }
-
-    // Local debugging needs to make the target remote.
-    let promiseTarget;
-    if (!this.target.isRemote) {
-      promiseTarget = this.target.makeRemote();
-    } else {
-      promiseTarget = promise.resolve(this.target);
-    }
-
-    // 1. Wait for the iframe to load.
-    // 2. Wait for the remote target.
-    // 3. Open the Web Console.
-    return deferredIframe.promise
-      .then(() => promiseTarget)
-      .then((target) => {
-        this._frameWindow._remoteTarget = target;
-
-        const webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;
-        const chromeWindow = iframe.ownerDocument.defaultView;
-        return HUDService.openWebConsole(this.target, webConsoleUIWindow,
-                                         chromeWindow);
-      })
-      .then((webConsole) => {
-        this.hud = webConsole;
-        // Pipe 'reloaded' event from WebConsoleFrame to WebConsolePanel.
-        // These events are listened by the Toolbox.
-        this.hud.ui.on("reloaded", () => {
-          this.emit("reloaded");
+      // Make sure the iframe content window is ready.
+      const win = iframe.contentWindow;
+      const doc = win && win.document;
+      if (!doc || doc.readyState !== "complete") {
+        await new Promise(resolve => {
+          iframe.addEventListener("load", resolve, {capture: true, once: true});
         });
-        this._isReady = true;
-        this.emit("ready");
-        return this;
-      }, (reason) => {
-        const msg = "WebConsolePanel open failed. " +
-                  reason.error + ": " + reason.message;
-        dump(msg + "\n");
-        console.error(msg, reason);
+      }
+
+      // Local debugging needs to make the target remote.
+      if (!this.target.isRemote) {
+        await this.target.makeRemote();
+      }
+
+      const webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;
+      const chromeWindow = iframe.ownerDocument.defaultView;
+
+      // Open the Web Console.
+      this.hud = await HUDService.openWebConsole(
+        this.target, webConsoleUIWindow, chromeWindow);
+
+      // Pipe 'reloaded' event from WebConsoleFrame to WebConsolePanel.
+      // These events are listened by the Toolbox.
+      this.hud.ui.on("reloaded", () => {
+        this.emit("reloaded");
       });
+
+      this._isReady = true;
+      this.emit("ready");
+    } catch (e) {
+      const msg = "WebConsolePanel open failed. " + e.error + ": " + e.message;
+      dump(msg + "\n");
+      console.error(msg, e);
+    }
+
+    return this;
   },
 
   get target() {

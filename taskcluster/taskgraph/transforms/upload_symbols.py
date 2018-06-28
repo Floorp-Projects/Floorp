@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 Transform the upload-symbols task description template,
-  taskcluster/ci/upload-symbols/job-template.yml
-into an actual task description.
+taskcluster/ci/upload-symbols/job-template.yml into an actual task description.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals

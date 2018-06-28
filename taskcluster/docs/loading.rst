@@ -16,7 +16,7 @@ The ``path`` is the path to the configuration directory for the kind. This
 can be used to load extra data, templates, etc.
 
 The ``parameters`` give details on which to base the task generation. See
-:ref:`parameters` for details.
+:doc:`parameters` for details.
 
 At the time this method is called, all kinds on which this kind depends
 (that is, specified in the ``kind-dependencies`` key in ``config``)
