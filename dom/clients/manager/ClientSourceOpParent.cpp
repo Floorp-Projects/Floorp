@@ -6,8 +6,6 @@
 
 #include "ClientSourceOpParent.h"
 
-#include "ClientSourceParent.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -27,22 +25,10 @@ ClientSourceOpParent::Recv__delete__(const ClientOpResult& aResult)
 {
   if (aResult.type() == ClientOpResult::Tnsresult &&
       NS_FAILED(aResult.get_nsresult())) {
-
-    // If a control message fails then clear the controller from
-    // the ClientSourceParent.  We eagerly marked it controlled at
-    // the start of the operation.
-    if (mArgs.type() == ClientOpConstructorArgs::TClientControlledArgs) {
-      auto source = static_cast<ClientSourceParent*>(Manager());
-      if (source) {
-        source->ClearController();
-      }
-    }
-
     mPromise->Reject(aResult.get_nsresult(), __func__);
     mPromise = nullptr;
     return IPC_OK();
   }
-
   mPromise->Resolve(aResult, __func__);
   mPromise = nullptr;
   return IPC_OK();
@@ -50,8 +36,7 @@ ClientSourceOpParent::Recv__delete__(const ClientOpResult& aResult)
 
 ClientSourceOpParent::ClientSourceOpParent(const ClientOpConstructorArgs& aArgs,
                                            ClientOpPromise::Private* aPromise)
-  : mArgs(aArgs)
-  , mPromise(aPromise)
+  : mPromise(aPromise)
 {
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
 }

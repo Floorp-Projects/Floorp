@@ -275,12 +275,6 @@ ClientSourceParent::GetController() const
 }
 
 void
-ClientSourceParent::ClearController()
-{
-  mController.reset();
-}
-
-void
 ClientSourceParent::AttachHandle(ClientHandleParent* aClientHandle)
 {
   MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
@@ -304,11 +298,7 @@ ClientSourceParent::StartOp(const ClientOpConstructorArgs& aArgs)
     new ClientOpPromise::Private(__func__);
 
   // If we are being controlled, remember that data before propagating
-  // on to the ClientSource.  This must be set prior to triggering
-  // the controllerchange event from the ClientSource since some tests
-  // expect matchAll() to find the controlled client immediately after.
-  // If the control operation fails, then we reset the controller value
-  // to reflect the final state.
+  // on to the ClientSource.
   if (aArgs.type() == ClientOpConstructorArgs::TClientControlledArgs) {
     mController.reset();
     mController.emplace(aArgs.get_ClientControlledArgs().serviceWorker());

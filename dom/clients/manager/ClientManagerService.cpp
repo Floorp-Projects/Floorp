@@ -475,8 +475,6 @@ ClaimOnMainThread(const ClientInfo& aClientInfo,
         }, [promise] (nsresult aRv) {
           promise->Reject(aRv, __func__);
         });
-
-      scopeExit.release();
     });
 
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
