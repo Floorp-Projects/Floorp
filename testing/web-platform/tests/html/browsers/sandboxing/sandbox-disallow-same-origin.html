@@ -3,8 +3,7 @@
   <head>
     <title>Access to sandbox iframe</title>
     <link rel="author" title="Kinuko Yasuda" href="mailto:kinuko@chromium.org">
-    <link rel="help" href="https://html.spec.whatwg.org/multipage/#sandboxed-origin-browsing-context-flag">
-    <link rel="help" href="https://html.spec.whatwg.org/multipage/#integration-with-idl">
+    <link rel="help" href="http://www.w3.org/html/wg/drafts/html/master/browsers.html#sandboxing">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
   </head>
@@ -18,13 +17,9 @@
         called++;
       }
       function loaded() {
-        t.step(() => {
-          assert_throws("SecurityError", () => {
-            document.getElementById('sandboxedframe').contentWindow.document;
-          });
-          assert_equals(called, 0);
-          t.done();
-        });
+        assert_equals(document.getElementById('sandboxedframe').contentWindow.document, undefined);
+        assert_equals(called, 0);
+        t.done();
       }
     </script>
 
