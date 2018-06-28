@@ -3920,6 +3920,8 @@ nsContentUtils::GetEventArgNames(int32_t aNameSpaceID,
   }
 }
 
+// Note: The list of content bundles in nsStringBundle.cpp should be updated
+// whenever entries are added or removed from this list.
 static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   // Must line up with the enum values in |PropertiesFile| enum.
   "chrome://global/locale/css.properties",

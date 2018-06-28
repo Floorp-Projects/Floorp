@@ -18,6 +18,12 @@ UNIFIED_SOURCES += [
     'nsStringBundleTextOverride.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/xpcom/ds',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

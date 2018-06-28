@@ -15,37 +15,63 @@
 class nsIPersistentProperties;
 class nsIStringBundleOverride;
 
-class nsStringBundle : public nsIStringBundle
+class nsStringBundleBase : public nsIStringBundle
 {
 public:
-    // init version
-    nsStringBundle(const char* aURLSpec, nsIStringBundleOverride*);
-    nsresult LoadProperties();
+    nsStringBundleBase(const char* aURLSpec, nsIStringBundleOverride*);
+
+    nsresult ParseProperties(nsIPersistentProperties**);
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLE
 
-    nsCOMPtr<nsIPersistentProperties> mProps;
+    virtual nsresult LoadProperties() = 0;
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-    size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
+    const nsCString& BundleURL() const { return mPropertiesURL; }
 
 protected:
-    virtual ~nsStringBundle();
+    virtual ~nsStringBundleBase();
 
-    nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
-                                    nsISimpleEnumerator** aResult);
-private:
+    virtual nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) = 0;
+
+    virtual nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) = 0;
+
     nsCString              mPropertiesURL;
     nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
     mozilla::ReentrantMonitor    mReentrantMonitor;
     bool                         mAttemptedLoad;
     bool                         mLoaded;
 
+    nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
+                                    nsISimpleEnumerator** aResult);
+
+    size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
 public:
     static nsresult FormatString(const char16_t *formatStr,
                                  const char16_t **aParams, uint32_t aLength,
                                  nsAString& aResult);
+};
+
+class nsStringBundle : public nsStringBundleBase
+{
+public:
+    nsStringBundle(const char* aURLSpec, nsIStringBundleOverride*);
+
+    NS_DECL_ISUPPORTS_INHERITED
+
+    nsCOMPtr<nsIPersistentProperties> mProps;
+
+    nsresult LoadProperties() override;
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+protected:
+    virtual ~nsStringBundle();
+
+    nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
+
+    nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) override;
 };
 
 class nsExtensibleStringBundle;
