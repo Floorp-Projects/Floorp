@@ -26,6 +26,8 @@ const TEST_CACHE_PAGE = TEST_DIRECTORY + "file_favicon_cache.html";
 const FAVICON_URI = TEST_DIRECTORY + "file_favicon.png";
 const TEST_FAVICON_CACHE_URI = TEST_DIRECTORY + "file_favicon_cache.png";
 
+const ICON_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABH0lEQVRYw2P8////f4YBBEwMAwxGHcBCUMX/91DGOSj/BpT/DkpzQChGBSjfBErLQsVZhmoI/L8LpRdD6X1QietQGhYy7FB5aAgwmkLpBKi4BZTPMThDgBGjHIDF+f9mKD0fKvGBRKNdoF7sgPL1saaJwZgGDkJ9vpZMn8PAHqg5G9FyifBgD4H/W9HyOWrU/f+DIzHhkoeZxxgzZEIAVtJ9RxX+Q6DAxCmP3byhXxkxshAs5odqbcioAY3UC1CBLyTGOTqAmsfAOWRCwBvqxV0oIUB2OQAzDy3/D+a6wB7q8mCU2vD/nw94GziYIQOtDRn9oXz+IZMGBKGMbCjNh9Ii+v8HR4uIAUeLiEEbb9twELaIRlqrmHG0bzjiHQAA1LVfww8jwM4AAAAASUVORK5CYII=";
+
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
 
@@ -56,10 +58,7 @@ function clearAllPlacesFavicons() {
   });
 }
 
-function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI, aOnlyXUL) {
-  let faviconReqXUL = false;
-  // If aOnlyXUL is true, we only care about the favicon request from XUL.
-  let faviconReqPlaces = aOnlyXUL === true;
+function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI) {
   let expectedPrincipal = Services.scriptSecurityManager
                                   .createCodebasePrincipal(aPageURI, { firstPartyDomain: aFirstPartyDomain });
 
@@ -89,15 +88,10 @@ function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI, aOnlyXUL) 
           is(reqLoadInfo.originAttributes.firstPartyDomain, aFirstPartyDomain,
             "The loadInfo has correct first party domain");
 
-          if (loadingPrincipal.equals(systemPrincipal)) {
-            faviconReqXUL = true;
-            ok(triggeringPrincipal.equals(expectedPrincipal),
-              "The triggeringPrincipal of favicon loading from XUL should be the content principal.");
-          } else {
-            faviconReqPlaces = true;
-            ok(loadingPrincipal.equals(expectedPrincipal),
-              "The loadingPrincipal of favicon loading from Places should be the content prinicpal");
-          }
+          ok(loadingPrincipal.equals(expectedPrincipal),
+            "The loadingPrincipal of favicon loads should be the content prinicpal");
+          ok(triggeringPrincipal.equals(expectedPrincipal),
+            "The triggeringPrincipal of favicon loads should be the content prinicpal");
 
           let faviconCookie = httpChannel.getRequestHeader("cookie");
 
@@ -106,10 +100,8 @@ function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI, aOnlyXUL) 
           ok(false, "Received unexpected topic: ", aTopic);
         }
 
-        if (faviconReqXUL && faviconReqPlaces) {
-          Services.obs.removeObserver(observer, "http-on-modify-request");
-          resolve();
-        }
+        Services.obs.removeObserver(observer, "http-on-modify-request");
+        resolve();
       }
     };
 
@@ -215,6 +207,12 @@ async function generateCookies(aThirdParty) {
   return cookies;
 }
 
+function assertIconIsData(item) {
+  let icon = item.getAttribute("image");
+  is(icon.substring(0, 5), "data:", "Expected the image element to be a data URI");
+  is(icon, ICON_DATA, "Expected to see the correct data.");
+}
+
 async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
   let firstPageURI = makeURI(TEST_SITE_ONE + aTestPage);
   let secondPageURI = makeURI(TEST_SITE_TWO + aTestPage);
@@ -234,6 +232,8 @@ async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
   // Waiting until favicon loaded.
   await promiseFaviconLoaded;
 
+  assertIconIsData(tabInfo.tab);
+
   BrowserTestUtils.removeTab(tabInfo.tab);
   // FIXME: We need to wait for the next event tick here to avoid observing
   //        the previous tab info in the next step (bug 1446725).
@@ -252,8 +252,6 @@ async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
 }
 
 async function doTestForAllTabsFavicon(aTestPage, aExpectedCookies, aIsThirdParty) {
-  let firstPageURI = makeURI(TEST_SITE_ONE + aTestPage);
-  let secondPageURI = makeURI(TEST_SITE_TWO + aTestPage);
   let faviconURI = aIsThirdParty ? THIRD_PARTY_SITE + FAVICON_URI :
                                    TEST_SITE_ONE + FAVICON_URI;
 
@@ -270,20 +268,15 @@ async function doTestForAllTabsFavicon(aTestPage, aExpectedCookies, aIsThirdPart
   // Waiting until the favicon loaded.
   await promiseFaviconLoaded;
 
-  // We need to clear the image cache here for making sure the network request will
-  // be made for the favicon of allTabs menuitem.
-  clearAllImageCaches();
-
-  // Start to observe the allTabs favicon requests earlier in case we miss it.
-  let promiseObserveFavicon = observeFavicon(FIRST_PARTY_ONE, aExpectedCookies[0],
-                                             firstPageURI, true);
+  assertIconIsData(tabInfo.tab);
 
   // Make the popup of allTabs showing up and trigger the loading of the favicon.
   let allTabsView = document.getElementById("allTabsMenu-allTabsView");
   let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsView, "ViewShown");
   gTabsPanel.showAllTabsPanel();
-  await promiseObserveFavicon;
   await allTabsPopupShownPromise;
+
+  assertIconIsData(gTabsPanel.allTabsViewTabs.lastChild.firstChild);
 
   // Close the popup of allTabs and wait until it's done.
   let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsView.panelMultiView, "PanelMultiViewHidden");
@@ -305,18 +298,14 @@ async function doTestForAllTabsFavicon(aTestPage, aExpectedCookies, aIsThirdPart
   // Wait until the favicon is fully loaded.
   await promiseFaviconLoaded;
 
-  // Clear the image cache for the favicon of the second site.
-  clearAllImageCaches();
-
-  // Start to observe the allTabs favicon requests earlier in case we miss it.
-  promiseObserveFavicon = observeFavicon(FIRST_PARTY_TWO, aExpectedCookies[1],
-                                         secondPageURI, true);
+  assertIconIsData(tabInfo.tab);
 
   // Make the popup of allTabs showing up again.
   allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsView, "ViewShown");
   gTabsPanel.showAllTabsPanel();
-  await promiseObserveFavicon;
   await allTabsPopupShownPromise;
+
+  assertIconIsData(gTabsPanel.allTabsViewTabs.lastChild.firstChild);
 
   // Close the popup of allTabs and wait until it's done.
   allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsView.panelMultiView, "PanelMultiViewHidden");
@@ -413,17 +402,12 @@ add_task(async function test_favicon_cache_firstParty() {
   // Waiting until the favicon has been loaded and cached.
   await promiseForFaviconLoaded;
 
-  // Open the tab again for checking the image cache is working correctly.
-  let tabInfoB = await openTab(TEST_SITE_ONE + TEST_CACHE_PAGE);
-
-  // Start to observe the favicon response, the second tab actually will not
-  // make any network request since the favicon will be loaded by the cache for
-  // both Places and XUL image. So here, we are going to observe the favicon
-  // response for the third tab which opens with the second first party.
+  // Here, we are going to observe the favicon response for the third tab which
+  // opens with the second first party.
   let promiseForFaviconResponse = waitOnFaviconResponse(THIRD_PARTY_SITE + TEST_FAVICON_CACHE_URI);
 
   // Open the tab for the second site.
-  let tabInfoC = await openTab(TEST_SITE_TWO + TEST_CACHE_PAGE);
+  let tabInfoB = await openTab(TEST_SITE_TWO + TEST_CACHE_PAGE);
 
   // Wait for the favicon response. In this case, we suppose to catch the
   // response for the third tab but not the second tab since it will not
@@ -437,5 +421,4 @@ add_task(async function test_favicon_cache_firstParty() {
 
   BrowserTestUtils.removeTab(tabInfoA.tab);
   BrowserTestUtils.removeTab(tabInfoB.tab);
-  BrowserTestUtils.removeTab(tabInfoC.tab);
 });
