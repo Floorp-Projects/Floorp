@@ -1105,6 +1105,12 @@ class TokenStreamCharsShared
         return mozilla::IsAscii(unit);
     }
 
+    JSAtom* drainCharBufferIntoAtom(JSContext* cx) {
+        JSAtom* atom = AtomizeChars(cx, charBuffer.begin(), charBuffer.length());
+        charBuffer.clear();
+        return atom;
+    }
+
   public:
     CharBuffer& getCharBuffer() { return charBuffer; }
 };
@@ -1538,6 +1544,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsBase::consumeKnownCodeUnit;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
+    using TokenStreamCharsShared::drainCharBufferIntoAtom;
     using CharsBase::fillCharBufferWithTemplateStringContents;
     using SpecializedCharsBase::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
@@ -1662,7 +1669,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         if (!fillCharBufferWithTemplateStringContents(cur, end))
             return nullptr;
 
-        return atomizeChars(anyChars.cx, charBuffer.begin(), charBuffer.length());
+        return drainCharBufferIntoAtom(anyChars.cx);
     }
 
   private:
