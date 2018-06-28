@@ -28,6 +28,7 @@
 # define getpid _getpid
 #endif
 
+#include "js/Utility.h"
 #include "util/Text.h"
 #include "vm/Probes.h"
 
@@ -189,27 +190,21 @@ JS_DumpProfile(const char* outfile, const char* profileName)
 
 #ifdef MOZ_PROFILING
 
-struct RequiredStringArg {
-    JSContext* mCx;
-    char* mBytes;
-    RequiredStringArg(JSContext* cx, const CallArgs& args, size_t argi, const char* caller)
-        : mCx(cx), mBytes(nullptr)
-    {
-        if (args.length() <= argi) {
-            JS_ReportErrorASCII(cx, "%s: not enough arguments", caller);
-        } else if (!args[argi].isString()) {
-            JS_ReportErrorASCII(cx, "%s: invalid arguments (string expected)", caller);
-        } else {
-            mBytes = JS_EncodeString(cx, args[argi].toString());
-        }
+static UniqueChars
+RequiredStringArg(JSContext* cx, const CallArgs& args, size_t argi, const char* caller)
+{
+    if (args.length() <= argi) {
+        JS_ReportErrorASCII(cx, "%s: not enough arguments", caller);
+        return nullptr;
     }
-    operator void*() {
-        return (void*) mBytes;
+
+    if (!args[argi].isString()) {
+        JS_ReportErrorASCII(cx, "%s: invalid arguments (string expected)", caller);
+        return nullptr;
     }
-    ~RequiredStringArg() {
-        js_free(mBytes);
-    }
-};
+
+    return UniqueChars(JS_EncodeString(cx, args[argi].toString()));
+}
 
 static bool
 StartProfiling(JSContext* cx, unsigned argc, Value* vp)
@@ -220,12 +215,12 @@ StartProfiling(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    RequiredStringArg profileName(cx, args, 0, "startProfiling");
+    UniqueChars profileName = RequiredStringArg(cx, args, 0, "startProfiling");
     if (!profileName)
         return false;
 
     if (args.length() == 1) {
-        args.rval().setBoolean(JS_StartProfiling(profileName.mBytes, getpid()));
+        args.rval().setBoolean(JS_StartProfiling(profileName.get(), getpid()));
         return true;
     }
 
@@ -234,7 +229,7 @@ StartProfiling(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
     pid_t pid = static_cast<pid_t>(args[1].toInt32());
-    args.rval().setBoolean(JS_StartProfiling(profileName.mBytes, pid));
+    args.rval().setBoolean(JS_StartProfiling(profileName.get(), pid));
     return true;
 }
 
@@ -247,10 +242,10 @@ StopProfiling(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    RequiredStringArg profileName(cx, args, 0, "stopProfiling");
+    UniqueChars profileName = RequiredStringArg(cx, args, 0, "stopProfiling");
     if (!profileName)
         return false;
-    args.rval().setBoolean(JS_StopProfiling(profileName.mBytes));
+    args.rval().setBoolean(JS_StopProfiling(profileName.get()));
     return true;
 }
 
@@ -263,10 +258,10 @@ PauseProfilers(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    RequiredStringArg profileName(cx, args, 0, "pauseProfiling");
+    UniqueChars profileName = RequiredStringArg(cx, args, 0, "pauseProfiling");
     if (!profileName)
         return false;
-    args.rval().setBoolean(JS_PauseProfilers(profileName.mBytes));
+    args.rval().setBoolean(JS_PauseProfilers(profileName.get()));
     return true;
 }
 
@@ -279,10 +274,10 @@ ResumeProfilers(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    RequiredStringArg profileName(cx, args, 0, "resumeProfiling");
+    UniqueChars profileName = RequiredStringArg(cx, args, 0, "resumeProfiling");
     if (!profileName)
         return false;
-    args.rval().setBoolean(JS_ResumeProfilers(profileName.mBytes));
+    args.rval().setBoolean(JS_ResumeProfilers(profileName.get()));
     return true;
 }
 
@@ -295,18 +290,18 @@ DumpProfile(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() == 0) {
         ret = JS_DumpProfile(nullptr, nullptr);
     } else {
-        RequiredStringArg filename(cx, args, 0, "dumpProfile");
+        UniqueChars filename = RequiredStringArg(cx, args, 0, "dumpProfile");
         if (!filename)
             return false;
 
         if (args.length() == 1) {
-            ret = JS_DumpProfile(filename.mBytes, nullptr);
+            ret = JS_DumpProfile(filename.get(), nullptr);
         } else {
-            RequiredStringArg profileName(cx, args, 1, "dumpProfile");
+            UniqueChars profileName = RequiredStringArg(cx, args, 1, "dumpProfile");
             if (!profileName)
                 return false;
 
-            ret = JS_DumpProfile(filename.mBytes, profileName.mBytes);
+            ret = JS_DumpProfile(filename.get(), profileName.get());
         }
     }
 
@@ -368,11 +363,11 @@ DumpCallgrind(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    RequiredStringArg outFile(cx, args, 0, "dumpCallgrind");
+    UniqueChars outFile = RequiredStringArg(cx, args, 0, "dumpCallgrind");
     if (!outFile)
         return false;
 
-    args.rval().setBoolean(js_DumpCallgrind(outFile.mBytes));
+    args.rval().setBoolean(js_DumpCallgrind(outFile.get()));
     return true;
 }
 #endif

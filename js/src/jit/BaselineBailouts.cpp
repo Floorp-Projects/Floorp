@@ -18,6 +18,7 @@
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
+#include "js/Utility.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 #include "vm/TraceLogging.h"
@@ -1236,20 +1237,19 @@ InitFromBailout(JSContext* cx, size_t frameNo,
             if (filename == nullptr)
                 filename = "<unknown>";
             unsigned len = strlen(filename) + 200;
-            char* buf = js_pod_malloc<char>(len);
+            UniqueChars buf(js_pod_malloc<char>(len));
             if (buf == nullptr) {
                 ReportOutOfMemory(cx);
                 return false;
             }
-            snprintf(buf, len, "%s %s %s on line %u of %s:%u",
+            snprintf(buf.get(), len, "%s %s %s on line %u of %s:%u",
                      BailoutKindString(bailoutKind),
                      resumeAfter ? "after" : "at",
                      CodeName[op],
                      PCToLineNumber(script, pc),
                      filename,
                      script->lineno());
-            cx->runtime()->geckoProfiler().markEvent(buf);
-            js_free(buf);
+            cx->runtime()->geckoProfiler().markEvent(buf.get());
         }
 
         return true;

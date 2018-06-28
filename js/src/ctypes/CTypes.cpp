@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WrappingOperations.h"
 
@@ -7699,7 +7700,7 @@ CData::Create(JSContext* cx,
 
   // attach the buffer. since it might not be 2-byte aligned, we need to
   // allocate an aligned space for it and store it there. :(
-  char** buffer = cx->new_<char*>();
+  UniquePtr<char*, JS::FreePolicy> buffer(cx->new_<char*>());
   if (!buffer)
     return nullptr;
 
@@ -7713,7 +7714,6 @@ CData::Create(JSContext* cx,
     if (!data) {
       // Report a catchable allocation error.
       JS_ReportAllocationOverflow(cx);
-      js_free(buffer);
       return nullptr;
     }
 
@@ -7723,8 +7723,8 @@ CData::Create(JSContext* cx,
       memcpy(data, source, size);
   }
 
-  *buffer = data;
-  JS_SetReservedSlot(dataObj, SLOT_DATA, PrivateValue(buffer));
+  *buffer.get() = data;
+  JS_SetReservedSlot(dataObj, SLOT_DATA, PrivateValue(buffer.release()));
 
   // If this is an array, wrap it in a proxy so we can intercept element
   // gets/sets.
@@ -8014,16 +8014,15 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
     size_t length = strnlen(bytes, maxLength);
 
     // Determine the length.
-    char16_t* dst = inflateUTF8(cx, JS::UTF8Chars(bytes, length), &length).get();
+    UniqueTwoByteChars dst(inflateUTF8(cx, JS::UTF8Chars(bytes, length), &length).get());
     if (!dst)
       return false;
 
-    result = JS_NewUCString(cx, dst, length);
-    if (!result) {
-      js_free(dst);
+    result = JS_NewUCString(cx, dst.get(), length);
+    if (!result)
       return false;
-    }
 
+    mozilla::Unused << dst.release();
     break;
   }
   case TYPE_int16_t:

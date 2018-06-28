@@ -4347,18 +4347,16 @@ GetLcovInfo(JSContext* cx, unsigned argc, Value* vp)
     }
 
     size_t length = 0;
-    char* content = nullptr;
+    UniqueChars content;
     {
         AutoRealm ar(cx, global);
-        content = js::GetCodeCoverageSummary(cx, &length);
+        content.reset(js::GetCodeCoverageSummary(cx, &length));
     }
 
     if (!content)
         return false;
 
-    JSString* str = JS_NewStringCopyN(cx, content, length);
-    js_free(content);
-
+    JSString* str = JS_NewStringCopyN(cx, content.get(), length);
     if (!str)
         return false;
 

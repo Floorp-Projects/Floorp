@@ -36,6 +36,7 @@
 # include "js/Proxy.h" // For AutoEnterPolicy
 #endif
 #include "js/UniquePtr.h"
+#include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/Thread.h"
 #include "vm/Caches.h"
@@ -528,7 +529,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::MainThreadData<const JSLocaleCallbacks*> localeCallbacks;
 
     /* Default locale for Internationalization API */
-    js::MainThreadData<char*> defaultLocale;
+    js::MainThreadData<js::UniqueChars> defaultLocale;
 
     /* If true, new scripts must be created with PC counter information. */
     js::MainThreadOrIonCompileData<bool> profilingScripts;

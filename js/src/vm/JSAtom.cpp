@@ -745,6 +745,7 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
          */
         char16_t* chars;
         char16_t stackChars[256];
+        UniqueTwoByteChars heapChars;
         if (length <= ArrayLength(stackChars)) {
             chars = stackChars;
         } else {
@@ -753,15 +754,15 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
              * most allocations here will be bigger than tempLifoAlloc's default
              * chunk size.
              */
-            chars = cx->pod_malloc<char16_t>(length);
-            if (!chars)
+            heapChars.reset(cx->pod_malloc<char16_t>(length));
+            if (!heapChars)
                 return xdr->fail(JS::TranscodeResult_Throw);
+
+            chars = heapChars.get();
         }
 
         MOZ_TRY(xdr->codeChars(chars, length));
         atom = AtomizeChars(cx, chars, length);
-        if (chars != stackChars)
-            js_free(chars);
 #endif /* !MOZ_LITTLE_ENDIAN */
     }
 
