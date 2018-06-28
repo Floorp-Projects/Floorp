@@ -246,7 +246,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "layout.css.offset-logical-properties.enabled",
    layout_css_offset_logical_properties_enabled,
-  bool, true
+  bool, false
 )
 
 // Should stray control characters be rendered visibly?
