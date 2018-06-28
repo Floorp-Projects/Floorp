@@ -58,14 +58,21 @@ const EXTRA_BORDER = {
  *        Preferred height for the tooltip.
  * @param {String} pos
  *        Preferred position for the tooltip. Possible values: "top" or "bottom".
+ * @param {Number} offset
+ *        Offset between the top of the anchor and the tooltip.
  * @return {Object}
  *         - {Number} top: the top offset for the tooltip.
  *         - {Number} height: the height to use for the tooltip container.
  *         - {String} computedPosition: Can differ from the preferred position depending
  *           on the available height). "top" or "bottom"
  */
-const calculateVerticalPosition =
-function(anchorRect, viewportRect, height, pos, offset) {
+const calculateVerticalPosition = (
+  anchorRect,
+  viewportRect,
+  height,
+  pos,
+  offset
+) => {
   const {TOP, BOTTOM} = POSITION;
 
   let {top: anchorTop, height: anchorHeight} = anchorRect;
@@ -337,13 +344,17 @@ HTMLTooltip.prototype = {
    *
    * @param {Element} anchor
    *        The reference element with which the tooltip should be aligned
-   * @param {Object}
-   *        - {String} position: optional, possible values: top|bottom
-   *          If layout permits, the tooltip will be displayed on top/bottom
-   *          of the anchor. If ommitted, the tooltip will be displayed where
-   *          more space is available.
-   *        - {Number} x: optional, horizontal offset between the anchor and the tooltip
-   *        - {Number} y: optional, vertical offset between the anchor and the tooltip
+   * @param {Object} options
+   *        Settings for positioning the tooltip.
+   * @param {String} options.position
+   *        Optional, possible values: top|bottom
+   *        If layout permits, the tooltip will be displayed on top/bottom
+   *        of the anchor. If omitted, the tooltip will be displayed where
+   *        more space is available.
+   * @param {Number} options.x
+   *        Optional, horizontal offset between the anchor and the tooltip.
+   * @param {Number} options.y
+   *        Optional, vertical offset between the anchor and the tooltip.
    */
   async show(anchor, {position, x = 0, y = 0} = {}) {
     // Get anchor geometry
@@ -408,7 +419,7 @@ HTMLTooltip.prototype = {
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
       this._maybeFocusTooltip();
-      // Updated the top window reference each time in case the host changes.
+      // Update the top window reference each time in case the host changes.
       this.topWindow = this._getTopWindow();
       this.topWindow.addEventListener("click", this._onClick, true);
       this.emit("shown");
