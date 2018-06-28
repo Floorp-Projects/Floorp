@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include rect,render_task,resource_cache,snap,transform
+#include rect,clip_scroll,render_task,resource_cache,snap,transform
 
 #define EXTEND_MODE_CLAMP  0
 #define EXTEND_MODE_REPEAT 1
@@ -32,6 +32,11 @@ varying vec3 vClipMaskUv;
 
 #ifdef WR_VERTEX_SHADER
 
+#define VECS_PER_LOCAL_CLIP_RECT    1
+#define VECS_PER_PRIM_HEADER        2
+#define VECS_PER_TEXT_RUN           3
+#define VECS_PER_GRADIENT_STOP      2
+
 #define COLOR_MODE_FROM_PASS          0
 #define COLOR_MODE_ALPHA              1
 #define COLOR_MODE_SUBPX_CONST_COLOR  2
@@ -42,46 +47,16 @@ varying vec3 vClipMaskUv;
 #define COLOR_MODE_BITMAP             7
 #define COLOR_MODE_COLOR_BITMAP       8
 
-uniform HIGHP_SAMPLER_FLOAT sampler2D sPrimitiveHeadersF;
-uniform HIGHP_SAMPLER_FLOAT isampler2D sPrimitiveHeadersI;
+uniform HIGHP_SAMPLER_FLOAT sampler2D sLocalClipRects;
 
 // Instanced attributes
-in ivec4 aData;
+in ivec4 aData0;
+in ivec4 aData1;
 
-#define VECS_PER_PRIM_HEADER_F 2
-#define VECS_PER_PRIM_HEADER_I 2
-
-struct PrimitiveHeader {
-    RectWithSize local_rect;
-    RectWithSize local_clip_rect;
-    float z;
-    int specific_prim_address;
-    int render_task_index;
-    int clip_task_index;
-    int transform_id;
-    ivec3 user_data;
-};
-
-PrimitiveHeader fetch_prim_header(int index) {
-    PrimitiveHeader ph;
-
-    ivec2 uv_f = get_fetch_uv(index, VECS_PER_PRIM_HEADER_F);
-    vec4 local_rect = TEXEL_FETCH(sPrimitiveHeadersF, uv_f, 0, ivec2(0, 0));
-    vec4 local_clip_rect = TEXEL_FETCH(sPrimitiveHeadersF, uv_f, 0, ivec2(1, 0));
-    ph.local_rect = RectWithSize(local_rect.xy, local_rect.zw);
-    ph.local_clip_rect = RectWithSize(local_clip_rect.xy, local_clip_rect.zw);
-
-    ivec2 uv_i = get_fetch_uv(index, VECS_PER_PRIM_HEADER_I);
-    ivec4 data0 = TEXEL_FETCH(sPrimitiveHeadersI, uv_i, 0, ivec2(0, 0));
-    ivec4 data1 = TEXEL_FETCH(sPrimitiveHeadersI, uv_i, 0, ivec2(1, 0));
-    ph.z = float(data0.x);
-    ph.render_task_index = data0.y;
-    ph.specific_prim_address = data0.z;
-    ph.clip_task_index = data0.w;
-    ph.transform_id = data1.x;
-    ph.user_data = data1.yzw;
-
-    return ph;
+RectWithSize fetch_clip_chain_rect(int index) {
+    ivec2 uv = get_fetch_uv(index, VECS_PER_LOCAL_CLIP_RECT);
+    vec4 rect = TEXEL_FETCH(sLocalClipRects, uv, 0, ivec2(0, 0));
+    return RectWithSize(rect.xy, rect.zw);
 }
 
 struct VertexInfo {
@@ -94,7 +69,7 @@ struct VertexInfo {
 VertexInfo write_vertex(RectWithSize instance_rect,
                         RectWithSize local_clip_rect,
                         float z,
-                        Transform transform,
+                        ClipScrollNode scroll_node,
                         PictureTask task,
                         RectWithSize snap_rect) {
 
@@ -107,13 +82,13 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     /// Compute the snapping offset.
     vec2 snap_offset = compute_snap_offset(
         clamped_local_pos,
-        transform.m,
+        scroll_node.transform,
         snap_rect,
         vec2(0.5)
     );
 
     // Transform the current vertex to world space.
-    vec4 world_pos = transform.m * vec4(clamped_local_pos, 0.0, 1.0);
+    vec4 world_pos = scroll_node.transform * vec4(clamped_local_pos, 0.0, 1.0);
 
     // Convert the world positions to device pixel space.
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
@@ -160,7 +135,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
                                   RectWithSize local_clip_rect,
                                   vec4 clip_edge_mask,
                                   float z,
-                                  Transform transform,
+                                  ClipScrollNode scroll_node,
                                   PictureTask task,
                                   bool do_perspective_interpolation) {
     // Calculate a clip rect from local_rect + local clip
@@ -193,7 +168,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     vec2 local_pos = local_segment_rect.p0 + local_segment_rect.size * aPosition.xy;
 
     // Transform the current vertex to the world cpace.
-    vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
+    vec4 world_pos = scroll_node.transform * vec4(local_pos, 0.0, 1.0);
 
     // Convert the world positions to device pixel space.
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;

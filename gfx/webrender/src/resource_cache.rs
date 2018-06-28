@@ -641,20 +641,13 @@ impl ResourceCache {
             return
         };
 
-        if !self.pending_image_requests.insert(request) {
-            return
-        }
-
-        // If we are tiling, then we need to confirm the dirty rect intersects
-        // the tile before leaving the request in the pending queue.
-        //
         // We can start a worker thread rasterizing right now, if:
         //  - The image is a blob.
         //  - The blob hasn't already been requested this frame.
-        if template.data.is_blob() || dirty_rect.is_some() {
-            let (offset, size) = match request.tile {
-                Some(tile_offset) => {
-                    let tile_size = template.tiling.unwrap();
+        if self.pending_image_requests.insert(request) && template.data.is_blob() {
+            let (offset, size) = match template.tiling {
+                Some(tile_size) => {
+                    let tile_offset = request.tile.unwrap();
                     let actual_size = compute_tile_size(
                         &template.descriptor,
                         tile_size,
@@ -678,19 +671,17 @@ impl ResourceCache {
                 None => (DevicePoint::zero(), template.descriptor.size),
             };
 
-            if template.data.is_blob() {
-                if let Some(ref mut renderer) = self.blob_image_renderer {
-                    renderer.request(
-                        &self.resources,
-                        request.into(),
-                        &BlobImageDescriptor {
-                            size,
-                            offset,
-                            format: template.descriptor.format,
-                        },
-                        dirty_rect,
-                    );
-                }
+            if let Some(ref mut renderer) = self.blob_image_renderer {
+                renderer.request(
+                    &self.resources,
+                    request.into(),
+                    &BlobImageDescriptor {
+                        size,
+                        offset,
+                        format: template.descriptor.format,
+                    },
+                    dirty_rect,
+                );
             }
         }
     }
@@ -932,8 +923,6 @@ impl ResourceCache {
     }
 
     fn update_texture_cache(&mut self, gpu_cache: &mut GpuCache) {
-        let mut keys_to_clear_dirty_rect = FastHashSet::default();
-
         for request in self.pending_image_requests.drain() {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
@@ -974,24 +963,23 @@ impl ResourceCache {
 
             let entry = self.cached_images.get_mut(&request).as_mut().unwrap();
             let mut descriptor = image_template.descriptor.clone();
-            let local_dirty_rect;
+            //TODO: erasing the dirty rectangle here is incorrect for tiled images,
+            // since other tile requests may follow that depend on it
+            let mut local_dirty_rect = image_template.dirty_rect.take();
 
             if let Some(tile) = request.tile {
                 let tile_size = image_template.tiling.unwrap();
                 let clipped_tile_size = compute_tile_size(&descriptor, tile_size, tile);
 
-                local_dirty_rect = if let Some(ref rect) = image_template.dirty_rect {
-                    keys_to_clear_dirty_rect.insert(request.key.clone());
-
-                    // We should either have a dirty rect, or we are re-uploading where the dirty
-                    // rect is ignored anyway.
-                    let intersection = intersect_for_tile(*rect, clipped_tile_size, tile_size, tile);
-                    debug_assert!(intersection.is_some() ||
-                                  self.texture_cache.needs_upload(&entry.texture_cache_handle));
-                    intersection
-                } else {
-                    None
-                };
+                if let Some(ref mut rect) = local_dirty_rect {
+                    match intersect_for_tile(*rect, clipped_tile_size, tile_size, tile) {
+                        Some(intersection) => *rect = intersection,
+                        None => {
+                            // if re-uploaded, the dirty rect is ignored anyway
+                            debug_assert!(self.texture_cache.needs_upload(&entry.texture_cache_handle))
+                        }
+                    }
+                }
 
                 // The tiled image could be stored on the CPU as one large image or be
                 // already broken up into tiles. This affects the way we compute the stride
@@ -1007,8 +995,6 @@ impl ResourceCache {
                 }
 
                 descriptor.size = clipped_tile_size;
-            } else {
-                local_dirty_rect = image_template.dirty_rect.take();
             }
 
             let filter = match request.rendering {
@@ -1049,11 +1035,6 @@ impl ResourceCache {
                 None,
                 UvRectKind::Rect,
             );
-        }
-
-        for key in keys_to_clear_dirty_rect.drain() {
-            let image_template = self.resources.image_templates.get_mut(key).unwrap();
-            image_template.dirty_rect.take();
         }
     }
 

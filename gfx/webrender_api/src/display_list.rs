@@ -27,8 +27,8 @@ use {StickyFrameDisplayItem, StickyOffsetBounds, TextDisplayItem, TransformStyle
 use {YuvData, YuvImageDisplayItem};
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
-// This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_TEXT_RUN) * 2
-pub const MAX_TEXT_RUN_LENGTH: usize = 2040;
+// This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_PRIM_HEADER - VECS_PER_TEXT_RUN) * 2
+pub const MAX_TEXT_RUN_LENGTH: usize = 2038;
 
 // We start at 2, because the root reference is always 0 and the root scroll node is always 1.
 const FIRST_CLIP_ID: usize = 2;
