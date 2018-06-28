@@ -26,6 +26,7 @@ const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCES
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
+const PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS = "browser.tabs.remote.separatePrivilegedContentProcess";
 const PREF_ACTIVITY_STREAM_PRERENDER_ENABLED = "browser.newtabpage.activity-stream.prerender";
 const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 
@@ -33,6 +34,7 @@ const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 function AboutNewTabService() {
   Services.obs.addObserver(this, TOPIC_APP_QUIT);
   Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
+  Services.prefs.addObserver(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS, this);
   Services.prefs.addObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
   if (!IS_RELEASE_OR_BETA) {
     Services.prefs.addObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
@@ -85,6 +87,7 @@ AboutNewTabService.prototype = {
   _activityStreamPrerender: false,
   _activityStreamPath: "",
   _activityStreamDebug: false,
+  _privilegedContentProcess: false,
   _overridden: false,
   willNotifyUser: false,
 
@@ -100,7 +103,9 @@ AboutNewTabService.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
-        if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
+        if (data === PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS) {
+          this._privilegedContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS);
+        } else if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
           this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
           this.notifyChange();
         } else if (!IS_RELEASE_OR_BETA && data === PREF_ACTIVITY_STREAM_DEBUG) {
@@ -137,7 +142,6 @@ AboutNewTabService.prototype = {
    * @param {Boolean}   forceState      force state change
    */
   toggleActivityStream(stateEnabled, forceState = false) {
-
     if (!forceState && (this.overridden || stateEnabled === this.activityStreamEnabled)) {
       // exit there is no change of state
       return false;
@@ -147,6 +151,7 @@ AboutNewTabService.prototype = {
     } else {
       this._activityStreamEnabled = false;
     }
+    this._privilegedContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS);
     this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
     if (!IS_RELEASE_OR_BETA) {
       this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
@@ -245,6 +250,7 @@ AboutNewTabService.prototype = {
     }
     Services.obs.removeObserver(this, TOPIC_APP_QUIT);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
+    Services.prefs.removeObserver(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS, this);
     Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
     if (!IS_RELEASE_OR_BETA) {
       Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
