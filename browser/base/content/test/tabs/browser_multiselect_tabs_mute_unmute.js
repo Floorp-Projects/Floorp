@@ -1,127 +1,5 @@
 const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-const PAGE = "https://example.com/browser/browser/base/content/test/general/file_mediaPlayback.html";
-
-async function wait_for_tab_playing_event(tab, expectPlaying) {
-  if (tab.soundPlaying == expectPlaying) {
-    ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-    return true;
-  }
-  return BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-    if (event.detail.changed.includes("soundplaying")) {
-      is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-      is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-      return true;
-    }
-    return false;
-  });
-}
-
-async function waitForTabMuteStateChangeEvent(tab) {
-  return BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-    for (let attr of ["activemedia-blocked", "muted", "soundplaying"]) {
-      if (event.detail.changed.includes(attr)) {
-        return true;
-      }
-    }
-    return false;
-  });
-}
-
-async function is_audio_playing(tab) {
-  let browser = tab.linkedBrowser;
-  let isPlaying = await ContentTask.spawn(browser, {}, async function() {
-    let audio = content.document.querySelector("audio");
-    return !audio.paused;
-  });
-  return isPlaying;
-}
-
-async function play(tab) {
-  let browser = tab.linkedBrowser;
-  await ContentTask.spawn(browser, {}, async function() {
-    let audio = content.document.querySelector("audio");
-    audio.play();
-  });
-
-  // If the tab has already been muted, it means the tab won't get soundplaying,
-  // so we don't need to check this attribute.
-  if (browser.audioMuted) {
-    return;
-  }
-
-  await waitForTabMuteStateChangeEvent(tab);
-}
-
-function disable_non_test_mouse(disable) {
-  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-  utils.disableNonTestMouseEvents(disable);
-}
-
-function hover_icon(icon, tooltip) {
-  disable_non_test_mouse(true);
-
-  let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
-  EventUtils.synthesizeMouse(icon, 1, 1, {type: "mouseover"});
-  EventUtils.synthesizeMouse(icon, 2, 2, {type: "mousemove"});
-  EventUtils.synthesizeMouse(icon, 3, 3, {type: "mousemove"});
-  EventUtils.synthesizeMouse(icon, 4, 4, {type: "mousemove"});
-  return popupShownPromise;
-}
-
-function leave_icon(icon) {
-  EventUtils.synthesizeMouse(icon, 0, 0, {type: "mouseout"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-
-  disable_non_test_mouse(false);
-}
-
-// The set of tabs which have ever had their mute state changed.
-// Used to determine whether the tab should have a muteReason value.
-let everMutedTabs = new WeakSet();
-
-function get_wait_for_mute_promise(tab, expectMuted) {
-  return BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, event => {
-    if (event.detail.changed.includes("muted") || event.detail.changed.includes("activemedia-blocked")) {
-      is(tab.hasAttribute("muted"), expectMuted, "The tab should " + (expectMuted ? "" : "not ") + "be muted");
-      is(tab.muted, expectMuted, "The tab muted property " + (expectMuted ? "" : "not ") + "be true");
-
-      if (expectMuted || everMutedTabs.has(tab)) {
-        everMutedTabs.add(tab);
-        is(tab.muteReason, null, "The tab should have a null muteReason value");
-      } else {
-        is(tab.muteReason, undefined, "The tab should have an undefined muteReason value");
-      }
-      return true;
-    }
-    return false;
-  });
-}
-
-async function test_mute_tab(tab, icon, expectMuted) {
-  let mutedPromise = waitForTabMuteStateChangeEvent(tab);
-
-  let activeTab = gBrowser.selectedTab;
-
-  let tooltip = document.getElementById("tabbrowser-tab-tooltip");
-
-  await hover_icon(icon, tooltip);
-  EventUtils.synthesizeMouseAtCenter(icon, {button: 0});
-  leave_icon(icon);
-
-  is(gBrowser.selectedTab, activeTab, "Clicking on mute should not change the currently selected tab");
-
-  // If the audio is playing, we should check whether clicking on icon affects
-  // the media element's playing state.
-  let isAudioPlaying = await is_audio_playing(tab);
-  if (isAudioPlaying) {
-    await wait_for_tab_playing_event(tab, !expectMuted);
-  }
-
-  return mutedPromise;
-}
+const PAGE = "https://example.com/browser/browser/base/content/test/tabs/file_mediaPlayback.html";
 
 function muted(tab) {
   return tab.linkedBrowser.audioMuted;
@@ -155,8 +33,8 @@ add_task(async function muteTabs_usingButton() {
 
   await BrowserTestUtils.switchTab(gBrowser, tab0);
   await play(tab0);
-  await play(tab1);
-  await play(tab2);
+  await play(tab1, false);
+  await play(tab2, false);
 
   // Multiselecting tab1, tab2 and tab3
   await BrowserTestUtils.switchTab(gBrowser, tab1);
@@ -234,8 +112,8 @@ add_task(async function unmuteTabs_usingButton() {
 
   await BrowserTestUtils.switchTab(gBrowser, tab0);
   await play(tab0);
-  await play(tab1);
-  await play(tab2);
+  await play(tab1, false);
+  await play(tab2, false);
 
   // Mute tab3 and tab4
   tab3.toggleMuteAudio();
@@ -290,8 +168,8 @@ add_task(async function playTabs_usingButton() {
 
   await BrowserTestUtils.switchTab(gBrowser, tab0);
   await play(tab0);
-  await play(tab1);
-  await play(tab2);
+  await play(tab1, false);
+  await play(tab2, false);
 
   // Multiselecting tab0, tab1, tab2 and tab3.
   await triggerClickOn(tab3, { shiftKey: true });
@@ -346,9 +224,9 @@ add_task(async function checkTabContextMenu() {
   let menuItemToggleMuteTab = document.getElementById("context_toggleMuteTab");
   let menuItemToggleMuteSelectedTabs = document.getElementById("context_toggleMuteSelectedTabs");
 
-  await play(tab0);
+  await play(tab0, false);
   tab0.toggleMuteAudio();
-  await play(tab1);
+  await play(tab1, false);
   tab2.toggleMuteAudio();
 
   // Mutliselect tab0, tab1, tab2.

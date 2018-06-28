@@ -46,6 +46,13 @@ div {
   height: 100px;
   background-color: white;
 }
+body {
+  /*
+   * set overflow:hidden to avoid accidentally unthrottling animations to update
+   * the overflow region.
+   */
+  overflow: hidden;
+}
 </style>
 </head>
 <body>
@@ -133,8 +140,6 @@ function waitForWheelEvent(aTarget) {
 }
 
 const omtaEnabled = isOMTAEnabled();
-
-const isAndroid = !!navigator.userAgent.includes("Android");
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -1723,10 +1728,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function restyling_outline_offset_animations_on_invisible_element() {
-    if (isAndroid) {
-      // FIXME: Bug 1470798: Enable this test on Android.
-      return;
-    }
     const div = addDiv(null,
                        { style: 'visibility: hidden; ' +
                                 'outline-style: solid; ' +
@@ -1747,10 +1748,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function restyling_transform_animations_on_invisible_element() {
-    if (isAndroid) {
-      // FIXME: Bug 1470798: Enable this test on Android.
-      return;
-    }
     const div = addDiv(null, { style: 'visibility: hidden;' });
 
     const animation =
@@ -1770,10 +1767,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function restyling_transform_animations_on_invisible_element() {
-    if (isAndroid) {
-      // FIXME: Bug 1470798: Enable this test on Android.
-      return;
-    }
     const div = addDiv(null, { style: 'visibility: hidden;' });
 
     const animation =
@@ -1795,10 +1788,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function restyling_transform_animations_having_abs_pos_child_on_invisible_element() {
-      if (isAndroid) {
-        // FIXME: Bug 1470798: Enable this test on Android.
-        return;
-      }
       const div = addDiv(null, { style: 'visibility: hidden;' });
       const child = addDiv(null, { style: 'position: absolute; top: 100px;' });
       div.appendChild(child);

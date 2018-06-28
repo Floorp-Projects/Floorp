@@ -10,42 +10,24 @@ add_task(async function() {
 
   // Create and add history observer.
   let visitedPromise = new Promise(resolve => {
-    let historyObserver = {
-      onVisit(aURI, aVisitID, aTime, aReferringID, aTransitionType) {
-        PlacesUtils.history.removeObserver(historyObserver);
-        info("Received onVisit: " + aURI.spec);
-        fieldForUrl(aURI, "frecency", function(aFrecency) {
-          is(aFrecency, 0, "Frecency should be 0");
-          fieldForUrl(aURI, "hidden", function(aHidden) {
-            is(aHidden, 0, "Page should not be hidden");
-            fieldForUrl(aURI, "typed", function(aTyped) {
-              is(aTyped, 0, "page should not be marked as typed");
-              resolve();
-            });
+    function listener(aEvents) {
+      is(aEvents.length, 1, "Right number of visits notified");
+      is(aEvents[0].type, "page-visited");
+      let uri = NetUtil.newURI(aEvents[0].url);
+      PlacesObservers.removeListener(["page-visited"], listener);
+      info("Received 'page-visited': " + uri.spec);
+      fieldForUrl(uri, "frecency", function(aFrecency) {
+        is(aFrecency, 0, "Frecency should be 0");
+        fieldForUrl(uri, "hidden", function(aHidden) {
+          is(aHidden, 0, "Page should not be hidden");
+          fieldForUrl(uri, "typed", function(aTyped) {
+            is(aTyped, 0, "page should not be marked as typed");
+            resolve();
           });
         });
-      },
-      onVisits(aVisits) {
-        is(aVisits.length, 1, "Right number of visits notified");
-        let {
-          uri,
-          visitId,
-          time,
-          referrerId,
-          transitionType,
-        } = aVisits[0];
-        this.onVisit(uri, visitId, time, referrerId, transitionType);
-      },
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onTitleChanged() {},
-      onDeleteURI() {},
-      onClearHistory() {},
-      onPageChanged() {},
-      onDeleteVisits() {},
-      QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
-    };
-    PlacesUtils.history.addObserver(historyObserver);
+      });
+    }
+    PlacesObservers.addListener(["page-visited"], listener);
   });
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);

@@ -50,7 +50,7 @@
 
         var isTreeMultiSelectable = false;
         var seltype = this.DOMNode.getAttribute("seltype");
-        if (seltype != "single" && seltype != "cell" && seltype != "text")
+        if (seltype != "single")
           isTreeMultiSelectable = true;
 
         // selectAll
@@ -110,8 +110,6 @@
       gQueue = new eventQueue(EVENT_REORDER);
       gQueue.push(new statesChecker("tree", new nsTreeTreeView()));
       gQueue.push(new statesChecker("treesingle", new nsTreeTreeView()));
-      gQueue.push(new statesChecker("treecell", new nsTreeTreeView()));
-      gQueue.push(new statesChecker("treetext", new nsTreeTreeView()));
       gQueue.push(new statesChecker("tabletree", new nsTreeTreeView()));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
@@ -152,20 +150,6 @@
       <tree id="treesingle" flex="1" seltype="single">
         <treecols>
           <treecol id="col_single" flex="1" primary="true" label="column"/>
-        </treecols>
-        <treechildren/>
-      </tree>
-
-      <tree id="treecell" flex="1" seltype="cell">
-        <treecols>
-          <treecol id="col_cell" flex="1" primary="true" label="column"/>
-        </treecols>
-        <treechildren/>
-      </tree>
-
-      <tree id="treetext" flex="1" seltype="text">
-        <treecols>
-          <treecol id="col_text" flex="1" primary="true" label="column"/>
         </treecols>
         <treechildren/>
       </tree>

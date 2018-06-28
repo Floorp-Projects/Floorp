@@ -20,29 +20,28 @@ const PRIVATE_URI = NetUtil.newURI("http://www.example.net/");
  *        Callback function to be called with the same arguments of onVisit.
  */
 function waitForOnVisit(aCallback) {
-  let historyObserver = {
-    __proto__: NavHistoryObserver.prototype,
-    onVisits: function HO_onVisit(aVisits) {
-      Assert.equal(aVisits.length, 1, "Right number of visits notified");
-      let {
-        uri,
-        visitId,
-        time,
-        referrerId,
-        transitionType,
-        guid,
-        hidden,
-        visitCount,
-        typed,
-        lastKnownTitle,
-      } = aVisits[0];
-      PlacesUtils.history.removeObserver(this);
-      aCallback(uri, visitId, time, 0, referrerId,
-                transitionType, guid, hidden, visitCount,
-                typed, lastKnownTitle);
-    }
-  };
-  PlacesUtils.history.addObserver(historyObserver);
+  function listener(aEvents) {
+    Assert.equal(aEvents.length, 1, "Right number of visits notified");
+    Assert.equal(aEvents[0].type, "page-visited");
+    let {
+      url,
+      visitId,
+      visitTime,
+      referringVisitId,
+      transitionType,
+      pageGuid,
+      hidden,
+      visitCount,
+      typedCount,
+      lastKnownTitle,
+    } = aEvents[0];
+    PlacesObservers.removeListener(["page-visited"], listener);
+    let uriArg = NetUtil.newURI(url);
+    aCallback(uriArg, visitId, visitTime, 0, referringVisitId,
+              transitionType, pageGuid, hidden, visitCount,
+              typedCount, lastKnownTitle);
+  }
+  PlacesObservers.addListener(["page-visited"], listener);
 }
 
 /**
@@ -157,11 +156,11 @@ add_task(async function test_dh_addBookmarkRemoveDownload() {
 add_task(async function test_dh_addDownload_referrer() {
   // Wait for visits notification and get the visit id.
   let visitId;
-  let referrerPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
+  let referrerPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
     visitId = visits[0].visitId;
-    let {uri} = visits[0];
-    return uri.equals(REFERRER_URI);
-  }, "history");
+    let {url} = visits[0];
+    return url == REFERRER_URI.spec;
+  }, "places");
 
   await PlacesTestUtils.addVisits([{
     uri: REFERRER_URI,
@@ -175,16 +174,17 @@ add_task(async function test_dh_addDownload_referrer() {
 
   // Wait for visits notification and get the referrer Id.
   let referrerId;
-  let downloadPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
-    referrerId = visits[0].referrerId;
-    let {uri} = visits[0];
-    return uri.equals(DOWNLOAD_URI);
-  }, "history");
+  let downloadPromise = PlacesTestUtils.waitForNotification("page-visited", visits => {
+    referrerId = visits[0].referringVisitId;
+    let {url} = visits[0];
+    return url == DOWNLOAD_URI.spec;
+  }, "places");
 
   gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
   await downloadPromise;
 
   // Verify results for download uri.
+  // ensure that we receive the 'page-visited' notification before we call addDownload.
   Assert.ok(!!PlacesTestUtils.isPageInDB(DOWNLOAD_URI));
   Assert.equal(visitId, referrerId);
 
@@ -260,7 +260,6 @@ add_test(function test_dh_details() {
   let historyObserver = {
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
-    onVisits() {},
     onTitleChanged: function HO_onTitleChanged(aURI, aPageTitle) {
       if (aURI.equals(SOURCE_URI)) {
         titleSet = true;

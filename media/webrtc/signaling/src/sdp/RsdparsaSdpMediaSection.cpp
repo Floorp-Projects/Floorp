@@ -190,7 +190,21 @@ void
 RsdparsaSdpMediaSection::AddDataChannel(const std::string& name, uint16_t port,
                                         uint16_t streams, uint32_t message_size)
 {
-  //TODO: See 1438290
+  StringView rustName{name.c_str(), name.size()};
+  auto nr = sdp_media_add_datachannel(mSection, rustName, port,
+                                      streams, message_size);
+  if (NS_SUCCEEDED(nr)) {
+    // Update the formats
+    mFormats.clear();
+    LoadFormats();
+
+    // Update the attribute list
+    RsdparsaSessionHandle sessHandle(sdp_new_reference(mSession.get()));
+    auto sessAttributes = mAttributeList->mSessionAttributes;
+    mAttributeList.reset(new RsdparsaSdpAttributeList(std::move(sessHandle),
+                                                      mSection,
+                                                      sessAttributes));
+  }
 }
 
 void
@@ -260,8 +274,6 @@ RsdparsaSdpMediaSection::LoadConnection()
       mConnection = convertRustConnection(conn);
     }
   } else if (sdp_session_has_connection(mSession.get())){
-    // TODO: rsdparsa needs to ensure there is a connection at the session level
-    // if it is missing at a media level. See Bug 1438539.
     nr = sdp_get_session_connection(mSession.get(), &conn);
     if (NS_SUCCEEDED(nr)) {
       mConnection = convertRustConnection(conn);

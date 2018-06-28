@@ -20,6 +20,7 @@ class ProcessTypes:
     Default = 0
     Web = 1
     Extension = 2
+    Privileged = 3
 
     def __init__(self, val):
         self.val = val
@@ -32,6 +33,8 @@ class ProcessTypes:
             res.append('Web')
         if self.val & (1 << self.Extension):
             res.append('Extension')
+        if self.val & (1 << self.Privileged):
+            res.append('Privileged')
         return '|'.join(res)
 
 

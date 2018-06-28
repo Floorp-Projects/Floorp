@@ -521,25 +521,15 @@ nsNavHistory::LoadPrefs()
 }
 
 void
-nsNavHistory::NotifyOnVisits(nsIVisitData** aVisits, uint32_t aVisitsCount)
+nsNavHistory::UpdateDaysOfHistory(PRTime visitTime)
 {
-  MOZ_ASSERT(aVisits, "Can't call NotifyOnVisits with a NULL aVisits");
-  MOZ_ASSERT(aVisitsCount, "Should have at least 1 visit when notifying");
-
   if (mDaysOfHistory == 0) {
     mDaysOfHistory = 1;
   }
 
-  for (uint32_t i = 0; i < aVisitsCount; ++i) {
-    PRTime time;
-    MOZ_ALWAYS_SUCCEEDS(aVisits[i]->GetTime(&time));
-    if (time > mLastCachedEndOfDay || time < mLastCachedStartOfDay) {
-      mDaysOfHistory = -1;
-    }
+  if (visitTime > mLastCachedEndOfDay || visitTime < mLastCachedStartOfDay) {
+    mDaysOfHistory = -1;
   }
-
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
-                   OnVisits(aVisits, aVisitsCount));
 }
 
 void

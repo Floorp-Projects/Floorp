@@ -305,6 +305,9 @@ nsresult sdp_media_add_codec(const RustMediaSection* aMediaSec,
                              uint8_t aPT, StringView aCodecName,
                              uint32_t aClockrate, uint16_t channels);
 void sdp_media_clear_codecs(const RustMediaSection* aMediaSec);
+nsresult sdp_media_add_datachannel(const RustMediaSection* aMediaSec,
+                                   StringView aName, uint16_t aPort,
+                                   uint16_t streams, uint32_t aMessageSize);
 
 nsresult sdp_get_iceufrag(const RustAttributeList* aList, StringView* ret);
 nsresult sdp_get_icepwd(const RustAttributeList* aList, StringView* ret);
@@ -330,6 +333,8 @@ size_t sdp_get_fmtp(const RustAttributeList* aList, size_t listSize,
                     RustSdpAttributeFmtp* ret);
 
 int64_t sdp_get_ptime(const RustAttributeList* aList);
+int64_t sdp_get_max_msg_size(const RustAttributeList* aList);
+int64_t sdp_get_sctp_port(const RustAttributeList* aList);
 
 RustSdpAttributeFlags sdp_get_attribute_flags(const RustAttributeList* aList);
 

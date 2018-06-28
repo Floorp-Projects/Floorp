@@ -66,4 +66,4 @@ FINAL_LIBRARY = 'gkmedias'
 AllowCompilerWarnings()
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CFLAGS += ['-std=c89']
+    CFLAGS += ['-std=gnu89']

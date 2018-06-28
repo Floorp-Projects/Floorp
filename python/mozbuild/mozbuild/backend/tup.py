@@ -816,7 +816,11 @@ class TupBackend(CommonBackend):
         cargo_status = self._cmd.run_process(
             [self.environment.substs['CARGO'], 'build'] + cargo_flags,
             line_handler=accumulate_output,
+            ensure_exit_code=False,
             explicit_env=cargo_env)
+        if cargo_status:
+            raise Exception("cargo --build-plan failed with output:\n%s" %
+                            '\n'.join(output_lines))
 
         cargo_plan = json.loads(''.join(output_lines))
         self._gen_cargo_rules(backend_file, cargo_plan, cargo_env)

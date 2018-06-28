@@ -49,17 +49,9 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
 
   // note: the functions below should be in this order due to changes made in later tests
 
-  // select the first column in cell selection mode so that the selection
-  // functions can be tested
-  if (seltype == "cell")
-    tree.view.selection.currentColumn = tree.columns[0];
-
   testtag_tree_columns(tree, columnInfo, testid);
   testtag_tree_TreeSelection(tree, testid, multiple);
   testtag_tree_TreeSelection_UI(tree, testid, multiple);
-  if (seltype == "cell")
-    testtag_tree_TreeSelection_UI_cell(tree, testid, rowInfo);
-
   testtag_tree_TreeView(tree, testid, rowInfo);
 
   is(tree.editable, false, "tree should not be editable");
@@ -606,8 +598,7 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   selection.currentIndex = 2;
   if (0) { // XXXndeakin disable these tests for now
     mouseOnCell(tree, 1, tree.columns[1], "mouse on row");
-    testtag_tree_TreeSelection_State(tree, testid + "mouse on row", 1, [1], 0,
-                                     tree.selType == "cell" ? tree.columns[1] : null);
+    testtag_tree_TreeSelection_State(tree, testid + "mouse on row", 1, [1], 0, null);
   }
 
   // restore the scroll position to the start of the page
@@ -636,23 +627,6 @@ function testtag_tree_UI_editing(tree, testid, rowInfo) {
   var wasOpen = null;
   if (tree.view.isContainer(row))
     wasOpen = tree.view.isContainerOpen(row);
-
-  // Test whether a keystroke can enter text entry, and another can exit.
-  if (tree.selType == "cell") {
-    tree.stopEditing(false);
-    ok(!tree.editingColumn, "Should not be editing tree cell now");
-    tree.view.selection.currentColumn = ecolumn;
-    tree.currentIndex = rowIndex;
-
-    const isMac = (navigator.platform.includes("Mac"));
-    const StartEditingKey = isMac ? "RETURN" : "F2";
-    sendKey(StartEditingKey);
-    is(tree.editingColumn, ecolumn, "Should be editing tree cell now");
-    sendKey("ESCAPE");
-    ok(!tree.editingColumn, "Should not be editing tree cell now");
-    is(tree.currentIndex, rowIndex, "Current index should not have changed");
-    is(tree.view.selection.currentColumn, ecolumn, "Current column should not have changed");
-  }
 
   mouseDblClickOnCell(tree, rowIndex, ecolumn, testid + "edit on double click");
   is(tree.editingColumn, ecolumn, testid + "editing column");
@@ -1044,18 +1018,13 @@ function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo) {
 // checks if the current and selected rows are correct
 // current is the index of the current row
 // selected is an array of the indicies of the selected rows
-// column is the selected column
 // viewidx is the row that should be visible at the top of the tree
-function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewidx, column) {
+function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewidx) {
   var selection = tree.view.selection;
-
-  if (!column)
-    column = (tree.selType == "cell") ? tree.columns[0] : null;
 
   is(selection.count, selected.length, testid + " count");
   is(tree.currentIndex, current, testid + " currentIndex");
   is(selection.currentIndex, current, testid + " TreeSelection currentIndex");
-  is(selection.currentColumn, column, testid + " currentColumn");
   if (viewidx !== null && viewidx !== undefined)
     is(tree.treeBoxObject.getFirstVisibleRow(), viewidx, testid + " first visible row");
 

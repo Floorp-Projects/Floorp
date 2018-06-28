@@ -102,6 +102,28 @@ jobs:
               mozilla-central: [{hour: 10, minute: 30}]
               # No default
 
+    - name: bouncer-check
+      job:
+          type: decision-task
+          treeherder-symbol: Rel
+          target-tasks-method: bouncer_check
+      run-on-projects:
+          - mozilla-beta
+          - mozilla-release
+          - mozilla-esr60
+      when:
+          by-project:
+              # No default branch
+              mozilla-beta:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-release:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-esr60:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+
     - name: periodic-update
       job:
           type: decision-task

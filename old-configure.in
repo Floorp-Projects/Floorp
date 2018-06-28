@@ -2677,32 +2677,14 @@ fi # COMPILE_ENVIRONMENT
 dnl ========================================================
 dnl Gamepad support
 dnl ========================================================
-MOZ_GAMEPAD_BACKEND=stub
 
-case "$OS_TARGET" in
-Darwin)
-    if test -z "$MOZ_IOS"; then
-        MOZ_GAMEPAD_BACKEND=cocoa
-    fi
-    ;;
-WINNT)
-    MOZ_GAMEPAD_BACKEND=windows
-    ;;
-Linux)
+dnl Moved gamepad platform check to moz.build, linux header check still needed here.
+if test "$OS_TARGET" = "Linux"; then
     MOZ_CHECK_HEADER([linux/joystick.h])
     if test "$ac_cv_header_linux_joystick_h" != "yes"; then
       AC_MSG_ERROR([Can't find header linux/joystick.h, needed for gamepad support. Please install Linux kernel headers.])
     fi
-    MOZ_GAMEPAD_BACKEND=linux
-    ;;
-Android)
-    MOZ_GAMEPAD_BACKEND=android
-    ;;
-*)
-    ;;
-esac
-
-AC_SUBST(MOZ_GAMEPAD_BACKEND)
+fi
 
 dnl ========================================================
 dnl = Breakpad crash reporting (on by default on supported platforms)

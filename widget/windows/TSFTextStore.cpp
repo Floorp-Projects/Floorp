@@ -18,6 +18,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
@@ -1562,6 +1563,31 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
     mIsIMM_IME = IsIMM_IME(hkl);
     GetTIPDescription(rclsid, mLangID, guidProfile,
                       mActiveTIPKeyboardDescription);
+    if (mActiveTIPGUID != GUID_NULL) {
+      // key should be "LocaleID|Description".  Although GUID of the
+      // profile is unique key since description may be localized for system
+      // language, unfortunately, it's too long to record as key with its
+      // description.  Therefore, we should record only the description with
+      // LocaleID because Microsoft IME may not include language information.
+      // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
+      nsAutoString key;
+      key.AppendPrintf("0x%04X|", mLangID & 0xFFFF);
+      nsAutoString description(mActiveTIPKeyboardDescription);
+      static const uint32_t kMaxDescriptionLength = 72 - key.Length();
+      if (description.Length() > kMaxDescriptionLength) {
+        if (NS_IS_LOW_SURROGATE(description[kMaxDescriptionLength - 1]) &&
+            NS_IS_HIGH_SURROGATE(description[kMaxDescriptionLength - 2])) {
+          description.Truncate(kMaxDescriptionLength - 2);
+        } else {
+          description.Truncate(kMaxDescriptionLength - 1);
+        }
+        // U+2026 is "..."
+        description.Append(char16_t(0x2026));
+      }
+      key.Append(description);
+      Telemetry::ScalarSet(Telemetry::ScalarID::WIDGET_IME_NAME_ON_WINDOWS,
+                           key, true);
+    }
     // Notify IMEHandler of changing active keyboard layout.
     IMEHandler::OnKeyboardLayoutChanged();
   }

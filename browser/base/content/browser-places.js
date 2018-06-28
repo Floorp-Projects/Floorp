@@ -215,30 +215,15 @@ var StarUI = {
     }
   },
 
-  _bookmarkPopupInitialized: false,
   async showEditBookmarkPopup(aNode, aAnchorElement, aPosition, aIsNewBookmark, aUrl, aIsCurrentBrowser = true) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
-    if (this.panel.state == "showing" ||
-        this.panel.state == "open") {
+    if (this.panel.state != "closed") {
       return;
     }
 
     this._isNewBookmark = aIsNewBookmark;
     this._itemGuids = null;
-
-    if (this._bookmarkPopupInitialized) {
-      await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl, aIsCurrentBrowser);
-      return;
-    }
-    this._bookmarkPopupInitialized = true;
-
-    await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl, aIsCurrentBrowser);
-  },
-
-  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl, aIsCurrentBrowser) {
-    if (this.panel.state != "closed")
-      return;
 
     this._blockCommands(); // un-done in the popuphidden handler
 

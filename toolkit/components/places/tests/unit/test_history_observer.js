@@ -10,7 +10,6 @@ function NavHistoryObserver() {
 NavHistoryObserver.prototype = {
   onBeginUpdateBatch() { },
   onEndUpdateBatch() { },
-  onVisits() { },
   onTitleChanged() { },
   onDeleteURI() { },
   onClearHistory() { },
@@ -37,6 +36,23 @@ function onNotify(callback) {
 }
 
 /**
+ * Registers a one-time places observer for 'page-visited',
+ * which resolves a promise on being called.
+ */
+function promiseVisitAdded(callback) {
+  return new Promise(resolve => {
+    function listener(events) {
+      PlacesObservers.removeListener(["page-visited"], listener);
+      Assert.equal(events.length, 1, "Right number of visits notified");
+      Assert.equal(events[0].type, "page-visited");
+      callback(events[0]);
+      resolve();
+    }
+    PlacesObservers.addListener(["page-visited"], listener);
+  });
+}
+
+/**
  * Asynchronous task that adds a visit to the history database.
  */
 async function task_add_visit(uri, timestamp, transition) {
@@ -50,19 +66,18 @@ async function task_add_visit(uri, timestamp, transition) {
   return [uri, timestamp];
 }
 
-add_task(async function test_onVisits() {
-  let promiseNotify = onNotify(function onVisits(aVisits) {
-    Assert.equal(aVisits.length, 1, "Right number of visits notified");
-    let visit = aVisits[0];
-    Assert.ok(visit.uri.equals(testuri));
+add_task(async function test_visitAdded() {
+  let promiseNotify = promiseVisitAdded(function(visit) {
     Assert.ok(visit.visitId > 0);
-    Assert.equal(visit.time, testtime);
-    Assert.equal(visit.referrerId, 0);
+    Assert.equal(visit.url, testuri.spec);
+    Assert.equal(visit.visitTime, testtime / 1000);
+    Assert.equal(visit.referringVisitId, 0);
     Assert.equal(visit.transitionType, TRANSITION_TYPED);
-    do_check_guid_for_uri(visit.uri, visit.guid);
+    let uri = NetUtil.newURI(visit.url);
+    do_check_guid_for_uri(uri, visit.pageGuid);
     Assert.ok(!visit.hidden);
     Assert.equal(visit.visitCount, 1);
-    Assert.equal(visit.typed, 1);
+    Assert.equal(visit.typedCount, 1);
   });
   let testuri = NetUtil.newURI("http://firefox.com/");
   let testtime = Date.now() * 1000;
@@ -70,19 +85,18 @@ add_task(async function test_onVisits() {
   await promiseNotify;
 });
 
-add_task(async function test_onVisits() {
-  let promiseNotify = onNotify(function onVisits(aVisits) {
-    Assert.equal(aVisits.length, 1, "Right number of visits notified");
-    let visit = aVisits[0];
-    Assert.ok(visit.uri.equals(testuri));
+add_task(async function test_visitAdded() {
+  let promiseNotify = promiseVisitAdded(function(visit) {
     Assert.ok(visit.visitId > 0);
-    Assert.equal(visit.time, testtime);
-    Assert.equal(visit.referrerId, 0);
+    Assert.equal(visit.url, testuri.spec);
+    Assert.equal(visit.visitTime, testtime / 1000);
+    Assert.equal(visit.referringVisitId, 0);
     Assert.equal(visit.transitionType, TRANSITION_FRAMED_LINK);
-    do_check_guid_for_uri(visit.uri, visit.guid);
+    let uri = NetUtil.newURI(visit.url);
+    do_check_guid_for_uri(uri, visit.pageGuid);
     Assert.ok(visit.hidden);
     Assert.equal(visit.visitCount, 1);
-    Assert.equal(visit.typed, 0);
+    Assert.equal(visit.typedCount, 0);
   });
   let testuri = NetUtil.newURI("http://hidden.firefox.com/");
   let testtime = Date.now() * 1000;
@@ -93,44 +107,43 @@ add_task(async function test_onVisits() {
 add_task(async function test_multiple_onVisit() {
   let testuri = NetUtil.newURI("http://self.firefox.com/");
   let promiseNotifications = new Promise(resolve => {
-    let observer = {
-      __proto__: NavHistoryObserver.prototype,
-      onVisits(aVisits) {
-        Assert.equal(aVisits.length, 3, "Right number of visits notified");
-        for (let i = 0; i < aVisits.length; i++) {
-          let visit = aVisits[i];
-          Assert.ok(testuri.equals(visit.uri));
-          Assert.ok(visit.visitId > 0);
-          Assert.ok(visit.time > 0);
-          Assert.ok(!visit.hidden);
-          do_check_guid_for_uri(visit.uri, visit.guid);
-          switch (i) {
-            case 0:
-              Assert.equal(visit.referrerId, 0);
-              Assert.equal(visit.transitionType, TRANSITION_LINK);
-              Assert.equal(visit.visitCount, 1);
-              Assert.equal(visit.typed, 0);
-              break;
-            case 1:
-              Assert.ok(visit.referrerId > 0);
-              Assert.equal(visit.transitionType, TRANSITION_LINK);
-              Assert.equal(visit.visitCount, 2);
-              Assert.equal(visit.typed, 0);
-              break;
-            case 2:
-              Assert.equal(visit.referrerId, 0);
-              Assert.equal(visit.transitionType, TRANSITION_TYPED);
-              Assert.equal(visit.visitCount, 3);
-              Assert.equal(visit.typed, 1);
+    function listener(aEvents) {
+      Assert.equal(aEvents.length, 3, "Right number of visits notified");
+      for (let i = 0; i < aEvents.length; i++) {
+        Assert.equal(aEvents[i].type, "page-visited");
+        let visit = aEvents[i];
+        Assert.equal(testuri.spec, visit.url);
+        Assert.ok(visit.visitId > 0);
+        Assert.ok(visit.visitTime > 0);
+        Assert.ok(!visit.hidden);
+        let uri = NetUtil.newURI(visit.url);
+        do_check_guid_for_uri(uri, visit.pageGuid);
+        switch (i) {
+          case 0:
+            Assert.equal(visit.referringVisitId, 0);
+            Assert.equal(visit.transitionType, TRANSITION_LINK);
+            Assert.equal(visit.visitCount, 1);
+            Assert.equal(visit.typedCount, 0);
+            break;
+          case 1:
+            Assert.ok(visit.referringVisitId > 0);
+            Assert.equal(visit.transitionType, TRANSITION_LINK);
+            Assert.equal(visit.visitCount, 2);
+            Assert.equal(visit.typedCount, 0);
+            break;
+          case 2:
+            Assert.equal(visit.referringVisitId, 0);
+            Assert.equal(visit.transitionType, TRANSITION_TYPED);
+            Assert.equal(visit.visitCount, 3);
+            Assert.equal(visit.typedCount, 1);
 
-              PlacesUtils.history.removeObserver(observer, false);
-              resolve();
-              break;
-          }
+            PlacesObservers.removeListener(["page-visited"], listener);
+            resolve();
+            break;
         }
-      },
-    };
-    PlacesUtils.history.addObserver(observer);
+      }
+    }
+    PlacesObservers.addListener(["page-visited"], listener);
   });
   await PlacesTestUtils.addVisits([
     { uri: testuri, transition: TRANSITION_LINK },

@@ -12,6 +12,7 @@
 #ifndef nsNavHistoryResult_h_
 #define nsNavHistoryResult_h_
 
+#include "INativePlacesEventCallback.h"
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
@@ -98,7 +99,8 @@ private:
 class nsNavHistoryResult final : public nsSupportsWeakReference,
                                  public nsINavHistoryResult,
                                  public nsINavBookmarkObserver,
-                                 public nsINavHistoryObserver
+                                 public nsINavHistoryObserver,
+                                 public mozilla::places::INativePlacesEventCallback
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
@@ -107,8 +109,6 @@ public:
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNavHistoryResult, nsINavHistoryResult)
   NS_DECL_BOOKMARK_HISTORY_OBSERVER_EXTERNAL(override)
-  NS_IMETHOD OnVisits(nsIVisitData** aVisits,
-                      uint32_t aVisitsCount) override;
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, int64_t aFolder);
@@ -173,6 +173,8 @@ public:
 
   ContainerObserverList mRefreshParticipants;
   void requestRefresh(nsNavHistoryContainerResultNode* aContainer);
+
+  void HandlePlacesEvent(const PlacesEventSequence& aEvents) override;
 
   void OnMobilePrefChanged();
 
