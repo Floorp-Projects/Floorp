@@ -530,7 +530,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, const FuncTypeIdDesc& funcT
     offsets->begin = masm.currentOffset();
     switch (funcTypeId.kind()) {
       case FuncTypeIdDesc::Kind::Global: {
-        Register scratch = WasmTableCallScratchReg;
+        Register scratch = WasmTableCallScratchReg0;
         masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
         masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
                        &normalEntry);

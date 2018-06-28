@@ -11,6 +11,7 @@ EXPORTS.harfbuzz += [
     'hb-deprecated.h',
     'hb-face.h',
     'hb-font.h',
+    'hb-map.h',
     'hb-ot-font.h',
     'hb-ot-layout.h',
     'hb-ot-math.h',
@@ -61,6 +62,7 @@ UNIFIED_SOURCES += [
     'hb-set.cc',
     'hb-shape.cc',
     'hb-shaper.cc',
+    'hb-static.cc',
     'hb-unicode.cc',
     'hb-warning.cc',
 ]
@@ -82,6 +84,7 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['PACKAGE_VERSION'] = '"moz"'
 DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
 DEFINES['HAVE_OT'] = 1
+DEFINES['HAVE_ROUND'] = 1
 DEFINES['HB_NO_MT'] = True
 DEFINES['HB_NO_UNICODE_FUNCS'] = True
 # Cancel the effect of the -DDEBUG macro if present,

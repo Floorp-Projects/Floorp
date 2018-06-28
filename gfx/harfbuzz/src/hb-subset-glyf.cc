@@ -32,20 +32,25 @@
 
 static bool
 _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
-                                     hb_prealloced_array_t<hb_codepoint_t> &glyph_ids,
+                                     hb_vector_t<hb_codepoint_t> &glyph_ids,
                                      hb_bool_t drop_hints,
                                      bool *use_short_loca /* OUT */,
                                      unsigned int *glyf_size /* OUT */,
                                      unsigned int *loca_size /* OUT */,
-                                     hb_prealloced_array_t<unsigned int> *instruction_ranges /* OUT */)
+                                     hb_vector_t<unsigned int> *instruction_ranges /* OUT */)
 {
   unsigned int total = 0;
   for (unsigned int i = 0; i < glyph_ids.len; i++)
   {
     hb_codepoint_t next_glyph = glyph_ids[i];
-    unsigned int *instruction_start = instruction_ranges->push();
-    unsigned int *instruction_end = instruction_ranges->push();
+    if (!instruction_ranges->resize (instruction_ranges->len + 2))
+    {
+      DEBUG_MSG(SUBSET, nullptr, "Failed to resize instruction_ranges.");
+      return false;
+    }
+    unsigned int *instruction_start = &(*instruction_ranges)[instruction_ranges->len - 2];
     *instruction_start = 0;
+    unsigned int *instruction_end = &(*instruction_ranges)[instruction_ranges->len - 1];
     *instruction_end = 0;
 
     unsigned int start_offset, end_offset;
@@ -116,7 +121,6 @@ static void
 _update_components (hb_subset_plan_t * plan,
 		    char * glyph_start,
 		    unsigned int length)
-
 {
   OT::glyf::CompositeGlyphHeader::Iterator iterator;
   if (OT::glyf::CompositeGlyphHeader::get_iterator (glyph_start,
@@ -126,9 +130,8 @@ _update_components (hb_subset_plan_t * plan,
     do
     {
       hb_codepoint_t new_gid;
-      if (!hb_subset_plan_new_gid_for_old_id (plan,
-					      iterator.current->glyphIndex,
-					      &new_gid))
+      if (!plan->new_gid_for_old_gid (iterator.current->glyphIndex,
+                                      &new_gid))
 	continue;
 
       ((OT::glyf::CompositeGlyphHeader *) iterator.current)->glyphIndex.set (new_gid);
@@ -155,13 +158,13 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
 			    const OT::glyf::accelerator_t &glyf,
                             const char                    *glyf_data,
                             bool                           use_short_loca,
-                            hb_prealloced_array_t<unsigned int> &instruction_ranges,
+                            hb_vector_t<unsigned int> &instruction_ranges,
                             unsigned int                   glyf_prime_size,
                             char                          *glyf_prime_data /* OUT */,
                             unsigned int                   loca_prime_size,
                             char                          *loca_prime_data /* OUT */)
 {
-  hb_prealloced_array_t<hb_codepoint_t> &glyph_ids = plan->gids_to_retain_sorted;
+  hb_vector_t<hb_codepoint_t> &glyph_ids = plan->glyphs;
   char *glyf_prime_data_next = glyf_prime_data;
 
   bool success = true;
@@ -171,11 +174,11 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
     if (unlikely (!(glyf.get_offsets (glyph_ids[i], &start_offset, &end_offset)
                     && glyf.remove_padding(start_offset, &end_offset))))
       end_offset = start_offset = 0;
+
     unsigned int instruction_start = instruction_ranges[i * 2];
     unsigned int instruction_end = instruction_ranges[i * 2 + 1];
 
     int length = end_offset - start_offset - (instruction_end - instruction_start);
-    length += length % 2;
 
     if (glyf_prime_data_next + length > glyf_prime_data + glyf_prime_size)
     {
@@ -209,7 +212,8 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
                                             loca_prime_size);
     _update_components (plan, glyf_prime_data_next, length);
 
-    glyf_prime_data_next += length;
+    // TODO: don't align to two bytes if using long loca.
+    glyf_prime_data_next += length + (length % 2); // Align to 2 bytes for short loca.
   }
 
   success = success && _write_loca_entry (glyph_ids.len,
@@ -229,11 +233,11 @@ _hb_subset_glyf_and_loca (const OT::glyf::accelerator_t  &glyf,
                           hb_blob_t                     **loca_prime /* OUT */)
 {
   // TODO(grieger): Sanity check allocation size for the new table.
-  hb_prealloced_array_t<hb_codepoint_t> &glyphs_to_retain = plan->gids_to_retain_sorted;
+  hb_vector_t<hb_codepoint_t> &glyphs_to_retain = plan->glyphs;
 
   unsigned int glyf_prime_size;
   unsigned int loca_prime_size;
-  hb_prealloced_array_t<unsigned int> instruction_ranges;
+  hb_vector_t<unsigned int> instruction_ranges;
   instruction_ranges.init();
 
   if (unlikely (!_calculate_glyf_and_loca_prime_size (glyf,
@@ -243,7 +247,7 @@ _hb_subset_glyf_and_loca (const OT::glyf::accelerator_t  &glyf,
                                                       &glyf_prime_size,
                                                       &loca_prime_size,
                                                       &instruction_ranges))) {
-    instruction_ranges.finish();
+    instruction_ranges.fini();
     return false;
   }
 
@@ -256,10 +260,10 @@ _hb_subset_glyf_and_loca (const OT::glyf::accelerator_t  &glyf,
                                              loca_prime_size, loca_prime_data))) {
     free (glyf_prime_data);
     free (loca_prime_data);
-    instruction_ranges.finish();
+    instruction_ranges.fini();
     return false;
   }
-  instruction_ranges.finish();
+  instruction_ranges.fini();
 
   *glyf_prime = hb_blob_create (glyf_prime_data,
                                 glyf_prime_size,

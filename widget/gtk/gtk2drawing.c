@@ -1820,7 +1820,10 @@ moz_gtk_treeview_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     /* Because the frame we get is of the entire treeview, we can't get the precise
      * event state of one expander, thus rendering hover and active feedback useless. */
-    state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+    state_type = state->disabled ? GTK_STATE_INSENSITIVE :
+                 state->inHover  ? GTK_STATE_PRELIGHT :
+                 state->selected ? GTK_STATE_SELECTED :
+                                   GTK_STATE_NORMAL;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_paint_expander(style, drawable, state_type, cliprect, gTreeViewWidget, "treeview",

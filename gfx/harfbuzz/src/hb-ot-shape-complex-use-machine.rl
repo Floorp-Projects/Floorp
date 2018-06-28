@@ -89,7 +89,7 @@ SMBlw	= 42; # SYM_MOD_BELOW
 CS	= 43; # CONS_WITH_STACKER
 
 
-# Override: Adjoc ZWJ placement. https://github.com/harfbuzz/harfbuzz/issues/542#issuecomment-353169729
+# Override: Adhoc ZWJ placement. https://github.com/harfbuzz/harfbuzz/issues/542#issuecomment-353169729
 consonant_modifiers = CMAbv* CMBlw* ((ZWJ?.H.ZWJ? B | SUB) VS? CMAbv? CMBlw*)*;
 # Override: Allow two MBlw. https://github.com/harfbuzz/harfbuzz/issues/376
 medial_consonants = MPre? MAbv? MBlw?.MBlw? MPst?;
@@ -153,7 +153,7 @@ main := |*
 static void
 find_syllables (hb_buffer_t *buffer)
 {
-  unsigned int p, pe, eof, ts HB_UNUSED, te HB_UNUSED, act HB_UNUSED;
+  unsigned int p, pe, eof, ts HB_UNUSED, te, act;
   int cs;
   hb_glyph_info_t *info = buffer->info;
   %%{

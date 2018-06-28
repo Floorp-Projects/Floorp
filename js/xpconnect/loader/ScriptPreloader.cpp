@@ -6,7 +6,6 @@
 
 #include "ScriptPreloader-inl.h"
 #include "mozilla/ScriptPreloader.h"
-#include "mozJSComponentLoader.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 
 #include "mozilla/URLPreloader.h"
@@ -468,7 +467,7 @@ ScriptPreloader::InitCache(const nsAString& basePath)
     // Grab the compilation scope before initializing the URLPreloader, since
     // it's not safe to run component loader code during its critical section.
     AutoSafeJSAPI jsapi;
-    JS::RootedObject scope(jsapi.cx(), CompilationScope(jsapi.cx()));
+    JS::RootedObject scope(jsapi.cx(), xpc::CompilationScope());
 
     // Note: Code on the main thread *must not access Omnijar in any way* until
     // this AutoBeginReading guard is destroyed.
@@ -980,12 +979,6 @@ ScriptPreloader::DoFinishOffThreadDecode()
     MaybeFinishOffThreadDecode();
 }
 
-JSObject*
-ScriptPreloader::CompilationScope(JSContext* cx)
-{
-    return mozJSComponentLoader::Get()->CompilationScope(cx);
-}
-
 void
 ScriptPreloader::MaybeFinishOffThreadDecode()
 {
@@ -1004,7 +997,7 @@ ScriptPreloader::MaybeFinishOffThreadDecode()
     AutoSafeJSAPI jsapi;
     JSContext* cx = jsapi.cx();
 
-    JSAutoRealm ar(cx, CompilationScope(cx));
+    JSAutoRealm ar(cx, xpc::CompilationScope());
     JS::Rooted<JS::ScriptVector> jsScripts(cx, JS::ScriptVector(cx));
 
     // If this fails, we still need to mark the scripts as finished. Any that
@@ -1074,7 +1067,7 @@ ScriptPreloader::DecodeNextBatch(size_t chunkSize, JS::HandleObject scope)
 
     AutoSafeJSAPI jsapi;
     JSContext* cx = jsapi.cx();
-    JSAutoRealm ar(cx, scope ? scope : CompilationScope(cx));
+    JSAutoRealm ar(cx, scope ? scope : xpc::CompilationScope());
 
     JS::CompileOptions options(cx);
     options.setNoScriptRval(true)

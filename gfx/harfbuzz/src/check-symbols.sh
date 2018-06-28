@@ -30,7 +30,6 @@ for soname in harfbuzz harfbuzz-subset harfbuzz-icu harfbuzz-gobject; do
 
 		prefix=$symprefix`basename "$so" | sed 's/libharfbuzz/hb/; s/-/_/g; s/[.].*//'`
 
-		echo
 		echo "Checking that $so does not expose internal symbols"
 		if echo "$EXPORTED_SYMBOLS" | grep -v "^${prefix}\(_\|$\)"; then
 			echo "Ouch, internal symbols exposed"
@@ -41,7 +40,6 @@ for soname in harfbuzz harfbuzz-subset harfbuzz-icu harfbuzz-gobject; do
 		if ! test -f "$def"; then
 			echo "'$def' not found; skipping"
 		else
-			echo
 			echo "Checking that $so has the same symbol list as $def"
 			{
 				echo EXPORTS
