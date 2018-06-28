@@ -112,15 +112,7 @@ def delete(path):
 
 
 def install_libgcc(gcc_dir, clang_dir):
-    gcc_bin_dir = os.path.join(gcc_dir, 'bin')
-    clang_bin_dir = os.path.join(clang_dir, 'bin')
-
-    # Copy over gcc toolchain bits that clang looks for, to ensure that
-    # clang is using a consistent version of ld, since the system ld may
-    # be incompatible with the output clang produces.
-    shutil.copy2(os.path.join(gcc_bin_dir, 'ld'), clang_bin_dir)
-
-    out = subprocess.check_output([os.path.join(gcc_bin_dir, "gcc"),
+    out = subprocess.check_output([os.path.join(gcc_dir, "bin", "gcc"),
                                    '-print-libgcc-file-name'])
 
     libgcc_dir = os.path.dirname(out.rstrip())
@@ -519,29 +511,11 @@ if __name__ == "__main__":
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
-        # When building stage2 and stage3, we want the newly-built clang to pick
-        # up whatever headers were installed from the gcc we used to build stage1,
-        # always, rather than the system headers.  Providing -gcc-toolchain
-        # encourages clang to do that.
-        extra_cflags2 = ["-fPIC",
-                         '-gcc-toolchain', stage1_inst_dir]
+        extra_cflags2 = ["-fPIC"]
         # Silence clang's warnings about arguments not being used in compilation.
-        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++",
-                           '-gcc-toolchain', stage1_inst_dir]
+        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++"]
         extra_asmflags = []
         extra_ldflags = []
-
-        # We want to ensure that the GCC we use for stage 1 always picks up the
-        # binutils it is packaged with, rather than the system binutils, which
-        # might be a much different version and therefore lacking in support for
-        # features GCC expects.
-        binutils_flags = ['-B', os.path.dirname(cc)]
-        if cc.endswith('gcc'):
-            extra_cflags += binutils_flags
-        if cxx.endswith('g++'):
-            extra_cxxflags += binutils_flags
-        if asm.endswith('gcc'):
-            extra_asmflags += binutils_flags
 
         if 'LD_LIBRARY_PATH' in os.environ:
             os.environ['LD_LIBRARY_PATH'] = ('%s/lib64/:%s' %
