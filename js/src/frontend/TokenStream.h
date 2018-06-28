@@ -1326,8 +1326,6 @@ class GeneralTokenStreamChars
         CharsBase::ungetCodeUnit(c);
     }
 
-    void ungetChar(int32_t c);
-
     /**
      * Consume characters til EOL/EOF following the start of a single-line
      * comment, without consuming the EOL/EOF.
@@ -1375,12 +1373,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     // line-counter state.  Return true on success and store the character in
     // |*c|.  Return false and leave |*c| undefined on failure.
     MOZ_MUST_USE bool getCodePoint(int32_t* cp);
-
-    // A deprecated alias for |getCodePoint|: most code using this is being
-    // replaced with different approaches.
-    MOZ_MUST_USE bool getChar(int32_t* cp) {
-        return getCodePoint(cp);
-    }
 
     /**
      * Given a just-consumed ASCII code unit/point |lead|, consume a full code
@@ -1547,7 +1539,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
     using CharsBase::fillCharBufferWithTemplateStringContents;
-    using SpecializedCharsBase::getChar;
     using SpecializedCharsBase::getCodePoint;
     using GeneralCharsBase::getCodeUnit;
     using SpecializedCharsBase::getFullAsciiCodePoint;
@@ -1563,7 +1554,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::newSimpleToken;
     using CharsBase::peekCodeUnit;
     using CharsBase::sourceUnits;
-    using GeneralCharsBase::ungetChar;
     using SpecializedCharsBase::ungetCodePointIgnoreEOL;
     using GeneralCharsBase::ungetCodeUnit;
     using SpecializedCharsBase::ungetNonAsciiNormalizedCodePoint;

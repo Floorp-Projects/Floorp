@@ -589,28 +589,6 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, i
     return true;
 }
 
-template<typename CharT, class AnyCharsAccess>
-void
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
-{
-    if (c == EOF)
-        return;
-
-    sourceUnits.ungetCodeUnit();
-    if (c == '\n') {
-        int32_t c2 = sourceUnits.peekCodeUnit();
-        MOZ_ASSERT(SourceUnits::isRawEOLChar(c2));
-
-        // If it's a \r\n sequence, also unget the \r.
-        if (c2 == CharT('\n') && !sourceUnits.atStart())
-            sourceUnits.ungetOptionalCRBeforeLF();
-
-        anyCharsAccess().undoInternalUpdateLineInfoForEOL();
-    } else {
-        MOZ_ASSERT(sourceUnits.peekCodeUnit() == c);
-    }
-}
-
 template<class AnyCharsAccess>
 void
 TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t codePoint)
