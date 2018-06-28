@@ -342,8 +342,6 @@ class nsXMLContentSerializer : public nsIContentSerializer {
     return mPreLevel;
   }
 
-  bool MaybeSerializeIsValue(mozilla::dom::Element* aElement, nsAString& aStr);
-
   int32_t mPrefixIndex;
 
   struct NameSpaceDecl {
