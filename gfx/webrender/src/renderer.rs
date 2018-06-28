@@ -26,7 +26,7 @@ use device::{FileWatcherHandler, ShaderError, TextureFilter,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use device::{ProgramCache, ReadPixelsFormat};
 use euclid::{rect, Transform3D};
-use frame_builder::{ChasePrimitive, FrameBuilderConfig};
+use frame_builder::FrameBuilderConfig;
 use gleam::gl;
 use glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
@@ -270,15 +270,14 @@ pub(crate) enum TextureSampler {
     CacheA8,
     CacheRGBA8,
     ResourceCache,
-    TransformPalette,
+    ClipScrollNodes,
     RenderTasks,
     Dither,
     // A special sampler that is bound to the A8 output of
     // the *first* pass. Items rendered in this target are
     // available as inputs to tasks in any subsequent pass.
     SharedCacheA8,
-    PrimitiveHeadersF,
-    PrimitiveHeadersI,
+    LocalClipRects
 }
 
 impl TextureSampler {
@@ -303,12 +302,11 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::CacheA8 => TextureSlot(3),
             TextureSampler::CacheRGBA8 => TextureSlot(4),
             TextureSampler::ResourceCache => TextureSlot(5),
-            TextureSampler::TransformPalette => TextureSlot(6),
+            TextureSampler::ClipScrollNodes => TextureSlot(6),
             TextureSampler::RenderTasks => TextureSlot(7),
             TextureSampler::Dither => TextureSlot(8),
             TextureSampler::SharedCacheA8 => TextureSlot(9),
-            TextureSampler::PrimitiveHeadersF => TextureSlot(10),
-            TextureSampler::PrimitiveHeadersI => TextureSlot(11),
+            TextureSampler::LocalClipRects => TextureSlot(10),
         }
     }
 }
@@ -332,7 +330,12 @@ pub(crate) mod desc {
         ],
         instance_attributes: &[
             VertexAttribute {
-                name: "aData",
+                name: "aData0",
+                count: 4,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aData1",
                 count: 4,
                 kind: VertexAttributeKind::I32,
             },
@@ -1212,14 +1215,8 @@ struct VertexDataTexture {
 }
 
 impl VertexDataTexture {
-    fn new(
-        device: &mut Device,
-        format: ImageFormat,
-    ) -> VertexDataTexture {
-        let texture = device.create_texture(
-            TextureTarget::Default,
-            format,
-        );
+    fn new(device: &mut Device) -> VertexDataTexture {
+        let texture = device.create_texture(TextureTarget::Default, ImageFormat::RGBAF32);
         let pbo = device.create_pbo();
 
         VertexDataTexture { texture, pbo }
@@ -1372,9 +1369,8 @@ pub struct Renderer {
     pub gpu_profile: GpuProfiler<GpuProfileTag>,
     vaos: RendererVAOs,
 
-    prim_header_f_texture: VertexDataTexture,
-    prim_header_i_texture: VertexDataTexture,
-    transforms_texture: VertexDataTexture,
+    node_data_texture: VertexDataTexture,
+    local_clip_rects_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
     gpu_cache_texture: CacheTexture,
 
@@ -1633,10 +1629,9 @@ impl Renderer {
 
         let texture_resolver = SourceTextureResolver::new(&mut device);
 
-        let prim_header_f_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
-        let prim_header_i_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAI32);
-        let transforms_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
-        let render_task_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
+        let node_data_texture = VertexDataTexture::new(&mut device);
+        let local_clip_rects_texture = VertexDataTexture::new(&mut device);
+        let render_task_texture = VertexDataTexture::new(&mut device);
 
         let gpu_cache_texture = CacheTexture::new(
             &mut device,
@@ -1658,7 +1653,6 @@ impl Renderer {
             default_font_render_mode,
             dual_source_blending_is_enabled: true,
             dual_source_blending_is_supported: ext_dual_source_blending,
-            chase_primitive: options.chase_primitive,
         };
 
         let device_pixel_ratio = options.device_pixel_ratio;
@@ -1790,9 +1784,8 @@ impl Renderer {
                 dash_and_dot_vao,
                 border_vao,
             },
-            transforms_texture,
-            prim_header_i_texture,
-            prim_header_f_texture,
+            node_data_texture,
+            local_clip_rects_texture,
             render_task_texture,
             pipeline_info: PipelineInfo::default(),
             dither_matrix_texture,
@@ -3540,31 +3533,16 @@ impl Renderer {
         let _timer = self.gpu_profile.start_timer(GPU_TAG_SETUP_DATA);
         self.device.set_device_pixel_ratio(frame.device_pixel_ratio);
 
-        self.prim_header_f_texture.update(
-            &mut self.device,
-            &mut frame.prim_headers.headers_float,
-        );
-        self.device.bind_texture(
-            TextureSampler::PrimitiveHeadersF,
-            &self.prim_header_f_texture.texture,
-        );
+        self.node_data_texture.update(&mut self.device, &mut frame.node_data);
+        self.device.bind_texture(TextureSampler::ClipScrollNodes, &self.node_data_texture.texture);
 
-        self.prim_header_i_texture.update(
+        self.local_clip_rects_texture.update(
             &mut self.device,
-            &mut frame.prim_headers.headers_int,
+            &mut frame.clip_chain_local_clip_rects
         );
         self.device.bind_texture(
-            TextureSampler::PrimitiveHeadersI,
-            &self.prim_header_i_texture.texture,
-        );
-
-        self.transforms_texture.update(
-            &mut self.device,
-            &mut frame.transform_palette,
-        );
-        self.device.bind_texture(
-            TextureSampler::TransformPalette,
-            &self.transforms_texture.texture,
+            TextureSampler::LocalClipRects,
+            &self.local_clip_rects_texture.texture
         );
 
         self.render_task_texture
@@ -3951,9 +3929,8 @@ impl Renderer {
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
             self.device.delete_texture(dither_matrix_texture);
         }
-        self.transforms_texture.deinit(&mut self.device);
-        self.prim_header_f_texture.deinit(&mut self.device);
-        self.prim_header_i_texture.deinit(&mut self.device);
+        self.node_data_texture.deinit(&mut self.device);
+        self.local_clip_rects_texture.deinit(&mut self.device);
         self.render_task_texture.deinit(&mut self.device);
         self.device.delete_pbo(self.texture_cache_upload_pbo);
         self.texture_resolver.deinit(&mut self.device);
@@ -4040,11 +4017,11 @@ pub trait SceneBuilderHooks {
     /// and before it processes anything.
     fn register(&self);
     /// This is called before each scene swap occurs.
-    fn pre_scene_swap(&self, scenebuild_time: u64);
+    fn pre_scene_swap(&self);
     /// This is called after each scene swap occurs. The PipelineInfo contains
     /// the updated epochs and pipelines removed in the new scene compared to
     /// the old scene.
-    fn post_scene_swap(&self, info: PipelineInfo, sceneswap_time: u64);
+    fn post_scene_swap(&self, info: PipelineInfo);
     /// This is called after a resource update operation on the scene builder
     /// thread, in the case where resource updates were applied without a scene
     /// build.
@@ -4101,7 +4078,6 @@ pub struct RendererOptions {
     pub disable_dual_source_blending: bool,
     pub scene_builder_hooks: Option<Box<SceneBuilderHooks + Send>>,
     pub sampler: Option<Box<AsyncPropertySampler + Send>>,
-    pub chase_primitive: ChasePrimitive,
 }
 
 impl Default for RendererOptions {
@@ -4135,7 +4111,6 @@ impl Default for RendererOptions {
             disable_dual_source_blending: false,
             scene_builder_hooks: None,
             sampler: None,
-            chase_primitive: ChasePrimitive::Nothing,
         }
     }
 }

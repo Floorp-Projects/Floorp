@@ -93,7 +93,6 @@ enum class ImageFormat : uint32_t {
   BGRA8 = 3,
   RGBAF32 = 4,
   RG8 = 5,
-  RGBAI32 = 6,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -1169,9 +1168,6 @@ void wr_dp_push_border_gradient(WrState *aState,
                                 LayoutRect aClip,
                                 bool aIsBackfaceVisible,
                                 BorderWidths aWidths,
-                                uint32_t aWidth,
-                                uint32_t aHeight,
-                                SideOffsets2D<uint32_t> aSlice,
                                 LayoutPoint aStartPoint,
                                 LayoutPoint aEndPoint,
                                 const GradientStop *aStops,

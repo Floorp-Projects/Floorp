@@ -4,13 +4,13 @@
 
 use api::{BuiltDisplayList, ColorF, DeviceIntPoint, DeviceIntRect, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
-use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, WorldPoint};
+use api::{LayoutRect, LayoutSize, PipelineId, WorldPoint};
 use clip::{ClipChain, ClipStore};
 use clip_scroll_node::{ClipScrollNode};
 use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
-use gpu_types::{PrimitiveHeaders, TransformData, UvRectKind};
+use gpu_types::{ClipChainRectIndex, ClipScrollNodeData, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use picture::PictureSurface;
@@ -24,22 +24,7 @@ use std::{mem, f32};
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
 use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
-use util::{self, WorldToLayoutFastTransform};
-
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum ChasePrimitive {
-    Nothing,
-    LocalRect(LayoutRect),
-}
-
-impl Default for ChasePrimitive {
-    fn default() -> Self {
-        ChasePrimitive::Nothing
-    }
-}
+use util::{self, MaxRect, WorldToLayoutFastTransform};
 
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -49,7 +34,6 @@ pub struct FrameBuilderConfig {
     pub default_font_render_mode: FontRenderMode,
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
-    pub chase_primitive: ChasePrimitive,
 }
 
 /// A builder structure for `tiling::Frame`
@@ -72,14 +56,14 @@ pub struct FrameBuildingContext<'a> {
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
     pub screen_rect: DeviceIntRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
-    pub transforms: &'a [TransformData],
-    pub max_local_clip: LayoutRect,
+    pub node_data: &'a [ClipScrollNodeData],
 }
 
 pub struct FrameBuildingState<'a> {
     pub render_tasks: &'a mut RenderTaskTree,
     pub profile_counters: &'a mut FrameProfileCounters,
     pub clip_store: &'a mut ClipStore,
+    pub local_clip_rects: &'a mut Vec<LayoutRect>,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
     pub special_render_passes: &'a mut SpecialRenderPasses,
@@ -115,19 +99,19 @@ impl PictureState {
 pub struct PrimitiveRunContext<'a> {
     pub clip_chain: &'a ClipChain,
     pub scroll_node: &'a ClipScrollNode,
-    pub local_clip_rect: LayoutRect,
+    pub clip_chain_rect_index: ClipChainRectIndex,
 }
 
 impl<'a> PrimitiveRunContext<'a> {
     pub fn new(
         clip_chain: &'a ClipChain,
         scroll_node: &'a ClipScrollNode,
-        local_clip_rect: LayoutRect,
+        clip_chain_rect_index: ClipChainRectIndex,
     ) -> Self {
         PrimitiveRunContext {
             clip_chain,
             scroll_node,
-            local_clip_rect,
+            clip_chain_rect_index,
         }
     }
 }
@@ -148,7 +132,6 @@ impl FrameBuilder {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
                 dual_source_blending_is_supported: false,
-                chase_primitive: ChasePrimitive::Nothing,
             },
         }
     }
@@ -186,7 +169,8 @@ impl FrameBuilder {
         profile_counters: &mut FrameProfileCounters,
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
-        transforms: &[TransformData],
+        local_clip_rects: &mut Vec<LayoutRect>,
+        node_data: &[ClipScrollNodeData],
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -203,8 +187,6 @@ impl FrameBuilder {
             .expect("No display list?")
             .display_list;
 
-        const MAX_CLIP_COORD: f32 = 1.0e9;
-
         let frame_context = FrameBuildingContext {
             scene_id: self.scene_id,
             device_pixel_scale,
@@ -212,17 +194,14 @@ impl FrameBuilder {
             pipelines,
             screen_rect: self.screen_rect.to_i32(),
             clip_scroll_tree,
-            transforms,
-            max_local_clip: LayoutRect::new(
-                LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
-                LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
-            ),
+            node_data,
         };
 
         let mut frame_state = FrameBuildingState {
             render_tasks,
             profile_counters,
             clip_store: &mut self.clip_store,
+            local_clip_rects,
             resource_cache,
             gpu_cache,
             special_render_passes,
@@ -322,13 +301,20 @@ impl FrameBuilder {
         resource_cache.begin_frame(frame_id);
         gpu_cache.begin_frame();
 
-        let transform_palette = clip_scroll_tree.update_tree(
+        let mut node_data = Vec::with_capacity(clip_scroll_tree.nodes.len());
+        let total_prim_runs =
+            self.prim_store.pictures.iter().fold(1, |count, pic| count + pic.runs.len());
+        let mut clip_chain_local_clip_rects = Vec::with_capacity(total_prim_runs);
+        clip_chain_local_clip_rects.push(LayoutRect::max_rect());
+
+        clip_scroll_tree.update_tree(
             &self.screen_rect.to_i32(),
             device_pixel_scale,
             &mut self.clip_store,
             resource_cache,
             gpu_cache,
             pan,
+            &mut node_data,
             scene_properties,
         );
 
@@ -349,7 +335,8 @@ impl FrameBuilder {
             &mut profile_counters,
             device_pixel_scale,
             scene_properties,
-            &transform_palette.transforms,
+            &mut clip_chain_local_clip_rects,
+            &node_data,
         );
 
         resource_cache.block_until_all_resources_added(gpu_cache,
@@ -382,7 +369,6 @@ impl FrameBuilder {
 
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
-        let mut prim_headers = PrimitiveHeaders::new();
         let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
                                        self.config.dual_source_blending_is_supported;
 
@@ -393,7 +379,7 @@ impl FrameBuilder {
                 resource_cache,
                 clip_scroll_tree,
                 use_dual_source_blending,
-                transforms: &transform_palette,
+                node_data: &node_data,
             };
 
             pass.build(
@@ -402,7 +388,6 @@ impl FrameBuilder {
                 &mut render_tasks,
                 &mut deferred_resolves,
                 &self.clip_store,
-                &mut prim_headers,
             );
 
             if let RenderPassKind::OffScreen { ref texture_cache, .. } = pass.kind {
@@ -424,13 +409,13 @@ impl FrameBuilder {
             layer,
             profile_counters,
             passes,
-            transform_palette: transform_palette.transforms,
+            node_data,
+            clip_chain_local_clip_rects,
             render_tasks,
             deferred_resolves,
             gpu_cache_frame_id,
             has_been_rendered: false,
             has_texture_cache_tasks,
-            prim_headers,
         }
     }
 

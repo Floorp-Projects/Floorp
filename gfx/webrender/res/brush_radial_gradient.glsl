@@ -49,16 +49,11 @@ void brush_vs(
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
-    vec4 texel_rect
+    vec4 unused
 ) {
     RadialGradient gradient = fetch_radial_gradient(prim_address);
 
-    if ((brush_flags & BRUSH_FLAG_SEGMENT_RELATIVE) != 0) {
-        vPos = (vi.local_pos - segment_rect.p0) / segment_rect.size;
-        vPos = vPos * (texel_rect.zw - texel_rect.xy) + texel_rect.xy;
-    } else {
-        vPos = vi.local_pos - local_rect.p0;
-    }
+    vPos = vi.local_pos - local_rect.p0;
 
     vCenter = gradient.center_start_end_radius.xy;
     vStartRadius = gradient.center_start_end_radius.z;

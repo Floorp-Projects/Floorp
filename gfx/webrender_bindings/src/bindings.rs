@@ -514,8 +514,7 @@ impl RenderNotifier for CppNotifier {
     fn new_frame_ready(&self,
                        _: DocumentId,
                        _scrolled: bool,
-                       composite_needed: bool,
-                       _render_time_ns: Option<u64>) {
+                       composite_needed: bool) {
         unsafe {
             if composite_needed {
                 wr_notifier_new_frame_ready(self.window_id);
@@ -718,11 +717,11 @@ impl SceneBuilderHooks for APZCallbacks {
         unsafe { apz_register_updater(self.window_id) }
     }
 
-    fn pre_scene_swap(&self, _scenebuild_time: u64) {
+    fn pre_scene_swap(&self) {
         unsafe { apz_pre_scene_swap(self.window_id) }
     }
 
-    fn post_scene_swap(&self, info: PipelineInfo, _sceneswap_time: u64) {
+    fn post_scene_swap(&self, info: PipelineInfo) {
         let info = WrPipelineInfo::new(info);
         unsafe { apz_post_scene_swap(self.window_id, info) }
 
@@ -2138,8 +2137,11 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder .dl_builder
-         .push_border(&prim_info, widths.into(), border_details);
+    state.frame_builder
+         .dl_builder
+         .push_border(&prim_info,
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
@@ -2148,9 +2150,6 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              clip: LayoutRect,
                                              is_backface_visible: bool,
                                              widths: BorderWidths,
-                                             width: u32,
-                                             height: u32,
-                                             slice: SideOffsets2D<u32>,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
                                              stops: *const GradientStop,
@@ -2162,30 +2161,24 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
     let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.to_owned();
 
-    let gradient = state.frame_builder.dl_builder.create_gradient(
-        start_point.into(),
-        end_point.into(),
-        stops_vector,
-        extend_mode.into()
-    );
-
-    let border_details = BorderDetails::NinePatch(NinePatchBorder {
-        source: NinePatchBorderSource::Gradient(gradient),
-        width,
-        height,
-        slice,
-        fill: false,
-        outset: outset.into(),
-        repeat_horizontal: RepeatMode::Stretch,
-        repeat_vertical: RepeatMode::Stretch,
-    });
-
+    let border_details = BorderDetails::Gradient(GradientBorder {
+                                                     gradient:
+                                                         state.frame_builder
+                                                              .dl_builder
+                                                              .create_gradient(start_point.into(),
+                                                                               end_point.into(),
+                                                                               stops_vector,
+                                                                               extend_mode.into()),
+                                                     outset: outset.into(),
+                                                 });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
-         .push_border(&prim_info, widths.into(), border_details);
+         .push_border(&prim_info,
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
@@ -2205,36 +2198,25 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
     let stops_slice = make_slice(stops, stops_count);
     let stops_vector = stops_slice.to_owned();
 
-    let sides = SideOffsets2D::new(
-        widths.top as u32,
-        widths.right as u32,
-        widths.bottom as u32,
-        widths.left as u32,
-    );
-
-    let gradient = state.frame_builder.dl_builder.create_radial_gradient(
-        center.into(),
-        radius.into(),
-        stops_vector,
-        extend_mode.into()
-    );
-
-    let border_details = BorderDetails::NinePatch(NinePatchBorder {
-        source: NinePatchBorderSource::RadialGradient(gradient),
-        width: rect.size.width as u32,
-        height: rect.size.height as u32,
-        sides,
-        fill: false,
-        outset: outset.into(),
-        repeat_horizontal: RepeatMode::Stretch,
-        repeat_vertical: RepeatMode::Stretch,
-    });
+    let border_details =
+        BorderDetails::RadialGradient(RadialGradientBorder {
+                                          gradient:
+                                              state.frame_builder
+                                                   .dl_builder
+                                                   .create_radial_gradient(center.into(),
+                                                                           radius.into(),
+                                                                           stops_vector,
+                                                                           extend_mode.into()),
+                                          outset: outset.into(),
+                                      });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
     state.frame_builder
          .dl_builder
-         .push_border(&prim_info, widths.into(), border_details);
+         .push_border(&prim_info,
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
