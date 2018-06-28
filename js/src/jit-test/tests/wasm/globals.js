@@ -315,12 +315,13 @@ wasmAssert(`(module
     assertEq(new Global({value: "i32"}) instanceof Global, true);
     assertEq(new Global({value: "f32"}) instanceof Global, true);
     assertEq(new Global({value: "f64"}) instanceof Global, true);
+    assertEq(new Global({value: "i64"}) instanceof Global, true); // No initial value works
 
     // These types should not work:
-    assertErrorMessage(() => new Global({value: "i64"}),   TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global({}),               TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global({value: "fnord"}), TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global(),                 TypeError, /Global requires more than 0 arguments/);
+    assertErrorMessage(() => new Global({}),                TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global({value: "fnord"}),  TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global(),                  TypeError, /Global requires more than 0 arguments/);
+    assertErrorMessage(() => new Global({value: "i64"}, 0), TypeError, /bad type for a WebAssembly.Global/); // Initial value does not work
 
     // Coercion of init value; ".value" accessor
     assertEq((new Global({value: "i32"}, 3.14)).value, 3);
@@ -334,6 +335,12 @@ wasmAssert(`(module
     assertEq((new Global({value: "i32"})).value, 0);
     assertEq((new Global({value: "f32"})).value, 0);
     assertEq((new Global({value: "f64"})).value, 0);
+    let mod = wasmEvalText(`(module
+                             (import "" "g" (global i64))
+                             (func (export "f") (result i32)
+                              (i64.eqz (get_global 0))))`,
+                           {"":{g: new Global({value: "i64"})}});
+    assertEq(mod.exports.f(), 1);
 
     {
         // "value" is enumerable
