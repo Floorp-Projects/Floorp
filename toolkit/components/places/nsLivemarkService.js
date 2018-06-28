@@ -15,9 +15,6 @@ XPCOMUtils.defineLazyGetter(this, "history", function() {
   let livemarks = PlacesUtils.livemarks;
   // Lazily add an history observer when it's actually needed.
   PlacesUtils.history.addObserver(livemarks, true);
-  let listener = new PlacesWeakCallbackWrapper(
-    livemarks.handlePlacesEvents.bind(livemarks));
-  PlacesObservers.addListener(["page-visited"], listener);
   return PlacesUtils.history;
 });
 
@@ -83,6 +80,10 @@ function LivemarkService() {
 
   // Observe bookmarks but don't init the service just for that.
   PlacesUtils.bookmarks.addObserver(this, true);
+
+  this._placesListener = new PlacesWeakCallbackWrapper(
+    this.handlePlacesEvents.bind(this));
+  PlacesObservers.addListener(["page-visited"], this._placesListener);
 
   this._livemarksMap = null;
   this._promiseLivemarksMapReady = Promise.resolve();
@@ -426,7 +427,7 @@ LivemarkService.prototype = {
   onDeleteURI(aURI) {
     this._withLivemarksMap(livemarksMap => {
       for (let livemark of livemarksMap.values()) {
-        livemark.updateURIVisitedStatus(aURI, false);
+        livemark.updateURIVisitedStatus(aURI.spec, false);
       }
     });
   },
@@ -609,7 +610,7 @@ Livemark.prototype = {
     // Update visited status for each entry.
     for (let child of this._children) {
       history.hasVisits(child.uri).then(isVisited => {
-        this.updateURIVisitedStatus(child.uri, isVisited);
+        this.updateURIVisitedStatus(child.uri.spec, isVisited);
       }).catch(Cu.reportError);
     }
 
