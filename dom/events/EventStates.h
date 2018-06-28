@@ -243,7 +243,8 @@ private:
 #define NS_EVENT_STATE_REQUIRED      NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content is optional (and can be required).
 #define NS_EVENT_STATE_OPTIONAL      NS_DEFINE_EVENT_STATE_MACRO(22)
-// Free bit                          NS_DEFINE_EVENT_STATE_MACRO(23)
+// Element is either a defined custom element or uncustomized element.
+#define NS_EVENT_STATE_DEFINED       NS_DEFINE_EVENT_STATE_MACRO(23)
 // Link has been visited.
 #define NS_EVENT_STATE_VISITED       NS_DEFINE_EVENT_STATE_MACRO(24)
 // Link hasn't been visited.
@@ -354,6 +355,7 @@ private:
   DISABLED_STATES |                           \
   REQUIRED_STATES |                           \
   NS_EVENT_STATE_ACTIVE |                     \
+  NS_EVENT_STATE_DEFINED |                    \
   NS_EVENT_STATE_DRAGOVER |                   \
   NS_EVENT_STATE_FOCUS |                      \
   NS_EVENT_STATE_FOCUSRING |                  \

@@ -30,8 +30,13 @@
 
 #include "hb-open-type-private.hh"
 #include "hb-aat-layout-common-private.hh"
+#include "hb-aat-layout-ankr-table.hh"
 
-#define HB_AAT_TAG_KERX HB_TAG('k','e','r','x')
+/*
+ * kerx -- Extended Kerning
+ * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6kerx.html
+ */
+#define HB_AAT_TAG_kerx HB_TAG('k','e','r','x')
 
 
 namespace AAT {
@@ -44,7 +49,7 @@ struct KerxFormat0Records
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this));
+    return_trace (likely (c->check_struct (this)));
   }
 
   protected:
@@ -70,22 +75,23 @@ struct KerxSubTableFormat0
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-      c->check_array (records, records[0].static_size, nPairs));
+    return_trace (likely (c->check_struct (this) &&
+			  recordsZ.sanitize (c, nPairs)));
   }
 
   protected:
   // TODO(ebraminio): A custom version of "BinSearchArrayOf<KerxPair> pairs;" is
   // needed here to use HBUINT32 instead
-  HBUINT32 nPairs;	/* The number of kerning pairs in this subtable */
-  HBUINT32 searchRange; /* The largest power of two less than or equal to the value of nPairs,
-                         * multiplied by the size in bytes of an entry in the subtable. */
-  HBUINT32 entrySelector; /* This is calculated as log2 of the largest power of two less
-                           * than or equal to the value of nPairs. */
-  HBUINT32 rangeShift;	/* The value of nPairs minus the largest power of two less than or equal to nPairs. */
-  KerxFormat0Records records[VAR]; /* VAR=nPairs */
+  HBUINT32	nPairs;		/* The number of kerning pairs in this subtable */
+  HBUINT32	searchRange;	/* The largest power of two less than or equal to the value of nPairs,
+				 * multiplied by the size in bytes of an entry in the subtable. */
+  HBUINT32	entrySelector;	/* This is calculated as log2 of the largest power of two less
+				 * than or equal to the value of nPairs. */
+  HBUINT32	rangeShift;	/* The value of nPairs minus the largest power of two less than or equal to nPairs. */
+  UnsizedArrayOf<KerxFormat0Records>
+		recordsZ;	/* VAR=nPairs */
   public:
-  DEFINE_SIZE_ARRAY (16, records);
+  DEFINE_SIZE_ARRAY (16, recordsZ);
 };
 
 struct KerxSubTableFormat1
@@ -93,8 +99,8 @@ struct KerxSubTableFormat1
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-      stateHeader.sanitize (c));
+    return_trace (likely (c->check_struct (this) &&
+			  stateHeader.sanitize (c)));
   }
 
   protected:
@@ -112,7 +118,8 @@ struct KerxClassTable
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (firstGlyph.sanitize (c) && classes.sanitize (c));
+    return_trace (likely (firstGlyph.sanitize (c) &&
+			  classes.sanitize (c)));
   }
 
   protected:
@@ -141,11 +148,11 @@ struct KerxSubTableFormat2
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-      rowWidth.sanitize (c) &&
-		  leftClassTable.sanitize (c, this) &&
-		  rightClassTable.sanitize (c, this) &&
-		  array.sanitize (c, this));
+    return_trace (likely (c->check_struct (this) &&
+			  rowWidth.sanitize (c) &&
+			  leftClassTable.sanitize (c, this) &&
+			  rightClassTable.sanitize (c, this) &&
+			  array.sanitize (c, this)));
   }
 
   protected:
@@ -168,11 +175,11 @@ struct KerxSubTableFormat4
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-      rowWidth.sanitize (c) &&
-		  leftClassTable.sanitize (c, this) &&
-		  rightClassTable.sanitize (c, this) &&
-		  array.sanitize (c, this));
+    return_trace (likely (c->check_struct (this) &&
+			  rowWidth.sanitize (c) &&
+			  leftClassTable.sanitize (c, this) &&
+			  rightClassTable.sanitize (c, this) &&
+			  array.sanitize (c, this)));
   }
 
   protected:
@@ -195,11 +202,11 @@ struct KerxSubTableFormat6
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-      rowIndexTable.sanitize (c, this) &&
-      columnIndexTable.sanitize (c, this) &&
-      kerningArray.sanitize (c, this) &&
-      kerningVector.sanitize (c, this));
+    return_trace (likely (c->check_struct (this) &&
+			  rowIndexTable.sanitize (c, this) &&
+			  columnIndexTable.sanitize (c, this) &&
+			  kerningArray.sanitize (c, this) &&
+			  kerningVector.sanitize (c, this)));
   }
 
   protected:
@@ -236,7 +243,7 @@ struct KerxTable
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    if (!c->check_struct (this))
+    if (unlikely (!c->check_struct (this)))
       return_trace (false);
 
     switch (format) {
@@ -271,7 +278,7 @@ struct SubtableGlyphCoverageArray
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this));
+    return_trace (likely (c->check_struct (this)));
   }
 
   protected:
@@ -284,7 +291,7 @@ struct SubtableGlyphCoverageArray
 
 struct kerx
 {
-  static const hb_tag_t tableTag = HB_AAT_TAG_KERX;
+  static const hb_tag_t tableTag = HB_AAT_TAG_kerx;
 
   inline bool apply (hb_aat_apply_context_t *c, const AAT::ankr *ankr) const
   {
@@ -296,18 +303,18 @@ struct kerx
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    if (!(c->check_struct (this)))
+    if (unlikely (!(c->check_struct (this))))
      return_trace (false);
 
     /* TODO: Something like `morx`s ChainSubtable should be done here instead */
     const KerxTable *table = &StructAfter<KerxTable> (*this);
-    if (!(table->sanitize (c)))
+    if (unlikely (!(table->sanitize (c))))
       return_trace (false);
 
     for (unsigned int i = 0; i < nTables - 1; ++i)
     {
       table = &StructAfter<KerxTable> (*table);
-      if (!(table->sanitize (c)))
+      if (unlikely (!(table->sanitize (c))))
         return_trace (false);
     }
 
@@ -327,7 +334,7 @@ struct kerx
   HBUINT16		version;
   HBUINT16		padding;
   HBUINT32		nTables;
-/*KerxTable tables[VAR];*/
+/*KerxTable tablesZ[VAR]; XXX ArrayOf??? */
 /*SubtableGlyphCoverageArray coverage_array;*/
   public:
   DEFINE_SIZE_STATIC (8);

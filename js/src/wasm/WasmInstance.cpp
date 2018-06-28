@@ -108,6 +108,8 @@ bool
 Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
+    AssertRealmUnchanged aru(cx);
+
     Tier tier = code().bestTier();
 
     const FuncImport& fi = metadata(tier).funcImports[funcImportIndex];
@@ -151,6 +153,8 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
 
     FuncImportTls& import = funcImportTls(fi);
     RootedFunction importFun(cx, &import.obj->as<JSFunction>());
+    MOZ_ASSERT(cx->realm() == importFun->realm());
+
     RootedValue fval(cx, ObjectValue(*import.obj));
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
@@ -319,6 +323,10 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
 /* static */ uint32_t
 Instance::currentMemory_i32(Instance* instance)
 {
+    // This invariant must hold when running Wasm code. Assert it here so we can
+    // write tests for cross-realm calls.
+    MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());
+
     uint32_t byteLength = instance->memory()->volatileMemoryLength();
     MOZ_ASSERT(byteLength % wasm::PageSize == 0);
     return byteLength / wasm::PageSize;
@@ -504,6 +512,7 @@ Instance::Instance(JSContext* cx,
     tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
 #endif
     tlsData()->instance = this;
+    tlsData()->realm = realm_;
     tlsData()->cx = cx;
     tlsData()->resetInterrupt(cx);
     tlsData()->jumpTable = code_->tieringJumpTable();
@@ -520,16 +529,19 @@ Instance::Instance(JSContext* cx,
             Tier calleeTier = calleeInstance.code().bestTier();
             const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f, calleeTier);
             import.tls = calleeInstance.tlsData();
+            import.realm = f->realm();
             import.code = calleeInstance.codeBase(calleeTier) + codeRange.funcNormalEntry();
             import.baselineScript = nullptr;
             import.obj = calleeInstanceObj;
         } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.funcType())) {
             import.tls = tlsData();
+            import.realm = f->realm();
             import.code = thunk;
             import.baselineScript = nullptr;
             import.obj = f;
         } else {
             import.tls = tlsData();
+            import.realm = f->realm();
             import.code = codeBase(callerTier) + fi.interpExitCodeOffset();
             import.baselineScript = nullptr;
             import.obj = f;

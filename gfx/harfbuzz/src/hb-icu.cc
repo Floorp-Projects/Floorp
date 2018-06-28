@@ -351,7 +351,12 @@ static hb_unicode_funcs_t *static_icu_funcs = nullptr;
 static
 void free_static_icu_funcs (void)
 {
-  hb_unicode_funcs_destroy (static_icu_funcs);
+retry:
+  hb_unicode_funcs_t *icu_funcs = (hb_unicode_funcs_t *) hb_atomic_ptr_get (&static_icu_funcs);
+  if (!hb_atomic_ptr_cmpexch (&static_icu_funcs, icu_funcs, nullptr))
+    goto retry;
+
+  hb_unicode_funcs_destroy (icu_funcs);
 }
 #endif
 

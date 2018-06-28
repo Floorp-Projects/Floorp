@@ -45,6 +45,7 @@ hb_subset_input_create_or_fail (void)
 
   input->unicodes = hb_set_create ();
   input->glyphs = hb_set_create ();
+  input->drop_ot_layout = true;
 
   return input;
 }
@@ -116,4 +117,20 @@ HB_EXTERN hb_bool_t *
 hb_subset_input_drop_hints (hb_subset_input_t *subset_input)
 {
   return &subset_input->drop_hints;
+}
+
+/**
+ * hb_subset_input_drop_ot_layout:
+ * @subset_input: a subset_input.
+ *
+ * If enabled ot layout tables will be dropped as part of
+ * the subsetting operation. Currently this defaults to
+ * true.
+ *
+ * Since: REPLACEME
+ **/
+HB_EXTERN hb_bool_t *
+hb_subset_input_drop_ot_layout (hb_subset_input_t *subset_input)
+{
+  return &subset_input->drop_ot_layout;
 }

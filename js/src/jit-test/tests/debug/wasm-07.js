@@ -15,7 +15,9 @@ wasmRunWithDebugger(
     function ({dbg}) {
         offsets = [];
         dbg.onEnterFrame = function (frame) {
-            if (frame.type != 'wasmcall') return;
+            if (frame.type != 'wasmcall') {
+                return;
+            }
             offsets.push(frame.offset);
             frame.onStep = function () {
                 offsets.push(frame.offset);
@@ -24,16 +26,16 @@ wasmRunWithDebugger(
                 offsets.push(frame.offset);
             };
         };
-  },
-  function ({wasmScript, error}) {
-      assertEq(error, undefined);
-      assertEq(offsets.length, 5);
-      offsets.forEach(offset => {
-          var loc = wasmScript.getOffsetLocation(offset);
-          assertEq(loc.isEntryPoint, true);
-          assertEq(loc.lineNumber > 0, true);
-          assertEq(loc.columnNumber > 0, true);
-          assertEq(wasmScript.getLineOffsets(loc.lineNumber).length, 1);
-      });
-  }
+    },
+    function ({wasmScript, error}) {
+        assertEq(error, undefined);
+        assertEq(offsets.length, 5);
+        offsets.forEach(offset => {
+            var loc = wasmScript.getOffsetLocation(offset);
+            assertEq(loc.isEntryPoint, true);
+            assertEq(loc.lineNumber > 0, true);
+            assertEq(loc.columnNumber > 0, true);
+            assertEq(wasmScript.getLineOffsets(loc.lineNumber).length, 1);
+        });
+    }
 );
