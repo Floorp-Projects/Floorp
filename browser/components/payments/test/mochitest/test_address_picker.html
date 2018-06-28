@@ -69,8 +69,8 @@ add_task(async function test_initialSet() {
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 2, "Check dropdown has both addresses");
-  ok(options[0].textContent.includes("123 Sesame Street"), "Check first address");
-  ok(options[1].textContent.includes("P.O. Box 123"), "Check second address");
+  ok(options[0].textContent.includes("Mr. Foo"), "Check first address");
+  ok(options[1].textContent.includes("Mrs. Bar"), "Check second address");
 });
 
 add_task(async function test_update() {
@@ -102,28 +102,38 @@ add_task(async function test_update() {
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 2, "Check dropdown still has both addresses");
-  ok(options[0].textContent.includes("MI-edit"), "Check updated first address-level1");
-  ok(!options[0].textContent.includes("Some City"), "Check removed first address-level2");
-  ok(options[0].textContent.includes("new-edit"), "Check updated first address");
-
-  ok(options[1].textContent.includes("P.O. Box 123"), "Check second address is the same");
+  ok(options[0].textContent.includes("Mr. Foo-edit"), "Check updated name in first address");
+  ok(!options[0].getAttribute("address-level2"), "Check removed first address-level2");
+  ok(options[1].textContent.includes("Mrs. Bar"), "Check that name is the same in second address");
+  ok(options[1].getAttribute("street-address").includes("P.O. Box 123"),
+     "Check second address is the same");
 });
 
 add_task(async function test_change_selected_address() {
   let options = picker1.dropdown.popupBox.children;
-  let selectedOption = picker1.dropdown.selectedOption;
-  is(selectedOption, null, "Should default to no selected option");
+  is(picker1.dropdown.selectedOption, null, "Should default to no selected option");
   let {selectedShippingAddress} = picker1.requestStore.getState();
   is(selectedShippingAddress, null, "store should have no option selected");
 
-  picker1.dropdown.click();
-  options[1].click();
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey(options[1].getAttribute("name"), {});
   await asyncElementRendered();
 
-  selectedOption = picker1.dropdown.selectedOption;
+  let selectedOption = picker1.dropdown.selectedOption;
   is(selectedOption, options[1], "Selected option should now be the second option");
   selectedShippingAddress = picker1.requestStore.getState().selectedShippingAddress;
-  is(selectedShippingAddress, selectedOption.guid, "store should have second option selected");
+  is(selectedShippingAddress, selectedOption.getAttribute("guid"),
+     "store should have second option selected");
+});
+
+add_task(async function test_streetAddress_combines_street_level2_level1_postalCode_country() {
+  let options = picker1.dropdown.popupBox.children;
+  let richoption1 = picker1.dropdown.querySelector(".rich-select-selected-option");
+  let streetAddress = richoption1.querySelector(".street-address");
+  /* eslint-disable max-len */
+  is(streetAddress.textContent,
+     `${options[1].getAttribute("street-address")} ${options[1].getAttribute("address-level2")} ${options[1].getAttribute("address-level1")} ${options[1].getAttribute("postal-code")} ${options[1].getAttribute("country")}`);
+  /* eslint-enable max-len */
 });
 
 add_task(async function test_delete() {
@@ -145,7 +155,7 @@ add_task(async function test_delete() {
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 1, "Check dropdown has one remaining address");
-  ok(options[0].textContent.includes("P.O. Box 123"), "Check remaining address");
+  ok(options[0].textContent.includes("Mrs. Bar"), "Check remaining address");
 });
 </script>
 

@@ -104,8 +104,7 @@ add_task(async function test_update() {
 
 add_task(async function test_change_selected_card() {
   let options = picker1.dropdown.popupBox.children;
-  let selectedOption = picker1.dropdown.selectedOption;
-  is(selectedOption, null, "Should default to no selected option");
+  is(picker1.dropdown.selectedOption, null, "Should default to no selected option");
   let {
     selectedPaymentCard,
     selectedPaymentCardSecurityCode,
@@ -114,26 +113,24 @@ add_task(async function test_change_selected_card() {
   is(selectedPaymentCardSecurityCode, null, "store should have no security code");
 
   await SimpleTest.promiseFocus();
-  let codeFocusPromise = new Promise(resolve => {
-    picker1.securityCodeInput.addEventListener("focus", resolve, {once: true});
-  });
-  picker1.dropdown.click();
-  options[1].click();
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey("************1234", {});
   await asyncElementRendered();
-  await codeFocusPromise;
   ok(true, "Focused the security code field");
   ok(!picker1.open, "Picker should be closed");
 
-  selectedOption = picker1.dropdown.selectedOption;
+  let selectedOption = picker1.dropdown.selectedOption;
   is(selectedOption, options[1], "Selected option should now be the second option");
   selectedPaymentCard = picker1.requestStore.getState().selectedPaymentCard;
-  is(selectedPaymentCard, selectedOption.guid, "store should have second option selected");
+  is(selectedPaymentCard, selectedOption.getAttribute("guid"),
+     "store should have second option selected");
   selectedPaymentCardSecurityCode = picker1.requestStore.getState().selectedPaymentCardSecurityCode;
   is(selectedPaymentCardSecurityCode, null, "store should have empty security code");
 
   let stateChangePromise = promiseStateChange(picker1.requestStore);
 
   // Type in the security code field
+  picker1.securityCodeInput.focus();
   sendString("836");
   sendKey("Tab");
   let state = await stateChangePromise;

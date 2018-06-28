@@ -121,8 +121,8 @@ add_task(async function test_edit_link() {
 
       let picker = content.document
                      .querySelector("address-picker[selected-state-key='selectedShippingAddress']");
-      Cu.waiveXrays(picker).dropdown.click();
-      Cu.waiveXrays(picker).dropdown.popupBox.children[0].click();
+      Cu.waiveXrays(picker).dropdown.popupBox.focus();
+      EventUtils.synthesizeKey(PTU.Addresses.TimBL["given-name"], {}, content.window);
 
       let editLink = content.document.querySelector("address-picker .edit-link");
       is(editLink.textContent, "Edit", "Edit link text");
