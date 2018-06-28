@@ -320,6 +320,5 @@ ViewSourceBrowser.prototype = {
  *        String containing the URI
  */
 ViewSourceBrowser.isViewSource = function(uri) {
-  return uri.startsWith("view-source:") ||
-         (uri.startsWith("data:") && uri.includes("MathML"));
+  return uri.startsWith("view-source:");
 };
