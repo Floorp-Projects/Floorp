@@ -22,6 +22,22 @@ class ImageContainer;
 class DXGIYCbCrTextureClient;
 class DXGIYCbCrTextureData;
 
+class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper
+{
+public:
+  DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
+                                   TextureFlags aTextureFlags,
+                                   ID3D11Device* aDevice);
+
+  bool IsCompatible(TextureClient* aTextureClient) override;
+
+  already_AddRefed<TextureClient> Allocate(KnowsCompositor* aAllocator) override;
+
+protected:
+  const PlanarYCbCrData& mData;
+  RefPtr<ID3D11Device> mDevice;
+};
+
 class D3D11YCbCrRecycleAllocator : public TextureClientRecycleAllocator
 {
 public:
