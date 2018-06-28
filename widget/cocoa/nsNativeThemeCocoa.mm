@@ -2745,12 +2745,15 @@ nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
   params.onDarkBackground = IsDarkBackground(aFrame);
   // Don't use custom scrollbars for overlay scrollbars since they are
   // generally good enough for use cases of custom scrollbars.
-  if (!params.overlay &&
-      aFrame->StyleUserInterface()->HasCustomScrollbars()) {
-    ComputedStyle* cs = aFrame->Style();
-    params.custom = true;
-    params.trackColor = GetScrollbarTrackColor(cs, &GetAutoScrollbarTrackColor);
-    params.faceColor = GetScrollbarFaceColor(cs, &GetAutoScrollbarFaceColor);
+  if (!params.overlay) {
+    ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+    if (style->StyleUserInterface()->HasCustomScrollbars()) {
+      params.custom = true;
+      params.trackColor =
+        GetScrollbarTrackColor(style, &GetAutoScrollbarTrackColor);
+      params.faceColor =
+        GetScrollbarFaceColor(style, &GetAutoScrollbarFaceColor);
+    }
   }
   return params;
 }
