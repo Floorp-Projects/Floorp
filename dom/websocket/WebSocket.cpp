@@ -63,7 +63,6 @@
 #include "nsIWebSocketListener.h"
 #include "nsProxyRelease.h"
 #include "nsWeakReference.h"
-#include "nsINSSErrorsService.h"
 
 #define OPEN_EVENT_STRING NS_LITERAL_STRING("open")
 #define MESSAGE_EVENT_STRING NS_LITERAL_STRING("message")
@@ -822,15 +821,6 @@ WebSocketImpl::ScheduleConnectionCloseEvents(nsISupports* aContext,
     }
 
     if (NS_FAILED(aStatusCode)) {
-      uint32_t errorClass;
-      nsCOMPtr<nsINSSErrorsService> errSvc =
-        do_GetService("@mozilla.org/nss_errors_service;1");
-      // If GetErrorClass succeeds the error is TLS related and we need to set
-      // status code to 1015.
-      if (errSvc && NS_SUCCEEDED(errSvc->GetErrorClass(aStatusCode, &errorClass))) {
-        mCloseEventCode = 1015;
-      }
-
       ConsoleError();
       mFailed = true;
     }
