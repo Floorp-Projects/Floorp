@@ -288,13 +288,8 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
 already_AddRefed<Promise>
 ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
 {
-  if (!mInner) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
   nsIGlobalObject* global = GetParentObject();
-  if (!global) {
+  if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -304,11 +299,18 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
+  if (!mInner) {
+    outer->MaybeResolve(false);
+    return outer.forget();
+  }
+
   mInner->Unregister(
     [outer] (bool aSuccess) {
       outer->MaybeResolve(aSuccess);
     }, [outer] (ErrorResult& aRv) {
-      outer->MaybeReject(aRv);
+      // register() should be resilient and resolve false instead
+      // of rejecting in most cases.
+      outer->MaybeResolve(false);
     });
 
   return outer.forget();
