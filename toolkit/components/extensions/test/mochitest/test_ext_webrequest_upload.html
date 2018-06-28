@@ -98,6 +98,10 @@ function background() {
   browser.webRequest.onCompleted.addListener(
     details => {
       browser.test.log(`onCompleted ${details.requestId} ${details.url}`);
+      // See bug 1471387
+      if (details.url.endsWith("/favicon.ico") || details.originUrl == "about:newtab") {
+        return;
+      }
 
       browser.test.sendMessage("done");
     },
@@ -105,6 +109,10 @@ function background() {
 
   let onBeforeRequest = details => {
     browser.test.log(`${name} ${details.requestId} ${details.url}`);
+    // See bug 1471387
+    if (details.url.endsWith("/favicon.ico") || details.originUrl == "about:newtab") {
+      return;
+    }
 
     onUpload(details);
   };

@@ -15,6 +15,7 @@ user_pref("app.update.url.android", "");
 // bug 1210465.
 user_pref("apz.content_response_timeout", 60000);
 user_pref("browser.EULA.override", true);
+user_pref("browser.chrome.guess_favicon", false);
 // Make sure we don't try to load snippets from the network.
 user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 // Disable Bookmark backups by default.
