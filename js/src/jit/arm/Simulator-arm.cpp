@@ -38,6 +38,7 @@
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
 #include "jit/AtomicOperations.h"
+#include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
@@ -620,7 +621,7 @@ ArmDebugger::redoBreakpoints()
 static char*
 ReadLine(const char* prompt)
 {
-    char* result = nullptr;
+    UniqueChars result;
     char line_buf[256];
     int offset = 0;
     bool keep_going = true;
@@ -629,8 +630,6 @@ ReadLine(const char* prompt)
     while (keep_going) {
         if (fgets(line_buf, sizeof(line_buf), stdin) == nullptr) {
             // fgets got an error. Just give up.
-            if (result)
-                js_delete(result);
             return nullptr;
         }
         int len = strlen(line_buf);
@@ -642,7 +641,7 @@ ReadLine(const char* prompt)
         if (!result) {
             // Allocate the initial result and make room for the terminating
             // '\0'.
-            result = js_pod_malloc<char>(len + 1);
+            result.reset(js_pod_malloc<char>(len + 1));
             if (!result)
                 return nullptr;
         } else {
@@ -653,18 +652,17 @@ ReadLine(const char* prompt)
                 return nullptr;
             // Copy the existing input into the new array and set the new
             // array as the result.
-            memcpy(new_result, result, offset * sizeof(char));
-            js_free(result);
-            result = new_result;
+            memcpy(new_result, result.get(), offset * sizeof(char));
+            result.reset(new_result);
         }
         // Copy the newly read line into the result.
-        memcpy(result + offset, line_buf, len * sizeof(char));
+        memcpy(result.get() + offset, line_buf, len * sizeof(char));
         offset += len;
     }
 
     MOZ_ASSERT(result);
     result[offset] = '\0';
-    return result;
+    return result.release();
 }
 
 

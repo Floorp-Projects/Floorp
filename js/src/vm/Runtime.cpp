@@ -322,7 +322,7 @@ JSRuntime::destroyRuntime()
 
     js_delete(defaultFreeOp_.ref());
 
-    js_free(defaultLocale);
+    defaultLocale = nullptr;
     js_delete(jitRuntime_.ref());
 
 #ifdef DEBUG
@@ -532,27 +532,25 @@ JSRuntime::setDefaultLocale(const char* locale)
     if (!locale)
         return false;
 
-    char* newLocale = DuplicateString(mainContextFromOwnThread(), locale).release();
+    UniqueChars newLocale = DuplicateString(mainContextFromOwnThread(), locale);
     if (!newLocale)
         return false;
 
-    resetDefaultLocale();
-    defaultLocale = newLocale;
+    defaultLocale.ref() = std::move(newLocale);
     return true;
 }
 
 void
 JSRuntime::resetDefaultLocale()
 {
-    js_free(defaultLocale);
     defaultLocale = nullptr;
 }
 
 const char*
 JSRuntime::getDefaultLocale()
 {
-    if (defaultLocale)
-        return defaultLocale;
+    if (defaultLocale.ref())
+        return defaultLocale.ref().get();
 
     const char* locale = setlocale(LC_ALL, nullptr);
 
@@ -560,18 +558,18 @@ JSRuntime::getDefaultLocale()
     if (!locale || !strcmp(locale, "C"))
         locale = "und";
 
-    char* lang = DuplicateString(mainContextFromOwnThread(), locale).release();
+    UniqueChars lang = DuplicateString(mainContextFromOwnThread(), locale);
     if (!lang)
         return nullptr;
 
     char* p;
-    if ((p = strchr(lang, '.')))
+    if ((p = strchr(lang.get(), '.')))
         *p = '\0';
-    while ((p = strchr(lang, '_')))
+    while ((p = strchr(lang.get(), '_')))
         *p = '-';
 
-    defaultLocale = lang;
-    return defaultLocale;
+    defaultLocale.ref() = std::move(lang);
+    return defaultLocale.ref().get();
 }
 
 void

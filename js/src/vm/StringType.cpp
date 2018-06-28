@@ -782,22 +782,21 @@ JSFlatString*
 JSDependentString::undependInternal(JSContext* cx)
 {
     size_t n = length();
-    CharT* s = cx->pod_malloc<CharT>(n + 1);
+    auto s = cx->make_pod_array<CharT>(n + 1);
     if (!s)
         return nullptr;
 
     if (!isTenured()) {
-        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s)) {
-            js_free(s);
+        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s.get())) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
     }
 
     AutoCheckCannotGC nogc;
-    PodCopy(s, nonInlineChars<CharT>(nogc), n);
+    PodCopy(s.get(), nonInlineChars<CharT>(nogc), n);
     s[n] = '\0';
-    setNonInlineChars<CharT>(s);
+    setNonInlineChars<CharT>(s.release());
 
     /*
      * Transform *this into an undepended string so 'base' will remain rooted
@@ -1358,13 +1357,12 @@ JSExternalString::ensureFlat(JSContext* cx)
     MOZ_ASSERT(hasTwoByteChars());
 
     size_t n = length();
-    char16_t* s = cx->pod_malloc<char16_t>(n + 1);
+    auto s = cx->make_pod_array<char16_t>(n + 1);
     if (!s)
         return nullptr;
 
     if (!isTenured()) {
-        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s)) {
-            js_free(s);
+        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s.get())) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -1373,7 +1371,7 @@ JSExternalString::ensureFlat(JSContext* cx)
     // Copy the chars before finalizing the string.
     {
         AutoCheckCannotGC nogc;
-        PodCopy(s, nonInlineChars<char16_t>(nogc), n);
+        PodCopy(s.get(), nonInlineChars<char16_t>(nogc), n);
         s[n] = '\0';
     }
 
@@ -1383,7 +1381,7 @@ JSExternalString::ensureFlat(JSContext* cx)
     // Transform the string into a non-external, flat string. Note that the
     // resulting string will still be in an AllocKind::EXTERNAL_STRING arena,
     // but will no longer be an external string.
-    setNonInlineChars<char16_t>(s);
+    setNonInlineChars<char16_t>(s.release());
     d.u1.flags = INIT_FLAT_FLAGS;
 
     return &this->asFlat();
