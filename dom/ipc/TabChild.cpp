@@ -25,7 +25,6 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PaymentRequestChild.h"
-#include "mozilla/dom/TelemetryScrollProbe.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/layers/APZChild.h"
@@ -2751,8 +2750,6 @@ TabChild::InitTabChildGlobal()
         return false;
     }
 
-    scope->Init();
-
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
     if (NS_WARN_IF(!root)) {
         mTabChildGlobal = nullptr;
@@ -3503,12 +3500,6 @@ TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
 
 TabChildGlobal::~TabChildGlobal()
 {
-}
-
-void
-TabChildGlobal::Init()
-{
-  TelemetryScrollProbe::Create(this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)

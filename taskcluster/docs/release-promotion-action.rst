@@ -7,14 +7,14 @@ taskgraphs. The one action covers all release promotion needs: different
 for each product. The input schema and release promotion flavors are defined in
 the `release promotion action`_.
 
+.. _snowman model:
+
 The snowman model
 -----------------
 
 The `release promotion action`_ allows us to chain multiple taskgraphs (aka graphs, aka task groups) together.
 Essentially, we're using `optimization`_ logic to replace task labels in the
 current taskgraph with task IDs from the previous taskgraph(s).
-
-.. _snowman model:
 
 This is the ``snowman`` model. If you request the body of
 the snowman and point at the base, we only create the middle section of the snowman.

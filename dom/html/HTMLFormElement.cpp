@@ -1953,7 +1953,12 @@ HTMLFormElement::CheckValidFormSubmission()
           // Input elements can trigger a form submission and we want to
           // update the style in that case.
           if (mControls->mElements[i]->IsHTMLElement(nsGkAtoms::input) &&
-              nsContentUtils::IsFocusedContent(mControls->mElements[i])) {
+              // We don't use nsContentUtils::IsFocusedContent here, because it
+              // doesn't really do what we want for number controls: it's true
+              // for the anonymous textnode inside, but not the number control
+              // itself.  We can use the focus state, though, because that gets
+              // synced to the number control by the anonymous text control.
+              mControls->mElements[i]->State().HasState(NS_EVENT_STATE_FOCUS)) {
             static_cast<HTMLInputElement*>(mControls->mElements[i])
               ->UpdateValidityUIBits(true);
           }

@@ -1,8 +1,6 @@
 Partial Update Generation
 =========================
 
-.. _overview
-
 Overview
 --------
 
@@ -14,8 +12,6 @@ versions. These are created using a docker image, some Python,
 The task has been called 'Funsize' for quite some time. This might
 make sense depending on what brands of chocolate bar are available
 near you.
-
-.. _how the task works
 
 How the Task Works
 ------------------
@@ -45,7 +41,7 @@ artifact.
        "previousVersion": "60.0b8",
        "previousBuildNumber": "1",
        "branch": "mozilla-beta"
-     },
+     }
 
 The 'update number' indicates how many released versions there are between 'to' and the current 'from'.
 For example, if we are building a partial update for the current nightly from the previous one, the update
@@ -67,8 +63,6 @@ Partials are made as part of the ``promote`` task group. The previous
 versions used to create the update are specified in ship-it by
 Release Management.
 
-.. _data and metrics
-
 Data About Partials
 -------------------
 
@@ -84,8 +78,6 @@ Some examples of potentially useful metrics:
 * ``releng.releases.partials.partial_mar_size`` (tagged with branch, platform and update-number)
 * ``releng.releases.partials.task_duration`` - the time the task took, running partial generation concurrently.
 * ``releng.releases.partials.generate_partial.time`` - the time taken to make one partial update
-
-.. _nightly partials
 
 Nightly Partials
 ----------------

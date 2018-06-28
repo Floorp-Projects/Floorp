@@ -2007,6 +2007,7 @@ GK_ATOM(gtk_csd_available, "gtk-csd-available")
 GK_ATOM(gtk_csd_minimize_button, "gtk-csd-minimize-button")
 GK_ATOM(gtk_csd_maximize_button, "gtk-csd-maximize-button")
 GK_ATOM(gtk_csd_close_button, "gtk-csd-close-button")
+GK_ATOM(system_dark_theme, "system-dark-theme")
 
 // windows theme selector metrics
 GK_ATOM(windows_classic, "windows-classic")
@@ -2057,6 +2058,7 @@ GK_ATOM(_moz_gtk_csd_available, "-moz-gtk-csd-available")
 GK_ATOM(_moz_gtk_csd_minimize_button, "-moz-gtk-csd-minimize-button")
 GK_ATOM(_moz_gtk_csd_maximize_button, "-moz-gtk-csd-maximize-button")
 GK_ATOM(_moz_gtk_csd_close_button, "-moz-gtk-csd-close-button")
+GK_ATOM(_moz_system_dark_theme, "-moz-system-dark-theme")
 
 // application commands
 GK_ATOM(Back, "Back")
