@@ -42,6 +42,9 @@ class ToolboxToolbar extends Component {
       // Current docking type. Typically one of the position values in
       // |hostTypes| but this is not always the case (e.g. when it is "custom").
       currentHostType: PropTypes.string,
+      // Are docking options enabled? They are not enabled in certain situations
+      // like when they are in the WebIDE.
+      areDockOptionsEnabled: PropTypes.bool,
       // Do we need to add UI for closing the toolbox? We don't when the
       // toolbox is undocked, for example.
       canCloseToolbox: PropTypes.bool,
@@ -54,8 +57,6 @@ class ToolboxToolbar extends Component {
       // undefined means that the option is not relevant in this context
       // (i.e. we're not in a browser toolbox).
       disableAutohide: PropTypes.bool,
-      // Function to select a tool based on its id.
-      selectTool: PropTypes.func,
       // Function to turn the options panel on / off.
       toggleOptions: PropTypes.func.isRequired,
       // Function to turn the split console on / off.
@@ -75,10 +76,10 @@ class ToolboxToolbar extends Component {
       toolbox: PropTypes.object,
       // Call back function to detect tabs order updated.
       onTabsOrderUpdated: PropTypes.func.isRequired,
-      // Count of visible toolbox buttons which is used by ToolboxTabs component to
-      // recognize that the visibility of toolbox buttons were changed. Because in the
-      // component we cannot compare the visibility since the button definition instance
-      // in toolboxButtons will be unchanged.
+      // Count of visible toolbox buttons which is used by ToolboxTabs component
+      // to recognize that the visibility of toolbox buttons were changed.
+      // Because in the component we cannot compare the visibility since the
+      // button definition instance in toolboxButtons will be unchanged.
       visibleToolboxButtonCount: PropTypes.number,
     };
   }
