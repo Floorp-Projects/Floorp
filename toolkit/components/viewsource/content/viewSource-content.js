@@ -50,8 +50,7 @@ var ViewSourceContent = {
 
   get isViewSource() {
     let uri = content.document.documentURI;
-    return uri.startsWith("view-source:") ||
-           (uri.startsWith("data:") && uri.includes("MathML"));
+    return uri.startsWith("view-source:");
   },
 
   get isAboutBlank() {
