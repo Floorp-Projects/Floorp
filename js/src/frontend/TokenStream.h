@@ -992,6 +992,23 @@ class SourceUnits
         return true;
     }
 
+    bool matchCodeUnits(const char* chars, uint8_t length) {
+        MOZ_ASSERT(ptr, "shouldn't match into poisoned SourceUnits");
+        if (length > remaining())
+            return false;
+
+        const CharT* start = ptr;
+        const CharT* end = ptr + length;
+        while (ptr < end) {
+            if (*ptr++ != CharT(*chars++)) {
+                ptr = start;
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     void skipCodeUnits(uint32_t n) {
         MOZ_ASSERT(ptr, "shouldn't use poisoned SourceUnits");
         MOZ_ASSERT(n <= remaining(),
