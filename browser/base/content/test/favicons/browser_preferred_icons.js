@@ -3,15 +3,26 @@
 
 const ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
 
-async function waitIcon(url) {
-  let icon = await waitForFaviconMessage(true, url);
-  is(icon.iconURL, url, "Should have seen the right icon.");
+function waitIcon(url) {
+  // Make sure we don't miss out on an icon if it was previously used in a test
+  PlacesUtils.favicons.removeFailedFavicon(makeURI(url));
+
+  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // favicon loads, we have to wait some time before checking that icon was
+  // stored properly.
+  return BrowserTestUtils.waitForCondition(
+    () => {
+      let tabIcon = gBrowser.getIcon();
+      info("Found icon " + tabIcon);
+      return tabIcon == url;
+    },
+    "wait for icon load to finish", 200, 25);
 }
 
 function createLinks(linkInfos) {
   return ContentTask.spawn(gBrowser.selectedBrowser, linkInfos, links => {
     let doc = content.document;
-    let head = doc.head;
+    let head = doc.getElementById("linkparent");
     for (let l of links) {
       let link = doc.createElement("link");
       link.rel = "icon";
@@ -27,9 +38,7 @@ function createLinks(linkInfos) {
 
 add_task(async function setup() {
   const URL = ROOT + "discovery.html";
-  let iconPromise = waitIcon("http://mochi.test:8888/favicon.ico");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
-  await iconPromise;
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
   });
@@ -50,15 +59,17 @@ add_task(async function prefer_svg() {
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function prefer_sized() {
-  let promise = waitIcon(ROOT + "moz.png");
+  let promise = waitIcon(ROOT + "icon.png");
   await createLinks([
     { href: ROOT + "icon.ico",
       type: "image/x-icon"
     },
-    { href: ROOT + "moz.png",
+    { href: ROOT + "icon.png",
       type: "image/png",
       size: 16 * Math.ceil(window.devicePixelRatio)
     },
@@ -67,10 +78,12 @@ add_task(async function prefer_sized() {
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function prefer_last_ico() {
-  let promise = waitIcon(ROOT + "file_generic_favicon.ico");
+  let promise = waitIcon(ROOT + "icon2.ico");
   await createLinks([
     { href: ROOT + "icon.ico",
       type: "image/x-icon"
@@ -78,15 +91,17 @@ add_task(async function prefer_last_ico() {
     { href: ROOT + "icon.png",
       type: "image/png",
     },
-    { href: ROOT + "file_generic_favicon.ico",
+    { href: ROOT + "icon2.ico",
       type: "image/x-icon"
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function fuzzy_ico() {
-  let promise = waitIcon(ROOT + "file_generic_favicon.ico");
+  let promise = waitIcon(ROOT + "microsoft.ico");
   await createLinks([
     { href: ROOT + "icon.ico",
       type: "image/x-icon"
@@ -94,11 +109,13 @@ add_task(async function fuzzy_ico() {
     { href: ROOT + "icon.png",
       type: "image/png",
     },
-    { href: ROOT + "file_generic_favicon.ico",
+    { href: ROOT + "microsoft.ico",
       type: "image/vnd.microsoft.icon"
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function guess_svg() {
@@ -114,17 +131,21 @@ add_task(async function guess_svg() {
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function guess_ico() {
-  let promise = waitIcon(ROOT + "file_generic_favicon.ico");
+  let promise = waitIcon(ROOT + "icon.ico");
   await createLinks([
-    { href: ROOT + "file_generic_favicon.ico" },
+    { href: ROOT + "icon.ico" },
     { href: ROOT + "icon.png",
       type: "image/png",
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function guess_invalid() {
@@ -140,11 +161,13 @@ add_task(async function guess_invalid() {
     { href: "about:icon" },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });
 
 add_task(async function guess_bestSized() {
   let preferredWidth = 16 * Math.ceil(window.devicePixelRatio);
-  let promise = waitIcon(ROOT + "moz.png");
+  let promise = waitIcon(ROOT + "icon3.png");
   await createLinks([
     { href: ROOT + "icon.png",
       type: "image/png",
@@ -153,7 +176,7 @@ add_task(async function guess_bestSized() {
     { href: ROOT + "icon2.png",
       type: "image/png",
     },
-    { href: ROOT + "moz.png",
+    { href: ROOT + "icon3.png",
       type: "image/png",
       size: preferredWidth + 1
     },
@@ -163,4 +186,6 @@ add_task(async function guess_bestSized() {
     },
   ]);
   await promise;
+  // Must have at least one test.
+  Assert.ok(true, "The expected icon has been set");
 });

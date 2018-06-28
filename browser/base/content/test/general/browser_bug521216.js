@@ -43,8 +43,9 @@ var progressListener = {
     if (aBrowser == tab.linkedBrowser)
       record("onStateChange");
   },
-  onLinkIconAvailable: function onLinkIconAvailable(aBrowser) {
-    if (aBrowser == tab.linkedBrowser)
+  onLinkIconAvailable: function onLinkIconAvailable(aBrowser, aIconURL) {
+    if (aBrowser == tab.linkedBrowser &&
+        aIconURL == "about:logo")
       record("onLinkIconAvailable");
   }
 };
