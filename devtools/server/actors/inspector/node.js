@@ -102,9 +102,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     const parentNode = this.walker.parentNode(this);
     const inlineTextChild = this.walker.inlineTextChild(this);
+    const shadowRoot = isShadowRoot(this.rawNode);
+    const hostActor = shadowRoot ? this.walker.getNode(this.rawNode.host) : null;
 
     const form = {
       actor: this.actorID,
+      host: hostActor ? hostActor.actorID : undefined,
       baseURI: this.rawNode.baseURI,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
@@ -128,7 +131,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       isNativeAnonymous: isNativeAnonymous(this.rawNode),
       isXBLAnonymous: isXBLAnonymous(this.rawNode),
       isShadowAnonymous: isShadowAnonymous(this.rawNode),
-      isShadowRoot: isShadowRoot(this.rawNode),
+      isShadowRoot: shadowRoot,
       isShadowHost: isShadowHost(this.rawNode),
       isDirectShadowHostChild: isDirectShadowHostChild(this.rawNode),
       pseudoClassLocks: this.writePseudoClassLocks(),
