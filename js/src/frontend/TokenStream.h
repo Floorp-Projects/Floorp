@@ -195,8 +195,8 @@ namespace js {
 namespace frontend {
 
 struct TokenPos {
-    uint32_t    begin;  // Offset of the token's first char.
-    uint32_t    end;    // Offset of 1 past the token's last char.
+    uint32_t    begin;  // Offset of the token's first code unit.
+    uint32_t    end;    // Offset of 1 past the token's last code unit.
 
     TokenPos()
       : begin(0),
@@ -286,9 +286,9 @@ struct Token
         // Div.
         Operand,
 
-        // Treat subsequent characters as the tail of a template literal, after
+        // Treat subsequent code units as the tail of a template literal, after
         // a template substitution, beginning with a "}", continuing with zero
-        // or more template literal characters, and ending with either "${" or
+        // or more template literal code units, and ending with either "${" or
         // the end of the template literal.  For example:
         //
         //   var entity = "world";
@@ -318,8 +318,8 @@ struct Token
         // conditional expression and missing it results in SyntaxError.
         // Comma/semicolon cases are also gotten as operators (None), and 4th
         // case is gotten after them.  If no comma/semicolon found but EOL,
-        // the next token should be gotten as operand in 4th case (especially if
-        // '/' is the first character).  So we should peek the token as
+        // the next token should be gotten as operand in 4th case (especially
+        // if '/' is the first code unit).  So we should peek the token as
         // operand before try getting colon/comma/semicolon.
         // See also the comment in Parser::assignExpr().
         NoneIsOperand,
@@ -1080,9 +1080,9 @@ class TokenStreamCharsShared
 
   protected:
     /**
-     * Character buffer transiently used to store sequences of identifier or
-     * string code points when such can't be directly processed from the
-     * original source text (e.g. because it contains escapes).
+     * Buffer transiently used to store sequences of identifier or string code
+     * points when such can't be directly processed from the original source
+     * text (e.g. because it contains escapes).
      */
     CharBuffer charBuffer;
 
@@ -1327,7 +1327,7 @@ class GeneralTokenStreamChars
     }
 
     /**
-     * Consume characters til EOL/EOF following the start of a single-line
+     * Consume code units til EOL/EOF following the start of a single-line
      * comment, without consuming the EOL/EOF.
      */
     void consumeRestOfSingleLineComment();
@@ -1370,7 +1370,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
     // Try to get the next code point, normalizing '\r', '\r\n', '\n', and the
     // Unicode line/paragraph separators into '\n'.  Also updates internal
-    // line-counter state.  Return true on success and store the character in
+    // line-counter state.  Return true on success and store the code point in
     // |*c|.  Return false and leave |*c| undefined on failure.
     MOZ_MUST_USE bool getCodePoint(int32_t* cp);
 
@@ -1461,7 +1461,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
 // TokenStream is the lexical scanner for JavaScript source text.
 //
-// It takes a buffer of CharT characters (currently only char16_t encoding
+// It takes a buffer of CharT code units (currently only char16_t encoding
 // UTF-16, but we're adding either UTF-8 or Latin-1 single-byte text soon) and
 // linearly scans it into |Token|s.
 //
