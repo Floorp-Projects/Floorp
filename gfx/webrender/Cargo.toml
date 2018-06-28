@@ -27,12 +27,12 @@ cfg-if = "0.1.2"
 euclid = "0.17.3"
 fxhash = "0.2.1"
 gleam = "0.5"
-image = { optional = true, version = "0.18" }
+image = { optional = true, version = "0.19" }
 lazy_static = "1"
 log = "0.4"
 num-traits = "0.1.43"
 plane-split = "0.9.1"
-png = { optional = true, version = "0.11" }
+png = { optional = true, version = "0.12" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }

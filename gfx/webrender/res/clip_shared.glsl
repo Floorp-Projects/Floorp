@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include rect,clip_scroll,render_task,resource_cache,snap,transform
+#include rect,render_task,resource_cache,snap,transform
 
 #ifdef WR_VERTEX_SHADER
 
@@ -19,7 +19,7 @@ in ivec4 aClipDataResourceAddress;
 
 struct ClipMaskInstance {
     int render_task_address;
-    int scroll_node_id;
+    int transform_id;
     int segment;
     ivec2 clip_data_address;
     ivec2 resource_address;
@@ -29,7 +29,7 @@ ClipMaskInstance fetch_clip_item() {
     ClipMaskInstance cmi;
 
     cmi.render_task_address = aClipRenderTaskAddress;
-    cmi.scroll_node_id = aScrollNodeId;
+    cmi.transform_id = aScrollNodeId;
     cmi.segment = aClipSegment;
     cmi.clip_data_address = aClipDataResourceAddress.xy;
     cmi.resource_address = aClipDataResourceAddress.zw;
@@ -51,20 +51,20 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 // The transformed vertex function that always covers the whole clip area,
 // which is the intersection of all clip instances of a given primitive
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
-                                      ClipScrollNode scroll_node,
+                                      Transform transform,
                                       ClipArea area) {
     vec2 device_pos = area.screen_origin + aPosition.xy * area.common_data.task_rect.size;
     vec2 actual_pos = device_pos;
 
-    if (scroll_node.is_axis_aligned) {
+    if (transform.is_axis_aligned) {
         vec4 snap_positions = compute_snap_positions(
-            scroll_node.transform,
+            transform.m,
             local_clip_rect
         );
 
         vec2 snap_offsets = compute_snap_offset_impl(
             device_pos,
-            scroll_node.transform,
+            transform.m,
             local_clip_rect,
             RectWithSize(snap_positions.xy, snap_positions.zw - snap_positions.xy),
             snap_positions,
@@ -81,7 +81,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     if (area.local_space) {
         node_pos = vec4(actual_pos / uDevicePixelRatio, 0.0, 1.0);
     } else {
-        node_pos = get_node_pos(actual_pos / uDevicePixelRatio, scroll_node);
+        node_pos = get_node_pos(actual_pos / uDevicePixelRatio, transform);
     }
 
     // compute the point position inside the scroll node, in CSS space

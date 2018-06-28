@@ -43,11 +43,11 @@ LineDecorationData fetch_data(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    ClipScrollNode scroll_node = fetch_clip_scroll_node(cmi.scroll_node_id);
+    Transform transform = fetch_transform(cmi.transform_id);
     LineDecorationData data = fetch_data(cmi.clip_data_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(data.local_rect,
-                                               scroll_node,
+                                               transform,
                                                area);
 
 
