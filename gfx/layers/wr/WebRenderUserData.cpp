@@ -20,6 +20,15 @@
 namespace mozilla {
 namespace layers {
 
+void
+WebRenderBackgroundData::AddWebRenderCommands(wr::DisplayListBuilder& aBuilder)
+{
+  aBuilder.PushRect(mBounds,
+                    mBounds,
+                    true,
+                    mColor);
+}
+
 /* static */ bool
 WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame)
 {
