@@ -1177,7 +1177,7 @@ var gCSSProperties = {
     subproperties: [ "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-direction", "animation-fill-mode", "animation-iteration-count", "animation-play-state" ],
     initial_values: [ "none none 0s 0s ease normal running 1.0", "none", "0s", "ease", "normal", "running", "1.0" ],
     other_values: [ "none none 0s 0s cubic-bezier(0.25, 0.1, 0.25, 1.0) normal running 1.0", "bounce 1s linear 2s", "bounce 1s 2s linear", "bounce linear 1s 2s", "linear bounce 1s 2s", "linear 1s bounce 2s", "linear 1s 2s bounce", "1s bounce linear 2s", "1s bounce 2s linear", "1s 2s bounce linear", "1s linear bounce 2s", "1s linear 2s bounce", "1s 2s linear bounce", "bounce linear 1s", "bounce 1s linear", "linear bounce 1s", "linear 1s bounce", "1s bounce linear", "1s linear bounce", "1s 2s bounce", "1s bounce 2s", "bounce 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "bounce 1s", "1s bounce", "linear 1s", "1s linear", "1s 2s", "2s 1s", "bounce", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s bounce, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32bounce linear 2s", "1s -bounce linear 2s", "1s -\\32bounce linear 2s", "1s \\32 0bounce linear 2s", "1s -\\32 0bounce linear 2s", "1s \\2bounce linear 2s", "1s -\\2bounce linear 2s", "2s, 1s bounce", "1s bounce, 2s", "2s all, 1s bounce", "1s bounce, 2s all", "1s bounce, 2s none", "2s none, 1s bounce", "2s bounce, 1s all", "2s all, 1s bounce" ],
-    invalid_values: [ "2s inherit", "inherit 2s", "2s bounce, 1s inherit", "2s inherit, 1s bounce", "2s initial", "2s all,, 1s bounce", "2s all, , 1s bounce", "bounce 1s cubic-bezier(0, rubbish) 2s", "bounce 1s steps(rubbish) 2s" ]
+    invalid_values: [ "2s inherit", "inherit 2s", "2s bounce, 1s inherit", "2s inherit, 1s bounce", "2s initial", "2s all,, 1s bounce", "2s all, , 1s bounce", "bounce 1s cubic-bezier(0, rubbish) 2s", "bounce 1s steps(rubbish) 2s", "2s unset" ]
   },
   "animation-delay": {
     domProp: "animationDelay",
@@ -1193,7 +1193,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "normal" ],
     other_values: [ "alternate", "normal, alternate", "alternate, normal", "normal, normal", "normal, normal, normal", "reverse", "alternate-reverse", "normal, reverse, alternate-reverse, alternate" ],
-    invalid_values: [ "normal normal", "inherit, normal", "reverse-alternate" ]
+    invalid_values: [ "normal normal", "inherit, normal", "reverse-alternate", "normal, unset", "unset, normal" ]
   },
   "animation-duration": {
     domProp: "animationDuration",
@@ -1227,7 +1227,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
     other_values: [ "all", "ball", "mall", "color", "bounce, bubble, opacity", "foobar", "auto", "\\32bounce", "-bounce", "-\\32bounce", "\\32 0bounce", "-\\32 0bounce", "\\2bounce", "-\\2bounce" ],
-    invalid_values: [ "bounce, initial", "initial, bounce", "bounce, inherit", "inherit, bounce" ]
+    invalid_values: [ "bounce, initial", "initial, bounce", "bounce, inherit", "inherit, bounce", "bounce, unset", "unset, bounce" ]
   },
   "animation-play-state": {
     domProp: "animationPlayState",
@@ -1423,7 +1423,7 @@ var gCSSProperties = {
       "2px 2px calc(2px + 1%) 2px",
       "1px 2px 2px 2px / 2px 2px calc(2px + 1%) 2px",
             ],
-    invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px", "2", "2 2", "2px 2px 2px 2px / 2px 2px 2 2px", "2px calc(0px + rubbish)" ]
+    invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px", "2", "2 2", "2px 2px 2px 2px / 2px 2px 2 2px", "2px calc(0px + rubbish)", "unset 2px", "unset / 2px", "2px unset", "2px / unset" ]
   },
   "border-bottom-left-radius": {
     domProp: "borderBottomLeftRadius",
@@ -1444,7 +1444,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
   },
   "border-bottom-right-radius": {
     domProp: "borderBottomRightRadius",
@@ -1465,7 +1465,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
   },
   "border-top-left-radius": {
     domProp: "borderTopLeftRadius",
@@ -1486,7 +1486,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
   },
   "border-top-right-radius": {
     domProp: "borderTopRightRadius",
@@ -1507,7 +1507,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)", "unset 2px", "2px unset" ]
   },
   "border-inline-start": {
     domProp: "borderInlineStart",
@@ -2272,7 +2272,7 @@ var gCSSProperties = {
       "2px 2px calc(2px + 1%) 2px",
       "1px 2px 2px 2px / 2px 2px calc(2px + 1%) 2px",
             ],
-    invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px", "2", "2 2", "2px 2px 2px 2px / 2px 2px 2 2px" ]
+    invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px", "2", "2 2", "2px 2px 2px 2px / 2px 2px 2 2px", "unset 2px", "unset / 2px", "2px unset", "2px / unset" ]
   },
   "-moz-outline-radius-bottomleft": {
     domProp: "MozOutlineRadiusBottomleft",
@@ -2292,7 +2292,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "unset 2px", "2px unset" ]
   },
   "-moz-outline-radius-bottomright": {
     domProp: "MozOutlineRadiusBottomright",
@@ -2312,7 +2312,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "unset 2px", "2px unset" ]
   },
   "-moz-outline-radius-topleft": {
     domProp: "MozOutlineRadiusTopleft",
@@ -2332,7 +2332,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "unset 2px", "2px unset" ]
   },
   "-moz-outline-radius-topright": {
     domProp: "MozOutlineRadiusTopright",
@@ -2352,7 +2352,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "unset 2px", "2px unset" ]
   },
   "padding-inline-end": {
     domProp: "paddingInlineEnd",
@@ -2750,7 +2750,7 @@ var gCSSProperties = {
     "none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
     "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
     ].concat(validGradientAndElementValues),
-    invalid_values: [
+    invalid_values: [ "linear-gradient(unset, 10px 10px, from(blue))", "linear-gradient(unset, 10px 10px, blue 0)", "repeating-linear-gradient(unset, 10px 10px, blue 0)"
     ].concat(invalidGradientAndElementValues),
     unbalanced_values: [
     ].concat(unbalancedGradientAndElementValues)
@@ -3244,7 +3244,7 @@ var gCSSProperties = {
       "calc(2px) calc(2px) calc(2px)",
       "calc(2px) calc(2px) calc(2px) calc(2px)"
     ],
-    invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none", "3 3", "3px 3", "3 3px", "3px 3px 3", "3px 3px 3px 3", "3px calc(3px + rubbish)", "3px 3px calc(3px + rubbish)", "3px 3px 3px calc(3px + rubbish)", "3px 3px 3px 3px rgb(0, rubbish, 0)" ]
+    invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none", "3 3", "3px 3", "3 3px", "3px 3px 3", "3px 3px 3px 3", "3px calc(3px + rubbish)", "3px 3px calc(3px + rubbish)", "3px 3px 3px calc(3px + rubbish)", "3px 3px 3px 3px rgb(0, rubbish, 0)", "unset, 2px 2px", "2px 2px, unset", "inset unset" ]
   },
   "caption-side": {
     domProp: "captionSide",
@@ -4523,7 +4523,7 @@ var gCSSProperties = {
     applies_to_placeholder: true,
     initial_values: [ "clip" ],
     other_values: [ "ellipsis", '""', "''", '"hello"', 'clip clip', 'ellipsis ellipsis', 'clip ellipsis', 'clip ""', '"hello" ""', '"" ellipsis' ],
-    invalid_values: [ "none", "auto", '"hello" inherit', 'inherit "hello"', 'clip initial', 'initial clip', 'initial inherit', 'inherit initial', 'inherit none']
+    invalid_values: [ "none", "auto", '"hello" inherit', 'inherit "hello"', 'clip initial', 'initial clip', 'initial inherit', 'inherit initial', 'inherit none', '"hello" unset', 'unset "hello"', 'clip unset', 'unset clip', 'unset inherit', 'unset none', 'initial unset']
   },
   "text-shadow": {
     domProp: "textShadow",
@@ -4548,7 +4548,7 @@ var gCSSProperties = {
       "calc(2px) calc(2px) calc(2px)",
     ],
     invalid_values: [ "3% 3%", "2px 2px -5px", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit", "2 2px", "2px 2", "2px 2px 2", "2px 2px 2px 2",
-      "calc(2px) calc(2px) calc(2px) calc(2px)", "3px 3px calc(3px + rubbish)"
+      "calc(2px) calc(2px) calc(2px) calc(2px)", "3px 3px calc(3px + rubbish)", "unset, 2px 2px", "2px 2px, unset"
     ]
   },
   "text-transform": {
@@ -4588,7 +4588,7 @@ var gCSSProperties = {
     subproperties: [ "transition-property", "transition-duration", "transition-timing-function", "transition-delay" ],
     initial_values: [ "all 0s ease 0s", "all", "0s", "0s 0s", "ease" ],
     other_values: [ "all 0s cubic-bezier(0.25, 0.1, 0.25, 1.0) 0s", "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32width linear 2s", "1s -width linear 2s", "1s -\\32width linear 2s", "1s \\32 0width linear 2s", "1s -\\32 0width linear 2s", "1s \\2width linear 2s", "1s -\\2width linear 2s", "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "2s all, 1s width", "2s width, 1s all", "3s --my-color", "none", "none 2s linear 2s" ],
-    invalid_values: [ "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "1s width,,2s color", "1s width, ,2s color", "bounce 1s cubic-bezier(0, rubbish) 2s", "bounce 1s steps(rubbish) 2s" ]
+    invalid_values: [ "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "1s width,,2s color", "1s width, ,2s color", "bounce 1s cubic-bezier(0, rubbish) 2s", "bounce 1s steps(rubbish) 2s", "2s unset" ]
   },
   "transition-delay": {
     domProp: "transitionDelay",
@@ -4612,7 +4612,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "all" ],
     other_values: [ "none", "left", "top", "color", "width, height, opacity", "foobar", "auto", "\\32width", "-width", "-\\32width", "\\32 0width", "-\\32 0width", "\\2width", "-\\2width", "all, all", "all, color", "color, all", "--my-color" ],
-    invalid_values: [ "none, none", "color, none", "none, color", "inherit, color", "color, inherit", "initial, color", "color, initial", "none, color", "color, none" ]
+    invalid_values: [ "none, none", "color, none", "none, color", "inherit, color", "color, inherit", "initial, color", "color, initial", "none, color", "color, none", "unset, color", "color, unset" ]
   },
   "transition-timing-function": {
     domProp: "transitionTimingFunction",
@@ -8190,36 +8190,16 @@ if (false) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
-  gCSSProperties["animation"].invalid_values.push("2s unset");
-  gCSSProperties["animation-direction"].invalid_values.push("normal, unset", "unset, normal");
-  gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
-  gCSSProperties["border-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
-  gCSSProperties["border-bottom-left-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["border-bottom-right-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["border-top-left-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["border-top-right-radius"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
-  gCSSProperties["-moz-outline-radius-bottomleft"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius-bottomright"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius-topleft"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["-moz-outline-radius-topright"].invalid_values.push("unset 2px", "2px unset");
-  gCSSProperties["background-image"].invalid_values.push("linear-gradient(unset, 10px 10px, from(blue))", "linear-gradient(unset, 10px 10px, blue 0)", "repeating-linear-gradient(unset, 10px 10px, blue 0)");
-  gCSSProperties["box-shadow"].invalid_values.push("unset, 2px 2px", "2px 2px, unset", "inset unset");
-  gCSSProperties["text-overflow"].invalid_values.push('"hello" unset', 'unset "hello"', 'clip unset', 'unset clip', 'unset inherit', 'unset none', 'initial unset');
-  gCSSProperties["text-shadow"].invalid_values.push("unset, 2px 2px", "2px 2px, unset");
-  gCSSProperties["transition"].invalid_values.push("2s unset");
-  gCSSProperties["transition-property"].invalid_values.push("unset, color", "color, unset");
-  if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
-    gCSSProperties["filter"].invalid_values.push("drop-shadow(unset, 2px 2px)", "drop-shadow(2px 2px, unset)");
-  }
-  if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
-    gCSSProperties["background-image"].invalid_values.push(
-      "-moz-linear-gradient(unset, 10px 10px, from(blue))",
-      "-moz-linear-gradient(unset, 10px 10px, blue 0)",
-      "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
-    );
-  }
+if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
+  gCSSProperties["filter"].invalid_values.push("drop-shadow(unset, 2px 2px)", "drop-shadow(2px 2px, unset)");
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
+  gCSSProperties["background-image"].invalid_values.push(
+    "-moz-linear-gradient(unset, 10px 10px, from(blue))",
+    "-moz-linear-gradient(unset, 10px 10px, blue 0)",
+    "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
+  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {

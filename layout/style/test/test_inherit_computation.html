@@ -37,8 +37,6 @@ var gChildRule3 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild.allother,
 var gChildRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #nchild.allother, #fchild, #fchild.allother {}", gStyleSheet.cssRules.length)];
 var gParentRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nparent, #fparent {}", gStyleSheet.cssRules.length)];
 
-var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
-
 function get_computed_value_node(node, property)
 {
   var cs = getComputedStyle(node, "");
@@ -50,7 +48,7 @@ function test_property(property)
   var info = gCSSProperties[property];
 
   var keywords = ["inherit"];
-  if (info.inherited && gTestUnset)
+  if (info.inherited)
     keywords.push("unset");
 
   keywords.forEach(function(keyword) {

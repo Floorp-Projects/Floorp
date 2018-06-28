@@ -521,22 +521,6 @@ nsLayoutUtils::CSSFiltersEnabled()
 }
 
 bool
-nsLayoutUtils::UnsetValueEnabled()
-{
-  static bool sUnsetValueEnabled;
-  static bool sUnsetValuePrefCached = false;
-
-  if (!sUnsetValuePrefCached) {
-    sUnsetValuePrefCached = true;
-    Preferences::AddBoolVarCache(&sUnsetValueEnabled,
-                                 "layout.css.unset-value.enabled",
-                                 false);
-  }
-
-  return sUnsetValueEnabled;
-}
-
-bool
 nsLayoutUtils::IsInterCharacterRubyEnabled()
 {
   static bool sInterCharacterRubyEnabled;
