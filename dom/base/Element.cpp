@@ -4283,6 +4283,7 @@ Element::ClearServoData(nsIDocument* aDoc) {
 void
 Element::SetCustomElementData(CustomElementData* aData)
 {
+  SetHasCustomElementData();
   nsExtendedDOMSlots *slots = ExtendedDOMSlots();
   MOZ_ASSERT(!slots->mCustomElementData, "Custom element data may not be changed once set.");
   #if DEBUG
