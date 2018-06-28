@@ -997,9 +997,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::errorAt(uint32_t offset, unsigned er
 }
 
 // We have encountered a '\': check for a Unicode escape sequence after it.
-// Return the length of the escape sequence and the character code point (by
-// value) if we found a Unicode escape sequence.  Otherwise, return 0.  In both
-// cases, do not advance along the buffer.
+// Return the length of the escape sequence and the encoded code point (by
+// value) if we found a Unicode escape sequence, and skip all code units
+// involed.  Otherwise, return 0 and don't advance along the buffer.
 template<typename CharT, class AnyCharsAccess>
 uint32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::matchUnicodeEscape(uint32_t* codePoint)
@@ -1134,7 +1134,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirectives(bool isMultiline,
     // To avoid a crashing bug in IE, several JavaScript transpilers wrap single
     // line comments containing a source mapping URL inside a multiline
     // comment. To avoid potentially expensive lookahead and backtracking, we
-    // only check for this case if we encounter a '#' character.
+    // only check for this case if we encounter a '#' code unit.
 
     bool res = getDisplayURL(isMultiline, shouldWarnDeprecated) &&
                getSourceMappingURL(isMultiline, shouldWarnDeprecated);
@@ -1171,12 +1171,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
     MOZ_ASSERT(directiveLength <= 18);
     char16_t peeked[18];
 
-    // If there aren't enough characters left, it can't be the desired
-    // directive.
+    // If there aren't enough code units left, it can't be the desired
+    // directive.  (Note that |directive| must be ASCII, so there are no
+    // tricky encoding issues to consider.)
     if (!sourceUnits.peekCodeUnits(directiveLength, peeked))
         return true;
 
-    // It's also not the desired directive if the characters don't match.
+    // It's also not the desired directive if the code units don't match.
     if (!CharsMatch(peeked, directive))
         return true;
 
@@ -2088,9 +2089,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             }
 
             // We could point "into" a mistyped escape, e.g. for "\u{41H}" we
-            // could point at the 'H'.  But we don't do that now, so the
-            // character after the '\' isn't necessarily bad, so just point at
-            // the start of the actually-invalid escape.
+            // could point at the 'H'.  But we don't do that now, so the code
+            // unit after the '\' isn't necessarily bad, so just point at the
+            // start of the actually-invalid escape.
             ungetCodeUnit('\\');
             error(JSMSG_BAD_ESCAPE);
             return badToken();
@@ -2434,7 +2435,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                         // so it'll pass into this |if|-block.
                         if (!JS7_ISHEX(u3)) {
                             if (parsingTemplate) {
-                                // We put the character back so that we read it
+                                // We put the code unit back so that we read it
                                 // on the next pass, which matters if it was
                                 // '`' or '\'.
                                 ungetCodeUnit(u3);
