@@ -1200,10 +1200,13 @@ parent:
      * node. Calling DetachBrowsingContext with an already detached
      * BrowsingContext effectively does nothing. Note that it is not
      * an error to call DetachBrowsingContext on a BrowsingContext
-     * belonging to an already detached subtree.
+     * belonging to an already detached subtree. The 'aMoveToBFCache'
+     * paramater controls if detaching a BrowsingContext should move
+     * it to the bfcache allowing it to be re-attached if navigated
+     * to.
      */
-    async DetachBrowsingContext(BrowsingContextId aContextId);
-
+    async DetachBrowsingContext(BrowsingContextId aContextId,
+                                bool aMoveToBFCache);
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);

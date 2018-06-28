@@ -66,6 +66,12 @@ public:
   // child and the parent process.
   void Detach();
 
+  // Remove all children from the current BrowsingContext and cache
+  // them to allow them to be attached again.
+  void CacheChildren();
+
+  bool IsCached();
+
   void SetName(const nsAString& aName) { mName = aName; }
   void GetName(nsAString& aName) { aName = mName; }
   bool NameEquals(const nsAString& aName) { return mName.Equals(aName); }

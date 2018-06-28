@@ -7763,6 +7763,8 @@ nsDocShell::CaptureState()
     mOSHE->AddChildShell(childShell);
   }
 
+  mBrowsingContext->CacheChildren();
+
   return NS_OK;
 }
 
