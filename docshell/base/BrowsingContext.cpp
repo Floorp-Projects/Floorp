@@ -13,6 +13,7 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsDataHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsIDocShell.h"
 #include "nsContentUtils.h"
 
@@ -26,6 +27,11 @@ static StaticAutoPtr<BrowsingContext::Children> sRootBrowsingContexts;
 static StaticAutoPtr<nsDataHashtable<nsUint64HashKey, BrowsingContext*>>
   sBrowsingContexts;
 
+// TODO(farre): This duplicates some of the work performed by the
+// bfcache. This should be unified. [Bug 1471601]
+static StaticAutoPtr<nsRefPtrHashtable<nsUint64HashKey, BrowsingContext>>
+  sCachedBrowsingContexts;
+
 /* static */ void
 BrowsingContext::Init()
 {
@@ -38,6 +44,12 @@ BrowsingContext::Init()
     sBrowsingContexts =
       new nsDataHashtable<nsUint64HashKey, BrowsingContext*>();
     ClearOnShutdown(&sBrowsingContexts);
+  }
+
+  if (!sCachedBrowsingContexts) {
+    sCachedBrowsingContexts =
+      new nsRefPtrHashtable<nsUint64HashKey, BrowsingContext>();
+    ClearOnShutdown(&sCachedBrowsingContexts);
   }
 }
 
@@ -87,12 +99,16 @@ BrowsingContext::Attach(BrowsingContext* aParent)
              Id(),
              aParent ? aParent->Id() : 0));
     MOZ_DIAGNOSTIC_ASSERT(sBrowsingContexts->Contains(Id()));
+    MOZ_DIAGNOSTIC_ASSERT(!IsCached());
     return;
   }
 
+  bool wasCached = sCachedBrowsingContexts->Remove(Id());
+
   MOZ_LOG(GetLog(),
           LogLevel::Debug,
-          ("%s: Connecting 0x%08" PRIx64 " to 0x%08" PRIx64 "\n",
+          ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
+           wasCached ? "Re-connecting" : "Connecting",
            XRE_IsParentProcess() ? "Parent" : "Child",
            Id(),
            aParent ? aParent->Id() : 0));
@@ -118,6 +134,10 @@ BrowsingContext::Detach()
 {
   RefPtr<BrowsingContext> kungFuDeathGrip(this);
 
+  if (sCachedBrowsingContexts) {
+    sCachedBrowsingContexts->Remove(Id());
+  }
+
   if (!isInList()) {
     MOZ_LOG(GetLog(),
             LogLevel::Debug,
@@ -142,7 +162,42 @@ BrowsingContext::Detach()
 
   auto cc = dom::ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(dom::BrowsingContextId(Id()));
+  cc->SendDetachBrowsingContext(dom::BrowsingContextId(Id()),
+                                false /* aMoveToBFCache */);
+}
+
+void
+BrowsingContext::CacheChildren()
+{
+  if (mChildren.isEmpty()) {
+    return;
+  }
+
+  MOZ_LOG(GetLog(),
+          LogLevel::Debug,
+          ("%s: Caching children of 0x%08" PRIx64 "",
+           XRE_IsParentProcess() ? "Parent" : "Child",
+           Id()));
+
+  while (!mChildren.isEmpty()) {
+    RefPtr<BrowsingContext> child = mChildren.popFirst();
+    sCachedBrowsingContexts->Put(child->Id(), child);
+  }
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  auto cc = dom::ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  cc->SendDetachBrowsingContext(dom::BrowsingContextId(Id()),
+                                true /* aMoveToBFCache */);
+}
+
+bool
+BrowsingContext::IsCached()
+{
+  return sCachedBrowsingContexts->Contains(Id());
 }
 
 uint64_t

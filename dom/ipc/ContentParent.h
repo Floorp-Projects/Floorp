@@ -688,7 +688,8 @@ public:
     const nsString& aName) override;
 
   virtual mozilla::ipc::IPCResult RecvDetachBrowsingContext(
-    const BrowsingContextId& aContextId) override;
+    const BrowsingContextId& aContextId,
+    const bool& aMoveToBFCache) override;
 
 protected:
   void OnChannelConnected(int32_t pid) override;
