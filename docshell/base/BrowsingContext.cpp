@@ -16,6 +16,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsIDocShell.h"
 #include "nsContentUtils.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -57,6 +58,28 @@ BrowsingContext::Init()
 BrowsingContext::GetLog()
 {
   return gBrowsingContextLog;
+}
+
+// TODO(farre): BrowsingContext::CleanupContexts starts from the list
+// of root BrowsingContexts. This isn't enough when separate
+// BrowsingContext nodes of a BrowsingContext tree not in a crashing
+// child process are from that process and thus needs to be
+// cleaned. [Bug 1472108]
+/* static */ void
+BrowsingContext::CleanupContexts(uint64_t aProcessId)
+{
+  if (sRootBrowsingContexts) {
+    RefPtr<BrowsingContext> context = sRootBrowsingContexts->getFirst();
+
+    while (context) {
+      RefPtr<BrowsingContext> next = context->getNext();
+      if (context->IsOwnedByProcess() &&
+          aProcessId == context->OwnerProcessId()) {
+        context->Detach();
+      }
+      context = next;
+    }
+  }
 }
 
 /* static */ already_AddRefed<BrowsingContext>
