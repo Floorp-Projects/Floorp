@@ -12,6 +12,8 @@ const {focusableSelector} = require("devtools/client/shared/focus");
 const {getCurrentZoom} = require("devtools/shared/layout/utils");
 const {listenOnce} = require("devtools/shared/async-utils");
 
+const Services = require("Services");
+
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -734,6 +736,11 @@ HTMLTooltip.prototype = {
 
   _onClick: function(e) {
     if (this._isInTooltipContainer(e.target)) {
+      return;
+    }
+
+    // If the disable autohide setting is in effect, ignore.
+    if (Services.prefs.getBoolPref("ui.popup.disable_autohide", false)) {
       return;
     }
 
