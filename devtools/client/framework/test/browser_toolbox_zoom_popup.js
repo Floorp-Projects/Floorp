@@ -14,10 +14,10 @@ add_task(async function() {
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("devtools.toolbox.zoomValue");
   });
-  const zoom = 1.5;
+  const zoom = 1.4;
   Services.prefs.setCharPref("devtools.toolbox.zoomValue", zoom.toString(10));
 
-  info("Load iframe page for checking the frame menu with x1.5 zoom.");
+  info("Load iframe page for checking the frame menu with x1.4 zoom.");
   await addTab(TEST_URL);
   const target = TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target,
@@ -30,9 +30,9 @@ add_task(async function() {
   const windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
-  info("Waiting for the toolbox window will to be rendered with zoom x1.5");
+  info("Waiting for the toolbox window will to be rendered with zoom x1.4");
   await waitUntil(() => {
-    return parseFloat(windowUtils.fullZoom.toFixed(1)) === parseFloat(zoom);
+    return parseFloat(windowUtils.fullZoom.toFixed(1)) === zoom;
   });
 
   info("Resizing and moving the toolbox window in order to display the chevron menu.");
