@@ -324,23 +324,6 @@ class QuickOpenModal extends _react.Component {
 
     this.isSourceSearch = () => this.isSourcesQuery() || this.isGotoSourceQuery();
 
-    this.renderHighlight = (candidateString, query, name) => {
-      const options = {
-        wrap: {
-          tagOpen: '<mark class="highlight">',
-          tagClose: "</mark>"
-        }
-      };
-
-      const html = _fuzzaldrinPlus2.default.wrap(candidateString, query, options);
-
-      return _react2.default.createElement("div", {
-        dangerouslySetInnerHTML: {
-          __html: html
-        }
-      });
-    };
-
     this.highlightMatching = (query, results) => {
       let newQuery = query;
 
@@ -350,9 +333,13 @@ class QuickOpenModal extends _react.Component {
 
       newQuery = query.replace(/[@:#?]/gi, " ");
       return results.map(result => {
-        return _objectSpread({}, result, {
-          title: this.renderHighlight(result.title, (0, _path.basename)(newQuery), "title")
-        });
+        if (typeof result.title == "string") {
+          return _objectSpread({}, result, {
+            title: this.renderHighlight(result.title, (0, _path.basename)(newQuery), "title")
+          });
+        }
+
+        return result;
       });
     };
 
@@ -386,6 +373,24 @@ class QuickOpenModal extends _react.Component {
     if (nowEnabled || queryChanged) {
       this.updateResults(this.props.query);
     }
+  }
+
+  /* eslint-disable react/no-danger */
+  renderHighlight(candidateString, query, name) {
+    const options = {
+      wrap: {
+        tagOpen: '<mark class="highlight">',
+        tagClose: "</mark>"
+      }
+    };
+
+    const html = _fuzzaldrinPlus2.default.wrap(candidateString, query, options);
+
+    return _react2.default.createElement("div", {
+      dangerouslySetInnerHTML: {
+        __html: html
+      }
+    });
   }
 
   shouldShowErrorEmoji() {

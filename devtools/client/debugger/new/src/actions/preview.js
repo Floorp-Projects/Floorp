@@ -83,6 +83,11 @@ function setPreview(expression, location, tokenPos, cursorPos) {
       type: "SET_PREVIEW",
       [_promise.PROMISE]: async function () {
         const source = (0, _selectors.getSelectedSource)(getState());
+
+        if (!source) {
+          return;
+        }
+
         const sourceId = source.id;
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
