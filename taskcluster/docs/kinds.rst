@@ -306,9 +306,13 @@ release-bouncer-aliases
 -----------------------
 Update Bouncer's (download.mozilla.org) "latest" aliases.
 
+bouncer-check
+-------------
+Checks Bouncer (download.mozilla.org) uptake.
+
 release-bouncer-check
 ---------------------
-Checks Bouncer (download.mozilla.org) uptake.
+Checks Bouncer (download.mozilla.org) uptake as part of the release tasks.
 
 release-generate-checksums
 --------------------------

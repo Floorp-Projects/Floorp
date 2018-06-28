@@ -25,6 +25,7 @@ class nsIPresShell;
 class nsPresContext;
 
 namespace mozilla {
+class ComputedStyle;
 class EventStates;
 } // namespace mozilla
 
@@ -184,6 +185,13 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed
 
   // scrollbar
   bool IsDarkBackground(nsIFrame* aFrame);
+  // custom scrollbar
+  typedef nscolor (*AutoColorGetter)(mozilla::ComputedStyle*);
+  bool IsWidgetScrollbarPart(uint8_t aWidgetType);
+  nscolor GetScrollbarFaceColor(mozilla::ComputedStyle* aStyle,
+                                AutoColorGetter aAutoGetter);
+  nscolor GetScrollbarTrackColor(mozilla::ComputedStyle* aStyle,
+                                 AutoColorGetter aAutoGetter);
 
  private:
   uint32_t mAnimatedContentTimeout;

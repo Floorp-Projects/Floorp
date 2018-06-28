@@ -1411,7 +1411,6 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
     float outer_radius = _cairo_fixed_to_float(source_pattern->r2);
     float inner_radius = _cairo_fixed_to_float(source_pattern->r1);
     int num_stops = source_pattern->base.n_stops;
-    int repeat_count = 1;
     D2D1_GRADIENT_STOP *stops;
 
     if (source_pattern->base.base.extend == CAIRO_EXTEND_REPEAT || source_pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
@@ -1461,7 +1460,6 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 
 	float stop_scale = 1.0f / (inner_repeat + outer_repeat);
 
-	float inner_position = (inner_repeat * gradient_length) / outer_radius;
 	if (reflect) {
 	    // We start out reflected (meaning reflected starts as false since it will
 	    // immediately be inverted) if the inner_repeats are uneven.
@@ -1658,7 +1656,6 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	p1.y = p1.y - u.y * before_repeat * gradient_length;
 
 	float stop_scale = 1.0f / (float)(after_repeat + before_repeat);
-	float begin_position = (float)before_repeat / (float)(after_repeat + before_repeat);
 
 	stops = new D2D1_GRADIENT_STOP[num_stops];
 	if (source_pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
@@ -2656,7 +2653,6 @@ _cairo_d2d_release_source_image(void                   *abstract_surface,
     if (((cairo_surface_t*)abstract_surface)->type != CAIRO_SURFACE_TYPE_D2D) {
 	return;
     }
-    cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(abstract_surface);
 
     cairo_surface_destroy(&image->base);
     ID3D10Texture2D *softTexture = (ID3D10Texture2D*)image_extra;
@@ -2805,7 +2801,9 @@ _cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
 	cairo_rectangle_int_t transformed_rect = { area_to_copy.x + translation->x,
 						   area_to_copy.y + translation->y,
 						   area_to_copy.width, area_to_copy.height };
-	cairo_rectangle_int_t surface_rect = { 0, 0, srcDesc.Width, srcDesc.Height };
+	cairo_rectangle_int_t surface_rect = { 0, 0,
+					       static_cast<int>(srcDesc.Width),
+					       static_cast<int>(srcDesc.Height) };
 
 
 	if (!_cairo_rectangle_contains(&surface_rect, &transformed_rect)) {
@@ -3020,8 +3018,8 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 
 	// Areas outside of the surface do not matter.
 	cairo_rectangle_int_t surface_rect = { 0, 0,
-					       dst->rt->GetPixelSize().width,
-					       dst->rt->GetPixelSize().height };
+					       static_cast<int>(dst->rt->GetPixelSize().width),
+					       static_cast<int>(dst->rt->GetPixelSize().height) };
 	cairo_region_intersect_rectangle(region, &surface_rect);
     }
 

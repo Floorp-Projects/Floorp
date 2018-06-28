@@ -25,7 +25,6 @@ add_task(async function() {
       data: [],
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onVisits() {},
       onTitleChanged(aURI, aPageTitle, aGUID) {
         this.data.push({ uri: aURI, title: aPageTitle, guid: aGUID });
 

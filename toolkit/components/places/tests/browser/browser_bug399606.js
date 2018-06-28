@@ -15,43 +15,33 @@ add_task(async function() {
   ];
 
   // Create and add history observer.
-  let historyObserver = {
-    count: 0,
-    expectedURI: null,
-    onVisits(aVisits) {
-      for (let {uri} of aVisits) {
-        info("Received onVisits: " + uri.spec);
-        if (uri.equals(this.expectedURI)) {
-          this.count++;
-        }
+  let count = 0;
+  let expectedURI = null;
+  function onVisitsListener(aEvents) {
+    for (let event of aEvents) {
+      info("Received onVisits: " + event.url);
+      if (event.url == expectedURI) {
+        count++;
       }
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onTitleChanged() {},
-    onDeleteURI() {},
-    onClearHistory() {},
-    onPageChanged() {},
-    onDeleteVisits() {},
-    QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
-  };
+    }
+  }
 
   async function promiseLoadedThreeTimes(uri) {
-    historyObserver.count = 0;
-    historyObserver.expectedURI = Services.io.newURI(uri);
+    count = 0;
+    expectedURI = uri;
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-    PlacesUtils.history.addObserver(historyObserver);
+    PlacesObservers.addListener(["page-visited"], onVisitsListener);
     gBrowser.loadURI(uri);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
-    PlacesUtils.history.removeObserver(historyObserver);
+    PlacesObservers.removeListener(["page-visited"], onVisitsListener);
     BrowserTestUtils.removeTab(tab);
   }
 
   for (let uri of URIS) {
     await promiseLoadedThreeTimes(uri);
-    is(historyObserver.count, 1,
-      "onVisit has been received right number of times for " + uri);
+    is(count, 1,
+      "'page-visited' has been received right number of times for " + uri);
   }
 });

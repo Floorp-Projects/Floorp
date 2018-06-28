@@ -55,7 +55,6 @@ function test() {
     var historyObserver = {
         onBeginUpdateBatch: function() {},
         onEndUpdateBatch: function() {},
-        onVisits: function() {},
         onTitleChanged: function(aURI, aPageTitle) {},
         onDeleteURI: function(aURI) {},
         onClearHistory: function() {},

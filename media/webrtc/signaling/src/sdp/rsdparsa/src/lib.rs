@@ -640,6 +640,18 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
                    });
     }
 
+    if session.get_connection().is_none() {
+        for msection in &session.media {
+            if !msection.has_connection() {
+                return Err(SdpParserError::Sequence {
+                    message: "Each media section must define a connection
+                              if it is not defined on session level".to_string(),
+                    line_number: 0,
+                });
+            }
+        }
+    }
+
     // Check that extmaps are not defined on session and media level
     if session.get_attribute(SdpAttributeType::Extmap).is_some() {
         for msection in &session.media {
@@ -729,9 +741,17 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
 fn create_dummy_sdp_session() -> SdpSession {
     let origin = parse_origin("mozilla 506705521068071134 0 IN IP4 0.0.0.0");
     assert!(origin.is_ok());
-    let sdp_session;
+    let connection = parse_connection("IN IP4 198.51.100.7");
+    assert!(connection.is_ok());
+    let mut sdp_session;
     if let SdpType::Origin(o) = origin.unwrap() {
         sdp_session = SdpSession::new(0, o, "-".to_string());
+
+        if let Ok(SdpType::Connection(c)) = connection {
+            sdp_session.connection = Some(c);
+        } else {
+            panic!("Sdp type is not Connection")
+        }
     } else {
         panic!("SdpType is not Origin");
     }
@@ -1023,6 +1043,7 @@ fn test_parse_sdp_unsupported_warning() {
     assert!(parse_sdp("v=0\r\n
 o=- 0 0 IN IP4 0.0.0.0\r\n
 s=-\r\n
+c=IN IP4 198.51.100.7\r\n
 t=0 0\r\n
 m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n
 a=unsupported\r\n",

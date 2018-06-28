@@ -237,6 +237,11 @@ used in Firefox.
 
 ## Release Notes
 
+### 0.8.4
+
+* Fix SSE2-specific, `simd-accel`-specific memory corruption introduced in
+  version 0.8.1 in conversions between UTF-16 and Latin1 in the `mem` module.
+
 ### 0.8.3
 
 * Removed an `#[inline(never)]` annotation that was not meant for release.

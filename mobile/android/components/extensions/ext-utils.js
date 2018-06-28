@@ -667,6 +667,10 @@ class Window extends WindowBase {
     }
   }
 
+  * getHighlightedTabs() {
+    yield this.activeTab;
+  }
+
   get activeTab() {
     let {BrowserApp} = this.window;
     let {selectedTab} = BrowserApp;

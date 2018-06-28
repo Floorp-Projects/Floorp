@@ -1,0 +1,67 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.bouncer_check:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: bouncer-check
+    description: bouncer check
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-phase: push
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1200
+        docker-image: {in-tree: "update-verify"}
+    run:
+        using: run-task
+        sparse-profile: mozharness
+    attributes:
+        build_platform: linux64
+        build_type: opt
+    treeherder:
+        symbol: Rel(ckbouncer)
+        kind: test
+        tier: 1
+
+jobs:
+    firefox:
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: firefox-bouncer-check
+        run:
+            config:
+                by-project:
+                    mozilla-beta:
+                        - releases/bouncer_firefox_beta.py
+                    mozilla-release:
+                        - releases/bouncer_firefox_release.py
+                    mozilla-esr60:
+                        - releases/bouncer_firefox_esr.py
+                    jamun:
+                        - releases/dev_bouncer_firefox_esr.py
+                    default:
+                        - releases/dev_bouncer_firefox_beta.py
+        treeherder:
+            platform: firefox-release/opt
+
+    devedition:
+        shipping-product: devedition
+        index:
+            product: devedition
+            job-name: devedition-bouncer-check
+        run:
+            config:
+                by-project:
+                    mozilla-beta:
+                        - releases/bouncer_firefox_devedition.py
+                    default:
+                        - releases/dev_bouncer_firefox_devedition.py
+        treeherder:
+            platform: devedition-release/opt

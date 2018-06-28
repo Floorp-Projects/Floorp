@@ -578,3 +578,13 @@ def target_tasks_file_update(full_task_graph, parameters, graph_config):
         # For now any task in the repo-update kind is ok
         return task.kind in ['repo-update']
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('bouncer_check')
+def target_tasks_bouncer_check(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to perform bouncer version verification.
+    """
+    def filter(task):
+        # For now any task in the repo-update kind is ok
+        return task.kind in ['bouncer-check']
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

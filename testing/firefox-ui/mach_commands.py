@@ -77,8 +77,10 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
         kwargs['tests'] = [os.path.join(fxui_dir, 'tests', test)
                            for test in test_types[testtype]['default_tests']]
 
-    kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
-                                                 {"mach": sys.stdout})
+    kwargs['logger'] = kwargs.pop('log', None)
+    if not kwargs['logger']:
+        kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
+                                                     {"mach": sys.stdout})
 
     args = Namespace()
 

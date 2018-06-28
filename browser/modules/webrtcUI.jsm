@@ -300,14 +300,17 @@ function denyRequest(aBrowser, aRequest) {
                                             windowID: aRequest.windowID});
 }
 
-function getHost(uri, href) {
+function getHostOrExtensionName(uri, href) {
   let host;
   try {
     if (!uri) {
       uri = Services.io.newURI(href);
     }
-    host = uri.host;
+
+    let addonPolicy = WebExtensionPolicy.getByURI(uri);
+    host = addonPolicy ? addonPolicy.name : uri.host;
   } catch (ex) {}
+
   if (!host) {
     if (uri && uri.scheme.toLowerCase() == "about") {
       // For about URIs, just use the full spec, without any #hash parts.
@@ -419,7 +422,7 @@ function prompt(aBrowser, aRequest) {
   let productName = gBrandBundle.GetStringFromName("brandShortName");
 
   let options = {
-    name: getHost(uri),
+    name: getHostOrExtensionName(uri),
     persistent: true,
     hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
     eventCallback(aTopic, aNewBrowser) {
@@ -1007,7 +1010,7 @@ function onTabSharingMenuPopupShowing(e) {
     let doc = e.target.ownerDocument;
     let bundle = doc.defaultView.gNavigatorBundle;
 
-    let origin = getHost(null, streamInfo.uri);
+    let origin = getHostOrExtensionName(null, streamInfo.uri);
     let menuitem = doc.createElement("menuitem");
     menuitem.setAttribute("label", bundle.getFormattedString(stringName, [origin]));
     menuitem.stream = streamInfo;

@@ -63,6 +63,8 @@ interface mozIAsyncLivemarks : nsISupports
    */
   void reloadLivemarks([optional]in boolean aForceUpdate);
 
+  void handlePlacesEvents(in jsval aEvents);
+
   jsval invalidateCachedLivemarks();
 };
 

@@ -196,6 +196,9 @@ ScriptPreloader::GetChildProcessType(const nsAString& remoteType)
     if (remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
         return ProcessType::Extension;
     }
+    if (remoteType.EqualsLiteral(PRIVILEGED_REMOTE_TYPE)) {
+        return ProcessType::Privileged;
+    }
     return ProcessType::Web;
 }
 

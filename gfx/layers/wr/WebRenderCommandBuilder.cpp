@@ -948,7 +948,8 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
       // that we're building the display list for.
       if (!groupData->mFollowingGroup.mGroupBounds.IsEqualEdges(currentGroup->mGroupBounds) ||
           groupData->mFollowingGroup.mScale != currentGroup->mScale ||
-          groupData->mFollowingGroup.mAppUnitsPerDevPixel != currentGroup->mAppUnitsPerDevPixel) {
+          groupData->mFollowingGroup.mAppUnitsPerDevPixel != currentGroup->mAppUnitsPerDevPixel ||
+          groupData->mFollowingGroup.mResidualOffset != currentGroup->mResidualOffset) {
         if (groupData->mFollowingGroup.mAppUnitsPerDevPixel != currentGroup->mAppUnitsPerDevPixel) {
           GP("app unit change following: %d %d\n", groupData->mFollowingGroup.mAppUnitsPerDevPixel, currentGroup->mAppUnitsPerDevPixel);
         }

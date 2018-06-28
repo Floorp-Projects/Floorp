@@ -23,6 +23,8 @@ activity_stream:
       "PREVIEW_REQUEST",
       "SAVE_TO_POCKET",
       "SEARCH",
+      "SKIPPED_SIGNIN",
+      "SUBMIT_EMAIL",
       "DISCLAIMER_ACKED",
       "MENU_ADD_TOPSITE",
       "MENU_COLLAPSE",
