@@ -6028,7 +6028,7 @@ ContentParent::RecvAttachBrowsingContext(
   }
 
   RefPtr<BrowsingContext> child = BrowsingContext::Get(aChildId);
-  if (child) {
+  if (child && !child->IsCached()) {
     // This is highly suspicious. BrowsingContexts should only be
     // attached at most once, but finding one indicates that someone
     // is doing something they shouldn't.
@@ -6081,7 +6081,11 @@ ContentParent::RecvDetachBrowsingContext(const BrowsingContextId& aContextId,
     return IPC_OK();
   }
 
-  context->Detach();
+  if (aMoveToBFCache) {
+    context->CacheChildren();
+  } else {
+    context->Detach();
+  }
 
   return IPC_OK();
 }
