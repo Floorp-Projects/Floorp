@@ -29,9 +29,9 @@ buildscript {
     // Synchronized versions numbers of GeckoView (Nightly) artifacts.
     ext.geckoNightly = [
         // Discover nightly builds: https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
-        nightlyDate: '2018.06.21',
-        revision: 'e834d23a292972ab4250a8be00e6740c43e41db2',
-        version: '62.0.20180621100051'
+        nightlyDate: '2018.06.27',
+        revision: '1c235a552c32ba6c97e6030c497c49f72c7d48a8',
+        version: '63.0.20180627100018'
     ]
 
     // Synchronized versions numbers of GeckoView (Beta) artifacts.
