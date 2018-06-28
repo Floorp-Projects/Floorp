@@ -176,6 +176,12 @@ DestroySurface(EGLSurface oldSurface) {
 static EGLSurface
 CreateFallbackSurface(const EGLConfig& config)
 {
+    nsCString discardFailureId;
+    if (!GLLibraryEGL::EnsureInitialized(false, &discardFailureId)) {
+        gfxCriticalNote << "Failed to load EGL library 3!";
+        return EGL_NO_SURFACE;
+    }
+
     auto* egl = gl::GLLibraryEGL::Get();
 
     if (egl->IsExtensionSupported(GLLibraryEGL::KHR_surfaceless_context)) {
