@@ -103,15 +103,16 @@ function(anchorRect, viewportRect, height, pos, offset) {
 };
 
 /**
- * Calculate the vertical position & offsets to use for the tooltip. Will attempt to
- * respect the provided height and position preferences, unless the available height
- * prevents this.
+ * Calculate the horizontal position & offsets to use for the tooltip. Will
+ * attempt to respect the provided width and position preferences, unless the
+ * available width prevents this.
  *
  * @param {DOMRect} anchorRect
  *        Bounding rectangle for the anchor, relative to the tooltip document.
  * @param {DOMRect} viewportRect
- *        Bounding rectangle for the viewport. top/left can be different from 0 if some
- *        space should not be used by tooltips (for instance OS toolbars, taskbars etc.).
+ *        Bounding rectangle for the viewport. top/left can be different from
+ *        0 if some space should not be used by tooltips (for instance OS
+ *        toolbars, taskbars etc.).
  * @param {Number} width
  *        Preferred width for the tooltip.
  * @param {String} type
@@ -125,47 +126,67 @@ function(anchorRect, viewportRect, height, pos, offset) {
  *         - {Number} width: the width to use for the tooltip container.
  *         - {Number} arrowLeft: the left offset to use for the arrow element.
  */
-const calculateHorizontalPosition =
-function(anchorRect, viewportRect, width, type, offset, isRtl) {
+const calculateHorizontalPosition = (
+  anchorRect,
+  viewportRect,
+  width,
+  type,
+  offset,
+  isRtl
+) => {
+  // Which direction should the tooltip go?
+  const hangDirection = isRtl ? "left" : "right";
   const anchorWidth = anchorRect.width;
-  let anchorStart = isRtl ? anchorRect.right : anchorRect.left;
 
-  // Translate to the available viewport space before calculating dimensions and position.
-  anchorStart -= viewportRect.left;
+  // Calculate logical start of anchor relative to the viewport.
+  const anchorStart =
+    hangDirection === "right"
+      ? anchorRect.left - viewportRect.left
+      : viewportRect.right - anchorRect.right;
 
-  // Calculate WIDTH.
-  width = Math.min(width, viewportRect.width);
+  // Calculate tooltip width.
+  const tooltipWidth = Math.min(width, viewportRect.width);
 
-  // Calculate LEFT.
-  // By default the tooltip is aligned with the anchor left edge. Unless this
-  // makes it overflow the viewport, in which case is shifts to the left.
-  let left = anchorStart + offset - (isRtl ? width : 0);
-  left = Math.min(left, viewportRect.width - width);
-  left = Math.max(0, left);
+  // Calculate tooltip start.
+  let tooltipStart = anchorStart + offset;
+  tooltipStart = Math.min(tooltipStart, viewportRect.width - tooltipWidth);
+  tooltipStart = Math.max(0, tooltipStart);
 
-  // Calculate ARROW LEFT (tooltip's LEFT might be updated)
-  let arrowLeft;
-  // Arrow style tooltips may need to be shifted to the left
+  // Calculate arrow start (tooltip's start might be updated)
+  const arrowWidth = type === TYPE.ARROW ? ARROW_WIDTH : 0;
+  let arrowStart;
+  // Arrow style tooltips may need to be shifted
   if (type === TYPE.ARROW) {
-    const arrowCenter = left + ARROW_OFFSET + ARROW_WIDTH / 2;
+    // Where will the point of the arrow be if we apply the standard offset?
+    const arrowCenter = tooltipStart + ARROW_OFFSET + arrowWidth / 2;
+
+    // How does that compare to the center of the anchor?
     const anchorCenter = anchorStart + anchorWidth / 2;
+
     // If the anchor is too narrow, align the arrow and the anchor center.
     if (arrowCenter > anchorCenter) {
-      left = Math.max(0, left - (arrowCenter - anchorCenter));
+      tooltipStart = Math.max(0, tooltipStart - (arrowCenter - anchorCenter));
     }
-    // Arrow's left offset relative to the anchor.
-    arrowLeft = Math.min(ARROW_OFFSET, (anchorWidth - ARROW_WIDTH) / 2) | 0;
+    // Arrow's start offset relative to the anchor.
+    arrowStart = Math.min(ARROW_OFFSET, (anchorWidth - arrowWidth) / 2) | 0;
     // Translate the coordinate to tooltip container
-    arrowLeft += anchorStart - left;
+    arrowStart += anchorStart - tooltipStart;
     // Make sure the arrow remains in the tooltip container.
-    arrowLeft = Math.min(arrowLeft, width - ARROW_WIDTH);
-    arrowLeft = Math.max(arrowLeft, 0);
+    arrowStart = Math.min(arrowStart, tooltipWidth - arrowWidth);
+    arrowStart = Math.max(arrowStart, 0);
   }
 
-  // Translate back to absolute coordinates by re-including viewport left margin.
-  left += viewportRect.left;
+  // Convert from logical coordinates to physical
+  const left =
+    hangDirection === "right"
+      ? viewportRect.left + tooltipStart
+      : viewportRect.right - tooltipStart - tooltipWidth;
+  const arrowLeft =
+    hangDirection === "right"
+      ? arrowStart
+      : tooltipWidth - arrowWidth - arrowStart;
 
-  return {left, width, arrowLeft};
+  return { left, width: tooltipWidth, arrowLeft };
 };
 
 /**
