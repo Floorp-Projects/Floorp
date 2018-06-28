@@ -115,7 +115,7 @@ pub struct ColorU {
 
 impl ColorU {
     /// Constructs a new additive `ColorU` from its components.
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> ColorU {
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         ColorU { r, g, b, a }
     }
 }
