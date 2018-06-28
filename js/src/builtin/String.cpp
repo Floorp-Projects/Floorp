@@ -192,12 +192,7 @@ class MOZ_NON_PARAM InlineCharBuffer
         MOZ_ASSERT(heapStorage, "heap storage was not allocated for non-inline string");
 
         heapStorage.get()[length] = '\0'; // Null-terminate
-        JSString* res = NewStringDontDeflate<CanGC>(cx, heapStorage.get(), length);
-        if (!res)
-            return nullptr;
-
-        mozilla::Unused << heapStorage.release();
-        return res;
+        return NewStringDontDeflate<CanGC>(cx, std::move(heapStorage), length);
     }
 
     JSString* toString(JSContext* cx, size_t length)
@@ -214,12 +209,7 @@ class MOZ_NON_PARAM InlineCharBuffer
         MOZ_ASSERT(heapStorage, "heap storage was not allocated for non-inline string");
 
         heapStorage.get()[length] = '\0'; // Null-terminate
-        JSString* res = NewString<CanGC>(cx, heapStorage.get(), length);
-        if (!res)
-            return nullptr;
-
-        mozilla::Unused << heapStorage.release();
-        return res;
+        return NewString<CanGC>(cx, std::move(heapStorage), length);
     }
 };
 
@@ -3576,11 +3566,9 @@ js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp)
     elements[length] = 0;
 
     // Step 6.
-    JSString* str = NewString<CanGC>(cx, elements.get(), length);
+    JSString* str = NewString<CanGC>(cx, std::move(elements), length);
     if (!str)
         return false;
-
-    mozilla::Unused << elements.release();
 
     args.rval().setString(str);
     return true;

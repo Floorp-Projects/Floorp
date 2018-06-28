@@ -41,6 +41,8 @@ using mozilla::Unused;
 
 using JS::AutoCheckCannotGC;
 
+using UniqueLatin1Chars = UniquePtr<Latin1Char[], JS::FreePolicy>;
+
 size_t
 JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
@@ -279,7 +281,7 @@ AllocChars(JSString* str, size_t length, CharT** chars, size_t* capacity)
     return *chars != nullptr;
 }
 
-UniquePtr<Latin1Char[], JS::FreePolicy>
+UniqueLatin1Chars
 JSRope::copyLatin1CharsZ(JSContext* maybecx) const
 {
     return copyCharsInternal<Latin1Char>(maybecx, true);
@@ -291,7 +293,7 @@ JSRope::copyTwoByteCharsZ(JSContext* maybecx) const
     return copyCharsInternal<char16_t>(maybecx, true);
 }
 
-UniquePtr<Latin1Char[], JS::FreePolicy>
+UniqueLatin1Chars
 JSRope::copyLatin1Chars(JSContext* maybecx) const
 {
     return copyCharsInternal<Latin1Char>(maybecx, false);
@@ -1529,7 +1531,7 @@ NewStringDeflated(JSContext* cx, const Latin1Char* s, size_t n)
     MOZ_CRASH("Shouldn't be called for Latin1 chars");
 }
 
-template <AllowGC allowGC, typename CharT>
+template <typename CharT>
 JSFlatString*
 js::NewStringDontDeflate(JSContext* cx, CharT* chars, size_t length)
 {
@@ -1542,7 +1544,7 @@ js::NewStringDontDeflate(JSContext* cx, CharT* chars, size_t length)
 
     if (JSInlineString::lengthFits<CharT>(length)) {
         JSInlineString* str =
-            NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(chars, length));
+            NewInlineString<CanGC>(cx, mozilla::Range<const CharT>(chars, length));
         if (!str)
             return nullptr;
 
@@ -1550,27 +1552,21 @@ js::NewStringDontDeflate(JSContext* cx, CharT* chars, size_t length)
         return str;
     }
 
-    return JSFlatString::new_<allowGC>(cx, chars, length);
+    return JSFlatString::new_<CanGC>(cx, chars, length);
 }
 
 template JSFlatString*
-js::NewStringDontDeflate<CanGC>(JSContext* cx, char16_t* chars, size_t length);
+js::NewStringDontDeflate(JSContext* cx, char16_t* chars, size_t length);
 
 template JSFlatString*
-js::NewStringDontDeflate<NoGC>(JSContext* cx, char16_t* chars, size_t length);
+js::NewStringDontDeflate(JSContext* cx, Latin1Char* chars, size_t length);
 
-template JSFlatString*
-js::NewStringDontDeflate<CanGC>(JSContext* cx, Latin1Char* chars, size_t length);
-
-template JSFlatString*
-js::NewStringDontDeflate<NoGC>(JSContext* cx, Latin1Char* chars, size_t length);
-
-template <AllowGC allowGC, typename CharT>
+template <typename CharT>
 JSFlatString*
 js::NewString(JSContext* cx, CharT* chars, size_t length)
 {
     if (IsSame<CharT, char16_t>::value && CanStoreCharsAsLatin1(chars, length)) {
-        JSFlatString* s = NewStringDeflated<allowGC>(cx, chars, length);
+        JSFlatString* s = NewStringDeflated<CanGC>(cx, chars, length);
         if (!s)
             return nullptr;
 
@@ -1579,20 +1575,66 @@ js::NewString(JSContext* cx, CharT* chars, size_t length)
         return s;
     }
 
-    return NewStringDontDeflate<allowGC>(cx, chars, length);
+    return NewStringDontDeflate(cx, chars, length);
 }
 
 template JSFlatString*
-js::NewString<CanGC>(JSContext* cx, char16_t* chars, size_t length);
+js::NewString(JSContext* cx, char16_t* chars, size_t length);
 
 template JSFlatString*
-js::NewString<NoGC>(JSContext* cx, char16_t* chars, size_t length);
+js::NewString(JSContext* cx, Latin1Char* chars, size_t length);
+
+template <AllowGC allowGC, typename CharT>
+JSFlatString*
+js::NewStringDontDeflate(JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length)
+{
+    if (JSFlatString* str = TryEmptyOrStaticString(cx, chars.get(), length))
+        return str;
+
+    if (JSInlineString::lengthFits<CharT>(length))
+        return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(chars.get(), length));
+
+    JSFlatString* str = JSFlatString::new_<allowGC>(cx, chars.get(), length);
+    if (!str)
+        return nullptr;
+
+    mozilla::Unused << chars.release();
+    return str;
+}
 
 template JSFlatString*
-js::NewString<CanGC>(JSContext* cx, Latin1Char* chars, size_t length);
+js::NewStringDontDeflate<CanGC>(JSContext* cx, UniqueTwoByteChars chars, size_t length);
 
 template JSFlatString*
-js::NewString<NoGC>(JSContext* cx, Latin1Char* chars, size_t length);
+js::NewStringDontDeflate<NoGC>(JSContext* cx, UniqueTwoByteChars chars, size_t length);
+
+template JSFlatString*
+js::NewStringDontDeflate<CanGC>(JSContext* cx, UniqueLatin1Chars chars, size_t length);
+
+template JSFlatString*
+js::NewStringDontDeflate<NoGC>(JSContext* cx, UniqueLatin1Chars chars, size_t length);
+
+template <AllowGC allowGC, typename CharT>
+JSFlatString*
+js::NewString(JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length)
+{
+    if (IsSame<CharT, char16_t>::value && CanStoreCharsAsLatin1(chars.get(), length))
+        return NewStringDeflated<allowGC>(cx, chars.get(), length);
+
+    return NewStringDontDeflate<allowGC>(cx, std::move(chars), length);
+}
+
+template JSFlatString*
+js::NewString<CanGC>(JSContext* cx, UniqueTwoByteChars chars, size_t length);
+
+template JSFlatString*
+js::NewString<NoGC>(JSContext* cx, UniqueTwoByteChars chars, size_t length);
+
+template JSFlatString*
+js::NewString<CanGC>(JSContext* cx, UniqueLatin1Chars chars, size_t length);
+
+template JSFlatString*
+js::NewString<NoGC>(JSContext* cx, UniqueLatin1Chars chars, size_t length);
 
 namespace js {
 
@@ -1639,12 +1681,9 @@ NewStringCopyNDontDeflate<NoGC>(JSContext* cx, const Latin1Char* s, size_t n);
 JSFlatString*
 NewLatin1StringZ(JSContext* cx, UniqueChars chars)
 {
-    JSFlatString* str = NewString<CanGC>(cx, (Latin1Char*)chars.get(), strlen(chars.get()));
-    if (!str)
-        return nullptr;
-
-    mozilla::Unused << chars.release();
-    return str;
+    size_t length = strlen(chars.get());
+    UniqueLatin1Chars latin1(reinterpret_cast<Latin1Char*>(chars.release()));
+    return NewString<CanGC>(cx, std::move(latin1), length);
 }
 
 template <AllowGC allowGC, typename CharT>
@@ -1679,26 +1718,20 @@ NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8)
 
     size_t length;
     if (encoding == JS::SmallestEncoding::Latin1) {
-        Latin1Char* latin1 = UTF8CharsToNewLatin1CharsZ(cx, utf8, &length).get();
+        UniqueLatin1Chars latin1(UTF8CharsToNewLatin1CharsZ(cx, utf8, &length).get());
         if (!latin1)
             return nullptr;
 
-        JSFlatString* result = NewString<allowGC>(cx, latin1, length);
-        if (!result)
-            js_free((void*)latin1);
-        return result;
+        return NewString<allowGC>(cx, std::move(latin1), length);
     }
 
     MOZ_ASSERT(encoding == JS::SmallestEncoding::UTF16);
 
-    char16_t* utf16 = UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get();
+    UniqueTwoByteChars utf16(UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get());
     if (!utf16)
         return nullptr;
 
-    JSFlatString* result = NewString<allowGC>(cx, utf16, length);
-    if (!result)
-        js_free((void*)utf16);
-    return result;
+    return NewString<allowGC>(cx, std::move(utf16), length);
 }
 
 template JSFlatString*

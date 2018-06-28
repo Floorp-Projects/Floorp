@@ -2435,13 +2435,9 @@ ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
             if (!JS_DefineProperty(cx, inlineFrameInfo, "kind", frameKind, propAttrs))
                 return false;
 
-            size_t length = strlen(inlineFrame.label.get());
-            auto* label = reinterpret_cast<Latin1Char*>(inlineFrame.label.release());
-            frameLabel = NewString<CanGC>(cx, label, length);
-            if (!frameLabel) {
-                js_free(label);
+            frameLabel = NewLatin1StringZ(cx, std::move(inlineFrame.label));
+            if (!frameLabel)
                 return false;
-            }
 
             if (!JS_DefineProperty(cx, inlineFrameInfo, "label", frameLabel, propAttrs))
                 return false;
@@ -3645,10 +3641,10 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 
         heaptools::EdgeName edgeName = std::move(edges[i]);
 
-        RootedString edgeStr(cx, NewString<CanGC>(cx, edgeName.get(), js_strlen(edgeName.get())));
+        size_t edgeNameLength = js_strlen(edgeName.get());
+        RootedString edgeStr(cx, NewString<CanGC>(cx, std::move(edgeName), edgeNameLength));
         if (!edgeStr)
             return false;
-        mozilla::Unused << edgeName.release(); // edgeStr acquired ownership
 
         if (!JS_DefineProperty(cx, obj, "edge", edgeStr, JSPROP_ENUMERATE))
             return false;

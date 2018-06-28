@@ -84,7 +84,7 @@ FinishStringFlat(JSContext* cx, StringBuffer& sb, Buffer& cb)
     if (!buf)
         return nullptr;
 
-    JSFlatString* str = NewStringDontDeflate<CanGC>(cx, buf.get(), len);
+    JSFlatString* str = NewStringDontDeflate<CanGC>(cx, std::move(buf), len);
     if (!str)
         return nullptr;
 
@@ -94,7 +94,6 @@ FinishStringFlat(JSContext* cx, StringBuffer& sb, Buffer& cb)
      */
     cx->updateMallocCounter(sizeof(CharT) * len);
 
-    mozilla::Unused << buf.release();
     return str;
 }
 

@@ -1444,14 +1444,24 @@ StringToNewUTF8CharsZ(JSContext* maybecx, JSString& str)
 }
 
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
-template <js::AllowGC allowGC, typename CharT>
+template <typename CharT>
 extern JSFlatString*
 NewString(JSContext* cx, CharT* chars, size_t length);
 
 /* Like NewString, but doesn't try to deflate to Latin1. */
-template <js::AllowGC allowGC, typename CharT>
+template <typename CharT>
 extern JSFlatString*
 NewStringDontDeflate(JSContext* cx, CharT* chars, size_t length);
+
+/* GC-allocate a string descriptor for the given malloc-allocated chars. */
+template <js::AllowGC allowGC, typename CharT>
+extern JSFlatString*
+NewString(JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length);
+
+/* Like NewString, but doesn't try to deflate to Latin1. */
+template <js::AllowGC allowGC, typename CharT>
+extern JSFlatString*
+NewStringDontDeflate(JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length);
 
 extern JSLinearString*
 NewDependentString(JSContext* cx, JSString* base, size_t start, size_t length);
