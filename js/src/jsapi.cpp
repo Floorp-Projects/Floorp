@@ -4361,7 +4361,7 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
 
     cx->clearPendingException();
 
-    UniquePtr<char16_t> chars
+    UniqueTwoByteChars chars
         { JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get() };
     if (!chars)
         return true;

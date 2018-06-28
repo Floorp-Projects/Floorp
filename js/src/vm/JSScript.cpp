@@ -2137,7 +2137,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 
         size_t byteLen = compressedLength ? compressedLength : (len * sizeof(char16_t));
         if (mode == XDR_DECODE) {
-            UniqueChars bytes(xdr->cx()->template pod_malloc<char>(Max<size_t>(byteLen, 1)));
+            auto bytes = xdr->cx()->template make_pod_array<char>(Max<size_t>(byteLen, 1));
             if (!bytes)
                 return xdr->fail(JS::TranscodeResult_Throw);
             MOZ_TRY(xdr->codeBytes(bytes.get(), byteLen));

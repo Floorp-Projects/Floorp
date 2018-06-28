@@ -1438,7 +1438,7 @@ NewExternalString(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx, args[0].toString());
     size_t len = str->length();
 
-    UniqueTwoByteChars buf(cx->pod_malloc<char16_t>(len));
+    auto buf = cx->make_pod_array<char16_t>(len);
     if (!buf)
         return false;
 
@@ -1467,7 +1467,7 @@ NewMaybeExternalString(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx, args[0].toString());
     size_t len = str->length();
 
-    UniqueTwoByteChars buf(cx->pod_malloc<char16_t>(len));
+    auto buf = cx->make_pod_array<char16_t>(len);
     if (!buf)
         return false;
 

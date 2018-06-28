@@ -884,7 +884,7 @@ InitModuleLoader(JSContext* cx)
     // the module loader for the current compartment.
 
     uint32_t srcLen = moduleloader::GetRawScriptsSize();
-    UniqueChars src(cx->pod_malloc<char>(srcLen));
+    auto src = cx->make_pod_array<char>(srcLen);
     if (!src || !DecompressString(moduleloader::compressedSources, moduleloader::GetCompressedSize(),
                                   reinterpret_cast<unsigned char*>(src.get()), srcLen))
     {
@@ -5027,7 +5027,7 @@ EscapeForShell(JSContext* cx, AutoCStringVector& argv)
                 newLen++;
         }
 
-        UniqueChars escaped(cx->pod_malloc<char>(newLen));
+        auto escaped = cx->make_pod_array<char>(newLen);
         if (!escaped)
             return false;
 

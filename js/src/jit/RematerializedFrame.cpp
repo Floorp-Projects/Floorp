@@ -73,10 +73,7 @@ RematerializedFrame::New(JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
     if (extraSlots > 0)
         extraSlots -= 1;
 
-    size_t numBytes = sizeof(RematerializedFrame) + (extraSlots * sizeof(Value));
-    MOZ_ASSERT(numBytes >= sizeof(RematerializedFrame));
-
-    void* buf = cx->pod_calloc<uint8_t>(numBytes);
+    RematerializedFrame* buf = cx->pod_calloc_with_extra<RematerializedFrame, Value>(extraSlots);
     if (!buf)
         return nullptr;
 
