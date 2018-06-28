@@ -3882,6 +3882,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
     case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
       return false;
 
+    case NS_THEME_SCROLLCORNER:
     case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
     case NS_THEME_SCROLLBARTRACK_VERTICAL: {
       BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
