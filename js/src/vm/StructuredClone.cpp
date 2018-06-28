@@ -1929,10 +1929,7 @@ JSStructuredCloneReader::readStringImpl(uint32_t nchars)
     UniquePtr<CharT[], JS::FreePolicy> chars = AllocateChars<CharT>(context(), nchars);
     if (!chars || !in.readChars(chars.get(), nchars))
         return nullptr;
-    JSString* str = NewString<CanGC>(context(), chars.get(), nchars);
-    if (str)
-        mozilla::Unused << chars.release();
-    return str;
+    return NewString<CanGC>(context(), std::move(chars), nchars);
 }
 
 JSString*

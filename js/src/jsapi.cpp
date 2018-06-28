@@ -5812,7 +5812,7 @@ JS_NewLatin1String(JSContext* cx, JS::Latin1Char* chars, size_t length)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return NewString<CanGC>(cx, chars, length);
+    return NewString(cx, chars, length);
 }
 
 JS_PUBLIC_API(JSString*)
@@ -5820,7 +5820,7 @@ JS_NewUCString(JSContext* cx, char16_t* chars, size_t length)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return NewString<CanGC>(cx, chars, length);
+    return NewString(cx, chars, length);
 }
 
 JS_PUBLIC_API(JSString*)
@@ -5828,7 +5828,7 @@ JS_NewUCStringDontDeflate(JSContext* cx, char16_t* chars, size_t length)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return NewStringDontDeflate<CanGC>(cx, chars, length);
+    return NewStringDontDeflate(cx, chars, length);
 }
 
 JS_PUBLIC_API(JSString*)

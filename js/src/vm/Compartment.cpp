@@ -131,22 +131,14 @@ CopyStringPure(JSContext* cx, JSString* str)
         if (!copiedChars)
             return nullptr;
 
-        auto* rawCopiedChars = copiedChars.release();
-        auto* result = NewString<CanGC>(cx, rawCopiedChars, len);
-        if (!result)
-            js_free(rawCopiedChars);
-        return result;
+        return NewString<CanGC>(cx, std::move(copiedChars), len);
     }
 
     UniqueTwoByteChars copiedChars = str->asRope().copyTwoByteCharsZ(cx);
     if (!copiedChars)
         return nullptr;
 
-    auto* rawCopiedChars = copiedChars.release();
-    auto* result = NewStringDontDeflate<CanGC>(cx, rawCopiedChars, len);
-    if (!result)
-        js_free(rawCopiedChars);
-    return result;
+    return NewStringDontDeflate<CanGC>(cx, std::move(copiedChars), len);
 }
 
 bool
