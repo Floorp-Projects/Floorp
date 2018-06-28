@@ -317,6 +317,20 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
   MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
 
   RefPtr<GenericPromise> ref;
+  RefPtr<ServiceWorkerManager> self(this);
+
+  // Always check to see if we failed to actually control the client.  In
+  // that case removed the client from our list of controlled clients.
+  auto scopeExit = MakeScopeExit([&] () {
+    ref->Then(
+      SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+      [] (bool) {
+        // do nothing on success
+      }, [self, aClientInfo] (nsresult aRv) {
+        // failed to control, forget about this client
+        self->StopControllingClient(aClientInfo);
+      });
+  });
 
   const ServiceWorkerDescriptor& active =
     aRegistrationInfo->GetActive()->Descriptor();
@@ -326,7 +340,12 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
     RefPtr<ServiceWorkerRegistrationInfo> old =
       entry.Data()->mRegistrationInfo.forget();
 
-    ref = entry.Data()->mClientHandle->Control(active);
+    if (aControlClientHandle) {
+      ref = entry.Data()->mClientHandle->Control(active);
+    } else {
+      ref = GenericPromise::CreateAndResolve(false, __func__);
+    }
+
     entry.Data()->mRegistrationInfo = aRegistrationInfo;
 
     if (old != aRegistrationInfo) {
@@ -355,10 +374,9 @@ ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
     return new ControlledClientData(clientHandle, aRegistrationInfo);
   });
 
-  RefPtr<ServiceWorkerManager> self(this);
   clientHandle->OnDetach()->Then(
     SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-    [self = std::move(self), aClientInfo] {
+    [self, aClientInfo] {
       self->StopControllingClient(aClientInfo);
     });
 
@@ -2695,7 +2713,20 @@ ServiceWorkerManager::UpdateClientControllers(ServiceWorkerRegistrationInfo* aRe
   // Fire event after iterating mControlledClients is done to prevent
   // modification by reentering from the event handlers during iteration.
   for (auto& handle : handleList) {
-    handle->Control(activeWorker->Descriptor());
+    RefPtr<GenericPromise> p = handle->Control(activeWorker->Descriptor());
+
+    RefPtr<ServiceWorkerManager> self = this;
+
+    // If we fail to control the client, then automatically remove it
+    // from our list of controlled clients.
+    p->Then(
+      SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+      [] (bool) {
+        // do nothing on success
+      }, [self, clientInfo = handle->Info()] (nsresult aRv) {
+        // failed to control, forget about this client
+        self->StopControllingClient(clientInfo);
+      });
   }
 }
 

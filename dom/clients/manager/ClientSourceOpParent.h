@@ -14,6 +14,7 @@ namespace dom {
 
 class ClientSourceOpParent final : public PClientSourceOpParent
 {
+  const ClientOpConstructorArgs mArgs;
   RefPtr<ClientOpPromise::Private> mPromise;
 
   // PClientSourceOpParent interface
