@@ -255,6 +255,8 @@ function HTMLTooltip(toolboxDoc, {
   this.autofocus = autofocus;
   this.consumeOutsideClicks = consumeOutsideClicks;
   this.useXulWrapper = this._isXUL() && useXulWrapper;
+  this.preferredWidth = "auto";
+  this.preferredHeight = "auto";
 
   // The top window is used to attach click event listeners to close the tooltip if the
   // user clicks on the content page.
@@ -326,11 +328,21 @@ HTMLTooltip.prototype = {
    * @param {Object}
    *        - {Number} width: preferred width for the tooltip container. If not specified
    *          the tooltip container will be measured before being displayed, and the
-   *          measured width will be used as preferred width.
-   *        - {Number} height: optional, preferred height for the tooltip container. If
-   *          not specified, the tooltip will be able to use all the height available.
+   *          measured width will be used as the preferred width.
+   *        - {Number} height: preferred height for the tooltip container. If
+   *          not specified the tooltip container will be measured before being
+   *          displayed, and the measured height will be used as the preferred
+   *          height.
+   *
+   *          For tooltips whose content height may change while being
+   *          displayed, the special value Infinity may be used to produce
+   *          a flexible container that accommodates resizing content. Note,
+   *          however, that when used in combination with the XUL wrapper the
+   *          unfilled part of this container will consume all mouse events
+   *          making content behind this area inaccessible until the tooltip is
+   *          dismissed.
    */
-  setContent: function(content, {width = "auto", height = Infinity} = {}) {
+  setContent: function(content, {width = "auto", height = "auto"} = {}) {
     this.preferredWidth = width;
     this.preferredHeight = height;
 
@@ -366,28 +378,21 @@ HTMLTooltip.prototype = {
     // Get viewport size
     const viewportRect = this._getViewportRect();
 
-    const themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
-    const preferredHeight = this.preferredHeight + themeHeight;
-
-    const {top, height, computedPosition} =
-      calculateVerticalPosition(anchorRect, viewportRect, preferredHeight, position, y);
-
-    this._position = computedPosition;
-    // Apply height before measuring the content width (if width="auto").
-    const isTop = computedPosition === POSITION.TOP;
-    this.container.classList.toggle("tooltip-top", isTop);
-    this.container.classList.toggle("tooltip-bottom", !isTop);
-
-    // If the preferred height is set to Infinity, the tooltip container should grow based
-    // on its content's height and use as much height as possible.
-    this.container.classList.toggle("tooltip-flexible-height",
-      this.preferredHeight === Infinity);
-
-    this.container.style.height = height + "px";
-
+    // Calculate the horizonal position and width
     let preferredWidth;
+    // Record the height too since it might save us from having to look it up
+    // later.
+    let measuredHeight;
     if (this.preferredWidth === "auto") {
-      preferredWidth = this._measureContainerWidth();
+      // Reset any styles that constrain the dimensions we want to calculate.
+      this.container.style.width = "auto";
+      if (this.preferredHeight === "auto") {
+        this.container.style.height = "auto";
+      }
+      ({
+        width: preferredWidth,
+        height: measuredHeight,
+      } = this._measureContainerSize());
     } else {
       const themeWidth = 2 * EXTRA_BORDER[this.type];
       preferredWidth = this.preferredWidth + themeWidth;
@@ -398,11 +403,46 @@ HTMLTooltip.prototype = {
     const {left, width, arrowLeft} = calculateHorizontalPosition(
       anchorRect, viewportRect, preferredWidth, this.type, x, isRtl);
 
-    this.container.style.width = width + "px";
+    // If we constrained the width, then any measured height we have is no
+    // longer valid.
+    if (measuredHeight && width !== preferredWidth) {
+      measuredHeight = undefined;
+    }
 
+    // Apply width and arrow positioning
+    this.container.style.width = width + "px";
     if (this.type === TYPE.ARROW) {
       this.arrow.style.left = arrowLeft + "px";
     }
+
+    // Calculate the vertical position and height
+    let preferredHeight;
+    if (this.preferredHeight === "auto") {
+      if (measuredHeight) {
+        this.container.style.height = "auto";
+        preferredHeight = measuredHeight;
+      } else {
+        ({ height: preferredHeight } = this._measureContainerSize());
+      }
+    } else {
+      const themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
+      preferredHeight = this.preferredHeight + themeHeight;
+    }
+
+    const {top, height, computedPosition} =
+      calculateVerticalPosition(anchorRect, viewportRect, preferredHeight, position, y);
+
+    this._position = computedPosition;
+    const isTop = computedPosition === POSITION.TOP;
+    this.container.classList.toggle("tooltip-top", isTop);
+    this.container.classList.toggle("tooltip-bottom", !isTop);
+
+    // If the preferred height is set to Infinity, the tooltip container should grow based
+    // on its content's height and use as much height as possible.
+    this.container.classList.toggle("tooltip-flexible-height",
+      this.preferredHeight === Infinity);
+
+    this.container.style.height = height + "px";
 
     if (this.useXulWrapper) {
       await this._showXulWrapperAt(left, top);
@@ -455,7 +495,7 @@ HTMLTooltip.prototype = {
     return this.doc.documentElement.getBoundingClientRect();
   },
 
-  _measureContainerWidth: function() {
+  _measureContainerSize: function() {
     const xulParent = this.container.parentNode;
     if (this.useXulWrapper && !this.isVisible()) {
       // Move the container out of the XUL Panel to measure it.
@@ -463,15 +503,19 @@ HTMLTooltip.prototype = {
     }
 
     this.container.classList.add("tooltip-hidden");
-    this.container.style.width = "auto";
-    const width = this.container.getBoundingClientRect().width;
+    // Set either of the tooltip-top or tooltip-bottom styles so that we get an
+    // accurate height. We're assuming that the two styles will be symmetrical
+    // and that we will clear this as necessary later.
+    this.container.classList.add("tooltip-top");
+    this.container.classList.remove("tooltip-bottom");
+    const { width, height } = this.container.getBoundingClientRect();
     this.container.classList.remove("tooltip-hidden");
 
     if (this.useXulWrapper && !this.isVisible()) {
       xulParent.appendChild(this.container);
     }
 
-    return width;
+    return { width, height };
   },
 
   /**
