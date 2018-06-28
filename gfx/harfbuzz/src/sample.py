@@ -1,7 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import print_function, division, absolute_import
+
 import sys
 import array
 from gi.repository import HarfBuzz as hb

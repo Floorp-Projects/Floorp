@@ -571,7 +571,7 @@ task_description_schema = Schema({
             Required('paths'): [basestring],
         }],
     }, {
-        Required('implementation'): 'shipit',
+        Required('implementation'): 'shipit-shipped',
         Required('release-name'): basestring,
     }, {
         Required('implementation'): 'treescript',
@@ -1143,8 +1143,8 @@ def build_push_snap_payload(config, task, task_def):
     }
 
 
-@payload_builder('shipit')
-def build_ship_it_payload(config, task, task_def):
+@payload_builder('shipit-shipped')
+def build_ship_it_shipped_payload(config, task, task_def):
     worker = task['worker']
 
     task_def['payload'] = {

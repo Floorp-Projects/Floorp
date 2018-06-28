@@ -67,11 +67,11 @@ struct BinSearchArrayOf
   inline const Type& operator [] (unsigned int i) const
   {
     if (unlikely (i >= header.nUnits)) return Null(Type);
-    return StructAtOffset<Type> (bytes, i * header.unitSize);
+    return StructAtOffset<Type> (bytesZ, i * header.unitSize);
   }
   inline Type& operator [] (unsigned int i)
   {
-    return StructAtOffset<Type> (bytes, i * header.unitSize);
+    return StructAtOffset<Type> (bytesZ, i * header.unitSize);
   }
   inline unsigned int get_size (void) const
   { return header.static_size + header.nUnits * header.unitSize; }
@@ -88,7 +88,7 @@ struct BinSearchArrayOf
      * pointed to do have a simple sanitize(), ie. they do not
      * reference other structs via offsets.
      */
-    (void) (false && StructAtOffset<Type> (bytes, 0).sanitize (c));
+    (void) (false && StructAtOffset<Type> (bytesZ, 0).sanitize (c));
 
     return_trace (true);
   }
@@ -111,7 +111,7 @@ struct BinSearchArrayOf
     while (min <= max)
     {
       int mid = (min + max) / 2;
-      const Type *p = (const Type *) (((const char *) bytes) + (mid * size));
+      const Type *p = (const Type *) (((const char *) bytesZ) + (mid * size));
       int c = p->cmp (key);
       if (c < 0)
 	max = mid - 1;
@@ -129,98 +129,14 @@ struct BinSearchArrayOf
     TRACE_SANITIZE (this);
     return_trace (header.sanitize (c) &&
 		  Type::static_size >= header.unitSize &&
-		  c->check_array (bytes, header.unitSize, header.nUnits));
+		  c->check_array (bytesZ, header.unitSize, header.nUnits));
   }
 
   protected:
   BinSearchHeader	header;
-  HBUINT8			bytes[VAR];
+  HBUINT8		bytesZ[VAR];
   public:
-  DEFINE_SIZE_ARRAY (10, bytes);
-};
-
-
-/* TODO Move this to hb-open-type-private.hh and use it in ArrayOf, HeadlessArrayOf,
- * and other places around the code base?? */
-template <typename Type>
-struct UnsizedArrayOf
-{
-  inline const Type& operator [] (unsigned int i) const { return arrayZ[i]; }
-  inline Type& operator [] (unsigned int i) { return arrayZ[i]; }
-
-  inline bool sanitize (hb_sanitize_context_t *c, unsigned int count) const
-  {
-    TRACE_SANITIZE (this);
-    if (unlikely (!sanitize_shallow (c, count))) return_trace (false);
-
-    /* Note: for structs that do not reference other structs,
-     * we do not need to call their sanitize() as we already did
-     * a bound check on the aggregate array size.  We just include
-     * a small unreachable expression to make sure the structs
-     * pointed to do have a simple sanitize(), ie. they do not
-     * reference other structs via offsets.
-     */
-    (void) (false && arrayZ[0].sanitize (c));
-
-    return_trace (true);
-  }
-  inline bool sanitize (hb_sanitize_context_t *c, unsigned int count, const void *base) const
-  {
-    TRACE_SANITIZE (this);
-    if (unlikely (!sanitize_shallow (c, count))) return_trace (false);
-    for (unsigned int i = 0; i < count; i++)
-      if (unlikely (!arrayZ[i].sanitize (c, base)))
-        return_trace (false);
-    return_trace (true);
-  }
-  template <typename T>
-  inline bool sanitize (hb_sanitize_context_t *c, unsigned int count, const void *base, T user_data) const
-  {
-    TRACE_SANITIZE (this);
-    if (unlikely (!sanitize_shallow (c, count))) return_trace (false);
-    for (unsigned int i = 0; i < count; i++)
-      if (unlikely (!arrayZ[i].sanitize (c, base, user_data)))
-        return_trace (false);
-    return_trace (true);
-  }
-
-  private:
-  inline bool sanitize_shallow (hb_sanitize_context_t *c, unsigned int count) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace (c->check_array (arrayZ, arrayZ[0].static_size, count));
-  }
-
-  public:
-  Type	arrayZ[VAR];
-  public:
-  DEFINE_SIZE_ARRAY (0, arrayZ);
-};
-
-/* Unsized array of offset's */
-template <typename Type, typename OffsetType>
-struct UnsizedOffsetArrayOf : UnsizedArrayOf<OffsetTo<Type, OffsetType> > {};
-
-/* Unsized array of offsets relative to the beginning of the array itself. */
-template <typename Type, typename OffsetType>
-struct UnsizedOffsetListOf : UnsizedOffsetArrayOf<Type, OffsetType>
-{
-  inline const Type& operator [] (unsigned int i) const
-  {
-    return this+this->arrayZ[i];
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c, unsigned int count) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace ((UnsizedOffsetArrayOf<Type, OffsetType>::sanitize (c, count, this)));
-  }
-  template <typename T>
-  inline bool sanitize (hb_sanitize_context_t *c, unsigned int count, T user_data) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace ((UnsizedOffsetArrayOf<Type, OffsetType>::sanitize (c, count, this, user_data)));
-  }
+  DEFINE_SIZE_ARRAY (10, bytesZ);
 };
 
 
@@ -595,11 +511,11 @@ struct StateTable
   protected:
   HBUINT32	nClasses;	/* Number of classes, which is the number of indices
 				 * in a single line in the state array. */
-  OffsetTo<Lookup<HBUINT16>, HBUINT32>
+  LOffsetTo<Lookup<HBUINT16> >
 		classTable;	/* Offset to the class table. */
-  OffsetTo<UnsizedArrayOf<HBUINT16>, HBUINT32>
+  LOffsetTo<UnsizedArrayOf<HBUINT16> >
 		stateArrayTable;/* Offset to the state array. */
-  OffsetTo<UnsizedArrayOf<Entry<Extra> >, HBUINT32>
+  LOffsetTo<UnsizedArrayOf<Entry<Extra> > >
 		entryTable;	/* Offset to the entry array. */
 
   public:

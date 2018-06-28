@@ -20,6 +20,7 @@ config = {
     "tooltool_servers": ['http://relengapi/tooltool/'],
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "avds_dir": "/builds/worker/workspace/build/.android",
+    "log_format": "%(levelname)8s - %(message)s",
     "minidump_stackwalk_path": "/usr/local/bin/linux64-minidump_stackwalk",
     "marionette_address": "localhost:2828",
     "marionette_test_manifest": "unit-tests.ini",

@@ -17,22 +17,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper
-{
-public:
-  DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
-                                   TextureFlags aTextureFlags,
-                                   ID3D11Device* aDevice);
-
-  bool IsCompatible(TextureClient* aTextureClient) override;
-
-  already_AddRefed<TextureClient> Allocate(KnowsCompositor* aAllocator) override;
-
-protected:
-  const PlanarYCbCrData& mData;
-  RefPtr<ID3D11Device> mDevice;
-};
-
 D3D11YCbCrImage::D3D11YCbCrImage()
  : Image(NULL, ImageFormat::D3D11_YCBCR_IMAGE)
 {
@@ -345,7 +329,13 @@ DXGIYCbCrTextureAllocationHelper::Allocate(KnowsCompositor* aAllocator)
 {
   CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_R8_UNORM, mData.mYSize.width, mData.mYSize.height,
                                 1, 1);
-  newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  // WebRender requests keyed mutex
+  if (mDevice == gfx::DeviceManagerDx::Get()->GetCompositorDevice() &&
+      !gfxVars::UseWebRender()) {
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+  } else {
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  }
 
   RefPtr<ID3D10Multithread> mt;
   HRESULT hr = mDevice->QueryInterface(
@@ -378,6 +368,8 @@ DXGIYCbCrTextureAllocationHelper::Allocate(KnowsCompositor* aAllocator)
   hr = mDevice->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCr));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
+  TextureForwarder* forwarder = aAllocator ? aAllocator->GetTextureForwarder() : nullptr;
+
   return TextureClient::CreateWithData(
     DXGIYCbCrTextureData::Create(
       textureY,
@@ -388,7 +380,7 @@ DXGIYCbCrTextureAllocationHelper::Allocate(KnowsCompositor* aAllocator)
       mData.mCbCrSize,
       mData.mYUVColorSpace),
     mTextureFlags,
-    aAllocator->GetTextureForwarder());
+    forwarder);
 }
 
 already_AddRefed<TextureClient>

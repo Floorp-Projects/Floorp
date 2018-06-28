@@ -19,6 +19,7 @@
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
 #include "nsMenuFrame.h"
+#include "tree/nsTreeBodyFrame.h"
 #include "prlink.h"
 #include "nsGkAtoms.h"
 #include "nsAttrValueInlines.h"
@@ -281,6 +282,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     aState->disabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
     aState->active  = eventState.HasState(NS_EVENT_STATE_ACTIVE);
     aState->focused = eventState.HasState(NS_EVENT_STATE_FOCUS);
+    aState->selected = FALSE;
     aState->inHover = eventState.HasState(NS_EVENT_STATE_HOVER);
     aState->isDefault = IsDefaultButton(aFrame);
     aState->canDefault = FALSE; // XXX fix me
@@ -302,6 +304,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
                aWidgetType == NS_THEME_MENULIST ||
                aWidgetType == NS_THEME_MENULIST_BUTTON) {
       aState->active &= aState->inHover;
+    } else if (aWidgetType == NS_THEME_TREETWISTY ||
+               aWidgetType == NS_THEME_TREETWISTYOPEN) {
+      nsTreeBodyFrame *treeBodyFrame = do_QueryFrame(aFrame);
+      if (treeBodyFrame) {
+        const mozilla::AtomArray& atoms =
+          treeBodyFrame->GetPropertyArrayForCurrentDrawingItem();
+        aState->selected = atoms.Contains(nsGkAtoms::selected);
+        aState->inHover = atoms.Contains(nsGkAtoms::hover);
+      }
     }
 
     if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {

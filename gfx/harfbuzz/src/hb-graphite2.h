@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2011  Martin Hosken
- * Copyright (C) 2011  SIL International
+ * Copyright © 2011  Martin Hosken
+ * Copyright © 2011  SIL International
  *
  *  This is part of HarfBuzz, a text shaping library.
  *

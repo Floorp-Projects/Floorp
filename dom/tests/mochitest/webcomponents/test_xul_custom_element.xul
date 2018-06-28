@@ -148,13 +148,13 @@
     function basicElementCreateBuiltIn() {
       let element = document.createElementNS(XUL_NS, "axulelement", { is: "test-built-in-element" });
       ok(element instanceof TestCustomBuiltInElement, "Should be an instance of TestCustomBuiltInElement");
-      is(element.getAttribute("is"), "test-built-in-element", "The |is| attribute of the created element should be the extended type.");
+      is(element.getAttribute("is"), "", "The |is| attribute of the created element should not be the extended type.");
       document.querySelector("#content").appendChild(element);
       is(element.textContent, "baz", "Should have set the textContent");
 
       let element2 = element.cloneNode(false);
       is(element2.localName, "axulelement", "Should see the right tag");
-      is(element2.getAttribute("is"), "test-built-in-element", "The |is| attribute of the created element should be the extended type.");
+      is(element2.getAttribute("is"), "", "The |is| attribute of the created element should not be the extended type.");
       is(element2.textContent, "", "Shouldn't have cloned the textContent");
       document.querySelector("#content").appendChild(element2);
       is(element2.textContent, "baz", "Should have set the textContent");
@@ -186,13 +186,13 @@
     function subclassElementCreateBuiltIn() {
       let element = document.createElementNS(XUL_NS, "popup", { is: "test-popup-extend" });
       ok(element instanceof TestPopupExtendElement, "Should be an instance of TestPopupExtendElement");
-      is(element.getAttribute("is"), "test-popup-extend", "The |is| attribute of the created element should be the extended type.");
+      is(element.getAttribute("is"), "", "The |is| attribute of the created element should not be the extended type.");
       document.querySelector("#content").appendChild(element);
       is(element.textContent, "quuz", "Should have set the textContent");
 
       let element2 = element.cloneNode(false);
       is(element2.localName, "popup", "Should see the right tag");
-      is(element2.getAttribute("is"), "test-popup-extend", "The |is| attribute of the created element should be the extended type.");
+      is(element2.getAttribute("is"), "", "The |is| attribute of the created element should not be the extended type.");
       is(element2.textContent, "", "Shouldn't have cloned the textContent");
       document.querySelector("#content").appendChild(element2);
       is(element2.textContent, "quuz", "Should have set the textContent");
@@ -266,13 +266,13 @@
       let element = document.createElementNS(XUL_NS, "testwithoutdash", { is: "testwithoutdash-extended" });
       ok(element instanceof TestWithoutDashExtended, "Should be an instance of TestWithoutDashExtended");
       ok(element instanceof TestWithoutDash, "Should be an instance of TestWithoutDash");
-      is(element.getAttribute("is"), "testwithoutdash-extended", "The |is| attribute of the created element should be the extended type.");
+      is(element.getAttribute("is"), "", "The |is| attribute of the created element should not be the extended type.");
       document.querySelector("#content").appendChild(element);
       is(element.textContent, "quux", "Should have set the textContent");
 
       let element2 = element.cloneNode(false);
       is(element2.localName, "testwithoutdash", "Should see the right tag");
-      is(element2.getAttribute("is"), "testwithoutdash-extended", "The |is| attribute of the created element should be the extended type.");
+      is(element2.getAttribute("is"), "", "The |is| attribute of the created element should not be the extended type.");
       is(element2.textContent, "", "Shouldn't have cloned the textContent");
       document.querySelector("#content").appendChild(element2);
       is(element2.textContent, "quux", "Should have set the textContent");

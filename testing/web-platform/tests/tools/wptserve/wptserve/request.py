@@ -50,7 +50,7 @@ class InputFile(object):
         self._file_position = 0
 
         if length > self.max_buffer_size:
-            self._buf = tempfile.TemporaryFile(mode="rw+b")
+            self._buf = tempfile.TemporaryFile()
         else:
             self._buf = StringIO.StringIO()
 

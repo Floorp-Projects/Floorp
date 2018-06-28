@@ -7123,6 +7123,7 @@ CodeGenerator::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck)
     // TLS and pinned regs. The only case where where we don't have to reload
     // the TLS and pinned regs is when the callee preserves them.
     bool reloadRegs = true;
+    bool switchRealm = true;
 
     const wasm::CallSiteDesc& desc = mir->desc();
     const wasm::CalleeDesc& callee = mir->callee();
@@ -7130,6 +7131,7 @@ CodeGenerator::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck)
       case wasm::CalleeDesc::Func:
         masm.call(desc, callee.funcIndex());
         reloadRegs = false;
+        switchRealm = false;
         break;
       case wasm::CalleeDesc::Import:
         masm.wasmCallImport(desc, callee);
@@ -7137,21 +7139,29 @@ CodeGenerator::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck)
       case wasm::CalleeDesc::AsmJSTable:
       case wasm::CalleeDesc::WasmTable:
         masm.wasmCallIndirect(desc, callee, needsBoundsCheck);
-        reloadRegs = callee.which() == wasm::CalleeDesc::WasmTable && callee.wasmTableIsExternal();
+        reloadRegs = switchRealm =
+            (callee.which() == wasm::CalleeDesc::WasmTable && callee.wasmTableIsExternal());
         break;
       case wasm::CalleeDesc::Builtin:
         masm.call(desc, callee.builtin());
         reloadRegs = false;
+        switchRealm = false;
         break;
       case wasm::CalleeDesc::BuiltinInstanceMethod:
         masm.wasmCallBuiltinInstanceMethod(desc, mir->instanceArg(), callee.builtin());
+        switchRealm = false;
         break;
     }
 
     if (reloadRegs) {
         masm.loadWasmTlsRegFromFrame();
         masm.loadWasmPinnedRegsFromTls();
+        if (switchRealm)
+            masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+    } else {
+        MOZ_ASSERT(!switchRealm);
     }
+
 
     if (mir->spIncrement())
         masm.reserveStack(mir->spIncrement());
