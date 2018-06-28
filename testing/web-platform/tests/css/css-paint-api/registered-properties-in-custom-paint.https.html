@@ -53,15 +53,10 @@ registerPaint('geometry', class {
 </script>
 
 <script>
-    try {
-      CSS.registerProperty({name: '--length', syntax: '<length>', initialValue: '0px'});
-      CSS.registerProperty({name: '--length-initial', syntax: '<length>', initialValue: '20px'});
-      CSS.registerProperty({name: '--number', syntax: '<number>', initialValue: '0'});
-      importWorkletAndTerminateTestAfterAsyncPaint(CSS.paintWorklet, document.getElementById('code').textContent);
-    } catch(e) {
-      document.body.textContent = e;
-      takeScreenshot();
-    }
+    CSS.registerProperty({name: '--length', syntax: '<length>', initialValue: '0px'});
+    CSS.registerProperty({name: '--length-initial', syntax: '<length>', initialValue: '20px'});
+    CSS.registerProperty({name: '--number', syntax: '<number>', initialValue: '0'});
+    importWorkletAndTerminateTestAfterAsyncPaint(CSS.paintWorklet, document.getElementById('code').textContent);
 </script>
 </body>
 </html>

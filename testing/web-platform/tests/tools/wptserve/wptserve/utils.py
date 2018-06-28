@@ -67,8 +67,7 @@ def is_bad_port(port):
         143,   # imap2
         179,   # bgp
         389,   # ldap
-        427,   # afp (alternate)
-        465,   # smtp (alternate)
+        465,   # smtp+ssl
         512,   # print / exec
         513,   # login
         514,   # shell
@@ -78,13 +77,12 @@ def is_bad_port(port):
         531,   # chat
         532,   # netnews
         540,   # uucp
-        548,   # afp
         556,   # remotefs
         563,   # nntp+ssl
-        587,   # smtp (outgoing)
+        587,   # smtp
         601,   # syslog-conn
         636,   # ldap+ssl
-        993,   # ldap+ssl
+        993,   # imap+ssl
         995,   # pop3+ssl
         2049,  # nfs
         3659,  # apple-sasl
@@ -95,7 +93,6 @@ def is_bad_port(port):
         6667,  # irc (default)
         6668,  # irc (alternate)
         6669,  # irc (alternate)
-        6697,  # irc+tls
     ]
 
 def get_port(host):
