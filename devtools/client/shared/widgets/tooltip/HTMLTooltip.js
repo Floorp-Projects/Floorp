@@ -8,6 +8,7 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
+const {focusableSelector} = require("devtools/client/shared/focus");
 const {getCurrentZoom} = require("devtools/shared/layout/utils");
 const {listenOnce} = require("devtools/shared/async-utils");
 
@@ -759,13 +760,10 @@ HTMLTooltip.prototype = {
   },
 
   /**
-   * If the tootlip is configured to autofocus and a focusable element can be found,
-   * focus it.
+   * If the tooltip is configured to autofocus and a focusable element can be
+   * found, focus it.
    */
   _maybeFocusTooltip: function() {
-    // Simplied selector targetting elements that can receive the focus, full version at
-    // http://stackoverflow.com/questions/1599660/which-html-elements-can-receive-focus .
-    const focusableSelector = "a, button, iframe, input, select, textarea";
     const focusableElement = this.panel.querySelector(focusableSelector);
     if (this.autofocus && focusableElement) {
       focusableElement.focus();
