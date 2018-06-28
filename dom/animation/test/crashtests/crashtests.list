@@ -40,4 +40,5 @@ pref(dom.animations-api.core.enabled,true) load 1393605-1.html
 load 1400022-1.html
 pref(dom.animations-api.core.enabled,true) load 1401809.html
 pref(dom.animations-api.core.enabled,true) load 1411318-1.html
+pref(dom.animations-api.core.enabled,true) load 1450881-1.html
 load 1468294-1.html
