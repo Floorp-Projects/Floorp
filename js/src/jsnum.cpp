@@ -86,7 +86,7 @@ ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start, const CharT* en
                               double* dp)
 {
     size_t length = end - start;
-    UniqueChars cstr(cx->pod_malloc<char>(length + 1));
+    auto cstr = cx->make_pod_array<char>(length + 1);
     if (!cstr)
         return false;
 
