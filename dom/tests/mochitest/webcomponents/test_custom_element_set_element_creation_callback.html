@@ -98,7 +98,7 @@ function simpleExtendedTest() {
   let el = document.createElement("button", { is: "x-extended-button"});
   ok(callbackCalled, "Callback should be called.");
   is(Object.getPrototypeOf(el), ExtendButton.prototype, "Created element should have the prototype of the extended type.");
-  is(el.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
+  is(el.getAttribute("is"), null, "The |is| attribute of the created element should not be the extended type.");
 }
 
 function simpleInnerHTMLTest() {
