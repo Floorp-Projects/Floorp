@@ -62,10 +62,11 @@ private:
   void flushBundleCache();
 
   bundleCacheEntry_t *insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                      nsCString &aHashKey);
+                                      const nsCString &aHashKey);
 
   nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
+  mozilla::AutoCleanLinkedList<bundleCacheEntry_t> mSharedBundles;
 
   nsCOMPtr<nsIErrorService> mErrorService;
   nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
