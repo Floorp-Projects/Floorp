@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 <div id="content" style="display: none">
 
 <div id="testnode"></div>
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -25,14 +25,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 
 var gDeclaration = document.getElementById("testnode").style;
 
-var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
-
 function test_property(property)
 {
   var info = gCSSProperties[property];
 
   var keywords = ["inherit"];
-  if (info.inherited && gTestUnset)
+  if (info.inherited)
     keywords.push("unset");
 
   keywords.forEach(function(keyword) {

@@ -35,15 +35,9 @@ var gProps = [
   [ "border-left-width", "border-right-width", "border-inline-start-width", "border-inline-end-width" ],
 ];
 
-var gLengthValues = [ "inherit", "initial", "2px", "1em" ];
-var gColorValues = [ "inherit", "initial", "currentColor", "green" ];
-var gStyleValues = [ "inherit", "initial", "double", "dashed" ];
-
-if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
-  gLengthValues.push("unset");
-  gColorValues.push("unset");
-  gStyleValues.push("unset");
-}
+var gLengthValues = [ "inherit", "initial", "2px", "1em", "unset" ];
+var gColorValues = [ "inherit", "initial", "currentColor", "green", "unset" ];
+var gStyleValues = [ "inherit", "initial", "double", "dashed", "unset" ];
 
 function values_for(set) {
   var values;
