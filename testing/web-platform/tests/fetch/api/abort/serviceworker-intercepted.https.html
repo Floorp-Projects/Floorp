@@ -94,37 +94,6 @@
     await promise_rejects(t, "AbortError", reader.read());
     await promise_rejects(t, "AbortError", reader.closed);
   }, "Stream errors once aborted.");
-
-  promise_test(async t => {
-    const scope = SCOPE + "?q=aborted-signal";
-    await setupRegistration(t, scope);
-    const iframe = await with_iframe(scope);
-    const w = iframe.contentWindow;
-
-    const testReady = new Promise(resolve => {
-      w.navigator.serviceWorker.addEventListener('message', event => {
-        resolve(event.data);
-      }, { once: true });
-    });
-
-    const controller = new w.AbortController();
-    const signal = controller.signal;
-
-    w.fetch('data.json?signal', { signal });
-
-    assert_true((await testReady) == "ready", "");
-
-    const aborted = new Promise(resolve => {
-      w.navigator.serviceWorker.addEventListener('message', event => {
-        resolve(event.data);
-      }, { once: true });
-    });
-
-    controller.abort();
-
-    assert_true((await aborted) == "aborted", "");
-  }, "FetchEvent.request.signal must be aborted.");
-
 </script>
 </body>
 </html>
