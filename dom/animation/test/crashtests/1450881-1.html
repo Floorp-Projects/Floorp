@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function start() {
+  o97=document.createElement('ol');
+  o101=document.createElement('li');
+  o97.appendChild(o101);
+  o102=document.createElement('li');
+  o97.appendChild(o102);
+  document.documentElement.appendChild(o97);
+  o143=new KeyframeEffect(o101,[{columnGap: 'inherit'},{columnGap: 'normal'}],{"duration":134217713});
+  o153=document.createElement('marquee');
+  o153.addEventListener('DOMAttrModified',fun0);
+  o102.appendChild(o153);
+  o143.setKeyframes([{flexGrow: '32765'},{flexGrow: '40960'}]);
+}
+function fun0() {
+  o101.remove();
+  o143.target=null;
+  o101=null;
+  o102=null;
+  o153=null;
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  document.documentElement.classList.remove("reftest-wait");
+}
+</script>
+<body onload="start()"></body>
+</html>
