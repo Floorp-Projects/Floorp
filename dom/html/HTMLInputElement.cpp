@@ -6435,6 +6435,7 @@ HTMLInputElement::AddStates(EventStates aStates)
     if (!focusStates.IsEmpty()) {
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
+        // If this code changes, audit existing places that check for NS_EVENT_STATE_FOCUS.
         ownerNumberControl->AddStates(focusStates);
       }
     }
@@ -6451,6 +6452,7 @@ HTMLInputElement::RemoveStates(EventStates aStates)
     if (!focusStates.IsEmpty()) {
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
+        // If this code changes, audit existing places that check for NS_EVENT_STATE_FOCUS.
         ownerNumberControl->RemoveStates(focusStates);
       }
     }
