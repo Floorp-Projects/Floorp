@@ -162,6 +162,11 @@ Preferences
   The maximum frequency at which an :doc:`../data/event-ping` will be sent.
   Default is 10 (minutes).
 
+``toolkit.telemetry.overrideUpdateChannel``
+
+  Override the ``channel`` value that is reported via Telemetry.
+  This is useful for distinguishing different types of builds that otherwise still report as the same update channel.
+
 Data-choices notification
 -------------------------
 
