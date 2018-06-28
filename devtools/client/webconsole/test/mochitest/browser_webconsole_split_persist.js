@@ -97,7 +97,8 @@ function doesMenuSayHide(toolbox) {
 
       const result =
         menuItem &&
-        menuItem.label ===
+        menuItem.querySelector(".label") &&
+        menuItem.querySelector(".label").textContent ===
           L10N.getStr("toolbox.meatballMenu.hideconsole.label");
 
       toolbox.doc.addEventListener("popuphidden", () => {
