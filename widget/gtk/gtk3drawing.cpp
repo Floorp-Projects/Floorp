@@ -1390,6 +1390,13 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStateFlags state_flags = state->disabled ? GTK_STATE_FLAG_INSENSITIVE :
                                                   GTK_STATE_FLAG_NORMAL;
 
+    if (state->inHover)
+        state_flags =
+            static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_PRELIGHT);
+    if (state->selected)
+        state_flags =
+            static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_SELECTED);
+
     /* GTK_STATE_FLAG_ACTIVE controls expanded/colapsed state rendering
      * in gtk_render_expander()
      */

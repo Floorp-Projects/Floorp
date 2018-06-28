@@ -1,13 +1,14 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-import sys
-import os.path
+from __future__ import print_function, division, absolute_import
+
+import io, os.path, sys
 
 if len (sys.argv) != 4:
-	print >>sys.stderr, "usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt"
+	print ("usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt", file=sys.stderr)
 	sys.exit (1)
 
-files = [file (x) for x in sys.argv[1:]]
+files = [io.open (x, encoding='utf-8') for x in sys.argv[1:]]
 
 headers = [[files[0].readline (), files[0].readline ()], [files[2].readline (), files[2].readline ()]]
 headers.append (["UnicodeData.txt does not have a header."])
@@ -65,9 +66,9 @@ def print_joining_table(f):
 		assert short not in short_value.values()
 		short_value[value] = short
 
-	print
+	print ()
 	for value,short in short_value.items():
-		print "#define %s	%s" % (short, value)
+		print ("#define %s	%s" % (short, value))
 
 	uu = sorted(values.keys())
 	num = len(values)
@@ -82,15 +83,15 @@ def print_joining_table(f):
 			ranges.append([u,u])
 		last = u
 
-	print
-	print "static const uint8_t joining_table[] ="
-	print "{"
+	print ()
+	print ("static const uint8_t joining_table[] =")
+	print ("{")
 	last_block = None
 	offset = 0
 	for start,end in ranges:
 
-		print
-		print "#define joining_offset_0x%04xu %d" % (start, offset)
+		print ()
+		print ("#define joining_offset_0x%04xu %d" % (start, offset))
 
 		for u in range(start, end+1):
 
@@ -99,53 +100,53 @@ def print_joining_table(f):
 
 			if block != last_block or u == start:
 				if u != start:
-					print
+					print ()
 				if block in all_blocks:
-					print "\n  /* %s */" % block
+					print ("\n  /* %s */" % block)
 				else:
-					print "\n  /* FILLER */"
+					print ("\n  /* FILLER */")
 				last_block = block
 				if u % 32 != 0:
-					print
-					print "  /* %04X */" % (u//32*32), "  " * (u % 32),
+					print ()
+					print ("  /* %04X */" % (u//32*32), "  " * (u % 32), end="")
 
 			if u % 32 == 0:
-				print
-				print "  /* %04X */ " % u,
-			sys.stdout.write("%s," % short_value[value])
-		print
+				print ()
+				print ("  /* %04X */ " % u, end="")
+			print ("%s," % short_value[value], end="")
+		print ()
 
 		offset += end - start + 1
-	print
+	print ()
 	occupancy = num * 100. / offset
-	print "}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy)
-	print
+	print ("}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy))
+	print ()
 
 	page_bits = 12;
-	print
-	print "static unsigned int"
-	print "joining_type (hb_codepoint_t u)"
-	print "{"
-	print "  switch (u >> %d)" % page_bits
-	print "  {"
+	print ()
+	print ("static unsigned int")
+	print ("joining_type (hb_codepoint_t u)")
+	print ("{")
+	print ("  switch (u >> %d)" % page_bits)
+	print ("  {")
 	pages = set([u>>page_bits for u in [s for s,e in ranges]+[e for s,e in ranges]])
 	for p in sorted(pages):
-		print "    case 0x%0Xu:" % p
+		print ("    case 0x%0Xu:" % p)
 		for (start,end) in ranges:
 			if p not in [start>>page_bits, end>>page_bits]: continue
 			offset = "joining_offset_0x%04xu" % start
-			print "      if (hb_in_range<hb_codepoint_t> (u, 0x%04Xu, 0x%04Xu)) return joining_table[u - 0x%04Xu + %s];" % (start, end, start, offset)
-		print "      break;"
-		print ""
-	print "    default:"
-	print "      break;"
-	print "  }"
-	print "  return X;"
-	print "}"
-	print
+			print ("      if (hb_in_range<hb_codepoint_t> (u, 0x%04Xu, 0x%04Xu)) return joining_table[u - 0x%04Xu + %s];" % (start, end, start, offset))
+		print ("      break;")
+		print ("")
+	print ("    default:")
+	print ("      break;")
+	print ("  }")
+	print ("  return X;")
+	print ("}")
+	print ()
 	for value,short in short_value.items():
-		print "#undef %s" % (short)
-	print
+		print ("#undef %s" % (short))
+	print ()
 
 def print_shaping_table(f):
 
@@ -186,9 +187,9 @@ def print_shaping_table(f):
 				shapes[items[0]] = {}
 			shapes[items[0]][shape] = c
 
-	print
-	print "static const uint16_t shaping_table[][4] ="
-	print "{"
+	print ()
+	print ("static const uint16_t shaping_table[][4] =")
+	print ("{")
 
 	keys = shapes.keys ()
 	min_u, max_u = min (keys), max (keys)
@@ -196,13 +197,13 @@ def print_shaping_table(f):
 		s = [shapes[u][shape] if u in shapes and shape in shapes[u] else 0
 		     for shape in  ['initial', 'medial', 'final', 'isolated']]
 		value = ', '.join ("0x%04Xu" % c for c in s)
-		print "  {%s}, /* U+%04X %s */" % (value, u, names[u] if u in names else "")
+		print ("  {%s}, /* U+%04X %s */" % (value, u, names[u] if u in names else ""))
 
-	print "};"
-	print
-	print "#define SHAPING_TABLE_FIRST	0x%04Xu" % min_u
-	print "#define SHAPING_TABLE_LAST	0x%04Xu" % max_u
-	print
+	print ("};")
+	print ()
+	print ("#define SHAPING_TABLE_FIRST	0x%04Xu" % min_u)
+	print ("#define SHAPING_TABLE_LAST	0x%04Xu" % max_u)
+	print ()
 
 	ligas = {}
 	for pair in ligatures.keys ():
@@ -218,52 +219,49 @@ def print_shaping_table(f):
 				ligas[liga[0]] = []
 			ligas[liga[0]].append ((liga[1], c))
 	max_i = max (len (ligas[l]) for l in ligas)
-	print
-	print "static const struct ligature_set_t {"
-	print " uint16_t first;"
-	print " struct ligature_pairs_t {"
-	print "   uint16_t second;"
-	print "   uint16_t ligature;"
-	print " } ligatures[%d];" % max_i
-	print "} ligature_table[] ="
-	print "{"
-	keys = ligas.keys ()
-	keys.sort ()
-	for first in keys:
+	print ()
+	print ("static const struct ligature_set_t {")
+	print (" uint16_t first;")
+	print (" struct ligature_pairs_t {")
+	print ("   uint16_t second;")
+	print ("   uint16_t ligature;")
+	print (" } ligatures[%d];" % max_i)
+	print ("} ligature_table[] =")
+	print ("{")
+	for first in sorted (ligas.keys ()):
 
-		print "  { 0x%04Xu, {" % (first)
+		print ("  { 0x%04Xu, {" % (first))
 		for liga in ligas[first]:
-			print "    { 0x%04Xu, 0x%04Xu }, /* %s */" % (liga[0], liga[1], names[liga[1]])
-		print "  }},"
+			print ("    { 0x%04Xu, 0x%04Xu }, /* %s */" % (liga[0], liga[1], names[liga[1]]))
+		print ("  }},")
 
-	print "};"
-	print
+	print ("};")
+	print ()
 
 
 
-print "/* == Start of generated table == */"
-print "/*"
-print " * The following table is generated by running:"
-print " *"
-print " *   ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt"
-print " *"
-print " * on files with these headers:"
-print " *"
+print ("/* == Start of generated table == */")
+print ("/*")
+print (" * The following table is generated by running:")
+print (" *")
+print (" *   ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt")
+print (" *")
+print (" * on files with these headers:")
+print (" *")
 for h in headers:
 	for l in h:
-		print " * %s" % (l.strip())
-print " */"
-print
-print "#ifndef HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH"
-print "#define HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH"
-print
+		print (" * %s" % (l.strip()))
+print (" */")
+print ()
+print ("#ifndef HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH")
+print ("#define HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH")
+print ()
 
 read_blocks (files[2])
 print_joining_table (files[0])
 print_shaping_table (files[1])
 
-print
-print "#endif /* HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH */"
-print
-print "/* == End of generated table == */"
-
+print ()
+print ("#endif /* HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH */")
+print ()
+print ("/* == End of generated table == */")

@@ -2,6 +2,7 @@
 
 HB_BASE_sources = \
 	hb-atomic-private.hh \
+	hb-blob-private.hh \
 	hb-blob.cc \
 	hb-buffer-private.hh \
 	hb-buffer-serialize.cc \
@@ -13,6 +14,8 @@ HB_BASE_sources = \
 	hb-face.cc \
 	hb-font-private.hh \
 	hb-font.cc \
+	hb-map-private.hh \
+	hb-map.cc \
 	hb-mutex-private.hh \
 	hb-object-private.hh \
 	hb-open-file-private.hh \
@@ -43,6 +46,7 @@ HB_BASE_sources = \
 	hb-shaper-impl-private.hh \
 	hb-shaper-private.hh \
 	hb-shaper.cc \
+	hb-static.cc \
 	hb-string-array.hh \
 	hb-unicode-private.hh \
 	hb-unicode.cc \
@@ -67,6 +71,7 @@ HB_BASE_headers = \
 	hb-deprecated.h \
 	hb-face.h \
 	hb-font.h \
+	hb-map.h \
 	hb-set.h \
 	hb-shape.h \
 	hb-shape-plan.h \
@@ -82,10 +87,15 @@ HB_OT_sources = \
 	hb-aat-layout.cc \
 	hb-aat-layout-common-private.hh \
 	hb-aat-layout-ankr-table.hh \
+	hb-aat-layout-bsln-table.hh \
+	hb-aat-layout-feat-table.hh \
 	hb-aat-layout-kerx-table.hh \
 	hb-aat-layout-morx-table.hh \
 	hb-aat-layout-trak-table.hh \
 	hb-aat-layout-private.hh \
+	hb-aat-fmtx-table.hh \
+	hb-aat-gcid-table.hh \
+	hb-aat-ltag-table.hh \
 	hb-ot-font.cc \
 	hb-ot-layout.cc \
 	hb-ot-layout-base-table.hh \
@@ -99,6 +109,8 @@ HB_OT_sources = \
 	hb-ot-color.cc \
 	hb-ot-color-colr-table.hh \
 	hb-ot-color-cpal-table.hh \
+	hb-ot-color-sbix-table.hh \
+	hb-ot-color-svg-table.hh \
 	hb-ot-map.cc \
 	hb-ot-map-private.hh \
 	hb-ot-math.cc \
@@ -191,6 +203,7 @@ HB_ICU_headers = hb-icu.h
 
 # Sources for libharfbuzz-subset
 HB_SUBSET_sources = \
+	hb-static.cc \
 	hb-subset.cc \
 	hb-subset-glyf.cc \
 	hb-subset-input.cc \

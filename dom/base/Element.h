@@ -150,7 +150,7 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   explicit Element(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo) :
     FragmentOrElement(aNodeInfo),
-    mState(NS_EVENT_STATE_MOZ_READONLY)
+    mState(NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_DEFINED)
   {
     MOZ_ASSERT(mNodeInfo->NodeType() == ELEMENT_NODE,
                "Bad NodeType in aNodeInfo");
@@ -520,6 +520,10 @@ public:
    */
   inline CustomElementData* GetCustomElementData() const
   {
+    if (!HasCustomElementData()) {
+      return nullptr;
+    }
+
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mCustomElementData.get() : nullptr;
   }
@@ -549,6 +553,14 @@ public:
    */
   void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
 
+  void SetDefined(bool aSet)
+  {
+    if (aSet) {
+      AddStates(NS_EVENT_STATE_DEFINED);
+    } else {
+      RemoveStates(NS_EVENT_STATE_DEFINED);
+    }
+  }
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
