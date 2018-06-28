@@ -264,6 +264,7 @@ async function setupPaymentDialog(browser, {methodData, details, options, mercha
     content.isHidden = (element) => elementHeight(element) == 0;
     content.isVisible = (element) => elementHeight(element) > 0;
   });
+  await injectEventUtilsInContentTask(frame);
   info("helper functions injected into frame");
 
   return {win, requestId, frame};
@@ -487,4 +488,41 @@ async function fillInCardForm(frame, aCard, aOptions = {}) {
       Cu.waiveXrays(persistCheckbox).checked = !options.isTemporary;
     }
   }, {card: aCard, options: aOptions});
+}
+
+// The JSDoc validator does not support @returns tags in abstract functions or
+// star functions without return statements.
+/* eslint-disable valid-jsdoc */
+/**
+ * Inject `EventUtils` helpers into ContentTask scope.
+ *
+ * This helper is automatically exposed to mochitest browser tests,
+ * but is missing from content task scope.
+ * You should call this method only once per <browser> tag
+ *
+ * @param {xul:browser} browser
+ *        Reference to the browser in which we load content task
+ */
+/* eslint-enable valid-jsdoc */
+async function injectEventUtilsInContentTask(browser) {
+  await ContentTask.spawn(browser, {}, async function() {
+    if ("EventUtils" in this) {
+      return;
+    }
+
+    const EventUtils = this.EventUtils = {};
+
+    EventUtils.window = {};
+    EventUtils.parent = EventUtils.window;
+    /* eslint-disable camelcase */
+    EventUtils._EU_Ci = Ci;
+    EventUtils._EU_Cc = Cc;
+    /* eslint-enable camelcase */
+    // EventUtils' `sendChar` function relies on the navigator to synthetize events.
+    EventUtils.navigator = content.navigator;
+    EventUtils.KeyboardEvent = content.KeyboardEvent;
+
+    Services.scriptloader.loadSubScript(
+      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+  });
 }
