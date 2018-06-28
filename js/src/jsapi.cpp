@@ -6131,7 +6131,7 @@ JS_GetStringEncodingLength(JSContext* cx, JSString* str)
     return str->length();
 }
 
-JS_PUBLIC_API(size_t)
+JS_PUBLIC_API(bool)
 JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t length)
 {
     AssertHeapIsIdle();
@@ -6139,7 +6139,7 @@ JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t lengt
 
     JSLinearString* linear = str->ensureLinear(cx);
     if (!linear)
-         return size_t(-1);
+        return false;
 
     JS::AutoCheckCannotGC nogc;
     size_t writeLength = Min(linear->length(), length);
@@ -6151,7 +6151,7 @@ JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t lengt
         for (size_t i = 0; i < writeLength; i++)
             buffer[i] = char(src[i]);
     }
-    return linear->length();
+    return true;
 }
 
 JS_PUBLIC_API(JS::Symbol*)
