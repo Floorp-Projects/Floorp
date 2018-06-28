@@ -20,12 +20,12 @@ function continueToHere(line) {
     getState
   }) {
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
+    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
-    if (!(0, _selectors.isPaused)(getState()) || !selectedSource) {
+    if (!selectedFrame || !selectedSource) {
       return;
     }
 
-    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
     const debugLine = selectedFrame.location.line;
 
     if (debugLine == line) {

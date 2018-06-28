@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.RelativeSourceRecordClass = exports.SourceRecordClass = undefined;
+exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.RelativeSourceRecordClass = exports.SourceRecordClass = undefined;
 exports.initialSourcesState = initialSourcesState;
 exports.createSourceRecord = createSourceRecord;
 exports.removeSourceFromTabList = removeSourceFromTabList;
@@ -122,16 +122,12 @@ function update(state = initialSourcesState(), action) {
 
     case "ADD_TAB":
       return state.merge({
-        tabs: updateTabList({
-          sources: state
-        }, action.url)
+        tabs: updateTabList(state.tabs, action.url)
       });
 
     case "MOVE_TAB":
       return state.merge({
-        tabs: updateTabList({
-          sources: state
-        }, action.url, action.tabIndex)
+        tabs: updateTabList(state.tabs, action.url, action.tabIndex)
       });
 
     case "CLOSE_TAB":
@@ -162,9 +158,7 @@ function update(state = initialSourcesState(), action) {
       break;
 
     case "NAVIGATE":
-      const source = getSelectedSource({
-        sources: state
-      });
+      const source = state.selectedLocation && state.sources.get(state.selectedLocation.sourceId);
       const url = source && source.url;
 
       if (!url) {
@@ -181,7 +175,6 @@ function update(state = initialSourcesState(), action) {
 
 function getTextPropsFromAction(action) {
   const {
-    value,
     sourceId
   } = action;
 
@@ -199,9 +192,9 @@ function getTextPropsFromAction(action) {
   }
 
   return {
-    text: value.text,
+    text: action.value.text,
     id: sourceId,
-    contentType: value.contentType,
+    contentType: action.value.contentType,
     loadedState: "loaded"
   };
 } // TODO: Action is coerced to `any` unfortunately because how we type
@@ -240,11 +233,6 @@ function removeSourcesFromTabList(tabs, urls) {
 
 function restoreTabs() {
   const prefsTabs = _prefs.prefs.tabs || [];
-
-  if (prefsTabs.length == 0) {
-    return;
-  }
-
   return prefsTabs;
 }
 /**
@@ -254,8 +242,7 @@ function restoreTabs() {
  */
 
 
-function updateTabList(state, url, tabIndex) {
-  let tabs = state.sources.tabs;
+function updateTabList(tabs, url, tabIndex) {
   const urlIndex = tabs.indexOf(url);
   const includesUrl = !!tabs.find(tab => tab == url);
 
@@ -396,7 +383,8 @@ function getSourceInSources(sources, id) {
   return sources.get(id);
 }
 
-const getSources = exports.getSources = (0, _reselect.createSelector)(getSourcesState, sources => sources.sources);
+const getSources = exports.getSources = sources => sources.sources.sources;
+
 const getTabs = exports.getTabs = (0, _reselect.createSelector)(getSourcesState, sources => sources.tabs);
 const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, getSources, (tabs, sources) => tabs.filter(tab => getSourceByUrlInSources(sources, tab)));
 const getSourcesForTabs = exports.getSourcesForTabs = (0, _reselect.createSelector)(getSourceTabs, getSources, (tabs, sources) => {
@@ -409,9 +397,5 @@ const getSelectedSource = exports.getSelectedSource = (0, _reselect.createSelect
   }
 
   return sources.get(selectedLocation.sourceId);
-});
-const getSelectedSourceText = exports.getSelectedSourceText = (0, _reselect.createSelector)(getSelectedSource, getSourcesState, (selectedSource, sources) => {
-  const id = selectedSource.id;
-  return id ? sources.sourcesText.get(id) : null;
 });
 exports.default = update;

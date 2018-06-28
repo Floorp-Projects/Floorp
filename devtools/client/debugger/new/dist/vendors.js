@@ -7890,15 +7890,6 @@ class Tree extends Component {
       return;
     }
 
-    const traversal = this._dfsFromRoots();
-    const length = traversal.length;
-    let parentIndex = 0;
-    for (; parentIndex < length; parentIndex++) {
-      if (traversal[parentIndex].item === parent) {
-        break;
-      }
-    }
-
     this._focus(parent, { alignTo: "top" });
   }
 
@@ -7979,12 +7970,12 @@ class Tree extends Component {
           return;
         }
 
-        const { relatedTarget } = nativeEvent;
+        const { explicitOriginalTarget } = nativeEvent;
 
         // Only set default focus to the first tree node if the focus came
         // from outside the tree (e.g. by tabbing to the tree from other
         // external elements).
-        if (relatedTarget !== this.treeRef && !this.treeRef.contains(relatedTarget)) {
+        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
           this._focus(traversal[0].item);
         }
       },

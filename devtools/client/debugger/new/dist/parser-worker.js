@@ -1673,7 +1673,8 @@ function extractSymbols(sourceId) {
     imports: [],
     literals: [],
     hasJsx: false,
-    hasTypes: false
+    hasTypes: false,
+    loading: false
   };
 
   const ast = (0, _ast.traverseAst)(sourceId, {

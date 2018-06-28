@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+ requestLongerTimeout(2);
 
 /**
  * Test WebAssembly source maps
@@ -18,22 +19,25 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "doc-wasm-sourcemaps");
   assertPausedLocation(dbg);
 
-  await waitForSource(dbg, "wasm-sourcemaps/average.c");
-  await addBreakpoint(dbg, "wasm-sourcemaps/average.c", 12);
+  await waitForSource(dbg, "fib.c");
 
-  clickElement(dbg, "resume");
+  ok(true, "Original sources exist");
+  const mainSrc = findSource(dbg, "fib.c");
 
-  await waitForPaused(dbg);
-  await waitForSelectedSource(dbg, "average.c");
-  assertPausedLocation(dbg);
+  await selectSource(dbg, mainSrc);
+  await addBreakpoint(dbg, "fib.c", 10);
+
+  resume(dbg);
+
+  await waitForPaused(dbg, "fib.c");
 
   const frames = findAllElements(dbg, "frames");
   const firstFrameTitle = frames[0].querySelector(".title").textContent;
   is(firstFrameTitle, "(wasmcall)", "It shall be a wasm call");
   const firstFrameLocation = frames[0].querySelector(".location").textContent;
   is(
-    firstFrameLocation.includes("average.c"),
+    firstFrameLocation.includes("fib.c"),
     true,
-    "It shall be to avarage.c source"
+    "It shall be to fib.c source"
   );
 });
