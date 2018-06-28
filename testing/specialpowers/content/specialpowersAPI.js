@@ -1982,12 +1982,24 @@ SpecialPowersAPI.prototype = {
     return this._sendSyncMessage("SPCleanUpSTSData", {origin, flags: flags || 0});
   },
 
-  requestDumpCoverageCounters() {
-    this._sendSyncMessage("SPRequestDumpCoverageCounters", {});
+  requestDumpCoverageCounters(cb) {
+    let messageListener = _ => {
+      this._removeMessageListener("SPRequestDumpCoverageCounters", messageListener);
+      cb();
+    };
+
+    this._addMessageListener("SPRequestDumpCoverageCounters", messageListener);
+    this._sendAsyncMessage("SPRequestDumpCoverageCounters", {});
   },
 
-  requestResetCoverageCounters() {
-    this._sendSyncMessage("SPRequestResetCoverageCounters", {});
+  requestResetCoverageCounters(cb) {
+    let messageListener = _ => {
+      this._removeMessageListener("SPRequestResetCoverageCounters", messageListener);
+      cb();
+    };
+
+    this._addMessageListener("SPRequestResetCoverageCounters", messageListener);
+    this._sendAsyncMessage("SPRequestResetCoverageCounters", {});
   },
 
   _nextExtensionID: 0,

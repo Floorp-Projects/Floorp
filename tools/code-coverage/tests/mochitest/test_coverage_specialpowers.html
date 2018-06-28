@@ -14,13 +14,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1380659
 
   SimpleTest.waitForExplicitFinish();
 
-  SpecialPowers.requestDumpCoverageCounters();
-  SimpleTest.ok(true, "Counters dumped.");
+  (async function() {
+    await new Promise(resolve => SpecialPowers.requestDumpCoverageCounters(resolve));
+    SimpleTest.ok(true, "Counters dumped.");
 
-  SpecialPowers.requestResetCoverageCounters();
-  SimpleTest.ok(true, "Counters reset.");
+    await new Promise(resolve => SpecialPowers.requestResetCoverageCounters(resolve));
+    SimpleTest.ok(true, "Counters reset.");
 
-  SimpleTest.finish();
+    SimpleTest.finish();
+  })();
 
   </script>
 </head>
