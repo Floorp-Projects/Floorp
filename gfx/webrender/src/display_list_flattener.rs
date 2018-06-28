@@ -14,10 +14,10 @@ use api::{PropertyBinding, ReferenceFrame, RepeatMode, ScrollFrameDisplayItem, S
 use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{TransformStyle, YuvColorSpace, YuvData};
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore};
-use clip_scroll_node::{ClipScrollNode, NodeType, StickyFrameInfo};
+use clip_scroll_node::{NodeType, SpatialNodeKind, StickyFrameInfo};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, ClipScrollTree};
-use euclid::{SideOffsets2D, vec2};
-use frame_builder::{FrameBuilder, FrameBuilderConfig};
+use euclid::vec2;
+use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
 use gpu_cache::GpuCacheHandle;
 use gpu_types::BrushFlags;
@@ -628,8 +628,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             SpecificDisplayItem::Gradient(ref info) => {
-                self.add_gradient(
-                    clip_and_scroll,
+                let brush_kind = self.create_brush_kind_for_gradient(
                     &prim_info,
                     info.gradient.start_point,
                     info.gradient.end_point,
@@ -638,10 +637,11 @@ impl<'a> DisplayListFlattener<'a> {
                     info.tile_size,
                     info.tile_spacing,
                 );
+                let prim = PrimitiveContainer::Brush(BrushPrimitive::new(brush_kind, None));
+                self.add_primitive(clip_and_scroll, &prim_info, Vec::new(), prim);
             }
             SpecificDisplayItem::RadialGradient(ref info) => {
-                self.add_radial_gradient(
-                    clip_and_scroll,
+                let brush_kind = self.create_brush_kind_for_radial_gradient(
                     &prim_info,
                     info.gradient.center,
                     info.gradient.start_offset * info.gradient.radius.width,
@@ -652,6 +652,8 @@ impl<'a> DisplayListFlattener<'a> {
                     info.tile_size,
                     info.tile_spacing,
                 );
+                let prim = PrimitiveContainer::Brush(BrushPrimitive::new(brush_kind, None));
+                self.add_primitive(clip_and_scroll, &prim_info, Vec::new(), prim);
             }
             SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
                 let bounds = box_shadow_info
@@ -875,6 +877,10 @@ impl<'a> DisplayListFlattener<'a> {
 
         if container.is_visible() {
             let prim_index = self.create_primitive(info, clip_sources, container);
+            if cfg!(debug_assertions) && ChasePrimitive::LocalRect(info.rect) == self.config.chase_primitive {
+                println!("Chasing {:?}", prim_index);
+                self.prim_store.chase_id = Some(prim_index);
+            }
             self.add_primitive_to_hit_testing_list(info, clip_and_scroll);
             self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
         }
@@ -1197,14 +1203,15 @@ impl<'a> DisplayListFlattener<'a> {
         origin_in_parent_reference_frame: LayoutVector2D,
     ) -> ClipScrollNodeIndex {
         let index = self.id_to_index_mapper.get_node_index(reference_frame_id);
-        let node = ClipScrollNode::new_reference_frame(
-            parent_id.map(|id| self.id_to_index_mapper.get_node_index(id)),
+        let parent_index = parent_id.map(|id| self.id_to_index_mapper.get_node_index(id));
+        self.clip_scroll_tree.add_reference_frame(
+            index,
+            parent_index,
             source_transform,
             source_perspective,
             origin_in_parent_reference_frame,
             pipeline_id,
         );
-        self.clip_scroll_tree.add_node(node, index);
         self.reference_frame_stack.push((reference_frame_id, index));
 
         match parent_id {
@@ -1227,7 +1234,7 @@ impl<'a> DisplayListFlattener<'a> {
         let viewport_offset = (inner_rect.origin.to_vector().to_f32() / device_pixel_scale).round();
         let root_id = self.clip_scroll_tree.root_reference_frame_index();
         let root_node = &mut self.clip_scroll_tree.nodes[root_id.0];
-        if let NodeType::ReferenceFrame(ref mut info) = root_node.node_type {
+        if let NodeType::Spatial { kind: SpatialNodeKind::ReferenceFrame(ref mut info), .. } = root_node.node_type {
             info.resolved_transform =
                 LayoutVector2D::new(viewport_offset.x, viewport_offset.y).into();
         }
@@ -1290,16 +1297,15 @@ impl<'a> DisplayListFlattener<'a> {
         scroll_sensitivity: ScrollSensitivity,
     ) -> ClipScrollNodeIndex {
         let node_index = self.id_to_index_mapper.get_node_index(new_node_id);
-        let node = ClipScrollNode::new_scroll_frame(
-            pipeline_id,
+        self.clip_scroll_tree.add_scroll_frame(
+            node_index,
             self.id_to_index_mapper.get_node_index(parent_id),
             external_id,
+            pipeline_id,
             frame_rect,
             content_size,
             scroll_sensitivity,
         );
-
-        self.clip_scroll_tree.add_node(node, node_index);
         self.id_to_index_mapper.map_to_parent_clip_chain(new_node_id, &parent_id);
         node_index
     }
@@ -1492,51 +1498,6 @@ impl<'a> DisplayListFlattener<'a> {
         gradient_stops: ItemRange<GradientStop>,
     ) {
         let rect = info.rect;
-        let create_segments = |outset: SideOffsets2D<f32>| {
-            // Calculate the modified rect as specific by border-image-outset
-            let origin = LayoutPoint::new(rect.origin.x - outset.left, rect.origin.y - outset.top);
-            let size = LayoutSize::new(
-                rect.size.width + outset.left + outset.right,
-                rect.size.height + outset.top + outset.bottom,
-            );
-            let rect = LayoutRect::new(origin, size);
-
-            let tl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y);
-            let tl_inner = tl_outer + vec2(border_item.widths.left, border_item.widths.top);
-
-            let tr_outer = LayoutPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
-            let tr_inner = tr_outer + vec2(-border_item.widths.right, border_item.widths.top);
-
-            let bl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
-            let bl_inner = bl_outer + vec2(border_item.widths.left, -border_item.widths.bottom);
-
-            let br_outer = LayoutPoint::new(
-                rect.origin.x + rect.size.width,
-                rect.origin.y + rect.size.height,
-            );
-            let br_inner = br_outer - vec2(border_item.widths.right, border_item.widths.bottom);
-
-            // Build the list of gradient segments
-            vec![
-                // Top left
-                LayoutRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
-                // Top right
-                LayoutRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
-                // Bottom right
-                LayoutRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
-                // Bottom left
-                LayoutRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
-                // Top
-                LayoutRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
-                // Bottom
-                LayoutRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
-                // Left
-                LayoutRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
-                // Right
-                LayoutRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
-            ]
-        };
-
         match border_item.details {
             BorderDetails::NinePatch(ref border) => {
                 // Calculate the modified rect as specific by border-image-outset
@@ -1701,70 +1662,55 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_mask_kind: BrushClipMaskKind::Unknown,
                 };
 
-                let prim = PrimitiveContainer::Brush(match border.source {
+                let brush_kind = match border.source {
                     NinePatchBorderSource::Image(image_key) => {
-                        let source = BorderSource::Image(ImageRequest {
-                            key: image_key,
-                            rendering: ImageRendering::Auto,
-                            tile: None,
-                        });
-
-                        BrushPrimitive::new(
-                            BrushKind::Border {
-                                source
-                            },
-                            Some(descriptor),
+                        BrushKind::Border {
+                            source: BorderSource::Image(ImageRequest {
+                                key: image_key,
+                                rendering: ImageRendering::Auto,
+                                tile: None,
+                            })
+                        }
+                    }
+                    NinePatchBorderSource::Gradient(gradient) => {
+                        self.create_brush_kind_for_gradient(
+                            &info,
+                            gradient.start_point,
+                            gradient.end_point,
+                            gradient_stops,
+                            gradient.extend_mode,
+                            LayoutSize::new(border.height as f32, border.width as f32),
+                            LayoutSize::zero(),
                         )
                     }
-                });
+                    NinePatchBorderSource::RadialGradient(gradient) => {
+                        self.create_brush_kind_for_radial_gradient(
+                            &info,
+                            gradient.center,
+                            gradient.start_offset * gradient.radius.width,
+                            gradient.end_offset * gradient.radius.width,
+                            gradient.radius.width / gradient.radius.height,
+                            gradient_stops,
+                            gradient.extend_mode,
+                            LayoutSize::new(border.height as f32, border.width as f32),
+                            LayoutSize::zero(),
+                        )
+                    }
+                };
 
+                let prim = PrimitiveContainer::Brush(
+                    BrushPrimitive::new(brush_kind, Some(descriptor))
+                );
                 self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
             }
             BorderDetails::Normal(ref border) => {
                 self.add_normal_border(info, border, &border_item.widths, clip_and_scroll);
             }
-            BorderDetails::Gradient(ref border) => for segment in create_segments(border.outset) {
-                let segment_rel = segment.origin - rect.origin;
-                let mut info = info.clone();
-                info.rect = segment;
-
-                self.add_gradient(
-                    clip_and_scroll,
-                    &info,
-                    border.gradient.start_point - segment_rel,
-                    border.gradient.end_point - segment_rel,
-                    gradient_stops,
-                    border.gradient.extend_mode,
-                    segment.size,
-                    LayoutSize::zero(),
-                );
-            },
-            BorderDetails::RadialGradient(ref border) => {
-                for segment in create_segments(border.outset) {
-                    let segment_rel = segment.origin - rect.origin;
-                    let mut info = info.clone();
-                    info.rect = segment;
-
-                    self.add_radial_gradient(
-                        clip_and_scroll,
-                        &info,
-                        border.gradient.center - segment_rel,
-                        border.gradient.start_offset * border.gradient.radius.width,
-                        border.gradient.end_offset * border.gradient.radius.width,
-                        border.gradient.radius.width / border.gradient.radius.height,
-                        gradient_stops,
-                        border.gradient.extend_mode,
-                        segment.size,
-                        LayoutSize::zero(),
-                    );
-                }
-            }
         }
     }
 
-    pub fn add_gradient(
+    pub fn create_brush_kind_for_gradient(
         &mut self,
-        clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
         start_point: LayoutPoint,
         end_point: LayoutPoint,
@@ -1772,13 +1718,9 @@ impl<'a> DisplayListFlattener<'a> {
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
-    ) {
+    ) -> BrushKind {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
-        let info = LayoutPrimitiveInfo {
-            rect: prim_rect,
-            .. *info
-        };
 
         // Try to ensure that if the gradient is specified in reverse, then so long as the stops
         // are also supplied in reverse that the rendered result will be equivalent. To do this,
@@ -1798,29 +1740,21 @@ impl<'a> DisplayListFlattener<'a> {
             (start_point, end_point)
         };
 
-        let prim = BrushPrimitive::new(
-            BrushKind::LinearGradient {
-                stops_range: stops,
-                extend_mode,
-                reverse_stops,
-                start_point: sp,
-                end_point: ep,
-                stops_handle: GpuCacheHandle::new(),
-                stretch_size,
-                tile_spacing,
-                visible_tiles: Vec::new(),
-            },
-            None,
-        );
-
-        let prim = PrimitiveContainer::Brush(prim);
-
-        self.add_primitive(clip_and_scroll, &info, Vec::new(), prim);
+        BrushKind::LinearGradient {
+            stops_range: stops,
+            extend_mode,
+            reverse_stops,
+            start_point: sp,
+            end_point: ep,
+            stops_handle: GpuCacheHandle::new(),
+            stretch_size,
+            tile_spacing,
+            visible_tiles: Vec::new(),
+        }
     }
 
-    pub fn add_radial_gradient(
+    pub fn create_brush_kind_for_radial_gradient(
         &mut self,
-        clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
         center: LayoutPoint,
         start_radius: f32,
@@ -1830,36 +1764,22 @@ impl<'a> DisplayListFlattener<'a> {
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
-    ) {
+    ) -> BrushKind {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
-        let info = LayoutPrimitiveInfo {
-            rect: prim_rect,
-            .. *info
-        };
 
-        let prim = BrushPrimitive::new(
-            BrushKind::RadialGradient {
-                stops_range: stops,
-                extend_mode,
-                center,
-                start_radius,
-                end_radius,
-                ratio_xy,
-                stops_handle: GpuCacheHandle::new(),
-                stretch_size,
-                tile_spacing,
-                visible_tiles: Vec::new(),
-            },
-            None,
-        );
-
-        self.add_primitive(
-            clip_and_scroll,
-            &info,
-            Vec::new(),
-            PrimitiveContainer::Brush(prim),
-        );
+        BrushKind::RadialGradient {
+            stops_range: stops,
+            extend_mode,
+            center,
+            start_radius,
+            end_radius,
+            ratio_xy,
+            stops_handle: GpuCacheHandle::new(),
+            stretch_size,
+            tile_spacing,
+            visible_tiles: Vec::new(),
+        }
     }
 
     pub fn add_text(

@@ -93,6 +93,7 @@ enum class ImageFormat : uint32_t {
   BGRA8 = 3,
   RGBAF32 = 4,
   RG8 = 5,
+  RGBAI32 = 6,
 
   Sentinel /* this must be last for serialization purposes. */
 };

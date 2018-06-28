@@ -257,7 +257,7 @@ fn make_window(
                 })
                 .with_vsync(vsync);
             let window_builder = winit::WindowBuilder::new()
-                .with_title("WRech")
+                .with_title("WRench")
                 .with_multitouch()
                 .with_dimensions(size.width, size.height);
 
@@ -351,7 +351,11 @@ impl RenderNotifier for Notifier {
         self.tx.send(NotifierEvent::ShutDown).unwrap();
     }
 
-    fn new_frame_ready(&self, _: DocumentId, _scrolled: bool, composite_needed: bool) {
+    fn new_frame_ready(&self,
+                       _: DocumentId,
+                       _scrolled: bool,
+                       composite_needed: bool,
+                       _render_time: Option<u64>) {
         if composite_needed {
             self.wake_up();
         }
@@ -424,6 +428,20 @@ fn main() {
         })
         .unwrap_or(DeviceUintSize::new(1920, 1080));
     let zoom_factor = args.value_of("zoom").map(|z| z.parse::<f32>().unwrap());
+    let chase_primitive = match args.value_of("chase") {
+        Some(s) => {
+            let mut items = s
+                .split(',')
+                .map(|s| s.parse::<f32>().unwrap())
+                .collect::<Vec<_>>();
+            let rect = LayoutRect::new(
+                LayoutPoint::new(items[0], items[1]),
+                LayoutSize::new(items[2], items[3]),
+            );
+            webrender::ChasePrimitive::LocalRect(rect)
+        },
+        None => webrender::ChasePrimitive::Nothing,
+    };
 
     let mut events_loop = if args.is_present("headless") {
         None
@@ -462,6 +480,7 @@ fn main() {
         args.is_present("precache"),
         args.is_present("slow_subpixel"),
         zoom_factor.unwrap_or(1.0),
+        chase_primitive,
         notifier,
     );
 
@@ -634,17 +653,30 @@ fn render<'a>(
                         let path = PathBuf::from("../captures/wrench");
                         wrench.api.save_capture(path, CaptureBits::all());
                     }
-                    VirtualKeyCode::Up => {
+                    VirtualKeyCode::Up | VirtualKeyCode::Down => {
+                        let mut txn = Transaction::new();
+
+                        let offset = match vk {
+                            winit::VirtualKeyCode::Up => LayoutVector2D::new(0.0, 10.0),
+                            winit::VirtualKeyCode::Down => LayoutVector2D::new(0.0, -10.0),
+                            _ => unreachable!("Should not see non directional keys here.")
+                        };
+
+                        txn.scroll(ScrollLocation::Delta(offset), cursor_position);
+                        txn.generate_frame();
+                        wrench.api.send_transaction(wrench.document_id, txn);
+
+                        do_frame = true;
+                    }
+                    VirtualKeyCode::Add => {
                         let current_zoom = wrench.get_page_zoom();
                         let new_zoom_factor = ZoomFactor::new(current_zoom.get() + 0.1);
-
                         wrench.set_page_zoom(new_zoom_factor);
                         do_frame = true;
                     }
-                    VirtualKeyCode::Down => {
+                    VirtualKeyCode::Subtract => {
                         let current_zoom = wrench.get_page_zoom();
                         let new_zoom_factor = ZoomFactor::new((current_zoom.get() - 0.1).max(0.1));
-
                         wrench.set_page_zoom(new_zoom_factor);
                         do_frame = true;
                     }
