@@ -441,6 +441,15 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   parentNode: function(node) {
+    const parent = this.rawParentNode(node);
+    if (parent) {
+      return this._ref(parent);
+    }
+
+    return null;
+  },
+
+  rawParentNode: function(node) {
     let parent;
     try {
       // If the node is the child of a shadow host, we can not use an anonymous walker to
@@ -457,11 +466,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       parent = walker.parentNode();
     }
 
-    if (parent) {
-      return this._ref(parent);
-    }
-
-    return null;
+    return parent;
   },
 
   /**
@@ -572,17 +577,17 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     if (!node) {
       return newParents;
     }
-    const walker = this.getDocumentWalker(node.rawNode);
-    let cur;
-    while ((cur = walker.parentNode())) {
-      const parent = this.getNode(cur);
-      if (!parent) {
-        // This parent didn't exist, so hasn't been seen by the client yet.
-        newParents.add(this._ref(cur));
-      } else {
+    let parent = this.rawParentNode(node);
+    while (parent) {
+      let parentActor = this.getNode(parent);
+      if (parentActor) {
         // This parent did exist, so the client knows about it.
         return newParents;
       }
+      // This parent didn't exist, so hasn't been seen by the client yet.
+      parentActor = this._ref(parent);
+      newParents.add(parentActor);
+      parent = this.rawParentNode(parentActor);
     }
     return newParents;
   },
