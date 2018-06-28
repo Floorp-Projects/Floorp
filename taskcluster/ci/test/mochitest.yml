@@ -343,15 +343,21 @@ mochitest-valgrind:
         mochitest-flavor: plain
         chunked: true
 
-mochitest-webgl1-core:
-    description: "Mochitest webgl1-core run"
-    suite: mochitest/mochitest-webgl1-core
-    treeherder-symbol: M(gl1c)
+mochitest-webgl:
+    description: "Mochitest webgl run"
+    suite: mochitest/mochitest-gl
+    treeherder-symbol: M(gl)
     run-on-projects:
         by-test-platform:
             windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
             default: built-projects
     virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android-em-7.0-x86/opt: 1
+            android-em.*: 10
+            windows.*: 8
+            default: 3
     e10s:
         by-test-platform:
             linux32/debug: both
@@ -360,123 +366,20 @@ mochitest-webgl1-core:
     max-run-time:
         by-test-platform:
             windows.*: 5400
+            android-em.*: 7200
             default: 3600
-    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
-    allow-software-gl-layers: false
-    mozharness:
-        mochitest-flavor: plain
-    tier:
+    instance-size:
         by-test-platform:
-            linux64-qr/.*: 1
+            android-em.*: xlarge
             default: default
-
-mochitest-webgl1-ext:
-    description: "Mochitest webgl1-ext run"
-    suite: mochitest/mochitest-webgl1-ext
-    treeherder-symbol: M(gl1e)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
-    virtualization: virtual-with-gpu
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
-    loopback-video: true
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
-
-mochitest-webgl2-core:
-    description: "Mochitest webgl2-core run"
-    suite: mochitest/mochitest-webgl2-core
-    treeherder-symbol: M(gl2c)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
-    virtualization: virtual-with-gpu
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
-    loopback-video: true
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
-    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
-    allow-software-gl-layers: false
-    mozharness:
-        mochitest-flavor: plain
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
-
-mochitest-webgl2-ext:
-    description: "Mochitest webgl2-ext run"
-    suite: mochitest/mochitest-webgl2-ext
-    treeherder-symbol: M(gl2e)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
-    virtualization: virtual-with-gpu
-    chunks: 4
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
-    loopback-video: true
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
-    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
-    allow-software-gl-layers: false
-    mozharness:
-        mochitest-flavor: plain
-        chunked: true
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            default: default
-
-mochitest-webgl2-deqp:
-    description: "Mochitest webgl2-deqp run"
-    suite: mochitest/mochitest-webgl2-deqp
-    treeherder-symbol: M(gl2d)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: []  # Don't run this for now.
-    virtualization: virtual-with-gpu
-    chunks: 4
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
-    loopback-video: true
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
-    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
-    allow-software-gl-layers: false
-    mozharness:
-        mochitest-flavor: plain
-        chunked: true
+        chunked:
+            by-test-platform:
+                android-em.*: false
+                default: true
     tier:
         by-test-platform:
             linux64-qr/.*: 1
