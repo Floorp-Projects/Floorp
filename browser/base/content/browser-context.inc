@@ -368,12 +368,7 @@
       <menuitem id="context-viewpartialsource-selection"
                 label="&viewPartialSourceForSelectionCmd.label;"
                 accesskey="&viewPartialSourceCmd.accesskey;"
-                oncommand="gContextMenu.viewPartialSource('selection');"
-                observes="isImage"/>
-      <menuitem id="context-viewpartialsource-mathml"
-                label="&viewPartialSourceForMathMLCmd.label;"
-                accesskey="&viewPartialSourceCmd.accesskey;"
-                oncommand="gContextMenu.viewPartialSource('mathml');"
+                oncommand="gContextMenu.viewPartialSource();"
                 observes="isImage"/>
       <menuseparator id="context-sep-viewsource"/>
       <menuitem id="context-viewsource"

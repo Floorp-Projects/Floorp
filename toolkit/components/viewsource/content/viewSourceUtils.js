@@ -110,12 +110,10 @@ var gViewSourceUtils = {
    *
    * @param aViewSourceInBrowser
    *        The browser containing the page to view the source of.
-   * @param aTarget
-   *        Set to the target node for MathML. Null for other types of elements.
    * @param aGetBrowserFn
    *        A function that will return a browser to open the source in.
    */
-  viewPartialSourceInBrowser(aViewSourceInBrowser, aTarget, aGetBrowserFn) {
+  viewPartialSourceInBrowser(aViewSourceInBrowser, aGetBrowserFn) {
     let mm = aViewSourceInBrowser.messageManager;
     mm.addMessageListener("ViewSource:GetSelectionDone", function gotSelection(message) {
       mm.removeMessageListener("ViewSource:GetSelectionDone", gotSelection);
@@ -125,10 +123,10 @@ var gViewSourceUtils = {
 
       let viewSourceBrowser = new ViewSourceBrowser(aGetBrowserFn());
       viewSourceBrowser.loadViewSourceFromSelection(message.data.uri, message.data.drawSelection,
-                                                      message.data.baseURI);
+                                                    message.data.baseURI);
     });
 
-    mm.sendAsyncMessage("ViewSource:GetSelection", { }, { target: aTarget });
+    mm.sendAsyncMessage("ViewSource:GetSelection");
   },
 
   buildEditorArgs(aPath, aLineNumber) {
