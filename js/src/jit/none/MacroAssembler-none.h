@@ -68,6 +68,7 @@ static constexpr Register64 ReturnReg64(InvalidReg);
 static constexpr Register ABINonArgReg0 { Registers::invalid_reg };
 static constexpr Register ABINonArgReg1 { Registers::invalid_reg };
 static constexpr Register ABINonArgReg2 { Registers::invalid_reg };
+static constexpr Register ABINonArgReg3 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnReg0 { Registers::invalid_reg };
 static constexpr Register ABINonArgReturnReg1 { Registers::invalid_reg };
 static constexpr Register ABINonVolatileReg { Registers::invalid_reg };
@@ -75,7 +76,8 @@ static constexpr Register ABINonArgReturnVolatileReg { Registers::invalid_reg };
 
 static constexpr FloatRegister ABINonArgDoubleReg = { FloatRegisters::invalid_reg };
 
-static constexpr Register WasmTableCallScratchReg { Registers::invalid_reg };
+static constexpr Register WasmTableCallScratchReg0 { Registers::invalid_reg };
+static constexpr Register WasmTableCallScratchReg1 { Registers::invalid_reg };
 static constexpr Register WasmTableCallSigReg { Registers::invalid_reg };
 static constexpr Register WasmTableCallIndexReg { Registers::invalid_reg };
 static constexpr Register WasmTlsReg { Registers::invalid_reg };
