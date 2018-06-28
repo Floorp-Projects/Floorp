@@ -27,7 +27,6 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/Debugger.h"
-#include "wasm/WasmBinaryToText.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmValidate.h"
 
@@ -36,56 +35,6 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::BinarySearchIf;
-
-bool
-GeneratedSourceMap::searchLineByOffset(JSContext* cx, uint32_t offset, size_t* exprlocIndex)
-{
-    MOZ_ASSERT(!exprlocs_.empty());
-    size_t exprlocsLength = exprlocs_.length();
-
-    // Lazily build sorted array for fast log(n) lookup.
-    if (!sortedByOffsetExprLocIndices_) {
-        ExprLocIndexVector scratch;
-        auto indices = MakeUnique<ExprLocIndexVector>();
-        if (!indices || !indices->resize(exprlocsLength) || !scratch.resize(exprlocsLength)) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-        sortedByOffsetExprLocIndices_ = std::move(indices);
-
-        for (size_t i = 0; i < exprlocsLength; i++)
-            (*sortedByOffsetExprLocIndices_)[i] = i;
-
-        auto compareExprLocViaIndex = [&](uint32_t i, uint32_t j, bool* lessOrEqualp) -> bool {
-            *lessOrEqualp = exprlocs_[i].offset <= exprlocs_[j].offset;
-            return true;
-        };
-        MOZ_ALWAYS_TRUE(MergeSort(sortedByOffsetExprLocIndices_->begin(), exprlocsLength,
-                                  scratch.begin(), compareExprLocViaIndex));
-    }
-
-    // Allowing non-exact search and if BinarySearchIf returns out-of-bound
-    // index, moving the index to the last index.
-    auto lookupFn = [&](uint32_t i) -> int {
-        const ExprLoc& loc = exprlocs_[i];
-        return offset == loc.offset ? 0 : offset < loc.offset ? -1 : 1;
-    };
-    size_t match;
-    Unused << BinarySearchIf(sortedByOffsetExprLocIndices_->begin(), 0, exprlocsLength, lookupFn, &match);
-    if (match >= exprlocsLength)
-        match = exprlocsLength - 1;
-    *exprlocIndex = (*sortedByOffsetExprLocIndices_)[match];
-    return true;
-}
-
-size_t
-GeneratedSourceMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    size_t size = exprlocs_.sizeOfExcludingThis(mallocSizeOf);
-    if (sortedByOffsetExprLocIndices_)
-        size += sortedByOffsetExprLocIndices_->sizeOfIncludingThis(mallocSizeOf);
-    return size;
-}
 
 DebugState::DebugState(SharedCode code,
                        const ShareableBytes* maybeBytecode,
@@ -99,16 +48,13 @@ DebugState::DebugState(SharedCode code,
 }
 
 const char enabledMessage[] =
-    "Restart with developer tools open to view WebAssembly source";
+    "Restart with developer tools open to view WebAssembly source.";
 
-const char tooBigMessage[] =
-    "Unfortunately, this WebAssembly module is too big to view as text.\n"
-    "We are working hard to remove this limitation.";
+const char noBinarySource[] =
+    "Configure the debugger to display WebAssembly bytecode.";
 
 const char notGeneratedMessage[] =
     "WebAssembly text generation was disabled.";
-
-static const unsigned TooBig = 1000000;
 
 static const uint32_t DefaultBinarySourceColumnNumber = 1;
 
@@ -129,98 +75,26 @@ DebugState::createText(JSContext* cx)
     if (!maybeBytecode_) {
         if (!buffer.append(enabledMessage))
             return nullptr;
-
-        MOZ_ASSERT(!maybeSourceMap_);
     } else if (binarySource_) {
         if (!buffer.append(notGeneratedMessage))
             return nullptr;
-        return buffer.finishString();
-    } else if (maybeBytecode_->bytes.length() > TooBig) {
-        if (!buffer.append(tooBigMessage))
-            return nullptr;
-
-        MOZ_ASSERT(!maybeSourceMap_);
     } else {
-        const Bytes& bytes = maybeBytecode_->bytes;
-        auto sourceMap = MakeUnique<GeneratedSourceMap>();
-        if (!sourceMap) {
-            ReportOutOfMemory(cx);
+        if (!buffer.append(noBinarySource))
             return nullptr;
-        }
-        maybeSourceMap_ = std::move(sourceMap);
-
-        if (!BinaryToText(cx, bytes.begin(), bytes.length(), buffer, maybeSourceMap_.get()))
-            return nullptr;
-
-#if DEBUG
-        // Check that expression locations are sorted by line number.
-        uint32_t lastLineno = 0;
-        for (const ExprLoc& loc : maybeSourceMap_->exprlocs()) {
-            MOZ_ASSERT(lastLineno <= loc.lineno);
-            lastLineno = loc.lineno;
-        }
-#endif
     }
-
     return buffer.finishString();
 }
-
-bool
-DebugState::ensureSourceMap(JSContext* cx)
-{
-    if (maybeSourceMap_ || !maybeBytecode_)
-        return true;
-
-    // We just need to cache maybeSourceMap_, ignoring the text result.
-    return createText(cx);
-}
-
-struct LineComparator
-{
-    const uint32_t lineno;
-    explicit LineComparator(uint32_t lineno) : lineno(lineno) {}
-
-    int operator()(const ExprLoc& loc) const {
-        return lineno == loc.lineno ? 0 : lineno < loc.lineno ? -1 : 1;
-    }
-};
 
 bool
 DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
 {
     if (!debugEnabled())
         return true;
-
-    if (binarySource_) {
-        const CallSite* callsite = SlowCallSiteSearchByOffset(metadata(Tier::Debug), lineno);
-        if (callsite && !offsets->append(lineno))
-            return false;
+    if (!binarySource_)
         return true;
-    }
-
-    if (!ensureSourceMap(cx))
+    const CallSite* callsite = SlowCallSiteSearchByOffset(metadata(Tier::Debug), lineno);
+    if (callsite && !offsets->append(lineno))
         return false;
-
-    if (!maybeSourceMap_)
-        return true; // no source text available, keep offsets empty.
-
-    ExprLocVector& exprlocs = maybeSourceMap_->exprlocs();
-
-    // Binary search for the expression with the specified line number and
-    // rewind to the first expression, if more than one expression on the same line.
-    size_t match;
-    if (!BinarySearchIf(exprlocs, 0, exprlocs.length(), LineComparator(lineno), &match))
-        return true;
-
-    while (match > 0 && exprlocs[match - 1].lineno == lineno)
-        match--;
-
-    // Return all expression offsets that were printed on the specified line.
-    for (size_t i = match; i < exprlocs.length() && exprlocs[i].lineno == lineno; i++) {
-        if (!offsets->append(exprlocs[i].offset))
-            return false;
-    }
-
     return true;
 }
 
@@ -229,25 +103,16 @@ DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
 {
     if (!metadata().debugEnabled)
         return true;
-
-    if (binarySource_) {
-        for (const CallSite& callSite : metadata(Tier::Debug).callSites) {
-            if (callSite.kind() != CallSite::Breakpoint)
-                continue;
-            uint32_t offset = callSite.lineOrBytecode();
-            if (!offsets->emplaceBack(offset, DefaultBinarySourceColumnNumber, offset))
-                return false;
-        }
+    if (!binarySource_)
         return true;
+    for (const CallSite& callSite : metadata(Tier::Debug).callSites) {
+        if (callSite.kind() != CallSite::Breakpoint)
+            continue;
+        uint32_t offset = callSite.lineOrBytecode();
+        if (!offsets->emplaceBack(offset, DefaultBinarySourceColumnNumber, offset))
+            return false;
     }
-
-    if (!ensureSourceMap(cx))
-        return false;
-
-    if (!maybeSourceMap_)
-        return true; // no source text available, keep offsets empty.
-
-    return offsets->appendAll(maybeSourceMap_->exprlocs());
+    return true;
 }
 
 bool
@@ -256,30 +121,13 @@ DebugState::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_
     *found = false;
     if (!debugEnabled())
         return true;
-
-    if (binarySource_) {
-        if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset))
-            return true; // offset was not found
-        *found = true;
-        *lineno = offset;
-        *column = DefaultBinarySourceColumnNumber;
+    if (!binarySource_)
         return true;
-    }
-
-    if (!ensureSourceMap(cx))
-        return false;
-
-    if (!maybeSourceMap_ || maybeSourceMap_->exprlocs().empty())
-        return true; // no source text available
-
-    size_t foundAt;
-    if (!maybeSourceMap_->searchLineByOffset(cx, offset, &foundAt))
-        return false;
-
-    const ExprLoc& loc = maybeSourceMap_->exprlocs()[foundAt];
+    if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset))
+        return true; // offset was not found
     *found = true;
-    *lineno = loc.lineno;
-    *column = loc.column;
+    *lineno = offset;
+    *column = DefaultBinarySourceColumnNumber;
     return true;
 }
 
@@ -289,18 +137,10 @@ DebugState::totalSourceLines(JSContext* cx, uint32_t* count)
     *count = 0;
     if (!debugEnabled())
         return true;
-
-    if (binarySource_) {
-        if (maybeBytecode_)
-            *count = maybeBytecode_->length();
+    if (!binarySource_)
         return true;
-    }
-
-    if (!ensureSourceMap(cx))
-        return false;
-
-    if (maybeSourceMap_)
-        *count = maybeSourceMap_->totalLines();
+    if (maybeBytecode_)
+        *count = maybeBytecode_->length();
     return true;
 }
 
@@ -708,8 +548,6 @@ DebugState::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                           size_t* data) const
 {
     code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
-    if (maybeSourceMap_)
-        *data += maybeSourceMap_->sizeOfExcludingThis(mallocSizeOf);
     if (maybeBytecode_)
         *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }

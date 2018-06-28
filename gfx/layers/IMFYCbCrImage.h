@@ -18,21 +18,26 @@ namespace layers {
 class IMFYCbCrImage : public RecyclingPlanarYCbCrImage
 {
 public:
-  IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer);
+  IMFYCbCrImage(IMFMediaBuffer* aBuffer,
+                IMF2DBuffer* a2DBuffer,
+                KnowsCompositor* aKnowsCompositor,
+                ImageContainer* aContainer);
 
   bool IsValid() const override { return true; }
 
   TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
-  static DXGIYCbCrTextureData* GetD3D11TextureData(Data aData,
-                                                   gfx::IntSize aSize);
 protected:
   TextureClient* GetD3D11TextureClient(KnowsCompositor* aForwarder);
+  static bool CopyDataToTexture(const Data& aData,
+                                ID3D11Device* aDevice,
+                                DXGIYCbCrTextureData* aTextureData);
 
   virtual ~IMFYCbCrImage();
 
   RefPtr<IMFMediaBuffer> mBuffer;
   RefPtr<IMF2DBuffer> m2DBuffer;
+  RefPtr<D3D11YCbCrRecycleAllocator> mAllocator;
   RefPtr<TextureClient> mTextureClient;
 };
 

@@ -3522,7 +3522,7 @@ class BaseCompiler final : public BaseCompilerInterface
     {
         explicit FunctionCall(uint32_t lineOrBytecode)
           : lineOrBytecode(lineOrBytecode),
-            reloadMachineStateAfter(false),
+            isInterModule(false),
             usesSystemAbi(false),
 #ifdef JS_CODEGEN_ARM
             hardFP(true),
@@ -3533,7 +3533,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
         uint32_t lineOrBytecode;
         ABIArgGenerator abi;
-        bool reloadMachineStateAfter;
+        bool isInterModule;
         bool usesSystemAbi;
 #ifdef JS_CODEGEN_ARM
         bool hardFP;
@@ -3544,7 +3544,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void beginCall(FunctionCall& call, UseABI useABI, InterModule interModule)
     {
-        call.reloadMachineStateAfter = interModule == InterModule::True || useABI == UseABI::System;
+        call.isInterModule = interModule == InterModule::True;
         call.usesSystemAbi = useABI == UseABI::System;
 
         if (call.usesSystemAbi) {
@@ -3575,7 +3575,11 @@ class BaseCompiler final : public BaseCompilerInterface
         size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
         fr.freeArgAreaAndPopBytes(adjustment, stackSpace);
 
-        if (call.reloadMachineStateAfter) {
+        if (call.isInterModule) {
+            masm.loadWasmTlsRegFromFrame();
+            masm.loadWasmPinnedRegsFromTls();
+            masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+        } else if (call.usesSystemAbi) {
             // On x86 there are no pinned registers, so don't waste time
             // reloading the Tls.
 #ifndef JS_CODEGEN_X86

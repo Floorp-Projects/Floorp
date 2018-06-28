@@ -60,12 +60,12 @@ _hb_options_init (void)
 
 /**
  * hb_tag_from_string:
- * @str: (array length=len) (element-type uint8_t): 
- * @len: 
+ * @str: (array length=len) (element-type uint8_t):
+ * @len:
  *
- * 
  *
- * Return value: 
+ *
+ * Return value:
  *
  * Since: 0.9.2
  **/
@@ -90,10 +90,10 @@ hb_tag_from_string (const char *str, int len)
 
 /**
  * hb_tag_to_string:
- * @tag: 
- * @buf: (out caller-allocates) (array fixed-size=4) (element-type uint8_t): 
+ * @tag:
+ * @buf: (out caller-allocates) (array fixed-size=4) (element-type uint8_t):
  *
- * 
+ *
  *
  * Since: 0.9.5
  **/
@@ -118,12 +118,12 @@ const char direction_strings[][4] = {
 
 /**
  * hb_direction_from_string:
- * @str: (array length=len) (element-type uint8_t): 
- * @len: 
+ * @str: (array length=len) (element-type uint8_t):
+ * @len:
  *
- * 
  *
- * Return value: 
+ *
+ * Return value:
  *
  * Since: 0.9.2
  **/
@@ -146,11 +146,11 @@ hb_direction_from_string (const char *str, int len)
 
 /**
  * hb_direction_to_string:
- * @direction: 
+ * @direction:
  *
- * 
  *
- * Return value: (transfer none): 
+ *
+ * Return value: (transfer none):
  *
  * Since: 0.9.2
  **/
@@ -225,7 +225,7 @@ struct hb_language_item_t {
 
   inline hb_language_item_t & operator = (const char *s) {
     /* If a custom allocated is used calling strdup() pairs
-    badly with a call to the custom free() in finish() below.
+    badly with a call to the custom free() in fini() below.
     Therefore don't call strdup(), implement its behavior.
     */
     size_t len = strlen(s) + 1;
@@ -240,7 +240,7 @@ struct hb_language_item_t {
     return *this;
   }
 
-  void finish (void) { free ((void *) lang); }
+  void fini (void) { free ((void *) lang); }
 };
 
 
@@ -252,11 +252,16 @@ static hb_language_item_t *langs;
 static void
 free_langs (void)
 {
-  while (langs) {
-    hb_language_item_t *next = langs->next;
-    langs->finish ();
-    free (langs);
-    langs = next;
+retry:
+  hb_language_item_t *first_lang = (hb_language_item_t *) hb_atomic_ptr_get (&langs);
+  if (!hb_atomic_ptr_cmpexch (&langs, first_lang, nullptr))
+    goto retry;
+
+  while (first_lang) {
+    hb_language_item_t *next = first_lang->next;
+    first_lang->fini ();
+    free (first_lang);
+    first_lang = next;
   }
 }
 #endif
@@ -284,7 +289,7 @@ retry:
   }
 
   if (!hb_atomic_ptr_cmpexch (&langs, first_lang, lang)) {
-    lang->finish ();
+    lang->fini ();
     free (lang);
     goto retry;
   }
@@ -356,7 +361,7 @@ hb_language_to_string (hb_language_t language)
 /**
  * hb_language_get_default:
  *
- * 
+ *
  *
  * Return value: (transfer none):
  *
@@ -385,7 +390,7 @@ hb_language_get_default (void)
  *
  * Converts an ISO 15924 script tag to a corresponding #hb_script_t.
  *
- * Return value: 
+ * Return value:
  * An #hb_script_t corresponding to the ISO 15924 tag.
  *
  * Since: 0.9.2
@@ -407,7 +412,7 @@ hb_script_from_iso15924_tag (hb_tag_t tag)
     case HB_TAG('Q','a','a','i'): return HB_SCRIPT_INHERITED;
     case HB_TAG('Q','a','a','c'): return HB_SCRIPT_COPTIC;
 
-    /* Script variants from http://unicode.org/iso15924/ */
+    /* Script variants from https://unicode.org/iso15924/ */
     case HB_TAG('C','y','r','s'): return HB_SCRIPT_CYRILLIC;
     case HB_TAG('L','a','t','f'): return HB_SCRIPT_LATIN;
     case HB_TAG('L','a','t','g'): return HB_SCRIPT_LATIN;
@@ -434,7 +439,7 @@ hb_script_from_iso15924_tag (hb_tag_t tag)
  * corresponding #hb_script_t. Shorthand for hb_tag_from_string() then
  * hb_script_from_iso15924_tag().
  *
- * Return value: 
+ * Return value:
  * An #hb_script_t corresponding to the ISO 15924 tag.
  *
  * Since: 0.9.2
@@ -464,18 +469,18 @@ hb_script_to_iso15924_tag (hb_script_t script)
 
 /**
  * hb_script_get_horizontal_direction:
- * @script: 
+ * @script:
  *
- * 
  *
- * Return value: 
+ *
+ * Return value:
  *
  * Since: 0.9.2
  **/
 hb_direction_t
 hb_script_get_horizontal_direction (hb_script_t script)
 {
-  /* http://goo.gl/x9ilM */
+  /* https://docs.google.com/spreadsheets/d/1Y90M0Ie3MUJ6UVCRDOypOtijlMDLNNyyLk36T6iMu0o */
   switch ((hb_tag_t) script)
   {
     /* Unicode-1.1 additions */
@@ -530,7 +535,18 @@ hb_script_get_horizontal_direction (hb_script_t script)
     /* Unicode-9.0 additions */
     case HB_SCRIPT_ADLAM:
 
+    /* Unicode-11.0 additions */
+    case HB_SCRIPT_HANIFI_ROHINGYA:
+    case HB_SCRIPT_OLD_SOGDIAN:
+    case HB_SCRIPT_SOGDIAN:
+
       return HB_DIRECTION_RTL;
+
+
+    /* https://github.com/harfbuzz/harfbuzz/issues/1000 */
+    case HB_SCRIPT_OLD_ITALIC:
+
+      return HB_DIRECTION_INVALID;
   }
 
   return HB_DIRECTION_LTR;
@@ -608,13 +624,13 @@ hb_version_string (void)
 
 /**
  * hb_version_atleast:
- * @major: 
- * @minor: 
- * @micro: 
+ * @major:
+ * @minor:
+ * @micro:
  *
- * 
  *
- * Return value: 
+ *
+ * Return value:
  *
  * Since: 0.9.30
  **/
@@ -719,8 +735,14 @@ static HB_LOCALE_T C_locale;
 static void
 free_C_locale (void)
 {
-  if (C_locale)
-    HB_FREE_LOCALE (C_locale);
+retry:
+  HB_LOCALE_T locale = (HB_LOCALE_T) hb_atomic_ptr_get (&C_locale);
+
+  if (!hb_atomic_ptr_cmpexch (&C_locale, locale, nullptr))
+    goto retry;
+
+  if (locale)
+    HB_FREE_LOCALE (locale);
 }
 #endif
 

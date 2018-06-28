@@ -63,6 +63,7 @@ add_task(async function setup_to_default_browserish_state() {
 
   await t1.disable();
   await t2.disable();
+  await new Promise(executeSoon);
   Assert.ok(!t1.isActive, "Theme should be disabled");
   Assert.ok(!t2.isActive, "Theme should be disabled");
   Assert.ok(d.isActive, "Default theme should be active");

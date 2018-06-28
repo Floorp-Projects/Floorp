@@ -955,7 +955,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   }
 
   RefPtr<layers::PlanarYCbCrImage> image =
-    new IMFYCbCrImage(buffer, twoDBuffer);
+    new IMFYCbCrImage(buffer, twoDBuffer, mKnowsCompositor, mImageContainer);
 
   VideoData::SetVideoDataToImage(image,
                                  mVideoInfo,

@@ -2462,32 +2462,11 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
 
   gfxSkipChars skipChars;
 
-  TextRunUserData dummyData;
-  TextRunMappedFlow dummyMappedFlow;
-  TextRunMappedFlow* userMappedFlows;
-  TextRunUserData* userData;
-  TextRunUserData* userDataToDestroy;
-  // If the situation is particularly simple (and common) we don't need to
-  // allocate userData.
-  if (mMappedFlows.Length() == 1 && !mMappedFlows[0].mEndFrame &&
-      mMappedFlows[0].mStartFrame->GetContentOffset() == 0) {
-    userData = &dummyData;
-    userMappedFlows = &dummyMappedFlow;
-    userDataToDestroy = nullptr;
-    dummyData.mMappedFlowCount = mMappedFlows.Length();
-    dummyData.mLastFlowIndex = 0;
-  } else {
-    userData = CreateUserData(mMappedFlows.Length());
-    userMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
-    userDataToDestroy = userData;
-  }
-
-  const nsStyleText* textStyle = nullptr;
   for (uint32_t i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* f = mappedFlow->mStartFrame;
 
-    textStyle = f->StyleText();
+    const nsStyleText* textStyle = f->StyleText();
     nsTextFrameUtils::CompressionMode compression =
       GetCSSWhitespaceToCompressionMode(f, textStyle);
 
@@ -2497,12 +2476,6 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
     int32_t contentStart = mappedFlow->mStartFrame->GetContentOffset();
     int32_t contentEnd = mappedFlow->GetContentEnd();
     int32_t contentLength = contentEnd - contentStart;
-
-    TextRunMappedFlow* newFlow = &userMappedFlows[i];
-    newFlow->mStartFrame = mappedFlow->mStartFrame;
-    newFlow->mDOMOffsetToBeforeTransformOffset = skipChars.GetOriginalCharCount() -
-      mappedFlow->mStartFrame->GetContentOffset();
-    newFlow->mContentLength = contentLength;
 
     nsTextFrameUtils::Flags analysisFlags;
     if (frag->Is2b()) {
@@ -2519,7 +2492,6 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
         AutoTArray<uint8_t,BIG_TEXT_NODE_SIZE> tempBuf;
         uint8_t* bufStart = tempBuf.AppendElements(contentLength, fallible);
         if (!bufStart) {
-          DestroyUserData(userDataToDestroy);
           return false;
         }
         uint8_t* end = nsTextFrameUtils::TransformText(
@@ -2542,8 +2514,6 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
   // This is a bit annoying because it requires another loop over the frames
   // making up the textrun, but I don't see a way to avoid this.
   SetupBreakSinksForTextRun(aTextRun, buffer.Elements());
-
-  DestroyUserData(userDataToDestroy);
 
   return true;
 }

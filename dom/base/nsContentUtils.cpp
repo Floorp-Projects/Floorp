@@ -9380,6 +9380,16 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
     aBuilder.Append(aContent->NodeName());
   }
 
+  CustomElementData* ceData = aContent->GetCustomElementData();
+  if (ceData) {
+    nsAtom* isAttr = ceData->GetIs(aContent);
+    if (isAttr && !aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::is)) {
+      aBuilder.Append(R"( is=")");
+      aBuilder.Append(nsDependentAtomString(isAttr));
+      aBuilder.Append(R"(")");
+    }
+  }
+
   int32_t count = aContent->GetAttrCount();
   for (int32_t i = 0; i < count; i++) {
     const nsAttrName* name = aContent->GetAttrNameAt(i);
@@ -9914,9 +9924,6 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
   int32_t tag = eHTMLTag_unknown;
   bool isCustomElementName = false;
   if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
-    if (aIsAtom && !nsContentUtils::IsNameWithDash(aIsAtom)) {
-      aIsAtom = nullptr;
-    }
     tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
     isCustomElementName = (tag == eHTMLTag_userdefined &&
                            nsContentUtils::IsCustomElementName(name, kNameSpaceID_XHTML));
@@ -10032,6 +10039,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
         } else {
           NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
         }
+        (*aResult)->SetDefined(false);
       }
       return NS_OK;
     }
