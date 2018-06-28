@@ -30,8 +30,6 @@ ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                                "resource://gre/modules/LightweightThemeManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
                                "resource://gre/modules/ProfileAge.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
                                "resource://gre/modules/WindowsRegistry.jsm");
 
@@ -1411,7 +1409,7 @@ EnvironmentCache.prototype = {
   _updateSettings() {
     let updateChannel = null;
     try {
-      updateChannel = UpdateUtils.getUpdateChannel(false);
+      updateChannel = Utils.getUpdateChannel();
     } catch (e) {}
 
     this._currentEnvironment.settings = {
