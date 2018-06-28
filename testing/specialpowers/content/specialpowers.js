@@ -35,9 +35,7 @@ function SpecialPowers(window) {
                            "SPPrefService",
                            "SPProcessCrashService",
                            "SPSetTestPluginEnabledState",
-                           "SPCleanUpSTSData",
-                           "SPRequestDumpCoverageCounters",
-                           "SPRequestResetCoverageCounters"];
+                           "SPCleanUpSTSData"];
 
   this.SP_ASYNC_MESSAGES = ["SpecialPowers.Focus",
                             "SpecialPowers.Quit",
@@ -48,7 +46,9 @@ function SpecialPowers(window) {
                             "SPProcessCrashManagerWait",
                             "SPStartupExtension",
                             "SPUnloadExtension",
-                            "SPExtensionMessage"];
+                            "SPExtensionMessage",
+                            "SPRequestDumpCoverageCounters",
+                            "SPRequestResetCoverageCounters"];
   addMessageListener("SPPingService", this._messageListener);
   addMessageListener("SpecialPowers.FilesCreated", this._messageListener);
   addMessageListener("SpecialPowers.FilesError", this._messageListener);
