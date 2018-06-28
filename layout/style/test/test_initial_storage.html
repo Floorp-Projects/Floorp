@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 <div id="content" style="display: none">
 
 <div id="testnode"></div>
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -24,8 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
     properties and 'unset' on reset properties **/
 
 var gDeclaration = document.getElementById("testnode").style;
-
-var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
 
 /**
  * Checks that the passed-in property-value (returned by getPropertyValue) is
@@ -53,7 +51,7 @@ function test_property(property)
   var info = gCSSProperties[property];
 
   var keywords = ["initial"];
-  if (!info.inherited && gTestUnset)
+  if (!info.inherited)
     keywords.push("unset");
 
   keywords.forEach(function(keyword) {
