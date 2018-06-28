@@ -214,8 +214,17 @@ def check_nsmodules(target, binary):
 
     symbols = sorted(symbols)
     next_addr = None
+    # MSVC linker, when doing incremental linking, adds padding when
+    # merging sections. Allow there to be more space between the NSModule
+    # symbols, as long as they are in the right order.
+    if buildconfig.substs.get('_MSC_VER') and \
+            buildconfig.substs.get('DEVELOPER_OPTIONS'):
+        sym_cmp = lambda guessed, actual: guessed <= actual
+    else:
+        sym_cmp = lambda guessed, actual: guessed == actual
+
     for addr, size, sym in symbols:
-        if next_addr is not None and next_addr != addr:
+        if next_addr is not None and not sym_cmp(next_addr, addr):
             print_symbols(symbols)
             raise RuntimeError('NSModules are not adjacent')
         next_addr = addr + size
