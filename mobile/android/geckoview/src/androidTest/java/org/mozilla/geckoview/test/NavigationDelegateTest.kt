@@ -44,6 +44,20 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("URI should match", uri, endsWith("trackertest.org/tracker.js"))
             }
         })
+
+        sessionRule.session.settings.setBoolean(
+            GeckoSessionSettings.USE_TRACKING_PROTECTION, false)
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+                object : Callbacks.TrackingProtectionDelegate {
+            @AssertCalled(false)
+            override fun onTrackerBlocked(session: GeckoSession, uri: String,
+                                          categories: Int) {
+            }
+        })
     }
 
     @WithDevToolsAPI

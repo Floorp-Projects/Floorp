@@ -8399,18 +8399,32 @@ DispatchFullScreenChange(nsIDocument* aTarget)
 
 static void ClearPendingFullscreenRequests(nsIDocument* aDoc);
 
+static bool
+HasHttpScheme(nsIURI* aURI)
+{
+  bool isHttpish = false;
+  return aURI &&
+         ((NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpish)) && isHttpish) ||
+          (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpish)) && isHttpish));
+}
+
 void
 nsIDocument::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget)
 {
-  if (mDocGroup && Telemetry::CanRecordExtended() &&
-      IsTopLevelContentDocument()) {
+  if (IsTopLevelContentDocument() && GetDocGroup() &&
+      Telemetry::CanRecordExtended()) {
     TabGroup* tabGroup = mDocGroup->GetTabGroup();
 
     if (tabGroup) {
-      Telemetry::Accumulate(Telemetry::ACTIVE_DOCGROUPS_PER_TABGROUP,
-                            tabGroup->Count(true /* aActiveOnly */));
-      Telemetry::Accumulate(Telemetry::TOTAL_DOCGROUPS_PER_TABGROUP,
-                            tabGroup->Count());
+      uint32_t active = tabGroup->Count(true /* aActiveOnly */);
+      uint32_t total = tabGroup->Count();
+
+      if (HasHttpScheme(GetDocumentURI())) {
+        Telemetry::Accumulate(Telemetry::ACTIVE_HTTP_DOCGROUPS_PER_TABGROUP,
+                              active);
+        Telemetry::Accumulate(Telemetry::TOTAL_HTTP_DOCGROUPS_PER_TABGROUP,
+                              total);
+      }
     }
   }
 

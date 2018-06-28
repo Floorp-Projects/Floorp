@@ -214,6 +214,21 @@ public final class GeckoRuntimeSettings implements Parcelable {
                      .set(TrackingProtection.buildPrefValue(categories));
             return this;
         }
+
+        /**
+         * Set whether or not web console messages should go to logcat.
+         *
+         * Note: If enabled, Gecko performance may be negatively impacted if
+         * content makes heavy use of the console API.
+         *
+         * @param enabled A flag determining whether or not web console messages should be
+         *                printed to logcat.
+         * @return The builder instance.
+         */
+        public @NonNull Builder consoleOutput(boolean enabled) {
+            mSettings.mConsoleOutput.set(enabled);
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -266,14 +281,16 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ Pref<String> mTrackingProtection = new Pref<String>(
         "urlclassifier.trackingTable",
         TrackingProtection.buildPrefValue(TrackingProtectionDelegate.CATEGORY_ALL));
+    /* package */ Pref<Boolean> mConsoleOutput = new Pref<Boolean>(
+        "geckoview.console.enabled", false);
 
     /* package */ boolean mNativeCrashReporting;
     /* package */ boolean mJavaCrashReporting;
     /* package */ boolean mDebugPause;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
-        mCookieBehavior, mCookieLifetime, mCookieLifetimeDays, mJavaScript,
-        mRemoteDebugging, mTrackingProtection, mWebFonts
+        mCookieBehavior, mCookieLifetime, mCookieLifetimeDays, mConsoleOutput,
+        mJavaScript, mRemoteDebugging, mTrackingProtection, mWebFonts
     };
 
     /* package */ GeckoRuntimeSettings() {
@@ -563,6 +580,31 @@ public final class GeckoRuntimeSettings implements Parcelable {
             @TrackingProtectionDelegate.Category int categories) {
         mTrackingProtection.set(TrackingProtection.buildPrefValue(categories));
         return this;
+    }
+
+    /**
+     * Set whether or not web console messages should go to logcat.
+     *
+     * Note: If enabled, Gecko performance may be negatively impacted if
+     * content makes heavy use of the console API.
+     *
+     * @param enabled A flag determining whether or not web console messages should be
+     *                printed to logcat.
+     * @return This GeckoRuntimeSettings instance.
+     */
+
+    public @NonNull GeckoRuntimeSettings setConsoleOutputEnabled(boolean enabled) {
+        mConsoleOutput.set(enabled);
+        return this;
+    }
+
+    /**
+     * Get whether or not web console messages are sent to logcat.
+     *
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public boolean getConsoleOutputEnabled() {
+        return mConsoleOutput.get();
     }
 
     @Override // Parcelable
