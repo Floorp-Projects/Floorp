@@ -1131,7 +1131,7 @@ class TokenStreamCharsBase
     TokenStreamCharsBase(JSContext* cx, const CharT* chars, size_t length, size_t startOffset);
 
     static MOZ_ALWAYS_INLINE JSAtom*
-    atomizeChars(JSContext* cx, const CharT* chars, size_t length);
+    atomizeSourceChars(JSContext* cx, const CharT* chars, size_t length);
 
     using SourceUnits = frontend::SourceUnits<CharT>;
 
@@ -1187,7 +1187,8 @@ class TokenStreamCharsBase
 
 template<>
 /* static */ MOZ_ALWAYS_INLINE JSAtom*
-TokenStreamCharsBase<char16_t>::atomizeChars(JSContext* cx, const char16_t* chars, size_t length)
+TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t* chars,
+                                                   size_t length)
 {
     return AtomizeChars(cx, chars, length);
 }
@@ -1538,7 +1539,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   private:
     using TokenStreamCharsShared::appendCodePointToCharBuffer;
-    using CharsBase::atomizeChars;
+    using CharsBase::atomizeSourceChars;
     using GeneralCharsBase::badToken;
     using TokenStreamCharsShared::charBuffer;
     using CharsBase::consumeKnownCodeUnit;
