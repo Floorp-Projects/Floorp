@@ -1063,6 +1063,7 @@ impl RenderBackend {
 
         debug_assert!(op.render || !op.composite);
 
+        let mut render_time = None;
         if op.render && doc.has_pixels() {
             profile_scope!("generate frame");
 
@@ -1071,6 +1072,7 @@ impl RenderBackend {
             // borrow ck hack for profile_counters
             let (pending_update, rendered_document) = {
                 let _timer = profile_counters.total_time.timer();
+                let render_start_time = precise_time_ns();
 
                 let rendered_document = doc.render(
                     &mut self.resource_cache,
@@ -1084,6 +1086,8 @@ impl RenderBackend {
 
                 let msg = ResultMsg::UpdateGpuCache(self.gpu_cache.extract_updates());
                 self.result_tx.send(msg).unwrap();
+
+                render_time = Some(precise_time_ns() - render_start_time);
 
                 let pending_update = self.resource_cache.pending_updates();
                 (pending_update, rendered_document)
@@ -1111,7 +1115,7 @@ impl RenderBackend {
         }
 
         if transaction_msg.generate_frame {
-            self.notifier.new_frame_ready(document_id, op.scroll, op.composite);
+            self.notifier.new_frame_ready(document_id, op.scroll, op.composite, render_time);
         }
     }
 
@@ -1410,7 +1414,7 @@ impl RenderBackend {
             self.result_tx.send(msg_publish).unwrap();
             profile_counters.reset();
 
-            self.notifier.new_frame_ready(id, false, true);
+            self.notifier.new_frame_ready(id, false, true, None);
             self.documents.insert(id, doc);
         }
     }

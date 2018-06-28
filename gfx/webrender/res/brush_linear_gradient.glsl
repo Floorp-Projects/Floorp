@@ -49,11 +49,16 @@ void brush_vs(
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
-    vec4 unused
+    vec4 texel_rect
 ) {
     Gradient gradient = fetch_gradient(prim_address);
 
-    vPos = vi.local_pos - local_rect.p0;
+    if ((brush_flags & BRUSH_FLAG_SEGMENT_RELATIVE) != 0) {
+        vPos = (vi.local_pos - segment_rect.p0) / segment_rect.size;
+        vPos = vPos * (texel_rect.zw - texel_rect.xy) + texel_rect.xy;
+    } else {
+        vPos = vi.local_pos - local_rect.p0;
+    }
 
     vec2 start_point = gradient.start_end_point.xy;
     vec2 end_point = gradient.start_end_point.zw;
