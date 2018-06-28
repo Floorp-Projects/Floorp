@@ -1592,15 +1592,6 @@ protected:
     bool CreateAndInitGL(bool forceEnabled,
                          std::vector<FailureReason>* const out_failReasons);
 
-    typedef already_AddRefed<gl::GLContext> FnCreateGL_T(const gl::SurfaceCaps& caps,
-                                                         gl::CreateContextFlags flags,
-                                                         WebGLContext* webgl,
-                                                         std::vector<FailureReason>* const out_failReasons);
-
-    bool CreateAndInitGLWith(FnCreateGL_T fnCreateGL, const gl::SurfaceCaps& baseCaps,
-                             gl::CreateContextFlags flags,
-                             std::vector<FailureReason>* const out_failReasons);
-
     void ThrowEvent_WebGLContextCreationError(const nsACString& text);
 
     // -------------------------------------------------------------------------
