@@ -3562,25 +3562,22 @@ EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
 struct WorkerInput
 {
     JSRuntime* parentRuntime;
-    char16_t* chars;
+    UniqueTwoByteChars chars;
     size_t length;
 
-    WorkerInput(JSRuntime* parentRuntime, char16_t* chars, size_t length)
-      : parentRuntime(parentRuntime), chars(chars), length(length)
+    WorkerInput(JSRuntime* parentRuntime, UniqueTwoByteChars chars, size_t length)
+      : parentRuntime(parentRuntime), chars(std::move(chars)), length(length)
     {}
 
-    ~WorkerInput() {
-        js_free(chars);
-    }
+    ~WorkerInput() = default;
 };
 
 static void SetWorkerContextOptions(JSContext* cx);
 static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 
 static void
-WorkerMain(void* arg)
+WorkerMain(WorkerInput* input)
 {
-    WorkerInput* input = (WorkerInput*) arg;
     MOZ_ASSERT(input->parentRuntime);
 
     JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime);
@@ -3635,7 +3632,7 @@ WorkerMain(void* arg)
 
         AutoReportException are(cx);
         RootedScript script(cx);
-        if (!JS::Compile(cx, options, input->chars, input->length, &script))
+        if (!JS::Compile(cx, options, input->chars.get(), input->length, &script))
             break;
         RootedValue result(cx);
         JS_ExecuteScript(cx, script, &result);
@@ -3694,15 +3691,16 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     JSLinearString* str = &args[0].toString()->asLinear();
 
-    char16_t* chars = js_pod_malloc<char16_t>(str->length());
+    UniqueTwoByteChars chars(js_pod_malloc<char16_t>(str->length()));
     if (!chars) {
         ReportOutOfMemory(cx);
         return false;
     }
 
-    CopyChars(chars, *str);
+    CopyChars(chars.get(), *str);
 
-    WorkerInput* input = js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
+    WorkerInput* input = js_new<WorkerInput>(JS_GetParentRuntime(cx), std::move(chars),
+                                             str->length());
     if (!input) {
         ReportOutOfMemory(cx);
         return false;
