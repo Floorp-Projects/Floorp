@@ -699,6 +699,12 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
               _ => None,
           }
         }).collect();
+        let send_rids:Vec<&str> = rids.iter().filter_map(|rid| {
+          match rid.direction {
+              SdpSingleDirection::Send => Some(rid.id.as_str()),
+              _ => None,
+          }
+        }).collect();
 
 
         for rid_format in rids.iter().flat_map(|rid| &rid.formats) {
@@ -718,7 +724,6 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
 
         if let Some(&SdpAttribute::Simulcast(ref simulcast)) =
                                             msection.get_attribute(SdpAttributeType::Simulcast) {
-            // This is already a closure as the next Bug 1432931 will require the same procedure
             let check_defined_rids = |simulcast_version_list: &Vec<SdpAttributeSimulcastVersion>,
                                       rid_ids: &[&str]| -> Result<(),SdpParserError> {
                 for simulcast_rid in simulcast_version_list.iter().flat_map(|x| &x.ids) {
@@ -730,7 +735,8 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
                 Ok(())
             };
 
-            check_defined_rids(&simulcast.receive, &recv_rids)?
+            check_defined_rids(&simulcast.receive, &recv_rids)?;
+            check_defined_rids(&simulcast.send, &send_rids)?;
         }
     }
 
