@@ -1431,20 +1431,18 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
         }
     }
 
-    const CharT* chars;
-    size_t length;
-    if (escaping == IdentifierEscapes::SawUnicodeEscape) {
+    JSAtom* atom;
+    if (MOZ_UNLIKELY(escaping == IdentifierEscapes::SawUnicodeEscape)) {
         // Identifiers containing Unicode escapes have to be converted into
         // tokenbuf before atomizing.
         if (!putIdentInCharBuffer(identStart))
             return false;
 
-        chars = charBuffer.begin();
-        length = charBuffer.length();
+        atom = drainCharBufferIntoAtom(anyCharsAccess().cx);
     } else {
         // Escape-free identifiers can be created directly from sourceUnits.
-        chars = identStart;
-        length = sourceUnits.addressOfNextCodeUnit() - identStart;
+        const CharT* chars = identStart;
+        size_t length = sourceUnits.addressOfNextCodeUnit() - identStart;
 
         // Represent reserved words lacking escapes as reserved word tokens.
         if (const ReservedWordInfo* rw = FindReservedWord(chars, length)) {
@@ -1452,9 +1450,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(TokenStart start,
             newSimpleToken(rw->tokentype, start, modifier, out);
             return true;
         }
-    }
 
-    JSAtom* atom = atomizeChars(anyCharsAccess().cx, chars, length);
+        atom = atomizeChars(anyCharsAccess().cx, chars, length);
+    }
     if (!atom)
         return false;
 
@@ -2612,7 +2610,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
             return false;
     }
 
-    JSAtom* atom = atomizeChars(anyCharsAccess().cx, charBuffer.begin(), charBuffer.length());
+    JSAtom* atom = drainCharBufferIntoAtom(anyCharsAccess().cx);
     if (!atom)
         return false;
 
