@@ -27,7 +27,8 @@ body {
   color: var(--theme-selection-color);
 }
 
-:root[platform="win"] {
+:root[platform="win"],
+:root[platform="mac"] {
   /* Set colors for native scrollbars on Windows dark theme */
   /* Other platforms support for scrollbar theming is Bug 1460109 */
   scrollbar-face-color: var(--theme-body-color-inactive);
