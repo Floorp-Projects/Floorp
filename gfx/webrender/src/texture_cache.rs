@@ -501,7 +501,6 @@ impl TextureCache {
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
             (ImageFormat::RGBAF32, _) |
             (ImageFormat::RG8, _) |
-            (ImageFormat::RGBAI32, _) |
             (ImageFormat::R8, TextureFilter::Nearest) |
             (ImageFormat::R8, TextureFilter::Trilinear) |
             (ImageFormat::BGRA8, TextureFilter::Trilinear) => unreachable!(),
@@ -726,7 +725,6 @@ impl TextureCache {
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
             (ImageFormat::RGBAF32, _) |
-            (ImageFormat::RGBAI32, _) |
             (ImageFormat::R8, TextureFilter::Nearest) |
             (ImageFormat::R8, TextureFilter::Trilinear) |
             (ImageFormat::BGRA8, TextureFilter::Trilinear) |

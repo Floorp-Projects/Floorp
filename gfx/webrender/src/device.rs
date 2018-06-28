@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use super::super::shader_source;
+use super::shader_source;
 use api::{ColorF, ImageFormat};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceUintRect, DeviceUintSize};
 use api::TextureTarget;
@@ -2234,11 +2234,6 @@ impl Device {
                 external: gl::RGBA,
                 pixel_type: gl::FLOAT,
             },
-            ImageFormat::RGBAI32 => FormatDesc {
-                internal: gl::RGBA32I as _,
-                external: gl::RGBA_INTEGER,
-                pixel_type: gl::INT,
-            },
             ImageFormat::RG8 => FormatDesc {
                 internal: gl::RG8 as _,
                 external: gl::RG,
@@ -2365,7 +2360,6 @@ impl<'a> UploadTarget<'a> {
             ImageFormat::BGRA8 => (self.bgra_format, 4, gl::UNSIGNED_BYTE),
             ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
             ImageFormat::RGBAF32 => (gl::RGBA, 16, gl::FLOAT),
-            ImageFormat::RGBAI32 => (gl::RGBA_INTEGER, 16, gl::INT),
         };
 
         let row_length = match chunk.stride {
