@@ -54,9 +54,13 @@ build_binutils() {
 }
 
 build_gcc() {
+  # Be explicit about --build and --target so header and library install
+  # directories are consistent.
+  local target="${1:-x86_64-unknown-linux-gnu}"
+
   mkdir $root_dir/gcc-objdir
   pushd $root_dir/gcc-objdir
-  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
+  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
   make $make_flags
   make $make_flags install DESTDIR=$root_dir
 
