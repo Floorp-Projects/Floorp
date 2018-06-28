@@ -648,7 +648,7 @@ ElementEditor.prototype = {
     event.stopPropagation();
 
     const target = event.target;
-    if (target.dataset.display !== "grid" || target.dataset.display !== "inline-grid") {
+    if (target.dataset.display !== "grid" && target.dataset.display !== "inline-grid") {
       return;
     }
 
