@@ -81,7 +81,7 @@ function startTest() {
   var extendedButton = document.createElement("button", {is: "x-extended-button"});
   is(extendedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
   is(extendedButton.__proto__, ExtendButton.prototype, "Created element should have the prototype of the extended type.");
-  is(extendedButton.getAttribute("is"), null, "The |is| attribute of the created element should not be the extended type.");
+  is(extendedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
   is(extendedButton.type, "submit", "Created element should be a button with type of \"submit\"");
 
   // Custom element constructor.
@@ -94,35 +94,6 @@ function startTest() {
   customElements.define("x-in-html-namespace", XInHTMLNamespace);
   var wrongNamespaceElem = document.createElementNS("http://www.w3.org/2000/svg", "x-in-html-namespace");
   isnot(wrongNamespaceElem.__proto__, XInHTMLNamespace.prototype, "Definition for element in html namespace should not apply to SVG elements.");
-
-  var div = document.createElement("div");
-  div.appendChild(extendedButton);
-  is(div.innerHTML, '<button is="x-extended-button"></button>', "'is value' should be serialized.");
-
-  const de = SpecialPowers.Ci.nsIDocumentEncoder;
-  var htmlencoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-                                 .createInstance(de);
-  htmlencoder.init(document, "text/html", de.OutputLFLineBreak);
-  htmlencoder.setCharset("UTF-8");
-  htmlencoder.setContainerNode(div);
-  is(htmlencoder.encodeToString(), '<button is="x-extended-button"></button>',
-     "'is value' should be serialized (html).");
-
-  var xhtmlencoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
-                                  .createInstance(de);
-  xhtmlencoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak);
-  xhtmlencoder.setCharset("UTF-8");
-  xhtmlencoder.setContainerNode(div);
-  is(xhtmlencoder.encodeToString(), '<button is="x-extended-button" xmlns="http://www.w3.org/1999/xhtml"></button>',
-     "'is value' should be serialized (xhtml).");
-
-  var xmlencoder = SpecialPowers.Cc["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
-                                  .createInstance(de);
-  xmlencoder.init(document, "text/xml", de.OutputLFLineBreak);
-  xmlencoder.setCharset("UTF-8");
-  xmlencoder.setContainerNode(div);
-  is(xmlencoder.encodeToString(), '<button is="x-extended-button" xmlns="http://www.w3.org/1999/xhtml"></button>',
-     "'is value' should be serialized (xml).");
 }
 
 startTest();
