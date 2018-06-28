@@ -547,7 +547,9 @@ HTMLTooltip.prototype = {
 
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
-      this._maybeFocusTooltip();
+      if (this.autofocus) {
+        this.focus();
+      }
       // Update the top window reference each time in case the host changes.
       this.topWindow = this._getTopWindow();
       this.topWindow.addEventListener("click", this._onClick, true);
@@ -760,14 +762,29 @@ HTMLTooltip.prototype = {
   },
 
   /**
-   * If the tooltip is configured to autofocus and a focusable element can be
-   * found, focus it.
+   * Focus on the first focusable item in the tooltip.
+   *
+   * Returns true if we found something to focus on, false otherwise.
    */
-  _maybeFocusTooltip: function() {
+  focus: function() {
     const focusableElement = this.panel.querySelector(focusableSelector);
-    if (this.autofocus && focusableElement) {
+    if (focusableElement) {
       focusableElement.focus();
     }
+    return !!focusableElement;
+  },
+
+  /**
+   * Focus on the last focusable item in the tooltip.
+   *
+   * Returns true if we found something to focus on, false otherwise.
+   */
+  focusEnd: function() {
+    const focusableElements = this.panel.querySelectorAll(focusableSelector);
+    if (focusableElements.length) {
+      focusableElements[focusableElements.length - 1].focus();
+    }
+    return focusableElements.length !== 0;
   },
 
   _getTopWindow: function() {
