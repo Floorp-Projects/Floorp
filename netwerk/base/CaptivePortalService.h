@@ -33,17 +33,15 @@ public:
   NS_DECL_NSICAPTIVEPORTALCALLBACK
   NS_DECL_NSINAMED
 
+  CaptivePortalService();
   nsresult Initialize();
   nsresult Start();
   nsresult Stop();
-
-  static already_AddRefed<nsICaptivePortalService> GetSingleton();
 
   // This method is only called in the content process, in order to mirror
   // the captive portal state in the parent process.
   void SetStateInChild(int32_t aState);
 private:
-  CaptivePortalService();
   virtual ~CaptivePortalService();
   nsresult PerformCheck();
   nsresult RearmTimer();
