@@ -20,7 +20,7 @@ let windowData, testWindow;
 
 add_task(async function setup() {
   let chromeScript = SpecialPowers.loadChromeScript(function() {
-    ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services.cache2.clear();
+    Services.cache2.clear();
   });
   chromeScript.destroy();
 
@@ -78,13 +78,6 @@ add_task(async function test_webRequest_filter_window() {
     },
   };
 
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: SimpleTest.getTestFileURL("file_image_bad.png"),
-    };
-  }
-
   let extension = makeExtension(events);
   await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});
@@ -132,13 +125,6 @@ add_task(async function test_webRequest_filter_tab() {
       // cached: AppConstants.MOZ_BUILD_APP === "browser",
     },
   };
-
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: SimpleTest.getTestFileURL(img),
-    };
-  }
 
   let extension = makeExtension(events);
   await extension.startup();

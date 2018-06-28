@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html><head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <link rel="icon" href="file_bug970276_favicon1.ico" type="image/ico" id="i">
+  <link rel="icon" href="http://example.org/one-icon" type="image/ico" id="i">
 </head>
 <body onload="onload()">
   <script>
@@ -9,9 +9,9 @@
     var ico = document.createElement("link");
     ico.setAttribute("rel", "icon");
     ico.setAttribute("type", "image/ico");
-    ico.setAttribute("href", "file_bug970276_favicon1.ico");
+    ico.setAttribute("href", "http://example.org/other-icon");
     setTimeout(function() {
-      ico.setAttribute("href", "file_generic_favicon.ico");
+      ico.setAttribute("href", "http://example.org/yet-another-icon");
       document.getElementById("i").remove();
       document.head.appendChild(ico);
     }, 1000);

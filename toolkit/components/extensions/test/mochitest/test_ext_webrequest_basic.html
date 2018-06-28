@@ -30,10 +30,6 @@ add_task(async function setup() {
   let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
   let cache = imgTools.getImgCacheForDocument(document);
   cache.clearCache(false);
-  function clearCache() {
-    ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services.cache2.clear();
-  }
-  SpecialPowers.loadChromeScript(clearCache);
 
   await SpecialPowers.pushPrefEnv({
     set: [["network.http.rcwn.enabled", false]],
@@ -54,7 +50,6 @@ add_task(async function setup() {
 // cancel: event in which we return cancel=true.  cancelled message is sent.
 // cached: expected fromCache value, default is false, checked in onCompletion
 // headers: request or response headers to modify
-// origin: The expected originUrl, a default origin can be passed for all files
 
 add_task(async function test_webRequest_links() {
   let expect = {
@@ -273,24 +268,14 @@ add_task(async function test_webRequest_tabId() {
   });
   await tabExt.startup();
 
-  let linkUrl = `file_WebRequest_page3.html?trigger=a&nocache=${Math.random()}`;
   let expect = {
     "file_WebRequest_page3.html": {
       type: "main_frame",
     },
   };
-
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: SimpleTest.getTestFileURL(linkUrl),
-      cached: false,
-    };
-  }
-
   extension.sendMessage("set-expected", {expect, origin: location.href});
   await extension.awaitMessage("continue");
-  let a = addLink(linkUrl);
+  let a = addLink(`file_WebRequest_page3.html?trigger=a&nocache=${Math.random()}`);
   a.click();
   await extension.awaitMessage("done");
 
@@ -313,14 +298,13 @@ add_task(async function test_webRequest_tabId_browser() {
     tabId = tab.id;
   }
 
-  let pageUrl = `${SimpleTest.getTestFileURL("file_sample.html")}?nocache=${Math.random()}`;
   let tabExt = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
         "tabs",
       ],
     },
-    background: `(${background})('${pageUrl}')`,
+    background: `(${background})('${SimpleTest.getTestFileURL("file_sample.html")}?nocache=${Math.random()}')`,
   });
 
   let expect = {
@@ -328,15 +312,6 @@ add_task(async function test_webRequest_tabId_browser() {
       type: "main_frame",
     },
   };
-
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: pageUrl,
-      cached: true,
-    };
-  }
-
   // expecting origin == undefined
   extension.sendMessage("set-expected", {expect});
   await extension.awaitMessage("continue");
