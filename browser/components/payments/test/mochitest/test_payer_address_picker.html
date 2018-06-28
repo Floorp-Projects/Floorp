@@ -32,13 +32,6 @@ Test the paymentOptions address-picker
 
 import PaymentDialog from "../../res/containers/payment-dialog.js";
 
-function getVisiblePickerOptions(picker) {
-  let select = picker.querySelector(":scope > rich-select");
-  let options = select.querySelectorAll("address-option");
-  let visibleOptions = Array.from(options).filter(isVisible);
-  return visibleOptions;
-}
-
 function isVisible(elem) {
   let result = elem.getBoundingClientRect().height > 0;
   return result;
@@ -186,19 +179,17 @@ add_task(async function test_visible_fields() {
 
   await asyncElementRendered();
 
-  let visibleOptions = getVisiblePickerOptions(elPicker);
-  let visibleOption = visibleOptions[0];
-
+  let closedRichOption = elPicker.dropdown.querySelector(".rich-select-selected-option");
   is(elPicker.dropdown.popupBox.children.length, 2, "Check dropdown has 2 addresses");
-  is(visibleOptions.length, 1, "One option should be visible");
-  is(visibleOption.getAttribute("guid"), "48bnds6854t", "expected option is visible");
+  is(closedRichOption.getAttribute("guid"), "48bnds6854t", "expected option is visible");
 
   for (let fieldName of ["name", "email", "tel"]) {
-    let elem = visibleOption.querySelector(`.${fieldName}`);
+    let elem = closedRichOption.querySelector(`.${fieldName}`);
     ok(elem, `field ${fieldName} exists`);
     ok(isVisible(elem), `field ${fieldName} is visible`);
   }
-  ok(!isVisible(visibleOption.querySelector(".street-address")), "street-address is not visible");
+  ok(!isVisible(closedRichOption.querySelector(".street-address")),
+     "street-address is not visible");
 });
 
 add_task(async function test_selective_fields() {
@@ -223,10 +214,10 @@ add_task(async function test_selective_fields() {
     setPaymentOptions(requestStore, payerFields);
     await asyncElementRendered();
 
-    let visibleOption = getVisiblePickerOptions(elPicker)[0];
-    let elName = visibleOption.querySelector(".name");
-    let elEmail = visibleOption.querySelector(".email");
-    let elPhone = visibleOption.querySelector(".tel");
+    let closedRichOption = elPicker.dropdown.querySelector(".rich-select-selected-option");
+    let elName = closedRichOption.querySelector(".name");
+    let elEmail = closedRichOption.querySelector(".email");
+    let elPhone = closedRichOption.querySelector(".tel");
 
     is(isVisible(elName), payerFields.requestPayerName,
        "name field is correctly toggled");
@@ -252,15 +243,12 @@ add_task(async function test_filtered_options() {
 
   await asyncElementRendered();
 
-  let visibleOptions = getVisiblePickerOptions(elPicker);
-  let visibleOption = visibleOptions[0];
-
-  is(elPicker.dropdown.popupBox.children.length, 4, "Check dropdown has 3 addresses");
-  is(visibleOptions.length, 1, "One option should be visible");
-  is(visibleOption.getAttribute("guid"), "a9e830667189", "expected option is visible");
+  let closedRichOption = elPicker.dropdown.querySelector(".rich-select-selected-option");
+  is(elPicker.dropdown.popupBox.children.length, 4, "Check dropdown has 4 addresses");
+  is(closedRichOption.getAttribute("guid"), "a9e830667189", "expected option is visible");
 
   for (let fieldName of ["name", "email"]) {
-    let elem = visibleOption.querySelector(`.${fieldName}`);
+    let elem = closedRichOption.querySelector(`.${fieldName}`);
     ok(elem, `field ${fieldName} exists`);
     ok(isVisible(elem), `field ${fieldName} is visible`);
   }
@@ -271,13 +259,11 @@ add_task(async function test_filtered_options() {
   await asyncElementRendered();
 
   is(elPicker.dropdown.popupBox.children.length, 1, "Check dropdown has 1 addresses");
-  is(visibleOptions.length, 1, "One option should be visible");
 
   setPaymentOptions(requestStore, {});
   await asyncElementRendered();
 
   is(elPicker.dropdown.popupBox.children.length, 4, "Check dropdown has 4 addresses");
-  is(visibleOptions.length, 1, "One option should be visible");
 });
 
 add_task(async function test_no_matches() {
@@ -304,9 +290,9 @@ add_task(async function test_no_matches() {
 
   await asyncElementRendered();
 
-  let visibleOptions = getVisiblePickerOptions(elPicker);
+  let closedRichOption = elPicker.dropdown.querySelector(".rich-select-selected-option");
   is(elPicker.dropdown.popupBox.children.length, 0, "Check dropdown is empty");
-  is(visibleOptions.length, 0, "No options should be visible");
+  ok(closedRichOption.localName !== "address-option", "No option is selected and visible");
 });
 
 </script>

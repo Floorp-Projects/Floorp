@@ -84,19 +84,17 @@ var PaymentTestUtils = {
 
   DialogContentTasks: {
     getShippingOptions: () => {
-      let select = content.document.querySelector("shipping-option-picker > rich-select");
-      let popupBox = Cu.waiveXrays(select).popupBox;
-      let selectedOptionIndex = Array.from(popupBox.children)
-                                     .findIndex(item => item.hasAttribute("selected"));
-      let selectedOption = popupBox.children[selectedOptionIndex];
-      let currencyAmount = selectedOption.querySelector("currency-amount");
+      let picker = content.document.querySelector("shipping-option-picker");
+      let popupBox = Cu.waiveXrays(picker).dropdown.popupBox;
+      let selectedOptionIndex = popupBox.selectedIndex;
+      let selectedOption = Cu.waiveXrays(picker).dropdown.selectedOption;
       return {
         optionCount: popupBox.children.length,
         selectedOptionIndex,
         selectedOptionID: selectedOption.getAttribute("value"),
         selectedOptionLabel: selectedOption.getAttribute("label"),
-        selectedOptionCurrency: currencyAmount.getAttribute("currency"),
-        selectedOptionValue: currencyAmount.getAttribute("value"),
+        selectedOptionCurrency: selectedOption.getAttribute("amount-currency"),
+        selectedOptionValue: selectedOption.getAttribute("amount-value"),
       };
     },
 
@@ -104,12 +102,11 @@ var PaymentTestUtils = {
       let doc = content.document;
       let addressPicker =
         doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
-      let select = addressPicker.querySelector("rich-select");
-      let popupBox = Cu.waiveXrays(select).popupBox;
+      let popupBox = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       let options = Array.from(popupBox.children).map(option => {
         return {
-          guid: option.guid,
-          country: option.country,
+          guid: option.getAttribute("guid"),
+          country: option.getAttribute("country"),
           selected: option.selected,
         };
       });
@@ -120,34 +117,37 @@ var PaymentTestUtils = {
       };
     },
 
-    selectShippingAddressByCountry: country => {
+    selectShippingAddressByCountry: (country) => {
       let doc = content.document;
       let addressPicker =
         doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
-      let select = addressPicker.querySelector("rich-select");
+      let select = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       let option = select.querySelector(`[country="${country}"]`);
-      select.click();
-      option.click();
+      select.focus();
+      // eslint-disable-next-line no-undef
+      EventUtils.synthesizeKey(option.label, {}, content.window);
     },
 
     selectShippingAddressByGuid: guid => {
       let doc = content.document;
       let addressPicker =
         doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
-      let select = addressPicker.querySelector("rich-select");
+      let select = Cu.waiveXrays(addressPicker).dropdown.popupBox;
       let option = select.querySelector(`[guid="${guid}"]`);
-      select.click();
-      option.click();
+      select.focus();
+      // eslint-disable-next-line no-undef
+      EventUtils.synthesizeKey(option.label, {}, content.window);
     },
 
     selectShippingOptionById: value => {
       let doc = content.document;
       let optionPicker =
         doc.querySelector("shipping-option-picker");
-      let select = optionPicker.querySelector("rich-select");
+      let select = Cu.waiveXrays(optionPicker).dropdown.popupBox;
       let option = select.querySelector(`[value="${value}"]`);
-      select.click();
-      option.click();
+      select.focus();
+      // eslint-disable-next-line no-undef
+      EventUtils.synthesizeKey(option.textContent, {}, content.window);
     },
 
     /**

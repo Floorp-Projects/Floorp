@@ -73,11 +73,11 @@ add_task(async function test_initialSet() {
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 2, "Check dropdown has both options");
   ok(options[0].textContent.includes("Carrier Pigeon"), "Check first option");
-  is(options[0].querySelector(".amount").currency, "USD", "Check currency");
+  is(options[0].getAttribute("amount-currency"), "USD", "Check currency");
   ok(options[1].textContent.includes("Lightspeed (default)"), "Check second option");
   is(picker1.dropdown.selectedOption, options[1], "Lightspeed selected by default");
 
-  let selectedClone = picker1.dropdown.querySelector(".rich-select-selected-clone");
+  let selectedClone = picker1.dropdown.querySelector(".rich-select-selected-option");
   let text = selectedClone.textContent;
   ok(text.includes("$20.00"),
      "Shipping option clone should include amount. Value = " + text);
@@ -120,7 +120,7 @@ add_task(async function test_update() {
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 2, "Check dropdown still has both options");
   ok(options[0].textContent.includes("Tortoise"), "Check updated first option");
-  is(options[0].querySelector(".amount").currency, "CAD", "Check currency");
+  is(options[0].getAttribute("amount-currency"), "CAD", "Check currency");
   ok(options[1].textContent.includes("Lightspeed (default)"), "Check second option is the same");
   is(picker1.dropdown.selectedOption, options[1], "Lightspeed selected by default");
 });
@@ -136,8 +136,8 @@ add_task(async function test_change_selected_option() {
      "store's selected option should match selected element");
 
   let stateChangedPromise = promiseStateChange(picker1.requestStore);
-  picker1.dropdown.click();
-  options[0].click();
+  picker1.dropdown.popupBox.focus();
+  synthesizeKey(options[0].textContent, {});
   state = await stateChangedPromise;
 
   selectedOption = picker1.dropdown.selectedOption;
