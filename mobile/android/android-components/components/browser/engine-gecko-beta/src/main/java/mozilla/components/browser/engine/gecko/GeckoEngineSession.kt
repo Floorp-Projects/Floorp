@@ -5,12 +5,12 @@
 package mozilla.components.browser.engine.gecko
 
 import kotlinx.coroutines.experimental.CompletableDeferred
-import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import kotlinx.coroutines.experimental.launch
 
 /**
  * Gecko-based EngineSession implementation.

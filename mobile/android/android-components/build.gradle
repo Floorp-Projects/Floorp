@@ -36,12 +36,13 @@ buildscript {
 
     // Synchronized versions numbers of GeckoView (Beta) artifacts.
     ext.geckoBeta = [
-        // (61.0b14)
-        revision: '585281dde9604ddd197693ca5330f2b95987a181',
-        version: '61.0.20180614135649'
+        // mozilla-beta: FENNEC_62_0b3_RELEASE
+        revision: '1716b76aa7b8df189e74bf87394d3a11e0c5ac12',
+        version: '62.0.20180625141512'
     ]
 
     ext.geckoRelease = [
+        // mozilla-release: FENNEC_61_0_RELEASE
         revision: '785d242a5b01d5f1094882aa2144d8e5e2791e06',
         version: '61.0.20180621125625'
     ]
