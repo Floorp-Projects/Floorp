@@ -1502,7 +1502,7 @@ var AddonManagerInternal = {
    *         A boolean indicating if the change will only take place the next
    *         time the application is restarted
    */
-  async notifyAddonChanged(aID, aType, aPendingRestart) {
+  notifyAddonChanged(aID, aType, aPendingRestart) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1530,10 +1530,7 @@ var AddonManagerInternal = {
     // removed by bug 520124, so this is a temporary quick'n'dirty hack.
     let providers = [...this.providers, ...this.pendingProviders];
     for (let provider of providers) {
-      let result = callProvider(provider, "addonChanged", null, aID, aType, aPendingRestart);
-      if (result) {
-        await result;
-      }
+      callProvider(provider, "addonChanged", null, aID, aType, aPendingRestart);
     }
   },
 
