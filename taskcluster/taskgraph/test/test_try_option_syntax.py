@@ -33,7 +33,11 @@ tasks = {k: v for k, v in [
     unittest_task('mochitest-browser-chrome', 'linux/opt'),
     unittest_task('mochitest-browser-chrome-e10s', 'linux64/opt'),
     unittest_task('mochitest-chrome', 'linux/debug', 'debug'),
-    unittest_task('mochitest-webgl', 'linux/debug', 'debug'),
+    unittest_task('mochitest-webgl1-core', 'linux/debug', 'debug'),
+    unittest_task('mochitest-webgl1-ext', 'linux/debug', 'debug'),
+    unittest_task('mochitest-webgl2-core', 'linux/debug', 'debug'),
+    unittest_task('mochitest-webgl2-ext', 'linux/debug', 'debug'),
+    unittest_task('mochitest-webgl2-deqp', 'linux/debug', 'debug'),
     unittest_task('extra1', 'linux', 'debug/opt'),
     unittest_task('extra2', 'win32/opt'),
     unittest_task('crashtest-e10s', 'linux/other'),
@@ -178,16 +182,22 @@ class TestTryOptionSyntax(unittest.TestCase):
         self.assertEqual(sorted(tos.unittests), sorted([{'test': t} for t in unittest_tasks]))
 
     def test_u_single(self):
-        "-u mochitest-webgl sets unittests=[mochitest-webgl]"
-        parameters = {'try_options': parse_message('try: -u mochitest-webgl')}
+        "-u mochitest-webgl1-core sets unittests=[mochitest-webgl1-core]"
+        parameters = {'try_options': parse_message('try: -u mochitest-webgl1-core')}
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
-        self.assertEqual(sorted(tos.unittests), sorted([{'test': 'mochitest-webgl'}]))
+        self.assertEqual(sorted(tos.unittests), sorted([{'test': 'mochitest-webgl1-core'}]))
 
     def test_u_alias(self):
-        "-u mochitest-gl sets unittests=[mochitest-webgl]"
+        "-u mochitest-gl sets unittests=[mochitest-webgl*]"
         parameters = {'try_options': parse_message('try: -u mochitest-gl')}
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
-        self.assertEqual(sorted(tos.unittests), sorted([{'test': 'mochitest-webgl'}]))
+        self.assertEqual(sorted(tos.unittests), sorted([{'test': t} for t in [
+            'mochitest-webgl1-core',
+            'mochitest-webgl1-ext',
+            'mochitest-webgl2-core',
+            'mochitest-webgl2-ext',
+            'mochitest-webgl2-deqp',
+        ]]))
 
     def test_u_multi_alias(self):
         "-u e10s sets unittests=[all e10s unittests]"
@@ -198,11 +208,11 @@ class TestTryOptionSyntax(unittest.TestCase):
         ]))
 
     def test_u_commas(self):
-        "-u mochitest-webgl,gtest sets unittests=both"
-        parameters = {'try_options': parse_message('try: -u mochitest-webgl,gtest')}
+        "-u mochitest-webgl1-core,gtest sets unittests=both"
+        parameters = {'try_options': parse_message('try: -u mochitest-webgl1-core,gtest')}
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([
-            {'test': 'mochitest-webgl'},
+            {'test': 'mochitest-webgl1-core'},
             {'test': 'gtest'},
         ]))
 

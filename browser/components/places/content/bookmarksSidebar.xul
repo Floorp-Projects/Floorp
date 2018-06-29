@@ -12,13 +12,16 @@
 %placesDTD;
 <!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
 ]>
 
 <page id="bookmarksPanel"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="init();"
-      onunload="PlacesUIUtils.setMouseoverURL('', window);">
+      onunload="PlacesUIUtils.setMouseoverURL('', window);"
+      aria-label="&bookmarksButton.label;">
 
   <script type="application/javascript"
           src="chrome://browser/content/places/bookmarksSidebar.js"/>

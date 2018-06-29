@@ -2954,9 +2954,6 @@ pref("layout.css.osx-font-smoothing.enabled", false);
 // Is support for the CSS-wide "unset" value enabled?
 pref("layout.css.unset-value.enabled", true);
 
-// Is support for the "all" shorthand enabled?
-pref("layout.css.all-shorthand.enabled", true);
-
 // Is support for CSS overflow-clip-box enabled for non-UA sheets?
 pref("layout.css.overflow-clip-box.enabled", false);
 

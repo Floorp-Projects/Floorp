@@ -20,7 +20,7 @@ required_settings = ['apps', 'type', 'page_cycles', 'test_url', 'measure',
 
 playback_settings = ['playback_binary_manifest', 'playback_binary_zip_mac',
                      'playback_pageset_manifest', 'playback_pageset_zip_mac',
-                     'playback_recordings']
+                     'playback_recordings', 'python3_win_manifest']
 
 
 def filter_app(tests, values):

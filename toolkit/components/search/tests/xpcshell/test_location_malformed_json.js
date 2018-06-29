@@ -18,16 +18,12 @@ function promiseTimezoneMessage() {
 }
 
 function run_test() {
-  // setup a console listener for the timezone fallback message.
-  let promiseTzMessage = promiseTimezoneMessage();
-
   // Here we have malformed JSON
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code"');
   Services.search.init(() => {
     ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
-    // fetch the engines - this should force the timezone check, but still
-    // doesn't persist any prefs.
+    // fetch the engines - this should not persist any prefs.
     Services.search.getEngines();
     ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
@@ -40,14 +36,8 @@ function run_test() {
       let snapshot = histogram.snapshot();
       deepEqual(snapshot.counts, [1, 0, 0]); // boolean probe so 3 buckets, expect 1 result for |0|.
     }
-
-    // Check we saw the timezone fallback message.
-    promiseTzMessage.then(msg => {
-      print("Timezone message:", msg.message);
-      ok(msg.message.endsWith(isUSTimezone().toString()), "fell back to timezone and it matches our timezone");
-      do_test_finished();
-      run_next_test();
-    });
+    do_test_finished();
+    run_next_test();
   });
   do_test_pending();
 }

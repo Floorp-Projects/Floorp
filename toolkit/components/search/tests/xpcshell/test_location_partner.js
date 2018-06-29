@@ -3,7 +3,7 @@
 
 add_task(async function run_test() {
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code": "US"}');
-  Services.prefs.setCharPref("distribution.id", "partner-1");
+  Services.prefs.getDefaultBranch("").setCharPref("distribution.id", "partner-1");
 
   await setUpGeoDefaults();
   await asyncReInit();

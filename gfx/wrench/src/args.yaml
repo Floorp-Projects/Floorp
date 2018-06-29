@@ -67,6 +67,10 @@ args:
   - no_batch:
       long: no-batch
       help: Disable batching of instanced draw calls
+  - chase:
+      long: chase
+      help: Chase a particular primitive matching the local rect
+      takes_value: true
 
 subcommands:
     - png:

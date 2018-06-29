@@ -18,7 +18,6 @@ import mozharness
 
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
-from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.codecoverage import (
@@ -44,7 +43,7 @@ RaptorErrorList = PythonErrorList + [
 ]
 
 
-class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin):
+class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
     """
     install and run raptor tests
     """

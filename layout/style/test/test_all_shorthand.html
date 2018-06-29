@@ -154,6 +154,5 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ "set": [["layout.css.all-shorthand.enabled", true],
-                                    ["layout.css.unset-value.enabled", true]] }, runTest);
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.unset-value.enabled", true]] }, runTest);
 </script>

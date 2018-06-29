@@ -22,8 +22,19 @@ here = os.path.dirname(os.path.realpath(__file__))
 LOG = get_proxy_logger(component='raptor-mitmproxy')
 
 # needed so unit tests can find their imports
-mozharness_dir = os.path.join(here, '../../../mozharness')
+if os.environ.get('SCRIPTSPATH', None) is not None:
+    # in production it is env SCRIPTS_PATH
+    mozharness_dir = os.environ['SCRIPTSPATH']
+else:
+    # locally it's in source tree
+    mozharness_dir = os.path.join(here, '../../../mozharness')
 sys.path.insert(0, mozharness_dir)
+
+# required for using a python3 virtualenv on win for mitmproxy
+from mozharness.base.python import Python3Virtualenv
+from mozharness.mozilla.testing.testbase import TestingMixin
+from mozharness.base.vcs.vcsbase import MercurialScript
+
 raptor_dir = os.path.join(here, '..')
 sys.path.insert(0, raptor_dir)
 
@@ -69,11 +80,12 @@ pref("network.proxy.ssl_port", 8080);
 '''
 
 
-class Mitmproxy(Playback):
+class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
 
     def __init__(self, config):
         self.config = config
         self.mitmproxy_proc = None
+        self.mitmdump_path = None
         self.recordings = config.get('playback_recordings', None)
         self.browser_path = config.get('binary', None)
 
@@ -94,6 +106,11 @@ class Mitmproxy(Playback):
 
         # go ahead and download and setup mitmproxy
         self.download()
+
+        # on windows we must use a python3 virtualen for mitmproxy
+        if 'win' in self.config['platform']:
+            self.setup_py3_virtualenv()
+
         # mitmproxy must be started before setup, so that the CA cert is available
         self.start()
         self.setup()
@@ -120,15 +137,57 @@ class Mitmproxy(Playback):
         # note: tooltool automatically unpacks the files as well
         if not os.path.exists(self.raptor_dir):
             os.makedirs(self.raptor_dir)
-        LOG.info("downloading mitmproxy binary")
-        _manifest = os.path.join(here, self.config['playback_binary_manifest'])
-        transformed_manifest = transform_platform(_manifest, self.config['platform'])
-        self._tooltool_fetch(transformed_manifest)
+
+        if 'win' in self.config['platform']:
+            # on windows we need a python3 environment and use our own package from tooltool
+            self.py3_path = self.fetch_python3()
+            LOG.info("python3 path is: %s" % self.py3_path)
+        else:
+            # on osx and linux we use pre-built binaries
+            LOG.info("downloading mitmproxy binary")
+            _manifest = os.path.join(here, self.config['playback_binary_manifest'])
+            transformed_manifest = transform_platform(_manifest, self.config['platform'])
+            self._tooltool_fetch(transformed_manifest)
+
+        # we use one pageset for all platforms (pageset was recorded on win10)
         LOG.info("downloading mitmproxy pageset")
         _manifest = os.path.join(here, self.config['playback_pageset_manifest'])
         transformed_manifest = transform_platform(_manifest, self.config['platform'])
         self._tooltool_fetch(transformed_manifest)
         return
+
+    def fetch_python3(self):
+        """Mitmproxy on windows needs Python 3.x"""
+        python3_path = os.path.join(self.raptor_dir, 'python3.6', 'python')
+        if not os.path.exists(os.path.dirname(python3_path)):
+            _manifest = os.path.join(here, self.config['python3_win_manifest'])
+            transformed_manifest = transform_platform(_manifest, self.config['platform'],
+                                                      self.config['processor'])
+            LOG.info("downloading py3 package for mitmproxy windows: %s" % transformed_manifest)
+            self._tooltool_fetch(transformed_manifest)
+        cmd = [python3_path, '--version']
+        # just want python3 ver printed in production log
+        subprocess.Popen(cmd, env=os.environ.copy())
+        return python3_path
+
+    def setup_py3_virtualenv(self):
+        """Mitmproxy on windows needs Python 3.x; set up a separate py 3.x env here"""
+        LOG.info("Setting up python 3.x virtualenv, required for mitmproxy on windows")
+        # these next two are required for py3_venv_configuration
+        self.abs_dirs = {'base_work_dir': mozharness_dir}
+        self.log_obj = None
+        # now create the py3 venv
+        venv_path = os.path.join(self.raptor_dir, 'py3venv')
+        self.py3_venv_configuration(python_path=self.py3_path, venv_path=venv_path)
+        self.py3_create_venv()
+        self.py3_install_modules(["cffi==1.10.0"])
+        requirements = [os.path.join(here, "mitmproxy_requirements.txt")]
+        self.py3_install_requirement_files(requirements)
+        # add py3 executables path to system path
+        sys.path.insert(1, self.py3_path_to_executables())
+        # install mitmproxy itself
+        self.py3_install_modules(modules=['mitmproxy'])
+        self.mitmdump_path = os.path.join(self.py3_path_to_executables(), 'mitmdump')
 
     def setup(self):
         # install the generated CA certificate into Firefox
@@ -142,9 +201,12 @@ class Mitmproxy(Playback):
         return
 
     def start(self):
-        mitmdump_path = os.path.join(self.raptor_dir, 'mitmdump')
+        # if on windows, the mitmdump_path was already set when creating py3 env
+        if self.mitmdump_path is None:
+            self.mitmdump_path = os.path.join(self.raptor_dir, 'mitmdump')
+
         recordings_list = self.recordings.split()
-        self.mitmproxy_proc = self.start_mitmproxy_playback(mitmdump_path,
+        self.mitmproxy_proc = self.start_mitmproxy_playback(self.mitmdump_path,
                                                             self.recordings_path,
                                                             recordings_list,
                                                             self.browser_path)

@@ -201,7 +201,6 @@ nsContextMenu.prototype = {
     this.onLink              = context.onLink;
     this.onLoadedImage       = context.onLoadedImage;
     this.onMailtoLink        = context.onMailtoLink;
-    this.onMathML            = context.onMathML;
     this.onMozExtLink        = context.onMozExtLink;
     this.onNumeric           = context.onNumeric;
     this.onPassword          = context.onPassword;
@@ -424,8 +423,6 @@ nsContextMenu.prototype = {
     // View source is always OK, unless in directory listing.
     this.showItem("context-viewpartialsource-selection",
                   this.isContentSelected);
-    this.showItem("context-viewpartialsource-mathml",
-                  this.onMathML && !this.isContentSelected);
 
     var shouldShow = !(this.isContentSelected ||
                        this.onImage || this.onCanvas ||
@@ -876,7 +873,7 @@ nsContextMenu.prototype = {
   },
 
   // View Partial Source
-  viewPartialSource(aContext) {
+  viewPartialSource() {
     let {browser} = this;
     let openSelectionFn = function() {
       let tabBrowser = gBrowser;
@@ -898,8 +895,7 @@ nsContextMenu.prototype = {
       return tabBrowser.getBrowserForTab(tab);
     };
 
-    let target = aContext == "mathml" ? this.target : null;
-    top.gViewSourceUtils.viewPartialSourceInBrowser(browser, target, openSelectionFn);
+    top.gViewSourceUtils.viewPartialSourceInBrowser(browser, openSelectionFn);
   },
 
   // Open new "view source" window with the frame's URL.

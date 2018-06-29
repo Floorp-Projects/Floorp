@@ -9293,10 +9293,6 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "all",
-    "layout.css.all-shorthand.enabled"
-  ],
-  [
     "overflow-clip-box",
     "layout.css.overflow-clip-box.enabled"
   ],

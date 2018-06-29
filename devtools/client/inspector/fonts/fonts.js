@@ -93,6 +93,7 @@ class FontInspector {
     }
 
     const fontsApp = FontsApp({
+      fontEditorEnabled: Services.prefs.getBoolPref(PREF_FONT_EDITOR),
       onInstanceChange: this.onInstanceChange,
       onToggleFontHighlight: this.onToggleFontHighlight,
       onPreviewFonts: this.onPreviewFonts,
