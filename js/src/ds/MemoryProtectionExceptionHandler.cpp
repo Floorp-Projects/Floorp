@@ -78,11 +78,7 @@ class ProtectedRegionTree
     }
 
     ~ProtectedRegionTree() {
-        // See Bug 1445619: Currently many users of the JS engine are leaking
-        // the world, unfortunately LifoAlloc owned by JSRuntimes have
-        // registered memory regions.
         sProtectedRegionsInit = false;
-        MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), tree.empty());
     }
 
     void insert(uintptr_t addr, size_t size) {
