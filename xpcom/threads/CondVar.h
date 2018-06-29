@@ -17,17 +17,17 @@
 
 namespace mozilla {
 
-
 /**
- * CondVar
- * Vanilla condition variable.  Please don't use this unless you have a
- * compelling reason --- Monitor provides a simpler API.
+ * Similarly to OffTheBooksMutex, OffTheBooksCondvar is identical to CondVar,
+ * except that OffTheBooksCondVar doesn't include leak checking.  Sometimes
+ * you want to intentionally "leak" a CondVar until shutdown; in these cases,
+ * OffTheBooksCondVar is for you.
  */
-class CondVar : BlockingResourceBase
+class OffTheBooksCondVar : BlockingResourceBase
 {
 public:
   /**
-   * CondVar
+   * OffTheBooksCondVar
    *
    * The CALLER owns |aLock|.
    *
@@ -37,20 +37,18 @@ public:
    *          If success, a valid Monitor* which must be destroyed
    *          by Monitor::DestroyMonitor()
    **/
-  CondVar(Mutex& aLock, const char* aName)
+  OffTheBooksCondVar(OffTheBooksMutex& aLock, const char* aName)
     : BlockingResourceBase(aName, eCondVar)
     , mLock(&aLock)
   {
-    MOZ_COUNT_CTOR(CondVar);
   }
 
   /**
-   * ~CondVar
-   * Clean up after this CondVar, but NOT its associated Mutex.
+   * ~OffTheBooksCondVar
+   * Clean up after this OffTheBooksCondVar, but NOT its associated Mutex.
    **/
-  ~CondVar()
+  ~OffTheBooksCondVar()
   {
-    MOZ_COUNT_DTOR(CondVar);
   }
 
   /**
@@ -125,12 +123,37 @@ public:
 #endif  // ifdef DEBUG
 
 private:
-  CondVar();
-  CondVar(const CondVar&) = delete;
-  CondVar& operator=(const CondVar&) = delete;
+  OffTheBooksCondVar();
+  OffTheBooksCondVar(const OffTheBooksCondVar&) = delete;
+  OffTheBooksCondVar& operator=(const OffTheBooksCondVar&) = delete;
 
-  Mutex* mLock;
+  OffTheBooksMutex* mLock;
   detail::ConditionVariableImpl mImpl;
+};
+
+/**
+ * CondVar
+ * Vanilla condition variable.  Please don't use this unless you have a
+ * compelling reason --- Monitor provides a simpler API.
+ */
+class CondVar : public OffTheBooksCondVar
+{
+public:
+  CondVar(OffTheBooksMutex& aLock, const char* aName)
+    : OffTheBooksCondVar(aLock, aName)
+  {
+    MOZ_COUNT_CTOR(CondVar);
+  }
+
+  ~CondVar()
+  {
+    MOZ_COUNT_DTOR(CondVar);
+  }
+
+private:
+  CondVar();
+  CondVar(const CondVar&);
+  CondVar& operator=(const CondVar&);
 };
 
 } // namespace mozilla
