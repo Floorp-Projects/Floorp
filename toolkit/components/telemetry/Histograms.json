@@ -10170,6 +10170,38 @@
     "description": "On page load, record the number of CSS Grid elements present on a page when the DevTools is open",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_FONTEDITOR_N_FONT_AXES": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
+    "expires_in_version": 66,
+    "bug_numbers": [1465424],
+    "description": "Indicates the number of variation axes of the variable fonts that are displayed in the font editor UI",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets": 20
+  },
+  "DEVTOOLS_FONTEDITOR_N_FONTS_RENDERED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
+    "expires_in_version": 66,
+    "bug_numbers": [1465424],
+    "description": "Indicates how many fonts the font editor displayed as being needed to render the selected element's content",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50,
+    "n_buckets": 10
+  },
+  "DEVTOOLS_FONTEDITOR_FONT_TYPE_DISPLAYED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
+    "expires_in_version": 66,
+    "bug_numbers": [1465424],
+    "description": "Indicates if the font editor displayed its UI for a non-variable font or a variable font",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "n_values": ["variable", "non-variable"]
+  },
   "BROWSER_IS_USER_DEFAULT": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
