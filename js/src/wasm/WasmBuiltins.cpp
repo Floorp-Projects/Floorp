@@ -1048,7 +1048,7 @@ ToBuiltinABIFunctionType(const FuncType& funcType)
     ExprType ret = funcType.ret();
 
     uint32_t abiType;
-    switch (ret) {
+    switch (ret.code()) {
       case ExprType::F32: abiType = ArgType_Float32 << RetType_Shift; break;
       case ExprType::F64: abiType = ArgType_Double << RetType_Shift; break;
       default: return Nothing();

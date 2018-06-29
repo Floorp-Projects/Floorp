@@ -415,13 +415,6 @@ var TelemetryStorage = {
   },
 
   /**
-   * The number of pending pings on disk.
-   */
-  get pendingPingCount() {
-    return TelemetryStorageImpl.pendingPingCount;
-  },
-
-  /**
    * Loads a ping file.
    * @param {String} aFilePath The path of the ping file.
    * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
@@ -1646,10 +1639,6 @@ var TelemetryStorageImpl = {
 
     list.sort((a, b) => b.lastModificationDate - a.lastModificationDate);
     return list;
-  },
-
-  get pendingPingCount() {
-    return this._pendingPings.size;
   },
 
   /**

@@ -3197,7 +3197,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return encoder().writeOp(Op::Else);
     }
     void setIfType(size_t typeAt, ExprType type) {
-        encoder().patchFixedU7(typeAt, uint8_t(type));
+        encoder().patchFixedU7(typeAt, uint8_t(type.code()));
     }
     bool popIf() {
         MOZ_ASSERT(blockDepth_ > 0);
@@ -6134,7 +6134,7 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
     if (!CheckExpr(f, pn, type))
         return false;
 
-    f.encoder().patchFixedU7(typeAt, uint8_t(type->toWasmBlockSignatureType()));
+    f.encoder().patchFixedU7(typeAt, uint8_t(type->toWasmBlockSignatureType().code()));
 
     return f.encoder().writeOp(Op::End);
 }
@@ -7762,6 +7762,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             *val = Val(simdConstant.asInt32x4());
             return true;
           }
+          case ValType::Ref:
           case ValType::AnyRef: {
             MOZ_CRASH("not available in asm.js");
           }

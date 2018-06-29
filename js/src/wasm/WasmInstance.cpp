@@ -135,6 +135,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::F64:
             args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
             break;
+          case ValType::Ref:
           case ValType::AnyRef: {
             args[i].set(ObjectOrNullValue(*(JSObject**)&argv[i]));
             break;
@@ -209,6 +210,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::I32:    type = TypeSet::Int32Type(); break;
           case ValType::F32:    type = TypeSet::DoubleType(); break;
           case ValType::F64:    type = TypeSet::DoubleType(); break;
+          case ValType::Ref:    MOZ_CRASH("case guarded above");
           case ValType::AnyRef: MOZ_CRASH("case guarded above");
           case ValType::I64:    MOZ_CRASH("NYI");
           case ValType::I8x16:  MOZ_CRASH("NYI");
@@ -798,6 +800,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             if (!ToNumber(cx, v, (double*)&exportArgs[i]))
                 return false;
             break;
+          case ValType::Ref:
           case ValType::AnyRef: {
             if (!ToRef(cx, v, &exportArgs[i]))
                 return false;
@@ -889,7 +892,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 
     bool expectsObject = false;
     JSObject* retObj = nullptr;
-    switch (func.funcType().ret()) {
+    switch (func.funcType().ret().code()) {
       case ExprType::Void:
         args.rval().set(UndefinedValue());
         break;
@@ -904,6 +907,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
       case ExprType::F64:
         args.rval().set(NumberValue(*(double*)retAddr));
         break;
+      case ExprType::Ref:
       case ExprType::AnyRef:
         retObj = *(JSObject**)retAddr;
         expectsObject = true;

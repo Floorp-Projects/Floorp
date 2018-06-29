@@ -978,7 +978,7 @@ var TelemetrySendImpl = {
   async _sendPersistedPings(pingIds) {
     this._log.trace("sendPersistedPings");
 
-    if (TelemetryStorage.pendingPingCount < 1) {
+    if (this.pendingPingCount < 1) {
       this._log.trace("_sendPersistedPings - no pings to send");
       return;
     }

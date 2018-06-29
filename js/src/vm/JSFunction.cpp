@@ -2508,11 +2508,7 @@ namespace detail {
 JS_PUBLIC_API(void)
 CheckIsValidConstructible(const Value& calleev)
 {
-    JSObject* callee = &calleev.toObject();
-    if (callee->is<JSFunction>())
-        MOZ_ASSERT(callee->as<JSFunction>().isConstructor());
-    else
-        MOZ_ASSERT(callee->constructHook() != nullptr);
+    MOZ_ASSERT(calleev.toObject().isConstructor());
 }
 
 } // namespace detail
