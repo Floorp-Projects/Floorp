@@ -102,7 +102,8 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
 
       tel.recordEvent("devtools.main", "activate", "responsive_design", null, {
         "host": hostType,
-        "width": Math.ceil(window.outerWidth / 50) * 50
+        "width": Math.ceil(window.outerWidth / 50) * 50,
+        "session_id": toolbox ? toolbox.sessionId : -1
       });
 
       // Track opens keyed by the UI entry point used.
@@ -141,6 +142,14 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    */
   async closeIfNeeded(window, tab, options = {}) {
     if (this.isActiveForTab(tab)) {
+      const target = TargetFactory.forTab(tab);
+      const toolbox = gDevTools.getToolbox(target);
+
+      if (!toolbox) {
+        // Destroy the tabTarget to avoid a memory leak.
+        target.destroy();
+      }
+
       const ui = this.activeTabs.get(tab);
       const destroyed = await ui.destroy(options);
       if (!destroyed) {
@@ -148,11 +157,12 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
         return;
       }
 
-      const hostType = Services.prefs.getStringPref("devtools.toolbox.host");
+      const hostType = toolbox ? toolbox.hostType : "none";
       const t = this._telemetry;
       t.recordEvent("devtools.main", "deactivate", "responsive_design", null, {
         "host": hostType,
-        "width": Math.ceil(window.outerWidth / 50) * 50
+        "width": Math.ceil(window.outerWidth / 50) * 50,
+        "session_id": toolbox ? toolbox.sessionId : -1
       });
 
       this.activeTabs.delete(tab);
