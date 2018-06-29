@@ -180,6 +180,7 @@ nsVideoFrame::GetVideoControls()
   }
   if (mContent->GetShadowRoot()) {
     // The video controls <div> is the only child of the UA Widget Shadow Root.
+    MOZ_ASSERT(mContent->GetShadowRoot()->IsUAWidget());
     return mContent->GetShadowRoot()->GetFirstChild();
   }
   return nullptr;

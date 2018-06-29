@@ -1651,15 +1651,12 @@ this.VideoControlsImplPageWidget = class {
 
         tt.index = this.textTracksCount++;
 
-        const label = tt.label || "";
-        const ttText = this.document.createTextNode(label);
-        const ttBtn = this.document.createElement("button");
+        const ttBtn =
+          this.shadowRoot.createElementAndAppendChildAt(this.textTrackList, "button");
+        ttBtn.textContent = tt.label || "";
 
         ttBtn.classList.add("textTrackItem");
         ttBtn.setAttribute("index", tt.index);
-        ttBtn.appendChild(ttText);
-
-        this.textTrackList.appendChild(ttBtn);
 
         if (tt.mode === "showing" && tt.index) {
           this.changeTextTrack(tt.index);
@@ -1859,6 +1856,7 @@ this.VideoControlsImplPageWidget = class {
       },
 
       init(shadowRoot) {
+        this.shadowRoot = shadowRoot;
         this.video = shadowRoot.host;
         this.videocontrols = shadowRoot.firstChild;
         this.document = this.videocontrols.ownerDocument;
@@ -2205,7 +2203,7 @@ this.VideoControlsImplPageWidget = class {
           </div>
         </div>
       </div>`, "application/xml");
-    this.shadowRoot.appendChild(this.document.importNode(parserDoc.documentElement, true));
+    this.shadowRoot.importNodeAndAppendChildAt(this.shadowRoot, parserDoc.documentElement, true);
   }
 
   destructor() {
@@ -2322,6 +2320,7 @@ this.NoControlsImplPageWidget = class {
       },
 
       init(shadowRoot) {
+        this.shadowRoot = shadowRoot;
         this.video = shadowRoot.host;
         this.videocontrols = shadowRoot.firstChild;
         this.document = this.videocontrols.ownerDocument;
@@ -2389,6 +2388,6 @@ this.NoControlsImplPageWidget = class {
           </div>
         </div>
       </div>`, "application/xml");
-    this.shadowRoot.appendChild(this.document.importNode(parserDoc.documentElement, true));
+    this.shadowRoot.importNodeAndAppendChildAt(this.shadowRoot, parserDoc.documentElement, true);
   }
 };
