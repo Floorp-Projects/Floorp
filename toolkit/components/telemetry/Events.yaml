@@ -411,6 +411,7 @@ devtools.main:
       splitconsole: Indicates whether the split console was open.
       width: Toolbox width rounded up to the nearest 50px.
       shortcut: The key combination pressed. Used only in the case that entrypoint === KeyShortcut.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   close:
     objects: ["tools"]
     bug_numbers: [1453312]
@@ -422,6 +423,7 @@ devtools.main:
     extra_keys:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   enter:
     objects: ["webconsole", "inspector", "jsdebugger", "styleeditor", "netmonitor", "storage", "other"]
     bug_numbers: [1441070]
@@ -437,6 +439,7 @@ devtools.main:
       start_state: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, unknown etc.
       panel_name: The name of the panel opened, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other
       cold: Is this the first time the current panel has been opened in this toolbox?
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   exit:
     objects: ["webconsole", "inspector", "jsdebugger", "styleeditor", "netmonitor", "storage", "other"]
     bug_numbers: [1455270]
@@ -451,6 +454,7 @@ devtools.main:
       next_panel: The name of the panel closed, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other.
       panel_name: The name of the panel opened, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other
       reason: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, toolbox_closed, unknown etc.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   activate:
     objects: ["responsive_design", "split_console"]
     bug_numbers: [1455273]
@@ -462,6 +466,7 @@ devtools.main:
     extra_keys:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   deactivate:
     objects: ["responsive_design", "split_console"]
     bug_numbers: [1455275]
@@ -473,6 +478,7 @@ devtools.main:
     extra_keys:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   edit_html:
     objects: ["inspector"]
     bug_numbers: [1463080]
@@ -484,6 +490,7 @@ devtools.main:
     extra_keys:
       made_changes: Indicates whether changes were made.
       time_open: The amount of time in ms that the HTML editor was open.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   edit_rule:
     objects: ["ruleview"]
     bug_numbers: [1463081]
@@ -492,6 +499,8 @@ devtools.main:
     description: User is editing a CSS rule by clicking on or next to a CSS property, enabling / disabling a rule or creating a new property.
     release_channel_collection: opt-out
     expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   sidepanel_changed:
     objects: ["inspector"]
     bug_numbers: [1463083]
@@ -503,6 +512,7 @@ devtools.main:
     extra_keys:
       oldpanel: The panel the user is switching from
       newpanel: The panel the user is switching to
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   execute_js:
     objects: ["webconsole"]
     bug_numbers: [1463083]
@@ -513,3 +523,4 @@ devtools.main:
     expiry_version: never
     extra_keys:
       lines: The number of lines contained in the command.
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
