@@ -11004,7 +11004,8 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
                 // needed.
                 get = MGetDOMMember::New(alloc(), jitinfo, obj, guard, globalGuard);
             } else {
-                get = MGetDOMProperty::New(alloc(), jitinfo, objKind, obj, guard, globalGuard);
+                get = MGetDOMProperty::New(alloc(), jitinfo, objKind, commonGetter->realm(), obj,
+                                           guard, globalGuard);
             }
             if (!get)
                 return abort(AbortReason::Alloc);
@@ -11693,7 +11694,7 @@ IonBuilder::setPropTryCommonDOMSetter(bool* emitted, MDefinition* obj,
     // Emit SetDOMProperty.
     MOZ_ASSERT(setter->jitInfo()->type() == JSJitInfo::Setter);
     MSetDOMProperty* set = MSetDOMProperty::New(alloc(), setter->jitInfo()->setter, objKind,
-                                                obj, value);
+                                                setter->realm(), obj, value);
 
     current->add(set);
     current->push(value);

@@ -12385,12 +12385,14 @@ class MSetDOMProperty
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
 {
     const JSJitSetterOp func_;
+    Realm* setterRealm_;
     DOMObjectKind objectKind_;
 
-    MSetDOMProperty(const JSJitSetterOp func, DOMObjectKind objectKind, MDefinition* obj,
-                    MDefinition* val)
+    MSetDOMProperty(const JSJitSetterOp func, DOMObjectKind objectKind, Realm* setterRealm,
+                    MDefinition* obj, MDefinition* val)
       : MBinaryInstruction(classOpcode, obj, val),
         func_(func),
+        setterRealm_(setterRealm),
         objectKind_(objectKind)
     { }
 
@@ -12401,6 +12403,9 @@ class MSetDOMProperty
 
     JSJitSetterOp fun() const {
         return func_;
+    }
+    Realm* setterRealm() const {
+        return setterRealm_;
     }
     DOMObjectKind objectKind() const {
         return objectKind_;
@@ -12517,11 +12522,14 @@ class MGetDOMPropertyBase
 class MGetDOMProperty
   : public MGetDOMPropertyBase
 {
+    Realm* getterRealm_;
     DOMObjectKind objectKind_;
 
   protected:
-    MGetDOMProperty(const JSJitInfo* jitinfo, DOMObjectKind objectKind)
+    MGetDOMProperty(const JSJitInfo* jitinfo, DOMObjectKind objectKind,
+                    Realm* getterRealm)
       : MGetDOMPropertyBase(classOpcode, jitinfo),
+        getterRealm_(getterRealm),
         objectKind_(objectKind)
     {}
 
@@ -12529,20 +12537,27 @@ class MGetDOMProperty
     INSTRUCTION_HEADER(GetDOMProperty)
 
     static MGetDOMProperty* New(TempAllocator& alloc, const JSJitInfo* info, DOMObjectKind objectKind,
-                                MDefinition* obj, MDefinition* guard, MDefinition* globalGuard)
+                                Realm* getterRealm, MDefinition* obj, MDefinition* guard,
+                                MDefinition* globalGuard)
     {
-        auto* res = new(alloc) MGetDOMProperty(info, objectKind);
+        auto* res = new(alloc) MGetDOMProperty(info, objectKind, getterRealm);
         if (!res || !res->init(alloc, obj, guard, globalGuard))
             return nullptr;
         return res;
     }
 
+    Realm* getterRealm() const {
+        return getterRealm_;
+    }
     DOMObjectKind objectKind() const {
         return objectKind_;
     }
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isGetDOMProperty())
+            return false;
+
+        if (ins->toGetDOMProperty()->getterRealm() != getterRealm())
             return false;
 
         return baseCongruentTo(ins->toGetDOMProperty());
