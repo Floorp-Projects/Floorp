@@ -1193,28 +1193,8 @@ class TokenStreamCharsBase
         MOZ_ASSERT(next == unit, "must be consuming the correct unit");
     }
 
-    MOZ_MUST_USE bool
-    fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end) {
-        while (cur < end) {
-            // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are
-            // interpreted literally inside template literal contents; only
-            // literal CRLF sequences are normalized to '\n'.  See
-            // <https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv>.
-            CharT ch = *cur;
-            if (ch == '\r') {
-                ch = '\n';
-                if ((cur + 1 < end) && (*(cur + 1) == '\n'))
-                    cur++;
-            }
-
-            if (!charBuffer.append(ch))
-                return false;
-
-            cur++;
-        }
-
-        return true;
-    }
+    MOZ_MUST_USE inline bool
+    fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end);
 
   protected:
     /** Code units in the source code being tokenized. */
@@ -1227,6 +1207,32 @@ TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t
                                                    size_t length)
 {
     return AtomizeChars(cx, chars, length);
+}
+
+template<>
+MOZ_MUST_USE inline bool
+TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
+                                                                         const char16_t* end)
+{
+    MOZ_ASSERT(charBuffer.length() == 0);
+
+    while (cur < end) {
+        // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are
+        // interpreted literally inside template literal contents; only
+        // literal CRLF sequences are normalized to '\n'.  See
+        // <https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv>.
+        char16_t ch = *cur++;
+        if (ch == '\r') {
+            ch = '\n';
+            if (cur < end && *cur == '\n')
+                cur++;
+        }
+
+        if (!charBuffer.append(ch))
+            return false;
+    }
+
+    return true;
 }
 
 /** A small class encapsulating computation of the start-offset of a Token. */
