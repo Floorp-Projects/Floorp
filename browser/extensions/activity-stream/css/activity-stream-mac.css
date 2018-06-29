@@ -233,6 +233,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   overflow-y: scroll; }
+  body.hide-onboarding > #onboarding-overlay-button {
+    display: none !important; }
 
 h1,
 h2 {
@@ -873,10 +875,12 @@ main {
   color: #0C0C0D;
   text-align: center;
   padding: 10px; }
+  .firstrun-sign-in form {
+    position: relative; }
   .firstrun-sign-in .extra-links {
     font-size: 12px;
     max-width: 340px;
-    margin: 14px 50px;
+    margin: 17px 50px;
     color: #676F7E;
     cursor: default; }
     .firstrun-sign-in .extra-links a {
@@ -903,6 +907,10 @@ main {
     .firstrun-sign-in .email-input:focus {
       border-color: #0A84FF;
       box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
+    .firstrun-sign-in .email-input.invalid {
+      border-color: #D70022; }
+    .firstrun-sign-in .email-input.invalid:focus {
+      box-shadow: 0 0 0 3px rgba(215, 0, 34, 0.3); }
   .firstrun-sign-in .form-header {
     font-size: 22px;
     margin: 15px auto; }
@@ -929,9 +937,9 @@ main {
       border-color: #002275; }
   .firstrun-sign-in .skip-button {
     font-size: 13px;
-    margin-top: 35px;
+    margin-top: 20px;
     margin-bottom: 20px;
-    background-color: #FCFCFC;
+    background-color: #F9F9FA;
     color: #0A84FF;
     border: 1px solid #0A84FF;
     border-radius: 2px;
@@ -939,9 +947,9 @@ main {
     padding: 5px 10px;
     transition: background-color 150ms, color 150ms, border-color 150ms; }
     .firstrun-sign-in .skip-button[disabled] {
-      background-color: #EBEBEB;
-      border-color: #B1B1B1;
-      color: #6A6A6A;
+      background-color: #EDEDF0;
+      border-color: #B1B1B3;
+      color: #737373;
       cursor: default;
       opacity: 0.5; }
     .firstrun-sign-in .skip-button:not([disabled]):hover {
@@ -987,9 +995,8 @@ main {
     .firstrun-title {
       background: url("chrome://branding/content/about-logo.png") top center no-repeat;
       background-size: 90px 90px; } }
-
-[dir='rtl'] .firstrun-title {
-  background-position: top right; }
+  .firstrun-title:dir(rtl) {
+    background-position: top right; }
 
 .fxaccounts-container {
   position: absolute;
@@ -1017,6 +1024,42 @@ main {
 .firstrun-link {
   opacity: 0;
   transform: translateY(-5px); }
+
+.error {
+  display: none; }
+
+.error.active {
+  display: block;
+  padding: 5px 12px;
+  animation: fade-down 450ms;
+  font-size: 12px;
+  font-weight: 500;
+  color: #FFF;
+  background-color: #D70022;
+  position: absolute;
+  inset-inline-start: 50px;
+  top: -28px;
+  border-radius: 2px; }
+  .error.active::before {
+    inset-inline-start: 12px;
+    background: #D70022;
+    bottom: -8px;
+    content: '.';
+    height: 16px;
+    position: absolute;
+    text-indent: -999px;
+    transform: rotate(45deg);
+    white-space: nowrap;
+    width: 16px;
+    z-index: -1; }
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px); }
+  100% {
+    opacity: 1;
+    transform: translateY(0); } }
 
 .topic {
   color: var(--newtab-section-navigation-text-color);
@@ -1317,6 +1360,8 @@ main {
     height: 122px;
     overflow: hidden;
     position: relative; }
+    .dark-theme .card-outer .card-preview-image-outer {
+      background-color: #4A4A4F; }
     .card-outer .card-preview-image-outer::after {
       border-bottom: 1px solid var(--newtab-card-hairline-color);
       bottom: 0;
@@ -1791,7 +1836,7 @@ main {
       margin-top: 20px;
       width: 150px;
       height: 30px;
-      padding: 4px 0 6px 0;
+      padding: 4px 0 6px;
       font-size: 15px; }
 
 .SimpleSnippet.tall {
@@ -1852,11 +1897,11 @@ main {
       height: 170px;
       text-align: left;
       padding: 10px;
-      border-bottom: 1px solid #D8D8D8;
+      border-bottom: 1px solid #D7D7DB;
       display: flex;
       margin-bottom: 11px; }
       .onboardingMessage:last-child {
-        border: none; }
+        border: 0; }
       .onboardingMessage .onboardingContent {
         padding-left: 10px;
         height: 100%; }
@@ -1907,14 +1952,14 @@ main {
       line-height: 22px; }
       @media (max-width: 650px) {
         .onboardingMessage .onboardingContent > span > p {
-          margin-bottom: 0px; } }
+          margin-bottom: 0; } }
   .onboardingMessage .onboardingButton {
     background-color: rgba(12, 12, 13, 0.1);
-    border: none;
+    border: 0;
     width: 150px;
     height: 30px;
     margin-bottom: 23px;
-    padding: 4px 0 6px 0;
+    padding: 4px 0 6px;
     font-size: 15px; }
     @media (max-width: 850px) {
       .onboardingMessage .onboardingButton {
@@ -1930,7 +1975,7 @@ main {
     height: 220px;
     width: 1px;
     position: absolute;
-    background-color: #D8D8D8;
+    background-color: #D7D7DB;
     margin-top: 40px;
     margin-left: 215px; }
     @media (max-width: 850px) {

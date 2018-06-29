@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Kirjoita sähköpostisi",
   "firstrun_form_sub_header": "jatkaaksesi Firefox Sync -palveluun.",
   "firstrun_email_input_placeholder": "Sähköposti",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Jatkamalla hyväksyt {terms} ja {privacy}.",
   "firstrun_terms_of_service": "käyttöehdot",
   "firstrun_privacy_notice": "tietosuojakäytännön",

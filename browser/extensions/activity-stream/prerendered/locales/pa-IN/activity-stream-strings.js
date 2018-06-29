@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "ਆਪਣਾ ਈਮੇਲ ਦਿਓ",
   "firstrun_form_sub_header": "ਤਾਂ ਕਿ ਫਾਇਰਫਾਕਸ ਸਿੰਕ ਨਾਲ ਜਾਰੀ ਰੱਖਿਆ ਜਾਵੇ।",
   "firstrun_email_input_placeholder": "ਈਮੇਲ",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "ਜਾਰੀ ਰੱਖ ਕੇ ਤੁਸੀਂ {terms} ਅਤੇ {privacy} ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।",
   "firstrun_terms_of_service": "ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ",
   "firstrun_privacy_notice": "ਪਰਦੇਦਾਰੀ ਦਾ ਨੋਟਿਸ",

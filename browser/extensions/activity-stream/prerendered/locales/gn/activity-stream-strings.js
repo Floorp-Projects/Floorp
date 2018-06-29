@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Emoinge ne ñandutiveve",
   "firstrun_form_sub_header": "eike hag̃ua Firefox Sync-pe.",
   "firstrun_email_input_placeholder": "Ñandutiveve",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Ejapóva, emoneĩ ko'ã {terms} ha {privacy}.",
   "firstrun_terms_of_service": "Mba'epytyvõrã ñemboguata",
   "firstrun_privacy_notice": "Ñemigua purureko",

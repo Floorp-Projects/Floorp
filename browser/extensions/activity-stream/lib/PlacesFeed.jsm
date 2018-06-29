@@ -60,7 +60,6 @@ class HistoryObserver extends Observer {
 
   onEndUpdateBatch() {}
 
-
   onTitleChanged() {}
 
   onFrecencyChanged() {}

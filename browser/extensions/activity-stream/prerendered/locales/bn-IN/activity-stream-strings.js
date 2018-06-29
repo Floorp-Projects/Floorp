@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "আপনার ই-মেইল লিখুন",
   "firstrun_form_sub_header": "to continue to Firefox Sync",
   "firstrun_email_input_placeholder": "ইমেইল",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "By proceeding, you agree to the {terms} and {privacy}.",
   "firstrun_terms_of_service": "সেবার শর্ত",
   "firstrun_privacy_notice": "গোপনীয়তা নীতি",

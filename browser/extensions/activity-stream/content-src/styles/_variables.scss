@@ -51,6 +51,8 @@ $pocket-teal: #50BCB6;
 $bookmark-icon-fill: #0A84FF;
 $download-icon-fill: #12BC00;
 $pocket-icon-fill: #D70022;
+$email-input-focus: rgba($blue-50, 0.3);
+$email-input-invalid: rgba($red-60, 0.3);
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);

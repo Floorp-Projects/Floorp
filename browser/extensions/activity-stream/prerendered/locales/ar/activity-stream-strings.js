@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "أدخِل بريدك الإلكتروني",
   "firstrun_form_sub_header": "لمواصلة استخدام «تزامُن فَيَرفُكس»",
   "firstrun_email_input_placeholder": "البريد الإلكتروني",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "بمواصلة هذه العملية أنت توافق على {terms} و{privacy}.",
   "firstrun_terms_of_service": "بنود الخدمة",
   "firstrun_privacy_notice": "تنويه الخصوصية",

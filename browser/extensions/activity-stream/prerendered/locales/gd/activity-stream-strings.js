@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Cuir a-steach am post-d agad",
   "firstrun_form_sub_header": "a leantainn air adhart gu sioncronachadh Firefox.",
   "firstrun_email_input_placeholder": "Post-d",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Ma leanas tu air adhart, bidh tu ag aontachadh ri {terms} agus {privacy}.",
   "firstrun_terms_of_service": "teirmichean na seirbheise",
   "firstrun_privacy_notice": "aithris na prìobhaideachd",

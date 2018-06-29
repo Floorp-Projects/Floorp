@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Ievadiet savu epastu",
   "firstrun_form_sub_header": "lai turpinātu Firefox Sync.",
   "firstrun_email_input_placeholder": "Epasts",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Turpinot jūs piekrītat {terms} un {privacy}.",
   "firstrun_terms_of_service": "Lietošanas noteikumiem",
   "firstrun_privacy_notice": "Privātuma politikai",

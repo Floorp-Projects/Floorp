@@ -7,6 +7,9 @@ const path = require("path");
 const {prerender} = require("./prerender");
 
 const DEFAULT_LOCALE = "en-US";
+
+// Note: DEFAULT_OPTIONS.baseUrl should match BASE_URL in aboutNewTabService.js
+//       in mozilla-central.
 const DEFAULT_OPTIONS = {
   addonPath: "..",
   baseUrl: "resource://activity-stream/"
@@ -166,6 +169,7 @@ function getTextDirection(locale) {
  *         {str} options.direction      The language direction to render in dir="" attribute
  *         {str} options.baseUrl        The base URL for all local assets
  *         {bool} options.debug         Should we use dev versions of JS libraries?
+ *         {bool} options.noscripts     Should we include scripts in the prerendered files?
  * @param  {str} html    The prerendered HTML created with React.renderToString (optional)
  * @return {str}         An HTML document as a string
  */
@@ -186,6 +190,18 @@ function templateHTML(options, html) {
   if (isPrerendered) {
     scripts.unshift(`${options.baseUrl}prerendered/static/activity-stream-initial-state.js`);
   }
+  const scriptTag = `
+    <script>
+// Don't directly load the following scripts as part of html to let the page
+// finish loading to render the content sooner.
+for (const src of ${JSON.stringify(scripts, null, 2)}) {
+  // These dynamically inserted scripts by default are async, but we need them
+  // to load in the desired order (i.e., bundle last).
+  const script = document.body.appendChild(document.createElement("script"));
+  script.async = false;
+  script.src = src;
+}
+    </script>`;
   return `<!doctype html>
 <html lang="${options.locale}" dir="${options.direction}">
   <head>
@@ -200,18 +216,7 @@ function templateHTML(options, html) {
     <div id="root">${isPrerendered ? html : ""}</div>
     <div id="snippets-container">
       <div id="snippets"></div>
-    </div>
-    <script>
-// Don't directly load the following scripts as part of html to let the page
-// finish loading to render the content sooner.
-for (const src of ${JSON.stringify(scripts, null, 2)}) {
-  // These dynamically inserted scripts by default are async, but we need them
-  // to load in the desired order (i.e., bundle last).
-  const script = document.body.appendChild(document.createElement("script"));
-  script.async = false;
-  script.src = src;
-}
-    </script>
+    </div>${options.noscripts ? "" : scriptTag}
   </body>
 </html>
 `;
@@ -256,14 +261,18 @@ function writeFiles(name, destPath, filesMap, {html, state}, options) {
 
 const STATIC_FILES = new Map([
   ["activity-stream-debug.html", ({options}) => templateHTML(options)],
+  ["activity-stream-debug-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))],
   ["activity-stream-initial-state.js", ({state}) => templateJs("gActivityStreamPrerenderedState", "static", state)],
-  ["activity-stream-prerendered-debug.html", ({html, options}) => templateHTML(options, html)]
+  ["activity-stream-prerendered-debug.html", ({html, options}) => templateHTML(options, html)],
+  ["activity-stream-prerendered-debug-noscripts.html", ({html, options}) => templateHTML(Object.assign({}, options, {noscripts: true}), html)]
 ]);
 
 const LOCALIZED_FILES = new Map([
   ["activity-stream-prerendered.html", ({html, options}) => templateHTML(options, html)],
+  ["activity-stream-prerendered-noscripts.html", ({html, options}) => templateHTML(Object.assign({}, options, {noscripts: true}), html)],
   ["activity-stream-strings.js", ({options: {locale, strings}}) => templateJs("gActivityStreamStrings", locale, strings)],
-  ["activity-stream.html", ({options}) => templateHTML(options)]
+  ["activity-stream.html", ({options}) => templateHTML(options)],
+  ["activity-stream-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))]
 ]);
 
 /**
