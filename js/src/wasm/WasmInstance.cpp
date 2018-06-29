@@ -25,7 +25,6 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
 
-#include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
 
@@ -413,12 +412,15 @@ Instance::memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteO
 
     // Knowing that len > 0 below simplifies the wraparound checks.
     if (len == 0) {
+
         // Even though the length is zero, we must check for a valid offset.
         if (destByteOffset < memLen && srcByteOffset < memLen)
             return 0;
 
         // else fall through to failure case
+
     } else {
+
         ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
         uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
 
@@ -451,12 +453,15 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
 
     // Knowing that len > 0 below simplifies the wraparound check.
     if (len == 0) {
+
         // Even though the length is zero, we must check for a valid offset.
         if (byteOffset < memLen)
             return 0;
 
         // else fall through to failure case
+
     } else {
+
         ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
         uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
 
@@ -471,33 +476,12 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
             return 0;
         }
         // else fall through to failure case
+
     }
 
     JSContext* cx = TlsContext.get();
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
-}
-
-/* static */ void
-Instance::postBarrier(Instance* instance, PostBarrierArg arg)
-{
-    gc::Cell** cell = nullptr;
-    switch (arg.type()) {
-      case PostBarrierArg::Type::Global: {
-        const GlobalDesc& global = instance->metadata().globals[arg.globalIndex()];
-        MOZ_ASSERT(!global.isConstant());
-        MOZ_ASSERT(global.type().isRefOrAnyRef());
-        uint8_t* globalAddr = instance->globalData() + global.offset();
-        if (global.isIndirect())
-            globalAddr = *(uint8_t**)globalAddr;
-        MOZ_ASSERT(*(JSObject**)globalAddr, "shouldn't call postbarrier if null");
-        cell = (gc::Cell**) globalAddr;
-        break;
-      }
-    }
-
-    MOZ_ASSERT(cell);
-    TlsContext.get()->runtime()->gc.storeBuffer().putCell(cell);
 }
 
 Instance::Instance(JSContext* cx,
@@ -508,7 +492,7 @@ Instance::Instance(JSContext* cx,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
-                   HandleValVector globalImportValues,
+                   const ValVector& globalImportValues,
                    const WasmGlobalObjectVector& globalObjs)
   : realm_(cx->realm()),
     object_(object),
@@ -534,10 +518,6 @@ Instance::Instance(JSContext* cx,
     tlsData()->cx = cx;
     tlsData()->resetInterrupt(cx);
     tlsData()->jumpTable = code_->tieringJumpTable();
-#ifdef ENABLE_WASM_GC
-    tlsData()->addressOfNeedsIncrementalBarrier =
-        (uint8_t*)cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
-#endif
 
     Tier callerTier = code_->bestTier();
 
@@ -591,7 +571,7 @@ Instance::Instance(JSContext* cx,
             if (global.isIndirect())
                 *(void**)globalAddr = globalObjs[imported]->cell();
             else
-                globalImportValues[imported].get().writePayload(globalAddr);
+                globalImportValues[imported].writePayload(globalAddr);
             break;
           }
           case GlobalKind::Variable: {
@@ -601,7 +581,7 @@ Instance::Instance(JSContext* cx,
                 if (global.isIndirect())
                     *(void**)globalAddr = globalObjs[i]->cell();
                 else
-                    Val(init.val()).writePayload(globalAddr);
+                    init.val().writePayload(globalAddr);
                 break;
               }
               case InitExpr::Kind::GetGlobal: {
@@ -611,13 +591,12 @@ Instance::Instance(JSContext* cx,
                 // the source global should never be indirect.
                 MOZ_ASSERT(!imported.isIndirect());
 
-                RootedVal dest(cx, globalImportValues[imported.importIndex()].get());
                 if (global.isIndirect()) {
                     void* address = globalObjs[i]->cell();
                     *(void**)globalAddr = address;
-                    dest.get().writePayload((uint8_t*)address);
+                    globalImportValues[imported.importIndex()].writePayload((uint8_t*)address);
                 } else {
-                    dest.get().writePayload(globalAddr);
+                    globalImportValues[imported.importIndex()].writePayload(globalAddr);
                 }
                 break;
               }
@@ -662,7 +641,6 @@ Instance::init(JSContext* cx)
         return false;
     jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
     jsJitExceptionHandler_ = jitRuntime->getExceptionTail();
-    preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
     return true;
 }
 
@@ -729,16 +707,6 @@ Instance::tracePrivate(JSTracer* trc)
 
     for (const SharedTable& table : tables_)
         table->trace(trc);
-
-#ifdef ENABLE_WASM_GC
-    for (const GlobalDesc& global : code().metadata().globals) {
-        // Indirect anyref global get traced by the owning WebAssembly.Global.
-        if (global.type() != ValType::AnyRef || global.isConstant() || global.isIndirect())
-            continue;
-        GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
-        TraceNullableEdge(trc, obj, "wasm anyref global");
-    }
-#endif
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }

@@ -49,8 +49,6 @@ let simpleTests = [
     "(module (func $test (local anyref) (result i32) (ref.is_null (get_local 0))))",
     `(module (import "a" "b" (param anyref)))`,
     `(module (import "a" "b" (result anyref)))`,
-    `(module (global anyref (ref.null anyref)))`,
-    `(module (global (mut anyref) (ref.null anyref)))`,
 ];
 
 for (let src of simpleTests) {
@@ -396,78 +394,3 @@ assertEq(x.i, 24);
 assertEq(x.newProp, "hello");
 assertEq(exports.count_f(), 1);
 assertEq(exports.count_g(), 1);
-
-// Globals.
-
-// Anyref globals in wasm modules.
-
-assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "anyref") anyref))`, { glob: { anyref: 42 } }),
-    WebAssembly.LinkError,
-    /import object field 'anyref' is not a Object-or-null/);
-
-assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "anyref") anyref))`, { glob: { anyref: new WebAssembly.Global({ value: 'i32' }, 42) } }),
-    WebAssembly.LinkError,
-    /imported global type mismatch/);
-
-assertErrorMessage(() => wasmEvalText(`(module (global (import "glob" "i32") i32))`, { glob: { i32: {} } }),
-    WebAssembly.LinkError,
-    /import object field 'i32' is not a Number/);
-
-imports = {
-    constants: {
-        imm_null: null,
-        imm_bread: new Baguette(321),
-        mut_null: new WebAssembly.Global({ value: "anyref", mutable: true }, null),
-        mut_bread: new WebAssembly.Global({ value: "anyref", mutable: true }, new Baguette(123))
-    }
-};
-
-exports = wasmEvalText(`(module
-    (global $g_imp_imm_null  (import "constants" "imm_null") anyref)
-    (global $g_imp_imm_bread (import "constants" "imm_bread") anyref)
-
-    (global $g_imp_mut_null   (import "constants" "mut_null") (mut anyref))
-    (global $g_imp_mut_bread  (import "constants" "mut_bread") (mut anyref))
-
-    (global $g_imm_null     anyref (ref.null anyref))
-    (global $g_imm_getglob  anyref (get_global $g_imp_imm_bread))
-    (global $g_mut         (mut anyref) (ref.null anyref))
-
-    (func (export "imm_null")      (result anyref) get_global $g_imm_null)
-    (func (export "imm_getglob")   (result anyref) get_global $g_imm_getglob)
-
-    (func (export "imp_imm_null")  (result anyref) get_global $g_imp_imm_null)
-    (func (export "imp_imm_bread") (result anyref) get_global $g_imp_imm_bread)
-    (func (export "imp_mut_null")  (result anyref) get_global $g_imp_mut_null)
-    (func (export "imp_mut_bread") (result anyref) get_global $g_imp_mut_bread)
-
-    (func (export "set_imp_null")  (param anyref) get_local 0 set_global $g_imp_mut_null)
-    (func (export "set_imp_bread") (param anyref) get_local 0 set_global $g_imp_mut_bread)
-
-    (func (export "set_mut") (param anyref) get_local 0 set_global $g_mut)
-    (func (export "get_mut") (result anyref) get_global $g_mut)
-)`, imports).exports;
-
-assertEq(exports.imp_imm_null(), imports.constants.imm_null);
-assertEq(exports.imp_imm_bread(), imports.constants.imm_bread);
-
-assertEq(exports.imm_null(), null);
-assertEq(exports.imm_getglob(), imports.constants.imm_bread);
-
-assertEq(exports.imp_mut_null(), imports.constants.mut_null.value);
-assertEq(exports.imp_mut_bread(), imports.constants.mut_bread.value);
-
-let brandNewBaguette = new Baguette(1000);
-exports.set_imp_null(brandNewBaguette);
-assertEq(exports.imp_mut_null(), brandNewBaguette);
-assertEq(exports.imp_mut_bread(), imports.constants.mut_bread.value);
-
-exports.set_imp_bread(null);
-assertEq(exports.imp_mut_null(), brandNewBaguette);
-assertEq(exports.imp_mut_bread(), null);
-
-assertEq(exports.get_mut(), null);
-let glutenFreeBaguette = new Baguette("calories-free bread");
-exports.set_mut(glutenFreeBaguette);
-assertEq(exports.get_mut(), glutenFreeBaguette);
-assertEq(exports.get_mut().calories, "calories-free bread");

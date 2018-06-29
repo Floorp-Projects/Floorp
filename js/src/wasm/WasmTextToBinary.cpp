@@ -2115,7 +2115,7 @@ ParseNaNLiteral(WasmParseContext& c, WasmToken token, const char16_t* cur, bool 
 
     Float flt;
     BitwiseCast(value, &flt);
-    return new (c.lifo) AstConst(LitVal(flt));
+    return new (c.lifo) AstConst(Val(flt));
 
   error:
     c.ts.generateError(token, c.error);
@@ -2267,7 +2267,7 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token)
     }
 
     if (token.kind() != WasmToken::Float)
-        return new (c.lifo) AstConst(LitVal(Float(result)));
+        return new (c.lifo) AstConst(Val(Float(result)));
 
     const char16_t* begin = token.begin();
     const char16_t* end = token.end();
@@ -2317,7 +2317,7 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token)
     if (isNegated)
         result = -result;
 
-    return new (c.lifo) AstConst(LitVal(Float(result)));
+    return new (c.lifo) AstConst(Val(Float(result)));
 }
 
 static AstConst*
@@ -2328,15 +2328,15 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
       case ValType::I32: {
         switch (val.kind()) {
           case WasmToken::Index:
-            return new(c.lifo) AstConst(LitVal(val.index()));
+            return new(c.lifo) AstConst(Val(val.index()));
           case WasmToken::SignedInteger: {
             CheckedInt<int32_t> sint = val.sint();
             if (!sint.isValid())
                 break;
-            return new(c.lifo) AstConst(LitVal(uint32_t(sint.value())));
+            return new(c.lifo) AstConst(Val(uint32_t(sint.value())));
           }
           case WasmToken::NegativeZero:
-            return new(c.lifo) AstConst(LitVal(uint32_t(0)));
+            return new(c.lifo) AstConst(Val(uint32_t(0)));
           default:
             break;
         }
@@ -2345,13 +2345,13 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
       case ValType::I64: {
         switch (val.kind()) {
           case WasmToken::Index:
-            return new(c.lifo) AstConst(LitVal(uint64_t(val.index())));
+            return new(c.lifo) AstConst(Val(uint64_t(val.index())));
           case WasmToken::UnsignedInteger:
-            return new(c.lifo) AstConst(LitVal(val.uint()));
+            return new(c.lifo) AstConst(Val(val.uint()));
           case WasmToken::SignedInteger:
-            return new(c.lifo) AstConst(LitVal(uint64_t(val.sint())));
+            return new(c.lifo) AstConst(Val(uint64_t(val.sint())));
           case WasmToken::NegativeZero:
-            return new(c.lifo) AstConst(LitVal(uint64_t(0)));
+            return new(c.lifo) AstConst(Val(uint64_t(0)));
           default:
             break;
         }
@@ -3594,7 +3594,7 @@ ParseMemory(WasmParseContext& c, AstModule* module)
         }
 
         if (fragments.length()) {
-            AstExpr* offset = new(c.lifo) AstConst(LitVal(uint32_t(0)));
+            AstExpr* offset = new(c.lifo) AstConst(Val(uint32_t(0)));
             if (!offset)
                 return false;
 
@@ -3914,7 +3914,7 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
     if (!module->addTable(name, Limits(numElements, Some(numElements), Shareable::False)))
         return false;
 
-    auto* zero = new(c.lifo) AstConst(LitVal(uint32_t(0)));
+    auto* zero = new(c.lifo) AstConst(Val(uint32_t(0)));
     if (!zero)
         return false;
 

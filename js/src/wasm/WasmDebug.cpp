@@ -398,7 +398,7 @@ DebugState::getGlobal(Instance& instance, uint32_t globalIndex, MutableHandleVal
     const GlobalDesc& global = metadata().globals[globalIndex];
 
     if (global.isConstant()) {
-        LitVal value = global.constantValue();
+        Val value = global.constantValue();
         switch (value.type().code()) {
           case ValType::I32:
             vp.set(Int32Value(value.i32()));
