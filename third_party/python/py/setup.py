@@ -1,17 +1,4 @@
-import os
-import sys
-
 from setuptools import setup, find_packages
-
-
-def get_version():
-    p = os.path.join(os.path.dirname(
-                     os.path.abspath(__file__)), "py", "__init__.py")
-    with open(p) as f:
-        for line in f.readlines():
-            if "__version__" in line:
-                return line.strip().split("=")[-1].strip(" '")
-    raise ValueError("could not read version")
 
 
 def main():
@@ -19,7 +6,8 @@ def main():
         name='py',
         description='library with cross-python path, ini-parsing, io, code, log facilities',
         long_description=open('README.rst').read(),
-        version=get_version(),
+        use_scm_version={"write_to": "py/_version.py"},
+        setup_requires=["setuptools-scm"],
         url='http://py.readthedocs.io/',
         license='MIT license',
         platforms=['unix', 'linux', 'osx', 'cygwin', 'win32'],

@@ -25,23 +25,23 @@ to assert that your function returns a certain value. If this assertion fails
 you will see the return value of the function call::
 
     $ pytest test_assert1.py
-    ======= test session starts ========
+    =========================== test session starts ============================
     platform linux -- Python 3.x.y, pytest-3.x.y, py-1.x.y, pluggy-0.x.y
     rootdir: $REGENDOC_TMPDIR, inifile:
     collected 1 item
-    
-    test_assert1.py F
-    
-    ======= FAILURES ========
-    _______ test_function ________
-    
+
+    test_assert1.py F                                                    [100%]
+
+    ================================= FAILURES =================================
+    ______________________________ test_function _______________________________
+
         def test_function():
     >       assert f() == 4
     E       assert 3 == 4
     E        +  where 3 = f()
-    
+
     test_assert1.py:5: AssertionError
-    ======= 1 failed in 0.12 seconds ========
+    ========================= 1 failed in 0.12 seconds =========================
 
 ``pytest`` has support for showing the values of the most common subexpressions
 including calls, attributes, comparisons, and binary and unary
@@ -91,7 +91,7 @@ In the context manager form you may use the keyword argument
 ``message`` to specify a custom failure message::
 
      >>> with raises(ZeroDivisionError, message="Expecting ZeroDivisionError"):
-     ...    pass
+     ...     pass
      ... Failed: Expecting ZeroDivisionError
 
 If you want to write test code that works on Python 2.4 as well,
@@ -168,16 +168,16 @@ when it encounters comparisons.  For example::
 if you run this module::
 
     $ pytest test_assert2.py
-    ======= test session starts ========
+    =========================== test session starts ============================
     platform linux -- Python 3.x.y, pytest-3.x.y, py-1.x.y, pluggy-0.x.y
     rootdir: $REGENDOC_TMPDIR, inifile:
     collected 1 item
-    
-    test_assert2.py F
-    
-    ======= FAILURES ========
-    _______ test_set_comparison ________
-    
+
+    test_assert2.py F                                                    [100%]
+
+    ================================= FAILURES =================================
+    ___________________________ test_set_comparison ____________________________
+
         def test_set_comparison():
             set1 = set("1308")
             set2 = set("8035")
@@ -188,9 +188,9 @@ if you run this module::
     E         Extra items in the right set:
     E         '5'
     E         Use -v to get the full diff
-    
+
     test_assert2.py:5: AssertionError
-    ======= 1 failed in 0.12 seconds ========
+    ========================= 1 failed in 0.12 seconds =========================
 
 Special comparisons are done for a number of cases:
 
@@ -209,7 +209,7 @@ the ``pytest_assertrepr_compare`` hook.
 .. autofunction:: _pytest.hookspec.pytest_assertrepr_compare
    :noindex:
 
-As an example consider adding the following hook in a :ref:`conftest.py <conftest.py>` 
+As an example consider adding the following hook in a :ref:`conftest.py <conftest.py>`
 file which provides an alternative explanation for ``Foo`` objects::
 
    # content of conftest.py
@@ -238,17 +238,17 @@ you can run the test module and get the custom output defined in
 the conftest file::
 
    $ pytest -q test_foocompare.py
-   F
-   ======= FAILURES ========
-   _______ test_compare ________
-   
+   F                                                                    [100%]
+   ================================= FAILURES =================================
+   _______________________________ test_compare _______________________________
+
        def test_compare():
            f1 = Foo(1)
            f2 = Foo(2)
    >       assert f1 == f2
    E       assert Comparing Foo instances:
    E            vals: 1 != 2
-   
+
    test_foocompare.py:11: AssertionError
    1 failed in 0.12 seconds
 
