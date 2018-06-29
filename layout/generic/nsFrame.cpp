@@ -10968,7 +10968,6 @@ IsFrameScrolledOutOfView(const nsIFrame* aTarget,
 {
   nsIScrollableFrame* scrollableFrame =
     nsLayoutUtils::GetNearestScrollableFrame(const_cast<nsIFrame*>(aParent),
-      nsLayoutUtils::SCROLLABLE_SAME_DOC |
       nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT |
       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (!scrollableFrame) {
