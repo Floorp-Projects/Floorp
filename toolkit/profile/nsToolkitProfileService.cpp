@@ -693,24 +693,10 @@ NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
     return NS_OK;
 }
 
-static const char kTable[] =
-    { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-      'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' };
-
 static void SaltProfileName(nsACString& aName)
 {
-    double fpTime = double(PR_Now());
-
-    // use 1e-6, granularity of PR_Now() on the mac is seconds
-    srand((unsigned int)(fpTime * 1e-6 + 0.5));
-
     char salt[9];
-
-    int i;
-    for (i = 0; i < 8; ++i)
-        salt[i] = kTable[rand() % ArrayLength(kTable)];
-
+    NS_MakeRandomString(salt, 8);
     salt[8] = '.';
 
     aName.Insert(salt, 0, 9);
