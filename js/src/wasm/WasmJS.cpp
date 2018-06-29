@@ -2182,10 +2182,6 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
     ValType globalType;
     if (StringEqualsAscii(typeLinearStr, "i32")) {
         globalType = ValType::I32;
-    } else if (args.length() == 1 && StringEqualsAscii(typeLinearStr, "i64")) {
-        // For the time being, i64 is allowed only if there is not an
-        // initializing value.
-        globalType = ValType::I64;
     } else if (StringEqualsAscii(typeLinearStr, "f32")) {
         globalType = ValType::F32;
     } else if (StringEqualsAscii(typeLinearStr, "f64")) {
@@ -2211,8 +2207,7 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
             return false;
     } else {
         switch (globalType.code()) {
-          case ValType::I32: /* set above */               break;
-          case ValType::I64: globalVal = Val(uint64_t(0)); break;
+          case ValType::I32: /* set above */ break;
           case ValType::F32: globalVal = Val(float(0.0));  break;
           case ValType::F64: globalVal = Val(double(0.0)); break;
           default: MOZ_CRASH();
