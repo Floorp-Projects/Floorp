@@ -881,6 +881,67 @@ TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(int32_t lead, i
     return true;
 }
 
+template<class AnyCharsAccess>
+bool
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePoint(int32_t unit, int32_t* codePoint)
+{
+    MOZ_ASSERT(unit != EOF);
+    MOZ_ASSERT(!isAsciiCodePoint(unit),
+               "ASCII code unit/point must be handled separately");
+
+    Utf8Unit lead = Utf8Unit(static_cast<unsigned char>(unit));
+    MOZ_ASSERT(lead == this->sourceUnits.previousCodeUnit(),
+               "getNonAsciiCodePoint called incorrectly");
+
+    auto onBadLeadUnit = [this, &lead]() {
+        this->badLeadUnit(lead);
+    };
+
+    auto onNotEnoughUnits = [this, &lead](uint_fast8_t remaining, uint_fast8_t required) {
+        this->notEnoughUnits(lead, remaining, required);
+    };
+
+    auto onBadTrailingUnit = [this, &lead](uint_fast8_t unitsObserved) {
+        this->badTrailingUnit(lead, unitsObserved);
+    };
+
+    auto onBadCodePoint = [this](char32_t badCodePoint, uint_fast8_t unitsObserved) {
+        this->badCodePoint(badCodePoint, unitsObserved);
+    };
+
+    auto onNotShortestForm = [this](char32_t badCodePoint, uint_fast8_t unitsObserved) {
+        this->notShortestForm(badCodePoint, unitsObserved);
+    };
+
+    // This consumes the full, valid code point or ungets |lead| and calls the
+    // appropriate error functor on failure.
+    SourceUnitsIterator iter(this->sourceUnits);
+    Maybe<char32_t> maybeCodePoint =
+        DecodeOneUtf8CodePoint(lead, &iter, SourceUnitsEnd(),
+                               onBadLeadUnit, onNotEnoughUnits, onBadTrailingUnit, onBadCodePoint,
+                               onNotShortestForm);
+    if (maybeCodePoint.isNothing())
+        return false;
+
+    char32_t cp = maybeCodePoint.value();
+    if (MOZ_UNLIKELY(cp == unicode::LINE_SEPARATOR || cp == unicode::PARA_SEPARATOR)) {
+        if (!updateLineInfoForEOL()) {
+#ifdef DEBUG
+            *codePoint = EOF; // sentinel value to hopefully cause errors
+#endif
+            MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
+            return false;
+        }
+
+        *codePoint = '\n';
+    } else {
+        MOZ_ASSERT(!IsLineTerminator(cp));
+        *codePoint = AssertedCast<int32_t>(cp);
+    }
+
+    return true;
+}
+
 template<>
 size_t
 SourceUnits<char16_t>::findWindowStart(size_t offset) const
