@@ -645,7 +645,7 @@ static_assert(sizeof(FragmentOrElement::nsDOMSlots) <= MaxDOMSlotSizeAllowed,
               "DOM slots cannot be grown without consideration");
 
 void
-nsIContent::nsExtendedContentSlots::Unlink()
+nsIContent::nsExtendedContentSlots::UnlinkExtendedSlots()
 {
   mBindingParent = nullptr;
   mXBLInsertionPoint = nullptr;
@@ -654,7 +654,7 @@ nsIContent::nsExtendedContentSlots::Unlink()
 }
 
 void
-nsIContent::nsExtendedContentSlots::Traverse(nsCycleCollectionTraversalCallback& aCb)
+nsIContent::nsExtendedContentSlots::TraverseExtendedSlots(nsCycleCollectionTraversalCallback& aCb)
 {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mBindingParent");
   aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mBindingParent));
@@ -679,10 +679,13 @@ FragmentOrElement::nsDOMSlots::nsDOMSlots()
   : nsIContent::nsContentSlots(),
     mDataset(nullptr)
 {
+  MOZ_COUNT_CTOR(nsDOMSlots);
 }
 
 FragmentOrElement::nsDOMSlots::~nsDOMSlots()
 {
+  MOZ_COUNT_DTOR(nsDOMSlots);
+
   if (mAttributeMap) {
     mAttributeMap->DropReference();
   }
@@ -723,8 +726,8 @@ size_t
 FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  if (mExtendedSlots) {
-    n += aMallocSizeOf(mExtendedSlots.get());
+  if (OwnsExtendedSlots()) {
+    n += aMallocSizeOf(GetExtendedContentSlots());
   }
 
   if (mAttributeMap) {
@@ -758,9 +761,9 @@ FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots()
 }
 
 void
-FragmentOrElement::nsExtendedDOMSlots::Unlink()
+FragmentOrElement::nsExtendedDOMSlots::UnlinkExtendedSlots()
 {
-  nsIContent::nsExtendedContentSlots::Unlink();
+  nsIContent::nsExtendedContentSlots::UnlinkExtendedSlots();
 
   // Don't clear mXBLBinding, it'll be done in
   // BindingManager::RemovedFromDocument from FragmentOrElement::Unlink.
@@ -780,9 +783,9 @@ FragmentOrElement::nsExtendedDOMSlots::Unlink()
 }
 
 void
-FragmentOrElement::nsExtendedDOMSlots::Traverse(nsCycleCollectionTraversalCallback& aCb)
+FragmentOrElement::nsExtendedDOMSlots::TraverseExtendedSlots(nsCycleCollectionTraversalCallback& aCb)
 {
-  nsIContent::nsExtendedContentSlots::Traverse(aCb);
+  nsIContent::nsExtendedContentSlots::TraverseExtendedSlots(aCb);
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mSMILOverrideStyle");
   aCb.NoteXPCOMChild(mSMILOverrideStyle.get());
