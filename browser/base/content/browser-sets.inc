@@ -57,7 +57,7 @@
 #endif
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs"
-             oncommand="PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, true);"/>
+             oncommand="PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser);"/>
     <!-- The command disabled state must be manually updated through
          PlacesCommandHook.updateBookmarkAllTabsCommand() -->
     <command id="Browser:BookmarkAllTabs"
