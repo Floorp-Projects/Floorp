@@ -22,17 +22,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 MOCHITEST_CHUNK_BY_DIR = 4
 MOCHITEST_TOTAL_CHUNKS = 5
 
-
-def WebglSuite(name):
-    return {
-        'aliases': (name,),
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'plain', 'subsuite': name, 'test_paths': None},
-        'task_regex': ['mochitest-' + name + '(?:-e10s)?(?:-1)?$',
-                       'test-verify(?:-gpu)?(?:-e10s)?(?:-1)?$'],
-    }
-
-
 TEST_SUITES = {
     'cppunittest': {
         'aliases': ('cpp',),
@@ -132,11 +121,13 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'screenshots', 'test_paths': None},
         'task_regex': ['browser-screenshots(?:-e10s)?(?:-1)?$'],
     },
-    'mochitest-webgl1-core': WebglSuite('webgl1-core'),
-    'mochitest-webgl1-ext': WebglSuite('webgl1-ext'),
-    'mochitest-webgl2-core': WebglSuite('webgl2-core'),
-    'mochitest-webgl2-ext': WebglSuite('webgl2-ext'),
-    'mochitest-webgl2-deqp': WebglSuite('webgl2-deqp'),
+    'mochitest-webgl': {
+        'aliases': ('webgl',),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'plain', 'subsuite': 'webgl', 'test_paths': None},
+        'task_regex': ['mochitest-webgl(?:-e10s)?(?:-1)?$',
+                       'test-verify(?:-gpu)?(?:-e10s)?(?:-1)?$'],
+    },
     'python': {
         'mach_command': 'python-test',
         'kwargs': {'tests': None},
@@ -214,11 +205,7 @@ _test_subsuites = {
     ('mochitest', 'gpu'): 'mochitest-gpu',
     ('mochitest', 'media'): 'mochitest-media',
     ('mochitest', 'robocop'): 'robocop',
-    ('mochitest', 'webgl1-core'): 'mochitest-webgl1-core',
-    ('mochitest', 'webgl1-ext'): 'mochitest-webgl1-ext',
-    ('mochitest', 'webgl2-core'): 'mochitest-webgl2-core',
-    ('mochitest', 'webgl2-ext'): 'mochitest-webgl2-ext',
-    ('mochitest', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
+    ('mochitest', 'webgl'): 'mochitest-webgl',
 }
 
 
