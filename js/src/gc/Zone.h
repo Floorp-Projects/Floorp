@@ -715,8 +715,8 @@ class Zone : public JS::shadow::Zone,
      * on OOM and retry the allocation.
      */
     template <typename T>
-    T* pod_callocCanGC(size_t numElems) {
-        T* p = pod_calloc<T>(numElems);
+    T* pod_callocCanGC(size_t numElems, arena_id_t arena = js::MallocArena) {
+        T* p = pod_calloc<T>(numElems, arena);
         if (MOZ_LIKELY(!!p))
             return p;
         size_t bytes;
