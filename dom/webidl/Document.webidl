@@ -63,22 +63,25 @@ interface Document : Node {
   [Pure]
   Element? getElementById(DOMString elementId);
 
-  [CEReactions, NewObject, Throws]
+  // These DOM methods cannot be accessed by UA Widget scripts
+  // because the DOM element reflectors will be in the content scope,
+  // instead of the desired UA Widget scope.
+  [CEReactions, NewObject, Throws, Func="IsNotUAWidget"]
   Element createElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
-  [CEReactions, NewObject, Throws]
+  [CEReactions, NewObject, Throws, Func="IsNotUAWidget"]
   Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (ElementCreationOptions or DOMString) options);
   [NewObject]
   DocumentFragment createDocumentFragment();
-  [NewObject]
+  [NewObject, Func="IsNotUAWidget"]
   Text createTextNode(DOMString data);
-  [NewObject]
+  [NewObject, Func="IsNotUAWidget"]
   Comment createComment(DOMString data);
   [NewObject, Throws]
   ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
-  [CEReactions, Throws]
+  [CEReactions, Throws, Func="IsNotUAWidget"]
   Node importNode(Node node, optional boolean deep = false);
-  [CEReactions, Throws]
+  [CEReactions, Throws, Func="IsNotUAWidget"]
   Node adoptNode(Node node);
 
   [NewObject, Throws, NeedsCallerType]
@@ -174,7 +177,7 @@ partial interface Document {
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.
    */
-  [Func="IsChromeOrXBL"] readonly attribute boolean mozSyntheticDocument;
+  [Func="IsChromeOrXBLOrUAWidget"] readonly attribute boolean mozSyntheticDocument;
   [Throws, Func="IsChromeOrXBL"]
   BoxObject? getBoxObjectFor(Element? element);
   /**

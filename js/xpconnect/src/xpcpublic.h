@@ -86,6 +86,10 @@ bool IsContentXBLCompartment(JS::Compartment* compartment);
 bool IsContentXBLScope(JS::Realm* realm);
 bool IsInContentXBLScope(JSObject* obj);
 
+bool IsUAWidgetCompartment(JS::Compartment* compartment);
+bool IsUAWidgetScope(JS::Realm* realm);
+bool IsInUAWidgetScope(JSObject* obj);
+
 bool IsInSandboxCompartment(JSObject* obj);
 
 // Return a raw XBL scope object corresponding to contentScope, which must
@@ -103,6 +107,12 @@ bool IsInSandboxCompartment(JSObject* obj);
 // are in XBL scope (by just returning the global).
 JSObject*
 GetXBLScope(JSContext* cx, JSObject* contentScope);
+
+JSObject*
+GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal);
+
+JSObject*
+GetUAWidgetScope(JSContext* cx, JSObject* contentScope);
 
 inline JSObject*
 GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj)
@@ -723,9 +733,22 @@ namespace dom {
 bool IsChromeOrXBL(JSContext* cx, JSObject* /* unused */);
 
 /**
- * Same as IsChromeOrXBL but can be used in worker threads as well.
+ * This is used to prevent UA widget code from directly creating and adopting
+ * nodes via the content document, since they should use the special
+ * create-and-insert apis instead.
  */
-bool ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj);
+bool IsNotUAWidget(JSContext* cx, JSObject* /* unused */);
+
+/**
+ * A test for whether WebIDL methods that should only be visible to
+ * chrome, XBL scopes, or UA Widget scopes.
+ */
+bool IsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* /* unused */);
+
+/**
+ * Same as IsChromeOrXBLOrUAWidget but can be used in worker threads as well.
+ */
+bool ThreadSafeIsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* obj);
 
 } // namespace dom
 } // namespace mozilla

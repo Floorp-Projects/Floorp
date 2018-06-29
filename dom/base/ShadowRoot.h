@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_shadowroot_h__
 #define mozilla_dom_shadowroot_h__
 
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/NameSpaceConstants.h"
@@ -171,12 +172,32 @@ public:
   void GetInnerHTML(nsAString& aInnerHTML);
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
 
+  /**
+   * These methods allow UA Widget to insert DOM elements into the Shadow ROM
+   * without putting their DOM reflectors to content scope first.
+   * The inserted DOM will have their reflectors in the UA Widget scope.
+   */
+  nsINode* ImportNodeAndAppendChildAt(nsINode& aParentNode,
+                                      nsINode& aNode,
+                                      bool aDeep, mozilla::ErrorResult& rv);
+
+  nsINode* CreateElementAndAppendChildAt(nsINode& aParentNode,
+                                         const nsAString& aTagName,
+                                         mozilla::ErrorResult& rv);
+
   bool IsComposedDocParticipant() const
   {
     return mIsComposedDocParticipant;
   }
 
   void SetIsComposedDocParticipant(bool aIsComposedDocParticipant);
+
+  bool IsUAWidget() const
+  {
+    return mIsUAWidget;
+  }
+
+  void SetIsUAWidget(bool aIsUAWidget);
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
@@ -203,6 +224,8 @@ protected:
   // mark whether it is in the composed document, but we have run out of flags
   // so instead we track it here.
   bool mIsComposedDocParticipant;
+
+  bool mIsUAWidget;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
