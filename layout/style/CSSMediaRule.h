@@ -17,12 +17,15 @@ class CSSMediaRule final : public css::ConditionRule
 {
 public:
   CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule,
-               uint32_t aLine, uint32_t aColumn);
+               StyleSheet* aSheet,
+               css::Rule* aParentRule,
+               uint32_t aLine,
+               uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSMediaRule, css::ConditionRule)
 
-  void SetStyleSheet(StyleSheet* aSheet) override;
+  void DropSheetReference() override;
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
