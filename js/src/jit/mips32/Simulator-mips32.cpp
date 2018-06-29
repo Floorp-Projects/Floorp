@@ -37,6 +37,7 @@
 
 #include "jit/AtomicOperations.h"
 #include "jit/mips32/Assembler-mips32.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
@@ -524,14 +525,12 @@ int Simulator::StopSimAt = -1;
 Simulator*
 Simulator::Create(JSContext* cx)
 {
-    Simulator* sim = js_new<Simulator>();
+    auto sim = MakeUnique<Simulator>();
     if (!sim)
         return nullptr;
 
-    if (!sim->init()) {
-        js_delete(sim);
+    if (!sim->init())
         return nullptr;
-    }
 
     char* stopAtStr = getenv("MIPS_SIM_STOP_AT");
     int64_t stopAt;
@@ -540,7 +539,7 @@ Simulator::Create(JSContext* cx)
         Simulator::StopSimAt = stopAt;
     }
 
-    return sim;
+    return sim.release();
 }
 
 void
