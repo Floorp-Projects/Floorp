@@ -1542,7 +1542,8 @@ MarkupView.prototype = {
         const end = this.telemetry.msSystemNow();
         this.telemetry.recordEvent("devtools.main", "edit_html", "inspector", null, {
           "made_changes": commit,
-          "time_open": end - start
+          "time_open": end - start,
+          "session_id": this.toolbox.sessionId
         });
       });
 
