@@ -939,16 +939,6 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     return result.succeed();
 }
 
-bool
-js::WouldDefinePastNonwritableLength(HandleNativeObject obj, uint32_t index)
-{
-    if (!obj->is<ArrayObject>())
-        return false;
-
-    ArrayObject* arr = &obj->as<ArrayObject>();
-    return !arr->lengthIsWritable() && index >= arr->length();
-}
-
 static bool
 array_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {

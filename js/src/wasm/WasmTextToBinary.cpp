@@ -1656,15 +1656,19 @@ WasmTokenStream::next()
         break;
 
       case 'm':
-#ifdef ENABLE_WASM_BULKMEM_OPS
         if (consume(u"memory.")) {
+#ifdef ENABLE_WASM_BULKMEM_OPS
             if (consume(u"copy"))
                 return WasmToken(WasmToken::MemCopy, begin, cur_);
             if (consume(u"fill"))
                 return WasmToken(WasmToken::MemFill, begin, cur_);
+#endif
+            if (consume(u"grow"))
+                return WasmToken(WasmToken::GrowMemory, begin, cur_);
+            if (consume(u"size"))
+                return WasmToken(WasmToken::CurrentMemory, begin, cur_);
             break;
         }
-#endif
         if (consume(u"module"))
             return WasmToken(WasmToken::Module, begin, cur_);
         if (consume(u"memory"))

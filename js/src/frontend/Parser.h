@@ -10,6 +10,8 @@
 #define frontend_Parser_h
 
 /*
+ * [SMDOC] JS Parser
+ *
  * JS parsers capable of generating ASTs from source text.
  *
  * A parser embeds token stream information, then gets and matches tokens to

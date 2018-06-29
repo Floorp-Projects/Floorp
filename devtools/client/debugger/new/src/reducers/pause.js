@@ -8,6 +8,7 @@ exports.getPauseReason = getPauseReason;
 exports.getPauseCommand = getPauseCommand;
 exports.isStepping = isStepping;
 exports.isPaused = isPaused;
+exports.getIsPaused = getIsPaused;
 exports.getPreviousPauseFrameLocation = getPreviousPauseFrameLocation;
 exports.isEvaluatingExpression = isEvaluatingExpression;
 exports.getPopupObjectProperties = getPopupObjectProperties;
@@ -301,6 +302,10 @@ function isStepping(state) {
 }
 
 function isPaused(state) {
+  return !!getFrames(state);
+}
+
+function getIsPaused(state) {
   return !!getFrames(state);
 }
 

@@ -592,6 +592,8 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
 }
 
 /*
+ * [SMDOC] WASM Linear Memory structure
+ *
  * Wasm Raw Buf Linear Memory Structure
  *
  * The linear heap in Wasm is an mmaped array buffer. Several

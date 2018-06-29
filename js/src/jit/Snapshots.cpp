@@ -19,6 +19,8 @@
 using namespace js;
 using namespace js::jit;
 
+// [SMDOC] IonMonkey Snapshot encoding
+//
 // Encodings:
 //   [ptr] A fixed-size pointer.
 //   [vwu] A variable-width unsigned integer.
