@@ -268,6 +268,18 @@ nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
   }
 }
 
+static bool
+SizeIsAvailable(imgIRequest* aRequest)
+{
+  if (!aRequest) {
+    return false;
+  }
+
+  uint32_t imageStatus = 0;
+  nsresult rv = aRequest->GetImageStatus(&imageStatus);
+  return NS_SUCCEEDED(rv) && (imageStatus & imgIRequest::STATUS_SIZE_AVAILABLE);
+}
+
 void
 nsImageFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
@@ -289,9 +301,15 @@ nsImageFrame::Init(nsIContent*       aContent,
     imageLoader->FrameCreated(this);
   } else {
     if (auto* proxy = StyleContent()->ContentAt(0).GetImage()) {
-      proxy->SyncClone(mListener,
-                       mContent->OwnerDoc(),
-                       getter_AddRefs(mContentURLRequest));
+      proxy->Clone(mListener,
+                   mContent->OwnerDoc(),
+                   getter_AddRefs(mContentURLRequest));
+      // Make sure we get the intrinsic size and such ASAP if available.
+      if (SizeIsAvailable(mContentURLRequest)) {
+        nsCOMPtr<imgIContainer> image;
+        mContentURLRequest->GetImage(getter_AddRefs(image));
+        OnSizeAvailable(mContentURLRequest, image);
+      }
     }
   }
 
@@ -575,17 +593,6 @@ nsImageFrame::Notify(imgIRequest* aRequest,
   return NS_OK;
 }
 
-static bool
-SizeIsAvailable(imgIRequest* aRequest)
-{
-  if (!aRequest)
-    return false;
-
-  uint32_t imageStatus = 0;
-  nsresult rv = aRequest->GetImageStatus(&imageStatus);
-  return NS_SUCCEEDED(rv) && (imageStatus & imgIRequest::STATUS_SIZE_AVAILABLE);
-}
-
 nsresult
 nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 {
@@ -624,9 +631,13 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
     intrinsicSizeChanged = true;
   }
 
+  if (!GotInitialReflow()) {
+    return NS_OK;
+  }
+
   MarkNeedsDisplayItemRebuild();
 
-  if (intrinsicSizeChanged && GotInitialReflow()) {
+  if (intrinsicSizeChanged) {
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow
     if (!(mState & IMAGE_SIZECONSTRAINED)) {
