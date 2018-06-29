@@ -51,7 +51,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#include "mozilla/jni/Utils.h"
 #endif
 
 namespace mozilla {
@@ -940,7 +940,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         (Renderer() == GLRenderer::AdrenoTM305 ||
          Renderer() == GLRenderer::AdrenoTM320 ||
          Renderer() == GLRenderer::AdrenoTM330) &&
-        AndroidBridge::Bridge()->GetAPIVersion() < 21) {
+        jni::GetAPIVersion() < 21) {
         // Bug 1164027. Driver crashes when functions such as
         // glTexImage2D fail due to virtual memory exhaustion.
         mTextureAllocCrashesOnMapFailure = true;
@@ -949,7 +949,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 #if MOZ_WIDGET_ANDROID
     if (mWorkAroundDriverBugs &&
         Renderer() == GLRenderer::SGX540 &&
-        AndroidBridge::Bridge()->GetAPIVersion() <= 15) {
+        jni::GetAPIVersion() <= 15) {
         // Bug 1288446. Driver sometimes crashes when uploading data to a
         // texture if the render target has changed since the texture was
         // rendered from. Calling glCheckFramebufferStatus after
@@ -1696,7 +1696,7 @@ GLContext::InitExtensions()
 #ifdef MOZ_WIDGET_ANDROID
         if (Vendor() == GLVendor::Imagination &&
             Renderer() == GLRenderer::SGX544MP &&
-            AndroidBridge::Bridge()->GetAPIVersion() < 21)
+            jni::GetAPIVersion() < 21)
         {
             // Bug 1026404
             MarkExtensionUnsupported(OES_EGL_image);
