@@ -744,19 +744,38 @@ pub unsafe extern "C" fn sdp_get_rtcpfbs(attributes: *const Vec<SdpAttribute>, r
 }
 
 
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RustSdpAttributeImageAttr {
+    pub pt: u32,
+}
+
+impl<'a> From<&'a SdpAttributeImageAttr> for RustSdpAttributeImageAttr {
+    fn from(other: &SdpAttributeImageAttr) -> Self {
+        RustSdpAttributeImageAttr {
+            pt: match other.pt {
+                SdpAttributePayloadType::Wildcard => u32::max_value(),
+                SdpAttributePayloadType::PayloadType(x) => x as u32,
+            },
+        }
+    }
+}
+
+
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_imageattr_count(attributes: *const Vec<SdpAttribute>) -> size_t {
     count_attribute((*attributes).as_slice(), RustSdpAttributeType::ImageAttr)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_imageattrs(attributes: *const Vec<SdpAttribute>, ret_size: size_t, ret_groups: *mut StringView) {
-    let attrs: Vec<_> = (*attributes).iter().filter_map(|x| if let SdpAttribute::ImageAttr(ref string) = *x {
-        Some(StringView::from(string.as_str()))
+pub unsafe extern "C" fn sdp_get_imageattrs(attributes: *const Vec<SdpAttribute>, ret_size: size_t, ret_attrs: *mut RustSdpAttributeImageAttr) {
+    let attrs: Vec<_> = (*attributes).iter().filter_map(|x| if let SdpAttribute::ImageAttr(ref data) = *x {
+        Some(RustSdpAttributeImageAttr::from(data))
     } else {
         None
     }).collect();
-    let imageattrs = slice::from_raw_parts_mut(ret_groups, ret_size);
+    let imageattrs = slice::from_raw_parts_mut(ret_attrs, ret_size);
     imageattrs.copy_from_slice(attrs.as_slice());
 }
 
