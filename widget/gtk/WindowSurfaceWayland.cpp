@@ -551,6 +551,8 @@ frame_callback_handler(void *data, struct wl_callback *callback, uint32_t time)
 {
   auto surface = reinterpret_cast<WindowSurfaceWayland*>(data);
   surface->FrameCallbackHandler();
+
+  gfxPlatformGtk::GetPlatform()->SetWaylandLastVsync(time);
 }
 
 static const struct wl_callback_listener frame_listener = {

@@ -51,6 +51,10 @@
 #undef Status
 #endif
 
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
+
 #endif /* MOZ_X11 */
 
 #include <fontconfig/fontconfig.h>
@@ -94,6 +98,12 @@ gfxPlatformGtk::gfxPlatformGtk()
       mCompositorDisplay = nullptr;
     }
 #endif // MOZ_X11
+#ifdef MOZ_WAYLAND
+    // Wayland compositors use g_get_monotonic_time() to get timestamps.
+    mWaylandLastVsyncTimestamp = (g_get_monotonic_time() / 1000);
+    // Set default display fps to 60
+    mWaylandFrameDelay = 1000/60;
+#endif
 }
 
 gfxPlatformGtk::~gfxPlatformGtk()
@@ -510,16 +520,16 @@ gfxPlatformGtk::CheckVariationFontSupport()
 
 #ifdef MOZ_X11
 
-class GLXVsyncSource final : public VsyncSource
+class GtkVsyncSource final : public VsyncSource
 {
 public:
-  GLXVsyncSource()
+  GtkVsyncSource()
   {
     MOZ_ASSERT(NS_IsMainThread());
     mGlobalDisplay = new GLXDisplay();
   }
 
-  virtual ~GLXVsyncSource()
+  virtual ~GtkVsyncSource()
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -541,6 +551,9 @@ public:
                  , mVsyncTask(nullptr)
                  , mVsyncEnabledLock("GLXVsyncEnabledLock")
                  , mVsyncEnabled(false)
+#ifdef MOZ_WAYLAND
+                 , mIsWaylandDisplay(false)
+#endif
     {
     }
 
@@ -555,7 +568,7 @@ public:
         return false;
 
       RefPtr<Runnable> vsyncSetup =
-        NewRunnableMethod("GLXVsyncSource::GLXDisplay::SetupGLContext",
+        NewRunnableMethod("GtkVsyncSource::GLXDisplay::SetupGLContext",
                           this,
                           &GLXDisplay::SetupGLContext);
       mVsyncThread.message_loop()->PostTask(vsyncSetup.forget());
@@ -563,6 +576,16 @@ public:
       lock.Wait();
       return mGLContext != nullptr;
     }
+
+#ifdef MOZ_WAYLAND
+    bool SetupWayland()
+    {
+      MonitorAutoLock lock(mSetupLock);
+      MOZ_ASSERT(NS_IsMainThread());
+      mIsWaylandDisplay = true;
+      return mVsyncThread.Start();
+    }
+#endif
 
     // Called on the Vsync thread to setup the GL context.
     void SetupGLContext()
@@ -618,7 +641,9 @@ public:
     virtual void EnableVsync() override
     {
       MOZ_ASSERT(NS_IsMainThread());
+#if !defined(MOZ_WAYLAND)
       MOZ_ASSERT(mGLContext, "GLContext not setup!");
+#endif
 
       MonitorAutoLock lock(mVsyncEnabledLock);
       if (mVsyncEnabled) {
@@ -630,7 +655,11 @@ public:
       // that vsync was disabled earlier, so continue its execution.
       if (!mVsyncTask) {
         mVsyncTask = NewRunnableMethod(
-          "GLXVsyncSource::GLXDisplay::RunVsync", this, &GLXDisplay::RunVsync);
+          "GtkVsyncSource::GLXDisplay::RunVsync", this,
+#if defined(MOZ_WAYLAND)
+          mIsWaylandDisplay ? &GLXDisplay::RunVsyncWayland :
+#endif
+          &GLXDisplay::RunVsync);
         RefPtr<Runnable> addrefedTask = mVsyncTask;
         mVsyncThread.message_loop()->PostTask(addrefedTask.forget());
       }
@@ -655,7 +684,7 @@ public:
 
       // Cleanup thread-specific resources before shutting down.
       RefPtr<Runnable> shutdownTask = NewRunnableMethod(
-        "GLXVsyncSource::GLXDisplay::Cleanup", this, &GLXDisplay::Cleanup);
+        "GtkVsyncSource::GLXDisplay::Cleanup", this, &GLXDisplay::Cleanup);
       mVsyncThread.message_loop()->PostTask(shutdownTask.forget());
 
       // Stop, waiting for the cleanup task to finish execution.
@@ -714,11 +743,47 @@ public:
       }
     }
 
+#ifdef MOZ_WAYLAND
+    /* VSync on Wayland is tricky as we can get only "last VSync" event signal.
+     * That means we should draw next frame at "last Vsync + frame delay" time.
+     */
+    void RunVsyncWayland()
+    {
+      MOZ_ASSERT(!NS_IsMainThread());
+
+      for (;;) {
+        {
+          MonitorAutoLock lock(mVsyncEnabledLock);
+          if (!mVsyncEnabled) {
+            mVsyncTask = nullptr;
+            return;
+          }
+        }
+
+        gint64 lastVsync = gfxPlatformGtk::GetPlatform()->GetWaylandLastVsync();
+        gint64 currTime = (g_get_monotonic_time() / 1000);
+
+        gint64 remaining = gfxPlatformGtk::GetPlatform()->GetWaylandFrameDelay() -
+          (currTime - lastVsync);
+        if (remaining > 0) {
+          PlatformThread::Sleep(remaining);
+        } else {
+          // Time from last HW Vsync is longer than our frame delay,
+          // use our approximation then.
+          gfxPlatformGtk::GetPlatform()->SetWaylandLastVsync(currTime);
+        }
+
+        NotifyVsync(TimeStamp::Now());
+      }
+    }
+#endif
+
     void Cleanup() {
       MOZ_ASSERT(!NS_IsMainThread());
 
       mGLContext = nullptr;
-      XCloseDisplay(mXDisplay);
+      if (mXDisplay)
+        XCloseDisplay(mXDisplay);
     }
 
     // Owned by the vsync thread.
@@ -729,6 +794,9 @@ public:
     RefPtr<Runnable> mVsyncTask;
     Monitor mVsyncEnabledLock;
     bool mVsyncEnabled;
+#ifdef MOZ_WAYLAND
+    bool mIsWaylandDisplay;
+#endif
   };
 private:
   // We need a refcounted VsyncSource::Display to use chromium IPC runnables.
@@ -738,16 +806,23 @@ private:
 already_AddRefed<gfx::VsyncSource>
 gfxPlatformGtk::CreateHardwareVsyncSource()
 {
+#ifdef MOZ_WAYLAND
+  if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+    RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
+    VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
+    static_cast<GtkVsyncSource::GLXDisplay&>(display).SetupWayland();
+    return vsyncSource.forget();
+  }
+#endif
+
   // Only use GLX vsync when the OpenGL compositor is being used.
   // The extra cost of initializing a GLX context while blocking the main
   // thread is not worth it when using basic composition.
-  // Also don't use it on non-X11 displays.
   if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
-        gl::sGLXLibrary.SupportsVideoSync()) {
-      RefPtr<VsyncSource> vsyncSource = new GLXVsyncSource();
+    if (gl::sGLXLibrary.SupportsVideoSync()) {
+      RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
       VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
-      if (!static_cast<GLXVsyncSource::GLXDisplay&>(display).Setup()) {
+      if (!static_cast<GtkVsyncSource::GLXDisplay&>(display).Setup()) {
         NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
         return gfxPlatform::CreateHardwareVsyncSource();
       }
