@@ -415,6 +415,10 @@ const PredictorNetworkCleaner = {
 
 const PushNotificationsCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
+    if (!Services.prefs.getBoolPref("dom.push.enabled", false)) {
+      return Promise.resolve();
+    }
+
     return new Promise((aResolve, aReject) => {
       let push = Cc["@mozilla.org/push/Service;1"]
                    .getService(Ci.nsIPushService);
@@ -429,6 +433,10 @@ const PushNotificationsCleaner = {
   },
 
   deleteAll() {
+    if (!Services.prefs.getBoolPref("dom.push.enabled", false)) {
+      return Promise.resolve();
+    }
+
     return new Promise((aResolve, aReject) => {
       let push = Cc["@mozilla.org/push/Service;1"]
                    .getService(Ci.nsIPushService);
