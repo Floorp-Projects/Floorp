@@ -594,10 +594,13 @@ bool nsLookAndFeel::AllowOverlayScrollbarsOverlap()
 
 bool nsLookAndFeel::SystemWantsDarkTheme()
 {
-  // This returns true if the macOS system appearance is set to dark mode, false
-  // otherwise.
-  return !![[NSUserDefaults standardUserDefaults]
-             stringForKey:@"AppleInterfaceStyle"];
+  // This returns true if the macOS system appearance is set to dark mode on
+  // 10.14+, false otherwise.
+  if (nsCocoaFeatures::OnMojaveOrLater()) {
+    return !![[NSUserDefaults standardUserDefaults]
+               stringForKey:@"AppleInterfaceStyle"];
+  }
+  return false;
 }
 
 bool
