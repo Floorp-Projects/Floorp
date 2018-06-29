@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_MediaCapabilities_h_
 #define mozilla_dom_MediaCapabilities_h_
 
+#include "MediaContainerType.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionNoteChild.h"
@@ -22,6 +24,8 @@ namespace dom {
 
 struct MediaDecodingConfiguration;
 struct MediaEncodingConfiguration;
+struct AudioConfiguration;
+struct VideoConfiguration;
 class Promise;
 
 class MediaCapabilities final
@@ -55,6 +59,13 @@ public:
 
 private:
   virtual ~MediaCapabilities() = default;
+  bool CheckContentType(const nsAString& aMIMEType,
+                        Maybe<MediaContainerType>& aContainer) const;
+  bool CheckVideoConfiguration(const VideoConfiguration& aConfig) const;
+  bool CheckAudioConfiguration(const AudioConfiguration& aConfig) const;
+  bool CheckTypeForMediaSource(const nsAString& aType);
+  bool CheckTypeForFile(const nsAString& aType);
+  bool CheckTypeForEncoder(const nsAString& aType);
   nsCOMPtr<nsIGlobalObject> mParent;
 };
 

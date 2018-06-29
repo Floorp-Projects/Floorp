@@ -5,8 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaCapabilities.h"
+#include "DecoderTraits.h"
+#include "MediaRecorder.h"
+#include "mozilla/Move.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/MediaCapabilitiesBinding.h"
+#include "mozilla/dom/MediaSource.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla {
@@ -21,7 +25,48 @@ MediaCapabilities::DecodingInfo(
   if (aRv.Failed()) {
     return nullptr;
   }
-  promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+
+  // If configuration is not a valid MediaConfiguration, return a Promise
+  // rejected with a TypeError.
+  if (!aConfiguration.IsAnyMemberPresent() ||
+      (!aConfiguration.mVideo.IsAnyMemberPresent() &&
+       !aConfiguration.mAudio.IsAnyMemberPresent())) {
+    aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(
+      NS_LITERAL_STRING("'audio' or 'video'"));
+    return nullptr;
+  }
+
+  bool supported = true;
+
+  // If configuration.video is present and is not a valid video configuration,
+  // return a Promise rejected with a TypeError.
+  if (aConfiguration.mVideo.IsAnyMemberPresent()) {
+    if (!CheckVideoConfiguration(aConfiguration.mVideo)) {
+      aRv.ThrowTypeError<MSG_INVALID_MEDIA_VIDEO_CONFIGURATION>();
+      return nullptr;
+    }
+
+    // We have a video configuration and it is valid. Check if it is supported.
+    supported &=
+      aConfiguration.mType == MediaDecodingType::File
+        ? CheckTypeForFile(aConfiguration.mVideo.mContentType)
+        : CheckTypeForMediaSource(aConfiguration.mVideo.mContentType);
+  }
+  if (aConfiguration.mAudio.IsAnyMemberPresent()) {
+    if (!CheckAudioConfiguration(aConfiguration.mAudio)) {
+      aRv.ThrowTypeError<MSG_INVALID_MEDIA_AUDIO_CONFIGURATION>();
+      return nullptr;
+    }
+    // We have an audio configuration and it is valid. Check if it is supported.
+    supported &=
+      aConfiguration.mType == MediaDecodingType::File
+        ? CheckTypeForFile(aConfiguration.mAudio.mContentType)
+        : CheckTypeForMediaSource(aConfiguration.mAudio.mContentType);
+  }
+
+  auto info =
+    MakeUnique<MediaCapabilitiesInfo>(supported, supported, supported);
+  promise->MaybeResolve(std::move(info));
 
   return promise.forget();
 }
@@ -35,9 +80,116 @@ MediaCapabilities::EncodingInfo(
   if (aRv.Failed()) {
     return nullptr;
   }
-  promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+
+  // If configuration is not a valid MediaConfiguration, return a Promise
+  // rejected with a TypeError.
+  if (!aConfiguration.IsAnyMemberPresent() ||
+      (!aConfiguration.mVideo.IsAnyMemberPresent() &&
+       !aConfiguration.mAudio.IsAnyMemberPresent())) {
+    aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(
+      NS_LITERAL_STRING("'audio' or 'video'"));
+    return nullptr;
+  }
+
+  bool supported = true;
+
+  // If configuration.video is present and is not a valid video configuration,
+  // return a Promise rejected with a TypeError.
+  if (aConfiguration.mVideo.IsAnyMemberPresent()) {
+    if (!CheckVideoConfiguration(aConfiguration.mVideo)) {
+      aRv.ThrowTypeError<MSG_INVALID_MEDIA_VIDEO_CONFIGURATION>();
+      return nullptr;
+    }
+    // We have a video configuration and it is valid. Check if it is supported.
+    supported &= CheckTypeForEncoder(aConfiguration.mVideo.mContentType);
+  }
+  if (aConfiguration.mAudio.IsAnyMemberPresent()) {
+    if (!CheckAudioConfiguration(aConfiguration.mAudio)) {
+      aRv.ThrowTypeError<MSG_INVALID_MEDIA_AUDIO_CONFIGURATION>();
+      return nullptr;
+    }
+    // We have an audio configuration and it is valid. Check if it is supported.
+    supported &= CheckTypeForEncoder(aConfiguration.mAudio.mContentType);
+  }
+
+  auto info = MakeUnique<MediaCapabilitiesInfo>(supported, supported, false);
+  promise->MaybeResolve(std::move(info));
 
   return promise.forget();
+}
+
+bool
+MediaCapabilities::CheckContentType(const nsAString& aMIMEType,
+                                    Maybe<MediaContainerType>& aContainer) const
+{
+  if (aMIMEType.IsEmpty()) {
+    return false;
+  }
+
+  aContainer = MakeMediaContainerType(aMIMEType);
+  return aContainer.isSome();
+}
+
+bool
+MediaCapabilities::CheckVideoConfiguration(
+  const VideoConfiguration& aConfig) const
+{
+  Maybe<MediaContainerType> container;
+  // A valid video MIME type is a string that is a valid media MIME type and for
+  // which the type per [RFC7231] is either video or application.
+  if (!CheckContentType(aConfig.mContentType, container)) {
+    return false;
+  }
+  if (!container->Type().HasVideoMajorType() &&
+      !container->Type().HasApplicationMajorType()) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
+MediaCapabilities::CheckAudioConfiguration(
+  const AudioConfiguration& aConfig) const
+{
+  Maybe<MediaContainerType> container;
+  // A valid audio MIME type is a string that is valid media MIME type and for
+  // which the type per [RFC7231] is either audio or application.
+  if (!CheckContentType(aConfig.mContentType, container)) {
+    return false;
+  }
+  if (!container->Type().HasAudioMajorType() &&
+      !container->Type().HasApplicationMajorType()) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
+MediaCapabilities::CheckTypeForMediaSource(const nsAString& aType)
+{
+  return NS_SUCCEEDED(MediaSource::IsTypeSupported(
+    aType, nullptr /* DecoderDoctorDiagnostics */));
+}
+
+bool
+MediaCapabilities::CheckTypeForFile(const nsAString& aType)
+{
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
+  if (!containerType) {
+    return false;
+  }
+
+  return DecoderTraits::CanHandleContainerType(
+           *containerType, nullptr /* DecoderDoctorDiagnostics */) !=
+         CANPLAY_NO;
+}
+
+bool
+MediaCapabilities::CheckTypeForEncoder(const nsAString& aType)
+{
+  return MediaRecorder::IsTypeSupported(aType);
 }
 
 bool
