@@ -131,17 +131,6 @@ void
 a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
                       const LayoutDeviceIntRect& aCaretRect)
 {
-  if (FocusMgr()->FocusedAccessible()) {
-    // This is a focus event from a remote document, but focus has moved out
-    // of that document into the chrome since that event was sent. For example,
-    // this can happen when choosing File menu -> New Tab. See bug 1471466.
-    // Note that this does not handle the case where a focus event is sent from
-    // one remote document, but focus moved into a second remote document
-    // since that event was sent. However, this isn't something anyone has been
-    // able to trigger.
-    return;
-  }
-
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
                                nsIAccessibleEvent::EVENT_FOCUS);
