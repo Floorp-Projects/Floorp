@@ -413,15 +413,12 @@ Instance::memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteO
 
     // Knowing that len > 0 below simplifies the wraparound checks.
     if (len == 0) {
-
         // Even though the length is zero, we must check for a valid offset.
         if (destByteOffset < memLen && srcByteOffset < memLen)
             return 0;
 
         // else fall through to failure case
-
     } else {
-
         ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
         uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
 
@@ -454,15 +451,12 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
 
     // Knowing that len > 0 below simplifies the wraparound check.
     if (len == 0) {
-
         // Even though the length is zero, we must check for a valid offset.
         if (byteOffset < memLen)
             return 0;
 
         // else fall through to failure case
-
     } else {
-
         ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
         uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
 
@@ -477,7 +471,6 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
             return 0;
         }
         // else fall through to failure case
-
     }
 
     JSContext* cx = TlsContext.get();
@@ -515,7 +508,7 @@ Instance::Instance(JSContext* cx,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
-                   const LitValVector& globalImportValues,
+                   HandleValVector globalImportValues,
                    const WasmGlobalObjectVector& globalObjs)
   : realm_(cx->realm()),
     object_(object),
@@ -598,7 +591,7 @@ Instance::Instance(JSContext* cx,
             if (global.isIndirect())
                 *(void**)globalAddr = globalObjs[imported]->cell();
             else
-                globalImportValues[imported].writePayload(globalAddr);
+                globalImportValues[imported].get().writePayload(globalAddr);
             break;
           }
           case GlobalKind::Variable: {
@@ -608,7 +601,7 @@ Instance::Instance(JSContext* cx,
                 if (global.isIndirect())
                     *(void**)globalAddr = globalObjs[i]->cell();
                 else
-                    init.val().writePayload(globalAddr);
+                    Val(init.val()).writePayload(globalAddr);
                 break;
               }
               case InitExpr::Kind::GetGlobal: {
@@ -618,12 +611,13 @@ Instance::Instance(JSContext* cx,
                 // the source global should never be indirect.
                 MOZ_ASSERT(!imported.isIndirect());
 
+                RootedVal dest(cx, globalImportValues[imported.importIndex()].get());
                 if (global.isIndirect()) {
                     void* address = globalObjs[i]->cell();
                     *(void**)globalAddr = address;
-                    globalImportValues[imported.importIndex()].writePayload((uint8_t*)address);
+                    dest.get().writePayload((uint8_t*)address);
                 } else {
-                    globalImportValues[imported.importIndex()].writePayload(globalAddr);
+                    dest.get().writePayload(globalAddr);
                 }
                 break;
               }
