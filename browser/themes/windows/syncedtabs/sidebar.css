@@ -87,9 +87,8 @@
 
 .item.client .item-twisty-container {
   background-image: url("chrome://global/skin/tree/twisty-expanded.svg");
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: #636363;
-  fill-opacity: 1;
 }
 
 .item.client.closed .item-twisty-container {

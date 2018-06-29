@@ -27,7 +27,7 @@ add_task(async function testSetup() {
 });
 
 function createScriptError(options = {}) {
-  const scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+  let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
   scriptError.init(
     options.message || "",
     "sourceName" in options ? options.sourceName : null,
@@ -37,7 +37,33 @@ function createScriptError(options = {}) {
     options.flags || Ci.nsIScriptError.errorFlag,
     options.category || "chrome javascript",
   );
+
+  // You can't really set the stack of a scriptError in JS, so we shadow it instead.
+   if (options.stack) {
+     scriptError = Object.create(scriptError, {
+       stack: {
+         value: createStack(options.stack),
+       },
+     });
+   }
+
   return scriptError;
+}
+
+function createStack(frames) {
+  for (let k = 0; k < frames.length - 1; k++) {
+    frames[k].parent = frames[k + 1];
+  }
+  return frames[0];
+}
+
+function frame(options = {}) {
+  return Object.assign({
+    functionDisplayName: "fooFunction",
+    source: "resource://modules/BrowserErrorReporter.jsm",
+    line: 5,
+    column: 10,
+  }, options);
 }
 
 function noop() {

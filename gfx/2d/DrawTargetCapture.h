@@ -147,8 +147,6 @@ public:
 
   void ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform);
 
-  bool ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont, Color& aColor, std::vector<Glyph>& aGlyphs) override;
-
   void Dump() override;
 
 protected:
