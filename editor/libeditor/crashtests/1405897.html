@@ -1,0 +1,16 @@
+<style>
+* { position: absolute; }
+</style>
+<script>
+function jsfuzzer() {
+  del1.addEventListener("DOMSubtreeModified", () => {
+    document.execCommand("italic", false);
+    document.execCommand("selectAll", false);
+  });
+  a1.replaceChild(iframe1, a1.childNodes[0]);
+}
+</script>
+<body onload=jsfuzzer()>
+<a contenteditable="" id="a1">
+<del id="del1">
+<iframe id="iframe1">
