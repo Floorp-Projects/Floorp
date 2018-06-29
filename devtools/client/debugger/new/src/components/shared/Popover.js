@@ -57,18 +57,6 @@ class Popover extends _react.Component {
       return this.calculateTopForRightOrientation(target, editor, popover);
     };
 
-    this.onMouseLeave = e => {
-      const {
-        onMouseLeave
-      } = this.props;
-
-      if (/^(bracket-arrow|gap)$/.test(e.currentTarget.className)) {
-        return;
-      }
-
-      onMouseLeave(e);
-    };
-
     this.state = {
       left: 0,
       top: 0,
@@ -260,7 +248,7 @@ class Popover extends _react.Component {
       className: (0, _classnames2.default)("popover", `orientation-${orientation}`, {
         up: orientation === "up"
       }),
-      onMouseLeave: this.onMouseLeave,
+      onMouseLeave: this.props.onMouseLeave,
       style: {
         top,
         left

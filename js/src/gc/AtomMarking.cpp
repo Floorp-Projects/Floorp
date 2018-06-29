@@ -15,7 +15,7 @@
 namespace js {
 namespace gc {
 
-// Atom Marking Overview
+// [SMDOC] GC Atom Marking
 //
 // Things in the atoms zone (which includes atomized strings and other things,
 // all of which we will refer to as 'atoms' here) may be pointed to freely by

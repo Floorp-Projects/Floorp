@@ -45,6 +45,8 @@ EnvironmentCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
 /*** Environment objects *****************************************************/
 
 /*
+ * [SMDOC] Environment Objects
+ *
  * About environments
  * ------------------
  *
