@@ -7,8 +7,11 @@
 #ifndef dom_ipc_SharedMap_h
 #define dom_ipc_SharedMap_h
 
+#include "mozilla/dom/MozSharedMapBinding.h"
+
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
@@ -45,12 +48,11 @@ namespace ipc {
  * were changed in the last update batch. Change events are never dispatched to
  * WritableSharedMap instances.
  */
-class SharedMap : public nsISupports
+class SharedMap : public DOMEventTargetHelper
 {
   using FileDescriptor = mozilla::ipc::FileDescriptor;
 
 public:
-  NS_DECL_ISUPPORTS
 
   SharedMap();
 
@@ -63,6 +65,40 @@ public:
   // of its value. Otherwise returns null.
   void Get(JSContext* cx, const nsACString& name, JS::MutableHandleValue aRetVal,
            ErrorResult& aRv);
+
+
+  // Conversion helpers for WebIDL callers
+  bool Has(const nsAString& aName)
+  {
+    return Has(NS_ConvertUTF16toUTF8(aName));
+  }
+
+  void Get(JSContext* aCx, const nsAString& aName, JS::MutableHandleValue aRetVal,
+           ErrorResult& aRv)
+  {
+    return Get(aCx, NS_ConvertUTF16toUTF8(aName), aRetVal, aRv);
+  }
+
+
+  /**
+   * WebIDL iterator glue.
+   */
+  uint32_t GetIterableLength() const
+  {
+    return EntryArray().Length();
+  }
+
+  /**
+   * These functions return the key or value, respectively, at the given index.
+   * The index *must* be less than the value returned by GetIterableLength(), or
+   * the program will crash.
+   */
+  const nsString GetKeyAtIndex(uint32_t aIndex) const;
+  // Note: This function should only be called if the instance has a live,
+  // cached wrapper. If it does not, this function will return null, and assert
+  // in debug builds.
+  // The returned value will always be in the same Realm as that wrapper.
+  JS::Value GetValueAtIndex(uint32_t aIndex) const;
 
 
   /**
@@ -89,8 +125,10 @@ public:
               nsTArray<nsCString>&& aChangedKeys);
 
 
+  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+
 protected:
-  virtual ~SharedMap() = default;
+  ~SharedMap() override = default;
 
   class Entry
   {
@@ -222,6 +260,8 @@ protected:
     uint32_t mSize = 0;
   };
 
+  const nsTArray<Entry*>& EntryArray() const;
+
   // Rebuilds the entry hashtable mEntries from the values serialized in the
   // current snapshot, if necessary. The hashtable is rebuilt lazily after
   // construction and after every Update() call, so this function must be called
@@ -238,6 +278,7 @@ protected:
   size_t mMapSize = 0;
 
   mutable nsClassHashtable<nsCStringHashKey, Entry> mEntries;
+  mutable Maybe<nsTArray<Entry*>> mEntryArray;
 
   // Manages the memory mapping of the current snapshot. This is initialized
   // lazily after each SharedMap construction or updated, based on the values in
@@ -255,6 +296,7 @@ protected:
 class WritableSharedMap final : public SharedMap
 {
 public:
+
   WritableSharedMap();
 
   // Sets the value of the given (UTF-8 encoded) key to a structured clone
@@ -263,6 +305,19 @@ public:
 
   // Deletes the given (UTF-8 encoded) key from the map.
   void Delete(const nsACString& name);
+
+
+  // Conversion helpers for WebIDL callers
+  void Set(JSContext* aCx, const nsAString& aName, JS::HandleValue aValue, ErrorResult& aRv)
+  {
+    return Set(aCx, NS_ConvertUTF16toUTF8(aName), aValue, aRv);
+  }
+
+  void Delete(const nsAString& aName)
+  {
+    return Delete(NS_ConvertUTF16toUTF8(aName));
+  }
+
 
   // Flushes any queued changes to a new snapshot, and broadcasts it to all
   // child SharedMap instances.
@@ -274,6 +329,9 @@ public:
    * WritableSharedMap for use in the parent process.
    */
   SharedMap* GetReadOnly();
+
+
+  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
 
 protected:
   ~WritableSharedMap() override = default;
