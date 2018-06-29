@@ -775,21 +775,22 @@ enum class HasGcTypes
 
 class LitVal
 {
+  protected:
     ValType type_;
     union U {
-        uint32_t i32_;
-        uint64_t i64_;
-        float f32_;
-        double f64_;
-        I8x16 i8x16_;
-        I16x8 i16x8_;
-        I32x4 i32x4_;
-        F32x4 f32x4_;
-        intptr_t ptr_;
+        uint32_t  i32_;
+        uint64_t  i64_;
+        float     f32_;
+        double    f64_;
+        I8x16     i8x16_;
+        I16x8     i16x8_;
+        I32x4     i32x4_;
+        F32x4     f32x4_;
+        JSObject* ptr_;
     } u;
 
   public:
-    LitVal() = default;
+    LitVal() : type_(), u{} {}
 
     explicit LitVal(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
     explicit LitVal(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
@@ -797,9 +798,10 @@ class LitVal
     explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
     explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
-    explicit LitVal(ValType refType, void* ptr) : type_(refType) {
+    explicit LitVal(ValType refType, JSObject* ptr) : type_(refType) {
         MOZ_ASSERT(refType.isRefOrAnyRef());
-        u.ptr_ = intptr_t(ptr);
+        MOZ_ASSERT(ptr == nullptr, "use Val for non-nullptr ref types to get tracing");
+        u.ptr_ = ptr;
     }
 
     explicit LitVal(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
@@ -826,7 +828,7 @@ class LitVal
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
-    intptr_t ptr() const { MOZ_ASSERT(type_.isRefOrAnyRef()); return u.ptr_; }
+    JSObject* ptr() const { MOZ_ASSERT(type_.isRefOrAnyRef()); return u.ptr_; }
 
     const I8x16& i8x16() const {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
@@ -844,11 +846,40 @@ class LitVal
         MOZ_ASSERT(type_ == ValType::F32x4);
         return u.f32x4_;
     }
-
-    void writePayload(uint8_t* dst) const;
+    // To be used only by Val.
+    const void* rawSimd() const { return &u.i32x4_; }
 };
 
 typedef Vector<LitVal, 0, SystemAllocPolicy> LitValVector;
+
+// A Val is a LitVal that can contain pointers to JSObjects, thanks to their
+// trace implementation. Since a Val is able to store a pointer to a JSObject,
+// it needs to be traced during compilation in case the pointee is moved.
+// The classic shorthands for Rooted things are defined after this class, for
+// easier usage.
+
+class MOZ_NON_PARAM Val : public LitVal
+{
+  public:
+    Val() : LitVal() {}
+    explicit Val(const LitVal& val);
+    explicit Val(uint32_t i32)  : LitVal(i32) {}
+    explicit Val(uint64_t i64)  : LitVal(i64) {}
+    explicit Val(float f32)     : LitVal(f32) {}
+    explicit Val(double f64)    : LitVal(f64) {}
+    explicit Val(JSObject* obj) : LitVal(ValType::AnyRef, nullptr) { u.ptr_ = obj; }
+    void writePayload(uint8_t* dst) const;
+    void trace(JSTracer* trc);
+};
+
+typedef Rooted<Val> RootedVal;
+typedef Handle<Val> HandleVal;
+typedef MutableHandle<Val> MutableHandleVal;
+
+typedef GCVector<Val, 0, SystemAllocPolicy> GCVectorVal;
+typedef Rooted<GCVectorVal> RootedValVector;
+typedef Handle<GCVectorVal> HandleValVector;
+typedef MutableHandle<GCVectorVal> MutableHandleValVector;
 
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two
