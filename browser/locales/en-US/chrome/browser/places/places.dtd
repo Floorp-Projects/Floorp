@@ -94,10 +94,6 @@
 
 <!ENTITY forwardButton.tooltip  "Go forward">
 
-<!ENTITY detailsPane.more.label "More">
-<!ENTITY detailsPane.more.accesskey "e">
-<!ENTITY detailsPane.less.label "Less">
-<!ENTITY detailsPane.less.accesskey "e">
 <!ENTITY detailsPane.selectAnItemText.description "Select an item to view and edit its properties">
 
 <!ENTITY view.label               "View">

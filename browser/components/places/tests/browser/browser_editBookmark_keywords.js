@@ -48,11 +48,6 @@ add_task(async function() {
     library.ContentTree.view.selectNode(node);
     synthesizeClickOnSelectedTreeCell(library.ContentTree.view);
 
-    // Expand the additional info for the first bookmark.
-    if (i === 0) {
-      library.document.getElementById("infoBoxExpander").click();
-    }
-
     is(library.document.getElementById("editBMPanel_keywordField").value, "",
       "The keyword field should be empty");
     info("Add a keyword to the bookmark");
