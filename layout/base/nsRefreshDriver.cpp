@@ -537,6 +537,9 @@ private:
 
     bool NotifyVsync(TimeStamp aVsyncTimestamp) override
     {
+      // IMPORTANT: All paths through this method MUST hold a strong ref on
+      // |this| for the duration of the TickRefreshDriver callback.
+
       if (!NS_IsMainThread()) {
         MOZ_ASSERT(XRE_IsParentProcess());
         // Compress vsync notifications such that only 1 may run at a time
@@ -571,6 +574,7 @@ private:
           return true;
         }
 
+        RefPtr<RefreshDriverVsyncObserver> kungFuDeathGrip(this);
         TickRefreshDriver(aVsyncTimestamp);
       }
 
