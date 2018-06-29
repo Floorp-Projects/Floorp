@@ -33,8 +33,17 @@ html|img#editBookmarkPanelFavicon[src] {
   background-size: cover;
 }
 
-#editBookmarkPanelRows {
+#editBookmarkPanelRows,
+#editBookmarkPanelBottomContent {
   padding: var(--arrowpanel-padding);
+}
+
+#editBookmarkPanelRows {
+  padding-bottom: 0;
+}
+
+#editBookmarkPanelBottomContent {
+  padding-top: 0;
 }
 
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
