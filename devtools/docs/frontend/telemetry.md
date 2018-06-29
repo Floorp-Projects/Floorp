@@ -243,12 +243,11 @@ this._telemetry.setEventRecordingEnabled("devtools.main", true);
 // telemetry event using:
 // this._telemetry.recordEvent(category, method, object, value, extra) e.g.
 this._telemetry.recordEvent("devtools.main", "open", "tools", null, {
-  "entrypoint": "ContextMenu",
-  "first_panel": "Inspector",
-  "host": "bottom",
-  "splitconsole": false,
-  "width": 1024,
-  "session_id": this.toolbox.sessionId
+  entrypoint: "ContextMenu",
+  first_panel: "Inspector",
+  host: "bottom",
+  splitconsole: false,
+  width: 1024
 });
 
 // If your "extra" properties are in different code paths you will need to
@@ -265,10 +264,9 @@ this._telemetry.addEventProperty(
 // signature of the event and needs to be sent with all properties.
 
 // Create the pending event using
-// this._telemetry.preparePendingEvent(category, method, object, value,
-// expectedPropertyNames) e.g.
+// this._telemetry.preparePendingEvent(category, method, object, value, expectedPropertyNames) e.g.
 this._telemetry.preparePendingEvent("devtools.main", "open", "tools", null,
-  ["entrypoint", "first_panel", "host", "splitconsole", "width", "session_id"]
+  ["entrypoint", "first_panel", "host", "splitconsole", "width"]
 );
 
 // Use the category, method, object, value combinations above to add each
