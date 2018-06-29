@@ -8,7 +8,8 @@ Field name | Type     | Required | Description | Example / Note
 `publish_end` | `date` | No | When to stop showing the message | `1524474850876`
 `content` | `object` | Yes | An object containing all variables/props to be rendered in the template. Subset of allowed tags detailed below. | [See example below](#html-subset)
 `campaign` | `string` | No | Campaign id that the message belongs to | `RustWebAssembly`
-`targeting` | `string` `JEXL` | Yes | A [JEXL expression](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#jexl-basics) with all targeting information needed in order to decide if the message is shown | Not yet implemented, [some examples](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#examples)
+`targeting` | `string` `JEXL` | No | A [JEXL expression](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#jexl-basics) with all targeting information needed in order to decide if the message is shown | Not yet implemented, [some examples](http://normandy.readthedocs.io/en/latest/user/filter_expressions.html#examples)
+`trigger` | `string` | No | An event or condition upon which the message will be immediately shown. This can be combined with `targeting`. Messages that define a trigger will not be shown during non-trigger-based passive message rotation.
 
 ### Message example
 ```javascript

@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Endatescha tia adressa dad e-mail",
   "firstrun_form_sub_header": "per cuntinuar cun Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mail",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Cun cuntinuar acceptas ti las {terms} e las {privacy}.",
   "firstrun_terms_of_service": "Cundiziuns d'utilisaziun",
   "firstrun_privacy_notice": "Infurmaziuns davart la protecziun da datas",

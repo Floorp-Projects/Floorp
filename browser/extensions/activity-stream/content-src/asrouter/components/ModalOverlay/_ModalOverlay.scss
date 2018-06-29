@@ -3,6 +3,7 @@
     overflow: hidden;
   }
 }
+
 .modalOverlayOuter {
   background: $white;
   opacity: 0.93;
@@ -96,7 +97,7 @@
       margin-top: 20px;
       width: 150px;
       height: 30px;
-      padding: 4px 0 6px 0;
+      padding: 4px 0 6px;
       font-size: 15px;
     }
   }

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja-JP-mac" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
+    <title>新規タブ</title>
+    <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
+    <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
+    <link rel="stylesheet" href="resource://activity-stream/css/activity-stream.css" />
+  </head>
+  <body class="activity-stream">
+    <div id="root"></div>
+    <div id="snippets-container">
+      <div id="snippets"></div>
+    </div>
+    <script>
+// Don't directly load the following scripts as part of html to let the page
+// finish loading to render the content sooner.
+for (const src of [
+  "chrome://browser/content/contentSearchUI.js",
+  "resource://activity-stream/vendor/react.js",
+  "resource://activity-stream/vendor/react-dom.js",
+  "resource://activity-stream/vendor/prop-types.js",
+  "resource://activity-stream/vendor/react-intl.js",
+  "resource://activity-stream/vendor/redux.js",
+  "resource://activity-stream/vendor/react-redux.js",
+  "resource://activity-stream/prerendered/ja-JP-mac/activity-stream-strings.js",
+  "resource://activity-stream/data/content/activity-stream.bundle.js"
+]) {
+  // These dynamically inserted scripts by default are async, but we need them
+  // to load in the desired order (i.e., bundle last).
+  const script = document.body.appendChild(document.createElement("script"));
+  script.async = false;
+  script.src = src;
+}
+    </script>
+  </body>
+</html>

@@ -17,6 +17,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   overflow-y: scroll;
+
+  &.hide-onboarding > #onboarding-overlay-button {
+    display: none !important;
+  }
 }
 
 h1,

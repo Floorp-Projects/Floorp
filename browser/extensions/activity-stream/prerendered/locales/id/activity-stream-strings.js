@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Masukkan surel Anda",
   "firstrun_form_sub_header": "Lanjutkan ke Firefox Sync.",
   "firstrun_email_input_placeholder": "Surel",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Dengan melanjutkan, Anda menyetujui {terms} dan {privacy}.",
   "firstrun_terms_of_service": "Ketentuan Layanan",
   "firstrun_privacy_notice": "Pernyataan Privasi",

@@ -11,6 +11,7 @@ export class _StartupOverlay extends React.PureComponent {
     this.clickSkip = this.clickSkip.bind(this);
     this.initScene = this.initScene.bind(this);
     this.removeOverlay = this.removeOverlay.bind(this);
+    this.onInputInvalid = this.onInputInvalid.bind(this);
 
     this.state = {emailInput: ""};
     this.initScene();
@@ -34,7 +35,10 @@ export class _StartupOverlay extends React.PureComponent {
   }
 
   onInputChange(e) {
+    let error = e.target.previousSibling;
     this.setState({emailInput: e.target.value});
+    error.classList.remove("active");
+    e.target.classList.remove("invalid");
   }
 
   onSubmit() {
@@ -45,6 +49,13 @@ export class _StartupOverlay extends React.PureComponent {
   clickSkip() {
     this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN"}));
     this.removeOverlay();
+  }
+
+  onInputInvalid(e) {
+    let error = e.target.previousSibling;
+    error.classList.add("active");
+    e.target.classList.add("invalid");
+    e.preventDefault(); // Override built-in form validation popup
   }
 
   render() {
@@ -69,7 +80,8 @@ export class _StartupOverlay extends React.PureComponent {
                 <input name="entrypoint" type="hidden" value="activity-stream-firstrun" />
                 <input name="utm_source" type="hidden" value="activity-stream" />
                 <input name="utm_campaign" type="hidden" value="firstrun" />
-                <input className="email-input" name="email" type="email" required="true" placeholder={this.props.intl.formatMessage({id: "firstrun_email_input_placeholder"})} onChange={this.onInputChange} />
+                <span className="error">{this.props.intl.formatMessage({id: "firstrun_invalid_input"})}</span>
+                <input className="email-input" name="email" type="email" required="true" onInvalid={this.onInputInvalid} placeholder={this.props.intl.formatMessage({id: "firstrun_email_input_placeholder"})} onChange={this.onInputChange} />
                 <div className="extra-links">
                   <FormattedMessage
                     id="firstrun_extra_legal_links"

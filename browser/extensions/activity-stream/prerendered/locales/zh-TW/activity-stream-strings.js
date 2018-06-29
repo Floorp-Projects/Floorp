@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "輸入您的電子郵件地址",
   "firstrun_form_sub_header": "繼續前往 Firefox Sync。",
   "firstrun_email_input_placeholder": "電子郵件",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "若繼續，代表您同意{terms}及{privacy}。",
   "firstrun_terms_of_service": "服務條款",
   "firstrun_privacy_notice": "隱私權公告",

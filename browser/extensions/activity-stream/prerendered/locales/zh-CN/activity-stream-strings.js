@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "请输入您的电子邮箱",
   "firstrun_form_sub_header": "继续使用 Firefox 同步服务。",
   "firstrun_email_input_placeholder": "电子邮件",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "若您选择继续，即表示您同意我们的{terms}和{privacy}。",
   "firstrun_terms_of_service": "服务条款",
   "firstrun_privacy_notice": "隐私声明",
