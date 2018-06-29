@@ -1,9 +1,17 @@
 <script>
+var target;
 function jsfuzzer() {
-try { htmlvar00017.addEventListener("DOMSubtreeModified", eventhandler5); } catch(e) { }
-try { htmlvar00017.align = ""; } catch(e) { }
+target = htmlvar00017; // Cache the target for removing the event handler.
+try { target.addEventListener("DOMSubtreeModified", eventhandler5); } catch(e) { }
+try { target.align = ""; } catch(e) { }
 }
+var count = 0;
 function eventhandler5() {
+if (count++ == 1) {
+  // If we didn't stop testing this, this event handler would be called too
+  // many times.  It's enough to run twice to reproduce the bug report.
+  target.removeEventListener("DOMSubtreeModified", eventhandler5);
+}
 try { document.execCommand("selectAll", false); } catch(e) { }
 try { document.execCommand("justifyCenter", false); } catch(e) { }
 try { document.execCommand("forwardDelete", false); } catch(e) { }

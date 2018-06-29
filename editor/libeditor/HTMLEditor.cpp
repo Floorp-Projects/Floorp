@@ -1163,7 +1163,7 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
   NS_ENSURE_STATE(selection);
 
   if (!selection->IsCollapsed()) {
-    nsresult rv = DeleteSelectionAsAction(eNone, eStrip);
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1587,7 +1587,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
         // inline wrappers before we do the insertion.  Otherwise we let
         // DeleteSelectionAndPrepareToCreateNode do the deletion for us, which
         // calls DeleteSelection with aStripWrappers = eStrip.
-        rv = DeleteSelectionAsAction(eNone, eNoStrip);
+        rv = DeleteSelectionAsSubAction(eNone, eNoStrip);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
