@@ -78,7 +78,7 @@ class FontInspector {
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
-    this.onRuleUpdated = this.onRuleUpdated.bind(this);
+    this.onRulePropertyUpdated = debounce(this.onRulePropertyUpdated, 100, this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
@@ -142,7 +142,7 @@ class FontInspector {
   destroy() {
     this.inspector.selection.off("new-node-front", this.onNewNode);
     this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
-    this.ruleView.off("property-value-updated", this.onRuleUpdated);
+    this.ruleView.off("property-value-updated", this.onRulePropertyUpdated);
     gDevTools.off("theme-switched", this.onThemeChanged);
 
     this.document = null;
@@ -480,7 +480,7 @@ class FontInspector {
       textProperty.setValue(value);
     }
 
-    this.ruleView.on("property-value-updated", this.onRuleUpdated);
+    this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
   }
 
   /**
@@ -539,6 +539,7 @@ class FontInspector {
    * Selection 'new-node' event handler.
    */
   onNewNode() {
+    this.ruleView.off("property-value-updated", this.onRulePropertyUpdated);
     if (this.isPanelVisible()) {
       this.update();
       this.refreshFontEditor();
@@ -578,9 +579,17 @@ class FontInspector {
 
   /**
    * Handler for "property-value-updated" event emitted from the rule view whenever a
-   * property value changes.
+   * property value changes. Ignore changes to properties unrelated to the font editor.
+   *
+   * @param {Object} eventData
+   *        Object with the property name and value.
+   *        Example: { name: "font-size", value: "1em" }
    */
-  async onRuleUpdated() {
+  async onRulePropertyUpdated(eventData) {
+    if (!FONT_PROPERTIES.includes(eventData.property)) {
+      return;
+    }
+
     if (this.isPanelVisible()) {
       await this.refreshFontEditor();
     }
@@ -714,6 +723,8 @@ class FontInspector {
 
     this.store.dispatch(updateFontEditor(fontsUsed, families, properties));
     this.inspector.emit("fonteditor-updated");
+    // Listen to manual changes in the Rule view that could update the Font Editor state
+    this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
   }
 
   /**
@@ -820,7 +831,7 @@ class FontInspector {
     }
 
     // Prevent reacting to changes we caused.
-    this.ruleView.off("property-value-updated", this.onRuleUpdated);
+    this.ruleView.off("property-value-updated", this.onRulePropertyUpdated);
     // Live preview font property changes on the page.
     textProperty.rule.previewPropertyValue(textProperty, value, "");
     // Sync Rule view with changes reflected on the page (debounced).
