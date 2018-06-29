@@ -26,6 +26,11 @@ interface FxaClient : Library {
         }
     }
 
+    // This is ultra hacky and takes advantage of the zero-based error codes returned in Rust.
+    enum class ErrorCode {
+        NoError, Other, AuthenticationError, InternalPanic
+    }
+
     class RawFxAccount : PointerType()
     class RawConfig : PointerType()
 
