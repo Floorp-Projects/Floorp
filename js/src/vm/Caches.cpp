@@ -17,7 +17,7 @@ RuntimeCaches::createMathCache(JSContext* cx)
 {
     MOZ_ASSERT(!mathCache_);
 
-    UniquePtr<MathCache> newMathCache(js_new<MathCache>());
+    auto newMathCache = MakeUnique<MathCache>();
     if (!newMathCache) {
         ReportOutOfMemory(cx);
         return nullptr;

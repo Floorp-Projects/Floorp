@@ -333,14 +333,14 @@ template JS::Zone* TracerConcrete<JSString>::zone() const;
 template<typename Referent>
 UniquePtr<EdgeRange>
 TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
-    UniquePtr<SimpleEdgeRange, JS::DeletePolicy<SimpleEdgeRange>> range(js_new<SimpleEdgeRange>());
+    auto range = js::MakeUnique<SimpleEdgeRange>();
     if (!range)
         return nullptr;
 
     if (!range->init(cx->runtime(), ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
-    return UniquePtr<EdgeRange>(range.release());
+    return range;
 }
 
 template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(JSContext* cx, bool wantNames) const;
@@ -556,7 +556,7 @@ const char16_t Concrete<RootList>::concreteTypeName[] = u"JS::ubi::RootList";
 UniquePtr<EdgeRange>
 Concrete<RootList>::edges(JSContext* cx, bool wantNames) const {
     MOZ_ASSERT_IF(wantNames, get().wantNames);
-    return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
+    return js::MakeUnique<PreComputedEdgeRange>(get().edges);
 }
 
 } // namespace ubi

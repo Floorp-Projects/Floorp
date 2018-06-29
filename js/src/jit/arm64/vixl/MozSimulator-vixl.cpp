@@ -29,6 +29,7 @@
 #include "jit/arm64/vixl/Debugger-vixl.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/IonTypes.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
@@ -168,19 +169,17 @@ Simulator* Simulator::Create(JSContext* cx) {
   // FIXME: This just leaks the Decoder object for now, which is probably OK.
   // FIXME: We should free it at some point.
   // FIXME: Note that it can't be stored in the SimulatorRuntime due to lifetime conflicts.
-  Simulator *sim;
+  js::UniquePtr<Simulator> sim;
   if (getenv("USE_DEBUGGER") != nullptr)
-    sim = js_new<Debugger>(cx, decoder, stdout);
+    sim.reset(js_new<Debugger>(cx, decoder, stdout));
   else
-    sim = js_new<Simulator>(cx, decoder, stdout);
+    sim.reset(js_new<Simulator>(cx, decoder, stdout));
 
   // Check if Simulator:init ran out of memory.
-  if (sim && sim->oom()) {
-    js_delete(sim);
+  if (sim && sim->oom())
     return nullptr;
-  }
 
-  return sim;
+  return sim.release();
 }
 
 

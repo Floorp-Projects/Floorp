@@ -5384,7 +5384,7 @@ CodeGenerator::maybeCreateScriptCounts()
     if (!script)
         return nullptr;
 
-    UniquePtr<IonScriptCounts> counts(js_new<IonScriptCounts>());
+    auto counts = MakeUnique<IonScriptCounts>();
     if (!counts || !counts->init(graph.numBlocks()))
         return nullptr;
 

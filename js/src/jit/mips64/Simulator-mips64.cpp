@@ -40,6 +40,7 @@
 
 #include "jit/AtomicOperations.h"
 #include "jit/mips64/Assembler-mips64.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
@@ -559,14 +560,12 @@ int64_t Simulator::StopSimAt = -1;
 Simulator *
 Simulator::Create(JSContext* cx)
 {
-    Simulator* sim = js_new<Simulator>();
+    auto sim = MakeUnique<Simulator>();
     if (!sim)
         return nullptr;
 
-    if (!sim->init()) {
-        js_delete(sim);
+    if (!sim->init())
         return nullptr;
-    }
 
     int64_t stopAt;
     char* stopAtStr = getenv("MIPS_SIM_STOP_AT");
@@ -575,7 +574,7 @@ Simulator::Create(JSContext* cx)
         Simulator::StopSimAt = stopAt;
     }
 
-    return sim;
+    return sim.release();
 }
 
 void
