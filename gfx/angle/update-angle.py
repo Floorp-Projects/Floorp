@@ -2,8 +2,9 @@
 assert __name__ == '__main__'
 
 '''
-To update ANGLE in Gecko, use Windows with git-bash, and setup depot_tools and
-python3.
+To update ANGLE in Gecko, use Windows with git-bash, and setup depot_tools, python2, and
+python3. Because depot_tools expects `python` to be `python2` (shame!), python2 must come
+before python3 in your path.
 
 Upstream: https://chromium.googlesource.com/angle/angle
 
@@ -16,6 +17,32 @@ Gecko. (gfx/angle/cherries.log)
 
 ANGLE<->Chrome version mappings are here: https://omahaproxy.appspot.com/
 An easy choice is to grab Chrome's Beta's ANGLE branch.
+
+## Usage
+
+Prepare your env:
+
+~~~
+export PATH="$PATH:/path/to/depot_tools"
+export DEPOT_TOOLS_WIN_TOOLCHAIN=0
+~~~
+
+If this is a new repo, don't forget:
+
+~~~
+# In the angle repo:
+./scripts/bootstrap.py
+gclient sync
+~~~
+
+Update: (in the angle repo)
+
+~~~
+# In the angle repo:
+/path/to/gecko/gfx/angle/update-angle.py origin/chromium/XXXX
+git push moz # Push the firefox-XX branch to github.com/mozilla/angle
+~~~~
+
 '''
 
 import json
@@ -30,7 +57,6 @@ from vendor_from_git import *
 
 REPO_DIR = Path.cwd()
 GECKO_ANGLE_DIR = Path(__file__).parent
-GECKO_DIR = GECKO_ANGLE_DIR.parent.parent
 
 OUT_DIR = 'out'
 
@@ -40,16 +66,70 @@ COMMON_HEADER = [
     "include('../../moz.build.common')",
 ]
 
-# --
+VENDOR_PREREQ_TARGETS = [
+    '//:commit_id', # Generate 'commit.h'.
+]
+
+ROOTS = ['//:translator', '//:libEGL', '//:libGLESv2']
+
+DRY_RUN = '--dry' in sys.argv
+ACTION_PREFIX = ''
+if DRY_RUN:
+    ACTION_PREFIX = '(not) '
+
+# --------------------------------------
 
 def sorted_items(x):
     for k in sorted(x.keys()):
         yield (k, x[k])
 
-# --
+
+def collapse_dotdots(path):
+    split = path.split('/')
+
+    ret = []
+    for x in split:
+        if x == '..' and ret:
+            ret.pop()
+            continue
+        ret.append(x)
+        continue
+
+    return '/'.join(ret)
+
+
+def traverse(roots, pre_recurse_func, key_func=id):
+    visited = set()
+
+    def recurse(cur):
+        key = key_func(cur)
+        if key in visited:
+            return
+        visited.add(key)
+
+        t = pre_recurse_func(cur)
+        post_recurse_func = None
+        try:
+            (children, post_recurse_func) = t
+        except ValueError:
+            (children,) = t
+
+        for x in children:
+            recurse(x)
+
+        if post_recurse_func:
+            post_recurse_func(cur)
+        return
+
+    for x in roots:
+        recurse(x)
+    return
+
+# --------------------------------------
 
 MERGE_BASE = sys.argv[1]
-record_cherry_picks(GECKO_ANGLE_DIR, MERGE_BASE)
+if not DRY_RUN:
+    record_cherry_picks(GECKO_ANGLE_DIR, MERGE_BASE)
 
 # --
 
@@ -88,112 +168,40 @@ common['sources'] += [
 
 # --
 
-# Inject node key and child links into desc dicts
 for (k, v) in descs.items():
+    for (k2, v2) in v.items():
+        if type(v2) == list:
+            v[k2] = tuple(v2) # Freeze lists
+
     v['target_name'] = k
-    v['dep_children'] = [descs[x] for x in v['deps']]
+    v['dep_nodes'] = tuple([descs[x] for x in v['deps']])
     assert v['public'] == '*', k
-
-    v['includes'] = []
-    v['just_sources'] = []
-
-    def fn(x):
-        (_, e) = x.rsplit('.', 1)
-        if e in ['h', 'inl']:
-            v['includes'].append(x)
-            return
-        elif e in ['cc', 'cpp']:
-            v['just_sources'].append(x)
-            return
-
-    list(map(fn, v.get('sources', [])))
-    if v['type'] == 'action':
-        list(map(fn, v['outputs']))
 
 # --
 # Ready to traverse
 
-def traverse(roots, pre_recurse_func, key_func=None):
-    visited = set()
-
-    def identity(x):
-        return x
-
-    if not key_func:
-        key_func = identity
-
-    def recurse(cur):
-        key = key_func(cur)
-        if key in visited:
-            return
-        visited.add(key)
-
-        t = pre_recurse_func(cur)
-        post_recurse_func = None
-        try:
-            (children, post_recurse_func) = t
-        except ValueError:
-            (children,) = t
-
-        for x in children:
-            recurse(x)
-
-        if post_recurse_func:
-            post_recurse_func(cur)
-        return
-
-    for x in roots:
-        recurse(x)
-    return
-
-ROOTS = ['//:translator', '//:libEGL', '//:libGLESv2']
-ROOTS = list(map(descs.get, ROOTS))
+ROOTS = [descs[k] for k in ROOTS]
 
 # Gather real targets:
 real_targets = []
-
-def desc_key(x):
-    return x['target_name']
-
-def gather_includable_includes_post(x):
-    x['includable_includes'] = x['includes']
-    x['includable_sources'] = x['just_sources']
-    x['all_include_dirs'] = x.get('include_dirs', [])
-    for y in x['dep_children']:
-        x['includable_includes'] += y['includable_includes']
-        x['all_include_dirs'] += y['all_include_dirs']
-        if y['type'] == 'source_set':
-            x['includable_sources'] += y['includable_sources']
 
 def gather_real_targets(cur):
     print_now('  ' + cur['type'], cur['target_name'])
     if cur['type'] in ['shared_library', 'static_library']:
         real_targets.append(cur)
 
-    return (cur['dep_children'], gather_includable_includes_post)
+    def post(x):
+        x['sources_with_deps'] = x.get('sources', ())
+        x['include_dirs_with_deps'] = x.get('include_dirs', ())
+        for y in x['dep_nodes']:
+            x['sources_with_deps'] += y['sources_with_deps']
+            x['include_dirs_with_deps'] += y['include_dirs_with_deps']
 
-traverse(ROOTS, gather_real_targets, desc_key)
+    return (cur['dep_nodes'], post)
+
+traverse(ROOTS, gather_real_targets)
 
 # --
-
-print_now('Running required actions')
-
-# Build the ':commit_id' 'action' target to generate 'commit.h'.
-run_checked('ninja', '-C', OUT_DIR, ':commit_id')
-
-# --
-
-print_now('Export targets')
-
-# Clear our dest directories
-targets_dir = Path(GECKO_ANGLE_DIR, 'targets')
-checkout_dir = Path(GECKO_ANGLE_DIR, 'checkout')
-shutil.rmtree(targets_dir, True)
-shutil.rmtree(checkout_dir, True)
-targets_dir.mkdir(exist_ok=True)
-checkout_dir.mkdir(exist_ok=True)
-
-# Export our targets
 
 def sortedi(x):
     return sorted(x, key=str.lower)
@@ -209,7 +217,7 @@ def append_arr(dest, name, vals, indent=0):
     dest.append('')
     return
 
-INCLUDE_REGEX = re.compile('# *include *"(.+)"')
+INCLUDE_REGEX = re.compile('# *include +([<"])([^>"]+)[>"]')
 
 IGNORED_INCLUDES = {
     'compiler/translator/TranslatorVulkan.h',
@@ -218,8 +226,26 @@ IGNORED_INCLUDES = {
     'libANGLE/renderer/gl/cgl/DisplayCGL.h',
     'libANGLE/renderer/gl/egl/ozone/DisplayOzone.h',
     'libANGLE/renderer/gl/egl/android/DisplayAndroid.h',
+    'libANGLE/renderer/gl/wgl/DisplayWGL.h',
+    'libANGLE/renderer/null/DisplayNULL.h',
+    'libANGLE/renderer/vulkan/android/DisplayVkAndroid.h',
     'libANGLE/renderer/vulkan/win32/DisplayVkWin32.h',
     'libANGLE/renderer/vulkan/xcb/DisplayVkXcb.h',
+}
+
+IGNORED_INCLUDE_PREFIXES = {
+    'android/',
+    'Carbon/',
+    'CoreFoundation/',
+    'CoreServices/',
+    'IOSurface/',
+    'mach/',
+    'mach-o/',
+    'OpenGL/',
+    'pci/',
+    'sys/',
+    'wrl/',
+    'X11/',
 }
 
 REGISTERED_DEFINES = {
@@ -265,6 +291,7 @@ REGISTERED_DEFINES = {
     'V8_DEPRECATION_WARNINGS': False,
     'WIN32': False,
     'WIN32_LEAN_AND_MEAN': False,
+    'WINAPI_FAMILY': False,
     'WINVER': False,
     'WTF_USE_DYNAMIC_ANNOTATIONS': False,
     '_ATL_NO_OPENGL': True,
@@ -281,18 +308,16 @@ REGISTERED_DEFINES = {
     '__STD_C': False,
 }
 
-def is_used_file_name(x):
-    (_, e) = x.rsplit('.', 1)
-    if e in ['h', 'cc', 'cpp', 'inl']:
-        return True
-    return False
+SOURCE_FILE_EXTS = frozenset(['h', 'hpp', 'inc', 'inl', 'c', 'cc', 'cpp'])
 
-def check_includes(target_name, cur, avail_files, include_dirs):
+def is_source_file(x):
+    e = x.split('.')[-1]
+    return e in SOURCE_FILE_EXTS
+
+
+def assert_valid_includes(target_name, cur, avail_files, include_dirs):
     assert cur.startswith('//'), cur
-    cur = cur[2:]
-
-    if not is_used_file_name(cur):
-        return
+    cur = PurePosixPath(cur[2:])
 
     (cur_dir, _) = os.path.split(cur)
     include_dirs = [
@@ -300,16 +325,24 @@ def check_includes(target_name, cur, avail_files, include_dirs):
         '//' + cur_dir + '/',
     ] + list(include_dirs)
 
-    def is_valid_include(inc):
-        if inc in IGNORED_INCLUDES:
-            return True
+    def assert_one(inc, line_num):
+        attempts = []
 
         for inc_dir in include_dirs:
+            assert inc_dir[-1] == '/'
             inc_path = inc_dir + inc
+            inc_path = collapse_dotdots(inc_path)
+            attempts.append(inc_path)
             if inc_path in avail_files:
-                return True
+                return
 
-        return False
+        print('Warning in {}: {}:{}: Invalid include: {}'.format(target_name, cur, line_num, inc))
+        print('  Tried:')
+        for x in attempts:
+            print('    {}'.format(x))
+        #print()
+        #print(avail_files)
+        exit(1)
 
     line_num = 0
     with open(cur, 'rb') as f:
@@ -319,19 +352,64 @@ def check_includes(target_name, cur, avail_files, include_dirs):
             m = INCLUDE_REGEX.match(line)
             if not m:
                 continue
-            inc = m.group(1)
-            if not is_valid_include(inc):
-                print('Warning in {}: {}:{}: Invalid include: {}'.format(target_name, cur, line_num, inc))
+            inc = m.group(2)
+            if inc in IGNORED_INCLUDES:
+                continue
+            if m.group(1) == '<':
+                if '/' not in inc:
+                    continue
+                if any((inc.startswith(x) for x in IGNORED_INCLUDE_PREFIXES)):
+                    continue
 
+            assert_one(inc, line_num)
 
 total_used_files = set()
+vendor_prereq_outputs = set()
+
+# --
+
+print_now('Running prerequisite actions')
+for k in VENDOR_PREREQ_TARGETS:
+    assert k.startswith('//')
+    run_checked('ninja', '-C', OUT_DIR, k[2:])
+    vendor_prereq_outputs |= set(descs[k]['outputs'])
+total_used_files |= vendor_prereq_outputs
+
+# --
+
+# Export our targets
+print_now('Export targets')
+
+# Clear our dest directories
+targets_dir = Path(GECKO_ANGLE_DIR, 'targets')
+checkout_dir = Path(GECKO_ANGLE_DIR, 'checkout')
+
+if not DRY_RUN:
+    shutil.rmtree(targets_dir, True)
+    shutil.rmtree(checkout_dir, True)
+    targets_dir.mkdir(exist_ok=True)
+    checkout_dir.mkdir(exist_ok=True)
 
 def export_target(root):
     name = root['target_name']
     assert name.startswith('//:')
     name = name[3:]
 
+    used_files = root['sources_with_deps']
+    used_files = [x for x in used_files if x.split('.')[-1] not in ['dll']]
+    global total_used_files
+    total_used_files |= set(used_files)
+
+    # Check includes, since `gn check` seems to be broken.
+    includable = set(root['sources_with_deps']) | vendor_prereq_outputs
+    for x in includable:
+        if is_source_file(x):
+            assert_valid_includes(name, x, includable, root['include_dirs_with_deps'])
+
+    # Accumulate a combined dict for the target including non-lib deps.
     accum_desc = dict(root)
+    del accum_desc['dep_nodes']
+
     use_libs = set()
 
     checkable_sources = set()
@@ -339,12 +417,12 @@ def export_target(root):
     target_includable_files = set()
 
     def pre(cur):
-        assert cur.get('allow_circular_includes_from', []) == [], cur['target_name']
-        children = cur['dep_children']
+        assert not cur.get('allow_circular_includes_from', ()), cur['target_name']
+        deps = cur['dep_nodes']
 
         if cur != root:
             if cur['type'] in ['shared_library', 'static_library']:
-                children = []
+                deps = []
 
                 name = cur['target_name']
                 assert name.startswith('//:')
@@ -352,25 +430,19 @@ def export_target(root):
                 use_libs.add(name)
             elif cur['type'] in ('source_set', 'group', 'action'):
                 for (k,v) in cur.items():
-                    if type(v) == list:
-                        vs = accum_desc.setdefault(k, [])
+                    if k in ('dep_nodes', 'sources_with_deps', 'include_dirs_with_deps'):
+                        continue
+                    if type(v) in (list, tuple):
+                        vs = accum_desc.setdefault(k, ())
                         vs += v
                     else:
                         accum_desc.setdefault(k, v)
 
-        return (children,)
+        return (deps,)
 
-    traverse([root], pre, desc_key)
+    traverse([root], pre)
 
-    # Check includes, since `gn check` seems to be broken
-    includable = set(root['includable_sources'] + root['includable_includes'])
-    for x in includable:
-        check_includes(name, x, includable, set(accum_desc['all_include_dirs']))
-
-    total_used_files.update(includable, root['sources']) # With 'sources' to get rc/defs.
-
-    # --
-
+    # Create our manifest lines
     target_dir = Path(targets_dir, name)
     target_dir.mkdir(exist_ok=True)
 
@@ -403,7 +475,7 @@ def export_target(root):
     extras = dict()
     for x in fixup_paths(accum_desc['sources']):
         (b, e) = x.rsplit('.', 1)
-        if e in ['h', 'y', 'l', 'inl']:
+        if e in ['h', 'y', 'l', 'inc', 'inl']:
             continue
         elif e in ['cpp', 'cc']:
             if b.endswith('_win'):
@@ -422,14 +494,23 @@ def export_target(root):
             assert 'RCFILE' not in extras
             extras['RCFILE'] = "'{}'".format(x)
             continue
-        elif e == 'def':
-            assert 'DEFFILE' not in extras
-            extras['DEFFILE'] = "SRCDIR + '/{}'".format(x)
-            continue
         else:
-            assert False, x
+            assert False, "Unhandled ext: {}".format(x)
 
-    ldflags = filter(lambda x: not x.startswith('/DEF:'), set(accum_desc['ldflags']))
+    ldflags = set(accum_desc['ldflags'])
+    DEF_PREFIX = '/DEF:'
+    for x in set(ldflags):
+        if x.startswith(DEF_PREFIX):
+            assert 'DEFFILE' not in extras
+            ldflags.remove(x)
+
+            def_path = OUT_DIR + '/' + x[len(DEF_PREFIX):]
+            def_path = '//' + collapse_dotdots(def_path)
+            total_used_files.add(def_path)
+
+            def_rel_path = list(fixup_paths([def_path]))[0]
+            extras['DEFFILE'] = "SRCDIR + '/{}'".format(def_rel_path)
+
     os_libs = list(map( lambda x: x[:-len('.lib')], set(accum_desc.get('libs', [])) ))
 
     def append_arr_commented(dest, name, src):
@@ -471,10 +552,11 @@ def export_target(root):
     # Write it out
 
     mozbuild = Path(target_dir, 'moz.build')
-    print_now('  Writing {}'.format(mozbuild))
-    with mozbuild.open('w', newline='\n') as f:
-        for x in lines:
-            f.write(x + '\n')
+    print_now('  {}Writing {}'.format(ACTION_PREFIX, mozbuild))
+    if not DRY_RUN:
+        with mozbuild.open('w', newline='\n') as f:
+            for x in lines:
+                f.write(x + '\n')
 
     return
 
@@ -486,20 +568,21 @@ for x in real_targets:
 
 print_now('Migrate files')
 
-total_used_files = sorted(set(total_used_files))
+total_used_files = sorted(total_used_files)
 i = 0
 for x in total_used_files:
     i += 1
-    sys.stdout.write('\r  Copying {}/{}'.format(i, len(total_used_files)))
+    sys.stdout.write('\r  {}Copying {}/{}'.format(ACTION_PREFIX, i, len(total_used_files)))
     sys.stdout.flush()
     assert x.startswith('//'), x
     x = x[2:]
 
     src = Path(REPO_DIR, x)
     dest = Path(checkout_dir, x)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    data = src.read_bytes()
-    data = data.replace(b'\r\n', b'\n')
-    dest.write_bytes(data)
+    if not DRY_RUN:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        data = src.read_bytes()
+        data = data.replace(b'\r\n', b'\n')
+        dest.write_bytes(data)
 
 print('\nDone')
