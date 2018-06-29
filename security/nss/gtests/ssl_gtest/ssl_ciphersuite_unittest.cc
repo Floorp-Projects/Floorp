@@ -84,6 +84,18 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
           Reset(TlsAgent::kRsa2048);
           auth_type_ = ssl_auth_rsa_sign;
           break;
+        case ssl_sig_rsa_pss_pss_sha256:
+          Reset(TlsAgent::kServerRsaPss);
+          auth_type_ = ssl_auth_rsa_pss;
+          break;
+        case ssl_sig_rsa_pss_pss_sha384:
+          Reset("rsa_pss384");
+          auth_type_ = ssl_auth_rsa_pss;
+          break;
+        case ssl_sig_rsa_pss_pss_sha512:
+          Reset("rsa_pss512");
+          auth_type_ = ssl_auth_rsa_pss;
+          break;
         case ssl_sig_ecdsa_secp256r1_sha256:
           Reset(TlsAgent::kServerEcdsa256);
           auth_type_ = ssl_auth_ecdsa;
@@ -310,14 +322,13 @@ static const auto kDummyNamedGroupParams = ::testing::Values(ssl_grp_none);
 static const auto kDummySignatureSchemesParams =
     ::testing::Values(ssl_sig_none);
 
-#ifndef NSS_DISABLE_TLS_1_3
 static SSLSignatureScheme kSignatureSchemesParamsArr[] = {
     ssl_sig_rsa_pkcs1_sha256,       ssl_sig_rsa_pkcs1_sha384,
     ssl_sig_rsa_pkcs1_sha512,       ssl_sig_ecdsa_secp256r1_sha256,
     ssl_sig_ecdsa_secp384r1_sha384, ssl_sig_rsa_pss_rsae_sha256,
     ssl_sig_rsa_pss_rsae_sha384,    ssl_sig_rsa_pss_rsae_sha512,
-};
-#endif
+    ssl_sig_rsa_pss_pss_sha256,     ssl_sig_rsa_pss_pss_sha384,
+    ssl_sig_rsa_pss_pss_sha512};
 
 INSTANTIATE_CIPHER_TEST_P(RC4, Stream, V10ToV12, kDummyNamedGroupParams,
                           kDummySignatureSchemesParams,
@@ -372,6 +383,14 @@ INSTANTIATE_CIPHER_TEST_P(
     TLS_ECDH_RSA_WITH_AES_128_CBC_SHA, TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA);
+INSTANTIATE_CIPHER_TEST_P(
+    TLS12SigSchemes, All, V12, ::testing::ValuesIn(kFasterDHEGroups),
+    ::testing::ValuesIn(kSignatureSchemesParamsArr),
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, TLS_RSA_WITH_AES_256_CBC_SHA256,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+    TLS_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA256);
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_CIPHER_TEST_P(TLS13, All, V13,
                           ::testing::ValuesIn(kFasterDHEGroups),

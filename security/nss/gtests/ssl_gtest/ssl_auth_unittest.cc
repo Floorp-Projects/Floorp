@@ -37,6 +37,50 @@ TEST_P(TlsConnectGeneric, ServerAuthRsaChain) {
   EXPECT_EQ(2UL, chain_length);
 }
 
+TEST_P(TlsConnectTls12Plus, ServerAuthRsaPss) {
+  static const SSLSignatureScheme kSignatureSchemePss[] = {
+      ssl_sig_rsa_pss_pss_sha256};
+
+  Reset(TlsAgent::kServerRsaPss);
+  client_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  server_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_pss,
+            ssl_sig_rsa_pss_pss_sha256);
+}
+
+// PSS doesn't work with TLS 1.0 or 1.1 because we can't signal it.
+TEST_P(TlsConnectPre12, ServerAuthRsaPssFails) {
+  static const SSLSignatureScheme kSignatureSchemePss[] = {
+      ssl_sig_rsa_pss_pss_sha256};
+
+  Reset(TlsAgent::kServerRsaPss);
+  client_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  server_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
+  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+}
+
+// Check that a PSS certificate with no parameters works.
+TEST_P(TlsConnectTls12Plus, ServerAuthRsaPssNoParameters) {
+  static const SSLSignatureScheme kSignatureSchemePss[] = {
+      ssl_sig_rsa_pss_pss_sha256};
+
+  Reset("rsa_pss_noparam");
+  client_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  server_->SetSignatureSchemes(kSignatureSchemePss,
+                               PR_ARRAY_SIZE(kSignatureSchemePss));
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_pss,
+            ssl_sig_rsa_pss_pss_sha256);
+}
+
 TEST_P(TlsConnectGeneric, ServerAuthRsaPssChain) {
   Reset("rsa_pss_chain");
   Connect();
@@ -218,13 +262,13 @@ TEST_P(TlsConnectTls12, ClientAuthNoSigAlgsFallback) {
   CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pkcs1_sha1, 1024);
 }
 
-static const SSLSignatureScheme SignatureSchemeEcdsaSha384[] = {
+static const SSLSignatureScheme kSignatureSchemeEcdsaSha384[] = {
     ssl_sig_ecdsa_secp384r1_sha384};
-static const SSLSignatureScheme SignatureSchemeEcdsaSha256[] = {
+static const SSLSignatureScheme kSignatureSchemeEcdsaSha256[] = {
     ssl_sig_ecdsa_secp256r1_sha256};
-static const SSLSignatureScheme SignatureSchemeRsaSha384[] = {
+static const SSLSignatureScheme kSignatureSchemeRsaSha384[] = {
     ssl_sig_rsa_pkcs1_sha384};
-static const SSLSignatureScheme SignatureSchemeRsaSha256[] = {
+static const SSLSignatureScheme kSignatureSchemeRsaSha256[] = {
     ssl_sig_rsa_pkcs1_sha256};
 
 static SSLNamedGroup NamedGroupForEcdsa384(uint16_t version) {
@@ -241,10 +285,10 @@ static SSLNamedGroup NamedGroupForEcdsa384(uint16_t version) {
 // for TLS 1.1 and 1.0, where they should be ignored.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerAuth) {
   Reset(TlsAgent::kServerEcdsa384);
-  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
-  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  client_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
   Connect();
   CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
             ssl_sig_ecdsa_secp384r1_sha384);
@@ -273,8 +317,8 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
 // Defaults on the client include the provided option.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
   Reset(TlsAgent::kServerEcdsa384);
-  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
   Connect();
   CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
             ssl_sig_ecdsa_secp384r1_sha384);
@@ -283,16 +327,16 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
 // In TLS 1.2, curve and hash aren't bound together.
 TEST_P(TlsConnectTls12, SignatureSchemeCurveMismatch) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  client_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
   Connect();
 }
 
 // In TLS 1.3, curve and hash are coupled.
 TEST_P(TlsConnectTls13, SignatureSchemeCurveMismatch) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  client_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
   ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
@@ -301,16 +345,16 @@ TEST_P(TlsConnectTls13, SignatureSchemeCurveMismatch) {
 // Configuring a P-256 cert with only SHA-384 signatures is OK in TLS 1.2.
 TEST_P(TlsConnectTls12, SignatureSchemeBadConfig) {
   Reset(TlsAgent::kServerEcdsa256);  // P-256 cert can't be used.
-  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
   Connect();
 }
 
 // A P-256 certificate in TLS 1.3 needs a SHA-256 signature scheme.
 TEST_P(TlsConnectTls13, SignatureSchemeBadConfig) {
   Reset(TlsAgent::kServerEcdsa256);  // P-256 cert can't be used.
-  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
   ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
@@ -319,10 +363,10 @@ TEST_P(TlsConnectTls13, SignatureSchemeBadConfig) {
 // Where there is no overlap on signature schemes, we still connect successfully
 // if we aren't going to use a signature.
 TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
-  client_->SetSignatureSchemes(SignatureSchemeRsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeRsaSha384));
-  server_->SetSignatureSchemes(SignatureSchemeRsaSha256,
-                               PR_ARRAY_SIZE(SignatureSchemeRsaSha256));
+  client_->SetSignatureSchemes(kSignatureSchemeRsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeRsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeRsaSha256,
+                               PR_ARRAY_SIZE(kSignatureSchemeRsaSha256));
   EnableOnlyStaticRsaCiphers();
   Connect();
   CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
@@ -330,10 +374,10 @@ TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
 
 TEST_P(TlsConnectTls12Plus, SignatureAlgorithmNoOverlapEcdsa) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
-  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha256,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha256));
+  client_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeEcdsaSha256,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha256));
   ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
@@ -342,10 +386,10 @@ TEST_P(TlsConnectTls12Plus, SignatureAlgorithmNoOverlapEcdsa) {
 // Pre 1.2, a mismatch on signature algorithms shouldn't affect anything.
 TEST_P(TlsConnectPre12, SignatureAlgorithmNoOverlapEcdsa) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
-  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha256,
-                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha256));
+  client_->SetSignatureSchemes(kSignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeEcdsaSha256,
+                               PR_ARRAY_SIZE(kSignatureSchemeEcdsaSha256));
   Connect();
 }
 
@@ -411,8 +455,8 @@ TEST_P(TlsConnectTls13, InconsistentSignatureSchemeAlert) {
 }
 
 TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
-  server_->SetSignatureSchemes(SignatureSchemeRsaSha384,
-                               PR_ARRAY_SIZE(SignatureSchemeRsaSha384));
+  server_->SetSignatureSchemes(kSignatureSchemeRsaSha384,
+                               PR_ARRAY_SIZE(kSignatureSchemeRsaSha384));
   server_->RequestClientAuth(false);
   Connect();
 }
@@ -754,15 +798,15 @@ TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPkcs1SignAndKEX) {
   PRFileDesc* ssl_fd = agent_->ssl_fd();
   EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_decrypt));
   EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_sign));
-  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
 
-  // Configuring for only rsa_sign, rsa_pss, or rsa_decrypt should work.
+  // Configuring for only rsa_sign or rsa_decrypt should work.
   EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
                                        &ServerCertDataRsaPkcs1Decrypt));
   EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
                                        &ServerCertDataRsaPkcs1Sign));
-  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
-                                       &ServerCertDataRsaPss));
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
+                                        &ServerCertDataRsaPss));
 }
 
 // Test RSA cert with usage=[signature].
@@ -772,17 +816,17 @@ TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPkcs1Sign) {
   PRFileDesc* ssl_fd = agent_->ssl_fd();
   EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_decrypt));
   EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_sign));
-  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
 
   // Configuring for only rsa_decrypt should fail.
   EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
                                         &ServerCertDataRsaPkcs1Decrypt));
 
-  // Configuring for only rsa_sign or rsa_pss should work.
+  // Configuring for only rsa_sign should work.
   EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
                                        &ServerCertDataRsaPkcs1Sign));
-  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
-                                       &ServerCertDataRsaPss));
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
+                                        &ServerCertDataRsaPss));
 }
 
 // Test RSA cert with usage=[encipherment].

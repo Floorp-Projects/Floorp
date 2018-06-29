@@ -1640,6 +1640,7 @@ SECStatus ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid,
 const ssl3CipherSuiteDef *ssl_LookupCipherSuiteDef(ssl3CipherSuite suite);
 SECStatus ssl3_SelectServerCert(sslSocket *ss);
 SECStatus ssl_PickSignatureScheme(sslSocket *ss,
+                                  CERTCertificate *cert,
                                   SECKEYPublicKey *pubKey,
                                   SECKEYPrivateKey *privKey,
                                   const SSLSignatureScheme *peerSchemes,
@@ -1647,7 +1648,7 @@ SECStatus ssl_PickSignatureScheme(sslSocket *ss,
                                   PRBool requireSha1);
 SECOidTag ssl3_HashTypeToOID(SSLHashType hashType);
 SSLHashType ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme);
-KeyType ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme);
+SSLAuthType ssl_SignatureSchemeToAuthType(SSLSignatureScheme scheme);
 
 SECStatus ssl3_SetupCipherSuite(sslSocket *ss, PRBool initHashes);
 SECStatus ssl_InsertRecordHeader(const sslSocket *ss, ssl3CipherSpec *cwSpec,
