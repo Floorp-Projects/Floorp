@@ -157,24 +157,8 @@ html|button, html|select {
   background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
 }
 
-.devtools-autocomplete-listbox .autocomplete-selected,
 .devtools-autocomplete-listbox .autocomplete-item:hover {
-  background-color: rgba(128,128,128,0.3);
-}
-
-.theme-dark .devtools-autocomplete-listbox .autocomplete-selected,
-.theme-dark .devtools-autocomplete-listbox .autocomplete-item:hover {
-  background-color: rgba(0,0,0,0.5);
-}
-
-.devtools-autocomplete-listbox .autocomplete-selected > .autocomplete-value,
-.devtools-autocomplete-listbox:focus .autocomplete-selected > .initial-value {
-  color: #222;
-}
-
-.theme-dark .devtools-autocomplete-listbox .autocomplete-selected > .autocomplete-value,
-.theme-dark .devtools-autocomplete-listbox:focus .autocomplete-selected > .initial-value {
-  color: hsl(208,100%,60%);
+  background: var(--theme-selection-background-hover);
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > span {
@@ -185,8 +169,18 @@ html|button, html|select {
   color: #ccc;
 }
 
-.theme-dark .devtools-autocomplete-listbox .autocomplete-selected > span {
-  color: #eee;
+.devtools-autocomplete-listbox .autocomplete-selected,
+.devtools-autocomplete-listbox .autocomplete-selected:hover {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.devtools-autocomplete-listbox .autocomplete-selected > span {
+  color: var(--theme-selection-color);
+}
+
+.devtools-autocomplete-listbox .autocomplete-selected > .initial-value {
+  font-weight: bold;
 }
 
 /* Autocomplete list clone used for accessibility. */
