@@ -62,7 +62,7 @@ matrix:
         - NAME=win32
         - EXT=zip
         - TOOLCHAIN=nightly
-        - DOCKER_IMAGE=i686-trusty
+        - DOCKER_IMAGE=i686-xenial
       dist: trusty
       services:
         - docker

@@ -419,6 +419,15 @@ public:
   already_AddRefed<DataTransfer> MozCloneForEvent(const nsAString& aEvent,
                                                   ErrorResult& aRv);
 
+  // Retrieve a list of clipboard formats supported
+  //
+  // If kFileMime is supported, then it will be placed either at
+  // index 0 or at index 1 in aResult
+  static void
+  GetExternalClipboardFormats(const int32_t& aWhichClipboard,
+                              const bool& aPlainTextOnly,
+                              nsTArray<nsCString>* aResult);
+
 protected:
 
   // caches text and uri-list data formats that exist in the drag service or

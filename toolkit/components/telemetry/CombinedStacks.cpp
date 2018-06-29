@@ -35,8 +35,9 @@ CombinedStacks::GetModule(unsigned aIndex) const {
 
 size_t
 CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
+  size_t index = mNextIndex;
   // Advance the indices of the circular queue holding the stacks.
-  size_t index = mNextIndex++ % mMaxStacksCount;
+  mNextIndex = (mNextIndex + 1) % mMaxStacksCount;
   // Grow the vector up to the maximum size, if needed.
   if (mStacks.size() < mMaxStacksCount) {
     mStacks.resize(mStacks.size() + 1);
@@ -95,6 +96,25 @@ CombinedStacks::SizeOfExcludingThis() const {
     n += s.capacity() * sizeof(Telemetry::ProcessedStack::Frame);
   }
   return n;
+}
+
+void
+CombinedStacks::RemoveStack(unsigned aIndex) {
+  MOZ_ASSERT(aIndex < mStacks.size());
+
+  mStacks.erase(mStacks.begin() + aIndex);
+
+  if (aIndex < mNextIndex) {
+    if (mNextIndex == 0) {
+      mNextIndex = mStacks.size();
+    } else {
+      mNextIndex--;
+    }
+  }
+
+  if (mNextIndex > mStacks.size()) {
+    mNextIndex = mStacks.size();
+  }
 }
 
 #if defined(MOZ_GECKO_PROFILER)
