@@ -39,6 +39,7 @@ MACH_MODULES = [
     'dom/bindings/mach_commands.py',
     'layout/tools/reftest/mach_commands.py',
     'python/mach_commands.py',
+    'python/safety/mach_commands.py',
     'python/mach/mach/commands/commandinfo.py',
     'python/mach/mach/commands/settings.py',
     'python/mozboot/mozboot/mach_commands.py',

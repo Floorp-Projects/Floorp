@@ -25,6 +25,7 @@ codespell:
         - netwerk/locales/en-US/
         - python/docs/
         - python/mozlint/
+        - python/safety/
         - services/sync/locales/en-US/
         - taskcluster/docs/
         - testing/mozbase/docs/
