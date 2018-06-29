@@ -93,10 +93,14 @@
   text-align: center;
   padding: 10px;
 
+  form {
+    position: relative;
+  }
+
   .extra-links {
     font-size: 12px;
     max-width: 340px;
-    margin: 14px 50px;
+    margin: 17px 50px;
     color: #676F7E;
     cursor: default;
 
@@ -131,7 +135,15 @@
 
     &:focus {
       border-color: $blue-50;
-      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+      box-shadow: 0 0 0 3px $email-input-focus;
+    }
+
+    &.invalid {
+      border-color: $red-60;
+    }
+
+    &.invalid:focus {
+      box-shadow: 0 0 0 3px $email-input-invalid;
     }
   }
 
@@ -172,9 +184,9 @@
 
   .skip-button {
     font-size: 13px;
-    margin-top: 35px;
+    margin-top: 20px;
     margin-bottom: 20px;
-    background-color: #FCFCFC;
+    background-color: $grey-10;
     color: $blue-50;
     border: 1px solid $blue-50;
     border-radius: 2px;
@@ -183,9 +195,9 @@
     transition: background-color 150ms, color 150ms, border-color 150ms;
 
     &[disabled] {
-      background-color: #EBEBEB;
-      border-color: #B1B1B1;
-      color: #6A6A6A;
+      background-color: $grey-20;
+      border-color: $grey-40;
+      color: $grey-50;
       cursor: default;
       opacity: 0.5;
     }
@@ -246,10 +258,8 @@
     background: url('chrome://branding/content/about-logo.png') top center no-repeat;
     background-size: 90px 90px;
   }
-}
 
-[dir='rtl'] {
-  .firstrun-title {
+  &:dir(rtl) {
     background-position: top right;
   }
 }
@@ -283,4 +293,48 @@
 .firstrun-link {
   opacity: 0;
   transform: translateY(-5px);
+}
+
+.error {
+  display: none;
+}
+
+.error.active {
+  display: block;
+  padding: 5px 12px;
+  animation: fade-down 450ms;
+  font-size: 12px;
+  font-weight: 500;
+  color: $white;
+  background-color: $red-60;
+  position: absolute;
+  inset-inline-start: 50px;
+  top: -28px;
+  border-radius: 2px;
+
+  &::before {
+    inset-inline-start: 12px;
+    background: $red-60;
+    bottom: -8px;
+    content: '.';
+    height: 16px;
+    position: absolute;
+    text-indent: -999px;
+    transform: rotate(45deg);
+    white-space: nowrap;
+    width: 16px;
+    z-index: -1;
+  }
+}
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

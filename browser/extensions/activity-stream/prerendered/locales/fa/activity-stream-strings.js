@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "پست‌الکترونیکی خود را وارد کنید",
   "firstrun_form_sub_header": "برای فعال کردن همگام‌سازی فایرفاکس.",
   "firstrun_email_input_placeholder": "پست‌الکترونیکی",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "با ادامه دادن، شما {terms} و {privacy} قبول می‌کنید.",
   "firstrun_terms_of_service": "قوانین سرویس",
   "firstrun_privacy_notice": "نکات حریم‌خصوصی",

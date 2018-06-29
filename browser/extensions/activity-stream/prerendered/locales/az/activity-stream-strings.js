@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "E-poçtunuzu daxil edin",
   "firstrun_form_sub_header": "və Firefox Sync ilə davam edin.",
   "firstrun_email_input_placeholder": "E-poçt",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Davam etməklə {terms} və {privacy} ilə razılaşmış olursuz.",
   "firstrun_terms_of_service": "İstifadə Şərtləri",
   "firstrun_privacy_notice": "Məxfilik Bildirişi",

@@ -1,16 +1,35 @@
 {
   "title": "SimpleSnippet",
   "description": "A simple template with an icon, text, and optional button.",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "richText": {
+      "description": "Text with HTML subset allowed: i, b, u, strong, em, br",
+      "type": "string"
+    },
+    "link_url": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
   "properties": {
     "title": {
-      "type": "string",
-      "description": "Snippet title displayed before snippet text"
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Snippet title displayed before snippet text"}
+      ]
     },
     "text": {
-      "type": "string",
-      "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+      ]
     },
     "icon": {
       "type": "string",
@@ -21,12 +40,16 @@
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
     },
     "button_url": {
-      "type": "string",
-      "description": "A url, button_label links to this"
+      "allOf": [
+        {"$ref": "#/definitions/link_url"},
+        {"description": "A url, button_label links to this"}
+      ]
     },
     "button_label": {
-      "type": "string",
-      "description": "Text for a button next to main snippet text that links to button_url. Requires button_url."
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
+      ]
     },
     "button_color": {
       "type": "string",
@@ -48,8 +71,10 @@
     "links": {
       "additionalProperties": {
         "url": {
-          "type": "string",
-          "description": "The url where the link points to."
+          "allOf": [
+            {"$ref": "#/definitions/link_url"},
+            {"description": "The url where the link points to."}
+          ]
         },
         "metric": {
           "type": "string",
