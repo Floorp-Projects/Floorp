@@ -471,8 +471,8 @@ TextEditRules::WillInsertBreak(bool* aCancel,
 
     // if the selection isn't collapsed, delete it.
     if (!SelectionRef().IsCollapsed()) {
-      rv = TextEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
-                                                   nsIEditor::eStrip);
+      rv = TextEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
+                                                      nsIEditor::eStrip);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -725,8 +725,8 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
 
   // if the selection isn't collapsed, delete it.
   if (!SelectionRef().IsCollapsed()) {
-    rv = TextEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
-                                                 nsIEditor::eStrip);
+    rv = TextEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
+                                                    nsIEditor::eStrip);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
