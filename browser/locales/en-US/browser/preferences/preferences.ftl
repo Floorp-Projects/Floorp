@@ -849,9 +849,18 @@ permissions-block-autoplay-media =
     .label = Block websites from automatically playing media with sound
     .accesskey = B
 
+permissions-block-autoplay-media-menu = For websites that autoplay sound
+
 permissions-block-autoplay-media-exceptions =
     .label = Exceptions…
     .accesskey = E
+
+autoplay-option-ask =
+    .label = Always Ask
+autoplay-option-allow =
+    .label = Allow Autoplay
+autoplay-option-block =
+    .label = Block Autoplay
 
 permissions-block-popups =
     .label = Block pop-up windows

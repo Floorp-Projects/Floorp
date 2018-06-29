@@ -17,7 +17,7 @@ Cu.importGlobalProperties(["URL"]);
 
 // Make sure media pre-loading is enabled on Android so that our <audio> and
 // <video> elements trigger the expected requests.
-Services.prefs.setBoolPref("media.autoplay.enabled", true);
+Services.prefs.setIntPref("media.autoplay.default", Ci.nsIAutoplay.ALLOWED);
 Services.prefs.setIntPref("media.preload.default", 3);
 
 // Increase the length of the code samples included in CSP reports so that we

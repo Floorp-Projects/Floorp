@@ -15,7 +15,7 @@
 
         // Tests that origins with "autoplay-media" permission can autoplay.
 
-        gTestPrefs.push(["media.autoplay.enabled", false],
+        gTestPrefs.push(["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
           ["media.autoplay.enabled.user-gestures-needed", true],
           // Note: permission prompt disabled, as we want immediate
           // notification in this test that an origin is blocked.
