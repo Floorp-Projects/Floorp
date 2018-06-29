@@ -22,7 +22,7 @@ var CompactTheme = {
   },
 
   get isThemeCurrentlyApplied() {
-    let theme = LightweightThemeManager.currentTheme;
+    let theme = LightweightThemeManager.currentThemeForDisplay;
     return theme && (
            theme.id == "firefox-compact-dark@mozilla.org" ||
            theme.id == "firefox-compact-light@mozilla.org");

@@ -4363,7 +4363,8 @@ NS_IMETHODIMP
 nsNativeThemeCocoa::ThemeChanged()
 {
   // This is unimplemented because we don't care if gecko changes its theme
-  // and Mac OS X doesn't have themes.
+  // and macOS system appearance changes are handled by
+  // nsLookAndFeel::SystemWantsDarkTheme.
   return NS_OK;
 }
 

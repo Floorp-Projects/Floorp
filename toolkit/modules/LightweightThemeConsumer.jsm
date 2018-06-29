@@ -116,6 +116,10 @@ function LightweightThemeConsumer(aDocument) {
 
   this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
+
+  let darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
+  darkThemeMediaQuery.addListener(temp.LightweightThemeManager);
+  temp.LightweightThemeManager.systemThemeChanged(darkThemeMediaQuery);
 }
 
 LightweightThemeConsumer.prototype = {
