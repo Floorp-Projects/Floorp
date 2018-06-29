@@ -195,7 +195,7 @@ static void
 StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
 {
     // Store the return value in argv[0].
-    switch (fe.funcType().ret()) {
+    switch (fe.funcType().ret().code()) {
       case ExprType::Void:
         break;
       case ExprType::I32:
@@ -212,6 +212,7 @@ StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
         masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
+      case ExprType::Ref:
       case ExprType::AnyRef:
         masm.storePtr(ReturnReg, Address(argv, 0));
         break;
@@ -809,7 +810,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
     masm.freeStack(frameSize);
 
     // Store the return value in the JSReturnOperand.
-    switch (fe.funcType().ret()) {
+    switch (fe.funcType().ret().code()) {
       case ExprType::Void:
         masm.moveValue(UndefinedValue(), JSReturnOperand);
         break;
@@ -824,6 +825,9 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
       case ExprType::F64:
         masm.canonicalizeDouble(ReturnDoubleReg);
         masm.boxDouble(ReturnDoubleReg, JSReturnOperand, ScratchDoubleReg);
+        break;
+      case ExprType::Ref:
+        MOZ_CRASH("return ref in jitentry NYI");
         break;
       case ExprType::AnyRef:
         MOZ_CRASH("return anyref in jitentry NYI");
@@ -1177,7 +1181,7 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
 
     // Make the call, test whether it succeeded, and extract the return value.
     AssertStackAlignment(masm, ABIStackAlignment);
-    switch (fi.funcType().ret()) {
+    switch (fi.funcType().ret().code()) {
       case ExprType::Void:
         masm.call(SymbolicAddress::CallImport_Void);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -1202,6 +1206,7 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
+      case ExprType::Ref:
       case ExprType::AnyRef:
         masm.call(SymbolicAddress::CallImport_Ref);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -1367,7 +1372,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
 #endif
 
     Label oolConvert;
-    switch (fi.funcType().ret()) {
+    switch (fi.funcType().ret().code()) {
       case ExprType::Void:
         break;
       case ExprType::I32:
@@ -1381,6 +1386,9 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         break;
       case ExprType::F64:
         masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
+        break;
+      case ExprType::Ref:
+        MOZ_CRASH("ref returned by import (jit exit) NYI");
         break;
       case ExprType::AnyRef:
         MOZ_CRASH("anyref returned by import (jit exit) NYI");
@@ -1448,7 +1456,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         // Call coercion function. Note that right after the call, the value of
         // FP is correct because FP is non-volatile in the native ABI.
         AssertStackAlignment(masm, ABIStackAlignment);
-        switch (fi.funcType().ret()) {
+        switch (fi.funcType().ret().code()) {
           case ExprType::I32:
             masm.call(SymbolicAddress::CoerceInPlace_ToInt32);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);

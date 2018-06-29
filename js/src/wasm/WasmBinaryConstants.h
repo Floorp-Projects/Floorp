@@ -65,6 +65,9 @@ enum class TypeCode
     // A reference to any type.
     AnyRef                               = 0x6f,
 
+    // Type constructor for reference types.
+    Ref                                  = 0x6e,
+
     // Type constructor for function types
     Func                                 = 0x60,  // SLEB128(-0x20)
 
@@ -592,6 +595,11 @@ enum class NameType
     Module   = 0,
     Function = 1,
     Local    = 2
+};
+
+enum class FieldFlags {
+    Mutable     = 0x01,
+    AllowedMask = 0x01
 };
 
 // These limits are agreed upon with other engines for consistency.

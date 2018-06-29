@@ -162,17 +162,230 @@ struct ShareableBase : AtomicRefCounted<T>
     }
 };
 
-enum class ExprType;
+// A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
+// for TypeCode::Ref).  PackedTypeCode is guaranteed to be POD.
+//
+// PackedTypeCode is an enum class, as opposed to the more natural
+// struct-with-bitfields, because bitfields would make it non-POD.
+//
+// DO NOT use PackedTypeCode as a cast.  ALWAYS go via PackTypeCode().
+
+enum class PackedTypeCode : uint32_t {};
+
+const uint32_t NoTypeCode     = 0xFF;      // Only use these
+const uint32_t NoRefTypeIndex = 0xFFFFFF;  //   with PackedTypeCode
+
+static inline PackedTypeCode
+InvalidPackedTypeCode()
+{
+    return PackedTypeCode((NoRefTypeIndex << 8) | NoTypeCode);
+}
+
+static inline PackedTypeCode
+PackTypeCode(TypeCode tc)
+{
+    MOZ_ASSERT(uint32_t(tc) <= 0xFF);
+    MOZ_ASSERT(tc != TypeCode::Ref);
+    return PackedTypeCode((NoRefTypeIndex << 8) | uint32_t(tc));
+}
+
+static inline PackedTypeCode
+PackTypeCode(TypeCode tc, uint32_t refTypeIndex)
+{
+    MOZ_ASSERT(uint32_t(tc) <= 0xFF);
+    MOZ_ASSERT_IF(tc != TypeCode::Ref, refTypeIndex == NoRefTypeIndex);
+    MOZ_ASSERT_IF(tc == TypeCode::Ref, refTypeIndex <= MaxTypes);
+    return PackedTypeCode((refTypeIndex << 8) | uint32_t(tc));
+}
+
+static inline PackedTypeCode
+PackedTypeCodeFromBits(uint32_t bits)
+{
+    return PackTypeCode(TypeCode(bits & 255), bits >> 8);
+}
+
+static inline bool
+IsValid(PackedTypeCode ptc)
+{
+    return (uint32_t(ptc) & 255) != NoTypeCode;
+}
+
+static inline uint32_t
+PackedTypeCodeToBits(PackedTypeCode ptc)
+{
+    return uint32_t(ptc);
+}
+
+static inline TypeCode
+UnpackTypeCodeType(PackedTypeCode ptc)
+{
+    MOZ_ASSERT(IsValid(ptc));
+    return TypeCode(uint32_t(ptc) & 255);
+}
+
+static inline uint32_t
+UnpackTypeCodeIndex(PackedTypeCode ptc)
+{
+    MOZ_ASSERT(UnpackTypeCodeType(ptc) == TypeCode::Ref);
+    return uint32_t(ptc) >> 8;
+}
+
+// The ExprType represents the type of a WebAssembly expression or return value
+// and may either be a ValType or void.
+//
+// (Soon, expression types will be generalized to a list of ValType and this
+// class will go away, replaced, wherever it is used, by a varU32 + list of
+// ValType.)
+
+class ValType;
+
+class ExprType
+{
+    PackedTypeCode tc_;
+
+#ifdef DEBUG
+    bool isValidCode() {
+        switch (UnpackTypeCodeType(tc_)) {
+          case TypeCode::I32:
+          case TypeCode::I64:
+          case TypeCode::F32:
+          case TypeCode::F64:
+          case TypeCode::I8x16:
+          case TypeCode::I16x8:
+          case TypeCode::I32x4:
+          case TypeCode::F32x4:
+          case TypeCode::B8x16:
+          case TypeCode::B16x8:
+          case TypeCode::B32x4:
+          case TypeCode::AnyRef:
+          case TypeCode::Ref:
+          case TypeCode::BlockVoid:
+          case TypeCode::Limit:
+            return true;
+          default:
+            return false;
+        }
+    }
+#endif
+
+  public:
+    enum Code {
+        Void   = uint8_t(TypeCode::BlockVoid),
+
+        I32    = uint8_t(TypeCode::I32),
+        I64    = uint8_t(TypeCode::I64),
+        F32    = uint8_t(TypeCode::F32),
+        F64    = uint8_t(TypeCode::F64),
+        AnyRef = uint8_t(TypeCode::AnyRef),
+        Ref    = uint8_t(TypeCode::Ref),
+
+        I8x16  = uint8_t(TypeCode::I8x16),
+        I16x8  = uint8_t(TypeCode::I16x8),
+        I32x4  = uint8_t(TypeCode::I32x4),
+        F32x4  = uint8_t(TypeCode::F32x4),
+        B8x16  = uint8_t(TypeCode::B8x16),
+        B16x8  = uint8_t(TypeCode::B16x8),
+        B32x4  = uint8_t(TypeCode::B32x4),
+
+        Limit  = uint8_t(TypeCode::Limit)
+    };
+
+    ExprType() : tc_() {}
+
+    ExprType(const ExprType& that) : tc_(that.tc_) {}
+
+    MOZ_IMPLICIT ExprType(Code c)
+      : tc_(PackTypeCode(TypeCode(c)))
+    {
+        MOZ_ASSERT(isValidCode());
+    }
+
+    ExprType(Code c, uint32_t refTypeIndex)
+      : tc_(PackTypeCode(TypeCode(c), refTypeIndex))
+    {
+        MOZ_ASSERT(isValidCode());
+    }
+
+    explicit ExprType(PackedTypeCode ptc)
+      : tc_(ptc)
+    {
+        MOZ_ASSERT(isValidCode());
+    }
+
+    explicit inline ExprType(const ValType& t);
+
+    PackedTypeCode packed() const {
+        return tc_;
+    }
+
+    Code code() const {
+        return Code(UnpackTypeCodeType(tc_));
+    }
+
+    uint32_t refTypeIndex() const {
+        return UnpackTypeCodeIndex(tc_);
+    }
+
+    bool isValid() const {
+        return IsValid(tc_);
+    }
+
+    bool isRef() const {
+        return UnpackTypeCodeType(tc_) == TypeCode::Ref;
+    }
+
+    bool isRefOrAnyRef() const {
+        TypeCode tc = UnpackTypeCodeType(tc_);
+        return tc == TypeCode::Ref || tc == TypeCode::AnyRef;
+    }
+
+    bool operator ==(const ExprType& that) const {
+        return tc_ == that.tc_;
+    }
+
+    bool operator !=(const ExprType& that) const {
+        return tc_ != that.tc_;
+    }
+
+    bool operator ==(Code that) const {
+        MOZ_ASSERT(that != Code::Ref);
+        return code() == that;
+    }
+
+    bool operator !=(Code that) const {
+        return !(*this == that);
+    }
+};
+
+// The ValType represents the storage type of a WebAssembly location, whether
+// parameter, local, or global.
 
 class ValType
 {
-    struct {
-        uint32_t code_ : 8;           // If code_ is InvalidCode then the ValType is invalid
-        uint32_t refTypeIndex_ : 24;  // If code_ is not Ref then this must be NoIndex
-    };
+    PackedTypeCode tc_;
 
-    static const uint32_t InvalidCode  = uint32_t(TypeCode::Limit);
-    static const uint32_t NoIndex = 0xFFFFFF;
+#ifdef DEBUG
+    bool isValidCode() {
+        switch (UnpackTypeCodeType(tc_)) {
+          case TypeCode::I32:
+          case TypeCode::I64:
+          case TypeCode::F32:
+          case TypeCode::F64:
+          case TypeCode::I8x16:
+          case TypeCode::I16x8:
+          case TypeCode::I32x4:
+          case TypeCode::F32x4:
+          case TypeCode::B8x16:
+          case TypeCode::B16x8:
+          case TypeCode::B32x4:
+          case TypeCode::AnyRef:
+          case TypeCode::Ref:
+            return true;
+          default:
+            return false;
+        }
+    }
+#endif
 
   public:
     enum Code {
@@ -182,10 +395,7 @@ class ValType
         F64    = uint8_t(TypeCode::F64),
 
         AnyRef = uint8_t(TypeCode::AnyRef),
-
-        // ------------------------------------------------------------------------
-        // The rest of these types are currently only emitted internally when
-        // compiling asm.js and are rejected by wasm validation.
+        Ref    = uint8_t(TypeCode::Ref),
 
         I8x16  = uint8_t(TypeCode::I8x16),
         I16x8  = uint8_t(TypeCode::I16x8),
@@ -196,94 +406,80 @@ class ValType
         B32x4  = uint8_t(TypeCode::B32x4)
     };
 
-    ValType()
-      : code_(InvalidCode), refTypeIndex_(NoIndex)
-    {}
+    ValType() : tc_(InvalidPackedTypeCode()) {}
 
-    MOZ_IMPLICIT ValType(ValType::Code c)
-      : code_(uint32_t(c)), refTypeIndex_(NoIndex)
+    MOZ_IMPLICIT ValType(Code c)
+      : tc_(PackTypeCode(TypeCode(c)))
     {
-        assertValid();
+        MOZ_ASSERT(isValidCode());
     }
 
-    explicit inline ValType(ExprType t);
+    ValType(Code c, uint32_t refTypeIndex)
+      : tc_(PackTypeCode(TypeCode(c), refTypeIndex))
+    {
+        MOZ_ASSERT(isValidCode());
+    }
 
-    static ValType fromTypeCode(uint32_t code) {
-        return ValType(code, NoIndex);
+    explicit ValType(const ExprType& t)
+      : tc_(t.packed())
+    {
+        MOZ_ASSERT(isValidCode());
+    }
+
+    explicit ValType(PackedTypeCode ptc)
+      : tc_(ptc)
+    {
+        MOZ_ASSERT(isValidCode());
     }
 
     static ValType fromBitsUnsafe(uint32_t bits) {
-        // This will change once we have Ref types.
-        return ValType(bits & 255, NoIndex);
+        return ValType(PackedTypeCodeFromBits(bits));
     }
 
-    bool isValid() const {
-        return code_ != InvalidCode;
-    }
-
-    Code code() const {
-        return Code(code_);
-    }
-    uint32_t refTypeIndex() const {
-        return refTypeIndex_;
+    PackedTypeCode packed() const {
+        return tc_;
     }
 
     uint32_t bitsUnsafe() const {
-        // This will change once we have Ref types.
-        return code_;
+        return PackedTypeCodeToBits(tc_);
+    }
+
+    Code code() const {
+        return Code(UnpackTypeCodeType(tc_));
+    }
+
+    uint32_t refTypeIndex() const {
+        return UnpackTypeCodeIndex(tc_);
+    }
+
+    bool isValid() const {
+        return IsValid(tc_);
+    }
+
+    bool isRef() const {
+        return UnpackTypeCodeType(tc_) == TypeCode::Ref;
+    }
+
+    bool isRefOrAnyRef() const {
+        TypeCode tc = UnpackTypeCodeType(tc_);
+        return tc == TypeCode::Ref || tc == TypeCode::AnyRef;
     }
 
     bool operator ==(const ValType& that) const {
-        return code_ == that.code_ && refTypeIndex_ == that.refTypeIndex_;
+        return tc_ == that.tc_;
     }
+
     bool operator !=(const ValType& that) const {
+        return tc_ != that.tc_;
+    }
+
+    bool operator ==(Code that) const {
+        MOZ_ASSERT(that != Code::Ref);
+        return code() == that;
+    }
+
+    bool operator !=(Code that) const {
         return !(*this == that);
-    }
-    bool operator ==(ValType::Code that) const {
-        // This will change once we have Ref types.
-        return code_ == uint32_t(that) && refTypeIndex_ == NoIndex;
-    }
-    bool operator !=(ValType::Code that) const {
-        return !(*this == that);
-    }
-
-  private:
-    ValType(uint32_t code, uint32_t refTypeIndex)
-      : code_(code),
-        refTypeIndex_(refTypeIndex)
-    {
-        // 8-bit field.  Invalid values have their own constructor and should
-        // not appear here.
-        MOZ_ASSERT(code <= 0xFF && code != InvalidCode);
-        // 24-bit field.
-        MOZ_ASSERT(refTypeIndex <= 0xFFFFFF);
-
-        assertValid();
-    }
-
-    void assertValid() const {
-#ifdef DEBUG
-        // This will change once we have Ref types.
-        MOZ_ASSERT(refTypeIndex_ == NoIndex);
-        switch (code_) {
-          case uint8_t(Code::I32):
-          case uint8_t(Code::I64):
-          case uint8_t(Code::F32):
-          case uint8_t(Code::F64):
-          case uint8_t(Code::AnyRef):
-          case uint8_t(Code::I8x16):
-          case uint8_t(Code::I16x8):
-          case uint8_t(Code::I32x4):
-          case uint8_t(Code::F32x4):
-          case uint8_t(Code::B8x16):
-          case uint8_t(Code::B16x8):
-          case uint8_t(Code::B32x4):
-          case InvalidCode:
-            break;
-          default:
-            MOZ_CRASH("Invalid code");
-        }
-#endif
     }
 };
 
@@ -310,7 +506,8 @@ SizeOf(ValType vt)
       case ValType::B32x4:
         return 16;
       case ValType::AnyRef:
-        MOZ_CRASH("unexpected anyref");
+      case ValType::Ref:
+        MOZ_CRASH("unexpected ref/anyref");
     }
     MOZ_CRASH("Invalid ValType");
 }
@@ -406,6 +603,7 @@ ToMIRType(ValType vt)
       case ValType::I64:    return jit::MIRType::Int64;
       case ValType::F32:    return jit::MIRType::Float32;
       case ValType::F64:    return jit::MIRType::Double;
+      case ValType::Ref:    return jit::MIRType::Pointer;
       case ValType::AnyRef: return jit::MIRType::Pointer;
       case ValType::I8x16:  return jit::MIRType::Int8x16;
       case ValType::I16x8:  return jit::MIRType::Int16x8;
@@ -419,48 +617,17 @@ ToMIRType(ValType vt)
 }
 
 static inline bool
-IsRefType(ValType vt)
-{
-    return vt == ValType::AnyRef;
-}
-
-static inline bool
 IsNumberType(ValType vt)
 {
-    return !IsRefType(vt);
+    return !vt.isRefOrAnyRef();
 }
 
-// The ExprType enum represents the type of a WebAssembly expression or return
-// value and may either be a value type or void. Soon, expression types will be
-// generalized to a list of ValType and this enum will go away, replaced,
-// wherever it is used, by a varU32 + list of ValType.
+// ExprType utilities
 
-enum class ExprType
-{
-    Void   = uint8_t(TypeCode::BlockVoid),
-
-    I32    = uint8_t(TypeCode::I32),
-    I64    = uint8_t(TypeCode::I64),
-    F32    = uint8_t(TypeCode::F32),
-    F64    = uint8_t(TypeCode::F64),
-    AnyRef = uint8_t(TypeCode::AnyRef),
-
-    I8x16  = uint8_t(TypeCode::I8x16),
-    I16x8  = uint8_t(TypeCode::I16x8),
-    I32x4  = uint8_t(TypeCode::I32x4),
-    F32x4  = uint8_t(TypeCode::F32x4),
-    B8x16  = uint8_t(TypeCode::B8x16),
-    B16x8  = uint8_t(TypeCode::B16x8),
-    B32x4  = uint8_t(TypeCode::B32x4),
-
-    Limit  = uint8_t(TypeCode::Limit)
-};
-
-inline ValType::ValType(ExprType t)
-  : code_(uint32_t(t)), refTypeIndex_(NoIndex)
-{
-    assertValid();
-}
+inline
+ExprType::ExprType(const ValType& t)
+  : tc_(t.packed())
+{}
 
 static inline bool
 IsVoid(ExprType et)
@@ -473,12 +640,6 @@ NonVoidToValType(ExprType et)
 {
     MOZ_ASSERT(!IsVoid(et));
     return ValType(et);
-}
-
-static inline ExprType
-ToExprType(ValType vt)
-{
-    return ExprType(vt.bitsUnsafe());
 }
 
 static inline bool
@@ -496,13 +657,14 @@ ToMIRType(ExprType et)
 static inline const char*
 ToCString(ExprType type)
 {
-    switch (type) {
+    switch (type.code()) {
       case ExprType::Void:    return "void";
       case ExprType::I32:     return "i32";
       case ExprType::I64:     return "i64";
       case ExprType::F32:     return "f32";
       case ExprType::F64:     return "f64";
       case ExprType::AnyRef:  return "anyref";
+      case ExprType::Ref:     return "ref";
       case ExprType::I8x16:   return "i8x16";
       case ExprType::I16x8:   return "i16x8";
       case ExprType::I32x4:   return "i32x4";
@@ -518,7 +680,7 @@ ToCString(ExprType type)
 static inline const char*
 ToCString(ValType type)
 {
-    return ToCString(ToExprType(type));
+    return ToCString(ExprType(type));
 }
 
 // Code can be compiled either with the Baseline compiler or the Ion compiler,
@@ -711,7 +873,7 @@ class FuncType
     const ExprType& ret() const { return ret_; }
 
     HashNumber hash() const {
-        HashNumber hn = HashNumber(ret_);
+        HashNumber hn = HashNumber(ret_.code());
         for (const ValType& vt : args_)
             hn = mozilla::AddToHash(hn, HashNumber(vt.code()));
         return hn;
@@ -733,10 +895,10 @@ class FuncType
         return false;
     }
     bool temporarilyUnsupportedAnyRef() const {
-        if (ret() == ExprType::AnyRef)
+        if (ret().isRefOrAnyRef())
             return true;
         for (ValType arg : args()) {
-            if (arg == ValType::AnyRef)
+            if (arg.isRefOrAnyRef())
                 return true;
         }
         return false;
@@ -758,19 +920,28 @@ struct FuncTypeHashPolicy
 // types that the module knows about.  It is created from the sparse array of
 // types in the ModuleEnvironment when the Module is created.
 
+struct StructField
+{
+    ValType  type;
+    uint32_t offset;
+    bool     isMutable;
+};
+
+typedef Vector<StructField, 0, SystemAllocPolicy> StructFieldVector;
+
 class StructType
 {
   public:
-    ValTypeVector fields_;       // Scalar types of fields
-    Uint32Vector  fieldOffsets_; // Byte offsets into an object for corresponding field
+    StructFieldVector fields_;
 
   public:
-    StructType() : fields_(), fieldOffsets_() {}
+    StructType() : fields_() {}
 
-    StructType(ValTypeVector&& fields, Uint32Vector&& fieldOffsets)
-      : fields_(std::move(fields)),
-        fieldOffsets_(std::move(fieldOffsets))
+    explicit StructType(StructFieldVector&& fields)
+      : fields_(std::move(fields))
     {}
+
+    bool hasPrefix(const StructType& other) const;
 
     WASM_DECLARE_SERIALIZABLE(StructType)
 };
@@ -1149,7 +1320,7 @@ class TypeDef
     };
 
   public:
-    TypeDef() : tag_(IsNone), structType_(StructType()) {}
+    TypeDef() : tag_(IsNone) {}
 
     explicit TypeDef(FuncType&& funcType)
       : tag_(IsFuncType),
@@ -1161,34 +1332,54 @@ class TypeDef
         structType_(std::move(structType))
     {}
 
-    TypeDef(TypeDef&& td) : tag_(td.tag_), structType_(StructType()) {
+    TypeDef(TypeDef&& td) : tag_(td.tag_) {
         switch (tag_) {
-          case IsFuncType:   funcType_ = std::move(td.funcType_); break;
-          case IsStructType: structType_ = std::move(td.structType_); break;
-          case IsNone:       break;
+          case IsFuncType:
+            new (&funcType_) FuncTypeWithId(std::move(td.funcType_));
+            break;
+          case IsStructType:
+            new (&structType_) StructType(std::move(td.structType_));
+            break;
+          case IsNone:
+            break;
         }
     }
 
     ~TypeDef() {
         switch (tag_) {
-          case IsFuncType:   funcType_.~FuncTypeWithId(); break;
-          case IsStructType: structType_.~StructType(); break;
-          case IsNone:       break;
+          case IsFuncType:
+            funcType_.~FuncTypeWithId();
+            break;
+          case IsStructType:
+            structType_.~StructType();
+            break;
+          case IsNone:
+            break;
         }
     }
 
     TypeDef& operator=(TypeDef&& that) {
-        tag_ = that.tag_;
-        switch (tag_) {
-          case IsFuncType:   funcType_ = std::move(that.funcType_); break;
-          case IsStructType: structType_ = std::move(that.structType_); break;
-          case IsNone:       break;
+        MOZ_ASSERT(isNone());
+        switch (that.tag_) {
+          case IsFuncType:
+            new (&funcType_) FuncTypeWithId(std::move(that.funcType_));
+            break;
+          case IsStructType:
+            new (&structType_) StructType(std::move(that.structType_));
+            break;
+          case IsNone:
+            break;
         }
+        tag_ = that.tag_;
         return *this;
     }
 
     bool isFuncType() const {
         return tag_ == IsFuncType;
+    }
+
+    bool isNone() const {
+        return tag_ == IsNone;
     }
 
     bool isStructType() const {
