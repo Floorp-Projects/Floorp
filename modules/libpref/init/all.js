@@ -563,12 +563,14 @@ pref("media.recorder.audio_node.enabled", false);
 // to keep up under load. Useful for tests but beware of memory consumption!
 pref("media.recorder.video.frame_drops", true);
 
-// Whether to autostart a media element with an |autoplay| attribute
-pref("media.autoplay.enabled", true);
+// Whether to autostart a media element with an |autoplay| attribute.
+// ALLOWED=0, BLOCKED=1, PROMPT=2, defined in dom/media/Autoplay.idl
+pref("media.autoplay.default", 0);
 
-// If "media.autoplay.enabled" is false, and this pref is true, then audible media
-// would only be allowed to autoplay after website has been activated by specific
-// user gestures, but the non-audible media won't be restricted.
+// If "media.autoplay.default" is not ALLOWED, and this pref is true,
+// then audible media would only be allowed to autoplay after website has
+// been activated by specific user gestures, but non-audible
+// media won't be restricted.
 #ifdef NIGHTLY_BUILD
 pref("media.autoplay.enabled.user-gestures-needed", false);
 #endif
