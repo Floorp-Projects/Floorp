@@ -341,10 +341,7 @@ SaveFileToEnv(const char *name, nsIFile *file)
 }
 
 // Load the path of a file saved with SaveFileToEnv
-#ifndef MOZ_ASAN_REPORTER
-static
-#endif
-already_AddRefed<nsIFile>
+static already_AddRefed<nsIFile>
 GetFileFromEnv(const char *name)
 {
   nsresult rv;
@@ -4248,18 +4245,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 
   CrashReporter::SetProfileDirectory(mProfD);
 
-#ifdef MOZ_ASAN_REPORTER
-  // In ASan reporter builds, we need to set ASan's log_path as early as
-  // possible, so it dumps its errors into files there instead of using
-  // the default stderr location. Since this is crucial for ASan reporter
-  // to work at all (and we don't want people to use a non-functional
-  // ASan reporter build), all failures while setting log_path are fatal.
-  setASanReporterPath(mProfD);
-
-  // Export to env for child processes
-  SaveFileToEnv("ASAN_REPORTER_PATH", mProfD);
-#endif
-
   nsAutoCString version;
   BuildVersion(version);
 
@@ -5309,32 +5294,3 @@ extern "C" void
 GeckoHandleOOM(size_t size) {
   mozalloc_handle_oom(size);
 }
-
-#ifdef MOZ_ASAN_REPORTER
-void setASanReporterPath(nsIFile* aDir) {
-  nsCOMPtr<nsIFile> dir;
-  aDir->Clone(getter_AddRefs(dir));
-
-  dir->Append(NS_LITERAL_STRING("asan"));
-  nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
-    MOZ_CRASH("[ASan Reporter] Unable to create crash directory.");
-  }
-
-  dir->Append(NS_LITERAL_STRING("ff_asan_log"));
-
-#ifdef XP_WIN
-  nsAutoString nspathW;
-  rv = dir->GetPath(nspathW);
-  NS_ConvertUTF16toUTF8 nspath(nspathW);
-#else
-  nsAutoCString nspath;
-  rv = dir->GetNativePath(nspath);
-#endif
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("[ASan Reporter] Unable to get native path for crash directory.");
-  }
-
-  __sanitizer_set_report_path(nspath.get());
-}
-#endif
