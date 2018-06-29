@@ -7840,10 +7840,42 @@ dom_set_x(JSContext* cx, HandleObject obj, void* self, JSJitSetterCallArgs args)
 }
 
 static bool
+dom_get_global(JSContext* cx, HandleObject obj, void* self, JSJitGetterCallArgs args)
+{
+    MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+    MOZ_ASSERT(self == (void*)0x1234);
+
+    // Return the current global (instead of obj->global()) to test cx->realm
+    // switching in the JIT.
+    args.rval().setObject(*ToWindowProxyIfWindow(cx->global()));
+
+    return true;
+}
+
+static bool
+dom_set_global(JSContext* cx, HandleObject obj, void* self, JSJitSetterCallArgs args)
+{
+    MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+    MOZ_ASSERT(self == (void*)0x1234);
+
+    // Throw an exception if our argument is not the current global. This lets
+    // us test cx->realm switching.
+    if (!args[0].isObject() ||
+        ToWindowIfWindowProxy(&args[0].toObject()) != cx->global())
+    {
+        JS_ReportErrorASCII(cx, "Setter not called with matching global argument");
+        return false;
+    }
+
+    return true;
+}
+
+static bool
 dom_doFoo(JSContext* cx, HandleObject obj, void* self, const JSJitMethodCallArgs& args)
 {
     MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
     MOZ_ASSERT(self == (void*)0x1234);
+    MOZ_ASSERT(cx->realm() == args.callee().as<JSFunction>().realm());
 
     /* Just return args.length(). */
     args.rval().setInt32(args.length());
@@ -7854,8 +7886,8 @@ static const JSJitInfo dom_x_getterinfo = {
     { (JSJitGetterOp)dom_get_x },
     { 0 },    /* protoID */
     { 0 },    /* depth */
-    JSJitInfo::AliasNone, /* aliasSet */
     JSJitInfo::Getter,
+    JSJitInfo::AliasNone, /* aliasSet */
     JSVAL_TYPE_UNKNOWN, /* returnType */
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
@@ -7868,6 +7900,41 @@ static const JSJitInfo dom_x_getterinfo = {
 
 static const JSJitInfo dom_x_setterinfo = {
     { (JSJitGetterOp)dom_set_x },
+    { 0 },    /* protoID */
+    { 0 },    /* depth */
+    JSJitInfo::Setter,
+    JSJitInfo::AliasEverything, /* aliasSet */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    false,    /* isInfallible. False in setters. */
+    false,    /* isMovable. */
+    false,    /* isEliminatable. */
+    false,    /* isAlwaysInSlot */
+    false,    /* isLazilyCachedInSlot */
+    false,    /* isTypedMethod */
+    0         /* slotIndex */
+};
+
+// Note: this getter uses AliasEverything and is marked as fallible and
+// non-movable (1) to prevent Ion from getting too clever optimizing it and
+// (2) it's nice to have a few different kinds of getters in the shell.
+static const JSJitInfo dom_global_getterinfo = {
+    { (JSJitGetterOp)dom_get_global },
+    { 0 },    /* protoID */
+    { 0 },    /* depth */
+    JSJitInfo::Getter,
+    JSJitInfo::AliasEverything, /* aliasSet */
+    JSVAL_TYPE_OBJECT, /* returnType */
+    false,    /* isInfallible. False in setters. */
+    false,    /* isMovable */
+    false,    /* isEliminatable */
+    false,    /* isAlwaysInSlot */
+    false,    /* isLazilyCachedInSlot */
+    false,    /* isTypedMethod */
+    0         /* slotIndex */
+};
+
+static const JSJitInfo dom_global_setterinfo = {
+    { (JSJitGetterOp)dom_set_global },
     { 0 },    /* protoID */
     { 0 },    /* depth */
     JSJitInfo::Setter,
@@ -7904,6 +7971,13 @@ static const JSPropertySpec dom_props[] = {
      { {
         { { dom_genericGetter, &dom_x_getterinfo } },
         { { dom_genericSetter, &dom_x_setterinfo } }
+     } },
+    },
+    {"global",
+     JSPROP_ENUMERATE,
+     { {
+        { { dom_genericGetter, &dom_global_getterinfo } },
+        { { dom_genericSetter, &dom_global_setterinfo } }
      } },
     },
     JS_PS_END

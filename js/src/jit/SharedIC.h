@@ -22,6 +22,7 @@
 namespace js {
 namespace jit {
 
+// [SMDOC] JIT Inline Caches (ICs)
 //
 // Baseline Inline Caches are polymorphic caches that aggressively
 // share their stub code.

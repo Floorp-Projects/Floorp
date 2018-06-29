@@ -1194,6 +1194,17 @@ CallAddPropertyHookDense(JSContext* cx, HandleNativeObject obj, uint32_t index,
     return true;
 }
 
+/**
+ * Determines whether a write to the given element on |arr| should fail
+ * because |arr| has a non-writable length, and writing that element would
+ * increase the length of the array.
+ */
+static bool
+WouldDefinePastNonwritableLength(ArrayObject* arr, uint32_t index)
+{
+    return !arr->lengthIsWritable() && index >= arr->length();
+}
+
 static MOZ_ALWAYS_INLINE void
 UpdateShapeTypeAndValue(JSContext* cx, NativeObject* obj, Shape* shape, jsid id,
                         const Value& value)
@@ -1621,7 +1632,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         // 9.4.2.1 step 3. Don't extend a fixed-length array.
         uint32_t index;
         if (IdIsIndex(id, &index)) {
-            if (WouldDefinePastNonwritableLength(obj, index))
+            if (WouldDefinePastNonwritableLength(arr, index))
                 return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
         }
     } else if (obj->is<TypedArrayObject>()) {
@@ -1923,7 +1934,7 @@ DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         // 9.4.2.1 step 3. Don't extend a fixed-length array.
         uint32_t index;
         if (IdIsIndex(id, &index)) {
-            if (WouldDefinePastNonwritableLength(obj, index))
+            if (WouldDefinePastNonwritableLength(&obj->as<ArrayObject>(), index))
                 return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
         }
     } else if (obj->is<TypedArrayObject>()) {
@@ -2647,11 +2658,14 @@ SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t inde
             return result.succeed();
         }
 
-        return result.failSoft(JSMSG_BAD_INDEX);
+        // A previously existing typed array element can only be out-of-bounds
+        // if the above ToNumber call detached the typed array's buffer.
+        MOZ_ASSERT(obj->as<TypedArrayObject>().hasDetachedBuffer());
+
+        return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
     }
 
-    if (WouldDefinePastNonwritableLength(obj, index))
-        return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+    MOZ_ASSERT(obj->containsDenseElement(index));
 
     if (!obj->maybeCopyElementsForWrite(cx))
         return false;
@@ -2669,9 +2683,8 @@ SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t inde
  * dense or typed array element (i.e. not actually a pointer to a Shape).
  */
 static bool
-SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleValue v,
-                    HandleValue receiver, HandleNativeObject pobj, Handle<PropertyResult> prop,
-                    ObjectOpResult& result)
+SetExistingProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue receiver,
+                    HandleNativeObject pobj, Handle<PropertyResult> prop, ObjectOpResult& result)
 {
     // Step 5 for dense elements.
     if (prop.isDenseOrTypedArrayElement()) {
@@ -2744,7 +2757,7 @@ js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handle
 
         if (prop) {
             // Steps 5-6.
-            return SetExistingProperty(cx, obj, id, v, receiver, pobj, prop, result);
+            return SetExistingProperty(cx, id, v, receiver, pobj, prop, result);
         }
 
         // Steps 4.a-b. The check for 'done' on this next line is tricky.

@@ -29,8 +29,6 @@ var _PreviewFunction = require("../../shared/PreviewFunction");
 
 var _PreviewFunction2 = _interopRequireDefault(_PreviewFunction);
 
-var _editor = require("../../../utils/editor/index");
-
 var _preview = require("../../../utils/preview");
 
 var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
@@ -63,6 +61,18 @@ const {
   loadItemProperties
 } = ObjectInspectorUtils.loadProperties;
 
+function inPreview(event) {
+  const relatedTarget = event.relatedTarget;
+
+  if (!relatedTarget || relatedTarget.classList.contains("preview-expression")) {
+    return true;
+  } // $FlowIgnore
+
+
+  const inPreviewSelection = document.elementsFromPoint(event.clientX, event.clientY).some(el => el.classList.contains("preview-selection"));
+  return inPreviewSelection;
+}
+
 class Popup extends _react.Component {
   constructor(...args) {
     var _temp;
@@ -70,11 +80,13 @@ class Popup extends _react.Component {
     return _temp = super(...args), this.onMouseLeave = e => {
       const relatedTarget = e.relatedTarget;
 
-      if (relatedTarget && relatedTarget.classList && (relatedTarget.classList.contains("popover") || relatedTarget.classList.contains("debug-expression") || relatedTarget.classList.contains("editor-mount"))) {
-        return;
+      if (!relatedTarget) {
+        return this.props.onClose();
       }
 
-      this.props.onClose();
+      if (!inPreview(e)) {
+        this.props.onClose();
+      }
     }, _temp;
   }
 
@@ -93,26 +105,6 @@ class Popup extends _react.Component {
         const properties = await onLoadItemProperties;
         setPopupObjectProperties(root.contents.value, properties);
       }
-    }
-  }
-
-  componentDidMount() {
-    const {
-      value,
-      editor,
-      range
-    } = this.props;
-
-    if (!value || !value.type == "object") {
-      return;
-    }
-
-    this.marker = (0, _editor.markText)(editor, "preview-selection", range);
-  }
-
-  componentWillUnmount() {
-    if (this.marker) {
-      this.marker.clear();
     }
   }
 

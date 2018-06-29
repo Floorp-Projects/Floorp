@@ -101,12 +101,14 @@ function setOutOfScopeLocations() {
 }
 
 function compressPausePoints(pausePoints) {
-  const compressed = {}
+  const compressed = {};
+
   for (const line in pausePoints) {
-    compressed[line] = {}
+    compressed[line] = {};
+
     for (const col in pausePoints[line]) {
-      const point = pausePoints[line][col]
-      compressed[line][col] = (point.break && 1) | (point.step && 2)
+      const point = pausePoints[line][col];
+      compressed[line][col] = (point.break && 1) | (point.step && 2);
     }
   }
 

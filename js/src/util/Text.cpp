@@ -119,36 +119,6 @@ js::InflateString(JSContext* cx, const char* bytes, size_t length)
     return chars;
 }
 
-template <typename CharT>
-bool
-js::DeflateStringToBuffer(JSContext* maybecx, const CharT* src, size_t srclen,
-                          char* dst, size_t* dstlenp)
-{
-    size_t dstlen = *dstlenp;
-    if (srclen > dstlen) {
-        for (size_t i = 0; i < dstlen; i++)
-            dst[i] = char(src[i]);
-        if (maybecx) {
-            AutoSuppressGC suppress(maybecx);
-            JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
-                                      JSMSG_BUFFER_TOO_SMALL);
-        }
-        return false;
-    }
-    for (size_t i = 0; i < srclen; i++)
-        dst[i] = char(src[i]);
-    *dstlenp = srclen;
-    return true;
-}
-
-template bool
-js::DeflateStringToBuffer(JSContext* maybecx, const Latin1Char* src, size_t srclen,
-                          char* dst, size_t* dstlenp);
-
-template bool
-js::DeflateStringToBuffer(JSContext* maybecx, const char16_t* src, size_t srclen,
-                          char* dst, size_t* dstlenp);
-
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 4 bytes long.  Return the number of UTF-8 bytes of data written.

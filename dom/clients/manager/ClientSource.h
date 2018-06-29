@@ -17,6 +17,7 @@
 #endif
 
 class nsIDocShell;
+class nsIGlobalObject;
 class nsISerialEventTarget;
 class nsPIDOMWindowInner;
 
@@ -77,6 +78,9 @@ class ClientSource final : public ClientThing<ClientSourceChild>
 
   nsIDocShell*
   GetDocShell() const;
+
+  nsIGlobalObject*
+  GetGlobal() const;
 
   void
   MaybeCreateInitialDocument();

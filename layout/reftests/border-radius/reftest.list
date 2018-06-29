@@ -58,7 +58,7 @@ fuzzy-if(cocoaWidget,1,4) fuzzy-if(d2d,59,342) fuzzy-if(d3d11&&advancedLayers&&!
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
 fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) fuzzy-if(skiaContent,1,300) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy-if(true,1,33) fuzzy-if(d2d,59,350) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android,124,440) fuzzy-if(skiaContent,1,135) fuzzy-if(d3d11&&advancedLayers,81,353) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
+fuzzy-if(true,1,33) fuzzy-if(d2d,59,350) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android,124,440) fuzzy-if(skiaContent,1,135) fuzzy-if(d3d11&&advancedLayers,81,353) skip-if(winWidget) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535 # Disable on Windows bug 1451808
 
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit

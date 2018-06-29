@@ -49,6 +49,8 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded)
 }  /* namespace js */
 
 /*
+ * [SMDOC] JSObject layout
+ *
  * A JavaScript object.
  *
  * This is the base class for all objects exposed to JS script (as well as some

@@ -1,11 +1,11 @@
-function linearModule(min, max, ops) {
+function linearModule(min, max, ops, current_memory, grow_memory) {
   var opsText = ops.map(function (op) {
     if (op[0] == "CM") {
-      res = `(if i32 (i32.ne (current_memory) (i32.const ${op[1]}))
+      res = `(if i32 (i32.ne (${current_memory}) (i32.const ${op[1]}))
                   (i32.load offset=10 (i32.const 4294967295))
                   (i32.const 0))`
     } else if (op[0] == "GM") {
-      res = `(if i32 (i32.ne (grow_memory (i32.const ${op[1]})) (i32.const ${op[2]}))
+      res = `(if i32 (i32.ne (${grow_memory} (i32.const ${op[1]})) (i32.const ${op[2]}))
                  (i32.load offset=10 (i32.const 4294967295))
                  (i32.const 0))`
     } else if (op[0] == "L") {
@@ -35,11 +35,12 @@ function linearModule(min, max, ops) {
        `
        (func (result i32)
          (drop ` + opsText + `)
-         (current_memory)
+         (${current_memory})
        ) (export "run" 0))`;
 
   return text;
 }
 
 // Just grow some memory
-wasmFullPass(linearModule(3,5, [["CM", 3]]), 3);
+wasmFullPass(linearModule(3,5, [["CM", 3]], "current_memory", "grow_memory"), 3); // Old opcode names
+wasmFullPass(linearModule(3,5, [["CM", 3]], "memory.size", "memory.grow"), 3);    // New opcode names

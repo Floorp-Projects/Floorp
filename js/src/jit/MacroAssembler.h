@@ -41,6 +41,8 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
+// [SMDOC] MacroAssembler multi-platform overview
+//
 // * How to read/write MacroAssembler method declarations:
 //
 // The following macros are made to avoid #ifdef around each method declarations

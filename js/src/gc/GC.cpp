@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
+ * [SMDOC] Garbage Collector
+ *
  * This code implements an incremental mark-and-sweep garbage collector, with
  * most sweeping carried out in the background on a parallel thread.
  *

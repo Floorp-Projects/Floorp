@@ -17,6 +17,8 @@
 namespace js {
 
 /**
+ * [SMDOC] ExclusiveData API
+ *
  * A mutual exclusion lock class.
  *
  * `ExclusiveData` provides an RAII guard to automatically lock and unlock when

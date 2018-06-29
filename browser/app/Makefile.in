@@ -79,7 +79,7 @@ clean clobber repackage::
 MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/buildid.h)
 
 .PHONY: repackage
-tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) features
+tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
 	rm -rf $(dist_dest)
 	$(MKDIR) -p '$(dist_dest)/Contents/MacOS'
 	$(MKDIR) -p '$(dist_dest)/$(LPROJ)'
@@ -100,7 +100,3 @@ ifdef MOZ_UPDATER
 endif
 	printf APPLMOZB > '$(dist_dest)/Contents/PkgInfo'
 endif
-
-.PHONY: features
-tools features::
-	$(call py_action,generate_builtin_addons,--features=browser/features browser/chrome/browser/content/browser/built_in_addons.json)

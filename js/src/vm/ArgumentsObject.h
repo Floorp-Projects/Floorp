@@ -98,6 +98,8 @@ struct ArgumentsData
 static const unsigned ARGS_LENGTH_MAX = 500 * 1000;
 
 /*
+ * [SMDOC] ArgumentsObject
+ *
  * ArgumentsObject instances represent |arguments| objects created to store
  * function arguments when a function is called.  It's expensive to create such
  * objects if they're never used, so they're only created when they are
