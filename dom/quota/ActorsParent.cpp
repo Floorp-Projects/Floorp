@@ -208,6 +208,9 @@ enum AppId {
 #define METADATA_V2_FILE_NAME ".metadata-v2"
 #define METADATA_V2_TMP_FILE_NAME ".metadata-v2-tmp"
 
+#define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
+#define LS_ARCHIVE_TMP_FILE_NAME "ls-archive-tmp.sqlite"
+
 /******************************************************************************
  * SQLite functions
  ******************************************************************************/
@@ -4826,6 +4829,206 @@ QuotaManager::UpgradeStorageFrom2_0To2_1(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+nsresult
+QuotaManager::MaybeRemoveLocalStorageData()
+{
+  AssertIsOnIOThread();
+
+  // Cleanup the tmp file first, if there's any.
+  nsCOMPtr<nsIFile> lsArchiveTmpFile;
+  nsresult rv = NS_NewLocalFile(mStoragePath,
+                                false,
+                                getter_AddRefs(lsArchiveTmpFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = lsArchiveTmpFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_TMP_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = lsArchiveTmpFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    rv = lsArchiveTmpFile->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Now check the real archive file.
+  nsCOMPtr<nsIFile> lsArchiveFile;
+  rv = NS_NewLocalFile(mStoragePath,
+                       false,
+                       getter_AddRefs(lsArchiveFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = lsArchiveFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = lsArchiveFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    // If the ls archive doesn't exist then ls directories can't exist either.
+    return NS_OK;
+  }
+
+  rv = MaybeRemoveLocalStorageDirectories();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Finally remove the ls archive, so we don't have to check all origin
+  // directories next time this method is called.
+  rv = lsArchiveFile->Remove(false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+QuotaManager::MaybeRemoveLocalStorageDirectories()
+{
+  AssertIsOnIOThread();
+
+  nsCOMPtr<nsIFile> defaultStorageDir;
+  nsresult rv = NS_NewLocalFile(mDefaultStoragePath,
+                                false,
+                                getter_AddRefs(defaultStorageDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = defaultStorageDir->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  rv = defaultStorageDir->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!entries) {
+    return NS_OK;
+  }
+
+  while (true) {
+    bool hasMore;
+    rv = entries->HasMoreElements(&hasMore);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!hasMore) {
+      break;
+    }
+
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
+    MOZ_ASSERT(originDir);
+
+    rv = originDir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(exists);
+
+    bool isDirectory;
+    rv = originDir->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      nsString leafName;
+      rv = originDir->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      // Unknown files during upgrade are allowed. Just warn if we find them.
+      if (!IsOSMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+
+      continue;
+    }
+
+    nsCOMPtr<nsIFile> lsDir;
+    rv = originDir->Clone(getter_AddRefs(lsDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = lsDir->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = lsDir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!exists) {
+      continue;
+    }
+
+    rv = lsDir->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      QM_WARNING("ls entry is not a directory!");
+
+      continue;
+    }
+
+    nsString path;
+    rv = lsDir->GetPath(path);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    QM_WARNING("Deleting %s directory!", NS_ConvertUTF16toUTF8(path).get());
+
+    rv = lsDir->Remove(/* aRecursive */ true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
 #ifdef DEBUG
 
 void
@@ -5003,6 +5206,11 @@ QuotaManager::EnsureStorageIsInitialized()
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
+
+  rv = MaybeRemoveLocalStorageData();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   mStorageInitialized = true;

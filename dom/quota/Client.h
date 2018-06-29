@@ -19,6 +19,7 @@ class nsIRunnable;
 #define IDB_DIRECTORY_NAME "idb"
 #define ASMJSCACHE_DIRECTORY_NAME "asmjs"
 #define DOMCACHE_DIRECTORY_NAME "cache"
+#define LS_DIRECTORY_NAME "ls"
 
 BEGIN_QUOTA_NAMESPACE
 
