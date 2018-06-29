@@ -493,7 +493,9 @@ public:
 
 private:
   /* Remove Mixer callbacks when switching */
-  void RemoveCallback() ;
+  void RemoveMixerCallback();
+  /* Add this driver in Mixer callbacks. */
+  void AddMixerCallback();
   /**
    * On certain MacBookPro, the microphone is located near the left speaker.
    * We need to pan the sound output to the right speaker if we are using the
@@ -573,8 +575,11 @@ private:
   const RefPtr<SharedThreadPool> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   AutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
-  /* Used to queue us to add the mixer callback on first run. */
-  bool mAddedMixer;
+  /* This is used to signal adding the mixer callback on first run
+   * of audio callback. This is atomic because it is touched from different
+   * threads, the audio callback thread and the state change thread. However,
+   * the order of the threads does not allow concurent access. */
+  Atomic<bool> mAddedMixer;
 
   /* Contains the id of the audio thread for as long as the callback
    * is taking place, after that it is reseted to an invalid value. */

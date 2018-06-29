@@ -567,6 +567,7 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
 AudioCallbackDriver::~AudioCallbackDriver()
 {
   MOZ_ASSERT(mPromisesForOperation.IsEmpty());
+  MOZ_ASSERT(!mAddedMixer);
 #if defined(XP_WIN)
   if (XRE_IsContentProcess()) {
     audio::AudioNotificationReceiver::Unregister(this);
@@ -798,7 +799,6 @@ AudioCallbackDriver::Revive()
   // If we were switching, switch now. Otherwise, start the audio thread again.
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   if (NextDriver()) {
-    RemoveCallback();
     SwitchToNextDriver();
   } else {
     LOG(LogLevel::Debug,
@@ -811,11 +811,24 @@ AudioCallbackDriver::Revive()
 }
 
 void
-AudioCallbackDriver::RemoveCallback()
+AudioCallbackDriver::RemoveMixerCallback()
 {
+  MOZ_ASSERT(OnThread() || !ThreadRunning());
+
   if (mAddedMixer) {
     mGraphImpl->mMixer.RemoveCallback(this);
     mAddedMixer = false;
+  }
+}
+
+void
+AudioCallbackDriver::AddMixerCallback()
+{
+  MOZ_ASSERT(OnThread());
+
+  if (!mAddedMixer) {
+    mGraphImpl->mMixer.AddCallback(this);
+    mAddedMixer = true;
   }
 }
 
@@ -901,10 +914,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 #endif
 
   // Don't add the callback until we're inited and ready
-  if (!mAddedMixer) {
-    mGraphImpl->mMixer.AddCallback(this);
-    mAddedMixer = true;
-  }
+  AddMixerCallback();
 
   GraphTime stateComputedTime = StateComputedTime();
   if (stateComputedTime == 0) {
@@ -1014,6 +1024,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // Enter shutdown mode. The stable-state handler will detect this
     // and complete shutdown if the graph does not get restarted.
     mGraphImpl->SignalMainThreadCleanup();
+    RemoveMixerCallback();
     // Update the flag before go to drain
     mAudioThreadRunning = false;
     return aFrames - 1;
@@ -1034,7 +1045,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
       return aFrames;
     }
     LOG(LogLevel::Debug, ("Switching to system driver."));
-    RemoveCallback();
+    RemoveMixerCallback();
     SwitchToNextDriver();
     mAudioThreadRunning = false;
     // Returning less than aFrames starts the draining and eventually stops the
@@ -1056,10 +1067,14 @@ AudioCallbackDriver::StateCallback(cubeb_state aState)
   mAudioThreadRunning = (aState == CUBEB_STATE_STARTED);
 
   if (aState == CUBEB_STATE_ERROR && mShouldFallbackIfError) {
+    MOZ_ASSERT(!ThreadRunning());
     mShouldFallbackIfError = false;
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
-    RemoveCallback();
+    RemoveMixerCallback();
     FallbackToSystemClockDriver();
+  } else if (aState == CUBEB_STATE_STOPPED) {
+    MOZ_ASSERT(!ThreadRunning());
+    RemoveMixerCallback();
   }
 }
 
