@@ -1267,8 +1267,6 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native memory.copy function";
       case SymbolicAddress::MemFill:
         return "call to native memory.fill function";
-      case SymbolicAddress::PostBarrier:
-        return "call to native GC postbarrier (in wasm)";
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
         MOZ_CRASH();

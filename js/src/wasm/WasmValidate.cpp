@@ -1398,7 +1398,6 @@ GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
       case ValType::F32:
       case ValType::F64:
       case ValType::I64:
-      case ValType::AnyRef:
         break;
       default:
         return d.fail("unexpected variable type in global import/export");
@@ -1408,10 +1407,10 @@ GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
 }
 
 static bool
-DecodeGlobalType(Decoder& d, const TypeDefVector& types, HasGcTypes gcTypesEnabled, ValType* type,
-                 bool* isMutable)
+DecodeGlobalType(Decoder& d, const TypeDefVector& types, ValType* type, bool* isMutable)
 {
-    if (!DecodeValType(d, ModuleKind::Wasm, types.length(), gcTypesEnabled, type))
+    // No gc types in globals at the moment.
+    if (!DecodeValType(d, ModuleKind::Wasm, types.length(), HasGcTypes::False, type))
         return false;
     if (!ValidateRefType(d, types, *type))
         return false;
@@ -1510,7 +1509,7 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
       case DefinitionKind::Global: {
         ValType type;
         bool isMutable;
-        if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled, &type, &isMutable))
+        if (!DecodeGlobalType(d, env->types, &type, &isMutable))
             return false;
         if (!GlobalIsJSCompatible(d, type, isMutable))
             return false;
@@ -1638,8 +1637,8 @@ DecodeMemorySection(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalDescVector& globals,
-                            ValType expected, InitExpr* init)
+DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
+                            InitExpr* init)
 {
     OpBytes op;
     if (!d.readOp(&op))
@@ -1650,40 +1649,28 @@ DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalD
         int32_t i32;
         if (!d.readVarS32(&i32))
             return d.fail("failed to read initializer i32 expression");
-        *init = InitExpr(LitVal(uint32_t(i32)));
+        *init = InitExpr(Val(uint32_t(i32)));
         break;
       }
       case uint16_t(Op::I64Const): {
         int64_t i64;
         if (!d.readVarS64(&i64))
             return d.fail("failed to read initializer i64 expression");
-        *init = InitExpr(LitVal(uint64_t(i64)));
+        *init = InitExpr(Val(uint64_t(i64)));
         break;
       }
       case uint16_t(Op::F32Const): {
         float f32;
         if (!d.readFixedF32(&f32))
             return d.fail("failed to read initializer f32 expression");
-        *init = InitExpr(LitVal(f32));
+        *init = InitExpr(Val(f32));
         break;
       }
       case uint16_t(Op::F64Const): {
         double f64;
         if (!d.readFixedF64(&f64))
             return d.fail("failed to read initializer f64 expression");
-        *init = InitExpr(LitVal(f64));
-        break;
-      }
-      case uint16_t(Op::RefNull): {
-        if (gcTypesEnabled == HasGcTypes::False)
-            return d.fail("unexpected initializer expression");
-        uint8_t valType;
-        uint32_t unusedRefTypeIndex;
-        if (!d.readValType(&valType, &unusedRefTypeIndex))
-            return false;
-        if (valType != uint8_t(ValType::AnyRef))
-            return d.fail("expected anyref as type for ref.null");
-        *init = InitExpr(LitVal(ValType::AnyRef, nullptr));
+        *init = InitExpr(Val(f64));
         break;
       }
       case uint16_t(Op::GetGlobal): {
@@ -1736,11 +1723,11 @@ DecodeGlobalSection(Decoder& d, ModuleEnvironment* env)
     for (uint32_t i = 0; i < numDefs; i++) {
         ValType type;
         bool isMutable;
-        if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled, &type, &isMutable))
+        if (!DecodeGlobalType(d, env->types, &type, &isMutable))
             return false;
 
         InitExpr initializer;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, type, &initializer))
+        if (!DecodeInitializerExpression(d, env->globals, type, &initializer))
             return false;
 
         env->globals.infallibleAppend(GlobalDesc(initializer, isMutable));
@@ -1921,8 +1908,7 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("table index out of range");
 
         InitExpr offset;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, ValType::I32,
-                                         &offset))
+        if (!DecodeInitializerExpression(d, env->globals, ValType::I32, &offset))
             return false;
 
         uint32_t numElems;
@@ -2092,8 +2078,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("data segment requires a memory section");
 
         DataSegment seg;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, ValType::I32,
-                                         &seg.offset))
+        if (!DecodeInitializerExpression(d, env->globals, ValType::I32, &seg.offset))
             return false;
 
         if (!d.readVarU32(&seg.length))
