@@ -5,12 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedMap.h"
+#include "SharedMapChangeEvent.h"
 
 #include "MemMapSnapshot.h"
 #include "ScriptPreloader-inl.h"
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla::loader;
 
@@ -36,10 +38,12 @@ AlignTo(size_t* aOffset, size_t aAlign)
 
 
 SharedMap::SharedMap()
+  : DOMEventTargetHelper()
 {}
 
 SharedMap::SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor& aMapFile,
                      size_t aMapSize)
+  : DOMEventTargetHelper(aGlobal)
 {
   mMapFile.reset(new FileDescriptor(aMapFile));
   mMapSize = aMapSize;
@@ -121,6 +125,71 @@ SharedMap::Update(const FileDescriptor& aMapFile, size_t aMapSize,
   }
   mMapSize = aMapSize;
   mEntries.Clear();
+  mEntryArray.reset();
+
+
+  AutoEntryScript aes(GetParentObject(), "SharedMap change event");
+  JSContext* cx = aes.cx();
+
+  RootedDictionary<MozSharedMapChangeEventInit> init(cx);
+  if (!init.mChangedKeys.SetCapacity(aChangedKeys.Length(), fallible)) {
+    NS_WARNING("Failed to dispatch SharedMap change event");
+    return;
+  }
+  for (auto& key : aChangedKeys) {
+    Unused << init.mChangedKeys.AppendElement(NS_ConvertUTF8toUTF16(key),
+                                              fallible);
+  }
+
+  RefPtr<SharedMapChangeEvent> event =
+    SharedMapChangeEvent::Constructor(this, NS_LITERAL_STRING("change"), init);
+  event->SetTrusted(true);
+
+  DispatchEvent(*event);
+}
+
+
+const nsTArray<SharedMap::Entry*>&
+SharedMap::EntryArray() const
+{
+  if (mEntryArray.isNothing()) {
+    MaybeRebuild();
+
+    mEntryArray.emplace(mEntries.Count());
+    auto& array = mEntryArray.ref();
+    for (auto& entry : IterHash(mEntries)) {
+      array.AppendElement(entry);
+    }
+  }
+
+  return mEntryArray.ref();
+}
+
+const nsString
+SharedMap::GetKeyAtIndex(uint32_t aIndex) const
+{
+  return NS_ConvertUTF8toUTF16(EntryArray()[aIndex]->Name());
+}
+
+JS::Value
+SharedMap::GetValueAtIndex(uint32_t aIndex) const
+{
+  JSObject* wrapper = GetWrapper();
+  MOZ_ASSERT(wrapper,
+             "Should never see GetValueAtIndex on a SharedMap without a live "
+             "wrapper");
+  if (!wrapper) {
+    return JS::NullValue();
+  }
+
+  AutoJSContext cx;
+
+  JSAutoRealm ar(cx, wrapper);
+
+  JS::RootedValue val(cx);
+  EntryArray()[aIndex]->Read(cx, &val, IgnoreErrors());
+
+  return val;
 }
 
 void
@@ -362,9 +431,38 @@ WritableSharedMap::KeyChanged(const nsACString& aName)
   if (!mChangedKeys.ContainsSorted(aName)) {
     mChangedKeys.InsertElementSorted(aName);
   }
+  mEntryArray.reset();
 }
 
-NS_IMPL_ISUPPORTS0(SharedMap)
+
+JSObject*
+SharedMap::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
+{
+  return MozSharedMap_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+JSObject*
+WritableSharedMap::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
+{
+  return MozWritableSharedMap_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+/* static */ already_AddRefed<SharedMapChangeEvent>
+SharedMapChangeEvent::Constructor(EventTarget* aEventTarget,
+                                  const nsAString& aType,
+                                  const MozSharedMapChangeEventInit& aInit)
+{
+  RefPtr<SharedMapChangeEvent> event = new SharedMapChangeEvent(aEventTarget);
+
+  bool trusted = event->Init(aEventTarget);
+  event->InitEvent(aType, aInit.mBubbles, aInit.mCancelable);
+  event->SetTrusted(trusted);
+  event->SetComposed(aInit.mComposed);
+
+  event->mChangedKeys = aInit.mChangedKeys;
+
+  return event.forget();
+}
 
 } // ipc
 } // dom
