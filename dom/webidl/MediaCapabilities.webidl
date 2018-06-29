@@ -32,16 +32,22 @@ enum MediaEncodingType {
   "transmission"
 };
 
+// all members are specified as required in the spec.
+// We enforce that requirement in the MediaCapabilities code instead
+// See https://github.com/heycam/webidl/issues/76
 dictionary VideoConfiguration {
-  required DOMString contentType;
-  required unsigned long width;
-  required unsigned long height;
-  required unsigned long long bitrate;
-  required DOMString framerate;
+  DOMString contentType;
+  unsigned long width;
+  unsigned long height;
+  unsigned long long bitrate;
+  DOMString framerate;
 };
 
+// contentType member is specified as required in the spec.
+// We enforce that requirement in the MediaCapabilities code instead
+// See https://github.com/heycam/webidl/issues/76
 dictionary AudioConfiguration {
-  required DOMString contentType;
+  DOMString contentType;
   DOMString channels;
   unsigned long long bitrate;
   unsigned long samplerate;
@@ -57,8 +63,6 @@ interface MediaCapabilitiesInfo {
 
 [Exposed=(Window, Worker), Func="mozilla::dom::MediaCapabilities::Enabled"]
 interface MediaCapabilities {
-  // As per https://github.com/WICG/media-capabilities/issues/91 we mark the
-  // methods as always returning a new object.
   [NewObject]
   Promise<MediaCapabilitiesInfo> decodingInfo(MediaDecodingConfiguration configuration);
   [NewObject]

@@ -32,6 +32,54 @@ MediaCapabilities::MediaCapabilities(nsIGlobalObject* aParent)
 {
 }
 
+static void
+ThrowWithMemberName(ErrorResult& aRv,
+                    const char* aCategory,
+                    const char* aMember)
+{
+  auto str = nsPrintfCString("'%s' member of %s", aMember, aCategory);
+  aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(
+    NS_ConvertUTF8toUTF16(str));
+}
+
+static void
+CheckVideoConfigurationSanity(const VideoConfiguration& aConfig,
+                              const char* aCategory,
+                              ErrorResult& aRv)
+{
+  if (!aConfig.mContentType.WasPassed()) {
+    ThrowWithMemberName(aRv, "contentType", aCategory);
+    return;
+  }
+  if (!aConfig.mWidth.WasPassed()) {
+    ThrowWithMemberName(aRv, "width", aCategory);
+    return;
+  }
+  if (!aConfig.mHeight.WasPassed()) {
+    ThrowWithMemberName(aRv, "height", aCategory);
+    return;
+  }
+  if (!aConfig.mBitrate.WasPassed()) {
+    ThrowWithMemberName(aRv, "bitrate", aCategory);
+    return;
+  }
+  if (!aConfig.mFramerate.WasPassed()) {
+    ThrowWithMemberName(aRv, "framerate", aCategory);
+    return;
+  }
+}
+
+static void
+CheckAudioConfigurationSanity(const AudioConfiguration& aConfig,
+                              const char* aCategory,
+                              ErrorResult& aRv)
+{
+  if (!aConfig.mContentType.WasPassed()) {
+    ThrowWithMemberName(aRv, "contentType", aCategory);
+    return;
+  }
+}
+
 already_AddRefed<Promise>
 MediaCapabilities::DecodingInfo(
   const MediaDecodingConfiguration& aConfiguration,
@@ -52,6 +100,25 @@ MediaCapabilities::DecodingInfo(
     return nullptr;
   }
 
+  // Here we will throw rather than rejecting a promise in order to simulate
+  // optional dictionaries with required members (see bug 1368949)
+  if (aConfiguration.mVideo.IsAnyMemberPresent()) {
+    // Check that all VideoConfiguration required members are present.
+    CheckVideoConfigurationSanity(
+      aConfiguration.mVideo, "MediaDecodingConfiguration", aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+  if (aConfiguration.mAudio.IsAnyMemberPresent()) {
+    // Check that all AudioConfiguration required members are present.
+    CheckAudioConfigurationSanity(
+      aConfiguration.mAudio, "MediaDecodingConfiguration", aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
   bool supported = true;
   Maybe<MediaContainerType> videoContainer;
   Maybe<MediaContainerType> audioContainer;
@@ -68,8 +135,8 @@ MediaCapabilities::DecodingInfo(
     // We have a video configuration and it is valid. Check if it is supported.
     supported &=
       aConfiguration.mType == MediaDecodingType::File
-        ? CheckTypeForFile(aConfiguration.mVideo.mContentType)
-        : CheckTypeForMediaSource(aConfiguration.mVideo.mContentType);
+        ? CheckTypeForFile(aConfiguration.mVideo.mContentType.Value())
+        : CheckTypeForMediaSource(aConfiguration.mVideo.mContentType.Value());
   }
   if (aConfiguration.mAudio.IsAnyMemberPresent()) {
     audioContainer = CheckAudioConfiguration(aConfiguration.mAudio);
@@ -80,8 +147,8 @@ MediaCapabilities::DecodingInfo(
     // We have an audio configuration and it is valid. Check if it is supported.
     supported &=
       aConfiguration.mType == MediaDecodingType::File
-        ? CheckTypeForFile(aConfiguration.mAudio.mContentType)
-        : CheckTypeForMediaSource(aConfiguration.mAudio.mContentType);
+        ? CheckTypeForFile(aConfiguration.mAudio.mContentType.Value())
+        : CheckTypeForMediaSource(aConfiguration.mAudio.mContentType.Value());
   }
 
   if (!supported) {
@@ -323,6 +390,25 @@ MediaCapabilities::EncodingInfo(
     return nullptr;
   }
 
+  // Here we will throw rather than rejecting a promise in order to simulate
+  // optional dictionaries with required members (see bug 1368949)
+  if (aConfiguration.mVideo.IsAnyMemberPresent()) {
+    // Check that all VideoConfiguration required members are present.
+    CheckVideoConfigurationSanity(
+      aConfiguration.mVideo, "MediaDecodingConfiguration", aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+  if (aConfiguration.mAudio.IsAnyMemberPresent()) {
+    // Check that all AudioConfiguration required members are present.
+    CheckAudioConfigurationSanity(
+      aConfiguration.mAudio, "MediaDecodingConfiguration", aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
   bool supported = true;
 
   // If configuration.video is present and is not a valid video configuration,
@@ -333,7 +419,8 @@ MediaCapabilities::EncodingInfo(
       return nullptr;
     }
     // We have a video configuration and it is valid. Check if it is supported.
-    supported &= CheckTypeForEncoder(aConfiguration.mVideo.mContentType);
+    supported &=
+      CheckTypeForEncoder(aConfiguration.mVideo.mContentType.Value());
   }
   if (aConfiguration.mAudio.IsAnyMemberPresent()) {
     if (!CheckAudioConfiguration(aConfiguration.mAudio)) {
@@ -341,7 +428,8 @@ MediaCapabilities::EncodingInfo(
       return nullptr;
     }
     // We have an audio configuration and it is valid. Check if it is supported.
-    supported &= CheckTypeForEncoder(aConfiguration.mAudio.mContentType);
+    supported &=
+      CheckTypeForEncoder(aConfiguration.mAudio.mContentType.Value());
   }
 
   auto info = MakeUnique<MediaCapabilitiesInfo>(supported, supported, false);
