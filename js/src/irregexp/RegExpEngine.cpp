@@ -1326,6 +1326,7 @@ Analysis::VisitAssertion(AssertionNode* that)
     EnsureAnalyzed(that->on_success());
 }
 
+// [SMDOC] Irregexp internals
 // -------------------------------------------------------------------
 // Implementation of the Irregexp regular expression engine.
 //

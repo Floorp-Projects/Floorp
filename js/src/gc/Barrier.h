@@ -17,6 +17,8 @@
 #include "js/Value.h"
 
 /*
+ * [SMDOC] GC Barriers
+ *
  * A write barrier is a mechanism used by incremental or generation GCs to
  * ensure that every value that needs to be marked is marked. In general, the
  * write barrier should be invoked whenever a write can cause the set of things

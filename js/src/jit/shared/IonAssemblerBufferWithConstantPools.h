@@ -14,6 +14,8 @@
 #include "jit/JitSpewer.h"
 #include "jit/shared/IonAssemblerBuffer.h"
 
+// [SMDOC] JIT AssemblerBuffer constant pooling (ARM/ARM64/MIPS)
+//
 // This code extends the AssemblerBuffer to support the pooling of values loaded
 // using program-counter relative addressing modes. This is necessary with the
 // ARM instruction set because it has a fixed instruction size that can not

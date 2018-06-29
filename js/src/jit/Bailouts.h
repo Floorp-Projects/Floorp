@@ -16,8 +16,10 @@
 namespace js {
 namespace jit {
 
-// A "bailout" is a condition in which we need to recover an interpreter frame
-// from an IonFrame. Bailouts can happen for the following reasons:
+// [SMDOC] IonMonkey Bailouts
+//
+// A "bailout" is a condition in which we need to recover a baseline frame from
+// an IonFrame. Bailouts can happen for the following reasons:
 //   (1) A deoptimization guard, for example, an add overflows or a type check
 //       fails.
 //   (2) A check or assumption held by the JIT is invalidated by the VM, and
@@ -36,7 +38,7 @@ namespace jit {
 //  jmp _bailout
 //
 // The bailout target needs to somehow translate the Ion frame (whose state
-// will differ at each program point) to an interpreter frame. This state is
+// will differ at each program point) to a baseline frame. This state is
 // captured into the IonScript's snapshot buffer, and for each bailout we know
 // which snapshot corresponds to its state.
 //
@@ -49,7 +51,7 @@ namespace jit {
 //       to find the structure of the frame, and then use the stack and spilled
 //       registers to perform frame conversion.
 //   (5) Bailout() returns, and the JIT must immediately return to the
-//       interpreter (all frames are converted at once).
+//       baseline JIT code (all frames are converted at once).
 //
 // (2) and (3) are implemented by a trampoline held in the compartment.
 // Naively, we could implement (1) like:

@@ -15,6 +15,8 @@ using namespace js;
 using namespace js::jit;
 
 /*
+ * [SMDOC] IonMonkey Value Numbering
+ *
  * Some notes on the main algorithm here:
  *  - The SSA identifier id() is the value number. We do replaceAllUsesWith as
  *    we go, so there's always at most one visible value with a given number.
