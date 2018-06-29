@@ -437,6 +437,9 @@ CallJSNative(JSContext* cx, Native native, const CallArgs& args)
     bool alreadyThrowing = cx->isExceptionPending();
 #endif
     assertSameCompartment(cx, args);
+    MOZ_ASSERT(!args.callee().is<ProxyObject>());
+
+    AutoRealm ar(cx, &args.callee());
     bool ok = native(cx, args.length(), args.base());
     if (ok) {
         assertSameCompartment(cx, args.rval());
@@ -525,7 +528,6 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
             if (jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
                 native = jitInfo->ignoresReturnValueMethod;
         }
-        AutoRealm ar(cx, fun);
         return CallJSNative(cx, native, args);
     }
 
@@ -622,10 +624,8 @@ InternalConstruct(JSContext* cx, const AnyConstructArgs& args)
     if (callee.is<JSFunction>()) {
         RootedFunction fun(cx, &callee.as<JSFunction>());
 
-        if (fun->isNative()) {
-            AutoRealm ar(cx, fun);
+        if (fun->isNative())
             return CallJSNativeConstructor(cx, fun->native(), args);
-        }
 
         if (!InternalCallOrConstruct(cx, args, CONSTRUCT))
             return false;

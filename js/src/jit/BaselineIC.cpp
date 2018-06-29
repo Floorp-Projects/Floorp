@@ -2171,6 +2171,9 @@ static bool
 GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
                               MutableHandleObject templateObject)
 {
+    if (args.callee().nonCCWRealm() != cx->realm())
+        return true;
+
     if (hook == TypedObject::construct) {
         Rooted<TypeDescr*> descr(cx, &args.callee().as<TypeDescr>());
         templateObject.set(TypedObject::createZeroed(cx, descr, gc::TenuredHeap));
@@ -3733,6 +3736,8 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     // Note that this leaves the return address in TailCallReg.
     enterStubFrame(masm, regs.getAny());
 
+    masm.switchToObjectRealm(callee, regs.getAny());
+
     regs.add(scratch);
     pushCallArguments(masm, regs, argcReg, /* isJitCall = */ false, isConstructing_);
     regs.take(scratch);
@@ -3774,6 +3779,8 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     masm.loadValue(Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()), R0);
 
     leaveStubFrame(masm);
+
+    masm.switchToBaselineFrameRealm(R1.scratchReg());
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
