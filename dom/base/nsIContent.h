@@ -791,8 +791,8 @@ protected:
     nsExtendedContentSlots();
     virtual ~nsExtendedContentSlots();
 
-    virtual void Traverse(nsCycleCollectionTraversalCallback&);
-    virtual void Unlink();
+    virtual void TraverseExtendedSlots(nsCycleCollectionTraversalCallback&);
+    virtual void UnlinkExtendedSlots();
 
     /**
      * The nearest enclosing content node with a binding that created us.
@@ -821,11 +821,24 @@ protected:
   class nsContentSlots : public nsINode::nsSlots
   {
   public:
+    nsContentSlots()
+      : nsINode::nsSlots()
+      , mExtendedSlots(0)
+    {
+    }
+
+    ~nsContentSlots()
+    {
+      if (!(mExtendedSlots & sNonOwningExtendedSlotsFlag)) {
+        delete GetExtendedContentSlots();
+      }
+    }
+
     void Traverse(nsCycleCollectionTraversalCallback& aCb) override
     {
       nsINode::nsSlots::Traverse(aCb);
       if (mExtendedSlots) {
-        mExtendedSlots->Traverse(aCb);
+        GetExtendedContentSlots()->TraverseExtendedSlots(aCb);
       }
     }
 
@@ -833,11 +846,33 @@ protected:
     {
       nsINode::nsSlots::Unlink();
       if (mExtendedSlots) {
-        mExtendedSlots->Unlink();
+        GetExtendedContentSlots()->UnlinkExtendedSlots();
       }
     }
 
-    mozilla::UniquePtr<nsExtendedContentSlots> mExtendedSlots;
+    void SetExtendedContentSlots(nsExtendedContentSlots* aSlots, bool aOwning)
+    {
+      mExtendedSlots = reinterpret_cast<uintptr_t>(aSlots);
+      if (!aOwning) {
+        mExtendedSlots |= sNonOwningExtendedSlotsFlag;
+      }
+    }
+
+    bool OwnsExtendedSlots() const
+    {
+      return !(mExtendedSlots & sNonOwningExtendedSlotsFlag);
+    }
+
+    nsExtendedContentSlots* GetExtendedContentSlots() const
+    {
+      return reinterpret_cast<nsExtendedContentSlots*>(
+        mExtendedSlots & ~sNonOwningExtendedSlotsFlag);
+    }
+
+  private:
+    static const uintptr_t sNonOwningExtendedSlotsFlag = 1u;
+
+    uintptr_t mExtendedSlots;
   };
 
   // Override from nsINode
@@ -869,22 +904,22 @@ protected:
   const nsExtendedContentSlots* GetExistingExtendedContentSlots() const
   {
     const nsContentSlots* slots = GetExistingContentSlots();
-    return slots ? slots->mExtendedSlots.get() : nullptr;
+    return slots ? slots->GetExtendedContentSlots() : nullptr;
   }
 
   nsExtendedContentSlots* GetExistingExtendedContentSlots()
   {
     nsContentSlots* slots = GetExistingContentSlots();
-    return slots ? slots->mExtendedSlots.get() : nullptr;
+    return slots ? slots->GetExtendedContentSlots() : nullptr;
   }
 
   nsExtendedContentSlots* ExtendedContentSlots()
   {
     nsContentSlots* slots = ContentSlots();
-    if (!slots->mExtendedSlots) {
-      slots->mExtendedSlots.reset(CreateExtendedSlots());
+    if (!slots->GetExtendedContentSlots()) {
+      slots->SetExtendedContentSlots(CreateExtendedSlots(), true);
     }
-    return slots->mExtendedSlots.get();
+    return slots->GetExtendedContentSlots();
   }
 
   /**

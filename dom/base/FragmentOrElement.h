@@ -171,14 +171,14 @@ public:
    * accessed through the DOM.
    */
 
-  class nsExtendedDOMSlots final : public nsIContent::nsExtendedContentSlots
+  class nsExtendedDOMSlots : public nsIContent::nsExtendedContentSlots
   {
   public:
     nsExtendedDOMSlots();
-    ~nsExtendedDOMSlots() final;
+    ~nsExtendedDOMSlots();
 
-    void Traverse(nsCycleCollectionTraversalCallback&) final;
-    void Unlink() final;
+    void TraverseExtendedSlots(nsCycleCollectionTraversalCallback&) final;
+    void UnlinkExtendedSlots() final;
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
@@ -223,11 +223,11 @@ public:
 
   };
 
-  class nsDOMSlots final : public nsIContent::nsContentSlots
+  class nsDOMSlots : public nsIContent::nsContentSlots
   {
   public:
     nsDOMSlots();
-    ~nsDOMSlots() final;
+    ~nsDOMSlots();
 
     void Traverse(nsCycleCollectionTraversalCallback&) final;
     void Unlink() final;
@@ -263,6 +263,29 @@ public:
     RefPtr<nsDOMTokenList> mClassList;
   };
 
+  /**
+   * In case ExtendedDOMSlots is needed before normal DOMSlots, an instance of
+   * FatSlots class, which combines those two slot types, is created.
+   * This way we can avoid extra allocation for ExtendedDOMSlots.
+   * FatSlots is useful for example when creating Custom Elements.
+   */
+  class FatSlots final : public nsDOMSlots, public nsExtendedDOMSlots
+  {
+  public:
+    FatSlots()
+      : nsDOMSlots()
+      , nsExtendedDOMSlots()
+    {
+      MOZ_COUNT_CTOR(FatSlots);
+      SetExtendedContentSlots(this, false);
+    }
+
+    ~FatSlots() final
+    {
+      MOZ_COUNT_DTOR(FatSlots);
+    }
+  };
+
 protected:
   void GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
   void SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult& aError);
@@ -290,7 +313,18 @@ protected:
 
   nsExtendedDOMSlots* ExtendedDOMSlots()
   {
-    return static_cast<nsExtendedDOMSlots*>(ExtendedContentSlots());
+    nsContentSlots* slots = GetExistingContentSlots();
+    if (!slots) {
+      FatSlots* fatSlots = new FatSlots();
+      mSlots = fatSlots;
+      return fatSlots;
+    }
+
+    if (!slots->GetExtendedContentSlots()) {
+      slots->SetExtendedContentSlots(CreateExtendedSlots(), true);
+    }
+
+    return static_cast<nsExtendedDOMSlots*>(slots->GetExtendedContentSlots());
   }
 
   const nsExtendedDOMSlots* GetExistingExtendedDOMSlots() const
