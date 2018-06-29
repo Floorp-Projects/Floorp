@@ -683,7 +683,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream)
 StreamTime
 MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
 {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
 
   float volume = 0.0f;
