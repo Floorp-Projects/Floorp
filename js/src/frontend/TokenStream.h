@@ -1289,8 +1289,13 @@ class TokenStreamCharsBase
     // use the original CharT.
     template<typename T> inline void consumeKnownCodeUnit(T) = delete;
 
-    MOZ_MUST_USE inline bool
-    fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end);
+    /**
+     * Accumulate the provided range of already-validated (i.e. valid UTF-8, or
+     * anything if CharT is char16_t because JS permits lone and mispaired
+     * surrogates) raw template literal text (i.e. containing no escapes or
+     * substitutions) into |charBuffer|.
+     */
+    MOZ_MUST_USE bool fillCharBufferWithTemplateStringContents(const CharT* cur, const CharT* end);
 
   protected:
     /** Code units in the source code being tokenized. */
@@ -1326,32 +1331,6 @@ TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t
                                                    size_t length)
 {
     return AtomizeChars(cx, chars, length);
-}
-
-template<>
-MOZ_MUST_USE inline bool
-TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
-                                                                         const char16_t* end)
-{
-    MOZ_ASSERT(this->charBuffer.length() == 0);
-
-    while (cur < end) {
-        // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are
-        // interpreted literally inside template literal contents; only
-        // literal CRLF sequences are normalized to '\n'.  See
-        // <https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv>.
-        char16_t ch = *cur++;
-        if (ch == '\r') {
-            ch = '\n';
-            if (cur < end && *cur == '\n')
-                cur++;
-        }
-
-        if (!this->charBuffer.append(ch))
-            return false;
-    }
-
-    return true;
 }
 
 template<typename CharT>
@@ -1481,6 +1460,9 @@ class GeneralTokenStreamChars
     uint32_t matchExtendedUnicodeEscape(uint32_t* codePoint);
 
   protected:
+    using TokenStreamCharsShared::drainCharBufferIntoAtom;
+    using CharsBase::fillCharBufferWithTemplateStringContents;
+
     using typename CharsBase::SourceUnits;
 
   protected:
@@ -1572,6 +1554,28 @@ class GeneralTokenStreamChars
 
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
+
+  public:
+    JSAtom* getRawTemplateStringAtom() {
+        TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+        MOZ_ASSERT(anyChars.currentToken().type == TokenKind::TemplateHead ||
+                   anyChars.currentToken().type == TokenKind::NoSubsTemplate);
+        const CharT* cur = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.begin + 1);
+        const CharT* end;
+        if (anyChars.currentToken().type == TokenKind::TemplateHead) {
+            // Of the form    |`...${|   or   |}...${|
+            end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 2);
+        } else {
+            // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
+            end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
+        }
+
+        if (!fillCharBufferWithTemplateStringContents(cur, end))
+            return nullptr;
+
+        return drainCharBufferIntoAtom(anyChars.cx);
+    }
 };
 
 template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
@@ -1904,27 +1908,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
                                        bool strictMode, unsigned errorNumber, va_list* args);
     bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
                                          unsigned errorNumber, va_list* args);
-
-    JSAtom* getRawTemplateStringAtom() {
-        TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-        MOZ_ASSERT(anyChars.currentToken().type == TokenKind::TemplateHead ||
-                   anyChars.currentToken().type == TokenKind::NoSubsTemplate);
-        const CharT* cur = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.begin + 1);
-        const CharT* end;
-        if (anyChars.currentToken().type == TokenKind::TemplateHead) {
-            // Of the form    |`...${|   or   |}...${|
-            end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 2);
-        } else {
-            // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
-            end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
-        }
-
-        if (!fillCharBufferWithTemplateStringContents(cur, end))
-            return nullptr;
-
-        return drainCharBufferIntoAtom(anyChars.cx);
-    }
 
   private:
     // This is private because it should only be called by the tokenizer while
