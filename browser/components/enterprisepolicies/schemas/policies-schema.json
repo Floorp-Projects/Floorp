@@ -114,6 +114,7 @@
       "properties": {
         "Allow": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "origin"
           }
@@ -121,6 +122,7 @@
 
         "Block": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "origin"
           }
@@ -338,6 +340,7 @@
       "properties": {
         "Allow": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "origin"
           }
@@ -345,6 +348,7 @@
 
         "Block": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "origin"
           }
@@ -380,6 +384,7 @@
         },
         "Additional": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "URL"
           }
@@ -395,6 +400,7 @@
       "properties": {
         "Allow": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "origin"
           }
@@ -441,6 +447,7 @@
           "properties": {
             "Allow": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -448,6 +455,7 @@
 
             "Block": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -468,6 +476,7 @@
           "properties": {
             "Allow": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -475,6 +484,7 @@
 
             "Block": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -495,6 +505,7 @@
           "properties": {
             "Allow": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -502,6 +513,7 @@
 
             "Block": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -522,6 +534,7 @@
           "properties": {
             "Allow": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -529,6 +542,7 @@
 
             "Block": {
               "type": "array",
+              "strict": false,
               "items": {
                 "type": "origin"
               }
@@ -553,6 +567,7 @@
       "properties": {
         "Allow": {
           "type": "array",
+          "strict": false,
           "items": {
             "type": "origin"
           }
