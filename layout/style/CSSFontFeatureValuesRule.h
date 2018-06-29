@@ -19,7 +19,14 @@ class CSSFontFeatureValuesRule final : public css::Rule
 {
 public:
   CSSFontFeatureValuesRule(RefPtr<RawServoFontFeatureValuesRule> aRawRule,
-                           uint32_t aLine, uint32_t aColumn);
+                           StyleSheet* aSheet,
+                           css::Rule* aParentRule,
+                           uint32_t aLine,
+                           uint32_t aColumn)
+    : css::Rule(aSheet, aParentRule, aLine, aColumn)
+    , mRawRule(std::move(aRawRule))
+  {
+  }
 
   virtual bool IsCCLeaf() const override;
 

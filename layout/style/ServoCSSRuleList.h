@@ -27,15 +27,18 @@ class Rule;
 class ServoCSSRuleList final : public dom::CSSRuleList
 {
 public:
-  // @param aDirectOwnerStyleSheet should be set to the owner stylesheet
-  // if this rule list is owned directly by a stylesheet, which means it
-  // is a top level CSSRuleList. If it's owned by a group rule, nullptr.
-  // If this param is set, the caller doesn't need to call SetStyleSheet.
   ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
-                   StyleSheet* aDirectOwnerStyleSheet);
+                   StyleSheet* aSheet,
+                   css::GroupRule* aParentRule);
   css::GroupRule* GetParentRule() const { return mParentRule; }
-  void SetParentRule(css::GroupRule* aParentRule);
-  void SetStyleSheet(StyleSheet* aSheet);
+  void DropSheetReference();
+  void DropParentRuleReference();
+
+  void DropReferences()
+  {
+    DropSheetReference();
+    DropParentRuleReference();
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoCSSRuleList, dom::CSSRuleList)
@@ -44,8 +47,6 @@ public:
 
   css::Rule* IndexedGetter(uint32_t aIndex, bool& aFound) final;
   uint32_t Length() final { return mRules.Length(); }
-
-  void DropReference();
 
   css::Rule* GetRule(uint32_t aIndex);
   nsresult InsertRule(const nsAString& aRule, uint32_t aIndex);

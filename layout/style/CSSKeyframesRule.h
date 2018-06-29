@@ -19,7 +19,10 @@ class CSSKeyframesRule final : public css::Rule
 {
 public:
   CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
-                   uint32_t aLine, uint32_t aColumn);
+                   StyleSheet* aSheet,
+                   css::Rule* aParentRule,
+                   uint32_t aLine,
+                   uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframesRule,
@@ -31,7 +34,7 @@ public:
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  void SetStyleSheet(StyleSheet* aSheet) final;
+  void DropSheetReference() final;
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRule_Binding::KEYFRAMES_RULE; }
