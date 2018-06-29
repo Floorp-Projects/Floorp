@@ -391,22 +391,20 @@ var PlacesCommandHook = {
    *
    * @param aBrowser
    *        a <browser> element.
-   * @param [optional] aShowEditUI
-   *        whether or not to show the edit-bookmark UI for the bookmark item
    * @param [optional] aUrl
    *        Option to provide a URL to bookmark rather than the current page
    * @param [optional] aTitle
    *        Option to provide a title for a bookmark to use rather than the
    *        getting the current page's title
    */
-  async bookmarkPage(aBrowser, aShowEditUI, aUrl = null, aTitle = null) {
+  async bookmarkPage(aBrowser, aUrl = null, aTitle = null) {
     // If aUrl is provided, we want to bookmark that url rather than the
     // the current page
     let isCurrentBrowser = !aUrl;
     let url = aUrl ? new URL(aUrl) : new URL(aBrowser.currentURI.spec);
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
-    let showEditUI = aShowEditUI && (!isNewBookmark || StarUI.showForNewBookmarks);
+    let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;
     if (isNewBookmark) {
       let parentGuid = PlacesUtils.bookmarks.unfiledGuid;
       info = { url, parentGuid };
@@ -1603,7 +1601,7 @@ var BookmarkingUI = {
         }, { once: true });
         this.star.setAttribute("animate", "true");
       }
-      PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, true);
+      PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser);
     }
   },
 
