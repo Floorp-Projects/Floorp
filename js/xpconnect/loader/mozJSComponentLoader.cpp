@@ -635,7 +635,7 @@ mozJSComponentLoader::ReuseGlobal(nsIURI* aURI)
     // which sets a per-compartment flag that disables certain
     // security wrappers, so don't use the shared global for them
     // to avoid breaking tests.
-    if (FindInReadable(NS_LITERAL_CSTRING("resource://specialpowers/"), spec)) {
+    if (FindInReadable(NS_LITERAL_CSTRING("chrome://specialpowers/"), spec)) {
         return false;
     }
 
