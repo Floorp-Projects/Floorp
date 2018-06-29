@@ -44,15 +44,15 @@ add_task(async function() {
   await startPicker(toolbox);
 
   info("Move mouse over the padding of the test-component");
-  await hoverElement("test-component", 10, 10);
+  await hoverElement(inspector, testActor, "test-component", 10, 10);
 
   info("Move mouse over the pick-target");
   // Note we can't reach pick-target with a selector because this element lives in the
   // shadow-dom of test-component. We aim for PADDING + 5 pixels
-  await hoverElement("test-component", 10, 25);
+  await hoverElement(inspector, testActor, "test-component", 10, 25);
 
   info("Click and pick the pick-target");
-  await pickElement("test-component", 10, 25);
+  await pickElement(inspector, testActor, "test-component", 10, 25);
 
   info("Check that the markup view has the expected content after using the picker");
   const tree = `
@@ -71,24 +71,4 @@ add_task(async function() {
   const hostContainer = inspector.markup.getContainer(hostFront);
   const moreNodesLink = hostContainer.elt.querySelector(".more-nodes");
   ok(!moreNodesLink, "There is no 'more nodes' button displayed in the host container");
-
-  /**
-   * Helpers defined in the test task to reuse easily the inspector and testActor
-   * variables.
-   */
-  function hoverElement(selector, x, y) {
-    info("Waiting for element " + selector + " to be hovered");
-    const onHovered = inspector.toolbox.once("picker-node-hovered");
-    testActor.synthesizeMouse({selector, x, y, options: {type: "mousemove"}});
-    return onHovered;
-  }
-
-  function pickElement(selector, x, y) {
-    info("Waiting for element " + selector + " to be picked");
-    // Use an empty options argument in order trigger the default synthesizeMouse behavior
-    // which will trigger mousedown, then mouseup.
-    const onNewNodeFront = inspector.selection.once("new-node-front");
-    testActor.synthesizeMouse({selector, x, y, options: {}});
-    return onNewNodeFront;
-  }
 });
