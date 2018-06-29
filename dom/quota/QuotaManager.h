@@ -483,6 +483,12 @@ private:
   UpgradeStorageFrom2_0To2_1(mozIStorageConnection* aConnection);
 
   nsresult
+  MaybeRemoveLocalStorageData();
+
+  nsresult
+  MaybeRemoveLocalStorageDirectories();
+
+  nsresult
   InitializeRepository(PersistenceType aPersistenceType);
 
   nsresult
