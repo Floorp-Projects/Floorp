@@ -6,6 +6,7 @@ MOZ_AUTOMATION_L10N_CHECK=0
 ac_add_options --enable-optimize
 ac_add_options --enable-debug
 ac_add_options --disable-sandbox
+ac_add_options --disable-warnings-as-errors
 ac_add_options --enable-coverage
 
 # Needed to enable breakpad in application.ini
