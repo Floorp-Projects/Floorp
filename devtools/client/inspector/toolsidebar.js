@@ -337,8 +337,9 @@ ToolSidebar.prototype = {
 
       this._telemetry.recordEvent("devtools.main", "sidepanel_changed", "inspector", null,
         {
-          oldpanel: previousToolId,
-          newpanel: currentToolId
+          "oldpanel": previousToolId,
+          "newpanel": currentToolId,
+          "session_id": this._toolPanel._toolbox.sessionId
         }
       );
     }
