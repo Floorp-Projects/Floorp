@@ -106,7 +106,9 @@ public:
     // used to highlight valid regions to drop something onto
     eColorID__moz_dragtargetzone,
 
-    // used to cell text background, selected but not focus
+    // used to cell text background, selected but not focus.
+    // It is not necessarily a system color, but it is
+    // distinct from -moz-appearance: listbox; and Highlight
     eColorID__moz_cellhighlight,
     // used to cell text, selected but not focus
     eColorID__moz_cellhighlighttext,
