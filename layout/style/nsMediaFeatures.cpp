@@ -631,6 +631,12 @@ nsMediaFeatures::InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::gtk_csd_close_button);
   }
 
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme);
+  if (metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::system_dark_theme);
+  }
+
 #ifdef XP_WIN
   if (NS_SUCCEEDED(
         LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,
@@ -1029,6 +1035,15 @@ nsMediaFeatures::features[] = {
     nsMediaFeature::eBoolInteger,
     nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::gtk_csd_close_button },
+    GetSystemMetric
+  },
+
+  {
+    &nsGkAtoms::_moz_system_dark_theme,
+    nsMediaFeature::eMinMaxNotAllowed,
+    nsMediaFeature::eBoolInteger,
+    nsMediaFeature::eUserAgentAndChromeOnly,
+    { &nsGkAtoms::system_dark_theme },
     GetSystemMetric
   },
 

@@ -3344,6 +3344,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                                name:NSViewGlobalFrameDidChangeNotification
                                              object:self];
 
+  [[NSDistributedNotificationCenter defaultCenter]
+           addObserver:self
+              selector:@selector(systemMetricsChanged)
+                  name:@"AppleInterfaceThemeChangedNotification"
+                object:nil
+    suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
+
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

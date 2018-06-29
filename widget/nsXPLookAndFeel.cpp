@@ -134,6 +134,9 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     false, 0 },
   { "ui.GtkCSDCloseButton",
     eIntID_GTKCSDCloseButton,
+    false, 0 },
+  { "ui.systemUsesDarkTheme",
+    eIntID_SystemUsesDarkTheme,
     false, 0 }
 };
 
