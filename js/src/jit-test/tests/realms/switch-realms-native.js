@@ -45,3 +45,16 @@ function testException1() {
     }
 }
 testException1();
+
+function testDOMCalls() {
+    var g = newGlobal({sameCompartmentAs: this});
+    var obj = g.evaluate("new FakeDOMObject()");
+    for (var i = 0; i < 2000; i++) {
+        assertCorrectRealm();
+        assertEq(obj.doFoo(1), 1);
+        assertEq(typeof obj.x, "number");
+        assertEq(obj.global, g);
+        obj.global = g; // Throws if not setter's global.
+    }
+}
+testDOMCalls();

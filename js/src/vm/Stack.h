@@ -69,7 +69,7 @@ class DebugFrame;
 class Instance;
 }
 
-// VM stack layout
+// [SMDOC] VM stack layout
 //
 // A JSRuntime's stack consists of a linked list of activations. Every activation
 // contains a number of scripted frames that are either running in the interpreter

@@ -18,7 +18,7 @@
 
 /*
  * -------------
- * Typed Objects
+ * [SMDOC] Typed Objects
  * -------------
  *
  * Typed objects are a special kind of JS object where the data is

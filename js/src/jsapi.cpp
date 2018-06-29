@@ -6137,36 +6137,21 @@ JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t lengt
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    /*
-     * FIXME bug 612141 - fix DeflateStringToBuffer interface so the result
-     * would allow to distinguish between insufficient buffer and encoding
-     * error.
-     */
-    size_t writtenLength = length;
     JSLinearString* linear = str->ensureLinear(cx);
     if (!linear)
          return size_t(-1);
 
-    bool res;
+    JS::AutoCheckCannotGC nogc;
+    size_t writeLength = Min(linear->length(), length);
     if (linear->hasLatin1Chars()) {
-        JS::AutoCheckCannotGC nogc;
-        res = DeflateStringToBuffer(nullptr, linear->latin1Chars(nogc), linear->length(), buffer,
-                                    &writtenLength);
+        mozilla::PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc),
+                         writeLength);
     } else {
-        JS::AutoCheckCannotGC nogc;
-        res = DeflateStringToBuffer(nullptr, linear->twoByteChars(nogc), linear->length(), buffer,
-                                    &writtenLength);
+        const char16_t* src = linear->twoByteChars(nogc);
+        for (size_t i = 0; i < writeLength; i++)
+            buffer[i] = char(src[i]);
     }
-    if (res) {
-        MOZ_ASSERT(writtenLength <= length);
-        return writtenLength;
-    }
-    MOZ_ASSERT(writtenLength <= length);
-    size_t necessaryLength = str->length();
-    if (necessaryLength == size_t(-1))
-        return size_t(-1);
-    MOZ_ASSERT(writtenLength == length); // C strings are NOT encoded.
-    return necessaryLength;
+    return linear->length();
 }
 
 JS_PUBLIC_API(JS::Symbol*)

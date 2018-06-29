@@ -99,6 +99,7 @@ class BackendTupfile(object):
         # These files are special, ignore anything that generates them or
         # depends on them.
         self._skip_files = [
+            'built_in_addons.json',
             'signmar',
         ]
 

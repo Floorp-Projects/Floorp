@@ -29,7 +29,7 @@
 #include "js/Value.h"
 #include "js/Vector.h"
 
-// JS::ubi::Node
+// [SMDOC] ubi::Node (Heap Analysis framework)
 //
 // JS::ubi::Node is a pointer-like type designed for internal use by heap
 // analysis tools. A ubi::Node can refer to:

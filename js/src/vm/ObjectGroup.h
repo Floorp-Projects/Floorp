@@ -65,7 +65,7 @@ enum NewObjectKind {
 };
 
 /*
- * Lazy object groups overview.
+ * [SMDOC] Type-Inference lazy ObjectGroup
  *
  * Object groups which represent at most one JS object are constructed lazily.
  * These include groups for native functions, standard classes, scripted
@@ -109,6 +109,8 @@ class ObjectGroup : public gc::TenuredCell
     void* addendum_ = nullptr;
 
     /*
+     * [SMDOC] Type-Inference object properties
+     *
      * Properties of this object.
      *
      * The type sets in the properties of a group describe the possible values

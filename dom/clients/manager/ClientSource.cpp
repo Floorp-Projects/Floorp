@@ -124,6 +124,28 @@ ClientSource::GetDocShell() const
   return mOwner.as<nsCOMPtr<nsIDocShell>>();
 }
 
+nsIGlobalObject*
+ClientSource::GetGlobal() const
+{
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  nsPIDOMWindowInner* win = GetInnerWindow();
+  if (win) {
+    return win->AsGlobal();
+  }
+
+  WorkerPrivate* wp = GetWorkerPrivate();
+  if (wp) {
+    return wp->GlobalScope();
+  }
+
+  // Note, ClientSource objects attached to docshell for conceptual
+  // initial about:blank will get nullptr here.  The caller should
+  // use MaybeCreateIntitialDocument() to create the window before
+  // GetGlobal() if it wants this before.
+
+  return nullptr;
+}
+
 void
 ClientSource::MaybeCreateInitialDocument()
 {
@@ -431,10 +453,47 @@ ClientSource::Control(const ClientControlledArgs& aArgs)
 {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
 
+  // Determine if the client is allowed to be controlled.  Currently we
+  // prevent service workers from controlling clients that cannot access
+  // storage.  We exempt this restriction for local URL clients, like about:blank
+  // and blob:, since access to service workers is dictated by their parent.
+  //
+  // Note, we default to allowing the client to be controlled in the case
+  // where we are not execution ready yet.  This can only happen if the
+  // the non-subresource load is intercepted by a service worker.  Since
+  // ServiceWorkerInterceptController() uses StorageAllowedForChannel()
+  // it should be fine to accept these control messages.
+  //
+  // Its also fine to default to allowing ClientSource attached to a docshell
+  // to be controlled.  These clients represent inital about:blank windows
+  // that do not have an inner window created yet.  We explicitly allow initial
+  // about:blank.
+  bool controlAllowed = true;
+  if (GetInnerWindow()) {
+
+    // Local URL windows and windows with access to storage can be controlled.
+    controlAllowed = Info().URL().LowerCaseEqualsLiteral("about:blank") ||
+                     StringBeginsWith(Info().URL(), NS_LITERAL_CSTRING("blob:")) ||
+                     nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
+                      nsContentUtils::StorageAccess::eAllow;
+  } else if (GetWorkerPrivate()) {
+    // Local URL workers and workers with access to storage cna be controlled.
+    controlAllowed = GetWorkerPrivate()->IsStorageAllowed() ||
+                     StringBeginsWith(GetWorkerPrivate()->ScriptURL(),
+                                      NS_LITERAL_STRING("blob:"));
+  }
+
+  RefPtr<ClientOpPromise> ref;
+
+  if (NS_WARN_IF(!controlAllowed)) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
+    return ref.forget();
+  }
+
   SetController(ServiceWorkerDescriptor(aArgs.serviceWorker()));
 
-  RefPtr<ClientOpPromise> ref =
-    ClientOpPromise::CreateAndResolve(NS_OK, __func__);
+  ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
   return ref.forget();
 }
 
@@ -670,35 +729,55 @@ ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
 RefPtr<ClientOpPromise>
 ClientSource::Claim(const ClientClaimArgs& aArgs)
 {
+  // The ClientSource::Claim method is only needed in the legacy
+  // mode where the ServiceWorkerManager is run in each child-process.
+  // In parent-process mode this method should not be called.
+  MOZ_DIAGNOSTIC_ASSERT(!ServiceWorkerParentInterceptEnabled());
+
   RefPtr<ClientOpPromise> ref;
 
+  nsIGlobalObject* global = GetGlobal();
+  if (NS_WARN_IF(!global)) {
+    ref = ClientOpPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
+    return ref.forget();
+  }
+
+  // Note, we cannot just mark the ClientSource controlled.  We must go through
+  // the SWM so that it can keep track of which clients are controlled by each
+  // registration.  We must tell the child-process SWM in legacy child-process
+  // mode.  In parent-process service worker mode the SWM is notified in the
+  // parent-process in ClientManagerService::Claim().
+
+  RefPtr<GenericPromise::Private> innerPromise =
+    new GenericPromise::Private(__func__);
   ServiceWorkerDescriptor swd(aArgs.serviceWorker());
 
-  // Today the ServiceWorkerManager maintains its own list of
-  // nsIDocument objects controlled by each service worker.  We
-  // need to try to update that data structure for now.  If we
-  // can't, however, then simply mark the Client as controlled.
-  // In the future this will be enough for the SWM as well since
-  // it will eventually hold ClientHandle objects instead of
-  // nsIDocuments.
-  nsPIDOMWindowInner* innerWindow = GetInnerWindow();
-  nsIDocument* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
-  RefPtr<ServiceWorkerManager> swm = doc ? ServiceWorkerManager::GetInstance()
-                                         : nullptr;
-  if (!swm || !doc) {
-    SetController(swd);
-    ref = ClientOpPromise::CreateAndResolve(NS_OK, __func__);
-    return ref.forget();
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ClientSource::Claim",
+    [innerPromise, clientInfo = mClientInfo, swd] () mutable {
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      if (NS_WARN_IF(!swm)) {
+        innerPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+        return;
+      }
+
+      RefPtr<GenericPromise> p = swm->MaybeClaimClient(clientInfo, swd);
+      p->ChainTo(innerPromise.forget(), __func__);
+    });
+
+  if (NS_IsMainThread()) {
+    r->Run();
+  } else {
+    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
   }
 
   RefPtr<ClientOpPromise::Private> outerPromise =
     new ClientOpPromise::Private(__func__);
 
-  auto holder =
-    MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(innerWindow->AsGlobal());
+  auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(global);
 
-  RefPtr<GenericPromise> p = swm->MaybeClaimClient(mClientInfo, swd);
-  p->Then(mEventTarget, __func__,
+  innerPromise->Then(mEventTarget, __func__,
     [outerPromise, holder] (bool aResult) {
       holder->Complete();
       outerPromise->Resolve(NS_OK, __func__);

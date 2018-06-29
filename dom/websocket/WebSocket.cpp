@@ -820,6 +820,11 @@ WebSocketImpl::ScheduleConnectionCloseEvents(nsISupports* aContext,
       aStatusCode = NS_OK;
     }
 
+    if (aStatusCode == NS_ERROR_NET_INADEQUATE_SECURITY) {
+      // TLS negotiation failed so we need to set status code to 1015.
+      mCloseEventCode = 1015;
+    }
+
     if (NS_FAILED(aStatusCode)) {
       ConsoleError();
       mFailed = true;

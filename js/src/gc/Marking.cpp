@@ -54,6 +54,8 @@ using mozilla::IsBaseOf;
 using mozilla::IsSame;
 using mozilla::PodCopy;
 
+// [SMDOC] GC Tracing
+//
 // Tracing Overview
 // ================
 //
