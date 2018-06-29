@@ -55,6 +55,10 @@ ID3D11Device*
 RenderCompositorANGLE::GetDeviceOfEGLDisplay()
 {
   auto* egl = gl::GLLibraryEGL::Get();
+  MOZ_ASSERT(egl);
+  if (!egl || !egl->IsExtensionSupported(gl::GLLibraryEGL::EXT_device_query)) {
+    return nullptr;
+  }
 
   // Fetch the D3D11 device.
   EGLDeviceEXT eglDevice = nullptr;
