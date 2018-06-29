@@ -3,8 +3,7 @@ extern crate libc;
 #[macro_use] extern crate log;
 extern crate nserror;
 
-use std::ffi::CStr;
-use std::{str, slice, ptr};
+use std::ptr;
 use std::os::raw::c_char;
 use std::error::Error;
 
@@ -28,34 +27,23 @@ use network::{RustSdpOrigin, origin_view_helper, RustSdpConnection,
               get_bandwidth};
 
 #[no_mangle]
-pub unsafe extern "C" fn parse_sdp(sdp: *const u8, length: u32,
+pub unsafe extern "C" fn parse_sdp(sdp: StringView,
                                    fail_on_warning: bool,
                                    session: *mut *const SdpSession,
                                    error: *mut *const SdpParserError) -> nsresult {
-    // Bug 1433529 tracks fixing the TODOs in this function.
-    // TODO: Do I need to add explicit lifetime here?
-    // https://gankro.github.io/blah/only-in-rust/#honorable-mention-variance
-    let sdp_slice: &[u8] = slice::from_raw_parts(sdp, length as usize);
-    let sdp_c_str = match CStr::from_bytes_with_nul(sdp_slice) {
+    let sdp_str = match sdp.into() {
         Ok(string) => string,
-        Err(_) => {
+        Err(boxed_error) => {
             *session = ptr::null();
-            *error = ptr::null(); // TODO: Give more useful return value here
-            debug!("Error converting string");
+            *error = Box::into_raw(Box::new(SdpParserError::Sequence {
+                message: (*boxed_error).description().to_string(),
+                line_number: 0,
+            }));
             return NS_ERROR_INVALID_ARG;
         }
     };
-    let sdp_buf: &[u8] = sdp_c_str.to_bytes();
-    let sdp_str_slice: &str = match str::from_utf8(sdp_buf) {
-        Ok(string) => string,
-        Err(_) => {
-            *session = ptr::null();
-            *error = ptr::null(); // TODO: Give more useful return value here
-            debug!("Error converting string to utf8");
-            return NS_ERROR_INVALID_ARG;
-        }
-    };
-    let parser_result = rsdparsa::parse_sdp(sdp_str_slice, fail_on_warning);
+
+    let parser_result = rsdparsa::parse_sdp(&sdp_str, fail_on_warning);
     match parser_result {
         Ok(parsed) => {
             *error = match parsed.warnings.len(){
