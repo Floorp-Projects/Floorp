@@ -9,7 +9,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
@@ -62,7 +62,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(Location)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Location)
 
 nsresult
-Location::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
+Location::CheckURL(nsIURI* aURI, nsDocShellLoadInfo** aLoadInfo)
 {
   *aLoadInfo = nullptr;
 
@@ -150,9 +150,7 @@ Location::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
   }
 
   // Create load info
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+  RefPtr<nsDocShellLoadInfo> loadInfo = new nsDocShellLoadInfo();
 
   loadInfo->SetTriggeringPrincipal(triggeringPrincipal);
 
@@ -233,15 +231,15 @@ Location::SetURI(nsIURI* aURI, bool aReplace)
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (docShell) {
-    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    RefPtr<nsDocShellLoadInfo> loadInfo;
 
     if(NS_FAILED(CheckURL(aURI, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;
 
     if (aReplace) {
-      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContentAndReplace);
+      loadInfo->SetLoadType(nsDocShellLoadInfo::loadStopContentAndReplace);
     } else {
-      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContent);
+      loadInfo->SetLoadType(nsDocShellLoadInfo::loadStopContent);
     }
 
     // Get the incumbent script's browsing context to set as source.

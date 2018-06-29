@@ -11,7 +11,7 @@
 
 #include "nsDOMNavigationTiming.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
 
 /**
@@ -120,80 +120,80 @@ IsForceReloadType(uint32_t aLoadType) {
   return false;
 }
 
-static inline nsDocShellInfoLoadType
+static inline nsDocShellLoadInfo::nsDocShellInfoLoadType
 ConvertLoadTypeToDocShellInfoLoadType(uint32_t aLoadType)
 {
-  nsDocShellInfoLoadType docShellLoadType = nsIDocShellLoadInfo::loadNormal;
+  nsDocShellLoadInfo::nsDocShellInfoLoadType docShellLoadType = nsDocShellLoadInfo::loadNormal;
   switch (aLoadType) {
     case LOAD_NORMAL:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormal;
+      docShellLoadType = nsDocShellLoadInfo::loadNormal;
       break;
     case LOAD_NORMAL_REPLACE:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormalReplace;
+      docShellLoadType = nsDocShellLoadInfo::loadNormalReplace;
       break;
     case LOAD_NORMAL_EXTERNAL:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormalExternal;
+      docShellLoadType = nsDocShellLoadInfo::loadNormalExternal;
       break;
     case LOAD_NORMAL_BYPASS_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormalBypassCache;
+      docShellLoadType = nsDocShellLoadInfo::loadNormalBypassCache;
       break;
     case LOAD_NORMAL_BYPASS_PROXY:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormalBypassProxy;
+      docShellLoadType = nsDocShellLoadInfo::loadNormalBypassProxy;
       break;
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormalBypassProxyAndCache;
+      docShellLoadType = nsDocShellLoadInfo::loadNormalBypassProxyAndCache;
       break;
     case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
-      docShellLoadType = nsIDocShellLoadInfo::loadNormalAllowMixedContent;
+      docShellLoadType = nsDocShellLoadInfo::loadNormalAllowMixedContent;
       break;
     case LOAD_HISTORY:
-      docShellLoadType = nsIDocShellLoadInfo::loadHistory;
+      docShellLoadType = nsDocShellLoadInfo::loadHistory;
       break;
     case LOAD_RELOAD_NORMAL:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadNormal;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadNormal;
       break;
     case LOAD_RELOAD_CHARSET_CHANGE:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadCharsetChange;
       break;
     case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChangeBypassCache;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadCharsetChangeBypassCache;
       break;
     case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache;
       break;
     case LOAD_RELOAD_BYPASS_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassCache;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadBypassCache;
       break;
     case LOAD_RELOAD_BYPASS_PROXY:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadBypassProxy;
       break;
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadBypassProxyAndCache;
       break;
     case LOAD_LINK:
-      docShellLoadType = nsIDocShellLoadInfo::loadLink;
+      docShellLoadType = nsDocShellLoadInfo::loadLink;
       break;
     case LOAD_REFRESH:
-      docShellLoadType = nsIDocShellLoadInfo::loadRefresh;
+      docShellLoadType = nsDocShellLoadInfo::loadRefresh;
       break;
     case LOAD_BYPASS_HISTORY:
     case LOAD_ERROR_PAGE:
-      docShellLoadType = nsIDocShellLoadInfo::loadBypassHistory;
+      docShellLoadType = nsDocShellLoadInfo::loadBypassHistory;
       break;
     case LOAD_STOP_CONTENT:
-      docShellLoadType = nsIDocShellLoadInfo::loadStopContent;
+      docShellLoadType = nsDocShellLoadInfo::loadStopContent;
       break;
     case LOAD_STOP_CONTENT_AND_REPLACE:
-      docShellLoadType = nsIDocShellLoadInfo::loadStopContentAndReplace;
+      docShellLoadType = nsDocShellLoadInfo::loadStopContentAndReplace;
       break;
     case LOAD_PUSHSTATE:
-      docShellLoadType = nsIDocShellLoadInfo::loadPushState;
+      docShellLoadType = nsDocShellLoadInfo::loadPushState;
       break;
     case LOAD_REPLACE_BYPASS_CACHE:
-      docShellLoadType = nsIDocShellLoadInfo::loadReplaceBypassCache;
+      docShellLoadType = nsDocShellLoadInfo::loadReplaceBypassCache;
       break;
     case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
-      docShellLoadType = nsIDocShellLoadInfo::loadReloadMixedContent;
+      docShellLoadType = nsDocShellLoadInfo::loadReloadMixedContent;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected load type value");
@@ -203,82 +203,82 @@ ConvertLoadTypeToDocShellInfoLoadType(uint32_t aLoadType)
 }
 
 static inline uint32_t
-ConvertDocShellInfoLoadTypeToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
+ConvertDocShellInfoLoadTypeToLoadType(nsDocShellLoadInfo::nsDocShellInfoLoadType aDocShellLoadType)
 {
   uint32_t loadType = LOAD_NORMAL;
 
   switch (aDocShellLoadType) {
-    case nsIDocShellLoadInfo::loadNormal:
+    case nsDocShellLoadInfo::loadNormal:
       loadType = LOAD_NORMAL;
       break;
-    case nsIDocShellLoadInfo::loadNormalReplace:
+    case nsDocShellLoadInfo::loadNormalReplace:
       loadType = LOAD_NORMAL_REPLACE;
       break;
-    case nsIDocShellLoadInfo::loadNormalExternal:
+    case nsDocShellLoadInfo::loadNormalExternal:
       loadType = LOAD_NORMAL_EXTERNAL;
       break;
-    case nsIDocShellLoadInfo::loadHistory:
+    case nsDocShellLoadInfo::loadHistory:
       loadType = LOAD_HISTORY;
       break;
-    case nsIDocShellLoadInfo::loadNormalBypassCache:
+    case nsDocShellLoadInfo::loadNormalBypassCache:
       loadType = LOAD_NORMAL_BYPASS_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadNormalBypassProxy:
+    case nsDocShellLoadInfo::loadNormalBypassProxy:
       loadType = LOAD_NORMAL_BYPASS_PROXY;
       break;
-    case nsIDocShellLoadInfo::loadNormalBypassProxyAndCache:
+    case nsDocShellLoadInfo::loadNormalBypassProxyAndCache:
       loadType = LOAD_NORMAL_BYPASS_PROXY_AND_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadNormalAllowMixedContent:
+    case nsDocShellLoadInfo::loadNormalAllowMixedContent:
       loadType = LOAD_NORMAL_ALLOW_MIXED_CONTENT;
       break;
-    case nsIDocShellLoadInfo::loadReloadNormal:
+    case nsDocShellLoadInfo::loadReloadNormal:
       loadType = LOAD_RELOAD_NORMAL;
       break;
-    case nsIDocShellLoadInfo::loadReloadCharsetChange:
+    case nsDocShellLoadInfo::loadReloadCharsetChange:
       loadType = LOAD_RELOAD_CHARSET_CHANGE;
       break;
-    case nsIDocShellLoadInfo::loadReloadCharsetChangeBypassCache:
+    case nsDocShellLoadInfo::loadReloadCharsetChangeBypassCache:
       loadType = LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache:
+    case nsDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache:
       loadType = LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadReloadBypassCache:
+    case nsDocShellLoadInfo::loadReloadBypassCache:
       loadType = LOAD_RELOAD_BYPASS_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadReloadBypassProxy:
+    case nsDocShellLoadInfo::loadReloadBypassProxy:
       loadType = LOAD_RELOAD_BYPASS_PROXY;
       break;
-    case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+    case nsDocShellLoadInfo::loadReloadBypassProxyAndCache:
       loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadLink:
+    case nsDocShellLoadInfo::loadLink:
       loadType = LOAD_LINK;
       break;
-    case nsIDocShellLoadInfo::loadRefresh:
+    case nsDocShellLoadInfo::loadRefresh:
       loadType = LOAD_REFRESH;
       break;
-    case nsIDocShellLoadInfo::loadBypassHistory:
+    case nsDocShellLoadInfo::loadBypassHistory:
       loadType = LOAD_BYPASS_HISTORY;
       break;
-    case nsIDocShellLoadInfo::loadStopContent:
+    case nsDocShellLoadInfo::loadStopContent:
       loadType = LOAD_STOP_CONTENT;
       break;
-    case nsIDocShellLoadInfo::loadStopContentAndReplace:
+    case nsDocShellLoadInfo::loadStopContentAndReplace:
       loadType = LOAD_STOP_CONTENT_AND_REPLACE;
       break;
-    case nsIDocShellLoadInfo::loadPushState:
+    case nsDocShellLoadInfo::loadPushState:
       loadType = LOAD_PUSHSTATE;
       break;
-    case nsIDocShellLoadInfo::loadReplaceBypassCache:
+    case nsDocShellLoadInfo::loadReplaceBypassCache:
       loadType = LOAD_REPLACE_BYPASS_CACHE;
       break;
-    case nsIDocShellLoadInfo::loadReloadMixedContent:
+    case nsDocShellLoadInfo::loadReloadMixedContent:
       loadType = LOAD_RELOAD_ALLOW_MIXED_CONTENT;
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected nsDocShellInfoLoadType value");
+      MOZ_ASSERT_UNREACHABLE("Unexpected nsDocShellLoadInfo::nsDocShellInfoLoadType value");
   }
 
   return loadType;
