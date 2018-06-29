@@ -267,8 +267,8 @@ class RemoteAutomation(Automation):
                         app, moz_env=env, extra_args=args, url=url)
 
             # Setting timeout at 1 hour since on a remote device this takes much longer.
-            # Temporarily increased to 90 minutes because no more chunks can be created.
-            self.timeout = 5400
+            # Temporarily increased to 110 minutes because no more chunks can be created.
+            self.timeout = 6600
 
             # Used to buffer log messages until we meet a line break
             self.logBuffer = ""
