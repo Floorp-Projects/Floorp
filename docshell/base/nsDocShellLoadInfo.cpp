@@ -11,11 +11,12 @@
 #include "nsIDocShell.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
 void
-GetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>>& aRPURI)
+GetMaybeResultPrincipalURI(nsDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>>& aRPURI)
 {
   if (!aLoadInfo) {
     return;
@@ -45,7 +46,7 @@ GetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI
 }
 
 void
-SetMaybeResultPrincipalURI(nsIDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>> const& aRPURI)
+SetMaybeResultPrincipalURI(nsDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>> const& aRPURI)
 {
   if (!aLoadInfo) {
     return;
@@ -71,7 +72,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
   , mOriginalFrameSrc(false)
   , mSendReferrer(true)
   , mReferrerPolicy(mozilla::net::RP_Unset)
-  , mLoadType(nsIDocShellLoadInfo::loadNormal)
+  , mLoadType(nsDocShellLoadInfo::loadNormal)
   , mIsSrcdocLoad(false)
 {
 }
@@ -79,14 +80,6 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
 nsDocShellLoadInfo::~nsDocShellLoadInfo()
 {
 }
-
-NS_IMPL_ADDREF(nsDocShellLoadInfo)
-NS_IMPL_RELEASE(nsDocShellLoadInfo)
-
-NS_INTERFACE_MAP_BEGIN(nsDocShellLoadInfo)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellLoadInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIDocShellLoadInfo)
-NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsDocShellLoadInfo::GetReferrer(nsIURI** aReferrer)

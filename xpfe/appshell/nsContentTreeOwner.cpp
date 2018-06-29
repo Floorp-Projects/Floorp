@@ -33,7 +33,7 @@
 #include "nsWindowWatcher.h"
 #include "NullPrincipal.h"
 #include "mozilla/BrowserElementParent.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
@@ -799,7 +799,7 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
                                   bool aForceNoOpener,
-                                  nsIDocShellLoadInfo* aLoadInfo,
+                                  nsDocShellLoadInfo* aLoadInfo,
                                   bool* aWindowIsNew,
                                   mozIDOMWindowProxy** aReturn)
 {

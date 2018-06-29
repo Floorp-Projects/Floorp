@@ -16,7 +16,6 @@
 #include "nsWrapperCache.h"
 
 class nsIDocShell;
-class nsIDocShellLoadInfo;
 class nsIURI;
 
 namespace mozilla {
@@ -179,7 +178,7 @@ protected:
                               bool aReplace);
 
   nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
-  nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
+  nsresult CheckURL(nsIURI *url, nsDocShellLoadInfo** aLoadInfo);
   bool CallerSubsumes(nsIPrincipal* aSubjectPrincipal);
 
   nsString mCachedHash;
