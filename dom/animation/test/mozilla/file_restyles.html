@@ -1809,6 +1809,35 @@ waitForAllPaints(() => {
       await ensureElementRemoval(div);
   });
 
+  add_task(async function no_restyling_animations_in_out_of_view_iframe() {
+    const div = addDiv(null, { style: 'overflow-y: scroll; height: 100px;' });
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute(
+      'srcdoc',
+      '<div style="height: 100px;"></div><div id="target"></div>');
+    div.appendChild(iframe);
+
+    await new Promise(resolve => {
+      iframe.addEventListener('load', () => {
+        resolve();
+      });
+    });
+
+    const target = iframe.contentDocument.getElementById("target");
+    target.style= 'width: 100px; height: 100px;';
+
+    const animation = target.animate({ backgroundColor: [ 'blue', 'green' ] },
+                                     100 * MS_PER_SEC);
+    await waitForAnimationReadyToRestyle(animation);
+
+    const markers = await observeStylingInTargetWindow(iframe.contentWindow, 5);
+    is(markers.length, 0,
+       'Animation in out-of-view iframe should be throttled');
+
+    await ensureElementRemoval(div);
+  });
+
 });
 
 </script>
