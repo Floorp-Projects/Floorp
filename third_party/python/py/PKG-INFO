@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: py
-Version: 1.5.3
+Version: 1.5.4
 Summary: library with cross-python path, ini-parsing, io, code, log facilities
 Home-page: http://py.readthedocs.io/
 Author: holger krekel, Ronny Pfannschmidt, Benjamin Peterson and others
@@ -27,10 +27,10 @@ Description: .. image:: https://img.shields.io/pypi/v/py.svg
         The py lib is a Python development support library featuring
         the following tools and modules:
         
-        * ``py.path``:  uniform local and svn path objects
-        * ``py.apipkg``:  explicit API control and lazy-importing
-        * ``py.iniconfig``:  easy parsing of .ini files
-        * ``py.code``: dynamic code generation and introspection (deprecated, moved to ``pytest``).
+        * ``py.path``:  uniform local and svn path objects  -> please use pathlib/pathlib2 instead
+        * ``py.apipkg``:  explicit API control and lazy-importing -> please use the standalone package instead
+        * ``py.iniconfig``:  easy parsing of .ini files -> please use the standalone package instead
+        * ``py.code``: dynamic code generation and introspection (deprecated, moved to ``pytest`` as a implementation detail).
         
         **NOTE**: prior to the 1.4 release this distribution used to
         contain py.test which is now its own package, see http://pytest.org

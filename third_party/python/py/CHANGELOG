@@ -1,5 +1,11 @@
-1.5.3 (unreleased)
+1.5.4 (2018-06-27)
 ==================
+
+- fix pytest-dev/pytest#3451: don't make assumptions about fs case sensitivity
+  in ``make_numbered_dir``.
+
+1.5.3
+=====
 
 - fix #179: ensure we can support 'from py.error import ...'
 
