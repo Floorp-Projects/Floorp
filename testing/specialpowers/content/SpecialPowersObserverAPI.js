@@ -501,7 +501,7 @@ SpecialPowersObserverAPI.prototype = {
         Object.defineProperty(sb, "assert", {
           get() {
             let scope = Cu.createObjectIn(sb);
-            Services.scriptloader.loadSubScript("resource://specialpowers/Assert.jsm",
+            Services.scriptloader.loadSubScript("chrome://specialpowers/content/Assert.jsm",
                                                 scope);
 
             let assert = new scope.Assert(reporter);
