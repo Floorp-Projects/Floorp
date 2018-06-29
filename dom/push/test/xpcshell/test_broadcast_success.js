@@ -265,3 +265,17 @@ add_task(async function test_broadcast_reject_invalid_sourceinfo() {
       symbolName: "getGhi"
   }), /moduleURI must be a string/, "rejects sourceInfo that doesn't have moduleURI");
 });
+
+add_task(async function test_broadcast_reject_version_not_string() {
+  await assert.rejects(broadcastService.addListener("ghi", {}, {
+      moduleURI: "resource://gre/modules/ghi.jsm",
+      symbolName: "getGhi"
+  }), /version should be a string/, "rejects version that isn't a string");
+});
+
+add_task(async function test_broadcast_reject_version_empty_string() {
+  await assert.rejects(broadcastService.addListener("ghi", "", {
+      moduleURI: "resource://gre/modules/ghi.jsm",
+      symbolName: "getGhi"
+  }), /version should not be an empty string/, "rejects version that is an empty string");
+});

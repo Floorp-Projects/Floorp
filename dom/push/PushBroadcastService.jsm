@@ -114,6 +114,10 @@ var BroadcastService = class {
     if (typeof version !== "string") {
       throw new TypeError("version should be a string");
     }
+    if (!version) {
+      throw new TypeError("version should not be an empty string");
+    }
+
     const isNew = !this.jsonFile.data.listeners.hasOwnProperty(broadcastId);
 
     // Update listeners before telling the pushService to subscribe,
