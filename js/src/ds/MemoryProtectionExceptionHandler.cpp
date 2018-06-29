@@ -78,11 +78,7 @@ class ProtectedRegionTree
     }
 
     ~ProtectedRegionTree() {
-        // See Bug 1445619: Currently many users of the JS engine are leaking
-        // the world, unfortunately LifoAlloc owned by JSRuntimes have
-        // registered memory regions.
         sProtectedRegionsInit = false;
-        MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), tree.empty());
     }
 
     void insert(uintptr_t addr, size_t size) {
@@ -193,6 +189,7 @@ VectoredExceptionHandler(EXCEPTION_POINTERS* ExceptionInfo)
             // Restore the previous handler. We're going to forward to it
             // anyway, and if we crash while doing so we don't want to hang.
             MOZ_ALWAYS_TRUE(RemoveVectoredExceptionHandler(sVectoredExceptionHandler));
+            sExceptionHandlerInstalled = false;
 
             // Get the address that the offending code tried to access.
             uintptr_t address = uintptr_t(ExceptionRecord->ExceptionInformation[1]);

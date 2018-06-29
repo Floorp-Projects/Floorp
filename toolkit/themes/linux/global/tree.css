@@ -20,7 +20,7 @@ tree {
 /* ::::: tree focusring ::::: */
 
 .focusring > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid transparent;  
+  border: 1px solid transparent;
 }
 
 .focusring:focus > .tree-stack > .tree-rows > .tree-bodybox {
@@ -163,17 +163,24 @@ treechildren::-moz-tree-column(insertafter) {
 /* ::::: twisty :::::  */
 
 treechildren::-moz-tree-twisty {
-  -moz-appearance: treetwisty;
   padding-inline-end: 4px;
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
+  list-style-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(close) {
+  list-style-image: url("chrome://global/skin/tree/twisty-collapsed-rtl.svg");
 }
 
 treechildren::-moz-tree-twisty(open) {
-  -moz-appearance: treetwistyopen;
-  width: 9px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
+  list-style-image: url("chrome://global/skin/tree/twisty-expanded.svg");
+}
+
+treechildren::-moz-tree-twisty(selected) {
+  fill: -moz-cellhighlighttext;
 }
 
 treechildren::-moz-tree-indentation {
