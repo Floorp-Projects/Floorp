@@ -112,11 +112,7 @@ class SingleTestMixin(object):
                 ('browser-chrome', 'gpu'): 'browser-chrome-gpu',
                 ('chrome', 'gpu'): 'chrome-gpu',
                 ('plain', 'gpu'): 'plain-gpu',
-                ('plain', 'webgl1-core'): 'mochitest-webgl1-core',
-                ('plain', 'webgl1-ext'): 'mochitest-webgl1-ext',
-                ('plain', 'webgl2-core'): 'mochitest-webgl2-core',
-                ('plain', 'webgl2-ext'): 'mochitest-webgl2-ext',
-                ('plain', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
+                ('plain', 'webgl'): 'mochitest-gl',
             }
             if entry in subsuite_mapping:
                 suite = subsuite_mapping[entry]

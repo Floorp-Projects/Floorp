@@ -258,15 +258,6 @@ class CodeCoverageMixin(SingleTestMixin):
         rewriter = LcovFileRewriter(os.path.join(self.grcov_dir, 'chrome-map.json'))
         rewriter.rewrite_files(jsvm_files, jsvm_output_file, '')
 
-        # Zip gcda files (will be given in input to grcov).
-        file_path_gcda = os.path.join(os.getcwd(), 'code-coverage-gcda.zip')
-        with zipfile.ZipFile(file_path_gcda, 'w', zipfile.ZIP_STORED) as z:
-            for topdir, _, files in os.walk(gcov_dir):
-                for f in files:
-                    full_path = os.path.join(topdir, f)
-                    rel_path = os.path.relpath(full_path, gcov_dir)
-                    z.write(full_path, rel_path)
-
         # Run grcov on the zipped .gcno and .gcda files.
         grcov_command = [
             os.path.join(self.grcov_dir, 'grcov'),
@@ -274,7 +265,7 @@ class CodeCoverageMixin(SingleTestMixin):
             '-p', self.prefix,
             '--ignore-dir', 'gcc*',
             '--ignore-dir', 'vs2017_*',
-            os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), file_path_gcda
+            os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), gcov_dir
         ]
 
         if 'coveralls' in output_format:
