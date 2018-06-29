@@ -107,11 +107,9 @@ Example:
 
     image: taskcluster/decision:0.1.10@sha256:c5451ee6c655b3d97d4baa3b0e29a5115f23e0991d4f7f36d2a8f793076d6854
 
-Each image has a repo digest, an image hash, and a version. The repo digest is
-stored in the ``HASH`` file in the image directory  and used to refer to the
-image as above.  The version is in ``VERSION``.  The image hash is used in
-`chain-of-trust verification <https://scriptworker.readthedocs.io/en/latest/chain_of_trust.html>`_
-in `scriptworker <https://github.com/mozilla-releng/scriptworker>`_.
+Each image has a repo digest and a version. The repo digest is stored in the
+``HASH`` file in the image directory and used to refer to the image as above.
+The version is in ``VERSION``.
 
 The version file only serves to provide convenient names, such that old
 versions are easy to discover in the registry (and ensuring old versions aren't
@@ -171,12 +169,7 @@ the docker registry and make note of the resulting repo digest.  Put this value
 in the ``HASH`` file, and update any references to the image in the code or
 task definitions.
 
-The change is now safe to use in Try pushes.  However, if the image is used in
-building releases then it is *not* safe to land to an integration branch until
-the whitelists in `scriptworker's constants.py
-<https://github.com/mozilla-releng/scriptworker/blob/master/scriptworker/constants.py>`_
-have also been updated. These whitelists use the image hash, not the repo
-digest.
+The change is now safe to use in Try pushes.
 
 Special Dockerfile Syntax
 -------------------------

@@ -13,6 +13,8 @@
 #include <stddef.h>
 
 /*
+ * [SMDOC] Bytecode Definitions
+ *
  * JavaScript operation bytecodes.  Add a new bytecode by claiming one of the
  * JSOP_UNUSED* here or by extracting the first unused opcode from
  * FOR_EACH_TRAILING_UNUSED_OPCODE and updating js::detail::LastDefinedOpcode

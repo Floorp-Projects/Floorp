@@ -1313,18 +1313,6 @@ ReparentWrappersInSubtree(nsIContent* aRoot)
 
   JSContext* cx = jsapi.cx();
 
-  nsIGlobalObject* docGlobal = aRoot->OwnerDoc()->GetScopeObject();
-  if (NS_WARN_IF(!docGlobal)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  JS::Rooted<JSObject*> rootedGlobal(cx, docGlobal->GetGlobalJSObject());
-  if (NS_WARN_IF(!rootedGlobal)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  rootedGlobal = xpc::GetXBLScope(cx, rootedGlobal);
-
   ErrorResult rv;
   JS::Rooted<JSObject*> reflector(cx);
   for (nsIContent* cur = aRoot; cur; cur = cur->GetNextNode(aRoot)) {

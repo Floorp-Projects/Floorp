@@ -16,6 +16,8 @@
 #define frontend_TokenStream_h
 
 /*
+ * [SMDOC] Parser Token Stream
+ *
  * A token stream exposes the raw tokens -- operators, names, numbers,
  * keywords, and so on -- of JavaScript source code.
  *

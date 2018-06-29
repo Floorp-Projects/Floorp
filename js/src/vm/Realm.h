@@ -119,6 +119,8 @@ class NewProxyCache
     }
 };
 
+// [SMDOC] Object MetadataBuilder API
+//
 // We must ensure that all newly allocated JSObjects get their metadata
 // set. However, metadata builders may require the new object be in a sane
 // state (eg, have its reserved slots initialized so they can get the

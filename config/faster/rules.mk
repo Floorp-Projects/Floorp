@@ -96,23 +96,3 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(addprefix $(TOPOBJDIR)/
 # that are not supported by data in moz.build.
 
 $(TOPOBJDIR)/build/application.ini: $(TOPOBJDIR)/buildid.h $(TOPOBJDIR)/source-repo.h
-
-# The manifest of allowed system add-ons should be re-built when using
-# "build faster".
-#
-# Note the dependency on install-dist/bin.  The form of this
-# dependency is critical: it's triggering the stem rule (install-%)
-# above to force the dist/bin manifest to be processed.  The more
-# obvious `$(TOPOBJDIR)/install-dist_bin` doesn't work because
-# dist/bin isn't in $(INSTALL_MANIFESTS) in the
-# FasterMake+RecursiveMake (artifact build) situation.
-ifeq ($(MOZ_BUILD_APP),browser)
-$(TOPOBJDIR)/browser/app/features: install-dist/bin
-
-default: $(TOPOBJDIR)/browser/app/features
-endif
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-$(TOPOBJDIR)/mobile/android/base/features: install-dist/bin
-
-default: $(TOPOBJDIR)/mobile/android/base/features
-endif

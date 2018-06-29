@@ -176,6 +176,8 @@
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/FocusTarget.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheet.h"
@@ -6319,7 +6321,15 @@ PresShell::Paint(nsView*         aViewToPaint,
   }
 
   if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
-    // TODO: bug 1405465 - create a WR display list which simulates the color layer below.
+    nsPresContext* pc = GetPresContext();
+    LayoutDeviceRect bounds =
+      LayoutDeviceRect::FromAppUnits(pc->GetVisibleArea(), pc->AppUnitsPerDevPixel());
+    bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
+    WebRenderBackgroundData data(wr::ToLayoutRect(bounds), wr::ToColorF(ToDeviceColor(bgcolor)));
+    nsTArray<wr::WrFilterOp> wrFilters;
+
+    MaybeSetupTransactionIdAllocator(layerManager, presContext);
+    layerManager->AsWebRenderLayerManager()->EndTransactionWithoutLayer(nullptr, nullptr, wrFilters, &data);
     return;
   }
 

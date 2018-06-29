@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
+ * [SMDOC] JS::CallArgs API
+ *
  * Helper classes encapsulating access to the callee, |this| value, arguments,
  * and argument count for a call/construct operation.
  *
@@ -46,10 +48,7 @@
  *
  * It's possible (albeit deprecated) to manually index into |vp| to access the
  * callee, |this|, and arguments of a function, and to set its return value.
- * It's also possible to use the supported API of JS_CALLEE, JS_THIS, JS_ARGV,
- * JS_RVAL, and JS_SET_RVAL to the same ends.
- *
- * But neither API has the error-handling or moving-GC correctness of CallArgs.
+ * This does not have the error-handling or moving-GC correctness of CallArgs.
  * New code should use CallArgs instead whenever possible.
  *
  * The eventual plan is to change JSNative to take |const CallArgs&| directly,

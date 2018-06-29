@@ -6,11 +6,11 @@ function run_test() {
   do_load_child_test_harness();
   do_test_pending();
 
-  sendCommand("let v = 'test';", function() {
+  sendCommand("let v = 'test';", async function() {
       let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].getService(Ci.nsICodeCoverage);
 
-      codeCoverage.dumpCounters();
-      codeCoverage.resetCounters();
+      await codeCoverage.dumpCounters();
+      await codeCoverage.resetCounters();
 
       do_test_finished();
   });

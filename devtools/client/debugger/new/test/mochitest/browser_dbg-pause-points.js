@@ -32,6 +32,7 @@ async function testCase(dbg, { name, count, steps }) {
 add_task(async function test() {
   const dbg = await initDebugger("doc-pause-points.html");
 
+  await selectSource(dbg, "pause-points.js")
   await testCase(dbg, {
     name: "statements",
     count: 7,

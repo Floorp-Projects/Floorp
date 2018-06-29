@@ -107,7 +107,7 @@ class Simulator;
 #endif
 } // namespace jit
 
-// JS Engine Threading
+// [SMDOC] JS Engine Threading
 //
 // Threads interacting with a runtime are divided into two categories:
 //
