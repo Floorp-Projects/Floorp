@@ -986,6 +986,9 @@ pref("browser.security.newcerterrorpage.enabled", false);
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);
 
+// Whether the bookmark panel should be shown when bookmarking a page.
+pref("browser.bookmarks.editDialog.showForNewBookmarks", true);
+
 // Don't try to alter this pref, it'll be reset the next time you use the
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");

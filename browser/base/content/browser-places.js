@@ -28,6 +28,10 @@ var StarUI = {
     return document.getElementById(aID);
   },
 
+  get showForNewBookmarks() {
+    return Services.prefs.getBoolPref("browser.bookmarks.editDialog.showForNewBookmarks");
+  },
+
   // Edit-bookmark panel
   get panel() {
     delete this.panel;
@@ -118,8 +122,7 @@ var StarUI = {
             PlacesTransactions.Remove(guidsForRemoval)
                               .transact().catch(Cu.reportError);
           } else if (this._isNewBookmark) {
-            this._showConfirmation();
-            LibraryUI.triggerLibraryAnimation("bookmark");
+            this.showConfirmation();
           }
 
           if (!removeBookmarksOnPopupHidden) {
@@ -231,7 +234,9 @@ var StarUI = {
         gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle") :
         gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle");
 
-    // No description; show the Done, Remove;
+    this._element("editBookmarkPanel_showForNewBookmarks").checked =
+      this.showForNewBookmarks;
+
     this._element("editBookmarkPanelBottomButtons").hidden = false;
     this._element("editBookmarkPanelContent").hidden = false;
 
@@ -385,7 +390,14 @@ var StarUI = {
                                    lastUsedFolderGuids);
   },
 
-  _showConfirmation() {
+  onShowForNewBookmarksCheckboxCommand() {
+    Services.prefs.setBoolPref("browser.bookmarks.editDialog.showForNewBookmarks",
+      this._element("editBookmarkPanel_showForNewBookmarks").checked);
+  },
+
+  showConfirmation() {
+    LibraryUI.triggerLibraryAnimation("bookmark");
+
     let anchor;
     if (window.toolbar.visible) {
       for (let id of ["library-button", "bookmarks-menu-button"]) {
@@ -401,7 +413,6 @@ var StarUI = {
     if (!anchor) {
       anchor = document.getElementById("PanelUI-menu-button");
     }
-
     ConfirmationHint.show(anchor, "pageBookmarked");
   }
 };
@@ -427,7 +438,8 @@ var PlacesCommandHook = {
     let url = aUrl ? new URL(aUrl) : new URL(aBrowser.currentURI.spec);
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
-    if (!info) {
+    let showEditUI = aShowEditUI && (!isNewBookmark || StarUI.showForNewBookmarks);
+    if (isNewBookmark) {
       let parentGuid = PlacesUtils.bookmarks.unfiledGuid;
       info = { url, parentGuid };
       // Bug 1148838 - Make this code work for full page plugins.
@@ -453,7 +465,7 @@ var PlacesCommandHook = {
         Cu.reportError(e);
       }
 
-      if (aShowEditUI && isNewBookmark) {
+      if (showEditUI) {
         // If we bookmark the page here but open right into a cancelable
         // state (i.e. new bookmark in Library), start batching here so
         // all of the actions can be undone in a single undo step.
@@ -471,8 +483,10 @@ var PlacesCommandHook = {
     gURLBar.handleRevert();
 
     // If it was not requested to open directly in "edit" mode, we are done.
-    if (!aShowEditUI)
+    if (!showEditUI) {
+      StarUI.showConfirmation();
       return;
+    }
 
     let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
 
