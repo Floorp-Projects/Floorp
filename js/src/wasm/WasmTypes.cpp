@@ -81,9 +81,10 @@ Val::writePayload(uint8_t* dst) const
       case ValType::B32x4:
         memcpy(dst, &u, jit::Simd128DataSize);
         return;
+      case ValType::Ref:
       case ValType::AnyRef:
         // TODO
-        MOZ_CRASH("writing imported value of AnyRef in global NYI");
+        MOZ_CRASH("writing imported value of Ref/AnyRef in global NYI");
     }
 }
 
@@ -204,6 +205,7 @@ IsImmediateType(ValType vt)
       case ValType::B8x16:
       case ValType::B16x8:
       case ValType::B32x4:
+      case ValType::Ref:
         return false;
     }
     MOZ_CRASH("bad ValType");
@@ -231,6 +233,7 @@ EncodeImmediateType(ValType vt)
       case ValType::B8x16:
       case ValType::B16x8:
       case ValType::B32x4:
+      case ValType::Ref:
         break;
     }
     MOZ_CRASH("bad ValType");
@@ -327,18 +330,34 @@ FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
     return FuncType::sizeOfExcludingThis(mallocSizeOf);
 }
 
+// A simple notion of prefix: types and mutability must match exactly.
+
+bool
+StructType::hasPrefix(const StructType& other) const
+{
+    if (fields_.length() < other.fields_.length())
+        return false;
+    uint32_t limit = other.fields_.length();
+    for (uint32_t i = 0; i < limit; i++) {
+        if (fields_[i].type != other.fields_[i].type ||
+            fields_[i].isMutable != other.fields_[i].isMutable)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 size_t
 StructType::serializedSize() const
 {
-    return SerializedPodVectorSize(fields_) +
-           SerializedPodVectorSize(fieldOffsets_);
+    return SerializedPodVectorSize(fields_);
 }
 
 uint8_t*
 StructType::serialize(uint8_t* cursor) const
 {
     cursor = SerializePodVector(cursor, fields_);
-    cursor = SerializePodVector(cursor, fieldOffsets_);
     return cursor;
 }
 
@@ -346,15 +365,13 @@ const uint8_t*
 StructType::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializePodVector(cursor, &fields_));
-    (cursor = DeserializePodVector(cursor, &fieldOffsets_));
     return cursor;
 }
 
 size_t
 StructType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return fields_.sizeOfExcludingThis(mallocSizeOf) +
-           fieldOffsets_.sizeOfExcludingThis(mallocSizeOf);
+    return fields_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
@@ -700,7 +717,7 @@ DebugFrame::updateReturnJSValue()
 {
     hasCachedReturnJSValue_ = true;
     ExprType returnType = instance()->debug().debugGetResultType(funcIndex());
-    switch (returnType) {
+    switch (returnType.code()) {
       case ExprType::Void:
           cachedReturnJSValue_.setUndefined();
           break;
@@ -717,6 +734,7 @@ DebugFrame::updateReturnJSValue()
       case ExprType::F64:
           cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
           break;
+      case ExprType::Ref:
       case ExprType::AnyRef:
           cachedReturnJSValue_ = ObjectOrNullValue(*(JSObject**)&resultRef_);
           break;

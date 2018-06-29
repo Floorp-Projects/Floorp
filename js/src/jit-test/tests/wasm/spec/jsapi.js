@@ -692,14 +692,17 @@ test(() => {
     assertThrows(() => new Global(1), TypeError);
     assertThrows(() => new Global({}), TypeError);
     assertThrows(() => new Global({value: 'foo'}), TypeError);
-    assertThrows(() => new Global({value: 'i64'}), TypeError);
+    assertThrows(() => new Global({value: 'i64'}, 0), TypeError);
     assert_equals(new Global({value:'i32'}) instanceof Global, true);
+    assert_equals(new Global({value:'i64'}) instanceof Global, true);
     assert_equals(new Global({value:'f32'}) instanceof Global, true);
     assert_equals(new Global({value:'f64'}) instanceof Global, true);
     assert_equals(new Global({value:'i32', mutable: false}) instanceof Global, true);
+    assert_equals(new Global({value:'i64', mutable: false}) instanceof Global, true);
     assert_equals(new Global({value:'f64', mutable: false}) instanceof Global, true);
     assert_equals(new Global({value:'f64', mutable: false}) instanceof Global, true);
     assert_equals(new Global({value:'i32', mutable: true}) instanceof Global, true);
+    assert_equals(new Global({value:'i64', mutable: true}) instanceof Global, true);
     assert_equals(new Global({value:'f64', mutable: true}) instanceof Global, true);
     assert_equals(new Global({value:'f64', mutable: true}) instanceof Global, true);
     assert_equals(new Global({value:'i32'}, 0x132) instanceof Global, true);

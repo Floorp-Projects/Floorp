@@ -382,7 +382,7 @@ DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t
     size_t offsetInModule = range.funcLineOrBytecode();
     Decoder d(maybeBytecode_->begin() + offsetInModule,  maybeBytecode_->end(),
               offsetInModule, /* error = */ nullptr);
-    return DecodeLocalEntries(d, metadata().kind, metadata().temporaryHasGcTypes, locals);
+    return DecodeValidatedLocalEntries(d, locals);
 }
 
 ExprType
