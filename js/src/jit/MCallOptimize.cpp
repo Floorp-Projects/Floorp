@@ -460,6 +460,8 @@ IonBuilder::inlineNonFunctionCall(CallInfo& callInfo, JSObject* target)
     // Inline a call to a non-function object, invoking the object's call or
     // construct hook.
 
+    MOZ_ASSERT(target->nonCCWRealm() == script()->realm());
+
     if (callInfo.constructing() && target->constructHook() == TypedObject::construct)
         return inlineConstructTypedObject(callInfo, &target->as<TypeDescr>());
 
