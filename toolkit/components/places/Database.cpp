@@ -2206,6 +2206,7 @@ Database::MigrateV44Up() {
       "UNION ALL "
       "SELECT b.id, b.guid FROM moz_bookmarks b "
       "JOIN itemsToRemove d ON d.id = b.parent "
+      "WHERE b.guid NOT IN ('menu________', 'toolbar_____', 'tags________', 'unfiled_____', 'mobile______') "
     ") "
     "DELETE FROM moz_bookmarks "
       "WHERE id IN (SELECT id FROM itemsToRemove) "
