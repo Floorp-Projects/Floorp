@@ -193,6 +193,7 @@ VectoredExceptionHandler(EXCEPTION_POINTERS* ExceptionInfo)
             // Restore the previous handler. We're going to forward to it
             // anyway, and if we crash while doing so we don't want to hang.
             MOZ_ALWAYS_TRUE(RemoveVectoredExceptionHandler(sVectoredExceptionHandler));
+            sExceptionHandlerInstalled = false;
 
             // Get the address that the offending code tried to access.
             uintptr_t address = uintptr_t(ExceptionRecord->ExceptionInformation[1]);
