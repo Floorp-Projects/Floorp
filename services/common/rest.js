@@ -267,7 +267,7 @@ RESTRequest.prototype = {
     // Set request headers.
     let headers = this._headers;
     for (let key in headers) {
-      if (key == "authorization") {
+      if (key == "authorization" || key == "x-client-state") {
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       } else {
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
@@ -436,16 +436,17 @@ RESTRequest.prototype = {
       let message = Components.Exception("", statusCode).name;
       let error = Components.Exception(message, statusCode);
       this._log.debug(this.method + " " + uri + " failed: " + statusCode + " - " + message);
+      // Additionally give the full response body when Trace logging.
+      if (this._log.level <= Log.Level.Trace) {
+        this._log.trace(this.method + " body", this.response.body);
+      }
       this._deferred.reject(error);
       return;
     }
 
     this._log.debug(this.method + " " + uri + " " + this.response.status);
 
-    // Additionally give the full response body when Trace logging.
-    if (this._log.level <= Log.Level.Trace) {
-      this._log.trace(this.method + " body", this.response.body);
-    }
+    // Note that for privacy/security reasons we don't log this response body
 
     delete this._inputStream;
 
