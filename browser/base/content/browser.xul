@@ -12,6 +12,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
@@ -22,7 +23,6 @@
 <?xml-stylesheet href="chrome://browser/skin/searchbar.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
-<?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/compacttheme.css" type="text/css" alternate="yes" title="Light/Dark"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
