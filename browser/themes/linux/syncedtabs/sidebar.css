@@ -51,12 +51,25 @@ html {
   cursor: pointer;
 }
 
+.item-twisty-container {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  min-width: 9px; /* The image's width is 9 pixels */
+  height: 9px;
+  margin: auto;
+}
+
 .item.client .item-twisty-container {
-  -moz-appearance: treetwistyopen;
-  margin-top: 3px;
-  margin-left: 2px;
+  background-image: url("chrome://global/skin/tree/twisty-expanded.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .item.client.closed .item-twisty-container {
-  -moz-appearance: treetwisty;
+  background-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
+}
+
+.item.client.closed .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/tree/twisty-collapsed-rtl.svg");
 }

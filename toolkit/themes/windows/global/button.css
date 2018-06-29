@@ -109,9 +109,8 @@ button[type="disclosure"] {
   margin: 0;
   -moz-appearance: none;
   list-style-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: currentColor;
-  fill-opacity: 1;
   min-width: 0;
 }
 

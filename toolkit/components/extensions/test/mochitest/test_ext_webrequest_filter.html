@@ -20,7 +20,7 @@ let windowData, testWindow;
 
 add_task(async function setup() {
   let chromeScript = SpecialPowers.loadChromeScript(function() {
-    Services.cache2.clear();
+    ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services.cache2.clear();
   });
   chromeScript.destroy();
 
@@ -78,6 +78,15 @@ add_task(async function test_webRequest_filter_window() {
     },
   };
 
+  if (AppConstants.platform != "android") {
+    expect["favicon.ico"] = {
+      // These events only happen in non-e10s. See bug 1472156.
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "image",
+      origin: SimpleTest.getTestFileURL("file_image_bad.png"),
+    };
+  }
+
   let extension = makeExtension(events);
   await extension.startup();
   extension.sendMessage("set-expected", {expect, origin: location.href});
@@ -120,11 +129,20 @@ add_task(async function test_webRequest_filter_tab() {
   };
   let expect = {
     "file_image_good.png": {
+      // These events only happen in non-e10s. See bug 1472156.
       optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
       type: "main_frame",
       // cached: AppConstants.MOZ_BUILD_APP === "browser",
     },
   };
+
+  if (AppConstants.platform != "android") {
+    expect["favicon.ico"] = {
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "image",
+      origin: SimpleTest.getTestFileURL(img),
+    };
+  }
 
   let extension = makeExtension(events);
   await extension.startup();

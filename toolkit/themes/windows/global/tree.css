@@ -198,9 +198,8 @@ treechildren::-moz-tree-twisty {
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-collapsed.svg");
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: #b6b6b6;
-  fill-opacity: 1;
 }
 
 treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(close) {
