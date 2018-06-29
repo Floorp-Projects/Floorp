@@ -1511,16 +1511,16 @@ static const uint8_t firstCharKinds[] = {
 static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
               "Elements of firstCharKinds[] are too small");
 
-template<typename CharT, class AnyCharsAccess>
 void
-GeneralTokenStreamChars<CharT, AnyCharsAccess>::consumeRestOfSingleLineComment()
+SpecializedTokenStreamCharsBase<char16_t>::infallibleConsumeRestOfSingleLineComment()
 {
-    int32_t c;
-    do {
-        c = getCodeUnit();
-    } while (c != EOF && !SourceUnits::isRawEOLChar(c));
+    while (MOZ_LIKELY(!this->sourceUnits.atEnd())) {
+        char16_t unit = this->sourceUnits.peekCodeUnit();
+        if (SourceUnits::isRawEOLChar(unit))
+            return;
 
-    ungetCodeUnit(c);
+        this->sourceUnits.consumeKnownCodeUnit(unit);
+    }
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -2097,7 +2097,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (matchCodeUnit('!')) {
                     if (matchCodeUnit('-')) {
                         if (matchCodeUnit('-')) {
-                            consumeRestOfSingleLineComment();
+                            if (!consumeRestOfSingleLineComment())
+                                return false;
+
                             continue;
                         }
                         ungetCodeUnit('-');
@@ -2142,7 +2144,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     ungetCodeUnit(unit);
                 }
 
-                consumeRestOfSingleLineComment();
+                if (!consumeRestOfSingleLineComment())
+                    return false;
+
                 continue;
             }
 
@@ -2199,7 +2203,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     !anyCharsAccess().flags.isDirtyLine)
                 {
                     if (matchCodeUnit('>')) {
-                        consumeRestOfSingleLineComment();
+                        if (!consumeRestOfSingleLineComment())
+                            return false;
+
                         continue;
                     }
                 }
