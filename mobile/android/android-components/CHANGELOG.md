@@ -1,3 +1,20 @@
+# 0.12
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.50
+  * Kotlin coroutines 0.23.3
+  * GeckoView Nightly
+    * date: 2018.06.27
+    * version: 63.0.20180627100018
+    * revision: 1c235a552c32ba6c97e6030c497c49f72c7d48a8
+
+* **service-fxa**, **samples-fxa**: Added new library/component for integrating with Firefox Accounts, and a sample app to demo its usage
+* **samples-browser**: Moved all browser behaviour into standalone fragment
+* Various bugfixes and refactorings (see commits below for details)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.11...v0.12)
+
 # 0.11
 
 * Compiled against:
