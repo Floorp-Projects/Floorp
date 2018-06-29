@@ -174,6 +174,33 @@ add_task(async function test_array_values() {
   ok(!JsonSchemaValidator.validateAndParseParameters({}, schema)[0], "Object is not an array");
 });
 
+add_task(async function test_non_strict_arrays() {
+  // Non-srict arrays ignores invalid values (don't include
+  // them in the parsed output), instead of failing the validation.
+  // Note: invalid values might still report errors to the console.
+  let schema = {
+    type: "array",
+    strict: false,
+    items: {
+      type: "string"
+    }
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    ["valid1", "valid2", false, 3, "valid3"], schema);
+  ok(valid, "Array is valid");
+  ok(Array.isArray(parsed, "parsed is an array"));
+  is(parsed.length, 3, "Only valid values were included in the parsed array");
+  Assert.deepEqual(parsed, ["valid1", "valid2", "valid3"], "Results were expected");
+
+  // Checks that strict defaults to true;
+  delete schema.strict;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+    ["valid1", "valid2", false, 3, "valid3"], schema);
+  ok(!valid, "Same verification was invalid without strict=false");
+});
+
 add_task(async function test_object_values() {
   let schema = {
     type: "object",
