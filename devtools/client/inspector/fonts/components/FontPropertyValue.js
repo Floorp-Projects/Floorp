@@ -28,19 +28,40 @@ class FontPropertyValue extends PureComponent {
 
   constructor(props) {
     super(props);
-
+    this.state = {
+      // Whether the user is dragging the slider thumb or pressing on the numeric stepper.
+      interactive: false
+    };
     this.onChange = this.onChange.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
     this.onUnitChange = this.onUnitChange.bind(this);
   }
 
   onChange(e) {
     this.props.onChange(this.props.name, e.target.value, this.props.unit);
+    const value = e.target.value;
+    this.setState((prevState) => {
+      return { ...prevState, value };
+    });
   }
 
   onUnitChange(e) {
     // TODO implement conversion.
     // Bug 1459898: https://bugzilla.mozilla.org/show_bug.cgi?id=1459898
     this.props.onChange(this.props.name, this.props.value, e.target.value);
+  }
+
+  onMouseDown(e) {
+    this.setState((prevState, props) => {
+      return { ...prevState, interactive: true, value: props.value };
+    });
+  }
+
+  onMouseUp(e) {
+    this.setState((prevState, props) => {
+      return { ...prevState, interactive: false, value: props.value };
+    });
   }
 
   render() {
@@ -53,8 +74,14 @@ class FontPropertyValue extends PureComponent {
       min: this.props.min,
       max: this.props.max,
       onChange: this.onChange,
+      onMouseDown: this.onMouseDown,
+      onMouseUp: this.onMouseUp,
       step: this.props.step || 1,
-      value: this.props.value || this.props.defaultValue,
+      // While interacting with the slider or numeric stepper, prevent updating value from
+      // outside props which may be debounced and could cause jitter when rendering.
+      value: this.state.interactive
+        ? this.state.value
+        : this.props.value || this.props.defaultValue,
     };
 
     const range = dom.input(

@@ -39,9 +39,9 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
       return;
     }
 
-    this.markup.inspector.selection.setNodeFront(this.node, {
-      reason: "reveal-from-slot"
-    });
+    const reason = "reveal-from-slot";
+    this.markup.inspector.selection.setNodeFront(this.node, { reason });
+    this.markup.telemetry.scalarSet("devtools.shadowdom.reveal_link_clicked", true);
   },
 
   isDraggable: function() {
