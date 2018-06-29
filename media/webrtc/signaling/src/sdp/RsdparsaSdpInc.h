@@ -256,7 +256,7 @@ nsresult u8_vec_get(const U8Vec* vec, size_t index, uint8_t* ret);
 
 void sdp_free_string(char* string);
 
-nsresult parse_sdp(const char* sdp, uint32_t length, bool fail_on_warning,
+nsresult parse_sdp(StringView sdp, bool fail_on_warning,
                    RustSdpSession** ret, RustSdpError** err);
 RustSdpSession* sdp_new_reference(RustSdpSession* aSess);
 void sdp_free_session(RustSdpSession* ret);
