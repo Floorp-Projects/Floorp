@@ -1350,8 +1350,8 @@ HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   // tags, because we're hopefully going to insert text (bug 787432).
   if (!SelectionRef().IsCollapsed()) {
     nsresult rv =
-      HTMLEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
-                                              nsIEditor::eNoStrip);
+      HTMLEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
+                                                 nsIEditor::eNoStrip);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -1707,8 +1707,8 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
   // If the selection isn't collapsed, delete it.
   if (!SelectionRef().IsCollapsed()) {
     nsresult rv =
-      HTMLEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
-                                              nsIEditor::eStrip);
+      HTMLEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
+                                                 nsIEditor::eStrip);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
