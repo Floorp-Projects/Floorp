@@ -165,6 +165,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
@@ -914,6 +915,12 @@ class TokenStreamAnyChars
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
 };
 
+constexpr char16_t
+CodeUnitValue(char16_t unit)
+{
+    return unit;
+}
+
 // This is the low-level interface to the JS source code buffer.  It just gets
 // raw Unicode code units -- 16-bit char16_t units of source text that are not
 // (always) full code points, and 8-bit units of UTF-8 source text soon.
@@ -993,10 +1000,11 @@ class SourceUnits
 
         char16_t v = 0;
         for (uint8_t i = 0; i < n; i++) {
-            if (!JS7_ISHEX(ptr[i]))
+            auto unit = CodeUnitValue(ptr[i]);
+            if (!JS7_ISHEX(unit))
                 return false;
 
-            v = (v << 4) | JS7_UNHEX(ptr[i]);
+            v = (v << 4) | JS7_UNHEX(unit);
         }
 
         *out = v;
@@ -1156,6 +1164,12 @@ class TokenStreamCharsBase
   : public TokenStreamCharsShared
 {
   protected:
+    /**
+     * Convert a non-EOF code unit returned by |getCodeUnit()| or
+     * |peekCodeUnit()| to a CharT code unit.
+     */
+    inline CharT toCharT(int32_t codeUnitValue);
+
     void ungetCodeUnit(int32_t c) {
         if (c == EOF)
             return;
@@ -1171,16 +1185,12 @@ class TokenStreamCharsBase
 
     using SourceUnits = frontend::SourceUnits<CharT>;
 
-    // |expect| cannot be an EOL char.
-    bool matchCodeUnit(int32_t expect) {
-        MOZ_ASSERT(expect != EOF, "shouldn't be matching EOFs");
-        MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
-        return MOZ_LIKELY(!sourceUnits.atEnd()) && sourceUnits.matchCodeUnit(expect);
-    }
+    /** Match a non-EOL, non-EOF code unit; return true iff it was matched. */
+    inline bool matchCodeUnit(int32_t expect);
 
   protected:
     int32_t peekCodeUnit() {
-        return MOZ_LIKELY(!sourceUnits.atEnd()) ? sourceUnits.peekCodeUnit() : EOF;
+        return MOZ_LIKELY(!sourceUnits.atEnd()) ? CodeUnitValue(sourceUnits.peekCodeUnit()) : EOF;
     }
 
     void consumeKnownCodeUnit(int32_t unit) {
@@ -1190,7 +1200,8 @@ class TokenStreamCharsBase
         CharT next =
 #endif
             sourceUnits.getCodeUnit();
-        MOZ_ASSERT(next == unit, "must be consuming the correct unit");
+        MOZ_ASSERT(CodeUnitValue(next) == unit,
+                   "must be consuming the correct unit");
     }
 
     MOZ_MUST_USE inline bool
@@ -1202,11 +1213,28 @@ class TokenStreamCharsBase
 };
 
 template<>
+inline char16_t
+TokenStreamCharsBase<char16_t>::toCharT(int32_t codeUnitValue)
+{
+    MOZ_ASSERT(codeUnitValue != EOF, "EOF is not a CharT");
+    return mozilla::AssertedCast<char16_t>(codeUnitValue);
+}
+
+template<>
 /* static */ MOZ_ALWAYS_INLINE JSAtom*
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(JSContext* cx, const char16_t* chars,
                                                    size_t length)
 {
     return AtomizeChars(cx, chars, length);
+}
+
+template<typename CharT>
+inline bool
+TokenStreamCharsBase<CharT>::matchCodeUnit(int32_t expect)
+{
+    MOZ_ASSERT(expect != EOF, "shouldn't be matching EOFs");
+    MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
+    return MOZ_LIKELY(!sourceUnits.atEnd()) && sourceUnits.matchCodeUnit(toCharT(expect));
 }
 
 template<>
