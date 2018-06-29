@@ -6,6 +6,7 @@
 
 #include "MediaCapabilities.h"
 #include "DecoderTraits.h"
+#include "Layers.h"
 #include "MediaInfo.h"
 #include "MediaRecorder.h"
 #include "PDMFactory.h"
@@ -18,6 +19,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/layers/KnowsCompositor.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -160,16 +163,18 @@ MediaCapabilities::DecodingInfo(
     // supporting MTA, which the main thread doesn't. So we use our task queue
     // to create such decoder and perform initialization.
 
+    RefPtr<layers::KnowsCompositor> compositor = GetCompositor();
     double frameRate = videoContainer->ExtendedType().GetFramerate().ref();
     promises.AppendElement(InvokeAsync(
       taskQueue,
       __func__,
-      [taskQueue, frameRate, config = std::move(config)]() mutable
+      [taskQueue, frameRate, compositor, config = std::move(config)]() mutable
       -> RefPtr<CapabilitiesPromise> {
         // MediaDataDecoder keeps a reference to the config object, so we must
         // keep it alive until the decoder has been shutdown.
         CreateDecoderParams params{ *config,
                                     taskQueue,
+                                    compositor,
                                     CreateDecoderParams::VideoFrameRate(
                                       frameRate),
                                     TrackInfo::kVideoTrack };
@@ -388,6 +393,30 @@ bool
 MediaCapabilities::CheckTypeForEncoder(const nsAString& aType)
 {
   return MediaRecorder::IsTypeSupported(aType);
+}
+
+already_AddRefed<layers::KnowsCompositor>
+MediaCapabilities::GetCompositor()
+{
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
+  if (NS_WARN_IF(!window)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
+  RefPtr<layers::LayerManager> layerManager =
+    nsContentUtils::LayerManagerForDocument(doc);
+  if (NS_WARN_IF(!layerManager)) {
+    return nullptr;
+  }
+  RefPtr<layers::KnowsCompositor> knows = layerManager->AsKnowsCompositor();
+  if (NS_WARN_IF(!knows)) {
+    return nullptr;
+  }
+  return knows->GetForMedia().forget();
 }
 
 bool
