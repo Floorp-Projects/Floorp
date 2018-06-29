@@ -48,10 +48,10 @@ partial interface HTMLVideoElement {
 
   // Attributes for builtin video controls to lock screen orientation.
   // True if video controls should lock orientation when fullscreen.
-  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBL"]
+  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBLOrUAWidget"]
     readonly attribute boolean mozOrientationLockEnabled;
   // True if screen orientation is locked by video controls.
-  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBL"]
+  [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBLOrUAWidget"]
     attribute boolean mozIsOrientationLocked;
 };
 

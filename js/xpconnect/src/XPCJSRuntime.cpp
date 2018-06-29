@@ -184,7 +184,9 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c)
     , isWebExtensionContentScript(false)
     , allowCPOWs(false)
     , isContentXBLCompartment(false)
+    , isUAWidgetCompartment(false)
     , isSandboxCompartment(false)
+    , isAddonCompartment(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
     , wasNuked(false)
@@ -466,6 +468,26 @@ bool
 IsInContentXBLScope(JSObject* obj)
 {
     return IsContentXBLCompartment(js::GetObjectCompartment(obj));
+}
+
+bool
+IsUAWidgetCompartment(JS::Compartment* compartment)
+{
+    // We always eagerly create compartment privates for UA Widget compartments.
+    CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
+    return priv && priv->isUAWidgetCompartment;
+}
+
+bool
+IsUAWidgetScope(JS::Realm* realm)
+{
+    return IsUAWidgetCompartment(JS::GetCompartmentForRealm(realm));
+}
+
+bool
+IsInUAWidgetScope(JSObject* obj)
+{
+    return IsUAWidgetCompartment(js::GetObjectCompartment(obj));
 }
 
 bool
@@ -2828,7 +2850,6 @@ XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
    mWrappedJSRoots(nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
-    MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.init());
     MOZ_COUNT_CTOR_INHERITED(XPCJSRuntime, CycleCollectedJSRuntime);
 }
 
@@ -3156,6 +3177,7 @@ XPCJSRuntime::GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal)
     options.sandboxName.AssignLiteral("UA Widget Scope");
     options.wantXrays = false;
     options.wantComponents = false;
+    options.isUAWidgetScope = true;
 
     // Use an ExpandedPrincipal to create asymmetric security.
     MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
@@ -3172,6 +3194,8 @@ XPCJSRuntime::GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal)
                                       options);
     NS_ENSURE_SUCCESS(rv, nullptr);
     JSObject* scope = &v.toObject();
+
+    MOZ_ASSERT(xpc::IsInUAWidgetScope(js::UncheckedUnwrap(scope)));
 
     MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.putNew(key, scope));
 

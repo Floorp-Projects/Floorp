@@ -1241,6 +1241,8 @@ public:
     return DoGetContainingSVGUseShadowHost();
   }
 
+  bool IsInUAWidget() const;
+
   // True for native anonymous content and for XBL content if the binding
   // has chromeOnlyContent="true".
   bool ChromeOnlyAccess() const

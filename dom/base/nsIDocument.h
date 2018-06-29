@@ -4664,13 +4664,23 @@ inline bool ShouldUseXBLScope(const T* aNode)
   return aNode->IsInAnonymousSubtree() && !aNode->IsInSVGUseShadowTree();
 }
 
+template<typename T>
+inline bool ShouldUseUAWidgetScope(const T* aNode)
+{
+  return aNode->IsInUAWidget();
+}
+
 inline mozilla::dom::ParentObject
 nsINode::GetParentObject() const
 {
   mozilla::dom::ParentObject p(OwnerDoc());
-    // Note that mUseXBLScope is a no-op for chrome, and other places where we
-    // don't use XBL scopes.
-  p.mUseXBLScope = ShouldUseXBLScope(this);
+    // Note that mReflectionScope is a no-op for chrome, and other places
+    // where we don't check this value.
+  if (ShouldUseXBLScope(this)) {
+    p.mReflectionScope = mozilla::dom::ReflectionScope::XBL;
+  } else if (ShouldUseUAWidgetScope(this)) {
+    p.mReflectionScope = mozilla::dom::ReflectionScope::UAWidget;
+  }
   return p;
 }
 

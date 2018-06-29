@@ -4942,11 +4942,14 @@ void
 HTMLMediaElement::AttachAndSetUAShadowRoot()
 {
   if (GetShadowRoot()) {
+    MOZ_ASSERT(GetShadowRoot()->IsUAWidget());
     return;
   }
 
   // Add a closed shadow root to host video controls
-  AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
+  RefPtr<ShadowRoot> shadowRoot =
+    AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
+  shadowRoot->SetIsUAWidget(true);
 }
 
 nsresult

@@ -1112,6 +1112,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     priv->allowWaivers = options.allowWaivers;
     priv->isWebExtensionContentScript = options.isWebExtensionContentScript;
     priv->isContentXBLCompartment = options.isContentXBLScope;
+    priv->isUAWidgetCompartment = options.isUAWidgetScope;
     priv->isSandboxCompartment = true;
 
     // Set up the wantXrays flag, which indicates whether xrays are desired even
