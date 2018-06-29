@@ -22,8 +22,12 @@ namespace dom {
 class CSSKeyframeList : public dom::CSSRuleList
 {
 public:
-  explicit CSSKeyframeList(already_AddRefed<RawServoKeyframesRule> aRawRule)
-    : mRawRule(aRawRule)
+  CSSKeyframeList(already_AddRefed<RawServoKeyframesRule> aRawRule,
+                  StyleSheet* aSheet,
+                  CSSKeyframesRule* aParentRule)
+    : mStyleSheet(aSheet)
+    , mParentRule(aParentRule)
+    , mRawRule(aRawRule)
   {
     mRules.SetCount(Servo_KeyframesRule_GetCount(mRawRule));
   }
@@ -31,21 +35,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeList, dom::CSSRuleList)
 
-  void SetParentRule(CSSKeyframesRule* aParentRule)
+  void DropSheetReference()
   {
-    mParentRule = aParentRule;
-    for (css::Rule* rule : mRules) {
-      if (rule) {
-        rule->SetParentRule(aParentRule);
-      }
+    if (!mStyleSheet) {
+      return;
     }
-  }
-  void SetStyleSheet(StyleSheet* aSheet)
-  {
-    mStyleSheet = aSheet;
+    mStyleSheet = nullptr;
     for (css::Rule* rule : mRules) {
       if (rule) {
-        rule->SetStyleSheet(aSheet);
+        rule->DropSheetReference();
       }
     }
   }
@@ -59,10 +57,9 @@ public:
         Servo_KeyframesRule_GetKeyframeAt(mRawRule, aIndex,
                                           &line, &column).Consume();
       CSSKeyframeRule* ruleObj =
-        new CSSKeyframeRule(rule.forget(), line, column);
+        new CSSKeyframeRule(rule.forget(), mStyleSheet, mParentRule,
+                            line, column);
       mRules.ReplaceObjectAt(ruleObj, aIndex);
-      ruleObj->SetStyleSheet(mStyleSheet);
-      ruleObj->SetParentRule(mParentRule);
     }
     return static_cast<CSSKeyframeRule*>(mRules[aIndex]);
   }
@@ -87,14 +84,17 @@ public:
 
   uint32_t Length() final { return mRules.Length(); }
 
-  void DropReference()
+  void DropReferences()
   {
+    if (!mStyleSheet && !mParentRule) {
+      return;
+    }
     mStyleSheet = nullptr;
     mParentRule = nullptr;
     for (css::Rule* rule : mRules) {
       if (rule) {
-        rule->SetStyleSheet(nullptr);
-        rule->SetParentRule(nullptr);
+        rule->DropParentRuleReference();
+        rule->DropSheetReference();
       }
     }
   }
@@ -117,9 +117,7 @@ private:
 
   void DropAllRules()
   {
-    if (mParentRule || mStyleSheet) {
-      DropReference();
-    }
+    DropReferences();
     mRules.Clear();
     mRawRule = nullptr;
   }
@@ -158,8 +156,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 //
 
 CSSKeyframesRule::CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
-                                   uint32_t aLine, uint32_t aColumn)
-  : css::Rule(aLine, aColumn)
+                                   StyleSheet* aSheet,
+                                   css::Rule* aParentRule,
+                                   uint32_t aLine,
+                                   uint32_t aColumn)
+  : css::Rule(aSheet, aParentRule, aLine, aColumn)
   , mRawRule(std::move(aRawRule))
 {
 }
@@ -167,7 +168,7 @@ CSSKeyframesRule::CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
 CSSKeyframesRule::~CSSKeyframesRule()
 {
   if (mKeyframeList) {
-    mKeyframeList->DropReference();
+    mKeyframeList->DropReferences();
   }
 }
 
@@ -182,7 +183,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CSSKeyframesRule)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSKeyframesRule,
                                                 css::Rule)
   if (tmp->mKeyframeList) {
-    tmp->mKeyframeList->DropReference();
+    tmp->mKeyframeList->DropReferences();
     tmp->mKeyframeList = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -212,12 +213,12 @@ CSSKeyframesRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 /* virtual */ void
-CSSKeyframesRule::SetStyleSheet(StyleSheet* aSheet)
+CSSKeyframesRule::DropSheetReference()
 {
   if (mKeyframeList) {
-    mKeyframeList->SetStyleSheet(aSheet);
+    mKeyframeList->DropSheetReference();
   }
-  css::Rule::SetStyleSheet(aSheet);
+  css::Rule::DropSheetReference();
 }
 
 static const uint32_t kRuleNotFound = std::numeric_limits<uint32_t>::max();
@@ -305,11 +306,7 @@ CSSKeyframesRule::GetCssText(nsAString& aCssText) const
 CSSKeyframesRule::CssRules()
 {
   if (!mKeyframeList) {
-    mKeyframeList = new CSSKeyframeList(do_AddRef(mRawRule));
-    mKeyframeList->SetParentRule(this);
-    if (StyleSheet* sheet = GetStyleSheet()) {
-      mKeyframeList->SetStyleSheet(sheet);
-    }
+    mKeyframeList = new CSSKeyframeList(do_AddRef(mRawRule), mSheet, this);
   }
   return mKeyframeList;
 }

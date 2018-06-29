@@ -18,7 +18,10 @@ class CSSMozDocumentRule final : public css::ConditionRule
 {
 public:
   CSSMozDocumentRule(RefPtr<RawServoMozDocumentRule> aRawRule,
-                     uint32_t aLine, uint32_t aColumn);
+                     StyleSheet* aSheet,
+                     css::Rule* aParentRule,
+                     uint32_t aLine,
+                     uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 

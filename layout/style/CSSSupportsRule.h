@@ -17,7 +17,10 @@ class CSSSupportsRule : public css::ConditionRule
 {
 public:
   CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
-                  uint32_t aLine, uint32_t aColumn);
+                  StyleSheet* aSheet,
+                  css::Rule* aParentRule,
+                  uint32_t aLine,
+                  uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 

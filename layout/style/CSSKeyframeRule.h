@@ -22,7 +22,10 @@ class CSSKeyframeRule final : public css::Rule
 {
 public:
   CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw,
-                  uint32_t aLine, uint32_t aColumn);
+                  StyleSheet* aSheet,
+                  css::Rule* aParentRule,
+                  uint32_t aLine,
+                  uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeRule,

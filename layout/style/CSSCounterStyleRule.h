@@ -19,8 +19,11 @@ class CSSCounterStyleRule final : public css::Rule
 {
 public:
   CSSCounterStyleRule(already_AddRefed<RawServoCounterStyleRule> aRawRule,
-                      uint32_t aLine, uint32_t aColumn)
-    : mozilla::css::Rule(aLine, aColumn)
+                      StyleSheet* aSheet,
+                      css::Rule* aParentRule,
+                      uint32_t aLine,
+                      uint32_t aColumn)
+    : css::Rule(aSheet, aParentRule, aLine, aColumn)
     , mRawRule(std::move(aRawRule))
   {
   }
