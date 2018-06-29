@@ -16,7 +16,7 @@ var UserGestureTests = [
 
 function setup_test_preference() {
   return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.enabled", false],
+    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
     ["media.autoplay.enabled.user-gestures-needed", true],
     ["media.navigator.permission.fake", true]
   ]});
