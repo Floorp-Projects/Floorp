@@ -22,6 +22,10 @@ job-defaults:
 marionette:
     description: "Marionette unittest run"
     treeherder-symbol: Mn
+    run-on-projects:
+        by-test-platform:
+            android-em.*: ["trunk", "try"]
+            default: built-projects
     max-run-time:
         by-test-platform:
             android-em.*: 3600
