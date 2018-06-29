@@ -19,6 +19,7 @@ flake8:
         - python/mozlint
         - python/mozterm
         - python/mozversioncontrol
+        - python/safety
         - security/
         - security/manager
         - taskcluster

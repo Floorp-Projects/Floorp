@@ -24,6 +24,7 @@ py3:
         - memory/replace
         - modules/freetype2
         - nsprpub
+        - python/safety
         - security/manager/ssl
         - security/nss
         - servo
