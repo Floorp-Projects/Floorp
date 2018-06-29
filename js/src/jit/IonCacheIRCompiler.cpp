@@ -1337,6 +1337,7 @@ IonCacheIRCompiler::emitCallStringSplitResult()
 bool
 IonCacheIRCompiler::emitCompareStringResult()
 {
+    AutoSaveLiveRegisters save(*this);
     AutoOutputRegister output(*this);
 
     Register left = allocator.useRegister(masm, reader.stringOperandId());
@@ -1344,10 +1345,6 @@ IonCacheIRCompiler::emitCompareStringResult()
     JSOp op = reader.jsop();
 
     AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
 
     allocator.discardStack(masm);
 
