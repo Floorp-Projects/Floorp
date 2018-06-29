@@ -105,7 +105,7 @@ private:
   OffTheBooksMutex(const OffTheBooksMutex&);
   OffTheBooksMutex& operator=(const OffTheBooksMutex&);
 
-  friend class CondVar;
+  friend class OffTheBooksCondVar;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
