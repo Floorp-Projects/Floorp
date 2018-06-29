@@ -219,8 +219,9 @@ class FunctionCompiler
               case ValType::F64:
                 ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
                 break;
+              case ValType::Ref:
               case ValType::AnyRef:
-                MOZ_CRASH("ion support for anyref locale default value NYI");
+                MOZ_CRASH("ion support for ref/anyref value NYI");
                 break;
               case ValType::I8x16:
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX16(0), MIRType::Int8x16);
@@ -2982,6 +2983,7 @@ SimdToLaneType(ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
+      case ValType::Ref:
       case ValType::AnyRef:
         break;
     }
@@ -3263,6 +3265,7 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
+      case ValType::Ref:
       case ValType::AnyRef:
         break;
     }
@@ -4477,7 +4480,7 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
         ValTypeVector locals;
         if (!locals.appendAll(env.funcTypes[func.index]->args()))
             return false;
-        if (!DecodeLocalEntries(d, env.kind, env.gcTypesEnabled, &locals))
+        if (!DecodeLocalEntries(d, env.kind, env.types, env.gcTypesEnabled, &locals))
             return false;
 
         // Set up for Ion compilation.

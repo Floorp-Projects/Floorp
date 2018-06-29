@@ -2893,7 +2893,9 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
     return false;
   }
 
-  JS_EncodeStringToBuffer(cx, s, result.BeginWriting(), length);
+  if (!JS_EncodeStringToBuffer(cx, s, result.BeginWriting(), length)) {
+    return false;
+  }
 
   return true;
 }

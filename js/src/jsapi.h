@@ -4636,7 +4636,7 @@ JS_GetStringEncodingLength(JSContext* cx, JSString* str);
  * length parameter, the string will be cut and only length bytes will be
  * written into the buffer.
  */
-JS_PUBLIC_API(size_t)
+MOZ_MUST_USE JS_PUBLIC_API(bool)
 JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t length);
 
 class MOZ_RAII JSAutoByteString

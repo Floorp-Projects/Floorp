@@ -2298,6 +2298,8 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
     MOZ_ASSERT(args.callee().is<TypeDescr>());
     Rooted<TypeDescr*> callee(cx, &args.callee().as<TypeDescr>());
 
+    MOZ_ASSERT(cx->realm() == callee->realm());
+
     // Typed object constructors are overloaded in two ways:
     //
     //   new TypeObj()

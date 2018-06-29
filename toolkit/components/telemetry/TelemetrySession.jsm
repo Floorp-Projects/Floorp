@@ -792,8 +792,6 @@ var Impl = {
     for (let ioCounter in this._startupIO)
       ret[ioCounter] = this._startupIO[ioCounter];
 
-    ret.savedPings = TelemetryStorage.pendingPingCount;
-
     let activeTicks = this._sessionActiveTicks;
     if (isSubsession) {
       activeTicks = this._sessionActiveTicks - this._subsessionStartActiveTicks;
