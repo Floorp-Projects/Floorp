@@ -351,7 +351,7 @@ IsTypedArrayIndex(jsid id, uint64_t* indexp)
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
         MOZ_ASSERT(i >= 0);
-        *indexp = (double)i;
+        *indexp = static_cast<uint64_t>(i);
         return true;
     }
 
