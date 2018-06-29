@@ -291,3 +291,8 @@ selector in floating-scrollbar-light.css across all platforms. */
 .CodeMirror-Tern-fhint-guess {
   opacity: .7;
 }
+
+/* Override the background-color: white applied to filler elements in codemirror.css */
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  -moz-appearance: scrollcorner;
+}
