@@ -41,12 +41,12 @@ BoxShadowData fetch_data(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    ClipScrollNode scroll_node = fetch_clip_scroll_node(cmi.scroll_node_id);
+    Transform transform = fetch_transform(cmi.transform_id);
     BoxShadowData bs_data = fetch_data(cmi.clip_data_address);
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(bs_data.dest_rect,
-                                               scroll_node,
+                                               transform,
                                                area);
 
     vLayer = res.layer;

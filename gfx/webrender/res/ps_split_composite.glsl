@@ -44,10 +44,10 @@ struct SplitCompositeInstance {
 SplitCompositeInstance fetch_composite_instance() {
     SplitCompositeInstance ci;
 
-    ci.render_task_index = aData0.x;
-    ci.src_task_index = aData0.y;
-    ci.polygons_address = aData0.z;
-    ci.z = float(aData0.w);
+    ci.render_task_index = aData.x;
+    ci.src_task_index = aData.y;
+    ci.polygons_address = aData.z;
+    ci.z = float(aData.w);
 
     return ci;
 }

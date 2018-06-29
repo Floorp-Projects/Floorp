@@ -273,22 +273,10 @@ pub enum RepeatMode {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct GradientBorder {
-    pub gradient: Gradient,
-    pub outset: SideOffsets2D<f32>,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct RadialGradientBorder {
-    pub gradient: RadialGradient,
-    pub outset: SideOffsets2D<f32>,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-/// TODO(mrobinson): Currently only images are supported, but we will
-/// eventually add support for Gradient and RadialGradient.
 pub enum NinePatchBorderSource {
     Image(ImageKey),
+    Gradient(Gradient),
+    RadialGradient(RadialGradient),
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -333,8 +321,6 @@ pub struct NinePatchBorder {
 pub enum BorderDetails {
     Normal(NormalBorder),
     NinePatch(NinePatchBorder),
-    Gradient(GradientBorder),
-    RadialGradient(RadialGradientBorder),
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
