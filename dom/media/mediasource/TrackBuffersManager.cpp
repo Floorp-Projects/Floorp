@@ -1153,121 +1153,142 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
     mAudioTracks.mNeedRandomAccessPoint = true;
   }
 
-  // 4. Let active track flag equal false.
-  bool activeTrack = false;
+  // Check if we've received the same init data again. Some streams will
+  // resend the same data. In these cases we don't need to change the stream
+  // id as it's the same stream. Doing so would recreate decoders, possibly
+  // leading to gaps in audio and/or video (see bug 1450952).
+  //
+  // It's possible to have the different binary representations for the same
+  // logical init data. If this case is encountered in the wild then these
+  // checks could be revised to compare MediaInfo rather than init segment
+  // bytes.
+  bool isRepeatInitData =
+    mInitData && *(mInitData.get()) == *(mParser->InitData());
 
-  // Increase our stream id.
-  uint32_t streamID = sStreamSourceID++;
+  MOZ_ASSERT(mFirstInitializationSegmentReceived || !isRepeatInitData,
+             "Should never detect repeat init data for first segment!");
 
-  // 5. If the first initialization segment received flag is false, then run the following steps:
-  if (!mFirstInitializationSegmentReceived) {
-    mAudioTracks.mNumTracks = numAudios;
-    // TODO:
-    // 1. If the initialization segment contains tracks with codecs the user agent
-    // does not support, then run the append error algorithm with the decode
-    // error parameter set to true and abort these steps.
+  // If we have new init data we configure and set track info as needed. If we
+  // have repeat init data we carry forward our existing track info.
+  if (!isRepeatInitData) {
+    // Increase our stream id.
+    uint32_t streamID = sStreamSourceID++;
 
-    // 2. For each audio track in the initialization segment, run following steps:
-    // for (uint32_t i = 0; i < numAudios; i++) {
-    if (numAudios) {
-      // 1. Let audio byte stream track ID be the Track ID for the current track being processed.
-      // 2. Let audio language be a BCP 47 language tag for the language specified in the initialization segment for this track or an empty string if no language info is present.
-      // 3. If audio language equals an empty string or the 'und' BCP 47 value, then run the default track language algorithm with byteStreamTrackID set to audio byte stream track ID and type set to "audio" and assign the value returned by the algorithm to audio language.
-      // 4. Let audio label be a label specified in the initialization segment for this track or an empty string if no label info is present.
-      // 5. If audio label equals an empty string, then run the default track label algorithm with byteStreamTrackID set to audio byte stream track ID and type set to "audio" and assign the value returned by the algorithm to audio label.
-      // 6. Let audio kinds be an array of kind strings specified in the initialization segment for this track or an empty array if no kind information is provided.
-      // 7. If audio kinds equals an empty array, then run the default track kinds algorithm with byteStreamTrackID set to audio byte stream track ID and type set to "audio" and assign the value returned by the algorithm to audio kinds.
-      // 8. For each value in audio kinds, run the following steps:
-      //   1. Let current audio kind equal the value from audio kinds for this iteration of the loop.
-      //   2. Let new audio track be a new AudioTrack object.
-      //   3. Generate a unique ID and assign it to the id property on new audio track.
-      //   4. Assign audio language to the language property on new audio track.
-      //   5. Assign audio label to the label property on new audio track.
-      //   6. Assign current audio kind to the kind property on new audio track.
-      //   7. If audioTracks.length equals 0, then run the following steps:
-      //     1. Set the enabled property on new audio track to true.
-      //     2. Set active track flag to true.
-      activeTrack = true;
-      //   8. Add new audio track to the audioTracks attribute on this SourceBuffer object.
-      //   9. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the AudioTrackList object referenced by the audioTracks attribute on this SourceBuffer object.
-      //   10. Add new audio track to the audioTracks attribute on the HTMLMediaElement.
-      //   11. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the AudioTrackList object referenced by the audioTracks attribute on the HTMLMediaElement.
-      mAudioTracks.mBuffers.AppendElement(TrackBuffer());
-      // 10. Add the track description for this track to the track buffer.
-      mAudioTracks.mInfo = new TrackInfoSharedPtr(info.mAudio, streamID);
-      mAudioTracks.mLastInfo = mAudioTracks.mInfo;
+    // 4. Let active track flag equal false.
+    bool activeTrack = false;
+
+    // 5. If the first initialization segment received flag is false, then run the following steps:
+    if (!mFirstInitializationSegmentReceived) {
+      mAudioTracks.mNumTracks = numAudios;
+      // TODO:
+      // 1. If the initialization segment contains tracks with codecs the user agent
+      // does not support, then run the append error algorithm with the decode
+      // error parameter set to true and abort these steps.
+
+      // 2. For each audio track in the initialization segment, run following steps:
+      // for (uint32_t i = 0; i < numAudios; i++) {
+      if (numAudios) {
+        // 1. Let audio byte stream track ID be the Track ID for the current track being processed.
+        // 2. Let audio language be a BCP 47 language tag for the language specified in the initialization segment for this track or an empty string if no language info is present.
+        // 3. If audio language equals an empty string or the 'und' BCP 47 value, then run the default track language algorithm with byteStreamTrackID set to audio byte stream track ID and type set to "audio" and assign the value returned by the algorithm to audio language.
+        // 4. Let audio label be a label specified in the initialization segment for this track or an empty string if no label info is present.
+        // 5. If audio label equals an empty string, then run the default track label algorithm with byteStreamTrackID set to audio byte stream track ID and type set to "audio" and assign the value returned by the algorithm to audio label.
+        // 6. Let audio kinds be an array of kind strings specified in the initialization segment for this track or an empty array if no kind information is provided.
+        // 7. If audio kinds equals an empty array, then run the default track kinds algorithm with byteStreamTrackID set to audio byte stream track ID and type set to "audio" and assign the value returned by the algorithm to audio kinds.
+        // 8. For each value in audio kinds, run the following steps:
+        //   1. Let current audio kind equal the value from audio kinds for this iteration of the loop.
+        //   2. Let new audio track be a new AudioTrack object.
+        //   3. Generate a unique ID and assign it to the id property on new audio track.
+        //   4. Assign audio language to the language property on new audio track.
+        //   5. Assign audio label to the label property on new audio track.
+        //   6. Assign current audio kind to the kind property on new audio track.
+        //   7. If audioTracks.length equals 0, then run the following steps:
+        //     1. Set the enabled property on new audio track to true.
+        //     2. Set active track flag to true.
+        activeTrack = true;
+        //   8. Add new audio track to the audioTracks attribute on this SourceBuffer object.
+        //   9. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the AudioTrackList object referenced by the audioTracks attribute on this SourceBuffer object.
+        //   10. Add new audio track to the audioTracks attribute on the HTMLMediaElement.
+        //   11. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the AudioTrackList object referenced by the audioTracks attribute on the HTMLMediaElement.
+        mAudioTracks.mBuffers.AppendElement(TrackBuffer());
+        // 10. Add the track description for this track to the track buffer.
+        mAudioTracks.mInfo = new TrackInfoSharedPtr(info.mAudio, streamID);
+        mAudioTracks.mLastInfo = mAudioTracks.mInfo;
+      }
+
+      mVideoTracks.mNumTracks = numVideos;
+      // 3. For each video track in the initialization segment, run following steps:
+      // for (uint32_t i = 0; i < numVideos; i++) {
+      if (numVideos) {
+        // 1. Let video byte stream track ID be the Track ID for the current track being processed.
+        // 2. Let video language be a BCP 47 language tag for the language specified in the initialization segment for this track or an empty string if no language info is present.
+        // 3. If video language equals an empty string or the 'und' BCP 47 value, then run the default track language algorithm with byteStreamTrackID set to video byte stream track ID and type set to "video" and assign the value returned by the algorithm to video language.
+        // 4. Let video label be a label specified in the initialization segment for this track or an empty string if no label info is present.
+        // 5. If video label equals an empty string, then run the default track label algorithm with byteStreamTrackID set to video byte stream track ID and type set to "video" and assign the value returned by the algorithm to video label.
+        // 6. Let video kinds be an array of kind strings specified in the initialization segment for this track or an empty array if no kind information is provided.
+        // 7. If video kinds equals an empty array, then run the default track kinds algorithm with byteStreamTrackID set to video byte stream track ID and type set to "video" and assign the value returned by the algorithm to video kinds.
+        // 8. For each value in video kinds, run the following steps:
+        //   1. Let current video kind equal the value from video kinds for this iteration of the loop.
+        //   2. Let new video track be a new VideoTrack object.
+        //   3. Generate a unique ID and assign it to the id property on new video track.
+        //   4. Assign video language to the language property on new video track.
+        //   5. Assign video label to the label property on new video track.
+        //   6. Assign current video kind to the kind property on new video track.
+        //   7. If videoTracks.length equals 0, then run the following steps:
+        //     1. Set the selected property on new video track to true.
+        //     2. Set active track flag to true.
+        activeTrack = true;
+        //   8. Add new video track to the videoTracks attribute on this SourceBuffer object.
+        //   9. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the VideoTrackList object referenced by the videoTracks attribute on this SourceBuffer object.
+        //   10. Add new video track to the videoTracks attribute on the HTMLMediaElement.
+        //   11. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the VideoTrackList object referenced by the videoTracks attribute on the HTMLMediaElement.
+        mVideoTracks.mBuffers.AppendElement(TrackBuffer());
+        // 10. Add the track description for this track to the track buffer.
+        mVideoTracks.mInfo = new TrackInfoSharedPtr(info.mVideo, streamID);
+        mVideoTracks.mLastInfo = mVideoTracks.mInfo;
+      }
+      // 4. For each text track in the initialization segment, run following steps:
+      // 5. If active track flag equals true, then run the following steps:
+      // This is handled by SourceBuffer once the promise is resolved.
+      if (activeTrack) {
+        mActiveTrack = true;
+      }
+
+      // 6. Set first initialization segment received flag to true.
+      mFirstInitializationSegmentReceived = true;
+    } else {
+      mAudioTracks.mLastInfo = new TrackInfoSharedPtr(info.mAudio, streamID);
+      mVideoTracks.mLastInfo = new TrackInfoSharedPtr(info.mVideo, streamID);
     }
 
-    mVideoTracks.mNumTracks = numVideos;
-    // 3. For each video track in the initialization segment, run following steps:
-    // for (uint32_t i = 0; i < numVideos; i++) {
-    if (numVideos) {
-      // 1. Let video byte stream track ID be the Track ID for the current track being processed.
-      // 2. Let video language be a BCP 47 language tag for the language specified in the initialization segment for this track or an empty string if no language info is present.
-      // 3. If video language equals an empty string or the 'und' BCP 47 value, then run the default track language algorithm with byteStreamTrackID set to video byte stream track ID and type set to "video" and assign the value returned by the algorithm to video language.
-      // 4. Let video label be a label specified in the initialization segment for this track or an empty string if no label info is present.
-      // 5. If video label equals an empty string, then run the default track label algorithm with byteStreamTrackID set to video byte stream track ID and type set to "video" and assign the value returned by the algorithm to video label.
-      // 6. Let video kinds be an array of kind strings specified in the initialization segment for this track or an empty array if no kind information is provided.
-      // 7. If video kinds equals an empty array, then run the default track kinds algorithm with byteStreamTrackID set to video byte stream track ID and type set to "video" and assign the value returned by the algorithm to video kinds.
-      // 8. For each value in video kinds, run the following steps:
-      //   1. Let current video kind equal the value from video kinds for this iteration of the loop.
-      //   2. Let new video track be a new VideoTrack object.
-      //   3. Generate a unique ID and assign it to the id property on new video track.
-      //   4. Assign video language to the language property on new video track.
-      //   5. Assign video label to the label property on new video track.
-      //   6. Assign current video kind to the kind property on new video track.
-      //   7. If videoTracks.length equals 0, then run the following steps:
-      //     1. Set the selected property on new video track to true.
-      //     2. Set active track flag to true.
-      activeTrack = true;
-      //   8. Add new video track to the videoTracks attribute on this SourceBuffer object.
-      //   9. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the VideoTrackList object referenced by the videoTracks attribute on this SourceBuffer object.
-      //   10. Add new video track to the videoTracks attribute on the HTMLMediaElement.
-      //   11. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the VideoTrackList object referenced by the videoTracks attribute on the HTMLMediaElement.
-      mVideoTracks.mBuffers.AppendElement(TrackBuffer());
-      // 10. Add the track description for this track to the track buffer.
-      mVideoTracks.mInfo = new TrackInfoSharedPtr(info.mVideo, streamID);
-      mVideoTracks.mLastInfo = mVideoTracks.mInfo;
-    }
-    // 4. For each text track in the initialization segment, run following steps:
-    // 5. If active track flag equals true, then run the following steps:
-    // This is handled by SourceBuffer once the promise is resolved.
-    if (activeTrack) {
-      mActiveTrack = true;
+    UniquePtr<EncryptionInfo> crypto = mInputDemuxer->GetCrypto();
+    if (crypto && crypto->IsEncrypted()) {
+      // Try and dispatch 'encrypted'. Won't go if ready state still
+      // HAVE_NOTHING.
+      for (uint32_t i = 0; i < crypto->mInitDatas.Length(); i++) {
+        nsCOMPtr<nsIRunnable> r =
+          new DispatchKeyNeededEvent(mParentDecoder,
+                                     crypto->mInitDatas[i].mInitData,
+                                     crypto->mInitDatas[i].mType);
+        mAbstractMainThread->Dispatch(r.forget());
+      }
+      info.mCrypto = *crypto;
+      // We clear our crypto init data array, so the MediaFormatReader will
+      // not emit an encrypted event for the same init data again.
+      info.mCrypto.mInitDatas.Clear();
     }
 
-    // 6. Set first initialization segment received flag to true.
-    mFirstInitializationSegmentReceived = true;
-  } else {
-    mAudioTracks.mLastInfo = new TrackInfoSharedPtr(info.mAudio, streamID);
-    mVideoTracks.mLastInfo = new TrackInfoSharedPtr(info.mVideo, streamID);
+    {
+      MutexAutoLock mut(mMutex);
+      mInfo = info;
+    }
+
+    // We now have a valid init data ; we can store it for later use.
+    mInitData = mParser->InitData();
   }
 
   // We have now completed the changeType operation.
   mChangeTypeReceived = false;
-
-  UniquePtr<EncryptionInfo> crypto = mInputDemuxer->GetCrypto();
-  if (crypto && crypto->IsEncrypted()) {
-    // Try and dispatch 'encrypted'. Won't go if ready state still HAVE_NOTHING.
-    for (uint32_t i = 0; i < crypto->mInitDatas.Length(); i++) {
-      nsCOMPtr<nsIRunnable> r =
-        new DispatchKeyNeededEvent(mParentDecoder, crypto->mInitDatas[i].mInitData,
-                                   crypto->mInitDatas[i].mType);
-      mAbstractMainThread->Dispatch(r.forget());
-    }
-    info.mCrypto = *crypto;
-    // We clear our crypto init data array, so the MediaFormatReader will
-    // not emit an encrypted event for the same init data again.
-    info.mCrypto.mInitDatas.Clear();
-  }
-
-  {
-    MutexAutoLock mut(mMutex);
-    mInfo = info;
-  }
-
-  // We now have a valid init data ; we can store it for later use.
-  mInitData = mParser->InitData();
 
   // 3. Remove the initialization segment bytes from the beginning of the input buffer.
   // This step has already been done in InitializationSegmentReceived when we

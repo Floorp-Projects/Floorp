@@ -89,7 +89,6 @@ menulist > menupopup > menu {
 
 .menu-text,
 .menu-iconic-left,
-.menu-iconic-right,
 .menu-iconic-text {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
@@ -121,8 +120,7 @@ menucaption > .menu-iconic-text {
   -moz-box-pack: end;
 }
 
-.menu-iconic-left,
-.menu-iconic-right {
+.menu-iconic-left {
   width: 16px;
   /* We can only hardcode this, to make the default GTK icon<->label spacing */
   padding-inline-end: 3px !important;

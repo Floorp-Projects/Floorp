@@ -32,6 +32,7 @@ public:
   size_t AddStack(const Telemetry::ProcessedStack& aStack);
   size_t GetStackCount() const;
   size_t SizeOfExcludingThis() const;
+  void RemoveStack(unsigned aIndex);
 
 #if defined(MOZ_GECKO_PROFILER)
   /** Clears the contents of vectors and resets the index. */

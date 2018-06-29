@@ -431,7 +431,6 @@ pub fn parse_media_vector(lines: &[SdpLine]) -> Result<Vec<SdpMedia>, SdpParserE
         }
     };
 
-
     for line in lines.iter().skip(1) {
         match line.sdp_type {
             SdpType::Connection(ref c) => {
@@ -446,14 +445,29 @@ pub fn parse_media_vector(lines: &[SdpLine]) -> Result<Vec<SdpMedia>, SdpParserE
             }
             SdpType::Bandwidth(ref b) => sdp_media.add_bandwidth(b),
             SdpType::Attribute(ref a) => {
-                sdp_media
-                    .add_attribute(a)
-                    .map_err(|e: SdpParserInternalError| {
-                                 SdpParserError::Sequence {
-                                     message: format!("{}", e),
-                                     line_number: line.line_number,
-                                 }
-                             })?
+                match a {
+                    &SdpAttribute::Rtpmap(ref rtpmap) => {
+                        sdp_media.add_attribute(&SdpAttribute::Rtpmap(
+                            SdpAttributeRtpmap {
+                                payload_type: rtpmap.payload_type,
+                                codec_name: rtpmap.codec_name.clone(),
+                                frequency: rtpmap.frequency,
+                                channels: match sdp_media.media.media {
+                                    SdpMediaValue::Video => Some(0),
+                                    _ => rtpmap.channels
+                                },
+                            }
+                        ))
+                    },
+                    _ => {
+                        sdp_media.add_attribute(a)
+                    }
+                }.map_err(|e: SdpParserInternalError| {
+                             SdpParserError::Sequence {
+                                 message: format!("{}", e),
+                                 line_number: line.line_number,
+                             }
+                         })?
             }
             SdpType::Media(ref v) => {
                 media_sections.push(sdp_media);

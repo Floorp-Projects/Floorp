@@ -608,6 +608,48 @@ DataTransfer::MozCloneForEvent(const nsAString& aEvent, ErrorResult& aRv)
   return dt.forget();
 }
 
+/* static */
+void
+DataTransfer::GetExternalClipboardFormats(const int32_t& aWhichClipboard,
+                                         const bool& aPlainTextOnly,
+                                         nsTArray<nsCString>* aResult)
+{
+  MOZ_ASSERT(aResult);
+  nsCOMPtr<nsIClipboard> clipboard =
+    do_GetService("@mozilla.org/widget/clipboard;1");
+  if (!clipboard || aWhichClipboard < 0) {
+    return;
+  }
+
+  if (aPlainTextOnly) {
+    bool hasType;
+    static const char * unicodeMime[] = { kUnicodeMime };
+    nsresult rv = clipboard->HasDataMatchingFlavors(unicodeMime,
+                                                    /* number of flavors to check */ 1,
+                                                    aWhichClipboard, &hasType);
+    NS_SUCCEEDED(rv);
+    if (hasType) {
+      aResult->AppendElement(kUnicodeMime);
+    }
+    return;
+  }
+
+  // If not plain text only, then instead check all the other types
+  static const char * formats[] = { kCustomTypesMime, kFileMime, kHTMLMime, kRTFMime,
+                                  kURLMime, kURLDataMime, kUnicodeMime, kPNGImageMime };
+
+  for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
+    bool hasType;
+    nsresult rv = clipboard->HasDataMatchingFlavors(&(formats[f]),
+                                                    /* number of flavors to check */ 1,
+                                                    aWhichClipboard, &hasType);
+    NS_SUCCEEDED(rv);
+    if (hasType) {
+      aResult->AppendElement(formats[f]);
+    }
+  }
+}
+
 nsresult
 DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
                                 uint32_t aIndex,
@@ -1338,75 +1380,52 @@ DataTransfer::CacheExternalDragFormats()
 void
 DataTransfer::CacheExternalClipboardFormats(bool aPlainTextOnly)
 {
-  NS_ASSERTION(mEventMessage == ePaste,
-               "caching clipboard data for invalid event");
-
   // Called during the constructor for paste events to cache the formats
   // available on the clipboard. As with CacheExternalDragFormats, the
   // data will only be retrieved when needed.
-
-  nsCOMPtr<nsIClipboard> clipboard =
-    do_GetService("@mozilla.org/widget/clipboard;1");
-  if (!clipboard || mClipboardType < 0) {
-    return;
-  }
+  NS_ASSERTION(mEventMessage == ePaste,
+               "caching clipboard data for invalid event");
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> sysPrincipal;
   ssm->GetSystemPrincipal(getter_AddRefs(sysPrincipal));
 
+  nsTArray<nsCString> typesArray;
+
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->SendGetExternalClipboardFormats(mClipboardType, aPlainTextOnly, &typesArray);
+  } else {
+    GetExternalClipboardFormats(mClipboardType, aPlainTextOnly, &typesArray);
+  }
+
   if (aPlainTextOnly) {
-    bool supported;
-    const char* unicodeMime[] = { kUnicodeMime };
-    clipboard->HasDataMatchingFlavors(unicodeMime, 1, mClipboardType,
-                                      &supported);
-    if (supported) {
+    // The only thing that will be in types is kUnicodeMime
+    MOZ_ASSERT(typesArray.IsEmpty() || typesArray.Length() == 1);
+    if (typesArray.Length() == 1) {
       CacheExternalData(kUnicodeMime, 0, sysPrincipal, false);
     }
     return;
   }
 
-  // Check if the clipboard has any files
   bool hasFileData = false;
-  const char *fileMime[] = { kFileMime };
-  clipboard->HasDataMatchingFlavors(fileMime, 1, mClipboardType, &hasFileData);
-
-  // We will be ignoring any application/x-moz-file files found in the paste
-  // datatransfer within e10s, as they will fail to be sent over IPC. Because of
-  // that, we will unset hasFileData, whether or not it would have been set.
-  // (bug 1308007)
-  if (XRE_IsContentProcess()) {
-    hasFileData = false;
-  }
-
-  // there isn't a way to get a list of the formats that might be available on
-  // all platforms, so just check for the types that can actually be imported.
-  // NOTE: kCustomTypesMime must have index 0, kFileMime index 1
-  const char* formats[] = { kCustomTypesMime, kFileMime, kHTMLMime, kRTFMime,
-                            kURLMime, kURLDataMime, kUnicodeMime, kPNGImageMime };
-
-  for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
-    // check each format one at a time
-    bool supported;
-    clipboard->HasDataMatchingFlavors(&(formats[f]), 1, mClipboardType,
-                                      &supported);
-    // if the format is supported, add an item to the array with null as
-    // the data. When retrieved, GetRealData will read the data.
-    if (supported) {
-      if (f == 0) {
-        FillInExternalCustomTypes(0, sysPrincipal);
-      } else {
-        // In non-e10s we support pasting files from explorer.exe.
-        // Unfortunately, we fail to send that data over IPC in e10s, so we
-        // don't want to add the item to the DataTransfer and end up producing a
-        // null `application/x-moz-file`. (bug 1308007)
-        if (XRE_IsContentProcess() && f == 1) {
-          continue;
-        }
-
-        // If we aren't the file data, and we have file data, we want to be hidden
-        CacheExternalData(formats[f], 0, sysPrincipal, /* hidden = */ f != 1 && hasFileData);
+  for (const nsCString& type: typesArray) {
+    if (type.EqualsLiteral(kCustomTypesMime)) {
+      FillInExternalCustomTypes(0, sysPrincipal);
+    } else if (type.EqualsLiteral(kFileMime) && XRE_IsContentProcess()) {
+      // We will be ignoring any application/x-moz-file files found in the paste
+      // datatransfer within e10s, as they will fail top be sent over IPC. Because of
+      // that, we will unset hasFileData, whether or not it would have been set.
+      // (bug 1308007)
+      hasFileData = false;
+      continue;
+    } else {
+      // We expect that if kFileMime is supported, then it will be the either at
+      // index 0 or at index 1 in the typesArray returned by GetExternalClipboardFormats
+      if (type.EqualsLiteral(kFileMime) && !XRE_IsContentProcess()) {
+        hasFileData = true;
       }
+      // If we aren't the file data, and we have file data, we want to be hidden
+      CacheExternalData(type.get(), 0, sysPrincipal, /* hidden = */ !type.EqualsLiteral(kFileMime) && hasFileData);
     }
   }
 }
