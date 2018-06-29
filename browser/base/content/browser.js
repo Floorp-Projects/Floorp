@@ -7864,6 +7864,10 @@ var TabContextMenu = {
     document.getElementById("context_undoCloseTab").disabled =
       SessionStore.getClosedTabCount(window) == 0;
 
+    // Only one of Reload_Tab/Reload_Selected_Tabs should be visible.
+    document.getElementById("context_reloadTab").hidden = multiselectionContext;
+    document.getElementById("context_reloadSelectedTabs").hidden = !multiselectionContext;
+
     // Only one of pin/unpin/multiselect-pin/multiselect-unpin should be visible
     let contextPinTab = document.getElementById("context_pinTab");
     contextPinTab.hidden = this.contextTab.pinned || multiselectionContext;
