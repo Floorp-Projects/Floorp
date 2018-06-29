@@ -20,6 +20,9 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+namespace layers {
+class KnowsCompositor;
+}
 namespace dom {
 
 struct MediaDecodingConfiguration;
@@ -63,6 +66,7 @@ private:
   bool CheckTypeForMediaSource(const nsAString& aType);
   bool CheckTypeForFile(const nsAString& aType);
   bool CheckTypeForEncoder(const nsAString& aType);
+  already_AddRefed<layers::KnowsCompositor> GetCompositor();
   nsCOMPtr<nsIGlobalObject> mParent;
 };
 
