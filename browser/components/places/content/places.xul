@@ -441,25 +441,8 @@
           </description>
           <spacer flex="3"/>
         </vbox>
-        <vbox id="infoBox" minimal="true">
+        <vbox id="infoBox">
 #include editBookmarkPanel.inc.xul
-          <hbox id="infoBoxExpanderWrapper" align="center">
-
-            <button type="image" id="infoBoxExpander"
-                    class="expander-down"
-                    oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
-                    observes="paneElementsBroadcaster"/>
-
-            <label id="infoBoxExpanderLabel"
-                    lesslabel="&detailsPane.less.label;"
-                    lessaccesskey="&detailsPane.less.accesskey;"
-                    morelabel="&detailsPane.more.label;"
-                    moreaccesskey="&detailsPane.more.accesskey;"
-                    value="&detailsPane.more.label;"
-                    accesskey="&detailsPane.more.accesskey;"
-                    control="infoBoxExpander"/>
-
-          </hbox>
         </vbox>
       </deck>
     </vbox>
