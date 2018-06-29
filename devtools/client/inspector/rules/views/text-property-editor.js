@@ -84,9 +84,9 @@ function TextPropertyEditor(ruleEditor, property) {
   this._hasPendingClick = false;
   this._clickedElementOptions = null;
 
-  this.toolbox = this.ruleView.inspector.toolbox;
-  this.telemetry = this.toolbox.telemetry;
-  this.cssProperties = getCssProperties(this.toolbox);
+  const toolbox = this.ruleView.inspector.toolbox;
+  this.telemetry = toolbox.telemetry;
+  this.cssProperties = getCssProperties(toolbox);
 
   this.getGridlineNames = this.getGridlineNames.bind(this);
   this.update = this.update.bind(this);
@@ -741,9 +741,7 @@ TextPropertyEditor.prototype = {
     }
     this.prop.setEnabled(!checked);
     event.stopPropagation();
-    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId
-    });
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
   },
 
   /**
@@ -814,9 +812,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId
-    });
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
 
     // Remove a property if the name is empty
     if (!value.trim()) {
@@ -909,9 +905,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview", null, {
-      "session_id": this.toolbox.sessionId
-    });
+    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview");
 
     // Since the value was changed, check if the original propertywas a flex or grid
     // display declaration and hide their respective highlighters.
