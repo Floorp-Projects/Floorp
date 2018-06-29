@@ -13,9 +13,13 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+class nsDocShellLoadInfo;
+%}
+
 interface mozIDOMWindowProxy;
 interface nsIURI;
-interface nsIDocShellLoadInfo;
+native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
 /**
  * The nsIWindowProvider interface exists so that the window watcher's default
@@ -102,6 +106,6 @@ interface nsIWindowProvider : nsISupports
                                    in AString aName,
                                    in AUTF8String aFeatures,
                                    in boolean aForceNoOpener,
-                                   in nsIDocShellLoadInfo aLoadInfo,
+                                   in nsDocShellLoadInfoPtr aLoadInfo,
                                    out boolean aWindowIsNew);
 };

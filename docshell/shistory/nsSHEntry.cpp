@@ -10,7 +10,7 @@
 
 #include "nsDocShellEditorData.h"
 #include "nsIContentViewer.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInputStream.h"
 #include "nsILayoutHistoryState.h"
@@ -453,7 +453,7 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
   mPostData = aInputStream;
 
   // Set the LoadType by default to loadHistory during creation
-  mLoadType = (uint32_t)nsIDocShellLoadInfo::loadHistory;
+  mLoadType = (uint32_t)nsDocShellLoadInfo::loadHistory;
 
   mShared->mCacheKey = aCacheKey;
   mShared->mContentType = aContentType;

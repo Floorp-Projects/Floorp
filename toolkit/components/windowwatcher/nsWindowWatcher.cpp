@@ -22,7 +22,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
+#include "nsDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocumentLoader.h"
@@ -395,7 +395,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              nsISupports* aArguments,
                              bool aIsPopupSpam,
                              bool aForceNoOpener,
-                             nsIDocShellLoadInfo* aLoadInfo,
+                             nsDocShellLoadInfo* aLoadInfo,
                              mozIDOMWindowProxy** aResult)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -641,7 +641,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     nsIArray* aArgv,
                                     bool aIsPopupSpam,
                                     bool aForceNoOpener,
-                                    nsIDocShellLoadInfo* aLoadInfo,
+                                    nsDocShellLoadInfo* aLoadInfo,
                                     mozIDOMWindowProxy** aResult)
 {
   nsresult rv = NS_OK;
@@ -1122,10 +1122,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     }
   }
 
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo = aLoadInfo;
+  RefPtr<nsDocShellLoadInfo> loadInfo = aLoadInfo;
   if (uriToLoad && aNavigate && !loadInfo) {
-    newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+    loadInfo = new nsDocShellLoadInfo();
 
     if (subjectPrincipal) {
       loadInfo->SetTriggeringPrincipal(subjectPrincipal);

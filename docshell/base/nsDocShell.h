@@ -24,7 +24,6 @@
 #include "nsIClipboardCommands.h"
 #include "nsIDeprecationWarner.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMStorageManager.h"
 #include "nsIInterfaceRequestor.h"

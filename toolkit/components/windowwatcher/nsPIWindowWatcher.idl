@@ -10,6 +10,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+class nsDocShellLoadInfo;
+%}
+
 interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
@@ -17,7 +21,7 @@ interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
 interface nsITabParent;
-interface nsIDocShellLoadInfo;
+native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
 
@@ -86,7 +90,7 @@ interface nsPIWindowWatcher : nsISupports
                                  in nsISupports aArgs,
                                  in boolean aIsPopupSpam,
                                  in boolean aForceNoOpener,
-                                 in nsIDocShellLoadInfo aLoadInfo);
+                                 in nsDocShellLoadInfoPtr aLoadInfo);
 
   /**
    * Opens a new window so that the window that aOpeningTab belongs to
