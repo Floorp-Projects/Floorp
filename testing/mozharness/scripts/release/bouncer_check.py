@@ -27,6 +27,16 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             "dest": "version",
             "help": "Version of release, eg: 39.0b5",
         }],
+        [["--product-field"], {
+            "dest": "product_field",
+            "help": "Version field of release from product details, eg: LATEST_FIREFOX_VERSION",
+        }],
+        [["--products-url"], {
+            "dest": "products_url",
+            "help": "The URL of the current Firefox product versions",
+            "type": str,
+            "default": "https://product-details.mozilla.org/1.0/firefox_versions.json",
+        }],
         [["--previous-version"], {
             "dest": "prev_versions",
             "action": "extend",
@@ -75,6 +85,19 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
                 "check-bouncer",
             ],
         )
+
+    def _pre_config_lock(self, rw_config):
+        super(BouncerCheck, self)._pre_config_lock(rw_config)
+
+        if "product_field" not in self.config:
+            return
+
+        firefox_versions = self.load_json_url(self.config["products_url"])
+
+        if self.config['product_field'] not in firefox_versions:
+            self.fatal('Unknown Firefox label: {}'.format(self.config['product_field']))
+        self.config["version"] = firefox_versions[self.config["product_field"]]
+        self.log("Set Firefox version {}".format(self.config["version"]))
 
     def check_url(self, session, url):
         from redo import retry
