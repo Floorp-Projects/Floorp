@@ -109,7 +109,10 @@ impl RenderNotifier for Notifier {
         self.update(false);
     }
 
-    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, _composite_needed: bool) {
+    fn new_frame_ready(&self, _: DocumentId,
+                       scrolled: bool,
+                       _composite_needed: bool,
+                       _render_time: Option<u64>) {
         self.update(!scrolled);
     }
 }
@@ -180,6 +183,7 @@ impl Wrench {
         precache_shaders: bool,
         disable_dual_source_blending: bool,
         zoom_factor: f32,
+        chase_primitive: webrender::ChasePrimitive,
         notifier: Option<Box<RenderNotifier>>,
     ) -> Self {
         println!("Shader override path: {:?}", shader_override_path);
@@ -212,6 +216,7 @@ impl Wrench {
             precache_shaders,
             blob_image_renderer: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             disable_dual_source_blending,
+            chase_primitive,
             ..Default::default()
         };
 

@@ -13,6 +13,7 @@ use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
 use scene::Scene;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use time::precise_time_ns;
 
 // Message from render backend to scene builder.
 pub enum SceneBuilderRequest {
@@ -137,6 +138,7 @@ impl SceneBuilder {
                 frame_ops,
                 render,
             } => {
+                let scenebuild_start_time = precise_time_ns();
                 let built_scene = scene.map(|request|{
                     build_scene(&self.config, request)
                 });
@@ -156,13 +158,15 @@ impl SceneBuilder {
                         };
                         let (tx, rx) = channel();
 
-                        hooks.pre_scene_swap();
+                        let scenebuild_time = precise_time_ns() - scenebuild_start_time;
+                        hooks.pre_scene_swap(scenebuild_time);
 
                         (Some(info), Some(tx), Some(rx))
                     }
                     _ => (None, None, None),
                 };
 
+                let sceneswap_start_time = precise_time_ns();
                 let has_resources_updates = !resource_updates.is_empty();
                 self.tx.send(SceneBuilderResult::Transaction {
                     document_id,
@@ -178,7 +182,8 @@ impl SceneBuilder {
                 if let Some(pipeline_info) = pipeline_info {
                     // Block until the swap is done, then invoke the hook.
                     let swap_result = result_rx.unwrap().recv();
-                    self.hooks.as_ref().unwrap().post_scene_swap(pipeline_info);
+                    let sceneswap_time = precise_time_ns() - sceneswap_start_time;
+                    self.hooks.as_ref().unwrap().post_scene_swap(pipeline_info, sceneswap_time);
                     // Once the hook is done, allow the RB thread to resume
                     match swap_result {
                         Ok(SceneSwapResult::Complete(resume_tx)) => {

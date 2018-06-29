@@ -72,6 +72,14 @@ var Policies = {
       if ("NTLM" in param) {
         setAndLockPref("network.automatic-ntlm-auth.trusted-uris", param.NTLM.join(", "));
       }
+      if ("AllowNonFQDN" in param) {
+        if (param.AllowNonFQDN.NTLM) {
+          setAndLockPref("network.automatic-ntlm-auth.allow-non-fqdn", param.AllowNonFQDN.NTLM);
+        }
+        if (param.AllowNonFQDN.SPNEGO) {
+          setAndLockPref("network.negotiate-auth.allow-non-fqdn", param.AllowNonFQDN.SPNEGO);
+        }
+      }
     }
   },
 

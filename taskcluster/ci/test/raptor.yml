@@ -29,11 +29,7 @@ raptor-firefox-tp6:
     description: "Raptor Firefox tp6"
     try-name: raptor-firefox-tp6
     treeherder-symbol: Rap(tp6)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            linux64.*: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -43,10 +39,7 @@ raptor-firefox-speedometer:
     description: "Raptor Firefox speedometer"
     try-name: raptor-firefox-speedometer
     treeherder-symbol: Rap(sp)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try', 'mozilla-central']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -56,10 +49,7 @@ raptor-firefox-stylebench:
     description: "Raptor Firefox StyleBench"
     try-name: raptor-firefox-stylebench
     treeherder-symbol: Rap(sb)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try', 'mozilla-central']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -69,10 +59,7 @@ raptor-firefox-motionmark-htmlsuite:
     description: "Raptor Firefox MotionMark HtmlSuite"
     try-name: raptor-firefox-motionmark-htmlsuite
     treeherder-symbol: Rap(mm-h)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try', 'mozilla-central']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -82,10 +69,7 @@ raptor-firefox-motionmark-animometer:
     description: "Raptor Firefox MotionMark Animometer"
     try-name: raptor-firefox-motionmark-animometer
     treeherder-symbol: Rap(mm-a)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try', 'mozilla-central']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -109,10 +93,7 @@ raptor-chrome-speedometer:
     description: "Raptor Chrome speedometer"
     try-name: raptor-chrome-speedometer
     treeherder-symbol: Rap-C(sp)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -123,10 +104,7 @@ raptor-chrome-stylebench:
     description: "Raptor Chrome StyleBench"
     try-name: raptor-chrome-stylebench
     treeherder-symbol: Rap-C(sb)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -137,10 +115,7 @@ raptor-chrome-motionmark-htmlsuite:
     description: "Raptor Chrome MotionMark HtmlSuite"
     try-name: raptor-chrome-motionmark-htmlsuite
     treeherder-symbol: Rap-C(mm-h)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -151,10 +126,7 @@ raptor-chrome-motionmark-animometer:
     description: "Raptor Chrome MotionMark Animometer"
     try-name: raptor-chrome-motionmark-animometer
     treeherder-symbol: Rap-C(mm-a)
-    run-on-projects:
-        by-test-platform:
-            macosx.*: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     max-run-time: 1800
     mozharness:
         extra-options:

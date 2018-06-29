@@ -1100,7 +1100,27 @@ TEST_F(JsepTrackTest, VideoOffSendrecvAnsSendonly)
 
 TEST_F(JsepTrackTest, DataChannelDraft05)
 {
-  Init(SdpMediaSection::kApplication);
+  mOffCodecs.values = MakeCodecs(false, false, false);
+  mAnsCodecs.values = MakeCodecs(false, false, false);
+  InitTracks(SdpMediaSection::kApplication);
+
+  mOffer.reset(new SipccSdp(SdpOrigin("", 0, 0, sdp::kIPv4, "")));
+  mOffer->AddMediaSection(
+      SdpMediaSection::kApplication,
+      SdpDirectionAttribute::kSendrecv,
+      0,
+      SdpMediaSection::kDtlsSctp,
+      sdp::kIPv4,
+      "0.0.0.0");
+  mAnswer.reset(new SipccSdp(SdpOrigin("", 0, 0, sdp::kIPv4, "")));
+  mAnswer->AddMediaSection(
+      SdpMediaSection::kApplication,
+      SdpDirectionAttribute::kSendrecv,
+      0,
+      SdpMediaSection::kDtlsSctp,
+      sdp::kIPv4,
+      "0.0.0.0");
+
   OfferAnswer();
   CheckOffEncodingCount(1);
   CheckAnsEncodingCount(1);
@@ -1118,7 +1138,22 @@ TEST_F(JsepTrackTest, DataChannelDraft05)
   ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctp-port"));
 }
 
-TEST_F(JsepTrackTest, DataChannelDraft05AnswerWithDifferentPort)
+TEST_F(JsepTrackTest, DataChannelDraft21)
+{
+  Init(SdpMediaSection::kApplication);
+  OfferAnswer();
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=sctp-port:5999"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=sctp-port:5999"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=max-message-size:499"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=max-message-size:499"));
+  ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctpmap"));
+  ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctpmap"));
+}
+
+TEST_F(JsepTrackTest, DataChannelDraft21AnswerWithDifferentPort)
 {
   mOffCodecs.values = MakeCodecs(false, false, false);
   mAnsCodecs.values = MakeCodecs(false, false, false);
@@ -1134,54 +1169,14 @@ TEST_F(JsepTrackTest, DataChannelDraft05AnswerWithDifferentPort)
 
   InitTracks(SdpMediaSection::kApplication);
   InitSdp(SdpMediaSection::kApplication);
-  OfferAnswer();
-
-  CheckOffEncodingCount(1);
-  CheckAnsEncodingCount(1);
-
-  ASSERT_NE(std::string::npos,
-            mOffer->ToString().find("a=sctpmap:4555 webrtc-datachannel 256"));
-  ASSERT_NE(std::string::npos,
-            mAnswer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
-  // Note: this is testing for a workaround, see bug 1335262 for details
-  ASSERT_NE(std::string::npos,
-            mOffer->ToString().find("a=max-message-size:10544"));
-  ASSERT_NE(std::string::npos,
-            mAnswer->ToString().find("a=max-message-size:499"));
-  ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctp-port"));
-  ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctp-port"));
-}
-
-TEST_F(JsepTrackTest, DataChannelDraft21)
-{
-  mOffCodecs.values = MakeCodecs(false, false, false);
-  mAnsCodecs.values = MakeCodecs(false, false, false);
-  InitTracks(SdpMediaSection::kApplication);
-
-  mOffer.reset(new SipccSdp(SdpOrigin("", 0, 0, sdp::kIPv4, "")));
-  mOffer->AddMediaSection(
-      SdpMediaSection::kApplication,
-      SdpDirectionAttribute::kSendrecv,
-      0,
-      SdpMediaSection::kUdpDtlsSctp,
-      sdp::kIPv4,
-      "0.0.0.0");
-  mAnswer.reset(new SipccSdp(SdpOrigin("", 0, 0, sdp::kIPv4, "")));
-  mAnswer->AddMediaSection(
-      SdpMediaSection::kApplication,
-      SdpDirectionAttribute::kSendrecv,
-      0,
-      SdpMediaSection::kUdpDtlsSctp,
-      sdp::kIPv4,
-      "0.0.0.0");
 
   OfferAnswer();
   CheckOffEncodingCount(1);
   CheckAnsEncodingCount(1);
 
-  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=sctp-port:5999"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=sctp-port:4555"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=sctp-port:5999"));
-  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=max-message-size:499"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=max-message-size:10544"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=max-message-size:499"));
   ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctpmap"));
   ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctpmap"));

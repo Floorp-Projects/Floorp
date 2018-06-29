@@ -360,6 +360,24 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
 
+#ifdef MOZ_ASAN_REPORTER
+  // In ASan reporter builds, we need to set ASan's log_path as early as
+  // possible, so it dumps its errors into files there instead of using
+  // the default stderr location. Since this is crucial for ASan reporter
+  // to work at all (and we don't want people to use a non-functional
+  // ASan reporter build), all failures while setting log_path are fatal.
+  //
+  // We receive this log_path via the ASAN_REPORTER_PATH environment variable
+  // because there is no other way to generically get the necessary profile
+  // directory in all child types without adding support for that in each
+  // child process type class (at the risk of missing this in a child).
+  nsCOMPtr<nsIFile> asanReporterPath = GetFileFromEnv("ASAN_REPORTER_PATH");
+  if (!asanReporterPath) {
+    MOZ_CRASH("Child did not receive ASAN_REPORTER_PATH!");
+  }
+  setASanReporterPath(asanReporterPath);
+#endif
+
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   // This has to happen before glib thread pools are started.
   mozilla::SandboxEarlyInit();

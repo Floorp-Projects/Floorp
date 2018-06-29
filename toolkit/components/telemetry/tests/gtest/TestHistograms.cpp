@@ -15,7 +15,7 @@ using namespace TelemetryTestHelpers;
 
 TEST_F(TelemetryTestFixture, AccumulateCountHistogram)
 {
-  const uint32_t kExpectedValue = 100;
+  const uint32_t kExpectedValue = 200;
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
   const char* telemetryTestCountName = Telemetry::GetHistogramName(Telemetry::TELEMETRY_TEST_COUNT);
@@ -25,7 +25,8 @@ TEST_F(TelemetryTestFixture, AccumulateCountHistogram)
                        false);
 
   // Accumulate in the histogram
-  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_COUNT, kExpectedValue);
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_COUNT, kExpectedValue/2);
+  Telemetry::Accumulate("TELEMETRY_TEST_COUNT", kExpectedValue/2);
 
   // Get a snapshot for all the histograms
   JS::RootedValue snapshot(cx.GetJSContext());
