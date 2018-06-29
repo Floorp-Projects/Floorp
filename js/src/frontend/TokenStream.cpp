@@ -440,6 +440,32 @@ TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* ch
     sourceUnits(chars, length, startOffset)
 {}
 
+template<>
+MOZ_MUST_USE bool
+TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
+                                                                         const char16_t* end)
+{
+    MOZ_ASSERT(this->charBuffer.length() == 0);
+
+    while (cur < end) {
+        // Template literals normalize only '\r' and "\r\n" to '\n'.  The
+        // Unicode separators need no special handling here.
+        // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
+        char16_t ch = *cur++;
+        if (ch == '\r') {
+            ch = '\n';
+            if (cur < end && *cur == '\n')
+                cur++;
+        }
+
+        if (!this->charBuffer.append(ch))
+            return false;
+    }
+
+    MOZ_ASSERT(cur == end);
+    return true;
+}
+
 template<typename CharT, class AnyCharsAccess>
 TokenStreamSpecific<CharT, AnyCharsAccess>::TokenStreamSpecific(JSContext* cx,
                                                                 const ReadOnlyCompileOptions& options,
