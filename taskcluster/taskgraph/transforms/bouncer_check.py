@@ -21,15 +21,12 @@ transforms = TransformSequence()
 
 @transforms.add
 def add_command(config, jobs):
-    release_config = get_release_config(config)
-    version = release_config["version"]
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
         command = [
             "cd", "/builds/worker/checkouts/gecko", "&&",
             "./mach", "python",
             "testing/mozharness/scripts/release/bouncer_check.py",
-            "--version={}".format(version),
         ]
         job["run"]["command"] = command
         yield job
@@ -57,8 +54,13 @@ def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by project, etc."""
     fields = [
         "run.config",
+        "run.product-field",
         "run.extra-config",
     ]
+
+    release_config = get_release_config(config)
+    version = release_config["version"]
+
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
         for field in fields:
@@ -67,6 +69,16 @@ def handle_keyed_by(config, jobs):
 
         for cfg in job["run"]["config"]:
             job["run"]["command"].extend(["--config", cfg])
+
+        if config.kind == "bouncer-check":
+            job["run"]["command"].extend([
+                "--product-field={}".format(job["run"]["product-field"]),
+                "--products-url={}".format(job["run"]["products-url"]),
+            ])
+            del job["run"]["product-field"]
+            del job["run"]["products-url"]
+        elif config.kind == "release-bouncer-check":
+            job["run"]["command"].append("--version={}".format(version))
 
         del job["run"]["config"]
 
