@@ -281,9 +281,6 @@ public:
            !mText.IsEmpty();
   }
 
-  bool
-  BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA);
-
   void
   PaintTextToContext(nsIFrame* aFrame,
                      gfxContext* aCtx,
@@ -425,37 +422,6 @@ BulletRenderer::Paint(gfxContext& aRenderingContext, nsPoint aPt,
   }
 
   return ImgDrawResult::SUCCESS;
-}
-
-bool
-BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
-{
-  MOZ_ASSERT(IsTextType());
-
-  RefPtr<DrawTarget> screenTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<DrawTargetCapture> capture =
-    Factory::CreateCaptureDrawTarget(screenTarget->GetBackendType(),
-                                     IntSize(),
-                                     screenTarget->GetFormat());
-
-  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);
-
-  PaintTextToContext(aItem->Frame(), captureCtx, disableSubpixelAA);
-
-  layers::GlyphArray* g = mGlyphs.AppendElement();
-  std::vector<Glyph> glyphs;
-  Color color;
-  if (!capture->ContainsOnlyColoredGlyphs(mFont, color, glyphs)) {
-    mFont = nullptr;
-    mGlyphs.Clear();
-    return false;
-  }
-
-  g->glyphs().SetLength(glyphs.size());
-  PodCopy(g->glyphs().Elements(), glyphs.data(), glyphs.size());
-  g->color() = color;
-
-  return true;
 }
 
 void

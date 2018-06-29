@@ -3,94 +3,114 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-add_task(async function() {
-  let url = "http://mochi.test:8888/browser/browser/base/content/test/favicons/discovery.html";
-  info("Test icons discovery");
-  // First we need to clear the failed favicons cache, since previous tests
-  // likely added this non-existing icon, and useDefaultIcon would skip it.
-  PlacesUtils.favicons.removeFailedFavicon(makeURI("http://mochi.test:8888/favicon.ico"));
-  await BrowserTestUtils.withNewTab(url, iconDiscovery);
-});
+const ROOTURI = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
+const ICON = "moz.png";
+const DATAURL = "data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAEAAAAAAAAAAAAAAAEAAAABAAAAAAAAAACAAACAAAAAgIAAgAAAAIAAgACAgAAAwMDAAMDcwADwyqYABAQEAAgICAAMDAwAERERABYWFgAcHBwAIiIiACkpKQBVVVUATU1NAEJCQgA5OTkAgHz/AFBQ/wCTANYA/+zMAMbW7wDW5+cAkKmtAAAAMwAAAGYAAACZAAAAzAAAMwAAADMzAAAzZgAAM5kAADPMAAAz/wAAZgAAAGYzAABmZgAAZpkAAGbMAABm/wAAmQAAAJkzAACZZgAAmZkAAJnMAACZ/wAAzAAAAMwzAADMZgAAzJkAAMzMAADM/wAA/2YAAP+ZAAD/zAAzAAAAMwAzADMAZgAzAJkAMwDMADMA/wAzMwAAMzMzADMzZgAzM5kAMzPMADMz/wAzZgAAM2YzADNmZgAzZpkAM2bMADNm/wAzmQAAM5kzADOZZgAzmZkAM5nMADOZ/wAzzAAAM8wzADPMZgAzzJkAM8zMADPM/wAz/zMAM/9mADP/mQAz/8wAM///AGYAAABmADMAZgBmAGYAmQBmAMwAZgD/AGYzAABmMzMAZjNmAGYzmQBmM8wAZjP/AGZmAABmZjMAZmZmAGZmmQBmZswAZpkAAGaZMwBmmWYAZpmZAGaZzABmmf8AZswAAGbMMwBmzJkAZszMAGbM/wBm/wAAZv8zAGb/mQBm/8wAzAD/AP8AzACZmQAAmTOZAJkAmQCZAMwAmQAAAJkzMwCZAGYAmTPMAJkA/wCZZgAAmWYzAJkzZgCZZpkAmWbMAJkz/wCZmTMAmZlmAJmZmQCZmcwAmZn/AJnMAACZzDMAZsxmAJnMmQCZzMwAmcz/AJn/AACZ/zMAmcxmAJn/mQCZ/8wAmf//AMwAAACZADMAzABmAMwAmQDMAMwAmTMAAMwzMwDMM2YAzDOZAMwzzADMM/8AzGYAAMxmMwCZZmYAzGaZAMxmzACZZv8AzJkAAMyZMwDMmWYAzJmZAMyZzADMmf8AzMwAAMzMMwDMzGYAzMyZAMzMzADMzP8AzP8AAMz/MwCZ/2YAzP+ZAMz/zADM//8AzAAzAP8AZgD/AJkAzDMAAP8zMwD/M2YA/zOZAP8zzAD/M/8A/2YAAP9mMwDMZmYA/2aZAP9mzADMZv8A/5kAAP+ZMwD/mWYA/5mZAP+ZzAD/mf8A/8wAAP/MMwD/zGYA/8yZAP/MzAD/zP8A//8zAMz/ZgD//5kA///MAGZm/wBm/2YAZv//AP9mZgD/Zv8A//9mACEApQBfX18Ad3d3AIaGhgCWlpYAy8vLALKysgDX19cA3d3dAOPj4wDq6uoA8fHxAPj4+ADw+/8ApKCgAICAgAAAAP8AAP8AAAD//wD/AAAA/wD/AP//AAD///8ACgoKCgoKCgoKCgoKCgoKCgoKCgoHAQEMbQoKCgoKCgoAAAdDH/kgHRIAAAAAAAAAAADrHfn5ASQQAAAAAAAAAArsBx0B+fkgHesAAAAAAAD/Cgwf+fn5IA4dEus/IvcACgcMAfkg+QEB+SABHushbf8QHR/5HQH5+QEdHetEHx4K7B/5+QH5+fkdDBL5+SBE/wwdJfkf+fn5AR8g+fkfEArsCh/5+QEeJR/5+SAeBwAACgoe+SAlHwFAEhAfAAAAAPcKHh8eASYBHhAMAAAAAAAA9EMdIB8gHh0dBwAAAAAAAAAA7BAdQ+wHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AADwfwAAwH8AAMB/AAAAPwAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAQAAgAcAAIAPAADADwAA8D8AAP//AAA=";
 
 let iconDiscoveryTests = [
-  { text: "rel icon discovered" },
-  { rel: "abcdefg icon qwerty", text: "rel may contain additional rels separated by spaces" },
-  { rel: "ICON", text: "rel is case insensitive" },
-  { rel: "shortcut-icon", pass: false, text: "rel shortcut-icon not discovered" },
-  { href: "moz.png", text: "relative href works" },
-  { href: "notthere.png", text: "404'd icon is removed properly" },
-  { href: "data:image/x-icon,%00", type: "image/x-icon", text: "data: URIs work" },
-  { type: "image/png; charset=utf-8", text: "type may have optional parameters (RFC2046)" },
-  { richIcon: true, rel: "apple-touch-icon", text: "apple-touch-icon discovered" },
-  { richIcon: true, rel: "apple-touch-icon-precomposed", text: "apple-touch-icon-precomposed discovered" },
-  { richIcon: true, rel: "fluid-icon", text: "fluid-icon discovered" },
-  { richIcon: true, rel: "unknown-icon", pass: false, text: "unknown icon not discovered" }
+  {
+    text: "rel icon discovered",
+    icons: [{}]
+  }, {
+    text: "rel may contain additional rels separated by spaces",
+    icons: [{ rel: "abcdefg icon qwerty" }],
+  }, {
+    text: "rel is case insensitive",
+    icons: [{ rel: "ICON" }],
+  }, {
+    text: "rel shortcut-icon not discovered",
+    expectedIcon: ROOTURI + ICON,
+    icons: [ // We will prefer the later icon if detected
+      { },
+      { rel: "shortcut-icon", href: "nothere.png" },
+    ],
+  }, {
+    text: "relative href works",
+    icons: [{ href: "moz.png" }],
+  }, {
+    text: "404'd icon is removed properly",
+    pass: false,
+    icons: [{ href: "notthere.png" }],
+  }, {
+    text: "data: URIs work",
+    icons: [{ href: DATAURL, type: "image/x-icon" }],
+  }, {
+    text: "type may have optional parameters (RFC2046)",
+    icons: [{ type: "image/png; charset=utf-8" }],
+  }, {
+    text: "apple-touch-icon discovered",
+    richIcon: true,
+    icons: [{ rel: "apple-touch-icon" }],
+  }, {
+    text: "apple-touch-icon-precomposed discovered",
+    richIcon: true,
+    icons: [{ rel: "apple-touch-icon-precomposed" }],
+  }, {
+    text: "fluid-icon discovered",
+    richIcon: true,
+    icons: [{ rel: "fluid-icon" }],
+  }, {
+    text: "unknown icon not discovered",
+    expectedIcon: ROOTURI + ICON,
+    richIcon: true,
+    icons: [ // We will prefer the larger icon if detected
+      { rel: "apple-touch-icon", sizes: "32x32" },
+      { rel: "unknown-icon", sizes: "128x128", href: "notthere.png" },
+    ],
+  },
 ];
 
-async function iconDiscovery() {
-  // Since the page doesn't have an icon, we should try using the root domain
-  // icon.
-  await BrowserTestUtils.waitForCondition(() => {
-    return gBrowser.getIcon() == "http://mochi.test:8888/favicon.ico";
-  }, "wait for default icon load to finish");
+add_task(async function() {
+  let url = ROOTURI + "discovery.html";
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   for (let testCase of iconDiscoveryTests) {
-    if (testCase.pass == undefined)
+    info(`Running test "${testCase.text}"`);
+
+    if (testCase.pass === undefined)
       testCase.pass = true;
 
-    // Clear the current icon.
-    gBrowser.setIcon(gBrowser.selectedTab, null);
+    if (testCase.icons.length > 1 && !testCase.expectedIcon) {
+      ok(false, "Invalid test data, missing expectedIcon");
+      continue;
+    }
 
-    let promiseLinkAdded =
-      BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
-                                           false, null, true);
-    let promiseMessage = new Promise(resolve => {
-      let mm = window.messageManager;
-      mm.addMessageListener("Link:SetIcon", function listenForIcon(msg) {
-        mm.removeMessageListener("Link:SetIcon", listenForIcon);
-        resolve(msg.data);
-      });
-    });
+    let expectedIcon = testCase.expectedIcon || testCase.icons[0].href || ICON;
+    expectedIcon = (new URL(expectedIcon, ROOTURI)).href;
 
-    await ContentTask.spawn(gBrowser.selectedBrowser, testCase, test => {
+    let iconPromise = waitForFaviconMessage(!testCase.richIcon, expectedIcon);
+
+    await ContentTask.spawn(gBrowser.selectedBrowser, [testCase.icons, ROOTURI + ICON], ([icons, defaultIcon]) => {
       let doc = content.document;
-      let head = doc.getElementById("linkparent");
-      let link = doc.createElement("link");
-      link.rel = test.rel || "icon";
-      link.href = test.href || "http://mochi.test:8888/browser/browser/base/content/test/favicons/moz.png";
-      link.type = test.type || "image/png";
-      head.appendChild(link);
+      let head = doc.head;
+
+      for (let icon of icons) {
+        let link = doc.createElement("link");
+        link.rel = icon.rel || "icon";
+        link.href = icon.href || defaultIcon;
+        link.type = icon.type || "image/png";
+        if (icon.sizes) {
+          link.sizes = icon.sizes;
+        }
+        head.appendChild(link);
+      }
     });
 
-    await promiseLinkAdded;
-
-    if (!testCase.richIcon) {
-      // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
-      // favicon loads, we have to wait some time before checking that icon was
-      // stored properly.
-      try {
-        await BrowserTestUtils.waitForCondition(() => {
-          return gBrowser.getIcon() != null;
-        }, "wait for icon load to finish", 100, 20);
-        ok(testCase.pass, testCase.text);
-      } catch (ex) {
-        ok(!testCase.pass, testCase.text);
-      }
-    } else {
-      // Rich icons are not set as tab icons, so just check for the SetIcon message.
-      try {
-        let data = await Promise.race([promiseMessage,
-                                       new Promise((resolve, reject) => setTimeout(reject, 2000))]);
-        is(data.canUseForTab, false, "Rich icons cannot be used for tabs");
-        ok(testCase.pass, testCase.text);
-      } catch (ex) {
-        ok(!testCase.pass, testCase.text);
-      }
+    try {
+      let { iconURL } = await iconPromise;
+      ok(testCase.pass, testCase.text);
+      is(iconURL, expectedIcon, "Should have seen the expected icon.");
+    } catch (e) {
+      ok(!testCase.pass, testCase.text);
     }
 
     await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-      let head = content.document.getElementById("linkparent");
-      head.removeChild(head.getElementsByTagName("link")[0]);
+      let links = content.document.querySelectorAll("link");
+      for (let link of links) {
+        link.remove();
+      }
     });
   }
-}
+
+  BrowserTestUtils.removeTab(tab);
+});

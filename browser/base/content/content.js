@@ -315,7 +315,7 @@ var ClickEventHandler = {
 };
 ClickEventHandler.init();
 
-ContentLinkHandler.init(this);
+new ContentLinkHandler(this);
 ContentMetaHandler.init(this);
 
 var PluginContentStub = {
