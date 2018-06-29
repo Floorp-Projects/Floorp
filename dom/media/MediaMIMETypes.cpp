@@ -262,10 +262,16 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
 Maybe<MediaExtendedMIMEType>
 MakeMediaExtendedMIMEType(const dom::VideoConfiguration& aConfig)
 {
-  if (aConfig.mContentType.IsEmpty()) {
+  MOZ_ASSERT(aConfig.mContentType.WasPassed() &&
+             aConfig.mFramerate.WasPassed() &&
+             aConfig.mWidth.WasPassed() &&
+             aConfig.mHeight.WasPassed() &&
+             aConfig.mBitrate.WasPassed(),
+             "All dictionary members must be present");
+  if (aConfig.mContentType.Value().IsEmpty()) {
     return Nothing();
   }
-  nsContentTypeParser parser(aConfig.mContentType);
+  nsContentTypeParser parser(aConfig.mContentType.Value());
   nsAutoString mime;
   nsresult rv = parser.GetType(mime);
   if (!NS_SUCCEEDED(rv) || mime.IsEmpty()) {
@@ -282,28 +288,30 @@ MakeMediaExtendedMIMEType(const dom::VideoConfiguration& aConfig)
   bool haveCodecs = NS_SUCCEEDED(rv);
 
   auto framerate =
-    MediaExtendedMIMEType::ComputeFractionalString(aConfig.mFramerate);
+    MediaExtendedMIMEType::ComputeFractionalString(aConfig.mFramerate.Value());
   if (!framerate) {
     return Nothing();
   }
 
-  return Some(MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aConfig.mContentType),
-                                    mime8,
-                                    haveCodecs,
-                                    codecs,
-                                    aConfig.mWidth,
-                                    aConfig.mHeight,
-                                    framerate.ref(),
-                                    aConfig.mBitrate));
+  return Some(
+    MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aConfig.mContentType.Value()),
+                          mime8,
+                          haveCodecs,
+                          codecs,
+                          aConfig.mWidth.Value(),
+                          aConfig.mHeight.Value(),
+                          framerate.ref(),
+                          aConfig.mBitrate.Value()));
 }
 
 Maybe<MediaExtendedMIMEType>
 MakeMediaExtendedMIMEType(const dom::AudioConfiguration& aConfig)
 {
-  if (aConfig.mContentType.IsEmpty()) {
+  if (!aConfig.mContentType.WasPassed() ||
+      aConfig.mContentType.Value().IsEmpty()) {
     return Nothing();
   }
-  nsContentTypeParser parser(aConfig.mContentType);
+  nsContentTypeParser parser(aConfig.mContentType.Value());
   nsAutoString mime;
   nsresult rv = parser.GetType(mime);
   if (!NS_SUCCEEDED(rv) || mime.IsEmpty()) {
@@ -335,7 +343,7 @@ MakeMediaExtendedMIMEType(const dom::AudioConfiguration& aConfig)
   }
 
   return Some(MediaExtendedMIMEType(
-    NS_ConvertUTF16toUTF8(aConfig.mContentType),
+    NS_ConvertUTF16toUTF8(aConfig.mContentType.Value()),
     mime8,
     haveCodecs,
     codecs,
