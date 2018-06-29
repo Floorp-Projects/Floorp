@@ -79,6 +79,54 @@ var startPicker = async function(toolbox, skipFocus) {
 };
 
 /**
+ * Pick an element from the content page using the element picker.
+ *
+ * @param {Inspector} inspector
+ *        Inspector instance
+ * @param {TestActor} testActor
+ *        TestActor instance
+ * @param {String} selector
+ *        CSS selector to identify the click target
+ * @param {Number} x
+ *        X-offset from the top-left corner of the element matching the provided selector
+ * @param {Number} y
+ *        Y-offset from the top-left corner of the element matching the provided selector
+ * @return {Promise} promise that resolves when the selection is updated with the picked
+ *         node.
+ */
+function pickElement(inspector, testActor, selector, x, y) {
+  info("Waiting for element " + selector + " to be picked");
+  // Use an empty options argument in order trigger the default synthesizeMouse behavior
+  // which will trigger mousedown, then mouseup.
+  const onNewNodeFront = inspector.selection.once("new-node-front");
+  testActor.synthesizeMouse({selector, x, y, options: {}});
+  return onNewNodeFront;
+}
+
+/**
+ * Hover an element from the content page using the element picker.
+ *
+ * @param {Inspector} inspector
+ *        Inspector instance
+ * @param {TestActor} testActor
+ *        TestActor instance
+ * @param {String} selector
+ *        CSS selector to identify the hover target
+ * @param {Number} x
+ *        X-offset from the top-left corner of the element matching the provided selector
+ * @param {Number} y
+ *        Y-offset from the top-left corner of the element matching the provided selector
+ * @return {Promise} promise that resolves when the "picker-node-hovered" event is
+ *         emitted.
+ */
+function hoverElement(inspector, testActor, selector, x, y) {
+  info("Waiting for element " + selector + " to be hovered");
+  const onHovered = inspector.toolbox.once("picker-node-hovered");
+  testActor.synthesizeMouse({selector, x, y, options: {type: "mousemove"}});
+  return onHovered;
+}
+
+/**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
  * @param {String|NodeFront} selector
