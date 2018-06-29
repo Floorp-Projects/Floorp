@@ -5475,9 +5475,27 @@ MWasmLoadGlobalVar::mightAlias(const MDefinition* def) const
 {
     if (def->isWasmStoreGlobalVar()) {
         const MWasmStoreGlobalVar* store = def->toWasmStoreGlobalVar();
-        // Global variables can't alias each other or be type-reinterpreted.
-        return (store->globalDataOffset() == globalDataOffset_) ? AliasType::MayAlias :
-                                                                  AliasType::NoAlias;
+
+        // If they are both indirect, then we don't know what the
+        // indirections point at, so we must be conservative.
+        if (isIndirect_ && store->isIndirect())
+            return AliasType::MayAlias;
+
+        // If they are both direct, then we can disambiguate them by
+        // inspecting their offsets.
+        if (!isIndirect_ && !store->isIndirect())
+            return store->globalDataOffset() == globalDataOffset_
+                      ? AliasType::MayAlias : AliasType::NoAlias;
+
+        // Otherwise, one is indirect and the other isn't, so they can't
+        // alias.
+        return AliasType::NoAlias;
+
+        // We could do better here, in that: if both variables are indirect,
+        // but at least one of them is created in this module, then they
+        // can't alias.  That would require having a flag on globals to
+        // indicate which are imported.  See bug 1467415 comment 3,
+        // 4th rule.
     }
     return AliasType::MayAlias;
 }
@@ -5485,6 +5503,7 @@ MWasmLoadGlobalVar::mightAlias(const MDefinition* def) const
 HashNumber
 MWasmLoadGlobalVar::valueHash() const
 {
+    // Same comment as in MWasmLoadGlobalVar::congruentTo() applies here.
     HashNumber hash = MDefinition::valueHash();
     hash = addU32ToHash(hash, globalDataOffset_);
     return hash;
@@ -5493,6 +5512,8 @@ MWasmLoadGlobalVar::valueHash() const
 bool
 MWasmLoadGlobalVar::congruentTo(const MDefinition* ins) const
 {
+    // We don't need to consider the isIndirect_ markings here, because
+    // equivalence of offsets implies equivalence of indirectness.
     if (ins->isWasmLoadGlobalVar())
         return globalDataOffset_ == ins->toWasmLoadGlobalVar()->globalDataOffset_;
     return false;
