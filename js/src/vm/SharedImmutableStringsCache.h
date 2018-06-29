@@ -16,6 +16,7 @@
 #include "builtin/String.h"
 
 #include "js/HashTable.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 
 #include "threading/ExclusiveData.h"
@@ -239,7 +240,7 @@ class SharedImmutableStringsCache
       public:
         mutable size_t refcount;
 
-        using Ptr = mozilla::UniquePtr<StringBox, JS::DeletePolicy<StringBox>>;
+        using Ptr = js::UniquePtr<StringBox>;
 
         StringBox(OwnedChars&& chars, size_t length)
           : chars_(std::move(chars))
@@ -250,7 +251,7 @@ class SharedImmutableStringsCache
         }
 
         static Ptr Create(OwnedChars&& chars, size_t length) {
-            return Ptr(js_new<StringBox>(std::move(chars), length));
+            return js::MakeUnique<StringBox>(std::move(chars), length);
         }
 
         StringBox(const StringBox&) = delete;
