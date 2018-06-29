@@ -1099,7 +1099,8 @@ nsHttpTransaction::Close(nsresult reason)
     if ((reason == NS_ERROR_NET_RESET ||
          reason == NS_OK ||
          reason == psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA)) &&
-        (!(mCaps & NS_HTTP_STICKY_CONNECTION) || (mCaps & NS_HTTP_CONNECTION_RESTARTABLE))) {
+        (!(mCaps & NS_HTTP_STICKY_CONNECTION) || (mCaps & NS_HTTP_CONNECTION_RESTARTABLE) ||
+         (mEarlyDataDisposition == EARLY_425))) {
 
         if (mForceRestart && NS_SUCCEEDED(Restart())) {
             if (mResponseHead) {
