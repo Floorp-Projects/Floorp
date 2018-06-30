@@ -141,6 +141,13 @@ NS_NewImageFrameForContentProperty(nsIPresShell* aPresShell,
     aStyle, nsImageFrame::Kind::NonGeneratedContentProperty);
 }
 
+nsImageFrame*
+nsImageFrame::CreateContinuingFrame(nsIPresShell* aPresShell,
+                                    ComputedStyle* aStyle) const
+{
+  return new (aPresShell) nsImageFrame(aStyle, mKind);
+}
+
 NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 
 nsImageFrame::nsImageFrame(ComputedStyle* aStyle, ClassID aID, Kind aKind)
@@ -281,10 +288,14 @@ SizeIsAvailable(imgIRequest* aRequest)
 }
 
 void
-nsImageFrame::Init(nsIContent*       aContent,
+nsImageFrame::Init(nsIContent* aContent,
                    nsContainerFrame* aParent,
-                   nsIFrame*         aPrevInFlow)
+                   nsIFrame* aPrevInFlow)
 {
+  MOZ_ASSERT_IF(aPrevInFlow,
+                aPrevInFlow->Type() == LayoutFrameType::Image &&
+                static_cast<nsImageFrame*>(aPrevInFlow)->mKind == mKind);
+
   nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   mListener = new nsImageListener(this);
