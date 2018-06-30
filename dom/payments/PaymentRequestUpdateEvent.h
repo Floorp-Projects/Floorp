@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-
-class PaymentRequestUpdateEvent final : public Event
-                                      , public PromiseNativeHandler
+class PaymentRequest;
+class PaymentRequestUpdateEvent : public Event
+                                , public PromiseNativeHandler
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
