@@ -18,7 +18,7 @@ namespace ubi {
 JS_PUBLIC_API(BackEdge::Ptr)
 BackEdge::clone() const
 {
-    BackEdge::Ptr clone(js_new<BackEdge>());
+    auto clone = js::MakeUnique<BackEdge>();
     if (!clone)
         return nullptr;
 

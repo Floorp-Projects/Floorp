@@ -18,6 +18,7 @@
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
+#include "js/Utility.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 #include "vm/TraceLogging.h"
@@ -118,7 +119,7 @@ struct BaselineStackBuilder
     MOZ_MUST_USE bool init() {
         MOZ_ASSERT(!buffer_);
         MOZ_ASSERT(bufferUsed_ == 0);
-        buffer_ = reinterpret_cast<uint8_t*>(js_calloc(bufferTotal_));
+        buffer_ = js_pod_calloc<uint8_t>(bufferTotal_);
         if (!buffer_)
             return false;
         bufferAvail_ = bufferTotal_ - HeaderSize();
@@ -148,7 +149,7 @@ struct BaselineStackBuilder
         if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value)
             return false;
         size_t newSize = bufferTotal_ * 2;
-        uint8_t* newBuffer = reinterpret_cast<uint8_t*>(js_calloc(newSize));
+        uint8_t* newBuffer = js_pod_calloc<uint8_t>(newSize);
         if (!newBuffer)
             return false;
         memcpy((newBuffer + newSize) - bufferUsed_, header_->copyStackBottom, bufferUsed_);
@@ -1236,20 +1237,19 @@ InitFromBailout(JSContext* cx, size_t frameNo,
             if (filename == nullptr)
                 filename = "<unknown>";
             unsigned len = strlen(filename) + 200;
-            char* buf = js_pod_malloc<char>(len);
+            UniqueChars buf(js_pod_malloc<char>(len));
             if (buf == nullptr) {
                 ReportOutOfMemory(cx);
                 return false;
             }
-            snprintf(buf, len, "%s %s %s on line %u of %s:%u",
+            snprintf(buf.get(), len, "%s %s %s on line %u of %s:%u",
                      BailoutKindString(bailoutKind),
                      resumeAfter ? "after" : "at",
                      CodeName[op],
                      PCToLineNumber(script, pc),
                      filename,
                      script->lineno());
-            cx->runtime()->geckoProfiler().markEvent(buf);
-            js_free(buf);
+            cx->runtime()->geckoProfiler().markEvent(buf.get());
         }
 
         return true;

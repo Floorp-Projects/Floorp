@@ -76,40 +76,6 @@ interface nsIFaviconService : nsISupports
   unsigned short preferredSizeFromURI(in nsIURI aURI);
 
   /**
-   * Adds a given favicon's URI to the failed favicon cache.
-   *
-   * The lifespan of the favicon cache is up to the caching system.  This cache
-   * will also be written when setAndLoadFaviconForPage hits an error while
-   * fetching an icon.
-   *
-   * @param aFaviconURI
-   *        The URI of an icon in the favicon service.
-   */
-  void addFailedFavicon(in nsIURI aFaviconURI);
-
-  /**
-   * Removes the given favicon from the failed favicon cache.  If the icon is
-   * not in the cache, it will silently succeed.
-   *
-   * @param aFaviconURI
-   *        The URI of an icon in the favicon service.
-   */
-  void removeFailedFavicon(in nsIURI aFaviconURI);
-
-  /**
-   * Checks to see if a favicon is in the failed favicon cache.
-   * A positive return value means the icon is in the failed cache and you
-   * probably shouldn't try to load it.  A false return value means that it's
-   * worth trying to load it.
-   * This allows you to avoid trying to load "foo.com/favicon.ico" for every
-   * page on a site that doesn't have a favicon.
-   *
-   * @param aFaviconURI
-   *        The URI of an icon in the favicon service.
-   */
-  boolean isFailedFavicon(in nsIURI aFaviconURI);
-
-  /**
    * The default favicon URI
    */
   readonly attribute nsIURI defaultFavicon;

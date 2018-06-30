@@ -306,11 +306,10 @@ MapIteratorObject::objectMoved(JSObject* obj, JSObject* old)
     }
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    auto newRange = iter->zone()->pod_malloc<ValueMap::Range>();
+    auto newRange = iter->zone()->new_<ValueMap::Range>(*range);
     if (!newRange)
         oomUnsafe.crash("MapIteratorObject failed to allocate Range data while tenuring.");
 
-    new (newRange) ValueMap::Range(*range);
     range->~Range();
     iter->setReservedSlot(MapIteratorObject::RangeSlot, PrivateValue(newRange));
     return sizeof(ValueMap::Range);
@@ -1161,11 +1160,10 @@ SetIteratorObject::objectMoved(JSObject* obj, JSObject* old)
     }
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    auto newRange = iter->zone()->pod_malloc<ValueSet::Range>();
+    auto newRange = iter->zone()->new_<ValueSet::Range>(*range);
     if (!newRange)
         oomUnsafe.crash("SetIteratorObject failed to allocate Range data while tenuring.");
 
-    new (newRange) ValueSet::Range(*range);
     range->~Range();
     iter->setReservedSlot(SetIteratorObject::RangeSlot, PrivateValue(newRange));
     return sizeof(ValueSet::Range);

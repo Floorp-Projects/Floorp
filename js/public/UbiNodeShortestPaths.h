@@ -13,6 +13,7 @@
 
 #include "js/AllocPolicy.h"
 #include "js/UbiNodeBreadthFirst.h"
+#include "js/UniquePtr.h"
 #include "js/Vector.h"
 
 namespace JS {
@@ -28,7 +29,7 @@ struct JS_PUBLIC_API(BackEdge)
     EdgeName name_;
 
   public:
-    using Ptr = mozilla::UniquePtr<BackEdge, JS::DeletePolicy<BackEdge>>;
+    using Ptr = js::UniquePtr<BackEdge>;
 
     BackEdge() : predecessor_(), name_(nullptr) { }
 
@@ -147,7 +148,7 @@ struct JS_PUBLIC_API(ShortestPaths)
                            "saw it.");
 
                 if (ptr->value().length() < shortestPaths.maxNumPaths_) {
-                    BackEdge::Ptr thisBackEdge(js_new<BackEdge>());
+                    auto thisBackEdge = js::MakeUnique<BackEdge>();
                     if (!thisBackEdge || !thisBackEdge->init(origin, edge))
                         return false;
                     ptr->value().infallibleAppend(std::move(thisBackEdge));

@@ -455,11 +455,7 @@ ParseTask::finish(JSContext* cx)
     return true;
 }
 
-ParseTask::~ParseTask()
-{
-    for (size_t i = 0; i < errors.length(); i++)
-        js_delete(errors[i]);
-}
+ParseTask::~ParseTask() = default;
 
 void
 ParseTask::trace(JSTracer* trc)
@@ -2059,11 +2055,12 @@ JSContext::addPendingCompileError(js::CompileError** error)
     auto errorPtr = make_unique<js::CompileError>();
     if (!errorPtr)
         return false;
-    if (!helperThread()->parseTask()->errors.append(errorPtr.get())) {
+    ParseTask* parseTask = helperThread()->parseTask();
+    if (!parseTask->errors.append(std::move(errorPtr))) {
         ReportOutOfMemory(this);
         return false;
     }
-    *error = errorPtr.release();
+    *error = parseTask->errors.back().get();
     return true;
 }
 

@@ -30,7 +30,7 @@ class ProcessCount final {
   NS_INLINE_DECL_REFCOUNTING(ProcessCount);
 
 public:
-  ProcessCount(uint32_t c) : mCount(c) {}
+  explicit ProcessCount(uint32_t c) : mCount(c) {}
   operator uint32_t() const { return mCount; }
   ProcessCount& operator--() { mCount--; return *this; }
 
@@ -57,6 +57,7 @@ nsresult Request(JSContext* cx, Promise** aPromise, RequestType requestType)
 
   uint32_t processCount = 0;
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    Unused << cp;
     ++processCount;
   }
 

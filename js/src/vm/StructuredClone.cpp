@@ -32,6 +32,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <utility>
@@ -1187,7 +1188,7 @@ JSStructuredCloneWriter::writeBigInt(uint32_t tag, BigInt* bi)
         return false;
     uint32_t lengthAndSign = length | (static_cast<uint32_t>(signBit) << 31);
 
-    js::UniquePtr<uint8_t> buf(static_cast<uint8_t*>(js_malloc(length)));
+    js::UniquePtr<uint8_t> buf(js_pod_malloc<uint8_t>(length));
     if (!buf)
         return false;
 
@@ -1905,31 +1906,16 @@ JSStructuredCloneReader::checkDouble(double d)
     return true;
 }
 
-namespace {
-
 template <typename CharT>
-class Chars {
-    JSContext* cx;
-    CharT* p;
-  public:
-    explicit Chars(JSContext* cx) : cx(cx), p(nullptr) {}
-    ~Chars() { js_free(p); }
-
-    bool allocate(size_t len) {
-        MOZ_ASSERT(!p);
-        // We're going to null-terminate!
-        p = cx->pod_malloc<CharT>(len + 1);
-        if (p) {
-            p[len] = CharT(0);
-            return true;
-        }
-        return false;
-    }
-    CharT* get() { return p; }
-    void forget() { p = nullptr; }
-};
-
-} // anonymous namespace
+static UniquePtr<CharT[], JS::FreePolicy>
+AllocateChars(JSContext* cx, size_t len)
+{
+    // We're going to null-terminate!
+    auto p = cx->make_pod_array<CharT>(len + 1);
+    if (p)
+        p[len] = CharT(0);
+    return p;
+}
 
 template <typename CharT>
 JSString*
@@ -1940,13 +1926,10 @@ JSStructuredCloneReader::readStringImpl(uint32_t nchars)
                                   "string length");
         return nullptr;
     }
-    Chars<CharT> chars(context());
-    if (!chars.allocate(nchars) || !in.readChars(chars.get(), nchars))
+    UniquePtr<CharT[], JS::FreePolicy> chars = AllocateChars<CharT>(context(), nchars);
+    if (!chars || !in.readChars(chars.get(), nchars))
         return nullptr;
-    JSString* str = NewString<CanGC>(context(), chars.get(), nchars);
-    if (str)
-        chars.forget();
-    return str;
+    return NewString<CanGC>(context(), std::move(chars), nchars);
 }
 
 JSString*
@@ -1967,7 +1950,7 @@ JSStructuredCloneReader::readBigInt(uint32_t data)
     if (nbytes == 0)
         return BigInt::create(context());
 
-    UniquePtr<uint8_t> buf(static_cast<uint8_t*>(js_malloc(nbytes)));
+    UniquePtr<uint8_t> buf(js_pod_malloc<uint8_t>(nbytes));
     if (!buf)
         return nullptr;
     if (!in.readBytes(buf.get(), nbytes))
