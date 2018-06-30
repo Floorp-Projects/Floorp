@@ -17,7 +17,8 @@ const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 
-const DARK_THEME_ID    = "firefox-compact-dark@mozilla.org";
+const DARK_THEME_ID    = Services.appinfo.name.toLowerCase() +
+                           "-compact-dark@mozilla.org";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
