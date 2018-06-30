@@ -39,6 +39,7 @@
 #include "imgIRequest.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 using namespace mozilla::image;
@@ -940,6 +941,7 @@ imgRequest::OnStopRequest(nsIRequest* aRequest,
 struct mimetype_closure
 {
   nsACString* newType;
+  uint32_t segmentSize;
 };
 
 /* prototype for these defined below */
@@ -986,11 +988,49 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
   if (aInStr) {
     mimetype_closure closure;
     closure.newType = &result.mContentType;
+    closure.segmentSize = 0;
 
     // Look at the first few bytes and see if we can tell what the data is from
     // that since servers tend to lie. :(
     uint32_t out;
     aInStr->ReadSegments(sniff_mimetype_callback, &closure, aCount, &out);
+
+    // We don't support WebP but we are getting reports of Firefox being served
+    // WebP content in the wild. In particular this appears to be a problem on
+    // Fennec where content authors assume Android implies WebP support. The
+    // telemetry below is intended to get a sense of how prevalent this is.
+    //
+    // From the Google WebP FAQ example and the Modernizr library, websites may
+    // supply a tiny WebP image to probe for feature support using scripts. The
+    // probes are implemented as data URIs thus we should have all the content
+    // upfront. We don't want to consider a probe as having observed WebP since
+    // in theory the client should do the right thing when we fail to decode it.
+    // See https://developers.google.com/speed/webp/faq for details.
+    bool webp = result.mContentType.EqualsLiteral(IMAGE_WEBP);
+    bool webpProbe = false;
+    if (webp) {
+      // The probes from the example/library are all < 90 bytes. Round it up
+      // just in case.
+      const uint32_t kMaxProbeSize = 100;
+      if (closure.segmentSize < kMaxProbeSize &&
+          NS_FAILED(aURI->SchemeIs("data", &webpProbe))) {
+        webpProbe = false;
+      }
+
+      if (webpProbe) {
+        Telemetry::ScalarSet(Telemetry::ScalarID::IMAGES_WEBP_PROBE_OBSERVED,
+                             true);
+      } else {
+        Telemetry::ScalarSet(Telemetry::ScalarID::IMAGES_WEBP_CONTENT_OBSERVED,
+                             true);
+      }
+    }
+
+    if (!webpProbe) {
+      Telemetry::ScalarAdd(Telemetry::ScalarID::IMAGES_WEBP_CONTENT_FREQUENCY,
+                           webp ? NS_LITERAL_STRING("webp") :
+                                  NS_LITERAL_STRING("other"), 1);
+    }
   }
 
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
@@ -1241,6 +1281,7 @@ sniff_mimetype_callback(nsIInputStream* in,
 
   NS_ASSERTION(closure, "closure is null!");
 
+  closure->segmentSize = count;
   if (count > 0) {
     imgLoader::GetMimeTypeFromContent(fromRawSegment, count, *closure->newType);
   }
