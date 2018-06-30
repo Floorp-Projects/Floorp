@@ -15,6 +15,7 @@ UNIFIED_SOURCES = [
     'TestDecoders.cpp',
     'TestDecodeToSurface.cpp',
     'TestDeinterlacingFilter.cpp',
+    'TestLoader.cpp',
     'TestMetadata.cpp',
     'TestRemoveFrameRectFilter.cpp',
     'TestSourceBuffer.cpp',
