@@ -8620,7 +8620,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame = NS_NewFirstLetterFrame(shell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Image == frameType) {
-    newFrame = NS_NewImageFrame(shell, computedStyle);
+    auto* imageFrame = static_cast<nsImageFrame*>(aFrame);
+    newFrame = imageFrame->CreateContinuingFrame(shell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ImageControl == frameType) {
     newFrame = NS_NewImageControlFrame(shell, computedStyle);
