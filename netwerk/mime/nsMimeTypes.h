@@ -114,6 +114,7 @@
 #define IMAGE_MNG                           "video/x-mng"
 #define IMAGE_JNG                           "image/x-jng"
 #define IMAGE_SVG_XML                       "image/svg+xml"
+#define IMAGE_WEBP                          "image/webp"
 
 #define MESSAGE_EXTERNAL_BODY               "message/external-body"
 #define MESSAGE_NEWS                        "message/news"
