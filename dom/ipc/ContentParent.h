@@ -204,6 +204,8 @@ public:
 
   static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
 
+  static void BroadcastStringBundle(const StringBundleDescriptor&);
+
   const nsAString& GetRemoteType() const;
 
   virtual void DoGetRemoteType(nsAString& aRemoteType, ErrorResult& aError) const override

@@ -3962,6 +3962,18 @@ nsContentUtils::EnsureStringBundle(PropertiesFile aFile)
 void
 nsContentUtils::AsyncPrecreateStringBundles()
 {
+  // We only ever want to pre-create bundles in the parent process.
+  //
+  // All nsContentUtils bundles are shared between the parent and child
+  // precesses, and the shared memory regions that back them *must* be created
+  // in the parent, and then sent to all children.
+  //
+  // If we attempt to create a bundle in the child before its memory region is
+  // available, we need to create a temporary non-shared bundle, and later
+  // replace that with the shared memory copy. So attempting to pre-load in the
+  // child is wasteful and unnecessary.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   for (uint32_t bundleIndex = 0; bundleIndex < PropertiesFile_COUNT; ++bundleIndex) {
     nsresult rv = NS_IdleDispatchToCurrentThread(
       NS_NewRunnableFunction("AsyncPrecreateStringBundles",
