@@ -54,6 +54,7 @@ add_task(async function noItemsInTheCollectionBeforeShiftClicking() {
 
     info("Click on tab4 while holding shift key");
     await triggerClickOn(tab4, { shiftKey: true });
+    mSelectedTabs = gBrowser._multiSelectedTabsSet;
 
     ok(tab1.multiselected && mSelectedTabs.has(tab1), "Tab1 is multi-selected");
     ok(tab2.multiselected && mSelectedTabs.has(tab2), "Tab2 is multi-selected");
@@ -92,14 +93,27 @@ add_task(async function itemsInTheCollectionBeforeShiftClicking() {
 
     info("Click on tab5 while holding Shift key");
     await triggerClickOn(tab5, { shiftKey: true });
+    mSelectedTabs = gBrowser._multiSelectedTabsSet;
 
-    is(gBrowser.selectedTab, tab1, "Tab1 still has focus");
-    ok(tab1.multiselected && mSelectedTabs.has(tab1), "Tab1 is multi-selected");
+    is(gBrowser.selectedTab, tab3, "Tab3 has focus");
+    ok(!tab1.multiselected && !mSelectedTabs.has(tab1), "Tab1 is not multi-selected");
     ok(!tab2.multiselected && !mSelectedTabs.has(tab2), "Tab2 is not multi-selected ");
     ok(tab3.multiselected && mSelectedTabs.has(tab3), "Tab3 is multi-selected");
     ok(tab4.multiselected && mSelectedTabs.has(tab4), "Tab4 is multi-selected");
     ok(tab5.multiselected && mSelectedTabs.has(tab5), "Tab5 is multi-selected");
-    is(gBrowser.multiSelectedTabsCount, 4, "Four tabs are multi-selected");
+    is(gBrowser.multiSelectedTabsCount, 3, "Three tabs are multi-selected");
+
+    info("Click on tab1 while holding Shift key");
+    await triggerClickOn(tab1, { shiftKey: true });
+    mSelectedTabs = gBrowser._multiSelectedTabsSet;
+
+    is(gBrowser.selectedTab, tab3, "Tab3 has focus");
+    ok(tab1.multiselected && mSelectedTabs.has(tab1), "Tab1 is multi-selected");
+    ok(tab2.multiselected && mSelectedTabs.has(tab2), "Tab2 is multi-selected ");
+    ok(tab3.multiselected && mSelectedTabs.has(tab3), "Tab3 is multi-selected");
+    ok(!tab4.multiselected && !mSelectedTabs.has(tab4), "Tab4 is not multi-selected");
+    ok(!tab5.multiselected && !mSelectedTabs.has(tab5), "Tab5 is not multi-selected");
+    is(gBrowser.multiSelectedTabsCount, 3, "Three tabs are multi-selected");
 
     BrowserTestUtils.removeTab(tab1);
     BrowserTestUtils.removeTab(tab2);
