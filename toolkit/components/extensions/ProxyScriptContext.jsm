@@ -38,7 +38,6 @@ const PROXY_TIMEOUT_SEC = 10;
 
 const {
   ExtensionError,
-  defineLazyGetter,
 } = ExtensionUtils;
 
 const {
@@ -46,6 +45,7 @@ const {
   CanOfAPIs,
   LocalAPIImplementation,
   SchemaAPIManager,
+  defineLazyGetter,
 } = ExtensionCommon;
 
 const PROXY_TYPES = Object.freeze({

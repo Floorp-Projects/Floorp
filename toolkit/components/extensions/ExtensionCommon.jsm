@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ConsoleAPI: "resource://gre/modules/Console.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
@@ -37,15 +38,19 @@ ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultMap,
   DefaultWeakMap,
-  EventEmitter,
   ExtensionError,
-  defineLazyGetter,
   filterStack,
-  getConsole,
   getInnerWindowID,
   getUniqueId,
   getWinUtils,
 } = ExtensionUtils;
+
+function getConsole() {
+  return new ConsoleAPI({
+    maxLogLevelPref: "extensions.webextensions.log.level",
+    prefix: "WebExtensions",
+  });
+}
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
@@ -53,6 +58,121 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DELAYED_BG_STARTUP",
                                       "extensions.webextensions.background-delayed-startup");
 
 var ExtensionCommon;
+
+// Run a function and report exceptions.
+function runSafeSyncWithoutClone(f, ...args) {
+  try {
+    return f(...args);
+  } catch (e) {
+    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n[[Exception stack\n${filterStack(e)}Current stack\n${filterStack(Error())}]]\n`);
+    Cu.reportError(e);
+  }
+}
+
+// Return true if the given value is an instance of the given
+// native type.
+function instanceOf(value, type) {
+  return (value && typeof value === "object" &&
+          ChromeUtils.getClassName(value) === type);
+}
+
+/**
+ * Convert any of several different representations of a date/time to a Date object.
+ * Accepts several formats:
+ * a Date object, an ISO8601 string, or a number of milliseconds since the epoch as
+ * either a number or a string.
+ *
+ * @param {Date|string|number} date
+ *      The date to convert.
+ * @returns {Date}
+ *      A Date object
+ */
+function normalizeTime(date) {
+  // Of all the formats we accept the "number of milliseconds since the epoch as a string"
+  // is an outlier, everything else can just be passed directly to the Date constructor.
+  return new Date((typeof date == "string" && /^\d+$/.test(date))
+                        ? parseInt(date, 10) : date);
+}
+
+function withHandlingUserInput(window, callable) {
+  let handle = getWinUtils(window).setHandlingUserInput(true);
+  try {
+    return callable();
+  } finally {
+    handle.destruct();
+  }
+}
+
+/**
+ * Defines a lazy getter for the given property on the given object. The
+ * first time the property is accessed, the return value of the getter
+ * is defined on the current `this` object with the given property name.
+ * Importantly, this means that a lazy getter defined on an object
+ * prototype will be invoked separately for each object instance that
+ * it's accessed on.
+ *
+ * @param {object} object
+ *        The prototype object on which to define the getter.
+ * @param {string|Symbol} prop
+ *        The property name for which to define the getter.
+ * @param {function} getter
+ *        The function to call in order to generate the final property
+ *        value.
+ */
+function defineLazyGetter(object, prop, getter) {
+  let redefine = (obj, value) => {
+    Object.defineProperty(obj, prop, {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value,
+    });
+    return value;
+  };
+
+  Object.defineProperty(object, prop, {
+    enumerable: true,
+    configurable: true,
+
+    get() {
+      return redefine(this, getter.call(this));
+    },
+
+    set(value) {
+      redefine(this, value);
+    },
+  });
+}
+
+function checkLoadURL(url, principal, options) {
+  let ssm = Services.scriptSecurityManager;
+
+  let flags = ssm.STANDARD;
+  if (!options.allowScript) {
+    flags |= ssm.DISALLOW_SCRIPT;
+  }
+  if (!options.allowInheritsPrincipal) {
+    flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
+  }
+  if (options.dontReportErrors) {
+    flags |= ssm.DONT_REPORT_ERRORS;
+  }
+
+  try {
+    ssm.checkLoadURIWithPrincipal(principal,
+                                  Services.io.newURI(url),
+                                  flags);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
+function makeWidgetId(id) {
+  id = id.toLowerCase();
+  // FIXME: This allows for collisions.
+  return id.replace(/[^a-z0-9_-]/g, "_");
+}
 
 /**
  * A sentinel class to indicate that an array of values should be
@@ -85,12 +205,119 @@ class NoCloneSpreadArgs {
   }
 }
 
+const LISTENERS = Symbol("listeners");
+const ONCE_MAP = Symbol("onceMap");
+
+class EventEmitter {
+  constructor() {
+    this[LISTENERS] = new Map();
+    this[ONCE_MAP] = new WeakMap();
+  }
+
+  /**
+   * Adds the given function as a listener for the given event.
+   *
+   * The listener function may optionally return a Promise which
+   * resolves when it has completed all operations which event
+   * dispatchers may need to block on.
+   *
+   * @param {string} event
+   *       The name of the event to listen for.
+   * @param {function(string, ...any)} listener
+   *        The listener to call when events are emitted.
+   */
+  on(event, listener) {
+    let listeners = this[LISTENERS].get(event);
+    if (!listeners) {
+      listeners = new Set();
+      this[LISTENERS].set(event, listeners);
+    }
+
+    listeners.add(listener);
+  }
+
+  /**
+   * Removes the given function as a listener for the given event.
+   *
+   * @param {string} event
+   *       The name of the event to stop listening for.
+   * @param {function(string, ...any)} listener
+   *        The listener function to remove.
+   */
+  off(event, listener) {
+    let set = this[LISTENERS].get(event);
+    if (set) {
+      set.delete(listener);
+      set.delete(this[ONCE_MAP].get(listener));
+      if (!set.size) {
+        this[LISTENERS].delete(event);
+      }
+    }
+  }
+
+  /**
+   * Adds the given function as a listener for the given event once.
+   *
+   * @param {string} event
+   *       The name of the event to listen for.
+   * @param {function(string, ...any)} listener
+   *        The listener to call when events are emitted.
+   */
+  once(event, listener) {
+    let wrapper = (...args) => {
+      this.off(event, wrapper);
+      this[ONCE_MAP].delete(listener);
+
+      return listener(...args);
+    };
+    this[ONCE_MAP].set(listener, wrapper);
+
+    this.on(event, wrapper);
+  }
+
+
+  /**
+   * Triggers all listeners for the given event. If any listeners return
+   * a value, returns a promise which resolves when all returned
+   * promises have resolved. Otherwise, returns undefined.
+   *
+   * @param {string} event
+   *       The name of the event to emit.
+   * @param {any} args
+   *        Arbitrary arguments to pass to the listener functions, after
+   *        the event name.
+   * @returns {Promise?}
+   */
+  emit(event, ...args) {
+    let listeners = this[LISTENERS].get(event);
+
+    if (listeners) {
+      let promises = [];
+
+      for (let listener of listeners) {
+        try {
+          let result = listener(event, ...args);
+          if (result !== undefined) {
+            promises.push(result);
+          }
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+
+      if (promises.length) {
+        return Promise.all(promises);
+      }
+    }
+  }
+}
+
 /**
  * Base class for WebExtension APIs.  Each API creates a new class
  * that inherits from this class, the derived class is instantiated
  * once for each extension that uses the API.
  */
-class ExtensionAPI extends ExtensionUtils.EventEmitter {
+class ExtensionAPI extends EventEmitter {
   constructor(extension) {
     super();
 
@@ -246,7 +473,7 @@ class BaseContext {
       return true;
     }
 
-    return ExtensionUtils.checkLoadURL(url, this.principal, options);
+    return checkLoadURL(url, this.principal, options);
   }
 
   /**
@@ -2074,14 +2301,23 @@ ExtensionCommon = {
   CanOfAPIs,
   EventManager,
   ExtensionAPI,
+  EventEmitter,
   LocalAPIImplementation,
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
   SchemaAPIManager,
   SpreadArgs,
+  checkLoadURL,
+  defineLazyGetter,
+  getConsole,
   ignoreEvent,
+  instanceOf,
+  makeWidgetId,
+  normalizeTime,
+  runSafeSyncWithoutClone,
   stylesheetMap,
+  withHandlingUserInput,
 
   MultiAPIManager,
   LazyAPIManager,

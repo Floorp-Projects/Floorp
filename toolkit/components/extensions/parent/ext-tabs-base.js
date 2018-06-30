@@ -18,9 +18,12 @@ var {
   DefaultMap,
   DefaultWeakMap,
   ExtensionError,
-  defineLazyGetter,
   getWinUtils,
 } = ExtensionUtils;
+
+var {
+  defineLazyGetter,
+} = ExtensionCommon;
 
 /**
  * The platform-specific type of native tab objects, which are wrapped by

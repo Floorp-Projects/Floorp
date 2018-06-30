@@ -54,9 +54,7 @@ nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue, nsSVGElement *aSVGElement)
     mapping++;
   }
 
-  // only a warning since authors may mistype attribute values
-  NS_WARNING("unknown enumeration key");
-  return NS_ERROR_DOM_SYNTAX_ERR;
+  return NS_ERROR_DOM_TYPE_ERR;
 }
 
 nsAtom*
@@ -97,7 +95,7 @@ nsSVGEnum::SetBaseValue(uint16_t aValue,
     }
     mapping++;
   }
-  return NS_ERROR_DOM_SYNTAX_ERR;
+  return NS_ERROR_DOM_TYPE_ERR;
 }
 
 void
