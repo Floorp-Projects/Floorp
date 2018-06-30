@@ -48,6 +48,20 @@ export const ASRouterUtils = {
   sendTelemetry(ping) {
     const payload = ac.ASRouterUserEvent(ping);
     global.RPMSendAsyncMessage(AS_GENERAL_OUTGOING_MESSAGE_NAME, payload);
+  },
+  getEndpoint() {
+    if (window.location.href.includes("endpoint")) {
+      const params = new URLSearchParams(window.location.href.slice(window.location.href.indexOf("endpoint")));
+      try {
+        const endpoint = new URL(params.get("endpoint"));
+        return {
+          url: endpoint.href,
+          snippetId: params.get("snippetId")
+        };
+      } catch (e) {}
+    }
+
+    return null;
   }
 };
 
@@ -171,8 +185,15 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   componentWillMount() {
+    const endpoint = ASRouterUtils.getEndpoint();
     ASRouterUtils.addListener(this.onMessageFromParent);
-    ASRouterUtils.sendMessage({type: "CONNECT_UI_REQUEST"});
+
+    // If we are loading about:welcome we want to trigger the onboarding messages
+    if (this.props.document.location.href === "about:welcome") {
+      ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: "firstRun"}});
+    } else {
+      ASRouterUtils.sendMessage({type: "CONNECT_UI_REQUEST", data: {endpoint}});
+    }
   }
 
   componentWillUnmount() {

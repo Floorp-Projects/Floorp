@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "이메일을 입력",
   "firstrun_form_sub_header": "해서 Firefox Sync 사용",
   "firstrun_email_input_placeholder": "이메일",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "진행하면 {terms}과 {privacy}에 동의하게 됩니다.",
   "firstrun_terms_of_service": "이용 약관",
   "firstrun_privacy_notice": "개인 정보 보호 정책",

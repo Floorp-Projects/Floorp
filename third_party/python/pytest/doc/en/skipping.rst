@@ -58,8 +58,20 @@ by calling the ``pytest.skip(reason)`` function:
         if not valid_config():
             pytest.skip("unsupported configuration")
 
+It is also possible to skip the whole module using
+``pytest.skip(reason, allow_module_level=True)`` at the module level:
+
+.. code-block:: python
+
+    import pytest
+
+    if not pytest.config.getoption("--custom-flag"):
+        pytest.skip("--custom-flag is missing, skipping tests", allow_module_level=True)
+
 The imperative method is useful when it is not possible to evaluate the skip condition
 during import time.
+
+**Reference**: :ref:`pytest.mark.skip ref`
 
 ``skipif``
 ~~~~~~~~~~
@@ -68,11 +80,11 @@ during import time.
 
 If you wish to skip something conditionally then you can use ``skipif`` instead.
 Here is an example of marking a test function to be skipped
-when run on a Python3.3 interpreter::
+when run on a Python3.6 interpreter::
 
     import sys
-    @pytest.mark.skipif(sys.version_info < (3,3),
-                        reason="requires python3.3")
+    @pytest.mark.skipif(sys.version_info < (3,6),
+                        reason="requires python3.6")
     def test_function():
         ...
 
@@ -105,6 +117,8 @@ throughout your test suite.
 Alternatively, you can use :ref:`condition strings
 <string conditions>` instead of booleans, but they can't be shared between modules easily
 so they are supported mainly for backward compatibility reasons.
+
+**Reference**: :ref:`pytest.mark.skipif ref`
 
 
 Skip all test functions of a class or module
@@ -178,19 +192,19 @@ Here's a quick guide on how to skip tests in a module in different situations:
 
   .. code-block:: python
 
-        pytestmark = pytest.mark.skip('all tests still WIP')
+        pytestmark = pytest.mark.skip("all tests still WIP")
 
 2. Skip all tests in a module based on some condition:
 
   .. code-block:: python
 
-        pytestmark = pytest.mark.skipif(sys.platform == 'win32', 'tests for linux only')
+        pytestmark = pytest.mark.skipif(sys.platform == "win32", "tests for linux only")
 
 3. Skip all tests in a module if some import is missing:
 
   .. code-block:: python
 
-        pexpect = pytest.importorskip('pexpect')
+        pexpect = pytest.importorskip("pexpect")
 
 
 .. _xfail:
@@ -222,15 +236,10 @@ This will unconditionally make ``test_function`` ``XFAIL``. Note that no other c
 after ``pytest.xfail`` call, differently from the marker. That's because it is implemented
 internally by raising a known exception.
 
-Here's the signature of the ``xfail`` **marker** (not the function), using Python 3 keyword-only
-arguments syntax:
-
-.. code-block:: python
-
-    def xfail(condition=None, *, reason=None, raises=None, run=True, strict=False):
+**Reference**: :ref:`pytest.mark.xfail ref`
 
 
-
+.. _`xfail strict tutorial`:
 
 ``strict`` parameter
 ~~~~~~~~~~~~~~~~~~~~
@@ -264,8 +273,8 @@ You can change the default value of the ``strict`` parameter using the
 As with skipif_ you can also mark your expectation of a failure
 on a particular platform::
 
-    @pytest.mark.xfail(sys.version_info >= (3,3),
-                       reason="python3.3 api changes")
+    @pytest.mark.xfail(sys.version_info >= (3,6),
+                       reason="python3.6 api changes")
     def test_function():
         ...
 
@@ -321,16 +330,16 @@ Here is a simple test file with the several usages:
 Running it with the report-on-xfail option gives this output::
 
     example $ pytest -rx xfail_demo.py
-    ======= test session starts ========
+    =========================== test session starts ============================
     platform linux -- Python 3.x.y, pytest-3.x.y, py-1.x.y, pluggy-0.x.y
     rootdir: $REGENDOC_TMPDIR/example, inifile:
     collected 7 items
-    
-    xfail_demo.py xxxxxxx
-    ======= short test summary info ========
+
+    xfail_demo.py xxxxxxx                                                [100%]
+    ========================= short test summary info ==========================
     XFAIL xfail_demo.py::test_hello
     XFAIL xfail_demo.py::test_hello2
-      reason: [NOTRUN] 
+      reason: [NOTRUN]
     XFAIL xfail_demo.py::test_hello3
       condition: hasattr(os, 'sep')
     XFAIL xfail_demo.py::test_hello4
@@ -340,8 +349,8 @@ Running it with the report-on-xfail option gives this output::
     XFAIL xfail_demo.py::test_hello6
       reason: reason
     XFAIL xfail_demo.py::test_hello7
-    
-    ======= 7 xfailed in 0.12 seconds ========
+
+    ======================== 7 xfailed in 0.12 seconds =========================
 
 .. _`skip/xfail with parametrize`:
 
@@ -355,14 +364,20 @@ test instances when using parametrize:
 
     import pytest
 
-    @pytest.mark.parametrize(("n", "expected"), [
-        (1, 2),
-    pytest.param(1, 0, marks=pytest.mark.xfail),
-	pytest.param(1, 3, marks=pytest.mark.xfail(reason="some bug")),
-        (2, 3),
-        (3, 4),
-        (4, 5),
-    pytest.param(10, 11, marks=pytest.mark.skipif(sys.version_info >= (3, 0), reason="py2k")),
-    ])
+
+    @pytest.mark.parametrize(
+        ("n", "expected"),
+        [
+            (1, 2),
+            pytest.param(1, 0, marks=pytest.mark.xfail),
+            pytest.param(1, 3, marks=pytest.mark.xfail(reason="some bug")),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            pytest.param(
+                10, 11, marks=pytest.mark.skipif(sys.version_info >= (3, 0), reason="py2k")
+            ),
+        ],
+    )
     def test_increment(n, expected):
         assert n + 1 == expected

@@ -4,13 +4,13 @@ local path implementation.
 from __future__ import with_statement
 
 from contextlib import contextmanager
-import sys, os, re, atexit, io, uuid
+import sys, os, atexit, io, uuid
 import py
 from py._path import common
 from py._path.common import iswin32, fspath
 from stat import S_ISLNK, S_ISDIR, S_ISREG
 
-from os.path import abspath, normcase, normpath, isabs, exists, isdir, isfile, islink, dirname
+from os.path import abspath, normpath, isabs, exists, isdir, isfile, islink, dirname
 
 if sys.version_info > (3,0):
     def map_as_list(func, iter):
@@ -800,7 +800,7 @@ class LocalPath(FSBase):
         return cls(py.error.checked_call(tempfile.mkdtemp, dir=str(rootdir)))
 
     def make_numbered_dir(cls, prefix='session-', rootdir=None, keep=3,
-                          lock_timeout = 172800):   # two days
+                          lock_timeout=172800):   # two days
         """ return unique directory with a number greater than the current
             maximum one.  The number is assumed to start directly after prefix.
             if keep is true directories with a number less than (maxnum-keep)
@@ -810,10 +810,10 @@ class LocalPath(FSBase):
         if rootdir is None:
             rootdir = cls.get_temproot()
 
-        nprefix = normcase(prefix)
+        nprefix = prefix.lower()
         def parse_num(path):
             """ parse the number out of a path (if it matches the prefix) """
-            nbasename = normcase(path.basename)
+            nbasename = path.basename.lower()
             if nbasename.startswith(nprefix):
                 try:
                     return int(nbasename[len(nprefix):])

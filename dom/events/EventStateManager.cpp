@@ -1385,8 +1385,7 @@ EventStateManager::IsRemoteTarget(nsIContent* target)
 bool
 EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
                                            nsEventStatus *aStatus) {
-  if (*aStatus == nsEventStatus_eConsumeNoDefault ||
-      !aEvent->CanBeSentToRemoteProcess()) {
+  if (!aEvent->CanBeSentToRemoteProcess()) {
     return false;
   }
 

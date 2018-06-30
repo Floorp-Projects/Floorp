@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testing if AltGr keydown and keyup events are fired in web content on Windows</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+  <input id="input">
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function checkEvent(aEvent, aExpectedEvents, aDescription) {
+  if (!aExpectedEvents.length) {
+    ok(false, `${aDescription}: no more expected events ` +
+              `(type: ${aEvent.type}, code: ${aEvent.code}, key: ${aEvent.key}, keyCode: ${aEvent.keyCode}`);
+  }
+  let expectedEvent = aExpectedEvents.shift();
+  for (let property in expectedEvent) {
+    is(aEvent[property], expectedEvent[property], `${aDescription}: ${property}`);
+  }
+}
+
+async function runAltGrKeyTest() {
+  return new Promise(resolve => {
+    let target = document.getElementById("input");
+    target.focus();
+
+    let events = [
+      { type: "keydown", code: "ControlLeft", key: "Control", keyCode: KeyboardEvent.DOM_VK_CONTROL },
+      { type: "keydown", code: "AltRight", key: "AltGraph", keyCode: KeyboardEvent.DOM_VK_ALT },
+      { type: "keyup", code: "ControlLeft", key: "Control", keyCode: KeyboardEvent.DOM_VK_CONTROL },
+      { type: "keyup", code: "AltRight", key: "AltGraph", keyCode: KeyboardEvent.DOM_VK_ALT },
+    ];
+    function handleEvent(aEvent) {
+      checkEvent(aEvent, events, "runAltGrKeyTest");
+      if (aEvent.type === "keyup" && aEvent.code === "AltRight") {
+        is(events.length, 0, "runAltGrKeyTest: all expected events are fired");
+        SimpleTest.executeSoon(() => {
+          target.removeEventListener("keydown", handleEvent);
+          target.removeEventListener("keypress", handleEvent);
+          target.removeEventListener("keyup", handleEvent);
+          resolve();
+        });
+      }
+    }
+    target.addEventListener("keydown", handleEvent);
+    target.addEventListener("keypress", handleEvent);
+    target.addEventListener("keyup", handleEvent);
+
+    synthesizeNativeKey(KEYBOARD_LAYOUT_SPANISH, WIN_VK_RMENU, {},
+                        "", "");
+  });
+}
+
+async function runEmulatingAltGrKeyTest() {
+  return new Promise(resolve => {
+    let target = document.getElementById("input");
+    target.focus();
+
+    let events = [
+      { type: "keydown", code: "ControlLeft", key: "Control", keyCode: KeyboardEvent.DOM_VK_CONTROL },
+      { type: "keydown", code: "AltLeft", key: "Alt", keyCode: KeyboardEvent.DOM_VK_ALT },
+      { type: "keyup", code: "AltLeft", key: "Alt", keyCode: KeyboardEvent.DOM_VK_ALT },
+      { type: "keyup", code: "ControlLeft", key: "Control", keyCode: KeyboardEvent.DOM_VK_CONTROL },
+    ];
+    function handleEvent(aEvent) {
+      checkEvent(aEvent, events, "runEmulatingAltGrKeyTest");
+      if (aEvent.type === "keyup" && aEvent.code === "ControlLeft") {
+        is(events.length, 0, "runAltGrKeyTest: all expected events are fired");
+        SimpleTest.executeSoon(() => {
+          target.removeEventListener("keydown", handleEvent);
+          target.removeEventListener("keypress", handleEvent);
+          target.removeEventListener("keyup", handleEvent);
+          resolve();
+        });
+      }
+    }
+    target.addEventListener("keydown", handleEvent);
+    target.addEventListener("keypress", handleEvent);
+    target.addEventListener("keyup", handleEvent);
+
+    synthesizeNativeKey(KEYBOARD_LAYOUT_SPANISH, WIN_VK_LMENU, { ctrlKey: true },
+                        "", "");
+  });
+}
+
+async function runTests() {
+  await runAltGrKeyTest();
+  await runEmulatingAltGrKeyTest();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>

@@ -7864,9 +7864,15 @@ var TabContextMenu = {
     document.getElementById("context_undoCloseTab").disabled =
       SessionStore.getClosedTabCount(window) == 0;
 
-    // Only one of pin/unpin should be visible
-    document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
-    document.getElementById("context_unpinTab").hidden = !this.contextTab.pinned;
+    // Only one of pin/unpin/multiselect-pin/multiselect-unpin should be visible
+    let contextPinTab = document.getElementById("context_pinTab");
+    contextPinTab.hidden = this.contextTab.pinned || multiselectionContext;
+    let contextUnpinTab = document.getElementById("context_unpinTab");
+    contextUnpinTab.hidden = !this.contextTab.pinned || multiselectionContext;
+    let contextPinSelectedTabs = document.getElementById("context_pinSelectedTabs");
+    contextPinSelectedTabs.hidden = this.contextTab.pinned || !multiselectionContext;
+    let contextUnpinSelectedTabs = document.getElementById("context_unpinSelectedTabs");
+    contextUnpinSelectedTabs.hidden = !this.contextTab.pinned || !multiselectionContext;
 
     // Disable "Close Tabs to the Right" if there are no tabs
     // following it.

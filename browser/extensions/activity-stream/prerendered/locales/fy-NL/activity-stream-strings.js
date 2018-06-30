@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Fier jo e-mailadres yn",
   "firstrun_form_sub_header": "om troch te gean nei Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mailadres",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Troch fierder te gean, gean jo akkoard mei de {terms} en {privacy}.",
   "firstrun_terms_of_service": "Tsjinstbetingsten",
   "firstrun_privacy_notice": "Privacyferklearring",

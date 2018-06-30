@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Vnesite e-poštni naslov",
   "firstrun_form_sub_header": "za nadaljevanje v Firefox Sync.",
   "firstrun_email_input_placeholder": "E-pošta",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Z nadaljevanjem se strinjate s {terms} in {privacy}.",
   "firstrun_terms_of_service": "Pogoji uporabe",
   "firstrun_privacy_notice": "Obvestilom o zasebnosti",
