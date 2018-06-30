@@ -89,10 +89,22 @@ ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
         ShallowHeapSizeOfIncludingThis(MallocSizeOf),
         "Memory used by the script cache service itself.");
 
-    MOZ_COLLECT_REPORT(
-        "explicit/script-preloader/non-heap/memmapped-cache", KIND_NONHEAP, UNITS_BYTES,
-        mCacheData.nonHeapSizeOfExcludingThis(),
-        "The memory-mapped startup script cache file.");
+    // Since the mem-mapped cache file is mapped into memory, we want to report
+    // it as explicit memory somewhere. But since the child cache is shared
+    // between all processes, we don't want to report it as explicit memory for
+    // all of them. So we report it as explicit only in the parent process, and
+    // non-explicit everywhere else.
+    if (XRE_IsParentProcess()) {
+        MOZ_COLLECT_REPORT(
+            "explicit/script-preloader/non-heap/memmapped-cache", KIND_NONHEAP, UNITS_BYTES,
+            mCacheData.nonHeapSizeOfExcludingThis(),
+            "The memory-mapped startup script cache file.");
+    } else {
+        MOZ_COLLECT_REPORT(
+            "script-preloader-memmapped-cache", KIND_NONHEAP, UNITS_BYTES,
+            mCacheData.nonHeapSizeOfExcludingThis(),
+            "The memory-mapped startup script cache file.");
+    }
 
     return NS_OK;
 }
