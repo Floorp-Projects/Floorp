@@ -51,6 +51,12 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
+  void SendContentBundles(mozilla::dom::ContentParent* aContentParent) const override;
+
+  void RegisterContentBundle(const nsCString& aBundleURL,
+                             const mozilla::ipc::FileDescriptor& aMapFile,
+                             size_t aMapSize) override;
+
 private:
   virtual ~nsStringBundleService();
 
@@ -61,8 +67,8 @@ private:
 
   void flushBundleCache();
 
-  bundleCacheEntry_t *insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                      const nsCString &aHashKey);
+  bundleCacheEntry_t* insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
+                                      const nsACString &aHashKey);
 
   nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
