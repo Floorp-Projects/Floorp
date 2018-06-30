@@ -119,6 +119,8 @@ this.ProfileAge.prototype = {
       let contents = existingContents || {};
       contents.created = oldest;
       this._times = contents;
+      Services.telemetry.scalarSet("telemetry.profile_directory_scan_date",
+        TelemetryUtils.millisecondsToDays(Date.now()));
       return this.writeTimes(contents, path)
                  .then(function onSuccess() {
                    return oldest;
