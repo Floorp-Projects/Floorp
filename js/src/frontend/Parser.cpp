@@ -9095,12 +9095,12 @@ Parser<FullParseHandler, CharT>::newRegExp()
                   "code below will need changing for UTF-8 handling");
 
     // Create the regexp and check its syntax.
-    const CharT* chars = tokenStream.getTokenbuf().begin();
-    size_t length = tokenStream.getTokenbuf().length();
+    const auto& chars = tokenStream.getCharBuffer();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
     Rooted<RegExpObject*> reobj(context);
-    reobj = RegExpObject::create(context, chars, length, flags, anyChars, alloc, TenuredObject);
+    reobj = RegExpObject::create(context, chars.begin(), chars.length(), flags, anyChars, alloc,
+                                 TenuredObject);
     if (!reobj)
         return null();
 
@@ -9117,11 +9117,10 @@ Parser<SyntaxParseHandler, CharT>::newRegExp()
                   "code below will need changing for UTF-8 handling");
 
     // Only check the regexp's syntax, but don't create a regexp object.
-    const CharT* chars = tokenStream.getTokenbuf().begin();
-    size_t length = tokenStream.getTokenbuf().length();
+    const auto& chars = tokenStream.getCharBuffer();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
-    mozilla::Range<const CharT> source(chars, length);
+    mozilla::Range<const CharT> source(chars.begin(), chars.length());
     if (!js::irregexp::ParsePatternSyntax(anyChars, alloc, source, flags & UnicodeFlag))
         return null();
 

@@ -39,19 +39,19 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 const {
   DefaultMap,
   DefaultWeakMap,
-  defineLazyGetter,
   getInnerWindowID,
   getWinUtils,
   promiseDocumentIdle,
   promiseDocumentLoaded,
   promiseDocumentReady,
-  runSafeSyncWithoutClone,
 } = ExtensionUtils;
 
 const {
   BaseContext,
   CanOfAPIs,
   SchemaAPIManager,
+  defineLazyGetter,
+  runSafeSyncWithoutClone,
 } = ExtensionCommon;
 
 const {
@@ -60,7 +60,7 @@ const {
   Messenger,
 } = ExtensionChild;
 
-XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
 
 var DocumentManager;

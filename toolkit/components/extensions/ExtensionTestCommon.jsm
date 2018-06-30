@@ -33,6 +33,7 @@ ChromeUtils.defineModuleGetter(this, "OS",
 XPCOMUtils.defineLazyGetter(this, "apiManager",
                             () => ExtensionParent.apiManager);
 
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
@@ -41,10 +42,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
 
 const {
   flushJarCache,
-  instanceOf,
 } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+const {
+  instanceOf,
+} = ExtensionCommon;
+
+XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole());
 
 
 /**

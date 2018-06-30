@@ -95,7 +95,7 @@ function checkAllowedAddon(addon) {
   return allowedTypes.includes(addon.type);
 }
 
-class AddonListener extends ExtensionUtils.EventEmitter {
+class AddonListener extends ExtensionCommon.EventEmitter {
   constructor() {
     super();
     AddonManager.addAddonListener(this);

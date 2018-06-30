@@ -42,7 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
@@ -77,6 +76,7 @@ XPCOMUtils.defineLazyGetter(
   () => Services.io.getProtocolHandler("resource")
           .QueryInterface(Ci.nsIResProtocolHandler));
 
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
@@ -96,12 +96,15 @@ var {
 } = ExtensionParent;
 
 const {
-  EventEmitter,
   getUniqueId,
   promiseTimeout,
 } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+const {
+  EventEmitter,
+} = ExtensionCommon;
+
+XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 
 XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData);
 
@@ -1430,7 +1433,7 @@ class Extension extends ExtensionData {
       return true;
     }
 
-    return ExtensionUtils.checkLoadURL(url, this.principal, options);
+    return ExtensionCommon.checkLoadURL(url, this.principal, options);
   }
 
   async promiseLocales(locale) {
