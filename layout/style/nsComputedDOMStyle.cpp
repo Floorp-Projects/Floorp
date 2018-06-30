@@ -465,6 +465,18 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
+  if (nsCSSProps::PropHasFlags(prop, CSSPropFlags::IsLogical)) {
+    MOZ_ASSERT(entry);
+    MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
+
+    prop = Servo_ResolveLogicalProperty(prop, mComputedStyle);
+    entry = GetComputedStyleMap()->FindEntryForProperty(prop);
+
+    MOZ_ASSERT(layoutFlushIsNeeded == entry->IsLayoutFlushNeeded(),
+               "Logical and physical property don't agree on whether layout is "
+               "needed");
+  }
+
   if (!nsCSSProps::PropHasFlags(prop, CSSPropFlags::SerializedByServo)) {
     if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
       ErrorResult rv;

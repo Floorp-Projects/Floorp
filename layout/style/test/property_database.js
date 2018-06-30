@@ -49,8 +49,6 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //   axis: optional, indicates that the property is an axis-related logical
 //     directional property.  (Type must be CSS_TYPE_LONGHAND and 'logical'
 //     must be true.)
-//   get_computed: if present, the property's computed value shows up on
-//     another property, and this is a function used to get it
 //   initial_values: Values whose computed value should be the same as the
 //     computed value for the property's initial value.
 //   other_values: Values whose computed value should be different from the
@@ -1278,7 +1276,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
@@ -1289,7 +1286,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -1301,7 +1297,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     prerequisites: { "border-inline-end-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -1529,7 +1524,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
@@ -1540,7 +1534,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -1552,7 +1545,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     prerequisites: { "border-inline-start-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -1960,7 +1952,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     /* auto may or may not be initial */
     initial_values: [ "0", "0px", "0%", "0em", "0ex", "calc(0pt)", "calc(0% + 0px)" ],
@@ -1980,7 +1971,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     /* auto may or may not be initial */
     initial_values: [ "0", "0px", "0%", "0em", "0ex", "calc(0pt)", "calc(0% + 0px)" ],
@@ -2371,7 +2361,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     // No applies_to_placeholder because we have a !important rule in forms.css.
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     initial_values: [ "0", "0px", "0%", "0em", "0ex", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
     other_values: [ "1px", "3em", "5%",
@@ -2390,7 +2379,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     // No applies_to_placeholder because we have a !important rule in forms.css.
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* no subproperties */
     initial_values: [ "0", "0px", "0%", "0em", "0ex", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
     other_values: [ "1px", "3em", "5%",
@@ -5609,7 +5597,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     logical: true,
     axis: true,
-    get_computed: logical_axis_prop_get_computed,
     /* XXX testing auto has prerequisites */
     initial_values: [ "auto" ],
     prerequisites: { "display": "block" },
@@ -5628,7 +5615,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
@@ -5639,7 +5625,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -5651,7 +5636,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     prerequisites: { "border-block-end-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -5681,7 +5665,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
@@ -5692,7 +5675,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -5704,7 +5686,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     prerequisites: { "border-block-start-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -5733,7 +5714,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "border-inline-end-color",
     subproperties: [ "border-inline-end-color" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-border-end-style": {
     domProp: "MozBorderEndStyle",
@@ -5742,7 +5722,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "border-inline-end-style",
     subproperties: [ "border-inline-end-style" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-border-end-width": {
     domProp: "MozBorderEndWidth",
@@ -5751,7 +5730,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "border-inline-end-width",
     subproperties: [ "border-inline-end-width" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-border-start": {
     domProp: "MozBorderStart",
@@ -5767,7 +5745,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "border-inline-start-color",
     subproperties: [ "border-inline-start-color" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-border-start-style": {
     domProp: "MozBorderStartStyle",
@@ -5776,7 +5753,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "border-inline-start-style",
     subproperties: [ "border-inline-start-style" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-border-start-width": {
     domProp: "MozBorderStartWidth",
@@ -5785,7 +5761,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "border-inline-start-width",
     subproperties: [ "border-inline-start-width" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "inline-size": {
     domProp: "inlineSize",
@@ -5793,7 +5768,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     logical: true,
     axis: true,
-    get_computed: logical_axis_prop_get_computed,
     /* XXX testing auto has prerequisites */
     initial_values: [ "auto" ],
     prerequisites: {
@@ -5825,7 +5799,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* XXX testing auto has prerequisites */
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)" ],
     other_values: [ "1px", "2em", "5%",
@@ -5844,7 +5817,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* XXX testing auto has prerequisites */
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)" ],
     other_values: [ "1px", "2em", "5%",
@@ -5864,7 +5836,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "margin-inline-end",
     subproperties: [ "margin-inline-end" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-margin-start": {
     domProp: "MozMarginStart",
@@ -5873,7 +5844,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "margin-inline-start",
     subproperties: [ "margin-inline-start" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "max-block-size": {
     domProp: "maxBlockSize",
@@ -5881,7 +5851,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     logical: true,
     axis: true,
-    get_computed: logical_axis_prop_get_computed,
     prerequisites: { "display": "block" },
     initial_values: [ "none" ],
     other_values: [ "30px", "50%",
@@ -5899,7 +5868,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     logical: true,
     axis: true,
-    get_computed: logical_axis_prop_get_computed,
     prerequisites: { "display": "block" },
     initial_values: [ "none" ],
     other_values: [ "30px", "50%",
@@ -5921,7 +5889,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     logical: true,
     axis: true,
-    get_computed: logical_axis_prop_get_computed,
     prerequisites: { "display": "block" },
     initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)" ],
     other_values: [ "30px", "50%",
@@ -5940,7 +5907,6 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     logical: true,
     axis: true,
-    get_computed: logical_axis_prop_get_computed,
     prerequisites: { "display": "block" },
     initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)" ],
     other_values: [ "30px", "50%",
@@ -5962,7 +5928,6 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* FIXME: run tests with multiple prerequisites */
     prerequisites: { "position": "relative" },
     /* XXX 0 may or may not be equal to auto */
@@ -5982,7 +5947,6 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* FIXME: run tests with multiple prerequisites */
     prerequisites: { "position": "relative" },
     /* XXX 0 may or may not be equal to auto */
@@ -6002,7 +5966,6 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* FIXME: run tests with multiple prerequisites */
     prerequisites: { "position": "relative" },
     /* XXX 0 may or may not be equal to auto */
@@ -6022,7 +5985,6 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     /* FIXME: run tests with multiple prerequisites */
     prerequisites: { "position": "relative" },
     /* XXX 0 may or may not be equal to auto */
@@ -6044,7 +6006,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     // No applies_to_placeholder because we have a !important rule in forms.css.
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
     other_values: [ "1px", "2em", "5%",
       "calc(2px)",
@@ -6062,7 +6023,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     // No applies_to_placeholder because we have a !important rule in forms.css.
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     initial_values: [ "0", "0px", "0%", "calc(0pt)", "calc(0% + 0px)", "calc(-3px)", "calc(-1%)" ],
     other_values: [ "1px", "2em", "5%",
       "calc(2px)",
@@ -6080,7 +6040,6 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "padding-inline-end",
     subproperties: [ "padding-inline-end" ],
-    get_computed: logical_box_prop_get_computed,
   },
   "-moz-padding-start": {
     domProp: "MozPaddingStart",
@@ -6089,124 +6048,8 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     alias_for: "padding-inline-start",
     subproperties: [ "padding-inline-start" ],
-    get_computed: logical_box_prop_get_computed,
   },
 } // end of gCSSProperties
-
-function logical_axis_prop_get_computed(cs, property)
-{
-  // Use defaults for these two properties in case the vertical text
-  // pref (which they live behind) is turned off.
-  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
-  var orientation = writingMode.substring(0, writingMode.indexOf("-"));
-
-  var mappings = {
-    "block-size":      { horizontal: "height",
-                         vertical:   "width",
-                         sideways:   "width"      },
-    "inline-size":     { horizontal: "width",
-                         vertical:   "height",
-                         sideways:   "height"     },
-    "max-block-size":  { horizontal: "max-height",
-                         vertical:   "max-width",
-                         sideways:   "max-width"  },
-    "max-inline-size": { horizontal: "max-width",
-                         vertical:   "max-height",
-                         sideways:   "max-height" },
-    "min-block-size":  { horizontal: "min-height",
-                         vertical:   "min-width",
-                         sideways:   "min-width"  },
-    "min-inline-size": { horizontal: "min-width",
-                         vertical:   "min-height",
-                         sideways:   "min-height" },
-  };
-
-  if (!mappings[property]) {
-    throw "unexpected property " + property;
-  }
-
-  var prop = mappings[property][orientation];
-  if (!prop) {
-    throw "unexpected writing mode " + writingMode;
-  }
-
-  return cs.getPropertyValue(prop);
-}
-
-function logical_box_prop_get_computed(cs, property)
-{
-  // http://dev.w3.org/csswg/css-writing-modes-3/#logical-to-physical
-
-  // Use default for writing-mode in case the vertical text
-  // pref (which it lives behind) is turned off.
-  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
-
-  var direction = cs.getPropertyValue("direction");
-
-  // keys in blockMappings are writing-mode values
-  var blockMappings = {
-    "horizontal-tb": { "start": "top",   "end": "bottom" },
-    "vertical-rl":   { "start": "right", "end": "left"   },
-    "vertical-lr":   { "start": "left",  "end": "right"  },
-    "sideways-rl":   { "start": "right", "end": "left"   },
-    "sideways-lr":   { "start": "left",  "end": "right"  },
-  };
-
-  // keys in inlineMappings are regular expressions that match against
-  // a {writing-mode,direction} pair as a space-separated string
-  var inlineMappings = {
-    "horizontal-tb ltr": { "start": "left",   "end": "right"  },
-    "horizontal-tb rtl": { "start": "right",  "end": "left"   },
-    "vertical-.. ltr":   { "start": "bottom", "end": "top"    },
-    "vertical-.. rtl":   { "start": "top",    "end": "bottom" },
-    "vertical-.. ltr":   { "start": "top",    "end": "bottom" },
-    "vertical-.. rtl":   { "start": "bottom", "end": "top"    },
-    "sideways-lr ltr":   { "start": "bottom", "end": "top"    },
-    "sideways-lr rtl":   { "start": "top",    "end": "bottom" },
-    "sideways-rl ltr":   { "start": "top",    "end": "bottom" },
-    "sideways-rl rtl":   { "start": "bottom", "end": "top"    },
-  };
-
-  var blockMapping = blockMappings[writingMode];
-  var inlineMapping;
-
-  // test each regular expression in inlineMappings against the
-  // {writing-mode,direction} pair
-  var key = `${writingMode} ${direction}`;
-  for (var k in inlineMappings) {
-    if (new RegExp(k).test(key)) {
-      inlineMapping = inlineMappings[k];
-      break;
-    }
-  }
-
-  if (!blockMapping || !inlineMapping) {
-    throw "Unexpected writing mode property values";
-  }
-
-  function physicalize(aProperty, aMapping, aLogicalPrefix) {
-    for (var logicalSide in aMapping) {
-      var physicalSide = aMapping[logicalSide];
-      logicalSide = aLogicalPrefix + logicalSide;
-      aProperty = aProperty.replace(logicalSide, physicalSide);
-    }
-    return aProperty;
-  }
-
-  if (/^-moz-/.test(property)) {
-    property = physicalize(property.substring(5), inlineMapping, "");
-  } else if (/^(offset|inset)-(block|inline)-(start|end)/.test(property)) {
-    property = property.replace("offset-", "").replace("inset-", "");  // we want "top" not "offset-top", e.g.
-    property = physicalize(property, blockMapping, "block-");
-    property = physicalize(property, inlineMapping, "inline-");
-  } else if (/-(block|inline)-(start|end)/.test(property)) {
-    property = physicalize(property, blockMapping, "block-");
-    property = physicalize(property, inlineMapping, "inline-");
-  } else {
-    throw "Unexpected property";
-  }
-  return cs.getPropertyValue(property);
-}
 
 // Get the computed value for a property.  For shorthands, return the
 // computed values of all the subproperties, delimited by " ; ".
@@ -6223,8 +6066,6 @@ function get_computed_value(cs, property)
     }
     return results.join(" ; ");
   }
-  if (info.get_computed)
-    return info.get_computed(cs, property);
   return cs.getPropertyValue(property);
 }
 
@@ -8094,7 +7935,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     alias_for: "inset-block-start",
     subproperties: [ "inset-block-start" ],
   };
@@ -8103,7 +7943,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     alias_for: "inset-block-end",
     subproperties: [ "inset-block-end" ],
   };
@@ -8112,7 +7951,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     alias_for: "inset-inline-start",
     subproperties: [ "inset-inline-start" ],
   };
@@ -8121,7 +7959,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     logical: true,
-    get_computed: logical_box_prop_get_computed,
     alias_for: "inset-inline-end",
     subproperties: [ "inset-inline-end" ],
   };

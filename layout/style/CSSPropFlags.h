@@ -52,6 +52,9 @@ enum class CSSPropFlags : uint8_t
 
   // Whether this property should be serialized by Servo in getComputedStyle.
   SerializedByServo = 1 << 6,
+
+  // Whether this is a logical property.
+  IsLogical = 1 << 7,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSPropFlags)
