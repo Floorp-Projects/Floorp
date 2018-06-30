@@ -1265,7 +1265,7 @@ nsComputedDOMStyle::DoGetContent()
   }
 
   if (content->ContentCount() == 1 &&
-      content->ContentAt(0).GetType() == eStyleContentType_AltContent) {
+      content->ContentAt(0).GetType() == StyleContentType::AltContent) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword__moz_alt_content);
     return val.forget();
@@ -1277,16 +1277,16 @@ nsComputedDOMStyle::DoGetContent()
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
     const nsStyleContentData &data = content->ContentAt(i);
-    nsStyleContentType type = data.GetType();
+    StyleContentType type = data.GetType();
     switch (type) {
-      case eStyleContentType_String: {
+      case StyleContentType::String: {
         nsAutoString str;
         nsStyleUtil::AppendEscapedCSSString(
           nsDependentString(data.GetString()), str);
         val->SetString(str);
         break;
       }
-      case eStyleContentType_Image: {
+      case StyleContentType::Image: {
         nsCOMPtr<nsIURI> uri;
         if (imgRequestProxy* image = data.GetImage()) {
           image->GetURI(getter_AddRefs(uri));
@@ -1294,7 +1294,7 @@ nsComputedDOMStyle::DoGetContent()
         val->SetURI(uri);
         break;
       }
-      case eStyleContentType_Attr: {
+      case StyleContentType::Attr: {
         // XXXbholley: We don't correctly serialize namespaces here. Doing so
         // would require either storing the prefix on the nsStyleContentAttr,
         // or poking at the namespaces in the stylesheet to map from the
@@ -1305,11 +1305,11 @@ nsComputedDOMStyle::DoGetContent()
         val->SetString(str, nsROCSSPrimitiveValue::CSS_ATTR);
         break;
       }
-      case eStyleContentType_Counter:
-      case eStyleContentType_Counters: {
+      case StyleContentType::Counter:
+      case StyleContentType::Counters: {
         /* FIXME: counters should really use an object */
         nsAutoString str;
-        if (type == eStyleContentType_Counter) {
+        if (type == StyleContentType::Counter) {
           str.AppendLiteral("counter(");
         }
         else {
@@ -1317,7 +1317,7 @@ nsComputedDOMStyle::DoGetContent()
         }
         nsStyleContentData::CounterFunction* counters = data.GetCounters();
         nsStyleUtil::AppendEscapedCSSIdent(counters->mIdent, str);
-        if (type == eStyleContentType_Counters) {
+        if (type == StyleContentType::Counters) {
           str.AppendLiteral(", ");
           nsStyleUtil::AppendEscapedCSSString(counters->mSeparator, str);
         }
@@ -1330,19 +1330,19 @@ nsComputedDOMStyle::DoGetContent()
         val->SetString(str, nsROCSSPrimitiveValue::CSS_COUNTER);
         break;
       }
-      case eStyleContentType_OpenQuote:
+      case StyleContentType::OpenQuote:
         val->SetIdent(eCSSKeyword_open_quote);
         break;
-      case eStyleContentType_CloseQuote:
+      case StyleContentType::CloseQuote:
         val->SetIdent(eCSSKeyword_close_quote);
         break;
-      case eStyleContentType_NoOpenQuote:
+      case StyleContentType::NoOpenQuote:
         val->SetIdent(eCSSKeyword_no_open_quote);
         break;
-      case eStyleContentType_NoCloseQuote:
+      case StyleContentType::NoCloseQuote:
         val->SetIdent(eCSSKeyword_no_close_quote);
         break;
-      case eStyleContentType_AltContent:
+      case StyleContentType::AltContent:
       default:
         MOZ_ASSERT_UNREACHABLE("unexpected type");
         break;

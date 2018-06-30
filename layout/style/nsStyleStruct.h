@@ -2600,20 +2600,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder
   uint8_t       mEmptyCells;
 };
 
-enum nsStyleContentType {
-  eStyleContentType_String        = 1,
-  eStyleContentType_Image         = 10,
-  eStyleContentType_Attr          = 20,
-  eStyleContentType_Counter       = 30,
-  eStyleContentType_Counters      = 31,
-  eStyleContentType_OpenQuote     = 40,
-  eStyleContentType_CloseQuote    = 41,
-  eStyleContentType_NoOpenQuote   = 42,
-  eStyleContentType_NoCloseQuote  = 43,
-  eStyleContentType_AltContent    = 50,
-  eStyleContentType_Uninitialized
-};
-
 struct nsStyleContentAttr {
   RefPtr<nsAtom> mName; // Non-null.
   RefPtr<nsAtom> mNamespaceURL; // May be null.
@@ -2626,9 +2612,11 @@ struct nsStyleContentAttr {
 
 class nsStyleContentData
 {
+  using StyleContentType = mozilla::StyleContentType;
+
 public:
   nsStyleContentData()
-    : mType(eStyleContentType_Uninitialized)
+    : mType(StyleContentType::Uninitialized)
   {
     MOZ_COUNT_CTOR(nsStyleContentData);
     mContent.mString = nullptr;
@@ -2643,16 +2631,16 @@ public:
     return !(*this == aOther);
   }
 
-  nsStyleContentType GetType() const { return mType; }
+  StyleContentType GetType() const { return mType; }
 
   char16_t* GetString() const
   {
-    MOZ_ASSERT(mType == eStyleContentType_String);
+    MOZ_ASSERT(mType == StyleContentType::String);
     return mContent.mString;
   }
 
   const nsStyleContentAttr* GetAttr() const {
-    MOZ_ASSERT(mType == eStyleContentType_Attr);
+    MOZ_ASSERT(mType == StyleContentType::Attr);
     MOZ_ASSERT(mContent.mAttr);
     return mContent.mAttr;
    }
@@ -2676,8 +2664,8 @@ public:
 
   CounterFunction* GetCounters() const
   {
-    MOZ_ASSERT(mType == eStyleContentType_Counter ||
-               mType == eStyleContentType_Counters);
+    MOZ_ASSERT(mType == StyleContentType::Counter ||
+               mType == StyleContentType::Counters);
     MOZ_ASSERT(mContent.mCounters->mCounterStyle.IsResolved(),
                "Counter style should have been resolved");
     return mContent.mCounters;
@@ -2685,7 +2673,7 @@ public:
 
   nsStyleImageRequest* ImageRequest() const
   {
-    MOZ_ASSERT(mType == eStyleContentType_Image);
+    MOZ_ASSERT(mType == StyleContentType::Image);
     MOZ_ASSERT(mContent.mImage);
     return mContent.mImage;
   }
@@ -2695,34 +2683,34 @@ public:
     return ImageRequest()->get();
   }
 
-  void SetKeyword(nsStyleContentType aType)
+  void SetKeyword(StyleContentType aType)
   {
-    MOZ_ASSERT(aType == eStyleContentType_OpenQuote ||
-               aType == eStyleContentType_CloseQuote ||
-               aType == eStyleContentType_NoOpenQuote ||
-               aType == eStyleContentType_NoCloseQuote ||
-               aType == eStyleContentType_AltContent);
-    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+    MOZ_ASSERT(aType == StyleContentType::OpenQuote ||
+               aType == StyleContentType::CloseQuote ||
+               aType == StyleContentType::NoOpenQuote ||
+               aType == StyleContentType::NoCloseQuote ||
+               aType == StyleContentType::AltContent);
+    MOZ_ASSERT(mType == StyleContentType::Uninitialized,
                "should only initialize nsStyleContentData once");
     mType = aType;
   }
 
-  void SetString(nsStyleContentType aType, const char16_t* aString)
+  void SetString(StyleContentType aType, const char16_t* aString)
   {
-    MOZ_ASSERT(aType == eStyleContentType_String);
+    MOZ_ASSERT(aType == StyleContentType::String);
     MOZ_ASSERT(aString);
-    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+    MOZ_ASSERT(mType == StyleContentType::Uninitialized,
                "should only initialize nsStyleContentData once");
     mType = aType;
     mContent.mString = NS_strdup(aString);
   }
 
-  void SetCounters(nsStyleContentType aType,
+  void SetCounters(StyleContentType aType,
                    already_AddRefed<CounterFunction> aCounterFunction)
   {
-    MOZ_ASSERT(aType == eStyleContentType_Counter ||
-               aType == eStyleContentType_Counters);
-    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+    MOZ_ASSERT(aType == StyleContentType::Counter ||
+               aType == StyleContentType::Counters);
+    MOZ_ASSERT(mType == StyleContentType::Uninitialized,
                "should only initialize nsStyleContentData once");
     mType = aType;
     mContent.mCounters = aCounterFunction.take();
@@ -2731,9 +2719,9 @@ public:
 
   void SetImageRequest(already_AddRefed<nsStyleImageRequest> aRequest)
   {
-    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+    MOZ_ASSERT(mType == StyleContentType::Uninitialized,
                "should only initialize nsStyleContentData once");
-    mType = eStyleContentType_Image;
+    mType = StyleContentType::Image;
     mContent.mImage = aRequest.take();
     MOZ_ASSERT(mContent.mImage);
   }
@@ -2741,7 +2729,7 @@ public:
   void Resolve(nsPresContext*, const nsStyleContentData*);
 
 private:
-  nsStyleContentType mType;
+  StyleContentType mType;
   union {
     char16_t *mString;
     nsStyleContentAttr* mAttr;

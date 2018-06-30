@@ -86,6 +86,21 @@ enum class StyleClear : uint8_t {
   Max = 13  // Max = (Both | Line)
 };
 
+// Counters and generated content.
+enum class StyleContentType : uint8_t {
+  String = 1,
+  Image = 10,
+  Attr = 20,
+  Counter = 30,
+  Counters = 31,
+  OpenQuote = 40,
+  CloseQuote = 41,
+  NoOpenQuote = 42,
+  NoCloseQuote = 43,
+  AltContent = 50,
+  Uninitialized,
+};
+
 // Define geometry box for clip-path's reference-box, background-clip,
 // background-origin, mask-clip, mask-origin, shape-box and transform-box.
 enum class StyleGeometryBox : uint8_t {
