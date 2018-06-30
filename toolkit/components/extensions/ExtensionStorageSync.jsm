@@ -48,6 +48,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CollectionKeyManager: "resource://services-sync/record.js",
   CommonUtils: "resource://services-common/utils.js",
   CryptoUtils: "resource://services-crypto/utils.js",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Kinto: "resource://services-common/kinto-offline-client.js",
@@ -68,7 +69,6 @@ XPCOMUtils.defineLazyGetter(this, "WeaveCrypto", function() {
 
 const {
   DefaultMap,
-  runSafeSyncWithoutClone,
 } = ExtensionUtils;
 
 // Map of Extensions to Set<Contexts> to track contexts that are still
@@ -1249,7 +1249,7 @@ class ExtensionStorageSync {
     let listeners = this.listeners.get(extension) || new Set();
     if (listeners) {
       for (let listener of listeners) {
-        runSafeSyncWithoutClone(listener, changes);
+        ExtensionCommon.runSafeSyncWithoutClone(listener, changes);
       }
     }
   }

@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(this, "Services",
 
 var {
   normalizeTime,
-} = ExtensionUtils;
+} = ExtensionCommon;
 
 let nsINavHistoryService = Ci.nsINavHistoryService;
 const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([

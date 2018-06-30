@@ -4,7 +4,7 @@
 
 var {
   withHandlingUserInput,
-} = ExtensionUtils;
+} = ExtensionCommon;
 
 // If id is not specified for an item we use an integer.
 // This ID need only be unique within a single addon. Since all addon code that
