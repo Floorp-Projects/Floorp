@@ -361,21 +361,6 @@ Specific keys are:
 
 - ``effectiveContentProcessLevel``: The meanings of the values are OS dependent. Details of the meanings can be found in the `Firefox prefs file <https://hg.mozilla.org/mozilla-central/file/tip/browser/app/profile/firefox.js>`_. The value here is the effective value, not the raw value, some platforms enforce a minimum sandbox level. If there is an error calculating this, it will be ``null``.
 
-profile
--------
-
-creationDate
-~~~~~~~~~~~~
-
-The assumed creation date of this client's profile.
-It's read from a file-stored timestamp from the client's profile directory.
-
-.. note::
-
-    If the timestamp file does not exist all files in the profile directory are scanned.
-    The oldest creation or modification date of the scanned files is then taken to be the profile creation date.
-    This has been shown to sometimes be inaccurate (`bug 1449739 <https://bugzilla.mozilla.org/show_bug.cgi?id=1449739>`_).
-
 partner
 -------
 
