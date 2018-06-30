@@ -1230,25 +1230,33 @@ BrowserPageActions.shareURL = {
     let shareProviders = sharingService.getSharingProviders(currentURI);
     let fragment = document.createDocumentFragment();
 
+    let onCommand = event => {
+      let shareName = event.target.getAttribute("share-name");
+      if (shareName) {
+        sharingService.shareUrl(shareName,
+                                currentURI,
+                                gBrowser.selectedBrowser.contentTitle);
+      } else if (event.target.classList.contains("share-more-button")) {
+        sharingService.openSharingPreferences();
+      }
+      PanelMultiView.hidePopup(BrowserPageActions.panelNode);
+    };
+
     shareProviders.forEach(function(share) {
       let item = document.createElement("toolbarbutton");
       item.setAttribute("label", share.menuItemTitle);
       item.setAttribute("share-name", share.name);
       item.setAttribute("image", share.image);
       item.classList.add("subviewbutton", "subviewbutton-iconic");
-
-      item.addEventListener("command", event => {
-        let shareName = event.target.getAttribute("share-name");
-        if (shareName) {
-          sharingService.shareUrl(shareName,
-                                  currentURI,
-                                  gBrowser.selectedBrowser.contentTitle);
-        }
-        PanelMultiView.hidePopup(BrowserPageActions.panelNode);
-      });
-
+      item.addEventListener("command", onCommand);
       fragment.appendChild(item);
     });
+
+    let item = document.createElement("toolbarbutton");
+    item.setAttribute("label", BrowserPageActions.panelNode.getAttribute("shareMore-label"));
+    item.classList.add("subviewbutton", "subviewbutton-iconic", "share-more-button");
+    item.addEventListener("command", onCommand);
+    fragment.appendChild(item);
 
     while (bodyNode.firstChild) {
       bodyNode.firstChild.remove();
