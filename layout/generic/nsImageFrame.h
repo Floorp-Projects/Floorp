@@ -184,20 +184,15 @@ public:
   // The kind of image frame we are.
   enum class Kind : uint8_t
   {
-    // For an nsImageLoadingContent, including generated ::before and ::after
-    // content, which are an nsGenConImageContent.
+    // For an nsImageLoadingContent.
     ImageElement,
-    // For css 'content: url(..)' on other elements.
-    NonGeneratedContentProperty,
+    // For css 'content: url(..)' on non-generated content, or on generated
+    // ::before / ::after with exactly one item in the content property.
+    ContentProperty,
+    // For a child of a ::before / ::after pseudo-element that had more than one
+    // item for the content property.
+    ContentPropertyAtIndex,
   };
-
-  // Whether this frame is for a non-generated image element, that is, one that
-  // isn't a ::before / ::after.
-  bool IsForNonGeneratedImageElement() const
-  {
-    return mKind == Kind::ImageElement &&
-      !HasAnyStateBits(NS_FRAME_GENERATED_CONTENT);
-  }
 
   // Creates a suitable continuing frame for this frame.
   nsImageFrame* CreateContinuingFrame(nsIPresShell*, ComputedStyle*) const;
@@ -205,6 +200,7 @@ public:
 private:
   friend nsIFrame* NS_NewImageFrame(nsIPresShell*, ComputedStyle*);
   friend nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
+  friend nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*, ComputedStyle*);
 
   nsImageFrame(ComputedStyle* aStyle, Kind aKind)
     : nsImageFrame(aStyle, kClassID, aKind)
