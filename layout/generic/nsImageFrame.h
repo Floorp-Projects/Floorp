@@ -186,11 +186,10 @@ public:
   {
     // For an nsImageLoadingContent.
     ImageElement,
-    // For css 'content: url(..)' on non-generated content, or on generated
-    // ::before / ::after with exactly one item in the content property.
+    // For css 'content: url(..)' on non-generated content.
     ContentProperty,
-    // For a child of a ::before / ::after pseudo-element that had more than one
-    // item for the content property.
+    // For a child of a ::before / ::after pseudo-element that had an url() item
+    // for the content property.
     ContentPropertyAtIndex,
   };
 
