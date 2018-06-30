@@ -3,5 +3,4 @@ AllowCompilerWarnings()
 if CONFIG['INTEL_ARCHITECTURE']:
     CXXFLAGS += CONFIG['SSE2_FLAGS']
 DEFINES['__NDK_FPABI__'] = ''
-DEFINES['constexpr14'] = ''
 DEFINES['ANGLE_SKIP_DXGI_1_2_CHECK'] = True
