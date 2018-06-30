@@ -25,8 +25,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
+  MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
@@ -43,14 +44,13 @@ var {
   CanOfAPIs,
   SchemaAPIManager,
   SpreadArgs,
+  defineLazyGetter,
 } = ExtensionCommon;
 
 var {
   DefaultMap,
   DefaultWeakMap,
   ExtensionError,
-  MessageManagerProxy,
-  defineLazyGetter,
   promiseDocumentLoaded,
   promiseEvent,
   promiseObserved,

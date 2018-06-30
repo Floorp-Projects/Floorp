@@ -18,13 +18,17 @@ ChromeUtils.defineModuleGetter(this, "setTimeout",
                                "resource://gre/modules/Timer.jsm");
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   DefaultWeakMap,
-  makeWidgetId,
   promiseEvent,
 } = ExtensionUtils;
+
+const {
+  makeWidgetId,
+} = ExtensionCommon;
 
 
 const POPUP_LOAD_TIMEOUT_MS = 200;

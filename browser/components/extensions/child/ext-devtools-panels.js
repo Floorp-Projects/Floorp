@@ -18,7 +18,7 @@ var {
  * @param {string} panelOptions.id
  *   The id of the addon devtools panel registered in the main process.
  */
-class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
+class ChildDevToolsPanel extends ExtensionCommon.EventEmitter {
   constructor(context, {id}) {
     super();
 
@@ -144,7 +144,7 @@ class ChildDevToolsPanel extends ExtensionUtils.EventEmitter {
  * @param {string} sidebarOptions.id
  *   The id of the addon devtools sidebar registered in the main process.
  */
-class ChildDevToolsInspectorSidebar extends ExtensionUtils.EventEmitter {
+class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
   constructor(context, {id}) {
     super();
 
