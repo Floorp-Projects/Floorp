@@ -41,7 +41,6 @@ XPIDL_SOURCES += [
     'nsIContentViewer.idl',
     'nsIContentViewerEdit.idl',
     'nsIDocShell.idl',
-    'nsIDocShellLoadInfo.idl',
     'nsIDocShellTreeItem.idl',
     'nsIDocShellTreeOwner.idl',
     'nsIDocumentLoaderFactory.idl',
