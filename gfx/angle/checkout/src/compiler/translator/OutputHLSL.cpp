@@ -626,14 +626,6 @@ void OutputHLSL::header(TInfoSinkBase &out,
                    "\n";
         }
 
-        if (!mappedStructs.empty())
-        {
-            out << "// Structures from std140 blocks with padding removed\n";
-            out << "\n";
-            out << mappedStructs;
-            out << "\n";
-        }
-
         if (usingMRTExtension && mNumRenderTargets > 1)
         {
             out << "#define GL_USES_MRT\n";
@@ -738,14 +730,6 @@ void OutputHLSL::header(TInfoSinkBase &out,
                    "dx_DepthRange.y, dx_DepthRange.z};\n"
                    "\n";
         }
-
-        if (!mappedStructs.empty())
-        {
-            out << "// Structures from std140 blocks with padding removed\n";
-            out << "\n";
-            out << mappedStructs;
-            out << "\n";
-        }
     }
     else  // Compute shader
     {
@@ -783,6 +767,14 @@ void OutputHLSL::header(TInfoSinkBase &out,
         {
             out << "static uint gl_LocalInvocationIndex = uint(0);\n";
         }
+    }
+
+    if (!mappedStructs.empty())
+    {
+        out << "// Structures from std140 blocks with padding removed\n";
+        out << "\n";
+        out << mappedStructs;
+        out << "\n";
     }
 
     bool getDimensionsIgnoresBaseLevel =

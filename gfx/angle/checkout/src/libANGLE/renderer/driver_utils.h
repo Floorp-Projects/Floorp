@@ -45,6 +45,8 @@ inline bool IsQualcomm(uint32_t vendor_id)
     return vendor_id == VENDOR_ID_QUALCOMM;
 }
 
+const char *GetVendorString(uint32_t vendorId);
+
 // Intel
 class IntelDriverVersion
 {

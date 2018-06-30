@@ -23,8 +23,8 @@
     void color4x(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);                 \
     void colorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer);       \
     void depthRangex(GLfixed n, GLfixed f);                                                \
-    void disableClientState(GLenum array);                                                 \
-    void enableClientState(GLenum array);                                                  \
+    void disableClientState(ClientVertexArrayType arrayPacked);                            \
+    void enableClientState(ClientVertexArrayType arrayPacked);                             \
     void fogf(GLenum pname, GLfloat param);                                                \
     void fogfv(GLenum pname, const GLfloat *params);                                       \
     void fogx(GLenum pname, GLfixed param);                                                \

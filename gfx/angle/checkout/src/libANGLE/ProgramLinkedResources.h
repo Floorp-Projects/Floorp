@@ -13,7 +13,7 @@
 
 #include "angle_gl.h"
 #include "common/angleutils.h"
-#include "libANGLE/PackedGLEnums_autogen.h"
+#include "libANGLE/PackedEnums.h"
 #include "libANGLE/VaryingPacking.h"
 
 #include <functional>
@@ -234,8 +234,7 @@ class InterfaceBlockLinker : angle::NonCopyable
                                              ShaderType shaderType,
                                              bool active) const                 = 0;
 
-    using ShaderBlocks = std::pair<ShaderType, const std::vector<sh::InterfaceBlock> *>;
-    std::vector<ShaderBlocks> mShaderBlocks;
+    ShaderMap<const std::vector<sh::InterfaceBlock> *> mShaderBlocks;
 
     std::vector<InterfaceBlock> *mBlocksOut;
 

@@ -499,7 +499,14 @@ Error Display::initialize()
         {
             std::unique_ptr<rx::DeviceImpl> impl(mImplementation->createDevice());
             ASSERT(impl != nullptr);
-            ANGLE_TRY(impl->initialize());
+            error = impl->initialize();
+            if (error.isError())
+            {
+                ERR() << "Failed to initialize display because device creation failed: "
+                      << error.getMessage();
+                mImplementation->terminate();
+                return error;
+            }
             mDevice = new Device(this, impl.release());
         }
         else
@@ -515,8 +522,9 @@ Error Display::initialize()
     }
 
     mProxyContext.reset(nullptr);
-    gl::Context *proxyContext = new gl::Context(mImplementation, nullptr, nullptr, nullptr, nullptr,
-                                                egl::AttributeMap(), mDisplayExtensions);
+    gl::Context *proxyContext =
+        new gl::Context(mImplementation, nullptr, nullptr, nullptr, nullptr, egl::AttributeMap(),
+                        mDisplayExtensions, GetClientExtensions());
     mProxyContext.reset(proxyContext);
 
     mInitialized = true;
@@ -526,11 +534,14 @@ Error Display::initialize()
 
 Error Display::terminate()
 {
+    if (!mInitialized)
+    {
+        return NoError();
+    }
+
     ANGLE_TRY(makeCurrent(nullptr, nullptr, nullptr));
 
     mMemoryProgramCache.clear();
-
-    mProxyContext.reset(nullptr);
 
     while (!mContextSet.empty())
     {
@@ -554,6 +565,9 @@ Error Display::terminate()
     {
         ANGLE_TRY(destroySurface(*mState.surfaceSet.begin()));
     }
+
+    // Allow the EGL objects that are being deleted to use the proxy context.
+    mProxyContext.reset(nullptr);
 
     mConfigSet.clear();
 
@@ -780,7 +794,7 @@ Error Display::createContext(const Config *configuration,
 
     gl::Context *context =
         new gl::Context(mImplementation, configuration, shareContext, shareTextures, cachePointer,
-                        attribs, mDisplayExtensions);
+                        attribs, mDisplayExtensions, GetClientExtensions());
 
     ASSERT(context != nullptr);
     mContextSet.insert(context);
@@ -1002,6 +1016,7 @@ static ClientExtensions GenerateClientExtensions()
 #endif
 
     extensions.clientGetAllProcAddresses = true;
+    extensions.explicitContext           = true;
 
     return extensions;
 }

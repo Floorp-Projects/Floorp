@@ -14,7 +14,7 @@
 #include "common/vector_utils.h"
 #include "libANGLE/Constants.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 
 #include <stdint.h>
@@ -54,6 +54,12 @@ struct Rectangle
     int y0() const { return y; }
     int x1() const { return x + width; }
     int y1() const { return y + height; }
+
+    bool isReversedX() const { return width < 0; }
+    bool isReversedY() const { return height < 0; }
+
+    // Returns a rectangle with the same area but with height and width guaranteed to be positive.
+    Rectangle removeReversal() const;
 
     int x;
     int y;

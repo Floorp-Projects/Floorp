@@ -808,7 +808,7 @@ bool ValidateES3CopyTexImageParametersBase(Context *context,
     gl::Framebuffer *framebuffer = state.getReadFramebuffer();
     GLuint readFramebufferID     = framebuffer->id();
 
-    if (!ValidateFramebufferComplete(context, framebuffer, true))
+    if (!ValidateFramebufferComplete(context, framebuffer))
     {
         return false;
     }
@@ -1063,7 +1063,7 @@ bool ValidateES3TexStorage3DParameters(Context *context,
                                                height, depth);
 }
 
-bool ValidateBeginQuery(gl::Context *context, GLenum target, GLuint id)
+bool ValidateBeginQuery(gl::Context *context, QueryType target, GLuint id)
 {
     if (context->getClientMajorVersion() < 3)
     {
@@ -1074,7 +1074,7 @@ bool ValidateBeginQuery(gl::Context *context, GLenum target, GLuint id)
     return ValidateBeginQueryBase(context, target, id);
 }
 
-bool ValidateEndQuery(gl::Context *context, GLenum target)
+bool ValidateEndQuery(gl::Context *context, QueryType target)
 {
     if (context->getClientMajorVersion() < 3)
     {
@@ -1085,7 +1085,7 @@ bool ValidateEndQuery(gl::Context *context, GLenum target)
     return ValidateEndQueryBase(context, target);
 }
 
-bool ValidateGetQueryiv(Context *context, GLenum target, GLenum pname, GLint *params)
+bool ValidateGetQueryiv(Context *context, QueryType target, GLenum pname, GLint *params)
 {
     if (context->getClientMajorVersion() < 3)
     {
@@ -1244,7 +1244,7 @@ bool ValidateClearBuffer(Context *context)
         return false;
     }
 
-    if (!ValidateFramebufferComplete(context, context->getGLState().getDrawFramebuffer(), true))
+    if (!ValidateFramebufferComplete(context, context->getGLState().getDrawFramebuffer()))
     {
         return false;
     }

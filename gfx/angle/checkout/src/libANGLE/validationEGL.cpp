@@ -304,6 +304,7 @@ Error ValidateGetPlatformDisplayCommon(EGLenum platform,
         Optional<EGLAttrib> majorVersion;
         Optional<EGLAttrib> minorVersion;
         Optional<EGLAttrib> deviceType;
+        Optional<EGLAttrib> eglHandle;
 
         for (const auto &curAttrib : attribMap)
         {
@@ -400,6 +401,13 @@ Error ValidateGetPlatformDisplayCommon(EGLenum platform,
                     }
                     break;
 
+                case EGL_PLATFORM_ANGLE_EGL_HANDLE_ANGLE:
+                    if (value != EGL_DONT_CARE)
+                    {
+                        eglHandle = value;
+                    }
+                    break;
+
                 default:
                     break;
             }
@@ -459,6 +467,13 @@ Error ValidateGetPlatformDisplayCommon(EGLenum platform,
                 return EglBadAttribute() << "EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE currently "
                                             "only supports Vulkan 1.0.";
             }
+        }
+
+        if (eglHandle.valid() && platformType != EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE &&
+            platformType != EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE)
+        {
+            return EglBadAttribute() << "EGL_PLATFORM_ANGLE_EGL_HANDLE_ANGLE requires a "
+                                        "device type of EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE.";
         }
     }
     else if (platform == EGL_PLATFORM_DEVICE_EXT)
@@ -1270,7 +1285,7 @@ Error ValidateCreatePbufferFromClientBuffer(Display *display, EGLenum buftype, E
     return NoError();
 }
 
-Error ValidateMakeCurrent(Display *display, EGLSurface draw, EGLSurface read, gl::Context *context)
+Error ValidateMakeCurrent(Display *display, Surface *draw, Surface *read, gl::Context *context)
 {
     if (context == EGL_NO_CONTEXT && (draw != EGL_NO_SURFACE || read != EGL_NO_SURFACE))
     {
@@ -1321,37 +1336,31 @@ Error ValidateMakeCurrent(Display *display, EGLSurface draw, EGLSurface read, gl
         ANGLE_TRY(ValidateContext(display, context));
     }
 
-    if (display->isInitialized() && display->testDeviceLost())
+    if (display->isInitialized() && display->isDeviceLost())
     {
         return EglContextLost();
     }
 
-    Surface *drawSurface = static_cast<Surface *>(draw);
     if (draw != EGL_NO_SURFACE)
     {
-        ANGLE_TRY(ValidateSurface(display, drawSurface));
+        ANGLE_TRY(ValidateSurface(display, draw));
     }
 
-    Surface *readSurface = static_cast<Surface *>(read);
     if (read != EGL_NO_SURFACE)
     {
-        ANGLE_TRY(ValidateSurface(display, readSurface));
-    }
-
-    if (readSurface)
-    {
-        ANGLE_TRY(ValidateCompatibleConfigs(display, readSurface->getConfig(), readSurface,
-                                            context->getConfig(), readSurface->getType()));
+        ANGLE_TRY(ValidateSurface(display, read));
+        ANGLE_TRY(ValidateCompatibleConfigs(display, read->getConfig(), read, context->getConfig(),
+                                            read->getType()));
     }
 
     if (draw != read)
     {
         UNIMPLEMENTED();  // FIXME
 
-        if (drawSurface)
+        if (draw)
         {
-            ANGLE_TRY(ValidateCompatibleConfigs(display, drawSurface->getConfig(), drawSurface,
-                                                context->getConfig(), drawSurface->getType()));
+            ANGLE_TRY(ValidateCompatibleConfigs(display, draw->getConfig(), draw,
+                                                context->getConfig(), draw->getType()));
         }
     }
     return NoError();

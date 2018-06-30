@@ -55,9 +55,7 @@ struct D3DUniform : private angle::NonCopyable
     bool isImage() const;
     bool isArray() const { return !arraySizes.empty(); }
     unsigned int getArraySizeProduct() const;
-    bool isReferencedByVertexShader() const;
-    bool isReferencedByFragmentShader() const;
-    bool isReferencedByComputeShader() const;
+    bool isReferencedByShader(gl::ShaderType shaderType) const;
 
     const uint8_t *firstNonNullData() const;
     const uint8_t *getDataPtrToElement(size_t elementIndex) const;
@@ -68,15 +66,11 @@ struct D3DUniform : private angle::NonCopyable
     std::vector<unsigned int> arraySizes;
 
     // Pointer to a system copies of the data. Separate pointers for each uniform storage type.
-    uint8_t *vsData;
-    uint8_t *psData;
-    uint8_t *csData;
+    gl::ShaderMap<uint8_t *> mShaderData;
 
     // Register information.
     HLSLRegisterType regType;
-    unsigned int vsRegisterIndex;
-    unsigned int psRegisterIndex;
-    unsigned int csRegisterIndex;
+    gl::ShaderMap<unsigned int> mShaderRegisterIndexes;
     unsigned int registerCount;
 
     // Register "elements" are used for uniform structs in ES3, to appropriately identify single
@@ -90,22 +84,14 @@ struct D3DUniform : private angle::NonCopyable
 
 struct D3DUniformBlock
 {
-    D3DUniformBlock()
-        : vsRegisterIndex(GL_INVALID_INDEX),
-          psRegisterIndex(GL_INVALID_INDEX),
-          csRegisterIndex(GL_INVALID_INDEX)
+    D3DUniformBlock() { mShaderRegisterIndexes.fill(GL_INVALID_INDEX); }
+
+    bool activeInShader(gl::ShaderType shaderType) const
     {
+        return mShaderRegisterIndexes[shaderType] != GL_INVALID_INDEX;
     }
 
-    bool vertexActive() const { return vsRegisterIndex != GL_INVALID_INDEX; }
-
-    bool fragmentActive() const { return psRegisterIndex != GL_INVALID_INDEX; }
-
-    bool computeActive() const { return csRegisterIndex != GL_INVALID_INDEX; }
-
-    unsigned int vsRegisterIndex;
-    unsigned int psRegisterIndex;
-    unsigned int csRegisterIndex;
+    gl::ShaderMap<unsigned int> mShaderRegisterIndexes;
 };
 
 struct D3DVarying final
@@ -129,8 +115,7 @@ class ProgramD3DMetadata final : angle::NonCopyable
 {
   public:
     ProgramD3DMetadata(RendererD3D *renderer,
-                       const ShaderD3D *vertexShader,
-                       const ShaderD3D *fragmentShader);
+                       const gl::ShaderMap<const ShaderD3D *> &attachedShaders);
 
     int getRendererMajorShaderModel() const;
     bool usesBroadcast(const gl::ContextState &data) const;
@@ -155,11 +140,8 @@ class ProgramD3DMetadata final : angle::NonCopyable
     const std::string mShaderModelSuffix;
     const bool mUsesInstancedPointSpriteEmulation;
     const bool mUsesViewScale;
-    const bool mHasANGLEMultiviewEnabled;
-    const bool mUsesViewID;
     const bool mCanSelectViewInVertexShader;
-    const ShaderD3D *mVertexShader;
-    const ShaderD3D *mFragmentShader;
+    const gl::ShaderMap<const ShaderD3D *> mAttachedShaders;
 };
 
 class ProgramD3D : public ProgramImpl
@@ -223,12 +205,9 @@ class ProgramD3D : public ProgramImpl
                                  GLint components,
                                  const GLfloat *coeffs) override;
 
-    void initializeUniformStorage();
     void updateUniformBufferCache(const gl::Caps &caps,
-                                  unsigned int reservedVertex,
-                                  unsigned int reservedFragment);
-    const std::vector<GLint> &getVertexUniformBufferCache() const;
-    const std::vector<GLint> &getFragmentUniformBufferCache() const;
+                                  const gl::ShaderMap<unsigned int> &reservedShaderRegisterIndexes);
+    const std::vector<GLint> &getShaderUniformBufferCache(gl::ShaderType shaderType) const;
 
     void dirtyAllUniforms();
 
@@ -287,9 +266,10 @@ class ProgramD3D : public ProgramImpl
 
     void setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) override;
 
-    UniformStorageD3D &getVertexUniformStorage() const { return *mVertexUniformStorage.get(); }
-    UniformStorageD3D &getFragmentUniformStorage() const { return *mFragmentUniformStorage.get(); }
-    UniformStorageD3D &getComputeUniformStorage() const { return *mComputeUniformStorage.get(); }
+    UniformStorageD3D *getShaderUniformStorage(gl::ShaderType shaderType) const
+    {
+        return mShaderUniformStorages[shaderType].get();
+    }
 
     unsigned int getSerial() const;
 
@@ -395,6 +375,8 @@ class ProgramD3D : public ProgramImpl
 
     typedef std::map<std::string, D3DUniform *> D3DUniformMap;
 
+    void initializeUniformStorage(const gl::ShaderBitSet &availableShaderStages);
+
     void defineUniformsAndAssignRegisters(const gl::Context *context);
     void defineUniformBase(const gl::Shader *shader,
                            const sh::Uniform &uniform,
@@ -498,11 +480,9 @@ class ProgramD3D : public ProgramImpl
     std::vector<std::unique_ptr<ShaderExecutableD3D>> mGeometryExecutables;
     std::unique_ptr<ShaderExecutableD3D> mComputeExecutable;
 
-    std::string mVertexHLSL;
-    angle::CompilerWorkaroundsD3D mVertexWorkarounds;
+    gl::ShaderMap<std::string> mShaderHLSL;
+    gl::ShaderMap<angle::CompilerWorkaroundsD3D> mShaderWorkarounds;
 
-    std::string mPixelHLSL;
-    angle::CompilerWorkaroundsD3D mPixelWorkarounds;
     bool mUsesFragDepth;
     bool mHasANGLEMultiviewEnabled;
     bool mUsesViewID;
@@ -516,16 +496,10 @@ class ProgramD3D : public ProgramImpl
     bool mUsesPointSize;
     bool mUsesFlatInterpolation;
 
-    std::unique_ptr<UniformStorageD3D> mVertexUniformStorage;
-    std::unique_ptr<UniformStorageD3D> mFragmentUniformStorage;
-    std::unique_ptr<UniformStorageD3D> mComputeUniformStorage;
+    gl::ShaderMap<std::unique_ptr<UniformStorageD3D>> mShaderUniformStorages;
 
-    std::vector<Sampler> mSamplersPS;
-    std::vector<Sampler> mSamplersVS;
-    std::vector<Sampler> mSamplersCS;
-    GLuint mUsedVertexSamplerRange;
-    GLuint mUsedPixelSamplerRange;
-    GLuint mUsedComputeSamplerRange;
+    gl::ShaderMap<std::vector<Sampler>> mShaderSamplers;
+    gl::ShaderMap<GLuint> mUsedShaderSamplerRanges;
     bool mDirtySamplerMapping;
 
     std::vector<Image> mImagesCS;
@@ -541,8 +515,7 @@ class ProgramD3D : public ProgramImpl
 
     unsigned int mSerial;
 
-    std::vector<GLint> mVertexUBOCache;
-    std::vector<GLint> mFragmentUBOCache;
+    gl::ShaderMap<std::vector<int>> mShaderUBOCaches;
     VertexExecutable::Signature mCachedVertexSignature;
     gl::InputLayout mCachedInputLayout;
     Optional<size_t> mCachedVertexExecutableIndex;

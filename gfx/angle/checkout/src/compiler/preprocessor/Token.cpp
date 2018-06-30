@@ -9,6 +9,9 @@
 #include "common/debug.h"
 #include "compiler/preprocessor/numeric_lex.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -78,3 +81,5 @@ std::ostream &operator<<(std::ostream &out, const Token &token)
 }
 
 }  // namespace pp
+
+}  // namespace angle

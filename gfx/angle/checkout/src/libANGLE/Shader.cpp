@@ -130,6 +130,7 @@ Shader::Shader(ShaderProgramManager *manager,
 
 void Shader::onDestroy(const gl::Context *context)
 {
+    mImplementation->destroy(context);
     mBoundCompiler.set(context, nullptr);
     mImplementation.reset(nullptr);
     delete this;
@@ -226,7 +227,7 @@ int Shader::getTranslatedSourceWithDebugInfoLength(const Context *context)
 {
     resolveCompile(context);
 
-    const std::string &debugInfo = mImplementation->getDebugInfo();
+    const std::string &debugInfo = mImplementation->getDebugInfo(context);
     if (debugInfo.empty())
     {
         return 0;
@@ -282,7 +283,7 @@ void Shader::getTranslatedSourceWithDebugInfo(const Context *context,
                                               char *buffer)
 {
     resolveCompile(context);
-    const std::string &debugInfo = mImplementation->getDebugInfo();
+    const std::string &debugInfo = mImplementation->getDebugInfo(context);
     GetSourceImpl(debugInfo, bufSize, length, buffer);
 }
 
@@ -312,8 +313,8 @@ void Shader::compile(const Context *context)
 
     std::stringstream sourceStream;
 
-    mLastCompileOptions =
-        mImplementation->prepareSourceAndReturnOptions(&sourceStream, &mLastCompiledSourcePath);
+    mLastCompileOptions = mImplementation->prepareSourceAndReturnOptions(context, &sourceStream,
+                                                                         &mLastCompiledSourcePath);
     mLastCompileOptions |= (SH_OBJECT_CODE | SH_VARIABLES);
     mLastCompiledSource = sourceStream.str();
 
@@ -447,7 +448,7 @@ void Shader::resolveCompile(const Context *context)
 
     ASSERT(!mState.mTranslatedSource.empty());
 
-    bool success = mImplementation->postTranslateCompile(mBoundCompiler.get(), &mInfoLog);
+    bool success = mImplementation->postTranslateCompile(context, mBoundCompiler.get(), &mInfoLog);
     mState.mCompileStatus = success ? CompileStatus::COMPILED : CompileStatus::NOT_COMPILED;
 }
 

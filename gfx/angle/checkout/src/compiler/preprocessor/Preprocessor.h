@@ -11,6 +11,9 @@
 
 #include "common/angleutils.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -56,5 +59,7 @@ class Preprocessor : angle::NonCopyable
 };
 
 }  // namespace pp
+
+}  // namespace angle
 
 #endif  // COMPILER_PREPROCESSOR_PREPROCESSOR_H_

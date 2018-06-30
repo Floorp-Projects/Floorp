@@ -14,6 +14,9 @@
 #include "compiler/preprocessor/Token.h"
 #include "compiler/preprocessor/Tokenizer.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -105,3 +108,5 @@ void Preprocessor::setMaxTokenSize(size_t maxTokenSize)
 }
 
 }  // namespace pp
+
+}  // namespace angle

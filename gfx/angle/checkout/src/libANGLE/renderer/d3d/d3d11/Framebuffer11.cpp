@@ -375,7 +375,9 @@ gl::Error Framebuffer11::syncState(const gl::Context *context,
     return gl::NoError();
 }
 
-gl::Error Framebuffer11::getSamplePosition(size_t index, GLfloat *xy) const
+gl::Error Framebuffer11::getSamplePosition(const gl::Context *context,
+                                           size_t index,
+                                           GLfloat *xy) const
 {
     const gl::FramebufferAttachment *attachment = mState.getFirstNonNullAttachment();
     ASSERT(attachment);

@@ -34,8 +34,8 @@ namespace
 {
 bool ImageIndexConflictsWithSRV(const gl::ImageIndex &index, D3D11_SHADER_RESOURCE_VIEW_DESC desc)
 {
-    unsigned mipLevel  = index.mipIndex;
-    gl::TextureType textureType = index.type;
+    unsigned mipLevel           = index.getLevelIndex();
+    gl::TextureType textureType = index.getType();
 
     switch (desc.ViewDimension)
     {
@@ -45,7 +45,7 @@ bool ImageIndexConflictsWithSRV(const gl::ImageIndex &index, D3D11_SHADER_RESOUR
             unsigned int maxSrvMip = desc.Texture2D.MipLevels + desc.Texture2D.MostDetailedMip;
             maxSrvMip              = allLevels ? INT_MAX : maxSrvMip;
 
-            unsigned mipMin = index.mipIndex;
+            unsigned mipMin = index.getLevelIndex();
             unsigned mipMax = INT_MAX;
 
             return textureType == gl::TextureType::_2D &&
@@ -55,7 +55,7 @@ bool ImageIndexConflictsWithSRV(const gl::ImageIndex &index, D3D11_SHADER_RESOUR
 
         case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
         {
-            GLint layerIndex = index.layerIndex;
+            GLint layerIndex = index.getLayerIndex();
 
             bool allLevels = (desc.Texture2DArray.MipLevels == std::numeric_limits<UINT>::max());
             unsigned int maxSrvMip =
@@ -272,9 +272,9 @@ ShaderConstants11::~ShaderConstants11()
 
 void ShaderConstants11::init(const gl::Caps &caps)
 {
-    mSamplerMetadataVS.resize(caps.maxVertexTextureImageUnits);
-    mSamplerMetadataPS.resize(caps.maxTextureImageUnits);
-    mSamplerMetadataCS.resize(caps.maxComputeTextureImageUnits);
+    mSamplerMetadataVS.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Vertex]);
+    mSamplerMetadataPS.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Fragment]);
+    mSamplerMetadataCS.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Compute]);
 }
 
 size_t ShaderConstants11::getRequiredBufferSize(gl::ShaderType shaderType) const
@@ -559,10 +559,6 @@ gl::Error ShaderConstants11::updateBuffer(Renderer11 *renderer,
 
     return gl::NoError();
 }
-
-static const GLenum QueryTypes[] = {GL_ANY_SAMPLES_PASSED, GL_ANY_SAMPLES_PASSED_CONSERVATIVE,
-                                    GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, GL_TIME_ELAPSED_EXT,
-                                    GL_COMMANDS_COMPLETED_CHROMIUM};
 
 StateManager11::StateManager11(Renderer11 *renderer)
     : mRenderer(renderer),
@@ -1596,9 +1592,9 @@ gl::Error StateManager11::onMakeCurrent(const gl::Context *context)
     }
     mCurrentQueries.clear();
 
-    for (GLenum queryType : QueryTypes)
+    for (gl::QueryType type : angle::AllEnums<gl::QueryType>())
     {
-        gl::Query *query = state.getActiveQuery(queryType);
+        gl::Query *query = state.getActiveQuery(type);
         if (query != nullptr)
         {
             Query11 *query11 = GetImplAs<Query11>(query);
@@ -1737,8 +1733,8 @@ void StateManager11::unsetConflictingAttachmentResources(
 
 gl::Error StateManager11::initialize(const gl::Caps &caps, const gl::Extensions &extensions)
 {
-    mCurVertexSRVs.initialize(caps.maxVertexTextureImageUnits);
-    mCurPixelSRVs.initialize(caps.maxTextureImageUnits);
+    mCurVertexSRVs.initialize(caps.maxShaderTextureImageUnits[gl::ShaderType::Vertex]);
+    mCurPixelSRVs.initialize(caps.maxShaderTextureImageUnits[gl::ShaderType::Fragment]);
 
     // TODO(xinghua.cao@intel.com): need to add compute shader texture image units.
     mCurComputeSRVs.initialize(caps.maxImageUnits);
@@ -1746,19 +1742,22 @@ gl::Error StateManager11::initialize(const gl::Caps &caps, const gl::Extensions 
     mCurComputeUAVs.initialize(caps.maxImageUnits);
 
     // Initialize cached NULL SRV block
-    mNullSRVs.resize(caps.maxTextureImageUnits, nullptr);
+    mNullSRVs.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Fragment], nullptr);
 
     mNullUAVs.resize(caps.maxImageUnits, nullptr);
 
     mCurrentValueAttribs.resize(caps.maxVertexAttributes);
 
-    mForceSetVertexSamplerStates.resize(caps.maxVertexTextureImageUnits, true);
-    mForceSetPixelSamplerStates.resize(caps.maxTextureImageUnits, true);
-    mForceSetComputeSamplerStates.resize(caps.maxComputeTextureImageUnits, true);
+    mForceSetVertexSamplerStates.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Vertex],
+                                        true);
+    mForceSetPixelSamplerStates.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Fragment],
+                                       true);
+    mForceSetComputeSamplerStates.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Compute],
+                                         true);
 
-    mCurVertexSamplerStates.resize(caps.maxVertexTextureImageUnits);
-    mCurPixelSamplerStates.resize(caps.maxTextureImageUnits);
-    mCurComputeSamplerStates.resize(caps.maxComputeTextureImageUnits);
+    mCurVertexSamplerStates.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Vertex]);
+    mCurPixelSamplerStates.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Fragment]);
+    mCurComputeSamplerStates.resize(caps.maxShaderTextureImageUnits[gl::ShaderType::Compute]);
 
     mShaderConstants.init(caps);
 
@@ -2033,15 +2032,15 @@ gl::Error StateManager11::updateState(const gl::Context *context,
         mInternalDirtyBits.set(DIRTY_BIT_BLEND_STATE);
     }
 
+    VertexArray11 *vao11 = GetImplAs<VertexArray11>(glState.getVertexArray());
+    ANGLE_TRY(vao11->syncStateForDraw(context, drawCallParams));
+
     // Changes in the draw call can affect the vertex buffer translations.
     if (!mLastFirstVertex.valid() || mLastFirstVertex.value() != drawCallParams.firstVertex())
     {
         mLastFirstVertex = drawCallParams.firstVertex();
         invalidateInputLayout();
     }
-
-    VertexArray11 *vao11 = GetImplAs<VertexArray11>(glState.getVertexArray());
-    ANGLE_TRY(vao11->syncStateForDraw(context, drawCallParams));
 
     if (drawCallParams.isDrawElements())
     {
@@ -2438,8 +2437,8 @@ gl::Error StateManager11::applyTextures(const gl::Context *context, gl::ShaderTy
 
     // Set all the remaining textures to NULL
     size_t samplerCount = (shaderType == gl::ShaderType::Fragment)
-                              ? caps.maxTextureImageUnits
-                              : caps.maxVertexTextureImageUnits;
+                              ? caps.maxShaderTextureImageUnits[gl::ShaderType::Fragment]
+                              : caps.maxShaderTextureImageUnits[gl::ShaderType::Vertex];
     ANGLE_TRY(clearSRVs(shaderType, samplerRange, samplerCount));
 
     return gl::NoError();
@@ -2470,7 +2469,8 @@ gl::Error StateManager11::setSamplerState(const gl::Context *context,
 
     if (type == gl::ShaderType::Fragment)
     {
-        ASSERT(static_cast<unsigned int>(index) < mRenderer->getNativeCaps().maxTextureImageUnits);
+        ASSERT(static_cast<unsigned int>(index) <
+               mRenderer->getNativeCaps().maxShaderTextureImageUnits[gl::ShaderType::Fragment]);
 
         if (mForceSetPixelSamplerStates[index] ||
             memcmp(&samplerState, &mCurPixelSamplerStates[index], sizeof(gl::SamplerState)) != 0)
@@ -2489,7 +2489,7 @@ gl::Error StateManager11::setSamplerState(const gl::Context *context,
     else if (type == gl::ShaderType::Vertex)
     {
         ASSERT(static_cast<unsigned int>(index) <
-               mRenderer->getNativeCaps().maxVertexTextureImageUnits);
+               mRenderer->getNativeCaps().maxShaderTextureImageUnits[gl::ShaderType::Vertex]);
 
         if (mForceSetVertexSamplerStates[index] ||
             memcmp(&samplerState, &mCurVertexSamplerStates[index], sizeof(gl::SamplerState)) != 0)
@@ -2508,7 +2508,7 @@ gl::Error StateManager11::setSamplerState(const gl::Context *context,
     else if (type == gl::ShaderType::Compute)
     {
         ASSERT(static_cast<unsigned int>(index) <
-               mRenderer->getNativeCaps().maxComputeTextureImageUnits);
+               mRenderer->getNativeCaps().maxShaderTextureImageUnits[gl::ShaderType::Compute]);
 
         if (mForceSetComputeSamplerStates[index] ||
             memcmp(&samplerState, &mCurComputeSamplerStates[index], sizeof(gl::SamplerState)) != 0)
@@ -2564,11 +2564,12 @@ gl::Error StateManager11::setTexture(const gl::Context *context,
         textureImpl->resetDirty();
     }
 
-    ASSERT(
-        (type == gl::ShaderType::Fragment &&
-         static_cast<unsigned int>(index) < mRenderer->getNativeCaps().maxTextureImageUnits) ||
-        (type == gl::ShaderType::Vertex &&
-         static_cast<unsigned int>(index) < mRenderer->getNativeCaps().maxVertexTextureImageUnits));
+    ASSERT((type == gl::ShaderType::Fragment &&
+            static_cast<unsigned int>(index) <
+                mRenderer->getNativeCaps().maxShaderTextureImageUnits[gl::ShaderType::Fragment]) ||
+           (type == gl::ShaderType::Vertex &&
+            static_cast<unsigned int>(index) <
+                mRenderer->getNativeCaps().maxShaderTextureImageUnits[gl::ShaderType::Vertex]));
 
     setShaderResourceInternal(type, index, textureSRV);
     return gl::NoError();
@@ -3077,9 +3078,9 @@ gl::Error StateManager11::generateSwizzles(const gl::Context *context)
 gl::Error StateManager11::applyUniforms(ProgramD3D *programD3D)
 {
     UniformStorage11 *vertexUniformStorage =
-        GetAs<UniformStorage11>(&programD3D->getVertexUniformStorage());
+        GetAs<UniformStorage11>(programD3D->getShaderUniformStorage(gl::ShaderType::Vertex));
     UniformStorage11 *fragmentUniformStorage =
-        GetAs<UniformStorage11>(&programD3D->getFragmentUniformStorage());
+        GetAs<UniformStorage11>(programD3D->getShaderUniformStorage(gl::ShaderType::Fragment));
     ASSERT(vertexUniformStorage);
     ASSERT(fragmentUniformStorage);
 
@@ -3180,7 +3181,7 @@ gl::Error StateManager11::applyDriverUniforms(const ProgramD3D &programD3D)
 gl::Error StateManager11::applyComputeUniforms(ProgramD3D *programD3D)
 {
     UniformStorage11 *computeUniformStorage =
-        GetAs<UniformStorage11>(&programD3D->getComputeUniformStorage());
+        GetAs<UniformStorage11>(programD3D->getShaderUniformStorage(gl::ShaderType::Compute));
     ASSERT(computeUniformStorage);
 
     const d3d11::Buffer *constantBuffer = nullptr;
@@ -3223,18 +3224,21 @@ gl::Error StateManager11::applyComputeUniforms(ProgramD3D *programD3D)
 
 gl::Error StateManager11::syncUniformBuffers(const gl::Context *context, ProgramD3D *programD3D)
 {
-    unsigned int reservedVertex   = mRenderer->getReservedVertexUniformBuffers();
-    unsigned int reservedFragment = mRenderer->getReservedFragmentUniformBuffers();
+    gl::ShaderMap<unsigned int> shaderReservedUBOs = mRenderer->getReservedShaderUniformBuffers();
+    programD3D->updateUniformBufferCache(context->getCaps(), shaderReservedUBOs);
 
-    programD3D->updateUniformBufferCache(context->getCaps(), reservedVertex, reservedFragment);
-
-    const auto &vertexUniformBuffers     = programD3D->getVertexUniformBufferCache();
-    const auto &fragmentUniformBuffers   = programD3D->getFragmentUniformBufferCache();
+    const auto &vertexUniformBuffers =
+        programD3D->getShaderUniformBufferCache(gl::ShaderType::Vertex);
+    const auto &fragmentUniformBuffers =
+        programD3D->getShaderUniformBufferCache(gl::ShaderType::Fragment);
     const auto &glState                  = context->getGLState();
     ID3D11DeviceContext *deviceContext   = mRenderer->getDeviceContext();
     ID3D11DeviceContext1 *deviceContext1 = mRenderer->getDeviceContext1IfSupported();
 
     mConstantBufferObserver.reset();
+
+    unsigned int reservedVertex   = shaderReservedUBOs[gl::ShaderType::Vertex];
+    unsigned int reservedFragment = shaderReservedUBOs[gl::ShaderType::Fragment];
 
     for (size_t bufferIndex = 0; bufferIndex < vertexUniformBuffers.size(); bufferIndex++)
     {

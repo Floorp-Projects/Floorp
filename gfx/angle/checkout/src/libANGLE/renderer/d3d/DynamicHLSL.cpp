@@ -454,10 +454,11 @@ void DynamicHLSL::generateShaderLinkHLSL(const gl::Context *context,
                                          const ProgramD3DMetadata &programMetadata,
                                          const VaryingPacking &varyingPacking,
                                          const BuiltinVaryingsD3D &builtinsD3D,
-                                         std::string *pixelHLSL,
-                                         std::string *vertexHLSL) const
+                                         gl::ShaderMap<std::string> *shaderHLSL) const
 {
-    ASSERT(pixelHLSL->empty() && vertexHLSL->empty());
+    ASSERT(shaderHLSL);
+    ASSERT((*shaderHLSL)[gl::ShaderType::Vertex].empty() &&
+           (*shaderHLSL)[gl::ShaderType::Fragment].empty());
 
     const auto &data                   = context->getContextState();
     gl::Shader *vertexShaderGL         = programData.getAttachedShader(ShaderType::Vertex);
@@ -844,8 +845,8 @@ void DynamicHLSL::generateShaderLinkHLSL(const gl::Context *context,
                 << "    return generateOutput();\n"
                 << "}\n";
 
-    *vertexHLSL = vertexStream.str();
-    *pixelHLSL  = pixelStream.str();
+    (*shaderHLSL)[gl::ShaderType::Vertex]   = vertexStream.str();
+    (*shaderHLSL)[gl::ShaderType::Fragment] = pixelStream.str();
 }
 
 std::string DynamicHLSL::generateComputeShaderLinkHLSL(const gl::Context *context,

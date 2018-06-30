@@ -88,8 +88,8 @@ Error Buffer::bufferData(const Context *context,
     mState.mUsage = usage;
     mState.mSize  = size;
 
-    // Notify when data changes.
-    mImpl->onStateChange(context, angle::SubjectMessage::CONTENTS_CHANGED);
+    // Notify when storage changes.
+    mImpl->onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
     return NoError();
 }
@@ -243,7 +243,7 @@ bool Buffer::isBoundForTransformFeedbackAndOtherUse() const
            mState.mTransformFeedbackBindingCount != mState.mBindingCount;
 }
 
-void Buffer::onBindingChanged(bool bound, BufferBinding target)
+void Buffer::onBindingChanged(const Context *context, bool bound, BufferBinding target)
 {
     ASSERT(bound || mState.mBindingCount > 0);
     mState.mBindingCount += bound ? 1 : -1;
@@ -251,6 +251,8 @@ void Buffer::onBindingChanged(bool bound, BufferBinding target)
     {
         ASSERT(bound || mState.mTransformFeedbackBindingCount > 0);
         mState.mTransformFeedbackBindingCount += bound ? 1 : -1;
+
+        mImpl->onStateChange(context, angle::SubjectMessage::BINDING_CHANGED);
     }
 }
 

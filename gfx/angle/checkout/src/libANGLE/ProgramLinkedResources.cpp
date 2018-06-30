@@ -188,27 +188,29 @@ bool UniformLinker::validateGraphicsUniforms(const Context *context, InfoLog &in
 {
     // Check that uniforms defined in the graphics shaders are identical
     std::map<std::string, ShaderUniform> linkedUniforms;
-    for (const sh::Uniform &vertexUniform :
-         mState.getAttachedShader(ShaderType::Vertex)->getUniforms(context))
-    {
-        linkedUniforms[vertexUniform.name] = std::make_pair(ShaderType::Vertex, &vertexUniform);
-    }
 
-    std::vector<Shader *> activeShadersToLink;
-    if (mState.getAttachedShader(ShaderType::Geometry))
+    for (ShaderType shaderType : kAllGraphicsShaderTypes)
     {
-        activeShadersToLink.push_back(mState.getAttachedShader(ShaderType::Geometry));
-    }
-    activeShadersToLink.push_back(mState.getAttachedShader(ShaderType::Fragment));
-
-    const size_t numActiveShadersToLink = activeShadersToLink.size();
-    for (size_t shaderIndex = 0; shaderIndex < numActiveShadersToLink; ++shaderIndex)
-    {
-        bool isLastShader = (shaderIndex == numActiveShadersToLink - 1);
-        if (!ValidateGraphicsUniformsPerShader(context, activeShadersToLink[shaderIndex],
-                                               !isLastShader, &linkedUniforms, infoLog))
+        Shader *currentShader = mState.getAttachedShader(shaderType);
+        if (currentShader)
         {
-            return false;
+            if (shaderType == ShaderType::Vertex)
+            {
+                for (const sh::Uniform &vertexUniform : currentShader->getUniforms(context))
+                {
+                    linkedUniforms[vertexUniform.name] =
+                        std::make_pair(ShaderType::Vertex, &vertexUniform);
+                }
+            }
+            else
+            {
+                bool isLastShader = (shaderType == ShaderType::Fragment);
+                if (!ValidateGraphicsUniformsPerShader(context, currentShader, !isLastShader,
+                                                       &linkedUniforms, infoLog))
+                {
+                    return false;
+                }
+            }
         }
     }
 
@@ -460,7 +462,7 @@ bool UniformLinker::flattenUniformsAndCheckCaps(const Context *context, InfoLog 
         // TODO (mradev): check whether we need finer-grained component counting
         if (!flattenUniformsAndCheckCapsForShader(
                 context, computeShader, caps.maxComputeUniformComponents / 4,
-                caps.maxComputeTextureImageUnits, caps.maxComputeImageUniforms,
+                caps.maxShaderTextureImageUnits[ShaderType::Compute], caps.maxComputeImageUniforms,
                 caps.maxComputeAtomicCounters,
                 "Compute shader active uniforms exceed MAX_COMPUTE_UNIFORM_COMPONENTS (",
                 "Compute shader sampler count exceeds MAX_COMPUTE_TEXTURE_IMAGE_UNITS (",
@@ -477,7 +479,7 @@ bool UniformLinker::flattenUniformsAndCheckCaps(const Context *context, InfoLog 
 
         if (!flattenUniformsAndCheckCapsForShader(
                 context, vertexShader, caps.maxVertexUniformVectors,
-                caps.maxVertexTextureImageUnits, caps.maxVertexImageUniforms,
+                caps.maxShaderTextureImageUnits[ShaderType::Vertex], caps.maxVertexImageUniforms,
                 caps.maxVertexAtomicCounters,
                 "Vertex shader active uniforms exceed MAX_VERTEX_UNIFORM_VECTORS (",
                 "Vertex shader sampler count exceeds MAX_VERTEX_TEXTURE_IMAGE_UNITS (",
@@ -491,7 +493,8 @@ bool UniformLinker::flattenUniformsAndCheckCaps(const Context *context, InfoLog 
         Shader *fragmentShader = mState.getAttachedShader(ShaderType::Fragment);
 
         if (!flattenUniformsAndCheckCapsForShader(
-                context, fragmentShader, caps.maxFragmentUniformVectors, caps.maxTextureImageUnits,
+                context, fragmentShader, caps.maxFragmentUniformVectors,
+                caps.maxShaderTextureImageUnits[ShaderType::Fragment],
                 caps.maxFragmentImageUniforms, caps.maxFragmentAtomicCounters,
                 "Fragment shader active uniforms exceed MAX_FRAGMENT_UNIFORM_VECTORS (",
                 "Fragment shader sampler count exceeds MAX_TEXTURE_IMAGE_UNITS (",
@@ -507,8 +510,8 @@ bool UniformLinker::flattenUniformsAndCheckCaps(const Context *context, InfoLog 
         if (geometryShader &&
             !flattenUniformsAndCheckCapsForShader(
                 context, geometryShader, caps.maxGeometryUniformComponents / 4,
-                caps.maxGeometryTextureImageUnits, caps.maxGeometryImageUniforms,
-                caps.maxGeometryAtomicCounters,
+                caps.maxShaderTextureImageUnits[ShaderType::Geometry],
+                caps.maxGeometryImageUniforms, caps.maxGeometryAtomicCounters,
                 "Geometry shader active uniforms exceed MAX_GEOMETRY_UNIFORM_VECTORS_EXT (",
                 "Geometry shader sampler count exceeds MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_EXT (",
                 "Geometry shader image count exceeds MAX_GEOMETRY_IMAGE_UNIFORMS_EXT (",
@@ -802,7 +805,7 @@ bool UniformLinker::checkMaxCombinedAtomicCounters(const Caps &caps, InfoLog &in
 
 // InterfaceBlockLinker implementation.
 InterfaceBlockLinker::InterfaceBlockLinker(std::vector<InterfaceBlock> *blocksOut)
-    : mBlocksOut(blocksOut)
+    : mShaderBlocks({}), mBlocksOut(blocksOut)
 {
 }
 
@@ -810,10 +813,10 @@ InterfaceBlockLinker::~InterfaceBlockLinker()
 {
 }
 
-void InterfaceBlockLinker::addShaderBlocks(ShaderType shader,
+void InterfaceBlockLinker::addShaderBlocks(ShaderType shaderType,
                                            const std::vector<sh::InterfaceBlock> *blocks)
 {
-    mShaderBlocks.push_back(std::make_pair(shader, blocks));
+    mShaderBlocks[shaderType] = blocks;
 }
 
 void InterfaceBlockLinker::linkBlocks(const GetBlockSize &getBlockSize,
@@ -823,11 +826,14 @@ void InterfaceBlockLinker::linkBlocks(const GetBlockSize &getBlockSize,
 
     std::set<std::string> visitedList;
 
-    for (const auto &shaderBlocks : mShaderBlocks)
+    for (ShaderType shaderType : AllShaderTypes())
     {
-        const ShaderType shaderType = shaderBlocks.first;
+        if (!mShaderBlocks[shaderType])
+        {
+            continue;
+        }
 
-        for (const auto &block : *shaderBlocks.second)
+        for (const auto &block : *mShaderBlocks[shaderType])
         {
             if (!IsActiveInterfaceBlock(block))
                 continue;

@@ -402,7 +402,9 @@ GLenum Framebuffer9::getRenderTargetImplementationFormat(RenderTargetD3D *render
     return d3dFormatInfo.info().glInternalFormat;
 }
 
-gl::Error Framebuffer9::getSamplePosition(size_t index, GLfloat *xy) const
+gl::Error Framebuffer9::getSamplePosition(const gl::Context *context,
+                                          size_t index,
+                                          GLfloat *xy) const
 {
     UNREACHABLE();
     return gl::InternalError() << "getSamplePosition is unsupported to d3d9.";

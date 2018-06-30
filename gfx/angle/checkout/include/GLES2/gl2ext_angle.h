@@ -546,6 +546,14 @@ GL_APICALL void GL_APIENTRY glFramebufferTextureMultiviewSideBySideANGLE(GLenum 
 #define GL_SAMPLER_2D_RECT_ANGLE 0x8B63
 #endif /* GL_ANGLE_texture_rectangle */
 
+#ifndef GL_ANGLE_explicit_context
+#define GL_ANGLE_explicit_context
+typedef void *GLeglContext;
+#include "gl2ext_explicit_context_autogen.inc"
+#include "../GLES3/gl3ext_explicit_context_autogen.inc"
+#include "../GLES3/gl31ext_explicit_context_autogen.inc"
+#endif /* GL_ANGLE_explicit_context */
+
 // clang-format on
 
 #endif  // INCLUDE_GLES2_GL2EXT_ANGLE_H_

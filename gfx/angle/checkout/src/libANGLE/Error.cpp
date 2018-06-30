@@ -70,7 +70,7 @@ bool Error::operator!=(const Error &other) const
 
 std::ostream &operator<<(std::ostream &os, const Error &err)
 {
-    return gl::FmtHexShort(os, err.getCode());
+    return gl::FmtHex(os, err.getCode());
 }
 
 }  // namespace gl
@@ -104,7 +104,7 @@ const std::string &Error::getMessage() const
 
 std::ostream &operator<<(std::ostream &os, const Error &err)
 {
-    return gl::FmtHexShort(os, err.getCode());
+    return gl::FmtHex(os, err.getCode());
 }
 
 }  // namespace egl

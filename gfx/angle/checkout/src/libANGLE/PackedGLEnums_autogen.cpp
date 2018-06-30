@@ -6,7 +6,7 @@
 // found in the LICENSE file.
 //
 // PackedGLEnums_autogen.cpp:
-//   Implements ANGLE-specific enums classes for GLEnum and functions operating
+//   Implements ANGLE-specific enums classes for GLenums and functions operating
 //   on them.
 
 #include "libANGLE/PackedGLEnums_autogen.h"
@@ -63,7 +63,7 @@ GLenum ToGLenum(AlphaTestFunc from)
             return GL_NOTEQUAL;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -131,7 +131,7 @@ GLenum ToGLenum(BufferBinding from)
             return GL_UNIFORM_BUFFER;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -187,7 +187,47 @@ GLenum ToGLenum(BufferUsage from)
             return GL_STREAM_READ;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
+    }
+}
+
+template <>
+ClientVertexArrayType FromGLenum<ClientVertexArrayType>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_COLOR_ARRAY:
+            return ClientVertexArrayType::Color;
+        case GL_NORMAL_ARRAY:
+            return ClientVertexArrayType::Normal;
+        case GL_POINT_SIZE_ARRAY_OES:
+            return ClientVertexArrayType::PointSize;
+        case GL_TEXTURE_COORD_ARRAY:
+            return ClientVertexArrayType::TextureCoord;
+        case GL_VERTEX_ARRAY:
+            return ClientVertexArrayType::Vertex;
+        default:
+            return ClientVertexArrayType::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(ClientVertexArrayType from)
+{
+    switch (from)
+    {
+        case ClientVertexArrayType::Color:
+            return GL_COLOR_ARRAY;
+        case ClientVertexArrayType::Normal:
+            return GL_NORMAL_ARRAY;
+        case ClientVertexArrayType::PointSize:
+            return GL_POINT_SIZE_ARRAY_OES;
+        case ClientVertexArrayType::TextureCoord:
+            return GL_TEXTURE_COORD_ARRAY;
+        case ClientVertexArrayType::Vertex:
+            return GL_VERTEX_ARRAY;
+        default:
+            UNREACHABLE();
+            return 0;
     }
 }
 
@@ -219,7 +259,7 @@ GLenum ToGLenum(CullFaceMode from)
             return GL_FRONT_AND_BACK;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -251,7 +291,7 @@ GLenum ToGLenum(FogMode from)
             return GL_LINEAR;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -283,7 +323,71 @@ GLenum ToGLenum(HintSetting from)
             return GL_NICEST;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
+    }
+}
+
+template <>
+LightParameter FromGLenum<LightParameter>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_AMBIENT:
+            return LightParameter::Ambient;
+        case GL_AMBIENT_AND_DIFFUSE:
+            return LightParameter::AmbientAndDiffuse;
+        case GL_CONSTANT_ATTENUATION:
+            return LightParameter::ConstantAttenuation;
+        case GL_DIFFUSE:
+            return LightParameter::Diffuse;
+        case GL_LINEAR_ATTENUATION:
+            return LightParameter::LinearAttenuation;
+        case GL_POSITION:
+            return LightParameter::Position;
+        case GL_QUADRATIC_ATTENUATION:
+            return LightParameter::QuadraticAttenuation;
+        case GL_SPECULAR:
+            return LightParameter::Specular;
+        case GL_SPOT_CUTOFF:
+            return LightParameter::SpotCutoff;
+        case GL_SPOT_DIRECTION:
+            return LightParameter::SpotDirection;
+        case GL_SPOT_EXPONENT:
+            return LightParameter::SpotExponent;
+        default:
+            return LightParameter::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(LightParameter from)
+{
+    switch (from)
+    {
+        case LightParameter::Ambient:
+            return GL_AMBIENT;
+        case LightParameter::AmbientAndDiffuse:
+            return GL_AMBIENT_AND_DIFFUSE;
+        case LightParameter::ConstantAttenuation:
+            return GL_CONSTANT_ATTENUATION;
+        case LightParameter::Diffuse:
+            return GL_DIFFUSE;
+        case LightParameter::LinearAttenuation:
+            return GL_LINEAR_ATTENUATION;
+        case LightParameter::Position:
+            return GL_POSITION;
+        case LightParameter::QuadraticAttenuation:
+            return GL_QUADRATIC_ATTENUATION;
+        case LightParameter::Specular:
+            return GL_SPECULAR;
+        case LightParameter::SpotCutoff:
+            return GL_SPOT_CUTOFF;
+        case LightParameter::SpotDirection:
+            return GL_SPOT_DIRECTION;
+        case LightParameter::SpotExponent:
+            return GL_SPOT_EXPONENT;
+        default:
+            UNREACHABLE();
+            return 0;
     }
 }
 
@@ -367,7 +471,51 @@ GLenum ToGLenum(LogicalOperation from)
             return GL_XOR;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
+    }
+}
+
+template <>
+MaterialParameter FromGLenum<MaterialParameter>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_AMBIENT:
+            return MaterialParameter::Ambient;
+        case GL_AMBIENT_AND_DIFFUSE:
+            return MaterialParameter::AmbientAndDiffuse;
+        case GL_DIFFUSE:
+            return MaterialParameter::Diffuse;
+        case GL_EMISSION:
+            return MaterialParameter::Emission;
+        case GL_SHININESS:
+            return MaterialParameter::Shininess;
+        case GL_SPECULAR:
+            return MaterialParameter::Specular;
+        default:
+            return MaterialParameter::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(MaterialParameter from)
+{
+    switch (from)
+    {
+        case MaterialParameter::Ambient:
+            return GL_AMBIENT;
+        case MaterialParameter::AmbientAndDiffuse:
+            return GL_AMBIENT_AND_DIFFUSE;
+        case MaterialParameter::Diffuse:
+            return GL_DIFFUSE;
+        case MaterialParameter::Emission:
+            return GL_EMISSION;
+        case MaterialParameter::Shininess:
+            return GL_SHININESS;
+        case MaterialParameter::Specular:
+            return GL_SPECULAR;
+        default:
+            UNREACHABLE();
+            return 0;
     }
 }
 
@@ -399,7 +547,55 @@ GLenum ToGLenum(MatrixType from)
             return GL_TEXTURE;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
+    }
+}
+
+template <>
+QueryType FromGLenum<QueryType>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_ANY_SAMPLES_PASSED:
+            return QueryType::AnySamples;
+        case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+            return QueryType::AnySamplesConservative;
+        case GL_COMMANDS_COMPLETED_CHROMIUM:
+            return QueryType::CommandsCompleted;
+        case GL_PRIMITIVES_GENERATED_EXT:
+            return QueryType::PrimitivesGenerated;
+        case GL_TIME_ELAPSED_EXT:
+            return QueryType::TimeElapsed;
+        case GL_TIMESTAMP_EXT:
+            return QueryType::Timestamp;
+        case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+            return QueryType::TransformFeedbackPrimitivesWritten;
+        default:
+            return QueryType::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(QueryType from)
+{
+    switch (from)
+    {
+        case QueryType::AnySamples:
+            return GL_ANY_SAMPLES_PASSED;
+        case QueryType::AnySamplesConservative:
+            return GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
+        case QueryType::CommandsCompleted:
+            return GL_COMMANDS_COMPLETED_CHROMIUM;
+        case QueryType::PrimitivesGenerated:
+            return GL_PRIMITIVES_GENERATED_EXT;
+        case QueryType::TimeElapsed:
+            return GL_TIME_ELAPSED_EXT;
+        case QueryType::Timestamp:
+            return GL_TIMESTAMP_EXT;
+        case QueryType::TransformFeedbackPrimitivesWritten:
+            return GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
+        default:
+            UNREACHABLE();
+            return 0;
     }
 }
 
@@ -435,7 +631,7 @@ GLenum ToGLenum(ShaderType from)
             return GL_COMPUTE_SHADER;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -463,7 +659,7 @@ GLenum ToGLenum(ShadingModel from)
             return GL_SMOOTH;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -515,7 +711,7 @@ GLenum ToGLenum(TextureCombine from)
             return GL_SUBTRACT;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -559,7 +755,7 @@ GLenum ToGLenum(TextureEnvMode from)
             return GL_REPLACE;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -595,7 +791,7 @@ GLenum ToGLenum(TextureOp from)
             return GL_SRC_COLOR;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -631,7 +827,7 @@ GLenum ToGLenum(TextureSrc from)
             return GL_TEXTURE;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -699,7 +895,7 @@ GLenum ToGLenum(TextureTarget from)
             return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -747,7 +943,7 @@ GLenum ToGLenum(TextureType from)
             return GL_TEXTURE_CUBE_MAP;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -787,7 +983,7 @@ GLenum ToGLenum(VertexArrayType from)
             return GL_VERTEX_ARRAY;
         default:
             UNREACHABLE();
-            return GL_NONE;
+            return 0;
     }
 }
 

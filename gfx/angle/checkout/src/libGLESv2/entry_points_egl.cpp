@@ -490,36 +490,30 @@ EGLBoolean EGLAPIENTRY MakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface r
     Thread *thread = GetCurrentThread();
 
     Display *display     = static_cast<Display *>(dpy);
+    Surface *drawSurface = static_cast<Surface *>(draw);
+    Surface *readSurface = static_cast<Surface *>(read);
     gl::Context *context = static_cast<gl::Context *>(ctx);
 
-    Error error = ValidateMakeCurrent(display, draw, read, context);
-    if (error.isError())
-    {
-        thread->setError(error);
-        return EGL_FALSE;
-    }
+    ANGLE_EGL_TRY_RETURN(thread, ValidateMakeCurrent(display, drawSurface, readSurface, context),
+                         EGL_FALSE);
 
-    Surface *readSurface   = static_cast<Surface *>(read);
-    Surface *drawSurface   = static_cast<Surface *>(draw);
-    Error makeCurrentError = display->makeCurrent(drawSurface, readSurface, context);
-    if (makeCurrentError.isError())
-    {
-        thread->setError(makeCurrentError);
-        return EGL_FALSE;
-    }
-
+    Surface *previousDraw        = thread->getCurrentDrawSurface();
+    Surface *previousRead        = thread->getCurrentReadSurface();
     gl::Context *previousContext = thread->getContext();
-    thread->setCurrent(context);
 
-    // Release the surface from the previously-current context, to allow
-    // destroyed surfaces to delete themselves.
-    if (previousContext != nullptr && context != previousContext)
+    // Only call makeCurrent if the context or surfaces have changed.
+    if (previousDraw != drawSurface || previousRead != readSurface || previousContext != context)
     {
-        auto err = previousContext->releaseSurface(display);
-        if (err.isError())
+        ANGLE_EGL_TRY_RETURN(thread, display->makeCurrent(drawSurface, readSurface, context),
+                             EGL_FALSE);
+
+        thread->setCurrent(context);
+
+        // Release the surface from the previously-current context, to allow
+        // destroyed surfaces to delete themselves.
+        if (previousContext != nullptr && context != previousContext)
         {
-            thread->setError(err);
-            return EGL_FALSE;
+            ANGLE_EGL_TRY_RETURN(thread, previousContext->releaseSurface(display), EGL_FALSE);
         }
     }
 
@@ -658,7 +652,7 @@ EGLBoolean EGLAPIENTRY SwapBuffers(EGLDisplay dpy, EGLSurface surface)
         return EGL_FALSE;
     }
 
-    if (display->testDeviceLost())
+    if (display->isDeviceLost())
     {
         thread->setError(EglContextLost());
         return EGL_FALSE;
@@ -752,7 +746,7 @@ EGLBoolean EGLAPIENTRY BindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint b
         return EGL_FALSE;
     }
 
-    if (eglSurface->getTextureFormat() == EGL_NO_TEXTURE)
+    if (eglSurface->getTextureFormat() == TextureFormat::NoTexture)
     {
         thread->setError(EglBadMatch());
         return EGL_FALSE;
@@ -839,7 +833,7 @@ EGLBoolean EGLAPIENTRY ReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLin
         return EGL_FALSE;
     }
 
-    if (eglSurface->getTextureFormat() == EGL_NO_TEXTURE)
+    if (eglSurface->getTextureFormat() == TextureFormat::NoTexture)
     {
         thread->setError(EglBadMatch());
         return EGL_FALSE;

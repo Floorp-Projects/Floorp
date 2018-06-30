@@ -17,6 +17,7 @@
 #include "libANGLE/AttributeMap.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/SurfaceImpl.h"
@@ -85,7 +86,7 @@ class Surface : public gl::FramebufferAttachmentObject
     EGLint getPixelAspectRatio() const;
     EGLenum getRenderBuffer() const;
     EGLenum getSwapBehavior() const;
-    EGLenum getTextureFormat() const;
+    TextureFormat getTextureFormat() const;
     EGLenum getTextureTarget() const;
     bool getLargestPbuffer() const;
     EGLenum getGLColorspace() const;
@@ -170,7 +171,7 @@ class Surface : public gl::FramebufferAttachmentObject
 
     bool mRobustResourceInitialization;
 
-    EGLenum mTextureFormat;
+    TextureFormat mTextureFormat;
     EGLenum mTextureTarget;
 
     EGLint mPixelAspectRatio;      // Display aspect ratio

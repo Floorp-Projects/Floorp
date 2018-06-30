@@ -20,7 +20,7 @@
 
 // Unfortunately ANGLE relies on ASSERT being an empty statement, which these libs don't respect.
 #ifndef NOTREACHED
-#define NOTREACHED() UNREACHABLE()
+#define NOTREACHED() ({ UNREACHABLE(); })
 #endif
 
 #endif  // ANGLEBASE_LOGGING_H_
