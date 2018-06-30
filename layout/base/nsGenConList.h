@@ -18,6 +18,8 @@
 class nsGenConList;
 
 struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
+  using StyleContentType = mozilla::StyleContentType;
+
   // The wrapper frame for all of the pseudo-element's content.  This
   // frame generally has useful style data and has the
   // NS_FRAME_GENERATED_CONTENT bit set (so we use it to track removal),

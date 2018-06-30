@@ -14,20 +14,20 @@
 
 struct nsQuoteNode : public nsGenConNode {
   // open-quote, close-quote, no-open-quote, or no-close-quote
-  const nsStyleContentType mType;
+  const StyleContentType mType;
 
   // Quote depth before this quote, which is always non-negative.
   int32_t mDepthBefore;
 
-  nsQuoteNode(nsStyleContentType& aType, uint32_t aContentIndex)
+  nsQuoteNode(StyleContentType aType, uint32_t aContentIndex)
     : nsGenConNode(aContentIndex)
     , mType(aType)
     , mDepthBefore(0)
   {
-    NS_ASSERTION(aType == eStyleContentType_OpenQuote ||
-                 aType == eStyleContentType_CloseQuote ||
-                 aType == eStyleContentType_NoOpenQuote ||
-                 aType == eStyleContentType_NoCloseQuote,
+    NS_ASSERTION(aType == StyleContentType::OpenQuote ||
+                 aType == StyleContentType::CloseQuote ||
+                 aType == StyleContentType::NoOpenQuote ||
+                 aType == StyleContentType::NoCloseQuote,
                  "incorrect type");
     NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");
   }
@@ -37,8 +37,8 @@ struct nsQuoteNode : public nsGenConNode {
 
   // is this 'open-quote' or 'no-open-quote'?
   bool IsOpenQuote() {
-    return mType == eStyleContentType_OpenQuote ||
-           mType == eStyleContentType_NoOpenQuote;
+    return mType == StyleContentType::OpenQuote ||
+           mType == StyleContentType::NoOpenQuote;
   }
 
   // is this 'close-quote' or 'no-close-quote'?
@@ -48,8 +48,8 @@ struct nsQuoteNode : public nsGenConNode {
 
   // is this 'open-quote' or 'close-quote'?
   bool IsRealQuote() {
-    return mType == eStyleContentType_OpenQuote ||
-           mType == eStyleContentType_CloseQuote;
+    return mType == StyleContentType::OpenQuote ||
+           mType == StyleContentType::CloseQuote;
   }
 
   // Depth of the quote for *this* node.  Either non-negative or -1.
