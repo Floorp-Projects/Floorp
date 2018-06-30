@@ -22,4 +22,9 @@ interface nsIMacSharingService : nsISupports
   void shareUrl(in AString serviceName,
                 in AString pageUrl,
                 in AString pageTitle);
+
+  /**
+   * Open the MacOS preferences window to the sharing panel
+   */
+  void openSharingPreferences();
 };
