@@ -1628,11 +1628,10 @@ Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
 }
 
 nsStyleContentData::CounterFunction*
-Gecko_SetCounterFunction(nsStyleContentData* aContent, nsStyleContentType aType)
+Gecko_SetCounterFunction(nsStyleContentData* aContent, StyleContentType aType)
 {
-  RefPtr<nsStyleContentData::CounterFunction>
-    counterFunc = new nsStyleContentData::CounterFunction();
-  nsStyleContentData::CounterFunction* ptr = counterFunc;
+  auto counterFunc = MakeRefPtr<nsStyleContentData::CounterFunction>();
+  auto* ptr = counterFunc.get();
   aContent->SetCounters(aType, counterFunc.forget());
   return ptr;
 }

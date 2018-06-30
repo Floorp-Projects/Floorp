@@ -382,7 +382,7 @@ void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
 void Gecko_SetContentDataImageValue(nsStyleContentData* aList,
                                     mozilla::css::ImageValue* aImageValue);
 nsStyleContentData::CounterFunction* Gecko_SetCounterFunction(
-    nsStyleContentData* content_data, nsStyleContentType type);
+    nsStyleContentData* content_data, mozilla::StyleContentType);
 
 // Dirtiness tracking.
 void Gecko_SetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
