@@ -1,4 +1,4 @@
-	/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -95,7 +95,7 @@ const char * const js::CodeName[] = {
 /************************************************************************/
 
 static bool
-DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res);
+DecompileArgumentFromStack(JSContext* cx, int formalIndex, UniqueChars* res);
 
 size_t
 js::GetVariableBytecodeLength(jsbytecode* pc)
@@ -1652,7 +1652,7 @@ struct ExpressionDecompiler
     bool quote(JSString* s, uint32_t quote);
     bool write(const char* s);
     bool write(JSString* str);
-    bool getOutput(char** out);
+    UniqueChars getOutput();
 #if defined(DEBUG) || defined(JS_JITSPEW)
     void setStackDump() {
         isStackDump = true;
@@ -1725,17 +1725,14 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
 #endif /* DEBUG */
             )
         {
-            char* result;
+            UniqueChars result;
             if (!DecompileArgumentFromStack(cx, slot, &result))
                 return false;
 
             // Note that decompiling the argument in the parent frame might
             // not succeed.
-            if (result) {
-		bool ok = write(result);
-                js_free(result);
-		return ok;
-            }
+            if (result)
+                return write(result.get());
         }
 
         JSAtom* atom = getArg(slot);
@@ -2160,16 +2157,16 @@ ExpressionDecompiler::getArg(unsigned slot)
     MOZ_CRASH("No binding");
 }
 
-bool
-ExpressionDecompiler::getOutput(char** res)
+UniqueChars
+ExpressionDecompiler::getOutput()
 {
     ptrdiff_t len = sprinter.stringEnd() - sprinter.stringAt(0);
-    *res = cx->pod_malloc<char>(len + 1);
-    if (!*res)
-        return false;
-    js_memcpy(*res, sprinter.stringAt(0), len);
-    (*res)[len] = 0;
-    return true;
+    auto res = cx->make_pod_array<char>(len + 1);
+    if (!res)
+        return nullptr;
+    js_memcpy(res.get(), sprinter.stringAt(0), len);
+    res[len] = 0;
+    return res;
 }
 
 }  // anonymous namespace
@@ -2187,13 +2184,11 @@ DecompileAtPCForStackDump(JSContext* cx, HandleScript script,
     if (!ed.decompilePC(offsetAndDefIndex))
         return false;
 
-    char* result;
-    if (!ed.getOutput(&result))
+    UniqueChars result = ed.getOutput();
+    if (!result)
         return false;
 
-    bool ok = sp->put(result);
-    js_free(result);
-    return ok;
+    return sp->put(result.get());
 }
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
@@ -2260,7 +2255,8 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
 }
 
 static bool
-DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, HandleValue v, char** res)
+DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, HandleValue v,
+                             UniqueChars* res)
 {
     MOZ_ASSERT(spindex < 0 ||
                spindex == JSDVG_IGNORE_STACK ||
@@ -2303,7 +2299,8 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
     if (!ed.decompilePC(valuepc, defIndex))
         return false;
 
-    return ed.getOutput(res);
+    *res = ed.getOutput();
+    return *res != nullptr;
 }
 
 UniqueChars
@@ -2312,14 +2309,11 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
 {
     RootedString fallback(cx, fallbackArg);
     {
-        char* result;
+        UniqueChars result;
         if (!DecompileExpressionFromStack(cx, spindex, skipStackHits, v, &result))
             return nullptr;
-        if (result) {
-            if (strcmp(result, "(intermediate value)"))
-                return UniqueChars(result);
-            js_free(result);
-        }
+        if (result && strcmp(result.get(), "(intermediate value)"))
+            return result;
     }
     if (!fallback) {
         if (v.isUndefined())
@@ -2333,7 +2327,7 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
 }
 
 static bool
-DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
+DecompileArgumentFromStack(JSContext* cx, int formalIndex, UniqueChars* res)
 {
     MOZ_ASSERT(formalIndex >= 0);
 
@@ -2398,21 +2392,19 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
     if (!ed.decompilePCForStackOperand(current, formalStackIndex))
         return false;
 
-    return ed.getOutput(res);
+    *res = ed.getOutput();
+    return *res != nullptr;
 }
 
 UniqueChars
 js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
 {
     {
-        char* result;
+        UniqueChars result;
         if (!DecompileArgumentFromStack(cx, formalIndex, &result))
             return nullptr;
-        if (result) {
-            if (strcmp(result, "(intermediate value)"))
-                return UniqueChars(result);
-            js_free(result);
-        }
+        if (result && strcmp(result.get(), "(intermediate value)"))
+            return result;
     }
     if (v.isUndefined())
         return DuplicateString(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
@@ -2755,11 +2747,10 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
             // defIndex passed here is not used.
             if (!ed.decompilePC(pc, /* defIndex = */ 0))
                 return false;
-            char* text;
-            if (!ed.getOutput(&text))
+            UniqueChars text = ed.getOutput();
+            if (!text)
                 return false;
-            JSString* str = JS_NewStringCopyZ(cx, text);
-            js_free(text);
+            JSString* str = NewLatin1StringZ(cx, std::move(text));
             if (!AppendJSONProperty(buf, "text"))
                 return false;
             if (!str || !(str = StringToSource(cx, str)))

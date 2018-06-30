@@ -1938,13 +1938,31 @@ DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                 return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
         }
     } else if (obj->is<TypedArrayObject>()) {
-        // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
+        // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
         uint64_t index;
         if (IsTypedArrayIndex(id, &index)) {
+            // ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
+            // 9.4.5.9 IntegerIndexedElementSet
+
             // This method is only called for non-existent properties, which
             // means any absent indexed property must be out of range.
             MOZ_ASSERT(index >= obj->as<TypedArrayObject>().length());
 
+            // Steps 1-2 are enforced by the caller.
+
+            // Step 3.
+            // We still need to call ToNumber, because of its possible side
+            // effects.
+            double d;
+            if (!ToNumber(cx, v, &d))
+                return false;
+
+            // Steps 4-5.
+            // ToNumber may have detached the array buffer.
+            if (obj->as<TypedArrayObject>().hasDetachedBuffer())
+                return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+
+            // Steps 6-9.
             // We (wrongly) ignore out of range defines.
             return result.failSoft(JSMSG_BAD_INDEX);
         }
@@ -2645,10 +2663,19 @@ SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t inde
                             ObjectOpResult& result)
 {
     if (obj->is<TypedArrayObject>()) {
+        // ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
+        // 9.4.5.9 IntegerIndexedElementSet
+
+        // Steps 1-2 are enforced by the caller.
+
+        // Step 3.
         double d;
         if (!ToNumber(cx, v, &d))
             return false;
 
+        // Steps 6-7 don't apply for existing typed array elements.
+
+        // Steps 8-16.
         // Silently do nothing for out-of-bounds sets, for consistency with
         // current behavior.  (ES6 currently says to throw for this in
         // strict mode code, so we may eventually need to change.)
@@ -2658,6 +2685,7 @@ SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t inde
             return result.succeed();
         }
 
+        // Steps 4-5.
         // A previously existing typed array element can only be out-of-bounds
         // if the above ToNumber call detached the typed array's buffer.
         MOZ_ASSERT(obj->as<TypedArrayObject>().hasDetachedBuffer());

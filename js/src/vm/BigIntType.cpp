@@ -216,7 +216,7 @@ BigInt::toString(JSContext* cx, BigInt* x, uint8_t radix)
     MOZ_ASSERT(2 <= radix && radix <= 36);
     // We need two extra chars for '\0' and potentially '-'.
     size_t strSize = mpz_sizeinbase(x->num_, 10) + 2;
-    UniqueChars str(static_cast<char*>(js_malloc(strSize)));
+    UniqueChars str(js_pod_malloc<char>(strSize));
     if (!str) {
         ReportOutOfMemory(cx);
         return nullptr;

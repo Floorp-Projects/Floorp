@@ -740,13 +740,8 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
 
   nsresult rv;
 
-  // If fetching the icon failed, add it to the failed cache.
+  // If fetching the icon failed, bail out.
   if (NS_FAILED(aStatusCode) || mIcon.payloads.Length() == 0) {
-    nsCOMPtr<nsIURI> iconURI;
-    rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = favicons->AddFailedFavicon(iconURI);
-    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
@@ -769,13 +764,8 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
                     payload.mimeType);
   }
 
-  // If the icon does not have a valid MIME type, add it to the failed cache.
+  // If the icon does not have a valid MIME type, bail out.
   if (payload.mimeType.IsEmpty()) {
-    nsCOMPtr<nsIURI> iconURI;
-    rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = favicons->AddFailedFavicon(iconURI);
-    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 

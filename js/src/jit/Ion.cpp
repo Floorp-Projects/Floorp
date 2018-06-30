@@ -1872,16 +1872,14 @@ GenerateCode(MIRGenerator* mir, LIRGraph* lir)
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog log(logger, TraceLogger_GenerateCode);
 
-    CodeGenerator* codegen = js_new<CodeGenerator>(mir, lir);
+    auto codegen = MakeUnique<CodeGenerator>(mir, lir);
     if (!codegen)
         return nullptr;
 
-    if (!codegen->generate()) {
-        js_delete(codegen);
+    if (!codegen->generate())
         return nullptr;
-    }
 
-    return codegen;
+    return codegen.release();
 }
 
 CodeGenerator*

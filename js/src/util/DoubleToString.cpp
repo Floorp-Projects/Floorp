@@ -307,7 +307,7 @@ js_dtobasestr(DtoaState* state, int base, double dinput)
     MOZ_ASSERT(base >= 2 && base <= 36);
 
     dval(d) = dinput;
-    buffer = (char*) js_malloc(DTOBASESTR_BUFFER_SIZE);
+    buffer = js_pod_malloc<char>(DTOBASESTR_BUFFER_SIZE);
     if (!buffer)
         return nullptr;
     p = buffer;

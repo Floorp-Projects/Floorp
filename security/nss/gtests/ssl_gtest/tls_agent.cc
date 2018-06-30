@@ -583,6 +583,7 @@ void TlsAgent::CheckAuthType(SSLAuthType auth,
   // switch statement because default label is different.
   switch (auth) {
     case ssl_auth_rsa_sign:
+    case ssl_auth_rsa_pss:
       EXPECT_EQ(ssl_auth_rsa_decrypt, csinfo_.authAlgorithm)
           << "authAlgorithm for RSA is always decrypt";
       break;

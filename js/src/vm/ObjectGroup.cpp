@@ -1252,14 +1252,13 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
         group->setPreliminaryObjects(preliminaryObjects);
         preliminaryObjects->registerNewObject(obj);
 
-        UniquePtr<jsid[], JS::FreePolicy> ids(group->zone()->pod_calloc<jsid>(nproperties));
+        auto ids = group->zone()->make_zeroed_pod_array<jsid>(nproperties);
         if (!ids) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
 
-        UniquePtr<TypeSet::Type[], JS::FreePolicy> types(
-            group->zone()->pod_calloc<TypeSet::Type>(nproperties));
+        auto types = group->zone()->make_zeroed_pod_array<TypeSet::Type>(nproperties);
         if (!types) {
             ReportOutOfMemory(cx);
             return nullptr;
