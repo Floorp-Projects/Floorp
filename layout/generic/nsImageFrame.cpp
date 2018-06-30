@@ -293,7 +293,7 @@ nsImageFrame::Init(nsIContent* aContent,
                    nsIFrame* aPrevInFlow)
 {
   MOZ_ASSERT_IF(aPrevInFlow,
-                aPrevInFlow->Type() == LayoutFrameType::Image &&
+                aPrevInFlow->Type() == Type() &&
                 static_cast<nsImageFrame*>(aPrevInFlow)->mKind == mKind);
 
   nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
