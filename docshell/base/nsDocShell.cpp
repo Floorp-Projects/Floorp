@@ -1024,16 +1024,6 @@ nsDocShell::LoadURI(nsIURI* aURI,
                       nullptr); // No nsIRequest
 }
 
-NS_IMETHODIMP
-nsDocShell::CreateLoadInfo(nsDocShellLoadInfo** aLoadInfo)
-{
-  nsDocShellLoadInfo* loadInfo = new nsDocShellLoadInfo();
-  RefPtr<nsDocShellLoadInfo> localRef(loadInfo);
-
-  localRef.forget(aLoadInfo);
-  return NS_OK;
-}
-
 /*
  * Reset state to a new content model within the current document and the
  * document viewer. Called by the document before initiating an out of band
