@@ -470,7 +470,8 @@ gl::Error Image9::copyToStorage(const gl::Context *context,
 
     TextureStorage9 *storage9 = GetAs<TextureStorage9>(storage);
     IDirect3DSurface9 *destSurface = nullptr;
-    ANGLE_TRY(storage9->getSurfaceLevel(context, index.target, index.mipIndex, true, &destSurface));
+    ANGLE_TRY(storage9->getSurfaceLevel(context, index.getTarget(), index.getLevelIndex(), true,
+                                        &destSurface));
 
     gl::Error error = copyToSurface(destSurface, region);
     SafeRelease(destSurface);

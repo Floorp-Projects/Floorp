@@ -13,7 +13,8 @@ namespace gl
 
 // [OpenGL ES 3.1] (November 3, 2016) Section 20 Page 361
 // Table 20.2: Vertex Array Object State
-VertexBinding::VertexBinding() : mStride(16u), mDivisor(0), mOffset(0)
+VertexBinding::VertexBinding()
+    : mStride(16u), mDivisor(0), mOffset(0), mCachedBufferSizeMinusOffset(0)
 {
 }
 
@@ -34,6 +35,7 @@ VertexBinding &VertexBinding::operator=(VertexBinding &&binding)
         mDivisor = binding.mDivisor;
         mOffset  = binding.mOffset;
         std::swap(binding.mBuffer, mBuffer);
+        mCachedBufferSizeMinusOffset = binding.mCachedBufferSizeMinusOffset;
     }
     return *this;
 }
@@ -41,16 +43,32 @@ VertexBinding &VertexBinding::operator=(VertexBinding &&binding)
 void VertexBinding::setBuffer(const gl::Context *context, Buffer *bufferIn, bool containerIsBound)
 {
     if (mBuffer.get() && containerIsBound)
-        mBuffer->onBindingChanged(false, BufferBinding::Array);
+        mBuffer->onBindingChanged(context, false, BufferBinding::Array);
     mBuffer.set(context, bufferIn);
     if (mBuffer.get() && containerIsBound)
-        mBuffer->onBindingChanged(true, BufferBinding::Array);
+        mBuffer->onBindingChanged(context, true, BufferBinding::Array);
 }
 
-void VertexBinding::onContainerBindingChanged(bool bound)
+void VertexBinding::onContainerBindingChanged(const Context *context, bool bound) const
 {
     if (mBuffer.get())
-        mBuffer->onBindingChanged(bound, BufferBinding::Array);
+        mBuffer->onBindingChanged(context, bound, BufferBinding::Array);
+}
+
+void VertexBinding::updateCachedBufferSizeMinusOffset()
+{
+    if (mBuffer.get())
+    {
+        angle::CheckedNumeric<GLuint64> checkedSize(mBuffer->getSize());
+        angle::CheckedNumeric<GLuint64> checkedOffset(mOffset);
+
+        // Use a default value of zero so checks will fail on overflow.
+        mCachedBufferSizeMinusOffset = (checkedSize - checkedOffset).ValueOrDefault(0);
+    }
+    else
+    {
+        mCachedBufferSizeMinusOffset = 0;
+    }
 }
 
 VertexAttribute::VertexAttribute(GLuint bindingIndex)
@@ -62,7 +80,8 @@ VertexAttribute::VertexAttribute(GLuint bindingIndex)
       pointer(nullptr),
       relativeOffset(0),
       vertexAttribArrayStride(0),
-      bindingIndex(bindingIndex)
+      bindingIndex(bindingIndex),
+      cachedSizePlusRelativeOffset(16)
 {
 }
 
@@ -75,7 +94,8 @@ VertexAttribute::VertexAttribute(VertexAttribute &&attrib)
       pointer(attrib.pointer),
       relativeOffset(attrib.relativeOffset),
       vertexAttribArrayStride(attrib.vertexAttribArrayStride),
-      bindingIndex(attrib.bindingIndex)
+      bindingIndex(attrib.bindingIndex),
+      cachedSizePlusRelativeOffset(attrib.cachedSizePlusRelativeOffset)
 {
 }
 
@@ -92,8 +112,17 @@ VertexAttribute &VertexAttribute::operator=(VertexAttribute &&attrib)
         relativeOffset          = attrib.relativeOffset;
         vertexAttribArrayStride = attrib.vertexAttribArrayStride;
         bindingIndex            = attrib.bindingIndex;
+        cachedSizePlusRelativeOffset = attrib.cachedSizePlusRelativeOffset;
     }
     return *this;
+}
+
+void VertexAttribute::updateCachedSizePlusRelativeOffset()
+{
+    ASSERT(relativeOffset <=
+           std::numeric_limits<GLuint64>::max() - ComputeVertexAttributeTypeSize(*this));
+    cachedSizePlusRelativeOffset =
+        relativeOffset + static_cast<GLuint64>(ComputeVertexAttributeTypeSize(*this));
 }
 
 size_t ComputeVertexAttributeTypeSize(const VertexAttribute& attrib)

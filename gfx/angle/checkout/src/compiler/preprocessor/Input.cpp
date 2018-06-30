@@ -11,6 +11,9 @@
 
 #include "common/debug.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -127,3 +130,5 @@ size_t Input::read(char *buf, size_t maxSize, int *lineNo)
 }
 
 }  // namespace pp
+
+}  // namespace angle

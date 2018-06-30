@@ -115,7 +115,9 @@ struct PointParameters
 };
 
 class Context;
+class GLES1Renderer;
 class State;
+
 class GLES1State final : angle::NonCopyable
 {
   public:
@@ -150,20 +152,21 @@ class GLES1State final : angle::NonCopyable
     void loadMatrix(const angle::Mat4 &m);
     void multMatrix(const angle::Mat4 &m);
 
+    void setClientStateEnabled(ClientVertexArrayType clientState, bool enable);
+    bool isClientStateEnabled(ClientVertexArrayType clientState) const;
+    bool isTexCoordArrayEnabled(unsigned int unit) const;
+    bool isTextureTargetEnabled(unsigned int unit, const TextureType type) const;
+
   private:
     friend class State;
+    friend class GLES1Renderer;
 
     // Back pointer for reading from State.
     const State *mGLState;
 
     // All initial state values come from the
     // OpenGL ES 1.1 spec.
-    struct TextureEnables
-    {
-        bool enable2D      = false;
-        bool enableCubeMap = false;
-    };
-    std::vector<TextureEnables> mTexUnitEnables;
+    std::vector<angle::PackedEnumBitSet<TextureType>> mTexUnitEnables;
 
     // Table 6.4, 6.5 (IsEnabled)
     bool mVertexArrayEnabled;

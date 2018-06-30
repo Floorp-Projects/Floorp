@@ -62,8 +62,9 @@ bool ValidateProgramInterface(GLenum programInterface)
             ValidateNamedProgramInterface(programInterface));
 }
 
-bool ValidateProgramResourceProperty(GLenum prop)
+bool ValidateProgramResourceProperty(const Context *context, GLenum prop)
 {
+    ASSERT(context);
     switch (prop)
     {
         case GL_ACTIVE_VARIABLES:
@@ -96,6 +97,9 @@ bool ValidateProgramResourceProperty(GLenum prop)
 
         case GL_TYPE:
             return true;
+
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
+            return context->getExtensions().geometryShader;
 
         default:
             return false;
@@ -199,6 +203,7 @@ bool ValidateProgramResourcePropertyByInterface(GLenum prop, GLenum programInter
         case GL_REFERENCED_BY_VERTEX_SHADER:
         case GL_REFERENCED_BY_FRAGMENT_SHADER:
         case GL_REFERENCED_BY_COMPUTE_SHADER:
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
         {
             switch (programInterface)
             {
@@ -470,9 +475,25 @@ bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indir
     if (curTransformFeedback && curTransformFeedback->isActive() &&
         !curTransformFeedback->isPaused())
     {
-        // An INVALID_OPERATION error is generated if transform feedback is active and not paused.
-        context->handleError(InvalidOperation() << "transform feedback is active and not paused.");
-        return false;
+        // EXT_geometry_shader allows transform feedback to work with all draw commands.
+        // [EXT_geometry_shader] Section 12.1, "Transform Feedback"
+        if (context->getExtensions().geometryShader)
+        {
+            if (!ValidateTransformFeedbackPrimitiveMode(
+                    context, curTransformFeedback->getPrimitiveMode(), mode))
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidOperation(), InvalidDrawModeTransformFeedback);
+                return false;
+            }
+        }
+        else
+        {
+            // An INVALID_OPERATION error is generated if transform feedback is active and not
+            // paused.
+            ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                 UnsupportedDrawModeForTransformFeedback);
+            return false;
+        }
     }
 
     if (!ValidateDrawIndirectBase(context, mode, indirect))
@@ -497,8 +518,10 @@ bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indir
 
 bool ValidateDrawElementsIndirect(Context *context, GLenum mode, GLenum type, const void *indirect)
 {
-    if (!ValidateDrawElementsBase(context, type))
+    if (!ValidateDrawElementsBase(context, mode, type))
+    {
         return false;
+    }
 
     const State &state             = context->getGLState();
     const VertexArray *vao         = state.getVertexArray();
@@ -1075,8 +1098,7 @@ bool ValidateGetMultisamplefv(Context *context, GLenum pname, GLuint index, GLfl
     }
 
     Framebuffer *framebuffer = context->getGLState().getDrawFramebuffer();
-    GLint samples            = 0;
-    ANGLE_VALIDATION_TRY(framebuffer->getSamples(context, &samples));
+    GLint samples            = framebuffer->getSamples(context);
 
     if (index >= static_cast<GLuint>(samples))
     {
@@ -1154,6 +1176,21 @@ bool ValidateFramebufferParameteri(Context *context, GLenum target, GLenum pname
         {
             break;
         }
+        case GL_FRAMEBUFFER_DEFAULT_LAYERS_EXT:
+        {
+            if (!context->getExtensions().geometryShader)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), GeometryShaderExtensionNotEnabled);
+                return false;
+            }
+            GLint maxLayers = context->getCaps().maxFramebufferLayers;
+            if (param < 0 || param > maxLayers)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidFramebufferLayer);
+                return false;
+            }
+            break;
+        }
         default:
         {
             ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidPname);
@@ -1191,6 +1228,13 @@ bool ValidateGetFramebufferParameteriv(Context *context, GLenum target, GLenum p
         case GL_FRAMEBUFFER_DEFAULT_HEIGHT:
         case GL_FRAMEBUFFER_DEFAULT_SAMPLES:
         case GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS:
+            break;
+        case GL_FRAMEBUFFER_DEFAULT_LAYERS_EXT:
+            if (!context->getExtensions().geometryShader)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), GeometryShaderExtensionNotEnabled);
+                return false;
+            }
             break;
         default:
             ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidPname);
@@ -1666,7 +1710,7 @@ bool ValidateGetProgramResourceiv(Context *context,
     }
     for (GLsizei i = 0; i < propCount; i++)
     {
-        if (!ValidateProgramResourceProperty(props[i]))
+        if (!ValidateProgramResourceProperty(context, props[i]))
         {
             context->handleError(InvalidEnum() << "Invalid prop.");
             return false;

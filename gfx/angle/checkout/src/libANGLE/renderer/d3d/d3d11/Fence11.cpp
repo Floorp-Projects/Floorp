@@ -15,8 +15,6 @@
 namespace rx
 {
 
-static const int kDeviceLostCheckPeriod = 64;
-
 //
 // Template helpers for set and test operations.
 //
@@ -93,7 +91,8 @@ gl::Error FenceNV11::finish()
         loopCount++;
         ANGLE_TRY(FenceTestHelper(this, true, &finished));
 
-        if (loopCount % kDeviceLostCheckPeriod == 0 && mRenderer->testDeviceLost())
+        bool checkDeviceLost = (loopCount % kPollingD3DDeviceLostCheckFrequency) == 0;
+        if (checkDeviceLost && mRenderer->testDeviceLost())
         {
             return gl::OutOfMemory() << "Device was lost while querying result of an event query.";
         }
@@ -193,7 +192,8 @@ gl::Error Sync11::clientWait(GLbitfield flags, GLuint64 timeout, GLenum *outResu
             return error;
         }
 
-        if ((loopCount % kDeviceLostCheckPeriod) == 0 && mRenderer->testDeviceLost())
+        bool checkDeviceLost = (loopCount % kPollingD3DDeviceLostCheckFrequency) == 0;
+        if (checkDeviceLost && mRenderer->testDeviceLost())
         {
             *outResult = GL_WAIT_FAILED;
             return gl::OutOfMemory() << "Device was lost while querying result of an event query.";

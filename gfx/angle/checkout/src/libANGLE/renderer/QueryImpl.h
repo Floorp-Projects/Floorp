@@ -9,11 +9,10 @@
 #ifndef LIBANGLE_RENDERER_QUERYIMPL_H_
 #define LIBANGLE_RENDERER_QUERYIMPL_H_
 
-#include "libANGLE/Error.h"
 
 #include "common/angleutils.h"
-
-#include <GLES2/gl2.h>
+#include "libANGLE/Error.h"
+#include "libANGLE/PackedEnums.h"
 
 namespace rx
 {
@@ -21,7 +20,7 @@ namespace rx
 class QueryImpl : angle::NonCopyable
 {
   public:
-    explicit QueryImpl(GLenum type) { mType = type; }
+    explicit QueryImpl(gl::QueryType type) { mType = type; }
     virtual ~QueryImpl() { }
 
     virtual gl::Error begin() = 0;
@@ -33,10 +32,10 @@ class QueryImpl : angle::NonCopyable
     virtual gl::Error getResult(GLuint64 *params) = 0;
     virtual gl::Error isResultAvailable(bool *available) = 0;
 
-    GLenum getType() const { return mType;  }
+    gl::QueryType getType() const { return mType; }
 
   private:
-    GLenum mType;
+    gl::QueryType mType;
 };
 
 }

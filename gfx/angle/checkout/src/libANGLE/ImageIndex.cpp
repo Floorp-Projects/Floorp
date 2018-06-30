@@ -1,4 +1,3 @@
-#include "ImageIndex.h"
 //
 // Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -8,186 +7,253 @@
 // ImageIndex.cpp: Implementation for ImageIndex methods.
 
 #include "libANGLE/ImageIndex.h"
-#include "libANGLE/Constants.h"
+
 #include "common/utilities.h"
+#include "libANGLE/Constants.h"
+#include "libANGLE/angletypes.h"
 
 #include <tuple>
 
 namespace gl
 {
+namespace
+{
+GLint TextureTargetToLayer(TextureTarget target)
+{
+    switch (target)
+    {
+        case TextureTarget::CubeMapPositiveX:
+            return 0;
+        case TextureTarget::CubeMapNegativeX:
+            return 1;
+        case TextureTarget::CubeMapPositiveY:
+            return 2;
+        case TextureTarget::CubeMapNegativeY:
+            return 3;
+        case TextureTarget::CubeMapPositiveZ:
+            return 4;
+        case TextureTarget::CubeMapNegativeZ:
+            return 5;
+        case TextureTarget::External:
+            return ImageIndex::kEntireLevel;
+        case TextureTarget::Rectangle:
+            return ImageIndex::kEntireLevel;
+        case TextureTarget::_2D:
+            return ImageIndex::kEntireLevel;
+        case TextureTarget::_2DArray:
+            return ImageIndex::kEntireLevel;
+        case TextureTarget::_2DMultisample:
+            return ImageIndex::kEntireLevel;
+        case TextureTarget::_3D:
+            return ImageIndex::kEntireLevel;
+        default:
+            UNREACHABLE();
+            return 0;
+    }
+}
+
+TextureTarget TextureTypeToTarget(TextureType type, GLint layerIndex)
+{
+    if (type == TextureType::CubeMap)
+    {
+        return CubeFaceIndexToTextureTarget(layerIndex);
+    }
+    else
+    {
+        return NonCubeTextureTypeToTarget(type);
+    }
+}
+}  // anonymous namespace
+
+ImageIndex::ImageIndex()
+    : mType(TextureType::InvalidEnum), mLevelIndex(0), mLayerIndex(0), mLayerCount(kEntireLevel)
+{
+}
 
 ImageIndex::ImageIndex(const ImageIndex &other) = default;
+
 ImageIndex &ImageIndex::operator=(const ImageIndex &other) = default;
 
-bool ImageIndex::is3D() const
+bool ImageIndex::hasLayer() const
 {
-    return type == TextureType::_3D || type == TextureType::_2DArray;
+    return mLayerIndex != kEntireLevel;
+}
+
+bool ImageIndex::has3DLayer() const
+{
+    // It's quicker to check != CubeMap than calling usesTex3D, which checks multiple types. This
+    // ASSERT validates the check gives the same result.
+    ASSERT(!hasLayer() || (mType != TextureType::CubeMap == usesTex3D()));
+    return (hasLayer() && mType != TextureType::CubeMap);
+}
+
+bool ImageIndex::usesTex3D() const
+{
+    return mType == TextureType::_3D || mType == TextureType::_2DArray;
+}
+
+TextureTarget ImageIndex::getTarget() const
+{
+    return TextureTypeToTarget(mType, mLayerIndex);
 }
 
 GLint ImageIndex::cubeMapFaceIndex() const
 {
-    ASSERT(type == TextureType::CubeMap);
-    ASSERT(TextureTargetToType(target) == TextureType::CubeMap);
-    return static_cast<GLint>(CubeMapTextureTargetToFaceIndex(target));
+    ASSERT(mType == TextureType::CubeMap);
+    ASSERT(mLayerIndex == kEntireLevel || mLayerIndex < static_cast<GLint>(CUBE_FACE_COUNT));
+    return mLayerIndex;
 }
 
 bool ImageIndex::valid() const
 {
-    return type != TextureType::InvalidEnum;
+    return mType != TextureType::InvalidEnum;
 }
 
-ImageIndex ImageIndex::Make2D(GLint mipIndex)
+ImageIndex ImageIndex::Make2D(GLint levelIndex)
 {
-    return ImageIndex(TextureType::_2D, TextureTarget::_2D, mipIndex, ENTIRE_LEVEL, 1);
+    return ImageIndex(TextureType::_2D, levelIndex, kEntireLevel, 1);
 }
 
-ImageIndex ImageIndex::MakeRectangle(GLint mipIndex)
+ImageIndex ImageIndex::MakeRectangle(GLint levelIndex)
 {
-    return ImageIndex(TextureType::Rectangle, TextureTarget::Rectangle, mipIndex, ENTIRE_LEVEL, 1);
+    return ImageIndex(TextureType::Rectangle, levelIndex, kEntireLevel, 1);
 }
 
-ImageIndex ImageIndex::MakeCube(TextureTarget target, GLint mipIndex)
+ImageIndex ImageIndex::MakeCube(TextureTarget target, GLint levelIndex)
 {
     ASSERT(TextureTargetToType(target) == TextureType::CubeMap);
-    return ImageIndex(TextureType::CubeMap, target, mipIndex, ENTIRE_LEVEL, 1);
+    return ImageIndex(TextureType::CubeMap, levelIndex, TextureTargetToLayer(target), 1);
 }
 
-ImageIndex ImageIndex::Make2DArray(GLint mipIndex, GLint layerIndex)
+ImageIndex ImageIndex::Make2DArray(GLint levelIndex, GLint layerIndex)
 {
-    return ImageIndex(TextureType::_2DArray, TextureTarget::_2DArray, mipIndex, layerIndex, 1);
+    return ImageIndex(TextureType::_2DArray, levelIndex, layerIndex, 1);
 }
 
-ImageIndex ImageIndex::Make2DArrayRange(GLint mipIndex, GLint layerIndex, GLint numLayers)
+ImageIndex ImageIndex::Make2DArrayRange(GLint levelIndex, GLint layerIndex, GLint numLayers)
 {
-    return ImageIndex(TextureType::_2DArray, TextureTarget::_2DArray, mipIndex, layerIndex,
-                      numLayers);
+    return ImageIndex(TextureType::_2DArray, levelIndex, layerIndex, numLayers);
 }
 
-ImageIndex ImageIndex::Make3D(GLint mipIndex, GLint layerIndex)
+ImageIndex ImageIndex::Make3D(GLint levelIndex, GLint layerIndex)
 {
-    return ImageIndex(TextureType::_3D, TextureTarget::_3D, mipIndex, layerIndex, 1);
+    return ImageIndex(TextureType::_3D, levelIndex, layerIndex, 1);
 }
 
-ImageIndex ImageIndex::MakeGeneric(TextureTarget target, GLint mipIndex)
+ImageIndex ImageIndex::MakeFromTarget(TextureTarget target, GLint levelIndex)
 {
-    return ImageIndex(TextureTargetToType(target), target, mipIndex, ENTIRE_LEVEL, 1);
+    return ImageIndex(TextureTargetToType(target), levelIndex, TextureTargetToLayer(target), 1);
+}
+
+ImageIndex ImageIndex::MakeFromType(TextureType type,
+                                    GLint levelIndex,
+                                    GLint layerIndex,
+                                    GLint layerCount)
+{
+    GLint overrideLayerCount =
+        (type == TextureType::CubeMap && layerIndex == kEntireLevel ? CUBE_FACE_COUNT : layerCount);
+    return ImageIndex(type, levelIndex, layerIndex, overrideLayerCount);
 }
 
 ImageIndex ImageIndex::Make2DMultisample()
 {
-    return ImageIndex(TextureType::_2DMultisample, TextureTarget::_2DMultisample, 0, ENTIRE_LEVEL,
-                      1);
+    return ImageIndex(TextureType::_2DMultisample, 0, kEntireLevel, 1);
 }
 
-ImageIndex ImageIndex::MakeInvalid()
+bool ImageIndex::operator<(const ImageIndex &b) const
 {
-    return ImageIndex(TextureType::InvalidEnum, TextureTarget::InvalidEnum, -1, -1, -1);
+    return std::tie(mType, mLevelIndex, mLayerIndex, mLayerCount) <
+           std::tie(b.mType, b.mLevelIndex, b.mLayerIndex, b.mLayerCount);
 }
 
-bool operator<(const ImageIndex &a, const ImageIndex &b)
+bool ImageIndex::operator==(const ImageIndex &b) const
 {
-    return std::tie(a.type, a.target, a.mipIndex, a.layerIndex, a.numLayers) <
-           std::tie(b.type, b.target, b.mipIndex, b.layerIndex, b.numLayers);
+    return std::tie(mType, mLevelIndex, mLayerIndex, mLayerCount) ==
+           std::tie(b.mType, b.mLevelIndex, b.mLayerIndex, b.mLayerCount);
 }
 
-bool operator==(const ImageIndex &a, const ImageIndex &b)
+bool ImageIndex::operator!=(const ImageIndex &b) const
 {
-    return std::tie(a.type, a.target, a.mipIndex, a.layerIndex, a.numLayers) ==
-           std::tie(b.type, b.target, b.mipIndex, b.layerIndex, b.numLayers);
+    return !(*this == b);
 }
 
-bool operator!=(const ImageIndex &a, const ImageIndex &b)
-{
-    return !(a == b);
-}
-
-ImageIndex::ImageIndex(TextureType typeIn,
-                       TextureTarget targetIn,
-                       GLint mipIndexIn,
-                       GLint layerIndexIn,
-                       GLint numLayersIn)
-    : type(typeIn),
-      target(targetIn),
-      mipIndex(mipIndexIn),
-      layerIndex(layerIndexIn),
-      numLayers(numLayersIn)
+ImageIndex::ImageIndex(TextureType type, GLint levelIndex, GLint layerIndex, GLint layerCount)
+    : mType(type), mLevelIndex(levelIndex), mLayerIndex(layerIndex), mLayerCount(layerCount)
 {}
+
+ImageIndexIterator ImageIndex::getLayerIterator(GLint layerCount) const
+{
+    ASSERT(mType != TextureType::_2D && !hasLayer());
+    return ImageIndexIterator::MakeGeneric(mType, mLevelIndex, mLevelIndex + 1, 0, layerCount);
+}
 
 ImageIndexIterator::ImageIndexIterator(const ImageIndexIterator &other) = default;
 
 ImageIndexIterator ImageIndexIterator::Make2D(GLint minMip, GLint maxMip)
 {
-    return ImageIndexIterator(
-        TextureType::_2D, TextureTarget::_2D, TextureTarget::_2D, Range<GLint>(minMip, maxMip),
-        Range<GLint>(ImageIndex::ENTIRE_LEVEL, ImageIndex::ENTIRE_LEVEL), nullptr);
+    return ImageIndexIterator(TextureType::_2D, Range<GLint>(minMip, maxMip),
+                              Range<GLint>(ImageIndex::kEntireLevel, ImageIndex::kEntireLevel),
+                              nullptr);
 }
 
 ImageIndexIterator ImageIndexIterator::MakeRectangle(GLint minMip, GLint maxMip)
 {
-    return ImageIndexIterator(TextureType::Rectangle, TextureTarget::Rectangle,
-                              TextureTarget::Rectangle, Range<GLint>(minMip, maxMip),
-                              Range<GLint>(ImageIndex::ENTIRE_LEVEL, ImageIndex::ENTIRE_LEVEL),
+    return ImageIndexIterator(TextureType::Rectangle, Range<GLint>(minMip, maxMip),
+                              Range<GLint>(ImageIndex::kEntireLevel, ImageIndex::kEntireLevel),
                               nullptr);
 }
 
 ImageIndexIterator ImageIndexIterator::MakeCube(GLint minMip, GLint maxMip)
 {
-    return ImageIndexIterator(TextureType::CubeMap, kCubeMapTextureTargetMin,
-                              kCubeMapTextureTargetMax, Range<GLint>(minMip, maxMip),
-                              Range<GLint>(ImageIndex::ENTIRE_LEVEL, ImageIndex::ENTIRE_LEVEL),
-                              nullptr);
+    return ImageIndexIterator(TextureType::CubeMap, Range<GLint>(minMip, maxMip),
+                              Range<GLint>(0, 6), nullptr);
 }
 
 ImageIndexIterator ImageIndexIterator::Make3D(GLint minMip, GLint maxMip,
                                               GLint minLayer, GLint maxLayer)
 {
-    return ImageIndexIterator(TextureType::_3D, TextureTarget::_3D, TextureTarget::_3D,
-                              Range<GLint>(minMip, maxMip), Range<GLint>(minLayer, maxLayer),
-                              nullptr);
+    return ImageIndexIterator(TextureType::_3D, Range<GLint>(minMip, maxMip),
+                              Range<GLint>(minLayer, maxLayer), nullptr);
 }
 
 ImageIndexIterator ImageIndexIterator::Make2DArray(GLint minMip, GLint maxMip,
                                                    const GLsizei *layerCounts)
 {
-    return ImageIndexIterator(TextureType::_2DArray, TextureTarget::_2DArray,
-                              TextureTarget::_2DArray, Range<GLint>(minMip, maxMip),
+    return ImageIndexIterator(TextureType::_2DArray, Range<GLint>(minMip, maxMip),
                               Range<GLint>(0, IMPLEMENTATION_MAX_2D_ARRAY_TEXTURE_LAYERS),
                               layerCounts);
 }
 
 ImageIndexIterator ImageIndexIterator::Make2DMultisample()
 {
-    return ImageIndexIterator(TextureType::_2DMultisample, TextureTarget::_2DMultisample,
-                              TextureTarget::_2DMultisample, Range<GLint>(0, 0),
-                              Range<GLint>(ImageIndex::ENTIRE_LEVEL, ImageIndex::ENTIRE_LEVEL),
+    return ImageIndexIterator(TextureType::_2DMultisample, Range<GLint>(0, 0),
+                              Range<GLint>(ImageIndex::kEntireLevel, ImageIndex::kEntireLevel),
                               nullptr);
 }
 
-ImageIndexIterator ImageIndexIterator::MakeGeneric(TextureType type, GLint minMip, GLint maxMip)
+ImageIndexIterator ImageIndexIterator::MakeGeneric(TextureType type,
+                                                   GLint minMip,
+                                                   GLint maxMip,
+                                                   GLint minLayer,
+                                                   GLint maxLayer)
 {
     if (type == TextureType::CubeMap)
     {
         return MakeCube(minMip, maxMip);
     }
 
-    TextureTarget target = NonCubeTextureTypeToTarget(type);
-    return ImageIndexIterator(type, target, target, Range<GLint>(minMip, maxMip),
-                              Range<GLint>(ImageIndex::ENTIRE_LEVEL, ImageIndex::ENTIRE_LEVEL),
+    return ImageIndexIterator(type, Range<GLint>(minMip, maxMip), Range<GLint>(minLayer, maxLayer),
                               nullptr);
 }
 
 ImageIndexIterator::ImageIndexIterator(TextureType type,
-                                       angle::EnumIterator<TextureTarget> targetLow,
-                                       angle::EnumIterator<TextureTarget> targetHigh,
                                        const Range<GLint> &mipRange,
                                        const Range<GLint> &layerRange,
                                        const GLsizei *layerCounts)
-    : mTargetLow(targetLow),
-      mTargetHigh(targetHigh),
-      mMipRange(mipRange),
+    : mMipRange(mipRange),
       mLayerRange(layerRange),
       mLayerCounts(layerCounts),
-      mCurrentIndex(type, *targetLow, mipRange.low(), layerRange.low(), 1)
+      mCurrentIndex(type, mipRange.low(), layerRange.low(), 1)
 {}
 
 GLint ImageIndexIterator::maxLayer() const
@@ -195,8 +261,9 @@ GLint ImageIndexIterator::maxLayer() const
     if (mLayerCounts)
     {
         ASSERT(mCurrentIndex.hasLayer());
-        return (mCurrentIndex.mipIndex < mMipRange.high()) ? mLayerCounts[mCurrentIndex.mipIndex]
-                                                           : 0;
+        return (mCurrentIndex.getLevelIndex() < mMipRange.high())
+                   ? mLayerCounts[mCurrentIndex.getLevelIndex()]
+                   : 0;
     }
     return mLayerRange.high();
 }
@@ -211,26 +278,18 @@ ImageIndex ImageIndexIterator::next()
     // Iterate layers in the inner loop for now. We can add switchable
     // layer or mip iteration if we need it.
 
-    angle::EnumIterator<TextureTarget> currentTarget = mCurrentIndex.target;
-    if (currentTarget != mTargetHigh)
+    if (mCurrentIndex.hasLayer() && mCurrentIndex.getLayerIndex() < maxLayer() - 1)
     {
-        ++currentTarget;
-        mCurrentIndex.target = *currentTarget;
+        mCurrentIndex.mLayerIndex++;
     }
-    else if (mCurrentIndex.hasLayer() && mCurrentIndex.layerIndex < maxLayer() - 1)
+    else if (mCurrentIndex.mLevelIndex < mMipRange.high() - 1)
     {
-        mCurrentIndex.target = *mTargetLow;
-        mCurrentIndex.layerIndex++;
-    }
-    else if (mCurrentIndex.mipIndex < mMipRange.high() - 1)
-    {
-        mCurrentIndex.target     = *mTargetLow;
-        mCurrentIndex.layerIndex = mLayerRange.low();
-        mCurrentIndex.mipIndex++;
+        mCurrentIndex.mLayerIndex = mLayerRange.low();
+        mCurrentIndex.mLevelIndex++;
     }
     else
     {
-        mCurrentIndex = ImageIndex::MakeInvalid();
+        mCurrentIndex = ImageIndex();
     }
 
     return previousIndex;

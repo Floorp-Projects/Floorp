@@ -22,7 +22,7 @@
 #include "libANGLE/Context_gles_1_0_autogen.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/HandleAllocator.h"
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 #include "libANGLE/ResourceMap.h"
 #include "libANGLE/VertexAttribute.h"
@@ -48,19 +48,20 @@ namespace gl
 class Buffer;
 class Compiler;
 class FenceNV;
-class Sync;
 class Framebuffer;
+class GLES1Renderer;
 class MemoryProgramCache;
 class Program;
+class ProgramPipeline;
 class Query;
 class Renderbuffer;
 class Sampler;
 class Shader;
+class Sync;
 class Texture;
 class TransformFeedback;
 class VertexArray;
 struct VertexAttribute;
-class ProgramPipeline;
 
 class Context final : angle::NonCopyable
 {
@@ -71,7 +72,8 @@ class Context final : angle::NonCopyable
             TextureManager *shareTextures,
             MemoryProgramCache *memoryProgramCache,
             const egl::AttributeMap &attribs,
-            const egl::DisplayExtensions &displayExtensions);
+            const egl::DisplayExtensions &displayExtensions,
+            const egl::ClientExtensions &clientExtensions);
 
     egl::Error onDestroy(const egl::Display *display);
     ~Context();
@@ -151,16 +153,15 @@ class Context final : angle::NonCopyable
     void bindTransformFeedback(GLenum target, GLuint transformFeedbackHandle);
     void bindProgramPipeline(GLuint pipelineHandle);
 
-    void beginQuery(GLenum target, GLuint query);
-    void endQuery(GLenum target);
-    void queryCounter(GLuint id, GLenum target);
-    void getQueryiv(GLenum target, GLenum pname, GLint *params);
-    void getQueryivRobust(GLenum target,
+    void beginQuery(QueryType target, GLuint query);
+    void endQuery(QueryType target);
+    void queryCounter(GLuint id, QueryType target);
+    void getQueryiv(QueryType target, GLenum pname, GLint *params);
+    void getQueryivRobust(QueryType target,
                           GLenum pname,
                           GLsizei bufSize,
                           GLsizei *length,
                           GLint *params);
-
     void getQueryObjectiv(GLuint id, GLenum pname, GLint *params);
     void getQueryObjectivRobust(GLuint id,
                                 GLenum pname,
@@ -352,7 +353,7 @@ class Context final : angle::NonCopyable
     Renderbuffer *getRenderbuffer(GLuint handle) const;
     VertexArray *getVertexArray(GLuint handle) const;
     Sampler *getSampler(GLuint handle) const;
-    Query *getQuery(GLuint handle, bool create, GLenum type);
+    Query *getQuery(GLuint handle, bool create, QueryType type);
     Query *getQuery(GLuint handle) const;
     TransformFeedback *getTransformFeedback(GLuint handle) const;
     ProgramPipeline *getProgramPipeline(GLuint handle) const;
@@ -1374,11 +1375,11 @@ class Context final : angle::NonCopyable
     void memoryBarrierByRegion(GLbitfield barriers);
 
     // Consumes the error.
-    void handleError(const Error &error);
+    void handleError(const Error &error) const;
 
     GLenum getError();
-    void markContextLost();
-    bool isContextLost();
+    void markContextLost() const;
+    bool isContextLost() const;
     GLenum getGraphicsResetStatus();
     bool isResetNotificationEnabled();
 
@@ -1457,6 +1458,11 @@ class Context final : angle::NonCopyable
 
     bool isValidBufferBinding(BufferBinding binding) const { return mValidBufferBindings[binding]; }
 
+    // GLES1 emulation: Renderer level (for validation)
+    int vertexArrayIndex(ClientVertexArrayType type) const;
+    static int TexCoordArrayIndex(unsigned int unit);
+    AttributesMask getVertexArraysAttributeMask() const;
+
   private:
     Error prepareForDraw();
     Error prepareForClear(GLbitfield mask);
@@ -1487,7 +1493,12 @@ class Context final : angle::NonCopyable
     void initVersionStrings();
     void initExtensionStrings();
 
-    void initCaps(const egl::DisplayExtensions &displayExtensions, bool robustResourceInit);
+    Extensions generateSupportedExtensions(const egl::DisplayExtensions &displayExtensions,
+                                           const egl::ClientExtensions &clientExtensions,
+                                           bool robustResourceInit) const;
+    void initCaps(const egl::DisplayExtensions &displayExtensions,
+                  const egl::ClientExtensions &clientExtensions,
+                  bool robustResourceInit);
     void updateCaps();
     void initWorkarounds();
 
@@ -1513,6 +1524,10 @@ class Context final : angle::NonCopyable
     TextureCapsMap mTextureCaps;
     Extensions mExtensions;
     Limitations mLimitations;
+
+    // Extensions supported by the implementation plus extensions that are implemented entirely
+    // within the frontend.
+    Extensions mSupportedExtensions;
 
     // Shader compiler. Lazily initialized hence the mutable value.
     mutable BindingPointer<Compiler> mCompiler;
@@ -1546,13 +1561,16 @@ class Context final : angle::NonCopyable
 
     // Recorded errors
     typedef std::set<GLenum> ErrorSet;
-    ErrorSet mErrors;
+    mutable ErrorSet mErrors;
+
+    // GLES1 renderer state
+    std::unique_ptr<GLES1Renderer> mGLES1Renderer;
 
     // Current/lost context flags
     bool mHasBeenCurrent;
-    bool mContextLost;
-    GLenum mResetStatus;
-    bool mContextLostForced;
+    mutable bool mContextLost;
+    mutable GLenum mResetStatus;
+    mutable bool mContextLostForced;
     GLenum mResetStrategy;
     bool mRobustAccess;
     egl::Surface *mCurrentSurface;

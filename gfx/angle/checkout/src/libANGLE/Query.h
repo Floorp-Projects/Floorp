@@ -11,6 +11,7 @@
 
 #include "libANGLE/Debug.h"
 #include "libANGLE/Error.h"
+#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 
 #include "common/angleutils.h"
@@ -44,7 +45,7 @@ class Query final : public RefCountObject, public LabeledObject
     Error getResult(GLuint64 *params);
     Error isResultAvailable(bool *available);
 
-    GLenum getType() const;
+    QueryType getType() const;
 
     rx::QueryImpl *getImplementation();
     const rx::QueryImpl *getImplementation() const;

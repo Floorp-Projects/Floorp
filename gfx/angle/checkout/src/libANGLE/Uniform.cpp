@@ -46,6 +46,11 @@ ShaderType ActiveVariable::getFirstShaderTypeWhereActive() const
     return static_cast<ShaderType>(gl::ScanForward(mActiveUseBits.bits()));
 }
 
+GLuint ActiveVariable::activeShaderCount() const
+{
+    return static_cast<GLuint>(mActiveUseBits.count());
+}
+
 LinkedUniform::LinkedUniform()
     : typeInfo(nullptr), bufferIndex(-1), blockInfo(sh::BlockMemberInfo::getDefaultBlockInfo())
 {

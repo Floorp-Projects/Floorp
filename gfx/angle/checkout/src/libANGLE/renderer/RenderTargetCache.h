@@ -26,9 +26,17 @@ class RenderTargetCache final : angle::NonCopyable
     RenderTargetCache();
     ~RenderTargetCache();
 
+    // Update all RenderTargets from the dirty bits.
     gl::Error update(const gl::Context *context,
                      const gl::FramebufferState &state,
                      const gl::Framebuffer::DirtyBits &dirtyBits);
+
+    // Update individual RenderTargets.
+    gl::Error updateColorRenderTarget(const gl::Context *context,
+                                      const gl::FramebufferState &state,
+                                      size_t colorIndex);
+    gl::Error updateDepthStencilRenderTarget(const gl::Context *context,
+                                             const gl::FramebufferState &state);
 
     using RenderTargetArray = gl::AttachmentArray<RenderTargetT *>;
 
@@ -41,12 +49,6 @@ class RenderTargetCache final : angle::NonCopyable
     gl::Error updateCachedRenderTarget(const gl::Context *context,
                                        const gl::FramebufferAttachment *attachment,
                                        RenderTargetT **cachedRenderTarget);
-
-    gl::Error updateColorRenderTarget(const gl::Context *context,
-                                      const gl::FramebufferState &state,
-                                      size_t colorIndex);
-    gl::Error updateDepthStencilRenderTarget(const gl::Context *context,
-                                             const gl::FramebufferState &state);
 
     gl::AttachmentArray<RenderTargetT *> mColorRenderTargets;
     // We only support a single Depth/Stencil RenderTarget currently.

@@ -146,8 +146,8 @@ bool CheckAttachmentSampleCompleteness(const Context *context,
 
         // ES3.1 (section 9.4) requires that the value of TEXTURE_FIXED_SAMPLE_LOCATIONS should be
         // the same for all attached textures.
-        bool fixedSampleloc = texture->getFixedSampleLocations(attachmentImageIndex.target,
-                                                               attachmentImageIndex.mipIndex);
+        bool fixedSampleloc = texture->getFixedSampleLocations(
+            attachmentImageIndex.getTarget(), attachmentImageIndex.getLevelIndex());
         if (fixedSampleLocations->valid() && fixedSampleloc != fixedSampleLocations->value())
         {
             return false;
@@ -261,6 +261,7 @@ FramebufferState::FramebufferState()
       mDefaultHeight(0),
       mDefaultSamples(0),
       mDefaultFixedSampleLocations(GL_FALSE),
+      mDefaultLayers(0),
       mWebGLDepthStencilConsistent(true)
 {
     ASSERT(mDrawBufferStates.size() > 0);
@@ -277,6 +278,7 @@ FramebufferState::FramebufferState(const Caps &caps)
       mDefaultHeight(0),
       mDefaultSamples(0),
       mDefaultFixedSampleLocations(GL_FALSE),
+      mDefaultLayers(0),
       mWebGLDepthStencilConsistent(true)
 {
     ASSERT(mDrawBufferStates.size() > 0);
@@ -642,16 +644,16 @@ Framebuffer::Framebuffer(const egl::Display *display, egl::Surface *surface)
 
     const Context *proxyContext = display->getProxyContext();
 
-    setAttachmentImpl(proxyContext, GL_FRAMEBUFFER_DEFAULT, GL_BACK, ImageIndex::MakeInvalid(),
-                      surface, FramebufferAttachment::kDefaultNumViews,
+    setAttachmentImpl(proxyContext, GL_FRAMEBUFFER_DEFAULT, GL_BACK, ImageIndex(), surface,
+                      FramebufferAttachment::kDefaultNumViews,
                       FramebufferAttachment::kDefaultBaseViewIndex,
                       FramebufferAttachment::kDefaultMultiviewLayout,
                       FramebufferAttachment::kDefaultViewportOffsets);
 
     if (surface->getConfig()->depthSize > 0)
     {
-        setAttachmentImpl(proxyContext, GL_FRAMEBUFFER_DEFAULT, GL_DEPTH, ImageIndex::MakeInvalid(),
-                          surface, FramebufferAttachment::kDefaultNumViews,
+        setAttachmentImpl(proxyContext, GL_FRAMEBUFFER_DEFAULT, GL_DEPTH, ImageIndex(), surface,
+                          FramebufferAttachment::kDefaultNumViews,
                           FramebufferAttachment::kDefaultBaseViewIndex,
                           FramebufferAttachment::kDefaultMultiviewLayout,
                           FramebufferAttachment::kDefaultViewportOffsets);
@@ -659,11 +661,11 @@ Framebuffer::Framebuffer(const egl::Display *display, egl::Surface *surface)
 
     if (surface->getConfig()->stencilSize > 0)
     {
-        setAttachmentImpl(
-            proxyContext, GL_FRAMEBUFFER_DEFAULT, GL_STENCIL, ImageIndex::MakeInvalid(), surface,
-            FramebufferAttachment::kDefaultNumViews, FramebufferAttachment::kDefaultBaseViewIndex,
-            FramebufferAttachment::kDefaultMultiviewLayout,
-            FramebufferAttachment::kDefaultViewportOffsets);
+        setAttachmentImpl(proxyContext, GL_FRAMEBUFFER_DEFAULT, GL_STENCIL, ImageIndex(), surface,
+                          FramebufferAttachment::kDefaultNumViews,
+                          FramebufferAttachment::kDefaultBaseViewIndex,
+                          FramebufferAttachment::kDefaultMultiviewLayout,
+                          FramebufferAttachment::kDefaultViewportOffsets);
     }
     mState.mDrawBufferTypeMask.setIndex(getDrawbufferWriteType(0), 0);
 }
@@ -698,11 +700,6 @@ void Framebuffer::onDestroy(const Context *context)
     mState.mWebGLDepthStencilAttachment.detach(context);
 
     mImpl->destroy(context);
-}
-
-void Framebuffer::destroyDefault(const egl::Display *display)
-{
-    mImpl->destroyDefault(display);
 }
 
 void Framebuffer::setLabel(const std::string &label)
@@ -981,7 +978,7 @@ void Framebuffer::invalidateCompletenessCache()
     }
 }
 
-Error Framebuffer::checkStatus(const Context *context, GLenum *statusOut)
+GLenum Framebuffer::checkStatus(const Context *context)
 {
     // The default framebuffer is always complete except when it is surfaceless in which
     // case it is always unsupported. We return early because the default framebuffer may
@@ -991,8 +988,7 @@ Error Framebuffer::checkStatus(const Context *context, GLenum *statusOut)
         ASSERT(mCachedStatus.valid());
         ASSERT(mCachedStatus.value() == GL_FRAMEBUFFER_COMPLETE ||
                mCachedStatus.value() == GL_FRAMEBUFFER_UNDEFINED_OES);
-        *statusOut = mCachedStatus.value();
-        return NoError();
+        return mCachedStatus.value();
     }
 
     if (hasAnyDirtyBit() || !mCachedStatus.valid())
@@ -1001,7 +997,12 @@ Error Framebuffer::checkStatus(const Context *context, GLenum *statusOut)
 
         if (mCachedStatus.value() == GL_FRAMEBUFFER_COMPLETE)
         {
-            ANGLE_TRY(syncState(context));
+            Error err = syncState(context);
+            if (err.isError())
+            {
+                context->handleError(err);
+                return GetDefaultReturnValue<EntryPoint::CheckFramebufferStatus, GLenum>();
+            }
             if (!mImpl->checkStatus(context))
             {
                 mCachedStatus = GL_FRAMEBUFFER_UNSUPPORTED;
@@ -1009,8 +1010,7 @@ Error Framebuffer::checkStatus(const Context *context, GLenum *statusOut)
         }
     }
 
-    *statusOut = mCachedStatus.value();
-    return NoError();
+    return mCachedStatus.value();
 }
 
 GLenum Framebuffer::checkStatusWithGLFrontEnd(const Context *context)
@@ -1433,12 +1433,9 @@ Error Framebuffer::blit(const Context *context,
     return mImpl->blit(context, sourceArea, destArea, blitMask, filter);
 }
 
-Error Framebuffer::getSamples(const Context *context, int *samplesOut)
+int Framebuffer::getSamples(const Context *context)
 {
-    bool completeness = false;
-    ANGLE_TRY(isComplete(context, &completeness));
-    *samplesOut = completeness ? getCachedSamples(context) : 0;
-    return NoError();
+    return (isComplete(context) ? getCachedSamples(context) : 0);
 }
 
 int Framebuffer::getCachedSamples(const Context *context)
@@ -1458,9 +1455,9 @@ int Framebuffer::getCachedSamples(const Context *context)
     return 0;
 }
 
-Error Framebuffer::getSamplePosition(size_t index, GLfloat *xy) const
+Error Framebuffer::getSamplePosition(const Context *context, size_t index, GLfloat *xy) const
 {
-    ANGLE_TRY(mImpl->getSamplePosition(index, xy));
+    ANGLE_TRY(mImpl->getSamplePosition(context, index, xy));
     return NoError();
 }
 
@@ -1589,7 +1586,7 @@ void Framebuffer::commitWebGL1DepthStencilIfConsistent(const Context *context,
         }
         else
         {
-            return ImageIndex::MakeInvalid();
+            return ImageIndex();
         }
     };
 
@@ -1599,14 +1596,14 @@ void Framebuffer::commitWebGL1DepthStencilIfConsistent(const Context *context,
         setAttachmentImpl(context, depth.type(), GL_DEPTH_ATTACHMENT,
                           getImageIndexIfTextureAttachment(depth), depth.getResource(), numViews,
                           baseViewIndex, multiviewLayout, viewportOffsets);
-        setAttachmentImpl(context, GL_NONE, GL_STENCIL_ATTACHMENT, ImageIndex::MakeInvalid(),
-                          nullptr, numViews, baseViewIndex, multiviewLayout, viewportOffsets);
+        setAttachmentImpl(context, GL_NONE, GL_STENCIL_ATTACHMENT, ImageIndex(), nullptr, numViews,
+                          baseViewIndex, multiviewLayout, viewportOffsets);
     }
     else if (mState.mWebGLStencilAttachment.isAttached())
     {
         const auto &stencil = mState.mWebGLStencilAttachment;
-        setAttachmentImpl(context, GL_NONE, GL_DEPTH_ATTACHMENT, ImageIndex::MakeInvalid(), nullptr,
-                          numViews, baseViewIndex, multiviewLayout, viewportOffsets);
+        setAttachmentImpl(context, GL_NONE, GL_DEPTH_ATTACHMENT, ImageIndex(), nullptr, numViews,
+                          baseViewIndex, multiviewLayout, viewportOffsets);
         setAttachmentImpl(context, stencil.type(), GL_STENCIL_ATTACHMENT,
                           getImageIndexIfTextureAttachment(stencil), stencil.getResource(),
                           numViews, baseViewIndex, multiviewLayout, viewportOffsets);
@@ -1625,10 +1622,10 @@ void Framebuffer::commitWebGL1DepthStencilIfConsistent(const Context *context,
     }
     else
     {
-        setAttachmentImpl(context, GL_NONE, GL_DEPTH_ATTACHMENT, ImageIndex::MakeInvalid(), nullptr,
-                          numViews, baseViewIndex, multiviewLayout, viewportOffsets);
-        setAttachmentImpl(context, GL_NONE, GL_STENCIL_ATTACHMENT, ImageIndex::MakeInvalid(),
-                          nullptr, numViews, baseViewIndex, multiviewLayout, viewportOffsets);
+        setAttachmentImpl(context, GL_NONE, GL_DEPTH_ATTACHMENT, ImageIndex(), nullptr, numViews,
+                          baseViewIndex, multiviewLayout, viewportOffsets);
+        setAttachmentImpl(context, GL_NONE, GL_STENCIL_ATTACHMENT, ImageIndex(), nullptr, numViews,
+                          baseViewIndex, multiviewLayout, viewportOffsets);
     }
 }
 
@@ -1736,7 +1733,7 @@ void Framebuffer::updateAttachment(const Context *context,
 
 void Framebuffer::resetAttachment(const Context *context, GLenum binding)
 {
-    setAttachment(context, GL_NONE, binding, ImageIndex::MakeInvalid(), nullptr);
+    setAttachment(context, GL_NONE, binding, ImageIndex(), nullptr);
 }
 
 Error Framebuffer::syncState(const Context *context)
@@ -1792,12 +1789,9 @@ FramebufferAttachment *Framebuffer::getAttachmentFromSubjectIndex(angle::Subject
     }
 }
 
-Error Framebuffer::isComplete(const Context *context, bool *completeOut)
+bool Framebuffer::isComplete(const Context *context)
 {
-    GLenum status = GL_NONE;
-    ANGLE_TRY(checkStatus(context, &status));
-    *completeOut = (status == GL_FRAMEBUFFER_COMPLETE);
-    return NoError();
+    return (checkStatus(context) == GL_FRAMEBUFFER_COMPLETE);
 }
 
 bool Framebuffer::formsRenderingFeedbackLoopWith(const State &state) const
@@ -1879,12 +1873,11 @@ bool Framebuffer::formsCopyingFeedbackLoopWith(GLuint copyTextureID,
     if (readAttachment->isTextureWithId(copyTextureID))
     {
         const auto &imageIndex = readAttachment->getTextureImageIndex();
-        if (imageIndex.mipIndex == copyTextureLevel)
+        if (imageIndex.getLevelIndex() == copyTextureLevel)
         {
             // Check 3D/Array texture layers.
-            return imageIndex.layerIndex == ImageIndex::ENTIRE_LEVEL ||
-                   copyTextureLayer == ImageIndex::ENTIRE_LEVEL ||
-                   imageIndex.layerIndex == copyTextureLayer;
+            return !imageIndex.hasLayer() || copyTextureLayer == ImageIndex::kEntireLevel ||
+                   imageIndex.getLayerIndex() == copyTextureLayer;
         }
     }
     return false;
@@ -1908,6 +1901,11 @@ GLint Framebuffer::getDefaultSamples() const
 bool Framebuffer::getDefaultFixedSampleLocations() const
 {
     return mState.getDefaultFixedSampleLocations();
+}
+
+GLint Framebuffer::getDefaultLayers() const
+{
+    return mState.getDefaultLayers();
 }
 
 void Framebuffer::setDefaultWidth(GLint defaultWidth)
@@ -1936,6 +1934,12 @@ void Framebuffer::setDefaultFixedSampleLocations(bool defaultFixedSampleLocation
     mState.mDefaultFixedSampleLocations = defaultFixedSampleLocations;
     mDirtyBits.set(DIRTY_BIT_DEFAULT_FIXED_SAMPLE_LOCATIONS);
     invalidateCompletenessCache();
+}
+
+void Framebuffer::setDefaultLayers(GLint defaultLayers)
+{
+    mState.mDefaultLayers = defaultLayers;
+    mDirtyBits.set(DIRTY_BIT_DEFAULT_LAYERS);
 }
 
 GLsizei Framebuffer::getNumViews() const

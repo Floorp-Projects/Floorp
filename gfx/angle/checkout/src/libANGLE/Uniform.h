@@ -32,6 +32,7 @@ struct ActiveVariable
     void setActive(ShaderType shaderType, bool used);
     void unionReferencesWith(const ActiveVariable &other);
     bool isActive(ShaderType shaderType) const;
+    GLuint activeShaderCount() const;
 
   private:
     ShaderBitSet mActiveUseBits;

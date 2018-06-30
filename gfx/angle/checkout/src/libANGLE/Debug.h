@@ -49,12 +49,12 @@ class Debug : angle::NonCopyable
                        GLenum type,
                        GLuint id,
                        GLenum severity,
-                       const std::string &message);
+                       const std::string &message) const;
     void insertMessage(GLenum source,
                        GLenum type,
                        GLuint id,
                        GLenum severity,
-                       std::string &&message);
+                       std::string &&message) const;
 
     void setMessageControl(GLenum source,
                            GLenum type,
@@ -119,7 +119,7 @@ class Debug : angle::NonCopyable
     bool mOutputEnabled;
     GLDEBUGPROCKHR mCallbackFunction;
     const void *mCallbackUserParam;
-    std::deque<Message> mMessages;
+    mutable std::deque<Message> mMessages;
     GLuint mMaxLoggedMessages;
     bool mOutputSynchronous;
     std::vector<Group> mGroups;

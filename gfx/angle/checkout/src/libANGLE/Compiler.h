@@ -12,7 +12,7 @@
 
 #include "GLSLANG/ShaderLang.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedGLEnums_autogen.h"
+#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 
 namespace rx
@@ -41,10 +41,7 @@ class Compiler final : public RefCountObjectNoID
     ShShaderOutput mOutputType;
     ShBuiltInResources mResources;
 
-    ShHandle mFragmentCompiler;
-    ShHandle mVertexCompiler;
-    ShHandle mComputeCompiler;
-    ShHandle mGeometryCompiler;
+    ShaderMap<ShHandle> mShaderCompilers;
 };
 
 }  // namespace gl

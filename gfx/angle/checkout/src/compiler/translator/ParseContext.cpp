@@ -194,7 +194,7 @@ TParseContext::TParseContext(TSymbolTable &symt,
                         mShaderVersion,
                         mShaderType,
                         resources.WEBGL_debug_shader_precision == 1),
-      mPreprocessor(mDiagnostics, &mDirectiveHandler, pp::PreprocessorSettings()),
+      mPreprocessor(mDiagnostics, &mDirectiveHandler, angle::pp::PreprocessorSettings()),
       mScanner(nullptr),
       mMinProgramTexelOffset(resources.MinProgramTexelOffset),
       mMaxProgramTexelOffset(resources.MaxProgramTexelOffset),
@@ -1755,7 +1755,7 @@ void TParseContext::handleExtensionDirective(const TSourceLoc &loc,
                                              const char *extName,
                                              const char *behavior)
 {
-    pp::SourceLocation srcLoc;
+    angle::pp::SourceLocation srcLoc;
     srcLoc.file = loc.first_file;
     srcLoc.line = loc.first_line;
     mDirectiveHandler.handleExtension(srcLoc, extName, behavior);
@@ -1766,7 +1766,7 @@ void TParseContext::handlePragmaDirective(const TSourceLoc &loc,
                                           const char *value,
                                           bool stdgl)
 {
-    pp::SourceLocation srcLoc;
+    angle::pp::SourceLocation srcLoc;
     srcLoc.file = loc.first_file;
     srcLoc.line = loc.first_line;
     mDirectiveHandler.handlePragma(srcLoc, name, value, stdgl);
@@ -2632,7 +2632,7 @@ TIntermInvariantDeclaration *TParseContext::parseInvariantDeclaration(
                                     typeQualifier.line);
     checkMemoryQualifierIsNotSpecified(typeQualifier.memoryQualifier, typeQualifier.line);
 
-    symbolTable.addInvariantVarying(identifier);
+    symbolTable.addInvariantVarying(*variable);
 
     TIntermSymbol *intermSymbol = new TIntermSymbol(variable);
     intermSymbol->setLine(identifierLoc);

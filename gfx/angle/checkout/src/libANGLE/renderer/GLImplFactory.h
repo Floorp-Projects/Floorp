@@ -71,7 +71,7 @@ class GLImplFactory : angle::NonCopyable
     virtual VertexArrayImpl *createVertexArray(const gl::VertexArrayState &data) = 0;
 
     // Query and Fence creation
-    virtual QueryImpl *createQuery(GLenum type) = 0;
+    virtual QueryImpl *createQuery(gl::QueryType type) = 0;
     virtual FenceNVImpl *createFenceNV() = 0;
     virtual SyncImpl *createSync()              = 0;
 

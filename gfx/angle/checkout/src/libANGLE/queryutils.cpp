@@ -480,6 +480,7 @@ GLint GetInputResourceProperty(const Program *program, GLuint index, GLenum prop
 
         case GL_REFERENCED_BY_FRAGMENT_SHADER:
         case GL_REFERENCED_BY_COMPUTE_SHADER:
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
             return 0;
 
         default:
@@ -501,13 +502,12 @@ GLint GetOutputResourceProperty(const Program *program, GLuint index, const GLen
         case GL_LOCATION:
             return program->getFragDataLocation(outputVariable.name);
 
-        case GL_REFERENCED_BY_VERTEX_SHADER:
-            return 0;
-
         case GL_REFERENCED_BY_FRAGMENT_SHADER:
             return 1;
 
+        case GL_REFERENCED_BY_VERTEX_SHADER:
         case GL_REFERENCED_BY_COMPUTE_SHADER:
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
             return 0;
 
         default:
@@ -734,6 +734,9 @@ void GetShaderVariableBufferResourceProperty(const ShaderVariableBuffer &buffer,
             break;
         case GL_REFERENCED_BY_COMPUTE_SHADER:
             params[(*outputPosition)++] = static_cast<GLint>(buffer.isActive(ShaderType::Compute));
+            break;
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
+            params[(*outputPosition)++] = static_cast<GLint>(buffer.isActive(ShaderType::Geometry));
             break;
         default:
             UNREACHABLE();
@@ -1265,6 +1268,9 @@ void QueryFramebufferParameteriv(const Framebuffer *framebuffer, GLenum pname, G
         case GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS:
             *params = ConvertToGLBoolean(framebuffer->getDefaultFixedSampleLocations());
             break;
+        case GL_FRAMEBUFFER_DEFAULT_LAYERS_EXT:
+            *params = framebuffer->getDefaultLayers();
+            break;
         default:
             UNREACHABLE();
             break;
@@ -1371,6 +1377,9 @@ void SetFramebufferParameteri(Framebuffer *framebuffer, GLenum pname, GLint para
         case GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS:
             framebuffer->setDefaultFixedSampleLocations(ConvertToBool(param));
             break;
+        case GL_FRAMEBUFFER_DEFAULT_LAYERS_EXT:
+            framebuffer->setDefaultLayers(param);
+            break;
         default:
             UNREACHABLE();
             break;
@@ -1433,6 +1442,9 @@ GLint GetUniformResourceProperty(const Program *program, GLuint index, const GLe
         case GL_REFERENCED_BY_COMPUTE_SHADER:
             return uniform.isActive(ShaderType::Compute);
 
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
+            return uniform.isActive(ShaderType::Geometry);
+
         case GL_ATOMIC_COUNTER_BUFFER_INDEX:
             return (uniform.isAtomicCounter() ? uniform.bufferIndex : -1);
 
@@ -1475,6 +1487,9 @@ GLint GetBufferVariableResourceProperty(const Program *program, GLuint index, co
 
         case GL_REFERENCED_BY_COMPUTE_SHADER:
             return bufferVariable.isActive(ShaderType::Compute);
+
+        case GL_REFERENCED_BY_GEOMETRY_SHADER_EXT:
+            return bufferVariable.isActive(ShaderType::Geometry);
 
         case GL_TOP_LEVEL_ARRAY_SIZE:
             return bufferVariable.topLevelArraySize;
@@ -1688,6 +1703,49 @@ void QueryProgramInterfaceiv(const Program *program,
     }
 }
 
+ClientVertexArrayType ParamToVertexArrayType(GLenum param)
+{
+    switch (param)
+    {
+        case GL_VERTEX_ARRAY:
+        case GL_VERTEX_ARRAY_BUFFER_BINDING:
+        case GL_VERTEX_ARRAY_STRIDE:
+        case GL_VERTEX_ARRAY_SIZE:
+        case GL_VERTEX_ARRAY_TYPE:
+        case GL_VERTEX_ARRAY_POINTER:
+            return ClientVertexArrayType::Vertex;
+        case GL_NORMAL_ARRAY:
+        case GL_NORMAL_ARRAY_BUFFER_BINDING:
+        case GL_NORMAL_ARRAY_STRIDE:
+        case GL_NORMAL_ARRAY_TYPE:
+        case GL_NORMAL_ARRAY_POINTER:
+            return ClientVertexArrayType::Normal;
+        case GL_COLOR_ARRAY:
+        case GL_COLOR_ARRAY_BUFFER_BINDING:
+        case GL_COLOR_ARRAY_STRIDE:
+        case GL_COLOR_ARRAY_SIZE:
+        case GL_COLOR_ARRAY_TYPE:
+        case GL_COLOR_ARRAY_POINTER:
+            return ClientVertexArrayType::Color;
+        case GL_POINT_SIZE_ARRAY_OES:
+        case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
+        case GL_POINT_SIZE_ARRAY_STRIDE_OES:
+        case GL_POINT_SIZE_ARRAY_TYPE_OES:
+        case GL_POINT_SIZE_ARRAY_POINTER_OES:
+            return ClientVertexArrayType::PointSize;
+        case GL_TEXTURE_COORD_ARRAY:
+        case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
+        case GL_TEXTURE_COORD_ARRAY_STRIDE:
+        case GL_TEXTURE_COORD_ARRAY_SIZE:
+        case GL_TEXTURE_COORD_ARRAY_TYPE:
+        case GL_TEXTURE_COORD_ARRAY_POINTER:
+            return ClientVertexArrayType::TextureCoord;
+        default:
+            UNREACHABLE();
+            return ClientVertexArrayType::InvalidEnum;
+    }
+}
+
 }  // namespace gl
 
 namespace egl
@@ -1894,7 +1952,7 @@ void QuerySurfaceAttrib(const Surface *surface, EGLint attribute, EGLint *value)
             // The EGL spec states that value is not written if the surface is not a pbuffer
             if (surface->getType() == EGL_PBUFFER_BIT)
             {
-                *value = surface->getTextureFormat();
+                *value = ToEGLenum(surface->getTextureFormat());
             }
             break;
         case EGL_TEXTURE_TARGET:

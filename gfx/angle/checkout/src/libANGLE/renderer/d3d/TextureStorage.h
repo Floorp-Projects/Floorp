@@ -18,7 +18,7 @@
 namespace gl
 {
 class Context;
-struct ImageIndex;
+class ImageIndex;
 struct Box;
 struct PixelUnpackState;
 }  // namespace gl

@@ -6,12 +6,14 @@
 // found in the LICENSE file.
 //
 // PackedGLEnums_autogen.h:
-//   Declares ANGLE-specific enums classes for GLEnum and functions operating
+//   Declares ANGLE-specific enums classes for GLenums and functions operating
 //   on them.
 
 #ifndef LIBANGLE_PACKEDGLENUMS_AUTOGEN_H_
 #define LIBANGLE_PACKEDGLENUMS_AUTOGEN_H_
 
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <angle_gl.h>
 
 #include <cstdint>
@@ -84,6 +86,22 @@ template <>
 BufferUsage FromGLenum<BufferUsage>(GLenum from);
 GLenum ToGLenum(BufferUsage from);
 
+enum class ClientVertexArrayType : uint8_t
+{
+    Color        = 0,
+    Normal       = 1,
+    PointSize    = 2,
+    TextureCoord = 3,
+    Vertex       = 4,
+
+    InvalidEnum = 5,
+    EnumCount   = 5,
+};
+
+template <>
+ClientVertexArrayType FromGLenum<ClientVertexArrayType>(GLenum from);
+GLenum ToGLenum(ClientVertexArrayType from);
+
 enum class CullFaceMode : uint8_t
 {
     Back         = 0,
@@ -126,6 +144,28 @@ template <>
 HintSetting FromGLenum<HintSetting>(GLenum from);
 GLenum ToGLenum(HintSetting from);
 
+enum class LightParameter : uint8_t
+{
+    Ambient              = 0,
+    AmbientAndDiffuse    = 1,
+    ConstantAttenuation  = 2,
+    Diffuse              = 3,
+    LinearAttenuation    = 4,
+    Position             = 5,
+    QuadraticAttenuation = 6,
+    Specular             = 7,
+    SpotCutoff           = 8,
+    SpotDirection        = 9,
+    SpotExponent         = 10,
+
+    InvalidEnum = 11,
+    EnumCount   = 11,
+};
+
+template <>
+LightParameter FromGLenum<LightParameter>(GLenum from);
+GLenum ToGLenum(LightParameter from);
+
 enum class LogicalOperation : uint8_t
 {
     And          = 0,
@@ -153,6 +193,23 @@ template <>
 LogicalOperation FromGLenum<LogicalOperation>(GLenum from);
 GLenum ToGLenum(LogicalOperation from);
 
+enum class MaterialParameter : uint8_t
+{
+    Ambient           = 0,
+    AmbientAndDiffuse = 1,
+    Diffuse           = 2,
+    Emission          = 3,
+    Shininess         = 4,
+    Specular          = 5,
+
+    InvalidEnum = 6,
+    EnumCount   = 6,
+};
+
+template <>
+MaterialParameter FromGLenum<MaterialParameter>(GLenum from);
+GLenum ToGLenum(MaterialParameter from);
+
 enum class MatrixType : uint8_t
 {
     Modelview  = 0,
@@ -166,6 +223,24 @@ enum class MatrixType : uint8_t
 template <>
 MatrixType FromGLenum<MatrixType>(GLenum from);
 GLenum ToGLenum(MatrixType from);
+
+enum class QueryType : uint8_t
+{
+    AnySamples                         = 0,
+    AnySamplesConservative             = 1,
+    CommandsCompleted                  = 2,
+    PrimitivesGenerated                = 3,
+    TimeElapsed                        = 4,
+    Timestamp                          = 5,
+    TransformFeedbackPrimitivesWritten = 6,
+
+    InvalidEnum = 7,
+    EnumCount   = 7,
+};
+
+template <>
+QueryType FromGLenum<QueryType>(GLenum from);
+GLenum ToGLenum(QueryType from);
 
 enum class ShaderType : uint8_t
 {

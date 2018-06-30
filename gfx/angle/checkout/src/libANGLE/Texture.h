@@ -426,7 +426,7 @@ class Texture final : public egl::ImageSibling, public LabeledObject
     };
     using DirtyBits = angle::BitSet<DIRTY_BIT_COUNT>;
 
-    void syncState();
+    Error syncState(const Context *context);
     bool hasAnyDirtyBit() const { return mDirtyBits.any(); }
 
   private:

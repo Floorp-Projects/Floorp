@@ -17,24 +17,24 @@
 namespace
 {
 
-GLuint64 MergeQueryResults(GLenum type, GLuint64 currentResult, GLuint64 newResult)
+GLuint64 MergeQueryResults(gl::QueryType type, GLuint64 currentResult, GLuint64 newResult)
 {
     switch (type)
     {
-        case GL_ANY_SAMPLES_PASSED:
-        case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        case gl::QueryType::AnySamples:
+        case gl::QueryType::AnySamplesConservative:
             return (currentResult == GL_TRUE || newResult == GL_TRUE) ? GL_TRUE : GL_FALSE;
 
-        case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        case gl::QueryType::TransformFeedbackPrimitivesWritten:
             return currentResult + newResult;
 
-        case GL_TIME_ELAPSED_EXT:
+        case gl::QueryType::TimeElapsed:
             return currentResult + newResult;
 
-        case GL_TIMESTAMP_EXT:
+        case gl::QueryType::Timestamp:
             return newResult;
 
-        case GL_COMMANDS_COMPLETED_CHROMIUM:
+        case gl::QueryType::CommandsCompleted:
             return newResult;
 
         default:
@@ -48,7 +48,8 @@ GLuint64 MergeQueryResults(GLenum type, GLuint64 currentResult, GLuint64 newResu
 namespace rx
 {
 
-Query11::QueryState::QueryState() : query(), beginTimestamp(), endTimestamp(), finished(false)
+Query11::QueryState::QueryState()
+    : getDataAttemptCount(0), query(), beginTimestamp(), endTimestamp(), finished(false)
 {
 }
 
@@ -56,7 +57,7 @@ Query11::QueryState::~QueryState()
 {
 }
 
-Query11::Query11(Renderer11 *renderer, GLenum type)
+Query11::Query11(Renderer11 *renderer, gl::QueryType type)
     : QueryImpl(type), mResult(0), mResultSum(0), mRenderer(renderer)
 {
     mActiveQuery = std::unique_ptr<QueryState>(new QueryState());
@@ -82,7 +83,7 @@ gl::Error Query11::end()
 gl::Error Query11::queryCounter()
 {
     // This doesn't do anything for D3D11 as we don't support timestamps
-    ASSERT(getType() == GL_TIMESTAMP_EXT);
+    ASSERT(getType() == gl::QueryType::Timestamp);
     mResultSum = 0;
     mPendingQueries.push_back(std::unique_ptr<QueryState>(new QueryState()));
     return gl::NoError();
@@ -132,10 +133,10 @@ gl::Error Query11::pause()
     if (mActiveQuery->query.valid())
     {
         ID3D11DeviceContext *context = mRenderer->getDeviceContext();
-        GLenum queryType             = getType();
+        gl::QueryType type             = getType();
 
         // If we are doing time elapsed query the end timestamp
-        if (queryType == GL_TIME_ELAPSED_EXT)
+        if (type == gl::QueryType::TimeElapsed)
         {
             context->End(mActiveQuery->endTimestamp.get());
         }
@@ -155,8 +156,8 @@ gl::Error Query11::resume()
     {
         ANGLE_TRY(flush(false));
 
-        GLenum queryType         = getType();
-        D3D11_QUERY d3dQueryType = gl_d3d11::ConvertQueryType(queryType);
+        gl::QueryType type         = getType();
+        D3D11_QUERY d3dQueryType = gl_d3d11::ConvertQueryType(type);
 
         D3D11_QUERY_DESC queryDesc;
         queryDesc.Query     = d3dQueryType;
@@ -165,7 +166,7 @@ gl::Error Query11::resume()
         ANGLE_TRY(mRenderer->allocateResource(queryDesc, &mActiveQuery->query));
 
         // If we are doing time elapsed we also need a query to actually query the timestamp
-        if (queryType == GL_TIME_ELAPSED_EXT)
+        if (type == gl::QueryType::TimeElapsed)
         {
             D3D11_QUERY_DESC desc;
             desc.Query     = D3D11_QUERY_TIMESTAMP;
@@ -183,7 +184,7 @@ gl::Error Query11::resume()
         }
 
         // If we are doing time elapsed, query the begin timestamp
-        if (queryType == GL_TIME_ELAPSED_EXT)
+        if (type == gl::QueryType::TimeElapsed)
         {
             context->End(mActiveQuery->beginTimestamp.get());
         }
@@ -221,8 +222,8 @@ gl::Error Query11::testQuery(QueryState *queryState)
         ID3D11DeviceContext *context = mRenderer->getDeviceContext();
         switch (getType())
         {
-            case GL_ANY_SAMPLES_PASSED_EXT:
-            case GL_ANY_SAMPLES_PASSED_CONSERVATIVE_EXT:
+            case gl::QueryType::AnySamples:
+            case gl::QueryType::AnySamplesConservative:
             {
                 ASSERT(queryState->query.valid());
                 UINT64 numPixels = 0;
@@ -242,7 +243,7 @@ gl::Error Query11::testQuery(QueryState *queryState)
             }
             break;
 
-            case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+            case gl::QueryType::TransformFeedbackPrimitivesWritten:
             {
                 ASSERT(queryState->query.valid());
                 D3D11_QUERY_DATA_SO_STATISTICS soStats = {0};
@@ -262,7 +263,7 @@ gl::Error Query11::testQuery(QueryState *queryState)
             }
             break;
 
-            case GL_TIME_ELAPSED_EXT:
+            case gl::QueryType::TimeElapsed:
             {
                 ASSERT(queryState->query.valid());
                 ASSERT(queryState->beginTimestamp.valid());
@@ -325,7 +326,7 @@ gl::Error Query11::testQuery(QueryState *queryState)
             }
             break;
 
-            case GL_TIMESTAMP_EXT:
+            case gl::QueryType::Timestamp:
             {
                 // D3D11 doesn't support GL timestamp queries as D3D timestamps are not guaranteed
                 // to have any sort of continuity outside of a disjoint timestamp query block, which
@@ -336,7 +337,7 @@ gl::Error Query11::testQuery(QueryState *queryState)
             }
             break;
 
-            case GL_COMMANDS_COMPLETED_CHROMIUM:
+            case gl::QueryType::CommandsCompleted:
             {
                 ASSERT(queryState->query.valid());
                 BOOL completed = 0;
@@ -362,7 +363,10 @@ gl::Error Query11::testQuery(QueryState *queryState)
                 break;
         }
 
-        if (!queryState->finished && mRenderer->testDeviceLost())
+        queryState->getDataAttemptCount++;
+        bool checkDeviceLost =
+            (queryState->getDataAttemptCount % kPollingD3DDeviceLostCheckFrequency) == 0;
+        if (!queryState->finished && checkDeviceLost && mRenderer->testDeviceLost())
         {
             mRenderer->notifyDeviceLost();
             return gl::OutOfMemory() << "Failed to test get query result, device is lost.";

@@ -69,6 +69,7 @@
 #define EGL_ANGLE_platform_angle_opengl 1
 #define EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE 0x320D
 #define EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE 0x320E
+#define EGL_PLATFORM_ANGLE_EGL_HANDLE_ANGLE 0x3480
 #endif /* EGL_ANGLE_platform_angle_opengl */
 
 #ifndef EGL_ANGLE_platform_angle_null

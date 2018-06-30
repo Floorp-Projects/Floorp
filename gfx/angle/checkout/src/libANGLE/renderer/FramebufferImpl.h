@@ -32,7 +32,6 @@ class FramebufferImpl : angle::NonCopyable
     explicit FramebufferImpl(const gl::FramebufferState &state) : mState(state) {}
     virtual ~FramebufferImpl() {}
     virtual void destroy(const gl::Context *context) {}
-    virtual void destroyDefault(const egl::Display *display) {}
 
     virtual gl::Error discard(const gl::Context *context,
                               size_t count,
@@ -83,7 +82,9 @@ class FramebufferImpl : angle::NonCopyable
     virtual gl::Error syncState(const gl::Context *context,
                                 const gl::Framebuffer::DirtyBits &dirtyBits) = 0;
 
-    virtual gl::Error getSamplePosition(size_t index, GLfloat *xy) const = 0;
+    virtual gl::Error getSamplePosition(const gl::Context *context,
+                                        size_t index,
+                                        GLfloat *xy) const = 0;
 
     const gl::FramebufferState &getState() const { return mState; }
 

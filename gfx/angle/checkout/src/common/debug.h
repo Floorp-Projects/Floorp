@@ -4,7 +4,8 @@
 // found in the LICENSE file.
 //
 
-// debug.h: Debugging utilities.
+// debug.h: Debugging utilities. A lot of the logging code is adapted from Chromium's
+// base/logging.h.
 
 #ifndef COMMON_DEBUG_H_
 #define COMMON_DEBUG_H_
@@ -104,6 +105,8 @@ class LogMessageVoidify
     void operator&(std::ostream &) {}
 };
 
+extern std::ostream *gSwallowStream;
+
 // Used by ANGLE_LOG_IS_ON to lazy-evaluate stream arguments.
 bool ShouldCreatePlatformLogMessage(LogSeverity severity);
 
@@ -124,39 +127,52 @@ std::ostream &FmtHex(std::ostream &os, T value)
 
     return os;
 }
-}  // namespace priv
-
-#if defined(ANGLE_PLATFORM_WINDOWS)
-class FmtHR
-{
-  public:
-    explicit FmtHR(HRESULT hresult) : mHR(hresult) {}
-  private:
-    HRESULT mHR;
-    friend std::ostream &operator<<(std::ostream &os, const FmtHR &fmt);
-};
-
-class FmtErr
-{
-  public:
-    explicit FmtErr(DWORD err) : mErr(err) {}
-
-  private:
-    DWORD mErr;
-    friend std::ostream &operator<<(std::ostream &os, const FmtErr &fmt);
-};
-#endif  // defined(ANGLE_PLATFORM_WINDOWS)
 
 template <typename T>
-std::ostream &FmtHexShort(std::ostream &os, T value)
+std::ostream &FmtHexAutoSized(std::ostream &os, T value)
 {
-    return priv::FmtHex<4>(os, value);
+    constexpr int N = sizeof(T) * 2;
+    return priv::FmtHex<N>(os, value);
 }
 
 template <typename T>
-std::ostream &FmtHexInt(std::ostream &os, T value)
+class FmtHexHelper
 {
-    return priv::FmtHex<8>(os, value);
+  public:
+    FmtHexHelper(const char *prefix, T value) : mPrefix(prefix), mValue(value) {}
+    explicit FmtHexHelper(T value) : mPrefix(nullptr), mValue(value) {}
+
+  private:
+    const char *mPrefix;
+    T mValue;
+
+    friend std::ostream &operator<<(std::ostream &os, const FmtHexHelper &fmt)
+    {
+        if (fmt.mPrefix)
+        {
+            os << fmt.mPrefix;
+        }
+        return FmtHexAutoSized(os, fmt.mValue);
+    }
+};
+
+}  // namespace priv
+
+template <typename T>
+priv::FmtHexHelper<T> FmtHex(T value)
+{
+    return priv::FmtHexHelper<T>(value);
+}
+
+#if defined(ANGLE_PLATFORM_WINDOWS)
+priv::FmtHexHelper<HRESULT> FmtHR(HRESULT value);
+priv::FmtHexHelper<DWORD> FmtErr(DWORD value);
+#endif  // defined(ANGLE_PLATFORM_WINDOWS)
+
+template <typename T>
+std::ostream &FmtHex(std::ostream &os, T value)
+{
+    return priv::FmtHexAutoSized(os, value);
 }
 
 // A few definitions of macros that don't generate much code. These are used
@@ -232,6 +248,18 @@ std::ostream &FmtHexInt(std::ostream &os, T value)
 #define ANGLE_ASSERT_IMPL_IS_NORETURN 1
 #endif  // !defined(NDEBUG)
 
+// Note that gSwallowStream is used instead of an arbitrary LOG() stream to avoid the creation of an
+// object with a non-trivial destructor (LogMessage). On MSVC x86 (checked on 2015 Update 3), this
+// causes a few additional pointless instructions to be emitted even at full optimization level,
+// even though the : arm of the ternary operator is clearly never executed. Using a simpler object
+// to be &'d with Voidify() avoids these extra instructions. Using a simpler POD object with a
+// templated operator<< also works to avoid these instructions. However, this causes warnings on
+// statically defined implementations of operator<<(std::ostream, ...) in some .cpp files, because
+// they become defined-but-unreferenced functions. A reinterpret_cast of 0 to an ostream* also is
+// not suitable, because some compilers warn of undefined behavior.
+#define ANGLE_EAT_STREAM_PARAMETERS \
+    true ? static_cast<void>(0) : ::gl::priv::LogMessageVoidify() & (*::gl::priv::gSwallowStream)
+
 // A macro asserting a condition and outputting failures to the debug log
 #if defined(ANGLE_ENABLE_ASSERTS)
 #define ASSERT(expression)                                                                         \
@@ -240,22 +268,11 @@ std::ostream &FmtHexInt(std::ostream &os, T value)
                                           ANGLE_ASSERT_IMPL(expression)))
 #define UNREACHABLE_IS_NORETURN ANGLE_ASSERT_IMPL_IS_NORETURN
 #else
-// These are just dummy values.
-#define COMPACT_ANGLE_LOG_EX_ASSERT(ClassName, ...) \
-    COMPACT_ANGLE_LOG_EX_EVENT(ClassName, ##__VA_ARGS__)
-#define COMPACT_ANGLE_LOG_ASSERT COMPACT_ANGLE_LOG_EVENT
-namespace gl
-{
-constexpr LogSeverity LOG_ASSERT = LOG_EVENT;
-}  // namespace gl
-
-#define ASSERT(condition)                                                     \
-    ANGLE_LAZY_STREAM(ANGLE_LOG_STREAM(ASSERT), false ? !(condition) : false) \
-        << "Check failed: " #condition ". "
+#define ASSERT(condition) ANGLE_EAT_STREAM_PARAMETERS << !(condition)
 #define UNREACHABLE_IS_NORETURN 0
 #endif  // defined(ANGLE_ENABLE_ASSERTS)
 
-#define UNUSED_VARIABLE(variable) ((void)variable)
+#define ANGLE_UNUSED_VARIABLE(variable) (static_cast<void>(variable))
 
 // A macro to indicate unimplemented functionality
 #ifndef NOASSERT_UNIMPLEMENTED
@@ -263,19 +280,22 @@ constexpr LogSeverity LOG_ASSERT = LOG_EVENT;
 #endif
 
 #if defined(ANGLE_TRACE_ENABLED) || defined(ANGLE_ENABLE_ASSERTS)
-#define UNIMPLEMENTED()                                                                      \
-    {                                                                                        \
-        ERR() << "\t! Unimplemented: " << __FUNCTION__ << "(" << __FILE__ << ":" << __LINE__ \
-              << ")";                                                                        \
-        ASSERT(NOASSERT_UNIMPLEMENTED);                                                      \
-    }                                                                                        \
+#define UNIMPLEMENTED()                                                                       \
+    {                                                                                         \
+        WARN() << "\t! Unimplemented: " << __FUNCTION__ << "(" << __FILE__ << ":" << __LINE__ \
+               << ")";                                                                        \
+        ASSERT(NOASSERT_UNIMPLEMENTED);                                                       \
+    }                                                                                         \
     ANGLE_EMPTY_STATEMENT
 
 // A macro for code which is not expected to be reached under valid assumptions
-#define UNREACHABLE()                                                                            \
-    ((ERR() << "\t! Unreachable reached: " << __FUNCTION__ << "(" << __FILE__ << ":" << __LINE__ \
-            << ")"),                                                                             \
-     ASSERT(false))
+#define UNREACHABLE()                                                                              \
+    {                                                                                              \
+        ERR() << "\t! Unreachable reached: " << __FUNCTION__ << "(" << __FILE__ << ":" << __LINE__ \
+              << ")";                                                                              \
+        ASSERT(false);                                                                             \
+    }                                                                                              \
+    ANGLE_EMPTY_STATEMENT
 #else
 #define UNIMPLEMENTED()                 \
     {                                   \
@@ -284,7 +304,11 @@ constexpr LogSeverity LOG_ASSERT = LOG_EVENT;
     ANGLE_EMPTY_STATEMENT
 
 // A macro for code which is not expected to be reached under valid assumptions
-#define UNREACHABLE() ASSERT(false)
+#define UNREACHABLE()  \
+    {                  \
+        ASSERT(false); \
+    }                  \
+    ANGLE_EMPTY_STATEMENT
 #endif  // defined(ANGLE_TRACE_ENABLED) || defined(ANGLE_ENABLE_ASSERTS)
 
 #endif   // COMMON_DEBUG_H_

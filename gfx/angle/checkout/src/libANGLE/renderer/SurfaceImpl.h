@@ -56,8 +56,10 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
                                      EGLint width,
                                      EGLint height) = 0;
     virtual egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) = 0;
-    virtual egl::Error bindTexImage(gl::Texture *texture, EGLint buffer) = 0;
-    virtual egl::Error releaseTexImage(EGLint buffer) = 0;
+    virtual egl::Error bindTexImage(const gl::Context *context,
+                                    gl::Texture *texture,
+                                    EGLint buffer)                                            = 0;
+    virtual egl::Error releaseTexImage(const gl::Context *context, EGLint buffer)             = 0;
     virtual egl::Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc) = 0;
     virtual void setSwapInterval(EGLint interval) = 0;
 
