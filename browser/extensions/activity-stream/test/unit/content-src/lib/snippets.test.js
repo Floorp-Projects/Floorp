@@ -19,8 +19,8 @@ describe("SnippetsMap", () => {
     dispatch = sandbox.spy();
     snippetsMap = new SnippetsMap(dispatch);
     globals = new GlobalOverrider();
-    globals.set("addMessageListener", sandbox.spy());
-    globals.set("removeMessageListener", sandbox.spy());
+    globals.set("RPMAddMessageListener", sandbox.spy());
+    globals.set("RPMRemoveMessageListener", sandbox.spy());
   });
   afterEach(async () => {
     sandbox.restore();
@@ -153,16 +153,16 @@ describe("SnippetsMap", () => {
 
       assert.calledOnce(dispatch);
       assert.equal(dispatch.firstCall.args[0].type, at.TOTAL_BOOKMARKS_REQUEST);
-      assert.calledWith(global.addMessageListener, INCOMING_MESSAGE_NAME);
+      assert.calledWith(global.RPMAddMessageListener, INCOMING_MESSAGE_NAME);
 
       // Call listener
-      const [, listener] = global.addMessageListener.firstCall.args;
+      const [, listener] = global.RPMAddMessageListener.firstCall.args;
       listener({data: {type: at.TOTAL_BOOKMARKS_RESPONSE, data: 42}});
 
       const result = await bookmarksPromise;
 
       assert.equal(result, 42);
-      assert.calledWith(global.removeMessageListener, INCOMING_MESSAGE_NAME, listener);
+      assert.calledWith(global.RPMRemoveMessageListener, INCOMING_MESSAGE_NAME, listener);
     });
   });
   describe("#getAddonsInfo", () => {
@@ -171,17 +171,17 @@ describe("SnippetsMap", () => {
 
       assert.calledOnce(dispatch);
       assert.equal(dispatch.firstCall.args[0].type, at.ADDONS_INFO_REQUEST);
-      assert.calledWith(global.addMessageListener, INCOMING_MESSAGE_NAME);
+      assert.calledWith(global.RPMAddMessageListener, INCOMING_MESSAGE_NAME);
 
       // Call listener
-      const [, listener] = global.addMessageListener.firstCall.args;
+      const [, listener] = global.RPMAddMessageListener.firstCall.args;
       const addonsInfo = {isFullData: true, addons: {foo: {}}};
       listener({data: {type: at.ADDONS_INFO_RESPONSE, data: addonsInfo}});
 
       const result = await addonsPromise;
 
       assert.equal(result, addonsInfo);
-      assert.calledWith(global.removeMessageListener, INCOMING_MESSAGE_NAME, listener);
+      assert.calledWith(global.RPMRemoveMessageListener, INCOMING_MESSAGE_NAME, listener);
     });
   });
 });
@@ -195,8 +195,8 @@ describe("SnippetsProvider", () => {
     sandbox = sinon.sandbox.create();
     sandbox.stub(window, "fetch").returns(Promise.resolve(""));
     globals = new GlobalOverrider();
-    globals.set("addMessageListener", sandbox.spy());
-    globals.set("removeMessageListener", sandbox.spy());
+    globals.set("RPMAddMessageListener", sandbox.spy());
+    globals.set("RPMRemoveMessageListener", sandbox.spy());
     dispatch = sandbox.stub();
   });
   afterEach(async () => {
@@ -275,7 +275,7 @@ describe("SnippetsProvider", () => {
     });
     it("should add a message listener for incoming messages", async () => {
       await snippets.init({connect: false});
-      assert.calledWith(global.addMessageListener, INCOMING_MESSAGE_NAME, snippets._onAction);
+      assert.calledWith(global.RPMAddMessageListener, INCOMING_MESSAGE_NAME, snippets._onAction);
     });
     it("should set the blocklist based on init options", async () => {
       const blockList = [1, 2, 3];
@@ -306,7 +306,7 @@ describe("SnippetsProvider", () => {
     it("should remove the message listener for incoming messages", () => {
       snippets = new SnippetsProvider(dispatch);
       snippets.uninit();
-      assert.calledWith(global.removeMessageListener, INCOMING_MESSAGE_NAME, snippets._onAction);
+      assert.calledWith(global.RPMRemoveMessageListener, INCOMING_MESSAGE_NAME, snippets._onAction);
     });
   });
   describe("#_refreshSnippets", () => {

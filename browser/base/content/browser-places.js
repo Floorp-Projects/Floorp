@@ -51,35 +51,6 @@ var StarUI = {
     return this.panel = element;
   },
 
-  // Array of command elements to disable when the panel is opened.
-  get _blockedCommands() {
-    delete this._blockedCommands;
-    return this._blockedCommands =
-      ["cmd_close", "cmd_closeWindow"].map(id => this._element(id));
-  },
-
-  _blockCommands: function SU__blockCommands() {
-    this._blockedCommands.forEach(function(elt) {
-      // make sure not to permanently disable this item (see bug 409155)
-      if (elt.hasAttribute("wasDisabled"))
-        return;
-      if (elt.getAttribute("disabled") == "true") {
-        elt.setAttribute("wasDisabled", "true");
-      } else {
-        elt.setAttribute("wasDisabled", "false");
-        elt.setAttribute("disabled", "true");
-      }
-    });
-  },
-
-  _restoreCommandsState: function SU__restoreCommandsState() {
-    this._blockedCommands.forEach(function(elt) {
-      if (elt.getAttribute("wasDisabled") != "true")
-        elt.removeAttribute("disabled");
-      elt.removeAttribute("wasDisabled");
-    });
-  },
-
   // nsIDOMEventListener
   handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -102,7 +73,6 @@ var StarUI = {
           this._anchorElement.removeAttribute("open");
           this._anchorElement = null;
 
-          this._restoreCommandsState();
           let removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
           this._removeBookmarksOnPopupHidden = false;
           let guidsForRemoval = this._itemGuids;
@@ -226,8 +196,6 @@ var StarUI = {
 
     this._isNewBookmark = aIsNewBookmark;
     this._itemGuids = null;
-
-    this._blockCommands(); // un-done in the popuphidden handler
 
     this._element("editBookmarkPanelTitle").value =
       this._isNewBookmark ?

@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Įveskite savo el. paštą",
   "firstrun_form_sub_header": "norėdami tęsti su „Firefox Sync“.",
   "firstrun_email_input_placeholder": "El. paštas",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Tęsdami sutinkate su {terms} ir {privacy}.",
   "firstrun_terms_of_service": "paslaugos teikimo nuostatais",
   "firstrun_privacy_notice": "privatumo nuostatais",

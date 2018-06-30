@@ -14,14 +14,13 @@ Full pytest documentation
    usage
    existingtestsuite
    assert
-   builtin
    fixture
+   mark
    monkeypatch
    tmpdir
    capture
    warnings
    doctest
-   mark
    skipping
    parametrize
    cache
@@ -30,6 +29,8 @@ Full pytest documentation
    xunit_setup
    plugins
    writing_plugins
+   logging
+   reference
 
    goodpractices
    pythonpath
@@ -61,4 +62,3 @@ Full pytest documentation
       :maxdepth: 1
 
       changelog
-

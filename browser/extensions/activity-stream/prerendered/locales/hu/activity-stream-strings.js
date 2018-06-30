@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Adja meg az e-mail címét",
   "firstrun_form_sub_header": "és lépjen tovább a Firefox Synchez.",
   "firstrun_email_input_placeholder": "E-mail",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "A folytatással elfogadja a {terms} és az {privacy}.",
   "firstrun_terms_of_service": "Felhasználási feltételeket",
   "firstrun_privacy_notice": "Adatvédelmi nyilatkozatot",

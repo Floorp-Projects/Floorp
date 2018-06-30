@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Introduïu la vostra adreça electrònica",
   "firstrun_form_sub_header": "per continuar al Firefox Sync.",
   "firstrun_email_input_placeholder": "Adreça electrònica",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Si continueu, accepteu les {terms} i l'{privacy}.",
   "firstrun_terms_of_service": "Condicions del servei",
   "firstrun_privacy_notice": "Avís de privadesa",

@@ -96,6 +96,7 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Indtast din mailadresse",
   "firstrun_form_sub_header": "for at fortsætte til Firefox Sync.",
   "firstrun_email_input_placeholder": "Mailadresse",
+  "firstrun_invalid_input": "Valid email required",
   "firstrun_extra_legal_links": "Ved at fortsætte godkender du vores {terms} og {privacy}.",
   "firstrun_terms_of_service": "tjenestevilkår",
   "firstrun_privacy_notice": "privatlivspolitik",

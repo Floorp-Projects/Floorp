@@ -170,6 +170,15 @@ add_task(async function test_user_defined_commands() {
         accelKey: true,
       },
     },
+    {
+      name: "toggle-ctrl-alt-v",
+      shortcut: "Ctrl+Alt+V",
+      key: "V",
+      modifiers: {
+        accelKey: true,
+        altKey: true,
+      },
+    },
 
   ];
 

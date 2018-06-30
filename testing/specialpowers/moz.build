@@ -6,17 +6,25 @@
 
 XPI_NAME = 'specialpowers'
 
-JAR_MANIFESTS += ['jar.mn']
-
 USE_EXTENSION_MANIFEST = True
 NO_JS_MANIFEST = True
 
-FINAL_TARGET_PP_FILES += [
-    'install.rdf',
+FINAL_TARGET_FILES += [
+    'api.js',
+    'manifest.json',
+    'schema.json',
 ]
 
-FINAL_TARGET_FILES += [
-    'bootstrap.js',
+FINAL_TARGET_FILES.content += [
+    '../modules/Assert.jsm',
+    'content/MockColorPicker.jsm',
+    'content/MockFilePicker.jsm',
+    'content/MockPermissionPrompt.jsm',
+    'content/MozillaLogger.js',
+    'content/specialpowers.js',
+    'content/specialpowersAPI.js',
+    'content/SpecialPowersObserver.jsm',
+    'content/SpecialPowersObserverAPI.js',
 ]
 
 with Files("**"):

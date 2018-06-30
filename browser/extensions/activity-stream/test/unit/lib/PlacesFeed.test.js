@@ -313,7 +313,6 @@ describe("PlacesFeed", () => {
       it("should have a various empty functions for xpconnect happiness", () => {
         observer.onBeginUpdateBatch();
         observer.onEndUpdateBatch();
-        observer.onVisits();
         observer.onTitleChanged();
         observer.onFrecencyChanged();
         observer.onManyFrecenciesChanged();

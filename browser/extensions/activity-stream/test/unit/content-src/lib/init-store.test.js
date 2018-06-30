@@ -15,8 +15,8 @@ describe("initStore", () => {
   let store;
   beforeEach(() => {
     globals = new GlobalOverrider();
-    globals.set("sendAsyncMessage", globals.sandbox.spy());
-    globals.set("addMessageListener", globals.sandbox.spy());
+    globals.set("RPMSendAsyncMessage", globals.sandbox.spy());
+    globals.set("RPMAddMessageListener", globals.sandbox.spy());
     store = initStore({number: addNumberReducer});
   });
   afterEach(() => globals.restore());
@@ -25,8 +25,8 @@ describe("initStore", () => {
     assert.property(store.getState(), "number");
   });
   it("should add a listener that dispatches actions", () => {
-    assert.calledWith(global.addMessageListener, INCOMING_MESSAGE_NAME);
-    const [, listener] = global.addMessageListener.firstCall.args;
+    assert.calledWith(global.RPMAddMessageListener, INCOMING_MESSAGE_NAME);
+    const [, listener] = global.RPMAddMessageListener.firstCall.args;
     globals.sandbox.spy(store, "dispatch");
     const message = {name: INCOMING_MESSAGE_NAME, data: {type: "FOO"}};
 
@@ -34,9 +34,9 @@ describe("initStore", () => {
 
     assert.calledWith(store.dispatch, message.data);
   });
-  it("should not throw if addMessageListener is not defined", () => {
+  it("should not throw if RPMAddMessageListener is not defined", () => {
     // Note: this is being set/restored by GlobalOverrider
-    delete global.addMessageListener;
+    delete global.RPMAddMessageListener;
 
     assert.doesNotThrow(() => initStore({number: addNumberReducer}));
   });
@@ -46,7 +46,7 @@ describe("initStore", () => {
     assert.equal(store.getState().number, 42);
   });
   it("should log errors from failed messages", () => {
-    const [, callback] = global.addMessageListener.firstCall.args;
+    const [, callback] = global.RPMAddMessageListener.firstCall.args;
     globals.sandbox.stub(global.console, "error");
     globals.sandbox.stub(store, "dispatch").throws(Error("failed"));
 
@@ -66,7 +66,7 @@ describe("initStore", () => {
     store.subscribe(subscriber);
     store.dispatch(action);
 
-    assert.calledWith(global.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
+    assert.calledWith(global.RPMSendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
     assert.calledOnce(subscriber);
   });
   it("should call .send but not update the local store if an OnlyToMain action is dispatched", () => {
@@ -76,12 +76,12 @@ describe("initStore", () => {
     store.subscribe(subscriber);
     store.dispatch(action);
 
-    assert.calledWith(global.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
+    assert.calledWith(global.RPMSendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
     assert.notCalled(subscriber);
   });
   it("should not send out other types of actions", () => {
     store.dispatch({type: "FOO"});
-    assert.notCalled(global.sendAsyncMessage);
+    assert.notCalled(global.RPMSendAsyncMessage);
   });
   describe("rehydrationMiddleware", () => {
     it("should allow NEW_TAB_STATE_REQUEST to go through", () => {
