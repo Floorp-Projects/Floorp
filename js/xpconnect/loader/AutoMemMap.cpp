@@ -143,7 +143,7 @@ void
 AutoMemMap::reset()
 {
     if (fileMap) {
-        if (addr) {
+        if (addr && !persistent_) {
             Unused << NS_WARN_IF(PR_MemUnmap(addr, size()) != PR_SUCCESS);
             addr = nullptr;
         }

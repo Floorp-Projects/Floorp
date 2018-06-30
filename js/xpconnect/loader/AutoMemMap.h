@@ -71,6 +71,10 @@ class AutoMemMap
         FileDescriptor cloneFileDescriptor() const;
         FileDescriptor cloneHandle() const;
 
+        // Makes this mapping persistent. After calling this, the mapped memory
+        // will remained mapped, even after this instance is destroyed.
+        void setPersistent() { persistent_ = true; }
+
     private:
         Result<Ok, nsresult> initInternal(PRFileMapProtect prot = PR_PROT_READONLY,
                                           size_t expectedSize = 0);
@@ -87,6 +91,8 @@ class AutoMemMap
 
         uint32_t size_ = 0;
         void* addr = nullptr;
+
+        bool persistent_ = 0;
 
         AutoMemMap(const AutoMemMap&) = delete;
         void operator=(const AutoMemMap&) = delete;
