@@ -3645,6 +3645,17 @@ window._gBrowser = {
     }
   },
 
+  set selectedTabs(tabs) {
+    this.clearMultiSelectedTabs(false);
+    this.selectedTab = tabs[0];
+    if (tabs.length > 1) {
+      for (let tab of tabs) {
+        this.addToMultiSelectedTabs(tab, true);
+      }
+    }
+    this.tabContainer._setPositionalAttributes();
+  },
+
   get selectedTabs() {
     let {selectedTab, _multiSelectedTabsSet} = this;
     let tabs = ChromeUtils.nondeterministicGetWeakSetKeys(_multiSelectedTabsSet)
