@@ -60,11 +60,13 @@
   <string name="preference_privacy_block_content">અન્ય સામગ્રી ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="preference_privacy_category_cookies">કૂકીઝને અવરોધિત કરો</string>
   <string name="preference_privacy_should_block_cookies_no_option">ના</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">માત્ર 3-પક્ષ કૂકીઝને અવરોધિત કરો</string>
   <string name="preference_privacy_should_block_cookies_yes_option">હા</string>
   <string name="preference_privacy_secure_mode">તરકિબ</string>
   <string name="preference_privacy_stealth_summary">એપ્લિકેશન્સને સ્વિચ કરતી વખતે વેબપૃષ્ઠો છુપાવો</string>
   <string name="preference_category_performance">પ્રદર્શન</string>
   <string name="preference_performance_block_webfonts">વેબ ફોન્ટ્સને અવરોધિત કરો</string>
+  <string name="preference_performance_block_webfonts_summary">ખૂટે ચિહ્નો અથવા છબીઓમાં પરિણામ હોઈ શકે છે</string>
   <string name="preference_performance_block_javascript">JavaScript અવરોધ</string>
   <string name="preference_performance_block_javascript_summary">પૃષ્ઠો વધુ ઝડપથી લોડ થઈ શકે છે, પરંતુ અણધારી રૂપે વર્તન પણ કરી શકે છે</string>
   <string name="preference_default_browser2">%1$s મૂળભૂત બ્રાઉઝર બનાવો</string>
@@ -107,9 +109,11 @@
   <string name="external_app_prompt_title">અન્ય એપ્લિકેશનમાં લિંક ખોલો</string>
   <string name="external_app_prompt">તમે %2$sમાં આ લિંકને ખોલવા માટે %1$s છોડી શકો છો.</string>
   <string name="external_app_prompt_no_app_title">એક એપ્લિકેશન શોધો જે લિંક ખોલી શકે છે</string>
+  <string name="external_app_prompt_no_app">તમારા ઉપકરણ પરની કોઈપણ એપ્લિકેશનો આ લિંક ખોલવા માટે સક્ષમ નથી. તમે એપ્લિકેશન માટે %2$s શોધવા માટે %1$s કરી છોડી શકો છો.</string>
   <string name="external_multiple_apps_matched_exit">ખાનગી બ્રાઉઝિંગ બહાર નીકળીએ?</string>
   <string name="download_snackbar_finished">%1$s સમાપ્ત થઈ</string>
   <string name="download_snackbar_open">ખોલો</string>
+  <string name="download_dialog_warning"><![CDATA["ડાઉનલોડ કરેલી ફાઇલો "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2709;&#2750;&#2722;&#2752; &#2728;&#2750;&#2710;&#2741;&#2750;&#2734;&#2750;&#2690; &#2694;&#2741;&#2742;&#2759; &#2728;&#2745;&#2752;&#2690;</b>" જ્યારે તમે %1$s ઇતિહાસને કાઢી નાખો ત્યારે."]]></string>
   <string name="download_dialog_title">ફાઈલ ડાઉનલોડ</string>
   <string name="download_dialog_action_cancel">રદ કરો</string>
   <string name="download_dialog_action_download">ડાઉનલોડ</string>

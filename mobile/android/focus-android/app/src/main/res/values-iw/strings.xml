@@ -8,12 +8,13 @@
   <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
   <string name="search_hint">חיפוש עבור %1$s</string>
   <string name="menu_share">שיתוף…</string>
+  <string name="menu_report_site_issue">דיווח על בעיה באתר</string>
   <string name="menu_open_with_default_browser2">פתיחה ב־%1$s</string>
   <string name="menu_open_with_a_browser2">פתיחה ב…</string>
   <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
   <string name="menu_whats_new">מה חדש</string>
   <string name="menu_settings">הגדרות</string>
-  <string name="menu_about">אודות</string>
+  <string name="menu_about">על אודות</string>
   <string name="menu_help">עזרה</string>
   <string name="menu_rights">הזכויות שלך</string>
   <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
@@ -26,6 +27,8 @@
   <string name="shortcut_erase_long_label">מחיקת היסטורית גלישה</string>
   <string name="text_selection_search_action">חיפוש פרטי</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1492;&#1513;&#1500;&#1497;&#1496;&#1492; &#1495;&#1493;&#1494;&#1512;&#1514; &#1500;&#1497;&#1491;&#1497;&#1498; &#1506;&#1501; %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1502;&#1497;&#1493;&#1506;&#1491; &#1500;&#1513;&#1497;&#1502;&#1493;&#1513; &#1499;&#1491;&#1508;&#1491;&#1508;&#1503; &#1508;&#1512;&#1496;&#1497;:\n  "<ul>"\n    "<li>&#1504;&#1497;&#1514;&#1503; &#1500;&#1495;&#1508;&#1513; &#1493;&#1500;&#1490;&#1500;&#1493;&#1513; &#1497;&#1513;&#1497;&#1512;&#1493;&#1514; &#1502;&#1492;&#1497;&#1497;&#1513;&#1493;&#1502;&#1493;&#1503;</li>"\n    "<li>&#1495;&#1505;&#1497;&#1502;&#1514; &#1502;&#1504;&#1490;&#1504;&#1493;&#1504;&#1497; &#1502;&#1506;&#1511;&#1489; (&#1488;&#1493; &#1500;&#1513;&#1504;&#1493;&#1514; &#1492;&#1490;&#1491;&#1512;&#1493;&#1514; &#1499;&#1491;&#1497; &#1500;&#1488;&#1508;&#1513;&#1512; &#1488;&#1493;&#1514;&#1501;)</li>"\n    "<li>&#1504;&#1497;&#1514;&#1503; &#1500;&#1488;&#1508;&#1505; &#1499;&#1491;&#1497; &#1500;&#1502;&#1495;&#1493;&#1511; &#1506;&#1493;&#1490;&#1497;&#1493;&#1514; &#1499;&#1502;&#1493; &#1490;&#1501; &#1488;&#1514; &#1492;&#1497;&#1505;&#1496;&#1493;&#1512;&#1497;&#1497;&#1514; &#1492;&#1495;&#1497;&#1508;&#1493;&#1513;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1502;&#1489;&#1497;&#1514; &#1502;&#1493;&#1494;&#1497;&#1500;&#1492; Mozilla. &#1492;&#1502;&#1496;&#1512;&#1492; &#1513;&#1500;&#1504;&#1493; &#1492;&#1497;&#1488; &#1500;&#1496;&#1508;&#1495; &#1488;&#1497;&#1504;&#1496;&#1512;&#1504;&#1496; &#1489;&#1512;&#1497;&#1488; &#1493;&#1508;&#1514;&#1493;&#1495;.<br/>\n<a href="%2$s">&#1502;&#1497;&#1491;&#1506; &#1504;&#1493;&#1505;&#1507;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">אבטחה ופרטיות</string>
+  <string name="preference_privacy_and_security_summary">מעקב, עוגיות, בחירות נתונים</string>
   <string name="preference_category_search">חיפוש</string>
   <string name="preference_search_engine_default">בררת מחדל</string>
   <string name="preference_state_on">פעיל</string>

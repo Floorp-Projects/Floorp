@@ -188,6 +188,10 @@
   <string name="site_security_icon_content_description">Eranharhikwaeri Kwatakwa</string>
   <string name="preference_autocomplete_duplicate_url_error">URL jarasti ya</string>
   <string name="find_in_page">Eranharhikwarhu Exent\'ani</string>
+  <string name="find_in_page_input">Eranharhikukwarhu exent\'ani</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d ankuri %2$d</string>
+  <string name="accessibility_next_result">Máteru exentskata</string>
   <string name="http_auth_dialog_title">Mitintskwa wétarhisïnti</string>
   <string name="http_auth_dialog_username">Jakankurhikwa</string>
   <string name="http_auth_dialog_password">Mítintskwa</string>

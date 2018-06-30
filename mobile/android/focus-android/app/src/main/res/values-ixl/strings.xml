@@ -169,4 +169,15 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Aq\'okej</string>
   <string name="dialog_addtohomescreen_action_cancel">Ya\'sa</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Uva\' la jaje\' as ye\'xh kam la itiisa ve\'t tib\'</string>
+  <string name="notification_browsing_session_channel_name">Axh kuxh la b\'anb\'en</string>
+  <string name="notification_browsing_session_channel_description">Unq\'a vaa\' neele\' la isojsa u %1$se asoj la kane\'. Jit chit tz\'ajinale\' la jaj u aplicación moj la eel kam ni b\'an u tiinsab\' tetze\'.</string>
+  <string name="tabs_tray_action_erase">Sojsa kaajayil unq\'a vee\' kat achukla</string>
+  <string name="download_firefox">Eq\'o ku\'tzan u Firefoxe</string>
+  <string name="your_rights_content1">%1$s jajle\'l kuxh u eq\'on tetze\' ta\'n u Mozilla.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s ile\' at ve\'t "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu\'aal tan u Mozilla</a>" as unka\'te uva jajlu kan."]]></string>
+  <string name="your_rights_content3"><![CDATA["Ye\' la uch taq\'ax u tu\'aale\' te ka\'t uxhchil tetz u Nimla atinb\'ale\' Mozilla moj ka\'taj taq\'onb\'al  ech kole\' uva\' la b\'anb\'el ib\'ii texhlalil u Mozilla, Firefox moj %1$s. La lej ka\'t alb\'al isuuchil see "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tzitza\'</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Ka\'taj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu\'aal</a>" uva\' jajlu kan kuxhtu\' as oy kuxh unpajte uva\' la ku\' texhlale\' tetz u %1$se."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s ni b\'anb\'e tachul unq\'a majb\'al tetze\' Disconnect, Inc. eche\' unq\'a aq\'one\' uva\' jatxel as a\' kuxhe\' junal jaq\' u "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Tu\'aal tetz tenam skaajayil tetz u GNU v3</a>" as la lej "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tzitza\'</a>.]]></string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
 </resources>

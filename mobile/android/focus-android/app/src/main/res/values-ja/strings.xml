@@ -17,7 +17,7 @@
   <string name="menu_about">製品情報</string>
   <string name="menu_help">ヘルプ</string>
   <string name="menu_rights">あなたの権利</string>
-  <string name="menu_trackers_blocked_title">追跡者がブロックされました</string>
+  <string name="menu_trackers_blocked_title">ブロックされた追跡</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">共有方法を選択</string>
   <string name="notification_erase_text">閲覧履歴を消去</string>

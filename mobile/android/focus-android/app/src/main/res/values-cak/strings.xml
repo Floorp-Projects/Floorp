@@ -106,8 +106,8 @@
   <string name="search_add_error_duplicate_name">Yakon chik jun kanob\'äl rik\'in ri b\'i\'aj ri\'.</string>
   <string name="search_add_error_empty_search">Titz\'ib\'äx rucholajem ri nikanöx</string>
   <string name="search_add_error_format">Tijikib\'äx chi ri rucholajem ri nikanöx nuk\'äm ri\' rik\'in ri rub\'anikil tz\'etb\'äl</string>
-  <string name="content_description_clear_input">Tajin yeyuj</string>
-  <string name="content_description_dismiss_input">Tichup ruwäch</string>
+  <string name="content_description_clear_input">Tiyuj okitz\'ib\'</string>
+  <string name="content_description_dismiss_input">Tewüx</string>
   <string name="content_description_erase">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
   <string name="content_description_tab_counter">Jaqäl taq ruwi\': %1$s</string>
   <string name="content_description_lock">Ütz okem</string>
@@ -119,7 +119,7 @@
   <string name="content_description_back">Katok pa k\'amaya\'l titzolin</string>
   <string name="content_description_stop">Tiq\'at ruqasaxik ruxaq ajk\'amaya\'l</string>
   <string name="content_description_customtab_exit">Titzolin pa ri jun chokoy</string>
-  <string name="content_description_blocking_switch">Keq\'ata ojqanela\'</string>
+  <string name="content_description_blocking_switch">Keq\'at ojqanela\'</string>
   <string name="your_rights">Taq Ach\'ojib\'al</string>
   <string name="external_app_prompt_title">Tijaq ximonel pa jun chik chokoy</string>
   <string name="external_app_prompt">Yatikïr yatel %1$s richin najäq re ximonel re\' pa %2$s.</string>
