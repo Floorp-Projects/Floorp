@@ -212,7 +212,10 @@ public:
     if (mMapFile.isSome()) {
       return mMapSize;
     }
-    return mStringMap->MapSize();
+    if (mStringMap) {
+      return mStringMap->MapSize();
+    }
+    return 0;
   }
 
   bool Initialized() const { return mStringMap || mMapFile.isSome(); }
@@ -388,16 +391,13 @@ nsStringBundleBase::CollectReports(nsIHandleReportCallback* aHandleReport,
   size_t heapSize = SizeOfIncludingThis(MallocSizeOf);
 
   nsAutoCStringN<256> path("explicit/string-bundles/");
-  {
-    RefPtr<SharedStringBundle> shared = do_QueryObject(this);
-    if (shared) {
-      path.AppendLiteral("SharedStringBundle");
-      if (XRE_IsParentProcess()) {
-        sharedSize = shared->MapSize();
-      }
-    } else {
-      path.AppendLiteral("nsStringBundle");
+  if (RefPtr<SharedStringBundle> shared = do_QueryObject(this)) {
+    path.AppendLiteral("SharedStringBundle");
+    if (XRE_IsParentProcess()) {
+      sharedSize = shared->MapSize();
     }
+  } else {
+    path.AppendLiteral("nsStringBundle");
   }
 
   path.AppendLiteral("(url=\"");
