@@ -1591,6 +1591,21 @@ MoveChildrenTo(nsIFrame* aOldParent,
   }
 }
 
+static bool
+ShouldCreateImageFrameForContent(const Element& aElement, ComputedStyle& aStyle)
+{
+  if (aElement.IsRootOfNativeAnonymousSubtree()) {
+    return false;
+  }
+
+  auto& content = *aStyle.StyleContent();
+  if (content.ContentCount() != 1) {
+    return false;
+  }
+
+  return content.ContentAt(0).GetType() == StyleContentType::Image;
+}
+
 //----------------------------------------------------------------------
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
@@ -1713,7 +1728,7 @@ already_AddRefed<nsIContent>
 nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                               Element* aParentContent,
                                               ComputedStyle* aComputedStyle,
-                                              uint32_t        aContentIndex)
+                                              uint32_t aContentIndex)
 {
   // Get the content value
   const nsStyleContentData& data =
@@ -1721,9 +1736,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
   const StyleContentType type = data.GetType();
 
   switch (type) {
-    case StyleContentType::Image: {
+    case StyleContentType::Image:
       return GeneratedImageContent::Create(*mDocument, aContentIndex);
-    }
 
     case StyleContentType::String:
       return CreateGenConTextNode(aState,
@@ -5637,17 +5651,6 @@ ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
   return true;
 }
 
-static bool
-ShouldCreateImageFrameForContent(ComputedStyle& aStyle)
-{
-  auto& content = *aStyle.StyleContent();
-  if (content.ContentCount() != 1) {
-    return false;
-  }
-
-  return content.ContentAt(0).GetType() == StyleContentType::Image;
-}
-
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                                          nsIContent* aContent,
@@ -5814,7 +5817,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
     // Check for 'content: <image-url>' on the element (which makes us ignore
     // 'display' values other than 'none' or 'contents').
-    if (!data && ShouldCreateImageFrameForContent(*computedStyle)) {
+    if (!data && ShouldCreateImageFrameForContent(*element, *computedStyle)) {
       static const FrameConstructionData sImgData =
         SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
       data = &sImgData;
