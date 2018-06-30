@@ -735,7 +735,7 @@ AddonWrapper.prototype = {
 function _getInternalID(id) {
   if (!id)
     return null;
-  if (LightweightThemeManager._builtInThemes.has(id))
+  if (id == DEFAULT_THEME_ID)
     return id;
   let len = id.length - ID_SUFFIX.length;
   if (len > 0 && id.substring(len) == ID_SUFFIX)
@@ -744,7 +744,7 @@ function _getInternalID(id) {
 }
 
 function _getExternalID(id) {
-  if (LightweightThemeManager._builtInThemes.has(id))
+  if (id == DEFAULT_THEME_ID)
     return id;
   return id + ID_SUFFIX;
 }
