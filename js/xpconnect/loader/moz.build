@@ -25,6 +25,7 @@ IPDL_SOURCES += [
 ]
 
 EXPORTS.mozilla += [
+    'AutoMemMap.h',
     'ScriptPreloader.h',
     'URLPreloader.h',
 ]
