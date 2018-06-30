@@ -31,6 +31,7 @@
 //
 
 #include <memory>
+#include <set>
 
 #include "common/angleutils.h"
 #include "compiler/translator/ExtensionBehavior.h"
@@ -117,15 +118,11 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
     // for the specified TBasicType
     TPrecision getDefaultPrecision(TBasicType type) const;
 
-    // This records invariant varyings declared through
-    // "invariant varying_name;".
-    void addInvariantVarying(const ImmutableString &originalName);
+    // This records invariant varyings declared through "invariant varying_name;".
+    void addInvariantVarying(const TVariable &variable);
 
-    // If this returns false, the varying could still be invariant
-    // if it is set as invariant during the varying variable
-    // declaration - this piece of information is stored in the
-    // variable's type, not here.
-    bool isVaryingInvariant(const ImmutableString &originalName) const;
+    // If this returns false, the varying could still be invariant if it is set as invariant during the varying variable declaration - this piece of information is stored in the variable's type, not here.
+    bool isVaryingInvariant(const TVariable &variable) const;
 
     void setGlobalInvariant(bool invariant);
 
@@ -142,6 +139,15 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
 
   private:
     friend class TSymbolUniqueId;
+
+    struct VariableMetadata
+    {
+        VariableMetadata();
+        bool staticRead;
+        bool staticWrite;
+        bool invariant;
+    };
+
     int nextUniqueIdValue();
 
     class TSymbolTableLevel;
@@ -154,6 +160,8 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
                                     ShShaderSpec spec,
                                     const ShBuiltInResources &resources);
 
+    VariableMetadata *getOrCreateVariableMetadata(const TVariable &variable);
+
     std::vector<std::unique_ptr<TSymbolTableLevel>> mTable;
 
     // There's one precision stack level for predefined precisions and then one level for each scope
@@ -161,19 +169,14 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
     typedef TMap<TBasicType, TPrecision> PrecisionStackLevel;
     std::vector<std::unique_ptr<PrecisionStackLevel>> mPrecisionStack;
 
+    bool mGlobalInvariant;
+
     int mUniqueIdCounter;
 
     static const int kLastBuiltInId;
 
     sh::GLenum mShaderType;
     ShBuiltInResources mResources;
-
-    struct VariableMetadata
-    {
-        VariableMetadata();
-        bool staticRead;
-        bool staticWrite;
-    };
 
     // Indexed by unique id. Map instead of vector since the variables are fairly sparse.
     std::map<int, VariableMetadata> mVariableMetadata;

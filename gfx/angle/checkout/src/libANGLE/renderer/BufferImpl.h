@@ -13,7 +13,7 @@
 #include "common/mathutil.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Observer.h"
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 
 #include <stdint.h>
 

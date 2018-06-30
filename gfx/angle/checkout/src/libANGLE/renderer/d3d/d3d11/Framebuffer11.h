@@ -50,7 +50,9 @@ class Framebuffer11 : public FramebufferD3D
 
     RenderTarget11 *getFirstRenderTarget() const;
 
-    gl::Error getSamplePosition(size_t index, GLfloat *xy) const override;
+    gl::Error getSamplePosition(const gl::Context *context,
+                                size_t index,
+                                GLfloat *xy) const override;
 
   private:
     gl::Error clearImpl(const gl::Context *context, const ClearParameters &clearParams) override;

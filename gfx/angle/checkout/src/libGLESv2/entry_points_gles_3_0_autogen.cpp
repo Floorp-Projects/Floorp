@@ -23,11 +23,12 @@ void GL_APIENTRY BeginQuery(GLenum target, GLuint id)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::BeginQuery>(target, id);
+        QueryType targetPacked = FromGLenum<QueryType>(target);
+        context->gatherParams<EntryPoint::BeginQuery>(targetPacked, id);
 
-        if (context->skipValidation() || ValidateBeginQuery(context, target, id))
+        if (context->skipValidation() || ValidateBeginQuery(context, targetPacked, id))
         {
-            context->beginQuery(target, id);
+            context->beginQuery(targetPacked, id);
         }
     }
 }
@@ -560,11 +561,12 @@ void GL_APIENTRY EndQuery(GLenum target)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::EndQuery>(target);
+        QueryType targetPacked = FromGLenum<QueryType>(target);
+        context->gatherParams<EntryPoint::EndQuery>(targetPacked);
 
-        if (context->skipValidation() || ValidateEndQuery(context, target))
+        if (context->skipValidation() || ValidateEndQuery(context, targetPacked))
         {
-            context->endQuery(target);
+            context->endQuery(targetPacked);
         }
     }
 }
@@ -963,11 +965,12 @@ void GL_APIENTRY GetQueryiv(GLenum target, GLenum pname, GLint *params)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::GetQueryiv>(target, pname, params);
+        QueryType targetPacked = FromGLenum<QueryType>(target);
+        context->gatherParams<EntryPoint::GetQueryiv>(targetPacked, pname, params);
 
-        if (context->skipValidation() || ValidateGetQueryiv(context, target, pname, params))
+        if (context->skipValidation() || ValidateGetQueryiv(context, targetPacked, pname, params))
         {
-            context->getQueryiv(target, pname, params);
+            context->getQueryiv(targetPacked, pname, params);
         }
     }
 }

@@ -69,8 +69,7 @@ void GLES1State::initialize(const Context *context, const State *state)
     mTexUnitEnables.resize(caps.maxMultitextureUnits);
     for (auto &enables : mTexUnitEnables)
     {
-        enables.enable2D      = false;
-        enables.enableCubeMap = false;
+        enables.reset();
     }
 
     mVertexArrayEnabled    = false;
@@ -264,8 +263,64 @@ void GLES1State::loadMatrix(const angle::Mat4 &m)
 
 void GLES1State::multMatrix(const angle::Mat4 &m)
 {
-    angle::Mat4 currentMatrix             = currentMatrixStack().back();
+    angle::Mat4 currentMatrix   = currentMatrixStack().back();
     currentMatrixStack().back() = currentMatrix.product(m);
+}
+
+void GLES1State::setClientStateEnabled(ClientVertexArrayType clientState, bool enable)
+{
+    switch (clientState)
+    {
+        case ClientVertexArrayType::Vertex:
+            mVertexArrayEnabled = enable;
+            break;
+        case ClientVertexArrayType::Normal:
+            mNormalArrayEnabled = enable;
+            break;
+        case ClientVertexArrayType::Color:
+            mColorArrayEnabled = enable;
+            break;
+        case ClientVertexArrayType::PointSize:
+            mPointSizeArrayEnabled = enable;
+            break;
+        case ClientVertexArrayType::TextureCoord:
+            mTexCoordArrayEnabled[mClientActiveTexture] = enable;
+            break;
+        default:
+            UNREACHABLE();
+            break;
+    }
+}
+
+bool GLES1State::isClientStateEnabled(ClientVertexArrayType clientState) const
+{
+    switch (clientState)
+    {
+        case ClientVertexArrayType::Vertex:
+            return mVertexArrayEnabled;
+        case ClientVertexArrayType::Normal:
+            return mNormalArrayEnabled;
+        case ClientVertexArrayType::Color:
+            return mColorArrayEnabled;
+        case ClientVertexArrayType::PointSize:
+            return mPointSizeArrayEnabled;
+        case ClientVertexArrayType::TextureCoord:
+            return mTexCoordArrayEnabled[mClientActiveTexture];
+        default:
+            UNREACHABLE();
+            return false;
+    }
+}
+
+bool GLES1State::isTexCoordArrayEnabled(unsigned int unit) const
+{
+    ASSERT(unit < mTexCoordArrayEnabled.size());
+    return mTexCoordArrayEnabled[unit];
+}
+
+bool GLES1State::isTextureTargetEnabled(unsigned int unit, const TextureType type) const
+{
+    return mTexUnitEnables[unit].test(type);
 }
 
 }  // namespace gl

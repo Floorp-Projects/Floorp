@@ -1232,7 +1232,10 @@ gl::Error Renderer11::finish()
             ScheduleYield();
         }
 
-        if (testDeviceLost())
+        // Attempt is incremented before checking if we should test for device loss so that device
+        // loss is not checked on the first iteration
+        bool checkDeviceLost = (attempt % kPollingD3DDeviceLostCheckFrequency) == 0;
+        if (checkDeviceLost && testDeviceLost())
         {
             mDisplay->notifyDeviceLost();
             return gl::OutOfMemory() << "Device was lost while waiting for sync.";
@@ -1256,7 +1259,7 @@ NativeWindowD3D *Renderer11::createNativeWindow(EGLNativeWindowType window,
                                                 const egl::AttributeMap &attribs) const
 {
 #ifdef ANGLE_ENABLE_WINDOWS_STORE
-    UNUSED_VARIABLE(attribs);
+    ANGLE_UNUSED_VARIABLE(attribs);
     return new NativeWindow11WinRT(window, config->alphaSize > 0);
 #else
     return new NativeWindow11Win32(
@@ -1997,16 +2000,15 @@ unsigned int Renderer11::getReservedFragmentUniformVectors() const
     return d3d11_gl::GetReservedFragmentUniformVectors(mRenderer11DeviceCaps.featureLevel);
 }
 
-unsigned int Renderer11::getReservedVertexUniformBuffers() const
+gl::ShaderMap<unsigned int> Renderer11::getReservedShaderUniformBuffers() const
 {
-    // we reserve one buffer for the application uniforms, and one for driver uniforms
-    return 2;
-}
+    gl::ShaderMap<unsigned int> shaderReservedUniformBuffers = {};
 
-unsigned int Renderer11::getReservedFragmentUniformBuffers() const
-{
     // we reserve one buffer for the application uniforms, and one for driver uniforms
-    return 2;
+    shaderReservedUniformBuffers[gl::ShaderType::Vertex]   = 2;
+    shaderReservedUniformBuffers[gl::ShaderType::Fragment] = 2;
+
+    return shaderReservedUniformBuffers;
 }
 
 d3d11::ANGLED3D11DeviceType Renderer11::getDeviceType() const
@@ -2376,7 +2378,7 @@ gl::Error Renderer11::copyTexture(const gl::Context *context,
         const TextureHelper11 *destResource = nullptr;
         ANGLE_TRY(destStorage11->getResource(context, &destResource));
 
-        gl::ImageIndex destIndex = gl::ImageIndex::MakeGeneric(destTarget, destLevel);
+        gl::ImageIndex destIndex = gl::ImageIndex::MakeFromTarget(destTarget, destLevel);
         UINT destSubresource     = destStorage11->getSubresourceIndex(destIndex);
 
         D3D11_BOX sourceBox{
@@ -2397,7 +2399,7 @@ gl::Error Renderer11::copyTexture(const gl::Context *context,
         const d3d11::SharedSRV *sourceSRV = nullptr;
         ANGLE_TRY(sourceStorage11->getSRVLevels(context, sourceLevel, sourceLevel, &sourceSRV));
 
-        gl::ImageIndex destIndex             = gl::ImageIndex::MakeGeneric(destTarget, destLevel);
+        gl::ImageIndex destIndex = gl::ImageIndex::MakeFromTarget(destTarget, destLevel);
         RenderTargetD3D *destRenderTargetD3D = nullptr;
         ANGLE_TRY(destStorage11->getRenderTarget(context, destIndex, &destRenderTargetD3D));
 
@@ -3234,98 +3236,68 @@ gl::Error Renderer11::blitRenderbufferRect(const gl::Context *context,
     // buffer, the depth buffer, and / or the stencil buffer depending on mask."
     // This means negative x and y are out of bounds, and not to be read from. We handle this here
     // by internally scaling the read and draw rectangles.
+
+    // Remove reversal from readRect to simplify further operations.
     gl::Rectangle readRect = readRectIn;
     gl::Rectangle drawRect = drawRectIn;
-
-    auto flip = [](int val) { return val >= 0 ? 1 : -1; };
-
-    if (readRect.x > readSize.width && readRect.width < 0)
+    if (readRect.isReversedX())
     {
-        int delta = readRect.x - readSize.width;
-        readRect.x -= delta;
-        readRect.width += delta;
-
-        int drawDelta = delta * flip(drawRect.width);
-        drawRect.x += drawDelta;
-        drawRect.width -= drawDelta;
+        readRect.x     = readRect.x + readRect.width;
+        readRect.width = -readRect.width;
+        drawRect.x     = drawRect.x + drawRect.width;
+        drawRect.width = -drawRect.width;
+    }
+    if (readRect.isReversedY())
+    {
+        readRect.y      = readRect.y + readRect.height;
+        readRect.height = -readRect.height;
+        drawRect.y      = drawRect.y + drawRect.height;
+        drawRect.height = -drawRect.height;
     }
 
-    if (readRect.y > readSize.height && readRect.height < 0)
+    gl::Rectangle readBounds(0, 0, readSize.width, readSize.height);
+    gl::Rectangle inBoundsReadRect;
+    if (!gl::ClipRectangle(readRect, readBounds, &inBoundsReadRect))
     {
-        int delta = readRect.y - readSize.height;
-        readRect.y -= delta;
-        readRect.height += delta;
-
-        int drawDelta = delta * flip(drawRect.height);
-        drawRect.y += drawDelta;
-        drawRect.height -= drawDelta;
+        return gl::NoError();
     }
 
-    auto readToDrawX       = [&drawRectIn, &readRectIn](int readOffset) {
-        double readToDrawScale =
-            static_cast<double>(drawRectIn.width) / static_cast<double>(readRectIn.width);
-        return static_cast<int>(round(static_cast<double>(readOffset) * readToDrawScale));
-    };
-    if (readRect.x < 0)
     {
-        int readOffset = -readRect.x;
-        readRect.x += readOffset;
-        readRect.width -= readOffset;
+        // Calculate the drawRect that corresponds to inBoundsReadRect.
+        auto readToDrawX = [&drawRect, &readRect](int readOffset) {
+            double readToDrawScale =
+                static_cast<double>(drawRect.width) / static_cast<double>(readRect.width);
+            return static_cast<int>(
+                round(static_cast<double>(readOffset - readRect.x) * readToDrawScale) + drawRect.x);
+        };
+        auto readToDrawY = [&drawRect, &readRect](int readOffset) {
+            double readToDrawScale =
+                static_cast<double>(drawRect.height) / static_cast<double>(readRect.height);
+            return static_cast<int>(
+                round(static_cast<double>(readOffset - readRect.y) * readToDrawScale) + drawRect.y);
+        };
 
-        int drawOffset = readToDrawX(readOffset);
-        drawRect.x += drawOffset;
-        drawRect.width -= drawOffset;
+        gl::Rectangle drawRectMatchingInBoundsReadRect;
+        drawRectMatchingInBoundsReadRect.x = readToDrawX(inBoundsReadRect.x);
+        drawRectMatchingInBoundsReadRect.y = readToDrawY(inBoundsReadRect.y);
+        drawRectMatchingInBoundsReadRect.width =
+            readToDrawX(inBoundsReadRect.x1()) - drawRectMatchingInBoundsReadRect.x;
+        drawRectMatchingInBoundsReadRect.height =
+            readToDrawY(inBoundsReadRect.y1()) - drawRectMatchingInBoundsReadRect.y;
+        drawRect = drawRectMatchingInBoundsReadRect;
+        readRect = inBoundsReadRect;
     }
 
-    auto readToDrawY = [&drawRectIn, &readRectIn](int readOffset) {
-        double readToDrawScale =
-            static_cast<double>(drawRectIn.height) / static_cast<double>(readRectIn.height);
-        return static_cast<int>(round(static_cast<double>(readOffset) * readToDrawScale));
-    };
-    if (readRect.y < 0)
+    bool scissorNeeded = false;
+    if (scissor)
     {
-        int readOffset = -readRect.y;
-        readRect.y += readOffset;
-        readRect.height -= readOffset;
-
-        int drawOffset = readToDrawY(readOffset);
-        drawRect.y += drawOffset;
-        drawRect.height -= drawOffset;
+        gl::Rectangle scissoredDrawRect;
+        if (!gl::ClipRectangle(drawRect, *scissor, &scissoredDrawRect))
+        {
+            return gl::NoError();
+        }
+        scissorNeeded = scissoredDrawRect != drawRect;
     }
-
-    if (readRect.x1() < 0)
-    {
-        int readOffset = -readRect.x1();
-        readRect.width += readOffset;
-
-        int drawOffset = readToDrawX(readOffset);
-        drawRect.width += drawOffset;
-    }
-
-    if (readRect.y1() < 0)
-    {
-        int readOffset = -readRect.y1();
-        readRect.height += readOffset;
-
-        int drawOffset = readToDrawY(readOffset);
-        drawRect.height += drawOffset;
-    }
-
-    if (readRect.x1() > readSize.width)
-    {
-        int delta = readRect.x1() - readSize.width;
-        readRect.width -= delta;
-        drawRect.width -= delta * flip(drawRect.width);
-    }
-
-    if (readRect.y1() > readSize.height)
-    {
-        int delta = readRect.y1() - readSize.height;
-        readRect.height -= delta;
-        drawRect.height -= delta * flip(drawRect.height);
-    }
-
-    bool scissorNeeded = scissor && gl::ClipRectangle(drawRect, *scissor, nullptr);
 
     const auto &destFormatInfo =
         gl::GetSizedInternalFormatInfo(drawRenderTarget->getInternalFormat());
@@ -3359,8 +3331,8 @@ gl::Error Renderer11::blitRenderbufferRect(const gl::Context *context,
 
     bool stretchRequired = readRect.width != drawRect.width || readRect.height != drawRect.height;
 
-    bool flipRequired =
-        readRect.width < 0 || readRect.height < 0 || drawRect.width < 0 || drawRect.height < 0;
+    ASSERT(!readRect.isReversedX() && !readRect.isReversedY());
+    bool reversalRequired = drawRect.isReversedX() || drawRect.isReversedY();
 
     bool outOfBounds = readRect.x < 0 || readRect.x + readRect.width > readSize.width ||
                        readRect.y < 0 || readRect.y + readRect.height > readSize.height ||
@@ -3372,7 +3344,7 @@ gl::Error Renderer11::blitRenderbufferRect(const gl::Context *context,
 
     if (readRenderTarget11->getFormatSet().formatID ==
             drawRenderTarget11->getFormatSet().formatID &&
-        !stretchRequired && !outOfBounds && !flipRequired && !partialDSBlit &&
+        !stretchRequired && !outOfBounds && !reversalRequired && !partialDSBlit &&
         !colorMaskingNeeded && (!(depthBlit || stencilBlit) || wholeBufferCopy))
     {
         UINT dstX = drawRect.x;

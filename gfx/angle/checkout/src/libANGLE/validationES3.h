@@ -9,7 +9,7 @@
 #ifndef LIBANGLE_VALIDATION_ES3_H_
 #define LIBANGLE_VALIDATION_ES3_H_
 
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 
 #include <GLES3/gl3.h>
 
@@ -146,11 +146,11 @@ bool ValidateES3TexStorage3DParameters(Context *context,
                                        GLsizei height,
                                        GLsizei depth);
 
-bool ValidateBeginQuery(Context *context, GLenum target, GLuint id);
+bool ValidateBeginQuery(Context *context, QueryType target, GLuint id);
 
-bool ValidateEndQuery(Context *context, GLenum target);
+bool ValidateEndQuery(Context *context, QueryType target);
 
-bool ValidateGetQueryiv(Context *context, GLenum target, GLenum pname, GLint *params);
+bool ValidateGetQueryiv(Context *context, QueryType target, GLenum pname, GLint *params);
 
 bool ValidateGetQueryObjectuiv(Context *context, GLuint id, GLenum pname, GLuint *params);
 

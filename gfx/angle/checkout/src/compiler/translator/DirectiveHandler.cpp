@@ -50,12 +50,12 @@ TDirectiveHandler::~TDirectiveHandler()
 {
 }
 
-void TDirectiveHandler::handleError(const pp::SourceLocation &loc, const std::string &msg)
+void TDirectiveHandler::handleError(const angle::pp::SourceLocation &loc, const std::string &msg)
 {
     mDiagnostics.error(loc, msg.c_str(), "");
 }
 
-void TDirectiveHandler::handlePragma(const pp::SourceLocation &loc,
+void TDirectiveHandler::handlePragma(const angle::pp::SourceLocation &loc,
                                      const std::string &name,
                                      const std::string &value,
                                      bool stdgl)
@@ -119,7 +119,7 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation &loc,
         }
         else
         {
-            mDiagnostics.report(pp::Diagnostics::PP_UNRECOGNIZED_PRAGMA, loc, name);
+            mDiagnostics.report(angle::pp::Diagnostics::PP_UNRECOGNIZED_PRAGMA, loc, name);
             return;
         }
 
@@ -130,7 +130,7 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation &loc,
     }
 }
 
-void TDirectiveHandler::handleExtension(const pp::SourceLocation &loc,
+void TDirectiveHandler::handleExtension(const angle::pp::SourceLocation &loc,
                                         const std::string &name,
                                         const std::string &behavior)
 {
@@ -185,7 +185,7 @@ void TDirectiveHandler::handleExtension(const pp::SourceLocation &loc,
     }
 }
 
-void TDirectiveHandler::handleVersion(const pp::SourceLocation &loc, int version)
+void TDirectiveHandler::handleVersion(const angle::pp::SourceLocation &loc, int version)
 {
     if (version == 100 || version == 300 || version == 310)
     {

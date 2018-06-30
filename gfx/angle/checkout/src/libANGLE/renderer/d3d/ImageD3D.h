@@ -14,13 +14,13 @@
 #include "common/debug.h"
 
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 
 namespace gl
 {
 class Context;
 class Framebuffer;
-struct ImageIndex;
+class ImageIndex;
 struct Box;
 struct Extents;
 struct Offset;

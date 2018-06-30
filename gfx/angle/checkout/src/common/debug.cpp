@@ -45,7 +45,7 @@ bool ShouldCreateLogMessage(LogSeverity severity)
 #if defined(ANGLE_TRACE_ENABLED)
     return true;
 #elif defined(ANGLE_ENABLE_ASSERTS)
-    return severity == LOG_ERR;
+    return severity != LOG_EVENT;
 #else
     return false;
 #endif
@@ -65,6 +65,9 @@ bool ShouldCreatePlatformLogMessage(LogSeverity severity)
 #endif
 }
 
+// This is never instantiated, it's just used for EAT_STREAM_PARAMETERS to an object of the correct
+// type on the LHS of the unused part of the ternary operator.
+std::ostream *gSwallowStream;
 }  // namespace priv
 
 bool DebugAnnotationsActive()
@@ -213,18 +216,15 @@ std::string LogMessage::getMessage() const
 }
 
 #if defined(ANGLE_PLATFORM_WINDOWS)
-std::ostream &operator<<(std::ostream &os, const FmtHR &fmt)
+priv::FmtHexHelper<HRESULT> FmtHR(HRESULT value)
 {
-    os << "HRESULT: ";
-    return FmtHexInt(os, fmt.mHR);
+    return priv::FmtHexHelper<HRESULT>("HRESULT: ", value);
 }
 
-std::ostream &operator<<(std::ostream &os, const FmtErr &fmt)
+priv::FmtHexHelper<DWORD> FmtErr(DWORD value)
 {
-    os << "error: ";
-    return FmtHexInt(os, fmt.mErr);
+    return priv::FmtHexHelper<DWORD>("error: ", value);
 }
-
 #endif  // defined(ANGLE_PLATFORM_WINDOWS)
 
 }  // namespace gl

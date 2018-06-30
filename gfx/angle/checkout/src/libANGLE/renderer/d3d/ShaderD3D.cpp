@@ -62,7 +62,7 @@ ShaderD3D::~ShaderD3D()
 {
 }
 
-std::string ShaderD3D::getDebugInfo() const
+std::string ShaderD3D::getDebugInfo(const gl::Context *context) const
 {
     if (mDebugInfo.empty())
     {
@@ -137,7 +137,8 @@ ShShaderOutput ShaderD3D::getCompilerOutputType() const
     return mCompilerOutputType;
 }
 
-ShCompileOptions ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStream,
+ShCompileOptions ShaderD3D::prepareSourceAndReturnOptions(const gl::Context *context,
+                                                          std::stringstream *shaderSourceStream,
                                                           std::string *sourcePath)
 {
     uncompile();
@@ -173,7 +174,9 @@ const std::map<std::string, unsigned int> &GetUniformRegisterMap(
     return *uniformRegisterMap;
 }
 
-bool ShaderD3D::postTranslateCompile(gl::Compiler *compiler, std::string *infoLog)
+bool ShaderD3D::postTranslateCompile(const gl::Context *context,
+                                     gl::Compiler *compiler,
+                                     std::string *infoLog)
 {
     // TODO(jmadill): We shouldn't need to cache this.
     mCompilerOutputType = compiler->getShaderOutputType();

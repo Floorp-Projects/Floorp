@@ -14,7 +14,7 @@
 
 bool atoi_clamp(const char *str, unsigned int *value)
 {
-    bool success = pp::numeric_lex_int(str, value);
+    bool success = angle::pp::numeric_lex_int(str, value);
     if (!success)
         *value = std::numeric_limits<unsigned int>::max();
     return success;
@@ -184,7 +184,7 @@ float NumericLexFloat32OutOfRangeToInfinity(const std::string &str)
 bool strtof_clamp(const std::string &str, float *value)
 {
     // Try the standard float parsing path first.
-    bool success = pp::numeric_lex_float(str, value);
+    bool success = angle::pp::numeric_lex_float(str, value);
 
     // If the standard path doesn't succeed, take the path that can handle the following corner
     // cases:

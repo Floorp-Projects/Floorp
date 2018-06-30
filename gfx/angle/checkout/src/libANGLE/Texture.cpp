@@ -513,7 +513,7 @@ void TextureState::setImageDesc(TextureTarget target, size_t level, const ImageD
 
 const ImageDesc &TextureState::getImageDesc(const ImageIndex &imageIndex) const
 {
-    return getImageDesc(imageIndex.target, imageIndex.mipIndex);
+    return getImageDesc(imageIndex.getTarget(), imageIndex.getLevelIndex());
 }
 
 void TextureState::setImageDescChain(GLuint baseLevel,
@@ -944,7 +944,7 @@ Error Texture::setImage(const Context *context,
     ANGLE_TRY(releaseTexImageInternal(context));
     ANGLE_TRY(orphanImages(context));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     ANGLE_TRY(mTexture->setImage(context, index, internalFormat, size, format, type, unpackState,
                                  pixels));
@@ -969,7 +969,7 @@ Error Texture::setSubImage(const Context *context,
 
     ANGLE_TRY(ensureSubImageInitialized(context, target, level, area));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     return mTexture->setSubImage(context, index, area, format, type, unpackState, pixels);
 }
@@ -989,7 +989,7 @@ Error Texture::setCompressedImage(const Context *context,
     ANGLE_TRY(releaseTexImageInternal(context));
     ANGLE_TRY(orphanImages(context));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     ANGLE_TRY(mTexture->setCompressedImage(context, index, internalFormat, size, unpackState,
                                            imageSize, pixels));
@@ -1014,7 +1014,7 @@ Error Texture::setCompressedSubImage(const Context *context,
 
     ANGLE_TRY(ensureSubImageInitialized(context, target, level, area));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     return mTexture->setCompressedSubImage(context, index, area, format, unpackState, imageSize,
                                            pixels);
@@ -1040,7 +1040,7 @@ Error Texture::copyImage(const Context *context,
     Box destBox(0, 0, 0, sourceArea.width, sourceArea.height, 1);
     ANGLE_TRY(ensureSubImageInitialized(context, target, level, destBox));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     ANGLE_TRY(mTexture->copyImage(context, index, sourceArea, internalFormat, source));
 
@@ -1072,7 +1072,7 @@ Error Texture::copySubImage(const Context *context,
     Box destBox(destOffset.x, destOffset.y, destOffset.y, sourceArea.width, sourceArea.height, 1);
     ANGLE_TRY(ensureSubImageInitialized(context, target, level, destBox));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     return mTexture->copySubImage(context, index, destOffset, sourceArea, source);
 }
@@ -1099,7 +1099,7 @@ Error Texture::copyTexture(const Context *context,
     // Note: we don't have a way to notify which portions of the image changed currently.
     ANGLE_TRY(source->ensureInitialized(context));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     ANGLE_TRY(mTexture->copyTexture(context, index, internalFormat, type, sourceLevel, unpackFlipY,
                                     unpackPremultiplyAlpha, unpackUnmultiplyAlpha, source));
@@ -1135,7 +1135,7 @@ Error Texture::copySubTexture(const Context *context,
     Box destBox(destOffset.x, destOffset.y, destOffset.y, sourceArea.width, sourceArea.height, 1);
     ANGLE_TRY(ensureSubImageInitialized(context, target, level, destBox));
 
-    ImageIndex index = ImageIndex::MakeGeneric(target, level);
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
 
     return mTexture->copySubTexture(context, index, destOffset, sourceLevel, sourceArea,
                                     unpackFlipY, unpackPremultiplyAlpha, unpackUnmultiplyAlpha,
@@ -1236,17 +1236,18 @@ Error Texture::generateMipmap(const Context *context)
     {
         return NoError();
     }
-    syncState();
+    ANGLE_TRY(syncState(context));
 
     // Clear the base image(s) immediately if needed
     if (context->isRobustResourceInitEnabled())
     {
         ImageIndexIterator it =
-            ImageIndexIterator::MakeGeneric(mState.mType, baseLevel, baseLevel + 1);
+            ImageIndexIterator::MakeGeneric(mState.mType, baseLevel, baseLevel + 1,
+                                            ImageIndex::kEntireLevel, ImageIndex::kEntireLevel);
         while (it.hasNext())
         {
             const ImageIndex index = it.next();
-            const ImageDesc &desc  = mState.getImageDesc(index.target, index.mipIndex);
+            const ImageDesc &desc  = mState.getImageDesc(index.getTarget(), index.getLevelIndex());
 
             if (desc.initState == InitState::MayNeedInit)
             {
@@ -1396,7 +1397,7 @@ const Format &Texture::getAttachmentFormat(GLenum /*binding*/, const ImageIndex 
 
 GLsizei Texture::getAttachmentSamples(const ImageIndex &imageIndex) const
 {
-    return getSamples(imageIndex.target, 0);
+    return getSamples(imageIndex.getTarget(), 0);
 }
 
 void Texture::setCrop(const gl::Rectangle& rect)
@@ -1434,10 +1435,11 @@ GLuint Texture::getId() const
     return id();
 }
 
-void Texture::syncState()
+Error Texture::syncState(const Context *context)
 {
-    mTexture->syncState(mDirtyBits);
+    ANGLE_TRY(mTexture->syncState(context, mDirtyBits));
     mDirtyBits.reset();
+    return NoError();
 }
 
 rx::FramebufferAttachmentObjectImpl *Texture::getAttachmentImpl() const
@@ -1483,11 +1485,13 @@ Error Texture::ensureInitialized(const Context *context)
     bool anyDirty = false;
 
     ImageIndexIterator it =
-        ImageIndexIterator::MakeGeneric(mState.mType, 0, IMPLEMENTATION_MAX_TEXTURE_LEVELS + 1);
+        ImageIndexIterator::MakeGeneric(mState.mType, 0, IMPLEMENTATION_MAX_TEXTURE_LEVELS + 1,
+                                        ImageIndex::kEntireLevel, ImageIndex::kEntireLevel);
     while (it.hasNext())
     {
         const ImageIndex index = it.next();
-        ImageDesc &desc = mState.mImageDescs[GetImageDescIndex(index.target, index.mipIndex)];
+        ImageDesc &desc =
+            mState.mImageDescs[GetImageDescIndex(index.getTarget(), index.getLevelIndex())];
         if (desc.initState == InitState::MayNeedInit)
         {
             ASSERT(mState.mInitState == InitState::MayNeedInit);
@@ -1519,7 +1523,7 @@ void Texture::setInitState(const ImageIndex &imageIndex, InitState initState)
 {
     ImageDesc newDesc = mState.getImageDesc(imageIndex);
     newDesc.initState = initState;
-    mState.setImageDesc(imageIndex.target, imageIndex.mipIndex, newDesc);
+    mState.setImageDesc(imageIndex.getTarget(), imageIndex.getLevelIndex(), newDesc);
 }
 
 Error Texture::ensureSubImageInitialized(const Context *context,
@@ -1534,7 +1538,7 @@ Error Texture::ensureSubImageInitialized(const Context *context,
 
     // Pre-initialize the texture contents if necessary.
     // TODO(jmadill): Check if area overlaps the entire texture.
-    ImageIndex imageIndex  = ImageIndex::MakeGeneric(target, static_cast<GLint>(level));
+    ImageIndex imageIndex  = ImageIndex::MakeFromTarget(target, static_cast<GLint>(level));
     const auto &desc       = mState.getImageDesc(imageIndex);
     if (desc.initState == InitState::MayNeedInit)
     {
