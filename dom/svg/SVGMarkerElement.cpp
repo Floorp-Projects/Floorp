@@ -71,7 +71,7 @@ nsSVGOrientType::SetBaseValue(uint16_t aValue,
 {
   if (aValue == SVG_MARKER_ORIENT_AUTO_START_REVERSE &&
       !SVGMarkerElement::MarkerImprovementsPrefEnabled()) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+    return NS_ERROR_DOM_TYPE_ERR;
   }
 
   if (aValue == SVG_MARKER_ORIENT_AUTO ||
@@ -88,7 +88,7 @@ nsSVGOrientType::SetBaseValue(uint16_t aValue,
       true);
     return NS_OK;
   }
-  return NS_ERROR_DOM_SYNTAX_ERR;
+  return NS_ERROR_DOM_TYPE_ERR;
 }
 
 already_AddRefed<SVGAnimatedEnumeration>
