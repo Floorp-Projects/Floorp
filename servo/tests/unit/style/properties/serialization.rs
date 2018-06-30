@@ -7,7 +7,7 @@ use style::computed_values::display::T as Display;
 use style::properties::{PropertyDeclaration, Importance};
 use style::properties::declaration_block::PropertyDeclarationBlock;
 use style::properties::parse_property_declaration_list;
-use style::values::{CustomIdent, RGBA};
+use style::values::RGBA;
 use style::values::specified::{BorderStyle, BorderSideWidth, Color};
 use style::values::specified::{Length, LengthOrPercentage, LengthOrPercentageOrAuto};
 use style::values::specified::NoCalcLength;
@@ -73,39 +73,6 @@ mod shorthand_serialization {
         let block = block_from(properties.into_iter().map(|d| (d, Importance::Normal)));
 
         block.to_css_string()
-    }
-
-    // Add Test to show error if a longhand property is missing!!!!!!
-
-    mod overflow {
-        pub use super::*;
-        use style::properties::longhands::overflow_x::SpecifiedValue as OverflowValue;
-
-        #[test]
-        fn equal_overflow_properties_should_serialize_to_single_value() {
-            let mut properties = Vec::new();
-
-            let overflow = OverflowValue::Auto;
-            properties.push(PropertyDeclaration::OverflowX(overflow));
-            properties.push(PropertyDeclaration::OverflowY(overflow));
-
-            let serialization = shorthand_properties_to_string(properties);
-            assert_eq!(serialization, "overflow: auto;");
-        }
-
-        #[test]
-        fn different_overflow_properties_should_serialize_to_two_values() {
-            let mut properties = Vec::new();
-
-            let overflow_x = OverflowValue::Scroll;
-            properties.push(PropertyDeclaration::OverflowX(overflow_x));
-
-            let overflow_y = OverflowValue::Auto;
-            properties.push(PropertyDeclaration::OverflowY(overflow_y));
-
-            let serialization = shorthand_properties_to_string(properties);
-            assert_eq!(serialization, "overflow-x: scroll; overflow-y: auto;");
-        }
     }
 
     mod four_sides_shorthands {
