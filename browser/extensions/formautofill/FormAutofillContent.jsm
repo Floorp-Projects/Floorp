@@ -98,7 +98,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let {activeInput, activeSection, activeFieldDetail, savedFieldNames} = FormAutofillContent;
     this.forceStop = false;
 
-    this.log.debug("startSearch: for", searchString, "with input", activeInput);
+    this.debug("startSearch: for", searchString, "with input", activeInput);
 
     let isAddressField = FormAutofillUtils.isAddressField(activeFieldDetail.fieldName);
     let isInputAutofilled = activeFieldDetail.state == FIELD_STATES.AUTO_FILLED;
@@ -196,7 +196,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    *          Promise that resolves when addresses returned from parent process.
    */
   _getRecords(data) {
-    this.log.debug("_getRecords with data:", data);
+    this.debug("_getRecords with data:", data);
     return new Promise((resolve) => {
       Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
         Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
@@ -222,7 +222,7 @@ let ProfileAutocomplete = {
     }
 
     FormAutofillUtils.defineLazyLogGetter(this, "ProfileAutocomplete");
-    this.log.debug("ensureRegistered");
+    this.debug("ensureRegistered");
     this._factory = new AutocompleteFactory();
     this._factory.register(AutofillProfileAutoCompleteSearch);
     this._registered = true;
@@ -235,7 +235,7 @@ let ProfileAutocomplete = {
       return;
     }
 
-    this.log.debug("ensureUnregistered");
+    this.debug("ensureUnregistered");
     this._factory.unregister();
     this._factory = null;
     this._registered = false;
@@ -275,7 +275,7 @@ let ProfileAutocomplete = {
   },
 
   _fillFromAutocompleteRow(focusedInput) {
-    this.log.debug("_fillFromAutocompleteRow:", focusedInput);
+    this.debug("_fillFromAutocompleteRow:", focusedInput);
     let formDetails = FormAutofillContent.activeFormDetails;
     if (!formDetails) {
       // The observer notification is for a different frame.
@@ -388,21 +388,21 @@ var FormAutofillContent = {
    */
   notify(formElement, domWin) {
     try {
-      this.log.debug("Notifying form early submission");
+      this.debug("Notifying form early submission");
 
       if (!FormAutofillUtils.isAutofillEnabled) {
-        this.log.debug("Form Autofill is disabled");
+        this.debug("Form Autofill is disabled");
         return true;
       }
 
       if (domWin && PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
-        this.log.debug("Ignoring submission in a private window");
+        this.debug("Ignoring submission in a private window");
         return true;
       }
 
       let handler = this._formsDetails.get(formElement);
       if (!handler) {
-        this.log.debug("Form element could not map to an existing handler");
+        this.debug("Form element could not map to an existing handler");
         return true;
       }
 
@@ -530,10 +530,10 @@ var FormAutofillContent = {
   },
 
   identifyAutofillFields(element) {
-    this.log.debug("identifyAutofillFields:", "" + element.ownerDocument.location);
+    this.debug("identifyAutofillFields:", element.ownerDocument.location.href);
 
     if (!this.savedFieldNames) {
-      this.log.debug("identifyAutofillFields: savedFieldNames are not known yet");
+      this.debug("identifyAutofillFields: savedFieldNames are not known yet");
       Services.cpmm.sendAsyncMessage("FormAutofill:InitStorage");
     }
 
@@ -542,14 +542,14 @@ var FormAutofillContent = {
       let formLike = FormLikeFactory.createFromField(element);
       formHandler = new FormAutofillHandler(formLike);
     } else if (!formHandler.updateFormIfNeeded(element)) {
-      this.log.debug("No control is removed or inserted since last collection.");
+      this.debug("No control is removed or inserted since last collection.");
       return;
     }
 
     let validDetails = formHandler.collectFormFields();
 
     this._formsDetails.set(formHandler.form.rootElement, formHandler);
-    this.log.debug("Adding form handler to _formsDetails:", formHandler);
+    this.debug("Adding form handler to _formsDetails:", formHandler);
 
     validDetails.forEach(detail =>
       this._markAsAutofillField(detail.elementWeakRef.get())
