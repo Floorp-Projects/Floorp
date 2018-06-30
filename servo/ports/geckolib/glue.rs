@@ -907,11 +907,22 @@ pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
         Ok(longhand) => longhand,
         Err(()) => return Strong::null(),
     };
-
     match AnimationValue::from_computed_values(property, &computed_values) {
         Some(v) => Arc::new(v).into_strong(),
         None => Strong::null(),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ResolveLogicalProperty(
+    property_id: nsCSSPropertyID,
+    style: ComputedStyleBorrowed,
+) -> nsCSSPropertyID {
+    let longhand =
+        LonghandId::from_nscsspropertyid(property_id)
+            .expect("There are no logical shorthands (yet)");
+
+    longhand.to_physical(style.writing_mode).to_nscsspropertyid()
 }
 
 macro_rules! parse_enabled_property_name {
