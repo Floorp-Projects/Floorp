@@ -32,7 +32,7 @@ const getIdleObserver = (extension, context) => {
   let observerInfo = getIdleObserverInfo(extension, context);
   let {observer, detectionInterval} = observerInfo;
   if (!observer) {
-    observer = new class extends ExtensionUtils.EventEmitter {
+    observer = new class extends ExtensionCommon.EventEmitter {
       observe(subject, topic, data) {
         if (topic == "idle" || topic == "active") {
           this.emit("stateChanged", topic);

@@ -16,13 +16,14 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
 });
 
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionUtils.getConsole());
+XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole());
 
 const {
   DefaultWeakMap,

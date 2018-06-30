@@ -9,13 +9,17 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 /* globals EventDispatcher */
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   DefaultWeakMap,
   ExtensionError,
-  defineLazyGetter,
 } = ExtensionUtils;
+
+var {
+  defineLazyGetter,
+} = ExtensionCommon;
 
 global.GlobalEventDispatcher = EventDispatcher.instance;
 
