@@ -19,8 +19,11 @@ import org.mozilla.focus.BuildConfig
  */
 object SentryWrapper {
 
+    private const val TAG_BUILD_FLAVOR: String = "build_flavor"
+
     fun init(context: Context) {
         onIsEnabledChanged(context, TelemetryWrapper.isTelemetryEnabled(context))
+        addTags()
     }
 
     internal fun onIsEnabledChanged(context: Context, isEnabled: Boolean) {
@@ -35,6 +38,10 @@ object SentryWrapper {
         // disabling the client: https://github.com/getsentry/sentry-java/issues/574#issuecomment-378406105
         val sentryDsn = if (isEnabled) BuildConfig.SENTRY_TOKEN else null
         Sentry.init(sentryDsn, AndroidSentryClientFactory(context.applicationContext))
+    }
+
+    private fun addTags() {
+        Sentry.getContext().addTag(TAG_BUILD_FLAVOR, BuildConfig.FLAVOR)
     }
 
     fun captureGeckoCrash() {
