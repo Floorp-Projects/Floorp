@@ -42,21 +42,21 @@ ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,
-  EventEmitter,
   LimitedSet,
-  defineLazyGetter,
   getMessageManager,
   getUniqueId,
   getWinUtils,
-  withHandlingUserInput,
 } = ExtensionUtils;
 
 const {
+  EventEmitter,
   EventManager,
   LocalAPIImplementation,
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
+  defineLazyGetter,
+  withHandlingUserInput,
 } = ExtensionCommon;
 
 const isContentProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;

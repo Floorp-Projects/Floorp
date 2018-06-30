@@ -37,7 +37,6 @@ ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
-  defineLazyGetter,
   getInnerWindowID,
   promiseEvent,
 } = ExtensionUtils;
@@ -46,6 +45,7 @@ const {
   BaseContext,
   CanOfAPIs,
   SchemaAPIManager,
+  defineLazyGetter,
 } = ExtensionCommon;
 
 const {

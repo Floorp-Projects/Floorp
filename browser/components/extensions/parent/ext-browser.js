@@ -13,8 +13,11 @@ ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
 
 var {
   ExtensionError,
-  defineLazyGetter,
 } = ExtensionUtils;
+
+var {
+  defineLazyGetter,
+} = ExtensionCommon;
 
 const READER_MODE_PREFIX = "about:reader";
 
@@ -31,8 +34,8 @@ const getSender = (extension, target, sender) => {
     // page-open listener below).
     tabId = sender.tabId;
     delete sender.tabId;
-  } else if (ExtensionUtils.instanceOf(target, "XULElement") ||
-             ExtensionUtils.instanceOf(target, "HTMLIFrameElement")) {
+  } else if (ExtensionCommon.instanceOf(target, "XULElement") ||
+             ExtensionCommon.instanceOf(target, "HTMLIFrameElement")) {
     tabId = tabTracker.getBrowserData(target).tabId;
   }
 
