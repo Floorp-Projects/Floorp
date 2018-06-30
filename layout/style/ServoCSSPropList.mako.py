@@ -75,6 +75,9 @@ def method(prop):
 # but other non-trivial dependence like scrollbar colors.
 SERIALIZED_PREDEFINED_TYPES = [
     "Color",
+    "Content",
+    "CounterIncrement",
+    "CounterReset",
     "Integer",
     "Length",
     "Opacity",
