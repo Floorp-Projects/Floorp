@@ -407,6 +407,12 @@ ScriptPreloader::FinishContentStartup()
     }
 }
 
+bool
+ScriptPreloader::WillWriteScripts()
+{
+    return Active() && (XRE_IsParentProcess() || mChildActor);
+}
+
 Result<nsCOMPtr<nsIFile>, nsresult>
 ScriptPreloader::GetCacheFile(const nsAString& suffix)
 {
@@ -797,11 +803,21 @@ ScriptPreloader::Run()
 
 void
 ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
-                            JS::HandleScript jsscript)
+                            JS::HandleScript jsscript, bool isRunOnce)
 {
+    if (!Active()) {
+        if (isRunOnce) {
+            if (auto script = mScripts.Get(cachePath)) {
+                script->mIsRunOnce = true;
+                script->MaybeDropScript();
+            }
+        }
+        return;
+    }
+
     // Don't bother trying to cache any URLs with cache-busting query
     // parameters.
-    if (!Active() || cachePath.FindChar('?') >= 0) {
+    if (cachePath.FindChar('?') >= 0) {
         return;
     }
 
@@ -812,8 +828,11 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
     }
 
     auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, jsscript);
+    if (isRunOnce) {
+        script->mIsRunOnce = true;
+    }
 
-    if (!script->mScript) {
+    if (!script->MaybeDropScript() && !script->mScript) {
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
@@ -1113,6 +1132,10 @@ ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache, InputBuffer&
 bool
 ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
 {
+    auto cleanup = MakeScopeExit([&] () {
+        MaybeDropScript();
+    });
+
     JSAutoRealm ar(cx, mScript);
     JS::RootedScript jsscript(cx, mScript);
 
