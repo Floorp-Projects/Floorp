@@ -1589,7 +1589,7 @@ else
   # These options are based on analyzing what the normal clang driver sends to
   # cc1 when given the "correct" dependency options.
   if test -n "$CLANG_CL"; then
-   _DEPEND_CFLAGS='-Xclang -MP -Xclang -MG -Xclang -dependency-file -Xclang $(MDDEPDIR)/$(@F).pp -Xclang -MT -Xclang $@'
+   _DEPEND_CFLAGS='-Xclang -MP -Xclang -dependency-file -Xclang $(MDDEPDIR)/$(@F).pp -Xclang -MT -Xclang $@'
   fi
   dnl Don't override this for MSVC
   if test -z "$_WIN32_MSVC"; then
