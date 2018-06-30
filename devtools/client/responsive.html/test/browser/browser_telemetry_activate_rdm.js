@@ -22,7 +22,7 @@ const DATA = [
     object: "responsive_design",
     value: null,
     extra: {
-      host: "bottom",
+      host: "none",
       width: "1300"
     }
   }, {

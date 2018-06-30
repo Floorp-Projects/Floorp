@@ -1711,12 +1711,12 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                               uint32_t        aContentIndex)
 {
   // Get the content value
-  const nsStyleContentData &data =
+  const nsStyleContentData& data =
     aComputedStyle->StyleContent()->ContentAt(aContentIndex);
-  nsStyleContentType type = data.GetType();
+  const StyleContentType type = data.GetType();
 
   switch (type) {
-    case eStyleContentType_Image: {
+    case StyleContentType::Image: {
       imgRequestProxy* image = data.GetImage();
       if (!image) {
         // CSS had something specified that couldn't be converted to an
@@ -1730,12 +1730,12 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       return CreateGenConImageContent(mDocument, image);
     }
 
-    case eStyleContentType_String:
+    case StyleContentType::String:
       return CreateGenConTextNode(aState,
                                   nsDependentString(data.GetString()),
                                   nullptr, nullptr);
 
-    case eStyleContentType_Attr: {
+    case StyleContentType::Attr: {
       const nsStyleContentAttr* attr = data.GetAttr();
       RefPtr<nsAtom> attrName = attr->mName;
       int32_t attrNameSpace = kNameSpaceID_None;
@@ -1755,15 +1755,15 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       return content.forget();
     }
 
-    case eStyleContentType_Counter:
-    case eStyleContentType_Counters: {
+    case StyleContentType::Counter:
+    case StyleContentType::Counters: {
       nsStyleContentData::CounterFunction* counters = data.GetCounters();
       nsCounterList* counterList =
         mCounterManager.CounterListFor(counters->mIdent);
 
       nsCounterUseNode* node =
         new nsCounterUseNode(counters, aContentIndex,
-                             type == eStyleContentType_Counters);
+                             type == StyleContentType::Counters);
 
       nsGenConInitializer* initializer =
         new nsGenConInitializer(node, counterList,
@@ -1772,10 +1772,10 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                   initializer);
     }
 
-    case eStyleContentType_OpenQuote:
-    case eStyleContentType_CloseQuote:
-    case eStyleContentType_NoOpenQuote:
-    case eStyleContentType_NoCloseQuote: {
+    case StyleContentType::OpenQuote:
+    case StyleContentType::CloseQuote:
+    case StyleContentType::NoOpenQuote:
+    case StyleContentType::NoCloseQuote: {
       nsQuoteNode* node =
         new nsQuoteNode(type, aContentIndex);
 
@@ -1786,7 +1786,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                   initializer);
     }
 
-    case eStyleContentType_AltContent: {
+    case StyleContentType::AltContent: {
       // Use the "alt" attribute; if that fails and the node is an HTML
       // <input>, try the value attribute and then fall back to some default
       // localized text we have.
@@ -1816,7 +1816,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       break;
     }
 
-    case eStyleContentType_Uninitialized:
+    case StyleContentType::Uninitialized:
       MOZ_ASSERT_UNREACHABLE("uninitialized content type");
       return nullptr;
   }
@@ -5636,7 +5636,7 @@ ShouldCreateImageFrameForContent(ComputedStyle& aStyle)
     return false;
   }
 
-  return content.ContentAt(0).GetType() == eStyleContentType_Image;
+  return content.ContentAt(0).GetType() == StyleContentType::Image;
 }
 
 void

@@ -465,6 +465,18 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
+  if (nsCSSProps::PropHasFlags(prop, CSSPropFlags::IsLogical)) {
+    MOZ_ASSERT(entry);
+    MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
+
+    prop = Servo_ResolveLogicalProperty(prop, mComputedStyle);
+    entry = GetComputedStyleMap()->FindEntryForProperty(prop);
+
+    MOZ_ASSERT(layoutFlushIsNeeded == entry->IsLayoutFlushNeeded(),
+               "Logical and physical property don't agree on whether layout is "
+               "needed");
+  }
+
   if (!nsCSSProps::PropHasFlags(prop, CSSPropFlags::SerializedByServo)) {
     if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
       ErrorResult rv;
@@ -1241,136 +1253,6 @@ AppendCounterStyle(CounterStyle* aStyle, nsAString& aString)
   }
 }
 
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetContent()
-{
-  const nsStyleContent *content = StyleContent();
-
-  if (content->ContentCount() == 0) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  if (content->ContentCount() == 1 &&
-      content->ContentAt(0).GetType() == eStyleContentType_AltContent) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword__moz_alt_content);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  for (uint32_t i = 0, i_end = content->ContentCount(); i < i_end; ++i) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-    const nsStyleContentData &data = content->ContentAt(i);
-    nsStyleContentType type = data.GetType();
-    switch (type) {
-      case eStyleContentType_String: {
-        nsAutoString str;
-        nsStyleUtil::AppendEscapedCSSString(
-          nsDependentString(data.GetString()), str);
-        val->SetString(str);
-        break;
-      }
-      case eStyleContentType_Image: {
-        nsCOMPtr<nsIURI> uri;
-        if (imgRequestProxy* image = data.GetImage()) {
-          image->GetURI(getter_AddRefs(uri));
-        }
-        val->SetURI(uri);
-        break;
-      }
-      case eStyleContentType_Attr: {
-        // XXXbholley: We don't correctly serialize namespaces here. Doing so
-        // would require either storing the prefix on the nsStyleContentAttr,
-        // or poking at the namespaces in the stylesheet to map from the
-        // namespace URL.
-        nsAutoString str;
-        nsStyleUtil::AppendEscapedCSSIdent(
-          nsDependentString(data.GetAttr()->mName->GetUTF16String()), str);
-        val->SetString(str, nsROCSSPrimitiveValue::CSS_ATTR);
-        break;
-      }
-      case eStyleContentType_Counter:
-      case eStyleContentType_Counters: {
-        /* FIXME: counters should really use an object */
-        nsAutoString str;
-        if (type == eStyleContentType_Counter) {
-          str.AppendLiteral("counter(");
-        }
-        else {
-          str.AppendLiteral("counters(");
-        }
-        nsStyleContentData::CounterFunction* counters = data.GetCounters();
-        nsStyleUtil::AppendEscapedCSSIdent(counters->mIdent, str);
-        if (type == eStyleContentType_Counters) {
-          str.AppendLiteral(", ");
-          nsStyleUtil::AppendEscapedCSSString(counters->mSeparator, str);
-        }
-        if (counters->mCounterStyle != CounterStyleManager::GetDecimalStyle()) {
-          str.AppendLiteral(", ");
-          AppendCounterStyle(counters->mCounterStyle, str);
-        }
-
-        str.Append(char16_t(')'));
-        val->SetString(str, nsROCSSPrimitiveValue::CSS_COUNTER);
-        break;
-      }
-      case eStyleContentType_OpenQuote:
-        val->SetIdent(eCSSKeyword_open_quote);
-        break;
-      case eStyleContentType_CloseQuote:
-        val->SetIdent(eCSSKeyword_close_quote);
-        break;
-      case eStyleContentType_NoOpenQuote:
-        val->SetIdent(eCSSKeyword_no_open_quote);
-        break;
-      case eStyleContentType_NoCloseQuote:
-        val->SetIdent(eCSSKeyword_no_close_quote);
-        break;
-      case eStyleContentType_AltContent:
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected type");
-        break;
-    }
-    valueList->AppendCSSValue(val.forget());
-  }
-
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetCounterIncrement()
-{
-  const nsStyleContent *content = StyleContent();
-
-  if (content->CounterIncrementCount() == 0) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  for (uint32_t i = 0, i_end = content->CounterIncrementCount(); i < i_end; ++i) {
-    RefPtr<nsROCSSPrimitiveValue> name = new nsROCSSPrimitiveValue;
-    RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-
-    const nsStyleCounterData& data = content->CounterIncrementAt(i);
-    nsAutoString escaped;
-    nsStyleUtil::AppendEscapedCSSIdent(data.mCounter, escaped);
-    name->SetString(escaped);
-    value->SetNumber(data.mValue); // XXX This should really be integer
-
-    valueList->AppendCSSValue(name.forget());
-    valueList->AppendCSSValue(value.forget());
-  }
-
-  return valueList.forget();
-}
-
 /* Convert the stored representation into a list of two values and then hand
  * it back.
  */
@@ -1703,36 +1585,6 @@ nsComputedDOMStyle::MatrixToCSSValue(const mozilla::gfx::Matrix4x4& matrix)
 
   val->SetString(resultString);
   return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetCounterReset()
-{
-  const nsStyleContent *content = StyleContent();
-
-  if (content->CounterResetCount() == 0) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  for (uint32_t i = 0, i_end = content->CounterResetCount(); i < i_end; ++i) {
-    RefPtr<nsROCSSPrimitiveValue> name = new nsROCSSPrimitiveValue;
-    RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-
-    const nsStyleCounterData& data = content->CounterResetAt(i);
-    nsAutoString escaped;
-    nsStyleUtil::AppendEscapedCSSIdent(data.mCounter, escaped);
-    name->SetString(escaped);
-    value->SetNumber(data.mValue); // XXX This should really be integer
-
-    valueList->AppendCSSValue(name.forget());
-    valueList->AppendCSSValue(value.forget());
-  }
-
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue>
