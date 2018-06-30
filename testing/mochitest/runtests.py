@@ -867,6 +867,7 @@ class MochitestDesktop(object):
         self.tests_by_manifest = defaultdict(list)
         self.prefs_by_manifest = defaultdict(set)
         self._active_tests = None
+        self.currentTests = None
         self._locations = None
 
         self.marionette = None
@@ -2772,6 +2773,7 @@ toolbar#nav-bar {
                 if not tests:
                     continue
 
+                self.currentTests = [t['path'] for t in tests]
                 testURL = self.buildTestURL(options, scheme=scheme)
 
                 self.buildURLOptions(options, self.browserEnv)
@@ -3030,6 +3032,11 @@ toolbar#nav-bar {
             """record last test on harness"""
             if message['action'] == 'test_start':
                 self.harness.lastTestSeen = message['test']
+            elif message['action'] == 'test_end':
+                if self.harness.currentTests and message['test'] == self.harness.currentTests[-1]:
+                    self.harness.lastTestSeen = 'Last test finished'
+                else:
+                    self.harness.lastTestSeen = '{} (finished)'.format(message['test'])
             return message
 
         def dumpScreenOnTimeout(self, message):
