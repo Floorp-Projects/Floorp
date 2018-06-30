@@ -40,6 +40,8 @@
 
 #include "jit/AtomicOperations.h"
 #include "jit/mips64/Assembler-mips64.h"
+#include "js/UniquePtr.h"
+#include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
@@ -558,14 +560,12 @@ int64_t Simulator::StopSimAt = -1;
 Simulator *
 Simulator::Create(JSContext* cx)
 {
-    Simulator* sim = js_new<Simulator>();
+    auto sim = MakeUnique<Simulator>();
     if (!sim)
         return nullptr;
 
-    if (!sim->init()) {
-        js_delete(sim);
+    if (!sim->init())
         return nullptr;
-    }
 
     int64_t stopAt;
     char* stopAtStr = getenv("MIPS_SIM_STOP_AT");
@@ -574,7 +574,7 @@ Simulator::Create(JSContext* cx)
         Simulator::StopSimAt = stopAt;
     }
 
-    return sim;
+    return sim.release();
 }
 
 void
@@ -767,7 +767,7 @@ MipsDebugger::printAllRegsIncludingFPU()
 static char*
 ReadLine(const char* prompt)
 {
-    char* result = nullptr;
+    UniqueChars result;
     char lineBuf[256];
     int offset = 0;
     bool keepGoing = true;
@@ -776,8 +776,6 @@ ReadLine(const char* prompt)
     while (keepGoing) {
         if (fgets(lineBuf, sizeof(lineBuf), stdin) == nullptr) {
             // fgets got an error. Just give up.
-            if (result)
-                js_delete(result);
             return nullptr;
         }
         int len = strlen(lineBuf);
@@ -788,29 +786,28 @@ ReadLine(const char* prompt)
         }
         if (!result) {
             // Allocate the initial result and make room for the terminating '\0'
-            result = (char*)js_malloc(len + 1);
+            result.reset(js_pod_malloc<char>(len + 1));
             if (!result)
                 return nullptr;
         } else {
             // Allocate a new result with enough room for the new addition.
             int new_len = offset + len + 1;
-            char* new_result = (char*)js_malloc(new_len);
+            char* new_result = js_pod_malloc<char>(new_len);
             if (!new_result)
                 return nullptr;
             // Copy the existing input into the new array and set the new
             // array as the result.
-            memcpy(new_result, result, offset * sizeof(char));
-            js_free(result);
-            result = new_result;
+            memcpy(new_result, result.get(), offset * sizeof(char));
+            result.reset(new_result);
         }
         // Copy the newly read line into the result.
-        memcpy(result + offset, lineBuf, len * sizeof(char));
+        memcpy(result.get() + offset, lineBuf, len * sizeof(char));
         offset += len;
     }
 
     MOZ_ASSERT(result);
     result[offset] = '\0';
-    return result;
+    return result.release();
 }
 
 static void
@@ -1296,7 +1293,7 @@ Simulator::init()
 {
     // Allocate 2MB for the stack. Note that we will only use 1MB, see below.
     static const size_t stackSize = 2 * 1024 * 1024;
-    stack_ = static_cast<char*>(js_malloc(stackSize));
+    stack_ = js_pod_malloc<char>(stackSize);
     if (!stack_)
         return false;
 
@@ -1355,7 +1352,7 @@ class Redirection
         }
 
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        Redirection* redir = (Redirection*)js_malloc(sizeof(Redirection));
+        Redirection* redir = js_pod_malloc<Redirection>();
         if (!redir) {
             oomUnsafe.crash("Simulator redirection");
         }

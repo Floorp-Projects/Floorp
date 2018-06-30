@@ -54,8 +54,6 @@ TraceLoggerGraphState* traceLoggerGraphState = nullptr;
 static js::UniqueChars
 MOZ_FORMAT_PRINTF(1, 2)
 AllocTraceLogFilename(const char* pattern, ...) {
-    js::UniqueChars filename;
-
     va_list ap;
 
     static const char* outdir = getenv("TLDIR") ? getenv("TLDIR") : DEFAULT_TRACE_LOG_DIR;
@@ -77,7 +75,7 @@ AllocTraceLogFilename(const char* pattern, ...) {
 
     len++; // For the terminating NUL.
 
-    filename.reset((char*) js_malloc(len));
+    js::UniqueChars filename(js_pod_malloc<char>(len));
     if (!filename)
         return nullptr;
     char* rest = filename.get() + sprintf(filename.get(), "%s/", outdir);

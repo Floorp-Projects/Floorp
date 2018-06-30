@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.625';
-var pdfjsBuild = 'e8b50883';
+var pdfjsVersion = '2.0.641';
+var pdfjsBuild = '6fa2c779';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.625';
+    let workerVersion = '2.0.641';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -11387,6 +11387,46 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
     return visitor.buffer;
   }
+  function parseJbig2(data) {
+    let position = 0,
+        end = data.length;
+    if (data[position] !== 0x97 || data[position + 1] !== 0x4A || data[position + 2] !== 0x42 || data[position + 3] !== 0x32 || data[position + 4] !== 0x0D || data[position + 5] !== 0x0A || data[position + 6] !== 0x1A || data[position + 7] !== 0x0A) {
+      throw new Jbig2Error('parseJbig2 - invalid header.');
+    }
+    let header = Object.create(null);
+    position += 8;
+    const flags = data[position++];
+    header.randomAccess = !(flags & 1);
+    if (!(flags & 2)) {
+      header.numberOfPages = (0, _util.readUint32)(data, position);
+      position += 4;
+    }
+    let segments = readSegments(header, data, position, end);
+    let visitor = new SimpleSegmentVisitor();
+    processSegments(segments, visitor);
+    const { width, height } = visitor.currentPageInfo;
+    const bitPacked = visitor.buffer;
+    let imgData = new Uint8ClampedArray(width * height);
+    let q = 0,
+        k = 0;
+    for (let i = 0; i < height; i++) {
+      let mask = 0,
+          buffer;
+      for (let j = 0; j < width; j++) {
+        if (!mask) {
+          mask = 128;
+          buffer = bitPacked[k++];
+        }
+        imgData[q++] = buffer & mask ? 0 : 255;
+        mask >>= 1;
+      }
+    }
+    return {
+      imgData,
+      width,
+      height
+    };
+  }
   function SimpleSegmentVisitor() {}
   SimpleSegmentVisitor.prototype = {
     onPageInformation: function SimpleSegmentVisitor_onPageInformation(info) {
@@ -11986,8 +12026,14 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
   function Jbig2Image() {}
   Jbig2Image.prototype = {
-    parseChunks: function Jbig2Image_parseChunks(chunks) {
+    parseChunks(chunks) {
       return parseJbig2Chunks(chunks);
+    },
+    parse(data) {
+      const { imgData, width, height } = parseJbig2(data);
+      this.width = width;
+      this.height = height;
+      return imgData;
     }
   };
   return Jbig2Image;
@@ -12381,7 +12427,10 @@ let JpegStream = function JpegStreamClosure() {
     if (this.eof) {
       return;
     }
-    let jpegImage = new _jpg.JpegImage();
+    let jpegOptions = {
+      decodeTransform: undefined,
+      colorTransform: undefined
+    };
     let decodeArr = this.dict.getArray('Decode', 'D');
     if (this.forceRGB && Array.isArray(decodeArr)) {
       let bitsPerComponent = this.dict.get('BitsPerComponent') || 8;
@@ -12397,15 +12446,16 @@ let JpegStream = function JpegStreamClosure() {
         }
       }
       if (transformNeeded) {
-        jpegImage.decodeTransform = transform;
+        jpegOptions.decodeTransform = transform;
       }
     }
     if ((0, _primitives.isDict)(this.params)) {
       let colorTransform = this.params.get('ColorTransform');
       if (Number.isInteger(colorTransform)) {
-        jpegImage.colorTransform = colorTransform;
+        jpegOptions.colorTransform = colorTransform;
       }
     }
+    const jpegImage = new _jpg.JpegImage(jpegOptions);
     jpegImage.parse(this.bytes);
     let data = jpegImage.getData(this.drawWidth, this.drawHeight, this.forceRGB);
     this.buffer = data;
@@ -12471,9 +12521,9 @@ var JpegImage = function JpegImageClosure() {
   var dctSin6 = 3784;
   var dctSqrt2 = 5793;
   var dctSqrt1d2 = 2896;
-  function JpegImage() {
-    this.decodeTransform = null;
-    this.colorTransform = -1;
+  function JpegImage({ decodeTransform = null, colorTransform = -1 } = {}) {
+    this._decodeTransform = decodeTransform;
+    this._colorTransform = colorTransform;
   }
   function buildHuffmanTable(codeLengths, values) {
     var k = 0,
@@ -13276,7 +13326,7 @@ var JpegImage = function JpegImageClosure() {
           }
         }
       }
-      var transform = this.decodeTransform;
+      const transform = this._decodeTransform;
       if (transform) {
         for (i = 0; i < dataLength;) {
           for (j = 0, k = 0; j < numComponents; j++, i++, k += 2) {
@@ -13291,12 +13341,12 @@ var JpegImage = function JpegImageClosure() {
         return !!this.adobe.transformCode;
       }
       if (this.numComponents === 3) {
-        if (this.colorTransform === 0) {
+        if (this._colorTransform === 0) {
           return false;
         }
         return true;
       }
-      if (this.colorTransform === 1) {
+      if (this._colorTransform === 1) {
         return true;
       }
       return false;
@@ -21484,11 +21534,13 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
     t['nul'] = null;
     t['null'] = null;
   });
+  const MAX_INVALID_PATH_OPS = 20;
   function EvaluatorPreprocessor(stream, xref, stateManager) {
     this.opMap = getOPMap();
     this.parser = new _parser.Parser(new _parser.Lexer(stream, this.opMap), false, xref);
     this.stateManager = stateManager;
     this.nonProcessedArgs = [];
+    this._numInvalidPathOPS = 0;
   }
   EvaluatorPreprocessor.prototype = {
     get savedStatesDepth() {
@@ -21502,7 +21554,7 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
           var cmd = obj.cmd;
           var opSpec = this.opMap[cmd];
           if (!opSpec) {
-            (0, _util.warn)('Unknown command "' + cmd + '"');
+            (0, _util.warn)(`Unknown command "${cmd}".`);
             continue;
           }
           var fn = opSpec.id;
@@ -21524,14 +21576,18 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
               }
             }
             if (argsLength < numArgs) {
-              (0, _util.warn)('Skipping command ' + fn + ': expected ' + numArgs + ' args, but received ' + argsLength + ' args.');
+              const partialMsg = `command ${cmd}: expected ${numArgs} args, ` + `but received ${argsLength} args.`;
+              if (fn >= _util.OPS.moveTo && fn <= _util.OPS.endPath && ++this._numInvalidPathOPS > MAX_INVALID_PATH_OPS) {
+                throw new _util.FormatError(`Invalid ${partialMsg}`);
+              }
+              (0, _util.warn)(`Skipping ${partialMsg}`);
               if (args !== null) {
                 args.length = 0;
               }
               continue;
             }
           } else if (argsLength > numArgs) {
-            (0, _util.info)('Command ' + fn + ': expected [0,' + numArgs + '] args, but received ' + argsLength + ' args.');
+            (0, _util.info)(`Command ${cmd}: expected [0, ${numArgs}] args, ` + `but received ${argsLength} args.`);
           }
           this.preprocessCommand(fn, args);
           operation.fn = fn;

@@ -170,7 +170,7 @@ class ContinuousSpace {
     bool init() {
         capacity_ = 64;
         size_ = 0;
-        data_ = (T*) js_malloc(capacity_ * sizeof(T));
+        data_ = js_pod_malloc<T>(capacity_);
         if (!data_)
             return false;
 
@@ -230,7 +230,7 @@ class ContinuousSpace {
         uint32_t nCapacity = capacity_ * 2;
         nCapacity = (nCapacity < maxSize()) ? nCapacity : maxSize();
 
-        T* entries = (T*) js_realloc(data_, nCapacity * sizeof(T));
+        T* entries = js_pod_realloc<T>(data_, capacity_, nCapacity);
         if (!entries)
             return false;
 

@@ -436,8 +436,6 @@ ssl_GetCertificateAuthTypes(CERTCertificate *cert, SSLAuthType targetAuthType)
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
             if (cert->keyUsage & KU_DIGITAL_SIGNATURE) {
                 authTypes |= 1 << ssl_auth_rsa_sign;
-                /* This certificate is RSA, assume that it's also PSS. */
-                authTypes |= 1 << ssl_auth_rsa_pss;
             }
 
             if (cert->keyUsage & KU_KEY_ENCIPHERMENT) {

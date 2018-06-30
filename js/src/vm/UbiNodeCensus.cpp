@@ -438,7 +438,7 @@ ByObjectClass::makeCount()
     if (!otherCount)
         return nullptr;
 
-    UniquePtr<Count> count(js_new<Count>(*this, otherCount));
+    auto count = js::MakeUnique<Count>(*this, otherCount);
     if (!count || !count->init())
         return nullptr;
 
@@ -532,7 +532,7 @@ class ByUbinodeType : public CountType {
 CountBasePtr
 ByUbinodeType::makeCount()
 {
-    UniquePtr<Count> count(js_new<Count>(*this));
+    auto count = js::MakeUnique<Count>(*this);
     if (!count || !count->init())
         return nullptr;
 
@@ -679,7 +679,7 @@ ByAllocationStack::makeCount()
     if (!noStackCount)
         return nullptr;
 
-    UniquePtr<Count> count(js_new<Count>(*this, noStackCount));
+    auto count = js::MakeUnique<Count>(*this, noStackCount);
     if (!count || !count->init())
         return nullptr;
     return CountBasePtr(count.release());
@@ -855,7 +855,7 @@ ByFilename::makeCount()
     if (!noFilenameCount)
         return nullptr;
 
-    UniquePtr<Count> count(js_new<Count>(*this, std::move(thenCount), std::move(noFilenameCount)));
+    auto count = js::MakeUnique<Count>(*this, std::move(thenCount), std::move(noFilenameCount));
     if (!count || !count->init())
         return nullptr;
 

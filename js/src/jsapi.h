@@ -374,7 +374,7 @@ namespace JS {
  * Example use:
  *
  *    size_t length = 512;
- *    char16_t* chars = static_cast<char16_t*>(js_malloc(sizeof(char16_t) * length));
+ *    char16_t* chars = js_pod_malloc<char16_t>(length);
  *    JS::SourceBufferHolder srcBuf(chars, length, JS::SourceBufferHolder::GiveOwnership);
  *    JS::Compile(cx, options, srcBuf);
  */

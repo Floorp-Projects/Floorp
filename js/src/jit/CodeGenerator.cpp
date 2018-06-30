@@ -5384,7 +5384,7 @@ CodeGenerator::maybeCreateScriptCounts()
     if (!script)
         return nullptr;
 
-    UniquePtr<IonScriptCounts> counts(js_new<IonScriptCounts>());
+    auto counts = MakeUnique<IonScriptCounts>();
     if (!counts || !counts->init(graph.numBlocks()))
         return nullptr;
 
@@ -5405,7 +5405,7 @@ CodeGenerator::maybeCreateScriptCounts()
             if (block->entryResumePoint()->caller()) {
                 // Get the filename and line number of the inner script.
                 JSScript* innerScript = block->info().script();
-                description = (char*) js_calloc(200);
+                description = js_pod_calloc<char>(200);
                 if (description) {
                     snprintf(description, 200, "%s:%u",
                              innerScript->filename(), innerScript->lineno());

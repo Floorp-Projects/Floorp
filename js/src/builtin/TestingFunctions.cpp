@@ -1438,7 +1438,7 @@ NewExternalString(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx, args[0].toString());
     size_t len = str->length();
 
-    UniqueTwoByteChars buf(cx->pod_malloc<char16_t>(len));
+    auto buf = cx->make_pod_array<char16_t>(len);
     if (!buf)
         return false;
 
@@ -1467,7 +1467,7 @@ NewMaybeExternalString(JSContext* cx, unsigned argc, Value* vp)
     RootedString str(cx, args[0].toString());
     size_t len = str->length();
 
-    UniqueTwoByteChars buf(cx->pod_malloc<char16_t>(len));
+    auto buf = cx->make_pod_array<char16_t>(len);
     if (!buf)
         return false;
 
@@ -2435,13 +2435,9 @@ ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
             if (!JS_DefineProperty(cx, inlineFrameInfo, "kind", frameKind, propAttrs))
                 return false;
 
-            size_t length = strlen(inlineFrame.label.get());
-            auto* label = reinterpret_cast<Latin1Char*>(inlineFrame.label.release());
-            frameLabel = NewString<CanGC>(cx, label, length);
-            if (!frameLabel) {
-                js_free(label);
+            frameLabel = NewLatin1StringZ(cx, std::move(inlineFrame.label));
+            if (!frameLabel)
                 return false;
-            }
 
             if (!JS_DefineProperty(cx, inlineFrameInfo, "label", frameLabel, propAttrs))
                 return false;
@@ -2927,7 +2923,7 @@ class CloneBufferObject : public NativeObject {
             return false;
 
         size_t size = data->Size();
-        UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        UniqueChars buffer(js_pod_malloc<char>(size));
         if (!buffer) {
             ReportOutOfMemory(cx);
             return false;
@@ -2957,7 +2953,7 @@ class CloneBufferObject : public NativeObject {
             return false;
 
         size_t size = data->Size();
-        UniqueChars buffer(static_cast<char*>(js_malloc(size)));
+        UniqueChars buffer(js_pod_malloc<char>(size));
         if (!buffer) {
             ReportOutOfMemory(cx);
             return false;
@@ -3645,10 +3641,10 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 
         heaptools::EdgeName edgeName = std::move(edges[i]);
 
-        RootedString edgeStr(cx, NewString<CanGC>(cx, edgeName.get(), js_strlen(edgeName.get())));
+        size_t edgeNameLength = js_strlen(edgeName.get());
+        RootedString edgeStr(cx, NewString<CanGC>(cx, std::move(edgeName), edgeNameLength));
         if (!edgeStr)
             return false;
-        mozilla::Unused << edgeName.release(); // edgeStr acquired ownership
 
         if (!JS_DefineProperty(cx, obj, "edge", edgeStr, JSPROP_ENUMERATE))
             return false;
@@ -4347,18 +4343,16 @@ GetLcovInfo(JSContext* cx, unsigned argc, Value* vp)
     }
 
     size_t length = 0;
-    char* content = nullptr;
+    UniqueChars content;
     {
         AutoRealm ar(cx, global);
-        content = js::GetCodeCoverageSummary(cx, &length);
+        content.reset(js::GetCodeCoverageSummary(cx, &length));
     }
 
     if (!content)
         return false;
 
-    JSString* str = JS_NewStringCopyN(cx, content, length);
-    js_free(content);
-
+    JSString* str = JS_NewStringCopyN(cx, content.get(), length);
     if (!str)
         return false;
 

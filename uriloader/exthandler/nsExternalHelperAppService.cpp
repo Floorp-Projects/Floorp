@@ -542,6 +542,7 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] =
   { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
   { IMAGE_XBM, "xbm", "XBM Image" },
   { IMAGE_SVG_XML, "svg", "Scalable Vector Graphics" },
+  { IMAGE_WEBP, "webp", "WebP Image" },
   { MESSAGE_RFC822, "eml", "RFC-822 data" },
   { TEXT_PLAIN, "txt,text", "Text File" },
   { APPLICATION_JSON, "json", "JavaScript Object Notation" },

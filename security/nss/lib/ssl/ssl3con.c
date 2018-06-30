@@ -765,6 +765,9 @@ ssl_HasCert(const sslSocket *ss, SSLAuthType authType)
         }
         return PR_TRUE;
     }
+    if (authType == ssl_auth_rsa_sign) {
+        return ssl_HasCert(ss, ssl_auth_rsa_pss);
+    }
     return PR_FALSE;
 }
 
@@ -1120,6 +1123,8 @@ ssl3_SignHashes(sslSocket *ss, SSL3Hashes *hash, SECKEYPrivateKey *key,
 
     if (ss->sec.isServer) {
         ss->sec.signatureScheme = ss->ssl3.hs.signatureScheme;
+        ss->sec.authType =
+            ssl_SignatureSchemeToAuthType(ss->ssl3.hs.signatureScheme);
     }
     PRINT_BUF(60, (NULL, "signed hashes", (unsigned char *)buf->data, buf->len));
 done:
@@ -1255,6 +1260,7 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
     }
     if (!ss->sec.isServer) {
         ss->sec.signatureScheme = scheme;
+        ss->sec.authType = ssl_SignatureSchemeToAuthType(scheme);
     }
 
 loser:
@@ -4002,8 +4008,8 @@ ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme)
     return ssl_hash_none;
 }
 
-KeyType
-ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme)
+static PRBool
+ssl_SignatureSchemeMatchesSpkiOid(SSLSignatureScheme scheme, SECOidTag spkiOid)
 {
     switch (scheme) {
         case ssl_sig_rsa_pkcs1_sha256:
@@ -4013,133 +4019,243 @@ ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pss_rsae_sha256:
         case ssl_sig_rsa_pss_rsae_sha384:
         case ssl_sig_rsa_pss_rsae_sha512:
+        case ssl_sig_rsa_pkcs1_sha1md5:
+            return (spkiOid == SEC_OID_X500_RSA_ENCRYPTION) ||
+                   (spkiOid == SEC_OID_PKCS1_RSA_ENCRYPTION);
         case ssl_sig_rsa_pss_pss_sha256:
         case ssl_sig_rsa_pss_pss_sha384:
         case ssl_sig_rsa_pss_pss_sha512:
-        case ssl_sig_rsa_pkcs1_sha1md5:
-            return rsaKey;
+            return spkiOid == SEC_OID_PKCS1_RSA_PSS_SIGNATURE;
         case ssl_sig_ecdsa_secp256r1_sha256:
         case ssl_sig_ecdsa_secp384r1_sha384:
         case ssl_sig_ecdsa_secp521r1_sha512:
         case ssl_sig_ecdsa_sha1:
-            return ecKey;
+            return spkiOid == SEC_OID_ANSIX962_EC_PUBLIC_KEY;
         case ssl_sig_dsa_sha256:
         case ssl_sig_dsa_sha384:
         case ssl_sig_dsa_sha512:
         case ssl_sig_dsa_sha1:
-            return dsaKey;
+            return spkiOid == SEC_OID_ANSIX9_DSA_SIGNATURE;
         case ssl_sig_none:
         case ssl_sig_ed25519:
         case ssl_sig_ed448:
             break;
     }
     PORT_Assert(0);
-    return nullKey;
+    return PR_FALSE;
 }
 
-static SSLNamedGroup
-ssl_NamedGroupForSignatureScheme(SSLSignatureScheme scheme)
-{
-    switch (scheme) {
-        case ssl_sig_ecdsa_secp256r1_sha256:
-            return ssl_grp_ec_secp256r1;
-        case ssl_sig_ecdsa_secp384r1_sha384:
-            return ssl_grp_ec_secp384r1;
-        case ssl_sig_ecdsa_secp521r1_sha512:
-            return ssl_grp_ec_secp521r1;
-        default:
-            break;
-    }
-    PORT_Assert(0);
-    return 0;
-}
-
-/* Validate that the signature scheme works for the given key.
- * If |allowSha1| is set, we allow the use of SHA-1.
- * If |matchGroup| is set, we also check that the group and hash match. */
+/* Validate that the signature scheme works for the given key type. */
 static PRBool
-ssl_SignatureSchemeValidForKey(PRBool allowSha1, PRBool matchGroup,
-                               KeyType keyType,
-                               const sslNamedGroupDef *ecGroup,
-                               SSLSignatureScheme scheme)
+ssl_SignatureSchemeValid(SSLSignatureScheme scheme, SECOidTag spkiOid,
+                         PRBool isTls13)
 {
     if (!ssl_IsSupportedSignatureScheme(scheme)) {
         return PR_FALSE;
     }
-    if (keyType != ssl_SignatureSchemeToKeyType(scheme)) {
+    if (!ssl_SignatureSchemeMatchesSpkiOid(scheme, spkiOid)) {
         return PR_FALSE;
     }
-    if (!allowSha1 && ssl_SignatureSchemeToHashType(scheme) == ssl_hash_sha1) {
-        return PR_FALSE;
+    if (isTls13) {
+        if (ssl_SignatureSchemeToHashType(scheme) == ssl_hash_sha1) {
+            return PR_FALSE;
+        }
+        /* With TLS 1.3, EC keys should have been selected based on calling
+         * ssl_SignatureSchemeFromSpki(), reject them otherwise. */
+        return spkiOid != SEC_OID_ANSIX962_EC_PUBLIC_KEY;
     }
-    if (keyType != ecKey) {
-        return PR_TRUE;
-    }
-    if (!ecGroup) {
-        return PR_FALSE;
-    }
-    /* If |allowSha1| is present and the scheme is ssl_sig_ecdsa_sha1, it's OK.
-     * This scheme isn't bound to a specific group. */
-    if (allowSha1 && (scheme == ssl_sig_ecdsa_sha1)) {
-        return PR_TRUE;
-    }
-    if (!matchGroup) {
-        return PR_TRUE;
-    }
-    return ecGroup->name == ssl_NamedGroupForSignatureScheme(scheme);
+    return PR_TRUE;
 }
 
-/* ssl3_CheckSignatureSchemeConsistency checks that the signature
- * algorithm identifier in |sigAndHash| is consistent with the public key in
- * |cert|. It also checks the hash algorithm against the configured signature
- * algorithms.  If all the tests pass, SECSuccess is returned. Otherwise,
- * PORT_SetError is called and SECFailure is returned. */
-SECStatus
-ssl_CheckSignatureSchemeConsistency(
-    sslSocket *ss, SSLSignatureScheme scheme, CERTCertificate *cert)
+static SECStatus
+ssl_SignatureSchemeFromPssSpki(CERTSubjectPublicKeyInfo *spki,
+                               SSLSignatureScheme *scheme)
 {
-    unsigned int i;
-    const sslNamedGroupDef *group = NULL;
-    SECKEYPublicKey *key;
-    KeyType keyType;
-    PRBool isTLS13 = ss->version == SSL_LIBRARY_VERSION_TLS_1_3;
+    SECKEYRSAPSSParams pssParam = { 0 };
+    PORTCheapArenaPool arena;
+    SECStatus rv;
 
-    key = CERT_ExtractPublicKey(cert);
-    if (key == NULL) {
-        ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
+    /* The key doesn't have parameters, boo. */
+    if (!spki->algorithm.parameters.len) {
+        *scheme = ssl_sig_none;
+        return SECSuccess;
+    }
+
+    PORT_InitCheapArena(&arena, DER_DEFAULT_CHUNKSIZE);
+    rv = SEC_QuickDERDecodeItem(&arena.arena, &pssParam,
+                                SEC_ASN1_GET(SECKEY_RSAPSSParamsTemplate),
+                                &spki->algorithm.parameters);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+    /* Not having hashAlg means SHA-1 and we don't accept that. */
+    if (!pssParam.hashAlg) {
+        goto loser;
+    }
+    switch (SECOID_GetAlgorithmTag(pssParam.hashAlg)) {
+        case SEC_OID_SHA256:
+            *scheme = ssl_sig_rsa_pss_pss_sha256;
+            break;
+        case SEC_OID_SHA384:
+            *scheme = ssl_sig_rsa_pss_pss_sha384;
+            break;
+        case SEC_OID_SHA512:
+            *scheme = ssl_sig_rsa_pss_pss_sha512;
+            break;
+        default:
+            goto loser;
+    }
+
+    PORT_DestroyCheapArena(&arena);
+    return SECSuccess;
+
+loser:
+    PORT_DestroyCheapArena(&arena);
+    PORT_SetError(SSL_ERROR_BAD_CERTIFICATE);
+    return SECFailure;
+}
+
+static SECStatus
+ssl_SignatureSchemeFromEcSpki(CERTSubjectPublicKeyInfo *spki,
+                              SSLSignatureScheme *scheme)
+{
+    const sslNamedGroupDef *group;
+    SECKEYPublicKey *key;
+
+    key = SECKEY_ExtractPublicKey(spki);
+    if (!key) {
+        PORT_SetError(SSL_ERROR_BAD_CERTIFICATE);
         return SECFailure;
     }
-
-    keyType = SECKEY_GetPublicKeyType(key);
-    if (keyType == ecKey) {
-        group = ssl_ECPubKey2NamedGroup(key);
-    }
+    group = ssl_ECPubKey2NamedGroup(key);
     SECKEY_DestroyPublicKey(key);
+    if (!group) {
+        PORT_SetError(SSL_ERROR_BAD_CERTIFICATE);
+        return SECFailure;
+    }
+    switch (group->name) {
+        case ssl_grp_ec_secp256r1:
+            *scheme = ssl_sig_ecdsa_secp256r1_sha256;
+            return SECSuccess;
+        case ssl_grp_ec_secp384r1:
+            *scheme = ssl_sig_ecdsa_secp384r1_sha384;
+            return SECSuccess;
+        case ssl_grp_ec_secp521r1:
+            *scheme = ssl_sig_ecdsa_secp521r1_sha512;
+            return SECSuccess;
+        default:
+            break;
+    }
+    PORT_SetError(SSL_ERROR_BAD_CERTIFICATE);
+    return SECFailure;
+}
+
+/* Newer signature schemes are designed so that a single SPKI can be used with
+ * that scheme.  This determines that scheme from the SPKI. If the SPKI doesn't
+ * have a single scheme, |*scheme| is set to ssl_sig_none. */
+static SECStatus
+ssl_SignatureSchemeFromSpki(CERTSubjectPublicKeyInfo *spki,
+                            PRBool isTls13, SSLSignatureScheme *scheme)
+{
+    SECOidTag spkiOid = SECOID_GetAlgorithmTag(&spki->algorithm);
+
+    if (spkiOid == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
+        return ssl_SignatureSchemeFromPssSpki(spki, scheme);
+    }
+
+    /* Only do this lookup for TLS 1.3, where the scheme can be determined from
+     * the SPKI alone because the ECDSA key size determines the hash. Earlier
+     * TLS versions allow the same EC key to be used with different hashes. */
+    if (isTls13 && spkiOid == SEC_OID_ANSIX962_EC_PUBLIC_KEY) {
+        return ssl_SignatureSchemeFromEcSpki(spki, scheme);
+    }
+
+    *scheme = ssl_sig_none;
+    return SECSuccess;
+}
+
+static PRBool
+ssl_SignatureSchemeEnabled(sslSocket *ss, SSLSignatureScheme scheme)
+{
+    unsigned int i;
+    for (i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+        if (scheme == ss->ssl3.signatureSchemes[i]) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
+static PRBool
+ssl_SignatureKeyMatchesSpkiOid(const ssl3KEADef *keaDef, SECOidTag spkiOid)
+{
+    switch (spkiOid) {
+        case SEC_OID_X500_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
+            return keaDef->signKeyType == rsaKey;
+        case SEC_OID_ANSIX9_DSA_SIGNATURE:
+            return keaDef->signKeyType == dsaKey;
+        case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+            return keaDef->signKeyType == ecKey;
+        default:
+            break;
+    }
+    return PR_FALSE;
+}
+
+/* ssl3_CheckSignatureSchemeConsistency checks that the signature algorithm
+ * identifier in |scheme| is consistent with the public key in |cert|. It also
+ * checks the hash algorithm against the configured signature algorithms.  If
+ * all the tests pass, SECSuccess is returned. Otherwise, PORT_SetError is
+ * called and SECFailure is returned. */
+SECStatus
+ssl_CheckSignatureSchemeConsistency(sslSocket *ss, SSLSignatureScheme scheme,
+                                    CERTCertificate *cert)
+{
+    SSLSignatureScheme spkiScheme;
+    PRBool isTLS13 = ss->version == SSL_LIBRARY_VERSION_TLS_1_3;
+    SECOidTag spkiOid;
+    SECStatus rv;
+
+    rv = ssl_SignatureSchemeFromSpki(&cert->subjectPublicKeyInfo, isTLS13,
+                                     &spkiScheme);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    if (spkiScheme != ssl_sig_none) {
+        /* The SPKI in the certificate can only be used for a single scheme. */
+        if (spkiScheme != scheme ||
+            !ssl_SignatureSchemeEnabled(ss, scheme)) {
+            PORT_SetError(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
+            return SECFailure;
+        }
+        return SECSuccess;
+    }
+
+    spkiOid = SECOID_GetAlgorithmTag(&cert->subjectPublicKeyInfo.algorithm);
 
     /* If we're a client, check that the signature algorithm matches the signing
      * key type of the cipher suite. */
-    if (!isTLS13 &&
-        !ss->sec.isServer &&
-        ss->ssl3.hs.kea_def->signKeyType != keyType) {
-        PORT_SetError(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
-        return SECFailure;
+    if (!isTLS13 && !ss->sec.isServer) {
+        if (!ssl_SignatureKeyMatchesSpkiOid(ss->ssl3.hs.kea_def, spkiOid)) {
+            PORT_SetError(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
+            return SECFailure;
+        }
     }
 
     /* Verify that the signature scheme matches the signing key. */
-    if (!ssl_SignatureSchemeValidForKey(!isTLS13 /* allowSha1 */,
-                                        isTLS13 /* matchGroup */,
-                                        keyType, group, scheme)) {
+    if (!ssl_SignatureSchemeValid(scheme, spkiOid, isTLS13)) {
         PORT_SetError(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
         return SECFailure;
     }
 
-    for (i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
-        if (scheme == ss->ssl3.signatureSchemes[i]) {
-            return SECSuccess;
-        }
+    if (!ssl_SignatureSchemeEnabled(ss, scheme)) {
+        PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+        return SECFailure;
     }
-    PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
-    return SECFailure;
+
+    return SECSuccess;
 }
 
 PRBool
@@ -4153,6 +4269,9 @@ ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pss_rsae_sha256:
         case ssl_sig_rsa_pss_rsae_sha384:
         case ssl_sig_rsa_pss_rsae_sha512:
+        case ssl_sig_rsa_pss_pss_sha256:
+        case ssl_sig_rsa_pss_pss_sha384:
+        case ssl_sig_rsa_pss_pss_sha512:
         case ssl_sig_ecdsa_secp256r1_sha256:
         case ssl_sig_ecdsa_secp384r1_sha384:
         case ssl_sig_ecdsa_secp521r1_sha512:
@@ -4164,9 +4283,6 @@ ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme)
             return PR_TRUE;
 
         case ssl_sig_rsa_pkcs1_sha1md5:
-        case ssl_sig_rsa_pss_pss_sha256:
-        case ssl_sig_rsa_pss_pss_sha384:
-        case ssl_sig_rsa_pss_pss_sha512:
         case ssl_sig_none:
         case ssl_sig_ed25519:
         case ssl_sig_ed448:
@@ -4182,12 +4298,50 @@ ssl_IsRsaPssSignatureScheme(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pss_rsae_sha256:
         case ssl_sig_rsa_pss_rsae_sha384:
         case ssl_sig_rsa_pss_rsae_sha512:
+        case ssl_sig_rsa_pss_pss_sha256:
+        case ssl_sig_rsa_pss_pss_sha384:
+        case ssl_sig_rsa_pss_pss_sha512:
             return PR_TRUE;
 
         default:
             return PR_FALSE;
     }
     return PR_FALSE;
+}
+
+SSLAuthType
+ssl_SignatureSchemeToAuthType(SSLSignatureScheme scheme)
+{
+    switch (scheme) {
+        case ssl_sig_rsa_pkcs1_sha1:
+        case ssl_sig_rsa_pkcs1_sha1md5:
+        case ssl_sig_rsa_pkcs1_sha256:
+        case ssl_sig_rsa_pkcs1_sha384:
+        case ssl_sig_rsa_pkcs1_sha512:
+        /* We report based on the key type for PSS signatures. */
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_rsae_sha384:
+        case ssl_sig_rsa_pss_rsae_sha512:
+            return ssl_auth_rsa_sign;
+        case ssl_sig_rsa_pss_pss_sha256:
+        case ssl_sig_rsa_pss_pss_sha384:
+        case ssl_sig_rsa_pss_pss_sha512:
+            return ssl_auth_rsa_pss;
+        case ssl_sig_ecdsa_secp256r1_sha256:
+        case ssl_sig_ecdsa_secp384r1_sha384:
+        case ssl_sig_ecdsa_secp521r1_sha512:
+        case ssl_sig_ecdsa_sha1:
+            return ssl_auth_ecdsa;
+        case ssl_sig_dsa_sha1:
+        case ssl_sig_dsa_sha256:
+        case ssl_sig_dsa_sha384:
+        case ssl_sig_dsa_sha512:
+            return ssl_auth_dsa;
+
+        default:
+            PORT_Assert(0);
+    }
+    return ssl_auth_null;
 }
 
 /* ssl_ConsumeSignatureScheme reads a SSLSignatureScheme (formerly
@@ -5394,6 +5548,7 @@ ssl3_GetWrappingKey(sslSocket *ss,
     switch (authType) {
         case ssl_auth_rsa_decrypt:
         case ssl_auth_rsa_sign: /* bad: see Bug 1248320 */
+        case ssl_auth_rsa_pss:
             asymWrapMechanism = CKM_RSA_PKCS;
             rv = PK11_PubWrapSymKey(asymWrapMechanism, svrPubKey,
                                     unwrappedWrappingKey, &wrappedKey);
@@ -5843,20 +5998,59 @@ ssl3_SendClientKeyExchange(sslSocket *ss)
     return rv; /* err code already set. */
 }
 
+/* Used by ssl_PickSignatureScheme(). */
+static PRBool
+ssl_CanUseSignatureScheme(SSLSignatureScheme scheme,
+                          const SSLSignatureScheme *peerSchemes,
+                          unsigned int peerSchemeCount,
+                          PRBool requireSha1,
+                          PRBool slotDoesPss)
+{
+    SSLHashType hashType;
+    SECOidTag hashOID;
+    PRUint32 policy;
+    unsigned int i;
+
+    /* Skip RSA-PSS schemes when the certificate's private key slot does
+     * not support this signature mechanism. */
+    if (ssl_IsRsaPssSignatureScheme(scheme) && !slotDoesPss) {
+        return PR_FALSE;
+    }
+
+    hashType = ssl_SignatureSchemeToHashType(scheme);
+    if (requireSha1 && (hashType != ssl_hash_sha1)) {
+        return PR_FALSE;
+    }
+    hashOID = ssl3_HashTypeToOID(hashType);
+    if ((NSS_GetAlgorithmPolicy(hashOID, &policy) == SECSuccess) &&
+        !(policy & NSS_USE_ALG_IN_SSL_KX)) {
+        return PR_FALSE;
+    }
+
+    for (i = 0; i < peerSchemeCount; i++) {
+        if (peerSchemes[i] == scheme) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
 SECStatus
 ssl_PickSignatureScheme(sslSocket *ss,
+                        CERTCertificate *cert,
                         SECKEYPublicKey *pubKey,
                         SECKEYPrivateKey *privKey,
                         const SSLSignatureScheme *peerSchemes,
                         unsigned int peerSchemeCount,
                         PRBool requireSha1)
 {
-    unsigned int i, j;
-    const sslNamedGroupDef *group = NULL;
-    KeyType keyType;
+    unsigned int i;
     PK11SlotInfo *slot;
     PRBool slotDoesPss;
     PRBool isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
+    SECStatus rv;
+    SSLSignatureScheme scheme;
+    SECOidTag spkiOid;
 
     /* We can't require SHA-1 in TLS 1.3. */
     PORT_Assert(!(requireSha1 && isTLS13));
@@ -5874,47 +6068,35 @@ ssl_PickSignatureScheme(sslSocket *ss,
     slotDoesPss = PK11_DoesMechanism(slot, auth_alg_defs[ssl_auth_rsa_pss]);
     PK11_FreeSlot(slot);
 
-    keyType = SECKEY_GetPublicKeyType(pubKey);
-    if (keyType == ecKey) {
-        group = ssl_ECPubKey2NamedGroup(pubKey);
+    /* If the certificate SPKI indicates a single scheme, don't search. */
+    rv = ssl_SignatureSchemeFromSpki(&cert->subjectPublicKeyInfo,
+                                     isTLS13, &scheme);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    if (scheme != ssl_sig_none) {
+        if (!ssl_SignatureSchemeEnabled(ss, scheme) ||
+            !ssl_CanUseSignatureScheme(scheme, peerSchemes, peerSchemeCount,
+                                       requireSha1, slotDoesPss)) {
+            PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+            return SECFailure;
+        }
+        ss->ssl3.hs.signatureScheme = scheme;
+        return SECSuccess;
     }
 
-    /* Here we look for the first local preference that the client has
-     * indicated support for in their signature_algorithms extension. */
+    spkiOid = SECOID_GetAlgorithmTag(&cert->subjectPublicKeyInfo.algorithm);
+
+    /* Now we have to search based on the key type. Go through our preferred
+     * schemes in order and find the first that can be used. */
     for (i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
-        SSLHashType hashType;
-        SECOidTag hashOID;
-        SSLSignatureScheme preferred = ss->ssl3.signatureSchemes[i];
-        PRUint32 policy;
+        scheme = ss->ssl3.signatureSchemes[i];
 
-        if (!ssl_SignatureSchemeValidForKey(!isTLS13 /* allowSha1 */,
-                                            isTLS13 /* matchGroup */,
-                                            keyType, group, preferred)) {
-            continue;
-        }
-
-        /* Skip RSA-PSS schemes when the certificate's private key slot does
-         * not support this signature mechanism. */
-        if (ssl_IsRsaPssSignatureScheme(preferred) && !slotDoesPss) {
-            continue;
-        }
-
-        hashType = ssl_SignatureSchemeToHashType(preferred);
-        if (requireSha1 && (hashType != ssl_hash_sha1)) {
-            continue;
-        }
-        hashOID = ssl3_HashTypeToOID(hashType);
-        if ((NSS_GetAlgorithmPolicy(hashOID, &policy) == SECSuccess) &&
-            !(policy & NSS_USE_ALG_IN_SSL_KX)) {
-            /* we ignore hashes we don't support */
-            continue;
-        }
-
-        for (j = 0; j < peerSchemeCount; j++) {
-            if (peerSchemes[j] == preferred) {
-                ss->ssl3.hs.signatureScheme = preferred;
-                return SECSuccess;
-            }
+        if (ssl_SignatureSchemeValid(scheme, spkiOid, isTLS13) &&
+            ssl_CanUseSignatureScheme(scheme, peerSchemes, peerSchemeCount,
+                                      requireSha1, slotDoesPss)) {
+            ss->ssl3.hs.signatureScheme = scheme;
+            return SECSuccess;
         }
     }
 
@@ -5956,17 +6138,19 @@ ssl_PickFallbackSignatureScheme(sslSocket *ss, SECKEYPublicKey *pubKey)
 static SECStatus
 ssl3_PickServerSignatureScheme(sslSocket *ss)
 {
-    sslKeyPair *keyPair = ss->sec.serverCert->serverKeyPair;
+    const sslServerCert *cert = ss->sec.serverCert;
     PRBool isTLS12 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_2;
 
     if (!isTLS12 || !ssl3_ExtensionNegotiated(ss, ssl_signature_algorithms_xtn)) {
         /* If the client didn't provide any signature_algorithms extension then
          * we can assume that they support SHA-1: RFC5246, Section 7.4.1.4.1. */
-        return ssl_PickFallbackSignatureScheme(ss, keyPair->pubKey);
+        return ssl_PickFallbackSignatureScheme(ss, cert->serverKeyPair->pubKey);
     }
 
     /* Sets error code, if needed. */
-    return ssl_PickSignatureScheme(ss, keyPair->pubKey, keyPair->privKey,
+    return ssl_PickSignatureScheme(ss, cert->serverCert,
+                                   cert->serverKeyPair->pubKey,
+                                   cert->serverKeyPair->privKey,
                                    ss->xtnData.sigSchemes,
                                    ss->xtnData.numSigSchemes,
                                    PR_FALSE /* requireSha1 */);
@@ -5977,11 +6161,10 @@ ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
                               unsigned int numSchemes)
 {
     SECKEYPrivateKey *privKey = ss->ssl3.clientPrivateKey;
-    SECKEYPublicKey *pubKey;
     SECStatus rv;
-
     PRBool isTLS13 = (PRBool)ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
-    pubKey = CERT_ExtractPublicKey(ss->ssl3.clientCertificate);
+    SECKEYPublicKey *pubKey = CERT_ExtractPublicKey(ss->ssl3.clientCertificate);
+
     PORT_Assert(pubKey);
 
     if (!isTLS13 && numSchemes == 0) {
@@ -6004,7 +6187,8 @@ ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
          * older, DSA key size is at most 1024 bits and the hash function must
          * be SHA-1.
          */
-        rv = ssl_PickSignatureScheme(ss, pubKey, privKey, schemes, numSchemes,
+        rv = ssl_PickSignatureScheme(ss, ss->ssl3.clientCertificate,
+                                     pubKey, privKey, schemes, numSchemes,
                                      PR_TRUE /* requireSha1 */);
         if (rv == SECSuccess) {
             SECKEY_DestroyPublicKey(pubKey);
@@ -6013,7 +6197,8 @@ ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
         /* If this fails, that's because the peer doesn't advertise SHA-1,
          * so fall back to the full negotiation. */
     }
-    rv = ssl_PickSignatureScheme(ss, pubKey, privKey, schemes, numSchemes,
+    rv = ssl_PickSignatureScheme(ss, ss->ssl3.clientCertificate,
+                                 pubKey, privKey, schemes, numSchemes,
                                  PR_FALSE /* requireSha1 */);
     SECKEY_DestroyPublicKey(pubKey);
     return rv;
@@ -7845,6 +8030,7 @@ ssl3_SelectServerCert(sslSocket *ss)
 {
     const ssl3KEADef *kea_def = ss->ssl3.hs.kea_def;
     PRCList *cursor;
+    SECStatus rv;
 
     /* If the client didn't include the supported groups extension, assume just
      * P-256 support and disable all the other ECDHE groups.  This also affects
@@ -7870,24 +8056,40 @@ ssl3_SelectServerCert(sslSocket *ss)
          cursor != &ss->serverCerts;
          cursor = PR_NEXT_LINK(cursor)) {
         sslServerCert *cert = (sslServerCert *)cursor;
-        if (!SSL_CERT_IS(cert, kea_def->authKeyType)) {
-            continue;
-        }
-        if (SSL_CERT_IS_EC(cert) &&
-            !ssl_NamedGroupEnabled(ss, cert->namedCurve)) {
-            continue;
+        if (kea_def->authKeyType == ssl_auth_rsa_sign) {
+            /* We consider PSS certificates here as well for TLS 1.2. */
+            if (!SSL_CERT_IS(cert, ssl_auth_rsa_sign) &&
+                (!SSL_CERT_IS(cert, ssl_auth_rsa_pss) ||
+                 ss->version < SSL_LIBRARY_VERSION_TLS_1_2)) {
+                continue;
+            }
+        } else {
+            if (!SSL_CERT_IS(cert, kea_def->authKeyType)) {
+                continue;
+            }
+            if (SSL_CERT_IS_EC(cert) &&
+                !ssl_NamedGroupEnabled(ss, cert->namedCurve)) {
+                continue;
+            }
         }
 
         /* Found one. */
         ss->sec.serverCert = cert;
-        ss->sec.authType = kea_def->authKeyType;
         ss->sec.authKeyBits = cert->serverKeyBits;
 
         /* Don't pick a signature scheme if we aren't going to use it. */
         if (kea_def->signKeyType == nullKey) {
+            ss->sec.authType = kea_def->authKeyType;
             return SECSuccess;
         }
-        return ssl3_PickServerSignatureScheme(ss);
+
+        rv = ssl3_PickServerSignatureScheme(ss);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        ss->sec.authType =
+            ssl_SignatureSchemeToAuthType(ss->ssl3.hs.signatureScheme);
+        return SECSuccess;
     }
 
     PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);

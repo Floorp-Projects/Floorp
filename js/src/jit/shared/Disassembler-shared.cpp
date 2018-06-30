@@ -237,7 +237,7 @@ DisassemblerSpew::Node*
 DisassemblerSpew::add(const Label* key, uint32_t value)
 {
     MOZ_ASSERT(!lookup(key));
-    Node* node = (Node*)js_malloc(sizeof(Node));
+    Node* node = js_pod_malloc<Node>();
     if (node) {
         node->key = key;
         node->value = value;
