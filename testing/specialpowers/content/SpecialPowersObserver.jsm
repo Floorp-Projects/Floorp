@@ -11,19 +11,19 @@
 
 /* import-globals-from SpecialPowersObserverAPI.js */
 
-var EXPORTED_SYMBOLS = ["SpecialPowersObserver", "SpecialPowersObserverFactory"];
+var EXPORTED_SYMBOLS = ["SpecialPowersObserver"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["File"]);
 
-const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
-const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
-const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
+const CHILD_SCRIPT = "resource://specialpowers/specialpowers.js";
+const CHILD_SCRIPT_API = "resource://specialpowers/specialpowersAPI.js";
+const CHILD_LOGGER_SCRIPT = "resource://specialpowers/MozillaLogger.js";
 
 
 // Glue to add in the observer API to this object.  This allows us to share code with chrome tests
-Services.scriptloader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
+Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObserverAPI.js");
 
 /* XPCOM gunk */
 function SpecialPowersObserver() {
@@ -34,9 +34,6 @@ function SpecialPowersObserver() {
 
 SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
 
-SpecialPowersObserver.prototype.classDescription = "Special powers Observer for use in testing.";
-SpecialPowersObserver.prototype.classID = Components.ID("{59a52458-13e0-4d93-9d85-a637344f29a1}");
-SpecialPowersObserver.prototype.contractID = "@mozilla.org/special-powers-observer;1";
 SpecialPowersObserver.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
 
 SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
@@ -289,12 +286,3 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
   }
   return undefined;
 };
-
-var SpecialPowersObserverFactory = Object.freeze({
-  createInstance(outer, id) {
-    if (outer) { throw Cr.NS_ERROR_NO_AGGREGATION; }
-    return new SpecialPowersObserver();
-  },
-  loadFactory(lock) {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
-});

@@ -527,3 +527,16 @@ body.dark > .container > .content blockquote {
 .moz-reader-content .sr-only {
   display: none;
 }
+
+/* Enforce wordpress and similar emoji/smileys aren't sized to be full-width,
+ * see bug 1399616 for context. */
+.moz-reader-content img.wp-smiley,
+.moz-reader-content img.emoji {
+  display: inline-block;
+  border-width: 0;
+  /* height: auto is implied from `.moz-reader-content *` rule. */
+  width: 1em;
+  margin: 0 .07em;
+  padding: 0;
+}
+

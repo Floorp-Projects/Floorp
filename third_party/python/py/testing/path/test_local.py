@@ -425,24 +425,23 @@ class TestExecution:
             if i >= 3:
                 assert not numdir.new(ext=str(i-3)).check()
 
-    def test_make_numbered_dir_case_insensitive(self, tmpdir, monkeypatch):
-        # https://github.com/pytest-dev/pytest/issues/708
-        monkeypatch.setattr(py._path.local, 'normcase',
-                            lambda path: path.lower())
-        monkeypatch.setattr(tmpdir, 'listdir',
-                            lambda: [tmpdir._fastjoin('case.0')])
-        numdir = local.make_numbered_dir(prefix='CAse.', rootdir=tmpdir,
-                                         keep=2, lock_timeout=0)
-        assert numdir.basename.endswith('.1')
+    def test_make_numbered_dir_case(self, tmpdir):
+        """make_numbered_dir does not make assumptions on the underlying
+        filesystem based on the platform and will assume it _could_ be case
+        insensitive.
 
-    def test_make_numbered_dir_case_sensitive(self, tmpdir, monkeypatch):
-        # https://github.com/pytest-dev/pytest/issues/708
-        monkeypatch.setattr(py._path.local, 'normcase', lambda path: path)
-        monkeypatch.setattr(tmpdir, 'listdir',
-                            lambda: [tmpdir._fastjoin('case.0')])
-        numdir = local.make_numbered_dir(prefix='CAse.', rootdir=tmpdir,
-                                         keep=2, lock_timeout=0)
-        assert numdir.basename.endswith('.0')
+        See issues:
+        - https://github.com/pytest-dev/pytest/issues/708
+        - https://github.com/pytest-dev/pytest/issues/3451
+        """
+        d1 = local.make_numbered_dir(
+            prefix='CAse.', rootdir=tmpdir, keep=2, lock_timeout=0,
+        )
+        d2 = local.make_numbered_dir(
+            prefix='caSE.', rootdir=tmpdir, keep=2, lock_timeout=0,
+        )
+        assert str(d1).lower() != str(d2).lower()
+        assert str(d2).endswith('.1')
 
     def test_make_numbered_dir_NotImplemented_Error(self, tmpdir, monkeypatch):
         def notimpl(x, y):

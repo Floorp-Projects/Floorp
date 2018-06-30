@@ -217,9 +217,9 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
           });
       });
 
-      mm.loadFrameScript("chrome://specialpowers/content/MozillaLogger.js", false);
-      mm.loadFrameScript("chrome://specialpowers/content/specialpowersAPI.js", false);
-      mm.loadFrameScript("chrome://specialpowers/content/specialpowers.js", false);
+      mm.loadFrameScript("resource://specialpowers/MozillaLogger.js", false);
+      mm.loadFrameScript("resource://specialpowers/specialpowersAPI.js", false);
+      mm.loadFrameScript("resource://specialpowers/specialpowers.js", false);
 
       let frameScript = "SpecialPowers.prototype.IsInNestedFrame=true;";
       mm.loadFrameScript("data:," + frameScript, false);

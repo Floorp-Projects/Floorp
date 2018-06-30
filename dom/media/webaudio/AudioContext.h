@@ -70,6 +70,7 @@ class PannerNode;
 class ScriptProcessorNode;
 class StereoPannerNode;
 class WaveShaperNode;
+class Worklet;
 class PeriodicWave;
 struct PeriodicWaveConstraints;
 class Promise;
@@ -192,6 +193,9 @@ public:
   AudioListener* Listener();
 
   AudioContextState State() const { return mAudioContextState; }
+
+  Worklet* GetAudioWorklet(ErrorResult& aRv);
+
   bool IsRunning() const;
 
   // Those three methods return a promise to content, that is resolved when an
@@ -352,6 +356,7 @@ private:
   AudioContextState mAudioContextState;
   RefPtr<AudioDestinationNode> mDestination;
   RefPtr<AudioListener> mListener;
+  RefPtr<Worklet> mWorklet;
   nsTArray<UniquePtr<WebAudioDecodeJob> > mDecodeJobs;
   // This array is used to keep the suspend/close promises alive until
   // they are resolved, so we can safely pass them accross threads.

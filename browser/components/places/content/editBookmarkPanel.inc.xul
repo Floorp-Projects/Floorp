@@ -114,7 +114,6 @@
 
     <vbox id="editBMPanel_keywordRow"
           collapsed="true">
-      <observes element="additionalInfoBroadcaster" attribute="hidden"/>
       <label value="&editBookmarkOverlay.keyword.label;"
              accesskey="&editBookmarkOverlay.keyword.accesskey;"
              control="editBMPanel_keywordField"/>
@@ -122,8 +121,4 @@
                onchange="gEditItemOverlay.onKeywordFieldChange();"/>
     </vbox>
   </vbox>
-
-  <!-- If the ids are changing or additional fields are being added, be sure
-       to sync the values in places.js -->
-  <broadcaster id="additionalInfoBroadcaster"/>
 </vbox>

@@ -25,12 +25,12 @@
     height: 170px;
     text-align: left;
     padding: 10px;
-    border-bottom: 1px solid #D8D8D8;
+    border-bottom: 1px solid $grey-30;
     display: flex;
     margin-bottom: 11px;
 
     &:last-child {
-      border: none;
+      border: 0;
     }
 
     .onboardingContent {
@@ -72,19 +72,19 @@
     }
 
     &.addons {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-addons@2x.png");
+      background-image: url('resource://activity-stream/data/content/assets/illustration-addons@2x.png');
     }
 
     &.privatebrowsing {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-privatebrowsing@2x.png");
+      background-image: url('resource://activity-stream/data/content/assets/illustration-privatebrowsing@2x.png');
     }
 
     &.screenshots {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-screenshots@2x.png");
+      background-image: url('resource://activity-stream/data/content/assets/illustration-screenshots@2x.png');
     }
 
     &.gift {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-gift@2x.png");
+      background-image: url('resource://activity-stream/data/content/assets/illustration-gift@2x.png');
     }
   }
 
@@ -106,18 +106,18 @@
       line-height: 22px;
 
       @media(max-width: 650px) {
-        margin-bottom: 0px;
+        margin-bottom: 0;
       }
     }
   }
 
   .onboardingButton {
     background-color: $grey-90-10;
-    border: none;
+    border: 0;
     width: 150px;
     height: 30px;
     margin-bottom: 23px;
-    padding: 4px 0 6px 0;
+    padding: 4px 0 6px;
     font-size: 15px;
 
     // at 850px, the button shimmies down and to the right
@@ -139,7 +139,7 @@
     height: 220px;
     width: 1px;
     position: absolute;
-    background-color: #D8D8D8;
+    background-color: $grey-30;
     margin-top: 40px;
     margin-left: 215px;
 
