@@ -32,6 +32,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ipc/SharedStringMap.h"
 
 // for async loading
@@ -42,6 +43,8 @@
 
 using namespace mozilla;
 
+using mozilla::dom::ContentParent;
+using mozilla::dom::StringBundleDescriptor;
 using mozilla::dom::ipc::SharedStringMap;
 using mozilla::dom::ipc::SharedStringMapBuilder;
 using mozilla::ipc::FileDescriptor;
@@ -222,6 +225,17 @@ public:
   }
 
   bool Initialized() const { return mStringMap || mMapFile.isSome(); }
+
+  StringBundleDescriptor GetDescriptor() const
+  {
+    MOZ_ASSERT(Initialized());
+
+    StringBundleDescriptor descriptor;
+    descriptor.bundleURL() = BundleURL();
+    descriptor.mapFile() = CloneFileDescriptor();
+    descriptor.mapSize() = MapSize();
+    return descriptor;
+  }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
@@ -462,6 +476,9 @@ SharedStringBundle::LoadProperties()
   }
 
   mStringMap = new SharedStringMap(std::move(builder));
+
+  ContentParent::BroadcastStringBundle(GetDescriptor());
+
   return NS_OK;
 }
 
@@ -999,6 +1016,52 @@ nsStringBundleService::FlushBundles()
 }
 
 void
+nsStringBundleService::SendContentBundles(ContentParent* aContentParent) const
+{
+  nsTArray<StringBundleDescriptor> bundles;
+
+  for (auto* entry : mSharedBundles) {
+    auto bundle = SharedStringBundle::Cast(entry->mBundle);
+
+    if (bundle->Initialized()) {
+      bundles.AppendElement(bundle->GetDescriptor());
+    }
+  }
+
+  Unused << aContentParent->SendRegisterStringBundles(std::move(bundles));
+}
+
+void
+nsStringBundleService::RegisterContentBundle(const nsCString& aBundleURL,
+                                             const FileDescriptor& aMapFile,
+                                             size_t aMapSize)
+{
+  RefPtr<StringBundleProxy> proxy;
+
+  bundleCacheEntry_t* cacheEntry = mBundleMap.Get(aBundleURL);
+  if (cacheEntry) {
+    if (RefPtr<SharedStringBundle> shared = do_QueryObject(cacheEntry->mBundle)) {
+      return;
+    }
+
+    proxy = do_QueryObject(cacheEntry->mBundle);
+    MOZ_ASSERT(proxy);
+    cacheEntry->remove();
+    delete cacheEntry;
+  }
+
+  auto bundle = MakeRefPtr<SharedStringBundle>(aBundleURL.get(), mOverrideStrings);
+  bundle->SetMapFile(aMapFile, aMapSize);
+
+  if (proxy) {
+    proxy->Retarget(bundle);
+  }
+
+  cacheEntry = insertIntoCache(bundle.forget(), aBundleURL);
+  mSharedBundles.insertBack(cacheEntry);
+}
+
+void
 nsStringBundleService::getStringBundle(const char *aURLSpec,
                                        nsIStringBundle **aResult)
 {
@@ -1063,7 +1126,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
 bundleCacheEntry_t *
 nsStringBundleService::insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                       const nsCString &aHashKey)
+                                       const nsACString& aHashKey)
 {
   bundleCacheEntry_t *cacheEntry;
 
