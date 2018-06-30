@@ -205,14 +205,6 @@
     "n_values": 21,
     "description": "Maximum number of concurrent threads reached during a given download session"
   },
-  "BLOCKLIST_SYNC_FILE_LOAD": {
-    "record_in_processes": ["main", "content"],
-    "bug_numbers": [1439405],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "64",
-    "kind": "boolean",
-    "description": "Whether blocklist.xml was loaded synchronously. True means it was loaded synchronously, false means it was preloaded asynchronously."
-  },
   "CHECKERBOARD_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],

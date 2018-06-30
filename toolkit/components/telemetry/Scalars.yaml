@@ -1311,6 +1311,20 @@ telemetry:
     record_in_processes:
       - 'all'
 
+  profile_directory_scan_date:
+    bug_numbers:
+      - 1466518
+    description: >
+      The date of the profile scan to determine the profile creation date from the oldest file, in days since UNIX epoch.
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - jrediger@mozilla.com
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
   # While the following probe could be restricted to GeckoView, we can't
   # turn the product filter on as we don't run GeckoView test coverage on
   # GeckoView.
