@@ -1441,6 +1441,53 @@ gfx.omtp:
     record_in_processes:
       - 'content'
 
+images.webp:
+  probe_observed:
+    bug_numbers:
+      - 1472145
+    description: >
+      Whether we received a probe detecting our WebP image support.
+    kind: boolean
+    expires: "65"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - aosmond@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  content_observed:
+    bug_numbers:
+      - 1472145
+    description: >
+      Whether we received a request to decode a WebP image, excluding probes.
+    kind: boolean
+    expires: "65"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - aosmond@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  content_frequency:
+    bug_numbers:
+      - 1472145
+    description: >
+      How many image requests are WebP images, excluding probes.
+    kind: uint
+    keyed: true
+    expires: "65"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - aosmond@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 # The following section contains the form autofill related scalars.
 formautofill:
   availability:
