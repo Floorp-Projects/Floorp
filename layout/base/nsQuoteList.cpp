@@ -38,8 +38,8 @@ nsQuoteNode::InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
 const nsString*
 nsQuoteNode::Text()
 {
-  NS_ASSERTION(mType == eStyleContentType_OpenQuote ||
-               mType == eStyleContentType_CloseQuote,
+  NS_ASSERTION(mType == StyleContentType::OpenQuote ||
+               mType == StyleContentType::CloseQuote,
                "should only be called when mText should be non-null");
   const nsStyleQuoteValues::QuotePairArray& quotePairs =
     mPseudoFrame->StyleList()->GetQuotePairs();
@@ -58,7 +58,7 @@ nsQuoteNode::Text()
     // with the empty string so dynamic changes are easier to handle)
     result = &EmptyString();
   } else {
-    result = eStyleContentType_OpenQuote == mType
+    result = StyleContentType::OpenQuote == mType
                ? &quotePairs[quoteDepth].first
                : &quotePairs[quoteDepth].second;
   }
@@ -95,16 +95,16 @@ nsQuoteList::PrintChain()
   for (nsQuoteNode* node = FirstNode(); node; node = Next(node)) {
     printf("  %p %d - ", static_cast<void*>(node), node->mDepthBefore);
     switch(node->mType) {
-        case (eStyleContentType_OpenQuote):
+        case StyleContentType::OpenQuote:
           printf("open");
           break;
-        case (eStyleContentType_NoOpenQuote):
+        case StyleContentType::NoOpenQuote:
           printf("noOpen");
           break;
-        case (eStyleContentType_CloseQuote):
+        case StyleContentType::CloseQuote:
           printf("close");
           break;
-        case (eStyleContentType_NoCloseQuote):
+        case StyleContentType::NoCloseQuote:
           printf("noClose");
           break;
         default:
