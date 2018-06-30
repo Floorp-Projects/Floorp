@@ -24,6 +24,8 @@ var {
 } = ExtensionUtils;
 
 const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
+const MULTISELECT_PREFNAME = "browser.tabs.multiselect";
+XPCOMUtils.defineLazyPreferenceGetter(this, "gMultiSelectEnabled", MULTISELECT_PREFNAME, false);
 
 const TAB_HIDE_CONFIRMED_TYPE = "tabHideNotification";
 
@@ -1238,8 +1240,8 @@ this.tabs = class extends ExtensionAPI {
         },
 
         highlight(highlightInfo) {
-          if (!Services.prefs.getBoolPref("browser.tabs.multiselect")) {
-            throw new ExtensionError("Multiple tab selection is not enabled.");
+          if (!gMultiSelectEnabled) {
+            throw new ExtensionError(`tabs.highlight is currently experimental and must be enabled with the ${MULTISELECT_PREFNAME} preference.`);
           }
           let {windowId, tabs} = highlightInfo;
           if (windowId == null) {
@@ -1251,18 +1253,13 @@ this.tabs = class extends ExtensionAPI {
           } else if (tabs.length == 0) {
             throw new ExtensionError("No highlighted tab.");
           }
-          tabs = tabs.map((tabIndex) => {
+          window.gBrowser.selectedTabs = tabs.map((tabIndex) => {
             let tab = window.gBrowser.tabs[tabIndex];
             if (!tab) {
               throw new ExtensionError("No tab at index: " + tabIndex);
             }
             return tab;
           });
-          window.gBrowser.clearMultiSelectedTabs();
-          window.gBrowser.selectedTab = tabs[0];
-          for (let tab of tabs) {
-            window.gBrowser.addToMultiSelectedTabs(tab);
-          }
           return windowManager.convert(window, {populate: true});
         },
       },
