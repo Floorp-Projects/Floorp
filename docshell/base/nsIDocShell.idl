@@ -209,12 +209,6 @@ interface nsIDocShell : nsIDocShellTreeItem
                 in DOMString aURL, in boolean aReplace);
 
   /**
-   * Creates a DocShellLoadInfo object that you can manipulate and then pass
-   * to loadURI.
-   */
-  void createLoadInfo(out nsDocShellLoadInfoPtr loadInfo);
-
-  /**
    * Reset state to a new content model within the current document and the document
    * viewer.  Called by the document before initiating an out of band document.write().
    */
