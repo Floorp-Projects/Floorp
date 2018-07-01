@@ -141,7 +141,7 @@ gfxPrefs::IsParentProcess()
 }
 
 void gfxPrefs::PrefAddVarCache(bool* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                bool aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -149,7 +149,7 @@ void gfxPrefs::PrefAddVarCache(bool* aVariable,
 }
 
 void gfxPrefs::PrefAddVarCache(int32_t* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                int32_t aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -157,7 +157,7 @@ void gfxPrefs::PrefAddVarCache(int32_t* aVariable,
 }
 
 void gfxPrefs::PrefAddVarCache(uint32_t* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                uint32_t aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -165,7 +165,7 @@ void gfxPrefs::PrefAddVarCache(uint32_t* aVariable,
 }
 
 void gfxPrefs::PrefAddVarCache(float* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                float aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -173,15 +173,15 @@ void gfxPrefs::PrefAddVarCache(float* aVariable,
 }
 
 void gfxPrefs::PrefAddVarCache(std::string* aVariable,
-                               const char* aPref,
+                               const nsCString& aPref,
                                std::string aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
-  Preferences::SetCString(aPref, aVariable->c_str());
+  Preferences::SetCString(aPref.get(), aVariable->c_str());
 }
 
 void gfxPrefs::PrefAddVarCache(AtomicBool* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                bool aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -189,7 +189,7 @@ void gfxPrefs::PrefAddVarCache(AtomicBool* aVariable,
 }
 
 void gfxPrefs::PrefAddVarCache(AtomicInt32* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                int32_t aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -197,7 +197,7 @@ void gfxPrefs::PrefAddVarCache(AtomicInt32* aVariable,
 }
 
 void gfxPrefs::PrefAddVarCache(AtomicUint32* aVariable,
-                               const char* aPref,
+                               const nsACString& aPref,
                                uint32_t aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
