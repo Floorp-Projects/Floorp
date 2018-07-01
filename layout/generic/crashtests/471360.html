@@ -1,0 +1,53 @@
+<html>
+<head>
+<script type="text/javascript">
+
+var ta, f, tb, s, tc;
+var i = 0;
+
+function boom1()
+{
+  var r = document.body; 
+  while(r.firstChild) 
+    r.removeChild(r.firstChild);
+
+  ta = document.createTextNode("A \u06cc");
+  (document.body).appendChild(ta);
+  f = document.createElement("IFRAME");
+  f.style.height = "15em";
+  f.src = "data:text/html," + "Iteration " + ++i;
+  (document.body).appendChild(f);
+  tb = document.createTextNode(" B ");
+  (document.body).appendChild(tb);
+  s = document.createElement("span");
+  s.id = "s";
+  tc = document.createTextNode(" C ");
+  (document.body).appendChild(s);
+  s.appendChild(tc);
+
+  setTimeout(boom2, 10);
+}
+
+function boom2()
+{
+  var w = document.createElement("style");
+  w.setAttribute("type", "text/css");
+  w.appendChild(document.createTextNode("body { -moz-column-gap: 1px; -moz-column-width: 1px; }"));
+  document.body.appendChild(w);
+
+  setTimeout(boom3, 10);
+}
+
+function boom3()
+{
+  ta.data = " E " + ta.data;
+  document.body.removeChild(s);
+
+  setTimeout(boom1, 10);
+}
+
+</script>
+</head>
+
+<body onload="boom1();"></body>
+</html>
