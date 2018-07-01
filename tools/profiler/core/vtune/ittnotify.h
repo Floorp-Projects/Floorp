@@ -4,7 +4,7 @@
 
   GPL LICENSE SUMMARY
 
-  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of version 2 of the GNU General Public License as
@@ -26,7 +26,7 @@
 
   BSD LICENSE
 
-  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -1812,7 +1812,7 @@ typedef struct ___itt_id
 #pragma pack(pop)
 /** @endcond */
 
-static const __itt_id __itt_null = { 0, 0, 0 };
+const __itt_id __itt_null = { 0, 0, 0 };
 
 /**
  * @ingroup ids

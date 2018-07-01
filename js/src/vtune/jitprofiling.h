@@ -4,7 +4,7 @@
 
   GPL LICENSE SUMMARY
 
-  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of version 2 of the GNU General Public License as
@@ -26,7 +26,7 @@
 
   BSD LICENSE
 
-  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -669,7 +669,7 @@ unsigned int JITAPI iJIT_GetNewMethodID(void);
  */
 iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive(void);
 
-int loadiJIT_Funcs();
+int loadiJIT_Funcs(void);
 
 /**
  * @brief Reports infomation about JIT-compiled code to the agent.
