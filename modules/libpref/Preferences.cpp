@@ -2896,6 +2896,14 @@ AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
 #endif
 }
 
+static void
+AssertNotAlreadyCached(const char* aPrefType,
+                       const nsACString& aPref,
+                       void* aPtr)
+{
+  AssertNotAlreadyCached(aPrefType, PromiseFlatCString(aPref).get(), aPtr);
+}
+
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
 /* static */ void
@@ -4737,13 +4745,13 @@ BoolVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache,
-                             const char* aPref,
+                             const nsACString& aPref,
                              bool aDefault,
                              bool aSkipAssignment)
 {
   AssertNotAlreadyCached("bool", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetBool(aPref, aDefault);
+    *aCache = GetBool(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4769,13 +4777,13 @@ AtomicBoolVarChanged(const char* aPref, void* aClosure)
 template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
-                                   const char* aPref,
+                                   const nsACString& aPref,
                                    bool aDefault,
                                    bool aSkipAssignment)
 {
   AssertNotAlreadyCached("bool", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetBool(aPref, aDefault);
+    *aCache = GetBool(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4799,13 +4807,13 @@ IntVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddIntVarCache(int32_t* aCache,
-                            const char* aPref,
+                            const nsACString& aPref,
                             int32_t aDefault,
                             bool aSkipAssignment)
 {
   AssertNotAlreadyCached("int", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetInt(aPref, aDefault);
+    *aCache = GetInt(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4828,13 +4836,13 @@ AtomicIntVarChanged(const char* aPref, void* aClosure)
 template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
-                                  const char* aPref,
+                                  const nsACString& aPref,
                                   int32_t aDefault,
                                   bool aSkipAssignment)
 {
   AssertNotAlreadyCached("int", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetInt(aPref, aDefault);
+    *aCache = GetInt(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4858,13 +4866,13 @@ UintVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddUintVarCache(uint32_t* aCache,
-                             const char* aPref,
+                             const nsACString& aPref,
                              uint32_t aDefault,
                              bool aSkipAssignment)
 {
   AssertNotAlreadyCached("uint", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetUint(aPref, aDefault);
+    *aCache = GetUint(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4890,13 +4898,13 @@ AtomicUintVarChanged(const char* aPref, void* aClosure)
 template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
-                                   const char* aPref,
+                                   const nsACString& aPref,
                                    uint32_t aDefault,
                                    bool aSkipAssignment)
 {
   AssertNotAlreadyCached("uint", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetUint(aPref, aDefault);
+    *aCache = GetUint(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4915,43 +4923,43 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 // limited orders are needed and therefore implemented.
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
-                                   const char*,
+                                   const nsACString&,
                                    bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, ReleaseAcquire>*,
-                                   const char*,
+                                   const nsACString&,
                                    bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, SequentiallyConsistent>*,
-                                   const char*,
+                                   const nsACString&,
                                    bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
-                                  const char*,
+                                  const nsACString&,
                                   int32_t,
                                   bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
-                                   const char*,
+                                   const nsACString&,
                                    uint32_t,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, ReleaseAcquire>*,
-                                   const char*,
+                                   const nsACString&,
                                    uint32_t,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, SequentiallyConsistent>*,
-                                   const char*,
+                                   const nsACString&,
                                    uint32_t,
                                    bool);
 
@@ -4965,13 +4973,13 @@ FloatVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache,
-                              const char* aPref,
+                              const nsACString& aPref,
                               float aDefault,
                               bool aSkipAssignment)
 {
   AssertNotAlreadyCached("float", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetFloat(aPref, aDefault);
+    *aCache = GetFloat(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -5062,12 +5070,12 @@ SetPref_String(const char* aName, const char* aDefaultValue)
 }
 
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  bool* aCache,
                  bool aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_bool(aName, aDefaultValue);
+  SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddBoolVarCache(aCache, aName, aDefaultValue, true);
@@ -5076,12 +5084,12 @@ InitVarCachePref(const char* aName,
 
 template<MemoryOrdering Order>
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  Atomic<bool, Order>* aCache,
                  bool aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_bool(aName, aDefaultValue);
+  SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicBoolVarCache(aCache, aName, aDefaultValue, true);
@@ -5090,12 +5098,12 @@ InitVarCachePref(const char* aName,
 
 // XXX: this will eventually become used
 MOZ_MAYBE_UNUSED static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  int32_t* aCache,
                  int32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, aDefaultValue);
+  SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddIntVarCache(aCache, aName, aDefaultValue, true);
@@ -5104,12 +5112,12 @@ InitVarCachePref(const char* aName,
 
 template<MemoryOrdering Order>
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  Atomic<int32_t, Order>* aCache,
                  int32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, aDefaultValue);
+  SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicIntVarCache(aCache, aName, aDefaultValue, true);
@@ -5117,12 +5125,13 @@ InitVarCachePref(const char* aName,
 }
 
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  uint32_t* aCache,
                  uint32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, static_cast<int32_t>(aDefaultValue));
+  SetPref_int32_t(PromiseFlatCString(aName).get(),
+                  static_cast<int32_t>(aDefaultValue));
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddUintVarCache(aCache, aName, aDefaultValue, true);
@@ -5131,12 +5140,13 @@ InitVarCachePref(const char* aName,
 
 template<MemoryOrdering Order>
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  Atomic<uint32_t, Order>* aCache,
                  uint32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, static_cast<int32_t>(aDefaultValue));
+  SetPref_int32_t(PromiseFlatCString(aName).get(),
+                  static_cast<int32_t>(aDefaultValue));
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicUintVarCache(aCache, aName, aDefaultValue, true);
@@ -5145,12 +5155,12 @@ InitVarCachePref(const char* aName,
 
 // XXX: this will eventually become used
 MOZ_MAYBE_UNUSED static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  float* aCache,
                  float aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_float(aName, aDefaultValue);
+  SetPref_float(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddFloatVarCache(aCache, aName, aDefaultValue, true);
@@ -5177,7 +5187,10 @@ StaticPrefs::InitAll(bool aIsStartup)
 // which prevents automatic int-to-float coercion.
 #define PREF(name, cpp_type, value) SetPref_##cpp_type(name, value);
 #define VARCACHE_PREF(name, id, cpp_type, value)                               \
-  InitVarCachePref(name, &StaticPrefs::sVarCache_##id, value, aIsStartup);
+  InitVarCachePref(NS_LITERAL_CSTRING(name),                                   \
+                   &StaticPrefs::sVarCache_##id,                               \
+                   value,                                                      \
+                   aIsStartup);
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF
