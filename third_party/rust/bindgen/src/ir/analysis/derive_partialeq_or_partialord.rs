@@ -119,7 +119,7 @@ impl<'ctx> CannotDerivePartialEqOrPartialOrd<'ctx> {
         trace!("ty: {:?}", ty);
         if item.is_opaque(self.ctx, &()) {
             if ty.is_union()
-                && self.ctx.options().rust_features().untagged_union()
+                && self.ctx.options().rust_features().untagged_union
             {
                 trace!(
                     "    cannot derive `PartialEq`/`PartialOrd` for Rust unions"
@@ -242,7 +242,7 @@ impl<'ctx> CannotDerivePartialEqOrPartialOrd<'ctx> {
                 }
 
                 if info.kind() == CompKind::Union {
-                    if self.ctx.options().rust_features().untagged_union() {
+                    if self.ctx.options().rust_features().untagged_union {
                         trace!(
                             "    cannot derive `PartialEq`/`PartialOrd` for Rust unions"
                         );

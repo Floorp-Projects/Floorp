@@ -9,6 +9,15 @@
 %{C++
 #include "mozilla/MemoryReporting.h"
 
+namespace mozilla {
+namespace dom {
+class ContentParent;
+}
+namespace ipc {
+class FileDescriptor;
+}
+}
+
 // Define Contractid and CID
 // {D85A17C1-AA7C-11d2-9B8C-00805F8A16D9}
 #define NS_STRINGBUNDLESERVICE_CID \
@@ -74,7 +83,6 @@ interface nsIStringBundle : nsISupports
 interface nsIStringBundleService : nsISupports
 {
   nsIStringBundle createBundle(in string aURLSpec);
-  nsIStringBundle createExtensibleBundle(in string aRegistryKey);
 
   /**
    * Formats a message string from a status code and status arguments.
@@ -99,5 +107,11 @@ interface nsIStringBundleService : nsISupports
 
   %{C++
     virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+
+  virtual void SendContentBundles(mozilla::dom::ContentParent* aContentParent) const = 0;
+
+  virtual void RegisterContentBundle(const nsCString& aBundleURL,
+                                     const mozilla::ipc::FileDescriptor& aMapFile,
+                                     size_t aMapSize) = 0;
   %}
 };

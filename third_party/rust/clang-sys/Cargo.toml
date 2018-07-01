@@ -12,7 +12,7 @@
 
 [package]
 name = "clang-sys"
-version = "0.22.0"
+version = "0.23.0"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -21,10 +21,6 @@ documentation = "https://kylemayes.github.io/clang-sys/3_5/clang_sys"
 readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/KyleMayes/clang-sys"
-[dependencies.clippy]
-version = "0.0.*"
-optional = true
-
 [dependencies.glob]
 version = "0.2.11"
 
@@ -34,10 +30,6 @@ version = "0.2.39"
 [dependencies.libloading]
 version = "0.5.0"
 optional = true
-[build-dependencies.clippy]
-version = "0.0.*"
-optional = true
-
 [build-dependencies.glob]
 version = "0.2.11"
 
