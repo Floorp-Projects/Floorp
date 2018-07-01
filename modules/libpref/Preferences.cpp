@@ -1464,7 +1464,7 @@ public:
 
 public:
   // Create a PrefCallback with a strong reference to its observer.
-  PrefCallback(const char* aDomain,
+  PrefCallback(const nsACString& aDomain,
                nsIObserver* aObserver,
                nsPrefBranch* aBranch)
     : mDomain(aDomain)
@@ -1478,7 +1478,7 @@ public:
   }
 
   // Create a PrefCallback with a weak reference to its observer.
-  PrefCallback(const char* aDomain,
+  PrefCallback(const nsACString& aDomain,
                nsISupportsWeakReference* aObserver,
                nsPrefBranch* aBranch)
     : mDomain(aDomain)
@@ -1634,6 +1634,16 @@ private:
       static const char* match(const nsCString& aVal) { return aVal.get(); }
     };
 
+    struct CStringMatcher
+    {
+      // Note: This is a reference, not an instance. It's used to pass our outer
+      // method argument through to our matcher methods.
+      nsACString& mStr;
+
+      void match(const char* aVal) { mStr.Assign(aVal); }
+      void match(const nsCString& aVal) { mStr.Assign(aVal); }
+    };
+
     struct LenMatcher
     {
       static size_t match(const char* aVal) { return strlen(aVal); }
@@ -1645,6 +1655,8 @@ private:
       static PtrMatcher m;
       return match(m);
     }
+
+    void get(nsACString& aStr) const { match(CStringMatcher{ aStr }); }
 
     size_t Length() const
     {
@@ -2377,6 +2389,9 @@ nsPrefBranch::AddObserver(const char* aDomain,
   NS_ENSURE_ARG(aDomain);
   NS_ENSURE_ARG(aObserver);
 
+  nsCString prefName;
+  GetPrefName(aDomain).get(prefName);
+
   // Hold a weak reference to the observer if so requested.
   if (aHoldWeak) {
     nsCOMPtr<nsISupportsWeakReference> weakRefFactory =
@@ -2388,11 +2403,11 @@ nsPrefBranch::AddObserver(const char* aDomain,
     }
 
     // Construct a PrefCallback with a weak reference to the observer.
-    pCallback = new PrefCallback(aDomain, weakRefFactory, this);
+    pCallback = new PrefCallback(prefName, weakRefFactory, this);
 
   } else {
     // Construct a PrefCallback with a strong reference to the observer.
-    pCallback = new PrefCallback(aDomain, aObserver, this);
+    pCallback = new PrefCallback(prefName, aObserver, this);
   }
 
   auto p = mObservers.LookupForAdd(pCallback);
@@ -2407,9 +2422,8 @@ nsPrefBranch::AddObserver(const char* aDomain,
   // We must pass a fully qualified preference name to the callback
   // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
-  const PrefName& pref = GetPrefName(aDomain);
   Preferences::RegisterCallback(NotifyObserver,
-                                pref.get(),
+                                prefName,
                                 pCallback,
                                 Preferences::PrefixMatch,
                                 /* isPriority */ false);
@@ -2439,14 +2453,14 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
   // Remove the relevant PrefCallback from mObservers and get an owning pointer
   // to it. Unregister the callback first, and then let the owning pointer go
   // out of scope and destroy the callback.
-  PrefCallback key(aDomain, aObserver, this);
+  nsCString prefName;
+  GetPrefName(aDomain).get(prefName);
+  PrefCallback key(prefName, aObserver, this);
   nsAutoPtr<PrefCallback> pCallback;
   mObservers.Remove(&key, &pCallback);
   if (pCallback) {
-    // aDomain == nullptr is the only possible failure, trapped above.
-    const PrefName& pref = GetPrefName(aDomain);
     rv = Preferences::UnregisterCallback(
-      NotifyObserver, pref.get(), pCallback, Preferences::PrefixMatch);
+      NotifyObserver, prefName, pCallback, Preferences::PrefixMatch);
   }
 
   return rv;
@@ -2480,7 +2494,7 @@ nsPrefBranch::NotifyObserver(const char* aNewPref, void* aData)
   // Remove any root this string may contain so as to not confuse the observer
   // by passing them something other than what they passed us as a topic.
   uint32_t len = pCallback->GetPrefBranch()->GetRootLength();
-  nsAutoCString suffix(aNewPref + len);
+  nsDependentCString suffix(aNewPref + len);
 
   observer->Observe(static_cast<nsIPrefBranch*>(pCallback->GetPrefBranch()),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
@@ -2513,10 +2527,8 @@ nsPrefBranch::FreeObserverList()
   mFreeingObserverList = true;
   for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
-    nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const PrefName& pref = prefBranch->GetPrefName(callback->GetDomain().get());
     Preferences::UnregisterCallback(nsPrefBranch::NotifyObserver,
-                                    pref.get(),
+                                    callback->GetDomain(),
                                     callback,
                                     Preferences::PrefixMatch);
     iter.Remove();
@@ -3043,8 +3055,6 @@ PreferenceServiceReporter::CollectReports(
 
   for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
-    nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const auto& pref = prefBranch->GetPrefName(callback->GetDomain().get());
 
     if (callback->IsWeak()) {
       nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);
@@ -3057,16 +3067,15 @@ PreferenceServiceReporter::CollectReports(
       numStrong++;
     }
 
-    nsDependentCString prefString(pref.get());
     uint32_t oldCount = 0;
-    prefCounter.Get(prefString, &oldCount);
+    prefCounter.Get(callback->GetDomain(), &oldCount);
     uint32_t currentCount = oldCount + 1;
-    prefCounter.Put(prefString, currentCount);
+    prefCounter.Put(callback->GetDomain(), currentCount);
 
     // Keep track of preferences that have a suspiciously large number of
     // referents (a symptom of a leak).
     if (currentCount == kSuspectReferentCount) {
-      suspectPreferences.AppendElement(prefString);
+      suspectPreferences.AppendElement(callback->GetDomain());
     }
   }
 
