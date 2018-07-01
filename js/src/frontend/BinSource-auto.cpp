@@ -65,7 +65,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumArrowExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerArrowExpression:
         MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpression(start, kind, fields));
         break;
@@ -105,7 +105,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayAssignmentTarget:
         MOZ_TRY_VAR(result, parseInterfaceArrayAssignmentTarget(start, kind, fields));
         break;
@@ -155,7 +155,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumAssignmentTargetOrAssignmentTargetWithInitializer(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayAssignmentTarget:
         MOZ_TRY_VAR(result, parseInterfaceArrayAssignmentTarget(start, kind, fields));
         break;
@@ -204,7 +204,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumAssignmentTargetPattern(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayAssignmentTarget:
         MOZ_TRY_VAR(result, parseInterfaceArrayAssignmentTarget(start, kind, fields));
         break;
@@ -241,7 +241,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumAssignmentTargetProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::AssignmentTargetPropertyIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetPropertyIdentifier(start, kind, fields));
         break;
@@ -279,7 +279,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumBinding(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayBinding:
         MOZ_TRY_VAR(result, parseInterfaceArrayBinding(start, kind, fields));
         break;
@@ -321,7 +321,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumBindingOrBindingWithInitializer(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayBinding:
         MOZ_TRY_VAR(result, parseInterfaceArrayBinding(start, kind, fields));
         break;
@@ -364,7 +364,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumBindingPattern(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayBinding:
         MOZ_TRY_VAR(result, parseInterfaceArrayBinding(start, kind, fields));
         break;
@@ -401,7 +401,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumBindingProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::BindingPropertyIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceBindingPropertyIdentifier(start, kind, fields));
         break;
@@ -441,7 +441,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumExportDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::Export:
         MOZ_TRY_VAR(result, parseInterfaceExport(start, kind, fields));
         break;
@@ -515,7 +515,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
@@ -665,7 +665,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumExpressionOrSuper(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
@@ -818,7 +818,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumExpressionOrTemplateElement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
@@ -946,7 +946,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumForInOfBindingOrAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayAssignmentTarget:
         MOZ_TRY_VAR(result, parseInterfaceArrayAssignmentTarget(start, kind, fields));
         break;
@@ -1024,7 +1024,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumFunctionBodyOrExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
@@ -1148,7 +1148,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumFunctionDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerFunctionDeclaration:
         MOZ_TRY_VAR(result, parseInterfaceEagerFunctionDeclaration(start, kind, fields));
         break;
@@ -1216,7 +1216,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumFunctionDeclarationOrClassDeclarationOrExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
@@ -1348,7 +1348,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumFunctionDeclarationOrClassDeclarationOrVariableDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ClassDeclaration:
         MOZ_TRY_VAR(result, parseInterfaceClassDeclaration(start, kind, fields));
         break;
@@ -1391,7 +1391,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumFunctionExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerFunctionExpression:
         MOZ_TRY_VAR(result, parseInterfaceEagerFunctionExpression(start, kind, fields));
         break;
@@ -1428,7 +1428,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumGetter(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerGetter:
         MOZ_TRY_VAR(result, parseInterfaceEagerGetter(start, kind, fields));
         break;
@@ -1465,7 +1465,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumImportDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::Import:
         MOZ_TRY_VAR(result, parseInterfaceImport(start, kind, fields));
         break;
@@ -1531,7 +1531,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumImportDeclarationOrExportDeclarationOrStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::Block:
         MOZ_TRY_VAR(result, parseInterfaceBlock(start, kind, fields));
         break;
@@ -1658,7 +1658,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumIterationStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::DoWhileStatement:
         MOZ_TRY_VAR(result, parseInterfaceDoWhileStatement(start, kind, fields));
         break;
@@ -1707,7 +1707,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumLiteral(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::LiteralBooleanExpression:
         MOZ_TRY_VAR(result, parseInterfaceLiteralBooleanExpression(start, kind, fields));
         break;
@@ -1753,7 +1753,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumMethod(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerMethod:
         MOZ_TRY_VAR(result, parseInterfaceEagerMethod(start, kind, fields));
         break;
@@ -1794,7 +1794,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumMethodDefinition(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerGetter:
         MOZ_TRY_VAR(result, parseInterfaceEagerGetter(start, kind, fields));
         break;
@@ -1849,7 +1849,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumObjectProperty(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::DataProperty:
         MOZ_TRY_VAR(result, parseInterfaceDataProperty(start, kind, fields));
         break;
@@ -1906,7 +1906,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumParameter(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayBinding:
         MOZ_TRY_VAR(result, parseInterfaceArrayBinding(start, kind, fields));
         break;
@@ -1953,7 +1953,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumProgram(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::Module:
         MOZ_TRY_VAR(result, parseInterfaceModule(start, kind, fields));
         break;
@@ -1990,7 +1990,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumPropertyName(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ComputedPropertyName:
         MOZ_TRY_VAR(result, parseInterfaceComputedPropertyName(start, kind, fields));
         break;
@@ -2027,7 +2027,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumSetter(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::EagerSetter:
         MOZ_TRY_VAR(result, parseInterfaceEagerSetter(start, kind, fields));
         break;
@@ -2065,7 +2065,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumSimpleAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::AssignmentTargetIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetIdentifier(start, kind, fields));
         break;
@@ -2134,7 +2134,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumSpreadElementOrExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
@@ -2280,7 +2280,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumStatement(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::Block:
         MOZ_TRY_VAR(result, parseInterfaceBlock(start, kind, fields));
         break;
@@ -2412,7 +2412,7 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumVariableDeclarationOrExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
     ParseNode* result;
-    switch(kind) {
+    switch (kind) {
       case BinKind::ArrayExpression:
         MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
         break;
