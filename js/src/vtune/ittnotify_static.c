@@ -4,7 +4,7 @@
 
   GPL LICENSE SUMMARY
 
-  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of version 2 of the GNU General Public License as
@@ -26,7 +26,7 @@
 
   BSD LICENSE
 
-  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,7 @@
 
 #include "vtune/disable_warnings.h"
 
-static const char api_version[] = API_VERSION "\0\n@(#) $Revision: 523557 $\n";
+static const char api_version[] = API_VERSION "\0\n@(#) $Revision: 481659 $\n";
 
 #define _N_(n) ITT_JOIN(INTEL_ITTNOTIFY_PREFIX,n)
 
