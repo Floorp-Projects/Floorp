@@ -5,78 +5,9 @@ use std::str::{self, FromStr};
 use proc_macro2::{Literal, Span, Term, TokenStream, TokenTree};
 
 #[test]
-fn terms() {
-    assert_eq!(Term::new("String", Span::call_site()).as_str(), "String");
-    assert_eq!(Term::new("fn", Span::call_site()).as_str(), "fn");
-    assert_eq!(Term::new("_", Span::call_site()).as_str(), "_");
-}
-
-#[test]
-fn raw_terms() {
-    assert_eq!(Term::new("r#String", Span::call_site()).as_str(), "r#String");
-    assert_eq!(Term::new("r#fn", Span::call_site()).as_str(), "r#fn");
-    assert_eq!(Term::new("r#_", Span::call_site()).as_str(), "r#_");
-}
-
-#[test]
-fn lifetimes() {
-    assert_eq!(Term::new("'a", Span::call_site()).as_str(), "'a");
-    assert_eq!(Term::new("'static", Span::call_site()).as_str(), "'static");
-    assert_eq!(Term::new("'_", Span::call_site()).as_str(), "'_");
-}
-
-#[test]
-#[should_panic(expected = "Term is not allowed to be empty; use Option<Term>")]
-fn term_empty() {
-    Term::new("", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "Term cannot be a number; use Literal instead")]
-fn term_number() {
-    Term::new("255", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "\"a#\" is not a valid Term")]
-fn term_invalid() {
-    Term::new("a#", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "Term is not allowed to be empty; use Option<Term>")]
-fn raw_term_empty() {
-    Term::new("r#", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "Term cannot be a number; use Literal instead")]
-fn raw_term_number() {
-    Term::new("r#255", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "\"r#a#\" is not a valid Term")]
-fn raw_term_invalid() {
-    Term::new("r#a#", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "Term is not allowed to be empty; use Option<Term>")]
-fn lifetime_empty() {
-    Term::new("'", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = "Term cannot be a number; use Literal instead")]
-fn lifetime_number() {
-    Term::new("'255", Span::call_site());
-}
-
-#[test]
-#[should_panic(expected = r#""\'a#" is not a valid Term"#)]
-fn lifetime_invalid() {
-    Term::new("'a#", Span::call_site());
+fn symbols() {
+    assert_eq!(Term::new("foo", Span::call_site()).as_str(), "foo");
+    assert_eq!(Term::new("bar", Span::call_site()).as_str(), "bar");
 }
 
 #[test]

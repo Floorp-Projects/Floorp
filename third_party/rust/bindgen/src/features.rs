@@ -90,8 +90,12 @@ macro_rules! rust_target_base {
             => Stable_1_0 => 1.0;
             /// Rust stable 1.19
             => Stable_1_19 => 1.19;
+            /// Rust stable 1.20
+            => Stable_1_20 => 1.20;
             /// Rust stable 1.21
             => Stable_1_21 => 1.21;
+            /// Rust stable 1.25
+            => Stable_1_25 => 1.25;
             /// Nightly rust
             => Nightly => nightly;
         );
@@ -111,7 +115,10 @@ macro_rules! rust_feature_def {
         #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
         pub struct RustFeatures {
             $(
-                $feature: bool,
+                $(
+                    #[$attr]
+                )*
+                pub $feature: bool,
             )*
         }
 
@@ -124,15 +131,6 @@ macro_rules! rust_feature_def {
                     )*
                 }
             }
-
-            $(
-                $(
-                    #[$attr]
-                )*
-                pub fn $feature(&self) -> bool {
-                    self.$feature
-                }
-            )*
         }
     }
 }
@@ -144,6 +142,10 @@ rust_feature_def!(
     => thiscall_abi;
     /// builtin impls for `Clone` ([PR](https://github.com/rust-lang/rust/pull/43690))
     => builtin_clone_impls;
+    /// repr(align) https://github.com/rust-lang/rust/pull/47006
+    => repr_align;
+    /// associated constants https://github.com/rust-lang/rust/issues/29646
+    => associated_const;
 );
 
 impl From<RustTarget> for RustFeatures {
@@ -154,8 +156,16 @@ impl From<RustTarget> for RustFeatures {
             features.untagged_union = true;
         }
 
+        if rust_target >= RustTarget::Stable_1_20 {
+            features.associated_const = true;
+        }
+
         if rust_target >= RustTarget::Stable_1_21 {
             features.builtin_clone_impls = true;
+        }
+
+        if rust_target >= RustTarget::Stable_1_25 {
+            features.repr_align = true;
         }
 
         if rust_target >= RustTarget::Nightly {
@@ -189,6 +199,7 @@ mod test {
         test_target("1.0", RustTarget::Stable_1_0);
         test_target("1.19", RustTarget::Stable_1_19);
         test_target("1.21", RustTarget::Stable_1_21);
+        test_target("1.25", RustTarget::Stable_1_25);
         test_target("nightly", RustTarget::Nightly);
     }
 }
