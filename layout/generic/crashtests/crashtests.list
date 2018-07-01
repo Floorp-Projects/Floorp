@@ -500,6 +500,8 @@ load 783228.html
 load 784600.html
 load 785555.html
 load 786740-1.html
+load 790252-1.html
+load 790252-2.html
 load 790260-1.html
 test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml
 test-pref(font.size.inflation.minTwips,120) load 794693.html
