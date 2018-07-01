@@ -762,7 +762,7 @@ impl CPPExporter {
         buffer.push_str(&format!("\n{first_line}
 {{
     {type_ok} result;
-    switch(kind) {{{cases}
+    switch (kind) {{{cases}
       default:
         return raiseInvalidKind(\"{kind}\", kind);
     }}
