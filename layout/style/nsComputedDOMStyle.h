@@ -261,24 +261,12 @@ private:
   already_AddRefed<CSSValue> DoGetRight();
   already_AddRefed<CSSValue> DoGetBottom();
 
-  /* Font properties */
+  /* Color */
   already_AddRefed<CSSValue> DoGetColor();
-  already_AddRefed<CSSValue> DoGetFontFamily();
-  already_AddRefed<CSSValue> DoGetFontFeatureSettings();
-  already_AddRefed<CSSValue> DoGetFontVariationSettings();
-  already_AddRefed<CSSValue> DoGetFontLanguageOverride();
-  already_AddRefed<CSSValue> DoGetFontSize();
-  already_AddRefed<CSSValue> DoGetFontSizeAdjust();
+
+  /* Font properties */
   already_AddRefed<CSSValue> DoGetOsxFontSmoothing();
-  already_AddRefed<CSSValue> DoGetFontStretch();
-  already_AddRefed<CSSValue> DoGetFontStyle();
-  already_AddRefed<CSSValue> DoGetFontSynthesis();
   already_AddRefed<CSSValue> DoGetFontVariant();
-  already_AddRefed<CSSValue> DoGetFontVariantAlternates();
-  already_AddRefed<CSSValue> DoGetFontVariantEastAsian();
-  already_AddRefed<CSSValue> DoGetFontVariantLigatures();
-  already_AddRefed<CSSValue> DoGetFontVariantNumeric();
-  already_AddRefed<CSSValue> DoGetFontWeight();
 
   /* Grid properties */
   already_AddRefed<CSSValue> DoGetGridAutoFlow();
