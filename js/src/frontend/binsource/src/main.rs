@@ -888,9 +888,11 @@ impl CPPExporter {
     {type_ok} result;
     if (kind == BinKind::{null}) {{
         result = {default_value};
-    }} else {{
+    }} else if (kind == BinKind::{kind}) {{
         const auto start = tokenizer_->offset();
         MOZ_TRY_VAR(result, parseInterface{contents}(start, kind, fields));
+    }} else {{
+        return raiseInvalidKind(\"{kind}\", kind);
     }}
     MOZ_TRY(guard.done());
 
@@ -903,6 +905,7 @@ impl CPPExporter {
                     contents = parser.elements.to_class_cases(),
                     type_ok = type_ok,
                     default_value = default_value,
+                    kind = parser.elements.to_cpp_enum_case(),
                 ));
             }
             NamedType::Typedef(ref type_) => {
@@ -988,7 +991,6 @@ impl CPPExporter {
         buffer.push_str(&comment);
 
         // Generate public method
-        let kind = name.to_class_cases();
         buffer.push_str(&format!("{first_line}
 {{
     BinKind kind;
@@ -996,9 +998,11 @@ impl CPPExporter {
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    if (kind != BinKind::{kind}) {{
+        return raiseInvalidKind(\"{kind}\", kind);
+    }}
     const auto start = tokenizer_->offset();
-
-    BINJS_MOZ_TRY_DECL(result, parseInterface{kind}(start, kind, fields));
+    BINJS_MOZ_TRY_DECL(result, parseInterface{class_name}(start, kind, fields));
     MOZ_TRY(guard.done());
 
     return result;
@@ -1006,7 +1010,8 @@ impl CPPExporter {
 
 ",
             first_line = self.get_method_definition_start(name, "ParseNode*", "", ""),
-            kind = kind
+            kind = name.to_cpp_enum_case(),
+            class_name = name.to_class_cases(),
         ));
 
         // Generate aux method
@@ -1154,11 +1159,11 @@ impl CPPExporter {
         if build_result == "" {
             buffer.push_str(&format!("{first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({})\");
+    return raiseError(\"FIXME: Not implemented yet ({class_name})\");
 }}
 
 ",
-                kind = kind.to_str(),
+                class_name = name.to_class_cases(),
                 first_line = first_line,
             ));
         } else {
