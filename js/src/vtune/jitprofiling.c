@@ -4,7 +4,7 @@
 
   GPL LICENSE SUMMARY
 
-  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of version 2 of the GNU General Public License as
@@ -26,7 +26,7 @@
 
   BSD LICENSE
 
-  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2017 Intel Corporation. All rights reserved.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,7 @@
 
 #include "vtune/jitprofiling.h"
 
-static const char rcsid[] = "\n@(#) $Revision: 471937 $\n";
+static const char rcsid[] = "\n@(#) $Revision: 523557 $\n";
 
 #define DLL_ENVIRONMENT_VAR             "VS_PROFILER"
 
@@ -251,7 +251,10 @@ int loadiJIT_Funcs()
     if (dllName)
     {
         /* Try to load the dll from the PATH... */
-        m_libHandle = dlopen(dllName, RTLD_LAZY);
+        if (DL_SYMBOLS)
+        {
+            m_libHandle = dlopen(dllName, RTLD_LAZY);
+        }
     }
 #endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
 
@@ -260,7 +263,10 @@ int loadiJIT_Funcs()
 #if ITT_PLATFORM==ITT_PLATFORM_WIN
         m_libHandle = LoadLibraryA(DEFAULT_DLLNAME);
 #else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        m_libHandle = dlopen(DEFAULT_DLLNAME, RTLD_LAZY);
+        if (DL_SYMBOLS)
+        {
+            m_libHandle = dlopen(DEFAULT_DLLNAME, RTLD_LAZY);
+        }
 #endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
     }
 
