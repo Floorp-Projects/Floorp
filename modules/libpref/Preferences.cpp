@@ -204,7 +204,10 @@ union PrefValue {
     mStringVal = nullptr;
   }
 
-  void Replace(bool aHasValue, PrefType aOldType, PrefType aNewType, PrefValue aNewValue)
+  void Replace(bool aHasValue,
+               PrefType aOldType,
+               PrefType aNewType,
+               PrefValue aNewValue)
   {
     if (aHasValue) {
       Clear(aOldType);
@@ -997,11 +1000,11 @@ public:
 class CallbackNode
 {
 public:
-  CallbackNode(const char* aDomain,
+  CallbackNode(const nsACString& aDomain,
                PrefChangedFunc aFunc,
                void* aData,
                Preferences::MatchKind aMatchKind)
-    : mDomain(moz_xstrdup(aDomain))
+    : mDomain(aDomain)
     , mFunc(aFunc)
     , mData(aData)
     , mNextAndMatchKind(aMatchKind)
@@ -1010,7 +1013,7 @@ public:
 
   // mDomain is a UniquePtr<>, so any uses of Domain() should only be temporary
   // borrows.
-  const char* Domain() const { return mDomain.get(); }
+  const nsCString& Domain() const { return mDomain; }
 
   PrefChangedFunc Func() const { return mFunc; }
   void ClearFunc() { mFunc = nullptr; }
@@ -1039,14 +1042,15 @@ public:
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
   {
     aSizes.mCallbacksObjects += aMallocSizeOf(this);
-    aSizes.mCallbacksDomains += aMallocSizeOf(mDomain.get());
+    aSizes.mCallbacksDomains +=
+      mDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
 private:
   static const uintptr_t kMatchKindMask = uintptr_t(0x1);
   static const uintptr_t kNextMask = ~kMatchKindMask;
 
-  UniqueFreePtr<const char> mDomain;
+  nsCString mDomain;
 
   // If someone attempts to remove the node from the callback list while
   // NotifyCallbacks() is running, |func| is set to nullptr. Such nodes will
@@ -1236,12 +1240,13 @@ NotifyCallbacks(const char* aPrefName)
   // if we haven't reentered.
   gCallbacksInProgress = true;
 
+  nsDependentCString prefName(aPrefName);
+
   for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
     if (node->Func()) {
-      bool matches =
-        node->MatchKind() == Preferences::ExactMatch
-          ? strcmp(node->Domain(), aPrefName) == 0
-          : strncmp(node->Domain(), aPrefName, strlen(node->Domain())) == 0;
+      bool matches = node->MatchKind() == Preferences::ExactMatch
+                       ? node->Domain() == prefName
+                       : StringBeginsWith(prefName, node->Domain());
       if (matches) {
         (node->Func())(aPrefName, node->Data());
       }
@@ -4628,12 +4633,11 @@ Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
 
 /* static */ nsresult
 Preferences::RegisterCallback(PrefChangedFunc aCallback,
-                              const char* aPrefNode,
+                              const nsACString& aPrefNode,
                               void* aData,
                               MatchKind aMatchKind,
                               bool aIsPriority)
 {
-  NS_ENSURE_ARG(aPrefNode);
   NS_ENSURE_ARG(aCallback);
 
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -4663,21 +4667,21 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
 
 /* static */ nsresult
 Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
-                                     const char* aPref,
+                                     const nsACString& aPref,
                                      void* aClosure,
                                      MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
-    (*aCallback)(aPref, aClosure);
+    (*aCallback)(PromiseFlatCString(aPref).get(), aClosure);
   }
   return rv;
 }
 
 /* static */ nsresult
 Preferences::UnregisterCallback(PrefChangedFunc aCallback,
-                                const char* aPrefNode,
+                                const nsACString& aPrefNode,
                                 void* aData,
                                 MatchKind aMatchKind)
 {
@@ -4694,8 +4698,7 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
 
   while (node) {
     if (node->Func() == aCallback && node->Data() == aData &&
-        node->MatchKind() == aMatchKind &&
-        strcmp(node->Domain(), aPrefNode) == 0) {
+        node->MatchKind() == aMatchKind && node->Domain() == aPrefNode) {
       if (gCallbacksInProgress) {
         // Postpone the node removal until after callbacks enumeration is
         // finished.
