@@ -48,8 +48,8 @@ SVGAngle::SetValue(float aValue, ErrorResult& rv)
     return;
   }
   bool isBaseVal = mType == BaseValue;
-  mVal->SetBaseValue(aValue, isBaseVal ? mSVGElement.get() : nullptr,
-                     isBaseVal);
+  mVal->SetBaseValue(aValue, mVal->mBaseValUnit,
+                     isBaseVal ? mSVGElement.get() : nullptr, isBaseVal);
 }
 
 float
