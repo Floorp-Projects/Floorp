@@ -1214,45 +1214,6 @@ nsComputedDOMStyle::DoGetColumnRuleWidth()
   return val.forget();
 }
 
-static void
-AppendCounterStyle(CounterStyle* aStyle, nsAString& aString)
-{
-  AnonymousCounterStyle* anonymous = aStyle->AsAnonymous();
-  if (!anonymous) {
-    // want SetIdent
-    nsDependentAtomString type(aStyle->GetStyleName());
-    nsStyleUtil::AppendEscapedCSSIdent(type, aString);
-  } else if (anonymous->IsSingleString()) {
-    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
-    MOZ_ASSERT(symbols.Length() == 1);
-    nsStyleUtil::AppendEscapedCSSString(symbols[0], aString);
-  } else {
-    aString.AppendLiteral("symbols(");
-
-    uint8_t system = anonymous->GetSystem();
-    NS_ASSERTION(system == NS_STYLE_COUNTER_SYSTEM_CYCLIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_NUMERIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_ALPHABETIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_SYMBOLIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_FIXED,
-                 "Invalid system for anonymous counter style.");
-    if (system != NS_STYLE_COUNTER_SYSTEM_SYMBOLIC) {
-      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
-              system, nsCSSProps::kCounterSystemKTable), aString);
-      aString.Append(' ');
-    }
-
-    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
-    NS_ASSERTION(symbols.Length() > 0,
-                 "No symbols in the anonymous counter style");
-    for (size_t i = 0, iend = symbols.Length(); i < iend; i++) {
-      nsStyleUtil::AppendEscapedCSSString(symbols[i], aString);
-      aString.Append(' ');
-    }
-    aString.Replace(aString.Length() - 1, 1, char16_t(')'));
-  }
-}
-
 /* Convert the stored representation into a list of two values and then hand
  * it back.
  */
@@ -3499,31 +3460,6 @@ nsComputedDOMStyle::DoGetZIndex()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StylePosition()->mZIndex, false);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetListStyleImage()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  nsCOMPtr<nsIURI> uri = StyleList()->GetListStyleImageURI();
-  if (!uri) {
-    val->SetIdent(eCSSKeyword_none);
-  } else {
-    val->SetURI(uri);
-  }
-
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetListStyleType()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  nsAutoString tmp;
-  AppendCounterStyle(StyleList()->mCounterStyle, tmp);
-  val->SetString(tmp);
   return val.forget();
 }
 

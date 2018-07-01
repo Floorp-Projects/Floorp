@@ -150,7 +150,7 @@ MODERN_MERCURIAL_VERSION = LooseVersion('4.3.3')
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 
 # Upgrade rust older than this.
-MODERN_RUST_VERSION = LooseVersion('1.24.0')
+MODERN_RUST_VERSION = LooseVersion('1.26.0')
 
 
 class BaseBootstrapper(object):
