@@ -275,7 +275,7 @@ impl<'ctx> UsedTemplateParameters<'ctx> {
         let decl = self.ctx.resolve_type(instantiation.template_definition());
         let args = instantiation.template_arguments();
 
-        let params = decl.self_template_params(self.ctx).unwrap_or(vec![]);
+        let params = decl.self_template_params(self.ctx);
 
         debug_assert!(this_id != instantiation.template_definition());
         let used_by_def = self.used
@@ -419,7 +419,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
                     // template parameters, there is a single exception:
                     // opaque templates. Hence the unwrap_or.
                     let params =
-                        decl.self_template_params(ctx).unwrap_or(vec![]);
+                        decl.self_template_params(ctx);
 
                     for (arg, param) in args.iter().zip(params.iter()) {
                         let arg = arg.into_resolver()

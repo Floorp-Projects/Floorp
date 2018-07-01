@@ -43,7 +43,7 @@ pub trait CanDeriveCopy<'a> {
 
 /// A trait that encapsulates the logic for whether or not we can trivially
 /// derive `Copy` without looking at any other types or results of fix point
-/// analsyses. This is a helper trait for fix point analysis.
+/// analyses. This is a helper trait for fix point analysis.
 pub trait CanTriviallyDeriveCopy {
     /// Return `true` if `Copy` can be trivially derived for this thing, `false`
     /// otherwise.

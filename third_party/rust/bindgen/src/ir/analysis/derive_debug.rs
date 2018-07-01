@@ -150,7 +150,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
             });
             return if layout_can_derive &&
                       !(ty.is_union() &&
-                        self.ctx.options().rust_features().untagged_union()) {
+                        self.ctx.options().rust_features().untagged_union) {
                 trace!("    we can trivially derive Debug for the layout");
                 ConstrainResult::Same
             } else {
@@ -235,7 +235,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
                 );
 
                 if info.kind() == CompKind::Union {
-                    if self.ctx.options().rust_features().untagged_union() {
+                    if self.ctx.options().rust_features().untagged_union {
                         trace!("    cannot derive Debug for Rust unions");
                         return self.insert(id);
                     }
