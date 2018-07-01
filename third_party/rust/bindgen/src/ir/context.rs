@@ -24,7 +24,7 @@ use cexpr;
 use clang::{self, Cursor};
 use clang_sys;
 use parse::ClangItemParser;
-use quote;
+use proc_macro2::{Term, Span};
 use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet, hash_map};
@@ -366,11 +366,14 @@ pub struct BindgenContext {
     /// The translation unit for parsing.
     translation_unit: clang::TranslationUnit,
 
+    /// Target information that can be useful for some stuff.
+    target_info: Option<clang::TargetInfo>,
+
     /// The options given by the user via cli or other medium.
     options: BindgenOptions,
 
     /// Whether a bindgen complex was generated
-    generated_bindegen_complex: Cell<bool>,
+    generated_bindgen_complex: Cell<bool>,
 
     /// The set of `ItemId`s that are whitelisted. This the very first thing
     /// computed after parsing our IR, and before running any of our analyses.
@@ -503,6 +506,9 @@ impl<'ctx> WhitelistedItemsTraversal<'ctx> {
     }
 }
 
+const HOST_TARGET: &'static str =
+    include_str!(concat!(env!("OUT_DIR"), "/host-target.txt"));
+
 /// Returns the effective target, and whether it was explicitly specified on the
 /// clang flags.
 fn find_effective_target(clang_args: &[String]) -> (String, bool) {
@@ -521,8 +527,6 @@ fn find_effective_target(clang_args: &[String]) -> (String, bool) {
         return (t, false)
     }
 
-    const HOST_TARGET: &'static str =
-        include_str!(concat!(env!("OUT_DIR"), "/host-target.txt"));
     (HOST_TARGET.to_owned(), false)
 }
 
@@ -561,6 +565,17 @@ impl BindgenContext {
             ).expect("TranslationUnit::parse failed")
         };
 
+        let target_info = clang::TargetInfo::new(&translation_unit);
+
+        #[cfg(debug_assertions)]
+        {
+            if let Some(ref ti) = target_info {
+                if effective_target == HOST_TARGET {
+                    assert_eq!(ti.pointer_width / 8, mem::size_of::<*mut ()>());
+                }
+            }
+        }
+
         let root_module = Self::build_root_module(ItemId(0));
         let root_module_id = root_module.id().as_module_id_unchecked();
 
@@ -578,10 +593,11 @@ impl BindgenContext {
             replacements: Default::default(),
             collected_typerefs: false,
             in_codegen: false,
-            index: index,
-            translation_unit: translation_unit,
-            options: options,
-            generated_bindegen_complex: Cell::new(false),
+            index,
+            translation_unit,
+            target_info,
+            options,
+            generated_bindgen_complex: Cell::new(false),
             whitelisted: None,
             codegen_items: None,
             used_template_parameters: None,
@@ -609,6 +625,15 @@ impl BindgenContext {
     /// nothing.
     pub fn timer<'a>(&self, name: &'a str) -> Timer<'a> {
         Timer::new(name).with_output(self.options.time_phases)
+    }
+
+    /// Returns the pointer width to use for the target for the current
+    /// translation.
+    pub fn target_pointer_size(&self) -> usize {
+        if let Some(ref ti) = self.target_info {
+            return ti.pointer_width / 8;
+        }
+        mem::size_of::<*mut ()>()
     }
 
     /// Get the stack of partially parsed types that we are in the middle of
@@ -880,7 +905,7 @@ impl BindgenContext {
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident<S>(&self, name: S) -> quote::Ident
+    pub fn rust_ident<S>(&self, name: S) -> Term
     where
         S: AsRef<str>
     {
@@ -888,11 +913,11 @@ impl BindgenContext {
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident_raw<T>(&self, name: T) -> quote::Ident
+    pub fn rust_ident_raw<T>(&self, name: T) -> Term
     where
-        T: Into<quote::Ident>
+        T: AsRef<str>
     {
-        name.into()
+        Term::new(name.as_ref(), Span::call_site())
     }
 
     /// Iterate over all items that have been defined.
@@ -1341,10 +1366,7 @@ impl BindgenContext {
             let mut used_params = HashMap::new();
             for &id in self.whitelisted_items() {
                 used_params.entry(id).or_insert(
-                    id.self_template_params(self).map_or(
-                        Default::default(),
-                        |params| params.into_iter().map(|p| p.into()).collect(),
-                    ),
+                    id.self_template_params(self).into_iter().map(|p| p.into()).collect()
                 );
             }
             self.used_template_parameters = Some(used_params);
@@ -1516,7 +1538,7 @@ impl BindgenContext {
     ///
     /// Note that `declaration_id` is not guaranteed to be in the context's item
     /// set! It is possible that it is a partial type that we are still in the
-    /// middle of parsign.
+    /// middle of parsing.
     fn get_declaration_info_for_template_instantiation(
         &self,
         instantiation: &Cursor,
@@ -1527,15 +1549,16 @@ impl BindgenContext {
             .and_then(|canon_decl| {
                 self.get_resolved_type(&canon_decl).and_then(
                     |template_decl_id| {
-                        template_decl_id.num_self_template_params(self).map(
-                            |num_params| {
-                                (
-                                    *canon_decl.cursor(),
-                                    template_decl_id.into(),
-                                    num_params,
-                                )
-                            },
-                        )
+                        let num_params = template_decl_id.num_self_template_params(self);
+                        if num_params == 0 {
+                            None
+                        } else {
+                            Some((
+                                *canon_decl.cursor(),
+                                template_decl_id.into(),
+                                num_params,
+                            ))
+                        }
                     },
                 )
             })
@@ -1556,15 +1579,16 @@ impl BindgenContext {
                             .cloned()
                     })
                     .and_then(|template_decl| {
-                        template_decl.num_self_template_params(self).map(
-                            |num_template_params| {
-                                (
-                                    *template_decl.decl(),
-                                    template_decl.id(),
-                                    num_template_params,
-                                )
-                            },
-                        )
+                        let num_template_params = template_decl.num_self_template_params(self);
+                        if num_template_params == 0 {
+                            None
+                        } else {
+                            Some((
+                                *template_decl.decl(),
+                                template_decl.id(),
+                                num_template_params,
+                            ))
+                        }
                     })
             })
     }
@@ -1611,17 +1635,14 @@ impl BindgenContext {
     ) -> Option<TypeId> {
         use clang_sys;
 
-        let num_expected_args = match self.resolve_type(template)
-            .num_self_template_params(self) {
-            Some(n) => n,
-            None => {
-                warn!(
-                    "Tried to instantiate a template for which we could not \
-                       determine any template parameters"
-                );
-                return None;
-            }
-        };
+        let num_expected_args = self.resolve_type(template).num_self_template_params(self);
+        if num_expected_args == 0 {
+            warn!(
+                "Tried to instantiate a template for which we could not \
+                   determine any template parameters"
+            );
+            return None;
+        }
 
         let mut args = vec![];
         let mut found_const_arg = false;
@@ -1893,7 +1914,7 @@ impl BindgenContext {
     /// Make a new item that is a resolved type reference to the `wrapped_id`.
     ///
     /// This is unfortunately a lot of bloat, but is needed to properly track
-    /// constness et. al.
+    /// constness et al.
     ///
     /// We should probably make the constness tracking separate, so it doesn't
     /// bloat that much, but hey, we already bloat the heck out of builtin
@@ -1905,8 +1926,43 @@ impl BindgenContext {
         parent_id: Option<ItemId>,
         ty: &clang::Type,
     ) -> TypeId {
+        self.build_wrapper(
+            with_id,
+            wrapped_id,
+            parent_id,
+            ty,
+            ty.is_const(),
+        )
+    }
+
+    /// A wrapper over a type that adds a const qualifier explicitly.
+    ///
+    /// Needed to handle const methods in C++, wrapping the type .
+    pub fn build_const_wrapper(
+        &mut self,
+        with_id: ItemId,
+        wrapped_id: TypeId,
+        parent_id: Option<ItemId>,
+        ty: &clang::Type,
+    ) -> TypeId {
+        self.build_wrapper(
+            with_id,
+            wrapped_id,
+            parent_id,
+            ty,
+            /* is_const = */ true,
+        )
+    }
+
+    fn build_wrapper(
+        &mut self,
+        with_id: ItemId,
+        wrapped_id: TypeId,
+        parent_id: Option<ItemId>,
+        ty: &clang::Type,
+        is_const: bool,
+    ) -> TypeId {
         let spelling = ty.spelling();
-        let is_const = ty.is_const();
         let layout = ty.fallible_layout().ok();
         let type_kind = TypeKind::ResolvedTypeRef(wrapped_id);
         let ty = Type::new(Some(spelling), layout, type_kind, is_const);
@@ -2291,7 +2347,11 @@ impl BindgenContext {
             if self.options().whitelist_recursively {
                 traversal::all_edges
             } else {
-                traversal::no_edges
+                // Only follow InnerType edges from the whitelisted roots.
+                // Such inner types (e.g. anonymous structs/unions) are
+                // always emitted by codegen, and they need to be whitelisted
+                // to make sure they are processed by e.g. the derive analysis.
+                traversal::only_inner_type_edges
             };
 
         let whitelisted = WhitelistedItemsTraversal::new(
@@ -2316,7 +2376,7 @@ impl BindgenContext {
 
     /// Convenient method for getting the prefix to use for most traits in
     /// codegen depending on the `use_core` option.
-    pub fn trait_prefix(&self) -> quote::Ident {
+    pub fn trait_prefix(&self) -> Term {
         if self.options().use_core {
             self.rust_ident_raw("core")
         } else {
@@ -2324,14 +2384,14 @@ impl BindgenContext {
         }
     }
 
-    /// Call if a binden complex is generated
-    pub fn generated_bindegen_complex(&self) {
-        self.generated_bindegen_complex.set(true)
+    /// Call if a bindgen complex is generated
+    pub fn generated_bindgen_complex(&self) {
+        self.generated_bindgen_complex.set(true)
     }
 
-    /// Whether we need to generate the binden complex type
-    pub fn need_bindegen_complex_type(&self) -> bool {
-        self.generated_bindegen_complex.get()
+    /// Whether we need to generate the bindgen complex type
+    pub fn need_bindgen_complex_type(&self) -> bool {
+        self.generated_bindgen_complex.get()
     }
 
     /// Compute whether we can derive debug.
@@ -2503,7 +2563,7 @@ impl BindgenContext {
         self.options().no_copy_types.matches(&name)
     }
 
-    /// Chech if `--no-hash` flag is enabled for this item.
+    /// Check if `--no-hash` flag is enabled for this item.
     pub fn no_hash_by_name(&self, item: &Item) -> bool {
         let name = item.canonical_path(self)[1..].join("::");
         self.options().no_hash_types.matches(&name)
@@ -2618,13 +2678,13 @@ impl TemplateParameters for PartialType {
     fn self_template_params(
         &self,
         _ctx: &BindgenContext,
-    ) -> Option<Vec<TypeId>> {
+    ) -> Vec<TypeId> {
         // Maybe at some point we will eagerly parse named types, but for now we
         // don't and this information is unavailable.
-        None
+        vec![]
     }
 
-    fn num_self_template_params(&self, _ctx: &BindgenContext) -> Option<usize> {
+    fn num_self_template_params(&self, _ctx: &BindgenContext) -> usize {
         // Wouldn't it be nice if libclang would reliably give us this
         // information‽
         match self.decl().kind() {
@@ -2643,9 +2703,9 @@ impl TemplateParameters for PartialType {
                     };
                     clang_sys::CXChildVisit_Continue
                 });
-                Some(num_params)
+                num_params
             }
-            _ => None,
+            _ => 0,
         }
     }
 }

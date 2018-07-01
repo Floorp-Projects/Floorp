@@ -1290,9 +1290,10 @@ impl CompInfo {
                         return CXChildVisit_Continue;
                     }
 
+                    // Even if this is a definition, we may not be the semantic
+                    // parent, see #1281.
                     let inner = Item::parse(cur, Some(potential_id), ctx)
                         .expect("Inner ClassDecl");
-                    assert_eq!(ctx.resolve_item(inner).parent_id(), potential_id);
 
                     let inner = inner.expect_type_id(ctx);
 
@@ -1355,7 +1356,7 @@ impl CompInfo {
                     // to be inserted in the map two times.
                     //
                     // I couldn't make a reduced test case, but anyway...
-                    // Methods of template functions not only use to be inlined,
+                    // Methods of template functions not only used to be inlined,
                     // but also instantiated, and we wouldn't be able to call
                     // them, so just bail out.
                     if !ci.template_params.is_empty() {
@@ -1543,7 +1544,7 @@ impl CompInfo {
     ///     1. Current RustTarget allows for `untagged_union`
     ///     2. Each field can derive `Copy`
     pub fn can_be_rust_union(&self, ctx: &BindgenContext) -> bool {
-        if !ctx.options().rust_features().untagged_union() {
+        if !ctx.options().rust_features().untagged_union {
             return false;
         }
 
@@ -1668,12 +1669,8 @@ impl TemplateParameters for CompInfo {
     fn self_template_params(
         &self,
         _ctx: &BindgenContext,
-    ) -> Option<Vec<TypeId>> {
-        if self.template_params.is_empty() {
-            None
-        } else {
-            Some(self.template_params.clone())
-        }
+    ) -> Vec<TypeId> {
+        self.template_params.clone()
     }
 }
 
@@ -1684,8 +1681,7 @@ impl Trace for CompInfo {
     where
         T: Tracer,
     {
-        let params = item.all_template_params(context).unwrap_or(vec![]);
-        for p in params {
+        for p in item.all_template_params(context) {
             tracer.visit_kind(p.into(), EdgeKind::TemplateParameterDefinition);
         }
 

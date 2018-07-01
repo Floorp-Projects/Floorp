@@ -1112,8 +1112,8 @@ where
     fn self_template_params(
         &self,
         ctx: &BindgenContext,
-    ) -> Option<Vec<TypeId>> {
-        ctx.resolve_item_fallible(*self).and_then(|item| {
+    ) -> Vec<TypeId> {
+        ctx.resolve_item_fallible(*self).map_or(vec![], |item| {
             item.self_template_params(ctx)
         })
     }
@@ -1123,7 +1123,7 @@ impl TemplateParameters for Item {
     fn self_template_params(
         &self,
         ctx: &BindgenContext,
-    ) -> Option<Vec<TypeId>> {
+    ) -> Vec<TypeId> {
         self.kind.self_template_params(ctx)
     }
 }
@@ -1132,7 +1132,7 @@ impl TemplateParameters for ItemKind {
     fn self_template_params(
         &self,
         ctx: &BindgenContext,
-    ) -> Option<Vec<TypeId>> {
+    ) -> Vec<TypeId> {
         match *self {
             ItemKind::Type(ref ty) => ty.self_template_params(ctx),
             // If we start emitting bindings to explicitly instantiated
@@ -1140,7 +1140,7 @@ impl TemplateParameters for ItemKind {
             // template params.
             ItemKind::Function(_) |
             ItemKind::Module(_) |
-            ItemKind::Var(_) => None,
+            ItemKind::Var(_) => vec![],
         }
     }
 }
@@ -1449,8 +1449,8 @@ impl ClangItemParser for Item {
                 return Ok(Item::new_opaque_type(id, ty, ctx));
             }
 
-            if let Some(id) = Item::type_param(Some(id), location, ctx) {
-                return Ok(id);
+            if let Some(param_id) = Item::type_param(None, location, ctx) {
+                return Ok(ctx.build_ty_wrapper(id, param_id, None, ty));
             }
         }
 
