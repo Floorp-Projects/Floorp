@@ -441,7 +441,8 @@ CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
 
 
 nsresult
-CharacterData::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+CharacterData::BindToTree(nsIDocument* aDocument,
+                          nsIContent* aParent,
                           nsIContent* aBindingParent,
                           bool aCompileEventHandlers)
 {
@@ -601,96 +602,9 @@ CharacterData::UnbindFromTree(bool aDeep, bool aNullParent)
   nsNodeUtils::ParentChainChanged(this);
 }
 
-already_AddRefed<nsINodeList>
-CharacterData::GetChildren(uint32_t aFilter)
-{
-  return nullptr;
-}
-
-uint32_t
-CharacterData::GetChildCount() const
-{
-  return 0;
-}
-
-nsIContent *
-CharacterData::GetChildAt_Deprecated(uint32_t aIndex) const
-{
-  return nullptr;
-}
-
-
-int32_t
-CharacterData::ComputeIndexOf(const nsINode* aPossibleChild) const
-{
-  return -1;
-}
-
-nsresult
-CharacterData::InsertChildBefore(nsIContent* aKid,
-                                 nsIContent* aBeforeThis,
-                                 bool aNotify)
-{
-  return NS_OK;
-}
-
-void
-CharacterData::RemoveChildNode(nsIContent* aKid, bool aNotify)
-{
-}
-
-nsXBLBinding *
-CharacterData::DoGetXBLBinding() const
-{
-  return nullptr;
-}
-
-bool
-CharacterData::IsNodeOfType(uint32_t aFlags) const
-{
-  return false;
-}
-
-void
-CharacterData::SaveSubtreeState()
-{
-}
-
-#ifdef DEBUG
-void
-CharacterData::List(FILE* out, int32_t aIndent) const
-{
-}
-
-void
-CharacterData::DumpContent(FILE* out, int32_t aIndent,
-                           bool aDumpAll) const
-{
-}
-#endif
-
-bool
-CharacterData::IsLink(nsIURI** aURI) const
-{
-  *aURI = nullptr;
-  return false;
-}
-
 //----------------------------------------------------------------------
 
 // Implementation of the nsIContent interface text functions
-
-const nsTextFragment *
-CharacterData::GetText()
-{
-  return &mText;
-}
-
-uint32_t
-CharacterData::TextLength() const
-{
-  return TextDataLength();
-}
 
 nsresult
 CharacterData::SetText(const char16_t* aBuffer,
@@ -757,19 +671,6 @@ CharacterData::ThreadSafeTextIsOnlyWhitespace() const
   }
 
   return true;
-}
-
-void
-CharacterData::AppendTextTo(nsAString& aResult)
-{
-  mText.AppendTo(aResult);
-}
-
-bool
-CharacterData::AppendTextTo(nsAString& aResult,
-                            const mozilla::fallible_t& aFallible)
-{
-  return mText.AppendTo(aResult, aFallible);
 }
 
 already_AddRefed<nsAtom>
