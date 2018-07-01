@@ -5539,7 +5539,9 @@ nsComputedDOMStyle::RegisterPrefChangeCallbacks()
   ComputedStyleMap* data = GetComputedStyleMap();
   for (const auto* p = nsCSSProps::kPropertyPrefTable;
        p->mPropID != eCSSProperty_UNKNOWN; p++) {
-    Preferences::RegisterCallback(MarkComputedStyleMapDirty, p->mPref, data);
+    nsCString name;
+    name.AssignLiteral(p->mPref, strlen(p->mPref));
+    Preferences::RegisterCallback(MarkComputedStyleMapDirty, name, data);
   }
 }
 
@@ -5549,6 +5551,7 @@ nsComputedDOMStyle::UnregisterPrefChangeCallbacks()
   ComputedStyleMap* data = GetComputedStyleMap();
   for (const auto* p = nsCSSProps::kPropertyPrefTable;
        p->mPropID != eCSSProperty_UNKNOWN; p++) {
-    Preferences::UnregisterCallback(MarkComputedStyleMapDirty, p->mPref, data);
+    Preferences::UnregisterCallback(MarkComputedStyleMapDirty,
+                                    nsDependentCString(p->mPref), data);
   }
 }
