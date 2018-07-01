@@ -4,8 +4,9 @@ use super::derive::{CanTriviallyDeriveCopy, CanTriviallyDeriveDebug,
                     CanTriviallyDeriveDefault, CanTriviallyDeriveHash,
                     CanTriviallyDerivePartialEqOrPartialOrd, CanDerive};
 use super::ty::{RUST_DERIVE_IN_ARRAY_LIMIT, Type, TypeKind};
+use ir::context::BindgenContext;
 use clang;
-use std::{cmp, mem};
+use std::cmp;
 
 /// A type that represents the struct layout of a type.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -20,10 +21,15 @@ pub struct Layout {
 
 #[test]
 fn test_layout_for_size() {
+    use std::mem;
+
     let ptr_size = mem::size_of::<*mut ()>();
-    assert_eq!(Layout::for_size(ptr_size), Layout::new(ptr_size, ptr_size));
     assert_eq!(
-        Layout::for_size(3 * ptr_size),
+        Layout::for_size_internal(ptr_size, ptr_size),
+        Layout::new(ptr_size, ptr_size)
+    );
+    assert_eq!(
+        Layout::for_size_internal(ptr_size, 3 * ptr_size),
         Layout::new(3 * ptr_size, ptr_size)
     );
 }
@@ -39,13 +45,9 @@ impl Layout {
         }
     }
 
-    /// Creates a non-packed layout for a given size, trying to use the maximum
-    /// alignment possible.
-    pub fn for_size(size: usize) -> Self {
+    fn for_size_internal(ptr_size: usize, size: usize) -> Self {
         let mut next_align = 2;
-        while size % next_align == 0 &&
-            next_align <= mem::size_of::<*mut ()>()
-        {
+        while size % next_align == 0 && next_align <= ptr_size {
             next_align *= 2;
         }
         Layout {
@@ -53,6 +55,12 @@ impl Layout {
             align: next_align / 2,
             packed: false,
         }
+    }
+
+    /// Creates a non-packed layout for a given size, trying to use the maximum
+    /// alignment possible.
+    pub fn for_size(ctx: &BindgenContext, size: usize) -> Self {
+        Self::for_size_internal(ctx.target_pointer_size(), size)
     }
 
     /// Is this a zero-sized layout?
@@ -80,7 +88,8 @@ impl Opaque {
     pub fn from_clang_ty(ty: &clang::Type) -> Type {
         let layout = Layout::new(ty.size(), ty.align());
         let ty_kind = TypeKind::Opaque;
-        Type::new(None, Some(layout), ty_kind, false)
+        let is_const = ty.is_const();
+        Type::new(None, Some(layout), ty_kind, is_const)
     }
 
     /// Return the known rust type we should use to create a correctly-aligned

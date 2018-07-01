@@ -19,6 +19,22 @@ use clap::{ App, Arg };
 
 use itertools::Itertools;
 
+/// A string or string-like construction that can be appended newline.
+trait NewLineIfNotEmpty {
+    /// Append newline if the string is not empty.
+    fn newline_if_not_empty(&self) -> String;
+}
+impl<T> NewLineIfNotEmpty for T where T: ToStr {
+    fn newline_if_not_empty(&self) -> String {
+        let str = self.to_str();
+        if str.len() == 0 {
+            "".to_string()
+        } else {
+            format!("{}\n", str)
+        }
+    }
+}
+
 /// Rules for generating the code for parsing a single field
 /// of a node.
 ///
@@ -735,18 +751,18 @@ impl CPPExporter {
             buffer_cases.push_str(&format!("
       case BinKind::{variant_name}:
         MOZ_TRY_VAR(result, parseInterface{class_name}(start, kind, fields));
-{arm_after}
-        break;",
+{arm_after}        break;",
                 class_name = node.to_class_cases(),
                 variant_name = node.to_cpp_enum_case(),
                 arm_after = rules_for_this_sum.by_sum.get(&node)
                     .cloned()
-                    .unwrap_or_default().after_arm.reindent("        ")));
+                    .unwrap_or_default().after_arm.reindent("        ")
+                    .newline_if_not_empty()));
         }
         buffer.push_str(&format!("\n{first_line}
 {{
     {type_ok} result;
-    switch(kind) {{{cases}
+    switch (kind) {{{cases}
       default:
         return raiseInvalidKind(\"{kind}\", kind);
     }}
@@ -888,9 +904,11 @@ impl CPPExporter {
     {type_ok} result;
     if (kind == BinKind::{null}) {{
         result = {default_value};
-    }} else {{
+    }} else if (kind == BinKind::{kind}) {{
         const auto start = tokenizer_->offset();
         MOZ_TRY_VAR(result, parseInterface{contents}(start, kind, fields));
+    }} else {{
+        return raiseInvalidKind(\"{kind}\", kind);
     }}
     MOZ_TRY(guard.done());
 
@@ -903,6 +921,7 @@ impl CPPExporter {
                     contents = parser.elements.to_class_cases(),
                     type_ok = type_ok,
                     default_value = default_value,
+                    kind = parser.elements.to_cpp_enum_case(),
                 ));
             }
             NamedType::Typedef(ref type_) => {
@@ -988,7 +1007,6 @@ impl CPPExporter {
         buffer.push_str(&comment);
 
         // Generate public method
-        let kind = name.to_class_cases();
         buffer.push_str(&format!("{first_line}
 {{
     BinKind kind;
@@ -996,9 +1014,11 @@ impl CPPExporter {
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    if (kind != BinKind::{kind}) {{
+        return raiseInvalidKind(\"{kind}\", kind);
+    }}
     const auto start = tokenizer_->offset();
-
-    BINJS_MOZ_TRY_DECL(result, parseInterface{kind}(start, kind, fields));
+    BINJS_MOZ_TRY_DECL(result, parseInterface{class_name}(start, kind, fields));
     MOZ_TRY(guard.done());
 
     return result;
@@ -1006,7 +1026,8 @@ impl CPPExporter {
 
 ",
             first_line = self.get_method_definition_start(name, "ParseNode*", "", ""),
-            kind = kind
+            kind = name.to_cpp_enum_case(),
+            class_name = name.to_class_cases(),
         ));
 
         // Generate aux method
@@ -1115,32 +1136,24 @@ impl CPPExporter {
                     };
                     if needs_block {
                         let parse_var = parse_var.reindent("        ");
-                        format!("{before_field}
-{decl_var}
-    {{
-{block_before_field}
-{parse_var}
-{block_after_field}
+                        format!("{before_field}{decl_var}    {{
+{block_before_field}{parse_var}{block_after_field}
     }}
 {after_field}",
-                            before_field = before_field.reindent("    "),
-                            decl_var = decl_var.reindent("    "),
-                            parse_var = parse_var.reindent("        "),
-                            after_field = after_field.reindent("    "),
-                            block_before_field = rules_for_this_field.block_before_field.reindent("        "),
-                            block_after_field = rules_for_this_field.block_after_field.reindent("        "))
+                            before_field = before_field.reindent("    ").newline_if_not_empty(),
+                            decl_var = decl_var.reindent("    ").newline_if_not_empty(),
+                            block_before_field = rules_for_this_field.block_before_field.reindent("        ").newline_if_not_empty(),
+                            parse_var = parse_var.reindent("        ").newline_if_not_empty(),
+                            block_after_field = rules_for_this_field.block_after_field.reindent("        "),
+                            after_field = after_field.reindent("    "))
                     } else {
                         // We have a before_field and an after_field. This will create newlines
                         // for them.
                         format!("
-{before_field}
-{decl_var}
-{parse_var}
-{after_field}
-",
-                            before_field = before_field.reindent("    "),
-                            decl_var = decl_var.reindent("    "),
-                            parse_var = parse_var.reindent("    "),
+{before_field}{decl_var}{parse_var}{after_field}",
+                            before_field = before_field.reindent("    ").newline_if_not_empty(),
+                            decl_var = decl_var.reindent("    ").newline_if_not_empty(),
+                            parse_var = parse_var.reindent("    ").newline_if_not_empty(),
                             after_field = after_field.reindent("    "))
                     }
                 }
@@ -1154,11 +1167,11 @@ impl CPPExporter {
         if build_result == "" {
             buffer.push_str(&format!("{first_line}
 {{
-    return raiseError(\"FIXME: Not implemented yet ({})\");
+    return raiseError(\"FIXME: Not implemented yet ({class_name})\");
 }}
 
 ",
-                kind = kind.to_str(),
+                class_name = name.to_class_cases(),
                 first_line = first_line,
             ));
         } else {
@@ -1170,8 +1183,7 @@ impl CPPExporter {
 #if defined(DEBUG)
     const BinField expected_fields[{number_of_fields}] = {fields_type_list};
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
-#endif // defined(DEBUG)
-",
+#endif // defined(DEBUG)",
                     fields_type_list = fields_type_list,
                     number_of_fields = number_of_fields)
             };
@@ -1179,18 +1191,16 @@ impl CPPExporter {
 {{
     MOZ_ASSERT(kind == BinKind::{kind});
     BINJS_TRY(CheckRecursionLimit(cx_));
-
 {check_fields}
 {pre}{fields_implem}
-{post}
-    return result;
+{post}    return result;
 }}
 
 ",
                 check_fields = check_fields,
                 fields_implem = fields_implem,
-                pre = init,
-                post = build_result,
+                pre = init.newline_if_not_empty(),
+                post = build_result.newline_if_not_empty(),
                 kind = name.to_cpp_enum_case(),
                 first_line = first_line,
             ));

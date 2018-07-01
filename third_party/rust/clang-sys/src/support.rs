@@ -63,12 +63,7 @@ impl Clang {
         let version = parse_version(&path);
         let c_search_paths = parse_search_paths(&path, "c", args);
         let cpp_search_paths = parse_search_paths(&path, "c++", args);
-        Clang {
-            path: path,
-            version: version,
-            c_search_paths: c_search_paths,
-            cpp_search_paths: cpp_search_paths,
-        }
+        Clang { path, version, c_search_paths, cpp_search_paths }
     }
 
     /// Returns a `clang` executable if one can be found.

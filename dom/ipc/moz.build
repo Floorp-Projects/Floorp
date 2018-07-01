@@ -15,6 +15,7 @@ XPIDL_MODULE = 'dom'
 
 EXPORTS.mozilla.dom.ipc += [
     'IdType.h',
+    'SharedStringMap.h',
     'StructuredCloneData.h',
 ]
 
@@ -61,12 +62,14 @@ UNIFIED_SOURCES += [
     'ContentProcessHost.cpp',
     'ContentProcessManager.cpp',
     'FilePickerParent.cpp',
+    'MemMapSnapshot.cpp',
     'MemoryReportRequest.cpp',
     'nsIContentChild.cpp',
     'nsIContentParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
+    'SharedStringMap.cpp',
     'StructuredCloneData.cpp',
     'TabChild.cpp',
     'TabContext.cpp',
@@ -132,6 +135,7 @@ LOCAL_INCLUDES += [
     '/extensions/spellcheck/src',
     '/gfx/2d',
     '/hal/sandbox',
+    '/js/xpconnect/loader',
     '/layout/base',
     '/media/webrtc',
     '/netwerk/base',

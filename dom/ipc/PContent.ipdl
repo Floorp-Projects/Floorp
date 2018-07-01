@@ -289,6 +289,13 @@ struct XPCOMInitData
     DynamicScalarDefinition[] dynamicScalarDefs;
 };
 
+struct StringBundleDescriptor
+{
+    nsCString bundleURL;
+    FileDescriptor mapFile;
+    uint32_t mapSize;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -456,6 +463,8 @@ child:
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 
     async ClearSiteDataReloadNeeded(nsString origin);
+
+    async RegisterStringBundles(StringBundleDescriptor[] stringBundles);
 
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
