@@ -273,7 +273,6 @@ public:
   static const KTableEntry kBorderImageRepeatKTable[];
   static const KTableEntry kBorderStyleKTable[];
   static const KTableEntry kClipPathGeometryBoxKTable[];
-  static const KTableEntry kCounterSystemKTable[];
   static const KTableEntry kShapeRadiusKTable[];
   static const KTableEntry kFilterFunctionKTable[];
   static const KTableEntry kShapeOutsideShapeBoxKTable[];
@@ -299,12 +298,7 @@ public:
   static const KTableEntry kAutoCompletionAlignJustifyContent[];
   // ------------------------------------------------------------------
   static const KTableEntry kFontSmoothingKTable[];
-  static const KTableEntry kFontSynthesisKTable[];
-  static const KTableEntry kFontVariantAlternatesKTable[];
   static const KTableEntry kFontVariantAlternatesFuncsKTable[];
-  static const KTableEntry kFontVariantEastAsianKTable[];
-  static const KTableEntry kFontVariantLigaturesKTable[];
-  static const KTableEntry kFontVariantNumericKTable[];
   static const KTableEntry kGridAutoFlowKTable[];
   static const KTableEntry kGridTrackBreadthKTable[];
   static const KTableEntry kLineHeightKTable[];
