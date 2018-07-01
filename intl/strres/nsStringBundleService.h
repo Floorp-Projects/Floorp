@@ -14,10 +14,10 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIErrorService.h"
-#include "nsIStringBundleOverride.h"
 #include "nsIMemoryReporter.h"
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 
 struct bundleCacheEntry_t;
 
@@ -43,13 +43,19 @@ public:
     size_t amt = SizeOfIncludingThis(MallocSizeOf);
 
     MOZ_COLLECT_REPORT(
-      "explicit/string-bundle-service", KIND_HEAP, UNITS_BYTES,
+      "explicit/string-bundles/service", KIND_HEAP, UNITS_BYTES,
       amt,
-      "Memory used for StringBundleService bundles");
+      "Memory used for StringBundleService overhead");
     return NS_OK;
   };
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+  void SendContentBundles(mozilla::dom::ContentParent* aContentParent) const override;
+
+  void RegisterContentBundle(const nsCString& aBundleURL,
+                             const mozilla::ipc::FileDescriptor& aMapFile,
+                             size_t aMapSize) override;
 
 private:
   virtual ~nsStringBundleService();
@@ -59,16 +65,20 @@ private:
                             uint32_t argCount, char16_t** argArray,
                             nsAString& result);
 
-  void flushBundleCache();
+  void flushBundleCache(bool ignoreShared = true);
 
-  bundleCacheEntry_t *insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                      nsCString &aHashKey);
+  mozilla::UniquePtr<bundleCacheEntry_t> evictOneEntry();
+
+  bundleCacheEntry_t* insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
+                                      const nsACString &aHashKey);
 
   nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
+  // LRU list of cached entries, with the least-recently-used entry first.
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
+  // List of cached shared-memory string bundles, in arbitrary order.
+  mozilla::AutoCleanLinkedList<bundleCacheEntry_t> mSharedBundles;
 
   nsCOMPtr<nsIErrorService> mErrorService;
-  nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
 };
 
 #endif

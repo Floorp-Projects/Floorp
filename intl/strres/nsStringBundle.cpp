@@ -8,7 +8,6 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsStringBundleService.h"
-#include "nsStringBundleTextOverride.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIMutableArray.h"
 #include "nsArrayEnumerator.h"
@@ -25,9 +24,15 @@
 #include "nsIErrorService.h"
 #include "nsICategoryManager.h"
 #include "nsContentUtils.h"
+#include "nsPersistentProperties.h"
+#include "nsQueryObject.h"
 #include "nsStringStream.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ipc/SharedStringMap.h"
 
 // for async loading
 #ifdef ASYNC_LOADING
@@ -37,48 +42,323 @@
 
 using namespace mozilla;
 
+using mozilla::dom::ContentParent;
+using mozilla::dom::StringBundleDescriptor;
+using mozilla::dom::ipc::SharedStringMap;
+using mozilla::dom::ipc::SharedStringMapBuilder;
+using mozilla::ipc::FileDescriptor;
+
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
+/**
+ * A set of string bundle URLs which are loaded by content processes, and
+ * should be allocated in a shared memory region, and then sent to content
+ * processes.
+ *
+ * Note: This layout is chosen to avoid having to create a separate char*
+ * array pointing to the string constant values, which would require
+ * per-process relocations. The second array size is the length of the longest
+ * URL plus its null terminator. Shorter strings are null padded to this
+ * length.
+ *
+ * This should be kept in sync with the similar array in nsContentUtils.cpp,
+ * and updated with any other property files which need to be loaded in all
+ * content processes.
+ */
+static const char kContentBundles[][52] = {
+  "chrome://branding/locale/brand.properties",
+  "chrome://global/locale/commonDialogs.properties",
+  "chrome://global/locale/css.properties",
+  "chrome://global/locale/dom/dom.properties",
+  "chrome://global/locale/intl.properties",
+  "chrome://global/locale/layout/HtmlForm.properties",
+  "chrome://global/locale/layout/htmlparser.properties",
+  "chrome://global/locale/layout_errors.properties",
+  "chrome://global/locale/mathml/mathml.properties",
+  "chrome://global/locale/printing.properties",
+  "chrome://global/locale/security/csp.properties",
+  "chrome://global/locale/security/security.properties",
+  "chrome://global/locale/svg/svg.properties",
+  "chrome://global/locale/xbl.properties",
+  "chrome://global/locale/xul.properties",
+  "chrome://necko/locale/necko.properties",
+  "chrome://onboarding/locale/onboarding.properties",
+};
 
-nsStringBundle::nsStringBundle(const char* aURLSpec,
-                               nsIStringBundleOverride* aOverrideStrings) :
+static bool
+IsContentBundle(const nsCString& aUrl)
+{
+  size_t index;
+  return BinarySearchIf(kContentBundles, 0, MOZ_ARRAY_LENGTH(kContentBundles),
+                        [&] (const char* aElem) { return aUrl.Compare(aElem); },
+                        &index);
+}
+
+namespace {
+
+#define STRINGBUNDLEPROXY_IID \
+{ 0x537cf21b, 0x99fc, 0x4002, \
+  { 0x9e, 0xec, 0x97, 0xbe, 0x4d, 0xe0, 0xb3, 0xdc } }
+
+/**
+ * A simple proxy class for a string bundle instance which will be replaced by
+ * a different implementation later in the session.
+ *
+ * This is used when creating string bundles which should use shared memory,
+ * but the content process has not yet received their shared memory buffer.
+ * When the shared memory variant becomes available, this proxy is retarged to
+ * that instance, and the original non-shared instance is destroyed.
+ *
+ * At that point, the cache entry for the proxy is replaced with the shared
+ * memory instance, and callers which already have an instance of the proxy
+ * are redirected to the new instance.
+ */
+class StringBundleProxy : public nsIStringBundle
+{
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(STRINGBUNDLEPROXY_IID)
+
+  explicit StringBundleProxy(already_AddRefed<nsIStringBundle> aTarget)
+    : mReentrantMonitor("StringBundleProxy::mReentrantMonitor")
+    , mTarget(aTarget)
+  {}
+
+  NS_FORWARD_NSISTRINGBUNDLE(Target()->);
+
+  void Retarget(nsIStringBundle* aTarget)
+  {
+    ReentrantMonitorAutoEnter automon(mReentrantMonitor);
+    mTarget = aTarget;
+  }
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    return aMallocSizeOf(this);
+  }
+
+  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override
+  {
+    return mRefCnt == 1 ? SizeOfIncludingThis(aMallocSizeOf) : 0;
+  }
+
+protected:
+  virtual ~StringBundleProxy() = default;
+
+private:
+  ReentrantMonitor mReentrantMonitor;
+  nsCOMPtr<nsIStringBundle> mTarget;
+
+  // Atomically reads mTarget and returns a strong reference to it. This
+  // allows for safe multi-threaded use when the proxy may be retargetted by
+  // the main thread during access.
+  nsCOMPtr<nsIStringBundle> Target()
+  {
+    ReentrantMonitorAutoEnter automon(mReentrantMonitor);
+    return mTarget;
+  }
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(StringBundleProxy, STRINGBUNDLEPROXY_IID)
+
+NS_IMPL_ISUPPORTS(StringBundleProxy, nsIStringBundle, StringBundleProxy)
+
+
+#define SHAREDSTRINGBUNDLE_IID \
+{ 0x7a8df5f7, 0x9e50, 0x44f6, \
+  { 0xbf, 0x89, 0xc7, 0xad, 0x6c, 0x17, 0xf8, 0x5f } }
+
+/**
+ * A string bundle backed by a read-only, shared memory buffer. This should
+ * only be used for string bundles which are used in child processes.
+ *
+ * Important: The memory allocated by these string bundles will never be freed
+ * before process shutdown, per the restrictions in SharedStringMap.h, so they
+ * should never be used for short-lived bundles.
+ */
+class SharedStringBundle final : public nsStringBundleBase
+{
+public:
+  /**
+   * Initialize the string bundle with a file descriptor pointing to a
+   * pre-populated key-value store for this string bundle. This should only be
+   * called in child processes, for bundles initially created in the parent
+   * process.
+   */
+  void SetMapFile(const FileDescriptor& aFile, size_t aSize);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECLARE_STATIC_IID_ACCESSOR(SHAREDSTRINGBUNDLE_IID)
+
+  nsresult LoadProperties() override;
+
+  /**
+   * Returns a copy of the file descriptor pointing to the shared memory
+   * key-values tore for this string bundle. This should only be called in the
+   * parent process, and may be used to send shared string bundles to child
+   * processes.
+   */
+  FileDescriptor CloneFileDescriptor() const
+  {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    if (mMapFile.isSome()) {
+      return mMapFile.ref();
+    }
+    return mStringMap->CloneFileDescriptor();
+  }
+
+  size_t MapSize() const
+  {
+    if (mMapFile.isSome()) {
+      return mMapSize;
+    }
+    if (mStringMap) {
+      return mStringMap->MapSize();
+    }
+    return 0;
+  }
+
+  bool Initialized() const { return mStringMap || mMapFile.isSome(); }
+
+  StringBundleDescriptor GetDescriptor() const
+  {
+    MOZ_ASSERT(Initialized());
+
+    StringBundleDescriptor descriptor;
+    descriptor.bundleURL() = BundleURL();
+    descriptor.mapFile() = CloneFileDescriptor();
+    descriptor.mapSize() = MapSize();
+    return descriptor;
+  }
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+  static SharedStringBundle* Cast(nsIStringBundle* aStringBundle)
+  {
+    return static_cast<SharedStringBundle*>(aStringBundle);
+  }
+
+protected:
+  friend class nsStringBundleBase;
+
+  explicit SharedStringBundle(const char* aURLSpec)
+    : nsStringBundleBase(aURLSpec)
+  {}
+
+  ~SharedStringBundle() override = default;
+
+  nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
+
+  nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) override;
+
+private:
+  RefPtr<SharedStringMap> mStringMap;
+
+  Maybe<FileDescriptor> mMapFile;
+  size_t mMapSize;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(SharedStringBundle, SHAREDSTRINGBUNDLE_IID)
+
+
+class StringMapEnumerator final : public nsISimpleEnumerator
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATOR
+
+  explicit StringMapEnumerator(SharedStringMap* aStringMap)
+    : mStringMap(aStringMap)
+  {}
+
+protected:
+  virtual ~StringMapEnumerator() = default;
+
+private:
+  RefPtr<SharedStringMap> mStringMap;
+
+  uint32_t mIndex = 0;
+};
+
+NS_IMPL_ISUPPORTS(StringMapEnumerator, nsISimpleEnumerator)
+
+template <typename T, typename... Args>
+already_AddRefed<T>
+MakeBundle(Args... args)
+{
+  return nsStringBundleBase::Create<T>(args...);
+}
+
+template <typename T, typename... Args>
+RefPtr<T>
+MakeBundleRefPtr(Args... args)
+{
+  return nsStringBundleBase::Create<T>(args...);
+}
+
+} // anonymous namespace
+
+NS_IMPL_ISUPPORTS(nsStringBundleBase, nsIStringBundle, nsIMemoryReporter)
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsStringBundle, nsStringBundleBase)
+NS_IMPL_ISUPPORTS_INHERITED(SharedStringBundle, nsStringBundleBase, SharedStringBundle)
+
+nsStringBundleBase::nsStringBundleBase(const char* aURLSpec) :
   mPropertiesURL(aURLSpec),
-  mOverrideStrings(aOverrideStrings),
   mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
   mAttemptedLoad(false),
   mLoaded(false)
 {
 }
 
+nsStringBundleBase::~nsStringBundleBase()
+{
+  UnregisterWeakMemoryReporter(this);
+}
+
+void
+nsStringBundleBase::RegisterMemoryReporter()
+{
+  RegisterWeakMemoryReporter(this);
+}
+
+template <typename T, typename... Args>
+/* static */ already_AddRefed<T>
+nsStringBundleBase::Create(Args... args)
+{
+  RefPtr<T> bundle = new T(args...);
+  bundle->RegisterMemoryReporter();
+  return bundle.forget();
+}
+
+nsStringBundle::nsStringBundle(const char* aURLSpec)
+  : nsStringBundleBase(aURLSpec)
+{}
+
 nsStringBundle::~nsStringBundle()
 {
 }
 
 NS_IMETHODIMP
-nsStringBundle::AsyncPreload()
+nsStringBundleBase::AsyncPreload()
 {
   return NS_IdleDispatchToCurrentThread(
-    NewIdleRunnableMethod("nsStringBundle::LoadProperties",
+    NewIdleRunnableMethod("nsStringBundleBase::LoadProperties",
                           this,
-                          &nsStringBundle::LoadProperties));
+                          &nsStringBundleBase::LoadProperties));
 }
 
 size_t
-nsStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+nsStringBundle::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
   if (mProps) {
     n += mProps->SizeOfIncludingThis(aMallocSizeOf);
   }
-  if (mOverrideStrings) {
-    n += mOverrideStrings->SizeOfIncludingThis(aMallocSizeOf);
-  }
   return aMallocSizeOf(this) + n;
 }
 
 size_t
-nsStringBundle::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
+nsStringBundleBase::SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   if (mRefCnt == 1) {
     return SizeOfIncludingThis(aMallocSizeOf);
@@ -87,8 +367,80 @@ nsStringBundle::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
   }
 }
 
+size_t
+SharedStringBundle::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (mStringMap) {
+    n += aMallocSizeOf(mStringMap);
+  }
+  return aMallocSizeOf(this) + n;
+}
+
+NS_IMETHODIMP
+nsStringBundleBase::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                   nsISupports* aData,
+                                   bool aAnonymize)
+{
+  // String bundle URLs are always local, and part of the distribution.
+  // There's no need to anonymize.
+  nsAutoCStringN<64> escapedURL(mPropertiesURL);
+  escapedURL.ReplaceChar('/', '\\');
+
+  size_t sharedSize = 0;
+  size_t heapSize = SizeOfIncludingThis(MallocSizeOf);
+
+  nsAutoCStringN<256> path("explicit/string-bundles/");
+  if (RefPtr<SharedStringBundle> shared = do_QueryObject(this)) {
+    path.AppendLiteral("SharedStringBundle");
+    if (XRE_IsParentProcess()) {
+      sharedSize = shared->MapSize();
+    }
+  } else {
+    path.AppendLiteral("nsStringBundle");
+  }
+
+  path.AppendLiteral("(url=\"");
+  path.Append(escapedURL);
+
+  // Note: The memory reporter service holds a strong reference to reporters
+  // while collecting reports, so we want to ignore the extra ref in reports.
+  path.AppendLiteral("\", shared=");
+  path.AppendASCII(mRefCnt > 2 ? "true" : "false");
+  path.AppendLiteral(", refCount=");
+  path.AppendInt(uint32_t(mRefCnt - 1));
+
+  if (sharedSize) {
+    path.AppendLiteral(", sharedMemorySize=");
+    path.AppendInt(uint32_t(sharedSize));
+  }
+
+  path.AppendLiteral(")");
+
+  NS_NAMED_LITERAL_CSTRING(
+      desc,
+      "A StringBundle instance representing the data in a (probably "
+      "localized) .properties file. Data may be shared between "
+      "processes.");
+
+  aHandleReport->Callback(
+    EmptyCString(), path, KIND_HEAP, UNITS_BYTES,
+    heapSize, desc, aData);
+
+  if (sharedSize) {
+    path.ReplaceLiteral(0, sizeof("explicit/") - 1,
+                        "shared-");
+
+    aHandleReport->Callback(
+      EmptyCString(), path, KIND_OTHER, UNITS_BYTES,
+      sharedSize, desc, aData);
+  }
+
+  return NS_OK;
+}
+
 nsresult
-nsStringBundle::LoadProperties()
+nsStringBundleBase::ParseProperties(nsIPersistentProperties** aProps)
 {
   // this is different than mLoaded, because we only want to attempt
   // to load once
@@ -100,6 +452,10 @@ nsStringBundle::LoadProperties()
 
     return NS_ERROR_UNEXPECTED;
   }
+
+  MOZ_ASSERT(NS_IsMainThread(),
+             "String bundles must be initialized on the main thread "
+             "before they may be used off-main-thread");
 
   mAttemptedLoad = true;
 
@@ -141,23 +497,86 @@ nsStringBundle::LoadProperties()
     if (NS_FAILED(rv)) return rv;
   }
 
-  NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && in, NS_ERROR_FAILURE);
+  auto props = MakeRefPtr<nsPersistentProperties>();
 
-  static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
-  mProps = do_CreateInstance(kPersistentPropertiesCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mAttemptedLoad = true;
 
-  mAttemptedLoad = mLoaded = true;
-  rv = mProps->Load(in);
+  MOZ_TRY(props->Load(in));
+  props.forget(aProps);
 
-  mLoaded = NS_SUCCEEDED(rv);
-
-  return rv;
+  mLoaded = true;
+  return NS_OK;
 }
 
+nsresult
+nsStringBundle::LoadProperties()
+{
+  if (mProps) {
+    return NS_OK;
+  }
+  return ParseProperties(getter_AddRefs(mProps));
+}
+
+nsresult
+SharedStringBundle::LoadProperties()
+{
+  if (mStringMap)
+    return NS_OK;
+
+  if (mMapFile.isSome()) {
+    mStringMap = new SharedStringMap(mMapFile.ref(), mMapSize);
+    mMapFile.reset();
+    return NS_OK;
+  }
+
+  // We should only populate shared memory string bundles in the parent
+  // process. Instances in the child process should always be instantiated
+  // with a shared memory file descriptor sent from the parent.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIPersistentProperties> props;
+  MOZ_TRY(ParseProperties(getter_AddRefs(props)));
+
+  SharedStringMapBuilder builder;
+
+  nsCOMPtr<nsISimpleEnumerator> iter;
+  MOZ_TRY(props->Enumerate(getter_AddRefs(iter)));
+  bool hasMore;
+  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> next;
+    MOZ_TRY(iter->GetNext(getter_AddRefs(next)));
+
+    nsresult rv;
+    nsCOMPtr<nsIPropertyElement> elem = do_QueryInterface(next, &rv);
+    MOZ_TRY(rv);
+
+    nsCString key;
+    nsString value;
+    MOZ_TRY(elem->GetKey(key));
+    MOZ_TRY(elem->GetValue(value));
+
+    builder.Add(key, value);
+  }
+
+  mStringMap = new SharedStringMap(std::move(builder));
+
+  ContentParent::BroadcastStringBundle(GetDescriptor());
+
+  return NS_OK;
+}
+
+void
+SharedStringBundle::SetMapFile(const FileDescriptor& aFile, size_t aSize)
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+  mStringMap = nullptr;
+  mMapFile.emplace(aFile);
+  mMapSize = aSize;
+}
+
+
 NS_IMETHODIMP
-nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
+nsStringBundleBase::GetStringFromID(int32_t aID, nsAString& aResult)
 {
   nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
@@ -165,38 +584,46 @@ nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
-                                       nsAString& aResult)
+nsStringBundleBase::GetStringFromAUTF8Name(const nsACString& aName,
+                                           nsAString& aResult)
 {
   return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
 }
 
 NS_IMETHODIMP
-nsStringBundle::GetStringFromName(const char* aName, nsAString& aResult)
+nsStringBundleBase::GetStringFromName(const char* aName, nsAString& aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
 
-  nsresult rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
-
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
 
-  // try override first
-  if (mOverrideStrings) {
-    rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
-                                             nsDependentCString(aName),
-                                             aResult);
-    if (NS_SUCCEEDED(rv)) return rv;
-  }
+  return GetStringImpl(nsDependentCString(aName), aResult);
+}
 
-  return mProps->GetStringProperty(nsDependentCString(aName), aResult);
+nsresult
+nsStringBundle::GetStringImpl(const nsACString& aName, nsAString& aResult)
+{
+  MOZ_TRY(LoadProperties());
+
+  return mProps->GetStringProperty(aName, aResult);
+}
+
+nsresult
+SharedStringBundle::GetStringImpl(const nsACString& aName, nsAString& aResult)
+{
+  MOZ_TRY(LoadProperties());
+
+  if (mStringMap->Get(PromiseFlatCString(aName), aResult)) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsStringBundle::FormatStringFromID(int32_t aID,
-                                   const char16_t **aParams,
-                                   uint32_t aLength,
-                                   nsAString& aResult)
+nsStringBundleBase::FormatStringFromID(int32_t aID,
+                                       const char16_t **aParams,
+                                       uint32_t aLength,
+                                       nsAString& aResult)
 {
   nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
@@ -205,10 +632,10 @@ nsStringBundle::FormatStringFromID(int32_t aID,
 
 // this function supports at most 10 parameters.. see below for why
 NS_IMETHODIMP
-nsStringBundle::FormatStringFromAUTF8Name(const nsACString& aName,
-                                          const char16_t **aParams,
-                                          uint32_t aLength,
-                                          nsAString& aResult)
+nsStringBundleBase::FormatStringFromAUTF8Name(const nsACString& aName,
+                                              const char16_t **aParams,
+                                              uint32_t aLength,
+                                              nsAString& aResult)
 {
   return FormatStringFromName(PromiseFlatCString(aName).get(), aParams,
                               aLength, aResult);
@@ -216,10 +643,10 @@ nsStringBundle::FormatStringFromAUTF8Name(const nsACString& aName,
 
 // this function supports at most 10 parameters.. see below for why
 NS_IMETHODIMP
-nsStringBundle::FormatStringFromName(const char* aName,
-                                     const char16_t** aParams,
-                                     uint32_t aLength,
-                                     nsAString& aResult)
+nsStringBundleBase::FormatStringFromName(const char* aName,
+                                         const char16_t** aParams,
+                                         uint32_t aLength,
+                                         nsAString& aResult)
 {
   NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
 
@@ -230,91 +657,62 @@ nsStringBundle::FormatStringFromName(const char* aName,
   return FormatString(formatStr.get(), aParams, aLength, aResult);
 }
 
-nsresult
-nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings,
-                                       nsISimpleEnumerator** aResult)
+NS_IMETHODIMP
+nsStringBundleBase::GetSimpleEnumeration(nsISimpleEnumerator** aElements)
 {
-  nsCOMPtr<nsISupports> supports;
-  nsCOMPtr<nsIPropertyElement> propElement;
+  NS_ENSURE_ARG_POINTER(aElements);
 
-  nsresult rv;
-
-  nsCOMPtr<nsIMutableArray> resultArray =
-    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // first, append the override elements
-  nsCOMPtr<nsISimpleEnumerator> overrideEnumerator;
-  rv = aOverrideStrings->EnumerateKeysInBundle(mPropertiesURL,
-                                               getter_AddRefs(overrideEnumerator));
-
-  bool hasMore;
-  rv = overrideEnumerator->HasMoreElements(&hasMore);
-  NS_ENSURE_SUCCESS(rv, rv);
-  while (hasMore) {
-
-    rv = overrideEnumerator->GetNext(getter_AddRefs(supports));
-    if (NS_SUCCEEDED(rv))
-      resultArray->AppendElement(supports);
-
-    rv = overrideEnumerator->HasMoreElements(&hasMore);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // ok, now we have the override elements in resultArray
-  nsCOMPtr<nsISimpleEnumerator> propEnumerator;
-  rv = mProps->Enumerate(getter_AddRefs(propEnumerator));
-  if (NS_FAILED(rv)) {
-    // no elements in mProps anyway, just return what we have
-    return NS_NewArrayEnumerator(aResult, resultArray);
-  }
-
-  // second, append all the elements that are in mProps
-  do {
-    rv = propEnumerator->GetNext(getter_AddRefs(supports));
-    if (NS_SUCCEEDED(rv) &&
-        (propElement = do_QueryInterface(supports, &rv))) {
-
-      // now check if its in the override bundle
-      nsAutoCString key;
-      propElement->GetKey(key);
-
-      nsAutoString value;
-      rv = aOverrideStrings->GetStringFromName(mPropertiesURL, key, value);
-
-      // if it isn't there, then it is safe to append
-      if (NS_FAILED(rv))
-        resultArray->AppendElement(propElement);
-    }
-
-    rv = propEnumerator->HasMoreElements(&hasMore);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } while (hasMore);
-
-  return resultArray->Enumerate(aResult);
+  return GetSimpleEnumerationImpl(aElements);
 }
 
-
-NS_IMETHODIMP
-nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
+nsresult
+nsStringBundle::GetSimpleEnumerationImpl(nsISimpleEnumerator** elements)
 {
-  if (!elements)
-    return NS_ERROR_INVALID_POINTER;
-
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
-
-  if (mOverrideStrings)
-      return GetCombinedEnumeration(mOverrideStrings, elements);
+  MOZ_TRY(LoadProperties());
 
   return mProps->Enumerate(elements);
 }
 
 nsresult
-nsStringBundle::FormatString(const char16_t *aFormatStr,
-                             const char16_t **aParams, uint32_t aLength,
-                             nsAString& aResult)
+SharedStringBundle::GetSimpleEnumerationImpl(nsISimpleEnumerator** aEnumerator)
+{
+  MOZ_TRY(LoadProperties());
+
+  auto iter = MakeRefPtr<StringMapEnumerator>(mStringMap);
+  iter.forget(aEnumerator);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+StringMapEnumerator::HasMoreElements(bool* aHasMore)
+{
+  *aHasMore = mIndex < mStringMap->Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StringMapEnumerator::GetNext(nsISupports** aNext)
+{
+  if (mIndex >= mStringMap->Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto elem = MakeRefPtr<nsPropertyElement>(
+    mStringMap->GetKeyAt(mIndex),
+    mStringMap->GetValueAt(mIndex));
+
+  elem.forget(aNext);
+
+  mIndex++;
+  return NS_OK;
+}
+
+
+nsresult
+nsStringBundleBase::FormatString(const char16_t *aFormatStr,
+                                 const char16_t **aParams, uint32_t aLength,
+                                 nsAString& aResult)
 {
   NS_ENSURE_ARG(aLength <= 10); // enforce 10-parameter limit
 
@@ -337,175 +735,6 @@ nsStringBundle::FormatString(const char16_t *aFormatStr,
                             aLength >= 10 ? aParams[9] : nullptr);
 
   return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, nsIStringBundle)
-
-nsExtensibleStringBundle::nsExtensibleStringBundle()
-{
-  mLoaded = false;
-}
-
-nsresult
-nsExtensibleStringBundle::Init(const char * aCategory,
-                               nsIStringBundleService* aBundleService)
-{
-
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = catman->EnumerateCategory(aCategory, getter_AddRefs(enumerator));
-  if (NS_FAILED(rv)) return rv;
-
-  bool hasMore;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = enumerator->GetNext(getter_AddRefs(supports));
-    if (NS_FAILED(rv))
-      continue;
-
-    nsCOMPtr<nsISupportsCString> supStr = do_QueryInterface(supports, &rv);
-    if (NS_FAILED(rv))
-      continue;
-
-    nsAutoCString name;
-    rv = supStr->GetData(name);
-    if (NS_FAILED(rv))
-      continue;
-
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = aBundleService->CreateBundle(name.get(), getter_AddRefs(bundle));
-    if (NS_FAILED(rv))
-      continue;
-
-    mBundles.AppendObject(bundle);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsExtensibleStringBundle::AsyncPreload()
-{
-  nsresult rv = NS_OK;
-  const uint32_t size = mBundles.Count();
-  for (uint32_t i = 0; i < size; ++i) {
-    nsIStringBundle* bundle = mBundles[i];
-    if (bundle) {
-      nsresult rv2 = bundle->AsyncPreload();
-      rv = NS_FAILED(rv) ? rv : rv2;
-    }
-  }
-  return rv;
-}
-
-nsExtensibleStringBundle::~nsExtensibleStringBundle()
-{
-}
-
-size_t
-nsExtensibleStringBundle::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = 0;
-  const uint32_t sz = mBundles.Count();
-  for (uint32_t i = 0; i < sz; ++i) {
-    nsIStringBundle* bundle = mBundles[i];
-    if (bundle) {
-      n += bundle->SizeOfIncludingThis(aMallocSizeOf);
-    }
-  }
-  n += mBundles.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  return aMallocSizeOf(this) + n;
-}
-
-size_t
-nsExtensibleStringBundle::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
-{
-  if (mRefCnt == 1) {
-    return SizeOfIncludingThis(aMallocSizeOf);
-  } else {
-    return 0;
-  }
-}
-
-nsresult
-nsExtensibleStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
-{
-  nsAutoCString idStr;
-  idStr.AppendInt(aID, 10);
-  return GetStringFromName(idStr.get(), aResult);
-}
-
-nsresult
-nsExtensibleStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
-                                                 nsAString& aResult)
-{
-  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
-}
-
-nsresult
-nsExtensibleStringBundle::GetStringFromName(const char* aName,
-                                            nsAString& aResult)
-{
-  nsresult rv;
-  const uint32_t size = mBundles.Count();
-  for (uint32_t i = 0; i < size; ++i) {
-    nsIStringBundle* bundle = mBundles[i];
-    if (bundle) {
-      rv = bundle->GetStringFromName(aName, aResult);
-      if (NS_SUCCEEDED(rv))
-        return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsExtensibleStringBundle::FormatStringFromID(int32_t aID,
-                                             const char16_t ** aParams,
-                                             uint32_t aLength,
-                                             nsAString& aResult)
-{
-  nsAutoCString idStr;
-  idStr.AppendInt(aID, 10);
-  return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
-}
-
-NS_IMETHODIMP
-nsExtensibleStringBundle::FormatStringFromAUTF8Name(const nsACString& aName,
-                                                    const char16_t ** aParams,
-                                                    uint32_t aLength,
-                                                    nsAString& aResult)
-{
-  return FormatStringFromName(PromiseFlatCString(aName).get(),
-                              aParams, aLength, aResult);
-}
-
-NS_IMETHODIMP
-nsExtensibleStringBundle::FormatStringFromName(const char* aName,
-                                               const char16_t** aParams,
-                                               uint32_t aLength,
-                                               nsAString& aResult)
-{
-  nsAutoString formatStr;
-  nsresult rv;
-  rv = GetStringFromName(aName, formatStr);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return nsStringBundle::FormatString(formatStr.get(), aParams, aLength,
-                                      aResult);
-}
-
-nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** aResult)
-{
-  // XXX write me
-  *aResult = nullptr;
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -544,7 +773,7 @@ NS_IMPL_ISUPPORTS(nsStringBundleService,
 nsStringBundleService::~nsStringBundleService()
 {
   UnregisterWeakMemoryReporter(this);
-  flushBundleCache();
+  flushBundleCache(/* ignoreShared = */ false);
 }
 
 nsresult
@@ -555,14 +784,8 @@ nsStringBundleService::Init()
     os->AddObserver(this, "memory-pressure", true);
     os->AddObserver(this, "profile-do-change", true);
     os->AddObserver(this, "chrome-flush-caches", true);
-    os->AddObserver(this, "xpcom-category-entry-added", true);
     os->AddObserver(this, "intl:app-locales-changed", true);
   }
-
-  // instantiate the override service, if there is any.
-  // at some point we probably want to make this a category, and
-  // support multiple overrides
-  mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
 
   RegisterWeakMemoryReporter(this);
 
@@ -574,7 +797,7 @@ nsStringBundleService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) 
 {
   size_t n = mBundleMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mBundleMap.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->mBundle->SizeOfIncludingThis(aMallocSizeOf);
+    n += aMallocSizeOf(iter.Data());
     n += iter.Data()->mHashKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
   return aMallocSizeOf(this) + n;
@@ -585,38 +808,88 @@ nsStringBundleService::Observe(nsISupports* aSubject,
                                const char* aTopic,
                                const char16_t* aSomeData)
 {
-  if (strcmp("memory-pressure", aTopic) == 0 ||
-      strcmp("profile-do-change", aTopic) == 0 ||
+  if (strcmp("profile-do-change", aTopic) == 0 ||
       strcmp("chrome-flush-caches", aTopic) == 0 ||
       strcmp("intl:app-locales-changed", aTopic) == 0)
   {
-    flushBundleCache();
-  }
-  else if (strcmp("xpcom-category-entry-added", aTopic) == 0 &&
-           NS_LITERAL_STRING("xpcom-autoregistration").Equals(aSomeData))
-  {
-    mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
+    flushBundleCache(/* ignoreShared = */ false);
+  } else if (strcmp("memory-pressure", aTopic) == 0) {
+    flushBundleCache(/* ignoreShared = */ true);
   }
 
   return NS_OK;
 }
 
 void
-nsStringBundleService::flushBundleCache()
+nsStringBundleService::flushBundleCache(bool ignoreShared)
 {
-  // release all bundles in the cache
-  mBundleMap.Clear();
+  LinkedList<bundleCacheEntry_t> newList;
 
   while (!mBundleCache.isEmpty()) {
-    delete mBundleCache.popFirst();
+    UniquePtr<bundleCacheEntry_t> entry(mBundleCache.popFirst());
+    auto* bundle = nsStringBundleBase::Cast(entry->mBundle);
+
+    if (ignoreShared && bundle->IsShared()) {
+      newList.insertBack(entry.release());
+    } else {
+      mBundleMap.Remove(entry->mHashKey);
+    }
   }
+
+  mBundleCache = std::move(newList);
 }
 
 NS_IMETHODIMP
 nsStringBundleService::FlushBundles()
 {
-  flushBundleCache();
+  flushBundleCache(/* ignoreShared = */ false);
   return NS_OK;
+}
+
+void
+nsStringBundleService::SendContentBundles(ContentParent* aContentParent) const
+{
+  nsTArray<StringBundleDescriptor> bundles;
+
+  for (auto* entry : mSharedBundles) {
+    auto bundle = SharedStringBundle::Cast(entry->mBundle);
+
+    if (bundle->Initialized()) {
+      bundles.AppendElement(bundle->GetDescriptor());
+    }
+  }
+
+  Unused << aContentParent->SendRegisterStringBundles(std::move(bundles));
+}
+
+void
+nsStringBundleService::RegisterContentBundle(const nsCString& aBundleURL,
+                                             const FileDescriptor& aMapFile,
+                                             size_t aMapSize)
+{
+  RefPtr<StringBundleProxy> proxy;
+
+  bundleCacheEntry_t* cacheEntry = mBundleMap.Get(aBundleURL);
+  if (cacheEntry) {
+    if (RefPtr<SharedStringBundle> shared = do_QueryObject(cacheEntry->mBundle)) {
+      return;
+    }
+
+    proxy = do_QueryObject(cacheEntry->mBundle);
+    MOZ_ASSERT(proxy);
+    cacheEntry->remove();
+    delete cacheEntry;
+  }
+
+  auto bundle = MakeBundleRefPtr<SharedStringBundle>(aBundleURL.get());
+  bundle->SetMapFile(aMapFile, aMapSize);
+
+  if (proxy) {
+    proxy->Retarget(bundle);
+  }
+
+  cacheEntry = insertIntoCache(bundle.forget(), aBundleURL);
+  mSharedBundles.insertBack(cacheEntry);
 }
 
 void
@@ -626,58 +899,90 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   nsDependentCString key(aURLSpec);
   bundleCacheEntry_t* cacheEntry = mBundleMap.Get(key);
 
+  RefPtr<SharedStringBundle> shared;
+
   if (cacheEntry) {
-    // cache hit!
-    // remove it from the list, it will later be reinserted
-    // at the head of the list
+    // Remove the entry from the list so it can be re-inserted at the back.
     cacheEntry->remove();
 
+    shared = do_QueryObject(cacheEntry->mBundle);
   } else {
-    // hasn't been cached, so insert it into the hash table
-    RefPtr<nsStringBundle> bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
+    nsCOMPtr<nsIStringBundle> bundle;
+    bool isContent = IsContentBundle(key);
+    if (!isContent || !XRE_IsParentProcess()) {
+      bundle = MakeBundle<nsStringBundle>(aURLSpec);
+    }
+
+    // If this is a bundle which is used by the content processes, we want to
+    // load it into a shared memory region.
+    //
+    // If we're in the parent process, just create a new SharedStringBundle,
+    // and populate it from the properties file.
+    //
+    // If we're in a child process, the fact that the bundle is not already in
+    // the cache means that we haven't received its shared memory descriptor
+    // from the parent yet. There's not much we can do about that besides
+    // wait, but we need to return a bundle now. So instead of a shared memory
+    // bundle, we create a temporary proxy, which points to a non-shared
+    // bundle initially, and is retarged to a shared memory bundle when it
+    // becomes available.
+    if (isContent) {
+      if (XRE_IsParentProcess()) {
+        shared = MakeBundle<SharedStringBundle>(aURLSpec);
+        bundle = shared;
+      } else {
+        bundle = new StringBundleProxy(bundle.forget());
+      }
+    }
+
     cacheEntry = insertIntoCache(bundle.forget(), key);
   }
 
-  // at this point the cacheEntry should exist in the hashtable,
-  // but is not in the LRU cache.
-  // put the cache entry at the front of the list
-  mBundleCache.insertFront(cacheEntry);
+  if (shared) {
+    mSharedBundles.insertBack(cacheEntry);
+  } else {
+    mBundleCache.insertBack(cacheEntry);
+  }
 
   // finally, return the value
   *aResult = cacheEntry->mBundle;
   NS_ADDREF(*aResult);
 }
 
-bundleCacheEntry_t *
-nsStringBundleService::insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                       nsCString &aHashKey)
+UniquePtr<bundleCacheEntry_t>
+nsStringBundleService::evictOneEntry()
 {
-  bundleCacheEntry_t *cacheEntry;
+  for (auto* entry : mBundleCache) {
+    auto* bundle = nsStringBundleBase::Cast(entry->mBundle);
+    if (!bundle->IsShared()) {
+      entry->remove();
+      mBundleMap.Remove(entry->mHashKey);
+      return UniquePtr<bundleCacheEntry_t>(entry);
+    }
+  }
+  return nullptr;
+}
 
-  if (mBundleMap.Count() < MAX_CACHED_BUNDLES) {
-    // cache not full - create a new entry
-    cacheEntry = new bundleCacheEntry_t();
-  } else {
-    // cache is full
-    // take the last entry in the list, and recycle it.
-    cacheEntry = mBundleCache.getLast();
+bundleCacheEntry_t*
+nsStringBundleService::insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
+                                       const nsACString& aHashKey)
+{
+  UniquePtr<bundleCacheEntry_t> cacheEntry;
 
-    // remove it from the hash table and linked list
-    NS_ASSERTION(mBundleMap.Contains(cacheEntry->mHashKey),
-                 "Element will not be removed!");
-    mBundleMap.Remove(cacheEntry->mHashKey);
-    cacheEntry->remove();
+  if (mBundleMap.Count() >= MAX_CACHED_BUNDLES) {
+    cacheEntry = evictOneEntry();
   }
 
-  // at this point we have a new cacheEntry that doesn't exist
-  // in the hashtable, so set up the cacheEntry
+  if (!cacheEntry) {
+    cacheEntry.reset(new bundleCacheEntry_t());
+  }
+
   cacheEntry->mHashKey = aHashKey;
   cacheEntry->mBundle = aBundle;
 
-  // insert the entry into the cache and map, make it the MRU
-  mBundleMap.Put(cacheEntry->mHashKey, cacheEntry);
+  mBundleMap.Put(cacheEntry->mHashKey, cacheEntry.get());
 
-  return cacheEntry;
+  return cacheEntry.release();
 }
 
 NS_IMETHODIMP
@@ -685,24 +990,6 @@ nsStringBundleService::CreateBundle(const char* aURLSpec,
                                     nsIStringBundle** aResult)
 {
   getStringBundle(aURLSpec,aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStringBundleService::CreateExtensibleBundle(const char* aCategory,
-                                              nsIStringBundle** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-
-  RefPtr<nsExtensibleStringBundle> bundle = new nsExtensibleStringBundle();
-
-  nsresult res = bundle->Init(aCategory, this);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  bundle.forget(aResult);
   return NS_OK;
 }
 

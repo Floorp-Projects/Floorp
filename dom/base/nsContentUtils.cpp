@@ -562,35 +562,6 @@ class SameOriginCheckerImpl final : public nsIChannelEventSink,
 
 } // namespace
 
-class nsContentUtils::nsContentUtilsReporter final : public nsIMemoryReporter
-{
-  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
-
-  ~nsContentUtilsReporter() = default;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport,
-                 nsISupports* aData, bool aAnonymize) override
-  {
-    int64_t amt = 0;
-    for (int32_t i = 0; i < PropertiesFile_COUNT; ++i) {
-      if (sStringBundles[i]) {
-        amt += sStringBundles[i]->SizeOfIncludingThisIfUnshared(MallocSizeOf);
-      }
-    }
-
-    MOZ_COLLECT_REPORT("explicit/dom/content-utils-string-bundles", KIND_HEAP, UNITS_BYTES,
-                       amt, "string-bundles in ContentUtils");
-
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS(nsContentUtils::nsContentUtilsReporter, nsIMemoryReporter)
-
 /**
  * This class is used to determine whether or not the user is currently
  * interacting with the browser. It listens to observer events to toggle the
@@ -691,7 +662,6 @@ nsContentUtils::Init()
       new PLDHashTable(&hash_table_ops, sizeof(EventListenerManagerMapEntry));
 
     RegisterStrongMemoryReporter(new DOMEventListenerManagersHashReporter());
-    RegisterStrongMemoryReporter(new nsContentUtilsReporter());
   }
 
   sBlockedScriptRunners = new AutoTArray<nsCOMPtr<nsIRunnable>, 8>;
@@ -3920,6 +3890,8 @@ nsContentUtils::GetEventArgNames(int32_t aNameSpaceID,
   }
 }
 
+// Note: The list of content bundles in nsStringBundle.cpp should be updated
+// whenever entries are added or removed from this list.
 static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   // Must line up with the enum values in |PropertiesFile| enum.
   "chrome://global/locale/css.properties",
@@ -3960,6 +3932,18 @@ nsContentUtils::EnsureStringBundle(PropertiesFile aFile)
 void
 nsContentUtils::AsyncPrecreateStringBundles()
 {
+  // We only ever want to pre-create bundles in the parent process.
+  //
+  // All nsContentUtils bundles are shared between the parent and child
+  // precesses, and the shared memory regions that back them *must* be created
+  // in the parent, and then sent to all children.
+  //
+  // If we attempt to create a bundle in the child before its memory region is
+  // available, we need to create a temporary non-shared bundle, and later
+  // replace that with the shared memory copy. So attempting to pre-load in the
+  // child is wasteful and unnecessary.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   for (uint32_t bundleIndex = 0; bundleIndex < PropertiesFile_COUNT; ++bundleIndex) {
     nsresult rv = NS_IdleDispatchToCurrentThread(
       NS_NewRunnableFunction("AsyncPrecreateStringBundles",

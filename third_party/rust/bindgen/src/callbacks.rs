@@ -35,7 +35,7 @@ pub trait ParseCallbacks: fmt::Debug + UnwindSafe {
         None
     }
 
-    /// This function should return whether, given the a given enum variant
+    /// This function should return whether, given an enum variant
     /// name, and value, this enum variant will forcibly be a constant.
     fn enum_variant_behavior(
         &self,

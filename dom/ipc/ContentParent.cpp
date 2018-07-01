@@ -146,6 +146,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsISound.h"
 #include "nsISpellChecker.h"
+#include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITimer.h"
 #include "nsIURIFixup.h"
@@ -1277,6 +1278,17 @@ ContentParent::GetAllEvenIfDead(nsTArray<ContentParent*>& aArray)
   }
 }
 
+void
+ContentParent::BroadcastStringBundle(const StringBundleDescriptor& aBundle)
+{
+  AutoTArray<StringBundleDescriptor, 1> array;
+  array.AppendElement(aBundle);
+
+  for (auto* cp : AllProcesses(eLive)) {
+    Unused << cp->SendRegisterStringBundles(array);
+  }
+}
+
 const nsAString&
 ContentParent::GetRemoteType() const
 {
@@ -2316,6 +2328,10 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   nsChromeRegistryChrome* chromeRegistry =
     static_cast<nsChromeRegistryChrome*>(registrySvc.get());
   chromeRegistry->SendRegisteredChrome(this);
+
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    services::GetStringBundleService();
+  stringBundleService->SendContentBundles(this);
 
   if (gAppData) {
     nsCString version(gAppData->version);
