@@ -22,7 +22,7 @@ impl<'a> Timer<'a> {
         }
     }
 
-    /// Sets whether or not the Timer will print a mesage
+    /// Sets whether or not the Timer will print a message
     /// when it is dropped.
     pub fn with_output(mut self, output: bool) -> Self {
         self.output = output;

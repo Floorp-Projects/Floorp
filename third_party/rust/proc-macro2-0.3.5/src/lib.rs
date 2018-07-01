@@ -24,7 +24,7 @@
 //! [ts]: https://doc.rust-lang.org/proc_macro/struct.TokenStream.html
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/0.3.6")]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/0.3.5")]
 #![cfg_attr(feature = "nightly", feature(proc_macro))]
 
 #[cfg(feature = "proc-macro")]

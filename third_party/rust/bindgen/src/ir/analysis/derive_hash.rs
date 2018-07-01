@@ -137,7 +137,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
             });
             return if layout_can_derive &&
                 !(ty.is_union() &&
-                  self.ctx.options().rust_features().untagged_union()) {
+                  self.ctx.options().rust_features().untagged_union) {
                 trace!("    we can trivially derive Hash for the layout");
                 ConstrainResult::Same
             } else {
@@ -257,7 +257,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
                 }
 
                 if info.kind() == CompKind::Union {
-                    if self.ctx.options().rust_features().untagged_union() {
+                    if self.ctx.options().rust_features().untagged_union {
                         trace!("    cannot derive Hash for Rust unions");
                         return self.insert(id);
                     }

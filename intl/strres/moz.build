@@ -8,15 +8,19 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'nsIStringBundle.idl',
-    'nsIStringBundleOverride.idl',
 ]
 
 XPIDL_MODULE = 'intl'
 
 UNIFIED_SOURCES += [
     'nsStringBundle.cpp',
-    'nsStringBundleTextOverride.cpp',
 ]
+
+LOCAL_INCLUDES += [
+    '/xpcom/ds',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 

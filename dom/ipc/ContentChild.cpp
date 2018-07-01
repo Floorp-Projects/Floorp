@@ -85,6 +85,7 @@
 #include "GMPServiceChild.h"
 #include "NullPrincipal.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIStringBundle.h"
 #include "nsIWorkerDebuggerManager.h"
 
 #if !defined(XP_WIN)
@@ -2262,11 +2263,6 @@ ContentChild::RecvRegisterChrome(InfallibleTArray<ChromePackage>&& packages,
     static_cast<nsChromeRegistryContent*>(registrySvc.get());
   chromeRegistry->RegisterRemoteChrome(packages, resources, overrides,
                                        locale, reset);
-  static bool preloadDone = false;
-  if (!preloadDone) {
-    preloadDone = true;
-    nsContentUtils::AsyncPrecreateStringBundles();
-  }
   return IPC_OK();
 }
 
@@ -2533,6 +2529,20 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
     cpm->ReceiveMessage(cpm, nullptr, aMsg, false, &data, &cpows, aPrincipal, nullptr,
                         IgnoreErrors());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvRegisterStringBundles(nsTArray<mozilla::dom::StringBundleDescriptor>&& aDescriptors)
+{
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    services::GetStringBundleService();
+
+  for (auto& descriptor : aDescriptors) {
+    stringBundleService->RegisterContentBundle(descriptor.bundleURL(), descriptor.mapFile(),
+                                               descriptor.mapSize());
+  }
+
   return IPC_OK();
 }
 

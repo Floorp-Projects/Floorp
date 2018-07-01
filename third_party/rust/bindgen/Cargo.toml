@@ -12,11 +12,12 @@
 
 [package]
 name = "bindgen"
-version = "0.33.2"
+version = "0.37.4"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
-include = ["Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
+include = ["LICENSE", "README.md", "Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
 description = "Automatically generates Rust FFI bindings to C and C++ libraries."
+homepage = "https://rust-lang-nursery.github.io/rust-bindgen/"
 documentation = "https://docs.rs/bindgen"
 readme = "README.md"
 keywords = ["bindings", "ffi", "code-generation"]
@@ -38,8 +39,8 @@ version = "0.2"
 version = "0.1.0"
 
 [dependencies.clang-sys]
-version = "0.22.0"
-features = ["runtime", "clang_3_9"]
+version = "0.23"
+features = ["runtime", "clang_6_0"]
 
 [dependencies.clap]
 version = "2"
@@ -58,11 +59,16 @@ optional = true
 [dependencies.peeking_take_while]
 version = "0.1.2"
 
+[dependencies.proc-macro2]
+version = "0.3.2, < 0.3.6"
+default-features = false
+
 [dependencies.quote]
-version = "0.3.15"
+version = "0.5"
+default-features = false
 
 [dependencies.regex]
-version = "0.2"
+version = "1.0"
 
 [dependencies.which]
 version = "1.0.2"
@@ -84,5 +90,6 @@ testing_only_extra_assertions = []
 testing_only_libclang_3_8 = []
 testing_only_libclang_3_9 = []
 testing_only_libclang_4 = []
+testing_only_libclang_5 = []
 [badges.travis-ci]
 repository = "rust-lang-nursery/rust-bindgen"

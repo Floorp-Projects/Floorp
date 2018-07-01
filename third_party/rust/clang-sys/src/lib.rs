@@ -27,10 +27,7 @@
 
 #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
 
-#![cfg_attr(feature="clippy", feature(plugin))]
-#![cfg_attr(feature="clippy", plugin(clippy))]
-#![cfg_attr(feature="clippy", warn(clippy))]
-#![cfg_attr(feature="clippy", allow(unreadable_literal))]
+#![cfg_attr(feature="cargo-clippy", allow(unreadable_literal))]
 
 extern crate glob;
 extern crate libc;

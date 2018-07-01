@@ -7,7 +7,6 @@
 
 // string bundles (intl)
 #include "nsStringBundleService.h"
-#include "nsStringBundleTextOverride.h"
 
 // locale
 #include "nsLocaleConstructors.h"
@@ -15,12 +14,10 @@
 // uconv
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
 
 NS_DEFINE_NAMED_CID(MOZ_LOCALESERVICE_CID);
 NS_DEFINE_NAMED_CID(MOZ_OSPREFERENCES_CID);
 NS_DEFINE_NAMED_CID(NS_STRINGBUNDLESERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_STRINGBUNDLETEXTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATIONFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
 
@@ -28,7 +25,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kMOZ_LOCALESERVICE_CID, false, nullptr, mozilla::intl::LocaleServiceConstructor },
     { &kMOZ_OSPREFERENCES_CID, false, nullptr, mozilla::intl::OSPreferencesConstructor },
     { &kNS_STRINGBUNDLESERVICE_CID, false, nullptr, nsStringBundleServiceConstructor },
-    { &kNS_STRINGBUNDLETEXTOVERRIDE_CID, false, nullptr, nsStringBundleTextOverrideConstructor },
     { &kNS_COLLATIONFACTORY_CID, false, nullptr, nsCollationFactoryConstructor },
     { &kNS_COLLATION_CID, false, nullptr, nsCollationConstructor },
     { nullptr }
@@ -38,7 +34,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { MOZ_LOCALESERVICE_CONTRACTID, &kMOZ_LOCALESERVICE_CID },
     { MOZ_OSPREFERENCES_CONTRACTID, &kMOZ_OSPREFERENCES_CID },
     { NS_STRINGBUNDLE_CONTRACTID, &kNS_STRINGBUNDLESERVICE_CID },
-    { NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID, &kNS_STRINGBUNDLETEXTOVERRIDE_CID },
     { NS_COLLATIONFACTORY_CONTRACTID, &kNS_COLLATIONFACTORY_CID },
     { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
     { nullptr }

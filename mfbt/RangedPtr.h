@@ -123,6 +123,19 @@ public:
     MOZ_ASSERT(mRangeEnd == aOther.mRangeEnd);
   }
 
+  template <typename U>
+  RangedPtr<U>
+  ReinterpretCast() const
+  {
+#ifdef DEBUG
+    return { reinterpret_cast<U*>(mPtr),
+             reinterpret_cast<U*>(mRangeStart),
+             reinterpret_cast<U*>(mRangeEnd) };
+#else
+    return { reinterpret_cast<U*>(mPtr), nullptr, nullptr };
+#endif
+  }
+
   /*
    * You can only assign one RangedPtr into another if the two pointers have
    * the same valid range:
