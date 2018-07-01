@@ -358,36 +358,100 @@ public:
   // but note that even if you modified it, the value isn't assigned to the
   // pref.
   static nsresult AddBoolVarCache(bool* aVariable,
-                                  const char* aPref,
+                                  const nsACString& aPref,
                                   bool aDefault = false,
                                   bool aSkipAssignment = false);
   template<MemoryOrdering Order>
   static nsresult AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
-                                        const char* aPref,
+                                        const nsACString& aPref,
                                         bool aDefault = false,
                                         bool aSkipAssignment = false);
   static nsresult AddIntVarCache(int32_t* aVariable,
-                                 const char* aPref,
+                                 const nsACString& aPref,
                                  int32_t aDefault = 0,
                                  bool aSkipAssignment = false);
   template<MemoryOrdering Order>
   static nsresult AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
-                                       const char* aPref,
+                                       const nsACString& aPref,
                                        int32_t aDefault = 0,
                                        bool aSkipAssignment = false);
   static nsresult AddUintVarCache(uint32_t* aVariable,
-                                  const char* aPref,
+                                  const nsACString& aPref,
                                   uint32_t aDefault = 0,
                                   bool aSkipAssignment = false);
   template<MemoryOrdering Order>
   static nsresult AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
-                                        const char* aPref,
+                                        const nsACString& aPref,
                                         uint32_t aDefault = 0,
                                         bool aSkipAssignment = false);
   static nsresult AddFloatVarCache(float* aVariable,
-                                   const char* aPref,
+                                   const nsACString& aPref,
                                    float aDefault = 0.0f,
                                    bool aSkipAssignment = false);
+
+  template<int N>
+  static nsresult AddBoolVarCache(bool* aVariable,
+                                  const char (&aPref)[N],
+                                  bool aDefault = false,
+                                  bool aSkipAssignment = false)
+  {
+    return AddBoolVarCache(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
+  template<MemoryOrdering Order, int N>
+  static nsresult AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
+                                        const char (&aPref)[N],
+                                        bool aDefault = false,
+                                        bool aSkipAssignment = false)
+  {
+    return AddAtomicBoolVarCache<Order>(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
+  template<int N>
+  static nsresult AddIntVarCache(int32_t* aVariable,
+                                 const char (&aPref)[N],
+                                 int32_t aDefault = 0,
+                                 bool aSkipAssignment = false)
+  {
+    return AddIntVarCache(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
+  template<MemoryOrdering Order, int N>
+  static nsresult AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
+                                       const char (&aPref)[N],
+                                       int32_t aDefault = 0,
+                                       bool aSkipAssignment = false)
+  {
+    return AddAtomicIntVarCache<Order>(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
+  template<int N>
+  static nsresult AddUintVarCache(uint32_t* aVariable,
+                                  const char (&aPref)[N],
+                                  uint32_t aDefault = 0,
+                                  bool aSkipAssignment = false)
+  {
+    return AddUintVarCache(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
+  template<MemoryOrdering Order, int N>
+  static nsresult AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
+                                        const char (&aPref)[N],
+                                        uint32_t aDefault = 0,
+                                        bool aSkipAssignment = false)
+  {
+    return AddAtomicUintVarCache<Order>(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
+  template<int N>
+  static nsresult AddFloatVarCache(float* aVariable,
+                                   const char (&aPref)[N],
+                                   float aDefault = 0.0f,
+                                   bool aSkipAssignment = false)
+  {
+    return AddFloatVarCache(
+      aVariable, nsLiteralCString(aPref), aDefault, aSkipAssignment);
+  }
 
   // When a content process is created these methods are used to pass changed
   // prefs in bulk from the parent process, via shared memory.

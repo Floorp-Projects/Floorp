@@ -126,8 +126,10 @@ nsCSSProps::AddRefTable(void)
       prefObserversInited = true;
       for (const PropertyPref* pref = kPropertyPrefTable;
            pref->mPropID != eCSSProperty_UNKNOWN; pref++) {
+        nsCString prefName;
+        prefName.AssignLiteral(pref->mPref, strlen(pref->mPref));
         bool* enabled = &gPropertyEnabled[pref->mPropID];
-        Preferences::AddBoolVarCache(enabled, pref->mPref);
+        Preferences::AddBoolVarCache(enabled, prefName);
       }
     }
   }

@@ -133,7 +133,7 @@ nsMenuChainItem::CheckForAnchorChange()
 
 bool nsXULPopupManager::sDevtoolsDisableAutoHide = false;
 
-const char* kPrefDevtoolsDisableAutoHide =
+const char kPrefDevtoolsDisableAutoHide[] =
   "ui.popup.disable_autohide";
 
 NS_IMPL_ISUPPORTS(nsXULPopupManager,
