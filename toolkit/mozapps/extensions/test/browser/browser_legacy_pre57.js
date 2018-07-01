@@ -3,7 +3,6 @@ add_task(async function() {
   const INFO_URL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "webextensions";
 
   const NAMES = {
-    fullTheme: "Full Theme",
     newTheme: "New LWT",
     legacy: "Legacy Extension",
     webextension: "WebExtension",
@@ -11,12 +10,6 @@ add_task(async function() {
     langpack: "Language Pack",
   };
   let addons = [
-    {
-      id: "full-theme@tests.mozilla.org",
-      name: NAMES.fullTheme,
-      type: "theme",
-      isWebExtension: false,
-    },
     {
       id: "new-theme@tests.mozilla.org",
       name: NAMES.newTheme,
@@ -87,7 +80,6 @@ add_task(async function() {
     }
   }
 
-  await check("theme", NAMES.fullTheme, true);
   await check("theme", NAMES.newTheme, false);
   await check("extension", NAMES.legacy, true);
   await check("extension", NAMES.webextension, false);

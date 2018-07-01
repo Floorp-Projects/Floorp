@@ -24,16 +24,52 @@ address-form[address-fields]:not([address-fields~='tel']) #tel-container {
   display: none !important;
 }
 
-address-form .error input,
-address-form .error select,
-address-form .error textarea {
-  border: 1px solid #ce001a;
+label[required] > span:first-of-type::after {
+  /* The asterisk should be localized, bug 1472278 */
+  content: "*";
 }
 
 .error-text:not(:empty) {
+  color: #fff;
+  background-color: #d70022;
   border-radius: 2px;
-  background-color: #ce001a;
-  color: #f9e6e9;
-  padding: .1em .5em;
-  margin-inline-start: .1em;
+  /* The padding-top and padding-bottom are referenced by address-form.js */
+  padding: 5px 12px;
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+body[dir="ltr"] .error-text {
+  left: 3px;
+}
+
+body[dir="rtl"] .error-text {
+  right: 3px;
+}
+
+:-moz-any(input, textarea, select):focus + .error-text:not(:empty)::before {
+  background-color: #d70022;
+  top: -7px;
+  content: '.';
+  height: 16px;
+  position: absolute;
+  text-indent: -999px;
+  transform: rotate(45deg);
+  white-space: nowrap;
+  width: 16px;
+  z-index: -1
+}
+
+body[dir=ltr] .error-text::before {
+  left: 12px
+}
+
+body[dir=rtl] .error-text::before {
+  right: 12px
+}
+
+:-moz-any(input, textarea, select):not(:focus) + .error-text,
+:-moz-any(input, textarea, select):valid + .error-text {
+  display: none;
 }
