@@ -8,39 +8,59 @@
 
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIStringBundle.h"
+#include "nsIMemoryReporter.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsCOMArray.h"
 
 class nsIPersistentProperties;
-class nsIStringBundleOverride;
 
-class nsStringBundle : public nsIStringBundle
+
+class nsStringBundleBase : public nsIStringBundle
+                         , public nsIMemoryReporter
 {
 public:
-    // init version
-    nsStringBundle(const char* aURLSpec, nsIStringBundleOverride*);
-    nsresult LoadProperties();
+    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+
+    nsresult ParseProperties(nsIPersistentProperties**);
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLE
+    NS_DECL_NSIMEMORYREPORTER
 
-    nsCOMPtr<nsIPersistentProperties> mProps;
+    virtual nsresult LoadProperties() = 0;
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-    size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
+    const nsCString& BundleURL() const { return mPropertiesURL; }
+
+    // Returns true if this bundle has more than one reference. If it has only
+    // a single reference, it is assumed to be held alive by the bundle cache.
+    bool IsShared() const { return mRefCnt > 1; }
+
+    static nsStringBundleBase* Cast(nsIStringBundle* aBundle)
+    {
+      return static_cast<nsStringBundleBase*>(aBundle);
+    }
+
+    template <typename T, typename... Args>
+    static already_AddRefed<T> Create(Args... args);
 
 protected:
-    virtual ~nsStringBundle();
+    nsStringBundleBase(const char* aURLSpec);
 
-    nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
-                                    nsISimpleEnumerator** aResult);
-private:
+    virtual ~nsStringBundleBase();
+
+    virtual nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) = 0;
+
+    virtual nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) = 0;
+
+    void RegisterMemoryReporter();
+
     nsCString              mPropertiesURL;
-    nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
     mozilla::ReentrantMonitor    mReentrantMonitor;
     bool                         mAttemptedLoad;
     bool                         mLoaded;
+
+    size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 public:
     static nsresult FormatString(const char16_t *formatStr,
@@ -48,33 +68,27 @@ public:
                                  nsAString& aResult);
 };
 
-class nsExtensibleStringBundle;
-
-/**
- * An extensible implementation of the StringBundle interface.
- *
- * @created         28/Dec/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsExtensibleStringBundle final : public nsIStringBundle
+class nsStringBundle : public nsStringBundleBase
 {
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTRINGBUNDLE
-
-  nsresult Init(const char * aCategory, nsIStringBundleService *);
-
 public:
-  nsExtensibleStringBundle();
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
+    NS_DECL_ISUPPORTS_INHERITED
 
-private:
-  virtual ~nsExtensibleStringBundle();
+    nsCOMPtr<nsIPersistentProperties> mProps;
 
-  nsCOMArray<nsIStringBundle> mBundles;
-  bool mLoaded;
+    nsresult LoadProperties() override;
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+protected:
+    friend class nsStringBundleBase;
+
+    explicit nsStringBundle(const char* aURLSpec);
+
+    virtual ~nsStringBundle();
+
+    nsresult GetStringImpl(const nsACString& aName, nsAString& aResult) override;
+
+    nsresult GetSimpleEnumerationImpl(nsISimpleEnumerator** elements) override;
 };
-
-
 
 #endif

@@ -25,15 +25,11 @@
 
 #![allow(unused_attributes)]
 
-#![cfg_attr(feature="clippy", feature(plugin))]
-#![cfg_attr(feature="clippy", plugin(clippy))]
-#![cfg_attr(feature="clippy", warn(clippy))]
-
 extern crate glob;
 
 use std::env;
 use std::fs::{self, File};
-use std::io::{Read};
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::process::{Command};
 
@@ -128,6 +124,41 @@ const SEARCH_WINDOWS: &[&str] = &[
     "C:\\MSYS*\\MinGW*\\lib",
 ];
 
+/// Returns the ELF class from the ELF header in the supplied file.
+fn parse_elf_header(file: &PathBuf) -> Result<u8, String> {
+    let mut file = try!(File::open(file).map_err(|e| e.to_string()));
+    let mut elf = [0; 5];
+    try!(file.read_exact(&mut elf).map_err(|e| e.to_string()));
+    if elf[..4] == [127, 69, 76, 70] {
+        Ok(elf[4])
+    } else {
+        Err("invalid ELF header".into())
+    }
+}
+
+/// Returns the magic number from the PE header in the supplied file.
+fn parse_pe_header(file: &PathBuf) -> Result<u16, String> {
+    let mut file = try!(File::open(file).map_err(|e| e.to_string()));
+    let mut pe = [0; 4];
+
+    // Determine the header offset.
+    try!(file.seek(SeekFrom::Start(0x3C)).map_err(|e| e.to_string()));
+    try!(file.read_exact(&mut pe).map_err(|e| e.to_string()));
+    let offset = i32::from(pe[0]) + (i32::from(pe[1]) << 8) + (i32::from(pe[2]) << 16) + (i32::from(pe[3]) << 24);
+
+    // Determine the validity of the header.
+    try!(file.seek(SeekFrom::Start(offset as u64)).map_err(|e| e.to_string()));
+    try!(file.read_exact(&mut pe).map_err(|e| e.to_string()));
+    if pe != [80, 69, 0, 0] {
+        return Err("invalid PE header".into());
+    }
+
+    // Find the magic number.
+    try!(file.seek(SeekFrom::Current(20)).map_err(|e| e.to_string()));
+    try!(file.read_exact(&mut pe).map_err(|e| e.to_string()));
+    Ok(u16::from(pe[0]) + (u16::from(pe[1]) << 8))
+}
+
 /// Indicates the type of library being searched for.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum Library {
@@ -142,17 +173,24 @@ impl Library {
             if *self == Library::Static {
                 return Ok(());
             }
-            let mut file = try!(File::open(file).map_err(|e| e.to_string()));
-            let mut elf = [0; 5];
-            try!(file.read_exact(&mut elf).map_err(|e| e.to_string()));
-            if elf[..4] != [127, 69, 76, 70] {
-                return Err("invalid ELF header".into());
-            }
-            if cfg!(target_pointer_width="32") && elf[4] != 1 {
+            let class = try!(parse_elf_header(file));
+            if cfg!(target_pointer_width="32") && class != 1 {
                 return Err("invalid ELF class (64-bit)".into());
             }
-            if cfg!(target_pointer_width="64") && elf[4] != 2 {
+            if cfg!(target_pointer_width="64") && class != 2 {
                 return Err("invalid ELF class (32-bit)".into());
+            }
+            Ok(())
+        } else if cfg!(target_os="windows") {
+            if *self == Library::Static {
+                return Ok(());
+            }
+            let magic = try!(parse_pe_header(file));
+            if cfg!(target_pointer_width="32") && magic != 267 {
+                return Err("invalid DLL (64-bit)".into());
+            }
+            if cfg!(target_pointer_width="64") && magic != 523 {
+                return Err("invalid DLL (32-bit)".into());
             }
             Ok(())
         } else {
@@ -216,7 +254,7 @@ fn find(library: Library, files: &[String], env: &str) -> Result<PathBuf, String
 
     // Search the `LD_LIBRARY_PATH` directories.
     if let Ok(path) = env::var("LD_LIBRARY_PATH") {
-        for directory in path.split(":").map(Path::new) {
+        for directory in path.split(':').map(Path::new) {
             search_directory!(directory);
         }
     }

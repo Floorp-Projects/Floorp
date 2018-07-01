@@ -403,8 +403,6 @@ thread_local!(static SYMBOLS: RefCell<Interner> = RefCell::new(Interner::new()))
 
 impl Term {
     pub fn new(string: &str, span: Span) -> Term {
-        validate_term(string);
-
         Term {
             intern: SYMBOLS.with(|s| s.borrow_mut().intern(string)),
             span: span,
@@ -425,42 +423,6 @@ impl Term {
 
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
-    }
-}
-
-fn validate_term(string: &str) {
-    let validate = if string.starts_with('\'') {
-        &string[1..]
-    } else if string.starts_with("r#") {
-        &string[2..]
-    } else {
-        string
-    };
-
-    if validate.is_empty() {
-        panic!("Term is not allowed to be empty; use Option<Term>");
-    }
-
-    if validate.bytes().all(|digit| digit >= b'0' && digit <= b'9') {
-        panic!("Term cannot be a number; use Literal instead");
-    }
-
-    fn xid_ok(string: &str) -> bool {
-        let mut chars = string.chars();
-        let first = chars.next().unwrap();
-        if !(UnicodeXID::is_xid_start(first) || first == '_') {
-            return false;
-        }
-        for ch in chars {
-            if !UnicodeXID::is_xid_continue(ch) {
-                return false;
-            }
-        }
-        true
-    }
-
-    if !xid_ok(validate) {
-        panic!("{:?} is not a valid Term", string);
     }
 }
 

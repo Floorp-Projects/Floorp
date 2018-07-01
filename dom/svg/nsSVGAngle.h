@@ -55,7 +55,8 @@ public:
   float GetAnimValue() const
     { return mAnimVal * GetDegreesPerUnit(mAnimValUnit); }
 
-  void SetBaseValue(float aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement,
+                    bool aDoSetAttr);
   void SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement);
 
   uint8_t GetBaseValueUnit() const { return mBaseValUnit; }

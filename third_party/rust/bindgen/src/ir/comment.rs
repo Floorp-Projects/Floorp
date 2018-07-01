@@ -39,7 +39,7 @@ fn make_indent(indent: usize) -> String {
     iter::repeat(' ').take(indent * RUST_INDENTATION).collect()
 }
 
-/// Preprocesses mulitple single line comments.
+/// Preprocesses multiple single line comments.
 ///
 /// Handles lines starting with both `//` and `///`.
 fn preprocess_single_lines(comment: &str, indent: usize) -> String {

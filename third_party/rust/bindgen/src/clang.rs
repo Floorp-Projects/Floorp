@@ -911,6 +911,13 @@ impl Type {
     /// Get the number of template arguments this type has, or `None` if it is
     /// not some kind of template.
     pub fn num_template_args(&self) -> Option<u32> {
+        // If an old libclang is loaded, we have no hope of answering this
+        // question correctly. However, that's no reason to panic when
+        // generating bindings for simple C headers with an old libclang.
+        if !clang_Type_getNumTemplateArguments::is_loaded() {
+            return None
+        }
+
         let n = unsafe { clang_Type_getNumTemplateArguments(self.x) };
         if n >= 0 {
             Some(n as u32)
@@ -975,7 +982,7 @@ impl Type {
         }
     }
 
-    /// Get the canonical version of this type. This sees through `typdef`s and
+    /// Get the canonical version of this type. This sees through `typedef`s and
     /// aliases to get the underlying, canonical type.
     pub fn canonical_type(&self) -> Type {
         unsafe {
@@ -1639,8 +1646,11 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
             depth,
             format!(" {}spelling = \"{}\"", prefix, ty.spelling()),
         );
-        let num_template_args =
-            unsafe { clang_Type_getNumTemplateArguments(ty.x) };
+        let num_template_args = if clang_Type_getNumTemplateArguments::is_loaded() {
+            unsafe { clang_Type_getNumTemplateArguments(ty.x) }
+        } else {
+            -1
+        };
         if num_template_args >= 0 {
             print_indent(
                 depth,
@@ -1810,5 +1820,37 @@ impl EvalResult {
 impl Drop for EvalResult {
     fn drop(&mut self) {
         unsafe { clang_EvalResult_dispose(self.x) };
+    }
+}
+
+/// Target information obtained from libclang.
+#[derive(Debug)]
+pub struct TargetInfo {
+    /// The target triple.
+    pub triple: String,
+    /// The width of the pointer _in bits_.
+    pub pointer_width: usize,
+}
+
+impl TargetInfo {
+    /// Tries to obtain target information from libclang.
+    pub fn new(tu: &TranslationUnit) -> Option<Self> {
+        if !clang_getTranslationUnitTargetInfo::is_loaded() {
+            return None;
+        }
+        let triple;
+        let pointer_width;
+        unsafe {
+            let ti = clang_getTranslationUnitTargetInfo(tu.x);
+            triple = cxstring_into_string(clang_TargetInfo_getTriple(ti));
+            pointer_width = clang_TargetInfo_getPointerWidth(ti);
+            clang_TargetInfo_dispose(ti);
+        }
+        assert!(pointer_width > 0);
+        assert_eq!(pointer_width % 8, 0);
+        Some(TargetInfo {
+            triple,
+            pointer_width: pointer_width as usize,
+        })
     }
 }

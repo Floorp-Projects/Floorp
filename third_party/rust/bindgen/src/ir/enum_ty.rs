@@ -7,6 +7,7 @@ use clang;
 use ir::annotations::Annotations;
 use ir::item::ItemCanonicalPath;
 use parse::{ClangItemParser, ParseError};
+use regex_set::RegexSet;
 
 /// An enum representing custom handling that can be given to a variant.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -137,44 +138,36 @@ impl Enum {
         Ok(Enum::new(repr, variants))
     }
 
-    /// Whether the enum should be a bitfield
-    pub fn is_bitfield(&self, ctx: &BindgenContext, item: &Item) -> bool {
+    fn is_matching_enum(&self, ctx: &BindgenContext, enums: &RegexSet, item: &Item) -> bool {
         let path = item.canonical_path(ctx);
         let enum_ty = item.expect_type();
 
-        ctx.options().bitfield_enums.matches(&path[1..].join("::")) ||
-            (enum_ty.name().is_none() &&
-                    self.variants().iter().any(|v| {
-                    ctx.options().bitfield_enums.matches(&v.name())
-                }))
+        let path_matches = enums.matches(&path[1..].join("::"));
+        let enum_is_anon = enum_ty.name().is_none();
+        let a_variant_matches = self.variants().iter().any(|v| {
+            enums.matches(&v.name())
+        });
+        path_matches || (enum_is_anon && a_variant_matches)
+    }
+
+    /// Whether the enum should be a bitfield
+    pub fn is_bitfield(&self, ctx: &BindgenContext, item: &Item) -> bool {
+        self.is_matching_enum(ctx, &ctx.options().bitfield_enums, item)
     }
 
     /// Whether the enum should be an constified enum module
-    pub fn is_constified_enum_module(
-        &self,
-        ctx: &BindgenContext,
-        item: &Item,
-    ) -> bool {
-        let path = item.canonical_path(ctx);
-        let enum_ty = item.expect_type();
+    pub fn is_constified_enum_module(&self, ctx: &BindgenContext, item: &Item) -> bool {
+        self.is_matching_enum(ctx, &ctx.options().constified_enum_modules, item)
+    }
 
-        ctx.options().constified_enum_modules.matches(&path[1..].join("::")) ||
-            (enum_ty.name().is_none() &&
-                 self.variants().iter().any(|v| {
-                    ctx.options().constified_enum_modules.matches(&v.name())
-                }))
+    /// Whether the enum should be an set of constants
+    pub fn is_constified_enum(&self, ctx: &BindgenContext, item: &Item) -> bool {
+        self.is_matching_enum(ctx, &ctx.options().constified_enums, item)
     }
 
     /// Whether the enum should be a Rust enum
     pub fn is_rustified_enum(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        let path = item.canonical_path(ctx);
-        let enum_ty = item.expect_type();
-
-        ctx.options().rustified_enums.matches(&path[1..].join("::")) ||
-            (enum_ty.name().is_none() &&
-                self.variants().iter().any(|v| {
-                    ctx.options().rustified_enums.matches(&v.name())
-            }))
+        self.is_matching_enum(ctx, &ctx.options().rustified_enums, item)
     }
 }
 

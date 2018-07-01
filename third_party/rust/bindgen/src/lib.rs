@@ -4,6 +4,9 @@
 //! functions and use types defined in the header.
 //!
 //! See the [`Builder`](./struct.Builder.html) struct for usage.
+//!
+//! See the [Users Guide](https://rust-lang-nursery.github.io/rust-bindgen/) for
+//! additional documentation.
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![deny(unused_extern_crates)]
@@ -23,6 +26,7 @@ extern crate lazy_static;
 extern crate peeking_take_while;
 #[macro_use]
 extern crate quote;
+extern crate proc_macro2;
 extern crate regex;
 extern crate which;
 
@@ -79,8 +83,10 @@ use ir::context::{BindgenContext, ItemId};
 use ir::item::Item;
 use parse::{ClangItemParser, ParseError};
 use regex_set::RegexSet;
+pub use codegen::EnumVariation;
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Write};
 use std::iter;
@@ -155,6 +161,23 @@ impl Default for CodegenConfig {
 /// // Write the generated bindings to an output file.
 /// bindings.write_to_file("path/to/output.rs")?;
 /// ```
+///
+/// # Enums
+///
+/// Bindgen can map C/C++ enums into Rust in different ways. The way bindgen maps enums depends on
+/// the pattern passed to several methods:
+///
+/// 1. [`constified_enum_module()`](#method.constified_enum_module)
+/// 2. [`bitfield_enum()`](#method.bitfield_enum)
+/// 3. [`rustified_enum()`](#method.rustified_enum)
+///
+/// For each C enum, bindgen tries to match the pattern in the following order:
+///
+/// 1. Constified enum module
+/// 2. Bitfield enum
+/// 3. Rustified enum
+///
+/// If none of the above patterns match, then bindgen will generate a set of Rust constants.
 #[derive(Debug, Default)]
 pub struct Builder {
     options: BindgenOptions,
@@ -180,6 +203,16 @@ impl Builder {
 
         output_vector.push("--rust-target".into());
         output_vector.push(self.options.rust_target.into());
+
+        if self.options.default_enum_style != Default::default() {
+            output_vector.push("--default-enum-variant=".into());
+            output_vector.push(match self.options.default_enum_style {
+                codegen::EnumVariation::Rust => "rust",
+                codegen::EnumVariation::Bitfield => "bitfield",
+                codegen::EnumVariation::Consts => "consts",
+                codegen::EnumVariation::ModuleConsts => "moduleconsts",
+            }.into())
+        }
 
         self.options
             .bitfield_enums
@@ -215,6 +248,20 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--constified-enum-module".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
+            .count();
+
+        self.options
+            .constified_enums
+            .get_items()
+            .iter()
+            .map(|item| {
+                output_vector.push("--constified-enum".into());
                 output_vector.push(
                     item.trim_left_matches("^")
                         .trim_right_matches("$")
@@ -326,19 +373,6 @@ impl Builder {
             output_vector.push("--disable-name-namespacing".into());
         }
 
-        self.options
-            .links
-            .iter()
-            .map(|&(ref item, _)| {
-                output_vector.push("--framework".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
-            })
-            .count();
-
         if !self.options.codegen_config.functions {
             output_vector.push("--ignore-functions".into());
         }
@@ -372,19 +406,6 @@ impl Builder {
             output_vector.push("--ignore-methods".into());
         }
 
-        self.options
-            .links
-            .iter()
-            .map(|&(ref item, _)| {
-                output_vector.push("--clang-args".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
-            })
-            .count();
-
         if !self.options.convert_floats {
             output_vector.push("--no-convert-floats".into());
         }
@@ -412,19 +433,6 @@ impl Builder {
             .iter()
             .map(|item| {
                 output_vector.push("--raw-line".into());
-                output_vector.push(
-                    item.trim_left_matches("^")
-                        .trim_right_matches("$")
-                        .into(),
-                );
-            })
-            .count();
-
-        self.options
-            .links
-            .iter()
-            .map(|&(ref item, _)| {
-                output_vector.push("--static".into());
                 output_vector.push(
                     item.trim_left_matches("^")
                         .trim_right_matches("$")
@@ -600,6 +608,12 @@ impl Builder {
         self
     }
 
+    /// Disable support for native Rust unions, if supported.
+    pub fn disable_untagged_union(mut self) -> Self {
+        self.options.rust_features.untagged_union = false;
+        self
+    }
+
     /// Set the output graphviz file.
     pub fn emit_ir_graphviz<T: Into<String>>(mut self, path: T) -> Builder {
         let path = path.into();
@@ -642,7 +656,7 @@ impl Builder {
     ///
     /// **Disabling this feature will almost certainly cause `bindgen` to emit
     /// bindings that will not compile!** If you disable this feature, then it
-    /// is *your* responsiblity to provide definitions for every type that is
+    /// is *your* responsibility to provide definitions for every type that is
     /// referenced from an explicitly whitelisted item. One way to provide the
     /// definitions is by using the [`Builder::raw_line`](#method.raw_line)
     /// method, another would be to define them in Rust and then `include!(...)`
@@ -740,6 +754,11 @@ impl Builder {
         self.whitelist_var(arg)
     }
 
+    /// Set the default style of code to generate for enums
+    pub fn default_enum_style(mut self, arg: codegen::EnumVariation) -> Builder {
+        self.options.default_enum_style = arg;
+        self
+    }
 
     /// Mark the given enum (or set of enums, if using a pattern) as being
     /// bitfield-like. Regular expressions are supported.
@@ -767,6 +786,13 @@ impl Builder {
     }
 
     /// Mark the given enum (or set of enums, if using a pattern) as a set of
+    /// constants that are not to be put into a module.
+    pub fn constified_enum<T: AsRef<str>>(mut self, arg: T) -> Builder {
+        self.options.constified_enums.insert(arg);
+        self
+    }
+
+    /// Mark the given enum (or set of enums, if using a pattern) as a set of
     /// constants that should be put into a module.
     ///
     /// This makes bindgen generate modules containing constants instead of
@@ -778,8 +804,37 @@ impl Builder {
 
     /// Add a string to prepend to the generated bindings. The string is passed
     /// through without any modification.
-    pub fn raw_line<T: Into<String>>(mut self, arg: T) -> Builder {
+    pub fn raw_line<T: Into<String>>(mut self, arg: T) -> Self {
         self.options.raw_lines.push(arg.into());
+        self
+    }
+
+    /// Add a given line to the beginning of module `mod`.
+    pub fn module_raw_line<T, U>(mut self, mod_: T, line: U) -> Self
+    where
+        T: Into<String>,
+        U: Into<String>,
+    {
+        self.options
+            .module_lines
+            .entry(mod_.into())
+            .or_insert_with(Vec::new)
+            .push(line.into());
+        self
+    }
+
+    /// Add a given set of lines to the beginning of module `mod`.
+    pub fn module_raw_lines<T, I>(mut self, mod_: T, lines: I) -> Self
+    where
+        T: Into<String>,
+        I: IntoIterator,
+        I::Item: Into<String>,
+    {
+        self.options
+            .module_lines
+            .entry(mod_.into())
+            .or_insert_with(Vec::new)
+            .extend(lines.into_iter().map(Into::into));
         self
     }
 
@@ -798,26 +853,6 @@ impl Builder {
         for arg in iter {
             self = self.clang_arg(arg.as_ref())
         }
-        self
-    }
-
-    /// Make the generated bindings link the given shared library.
-    pub fn link<T: Into<String>>(mut self, library: T) -> Builder {
-        self.options.links.push((library.into(), LinkType::Default));
-        self
-    }
-
-    /// Make the generated bindings link the given static library.
-    pub fn link_static<T: Into<String>>(mut self, library: T) -> Builder {
-        self.options.links.push((library.into(), LinkType::Static));
-        self
-    }
-
-    /// Make the generated bindings link the given framework.
-    pub fn link_framework<T: Into<String>>(mut self, library: T) -> Builder {
-        self.options.links.push(
-            (library.into(), LinkType::Framework),
-        );
         self
     }
 
@@ -1242,6 +1277,9 @@ struct BindgenOptions {
     /// Whitelisted variables. See docs for `whitelisted_types` for more.
     whitelisted_vars: RegexSet,
 
+    /// The default style of code to generate for enums
+    default_enum_style: codegen::EnumVariation,
+
     /// The enum patterns to mark an enum as bitfield.
     bitfield_enums: RegexSet,
 
@@ -1251,11 +1289,11 @@ struct BindgenOptions {
     /// The enum patterns to mark an enum as a module of constants.
     constified_enum_modules: RegexSet,
 
+    /// The enum patterns to mark an enum as a set of constants.
+    constified_enums: RegexSet,
+
     /// Whether we should generate builtins or not.
     builtins: bool,
-
-    /// The set of libraries we should link in the generated Rust code.
-    links: Vec<(String, LinkType)>,
 
     /// True if we should dump the Clang AST for debugging purposes.
     emit_ast: bool,
@@ -1281,7 +1319,7 @@ struct BindgenOptions {
     impl_debug: bool,
 
     /// True if we should implement the PartialEq trait for C/C++ structures and types
-    /// that do not support autoamically deriving PartialEq.
+    /// that do not support automatically deriving PartialEq.
     impl_partialeq: bool,
 
     /// True if we should derive Copy trait implementations for C/C++ structures
@@ -1335,8 +1373,14 @@ struct BindgenOptions {
     /// Whether we should convert float types to f32/f64 types.
     convert_floats: bool,
 
-    /// The set of raw lines to prepend to the generated Rust code.
+    /// The set of raw lines to prepend to the top-level module of generated
+    /// Rust code.
     raw_lines: Vec<String>,
+
+    /// The set of raw lines to prepend to each of the modules.
+    ///
+    /// This only makes sense if the `enable_cxx_namespaces` option is set.
+    module_lines: HashMap<String, Vec<String>>,
 
     /// The set of arguments to pass straight through to Clang.
     clang_args: Vec<String>,
@@ -1360,17 +1404,17 @@ struct BindgenOptions {
     /// See the builder method description for more details.
     conservative_inline_namespaces: bool,
 
-    /// Wether to keep documentation comments in the generated output. See the
+    /// Whether to keep documentation comments in the generated output. See the
     /// documentation for more details.
     generate_comments: bool,
 
     /// Whether to generate inline functions. Defaults to false.
     generate_inline_functions: bool,
 
-    /// Wether to whitelist types recursively. Defaults to true.
+    /// Whether to whitelist types recursively. Defaults to true.
     whitelist_recursively: bool,
 
-    /// Intead of emitting 'use objc;' to files generated from objective c files,
+    /// Instead of emitting 'use objc;' to files generated from objective c files,
     /// generate '#[macro_use] extern crate objc;'
     objc_extern_crate: bool,
 
@@ -1423,6 +1467,7 @@ impl BindgenOptions {
         self.blacklisted_types.build();
         self.opaque_types.build();
         self.bitfield_enums.build();
+        self.constified_enums.build();
         self.constified_enum_modules.build();
         self.rustified_enums.build();
         self.no_partialeq_types.build();
@@ -1457,11 +1502,12 @@ impl Default for BindgenOptions {
             whitelisted_types: Default::default(),
             whitelisted_functions: Default::default(),
             whitelisted_vars: Default::default(),
+            default_enum_style: Default::default(),
             bitfield_enums: Default::default(),
             rustified_enums: Default::default(),
+            constified_enums: Default::default(),
             constified_enum_modules: Default::default(),
             builtins: false,
-            links: vec![],
             emit_ast: false,
             emit_ir: false,
             emit_ir_graphviz: None,
@@ -1484,6 +1530,7 @@ impl Default for BindgenOptions {
             msvc_mangling: false,
             convert_floats: true,
             raw_lines: vec![],
+            module_lines: HashMap::default(),
             clang_args: vec![],
             input_header: None,
             input_unsaved_files: vec![],
@@ -1504,19 +1551,6 @@ impl Default for BindgenOptions {
             no_hash_types: Default::default(),
         }
     }
-}
-
-/// The linking type to use with a given library.
-///
-/// TODO: #104: This is ignored at the moment, but shouldn't be.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum LinkType {
-    /// Use shared library linking. This is the default.
-    Default,
-    /// Use static linking.
-    Static,
-    /// The library is an OSX framework.
-    Framework,
 }
 
 fn ensure_libclang_is_loaded() {
@@ -1696,7 +1730,7 @@ impl Bindings {
             writer.write("\n".as_bytes())?;
         }
 
-        let bindings = self.module.as_str().to_string();
+        let bindings = self.module.to_string();
 
         match self.rustfmt_generated_string(&bindings) {
             Ok(rustfmt_bindings) => {
@@ -1704,7 +1738,7 @@ impl Bindings {
             },
             Err(err) => {
                 eprintln!("{:?}", err);
-                writer.write(bindings.as_str().as_bytes())?;
+                writer.write(bindings.as_bytes())?;
             },
         }
         Ok(())
@@ -1865,13 +1899,13 @@ fn parse(context: &mut BindgenContext) -> Result<(), ()> {
 /// Extracted Clang version data
 #[derive(Debug)]
 pub struct ClangVersion {
-    /// Major and minor semvar, if parsing was successful
+    /// Major and minor semver, if parsing was successful
     pub parsed: Option<(u32, u32)>,
     /// full version string
     pub full: String,
 }
 
-/// Get the major and the minor semvar numbers of Clang's version
+/// Get the major and the minor semver numbers of Clang's version
 pub fn clang_version() -> ClangVersion {
     if !clang_sys::is_loaded() {
         // TODO(emilio): Return meaningful error (breaking).

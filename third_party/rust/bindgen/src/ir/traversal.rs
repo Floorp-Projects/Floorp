@@ -201,11 +201,13 @@ pub fn all_edges(_: &BindgenContext, _: Edge) -> bool {
     true
 }
 
-/// A `TraversalPredicate` implementation that never follows any edges, and
-/// therefore traversals using this predicate will only visit the traversal's
-/// roots.
-pub fn no_edges(_: &BindgenContext, _: Edge) -> bool {
-    false
+/// A `TraversalPredicate` implementation that only follows
+/// `EdgeKind::InnerType` edges, and therefore traversals using this predicate
+/// will only visit the traversal's roots and their inner types. This is used
+/// in no-recursive-whitelist mode, where inner types such as anonymous
+/// structs/unions still need to be processed.
+pub fn only_inner_type_edges(_: &BindgenContext, edge: Edge) -> bool {
+    edge.kind == EdgeKind::InnerType
 }
 
 /// A `TraversalPredicate` implementation that only follows edges to items that

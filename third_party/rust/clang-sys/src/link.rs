@@ -80,7 +80,7 @@ macro_rules! link {
         }
 
         $(
-            #[cfg_attr(feature="clippy", allow(too_many_arguments))]
+            #[cfg_attr(feature="cargo-clippy", allow(too_many_arguments))]
             $(#[cfg($cfg)])*
             pub unsafe fn $name($($pname: $pty), *) $(-> $ret)* {
                 let f = with_library(|l| {
