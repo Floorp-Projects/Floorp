@@ -345,6 +345,7 @@ load 477928.html
 load 478131-1.html
 load 478170-1.html
 load 478185-1.html
+load 478504.html
 asserts-if(!Android,0-1) load 479938-1.html # Bug 575011
 load 480345-1.html
 load 481921.html
