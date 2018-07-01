@@ -80,7 +80,9 @@ SERIALIZED_PREDEFINED_TYPES = [
     "CounterReset",
     "Integer",
     "Length",
+    "ListStyleType",
     "Opacity",
+    "url::ImageUrlOrNone",
 ]
 
 def serialized_by_servo(prop):
