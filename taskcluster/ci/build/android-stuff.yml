@@ -45,6 +45,40 @@ android-test/opt:
             - "mobile/android/tests/background/junit4/**"
             - "**/*.gradle"
 
+android-test-ccov/opt:
+    description: "Android armv7 unit test coverage report"
+    index:
+        product: mobile
+        job-name: android-test-ccov
+    treeherder:
+        platform: android-4-0-armv7-api16/opt
+        kind: build
+        tier: 1
+        symbol: A(test-ccov)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+            PERFHERDER_EXTRA_OPTIONS: android-test-ccov
+        artifacts:
+            - name: public/code-coverage-grcov.zip
+              path: /builds/worker/workspace/build/src/obj-firefox/code-coverage-grcov.zip
+              type: file
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets build]
+        config:
+            - builds/releng_base_android_64_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-test-ccov
+        tooltool-downloads: internal
+    toolchains:
+        - android-gradle-dependencies
+        - android-sdk-linux
+
 android-lint/opt:
     description: "Android lint"
     index:
