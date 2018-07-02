@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    var x = "K\u0756 ";
+    var y = "K\u000A ";
+
+    var t = document.createTextNode(x);
+    d.appendChild(t);
+    document.documentElement.offsetHeight;
+    t.data = y;
+}
+
+
+</script>
+</head>
+<body onload="boom();">
+<div id="d"></div>
+</body>
+</html>

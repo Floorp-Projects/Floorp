@@ -1,0 +1,36 @@
+<!-- quirks mode -->
+<html>
+<head>
+<style>
+
+body { white-space: pre-line; }
+
+#inner::first-letter {}
+
+.c0 {
+  direction: rtl;
+  height: 1000em;
+}
+
+</style>
+
+<script>
+
+function initCF() {
+  dump("1\n");
+  var test2 = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  test2.setAttribute("class", "c0");
+  document.body.appendChild(test2);
+  dump("2\n");
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+
+</script>
+</head>
+<body>
+
+*<div id=inner><span> }#+G2_h
+ :g}aA$ LcQrnTL :flWIc1:/40LPmypIzLQM, 7V=N4
+ 	O K UL#f)MO=a8v8}#  GW}	7,/ O%G~6Cy p8W
+
+@</span></div></body></html>

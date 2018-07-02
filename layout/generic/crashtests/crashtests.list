@@ -142,6 +142,7 @@ load 387219-1.xhtml
 load 387233-1.html
 load 387233-2.html
 load 387282-1.html
+load 388049.html
 load 388175-1.html
 load 388367-1.html
 load 388709-1.html
@@ -149,6 +150,8 @@ load 389635-1.html
 load 390050-1.html
 load 390050-2.html
 load 390050-3.html
+load 390052.html
+load 390417.html
 load 390762-1.html
 load 391053-1.xhtml
 load 391894-1.html
@@ -204,6 +207,7 @@ load 404215-2.html
 load 404215-3.html
 load 404219-1.html
 load 404219-2.html
+load 404624.html
 load 406137.html
 load 406380.html
 load 406902-1.html
@@ -238,6 +242,7 @@ load 414061-1.html
 load 414180-1.xul
 load 414719-1.html
 load 415685-1.html
+load 415818.xhtml
 load 416165.html
 load 416264-1.html
 load 416476-1.html
@@ -331,6 +336,7 @@ load 468207-1.html
 load 468771-1.xhtml
 load 468771-2.xhtml
 load 469859-1.xhtml # bug 1323665
+load 471360.html
 load 472587-1.xhtml
 load 472617-1.xhtml
 load 472774-1.html
@@ -345,6 +351,7 @@ load 477928.html
 load 478131-1.html
 load 478170-1.html
 load 478185-1.html
+load 478504.html
 asserts-if(!Android,0-1) load 479938-1.html # Bug 575011
 load 480345-1.html
 load 481921.html
@@ -370,6 +377,7 @@ load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
 load 505912-1.html
+load 507566.html
 load 508154-1.xhtml
 load 508168-1.html
 load 508816-1.xul
@@ -500,6 +508,8 @@ load 783228.html
 load 784600.html
 load 785555.html
 load 786740-1.html
+load 790252-1.html
+load 790252-2.html
 load 790260-1.html
 test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml
 test-pref(font.size.inflation.minTwips,120) load 794693.html
@@ -609,6 +619,7 @@ load 1186147-1.html
 load 1221112-1.html
 load 1221112-2.html
 load 1221874-1.html
+load 1221904.html
 load 1222783.xhtml
 load 1223522.xhtml
 load 1223568-1.html
@@ -662,6 +673,8 @@ load 1297427-non-equal-centers.html
 load 1304441.html
 load 1308876-1.html
 load 1316649.html
+load 1343552-1.html
+load 1343552-2.html
 load 1349650.html
 asserts-if(browserIsRemote,0-5) load 1349816-1.html # bug 1350352
 load 1350372.html
