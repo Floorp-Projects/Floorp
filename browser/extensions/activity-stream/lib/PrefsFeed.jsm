@@ -6,7 +6,6 @@
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {PrerenderData} = ChromeUtils.import("resource://activity-stream/common/PrerenderData.jsm", {});
-const {INITIAL_STATE} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
@@ -33,13 +32,12 @@ this.PrefsFeed = class PrefsFeed {
     this._prefs = new Prefs();
   }
 
-  // If any prefs or the theme are set to something other than what the
+  // If any of the prefs are set to something other than what the
   // prerendered version of AS expects, we can't use it.
-  async _setPrerenderPref(theme) {
+  async _setPrerenderPref() {
     const indexedDBPrefs = await this._storage.getAll();
     const prefsAreValid = PrerenderData.arePrefsValid(pref => this._prefs.get(pref), indexedDBPrefs);
-    const themeIsDefault = (theme || this.store.getState().Theme).className === INITIAL_STATE.Theme.className;
-    this._prefs.set("prerender", prefsAreValid && themeIsDefault);
+    this._prefs.set("prerender", prefsAreValid);
   }
 
   _checkPrerender(name) {
@@ -136,9 +134,6 @@ this.PrefsFeed = class PrefsFeed {
         break;
       case at.SET_PREF:
         this._prefs.set(action.data.name, action.data.value);
-        break;
-      case at.THEME_UPDATE:
-        this._setPrerenderPref(action.data);
         break;
       case at.DISABLE_ONBOARDING:
         this.setOnboardingDisabledDefault(true);
