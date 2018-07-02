@@ -27,7 +27,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
   , mOriginalFrameSrc(false)
   , mSendReferrer(true)
   , mReferrerPolicy(mozilla::net::RP_Unset)
-  , mLoadType(nsDocShellLoadInfo::loadNormal)
+  , mLoadType(LOAD_NORMAL)
   , mIsSrcdocLoad(false)
 {
 }
@@ -156,14 +156,14 @@ nsDocShellLoadInfo::SetOriginalFrameSrc(bool aOriginalFrameSrc)
   mOriginalFrameSrc = aOriginalFrameSrc;
 }
 
-nsDocShellLoadInfo::nsDocShellInfoLoadType
+uint32_t
 nsDocShellLoadInfo::LoadType() const
 {
   return mLoadType;
 }
 
 void
-nsDocShellLoadInfo::SetLoadType(nsDocShellLoadInfo::nsDocShellInfoLoadType aLoadType)
+nsDocShellLoadInfo::SetLoadType(uint32_t aLoadType)
 {
   mLoadType = aLoadType;
 }

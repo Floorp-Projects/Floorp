@@ -4713,11 +4713,9 @@ nsIDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   }
 
   if (!mMaybeServiceWorkerControlled && mDocumentContainer && mScriptGlobalObject && GetChannel()) {
-    uint32_t loadType;
-    mDocumentContainer->GetLoadType(&loadType);
 
     // If we are shift-reloaded, don't associate with a ServiceWorker.
-    if (IsForceReloadType(loadType)) {
+    if (mDocumentContainer->IsForceReloading()) {
       NS_WARNING("Page was shift reloaded, skipping ServiceWorker control");
       return;
     }
