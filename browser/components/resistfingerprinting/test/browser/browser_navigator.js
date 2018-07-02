@@ -24,7 +24,7 @@ const SPOOFED_APPVERSION = {
 };
 const SPOOFED_PLATFORM = {
   linux: "Linux x86_64",
-  win: "Win64",
+  win: "Win32",
   macosx: "MacIntel",
   android: "Linux armv7l",
   other: "Linux x86_64",

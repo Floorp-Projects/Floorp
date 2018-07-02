@@ -25,7 +25,7 @@
 #define SPOOFED_UA_OS      "Windows NT 6.1; Win64; x64"
 #define SPOOFED_APPVERSION "5.0 (Windows)"
 #define SPOOFED_OSCPU      "Windows NT 6.1; Win64; x64"
-#define SPOOFED_PLATFORM   "Win64"
+#define SPOOFED_PLATFORM   "Win32"
 #elif defined(XP_MACOSX)
 #define SPOOFED_UA_OS      "Macintosh; Intel Mac OS X 10.13"
 #define SPOOFED_APPVERSION "5.0 (Macintosh)"
