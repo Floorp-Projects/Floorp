@@ -25,6 +25,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 // Set to indicate whether or not we want autoCompleteSimple to return a result
 var returnResult = true;
 
+const IS_MAC = navigator.platform.includes("Mac");
+
 const ACR = Ci.nsIAutoCompleteResult;
 
 // This result can't be constructed in-line, because otherwise we leak memory.
@@ -88,6 +90,14 @@ componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete
 // Test Bug 325842 - completeDefaultIndex
 
 SimpleTest.waitForExplicitFinish();
+
+// 8 or 6 assertions are recorded due to nested setting <input>.value but not a problem.
+// They are necessary to detect invalid method call without event loop.
+if (IS_MAC)
+  SimpleTest.expectAssertions(6, 6);
+else
+  SimpleTest.expectAssertions(8, 8);
+
 setTimeout(nextTest, 0);
 
 var currentTest = null;
@@ -187,7 +197,7 @@ function nextTest() {
   currentTest = tests.shift();
 
   // HOME key works differently on Mac, so we skip tests using it.
-  if (currentTest.key == "KEY_Home" && navigator.platform.includes("Mac"))
+  if (currentTest.key == "KEY_Home" && IS_MAC)
     nextTest();
   else
     setTimeout(runCurrentTest, 0);

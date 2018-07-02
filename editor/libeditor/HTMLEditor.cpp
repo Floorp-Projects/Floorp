@@ -2354,7 +2354,7 @@ HTMLEditor::Indent(const nsAString& aIndent)
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
-    rv = InsertTextAsAction(NS_LITERAL_STRING(" "));
+    rv = InsertTextAsSubAction(NS_LITERAL_STRING(" "));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

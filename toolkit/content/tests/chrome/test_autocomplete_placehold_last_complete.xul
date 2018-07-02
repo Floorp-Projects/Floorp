@@ -107,6 +107,10 @@ let autoCompleteSimple = {
 
 SimpleTest.waitForExplicitFinish();
 
+// 6 assertions are recorded due to nested setting <input>.value but not a problem.
+// They are necessary to detect invalid method call without mutation event listers.
+SimpleTest.expectAssertions(6, 6);
+
 let gACTimer;
 let gAutoComplete;
 let asyncTest;

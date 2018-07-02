@@ -115,7 +115,8 @@ public:
   /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
    * Although this method is implementation of nsIPlaintextEditor.insertText(),
-   * this treats the input is an edit action.
+   * this treats the input is an edit action.  If you'd like to insert text
+   * as part of edit action, you probably should use InsertTextAsSubAction().
    *
    * @param aStringToInsert     The string to insert.
    */
@@ -229,6 +230,14 @@ protected: // May be called by friends.
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
+
+  /**
+   * InsertTextAsSubAction() inserts aStringToInsert at selection.  This
+   * should be used for handling it as an edit sub-action.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  nsresult InsertTextAsSubAction(const nsAString& aStringToInsert);
 
   /**
    * DeleteSelectionAsSubAction() removes selection content or content around
