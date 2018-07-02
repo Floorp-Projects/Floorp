@@ -208,6 +208,7 @@ namespace JS {
     _(CantInlineNativeNoTemplateObj)                                    \
     _(CantInlineBound)                                                  \
     _(CantInlineNativeNoSpecialization)                                 \
+    _(CantInlineUnexpectedNewTarget)                                    \
     _(HasCommonInliningPath)                                            \
                                                                         \
     _(GenericSuccess)                                                   \
