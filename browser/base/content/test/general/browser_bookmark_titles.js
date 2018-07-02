@@ -19,6 +19,8 @@ var tests = [
    "https://untrusted.example.com/somepage.html"]
 ];
 
+SpecialPowers.pushPrefEnv({"set": [["browser.bookmarks.editDialog.showForNewBookmarks", false]]});
+
 add_task(async function check_default_bookmark_title() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   let browser = tab.linkedBrowser;
@@ -96,7 +98,7 @@ async function checkBookmarkedPageTitle(url, default_title, overridden_title) {
 
   // Here we test that if we provide a url and a title to bookmark, it will use the
   // title provided rather than the one provided by the current page
-  PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, false, url, overridden_title);
+  PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, url, overridden_title);
   await promiseBookmark;
 
   let bookmark = await PlacesUtils.bookmarks.fetch({url});

@@ -81,7 +81,6 @@ HAWKAuthenticatedRESTRequest.prototype = {
       };
       let header = CryptoUtils.computeHAWK(this.uri, method, options);
       this.setHeader("Authorization", header.field);
-      this._log.trace("hawk auth header: " + header.field);
     }
 
     for (let header in this.extraHeaders) {

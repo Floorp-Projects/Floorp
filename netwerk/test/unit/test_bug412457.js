@@ -13,7 +13,8 @@ function run_test() {
   // There should be only allowed characters in hostname after
   // unescaping and attempting to apply IDNA. "\x80" is illegal in
   // UTF-8, so IDNA fails, and 0x80 is illegal in DNS too.
-  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://%80.com").finalize(); }, "illegal UTF character");
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://%80.com").finalize(); },
+                /NS_ERROR_UNEXPECTED/, "illegal UTF character");
 
   // test parsing URL with all possible host terminators
   newURI = newURI.mutate().setSpec("http://example.com?foo").finalize();

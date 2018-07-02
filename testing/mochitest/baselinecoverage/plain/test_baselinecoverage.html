@@ -7,7 +7,16 @@
 </head>
 <body>
 <script type="application/javascript">
-  SimpleTest.ok(true, "Collecting  baseline coverage for HTML (.html) file types.");
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("Baseline coverage stabilization delay.");
+
+  async function delayBaseline() {
+    SimpleTest.ok(true, "Collecting  baseline coverage for HTML (.html) file types.");
+    await new Promise((c) => setTimeout(c, 30 * 1000));
+    SimpleTest.finish();
+  }
+
+  delayBaseline();
 </script>
 </body>
 </html>
