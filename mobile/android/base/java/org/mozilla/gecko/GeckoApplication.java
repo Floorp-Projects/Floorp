@@ -234,6 +234,7 @@ public class GeckoApplication extends Application
         return new GeckoRuntimeSettings.Builder()
                 .javaCrashReportingEnabled(true)
                 .nativeCrashReportingEnabled(true)
+                .crashReportingJobId(JobIdsConstants.getIdForCrashReporter())
                 .arguments(getDefaultGeckoArgs());
     }
 

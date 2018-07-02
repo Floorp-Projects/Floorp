@@ -80,9 +80,11 @@
         </service>
         <service
                 android:name="org.mozilla.gecko.CrashReporterService"
+                android:permission="android.permission.BIND_JOB_SERVICE"
                 android:exported="false"
                 android:process=":crashreporter">
         </service>
+
     </application>
 
 </manifest>

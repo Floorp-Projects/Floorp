@@ -13,6 +13,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -517,6 +518,15 @@ public class GeckoThread extends Thread {
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);
+    }
+
+    public static int getCrashReporterJobId() {
+        synchronized (INSTANCE) {
+            if (!INSTANCE.mInitialized) {
+                return 1024;        // speculative, unique value
+            }
+            return INSTANCE.mExtras.getInt(GeckoRuntimeSettings.EXTRA_CRASH_REPORTING_JOB_ID, 1024);
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
