@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -55,6 +56,12 @@ public:
     virtual void
     RemoveServiceWorker(ServiceWorker* aWorker) = 0;
 
+    // Get the associated registration for this ServiceWorker.  The success
+    // callback should always be called asynchronously.
+    virtual void
+    GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                    ServiceWorkerFailureCallback&& aFailureCB) = 0;
+
     virtual void
     PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
                 const ClientInfo& aClientInfo,
@@ -65,6 +72,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKER_IID)
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorker, DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(statechange)
   IMPL_EVENT_HANDLER(error)
@@ -102,9 +110,13 @@ private:
   // This class is reference-counted and will be destroyed from Release().
   ~ServiceWorker();
 
+  void
+  MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration);
+
   ServiceWorkerDescriptor mDescriptor;
 
   RefPtr<Inner> mInner;
+  RefPtr<ServiceWorkerRegistration> mRegistration;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorker, NS_DOM_SERVICEWORKER_IID)

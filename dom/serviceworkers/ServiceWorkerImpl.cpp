@@ -37,6 +37,42 @@ ServiceWorkerImpl::RemoveServiceWorker(ServiceWorker* aWorker)
 }
 
 void
+ServiceWorkerImpl::GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                                   ServiceWorkerFailureCallback&& aFailureCB)
+{
+  // While we could immediate call success with our registration descriptor
+  // we instead queue a runnable to do this.  This ensures that GetRegistration()
+  // is always async to match how the IPC implementation will work.  It also
+  // ensure that if any events are triggered from providing the registration
+  // that they are fired from a runnable on the correct global's event target.
+
+  if (!mOuter) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  if (!global) {
+    aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ServiceWorkerImpl::GetRegistration",
+    [reg = mReg, successCB = std::move(aSuccessCB)] () mutable {
+      successCB(reg->Descriptor());
+    });
+
+  nsresult rv =
+    global->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget(),
+                                                          NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    aFailureCB(CopyableErrorResult(rv));
+    return;
+  }
+}
+
+void
 ServiceWorkerImpl::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
                                const ClientInfo& aClientInfo,
                                const ClientState& aClientState)
@@ -54,11 +90,14 @@ ServiceWorkerImpl::SetState(ServiceWorkerState aState)
 }
 
 
-ServiceWorkerImpl::ServiceWorkerImpl(ServiceWorkerInfo* aInfo)
+ServiceWorkerImpl::ServiceWorkerImpl(ServiceWorkerInfo* aInfo,
+                                     ServiceWorkerRegistrationInfo* aReg)
   : mInfo(aInfo)
+  , mReg(aReg)
   , mOuter(nullptr)
 {
   MOZ_DIAGNOSTIC_ASSERT(mInfo);
+  MOZ_DIAGNOSTIC_ASSERT(mReg);
 }
 
 } // namespace dom
