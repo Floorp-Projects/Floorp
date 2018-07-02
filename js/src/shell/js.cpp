@@ -5265,7 +5265,7 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
 
         if (!JS_GetProperty(cx, opts, "sameCompartmentAs", &v))
             return false;
-        if (v.isObject() && !fuzzingSafe)
+        if (v.isObject())
             creationOptions.setExistingCompartment(UncheckedUnwrap(&v.toObject()));
 
         if (!JS_GetProperty(cx, opts, "disableLazyParsing", &v))
