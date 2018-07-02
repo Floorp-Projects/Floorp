@@ -35,12 +35,6 @@ class FontOverview extends PureComponent {
   }
 
   renderElementFonts() {
-    // Do not show element fonts if the font editor is enabled.
-    // It handles this differently. Rendering twice is not desired.
-    if (Services.prefs.getBoolPref(PREF_FONT_EDITOR)) {
-      return null;
-    }
-
     const {
       fontData,
       fontOptions,
@@ -48,6 +42,26 @@ class FontOverview extends PureComponent {
       onToggleFontHighlight,
     } = this.props;
     const { fonts } = fontData;
+
+    // If the font editor is enabled, show the fonts in a collapsed accordion.
+    // The editor already displays fonts, in another way, rendering twice is not desired.
+    if (Services.prefs.getBoolPref(PREF_FONT_EDITOR)) {
+      return Accordion({
+        items: [
+          {
+            header: getStr("fontinspector.renderedFontsInPageHeader"),
+            component: FontList,
+            componentProps: {
+              fonts,
+              fontOptions,
+              onPreviewFonts,
+              onToggleFontHighlight,
+            },
+            opened: false
+          }
+        ]
+      });
+    }
 
     return fonts.length ?
       FontList({
