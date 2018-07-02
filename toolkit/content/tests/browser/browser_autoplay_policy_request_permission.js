@@ -201,3 +201,62 @@ add_task(async () => {
     mode: "call play",
   });
 });
+
+// Test that if playback starts while the permission prompt is shown,
+// that the prompt is hidden.
+add_task(async () => {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: VIDEO_PAGE,
+  }, async (browser) => {
+    info("- Started test prompt hides upon play -");
+    let promptShowing = () =>
+      PopupNotifications.getNotification("autoplay-media", browser);
+
+    // Set this site to ask permission to autoplay.
+    SitePermissions.set(browser.currentURI, "autoplay-media", SitePermissions.UNKNOWN);
+    ok(!promptShowing(), "Should not be showing permission prompt");
+
+    let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    await loadAutoplayVideo(browser, { mode: "call play" });
+
+    info("Awaiting popupshown");
+    await popupshown;
+    ok(promptShowing(), "Should now be showing permission prompt");
+
+    // Check that the video didn't start playing.
+    await ContentTask.spawn(browser, null,
+      async () => {
+        let video = content.document.getElementById("v1");
+        ok(video.paused && !video.didPlay, "Video should not be playing");
+      });
+
+    let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+
+    await ContentTask.spawn(browser, null,
+      async () => {
+        // Gesture activate the document, i.e. simulate a click in the document,
+        // to unblock autoplay,
+        content.document.notifyUserGestureActivation();
+        let video = content.document.getElementById("v1");
+        // Gesture activating in itself should not cause the previous pending
+        // play to proceed.
+        ok(video.paused && !video.didPlay, "Video should not have played yet");
+        // But trying to play again now that we're gesture activated will work...
+        let played = await video.play().then(() => true, () => false);
+        ok(played, "Should have played as now gesture activated");
+        // And because we started playing, the previous promise returned in the
+        // first call to play() above should also resolve too.
+        await video.didPlayPromise;
+        ok(video.didPlay, "Existing promise should resolve when media starts playing");
+      });
+
+    info("Awaiting popuphidden");
+    await popuphidden;
+    ok(!promptShowing(), "Permission prompt should have hidden when media started playing");
+
+    // Reset permission.
+    SitePermissions.remove(browser.currentURI, "autoplay-media");
+    info("- Finished test prompt hides upon play -");
+  });
+});
