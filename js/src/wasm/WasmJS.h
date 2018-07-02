@@ -126,6 +126,7 @@ class WasmGlobalObject : public NativeObject
 
     static const ClassOps classOps_;
     static void finalize(FreeOp*, JSObject* obj);
+    static void trace(JSTracer* trc, JSObject* obj);
 
     static bool valueGetterImpl(JSContext* cx, const CallArgs& args);
     static bool valueGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -136,10 +137,13 @@ class WasmGlobalObject : public NativeObject
     // For exposed globals the Cell holds the value of the global; the
     // instance's global area holds a pointer to the Cell.
     union Cell {
-        int32_t i32;
-        int64_t i64;
-        float   f32;
-        double  f64;
+        int32_t   i32;
+        int64_t   i64;
+        float     f32;
+        double    f64;
+        JSObject* ptr;
+        Cell() : i64(0) {}
+        ~Cell() {}
     };
 
     static const unsigned RESERVED_SLOTS = 3;
@@ -149,13 +153,13 @@ class WasmGlobalObject : public NativeObject
     static const JSFunctionSpec static_methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmGlobalObject* create(JSContext* cx, const wasm::Val& value, bool isMutable);
+    static WasmGlobalObject* create(JSContext* cx, wasm::HandleVal value, bool isMutable);
 
     wasm::ValType type() const;
-    wasm::Val val() const;
+    void val(wasm::MutableHandleVal outval) const;
     bool isMutable() const;
     // value() will MOZ_CRASH if the type is int64
-    Value value() const;
+    Value value(JSContext* cx) const;
     Cell* cell() const;
 };
 
@@ -214,7 +218,7 @@ class WasmInstanceObject : public NativeObject
                                       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
                                       Handle<FunctionVector> funcImports,
                                       const wasm::GlobalDescVector& globals,
-                                      const wasm::ValVector& globalImportValues,
+                                      wasm::HandleValVector globalImportValues,
                                       const WasmGlobalObjectVector& globalObjs,
                                       HandleObject proto);
     void initExportsObj(JSObject& exportsObj);

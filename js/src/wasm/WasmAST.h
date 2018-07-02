@@ -557,15 +557,15 @@ class AstDrop : public AstExpr
 
 class AstConst : public AstExpr
 {
-    const Val val_;
+    const LitVal val_;
 
   public:
     static const AstExprKind Kind = AstExprKind::Const;
-    explicit AstConst(Val val)
+    explicit AstConst(LitVal val)
       : AstExpr(Kind, ExprType::Limit),
         val_(val)
     {}
-    Val val() const { return val_; }
+    LitVal val() const { return val_; }
 };
 
 class AstGetLocal : public AstExpr

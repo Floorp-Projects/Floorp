@@ -721,13 +721,13 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
 }
 
 static uint32_t
-EvaluateInitExpr(const ValVector& globalImportValues, InitExpr initExpr)
+EvaluateInitExpr(HandleValVector globalImportValues, InitExpr initExpr)
 {
     switch (initExpr.kind()) {
       case InitExpr::Kind::Constant:
         return initExpr.val().i32();
       case InitExpr::Kind::GetGlobal:
-        return globalImportValues[initExpr.globalIndex()].i32();
+        return globalImportValues[initExpr.globalIndex()].get().i32();
     }
 
     MOZ_CRASH("bad initializer expression");
@@ -738,7 +738,7 @@ Module::initSegments(JSContext* cx,
                      HandleWasmInstanceObject instanceObj,
                      Handle<FunctionVector> funcImports,
                      HandleWasmMemoryObject memoryObj,
-                     const ValVector& globalImportValues) const
+                     HandleValVector globalImportValues) const
 {
     Instance& instance = instanceObj->instance();
     const SharedTableVector& tables = instance.tables();
@@ -1010,38 +1010,44 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
     return true;
 }
 
-static Val
-ExtractGlobalValue(const ValVector& globalImportValues, uint32_t globalIndex, const GlobalDesc& global)
+static void
+ExtractGlobalValue(HandleValVector globalImportValues, uint32_t globalIndex,
+                   const GlobalDesc& global, MutableHandleVal result)
 {
     switch (global.kind()) {
       case GlobalKind::Import: {
-        return globalImportValues[globalIndex];
+        result.set(Val(globalImportValues[globalIndex]));
+        return;
       }
       case GlobalKind::Variable: {
         const InitExpr& init = global.initExpr();
         switch (init.kind()) {
           case InitExpr::Kind::Constant:
-            return init.val();
+            result.set(Val(init.val()));
+            return;
           case InitExpr::Kind::GetGlobal:
-            return globalImportValues[init.globalIndex()];
+            result.set(Val(globalImportValues[init.globalIndex()]));
+            return;
         }
         break;
       }
       case GlobalKind::Constant: {
-        return global.constantValue();
+        result.set(Val(global.constantValue()));
+        return;
       }
     }
     MOZ_CRASH("Not a global value");
 }
 
 static bool
-EnsureGlobalObject(JSContext* cx, const ValVector& globalImportValues, size_t globalIndex,
+EnsureGlobalObject(JSContext* cx, HandleValVector globalImportValues, size_t globalIndex,
                    const GlobalDesc& global, WasmGlobalObjectVector& globalObjs)
 {
     if (globalIndex < globalObjs.length() && globalObjs[globalIndex])
         return true;
 
-    Val val = ExtractGlobalValue(globalImportValues, globalIndex, global);
+    RootedVal val(cx);
+    ExtractGlobalValue(globalImportValues, globalIndex, global, &val);
     RootedWasmGlobalObject go(cx, WasmGlobalObject::create(cx, val, global.isMutable()));
     if (!go)
         return false;
@@ -1056,7 +1062,7 @@ EnsureGlobalObject(JSContext* cx, const ValVector& globalImportValues, size_t gl
 }
 
 bool
-Module::instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
+Module::instantiateGlobals(JSContext* cx, HandleValVector globalImportValues,
                            WasmGlobalObjectVector& globalObjs) const
 {
     // If there are exported globals that aren't in globalObjs because they
@@ -1188,7 +1194,7 @@ Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
                     HandleWasmTableObject tableImport,
                     HandleWasmMemoryObject memoryImport,
-                    const ValVector& globalImportValues,
+                    HandleValVector globalImportValues,
                     WasmGlobalObjectVector& globalObjs,
                     HandleObject instanceProto,
                     MutableHandleWasmInstanceObject instance) const

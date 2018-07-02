@@ -126,6 +126,7 @@ sm-msan-linux64/opt:
     treeherder:
         symbol: SM(msan)
         platform: linux64/opt
+        tier: 3
     run:
         spidermonkey-variant: msan
 
