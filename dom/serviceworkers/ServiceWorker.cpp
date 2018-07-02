@@ -63,7 +63,7 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     return ref.forget();
   }
 
-  RefPtr<ServiceWorker::Inner> inner = new ServiceWorkerImpl(info);
+  RefPtr<ServiceWorker::Inner> inner = new ServiceWorkerImpl(info, reg);
   ref = new ServiceWorker(aOwner, aDescriptor, inner);
   return ref.forget();
 }
@@ -86,6 +86,31 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
 
   // This will update our state too.
   mInner->AddServiceWorker(this);
+
+  // Attempt to get an existing binding object for the registration
+  // associated with this ServiceWorker.
+  RefPtr<ServiceWorkerRegistration> reg = aGlobal->GetServiceWorkerRegistration(
+    ServiceWorkerRegistrationDescriptor(mDescriptor.RegistrationId(),
+                                        mDescriptor.PrincipalInfo(),
+                                        mDescriptor.Scope(),
+                                        ServiceWorkerUpdateViaCache::Imports));
+  if (reg) {
+    MaybeAttachToRegistration(reg);
+  } else {
+    RefPtr<ServiceWorker> self = this;
+
+    mInner->GetRegistration(
+      [self = std::move(self)] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+        nsIGlobalObject* global = self->GetParentObject();
+        NS_ENSURE_TRUE_VOID(global);
+        RefPtr<ServiceWorkerRegistration> reg =
+          global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+        self->MaybeAttachToRegistration(reg);
+      }, [] (ErrorResult& aRv) {
+        // do nothing
+        aRv.SuppressException();
+      });
+  }
 }
 
 ServiceWorker::~ServiceWorker()
@@ -93,6 +118,10 @@ ServiceWorker::~ServiceWorker()
   MOZ_ASSERT(NS_IsMainThread());
   mInner->RemoveServiceWorker(this);
 }
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker,
+                                   DOMEventTargetHelper,
+                                   mRegistration);
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -199,6 +228,15 @@ void
 ServiceWorker::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
+}
+
+void
+ServiceWorker::MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aRegistration);
+  MOZ_DIAGNOSTIC_ASSERT(!mRegistration);
+
+  mRegistration = aRegistration;
 }
 
 } // namespace dom
