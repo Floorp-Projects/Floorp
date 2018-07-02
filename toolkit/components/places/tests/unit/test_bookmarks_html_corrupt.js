@@ -7,9 +7,6 @@ const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/centra
 const TEST_FAVICON_DATA_SIZE = 580;
 
 add_task(async function test_corrupt_file() {
-  // avoid creating the places smart folder during tests
-  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
-
   // Import bookmarks from the corrupt file.
   let corruptHtml = OS.Path.join(do_get_cwd().path, "bookmarks.corrupt.html");
   await BookmarkHTMLUtils.importFromFile(corruptHtml, { replace: true });
