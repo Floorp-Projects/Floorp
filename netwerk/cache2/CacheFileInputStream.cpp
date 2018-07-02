@@ -152,10 +152,6 @@ CacheFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     return NS_OK;
   }
 
-  if (aCount == 0) {
-    return NS_OK;
-  }
-
   EnsureCorrectChunk(false);
 
   while (true) {
