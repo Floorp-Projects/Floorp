@@ -1,0 +1,31 @@
+<style>
+.class1 { float: left; white-space: pre-line; }
+.class2 { border-bottom-style: solid; font-face: Arial; font-size: 7ex; }
+</style>
+<script>
+function go() {
+  progress.remove();
+  menu.style.setProperty("flex-direction", "column");
+  setTimeout(callback,0);
+}
+function callback() {
+  menu.style.setProperty("flex-direction", "row-reverse");
+  option.scrollBy();
+}
+</script>
+<body onload=go()>
+<del class="class1">
+<span class="class2">
+<menu id="menu">
+<menuitem>
+</menuitem></menu>
+<menuitem id="menuitem">
+<progress id="progress">
+</progress>aaaaaaaaaaaaaaaaaa
+                                                                                                                                                  
+
+</menuitem></span></del>
+<ol dir="rtl"></ol>
+<canvas id="canvas">
+<option id="option">
+</option></canvas>

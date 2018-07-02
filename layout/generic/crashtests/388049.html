@@ -1,0 +1,43 @@
+<html>
+ <head>
+  <style type="text/css">
+   p:first-line { color: teal; }
+   p:first-letter { color: aqua; }
+   .one:first-line { font-size: 300%; }
+   .one:first-letter { font-size: 300%; }
+   p.two:first-letter { font-size: 200%; }
+   p.two:first-line { font-variant: small-caps; }
+   /* three uses the default styles */
+  </style>
+  </head>
+ <body>
+  <p class="one">
+   The <strong>first letter of this paragraph, and only that
+   one, should be 600% bigger than the normal text
+   (300% bigger than the rest of first line of this paragraph) and
+   aqua, while the entire first line
+   should be 300% bigger than normal and teal. If this precise combination does not occur,
+   then the user agent has failed this test. Remember that in order to
+   ensure a complete test, the paragraph must be displayed on more
+   than one line. (TEST1)
+  </p>
+  <p class="two">
+   The first two characters in this paragraph
+   (a double-quote mark and a capital 'T') should be 200%
+   bigger than the rest of the paragraph, and
+   aqua. In addition, the entire first
+   line should be in a small-caps font and
+   teal. Remember that in order to ensure a complete test,
+   the paragraph must be displayed on more than one line. (TEST2)
+  </p>
+  <p>
+   The first letter of this paragraph, and only that
+   one, should be aqua, while the entire
+   <strong>first line should be teal. If
+   this precise combination does not occur, then the user agent has
+   failed this test. Remember that in order to ensure a complete test,
+   the paragraph must be displayed on more than one line. (TEST3)
+  </p>
+
+ </body>
+</html>

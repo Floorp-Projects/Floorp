@@ -17,7 +17,6 @@ const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 
-const DARK_THEME_ID    = "firefox-compact-dark@mozilla.org";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
@@ -76,6 +75,9 @@ var _fallbackThemeData = null;
 // Holds whether or not the default theme should display in dark mode. This is
 // typically the case when the OS has a dark system appearance.
 var _defaultThemeIsInDarkMode = false;
+// Holds the dark theme to be used if the OS has a dark system appearance and
+// the default theme is selected.
+var _defaultDarkThemeID = null;
 
 // Convert from the old storage format (in which the order of usedThemes
 // was combined with isThemeSelected to determine which theme was selected)
@@ -145,8 +147,8 @@ var LightweightThemeManager = {
       if (_fallbackThemeData) {
         return _fallbackThemeData;
       }
-      if (_defaultThemeIsInDarkMode) {
-        return this.getUsedTheme(DARK_THEME_ID);
+      if (_defaultThemeIsInDarkMode && _defaultDarkThemeID) {
+        return this.getUsedTheme(_defaultDarkThemeID);
       }
     }
 
@@ -198,7 +200,7 @@ var LightweightThemeManager = {
     AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
   },
 
-  addBuiltInTheme(theme) {
+  addBuiltInTheme(theme, { useInDarkMode } = {}) {
     if (!theme || !theme.id || this.usedThemes.some(t => t.id == theme.id)) {
       throw new Error("Trying to add invalid builtIn theme");
     }
@@ -207,6 +209,10 @@ var LightweightThemeManager = {
 
     if (_prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID) == theme.id) {
       this.currentTheme = theme;
+    }
+
+    if (useInDarkMode) {
+      _defaultDarkThemeID = theme.id;
     }
   },
 
@@ -380,8 +386,10 @@ var LightweightThemeManager = {
     }
 
     let themeToSwitchTo = aData;
-    if (aData && aData.id == DEFAULT_THEME_ID && _defaultThemeIsInDarkMode) {
-      themeToSwitchTo = LightweightThemeManager.getUsedTheme(DARK_THEME_ID);
+    if (aData && aData.id == DEFAULT_THEME_ID && _defaultThemeIsInDarkMode &&
+        _defaultDarkThemeID) {
+      themeToSwitchTo =
+        LightweightThemeManager.getUsedTheme(_defaultDarkThemeID);
     }
 
     if (themeToSwitchTo) {
@@ -474,8 +482,8 @@ var LightweightThemeManager = {
    */
   systemThemeChanged(aEvent) {
     let themeToSwitchTo = null;
-    if (aEvent.matches && !_defaultThemeIsInDarkMode) {
-      themeToSwitchTo = this.getUsedTheme(DARK_THEME_ID);
+    if (aEvent.matches && !_defaultThemeIsInDarkMode && _defaultDarkThemeID) {
+      themeToSwitchTo = this.getUsedTheme(_defaultDarkThemeID);
       _defaultThemeIsInDarkMode = true;
     } else if (!aEvent.matches && _defaultThemeIsInDarkMode) {
       themeToSwitchTo = this.getUsedTheme(DEFAULT_THEME_ID);
