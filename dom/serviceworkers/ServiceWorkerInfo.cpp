@@ -113,36 +113,6 @@ ServiceWorkerInfo::DetachDebugger()
   return mServiceWorkerPrivate->DetachDebugger();
 }
 
-namespace {
-
-class ChangeStateUpdater final : public Runnable
-{
-public:
-  ChangeStateUpdater(const nsTArray<ServiceWorkerInfo::Listener*>& aInstances,
-                     ServiceWorkerState aState)
-    : Runnable("dom::ChangeStateUpdater")
-    , mState(aState)
-  {
-    for (size_t i = 0; i < aInstances.Length(); ++i) {
-      mInstances.AppendElement(aInstances[i]);
-    }
-  }
-
-  NS_IMETHOD Run() override
-  {
-    for (size_t i = 0; i < mInstances.Length(); ++i) {
-      mInstances[i]->SetState(mState);
-    }
-    return NS_OK;
-  }
-
-private:
-  AutoTArray<RefPtr<ServiceWorkerInfo::Listener>, 1> mInstances;
-  ServiceWorkerState mState;
-};
-
-}
-
 void
 ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 {
@@ -172,8 +142,6 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
     mServiceWorkerPrivate->UpdateState(aState);
   }
   mDescriptor.SetState(aState);
-  nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, State());
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
   if (State() == ServiceWorkerState::Redundant) {
     serviceWorkerScriptCache::PurgeCache(mPrincipal, mCacheName);
   }
@@ -223,24 +191,6 @@ uint64_t
 ServiceWorkerInfo::GetNextID() const
 {
   return ++gServiceWorkerInfoCurrentID;
-}
-
-void
-ServiceWorkerInfo::AddListener(Listener* aListener)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  MOZ_ASSERT(!mInstances.Contains(aListener));
-
-  mInstances.AppendElement(aListener);
-  aListener->SetState(State());
-}
-
-void
-ServiceWorkerInfo::RemoveListener(Listener* aListener)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  DebugOnly<bool> removed = mInstances.RemoveElement(aListener);
-  MOZ_ASSERT(removed);
 }
 
 void
