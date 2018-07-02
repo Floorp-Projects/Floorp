@@ -484,4 +484,11 @@ function mapStateToProps(state) {
 /* istanbul ignore next: ignoring testing of redux connection stuff */
 
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(QuickOpenModal);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  shortcutsModalEnabled: _actions2.default.shortcutsModalEnabled,
+  selectLocation: _actions2.default.selectLocation,
+  setQuickOpenQuery: _actions2.default.setQuickOpenQuery,
+  highlightLineRange: _actions2.default.highlightLineRange,
+  closeQuickOpen: _actions2.default.closeQuickOpen,
+  toggleShortcutsModal: _actions2.default.toggleShortcutsModal
+})(QuickOpenModal);

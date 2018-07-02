@@ -113,4 +113,6 @@ const mapStateToProps = state => ({
   popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(FrameworkComponent);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  setPopupObjectProperties: _actions2.default.setPopupObjectProperties
+})(FrameworkComponent);
