@@ -99,7 +99,7 @@ private:
 
   // Utility method corresponding to the spec Install algorithm.
   void
-  Install(ServiceWorkerManager* aSWM);
+  Install();
 
   // Utility method called after the install event is handled.
   void
