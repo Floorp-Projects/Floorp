@@ -159,6 +159,16 @@ describe("Store", () => {
 
       assert.calledOnce(dbStub);
     });
+    it("should reset ActivityStreamStorage telemetry if opening the db fails", async () => {
+      store._initIndexedDB.restore();
+      // Force an IndexedDB error
+      dbStub.rejects();
+
+      await store.init(new Map());
+
+      assert.calledOnce(dbStub);
+      assert.isNull(store.dbStorage.telemetry);
+    });
     it("should not initialize the feed if the Pref is set to false", async () => {
       sinon.stub(store, "initFeed");
       store._prefs.set("foo", false);
