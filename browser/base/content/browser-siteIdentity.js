@@ -46,12 +46,6 @@ var gIdentityHandler = {
   _state: 0,
 
   /**
-   * This flag gets set if the identity popup was opened by a keypress,
-   * to be able to focus it on the popupshown event.
-   */
-  _popupTriggeredByKeyboard: false,
-
-  /**
    * RegExp used to decide if an about url should be shown as being part of
    * the browser UI.
    */
@@ -831,7 +825,14 @@ var gIdentityHandler = {
       return;
     }
 
-    this._popupTriggeredByKeyboard = event.type == "keypress";
+    // Move focus to the next available element in the identity popup.
+    // This is required by role=alertdialog and fixes an issue where
+    // an already open panel would steal focus from the identity popup.
+    if (event.type == "keypress") {
+      let panelView = PanelView.forNode(this._identityPopupMainView);
+      this._identityPopupMainView.addEventListener("ViewShown", () => panelView.focusFirstNavigableElement(),
+        {once: true});
+    }
 
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
@@ -853,13 +854,6 @@ var gIdentityHandler = {
 
   onPopupShown(event) {
     if (event.target == this._identityPopup) {
-      if (this._popupTriggeredByKeyboard) {
-        // Move focus to the next available element in the identity popup.
-        // This is required by role=alertdialog and fixes an issue where
-        // an already open panel would steal focus from the identity popup.
-        document.commandDispatcher.advanceFocusIntoSubtree(this._identityPopup);
-      }
-
       window.addEventListener("focus", this, true);
     }
   },
