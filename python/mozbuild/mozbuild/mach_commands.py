@@ -1834,7 +1834,7 @@ class StaticAnalysis(MachCommandBase):
                               'Delete local helpers and reset static analysis helper tool cache')
     def clear_cache(self, verbose=False):
         self._set_log_level(verbose)
-        rc = self._get_clang_tools(force=True, download_if_needed=False,
+        rc = self._get_clang_tools(force=True, download_if_needed=True, skip_cache=True,
                                    verbose=verbose)
         if rc != 0:
             return rc
