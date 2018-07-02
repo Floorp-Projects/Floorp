@@ -15,6 +15,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.dom += [
     'PaymentAddress.h',
+    'PaymentMethodChangeEvent.h',
     'PaymentRequest.h',
     'PaymentRequestManager.h',
     'PaymentRequestUpdateEvent.h',
@@ -26,6 +27,7 @@ UNIFIED_SOURCES += [
     'PaymentActionRequest.cpp',
     'PaymentActionResponse.cpp',
     'PaymentAddress.cpp',
+    'PaymentMethodChangeEvent.cpp',
     'PaymentRequest.cpp',
     'PaymentRequestData.cpp',
     'PaymentRequestManager.cpp',

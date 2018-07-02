@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+var count = 0;
+
+function boom()
+{
+  var r = document.body; while(r.firstChild) { r.removeChild(r.firstChild); }
+  
+  document.body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  span.setAttributeNS(null, "contenteditable", "true");
+  document.documentElement.appendChild(span);
+  (document.body || document.documentElement).appendChild(div);
+  var text = document.createTextNode("\u200F\uE8D4");
+  document.body.appendChild(text);
+  document.documentElement.appendChild(document.body);
+  document.documentElement.offsetHeight;
+  text.data += "\uF0C5";
+  document.execCommand("selectAll", false, null);
+
+  if (++count < 20)
+    setTimeout(boom, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
