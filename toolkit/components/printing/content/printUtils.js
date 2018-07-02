@@ -545,8 +545,9 @@ var PrintUtils = {
       // that we can initialize the toolbar with total num pages
       const XUL_NS =
         "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
-      printPreviewTB.setAttribute("printpreview", true);
+
+      printPreviewTB = document.createElementNS(XUL_NS, "toolbar",
+        { is: "printpreview-toolbar" });
       printPreviewTB.setAttribute("fullscreentoolbar", true);
       printPreviewTB.id = "print-preview-toolbar";
 
