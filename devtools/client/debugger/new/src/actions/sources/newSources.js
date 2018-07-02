@@ -64,9 +64,9 @@ function loadSourceMap(sourceId) {
     getState,
     sourceMaps
   }) {
-    const source = (0, _selectors.getSource)(getState(), sourceId);
+    const source = (0, _selectors.getSource)(getState(), sourceId).toJS();
 
-    if (!source || !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) || !source.sourceMapURL) {
+    if (!sourceMaps || !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) || !source.sourceMapURL) {
       return;
     }
 
@@ -100,7 +100,7 @@ function checkSelectedSource(sourceId) {
     dispatch,
     getState
   }) => {
-    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
+    const source = (0, _selectors.getSource)(getState(), sourceId);
     const pendingLocation = (0, _selectors.getPendingSelectedLocation)(getState());
 
     if (!pendingLocation || !pendingLocation.url || !source.url) {
@@ -128,8 +128,8 @@ function checkPendingBreakpoints(sourceId) {
     getState
   }) => {
     // source may have been modified by selectLocation
-    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
-    const pendingBreakpoints = (0, _selectors.getPendingBreakpointsForSource)(getState(), source.url);
+    const source = (0, _selectors.getSource)(getState(), sourceId);
+    const pendingBreakpoints = (0, _selectors.getPendingBreakpointsForSource)(getState(), source.get("url"));
 
     if (!pendingBreakpoints.size) {
       return;

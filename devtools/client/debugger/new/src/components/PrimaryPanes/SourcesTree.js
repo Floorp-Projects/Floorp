@@ -85,7 +85,7 @@ class SourcesTree extends _react.Component {
       sourceTree
     } = this.state;
 
-    if (projectRoot != nextProps.projectRoot || debuggeeUrl != nextProps.debuggeeUrl || nextProps.sourceCount === 0) {
+    if (projectRoot != nextProps.projectRoot || debuggeeUrl != nextProps.debuggeeUrl || nextProps.sources.size === 0) {
       // early recreate tree because of changes
       // to project root, debugee url or lack of sources
       return this.setState((0, _sourcesTree.createTree)({
@@ -108,8 +108,8 @@ class SourcesTree extends _react.Component {
     }
 
     if (nextProps.selectedSource && nextProps.selectedSource != selectedSource) {
-      const highlightItems = (0, _sourcesTree.getDirectories)((0, _source.getRawSourceURL)(nextProps.selectedSource.url), sourceTree);
-      this.setState({
+      const highlightItems = (0, _sourcesTree.getDirectories)((0, _source.getRawSourceURL)(nextProps.selectedSource.get("url")), sourceTree);
+      return this.setState({
         highlightItems
       });
     } // NOTE: do not run this every time a source is clicked,
@@ -130,13 +130,7 @@ class SourcesTree extends _react.Component {
 
   // NOTE: we get the source from sources because item.contents is cached
   getSource(item) {
-    const source = (0, _sourcesTree.getSourceFromNode)(item);
-
-    if (source) {
-      return this.props.sources[source.id];
-    }
-
-    return null;
+    return this.props.sources.get(item.contents.id);
   }
 
   isEmpty() {
@@ -147,19 +141,12 @@ class SourcesTree extends _react.Component {
   }
 
   renderItemName(name) {
-    switch (name) {
-      case "ng://":
-        return "Angular";
-
-      case "webpack://":
-        return "Webpack";
-
-      case "moz-extension://":
-        return L10N.getStr("extensionsText");
-
-      default:
-        return name;
-    }
+    const hosts = {
+      "ng://": "Angular",
+      "webpack://": "Webpack",
+      "moz-extension://": L10N.getStr("extensionsText")
+    };
+    return hosts[name] || name;
   }
 
   renderEmptyElement(message) {
@@ -220,8 +207,7 @@ class SourcesTree extends _react.Component {
       onCollapse: this.onCollapse,
       onExpand: this.onExpand,
       onFocus: this.focusItem,
-      renderItem: this.renderItem,
-      preventBlur: true
+      renderItem: this.renderItem
     };
     return _react2.default.createElement(_ManagedTree2.default, treeProps);
   }
@@ -268,9 +254,7 @@ var _initialiseProps = function () {
   };
 
   this.selectItem = item => {
-    if (!(0, _sourcesTree.isDirectory)(item) && // This second check isn't strictly necessary, but it ensures that Flow
-    // knows that we are doing the correct thing.
-    !Array.isArray(item.contents)) {
+    if (!(0, _sourcesTree.isDirectory)(item)) {
       this.props.selectSource(item.contents.id);
     }
   };
@@ -283,7 +267,7 @@ var _initialiseProps = function () {
     }
 
     const source = this.getSource(item);
-    const blackBoxedPart = source && source.isBlackBoxed ? ":blackboxed" : "";
+    const blackBoxedPart = source.isBlackBoxed ? ":blackboxed" : "";
     return `${path}${blackBoxedPart}`;
   };
 
@@ -322,14 +306,9 @@ var _initialiseProps = function () {
     }
 
     const source = this.getSource(item);
-
-    if (source) {
-      return _react2.default.createElement(_SourceIcon2.default, {
-        source: source
-      });
-    }
-
-    return null;
+    return _react2.default.createElement(_SourceIcon2.default, {
+      source: source
+    });
   };
 
   this.onContextMenu = (event, item) => {
@@ -343,21 +322,14 @@ var _initialiseProps = function () {
     const menuOptions = [];
 
     if (!(0, _sourcesTree.isDirectory)(item)) {
-      // Flow requires some extra handling to ensure the value of contents.
-      const {
-        contents
-      } = item;
-
-      if (!Array.isArray(contents)) {
-        const copySourceUri2 = {
-          id: "node-menu-copy-source",
-          label: copySourceUri2Label,
-          accesskey: copySourceUri2Key,
-          disabled: false,
-          click: () => (0, _clipboard.copyToTheClipboard)(contents.url)
-        };
-        menuOptions.push(copySourceUri2);
-      }
+      const copySourceUri2 = {
+        id: "node-menu-copy-source",
+        label: copySourceUri2Label,
+        accesskey: copySourceUri2Key,
+        disabled: false,
+        click: () => (0, _clipboard.copyToTheClipboard)(item.contents.url)
+      };
+      menuOptions.push(copySourceUri2);
     }
 
     if ((0, _sourcesTree.isDirectory)(item) && _prefs.features.root) {
@@ -410,7 +382,7 @@ var _initialiseProps = function () {
   this.renderItem = (item, depth, focused, _, expanded, {
     setExpanded
   }) => {
-    const arrow = (0, _sourcesTree.isDirectory)(item) ? _react2.default.createElement("img", {
+    const arrow = (0, _sourcesTree.nodeHasChildren)(item) ? _react2.default.createElement("img", {
       className: (0, _classnames2.default)("arrow", {
         expanded: expanded
       })
@@ -471,8 +443,7 @@ const mapStateToProps = state => {
     debuggeeUrl: (0, _selectors.getDebuggeeUrl)(state),
     expanded: (0, _selectors.getExpandedState)(state),
     projectRoot: (0, _selectors.getProjectDirectoryRoot)(state),
-    sources: (0, _selectors.getRelativeSources)(state),
-    sourceCount: (0, _selectors.getSourceCount)(state)
+    sources: (0, _selectors.getRelativeSources)(state)
   };
 };
 

@@ -9,7 +9,7 @@ add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemap-bogus.html");
   const {
-    selectors: { getSourceCount },
+    selectors: { getSources },
     getState
   } = dbg;
 
@@ -24,5 +24,5 @@ add_task(async function() {
 
   // Make sure that only the single generated source exists. The
   // sourcemap failed to download.
-  is(getSourceCount(getState()), 1, "Only 1 source exists");
+  is(getSources(getState()).size, 1, "Only 1 source exists");
 });

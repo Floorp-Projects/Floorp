@@ -76,7 +76,7 @@ function shouldPrettyPrint(source) {
   const _isJavaScript = isJavaScript(source);
 
   const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
-  const hasSourceMap = source.sourceMapURL;
+  const hasSourceMap = source.get("sourceMapURL");
 
   if (_isPretty || isOriginal || hasSourceMap || !_isJavaScript) {
     return false;
@@ -421,11 +421,11 @@ function getMode(source, symbols) {
 }
 
 function isLoaded(source) {
-  return source.loadedState === "loaded";
+  return source.get("loadedState") === "loaded";
 }
 
 function isLoading(source) {
-  return source.loadedState === "loading";
+  return source.get("loadedState") === "loading";
 }
 
 function getTextAtPosition(source, location) {

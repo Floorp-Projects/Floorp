@@ -64,7 +64,7 @@ const {
 function inPreview(event) {
   const relatedTarget = event.relatedTarget;
 
-  if (!relatedTarget || relatedTarget.classList && relatedTarget.classList.contains("preview-expression")) {
+  if (!relatedTarget || relatedTarget.classList.contains("preview-expression")) {
     return true;
   } // $FlowIgnore
 

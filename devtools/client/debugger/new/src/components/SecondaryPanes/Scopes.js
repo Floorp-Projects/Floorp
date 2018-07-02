@@ -126,7 +126,7 @@ const mapStateToProps = state => {
   const {
     scope: originalFrameScopes,
     pending: originalPending
-  } = (0, _selectors.getOriginalFrameScope)(state, selectedSource && selectedSource.id, selectedFrame && selectedFrame.id) || {
+  } = (0, _selectors.getOriginalFrameScope)(state, selectedSource && selectedSource.get("id"), selectedFrame && selectedFrame.id) || {
     scope: null,
     pending: false
   };

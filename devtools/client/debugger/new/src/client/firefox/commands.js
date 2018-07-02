@@ -321,7 +321,7 @@ async function setSkipPausing(shouldSkip) {
   return threadClient.request({
     skip: shouldSkip,
     to: threadClient.actor,
-    type: "skipBreakpoints"
+    type: "skipPausing"
   });
 }
 

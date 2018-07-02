@@ -94,7 +94,7 @@ function navigated() {
   }) {
     await (0, _utils.waitForMs)(100);
 
-    if (Object.keys((0, _sources.getSources)(getState())).length == 0) {
+    if ((0, _sources.getSources)(getState()).size == 0) {
       const sources = await client.fetchSources();
       dispatch((0, _sources2.newSources)(sources));
     }

@@ -22,11 +22,6 @@ function inComponent(state) {
   }
 
   const source = (0, _.getSource)(state, selectedFrame.location.sourceId);
-
-  if (!source) {
-    return;
-  }
-
   const symbols = (0, _.getSymbols)(state, source);
 
   if (!symbols) {

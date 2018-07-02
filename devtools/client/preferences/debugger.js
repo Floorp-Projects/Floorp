@@ -64,5 +64,4 @@ pref("devtools.debugger.features.replay", false);
 pref("devtools.debugger.features.pause-points", true);
 pref("devtools.debugger.features.component-stack", false);
 pref("devtools.debugger.features.async-stepping", true);
-pref("devtools.debugger.features.skip-pausing", true);
-pref("devtools.debugger.features.autocomplete-expressions", false);
+pref("devtools.debugger.features.skip-pausing", false);

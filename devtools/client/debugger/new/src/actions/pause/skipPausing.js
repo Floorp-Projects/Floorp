@@ -22,8 +22,9 @@ function toggleSkipPausing() {
     getState,
     sourceMaps
   }) => {
-    const skipPausing = !(0, _selectors.getSkipPausing)(getState());
-    await client.setSkipPausing(skipPausing);
+    const skipPausing = !(0, _selectors.getSkipPausing)(getState()); // NOTE: enable this when we land the endpoint in m-c
+    // await client.setSkipPausing(skipPausing);
+
     dispatch({
       type: "TOGGLE_SKIP_PAUSING",
       skipPausing

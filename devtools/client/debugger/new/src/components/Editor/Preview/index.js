@@ -169,7 +169,7 @@ class Preview extends _react.PureComponent {
       return null;
     }
 
-    const editorRange = (0, _editor.toEditorRange)(selectedSource.id, location);
+    const editorRange = (0, _editor.toEditorRange)(selectedSource.get("id"), location);
     return _react2.default.createElement(_Popup2.default, {
       value: value,
       editor: this.props.editor,

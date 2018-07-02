@@ -27,7 +27,7 @@ add_task(async function() {
   await waitForPaused(dbg);
 
   await resume(dbg);
-  const source = getSelectedSource(getState())
+  const source = getSelectedSource(getState()).toJS();
   ok(!source.url, "It is an eval source");
 
   await addBreakpoint(dbg, source, 5);

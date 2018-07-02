@@ -133,7 +133,7 @@ class SearchBar extends _react.Component {
         selectedSource
       } = this.props;
 
-      if (!selectedSource || !selectedSource.text) {
+      if (!selectedSource || !selectedSource.get("text")) {
         return;
       }
 

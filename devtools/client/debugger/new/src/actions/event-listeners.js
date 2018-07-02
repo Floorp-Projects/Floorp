@@ -103,7 +103,7 @@ function formatListeners(state, listeners) {
     return {
       selector: l.node.selector,
       type: l.type,
-      sourceId: (0, _selectors.getSourceByURL)(state, l.function.location.url).id,
+      sourceId: (0, _selectors.getSourceByURL)(state, l.function.location.url).get("id"),
       line: l.function.location.line
     };
   });

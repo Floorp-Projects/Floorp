@@ -180,7 +180,7 @@ class Editor extends _react.PureComponent {
         return;
       }
 
-      const sourceLine = (0, _editor.toSourceLine)(selectedSource.id, line);
+      const sourceLine = (0, _editor.toSourceLine)(selectedSource.get("id"), line);
 
       if (ev.altKey) {
         return continueToHere(sourceLine);
@@ -344,7 +344,7 @@ class Editor extends _react.PureComponent {
       selectedSource
     } = this.props;
     const line = (0, _editor.getCursorLine)(codeMirror);
-    return (0, _editor.toSourceLine)(selectedSource.id, line);
+    return (0, _editor.toSourceLine)(selectedSource.get("id"), line);
   }
 
   onKeyDown(e) {
@@ -439,8 +439,8 @@ class Editor extends _react.PureComponent {
         column
       } = (0, _editor.toEditorPosition)(nextProps.selectedLocation);
 
-      if ((0, _editor.hasDocument)(nextProps.selectedSource.id)) {
-        const doc = (0, _editor.getDocument)(nextProps.selectedSource.id);
+      if ((0, _editor.hasDocument)(nextProps.selectedSource.get("id"))) {
+        const doc = (0, _editor.getDocument)(nextProps.selectedSource.get("id"));
         const lineText = doc.getLine(line);
         column = Math.max(column, (0, _indentation.getIndentation)(lineText));
       }
@@ -478,12 +478,12 @@ class Editor extends _react.PureComponent {
       return (0, _editor.showLoading)(this.state.editor);
     }
 
-    if (selectedSource.error) {
-      return this.showErrorMessage(selectedSource.error);
+    if (selectedSource.get("error")) {
+      return this.showErrorMessage(selectedSource.get("error"));
     }
 
     if (selectedSource) {
-      return (0, _editor.showSourceText)(this.state.editor, selectedSource, symbols);
+      return (0, _editor.showSourceText)(this.state.editor, selectedSource.toJS(), symbols);
     }
   }
 
@@ -623,7 +623,7 @@ Editor.contextTypes = {
 
 const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
-  const sourceId = selectedSource ? selectedSource.id : "";
+  const sourceId = selectedSource ? selectedSource.get("id") : "";
   return {
     selectedLocation: (0, _selectors.getSelectedLocation)(state),
     selectedSource,

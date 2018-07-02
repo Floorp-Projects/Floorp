@@ -28,11 +28,6 @@ var _pause = require("./pause/index");
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function findExpressionMatch(state, codeMirror, tokenPos) {
   const source = (0, _selectors.getSelectedSource)(state);
-
-  if (!source) {
-    return;
-  }
-
   const symbols = (0, _selectors.getSymbols)(state, source);
   let match;
 
