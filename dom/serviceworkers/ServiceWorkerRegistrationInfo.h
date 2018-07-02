@@ -26,6 +26,19 @@ class ServiceWorkerRegistrationInfo final
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
   nsTObserverArray<ServiceWorkerRegistrationListener*> mInstanceList;
 
+  struct VersionEntry
+  {
+    const ServiceWorkerRegistrationDescriptor mDescriptor;
+    TimeStamp mTimeStamp;
+
+    explicit VersionEntry(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+      : mDescriptor(aDescriptor)
+      , mTimeStamp(TimeStamp::Now())
+    {
+    }
+  };
+  nsTArray<UniquePtr<VersionEntry>> mVersionList;
+
   uint32_t mControlledClientsCounter;
   uint32_t mDelayMultiplier;
 
@@ -65,7 +78,8 @@ public:
                                 ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   void
-  AddInstance(ServiceWorkerRegistrationListener* aInstance);
+  AddInstance(ServiceWorkerRegistrationListener* aInstance,
+              const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   void
   RemoveInstance(ServiceWorkerRegistrationListener* aInstance);
