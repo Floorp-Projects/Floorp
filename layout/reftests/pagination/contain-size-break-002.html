@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+<meta charset="utf-8">
+  <title>CSS Test: 'contain: size' should ignore breaks and force elements to be monolithic.</title>
+  <style>
+    table {
+      background: lightblue;
+      height: 1in;
+      width: 1in;
+    }
+    .contain {
+      contain:size;
+    }
+    .innerPageBreak {
+      page-break-before: always;
+      page-break-after: always;
+    }
+    .basicOuter {
+      height: 20px;
+      background: orange;
+    }
+  </style>
+</head>
+  <body>
+    <div class="contain basicOuter">
+      <table border>
+        <tr class="innerPageBreak"><td></td></tr>
+        <tr class="innerPageBreak"><td></td></tr>
+      </table>
+    </div>
+  </body>
+</html>
