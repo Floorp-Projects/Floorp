@@ -1363,7 +1363,7 @@ var PanelView = class extends AssociatedToNode {
    *
    * @return {Array}
    */
-  getNavigableElements() {
+  _getNavigableElements() {
     let buttons = Array.from(this.node.querySelectorAll(
       ".subviewbutton:not([disabled]), .subviewkeynav:not([disabled])"));
     let dwu = this._dwu;
@@ -1379,7 +1379,7 @@ var PanelView = class extends AssociatedToNode {
    * undefined at any time.
    *
    * The element is usually, but not necessarily, in the "buttons" property
-   * which in turn is initialized from the getNavigableElements list.
+   * which in turn is initialized from the _getNavigableElements list.
    */
   get selectedElement() {
     return this._selectedElement && this._selectedElement.get();
@@ -1390,6 +1390,15 @@ var PanelView = class extends AssociatedToNode {
     } else {
       this._selectedElement = Cu.getWeakReference(value);
     }
+  }
+
+  /**
+   * Focuses and moves keyboard selection to the first navigable element.
+   * This is a no-op if there are no navigable elements.
+   */
+  focusFirstNavigableElement() {
+    this.selectedElement = this._getNavigableElements()[0];
+    this.focusSelectedElement();
   }
 
   /**
@@ -1472,7 +1481,7 @@ var PanelView = class extends AssociatedToNode {
 
     let buttons = this.buttons;
     if (!buttons || !buttons.length) {
-      buttons = this.buttons = this.getNavigableElements();
+      buttons = this.buttons = this._getNavigableElements();
       // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
       for (let button of buttons) {
         if (!button.classList.contains("subviewbutton-back") &&
