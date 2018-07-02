@@ -296,7 +296,8 @@ nsHostRecord::ResolveComplete()
         }
     }
 
-    if (mTRRUsed && mNativeUsed) {
+    if (mTRRUsed && mNativeUsed &&
+        ((mResolverMode == MODE_SHADOW) || (mResolverMode == MODE_PARALLEL))) {
         // both were used, accumulate comparative success
         AccumulateCategorical(mNativeSuccess && mTRRSuccess?
                               Telemetry::LABELS_DNS_TRR_COMPARE::BothWorked :
