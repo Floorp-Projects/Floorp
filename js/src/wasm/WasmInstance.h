@@ -47,6 +47,9 @@ class Instance
     ReadBarrieredWasmInstanceObject object_;
     jit::TrampolinePtr              jsJitArgsRectifier_;
     jit::TrampolinePtr              jsJitExceptionHandler_;
+#ifdef ENABLE_WASM_GC
+    jit::TrampolinePtr              preBarrierCode_;
+#endif
     const SharedCode                code_;
     const UniqueDebugState          debug_;
     const UniqueTlsData             tlsData_;
@@ -75,7 +78,7 @@ class Instance
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
              Handle<FunctionVector> funcImports,
-             const ValVector& globalImportValues,
+             HandleValVector globalImportValues,
              const WasmGlobalObjectVector& globalObjs);
     ~Instance();
     bool init(JSContext* cx);
@@ -108,6 +111,11 @@ class Instance
     static constexpr size_t offsetOfJSJitExceptionHandler() {
         return offsetof(Instance, jsJitExceptionHandler_);
     }
+#ifdef ENABLE_WASM_GC
+    static constexpr size_t offsetOfPreBarrierCode() {
+        return offsetof(Instance, preBarrierCode_);
+    }
+#endif
 
     // This method returns a pointer to the GC object that owns this Instance.
     // Instances may be reached via weak edges (e.g., Compartment::instances_)
@@ -171,6 +179,7 @@ class Instance
     static int32_t wake(Instance* instance, uint32_t byteOffset, int32_t count);
     static int32_t memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteOffset, uint32_t len);
     static int32_t memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len);
+    static void postBarrier(Instance* instance, PostBarrierArg arg);
 };
 
 typedef UniquePtr<Instance> UniqueInstance;

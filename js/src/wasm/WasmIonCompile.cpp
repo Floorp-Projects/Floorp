@@ -2303,7 +2303,7 @@ EmitGetGlobal(FunctionCompiler& f)
         return true;
     }
 
-    Val value = global.constantValue();
+    LitVal value = global.constantValue();
     MIRType mirType = ToMIRType(value.type());
 
     MDefinition* result;
