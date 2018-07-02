@@ -41,7 +41,7 @@ add_task(async function pp_after_orientation_change() {
   let orient = PrintUtils.getPrintSettings().orientation;
   let orientToSwitchTo = orient != Ci.nsIPrintSettings.kPortraitOrientation ?
     "portrait" : "landscape";
-  let printPreviewToolbar = document.querySelector("toolbar[is=printpreview-toolbar]");
+  let printPreviewToolbar = document.querySelector("toolbar[printpreview=true]");
 
   printPreviewEntered = BrowserTestUtils.waitForMessage(ppBrowser.messageManager, "Printing:Preview:Entered");
   printPreviewToolbar.orient(orientToSwitchTo);
