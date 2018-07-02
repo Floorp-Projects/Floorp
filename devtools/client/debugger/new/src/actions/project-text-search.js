@@ -88,8 +88,7 @@ function searchSources(query) {
     await dispatch(clearSearchResults());
     await dispatch(addSearchQuery(query));
     dispatch(updateSearchStatus(_projectTextSearch.statusType.fetching));
-    const sources = (0, _selectors.getSources)(getState());
-    const validSources = sources.valueSeq().filter(source => !(0, _selectors.hasPrettySource)(getState(), source.id) && !(0, _source.isThirdParty)(source));
+    const validSources = (0, _selectors.getSourceList)(getState()).filter(source => !(0, _selectors.hasPrettySource)(getState(), source.id) && !(0, _source.isThirdParty)(source));
 
     for (const source of validSources) {
       await dispatch((0, _loadSourceText.loadSourceText)(source));
@@ -105,18 +104,18 @@ function searchSource(sourceId, query) {
     dispatch,
     getState
   }) => {
-    const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
+    const source = (0, _selectors.getSource)(getState(), sourceId);
 
-    if (!sourceRecord) {
+    if (!source) {
       return;
     }
 
-    const matches = await (0, _search.findSourceMatches)(sourceRecord.toJS(), query);
+    const matches = await (0, _search.findSourceMatches)(source, query);
 
     if (!matches.length) {
       return;
     }
 
-    dispatch(addSearchResult(sourceRecord.id, sourceRecord.url, matches));
+    dispatch(addSearchResult(source.id, source.url, matches));
   };
 }

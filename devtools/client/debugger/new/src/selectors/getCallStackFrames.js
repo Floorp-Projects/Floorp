@@ -32,10 +32,10 @@ function getSourceForFrame(sources, frame, isGeneratedSource) {
 }
 
 function appendSource(sources, frame, selectedSource) {
-  const isGeneratedSource = selectedSource && !(0, _devtoolsSourceMap.isOriginalId)(selectedSource.get("id"));
+  const isGeneratedSource = selectedSource && !(0, _devtoolsSourceMap.isOriginalId)(selectedSource.id);
   return _objectSpread({}, frame, {
     location: getLocation(frame, isGeneratedSource),
-    source: getSourceForFrame(sources, frame, isGeneratedSource).toJS()
+    source: getSourceForFrame(sources, frame, isGeneratedSource)
   });
 }
 
