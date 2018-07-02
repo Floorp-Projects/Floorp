@@ -61,8 +61,22 @@ enum class PrefType : uint8_t
 #endif
 
 #ifdef XP_UNIX
+// We need to send two shared memory descriptors to every child process:
+//
+// 1) A read-only/write-protected snapshot of the initial state of the
+//    preference database. This memory is shared between all processes, and
+//    therefore cannot be modified once it has been created.
+//
+// 2) A set of changes on top of the snapshot, containing the current values of
+//    all preferences which have changed since it was created.
+//
+// Since the second set will be different for every process, and the first set
+// cannot be modified, it is unfortunately not possible to combine them into a
+// single file descriptor.
+//
 // XXX: bug 1440207 is about improving how fixed fds such as this are used.
 static const int kPrefsFileDescriptor = 8;
+static const int kPrefMapFileDescriptor = 9;
 #endif
 
 // Keep this in sync with PrefType in parser/src/lib.rs.
