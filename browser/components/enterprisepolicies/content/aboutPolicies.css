@@ -1,3 +1,141 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+html {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+#sectionTitle {
+  float: left;
+}
+
+#sectionTitle:dir(rtl) {
+  float: right;
+}
+
+/** Categories **/
+
+.category {
+  cursor: pointer;
+  /* Center category names */
+  display: flex;
+  align-items: center;
+}
+
+.category .category-name {
+  pointer-events: none;
+}
+
+#categories hr {
+  border-top-color: rgba(255,255,255,0.15);
+}
+
+/** Content area **/
+
+.main-content {
+  flex: 1;
+}
+
+.tab {
+  padding: 0.5em 0;
+}
+
+.tab table {
+  width: 100%;
+}
+
+th, td, table {
+  border-collapse: collapse;
+  border: none;
+  text-align: start;
+}
+
+th {
+  padding-bottom: 8px;
+  font-size: larger;
+}
+
+td {
+  padding-bottom: 8px;
+}
+
+.active-policies tr:nth-child(even) {
+  background-color: white;
+}
+
+.errors tr:nth-child(even) {
+  background-color: white;
+}
+
+/*
+ * In Documentation Tab, this property sets the policies row in an
+ * alternate color scheme of white and grey as each policy comprises
+ * of two tbody tags, one for the description and the other for the
+ * collapsible information block.
+ */
+
+tbody:nth-child(4n + 1) {
+  background-color: white;
+}
+
+.lastpolicyrow {
+  border-bottom: 3px solid #0c0c0d;
+}
+
+tr.lastpolicyrow td {
+  padding-bottom: 16px;
+}
+
+.array {
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  padding-bottom: 4px;
+}
+
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  -moz-context-properties: fill;
+  display: inline-block;
+  fill: var(--newtab-icon-primary-color);
+  height: 14px;
+  vertical-align: middle;
+  width: 14px;
+}
+
+.icon.machine-only {
+  background-image: url("chrome://browser/skin/developer.svg");
+}
+
+.collapsible {
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.content {
+  display: none;
+}
+
+.content-style {
+  background-color: white;
+  color: var(--in-content-category-text-selected);
+}
+
+tbody.collapsible td {
+  padding-bottom: 8px;
+}
+
+.schema {
+  font-family: monospace;
+  white-space: pre;
+}

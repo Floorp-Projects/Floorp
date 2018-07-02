@@ -7,11 +7,63 @@
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-  	<link rel="stylesheet" href="chrome://browser/content/policies/aboutPolicies.css" type="text/css" />
-    <script type="application/javascript" src="chrome://browser/content/policies/aboutPolicies.js" />
-  </head>
+    <head>
+        <title data-l10n-id="about-policies-title"/>
+        <link rel="stylesheet" href="chrome://browser/content/policies/aboutPolicies.css" type="text/css" />
+        <link rel="localization" href="browser/aboutPolicies.ftl"/>
+        <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+        <script type="application/javascript" src="chrome://browser/content/policies/aboutPolicies.js" />
+    </head>
+    <body id="body" onload="init()">
+        <div id="categories">
+            <div class="category" selected="true" id="category-active">
+                <span class="category-name" data-l10n-id="active-policies-tab"/>
+            </div>
+            <div class="category" id="category-documentation">
+                <span class="category-name" data-l10n-id="documentation-tab"/>
+            </div>
+            <div class="category" id="category-errors">
+                <span class="category-name" data-l10n-id="errors-tab"/>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <div id="sectionTitle" class="header-name" data-l10n-id="active-policies-tab"/>
+            </div>
 
-  <body>
-  </body>
+            <div id="active" class="tab active">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-l10n-id="policy-name"/>
+                            <th data-l10n-id="policy-value"/>
+                        </tr>
+                    </thead>
+                    <tbody id="activeContent" />
+                </table>
+            </div>
+
+            <div id="documentation" class="tab" hidden="true">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-l10n-id="policy-name"/>
+                        </tr>
+                    </thead>
+                    <tbody id="documentationContent" />
+                </table>
+            </div>
+
+             <div id="errors" class="tab" hidden="true">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-l10n-id="policy-errors"/>
+                        </tr>
+                    </thead>
+                    <tbody id="errorsContent" />
+                </table>
+            </div>
+        </div>
+    </body>
 </html>
