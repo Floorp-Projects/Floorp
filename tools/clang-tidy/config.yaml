@@ -44,6 +44,8 @@ clang_checkers:
     publish: !!bool yes
   - name: misc-suspicious-semicolon
     publish: !!bool yes
+  - name: misc-unused-raii
+    publish: !!bool yes
   - name: misc-unused-using-decls
     publish: !!bool yes
   - name: modernize-avoid-bind
