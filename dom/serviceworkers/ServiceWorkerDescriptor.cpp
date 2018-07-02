@@ -16,6 +16,7 @@ using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
+                                                 uint64_t aRegistrationId,
                                                  nsIPrincipal* aPrincipal,
                                                  const nsACString& aScope,
                                                  const nsACString& aScriptURL,
@@ -26,17 +27,20 @@ ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
     PrincipalToPrincipalInfo(aPrincipal, &mData->principalInfo()));
 
   mData->id() = aId;
+  mData->registrationId() = aRegistrationId;
   mData->scope() = aScope;
   mData->scriptURL() = aScriptURL;
   mData->state() = aState;
 }
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
+                                                 uint64_t aRegistrationId,
                                                  const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                                                  const nsACString& aScope,
                                                  const nsACString& aScriptURL,
                                                  ServiceWorkerState aState)
-  : mData(MakeUnique<IPCServiceWorkerDescriptor>(aId, aPrincipalInfo,
+  : mData(MakeUnique<IPCServiceWorkerDescriptor>(aId, aRegistrationId,
+                                                 aPrincipalInfo,
                                                  nsCString(aScriptURL),
                                                  nsCString(aScope), aState))
 {
@@ -90,6 +94,12 @@ uint64_t
 ServiceWorkerDescriptor::Id() const
 {
   return mData->id();
+}
+
+uint64_t
+ServiceWorkerDescriptor::RegistrationId() const
+{
+  return mData->registrationId();
 }
 
 const mozilla::ipc::PrincipalInfo&

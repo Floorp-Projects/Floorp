@@ -142,6 +142,7 @@ public:
 
   ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                     const nsACString& aScope,
+                    uint64_t aRegistrationId,
                     const nsACString& aScriptSpec,
                     const nsAString& aCacheName,
                     nsLoadFlags aLoadFlags);
