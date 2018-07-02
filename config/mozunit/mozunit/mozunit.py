@@ -14,6 +14,16 @@ import six
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+try:
+    # buildconfig doesn't yet support Python 3, so we can use pathlib to
+    # resolve the topsrcdir relative to our current location.
+    from pathlib import Path
+    topsrcdir = Path(here).parents[2]
+except ImportError:
+    from mozbuild.base import MozbuildObject
+    build = MozbuildObject.from_environment(cwd=here)
+    topsrcdir = build.topsrcdir
+
 StringIO = six.StringIO
 
 '''Helper to make python unit tests report the way that the Mozilla
@@ -234,6 +244,7 @@ def main(*args, **kwargs):
 
         module = __import__('__main__')
         args.extend([
+            '--rootdir', topsrcdir,
             '-c', os.path.join(here, 'pytest.ini'),
             '-vv',
             '-p', 'mozlog.pytest_mozlog.plugin',
