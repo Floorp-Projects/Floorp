@@ -247,6 +247,7 @@ body {
   border-radius: 8px;
   background: rgba(113, 113, 113, 0.5);
 }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2707,7 +2708,7 @@ html[dir="rtl"] .editor-mount {
 :not(.empty-line):not(.new-breakpoint) > .CodeMirror-gutter-wrapper:hover {
   width: 60px;
   height: 13px;
-  margin-left: -25px;
+  left: -55px !important;
   background-color: var(--gutter-hover-background-color) !important;
   mask: url("chrome://devtools/skin/images/debugger/breakpoint.svg") no-repeat;
   mask-size: 100%;
@@ -3114,8 +3115,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .breakpoint .close-btn {
-  inset-inline-end: 15px;
-  inset-inline-start: auto;
+  offset-inline-end: 15px;
+  offset-inline-start: auto;
   position: absolute;
   top: 8px;
   display: none;
@@ -3264,7 +3265,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .expression-container__close-btn {
   position: absolute;
-  inset-inline-end: 0px;
+  offset-inline-end: 0px;
   top: 1px;
 }
 
@@ -3948,8 +3949,8 @@ html[dir="rtl"] .object-node {
 .welcomebox .command-bar-button {
   position: absolute;
   top: auto;
-  inset-inline-end: 0;
-  inset-inline-start: auto;
+  offset-inline-end: 0;
+  offset-inline-start: auto;
   bottom: 0;
 }
 

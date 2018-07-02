@@ -22,6 +22,8 @@ var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _prefs = require("../utils/prefs");
 
+var _source = require("../utils/source");
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -32,7 +34,7 @@ function setSourceMetaData(sourceId) {
   }) => {
     const source = (0, _selectors.getSource)(getState(), sourceId);
 
-    if (!source || !source.text || source.isWasm) {
+    if (!source || !(0, _source.isLoaded)(source) || source.isWasm) {
       return;
     }
 
@@ -52,9 +54,9 @@ function setSymbols(sourceId) {
     dispatch,
     getState
   }) => {
-    const source = (0, _selectors.getSource)(getState(), sourceId);
+    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
 
-    if (!source || !source.text || source.isWasm || (0, _selectors.hasSymbols)(getState(), source)) {
+    if (source.isWasm || (0, _selectors.hasSymbols)(getState(), source)) {
       return;
     }
 
@@ -85,11 +87,11 @@ function setOutOfScopeLocations() {
       return;
     }
 
-    const source = (0, _selectors.getSource)(getState(), location.sourceId);
+    const source = (0, _selectors.getSourceFromId)(getState(), location.sourceId);
     let locations = null;
 
     if (location.line && source && (0, _selectors.isPaused)(getState())) {
-      locations = await (0, _parser.findOutOfScopeLocations)(source.get("id"), location);
+      locations = await (0, _parser.findOutOfScopeLocations)(source.id, location);
     }
 
     dispatch({
@@ -121,7 +123,7 @@ function setPausePoints(sourceId) {
     getState,
     client
   }) => {
-    const source = (0, _selectors.getSource)(getState(), sourceId);
+    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
 
     if (!_prefs.features.pausePoints || !source || !source.text || source.isWasm) {
       return;
@@ -136,7 +138,7 @@ function setPausePoints(sourceId) {
 
     dispatch({
       type: "SET_PAUSE_POINTS",
-      sourceText: source.text,
+      sourceText: source.text || "",
       sourceId,
       pausePoints
     });

@@ -17,11 +17,11 @@ var parser = _interopRequireWildcard(_parser);
 
 var _source = require("../../utils/source");
 
+var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+
 var _defer = require("../../utils/defer");
 
 var _defer2 = _interopRequireDefault(_defer);
-
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30,21 +30,23 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const requests = new Map();
+const requests = new Map(); // Measures the time it takes for a source to load
 
-const loadSourceHistogram = _devtoolsModules.Services.telemetry.getHistogramById("DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS");
+const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
+const telemetry = new _devtoolsModules.Telemetry();
 
 async function loadSource(source, {
   sourceMaps,
   client
 }) {
-  const id = source.get("id");
+  const id = source.id;
 
   if ((0, _devtoolsSourceMap.isOriginalId)(id)) {
-    return sourceMaps.getOriginalSourceText(source.toJS());
+    return sourceMaps.getOriginalSourceText(source);
   }
 
   const response = await client.sourceContents(id);
+  telemetry.finish(loadSourceHistogram, source);
   return {
     id,
     text: response.source,
@@ -64,7 +66,7 @@ function loadSourceText(source) {
     client,
     sourceMaps
   }) => {
-    const id = source.get("id"); // Fetch the source text only once.
+    const id = source.id; // Fetch the source text only once.
 
     if (requests.has(id)) {
       return requests.get(id);
@@ -74,9 +76,9 @@ function loadSourceText(source) {
       return Promise.resolve();
     }
 
-    const telemetryStart = performance.now();
     const deferred = (0, _defer2.default)();
     requests.set(id, deferred.promise);
+    telemetry.start(loadSourceHistogram, source);
 
     try {
       await dispatch({
@@ -93,7 +95,7 @@ function loadSourceText(source) {
       return;
     }
 
-    const newSource = (0, _selectors.getSource)(getState(), source.get("id")).toJS();
+    const newSource = (0, _selectors.getSourceFromId)(getState(), source.id);
 
     if ((0, _devtoolsSourceMap.isOriginalId)(newSource.id) && !newSource.isWasm) {
       const generatedSource = (0, _selectors.getGeneratedSource)(getState(), source);
@@ -107,8 +109,6 @@ function loadSourceText(source) {
 
     deferred.resolve();
     requests.delete(id);
-    const telemetryEnd = performance.now();
-    const duration = telemetryEnd - telemetryStart;
-    loadSourceHistogram.add(duration);
+    return source;
   };
 }

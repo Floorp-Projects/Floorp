@@ -3,74 +3,65 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.RelativeSourceRecordClass = exports.SourceRecordClass = undefined;
+exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = undefined;
 exports.initialSourcesState = initialSourcesState;
-exports.createSourceRecord = createSourceRecord;
+exports.createSource = createSource;
 exports.removeSourceFromTabList = removeSourceFromTabList;
 exports.removeSourcesFromTabList = removeSourcesFromTabList;
 exports.getBlackBoxList = getBlackBoxList;
 exports.getNewSelectedSourceId = getNewSelectedSourceId;
 exports.getSource = getSource;
+exports.getSourceFromId = getSourceFromId;
 exports.getSourceByURL = getSourceByURL;
 exports.getGeneratedSource = getGeneratedSource;
 exports.getPendingSelectedLocation = getPendingSelectedLocation;
 exports.getPrettySource = getPrettySource;
 exports.hasPrettySource = hasPrettySource;
 exports.getSourceInSources = getSourceInSources;
-
-var _immutable = require("devtools/client/shared/vendor/immutable");
-
-var I = _interopRequireWildcard(_immutable);
+exports.getSources = getSources;
+exports.getSourceList = getSourceList;
+exports.getSourceCount = getSourceCount;
 
 var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
 
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
+var _lodashMove = require("devtools/client/debugger/new/dist/vendors").vendored["lodash-move"];
 
 var _source = require("../utils/source");
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
+var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-environment"];
+
+var _lodash = require("devtools/client/shared/vendor/lodash");
+
 var _prefs = require("../utils/prefs");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function initialSourcesState() {
-  return (0, _makeRecord2.default)({
-    sources: I.Map(),
+  return {
+    sources: {},
     selectedLocation: undefined,
     pendingSelectedLocation: _prefs.prefs.pendingSelectedLocation,
-    sourcesText: I.Map(),
-    tabs: I.List(restoreTabs())
-  })();
+    tabs: restoreTabs()
+  };
 }
 
-const sourceRecordProperties = {
-  id: undefined,
-  url: undefined,
-  sourceMapURL: undefined,
-  isBlackBoxed: false,
-  isPrettyPrinted: false,
-  isWasm: false,
-  text: undefined,
-  contentType: "",
-  error: undefined,
-  loadedState: "unloaded"
-};
-const SourceRecordClass = exports.SourceRecordClass = new I.Record(sourceRecordProperties);
-const RelativeSourceRecordClass = exports.RelativeSourceRecordClass = new I.Record(_objectSpread({}, sourceRecordProperties, {
-  relativeUrl: undefined
-}));
-
-function createSourceRecord(source) {
-  return new SourceRecordClass(source);
+function createSource(source) {
+  return _objectSpread({
+    id: undefined,
+    url: undefined,
+    sourceMapURL: undefined,
+    isBlackBoxed: false,
+    isPrettyPrinted: false,
+    isWasm: false,
+    text: undefined,
+    contentType: "",
+    error: undefined,
+    loadedState: "unloaded"
+  }, source);
 }
 
 function update(state = initialSourcesState(), action) {
@@ -99,18 +90,22 @@ function update(state = initialSourcesState(), action) {
         url: action.source.url
       });
       _prefs.prefs.pendingSelectedLocation = location;
-      return state.set("selectedLocation", _objectSpread({
-        sourceId: action.source.id
-      }, action.location)).set("pendingSelectedLocation", location);
+      return _objectSpread({}, state, {
+        selectedLocation: _objectSpread({
+          sourceId: action.source.id
+        }, action.location),
+        pendingSelectedLocation: location
+      });
 
     case "CLEAR_SELECTED_LOCATION":
       location = {
         url: ""
       };
       _prefs.prefs.pendingSelectedLocation = location;
-      return state.set("selectedLocation", {
-        sourceId: ""
-      }).set("pendingSelectedLocation", location);
+      return _objectSpread({}, state, {
+        selectedLocation: null,
+        pendingSelectedLocation: location
+      });
 
     case "SET_PENDING_SELECTED_LOCATION":
       location = {
@@ -118,27 +113,29 @@ function update(state = initialSourcesState(), action) {
         line: action.line
       };
       _prefs.prefs.pendingSelectedLocation = location;
-      return state.set("pendingSelectedLocation", location);
+      return _objectSpread({}, state, {
+        pendingSelectedLocation: location
+      });
 
     case "ADD_TAB":
-      return state.merge({
+      return _objectSpread({}, state, {
         tabs: updateTabList(state.tabs, action.url)
       });
 
     case "MOVE_TAB":
-      return state.merge({
+      return _objectSpread({}, state, {
         tabs: updateTabList(state.tabs, action.url, action.tabIndex)
       });
 
     case "CLOSE_TAB":
       _prefs.prefs.tabs = action.tabs;
-      return state.merge({
+      return _objectSpread({}, state, {
         tabs: action.tabs
       });
 
     case "CLOSE_TABS":
       _prefs.prefs.tabs = action.tabs;
-      return state.merge({
+      return _objectSpread({}, state, {
         tabs: action.tabs
       });
 
@@ -147,25 +144,31 @@ function update(state = initialSourcesState(), action) {
 
     case "BLACKBOX":
       if (action.status === "done") {
-        const url = action.source.url;
+        const {
+          id,
+          url
+        } = action.source;
         const {
           isBlackBoxed
         } = action.value;
         updateBlackBoxList(url, isBlackBoxed);
-        return state.setIn(["sources", action.source.id, "isBlackBoxed"], isBlackBoxed);
+        return updateSource(state, {
+          id,
+          isBlackBoxed
+        });
       }
 
       break;
 
     case "NAVIGATE":
-      const source = state.selectedLocation && state.sources.get(state.selectedLocation.sourceId);
+      const source = state.selectedLocation && state.sources[state.selectedLocation.sourceId];
       const url = source && source.url;
 
       if (!url) {
         return initialSourcesState();
       }
 
-      return initialSourcesState().set("pendingSelectedLocation", {
+      return _objectSpread({}, initialSourcesState(), {
         url
       });
   }
@@ -213,18 +216,17 @@ function updateSource(state, source) {
     return state;
   }
 
-  const existingSource = state.sources.get(source.id);
-
-  if (existingSource) {
-    const updatedSource = existingSource.merge(source);
-    return state.setIn(["sources", source.id], updatedSource);
-  }
-
-  return state.setIn(["sources", source.id], createSourceRecord(source));
+  const existingSource = state.sources[source.id];
+  const updatedSource = existingSource ? _objectSpread({}, existingSource, source) : createSource(source);
+  return _objectSpread({}, state, {
+    sources: _objectSpread({}, state.sources, {
+      [source.id]: updatedSource
+    })
+  });
 }
 
 function removeSourceFromTabList(tabs, url) {
-  return tabs.filter(tab => tab != url);
+  return tabs.filter(tab => tab !== url);
 }
 
 function removeSourcesFromTabList(tabs, urls) {
@@ -242,19 +244,16 @@ function restoreTabs() {
  */
 
 
-function updateTabList(tabs, url, tabIndex) {
-  const urlIndex = tabs.indexOf(url);
-  const includesUrl = !!tabs.find(tab => tab == url);
+function updateTabList(tabs, url, newIndex) {
+  const currentIndex = tabs.indexOf(url);
 
-  if (includesUrl) {
-    if (tabIndex != undefined) {
-      tabs = tabs.delete(urlIndex).insert(tabIndex, url);
-    }
-  } else {
-    tabs = tabs.insert(0, url);
+  if (currentIndex === -1) {
+    tabs = [url, ...tabs];
+  } else if (newIndex !== undefined) {
+    tabs = (0, _lodashMove.move)(tabs, currentIndex, newIndex);
   }
 
-  _prefs.prefs.tabs = tabs.toJS();
+  _prefs.prefs.tabs = tabs;
   return tabs;
 }
 
@@ -294,17 +293,20 @@ function getNewSelectedSourceId(state, availableTabs) {
     return "";
   }
 
-  const selectedTab = state.sources.sources.get(selectedLocation.sourceId);
-  const selectedTabUrl = selectedTab ? selectedTab.url : "";
+  const selectedTab = getSource(state, selectedLocation.sourceId);
 
-  if (availableTabs.includes(selectedTabUrl)) {
+  if (!selectedTab) {
+    return "";
+  }
+
+  if (availableTabs.includes(selectedTab.url)) {
     const sources = state.sources.sources;
 
     if (!sources) {
       return "";
     }
 
-    const selectedSource = sources.find(source => source.url == selectedTabUrl);
+    const selectedSource = getSourceByURL(state, selectedTab.url);
 
     if (selectedSource) {
       return selectedSource.id;
@@ -314,10 +316,10 @@ function getNewSelectedSourceId(state, availableTabs) {
   }
 
   const tabUrls = state.sources.tabs;
-  const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTabUrl) - 1, 0);
-  const lastAvailbleTabIndex = availableTabs.size - 1;
+  const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTab.url) - 1, 0);
+  const lastAvailbleTabIndex = availableTabs.length - 1;
   const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
-  const availableTab = availableTabs.get(newSelectedTabIndex);
+  const availableTab = availableTabs[newSelectedTabIndex];
   const tabSource = getSourceByUrlInSources(state.sources.sources, availableTab);
 
   if (tabSource) {
@@ -341,16 +343,20 @@ function getSource(state, id) {
   return getSourceInSources(getSources(state), id);
 }
 
+function getSourceFromId(state, id) {
+  return getSourcesState(state).sources[id];
+}
+
 function getSourceByURL(state, url) {
   return getSourceByUrlInSources(state.sources.sources, url);
 }
 
-function getGeneratedSource(state, sourceRecord) {
-  if (!sourceRecord || !(0, _devtoolsSourceMap.isOriginalId)(sourceRecord.id)) {
-    return null;
+function getGeneratedSource(state, source) {
+  if (!(0, _devtoolsSourceMap.isOriginalId)(source.id)) {
+    return source;
   }
 
-  return getSource(state, (0, _devtoolsSourceMap.originalToGeneratedId)(sourceRecord.id));
+  return getSourceFromId(state, (0, _devtoolsSourceMap.originalToGeneratedId)(source.id));
 }
 
 function getPendingSelectedLocation(state) {
@@ -376,14 +382,24 @@ function getSourceByUrlInSources(sources, url) {
     return null;
   }
 
-  return sources.find(source => source.url === url);
+  return (0, _lodash.find)(sources, source => source.url === url);
 }
 
 function getSourceInSources(sources, id) {
-  return sources.get(id);
+  return sources[id];
 }
 
-const getSources = exports.getSources = sources => sources.sources.sources;
+function getSources(state) {
+  return state.sources.sources;
+}
+
+function getSourceList(state) {
+  return Object.values(getSources(state));
+}
+
+function getSourceCount(state) {
+  return Object.keys(getSources(state)).length;
+}
 
 const getTabs = exports.getTabs = (0, _reselect.createSelector)(getSourcesState, sources => sources.tabs);
 const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, getSources, (tabs, sources) => tabs.filter(tab => getSourceByUrlInSources(sources, tab)));
@@ -396,6 +412,16 @@ const getSelectedSource = exports.getSelectedSource = (0, _reselect.createSelect
     return;
   }
 
-  return sources.get(selectedLocation.sourceId);
+  const source = sources[selectedLocation.sourceId]; // TODO: remove this when the immutable refactor lands in m-c
+
+  if (_devtoolsEnvironment.isTesting) {
+    const testSource = _objectSpread({}, source, {
+      get: field => source[field]
+    });
+
+    return testSource;
+  }
+
+  return source;
 });
 exports.default = update;

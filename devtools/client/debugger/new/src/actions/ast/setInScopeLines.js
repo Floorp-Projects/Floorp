@@ -27,15 +27,15 @@ function setInScopeLines() {
     dispatch,
     getState
   }) => {
-    const sourceRecord = (0, _selectors.getSelectedSource)(getState());
+    const source = (0, _selectors.getSelectedSource)(getState());
     const outOfScopeLocations = (0, _selectors.getOutOfScopeLocations)(getState());
 
-    if (!sourceRecord || !sourceRecord.text) {
+    if (!source || !source.text) {
       return;
     }
 
     const linesOutOfScope = getOutOfScopeLines(outOfScopeLocations);
-    const sourceNumLines = (0, _source.getSourceLineCount)(sourceRecord);
+    const sourceNumLines = (0, _source.getSourceLineCount)(source);
     const sourceLines = (0, _lodash.range)(1, sourceNumLines + 1);
     const inScopeLines = !linesOutOfScope ? sourceLines : (0, _lodash.without)(sourceLines, ...linesOutOfScope);
     dispatch({
