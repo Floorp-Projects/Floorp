@@ -120,6 +120,7 @@ public:
   ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                     const nsACString& aScope,
                     uint64_t aRegistrationId,
+                    uint64_t aRegistrationVersion,
                     const nsACString& aScriptSpec,
                     const nsAString& aCacheName,
                     nsLoadFlags aLoadFlags);
@@ -178,6 +179,9 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch == Unknown);
     mHandlesFetch = aHandlesFetch ? Enabled : Disabled;
   }
+
+  void
+  SetRegistrationVersion(uint64_t aVersion);
 
   bool
   HandlesFetch() const

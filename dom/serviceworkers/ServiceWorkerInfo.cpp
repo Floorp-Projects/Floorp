@@ -150,12 +150,13 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsACString& aScope,
                                      uint64_t aRegistrationId,
+                                     uint64_t aRegistrationVersion,
                                      const nsACString& aScriptSpec,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextID(), aRegistrationId, aPrincipal, aScope, aScriptSpec,
-                ServiceWorkerState::Parsed)
+  , mDescriptor(GetNextID(), aRegistrationId, aRegistrationVersion, aPrincipal,
+                aScope, aScriptSpec, ServiceWorkerState::Parsed)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
   , mCreationTime(PR_Now())
@@ -234,6 +235,12 @@ ServiceWorkerInfo::UpdateRedundantTime()
   mRedundantTime =
     mCreationTime + static_cast<PRTime>((TimeStamp::Now() -
                                          mCreationTimeStamp).ToMicroseconds());
+}
+
+void
+ServiceWorkerInfo::SetRegistrationVersion(uint64_t aVersion)
+{
+  mDescriptor.SetRegistrationVersion(aVersion);
 }
 
 } // namespace dom

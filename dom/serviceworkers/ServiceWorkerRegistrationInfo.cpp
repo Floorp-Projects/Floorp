@@ -98,7 +98,8 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextId(), aPrincipal, aScope, aUpdateViaCache)
+  , mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope,
+                aUpdateViaCache)
   , mControlledClientsCounter(0)
   , mDelayMultiplier(0)
   , mUpdateState(NoUpdate)
@@ -380,8 +381,6 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
   mActiveWorker->UpdateState(ServiceWorkerState::Activated);
   mActiveWorker->UpdateActivatedTime();
 
-  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
-
   UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 
@@ -431,9 +430,22 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
 void
 ServiceWorkerRegistrationInfo::UpdateRegistrationState()
 {
+  UpdateRegistrationState(mDescriptor.UpdateViaCache());
+}
+
+void
+ServiceWorkerRegistrationInfo::UpdateRegistrationState(ServiceWorkerUpdateViaCache aUpdateViaCache)
+{
   MOZ_ASSERT(NS_IsMainThread());
 
+  // We are going to modify the descriptor, so increase its version number.
+  mDescriptor.SetVersion(GetNextVersion());
+
+  // Note, this also sets the new version number on the ServiceWorkerInfo
+  // objects before we copy over their updated descriptors.
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
+
+  mDescriptor.SetUpdateViaCache(aUpdateViaCache);
 
   nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
   while (it.HasMore()) {
@@ -706,8 +718,7 @@ void
 ServiceWorkerRegistrationInfo::SetUpdateViaCache(
     ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
-  mDescriptor.SetUpdateViaCache(aUpdateViaCache);
-  UpdateRegistrationState();
+  UpdateRegistrationState(aUpdateViaCache);
 }
 
 int64_t
@@ -736,6 +747,12 @@ uint64_t
 ServiceWorkerRegistrationInfo::Id() const
 {
   return mDescriptor.Id();
+}
+
+uint64_t
+ServiceWorkerRegistrationInfo::Version() const
+{
+  return mDescriptor.Version();
 }
 
 uint32_t
@@ -785,6 +802,15 @@ ServiceWorkerRegistrationInfo::GetNextId()
   MOZ_ASSERT(NS_IsMainThread());
   static uint64_t sNextId = 0;
   return ++sNextId;
+}
+
+// static
+uint64_t
+ServiceWorkerRegistrationInfo::GetNextVersion()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static uint64_t sNextVersion = 0;
+  return ++sNextVersion;
 }
 
 } // namespace dom

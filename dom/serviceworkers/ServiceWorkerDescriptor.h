@@ -37,6 +37,7 @@ class ServiceWorkerDescriptor final
 public:
   ServiceWorkerDescriptor(uint64_t aId,
                           uint64_t aRegistrationId,
+                          uint64_t aRegistrationVersion,
                           nsIPrincipal* aPrincipal,
                           const nsACString& aScope,
                           const nsACString& aScriptURL,
@@ -44,6 +45,7 @@ public:
 
   ServiceWorkerDescriptor(uint64_t aId,
                           uint64_t aRegistrationId,
+                          uint64_t aRegistrationVersion,
                           const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                           const nsACString& aScope,
                           const nsACString& aScriptURL,
@@ -72,6 +74,9 @@ public:
   uint64_t
   RegistrationId() const;
 
+  uint64_t
+  RegistrationVersion() const;
+
   const mozilla::ipc::PrincipalInfo&
   PrincipalInfo() const;
 
@@ -89,6 +94,9 @@ public:
 
   void
   SetState(ServiceWorkerState aState);
+
+  void
+  SetRegistrationVersion(uint64_t aVersion);
 
   // Try to determine if two workers match each other.  This is less strict
   // than an operator==() call since it ignores mutable values like State().

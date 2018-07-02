@@ -234,6 +234,9 @@ public:
   uint64_t
   Id() const;
 
+  uint64_t
+  Version() const;
+
   uint32_t
   GetUpdateDelay();
 
@@ -250,6 +253,9 @@ private:
   void
   UpdateRegistrationState();
 
+  void
+  UpdateRegistrationState(ServiceWorkerUpdateViaCache aUpdateViaCache);
+
   // Used by devtools to track changes to the properties of *nsIServiceWorkerRegistrationInfo*.
   // Note, this doesn't necessarily need to be in sync with the DOM registration objects, but
   // it does need to be called in the same task that changed |mInstallingWorker|,
@@ -259,6 +265,9 @@ private:
 
   static uint64_t
   GetNextId();
+
+  static uint64_t
+  GetNextVersion();
 };
 
 } // namespace dom

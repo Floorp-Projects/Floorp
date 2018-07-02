@@ -38,11 +38,13 @@ class ServiceWorkerRegistrationDescriptor final
 
 public:
   ServiceWorkerRegistrationDescriptor(uint64_t aId,
+                                      uint64_t aVersion,
                                       nsIPrincipal* aPrincipal,
                                       const nsACString& aScope,
                                       ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   ServiceWorkerRegistrationDescriptor(uint64_t aId,
+                                      uint64_t aVersion,
                                       const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                                       const nsACString& aScope,
                                       ServiceWorkerUpdateViaCache aUpdateViaCache);
@@ -66,6 +68,9 @@ public:
 
   uint64_t
   Id() const;
+
+  uint64_t
+  Version() const;
 
   ServiceWorkerUpdateViaCache
   UpdateViaCache() const;
@@ -106,9 +111,7 @@ public:
              ServiceWorkerInfo* aActive);
 
   void
-  SetWorkers(const OptionalIPCServiceWorkerDescriptor& aInstalling,
-             const OptionalIPCServiceWorkerDescriptor& aWaiting,
-             const OptionalIPCServiceWorkerDescriptor& aActive);
+  SetVersion(uint64_t aVersion);
 
   // Expose the underlying IPC type so that it can be passed via IPC.
   const IPCServiceWorkerRegistrationDescriptor&
