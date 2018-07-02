@@ -189,6 +189,12 @@
   <string name="site_security_icon_content_description">Sigurnost stranice</string>
   <string name="preference_autocomplete_duplicate_url_error">URL već postoji</string>
   <string name="find_in_page">Pronađi na stranici</string>
+  <string name="find_in_page_input">Pronađi na stranici</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d od %2$d</string>
+  <string name="accessibility_next_result">Pronađi sljedeći rezultat</string>
+  <string name="accessibility_previous_result">Pronađi prethodni rezultat</string>
+  <string name="accessibility_dismiss_find_in_page">Odbaci pronalazak na stranici</string>
   <string name="http_auth_dialog_title">Neophodna je autentikacija</string>
   <string name="http_auth_dialog_username">Korisničko ime</string>
   <string name="http_auth_dialog_password">Lozinka</string>

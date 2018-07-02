@@ -4,7 +4,7 @@
   <string name="action_ok">B\'a\'n kuxhtu\'</string>
   <string name="action_save">Kola</string>
   <string name="urlbar_hint">Chuka as moj la aaq\'ku\' ka\'t b\'ii</string>
-  <string name="teaser">.</string>
+  <string name="teaser">" "</string>
   <string name="feedback_erase">Sojsamal ve\'t unq\'a vee\' uve\' chukel kan.</string>
   <string name="search_hint">Chuka %1$s</string>
   <string name="menu_share">Q\'ajsab\'en…</string>
@@ -94,7 +94,7 @@
   <string name="preference_search_installed_search_engines">Taq\'onb\'al itiinsal unq\'a vee\' at ve\'t ok stuul</string>
   <string name="preference_search_restore">Q\'aavisab kan unq\'a chukb\'al tetze\' uve\' atik kan b\'axa</string>
   <string name="preference_search_add2">+ Aq\'o\'k uma\'t taq\'onb\'al chukb\'al tetz</string>
-  <string name="preference_search_remove_title">"Sojsa unq\'a taq\'onb\'ale\'  uve\' nichukube\'"</string>
+  <string name="preference_search_remove_title">Sojsa unq\'a taq\'onb\'ale\' uve\' nichukube\'</string>
   <string name="preference_search_remove">Sojsa</string>
   <string name="action_option_add_search_engine">Aq\'o\'k uma\'t aq\'onb\'al tetz chukb\'al tetz</string>
   <string name="search_add_manually_name_hint">Ib\'ii u taq\'onb\'al chukul tetze\'</string>
@@ -179,5 +179,24 @@
   <string name="your_rights_content3"><![CDATA["Ye\' la uch taq\'ax u tu\'aale\' te ka\'t uxhchil tetz u Nimla atinb\'ale\' Mozilla moj ka\'taj taq\'onb\'al  ech kole\' uva\' la b\'anb\'el ib\'ii texhlalil u Mozilla, Firefox moj %1$s. La lej ka\'t alb\'al isuuchil see "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tzitza\'</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Ka\'taj "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tu\'aal</a>" uva\' jajlu kan kuxhtu\' as oy kuxh unpajte uva\' la ku\' texhlale\' tetz u %1$se."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s ni b\'anb\'e tachul unq\'a majb\'al tetze\' Disconnect, Inc. eche\' unq\'a aq\'one\' uva\' jatxel as a\' kuxhe\' junal jaq\' u "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Tu\'aal tetz tenam skaajayil tetz u GNU v3</a>" as la lej "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">tzitza\'</a>.]]></string>
+  <string name="gv_prompt_username_hint">Ab\'ii la ooksa kan</string>
+  <string name="gv_prompt_password_hint">Exhlal axh kuxh la ootzin</string>
+  <string name="gv_prompt_clear">Josq\'i</string>
+  <string name="security_popup_secure_connection">Ile\' b\'a\'n ve\'t tatine\'</string>
+  <string name="security_popup_insecure_connection">Ye\'xh kam b\'a\'n koj tatine\'</string>
+  <string name="security_popup_security_verified">Ile\' pich\'umal ve\'te\' ta\'n: %1$s</string>
+  <string name="site_security_icon_content_description">Kach\'ub\'al tatine\'</string>
+  <string name="preference_autocomplete_duplicate_url_error">At ve\'t u URL</string>
+  <string name="find_in_page">La chuk tu u vee\' jajle\'l s-a\'n</string>
+  <string name="find_in_page_input">La chuk tu u vee\' jajle\'l s-a\'n</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d ti\' %2$d</string>
+  <string name="accessibility_next_result">Chuk u vee\' a\'n la leje\' svatz b\'en</string>
+  <string name="accessibility_previous_result">Chuk u vee\' lejel kan b\'axa</string>
+  <string name="accessibility_dismiss_find_in_page">Jup u vee\' nachuke\'</string>
+  <string name="http_auth_dialog_title">Ni sa\' uva\' la tiinsa</string>
+  <string name="http_auth_dialog_username">Ab\'ii la ooksa kan</string>
+  <string name="http_auth_dialog_password">Exhlal axh kuxh la ootzin</string>
+  <string name="preference_performance_request_desktop_site">Jaj aq\'al uva\' la eeq\'otzan svatz</string>
+  <string name="custom_tab_copy_url_action">URL eq\'omal ve\'t kan ivatz</string>
 </resources>
