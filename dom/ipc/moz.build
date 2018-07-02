@@ -15,9 +15,11 @@ XPIDL_MODULE = 'dom'
 
 EXPORTS.mozilla.dom.ipc += [
     'IdType.h',
+    'MemMapSnapshot.h',
     'SharedMap.h',
     'SharedMapChangeEvent.h',
     'SharedStringMap.h',
+    'StringTable.h',
     'StructuredCloneData.h',
 ]
 
