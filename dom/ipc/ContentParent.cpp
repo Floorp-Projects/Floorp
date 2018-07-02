@@ -2026,6 +2026,9 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   // Prefs information is passed via anonymous shared memory to avoid bloating
   // the command line.
 
+  size_t prefMapSize;
+  auto prefMapHandle = Preferences::EnsureSnapshot(&prefMapSize).ClonePlatformHandle();
+
   // Serialize the early prefs.
   nsAutoCStringN<1024> prefs;
   Preferences::SerializePreferences(prefs);
@@ -2046,14 +2049,22 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   // Copy the serialized prefs into the shared memory.
   memcpy(static_cast<char*>(shm.memory()), prefs.get(), prefs.Length());
 
+  // Formats a pointer or pointer-sized-integer as a string suitable for passing
+  // in an arguments list.
+  auto formatPtrArg = [] (auto arg) {
+    return nsPrintfCString("%zu", uintptr_t(arg));
+  };
+
 #if defined(XP_WIN)
   // Record the handle as to-be-shared, and pass it via a command flag. This
   // works because Windows handles are system-wide.
   HANDLE prefsHandle = shm.handle();
   mSubprocess->AddHandleToShare(prefsHandle);
+  mSubprocess->AddHandleToShare(prefMapHandle.get());
   extraArgs.push_back("-prefsHandle");
-  extraArgs.push_back(
-    nsPrintfCString("%zu", reinterpret_cast<uintptr_t>(prefsHandle)).get());
+  extraArgs.push_back(formatPtrArg(prefsHandle).get());
+  extraArgs.push_back("-prefMapHandle");
+  extraArgs.push_back(formatPtrArg(prefMapHandle.get()).get());
 #else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -2063,11 +2074,15 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   // and the fixed fd isn't used. However, we still need to mark it for
   // remapping so it doesn't get closed in the child.
   mSubprocess->AddFdToRemap(shm.handle().fd, kPrefsFileDescriptor);
+  mSubprocess->AddFdToRemap(prefMapHandle.get(), kPrefMapFileDescriptor);
 #endif
 
-  // Pass the length via a command flag.
+  // Pass the lengths via command line flags.
   extraArgs.push_back("-prefsLen");
-  extraArgs.push_back(nsPrintfCString("%zu", uintptr_t(prefs.Length())).get());
+  extraArgs.push_back(formatPtrArg(prefs.Length()).get());
+
+  extraArgs.push_back("-prefMapSize");
+  extraArgs.push_back(formatPtrArg(prefMapSize).get());
 
   // Scheduler prefs need to be handled differently because the scheduler needs
   // to start up in the content process before the normal preferences service.
