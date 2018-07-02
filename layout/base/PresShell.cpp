@@ -5118,8 +5118,9 @@ PresShell::RenderNode(nsINode* aNode,
   nsTArray<UniquePtr<RangePaintInfo>> rangeItems;
 
   // nothing to draw if the node isn't in a document
-  if (!aNode->IsInUncomposedDoc())
+  if (!aNode->IsInComposedDoc()) {
     return nullptr;
+  }
 
   RefPtr<nsRange> range = new nsRange(aNode);
   IgnoredErrorResult rv;

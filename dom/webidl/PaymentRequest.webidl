@@ -108,4 +108,5 @@ interface PaymentRequest : EventTarget {
 
            attribute EventHandler         onshippingaddresschange;
            attribute EventHandler         onshippingoptionchange;
+           attribute EventHandler         onpaymentmethodchange;
 };

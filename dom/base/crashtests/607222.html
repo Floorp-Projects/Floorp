@@ -1,0 +1,21 @@
+<html><body>
+<script>
+
+  function G(str){
+    var cobj=document.createElement(str);
+    document.body.appendChild(cobj);
+    cobj.scrollWidth;
+  }
+
+  function crashme() {
+    document.write("fooFOO");
+    G("a");
+    document.write("<a lang></a>a");
+    G("base");
+    document.write("barBAR");
+    G("audio");
+  }
+</script>
+<script>crashme();</script>
+</body>
+</html>

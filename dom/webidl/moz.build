@@ -698,6 +698,7 @@ WEBIDL_FILES = [
     'ParentNode.webidl',
     'ParentSHistory.webidl',
     'PaymentAddress.webidl',
+    'PaymentMethodChangeEvent.webidl',
     'PaymentRequest.webidl',
     'PaymentRequestUpdateEvent.webidl',
     'PaymentResponse.webidl',
