@@ -97,11 +97,27 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   Maybe<uint64_t> childID;
   Maybe<bool> isForBrowser;
   Maybe<base::SharedMemoryHandle> prefsHandle;
+  Maybe<FileDescriptor> prefMapHandle;
   Maybe<size_t> prefsLen;
+  Maybe<size_t> prefMapSize;
   Maybe<const char*> schedulerPrefs;
   Maybe<const char*> parentBuildID;
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   nsCOMPtr<nsIFile> profileDir;
+#endif
+
+  // Parses an arg containing a pointer-sized-integer.
+  auto parseUIntPtrArg = [] (char*& aArg) {
+    // ContentParent uses %zu to print a word-sized unsigned integer. So
+    // even though strtoull() returns a long long int, it will fit in a
+    // uintptr_t.
+    return uintptr_t(strtoull(aArg, &aArg, 10));
+  };
+
+#ifdef XP_WIN
+  auto parseHandleArg = [] (char*& aArg) {
+    return HANDLE(parseUIntPtrArg(aArg));
+  };
 #endif
 
   for (int i = 1; i < aArgc; i++) {
@@ -137,11 +153,22 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       if (++i == aArgc) {
         return false;
       }
-      // ContentParent uses %zu to print a word-sized unsigned integer. So
-      // even though strtoull() returns a long long int, it will fit in a
-      // uintptr_t.
       char* str = aArgv[i];
-      prefsHandle = Some(reinterpret_cast<HANDLE>(strtoull(str, &str, 10)));
+      prefsHandle = Some(parseHandleArg(str));
+      if (str[0] != '\0') {
+        return false;
+      }
+
+    } else if (strcmp(aArgv[i], "-prefMapHandle") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      char* str = aArgv[i];
+      // The FileDescriptor constructor will clone this handle when constructed,
+      // so store it in a UniquePlatformHandle to make sure the original gets
+      // closed.
+      FileDescriptor::UniquePlatformHandle handle(parseHandleArg(str));
+      prefMapHandle.emplace(handle.get());
       if (str[0] != '\0') {
         return false;
       }
@@ -151,11 +178,18 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       if (++i == aArgc) {
         return false;
       }
-      // ContentParent uses %zu to print a word-sized unsigned integer. So
-      // even though strtoull() returns a long long int, it will fit in a
-      // uintptr_t.
       char* str = aArgv[i];
-      prefsLen = Some(strtoull(str, &str, 10));
+      prefsLen = Some(parseUIntPtrArg(str));
+      if (str[0] != '\0') {
+        return false;
+      }
+
+    } else if (strcmp(aArgv[i], "-prefMapSize") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      char* str = aArgv[i];
+      prefMapSize = Some(parseUIntPtrArg(str));
       if (str[0] != '\0') {
         return false;
       }
@@ -197,6 +231,12 @@ ContentProcess::Init(int aArgc, char* aArgv[])
 #elif XP_UNIX
   prefsHandle = Some(base::FileDescriptor(kPrefsFileDescriptor,
                                           /* auto_close */ true));
+
+  // The FileDescriptor constructor will clone this handle when constructed,
+  // so store it in a UniquePlatformHandle to make sure the original gets
+  // closed.
+  FileDescriptor::UniquePlatformHandle handle(kPrefMapFileDescriptor);
+  prefMapHandle.emplace(handle.get());
 #endif
 
   // Did we find all the mandatory flags?
@@ -204,10 +244,16 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       isForBrowser.isNothing() ||
       prefsHandle.isNothing() ||
       prefsLen.isNothing() ||
+      prefMapHandle.isNothing() ||
+      prefMapSize.isNothing() ||
       schedulerPrefs.isNothing() ||
       parentBuildID.isNothing()) {
     return false;
   }
+
+  // Init the shared-memory base preference mapping first, so that only changed
+  // preferences wind up in heap memory.
+  Preferences::InitSnapshot(prefMapHandle.ref(), *prefMapSize);
 
   // Set up early prefs from the shared memory.
   base::SharedMemory shm;
