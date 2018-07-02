@@ -22,7 +22,7 @@ class BaseLegacyMouseAction(MarionetteTestCase):
     def setUp(self):
         super(BaseLegacyMouseAction, self).setUp()
 
-        if self.marionette.session_capabilities["platformName"] == "mac":
+        if self.marionette.session_capabilities["platformName"] == "darwin":
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
