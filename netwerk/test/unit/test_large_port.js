@@ -25,21 +25,20 @@ function run_test()
                 .init(Ci.nsIStandardURL.URLTYPE_AUTHORITY, 65536,
                       "http://localhost", "UTF-8", null)
                 .finalize();
-    }, "invalid port during creation");
+    }, /NS_ERROR_MALFORMED_URI/, "invalid port during creation");
 
     Assert.throws(() => {
         url = url.mutate()
                  .QueryInterface(Ci.nsIStandardURLMutator)
                  .setDefaultPort(65536)
                  .finalize();
-    }, "invalid port in setDefaultPort");
+    }, /NS_ERROR_MALFORMED_URI/, "invalid port in setDefaultPort");
     Assert.throws(() => {
         url = url.mutate()
                  .setPort(65536)
                  .finalize();
-    }, "invalid port in port setter");
+    }, /NS_ERROR_MALFORMED_URI/, "invalid port in port setter");
 
     Assert.equal(url.port, -1);
     do_test_finished();
 }
-

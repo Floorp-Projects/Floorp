@@ -186,6 +186,10 @@ pref("xpinstall.whitelist.add", "https://addons.mozilla.org,https://testpilot.fi
 pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 
+// Disable add-ons that are not installed by the user in all scopes by default (See the SCOPE
+// constants in AddonManager.jsm for values to use here, and Bug 1405528 for a rationale).
+pref("extensions.autoDisableScopes", 15);
+
 pref("extensions.enabledScopes", 1);
 pref("extensions.autoupdate.enabled", true);
 pref("extensions.autoupdate.interval", 86400);

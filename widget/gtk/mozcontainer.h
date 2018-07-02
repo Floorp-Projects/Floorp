@@ -73,7 +73,8 @@ struct _MozContainer
     struct wl_surface       *surface;
     struct wl_subsurface    *subsurface;
     struct wl_egl_window    *eglwindow;
-    gboolean                 committed;
+    gboolean                 parent_surface_committed;
+    gulong                   parent_surface_committed_handler;
 #endif
 };
 

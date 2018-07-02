@@ -117,7 +117,7 @@ Resource.prototype = {
 
     if (this._log.level <= Log.Level.Trace) {
       for (const [k, v] of headers) {
-        if (k == "authorization") {
+        if (k == "authorization" || k == "x-client-state") {
           this._log.trace(`HTTP Header ${k}: ***** (suppressed)`);
         } else {
           this._log.trace(`HTTP Header ${k}: ${v}`);

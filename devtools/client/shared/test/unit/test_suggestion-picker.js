@@ -138,12 +138,12 @@ function ensureMostRelevantIndexProvidedByClassMethod() {
 function ensureErrorThrownWithInvalidArguments() {
   info("Running ensureErrorThrownWithInvalidTypeArgument()");
 
-  const expectedError = "Please provide valid items and sortedItems arrays.";
+  const expectedError = /Please provide valid items and sortedItems arrays\./;
   // No arguments passed.
-  throws(() => findMostRelevantIndex(), expectedError);
+  Assert.throws(() => findMostRelevantIndex(), expectedError);
   // Invalid arguments passed.
-  throws(() => findMostRelevantIndex([]), expectedError);
-  throws(() => findMostRelevantIndex(null, []), expectedError);
-  throws(() => findMostRelevantIndex([], "string"), expectedError);
-  throws(() => findMostRelevantIndex("string", []), expectedError);
+  Assert.throws(() => findMostRelevantIndex([]), expectedError);
+  Assert.throws(() => findMostRelevantIndex(null, []), expectedError);
+  Assert.throws(() => findMostRelevantIndex([], "string"), expectedError);
+  Assert.throws(() => findMostRelevantIndex("string", []), expectedError);
 }

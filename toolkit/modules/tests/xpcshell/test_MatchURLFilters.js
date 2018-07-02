@@ -40,17 +40,17 @@ add_task(async function test_match_url_filters() {
 
   var testCases = [
     // Empty, undefined and null filters.
-    {shouldThrow, exceptionMessageContains: "filters array should not be empty",
+    {shouldThrow, exceptionMessageContains: /filters array should not be empty/,
      filters: [], url: "http://mozilla.org", },
-    {shouldThrow, exceptionMessageContains: "filters should be an array",
+    {shouldThrow, exceptionMessageContains: /filters should be an array/,
      filters: undefined, url: "http://mozilla.org"},
-    {shouldThrow, exceptionMessageContains: "filters should be an array",
+    {shouldThrow, exceptionMessageContains: /filters should be an array/,
      filters: null, url: "http://mozilla.org"},
 
     // Wrong formats (in a real webextension this will be blocked by the schema validation).
-    {shouldThrow, exceptionMessageContains: "filters should be an array", filters: {},
+    {shouldThrow, exceptionMessageContains: /filters should be an array/, filters: {},
      url: "http://mozilla.org"},
-    {shouldThrow, exceptionMessageContains: "filters should be an array",
+    {shouldThrow, exceptionMessageContains: /filters should be an array/,
      filters: {nonExistentCriteria: true}, url: "http://mozilla.org", },
     {shouldPass, filters: [{nonExistentCriteria: true}], url: "http://mozilla.org"},
 

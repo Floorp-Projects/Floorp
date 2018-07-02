@@ -81,6 +81,7 @@ add_task(async function test_cookies() {
       path: "/",
       secure: false,
       httpOnly: false,
+      sameSite: "no_restriction",
       session: false,
       expirationDate: THE_FUTURE,
       storeId: STORE_ID,
