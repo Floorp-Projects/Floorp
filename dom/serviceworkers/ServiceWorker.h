@@ -90,6 +90,9 @@ public:
   SetState(ServiceWorkerState aState);
 
   void
+  MaybeDispatchStateChangeEvent();
+
+  void
   GetScriptURL(nsString& aURL) const;
 
   void
@@ -117,6 +120,7 @@ private:
 
   RefPtr<Inner> mInner;
   RefPtr<ServiceWorkerRegistration> mRegistration;
+  ServiceWorkerState mLastNotifiedState;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorker, NS_DOM_SERVICEWORKER_IID)

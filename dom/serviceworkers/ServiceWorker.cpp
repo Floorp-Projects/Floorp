@@ -12,6 +12,7 @@
 #include "ServiceWorkerImpl.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
+#include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -74,6 +75,7 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   : DOMEventTargetHelper(aGlobal)
   , mDescriptor(aDescriptor)
   , mInner(aInner)
+  , mLastNotifiedState(ServiceWorkerState::Installing)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
@@ -147,18 +149,24 @@ ServiceWorker::State() const
 void
 ServiceWorker::SetState(ServiceWorkerState aState)
 {
-  ServiceWorkerState oldState = mDescriptor.State();
+  NS_ENSURE_TRUE_VOID(aState >= mDescriptor.State());
   mDescriptor.SetState(aState);
-  if (oldState == aState) {
+}
+
+void
+ServiceWorker::MaybeDispatchStateChangeEvent()
+{
+  if (mDescriptor.State() <= mLastNotifiedState || !GetParentObject()) {
     return;
   }
+  mLastNotifiedState = mDescriptor.State();
 
   DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
 
   // Once we have transitioned to the redundant state then no
   // more statechange events will occur.  We can allow the DOM
   // object to GC if script is not holding it alive.
-  if (mDescriptor.State() == ServiceWorkerState::Redundant) {
+  if (mLastNotifiedState == ServiceWorkerState::Redundant) {
     IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("statechange"));
   }
 }
@@ -235,6 +243,14 @@ ServiceWorker::MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistratio
 {
   MOZ_DIAGNOSTIC_ASSERT(aRegistration);
   MOZ_DIAGNOSTIC_ASSERT(!mRegistration);
+
+  // If the registration no longer actually references this ServiceWorker
+  // then we must be in the redundant state.
+  if (!aRegistration->Descriptor().HasWorker(mDescriptor)) {
+    SetState(ServiceWorkerState::Redundant);
+    MaybeDispatchStateChangeEvent();
+    return;
+  }
 
   mRegistration = aRegistration;
 }

@@ -197,6 +197,17 @@ ServiceWorkerRegistrationDescriptor::Newest() const
   return result;
 }
 
+bool
+ServiceWorkerRegistrationDescriptor::HasWorker(const ServiceWorkerDescriptor& aDescriptor) const
+{
+  Maybe<ServiceWorkerDescriptor> installing = GetInstalling();
+  Maybe<ServiceWorkerDescriptor> waiting = GetWaiting();
+  Maybe<ServiceWorkerDescriptor> active = GetActive();
+  return (installing.isSome() && installing.ref().Matches(aDescriptor)) ||
+         (waiting.isSome() && waiting.ref().Matches(aDescriptor)) ||
+         (active.isSome() && active.ref().Matches(aDescriptor));
+}
+
 namespace {
 
 bool

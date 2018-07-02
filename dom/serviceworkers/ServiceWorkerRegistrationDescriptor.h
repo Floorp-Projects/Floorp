@@ -92,6 +92,9 @@ public:
   Newest() const;
 
   bool
+  HasWorker(const ServiceWorkerDescriptor& aDescriptor) const;
+
+  bool
   IsValid() const;
 
   void

@@ -12,7 +12,6 @@ namespace dom {
 ServiceWorkerImpl::~ServiceWorkerImpl()
 {
   MOZ_DIAGNOSTIC_ASSERT(!mOuter);
-  mInfo->RemoveListener(this);
 }
 
 void
@@ -21,11 +20,6 @@ ServiceWorkerImpl::AddServiceWorker(ServiceWorker* aWorker)
   MOZ_DIAGNOSTIC_ASSERT(!mOuter);
   MOZ_DIAGNOSTIC_ASSERT(aWorker);
   mOuter = aWorker;
-
-  // Wait to attach to the info as a listener until we have the outer
-  // set.  This is important because the info will try to set the
-  // state immediately.
-  mInfo->AddListener(this);
 }
 
 void
