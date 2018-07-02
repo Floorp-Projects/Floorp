@@ -729,6 +729,12 @@ ServiceWorkerRegistrationInfo::Descriptor() const
   return mDescriptor;
 }
 
+uint64_t
+ServiceWorkerRegistrationInfo::Id() const
+{
+  return mDescriptor.Id();
+}
+
 uint32_t
 ServiceWorkerRegistrationInfo::GetUpdateDelay()
 {

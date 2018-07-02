@@ -181,11 +181,12 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 
 ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsACString& aScope,
+                                     uint64_t aRegistrationId,
                                      const nsACString& aScriptSpec,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextID(), aPrincipal, aScope, aScriptSpec,
+  , mDescriptor(GetNextID(), aRegistrationId, aPrincipal, aScope, aScriptSpec,
                 ServiceWorkerState::Parsed)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
