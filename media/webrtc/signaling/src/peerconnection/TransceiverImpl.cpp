@@ -1005,10 +1005,8 @@ TransceiverImpl::UpdateConduitRtpExtmap(const JsepTrackNegotiatedDetails& aDetai
 void
 TransceiverImpl::Stop()
 {
-  mTransmitPipeline->Stop();
-  mTransmitPipeline->DetachMedia();
-  mReceivePipeline->Stop();
-  mReceivePipeline->DetachMedia();
+  mTransmitPipeline->Shutdown_m();
+  mReceivePipeline->Shutdown_m();
   // Make sure that stats queries stop working on this transceiver.
   UpdateSendTrack(nullptr);
   mHaveStartedReceiving = false;
