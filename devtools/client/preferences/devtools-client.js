@@ -44,6 +44,8 @@ pref("devtools.inspector.show-three-pane-tooltip", false);
 #endif
 // Enable the 3 pane mode in the inspector
 pref("devtools.inspector.three-pane-enabled", true);
+// Enable the 3 pane mode in the chrome inspector
+pref("devtools.inspector.chrome.three-pane-enabled", false);
 // Whether or not this is the first run of the 3 pane mode. Used to reset the default
 // inspector sidebar widths for its first run.
 pref("devtools.inspector.three-pane-first-run", true);
