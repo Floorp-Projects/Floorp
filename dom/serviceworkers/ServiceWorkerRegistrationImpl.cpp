@@ -105,8 +105,23 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  mDescriptor = aDescriptor;
-  mOuter->UpdateState(aDescriptor);
+  NS_ENSURE_TRUE_VOID(mOuter);
+
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
+  RefPtr<ServiceWorkerRegistrationMainThread> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ServiceWorkerRegistrationMainThread::UpdateState",
+    [self, desc = std::move(aDescriptor)] () mutable {
+      self->mDescriptor = std::move(desc);
+      NS_ENSURE_TRUE_VOID(self->mOuter);
+      self->mOuter->UpdateState(self->mDescriptor);
+    });
+
+  Unused <<
+    global->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget(),
+                                                          NS_DISPATCH_NORMAL);
 }
 
 void

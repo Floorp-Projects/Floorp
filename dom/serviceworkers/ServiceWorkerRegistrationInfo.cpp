@@ -56,8 +56,6 @@ ServiceWorkerRegistrationInfo::Clear()
   RefPtr<ServiceWorkerInfo> waiting = mWaitingWorker.forget();
   RefPtr<ServiceWorkerInfo> active = mActiveWorker.forget();
 
-  UpdateRegistrationState();
-
   if (installing) {
     installing->UpdateState(ServiceWorkerState::Redundant);
     installing->UpdateRedundantTime();
@@ -77,6 +75,7 @@ ServiceWorkerRegistrationInfo::Clear()
     active->WorkerPrivate()->NoteDeadServiceWorkerInfo();
   }
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -366,6 +365,7 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
 
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -418,16 +418,10 @@ ServiceWorkerRegistrationInfo::UpdateRegistrationState()
 
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
 
-  RefPtr<ServiceWorkerRegistrationInfo> self(this);
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ServiceWorkerRegistrationInfo::UpdateRegistrationState",
-    [self = std::move(self)] {
-      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      if (swm) {
-        swm->UpdateRegistrationListeners(self);
-      }
-    });
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  NS_ENSURE_TRUE_VOID(swm);
+
+  swm->UpdateRegistrationListeners(this);
 }
 
 void
@@ -571,12 +565,10 @@ ServiceWorkerRegistrationInfo::ClearInstalling()
   }
 
   RefPtr<ServiceWorkerInfo> installing = mInstallingWorker.forget();
-
-  UpdateRegistrationState();
-
   installing->UpdateState(ServiceWorkerState::Redundant);
   installing->UpdateRedundantTime();
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -588,11 +580,9 @@ ServiceWorkerRegistrationInfo::TransitionEvaluatingToInstalling()
   MOZ_ASSERT(!mInstallingWorker);
 
   mInstallingWorker = mEvaluatingWorker.forget();
-
-  UpdateRegistrationState();
-
   mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -609,12 +599,10 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
   }
 
   mWaitingWorker = mInstallingWorker.forget();
-
-  UpdateRegistrationState();
-
   mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
   mWaitingWorker->UpdateInstalledTime();
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 
   // TODO: When bug 1426401 is implemented we will need to call
@@ -650,7 +638,6 @@ ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
   // We don't need to update activated time when we load registration from
   // registrar.
   UpdateRegistrationState();
-
   NotifyChromeRegistrationListeners();
 }
 
@@ -669,9 +656,6 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
   // We are transitioning from waiting to active normally, so go to
   // the activating state.
   mActiveWorker = mWaitingWorker.forget();
-
-  UpdateRegistrationState();
-
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
 
   nsCOMPtr<nsIRunnable> r =
@@ -684,6 +668,7 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
     });
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
