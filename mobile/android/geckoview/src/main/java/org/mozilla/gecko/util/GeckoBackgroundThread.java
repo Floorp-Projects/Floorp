@@ -32,7 +32,7 @@ final class GeckoBackgroundThread extends Thread {
 
         synchronized (GeckoBackgroundThread.class) {
             handler = new Handler();
-            GeckoBackgroundThread.class.notify();
+            GeckoBackgroundThread.class.notifyAll();
         }
 
         if (initialRunnable != null) {
