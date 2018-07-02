@@ -10,14 +10,6 @@
 namespace mozilla {
 namespace dom {
 
-CSSFontFeatureValuesRule::CSSFontFeatureValuesRule(
-  RefPtr<RawServoFontFeatureValuesRule> aRawRule,
-  uint32_t aLine, uint32_t aColumn)
-  : Rule(aLine, aColumn)
-  , mRawRule(std::move(aRawRule))
-{
-}
-
 size_t
 CSSFontFeatureValuesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {

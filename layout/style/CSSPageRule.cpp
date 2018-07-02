@@ -96,8 +96,11 @@ CSSPageRuleDeclaration::GetParsingEnvironment(
 // -- CSSPageRule --------------------------------------------------
 
 CSSPageRule::CSSPageRule(RefPtr<RawServoPageRule> aRawRule,
-                         uint32_t aLine, uint32_t aColumn)
-  : Rule(aLine, aColumn)
+                         StyleSheet* aSheet,
+                         css::Rule* aParentRule,
+                         uint32_t aLine,
+                         uint32_t aColumn)
+  : css::Rule(aSheet, aParentRule, aLine, aColumn)
   , mRawRule(std::move(aRawRule))
   , mDecls(Servo_PageRule_GetStyle(mRawRule).Consume())
 {

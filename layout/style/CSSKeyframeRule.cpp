@@ -101,9 +101,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 //
 
 CSSKeyframeRule::CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw,
-                                 uint32_t aLine, uint32_t aColumn)
-    : css::Rule(aLine, aColumn)
-    , mRaw(aRaw) {}
+                                 StyleSheet* aSheet,
+                                 css::Rule* aParentRule,
+                                 uint32_t aLine,
+                                 uint32_t aColumn)
+  : css::Rule(aSheet, aParentRule, aLine, aColumn)
+  , mRaw(aRaw)
+{
+}
 
 CSSKeyframeRule::~CSSKeyframeRule()
 {

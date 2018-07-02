@@ -588,7 +588,8 @@ StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
   nsresult result = aGroup->DeleteStyleRuleAt(aIndex);
   NS_ENSURE_SUCCESS(result, result);
 
-  rule->SetStyleSheet(nullptr);
+  rule->DropReferences();
+
   RuleRemoved(*rule);
   return NS_OK;
 }
@@ -1218,7 +1219,7 @@ void
 StyleSheet::DropRuleList()
 {
   if (mRuleList) {
-    mRuleList->DropReference();
+    mRuleList->DropReferences();
     mRuleList = nullptr;
   }
 }
@@ -1247,7 +1248,7 @@ StyleSheet::GetCssRulesInternal()
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner().mContents).Consume();
     MOZ_ASSERT(rawRules);
-    mRuleList = new ServoCSSRuleList(rawRules.forget(), this);
+    mRuleList = new ServoCSSRuleList(rawRules.forget(), this, nullptr);
   }
   return mRuleList;
 }
