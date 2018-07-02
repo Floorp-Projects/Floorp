@@ -294,4 +294,11 @@ const mapStateToProps = state => ({
   orientation: (0, _selectors.getOrientation)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(App);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  setActiveSearch: _actions2.default.setActiveSearch,
+  closeActiveSearch: _actions2.default.closeActiveSearch,
+  closeProjectSearch: _actions2.default.closeProjectSearch,
+  openQuickOpen: _actions2.default.openQuickOpen,
+  closeQuickOpen: _actions2.default.closeQuickOpen,
+  setOrientation: _actions2.default.setOrientation
+})(App);

@@ -90,4 +90,8 @@ const mapStateToProps = state => ({
   endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end")
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(WelcomeBox);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  togglePaneCollapse: _actions2.default.togglePaneCollapse,
+  setActiveSearch: _actions2.default.setActiveSearch,
+  openQuickOpen: _actions2.default.openQuickOpen
+})(WelcomeBox);
