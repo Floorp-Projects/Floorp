@@ -37,9 +37,8 @@ class MozXULElement extends XULElement {
    * @return DocumentFragment containing the corresponding element tree, including
    *         element nodes but excluding any text node.
    */
-  static parseXULToFragment(str, entities = "") {
+  static parseXULToFragment(str) {
     let doc = gXULDOMParser.parseFromString(`
-      ${entities}
       <box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         ${str}
       </box>
@@ -56,7 +55,7 @@ class MozXULElement extends XULElement {
     // We use a range here so that we don't access the inner DOM elements from
     // JavaScript before they are imported and inserted into a document.
     let range = doc.createRange();
-    range.selectNodeContents(doc.querySelector("box"));
+    range.selectNodeContents(doc.firstChild);
     return range.extractContents();
   }
 }
@@ -70,10 +69,5 @@ for (let script of [
 ]) {
   Services.scriptloader.loadSubScript(script, window);
 }
-
-customElements.setElementCreationCallback("printpreview-toolbar", type => {
-  Services.scriptloader.loadSubScript(
-    "chrome://global/content/printPreviewToolbar.js", window);
-});
 
 }

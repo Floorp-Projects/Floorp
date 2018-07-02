@@ -121,27 +121,6 @@ toolbar[mode="text"] .toolbarbutton-text {
   margin: 3px 5px !important;
 }
 
-toolbar[is="printpreview-toolbar"] .navigate-button {
-  min-width: 1.9em;
-}
-
-toolbar[is="printpreview-toolbar"] .navigate-button > .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[is="printpreview-toolbar"] .toolbar-portrait-page {
-  list-style-image: url("moz-icon://stock/gtk-orientation-portrait?size=button");
-}
-
-toolbar[is="printpreview-toolbar"] .toolbar-landscape-page {
-  list-style-image: url("moz-icon://stock/gtk-orientation-landscape?size=button");
-}
-
-toolbar[is="printpreview-toolbar"] #pageNumber {
-  /* 3 chars + 4px padding left + 2px padding right + 2*6px border */
-  width: calc(18px + 3ch);
-}
-
 /* ::::: miscellaneous formatting ::::: */
 
 :root:-moz-lwtheme {
