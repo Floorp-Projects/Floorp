@@ -721,9 +721,13 @@ public:
     public:
       XYRange() : min(0), max(0), step(1) {}
       void Serialize(std::ostream& os) const;
+      // TODO: Remove this Bug 1469702
       bool Parse(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseAfterBracket(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseAfterMin(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseDiscreteValues(std::istream& is, std::string* error);
       std::vector<uint32_t> discreteValues;
       // min/max are used iff discreteValues is empty
@@ -737,9 +741,13 @@ public:
     public:
       SRange() : min(0), max(0) {}
       void Serialize(std::ostream& os) const;
+      // TODO: Remove this Bug 1469702
       bool Parse(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseAfterBracket(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseAfterMin(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseDiscreteValues(std::istream& is, std::string* error);
       bool IsSet() const
       {
@@ -756,6 +764,7 @@ public:
     public:
       PRange() : min(0), max(0) {}
       void Serialize(std::ostream& os) const;
+      // TODO: Remove this Bug 1469702
       bool Parse(std::istream& is, std::string* error);
       bool IsSet() const
       {
@@ -770,6 +779,7 @@ public:
     public:
       Set() : qValue(-1) {}
       void Serialize(std::ostream& os) const;
+      // TODO: Remove this Bug 1469702
       bool Parse(std::istream& is, std::string* error);
       XYRange xRange;
       XYRange yRange;
@@ -783,7 +793,9 @@ public:
     public:
       Imageattr() : pt(), sendAll(false), recvAll(false) {}
       void Serialize(std::ostream& os) const;
+      // TODO: Remove this Bug 1469702
       bool Parse(std::istream& is, std::string* error);
+      // TODO: Remove this Bug 1469702
       bool ParseSets(std::istream& is, std::string* error);
       // If not set, this means all payload types
       Maybe<uint16_t> pt;
@@ -794,6 +806,8 @@ public:
   };
 
   virtual void Serialize(std::ostream& os) const override;
+
+  // TODO: Remove this Bug 1469702
   bool PushEntry(const std::string& raw, std::string* error, size_t* errorPos);
 
   std::vector<Imageattr> mImageattrs;
