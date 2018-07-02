@@ -1674,11 +1674,6 @@ private:
                 if (mCount != -1) {
                     MOZ_ASSERT(mCount >= writtenData);
                     mCount -= writtenData;
-
-                    // Is this the end of the reading?
-                    if (mCount == 0) {
-                        break;
-                    }
                 }
 
                 continue;
