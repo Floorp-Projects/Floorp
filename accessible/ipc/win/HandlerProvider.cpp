@@ -164,33 +164,6 @@ HandlerProvider::GetHandlerPayloadSize(NotNull<mscom::IInterceptor*> aIntercepto
   return S_OK;
 }
 
-template <typename CondFnT, typename ExeFnT>
-class MOZ_RAII ExecuteWhen final
-{
-public:
-  ExecuteWhen(CondFnT& aCondFn, ExeFnT& aExeFn)
-    : mCondFn(aCondFn)
-    , mExeFn(aExeFn)
-  {
-  }
-
-  ~ExecuteWhen()
-  {
-    if (mCondFn()) {
-      mExeFn();
-    }
-  }
-
-  ExecuteWhen(const ExecuteWhen&) = delete;
-  ExecuteWhen(ExecuteWhen&&) = delete;
-  ExecuteWhen& operator=(const ExecuteWhen&) = delete;
-  ExecuteWhen& operator=(ExecuteWhen&&) = delete;
-
-private:
-  CondFnT&  mCondFn;
-  ExeFnT&   mExeFn;
-};
-
 void
 HandlerProvider::BuildStaticIA2Data(
   NotNull<mscom::IInterceptor*> aInterceptor,
@@ -278,7 +251,8 @@ HandlerProvider::BuildDynamicIA2Data(DynamicIA2Data* aOutIA2Data)
     CleanupDynamicIA2Data(*aOutIA2Data);
   };
 
-  ExecuteWhen<decltype(hasFailed), decltype(cleanup)> onFail(hasFailed, cleanup);
+  mscom::ExecuteWhen<decltype(hasFailed), decltype(cleanup)>
+    onFail(hasFailed, cleanup);
 
   const VARIANT kChildIdSelf = {VT_I4};
   VARIANT varVal;
