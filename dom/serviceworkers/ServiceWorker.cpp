@@ -93,6 +93,7 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   // associated with this ServiceWorker.
   RefPtr<ServiceWorkerRegistration> reg = aGlobal->GetServiceWorkerRegistration(
     ServiceWorkerRegistrationDescriptor(mDescriptor.RegistrationId(),
+                                        mDescriptor.RegistrationVersion(),
                                         mDescriptor.PrincipalInfo(),
                                         mDescriptor.Scope(),
                                         ServiceWorkerUpdateViaCache::Imports));

@@ -1583,6 +1583,7 @@ ServiceWorkerManager::LoadRegistration(
       new ServiceWorkerInfo(registration->Principal(),
                             registration->Scope(),
                             registration->Id(),
+                            registration->Version(),
                             currentWorkerURL,
                             aRegistration.cacheName(),
                             importsLoadFlags));
