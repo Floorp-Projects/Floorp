@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "SharedPrefMap.h"
+
 #include "base/basictypes.h"
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
@@ -93,6 +95,8 @@
 
 using namespace mozilla;
 
+using mozilla::ipc::FileDescriptor;
+
 #ifdef DEBUG
 
 #define ENSURE_PARENT_PROCESS(func, pref)                                      \
@@ -126,15 +130,6 @@ typedef nsTArray<nsCString> PrefSaveData;
 static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 // Actually, 4kb should be enough for everyone.
 static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
-
-// Keep this in sync with PrefType in parser/src/lib.rs.
-enum class PrefType : uint8_t
-{
-  None = 0, // only used when neither the default nor user value is set
-  String = 1,
-  Int = 2,
-  Bool = 3,
-};
 
 // This is used for pref names and string pref values. We encode the string
 // length, then a '/', then the string chars. This encoding means there are no
@@ -188,6 +183,9 @@ union PrefValue {
         MOZ_CRASH("Unhandled enum value");
     }
   }
+
+  template<typename T>
+  T Get() const;
 
   void Init(PrefType aNewType, PrefValue aNewValue)
   {
@@ -317,6 +315,27 @@ union PrefValue {
     }
   }
 };
+
+template<>
+bool
+PrefValue::Get() const
+{
+  return mBoolVal;
+}
+
+template<>
+int32_t
+PrefValue::Get() const
+{
+  return mIntVal;
+}
+
+template<>
+nsDependentCString
+PrefValue::Get() const
+{
+  return nsDependentCString(mStringVal);
+}
 
 #ifdef DEBUG
 const char*
@@ -467,6 +486,29 @@ public:
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
   bool HasUserValue() const { return mHasUserValue; }
+
+  template<typename T>
+  void AddToMap(SharedPrefMapBuilder& aMap)
+  {
+    aMap.Add(
+      Name(),
+      { HasDefaultValue(), HasUserValue(), uint8_t(mIsSticky), IsLocked() },
+      HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
+      HasUserValue() ? mUserValue.Get<T>() : T());
+  }
+
+  void AddToMap(SharedPrefMapBuilder& aMap)
+  {
+    if (IsTypeBool()) {
+      AddToMap<bool>(aMap);
+    } else if (IsTypeInt()) {
+      AddToMap<int32_t>(aMap);
+    } else if (IsTypeString()) {
+      AddToMap<nsDependentCString>(aMap);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unexpected preference type");
+    }
+  }
 
   // When a content process is created we could tell it about every pref. But
   // the content process also initializes prefs from file, so we save a lot of
@@ -1063,6 +1105,8 @@ private:
 };
 
 static PLDHashTable* gHashTable;
+
+static StaticRefPtr<SharedPrefMap> gSharedMap;
 
 // The callback list contains all the priority callbacks followed by the
 // non-priority callbacks. gLastPriorityNode records where the first part ends.
@@ -3018,6 +3062,10 @@ PreferenceServiceReporter::CollectReports(
     node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
   }
 
+  if (gSharedMap) {
+    sizes.mMisc += mallocSizeOf(gSharedMap);
+  }
+
   MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
                      KIND_HEAP,
                      UNITS_BYTES,
@@ -3072,6 +3120,17 @@ PreferenceServiceReporter::CollectReports(
                      UNITS_BYTES,
                      sizes.mMisc,
                      "Miscellaneous memory used by libpref.");
+
+  if (gSharedMap) {
+    if (XRE_IsParentProcess()) {
+      MOZ_COLLECT_REPORT("explicit/preferences/shared-memory-map",
+                         KIND_NONHEAP,
+                         UNITS_BYTES,
+                         gSharedMap->MapSize(),
+                         "The shared memory mapping used to share a "
+                         "snapshot of preference values across processes.");
+    }
+  }
 
   nsPrefBranch* rootBranch =
     static_cast<nsPrefBranch*>(Preferences::GetRootBranch());
@@ -3445,6 +3504,8 @@ Preferences::~Preferences()
   delete gAccessCounts;
 #endif
 
+  gSharedMap = nullptr;
+
   gPrefNameArena.Clear();
 }
 
@@ -3494,6 +3555,36 @@ Preferences::DeserializePreferences(char* aStr, size_t aPrefsLen)
   MOZ_ASSERT(!gContentProcessPrefsAreInited);
   gContentProcessPrefsAreInited = true;
 #endif
+}
+
+/* static */ FileDescriptor
+Preferences::EnsureSnapshot(size_t* aSize)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!gSharedMap) {
+    SharedPrefMapBuilder builder;
+
+    for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+      Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
+
+      pref->AddToMap(builder);
+    }
+
+    gSharedMap = new SharedPrefMap(std::move(builder));
+  }
+
+  *aSize = gSharedMap->MapSize();
+  return gSharedMap->CloneFileDescriptor();
+}
+
+/* static */ void
+Preferences::InitSnapshot(const FileDescriptor& aHandle, size_t aSize)
+{
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  MOZ_ASSERT(!gSharedMap);
+
+  gSharedMap = new SharedPrefMap(aHandle, aSize);
 }
 
 /* static */ void

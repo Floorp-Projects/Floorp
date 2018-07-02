@@ -39,7 +39,26 @@ class Pref;
 class PrefValue;
 } // namespace dom
 
+namespace ipc {
+class FileDescriptor;
+} // namespace ipc
+
 struct PrefsSizes;
+
+// Xlib.h defines Bool as a macro constant. Don't try to define this enum if
+// it's already been included.
+#ifndef Bool
+
+// Keep this in sync with PrefType in parser/src/lib.rs.
+enum class PrefType : uint8_t
+{
+  None = 0, // only used when neither the default nor user value is set
+  String = 1,
+  Int = 2,
+  Bool = 3,
+};
+
+#endif
 
 #ifdef XP_UNIX
 // XXX: bug 1440207 is about improving how fixed fds such as this are used.
@@ -480,6 +499,9 @@ public:
   // prefs in bulk from the parent process, via shared memory.
   static void SerializePreferences(nsCString& aStr);
   static void DeserializePreferences(char* aStr, size_t aPrefsLen);
+
+  static mozilla::ipc::FileDescriptor EnsureSnapshot(size_t* aSize);
+  static void InitSnapshot(const mozilla::ipc::FileDescriptor&, size_t aSize);
 
   // When a single pref is changed in the parent process, these methods are
   // used to pass the update to content processes.
