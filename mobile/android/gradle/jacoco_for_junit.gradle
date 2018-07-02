@@ -1,0 +1,41 @@
+/* -*- Mode: Groovy; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: "jacoco"
+
+jacoco {
+    toolVersion = "${project.jacoco_version}"
+}
+
+android {
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
+}
+
+dependencies {
+    jacocoAgent "org.jacoco:org.jacoco.agent:${project.jacoco_version}"
+    jacocoAnt "org.jacoco:org.jacoco.ant:${project.jacoco_version}"
+}
+
+task jacocoTestReport(type: JacocoReport) {
+    reports {
+        xml.enabled = true
+        html.enabled = false
+        csv.enabled = false
+    }
+    def fileFilter = ['**/androidTest/**', '**/test/**', '**/R.class', '**/R$*.class',
+            '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+    def debugTree = fileTree(dir: "${buildDir}/intermediates/classes", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree])
+    executionData = fileTree("${buildDir}/jacoco")
+}

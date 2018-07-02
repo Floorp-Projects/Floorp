@@ -7,8 +7,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
+import shutil
+import subprocess
+import tarfile
+import urllib
+import zipfile
 
 import mozpack.path as mozpath
+
+from mozfile import TemporaryDirectory
 
 from mozbuild.base import (
     MachCommandBase,
@@ -199,6 +206,50 @@ class MachCommands(MachCommandBase):
             return 1
 
         return ret
+
+    @SubCommand('android', 'test-ccov',
+                """Run Android local unit tests in order to get a code coverage report.
+                See https://developer.mozilla.org/en-US/docs/Mozilla/Android-specific_test_suites#android-test""")  # NOQA: E501
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_test_ccov(self, args):
+        enable_ccov = '-Penable_code_coverage'
+
+        # Don't care if the tests are failing, we only want the coverage information.
+        self.android_test([enable_ccov])
+
+        self.gradle(self.substs['GRADLE_ANDROID_TEST_CCOV_REPORT_TASKS'] +
+                    ['--continue', enable_ccov] + args, verbose=True)
+        self._process_jacoco_reports()
+        return 0
+
+    def _process_jacoco_reports(self):
+        def download_grcov(parent_dir):
+            # TODO: Bug 1472236 - Remove this and use fetch tasks to download grcov.
+            grcov_version = "v0.2.1"
+            tar_name = 'grcov.tar.bz2'
+            tar_path = os.path.join(parent_dir, tar_name)
+            url = 'https://github.com/mozilla/grcov/releases/download/%s/grcov-linux-x86_64.tar.bz2' % grcov_version  # NOQA: E501
+            urllib.urlretrieve(url, tar_path)
+            with tarfile.open(tar_path) as tar:
+                tar.extractall(parent_dir)
+            return os.path.join(parent_dir, 'grcov')
+
+        def run_grcov(grcov_path, input_path):
+            args = [grcov_path, input_path, '-t', 'lcov']
+            return subprocess.check_output(args)
+
+        with TemporaryDirectory() as xml_dir, TemporaryDirectory() as grcov_dir:
+            grcov = download_grcov(grcov_dir)
+
+            report_xml_template = self.topobjdir + '/gradle/build/mobile/android/%s/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'  # NOQA: E501
+            shutil.copy(report_xml_template % 'app', os.path.join(xml_dir, 'app.xml'))
+            shutil.copy(report_xml_template % 'geckoview', os.path.join(xml_dir, 'geckoview.xml'))
+
+            # Parse output files with grcov.
+            grcov_output = run_grcov(grcov, xml_dir)
+            grcov_zip_path = os.path.join(self.topobjdir, 'code-coverage-grcov.zip')
+            with zipfile.ZipFile(grcov_zip_path, 'w', zipfile.ZIP_DEFLATED) as z:
+                z.writestr('grcov_lcov_output.info', grcov_output)
 
     @SubCommand('android', 'lint',
                 """Run Android lint.
