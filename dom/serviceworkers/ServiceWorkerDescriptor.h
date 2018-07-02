@@ -36,12 +36,14 @@ class ServiceWorkerDescriptor final
 
 public:
   ServiceWorkerDescriptor(uint64_t aId,
+                          uint64_t aRegistrationId,
                           nsIPrincipal* aPrincipal,
                           const nsACString& aScope,
                           const nsACString& aScriptURL,
                           ServiceWorkerState aState);
 
   ServiceWorkerDescriptor(uint64_t aId,
+                          uint64_t aRegistrationId,
                           const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                           const nsACString& aScope,
                           const nsACString& aScriptURL,
@@ -66,6 +68,9 @@ public:
 
   uint64_t
   Id() const;
+
+  uint64_t
+  RegistrationId() const;
 
   const mozilla::ipc::PrincipalInfo&
   PrincipalInfo() const;
