@@ -10,6 +10,7 @@ import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.view.dp
@@ -75,7 +76,7 @@ class EditToolbar(
      * Focus the URL editing component and show the virtual keyboard if needed.
      */
     fun focus() {
-        urlView.showKeyboard()
+        urlView.showKeyboard(flags = InputMethodManager.SHOW_FORCED)
     }
 
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations

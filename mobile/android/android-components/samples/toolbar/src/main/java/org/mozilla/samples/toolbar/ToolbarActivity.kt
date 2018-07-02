@@ -23,6 +23,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**
@@ -57,6 +58,12 @@ class ToolbarActivity : AppCompatActivity() {
                         InlineAutocompleteEditText.AutocompleteResult(result.text, result.source, result.size, { result.url }))
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        toolbar.hideKeyboard()
     }
 
     /**

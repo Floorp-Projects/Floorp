@@ -65,9 +65,12 @@ fun View.isInvisible(): Boolean {
 
 /**
  * Tries to focus this view and show the soft input window for it.
+ *
+ *  @param flags Provides additional operating flags to be used with InputMethodManager.showSoftInput().
+ *  Currently may be 0, SHOW_IMPLICIT or SHOW_FORCED.
  */
-fun View.showKeyboard() {
-    ShowKeyboard(this).post()
+fun View.showKeyboard(flags: Int = InputMethodManager.SHOW_IMPLICIT) {
+    ShowKeyboard(this, flags).post()
 }
 
 /**
@@ -80,7 +83,10 @@ fun View.hideKeyboard() {
     imm.hideSoftInputFromWindow(windowToken, 0)
 }
 
-private class ShowKeyboard(view: View) : Runnable {
+private class ShowKeyboard(
+    view: View,
+    private val flags: Int = InputMethodManager.SHOW_IMPLICIT
+) : Runnable {
     private val weakReference: WeakReference<View> = WeakReference(view)
     private val handler: Handler = Handler(Looper.getMainLooper())
     private var tries: Int = TRIES
@@ -105,7 +111,7 @@ private class ShowKeyboard(view: View) : Runnable {
                     return
                 }
 
-                if (!imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)) {
+                if (!imm.showSoftInput(view, flags)) {
                     // Showing they keyboard failed. Try again later.
                     post()
                 }
