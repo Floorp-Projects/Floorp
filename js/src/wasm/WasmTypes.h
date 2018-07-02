@@ -507,7 +507,7 @@ SizeOf(ValType vt)
         return 16;
       case ValType::AnyRef:
       case ValType::Ref:
-        MOZ_CRASH("unexpected ref/anyref");
+        return sizeof(intptr_t);
     }
     MOZ_CRASH("Invalid ValType");
 }
@@ -766,49 +766,57 @@ enum class HasGcTypes
     True
 };
 
-// The Val class represents a single WebAssembly value of a given value type,
-// mostly for the purpose of numeric literals and initializers. A Val does not
-// directly map to a JS value since there is not (currently) a precise
-// representation of i64 values. A Val may contain non-canonical NaNs since,
+// The LitVal class represents a single WebAssembly value of a given value
+// type, mostly for the purpose of numeric literals and initializers. A LitVal
+// does not directly map to a JS value since there is not (currently) a precise
+// representation of i64 values. A LitVal may contain non-canonical NaNs since,
 // within WebAssembly, floats are not canonicalized. Canonicalization must
 // happen at the JS boundary.
 
-class Val
+class LitVal
 {
+  protected:
     ValType type_;
     union U {
-        uint32_t i32_;
-        uint64_t i64_;
-        float f32_;
-        double f64_;
-        I8x16 i8x16_;
-        I16x8 i16x8_;
-        I32x4 i32x4_;
-        F32x4 f32x4_;
+        uint32_t  i32_;
+        uint64_t  i64_;
+        float     f32_;
+        double    f64_;
+        I8x16     i8x16_;
+        I16x8     i16x8_;
+        I32x4     i32x4_;
+        F32x4     f32x4_;
+        JSObject* ptr_;
     } u;
 
   public:
-    Val() = default;
+    LitVal() : type_(), u{} {}
 
-    explicit Val(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
-    explicit Val(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
+    explicit LitVal(uint32_t i32) : type_(ValType::I32) { u.i32_ = i32; }
+    explicit LitVal(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
 
-    explicit Val(float f32) : type_(ValType::F32) { u.f32_ = f32; }
-    explicit Val(double f64) : type_(ValType::F64) { u.f64_ = f64; }
+    explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
+    explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
-    explicit Val(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
+    explicit LitVal(ValType refType, JSObject* ptr) : type_(refType) {
+        MOZ_ASSERT(refType.isRefOrAnyRef());
+        MOZ_ASSERT(ptr == nullptr, "use Val for non-nullptr ref types to get tracing");
+        u.ptr_ = ptr;
+    }
+
+    explicit LitVal(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
         memcpy(u.i8x16_, i8x16, sizeof(u.i8x16_));
     }
-    explicit Val(const I16x8& i16x8, ValType type = ValType::I16x8) : type_(type) {
+    explicit LitVal(const I16x8& i16x8, ValType type = ValType::I16x8) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I16x8 || type_ == ValType::B16x8);
         memcpy(u.i16x8_, i16x8, sizeof(u.i16x8_));
     }
-    explicit Val(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
+    explicit LitVal(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
         memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_));
     }
-    explicit Val(const F32x4& f32x4) : type_(ValType::F32x4) {
+    explicit LitVal(const F32x4& f32x4) : type_(ValType::F32x4) {
         memcpy(u.f32x4_, f32x4, sizeof(u.f32x4_));
     }
 
@@ -820,6 +828,7 @@ class Val
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
+    JSObject* ptr() const { MOZ_ASSERT(type_.isRefOrAnyRef()); return u.ptr_; }
 
     const I8x16& i8x16() const {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
@@ -837,11 +846,40 @@ class Val
         MOZ_ASSERT(type_ == ValType::F32x4);
         return u.f32x4_;
     }
-
-    void writePayload(uint8_t* dst) const;
+    // To be used only by Val.
+    const void* rawSimd() const { return &u.i32x4_; }
 };
 
-typedef Vector<Val, 0, SystemAllocPolicy> ValVector;
+typedef Vector<LitVal, 0, SystemAllocPolicy> LitValVector;
+
+// A Val is a LitVal that can contain pointers to JSObjects, thanks to their
+// trace implementation. Since a Val is able to store a pointer to a JSObject,
+// it needs to be traced during compilation in case the pointee is moved.
+// The classic shorthands for Rooted things are defined after this class, for
+// easier usage.
+
+class MOZ_NON_PARAM Val : public LitVal
+{
+  public:
+    Val() : LitVal() {}
+    explicit Val(const LitVal& val);
+    explicit Val(uint32_t i32)  : LitVal(i32) {}
+    explicit Val(uint64_t i64)  : LitVal(i64) {}
+    explicit Val(float f32)     : LitVal(f32) {}
+    explicit Val(double f64)    : LitVal(f64) {}
+    explicit Val(JSObject* obj) : LitVal(ValType::AnyRef, nullptr) { u.ptr_ = obj; }
+    void writePayload(uint8_t* dst) const;
+    void trace(JSTracer* trc);
+};
+
+typedef Rooted<Val> RootedVal;
+typedef Handle<Val> HandleVal;
+typedef MutableHandle<Val> MutableHandleVal;
+
+typedef GCVector<Val, 0, SystemAllocPolicy> GCVectorVal;
+typedef Rooted<GCVectorVal> RootedValVector;
+typedef Handle<GCVectorVal> HandleValVector;
+typedef MutableHandle<GCVectorVal> MutableHandleValVector;
 
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two
@@ -963,7 +1001,7 @@ class InitExpr
   private:
     Kind kind_;
     union U {
-        Val val_;
+        LitVal val_;
         struct {
             uint32_t index_;
             ValType type_;
@@ -974,7 +1012,7 @@ class InitExpr
   public:
     InitExpr() = default;
 
-    explicit InitExpr(Val val) : kind_(Kind::Constant) {
+    explicit InitExpr(LitVal val) : kind_(Kind::Constant) {
         u.val_ = val;
     }
 
@@ -986,13 +1024,13 @@ class InitExpr
     Kind kind() const { return kind_; }
 
     bool isVal() const { return kind() == Kind::Constant; }
-    Val val() const { MOZ_ASSERT(isVal()); return u.val_; }
+    LitVal val() const { MOZ_ASSERT(isVal()); return u.val_; }
 
     uint32_t globalIndex() const { MOZ_ASSERT(kind() == Kind::GetGlobal); return u.global.index_; }
 
     ValType type() const {
         switch (kind()) {
-          case Kind::Constant: return u.val_.type();
+          case Kind::Constant:  return u.val_.type();
           case Kind::GetGlobal: return u.global.type_;
         }
         MOZ_CRASH("unexpected initExpr type");
@@ -1098,7 +1136,7 @@ class GlobalDesc
             bool isWasm_;
             bool isExport_;
         } var;
-        Val cst_;
+        LitVal cst_;
         V() {}
     } u;
     GlobalKind kind_;
@@ -1125,7 +1163,8 @@ class GlobalDesc
         }
     }
 
-    explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex, ModuleKind kind = ModuleKind::Wasm)
+    explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex,
+                        ModuleKind kind = ModuleKind::Wasm)
       : kind_(GlobalKind::Import)
     {
         u.var.val.import.type_ = type;
@@ -1158,7 +1197,7 @@ class GlobalDesc
     bool isImport() const { return kind_ == GlobalKind::Import; }
 
     bool isMutable() const { return !isConstant() && u.var.isMutable_; }
-    Val constantValue() const { MOZ_ASSERT(isConstant()); return u.cst_; }
+    LitVal constantValue() const { MOZ_ASSERT(isConstant()); return u.cst_; }
     const InitExpr& initExpr() const { MOZ_ASSERT(isVariable()); return u.var.val.initial_; }
     uint32_t importIndex() const { MOZ_ASSERT(isImport()); return u.var.val.import.index_; }
 
@@ -1942,6 +1981,7 @@ enum class SymbolicAddress
     Wake,
     MemCopy,
     MemFill,
+    PostBarrier,
 #if defined(JS_CODEGEN_MIPS32)
     js_jit_gAtomic64Lock,
 #endif
@@ -2062,6 +2102,10 @@ struct TlsData
 
     // Set to 1 when wasm should call CheckForInterrupt.
     Atomic<uint32_t, mozilla::Relaxed> interrupt;
+
+#ifdef ENABLE_WASM_GC
+    uint8_t* addressOfNeedsIncrementalBarrier;
+#endif
 
     // Methods to set, test and clear the above two fields. Both interrupt
     // fields are Relaxed and so no consistency/ordering can be assumed.
@@ -2315,7 +2359,7 @@ static const unsigned PageSize = 64 * 1024;
 // catch the overflow. MaxMemoryAccessSize is a conservative approximation of
 // the maximum guard space needed to catch all unaligned overflows.
 
-static const unsigned MaxMemoryAccessSize = Val::sizeofLargestValue();
+static const unsigned MaxMemoryAccessSize = LitVal::sizeofLargestValue();
 
 #ifdef WASM_HUGE_MEMORY
 
@@ -2518,6 +2562,48 @@ class DebugFrame
     static const unsigned Alignment = 8;
     static void alignmentStaticAsserts();
 };
+
+# ifdef ENABLE_WASM_GC
+// A packed format for an argument to the Instance::postBarrier function.
+class PostBarrierArg
+{
+  public:
+    enum class Type {
+        Global = 0x0,
+        Last = Global
+    };
+
+  private:
+    uint32_t type_: 1;
+    uint32_t payload_: 31;
+
+    PostBarrierArg(uint32_t payload, Type type)
+      : type_(uint32_t(type)),
+        payload_(payload)
+    {
+        MOZ_ASSERT(payload < (UINT32_MAX >> 1));
+        MOZ_ASSERT(uint32_t(type) <= uint32_t(Type::Last));
+    }
+
+  public:
+    static PostBarrierArg Global(uint32_t globalIndex) {
+        return PostBarrierArg(globalIndex, Type::Global);
+    }
+
+    Type type() const {
+        MOZ_ASSERT(type_ <= uint32_t(Type::Last));
+        return Type(type_);
+    }
+    uint32_t globalIndex() const {
+        MOZ_ASSERT(type() == Type::Global);
+        return payload_;
+    }
+
+    uint32_t rawPayload() const {
+        return (payload_ << 1) | type_;
+    }
+};
+# endif
 
 } // namespace wasm
 } // namespace js
