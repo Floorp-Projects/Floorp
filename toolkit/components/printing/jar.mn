@@ -13,6 +13,6 @@ toolkit.jar:
    content/global/printProgress.js                  (content/printProgress.js)
    content/global/printProgress.xul                 (content/printProgress.xul)
 #endif
-   content/global/printPreviewToolbar.js            (content/printPreviewToolbar.js)
+   content/global/printPreviewBindings.xml          (content/printPreviewBindings.xml)
    content/global/printUtils.js                     (content/printUtils.js)
    content/global/simplifyMode.css                  (content/simplifyMode.css)
