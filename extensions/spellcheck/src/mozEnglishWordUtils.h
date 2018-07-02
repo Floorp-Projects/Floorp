@@ -21,23 +21,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(mozEnglishWordUtils)
 
   mozEnglishWordUtils();
-  /* additional members */
-  enum myspCapitalization
-  {
-    NoCap,
-    InitCap,
-    AllCap,
-    HuhCap
-  };
 
 protected:
   virtual ~mozEnglishWordUtils();
 
-  mozEnglishWordUtils::myspCapitalization captype(const nsString &word);
-  bool ucIsAlpha(char16_t aChar);
+  static bool ucIsAlpha(char16_t aChar);
 
-  nsString mLanguage;
-  nsString mCharset;
   nsCOMPtr<mozITXTToHTMLConv> mURLDetector; // used to detect urls so the spell checker can skip them.
 };
 
