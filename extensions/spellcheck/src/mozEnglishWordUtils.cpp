@@ -12,14 +12,8 @@
 #include "mozilla/Likely.h"
 #include "nsMemory.h"
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(mozEnglishWordUtils)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(mozEnglishWordUtils)
-
-NS_INTERFACE_MAP_BEGIN(mozEnglishWordUtils)
-  NS_INTERFACE_MAP_ENTRY(mozISpellI18NUtil)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozISpellI18NUtil)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(mozEnglishWordUtils)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(mozEnglishWordUtils, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(mozEnglishWordUtils, Release)
 
 NS_IMPL_CYCLE_COLLECTION(mozEnglishWordUtils,
                          mURLDetector)
@@ -43,7 +37,9 @@ mozEnglishWordUtils::ucIsAlpha(char16_t aChar)
   return nsUGenCategory::kLetter == mozilla::unicode::GetGenCategory(aChar);
 }
 
-NS_IMETHODIMP mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length, uint32_t offset, int32_t *begin, int32_t *end)
+nsresult
+mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length,
+                                  uint32_t offset, int32_t *begin, int32_t *end)
 {
   const char16_t *p = word + offset;
   const char16_t *endbuf = word + length;
