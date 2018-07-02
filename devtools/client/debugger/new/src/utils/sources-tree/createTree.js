@@ -19,9 +19,10 @@ function createTree({
   debuggeeUrl,
   projectRoot
 }) {
-  const uncollapsedTree = (0, _utils.createNode)("root", "", []);
+  const uncollapsedTree = (0, _utils.createDirectoryNode)("root", "", []);
 
-  for (const source of sources.valueSeq()) {
+  for (const sourceId in sources) {
+    const source = sources[sourceId];
     (0, _addToTree.addToTree)(uncollapsedTree, source, debuggeeUrl, projectRoot);
   }
 

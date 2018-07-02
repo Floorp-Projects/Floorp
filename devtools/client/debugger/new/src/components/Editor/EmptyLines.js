@@ -37,7 +37,7 @@ class EmptyLines extends _react.Component {
 
     editor.codeMirror.operation(() => {
       emptyLines.forEach(emptyLine => {
-        const line = (0, _editor.toEditorLine)(selectedSource.get("id"), emptyLine);
+        const line = (0, _editor.toEditorLine)(selectedSource.id, emptyLine);
         editor.codeMirror.removeLineClass(line, "line", "empty-line");
       });
     });
@@ -56,7 +56,7 @@ class EmptyLines extends _react.Component {
 
     editor.codeMirror.operation(() => {
       emptyLines.forEach(emptyLine => {
-        const line = (0, _editor.toEditorLine)(selectedSource.get("id"), emptyLine);
+        const line = (0, _editor.toEditorLine)(selectedSource.id, emptyLine);
         editor.codeMirror.addLineClass(line, "line", "empty-line");
       });
     });
