@@ -683,7 +683,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream)
 StreamTime
 MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
 {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
 
   float volume = 0.0f;
@@ -799,7 +799,7 @@ void
 MediaStreamGraphImpl::OpenAudioInputImpl(int aID,
                                          AudioDataListener *aListener)
 {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   // Bug 1238038 Need support for multiple mics at once
   if (mInputDeviceUsers.Count() > 0 &&
       !mInputDeviceUsers.Get(aListener, nullptr)) {
@@ -881,7 +881,7 @@ MediaStreamGraphImpl::OpenAudioInput(int aID,
 void
 MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
 {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   uint32_t count;
   DebugOnly<bool> result = mInputDeviceUsers.Get(aListener, &count);
   MOZ_ASSERT(result);
@@ -1405,7 +1405,11 @@ MediaStreamGraphImpl::ForceShutDown(media::ShutdownTicket* aShutdownTicket)
   mForceShutdownTicket = aShutdownTicket;
   MonitorAutoLock lock(mMonitor);
   mForceShutDown = true;
-  if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
+  if (IsNonRealtime()) {
+    // Start the graph if it has not been started already, but don't produce anything.
+    // This method will return early if the graph is already started.
+    StartNonRealtimeProcessing(0);
+  } else if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
     // We *could* have just sent this a message to start up, so don't
     // yank the rug out from under it.  Tell it to startup and let it
     // shut down.
@@ -3782,12 +3786,6 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
   MOZ_ASSERT(aGraph->IsNonRealtime(), "Should not destroy the global graph here");
 
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(aGraph);
-
-  if (!graph->mNonRealtimeProcessing) {
-    // Start the graph, but don't produce anything
-    graph->StartNonRealtimeProcessing(0);
-  }
-
   graph->ForceShutDown(nullptr);
 }
 

@@ -2559,13 +2559,13 @@ nsCookieService::Add(const nsACString &aHost,
                      JSContext*        aCx,
                      uint8_t           aArgc)
 {
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
+  MOZ_ASSERT(aArgc == 0 || aArgc == 1 || aArgc == 2);
 
   OriginAttributes attrs;
   nsresult rv = InitializeOriginAttributes(&attrs,
                                            aOriginAttributes,
                                            aCx,
-                                           aArgc,
+                                           aArgc == 0 ? 0 : 1,
                                            u"nsICookieManager.add()",
                                            u"2");
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3706,14 +3706,15 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
         return;
       }
 
-      // If the new cookie has the same value, expiry date, and isSecure,
-      // isSession, and isHttpOnly flags then we can just keep the old one.
+      // If the new cookie has the same value, expiry date, isSecure, isSession,
+      // isHttpOnly and sameSite flags then we can just keep the old one.
       // Only if any of these differ we would want to override the cookie.
       if (oldCookie->Value().Equals(aCookie->Value()) &&
           oldCookie->Expiry() == aCookie->Expiry() &&
           oldCookie->IsSecure() == aCookie->IsSecure() &&
           oldCookie->IsSession() == aCookie->IsSession() &&
           oldCookie->IsHttpOnly() == aCookie->IsHttpOnly() &&
+          oldCookie->SameSite() == aCookie->SameSite() &&
           // We don't want to perform this optimization if the cookie is
           // considered stale, since in this case we would need to update the
           // database.

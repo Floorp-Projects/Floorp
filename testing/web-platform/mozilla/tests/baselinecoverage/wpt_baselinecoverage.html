@@ -1,10 +1,22 @@
 <!doctype html>
 <meta charset=utf-8>
+<meta name="timeout" content="long">
 <title>Baseline Coverage</title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script>
   test(function() {
     assert_equals(true, true);
-  }, "Collecting baseline coverage for web-platform tests.");
+  }, "Collecting basic baseline coverage for web-platform tests.");
+
+  async_test(function(t) {
+    function delayBaseline() {
+      return new Promise((c) => setTimeout(c, 30 * 1000));
+    }
+
+    delayBaseline().then(() => {
+        assert_equals(true, true);
+        t.done();
+    });
+  }, "Collecting delayed baseline coverage for web-platform tests.");
 </script>
