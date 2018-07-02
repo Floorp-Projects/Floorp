@@ -101,22 +101,62 @@ function getUsedFontsEls(viewDoc) {
 }
 
 /**
- * Expand the other fonts accordion.
+ * Get the DOM element for the accordion widget that contains the fonts used to render the
+ * current element.
+ *
+ * @param  {document} viewDoc
+ * @return {DOMNode}
  */
-async function expandOtherFontsAccordion(viewDoc) {
-  info("Expanding the other fonts section");
+function getRenderedFontsAccordion(viewDoc) {
+  return viewDoc.querySelectorAll("#font-container .accordion")[0];
+}
 
-  const accordion = viewDoc.querySelector("#font-container .accordion");
+/**
+ * Get the DOM element for the accordion widget that contains the fonts used elsewhere in
+ * the document.
+ *
+ * @param  {document} viewDoc
+ * @return {DOMNode}
+ */
+function getOtherFontsAccordion(viewDoc) {
+  return viewDoc.querySelectorAll("#font-container .accordion")[1];
+}
+
+/**
+ * Expand a given accordion widget.
+ *
+ * @param  {DOMNode} accordion
+ */
+async function expandAccordion(accordion) {
   const isExpanded = () => accordion.querySelector(".fonts-list");
-
   if (isExpanded()) {
     return;
   }
 
-  const onExpanded = BrowserTestUtils.waitForCondition(isExpanded,
-                                                     "Waiting for other fonts section");
+  const onExpanded = BrowserTestUtils.waitForCondition(
+    isExpanded, "Waiting for other fonts section");
   accordion.querySelector(".theme-twisty").click();
   await onExpanded;
+}
+
+/**
+ * Expand the other fonts accordion.
+ *
+ * @param  {document} viewDoc
+ */
+async function expandOtherFontsAccordion(viewDoc) {
+  info("Expanding the other fonts section");
+  await expandAccordion(getOtherFontsAccordion(viewDoc));
+}
+
+/**
+ * Get all of the <li> elements for the fonts used to render the current element.
+ *
+ * @param  {document} viewDoc
+ * @return {Array}
+ */
+function getRenderedFontsEls(viewDoc) {
+  return getRenderedFontsAccordion(viewDoc).querySelectorAll(".fonts-list > li");
 }
 
 /**
@@ -126,7 +166,7 @@ async function expandOtherFontsAccordion(viewDoc) {
  * @return {Array}
  */
 function getOtherFontsEls(viewDoc) {
-  return viewDoc.querySelectorAll("#font-container .accordion .fonts-list > li");
+  return getOtherFontsAccordion(viewDoc).querySelectorAll(".fonts-list > li");
 }
 
 /**
