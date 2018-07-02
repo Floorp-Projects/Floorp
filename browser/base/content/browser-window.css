@@ -10,6 +10,7 @@
 @import url("chrome://global/skin/");
 
 @import url("chrome://browser/content/browser.css");
+@import url("chrome://browser/content/tabbrowser.css");
 @import url("chrome://browser/content/downloads/downloads.css");
 @import url("chrome://browser/content/places/places.css");
 @import url("chrome://browser/content/usercontext/usercontext.css");
@@ -20,4 +21,3 @@
 @import url("chrome://browser/skin/searchbar.css");
 @import url("chrome://browser/skin/places/places.css");
 @import url("chrome://browser/skin/places/editBookmark.css");
-@import url("chrome://browser/content/tabbrowser.css");
