@@ -32,6 +32,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'Preferences.cpp',
+    'SharedPrefMap.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
