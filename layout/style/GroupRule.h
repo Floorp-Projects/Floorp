@@ -35,7 +35,10 @@ class GroupRule : public Rule
 {
 protected:
   GroupRule(already_AddRefed<ServoCssRules> aRules,
-            uint32_t aLineNumber, uint32_t aColumnNumber);
+            StyleSheet* aSheet,
+            Rule* aParentRule,
+            uint32_t aLineNumber,
+            uint32_t aColumnNumber);
   GroupRule(const GroupRule& aCopy) = delete;
   virtual ~GroupRule();
 public:
@@ -47,7 +50,7 @@ public:
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual void SetStyleSheet(StyleSheet* aSheet) override;
+  void DropSheetReference() override;
 
 public:
 
