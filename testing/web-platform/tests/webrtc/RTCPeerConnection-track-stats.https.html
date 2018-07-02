@@ -285,7 +285,7 @@
       sendingTrack1 = tracks[0];
       sendingTrack2 = tracks[1];
       sender = caller.addTrack(sendingTrack1);
-      return performOffer(caller, callee);
+      return exchangeOffer(caller, callee);
     }))
     .then(t.step_func(() => {
       return sender.replaceTrack(sendingTrack2);
