@@ -70,7 +70,7 @@ ServiceWorkerRegistrationMainThread::StartListeningForEvents()
                                mDescriptor.Scope());
   NS_ENSURE_TRUE_VOID(mInfo);
 
-  mInfo->AddInstance(this);
+  mInfo->AddInstance(this, mDescriptor);
   mListeningForEvents = true;
 }
 
@@ -673,7 +673,7 @@ public:
     mInfo = new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(
       "WorkerListener::mInfo", info);
 
-    mInfo->AddInstance(this);
+    mInfo->AddInstance(this, mDescriptor);
     mListeningForEvents = true;
   }
 
