@@ -180,3 +180,86 @@ add_task(async function test_storage_local_idb_backend_destroyed_context_promise
   return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
                       test_storage_local_call_from_destroying_context);
 });
+
+add_task(async function test_storage_local_should_not_cache_idb_open_rejections() {
+  async function test_storage_local_on_idb_disk_full_rejection() {
+    let extension = ExtensionTestUtils.loadExtension({
+      async background() {
+        browser.test.sendMessage("ext-page-url", browser.runtime.getURL("tab.html"));
+      },
+      files: {
+        "tab.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="tab.js"></script>
+          </head>
+        </html>`,
+
+        "tab.js"() {
+          browser.test.onMessage.addListener(async ({msg, expectErrorOnSet}) => {
+            if (msg !== "call-storage-local") {
+              return;
+            }
+
+            const expectedValue = "newvalue";
+
+            try {
+              await browser.storage.local.set({"newkey": expectedValue});
+            } catch (err) {
+              if (expectErrorOnSet) {
+                browser.test.sendMessage("storage-local-set-rejected");
+                return;
+              }
+
+              browser.test.fail(`Got an unexpected exception on storage.local.get: ${err}`);
+              throw err;
+            }
+
+            try {
+              const res = await browser.storage.local.get("newvalue");
+              browser.test.assertEq(expectedValue, res.newkey);
+              browser.test.sendMessage("storage-local-get-resolved");
+            } catch (err) {
+              browser.test.fail(`Got an unexpected exception on storage.local.get: ${err}`);
+              throw err;
+            }
+          });
+
+          browser.test.sendMessage("extension-tab-ready");
+        },
+      },
+      manifest: {
+        permissions: ["storage"],
+      },
+    });
+
+    await extension.startup();
+    const url = await extension.awaitMessage("ext-page-url");
+
+    let contentPage = await ExtensionTestUtils.loadContentPage(url, {extension});
+    await extension.awaitMessage("extension-tab-ready");
+
+    // Turn the low disk mode on (so that opening an IndexedDB connection raises a
+    // QuotaExceededError).
+    setLowDiskMode(true);
+
+    extension.sendMessage({msg: "call-storage-local", expectErrorOnSet: true});
+    info(`Wait the storage.local.set API call to reject while the disk is full`);
+    await extension.awaitMessage("storage-local-set-rejected");
+    info("Got the a rejection on storage.local.set while the disk is full as expected");
+
+    setLowDiskMode(false);
+    extension.sendMessage({msg: "call-storage-local", expectErrorOnSet: false});
+    info(`Wait the storage.local API calls to resolve successfully once the disk is free again`);
+    await extension.awaitMessage("storage-local-get-resolved");
+    info("storage.local.set and storage.local.get resolve successfully once the disk is free again");
+
+    contentPage.close();
+    await extension.unload();
+  }
+
+  return runWithPrefs([[ExtensionStorageIDB.BACKEND_ENABLED_PREF, true]],
+                      test_storage_local_on_idb_disk_full_rejection);
+});
+
