@@ -73,12 +73,9 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Rule)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 /* virtual */ void
-Rule::SetStyleSheet(StyleSheet* aSheet)
+Rule::DropSheetReference()
 {
-  // We don't reference count this up reference. The style sheet
-  // will tell us when it's going away or when we're detached from
-  // it.
-  mSheet = aSheet;
+  mSheet = nullptr;
 }
 
 void

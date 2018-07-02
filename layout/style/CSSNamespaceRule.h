@@ -20,8 +20,11 @@ class CSSNamespaceRule final : public css::Rule
 {
 public:
   CSSNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule,
-                   uint32_t aLine, uint32_t aColumn)
-    : css::Rule(aLine, aColumn)
+                   StyleSheet* aSheet,
+                   css::Rule* aParentRule,
+                   uint32_t aLine,
+                   uint32_t aColumn)
+    : css::Rule(aSheet, aParentRule, aLine, aColumn)
     , mRawRule(std::move(aRule))
   {
   }

@@ -68,9 +68,12 @@ CSSMozDocumentRule::Match(nsIDocument* aDoc,
 }
 
 CSSMozDocumentRule::CSSMozDocumentRule(RefPtr<RawServoMozDocumentRule> aRawRule,
-                                       uint32_t aLine, uint32_t aColumn)
+                                       StyleSheet* aSheet,
+                                       css::Rule* aParentRule,
+                                       uint32_t aLine,
+                                       uint32_t aColumn)
   : css::ConditionRule(Servo_MozDocumentRule_GetRules(aRawRule).Consume(),
-                       aLine, aColumn)
+                       aSheet, aParentRule, aLine, aColumn)
   , mRawRule(std::move(aRawRule))
 {
 }

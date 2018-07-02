@@ -19,18 +19,20 @@ namespace mozilla {
 namespace css {
 
 GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules,
-                     uint32_t aLineNumber, uint32_t aColumnNumber)
-  : Rule(aLineNumber, aColumnNumber)
-  , mRuleList(new ServoCSSRuleList(std::move(aRules), nullptr))
+                     StyleSheet* aSheet,
+                     Rule* aParentRule,
+                     uint32_t aLineNumber,
+                     uint32_t aColumnNumber)
+  : Rule(aSheet, aParentRule, aLineNumber, aColumnNumber)
+  , mRuleList(new ServoCSSRuleList(std::move(aRules), aSheet, this))
 {
-  mRuleList->SetParentRule(this);
 }
 
 GroupRule::~GroupRule()
 {
   MOZ_ASSERT(!mSheet, "SetStyleSheet should have been called");
   if (mRuleList) {
-    mRuleList->DropReference();
+    mRuleList->DropReferences();
   }
 }
 
@@ -51,17 +53,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(GroupRule, Rule)
   if (tmp->mRuleList) {
-    tmp->mRuleList->SetParentRule(nullptr);
-    // If tmp does not have a stylesheet, neither do its descendants.
-    // In that case, don't try to null out their stylesheet, to avoid
-    // O(N^2) behavior in depth of group rule nesting.  But if tmp
-    // _does_ have a stylesheet (which can happen if it gets unlinked
-    // earlier than its owning stylesheet), then we need to null out the
-    // stylesheet pointer on descendants now, before we clear mRuleList.
-    if (tmp->GetStyleSheet()) {
-      tmp->mRuleList->SetStyleSheet(nullptr);
-    }
-    tmp->mRuleList->DropReference();
+    // If tmp has a style sheet (which can happen if it gets unlinked
+    // earlier than its owning style sheet), then we need to null out the
+    // style sheet pointer on descendants now, before we clear mRuleList.
+    tmp->mRuleList->DropReferences();
     tmp->mRuleList = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -79,18 +74,12 @@ GroupRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 /* virtual */ void
-GroupRule::SetStyleSheet(StyleSheet* aSheet)
+GroupRule::DropSheetReference()
 {
-  // Don't set the sheet on the kids if it's already the same as the sheet we
-  // already have.  This is needed to avoid O(N^2) behavior in group nesting
-  // depth when seting the sheet to null during unlink, if we happen to unlin in
-  // order from most nested rule up to least nested rule.
-  if (aSheet != GetStyleSheet()) {
-    if (mRuleList) {
-      mRuleList->SetStyleSheet(aSheet);
-    }
-    Rule::SetStyleSheet(aSheet);
+  if (mRuleList) {
+    mRuleList->DropSheetReference();
   }
+  Rule::DropSheetReference();
 }
 
 uint32_t
