@@ -189,10 +189,10 @@
           },
           "validity": {
             "type": "object",
-            "description": "Contains start and end dates in GMT.",
+            "description": "Contains start and end timestamps.",
             "properties": {
-              "startGMT": { "type": "string" },
-              "endGMT": { "type": "string" }
+              "start": { "type": "integer" },
+              "end": { "type": "integer" }
             }
           },
           "fingerprint": {
@@ -213,9 +213,6 @@
             "properties": {
               "sha256": { "type": "string" }
             }
-          },
-          "keyUsages": {
-            "type": "string"
           },
           "rawDER": {
             "optional": true,
