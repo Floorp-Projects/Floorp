@@ -6,6 +6,8 @@ package mozilla.components.browser.toolbar.edit
 
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -26,5 +28,31 @@ class EditToolbarTest {
         toolbar.editToolbar.urlView.setText("Hello World")
 
         assertEquals(listOf("Hello World", null), invokedWithParams)
+    }
+
+    @Test
+    fun `focus change is forwarded to listener`() {
+        var listenerInvoked = false
+        var value = false
+
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        toolbar.setOnEditFocusChangeListener { hasFocus ->
+            listenerInvoked = true
+            value = hasFocus
+        }
+
+        // Switch to editing mode and focus view.
+        toolbar.editMode()
+        toolbar.editToolbar.urlView.requestFocus()
+
+        assertTrue(listenerInvoked)
+        assertTrue(value)
+
+        // Switch back to display mode
+        listenerInvoked = false
+        toolbar.displayMode()
+
+        assertTrue(listenerInvoked)
+        assertFalse(value)
     }
 }

@@ -99,6 +99,15 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
+     */
+    fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
+        editToolbar.urlView.onFocusChangeListener = OnFocusChangeListener { _, hasFocus ->
+            listener.invoke(hasFocus)
+        }
+    }
+
+    /**
      * Sets autocomplete filter to be used in edit mode.
      */
     fun setAutocompleteFilter(filter: (String, InlineAutocompleteEditText?) -> Unit) {
