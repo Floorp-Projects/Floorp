@@ -26,7 +26,6 @@ const {FaviconFeed} = ChromeUtils.import("resource://activity-stream/lib/Favicon
 const {TopSitesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopSitesFeed.jsm", {});
 const {TopStoriesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopStoriesFeed.jsm", {});
 const {HighlightsFeed} = ChromeUtils.import("resource://activity-stream/lib/HighlightsFeed.jsm", {});
-const {ThemeFeed} = ChromeUtils.import("resource://activity-stream/lib/ThemeFeed.jsm", {});
 const {ASRouterFeed} = ChromeUtils.import("resource://activity-stream/lib/ASRouterFeed.jsm", {});
 
 const DEFAULT_SITES = new Map([
@@ -203,12 +202,6 @@ const FEEDS_DATA = [
     name: "prefs",
     factory: () => new PrefsFeed(PREFS_CONFIG),
     title: "Preferences",
-    value: true
-  },
-  {
-    name: "theme",
-    factory: () => new ThemeFeed(),
-    title: "Theme",
     value: true
   },
   {
