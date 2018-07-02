@@ -31,7 +31,6 @@ const INITIAL_STATE = {
     initialized: false,
     values: {}
   },
-  Theme: {className: ""},
   Dialog: {
     visible: false,
     data: {}
@@ -374,19 +373,10 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
   }
 }
 
-function Theme(prevState = INITIAL_STATE.Theme, action) {
-  switch (action.type) {
-    case at.THEME_UPDATE:
-      return Object.assign({}, prevState, action.data);
-    default:
-      return prevState;
-  }
-}
-
 this.INITIAL_STATE = INITIAL_STATE;
 this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
 this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
-this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, Theme};
+this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections};
 
 const EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];

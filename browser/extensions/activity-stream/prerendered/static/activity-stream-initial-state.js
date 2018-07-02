@@ -55,8 +55,5 @@ window.gActivityStreamPrerenderedState = {
       "order": 2,
       "initialized": false
     }
-  ],
-  "Theme": {
-    "className": ""
-  }
+  ]
 };
