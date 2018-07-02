@@ -129,9 +129,11 @@ add_task(async function test_missing_children() {
         url: "http://example.com/c",
       }],
     }, "Menu children should be (C)");
-    let { missingChildren } = await buf.fetchRemoteOrphans();
-    deepEqual(missingChildren.sort(), ["bookmarkBBBB", "bookmarkDDDD",
-      "bookmarkEEEE"], "Should report (B D E) as missing");
+    deepEqual(await buf.fetchRemoteOrphans(), {
+      missingChildren: ["bookmarkBBBB", "bookmarkDDDD", "bookmarkEEEE"],
+      missingParents: [],
+      parentsWithGaps: [],
+    }, "Should report (B D E) as missing");
   }
 
   info("Add (B E) to remote");
@@ -180,9 +182,11 @@ add_task(async function test_missing_children() {
         url: "http://example.com/e",
       }],
     }, "Menu children should be (B C E)");
-    let { missingChildren } = await buf.fetchRemoteOrphans();
-    deepEqual(missingChildren, ["bookmarkDDDD"],
-      "Should report (D) as missing");
+    deepEqual(await buf.fetchRemoteOrphans(), {
+      missingChildren: ["bookmarkDDDD"],
+      missingParents: [],
+      parentsWithGaps: [],
+    }, "Should report (D) as missing");
   }
 
   info("Add D to remote");
@@ -232,8 +236,11 @@ add_task(async function test_missing_children() {
         url: "http://example.com/e",
       }],
     }, "Menu children should be (B C D E)");
-    let { missingChildren } = await buf.fetchRemoteOrphans();
-    deepEqual(missingChildren, [], "Should not report any missing children");
+    deepEqual(await buf.fetchRemoteOrphans(), {
+      missingChildren: [],
+      missingParents: [],
+      parentsWithGaps: [],
+    }, "Should not report any missing children");
   }
 
   await buf.finalize();
@@ -1590,6 +1597,51 @@ add_task(async function test_complete_cycle() {
       title: MobileBookmarksTitle,
     }],
   }, "Should not be confused into creating a cycle");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(async function test_invalid_guid() {
+  let buf = await openMirror("invalid_guid");
+
+  info("Set up empty mirror");
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Make remote changes");
+  await storeRecords(buf, [{
+    id: "menu",
+    type: "folder",
+    children: ["bookmarkAAAA", "bad!guid~", "bookmarkBBBB"],
+  }, {
+    id: "bookmarkAAAA",
+    type: "bookmark",
+    title: "A",
+    bmkUri: "http://example.com/a",
+  }, {
+    // Should be ignored.
+    id: "bad!guid~",
+    type: "bookmark",
+    title: "Bad GUID",
+    bmkUri: "http://example.com/bad-guid",
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
+  }]);
+
+  let changesToUpload = await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  deepEqual(changesToUpload, {}, "Should not reupload menu with gaps");
+
+  deepEqual(await buf.fetchRemoteOrphans(), {
+    missingChildren: [],
+    missingParents: [],
+    parentsWithGaps: [PlacesUtils.bookmarks.menuGuid],
+  }, "Should report gaps in menu");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
