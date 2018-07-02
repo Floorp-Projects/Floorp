@@ -186,13 +186,13 @@ class TestWindowRect(MarionetteTestCase):
         # On macOS, windows can only be moved off the screen on the
         # horizontal axis.  The system menu bar also blocks windows from
         # being moved to (0,0).
-        elif os == "mac":
+        elif os == "darwin":
             self.assertEqual(-8, new_position["x"])
             self.assertEqual(23, new_position["y"])
 
         # It turns out that Windows is the only platform on which the
         # window can be reliably positioned off-screen.
-        elif os == "windows":
+        elif os == "windows_nt":
             self.assertEqual(-8, new_position["x"])
             self.assertEqual(-8, new_position["y"])
 

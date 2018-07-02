@@ -153,7 +153,7 @@ class SessionStoreTestCase(PuppeteerMixin, MarionetteTestCase):
         :raises: WindowsError: if a Windows API call failed
         """
 
-        if self.marionette.session_capabilities['platformName'] != 'windows':
+        if self.marionette.session_capabilities['platformName'] != 'windows_nt':
             raise Exception('Unsupported platform for simulate_os_shutdown')
 
         self._shutdown_with_windows_restart_manager(self.marionette.process_id)
