@@ -4035,7 +4035,7 @@
     "input": "notspecial://host/?'",
     "base": "about:blank",
     "href": "notspecial://host/?'",
-    "origin": "notspecial://host",
+    "origin": "null",
     "protocol": "notspecial:",
     "username": "",
     "password": "",
