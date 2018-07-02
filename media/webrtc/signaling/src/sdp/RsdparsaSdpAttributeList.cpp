@@ -1023,6 +1023,65 @@ RsdparsaSdpAttributeList::LoadSimulcast(RustAttributeList* attributeList)
   }
 }
 
+SdpImageattrAttributeList::XYRange
+LoadImageattrXYRange(const RustSdpAttributeImageAttrXYRange& rustXYRange)
+{
+  SdpImageattrAttributeList::XYRange xyRange;
+
+  if (!rustXYRange.discrete_values) {
+    xyRange.min = rustXYRange.min;
+    xyRange.max = rustXYRange.max;
+    xyRange.step = rustXYRange.step;
+
+  } else {
+    xyRange.discreteValues = convertU32Vec(rustXYRange.discrete_values);
+  }
+
+  return xyRange;
+}
+
+std::vector<SdpImageattrAttributeList::Set>
+LoadImageattrSets(const RustSdpAttributeImageAttrSetVec* rustSets)
+{
+  std::vector<SdpImageattrAttributeList::Set> sets;
+
+  size_t rustSetCount = sdp_imageattr_get_set_count(rustSets);
+  if (!rustSetCount) {
+    return sets;
+  }
+
+  auto rustSetArray = MakeUnique<RustSdpAttributeImageAttrSet[]>(rustSetCount);
+  sdp_imageattr_get_sets(rustSets, rustSetCount, rustSetArray.get());
+
+  for(size_t i = 0; i < rustSetCount; i++) {
+    const RustSdpAttributeImageAttrSet& rustSet = rustSetArray[i];
+    SdpImageattrAttributeList::Set set;
+
+    set.xRange = LoadImageattrXYRange(rustSet.x);
+    set.yRange = LoadImageattrXYRange(rustSet.y);
+
+    if (rustSet.has_sar) {
+      if (!rustSet.sar.discrete_values) {
+        set.sRange.min = rustSet.sar.min;
+        set.sRange.max = rustSet.sar.max;
+      } else {
+        set.sRange.discreteValues = convertF32Vec(rustSet.sar.discrete_values);
+      }
+    }
+
+    if (rustSet.has_par) {
+      set.pRange.min = rustSet.par.min;
+      set.pRange.max = rustSet.par.max;
+    }
+
+    set.qValue = rustSet.q;
+
+    sets.push_back(set);
+  }
+
+  return sets;
+}
+
 void
 RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList)
 {
@@ -1030,17 +1089,31 @@ RsdparsaSdpAttributeList::LoadImageattr(RustAttributeList* attributeList)
   if (numImageattrs == 0) {
     return;
   }
-  auto rustImageattrs = MakeUnique<StringView[]>(numImageattrs);
+  auto rustImageattrs = MakeUnique<RustSdpAttributeImageAttr[]>(numImageattrs);
   sdp_get_imageattrs(attributeList, numImageattrs, rustImageattrs.get());
   auto imageattrList = MakeUnique<SdpImageattrAttributeList>();
   for(size_t i = 0; i < numImageattrs; i++) {
-    StringView& imageAttr = rustImageattrs[i];
-    std::string image = convertStringView(imageAttr);
-    std::string error;
-    size_t errorPos;
-    if (!imageattrList->PushEntry(image, &error, &errorPos)) {
-      // TODO: handle error, see Bug 1438237
+    const RustSdpAttributeImageAttr& rustImageAttr = rustImageattrs[i];
+
+    SdpImageattrAttributeList::Imageattr imageAttr;
+
+    if (rustImageAttr.payloadType != std::numeric_limits<uint32_t>::max()) {
+      imageAttr.pt = Some(rustImageAttr.payloadType);
     }
+
+    if (rustImageAttr.send.sets) {
+      imageAttr.sendSets = LoadImageattrSets(rustImageAttr.send.sets);
+    } else {
+      imageAttr.sendAll = true;
+    }
+
+    if (rustImageAttr.recv.sets) {
+      imageAttr.recvSets = LoadImageattrSets(rustImageAttr.recv.sets);
+    } else {
+      imageAttr.recvAll = true;
+    }
+
+    imageattrList->mImageattrs.push_back(imageAttr);
   }
   SetAttribute(imageattrList.release());
 }

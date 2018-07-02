@@ -77,6 +77,24 @@ pub unsafe extern "C" fn string_vec_get_view(vec: *const Vec<String>,
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn f32_vec_len(vec: *const Vec<f32>) -> size_t {
+    (*vec).len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn f32_vec_get(vec: *const Vec<f32>,
+                                     index: size_t,
+                                     ret: *mut f32) -> nsresult {
+    match (*vec).get(index) {
+        Some(val) => {
+            *ret = *val;
+            NS_OK
+        },
+        None => NS_ERROR_INVALID_ARG
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn u32_vec_len(vec: *const Vec<u32>) -> size_t {
     (*vec).len()
 }
