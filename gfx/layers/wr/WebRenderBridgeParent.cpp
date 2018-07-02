@@ -1121,7 +1121,8 @@ void
 WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                                        wr::WebRenderAPI* aApi,
                                        AsyncImagePipelineManager* aImageMgr,
-                                       CompositorAnimationStorage* aAnimStorage)
+                                       CompositorAnimationStorage* aAnimStorage,
+                                       const TextureFactoryIdentifier& aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(!mWidget);
   MOZ_ASSERT(aScheduler);
@@ -1144,7 +1145,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
   // after new layers/webrender keys allocation.
   // Without client side's layout refactoring, we could not finish all old layers/webrender keys removals
   // before new layer/webrender keys allocation. In future, we could address the problem.
-  Unused << SendWrUpdated(mIdNamespace);
+  Unused << SendWrUpdated(mIdNamespace, aTextureFactoryIdentifier);
   CompositorBridgeParentBase* cBridge = mCompositorBridge;
   // XXX Stop to clear resources if webreder supports resources sharing between different webrender instances.
   ClearResources();
