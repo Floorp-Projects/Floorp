@@ -861,9 +861,14 @@ nsNSSComponent::TrustLoaded3rdPartyRoots()
   if (mEnterpriseRoots) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(mEnterpriseRoots.get());
          !CERT_LIST_END(n, mEnterpriseRoots.get()); n = CERT_LIST_NEXT(n)) {
-      if (!n || !n->cert) {
+      if (!n) {
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                ("library failure: CERTCertListNode null or lacks cert"));
+                ("library failure: CERTCertListNode null"));
+        break;
+      }
+      if (!n->cert) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                ("library failure: CERTCertListNode lacks cert"));
         continue;
       }
       UniqueCERTCertificate cert(CERT_DupCertificate(n->cert));
