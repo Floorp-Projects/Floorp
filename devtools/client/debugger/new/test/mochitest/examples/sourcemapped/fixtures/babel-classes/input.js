@@ -1,11 +1,7 @@
 export default function root() {
   let one = 1;
 
-  class Thing {
-    one() {
-      console.log("pause here");
-    }
-  }
+  class Thing {}
 
   class Another {
     method() {
@@ -18,5 +14,4 @@ export default function root() {
   }
 
   new Another().method();
-  new Thing().one();
 }

@@ -20,7 +20,7 @@ function isMinified(source) {
     return _minifiedCache.get(source.id);
   }
 
-  let text = source.text;
+  let text = source.get("text");
 
   if (!text) {
     return false;

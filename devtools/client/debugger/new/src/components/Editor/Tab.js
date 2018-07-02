@@ -63,10 +63,10 @@ class Tab extends _react.PureComponent {
       togglePrettyPrint,
       selectedSource
     } = this.props;
-    const otherTabs = tabSources.filter(t => t.id !== tab);
-    const sourceTab = tabSources.find(t => t.id == tab);
-    const tabURLs = tabSources.map(t => t.url);
-    const otherTabURLs = otherTabs.map(t => t.url);
+    const otherTabs = tabSources.filter(t => t.get("id") !== tab);
+    const sourceTab = tabSources.find(t => t.get("id") == tab);
+    const tabURLs = tabSources.map(t => t.get("url"));
+    const otherTabURLs = otherTabs.map(t => t.get("url"));
 
     if (!sourceTab) {
       return;
@@ -76,7 +76,7 @@ class Tab extends _react.PureComponent {
     const tabMenuItems = (0, _tabs.getTabMenuItems)();
     const items = [{
       item: _objectSpread({}, tabMenuItems.closeTab, {
-        click: () => closeTab(sourceTab.url)
+        click: () => closeTab(sourceTab.get("url"))
       })
     }, {
       item: _objectSpread({}, tabMenuItems.closeOtherTabs, {
@@ -86,7 +86,7 @@ class Tab extends _react.PureComponent {
     }, {
       item: _objectSpread({}, tabMenuItems.closeTabsToEnd, {
         click: () => {
-          const tabIndex = tabSources.findIndex(t => t.id == tab);
+          const tabIndex = tabSources.findIndex(t => t.get("id") == tab);
           closeTabs(tabURLs.filter((t, i) => i > tabIndex));
         }
       }),
@@ -101,12 +101,12 @@ class Tab extends _react.PureComponent {
       }
     }, {
       item: _objectSpread({}, tabMenuItems.copyToClipboard, {
-        disabled: selectedSource.id !== tab,
+        disabled: selectedSource.get("id") !== tab,
         click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.text)
       })
     }, {
       item: _objectSpread({}, tabMenuItems.copySourceUri2, {
-        click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(sourceTab.url))
+        click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(sourceTab.get("url")))
       })
     }];
     items.push({
@@ -143,7 +143,7 @@ class Tab extends _react.PureComponent {
     } = this.props;
     const filename = (0, _source.getFilename)(source);
     const sourceId = source.id;
-    const active = selectedSource && sourceId == selectedSource.id && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
+    const active = selectedSource && sourceId == selectedSource.get("id") && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
     const isPrettyCode = (0, _source.isPretty)(source);
 
     function onClickClose(e) {

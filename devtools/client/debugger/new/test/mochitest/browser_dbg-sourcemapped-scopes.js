@@ -157,18 +157,7 @@ add_task(async function() {
     "root()"
   ]);
 
-  await breakpointScopes(dbg, "babel-classes", { line: 6, column: 6 }, [
-    "Class",
-    "Thing()",
-    "Function Body",
-    "Another()",
-    "one",
-    "Thing()",
-    "Module",
-    "root()"
-  ]);
-
-  await breakpointScopes(dbg, "babel-classes", { line: 16, column: 6 }, [
+  await breakpointScopes(dbg, "babel-classes", { line: 12, column: 6 }, [
     "Function Body",
     ["three", "3"],
     ["two", "2"],

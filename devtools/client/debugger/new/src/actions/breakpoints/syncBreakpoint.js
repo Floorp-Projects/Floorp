@@ -56,9 +56,9 @@ function createSyncData(id, pendingBreakpoint, location, generatedLocation, prev
 
 async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pendingBreakpoint) {
   (0, _breakpoint.assertPendingBreakpoint)(pendingBreakpoint);
-  const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
+  const source = (0, _selectors.getSource)(getState(), sourceId);
   const generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
-  const generatedSource = (0, _selectors.getSourceFromId)(getState(), generatedSourceId);
+  const generatedSource = (0, _selectors.getSource)(getState(), generatedSourceId);
   const {
     location,
     astLocation

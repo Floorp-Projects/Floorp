@@ -40,7 +40,7 @@ add_task(async function() {
   // Make sure the source is in the loading state, wait for it to be
   // fully loaded, and check the highlighted line.
   const simple1 = findSource(dbg, "simple1.js");
-  is(getSource(getState(), simple1.id).loadedState, "loading");
+  is(getSource(getState(), simple1.id).get("loadedState"), "loading");
 
   await waitForSelectedSource(dbg, "simple1.js");
   ok(getSource(getState(), simple1.id).text);

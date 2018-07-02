@@ -381,7 +381,7 @@ function getSelectedScope(state) {
   const frameId = getSelectedFrameId(state);
   const {
     scope
-  } = getFrameScope(state, sourceRecord && sourceRecord.id, frameId) || {};
+  } = getFrameScope(state, sourceRecord && sourceRecord.get("id"), frameId) || {};
   return scope || null;
 }
 

@@ -29,9 +29,9 @@ function mapScopes(scopes, frame) {
     client,
     sourceMaps
   }) {
-    const generatedSource = (0, _selectors.getSourceFromId)(getState(), frame.generatedLocation.sourceId);
-    const source = (0, _selectors.getSourceFromId)(getState(), frame.location.sourceId);
-    const shouldMapScopes = _prefs.features.mapScopes && !generatedSource.isWasm && !source.isPrettyPrinted && !(0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId);
+    const generatedSourceRecord = (0, _selectors.getSource)(getState(), frame.generatedLocation.sourceId);
+    const sourceRecord = (0, _selectors.getSource)(getState(), frame.location.sourceId);
+    const shouldMapScopes = _prefs.features.mapScopes && !generatedSourceRecord.isWasm && !sourceRecord.isPrettyPrinted && !(0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId);
     await dispatch({
       type: "MAP_SCOPES",
       frame,
@@ -40,10 +40,10 @@ function mapScopes(scopes, frame) {
           return null;
         }
 
-        await dispatch((0, _loadSourceText.loadSourceText)(source));
+        await dispatch((0, _loadSourceText.loadSourceText)(sourceRecord));
 
         try {
-          return await (0, _mapScopes.buildMappedScopes)(source, frame, (await scopes), sourceMaps, client);
+          return await (0, _mapScopes.buildMappedScopes)(sourceRecord.toJS(), frame, (await scopes), sourceMaps, client);
         } catch (e) {
           (0, _log.log)(e);
           return null;

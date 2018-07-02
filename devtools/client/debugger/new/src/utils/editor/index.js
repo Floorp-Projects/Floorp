@@ -124,7 +124,7 @@ function shouldShowFooter(selectedSource, horizontal) {
     return false;
   }
 
-  return shouldShowPrettyPrint(selectedSource) || (0, _devtoolsSourceMap.isOriginalId)(selectedSource.id);
+  return shouldShowPrettyPrint(selectedSource) || (0, _devtoolsSourceMap.isOriginalId)(selectedSource.get("id"));
 }
 
 function traverseResults(e, ctx, query, dir, modifiers) {

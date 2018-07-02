@@ -76,7 +76,7 @@ function updateDocument(editor, source) {
     return;
   }
 
-  const sourceId = source.id;
+  const sourceId = source.get("id");
   const doc = getDocument(sourceId) || editor.createDocument();
   editor.replaceDocument(doc);
   updateLineNumberFormat(editor, sourceId);

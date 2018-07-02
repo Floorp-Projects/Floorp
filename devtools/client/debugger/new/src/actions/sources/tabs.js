@@ -76,7 +76,7 @@ function closeTabs(urls) {
       const source = (0, _selectors.getSourceByURL)(getState(), url);
 
       if (source) {
-        (0, _editor.removeDocument)(source.id);
+        (0, _editor.removeDocument)(source.get("id"));
       }
     });
     const tabs = (0, _selectors.removeSourcesFromTabList)((0, _selectors.getSourceTabs)(getState()), urls);

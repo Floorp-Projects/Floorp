@@ -123,8 +123,7 @@ function formatShortcutResults() {
 }
 
 function formatSources(sources, tabs) {
-  const sourceList = Object.values(sources);
-  return sourceList.filter(source => !(0, _source.isPretty)(source)).filter(({
+  return sources.valueSeq().toArray().filter(source => !(0, _source.isPretty)(source)).filter(({
     relativeUrl
   }) => !!relativeUrl).map(source => formatSourcesForList(source, tabs));
 }
