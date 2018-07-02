@@ -8798,10 +8798,13 @@ class _StartupOverlay extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pure
             ),
             __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
               "form",
-              { method: "get", action: "https://accounts.firefox.com?entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun", target: "_blank", rel: "noopener noreferrer", onSubmit: this.onSubmit },
+              { method: "get", action: "https://accounts.firefox.com", target: "_blank", rel: "noopener noreferrer", onSubmit: this.onSubmit },
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "service", type: "hidden", value: "sync" }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "action", type: "hidden", value: "email" }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "context", type: "hidden", value: "fx_desktop_v3" }),
+              __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "entrypoint", type: "hidden", value: "activity-stream-firstrun" }),
+              __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "utm_source", type: "hidden", value: "activity-stream" }),
+              __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "utm_campaign", type: "hidden", value: "firstrun" }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { className: "email-input", name: "email", type: "email", required: "true", placeholder: this.props.intl.formatMessage({ id: "firstrun_email_input_placeholder" }), onChange: this.onInputChange }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
                 "div",
