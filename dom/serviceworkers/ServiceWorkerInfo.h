@@ -29,16 +29,6 @@ class ServiceWorkerPrivate;
  */
 class ServiceWorkerInfo final : public nsIServiceWorkerInfo
 {
-public:
-  class Listener
-  {
-  public:
-    virtual void
-    SetState(ServiceWorkerState aState) = 0;
-
-    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-  };
-
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ServiceWorkerDescriptor mDescriptor;
@@ -65,13 +55,6 @@ private:
   PRTime mActivatedTime;
   PRTime mRedundantTime;
 
-  // We hold rawptrs since the ServiceWorker constructor and destructor ensure
-  // addition and removal.
-  //
-  // There is a high chance of there being at least one ServiceWorker
-  // associated with this all the time.
-  AutoTArray<Listener*, 1> mInstances;
-
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
 
@@ -91,12 +74,6 @@ private:
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERINFO
-
-  void
-  AddListener(Listener* aListener);
-
-  void
-  RemoveListener(Listener* aListener);
 
   void
   PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
