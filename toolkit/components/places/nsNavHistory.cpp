@@ -1075,8 +1075,8 @@ nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery,
 // from browser-menubar.inc, our history menu query is:
 // place:sort=4&maxResults=10
 // note, any maxResult > 0 will still be considered a history menu query
-// or if this is the place query from the "Most Visited" item in the
-// "Smart Bookmarks" folder: place:sort=8&maxResults=10
+// or if this is the place query from the old "Most Visited" item in some profiles:
+// folder: place:sort=8&maxResults=10
 // note, any maxResult > 0 will still be considered a Most Visited menu query
 static
 bool IsOptimizableHistoryQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
@@ -1958,8 +1958,8 @@ nsNavHistory::ConstructQueryString(
         nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING) ||
       IsOptimizableHistoryQuery(aQuery, aOptions,
         nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)) {
-    // Generate an optimized query for the history menu and most visited
-    // smart bookmark.
+    // Generate an optimized query for the history menu and the old most visited
+    // bookmark that was inserted into profiles.
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, h.last_visit_date, "
           "null, null, null, null, null, ") +

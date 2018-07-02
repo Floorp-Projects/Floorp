@@ -19,7 +19,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 /**
  * This module exports functions for Sync to use when applying remote
  * records. The calls are similar to those in `Bookmarks.jsm` and
- * `nsINavBookmarksService`, with special handling for smart bookmarks,
+ * `nsINavBookmarksService`, with special handling for
  * tags, keywords, synced annotations, and missing parents.
  */
 var PlacesSyncUtils = {
@@ -377,7 +377,6 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
 });
 
 const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
-  SMART_BOOKMARKS_ANNO: "Places/SmartBookmark",
   SYNC_PARENT_ANNO: "sync/parent",
 
   SYNC_ID_META_KEY: "sync/bookmarks/syncId",
@@ -1140,7 +1139,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    *  - guid: Required.
    *  - parentGuid: Required.
    *  - url: Required for bookmarks.
-   *  - query: A smart bookmark query string, optional.
    *  - tags: An optional array of tag strings.
    *  - keyword: An optional keyword string.
    *
@@ -1184,8 +1182,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    *  - childRecordIds ("folder"): An array containing the record IDs of the item's
    *    children, used to determine child order.
    *  - folder ("query"): The tag folder name, if this is a tag query.
-   *  - query ("query"): The smart bookmark query name, if this is a smart
-   *    bookmark.
    *  - index ("separator"): The separator's position within its parent.
    */
   async fetch(recordId) {
@@ -1569,16 +1565,7 @@ function removeConflictingKeywords(bookmarkURL, newKeyword) {
 // Sets annotations, keywords, and tags on a new bookmark. Returns a Sync
 // bookmark object.
 async function insertBookmarkMetadata(db, bookmarkItem, insertInfo) {
-  let itemId = await PlacesUtils.promiseItemId(bookmarkItem.guid);
   let newItem = await placesBookmarkToSyncBookmark(db, bookmarkItem);
-
-  if (insertInfo.query) {
-    PlacesUtils.annotations.setItemAnnotation(itemId,
-      BookmarkSyncUtils.SMART_BOOKMARKS_ANNO, insertInfo.query, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER,
-      SOURCE_SYNC);
-    newItem.query = insertInfo.query;
-  }
 
   try {
     newItem.tags = tagItem(bookmarkItem, insertInfo.tags);
@@ -1787,7 +1774,6 @@ async function updateSyncBookmark(db, updateInfo) {
 async function updateBookmarkMetadata(db, oldBookmarkItem,
                                       newBookmarkItem,
                                       updateInfo) {
-  let itemId = await PlacesUtils.promiseItemId(newBookmarkItem.guid);
   let newItem = await placesBookmarkToSyncBookmark(db, newBookmarkItem);
 
   try {
@@ -1808,14 +1794,6 @@ async function updateBookmarkMetadata(db, oldBookmarkItem,
       });
     }
     newItem.keyword = updateInfo.keyword;
-  }
-
-  if (updateInfo.hasOwnProperty("query")) {
-    PlacesUtils.annotations.setItemAnnotation(itemId,
-      BookmarkSyncUtils.SMART_BOOKMARKS_ANNO, updateInfo.query, 0,
-      PlacesUtils.annotations.EXPIRE_NEVER,
-      SOURCE_SYNC);
-    newItem.query = updateInfo.query;
   }
 
   return newItem;
@@ -2069,7 +2047,7 @@ async function fetchLivemarkItem(db, bookmarkItem) {
 }
 
 // Creates and returns a Sync bookmark object containing the query's tag
-// folder name and smart bookmark query ID.
+// folder name.
 async function fetchQueryItem(db, bookmarkItem) {
   let item = await placesBookmarkToSyncBookmark(db, bookmarkItem);
 
@@ -2077,12 +2055,6 @@ async function fetchQueryItem(db, bookmarkItem) {
   let tags = params.getAll("tag");
   if (tags.length == 1) {
     item.folder = tags[0];
-  }
-
-  let query = await getAnno(db, bookmarkItem.guid,
-                            BookmarkSyncUtils.SMART_BOOKMARKS_ANNO);
-  if (query) {
-    item.query = query;
   }
 
   return item;

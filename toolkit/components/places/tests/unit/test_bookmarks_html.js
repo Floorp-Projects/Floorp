@@ -71,9 +71,6 @@ var gBookmarksFileOld;
 var gBookmarksFileNew;
 
 add_task(async function setup() {
-  // Avoid creating smart bookmarks during the test.
-  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
-
   // File pointer to legacy bookmarks file.
   gBookmarksFileOld = OS.Path.join(do_get_cwd().path, "bookmarks.preplaces.html");
 

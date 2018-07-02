@@ -5,7 +5,6 @@
  * Tests that nsBrowserGlue correctly imports bookmarks from distribution.ini.
  */
 
-const PREF_SMART_BOOKMARKS_VERSION = "browser.places.smartBookmarksVersion";
 const PREF_BMPROCESSED = "distribution.516444.bookmarksProcessed";
 const PREF_DISTRIBUTION_ID = "distribution.id";
 
@@ -48,9 +47,6 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
-  // Disable Smart Bookmarks creation.
-  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, -1);
-
   let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
   // Initialize Places through the History Service and check that a new
   // database has been created.

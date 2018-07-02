@@ -97,7 +97,6 @@ const SQLITE_MAX_VARIABLE_NUMBER = 999;
 const ACCEPTED_ANNOTATIONS = [
   PlacesUtils.LMANNO_FEEDURI,
   PlacesUtils.LMANNO_SITEURI,
-  "Places/SmartBookmark",
 ];
 
 var Bookmarks = Object.freeze({

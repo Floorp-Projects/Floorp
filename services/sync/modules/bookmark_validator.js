@@ -653,12 +653,7 @@ class BookmarkValidator {
       treeNode.id = guid;
       switch (treeNode.type) {
         case PlacesUtils.TYPE_X_MOZ_PLACE:
-          let query = null;
-          if (treeNode.annos && treeNode.uri.startsWith(QUERY_PROTOCOL)) {
-            query = treeNode.annos.find(({name}) =>
-              name === PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
-          }
-          if (query && query.value) {
+          if (treeNode.uri.startsWith(QUERY_PROTOCOL)) {
             itemType = "query";
           } else {
             itemType = "bookmark";

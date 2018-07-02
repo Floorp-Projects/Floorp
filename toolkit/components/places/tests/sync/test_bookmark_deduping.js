@@ -275,14 +275,10 @@ add_task(async function test_duping_remote_newer() {
     }, {
       // Should dupe to `queryD111111`.
       guid: "queryDDDDDDD",
-      url: "place:sort=8&maxResults=10",
+      url: "place:maxResults=10&sort=8",
       title: "Most Visited",
       dateAdded: localModified,
       lastModified: localModified,
-      annos: [{
-        name: PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO,
-        value: "MostVisited",
-      }],
     }],
   });
 
@@ -353,7 +349,6 @@ add_task(async function test_duping_remote_newer() {
     type: "query",
     bmkUri: "place:maxResults=10&sort=8",
     title: "Most Visited",
-    queryId: "MostVisited",
     dateAdded: localModified.getTime(),
     modified: localModified / 1000 + 5,
   }]));
@@ -439,12 +434,6 @@ add_task(async function test_duping_remote_newer() {
         index: 4,
         title: "Most Visited",
         url: "place:maxResults=10&sort=8",
-        annos: [{
-          name: PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO,
-          flags: 0,
-          expires: PlacesUtils.annotations.EXPIRE_NEVER,
-          value: "MostVisited",
-        }],
       }, {
         guid: "separatorEEE",
         type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
