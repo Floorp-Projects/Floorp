@@ -47,7 +47,7 @@
           </vbox>
         </vbox>
         <button id="identity-popup-security-expander"
-                class="identity-popup-expander"
+                class="identity-popup-expander subviewkeynav"
                 when-connection="not-secure secure secure-ev secure-cert-user-overridden"
                 oncommand="gIdentityHandler.showSecuritySubView();"/>
       </hbox>
@@ -84,22 +84,22 @@
                        crop="end">&trackingProtection.reloadRequired2;</description>
 
           <button id="tracking-action-reload"
-                  class="tracking-protection-button"
+                  class="tracking-protection-button subviewkeynav"
                   label="&trackingProtection.reload2.label;"
                   accesskey="&trackingProtection.reload2.accesskey;"
                   oncommand="TrackingProtection.hideIdentityPopupAndReload();" />
           <button id="tracking-action-unblock"
-                  class="tracking-protection-button"
+                  class="tracking-protection-button subviewkeynav"
                   label="&trackingProtection.unblock3.label;"
                   accesskey="&trackingProtection.unblock3.accesskey;"
                   oncommand="TrackingProtection.disableForCurrentPage();" />
           <button id="tracking-action-unblock-private"
-                  class="tracking-protection-button"
+                  class="tracking-protection-button subviewkeynav"
                   label="&trackingProtection.unblockPrivate3.label;"
                   accesskey="&trackingProtection.unblockPrivate3.accesskey;"
                   oncommand="TrackingProtection.disableForCurrentPage();" />
           <button id="tracking-action-block"
-                  class="tracking-protection-button"
+                  class="tracking-protection-button subviewkeynav"
                   label="&trackingProtection.block4.label;"
                   accesskey="&trackingProtection.block4.accesskey;"
                   oncommand="TrackingProtection.enableForCurrentPage();" />
