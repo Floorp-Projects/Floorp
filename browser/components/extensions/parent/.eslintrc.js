@@ -21,7 +21,6 @@ module.exports = {
     "openOptionsPage": true,
     "pageActionFor": true,
     "replaceUrlInTab": true,
-    "searchInitialized": true,
     "sidebarActionFor": true,
     "tabGetSender": true,
     "tabTracker": true,

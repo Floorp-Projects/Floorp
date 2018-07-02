@@ -223,16 +223,6 @@ global.TabContext = class extends EventEmitter {
   }
 };
 
-// This promise is used to wait for the search service to be initialized.
-// None of the code in the WebExtension modules requests that initialization.
-// It is assumed that it is started at some point. If tests start to fail
-// because this promise never resolves, that's likely the cause.
-XPCOMUtils.defineLazyGetter(global, "searchInitialized", () => {
-  if (Services.search.isInitialized) {
-    return Promise.resolve();
-  }
-  return ExtensionUtils.promiseObserved("browser-search-service", (_, data) => data == "init-complete");
-});
 
 class WindowTracker extends WindowTrackerBase {
   addProgressListener(window, listener) {
