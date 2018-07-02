@@ -1965,6 +1965,14 @@ if (AppConstants.platform == "macosx") {
         element.setAttribute("disabled", "true");
     }
 
+    // Show menus that are only visible in non-browser windows
+    let shownItems = ["menu_openLocation"];
+    for (let shownItem of shownItems) {
+      element = document.getElementById(shownItem);
+      if (element)
+        element.removeAttribute("hidden");
+    }
+
     // If no windows are active (i.e. we're the hidden window), disable the close, minimize
     // and zoom menu commands as well
     if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
