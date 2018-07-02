@@ -12,7 +12,6 @@ UNIFIED_SOURCES += [
     'mozPersonalDictionary.cpp',
     'mozSpellChecker.cpp',
     'mozSpellCheckerFactory.cpp',
-    'mozSpellI18NManager.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
