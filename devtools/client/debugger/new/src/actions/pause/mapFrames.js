@@ -32,7 +32,7 @@ function updateFrameLocations(frames, sourceMaps) {
 
 function mapDisplayNames(frames, getState) {
   return frames.map(frame => {
-    const source = (0, _selectors.getSourceFromId)(getState(), frame.location.sourceId);
+    const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
     const symbols = (0, _selectors.getSymbols)(getState(), source);
 
     if (!symbols || !symbols.functions) {

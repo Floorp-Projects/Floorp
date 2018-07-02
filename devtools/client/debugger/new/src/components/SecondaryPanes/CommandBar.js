@@ -258,7 +258,7 @@ class CommandBar extends _react.Component {
     }
 
     return _react2.default.createElement("button", {
-      className: (0, _classnames2.default)("command-bar-button", "command-bar-skip-pausing", {
+      className: (0, _classnames2.default)("command-bar-button", {
         active: skipPausing
       }),
       title: L10N.getStr("skipPausingTooltip"),

@@ -186,6 +186,7 @@ function generateClientScope(scopes, originalScopes) {
           variables = _objectWithoutProperties(_orig$generatedBindin, ["this"]);
 
     return _objectSpread({
+      // Flow doesn't like casting 'parent'.
       parent: acc,
       actor: `originalActor${i}`,
       type: orig.type,

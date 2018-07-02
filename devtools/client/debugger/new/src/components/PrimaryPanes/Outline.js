@@ -45,7 +45,7 @@ class Outline extends _react.Component {
       return;
     }
 
-    const selectedSourceId = selectedSource.id;
+    const selectedSourceId = selectedSource.get("id");
     const startLine = location.start.line;
     selectLocation({
       sourceId: selectedSourceId,

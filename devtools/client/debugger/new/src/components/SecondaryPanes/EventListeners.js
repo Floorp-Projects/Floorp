@@ -102,7 +102,8 @@ const mapStateToProps = state => {
     return _objectSpread({}, listener, {
       breakpoint: (0, _selectors.getBreakpoint)(state, {
         sourceId: listener.sourceId,
-        line: listener.line
+        line: listener.line,
+        column: null
       })
     });
   });

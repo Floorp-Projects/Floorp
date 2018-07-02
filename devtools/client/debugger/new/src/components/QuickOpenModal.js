@@ -201,8 +201,9 @@ class QuickOpenModal extends _react.Component {
       if (this.isVariableQuery()) {
         const line = item.location && item.location.start ? item.location.start.line : 0;
         return selectLocation({
-          sourceId: selectedSource.id,
-          line
+          sourceId: selectedSource.get("id"),
+          line,
+          column: null
         });
       }
 
@@ -211,7 +212,7 @@ class QuickOpenModal extends _react.Component {
           start: item.location.start.line,
           end: item.location.end.line
         } : {}, {
-          sourceId: selectedSource.id
+          sourceId: selectedSource.get("id")
         }));
       }
     };
@@ -239,14 +240,14 @@ class QuickOpenModal extends _react.Component {
         selectLocation,
         selectedSource
       } = this.props;
-      const selectedSourceId = selectedSource ? selectedSource.id : "";
+      const selectedSourceId = selectedSource ? selectedSource.get("id") : "";
 
       if (location != null) {
         const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
         selectLocation({
           sourceId,
           line: location.line,
-          column: location.column
+          column: location.column || null
         });
         this.closeModal();
       }
@@ -258,7 +259,7 @@ class QuickOpenModal extends _react.Component {
         setQuickOpenQuery
       } = this.props;
       setQuickOpenQuery(e.target.value);
-      const noSource = !selectedSource || !selectedSource.text;
+      const noSource = !selectedSource || !selectedSource.get("text");
 
       if (this.isSymbolSearch() && noSource || this.isGotoQuery()) {
         return;
@@ -472,13 +473,13 @@ function mapStateToProps(state) {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   return {
     enabled: (0, _selectors.getQuickOpenEnabled)(state),
-    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state), (0, _selectors.getTabs)(state)),
+    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state), (0, _selectors.getTabs)(state).toArray()),
     selectedSource,
     symbols: (0, _quickOpen.formatSymbols)((0, _selectors.getSymbols)(state, selectedSource)),
     symbolsLoading: (0, _selectors.isSymbolsLoading)(state, selectedSource),
     query: (0, _selectors.getQuickOpenQuery)(state),
     searchType: (0, _selectors.getQuickOpenType)(state),
-    tabs: (0, _selectors.getTabs)(state)
+    tabs: (0, _selectors.getTabs)(state).toArray()
   };
 }
 /* istanbul ignore next: ignoring testing of redux connection stuff */

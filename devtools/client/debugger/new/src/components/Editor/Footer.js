@@ -50,7 +50,7 @@ class SourceFooter extends _react.PureComponent {
     const tooltip = L10N.getStr("sourceTabs.prettyPrint");
     const type = "prettyPrint";
     return _react2.default.createElement("button", {
-      onClick: () => togglePrettyPrint(selectedSource.id),
+      onClick: () => togglePrettyPrint(selectedSource.get("id")),
       className: (0, _classnames2.default)("action", type, {
         active: sourceLoaded,
         pretty: (0, _source.isPretty)(selectedSource)
@@ -78,7 +78,7 @@ class SourceFooter extends _react.PureComponent {
     const tooltip = L10N.getStr("sourceFooter.blackbox");
     const type = "black-box";
     return _react2.default.createElement("button", {
-      onClick: () => toggleBlackBox(selectedSource),
+      onClick: () => toggleBlackBox(selectedSource.toJS()),
       className: (0, _classnames2.default)("action", type, {
         active: sourceLoaded,
         blackboxed: blackboxed
@@ -153,7 +153,7 @@ class SourceFooter extends _react.PureComponent {
       const tooltip = L10N.getFormatStr("sourceFooter.mappedSourceTooltip", filename);
       const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
       const mappedSourceLocation = {
-        sourceId: selectedSource.id,
+        sourceId: selectedSource.get("id"),
         line: 1,
         column: 1
       };

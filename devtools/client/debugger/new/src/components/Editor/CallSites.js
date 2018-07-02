@@ -146,7 +146,7 @@ class CallSites extends _react.Component {
     } else {
       addBreakpoint({
         sourceId: sourceId,
-        sourceUrl: selectedSource.url,
+        sourceUrl: selectedSource.get("url"),
         line: line,
         column: column
       });

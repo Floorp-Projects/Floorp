@@ -90,12 +90,51 @@ Object.defineProperty(exports, "updateTree", {
 
 var _utils = require("./utils");
 
-Object.keys(_utils).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _utils[key];
-    }
-  });
+Object.defineProperty(exports, "createNode", {
+  enumerable: true,
+  get: function () {
+    return _utils.createNode;
+  }
+});
+Object.defineProperty(exports, "createParentMap", {
+  enumerable: true,
+  get: function () {
+    return _utils.createParentMap;
+  }
+});
+Object.defineProperty(exports, "getFileExtension", {
+  enumerable: true,
+  get: function () {
+    return _utils.getFileExtension;
+  }
+});
+Object.defineProperty(exports, "getRelativePath", {
+  enumerable: true,
+  get: function () {
+    return _utils.getRelativePath;
+  }
+});
+Object.defineProperty(exports, "isDirectory", {
+  enumerable: true,
+  get: function () {
+    return _utils.isDirectory;
+  }
+});
+Object.defineProperty(exports, "isExactUrlMatch", {
+  enumerable: true,
+  get: function () {
+    return _utils.isExactUrlMatch;
+  }
+});
+Object.defineProperty(exports, "isNotJavaScript", {
+  enumerable: true,
+  get: function () {
+    return _utils.isNotJavaScript;
+  }
+});
+Object.defineProperty(exports, "nodeHasChildren", {
+  enumerable: true,
+  get: function () {
+    return _utils.nodeHasChildren;
+  }
 });

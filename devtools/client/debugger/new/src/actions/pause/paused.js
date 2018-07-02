@@ -33,7 +33,7 @@ var _fetchScopes = require("./fetchScopes");
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 async function getOriginalSourceForFrame(state, frame) {
-  return (0, _selectors.getSources)(state)[frame.location.sourceId];
+  return (0, _selectors.getSources)(state).get(frame.location.sourceId);
 }
 /**
  * Debugger has just paused

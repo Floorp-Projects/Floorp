@@ -5,7 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.addExpression = addExpression;
 exports.autocomplete = autocomplete;
-exports.clearAutocomplete = clearAutocomplete;
 exports.clearExpressionError = clearExpressionError;
 exports.updateExpression = updateExpression;
 exports.deleteExpression = deleteExpression;
@@ -84,12 +83,6 @@ function autocomplete(input, cursor) {
       input,
       result
     });
-  };
-}
-
-function clearAutocomplete() {
-  return {
-    type: "CLEAR_AUTOCOMPLETE"
   };
 }
 
@@ -184,11 +177,11 @@ function evaluateExpression(expression) {
       const {
         location
       } = frame;
-      const source = (0, _selectors.getSourceFromId)(getState(), location.sourceId);
-      const sourceId = source.id;
+      const source = (0, _selectors.getSource)(getState(), location.sourceId);
+      const sourceId = source.get("id");
       const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
-      if (selectedSource && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) && !(0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id)) {
+      if (selectedSource && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) && !(0, _devtoolsSourceMap.isGeneratedId)(selectedSource.get("id"))) {
         input = await dispatch(getMappedExpression(input));
       }
     }
