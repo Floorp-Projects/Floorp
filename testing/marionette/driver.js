@@ -17,10 +17,6 @@ const {
   Context,
   WindowState,
 } = ChromeUtils.import("chrome://marionette/content/browser.js", {});
-const {
-  Capabilities,
-  Timeouts,
-} = ChromeUtils.import("chrome://marionette/content/capabilities.js", {});
 ChromeUtils.import("chrome://marionette/content/capture.js");
 const {
   CertificateOverrideManager,
@@ -55,6 +51,7 @@ ChromeUtils.import("chrome://marionette/content/modal.js");
 const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 ChromeUtils.import("chrome://marionette/content/proxy.js");
 ChromeUtils.import("chrome://marionette/content/reftest.js");
+ChromeUtils.import("chrome://marionette/content/session.js");
 const {
   PollPromise,
   TimedPromise,
@@ -147,7 +144,7 @@ this.GeckoDriver = function(appId, server) {
   this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
   this.legacyactions = new legacyaction.Chain();
 
-  this.capabilities = new Capabilities();
+  this.capabilities = new session.Capabilities();
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(
@@ -706,7 +703,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   this.sessionID = WebElement.generateUUID();
 
   try {
-    this.capabilities = Capabilities.fromJSON(cmd.parameters);
+    this.capabilities = session.Capabilities.fromJSON(cmd.parameters);
 
     if (!this.secureTLS) {
       logger.warn("TLS certificate errors will be ignored for this session");
@@ -1875,7 +1872,7 @@ GeckoDriver.prototype.getTimeouts = function() {
 GeckoDriver.prototype.setTimeouts = function(cmd) {
   // merge with existing timeouts
   let merged = Object.assign(this.timeouts.toJSON(), cmd.parameters);
-  this.timeouts = Timeouts.fromJSON(merged);
+  this.timeouts = session.Timeouts.fromJSON(merged);
 };
 
 /** Single tap. */
@@ -2858,7 +2855,7 @@ GeckoDriver.prototype.deleteSession = function() {
   CertificateOverrideManager.uninstall();
 
   this.sessionID = null;
-  this.capabilities = new Capabilities();
+  this.capabilities = new session.Capabilities();
 };
 
 /**

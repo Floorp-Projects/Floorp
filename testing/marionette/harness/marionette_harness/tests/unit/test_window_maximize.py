@@ -31,7 +31,7 @@ class TestWindowMaximize(MarionetteTestCase):
             width=self.original_size["width"], height=self.original_size["height"])
 
     def assert_window_maximized(self, actual, delta=None):
-        if self.marionette.session_capabilities["platformName"] == "windows":
+        if self.marionette.session_capabilities["platformName"] == "windows_nt":
             delta = 16
         else:
             delta = 22
