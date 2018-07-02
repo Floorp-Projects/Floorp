@@ -265,7 +265,7 @@ var ViewSourceContent = {
     shEntry.setTitle(viewSrcURL);
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     shEntry.triggeringPrincipal = systemPrincipal;
-    shEntry.loadType = 2; /* nsDocShellLoadInfo::loadHistory */
+    shEntry.setAsHistoryLoad();
     shEntry.cacheKey = shEntrySource.cacheKey;
     docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory

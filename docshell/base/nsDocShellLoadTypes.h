@@ -39,7 +39,7 @@
  *  Remember to update the IsValidLoadType function below if you change this
  *  enum to ensure bad flag combinations will be rejected.
  */
-enum LoadType
+enum LoadType : uint32_t
 {
   LOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_NONE),
   LOAD_NORMAL_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
@@ -76,6 +76,18 @@ enum LoadType
 };
 
 static inline bool
+IsForceReloadType(uint32_t aLoadType) {
+  switch (aLoadType) {
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
+      return true;
+  }
+  return false;
+}
+
+static inline bool
 IsValidLoadType(uint32_t aLoadType)
 {
   switch (aLoadType) {
@@ -106,182 +118,6 @@ IsValidLoadType(uint32_t aLoadType)
       return true;
   }
   return false;
-}
-
-static inline bool
-IsForceReloadType(uint32_t aLoadType) {
-  switch (aLoadType) {
-    case LOAD_RELOAD_BYPASS_CACHE:
-    case LOAD_RELOAD_BYPASS_PROXY:
-    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
-      return true;
-  }
-  return false;
-}
-
-static inline nsDocShellLoadInfo::nsDocShellInfoLoadType
-ConvertLoadTypeToDocShellInfoLoadType(uint32_t aLoadType)
-{
-  nsDocShellLoadInfo::nsDocShellInfoLoadType docShellLoadType = nsDocShellLoadInfo::loadNormal;
-  switch (aLoadType) {
-    case LOAD_NORMAL:
-      docShellLoadType = nsDocShellLoadInfo::loadNormal;
-      break;
-    case LOAD_NORMAL_REPLACE:
-      docShellLoadType = nsDocShellLoadInfo::loadNormalReplace;
-      break;
-    case LOAD_NORMAL_EXTERNAL:
-      docShellLoadType = nsDocShellLoadInfo::loadNormalExternal;
-      break;
-    case LOAD_NORMAL_BYPASS_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadNormalBypassCache;
-      break;
-    case LOAD_NORMAL_BYPASS_PROXY:
-      docShellLoadType = nsDocShellLoadInfo::loadNormalBypassProxy;
-      break;
-    case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadNormalBypassProxyAndCache;
-      break;
-    case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
-      docShellLoadType = nsDocShellLoadInfo::loadNormalAllowMixedContent;
-      break;
-    case LOAD_HISTORY:
-      docShellLoadType = nsDocShellLoadInfo::loadHistory;
-      break;
-    case LOAD_RELOAD_NORMAL:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadNormal;
-      break;
-    case LOAD_RELOAD_CHARSET_CHANGE:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadCharsetChange;
-      break;
-    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadCharsetChangeBypassCache;
-      break;
-    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache;
-      break;
-    case LOAD_RELOAD_BYPASS_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadBypassCache;
-      break;
-    case LOAD_RELOAD_BYPASS_PROXY:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadBypassProxy;
-      break;
-    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadBypassProxyAndCache;
-      break;
-    case LOAD_LINK:
-      docShellLoadType = nsDocShellLoadInfo::loadLink;
-      break;
-    case LOAD_REFRESH:
-      docShellLoadType = nsDocShellLoadInfo::loadRefresh;
-      break;
-    case LOAD_BYPASS_HISTORY:
-    case LOAD_ERROR_PAGE:
-      docShellLoadType = nsDocShellLoadInfo::loadBypassHistory;
-      break;
-    case LOAD_STOP_CONTENT:
-      docShellLoadType = nsDocShellLoadInfo::loadStopContent;
-      break;
-    case LOAD_STOP_CONTENT_AND_REPLACE:
-      docShellLoadType = nsDocShellLoadInfo::loadStopContentAndReplace;
-      break;
-    case LOAD_PUSHSTATE:
-      docShellLoadType = nsDocShellLoadInfo::loadPushState;
-      break;
-    case LOAD_REPLACE_BYPASS_CACHE:
-      docShellLoadType = nsDocShellLoadInfo::loadReplaceBypassCache;
-      break;
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
-      docShellLoadType = nsDocShellLoadInfo::loadReloadMixedContent;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected load type value");
-  }
-
-  return docShellLoadType;
-}
-
-static inline uint32_t
-ConvertDocShellInfoLoadTypeToLoadType(nsDocShellLoadInfo::nsDocShellInfoLoadType aDocShellLoadType)
-{
-  uint32_t loadType = LOAD_NORMAL;
-
-  switch (aDocShellLoadType) {
-    case nsDocShellLoadInfo::loadNormal:
-      loadType = LOAD_NORMAL;
-      break;
-    case nsDocShellLoadInfo::loadNormalReplace:
-      loadType = LOAD_NORMAL_REPLACE;
-      break;
-    case nsDocShellLoadInfo::loadNormalExternal:
-      loadType = LOAD_NORMAL_EXTERNAL;
-      break;
-    case nsDocShellLoadInfo::loadHistory:
-      loadType = LOAD_HISTORY;
-      break;
-    case nsDocShellLoadInfo::loadNormalBypassCache:
-      loadType = LOAD_NORMAL_BYPASS_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadNormalBypassProxy:
-      loadType = LOAD_NORMAL_BYPASS_PROXY;
-      break;
-    case nsDocShellLoadInfo::loadNormalBypassProxyAndCache:
-      loadType = LOAD_NORMAL_BYPASS_PROXY_AND_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadNormalAllowMixedContent:
-      loadType = LOAD_NORMAL_ALLOW_MIXED_CONTENT;
-      break;
-    case nsDocShellLoadInfo::loadReloadNormal:
-      loadType = LOAD_RELOAD_NORMAL;
-      break;
-    case nsDocShellLoadInfo::loadReloadCharsetChange:
-      loadType = LOAD_RELOAD_CHARSET_CHANGE;
-      break;
-    case nsDocShellLoadInfo::loadReloadCharsetChangeBypassCache:
-      loadType = LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache:
-      loadType = LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadReloadBypassCache:
-      loadType = LOAD_RELOAD_BYPASS_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadReloadBypassProxy:
-      loadType = LOAD_RELOAD_BYPASS_PROXY;
-      break;
-    case nsDocShellLoadInfo::loadReloadBypassProxyAndCache:
-      loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadLink:
-      loadType = LOAD_LINK;
-      break;
-    case nsDocShellLoadInfo::loadRefresh:
-      loadType = LOAD_REFRESH;
-      break;
-    case nsDocShellLoadInfo::loadBypassHistory:
-      loadType = LOAD_BYPASS_HISTORY;
-      break;
-    case nsDocShellLoadInfo::loadStopContent:
-      loadType = LOAD_STOP_CONTENT;
-      break;
-    case nsDocShellLoadInfo::loadStopContentAndReplace:
-      loadType = LOAD_STOP_CONTENT_AND_REPLACE;
-      break;
-    case nsDocShellLoadInfo::loadPushState:
-      loadType = LOAD_PUSHSTATE;
-      break;
-    case nsDocShellLoadInfo::loadReplaceBypassCache:
-      loadType = LOAD_REPLACE_BYPASS_CACHE;
-      break;
-    case nsDocShellLoadInfo::loadReloadMixedContent:
-      loadType = LOAD_RELOAD_ALLOW_MIXED_CONTENT;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected nsDocShellLoadInfo::nsDocShellInfoLoadType value");
-  }
-
-  return loadType;
 }
 
 static inline nsDOMNavigationTiming::Type

@@ -10,6 +10,7 @@
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsDocShellLoadTypes.h"
 
 class nsIInputStream;
 class nsISHEntry;
@@ -19,34 +20,6 @@ class nsIDocShell;
 class nsDocShellLoadInfo
 {
 public:
-  typedef uint32_t nsDocShellInfoLoadType;
-
-  enum LoadType: uint32_t {
-    loadNormal = 0,                     // Normal Load
-    loadNormalReplace = 1,              // Normal Load but replaces current history slot
-    loadHistory = 2,                    // Load from history
-    loadReloadNormal = 3,               // Reload
-    loadReloadBypassCache = 4,
-    loadReloadBypassProxy = 5,
-    loadReloadBypassProxyAndCache = 6,
-    loadLink = 7,
-    loadRefresh = 8,
-    loadReloadCharsetChange = 9,
-    loadBypassHistory = 10,
-    loadStopContent = 11,
-    loadStopContentAndReplace = 12,
-    loadNormalExternal = 13,
-    loadNormalBypassCache = 14,
-    loadNormalBypassProxy = 15,
-    loadNormalBypassProxyAndCache = 16,
-    loadPushState = 17,                 // history.pushState or replaceState
-    loadReplaceBypassCache = 18,
-    loadReloadMixedContent = 19,
-    loadNormalAllowMixedContent = 20,
-    loadReloadCharsetChangeBypassCache = 21,
-    loadReloadCharsetChangeBypassProxyAndCache = 22
-  };
-
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadInfo);
 
   nsDocShellLoadInfo();
@@ -91,9 +64,9 @@ public:
 
   void SetOriginalFrameSrc(bool aOriginalFrameSrc);
 
-  nsDocShellInfoLoadType LoadType() const;
+  uint32_t LoadType() const;
 
-  void SetLoadType(nsDocShellInfoLoadType aLoadType);
+  void SetLoadType(uint32_t aLoadType);
 
   nsISHEntry* SHEntry() const;
 
@@ -155,7 +128,7 @@ protected:
   bool mOriginalFrameSrc;
   bool mSendReferrer;
   mozilla::net::ReferrerPolicy mReferrerPolicy;
-  nsDocShellInfoLoadType mLoadType;
+  uint32_t mLoadType;
   nsCOMPtr<nsISHEntry> mSHEntry;
   nsString mTarget;
   nsCOMPtr<nsIInputStream> mPostDataStream;

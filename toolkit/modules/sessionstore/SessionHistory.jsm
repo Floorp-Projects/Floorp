@@ -343,7 +343,7 @@ var SessionHistoryInternal = {
     shEntry.setTitle(entry.title || entry.url);
     if (entry.subframe)
       shEntry.setIsSubFrame(entry.subframe || false);
-    shEntry.loadType = 2; /* nsDocShellLoadInfo::loadHistory */
+    shEntry.setAsHistoryLoad();
     if (entry.contentType)
       shEntry.contentType = entry.contentType;
     if (entry.referrer) {
