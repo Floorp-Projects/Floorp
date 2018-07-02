@@ -17,6 +17,7 @@
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/HalTypes.h"
+#include "mozilla/Observer.h"
 #include "mozilla/Types.h"
 
 /*

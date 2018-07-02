@@ -20,7 +20,10 @@
 #include "nsJSUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Observer.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "WindowIdentifier.h"
 
@@ -180,28 +183,43 @@ class ObserversManager
 {
 public:
   void AddObserver(Observer<InfoType>* aObserver) {
-    mObservers.AddObserver(aObserver);
+    if (!mObservers) {
+      mObservers = new mozilla::ObserverList<InfoType>();
+    }
 
-    if (mObservers.Length() == 1) {
+    mObservers->AddObserver(aObserver);
+
+    if (mObservers->Length() == 1) {
       EnableNotifications();
     }
   }
 
   void RemoveObserver(Observer<InfoType>* aObserver) {
-    bool removed = mObservers.RemoveObserver(aObserver);
+    bool removed = mObservers && mObservers->RemoveObserver(aObserver);
     if (!removed) {
       return;
     }
 
-    if (mObservers.Length() == 0) {
+    if (mObservers->Length() == 0) {
       DisableNotifications();
 
       OnNotificationsDisabled();
+
+      delete mObservers;
+      mObservers = nullptr;
     }
   }
 
   void BroadcastInformation(const InfoType& aInfo) {
-    mObservers.Broadcast(aInfo);
+    // It is possible for mObservers to be nullptr here on some platforms,
+    // because a call to BroadcastInformation gets queued up asynchronously
+    // while RemoveObserver is running (and before the notifications are
+    // disabled). The queued call can then get run after mObservers has
+    // been nulled out. See bug 757025.
+    if (!mObservers) {
+      return;
+    }
+    mObservers->Broadcast(aInfo);
   }
 
 protected:
@@ -210,7 +228,7 @@ protected:
   virtual void OnNotificationsDisabled() {}
 
 private:
-  mozilla::ObserverList<InfoType> mObservers;
+  mozilla::ObserverList<InfoType>* mObservers;
 };
 
 template <class InfoType>
