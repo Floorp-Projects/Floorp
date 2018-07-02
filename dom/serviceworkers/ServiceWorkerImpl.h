@@ -8,7 +8,6 @@
 #define mozilla_dom_ServiceWorkerImpl_h
 
 #include "ServiceWorker.h"
-#include "ServiceWorkerInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,7 +16,6 @@ class ServiceWorkerInfo;
 class ServiceWorkerRegistrationInfo;
 
 class ServiceWorkerImpl final : public ServiceWorker::Inner
-                              , public ServiceWorkerInfo::Listener
 {
   RefPtr<ServiceWorkerInfo> mInfo;
   RefPtr<ServiceWorkerRegistrationInfo> mReg;
@@ -40,10 +38,6 @@ class ServiceWorkerImpl final : public ServiceWorker::Inner
   PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
               const ClientInfo& aClientInfo,
               const ClientState& aClientState) override;
-
-  // ServiceWorkerInfo::Listener interface
-  void
-  SetState(ServiceWorkerState aState) override;
 
 public:
   ServiceWorkerImpl(ServiceWorkerInfo* aInfo,

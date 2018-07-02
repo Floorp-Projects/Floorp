@@ -6,6 +6,8 @@
 
 #include "ServiceWorkerImpl.h"
 
+#include "ServiceWorkerInfo.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -73,16 +75,6 @@ ServiceWorkerImpl::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
 {
   mInfo->PostMessage(std::move(aData), aClientInfo, aClientState);
 }
-
-void
-ServiceWorkerImpl::SetState(ServiceWorkerState aState)
-{
-  if (!mOuter) {
-    return;
-  }
-  mOuter->SetState(aState);
-}
-
 
 ServiceWorkerImpl::ServiceWorkerImpl(ServiceWorkerInfo* aInfo,
                                      ServiceWorkerRegistrationInfo* aReg)
