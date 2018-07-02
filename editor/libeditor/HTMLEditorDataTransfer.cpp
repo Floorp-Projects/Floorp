@@ -1681,6 +1681,7 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
   // The whole operation should be undoable in one transaction:
   BeginTransaction();
+  AutoPlaceholderBatch beginBatching(this);
 
   // We're going to loop over the string, collecting up a "hunk"
   // that's all the same type (quoted or not),
@@ -1755,7 +1756,7 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
       rv = InsertAsPlaintextQuotation(curHunk, false,
                                       getter_AddRefs(dummyNode));
     } else {
-      rv = InsertTextAsAction(curHunk);
+      rv = InsertTextAsSubAction(curHunk);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
         "Failed to insert a line of the quoted text");
     }
@@ -1775,6 +1776,7 @@ NS_IMETHODIMP
 HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsINode** aNodeInserted)
 {
+  AutoPlaceholderBatch beginBatching(this);
   if (IsPlaintextEditor()) {
     return InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
   }
@@ -1802,7 +1804,6 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     return NS_ERROR_FAILURE;
   }
 
-  AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertQuotation,
                                       nsIEditor::eNext);
@@ -1860,7 +1861,7 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to insert the text with quotations");
   } else {
-    rv = InsertTextAsAction(aQuotedText);
+    rv = InsertTextAsSubAction(aQuotedText);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to insert the quoted text as plain text");
   }
@@ -1927,6 +1928,8 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    bool aInsertHTML,
                                    nsINode** aNodeInserted)
 {
+  AutoPlaceholderBatch beginBatching(this);
+
   // Don't let anyone insert HTML when we're in plaintext mode.
   if (IsPlaintextEditor()) {
     NS_ASSERTION(!aInsertHTML,
@@ -1939,7 +1942,6 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
     return NS_ERROR_FAILURE;
   }
 
-  AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertQuotation,
                                       nsIEditor::eNext);
@@ -1978,7 +1980,7 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
   if (aInsertHTML) {
     rv = LoadHTML(aQuotedText);
   } else {
-    rv = InsertTextAsAction(aQuotedText);  // XXX ignore charset
+    rv = InsertTextAsSubAction(aQuotedText);  // XXX ignore charset
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the quoted text");
   }
 
