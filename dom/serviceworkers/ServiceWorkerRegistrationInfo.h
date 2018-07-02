@@ -11,9 +11,12 @@
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsProxyRelease.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace dom {
+
+class ServiceWorkerRegistrationListener;
 
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
@@ -21,6 +24,7 @@ class ServiceWorkerRegistrationInfo final
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ServiceWorkerRegistrationDescriptor mDescriptor;
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
+  nsTObserverArray<ServiceWorkerRegistrationListener*> mInstanceList;
 
   uint32_t mControlledClientsCounter;
   uint32_t mDelayMultiplier;
@@ -59,6 +63,12 @@ public:
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
                                 ServiceWorkerUpdateViaCache aUpdateViaCache);
+
+  void
+  AddInstance(ServiceWorkerRegistrationListener* aInstance);
+
+  void
+  RemoveInstance(ServiceWorkerRegistrationListener* aInstance);
 
   const nsCString&
   Scope() const;
@@ -226,6 +236,12 @@ public:
 
   uint32_t
   GetUpdateDelay();
+
+  void
+  FireUpdateFound();
+
+  void
+  NotifyRemoved();
 
 private:
   // Roughly equivalent to [[Update Registration State algorithm]]. Make sure

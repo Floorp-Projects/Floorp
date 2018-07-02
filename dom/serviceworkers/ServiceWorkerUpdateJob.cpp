@@ -515,15 +515,14 @@ ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResu
     return;
   }
 
-  Install(swm);
+  Install();
 }
 
 void
-ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
+ServiceWorkerUpdateJob::Install()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!Canceled());
-  MOZ_DIAGNOSTIC_ASSERT(aSWM);
 
   MOZ_ASSERT(!mRegistration->GetInstalling());
 
@@ -540,13 +539,10 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
   // still fail; e.g. if the install event handler throws, etc.
 
   // fire the updatefound event
-  nsCOMPtr<nsIRunnable> upr =
-    NewRunnableMethod<RefPtr<ServiceWorkerRegistrationInfo>>(
-      "dom::ServiceWorkerManager::"
-      "FireUpdateFoundOnServiceWorkerRegistrations",
-      aSWM,
-      &ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations,
-      mRegistration);
+  nsCOMPtr<nsIRunnable> upr = NewRunnableMethod(
+      "ServiceWorkerRegistrationInfo::FireUpdateFound",
+      mRegistration,
+      &ServiceWorkerRegistrationInfo::FireUpdateFound);
   NS_DispatchToMainThread(upr);
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(

@@ -8,6 +8,7 @@
 
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
+#include "ServiceWorkerRegistrationListener.h"
 
 namespace mozilla {
 namespace dom {
@@ -111,6 +112,22 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsControllingClients());
+}
+
+void
+ServiceWorkerRegistrationInfo::AddInstance(ServiceWorkerRegistrationListener* aInstance)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aInstance);
+  MOZ_ASSERT(!mInstanceList.Contains(aInstance));
+  mInstanceList.AppendElement(aInstance);
+}
+
+void
+ServiceWorkerRegistrationInfo::RemoveInstance(ServiceWorkerRegistrationListener* aInstance)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aInstance);
+  DebugOnly<bool> removed = mInstanceList.RemoveElement(aInstance);
+  MOZ_ASSERT(removed);
 }
 
 const nsCString&
@@ -418,10 +435,11 @@ ServiceWorkerRegistrationInfo::UpdateRegistrationState()
 
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  NS_ENSURE_TRUE_VOID(swm);
-
-  swm->UpdateRegistrationListeners(this);
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    target->UpdateState(mDescriptor);
+  }
 }
 
 void
@@ -738,6 +756,26 @@ ServiceWorkerRegistrationInfo::GetUpdateDelay()
   }
 
   return delay;
+}
+
+void
+ServiceWorkerRegistrationInfo::FireUpdateFound()
+{
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    target->UpdateFound();
+  }
+}
+
+void
+ServiceWorkerRegistrationInfo::NotifyRemoved()
+{
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    target->RegistrationRemoved();
+  }
 }
 
 // static
