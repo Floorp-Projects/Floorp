@@ -462,7 +462,8 @@ public:
     mUserValue.Clear(Type());
   }
 
-  const char* Name() { return mName; }
+  const char* Name() const { return mName; }
+  nsDependentCString NameString() const { return nsDependentCString(mName); }
 
   // Types.
 
@@ -484,17 +485,18 @@ public:
     mHasChangedSinceInit = true;
   }
 
+  bool IsSticky() const { return mIsSticky; }
+
   bool HasDefaultValue() const { return mHasDefaultValue; }
   bool HasUserValue() const { return mHasUserValue; }
 
   template<typename T>
   void AddToMap(SharedPrefMapBuilder& aMap)
   {
-    aMap.Add(
-      Name(),
-      { HasDefaultValue(), HasUserValue(), uint8_t(mIsSticky), IsLocked() },
-      HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
-      HasUserValue() ? mUserValue.Get<T>() : T());
+    aMap.Add(Name(),
+             { HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked() },
+             HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
+             HasUserValue() ? mUserValue.Get<T>() : T());
   }
 
   void AddToMap(SharedPrefMapBuilder& aMap)
@@ -547,63 +549,41 @@ public:
     return strcmp(mName, aPrefName) == 0;
   }
 
-  nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
+  bool GetBoolValue(PrefValueKind aKind = PrefValueKind::User) const
   {
-    if (!IsTypeBool()) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    MOZ_ASSERT(IsTypeBool());
+    MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
+                                               : HasUserValue());
 
-    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
-      // Do we have a default?
-      if (!mHasDefaultValue) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      *aResult = mDefaultValue.mBoolVal;
-    } else {
-      *aResult = mUserValue.mBoolVal;
-    }
-
-    return NS_OK;
+    return aKind == PrefValueKind::Default ? mDefaultValue.mBoolVal
+                                           : mUserValue.mBoolVal;
   }
 
-  nsresult GetIntValue(PrefValueKind aKind, int32_t* aResult)
+  int32_t GetIntValue(PrefValueKind aKind = PrefValueKind::User) const
   {
-    if (!IsTypeInt()) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    MOZ_ASSERT(IsTypeInt());
+    MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
+                                               : HasUserValue());
 
-    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
-      // Do we have a default?
-      if (!mHasDefaultValue) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      *aResult = mDefaultValue.mIntVal;
-    } else {
-      *aResult = mUserValue.mIntVal;
-    }
-
-    return NS_OK;
+    return aKind == PrefValueKind::Default ? mDefaultValue.mIntVal
+                                           : mUserValue.mIntVal;
   }
 
-  nsresult GetCStringValue(PrefValueKind aKind, nsACString& aResult)
+  const char* GetBareStringValue(
+    PrefValueKind aKind = PrefValueKind::User) const
   {
-    if (!IsTypeString()) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    MOZ_ASSERT(IsTypeString());
+    MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
+                                               : HasUserValue());
 
-    if (aKind == PrefValueKind::Default || IsLocked() || !mHasUserValue) {
-      // Do we have a default?
-      if (!mHasDefaultValue) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      MOZ_ASSERT(mDefaultValue.mStringVal);
-      aResult = mDefaultValue.mStringVal;
-    } else {
-      MOZ_ASSERT(mUserValue.mStringVal);
-      aResult = mUserValue.mStringVal;
-    }
+    return aKind == PrefValueKind::Default ? mDefaultValue.mStringVal
+                                           : mUserValue.mStringVal;
+  }
 
-    return NS_OK;
+  nsDependentCString GetStringValue(
+    PrefValueKind aKind = PrefValueKind::User) const
+  {
+    return nsDependentCString(GetBareStringValue(aKind));
   }
 
   void ToDomPref(dom::Pref* aDomPref)
@@ -1036,6 +1016,113 @@ public:
   }
 };
 
+using PrefWrapperBase = Variant<Pref*, SharedPrefMap::Pref>;
+class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase
+{
+  using SharedPref = const SharedPrefMap::Pref;
+
+public:
+  MOZ_IMPLICIT PrefWrapper(Pref* aPref)
+    : PrefWrapperBase(AsVariant(aPref))
+  {
+  }
+
+  MOZ_IMPLICIT PrefWrapper(const SharedPrefMap::Pref& aPref)
+    : PrefWrapperBase(AsVariant(aPref))
+  {
+  }
+
+  // Types.
+
+  bool IsType(PrefType aType) const { return Type() == aType; }
+  bool IsTypeNone() const { return IsType(PrefType::None); }
+  bool IsTypeString() const { return IsType(PrefType::String); }
+  bool IsTypeInt() const { return IsType(PrefType::Int); }
+  bool IsTypeBool() const { return IsType(PrefType::Bool); }
+
+#define FORWARD(retType, method)                                               \
+  retType method() const                                                       \
+  {                                                                            \
+    struct Matcher                                                             \
+    {                                                                          \
+      retType match(const Pref* aPref) { return aPref->method(); }             \
+      retType match(SharedPref& aPref) { return aPref.method(); }              \
+    };                                                                         \
+    return match(Matcher());                                                   \
+  }
+
+  FORWARD(bool, IsLocked)
+  FORWARD(bool, IsSticky)
+  FORWARD(bool, HasDefaultValue)
+  FORWARD(bool, HasUserValue)
+  FORWARD(const char*, Name)
+  FORWARD(nsCString, NameString)
+  FORWARD(PrefType, Type)
+#undef FORWARD
+
+#define FORWARD(retType, method)                                               \
+  retType method(PrefValueKind aKind = PrefValueKind::User) const              \
+  {                                                                            \
+    struct Matcher                                                             \
+    {                                                                          \
+      PrefValueKind mKind;                                                     \
+                                                                               \
+      retType match(const Pref* aPref) { return aPref->method(mKind); }        \
+      retType match(SharedPref& aPref) { return aPref.method(mKind); }         \
+    };                                                                         \
+    return match(Matcher{ aKind });                                            \
+  }
+
+  FORWARD(bool, GetBoolValue)
+  FORWARD(int32_t, GetIntValue)
+  FORWARD(nsCString, GetStringValue)
+  FORWARD(const char*, GetBareStringValue)
+#undef FORWARD
+
+  Result<PrefValueKind, nsresult> WantValueKind(PrefType aType,
+                                                PrefValueKind aKind) const
+  {
+    if (Type() != aType) {
+      return Err(NS_ERROR_UNEXPECTED);
+    }
+
+    if (aKind == PrefValueKind::Default || IsLocked() || !HasUserValue()) {
+      if (!HasDefaultValue()) {
+        return Err(NS_ERROR_UNEXPECTED);
+      }
+      return PrefValueKind::Default;
+    }
+    return PrefValueKind::User;
+  }
+
+  nsresult GetBoolValue(PrefValueKind aKind, bool* aResult) const
+  {
+    PrefValueKind kind;
+    MOZ_TRY_VAR(kind, WantValueKind(PrefType::Bool, aKind));
+
+    *aResult = GetBoolValue(kind);
+    return NS_OK;
+  }
+
+  nsresult GetIntValue(PrefValueKind aKind, int32_t* aResult) const
+  {
+    PrefValueKind kind;
+    MOZ_TRY_VAR(kind, WantValueKind(PrefType::Int, aKind));
+
+    *aResult = GetIntValue(kind);
+    return NS_OK;
+  }
+
+  nsresult GetCStringValue(PrefValueKind aKind, nsACString& aResult) const
+  {
+    PrefValueKind kind;
+    MOZ_TRY_VAR(kind, WantValueKind(PrefType::String, aKind));
+
+    aResult = GetStringValue(kind);
+    return NS_OK;
+  }
+};
+
 class CallbackNode
 {
 public:
@@ -1221,9 +1308,21 @@ pref_HashTableLookup(const char* aPrefName)
     return nullptr;
   }
 
+  return entry->mPref;
+}
+
+Maybe<PrefWrapper>
+pref_Lookup(const char* aPrefName)
+{
+  Maybe<PrefWrapper> result;
+
   AddAccessCount(aPrefName);
 
-  return entry->mPref;
+  if (Pref* pref = pref_HashTableLookup(aPrefName)) {
+    result.emplace(pref);
+  }
+
+  return result;
 }
 
 static nsresult
@@ -4441,8 +4540,9 @@ Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
   MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  return pref ? pref->GetBoolValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() ? pref->GetBoolValue(aKind, aResult)
+                       : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4453,8 +4553,9 @@ Preferences::GetInt(const char* aPrefName,
   MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  return pref ? pref->GetIntValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() ? pref->GetIntValue(aKind, aResult)
+                       : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4481,8 +4582,9 @@ Preferences::GetCString(const char* aPrefName,
 
   aResult.SetIsVoid(true);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  return pref ? pref->GetCStringValue(aKind, aResult) : NS_ERROR_UNEXPECTED;
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() ? pref->GetCStringValue(aKind, aResult)
+                       : NS_ERROR_UNEXPECTED;
 }
 
 /* static */ nsresult
@@ -4652,8 +4754,8 @@ Preferences::IsLocked(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  return pref && pref->IsLocked();
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() && pref->IsLocked();
 }
 
 /* static */ nsresult
@@ -4682,8 +4784,8 @@ Preferences::HasUserValue(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  return pref && pref->HasUserValue();
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() && pref->HasUserValue();
 }
 
 /* static */ int32_t
@@ -4691,8 +4793,12 @@ Preferences::GetType(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
 
-  Pref* pref;
-  if (!gHashTable || !(pref = pref_HashTableLookup(aPrefName))) {
+  if (!gHashTable) {
+    return PREF_INVALID;
+  }
+
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  if (!pref.isSome()) {
     return PREF_INVALID;
   }
 
