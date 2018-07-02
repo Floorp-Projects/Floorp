@@ -763,6 +763,14 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.refresh);
       assert.calledWithExactly(feed.refresh, {broadcast: true});
     });
+    it("should call refresh without a target if we remove a Topsite from history", () => {
+      sandbox.stub(feed, "refresh");
+
+      feed.onAction({type: at.PLACES_LINK_DELETED});
+
+      assert.calledOnce(feed.refresh);
+      assert.calledWithExactly(feed.refresh, {broadcast: true});
+    });
     it("should still dispatch an action even if there's no target provided", async () => {
       sandbox.stub(feed, "_fetchIcon");
       await feed.refresh({broadcast: true});
