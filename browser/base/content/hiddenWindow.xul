@@ -18,6 +18,18 @@
 
 #include macWindow.inc.xul
 
+<!-- Dock menu -->
+<popupset>
+  <menupopup id="menu_mac_dockmenu">
+    <!-- The command cannot be cmd_newNavigator because we need to activate
+         the application. -->
+    <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();"
+              id="macDockMenuNewWindow" />
+    <menuitem label="&newPrivateWindow.label;" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
+              id="macDockMenuNewPrivateWindow" />
+  </menupopup>
+</popupset>
+
 </window>
 
 #endif
