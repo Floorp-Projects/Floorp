@@ -1956,7 +1956,7 @@ if (AppConstants.platform == "macosx") {
                          "viewToolbarsMenu", "viewSidebarMenuMenu", "Browser:Reload",
                          "viewFullZoomMenu", "pageStyleMenu", "charsetMenu", "View:PageSource", "View:FullScreen",
                          "viewHistorySidebar", "Browser:AddBookmarkAs", "Browser:BookmarkAllTabs",
-                         "View:PageInfo"];
+                         "View:PageInfo", "History:UndoCloseTab"];
     var element;
 
     for (let disabledItem of disabledItems) {
