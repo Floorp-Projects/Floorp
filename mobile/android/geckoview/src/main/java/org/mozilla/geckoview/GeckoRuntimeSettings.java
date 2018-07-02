@@ -20,6 +20,11 @@ import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 
 public final class GeckoRuntimeSettings implements Parcelable {
     /**
+     * {@link #mExtras} key for the crash reporting job id.
+     */
+    public static final String EXTRA_CRASH_REPORTING_JOB_ID = "crashReporterJobId";
+
+    /**
      * Settings builder used to construct the settings object.
      */
     public static final class Builder {
@@ -123,6 +128,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * a SIGSEGV handler to be installed, and any crash encountered there will be
          * reported to Mozilla.
          *
+         * <br>If crash reporting is enabled {@link #crashReportingJobId(int)} must also be used.
+         *
          * @param enabled A flag determining whether native crash reporting should be enabled.
          *                Defaults to false.
          * @return This Builder.
@@ -137,12 +144,29 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * a default unhandled exception handler to be installed, and any exceptions encountered
          * will automatically reported to Mozilla.
          *
+         * <br>If crash reporting is enabled {@link #crashReportingJobId(int)} must also be used.
+         *
          * @param enabled A flag determining whether Java crash reporting should be enabled.
          *                Defaults to false.
          * @return This Builder.
          */
         public @NonNull Builder javaCrashReportingEnabled(final boolean enabled) {
             mSettings.mJavaCrashReporting = enabled;
+            return this;
+        }
+
+        /**
+         * On Oreo and later devices we use the JobScheduler for crash reporting in the background.<br>
+         * This allows for setting the unique Job Id to be used.
+         * <a href="https://developer.android.com/reference/android/app/job/JobInfo.Builder#JobInfo.Builder(int,%20android.content.ComponentName)">
+         *           See why it must be unique</a>
+         *
+         * @param id A unique integer.
+         *
+         * @return This Builder.
+         */
+        public @NonNull Builder crashReportingJobId(final int id) {
+            mSettings.mCrashReportingJobId = id;
             return this;
         }
 
@@ -288,6 +312,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
     /* package */ boolean mNativeCrashReporting;
     /* package */ boolean mJavaCrashReporting;
+    /* package */ int mCrashReportingJobId;
     /* package */ boolean mDebugPause;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
@@ -326,6 +351,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
         mNativeCrashReporting = settings.mNativeCrashReporting;
         mJavaCrashReporting = settings.mJavaCrashReporting;
+        mCrashReportingJobId = settings.mCrashReportingJobId;
         mDebugPause = settings.mDebugPause;
     }
 
@@ -438,6 +464,13 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
     public boolean getJavaCrashReportingEnabled() {
         return mJavaCrashReporting;
+    }
+
+    /**
+     * Get the Job Id used on Oreo and later devices to manage crash reporting in background.
+     */
+    public int getCrashReportingServiceJobId() {
+        return mCrashReportingJobId;
     }
 
     /**
@@ -631,6 +664,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
         ParcelableUtils.writeBoolean(out, mNativeCrashReporting);
         ParcelableUtils.writeBoolean(out, mJavaCrashReporting);
+        out.writeInt(mCrashReportingJobId);
         ParcelableUtils.writeBoolean(out, mDebugPause);
     }
 
@@ -649,6 +683,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
         mNativeCrashReporting = ParcelableUtils.readBoolean(source);
         mJavaCrashReporting = ParcelableUtils.readBoolean(source);
+        mCrashReportingJobId = source.readInt();
         mDebugPause = ParcelableUtils.readBoolean(source);
     }
 

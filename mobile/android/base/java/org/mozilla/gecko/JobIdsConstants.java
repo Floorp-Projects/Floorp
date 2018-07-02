@@ -41,6 +41,8 @@ public class JobIdsConstants {
     private static final int JOB_ID_UPDATES_DOWNLOAD = 1011;
     private static final int JOB_ID_UPDATES_APPLY = 1012;
 
+    private static final int JOB_ID_CRASH_REPORTER = 1013;
+
     public static int getIdForDlcStudyJob() {
         return getIdWithOffset(JOB_ID_DLC_STUDY);
     }
@@ -91,6 +93,10 @@ public class JobIdsConstants {
 
     public static int getIdForUpdatesApplyJob() {
         return getIdWithOffset(JOB_ID_UPDATES_APPLY);
+    }
+
+    public static int getIdForCrashReporter() {
+        return getIdWithOffset(JOB_ID_CRASH_REPORTER);
     }
 
     private static boolean isReleaseBuild() {

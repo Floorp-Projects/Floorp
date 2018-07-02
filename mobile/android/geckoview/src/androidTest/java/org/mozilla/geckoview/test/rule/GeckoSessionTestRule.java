@@ -1255,7 +1255,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             if (env.isAutomation()) {
                 runtimeSettingsBuilder
                         .nativeCrashReportingEnabled(true)
-                        .javaCrashReportingEnabled(true);
+                        .javaCrashReportingEnabled(true)
+                        .crashReportingJobId(1024);
             }
 
             sRuntime = GeckoRuntime.create(
