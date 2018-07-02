@@ -17,6 +17,7 @@ using mozilla::ipc::PrincipalInfoToPrincipal;
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
                                                  uint64_t aRegistrationId,
+                                                 uint64_t aRegistrationVersion,
                                                  nsIPrincipal* aPrincipal,
                                                  const nsACString& aScope,
                                                  const nsACString& aScriptURL,
@@ -28,6 +29,7 @@ ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
 
   mData->id() = aId;
   mData->registrationId() = aRegistrationId;
+  mData->registrationVersion() = aRegistrationVersion;
   mData->scope() = aScope;
   mData->scriptURL() = aScriptURL;
   mData->state() = aState;
@@ -35,11 +37,13 @@ ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
                                                  uint64_t aRegistrationId,
+                                                 uint64_t aRegistrationVersion,
                                                  const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                                                  const nsACString& aScope,
                                                  const nsACString& aScriptURL,
                                                  ServiceWorkerState aState)
   : mData(MakeUnique<IPCServiceWorkerDescriptor>(aId, aRegistrationId,
+                                                 aRegistrationVersion,
                                                  aPrincipalInfo,
                                                  nsCString(aScriptURL),
                                                  nsCString(aScope), aState))
@@ -102,6 +106,12 @@ ServiceWorkerDescriptor::RegistrationId() const
   return mData->registrationId();
 }
 
+uint64_t
+ServiceWorkerDescriptor::RegistrationVersion() const
+{
+  return mData->registrationVersion();
+}
+
 const mozilla::ipc::PrincipalInfo&
 ServiceWorkerDescriptor::PrincipalInfo() const
 {
@@ -138,6 +148,13 @@ void
 ServiceWorkerDescriptor::SetState(ServiceWorkerState aState)
 {
   mData->state() = aState;
+}
+
+void
+ServiceWorkerDescriptor::SetRegistrationVersion(uint64_t aVersion)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aVersion > mData->registrationVersion());
+  mData->registrationVersion() = aVersion;
 }
 
 bool
