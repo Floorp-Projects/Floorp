@@ -99,6 +99,10 @@ function showSource(sourceId) {
   }) => {
     const source = (0, _selectors.getSource)(getState(), sourceId);
 
+    if (!source) {
+      return;
+    }
+
     if ((0, _selectors.getPaneCollapse)(getState(), "start")) {
       dispatch({
         type: "TOGGLE_PANE",
@@ -114,7 +118,7 @@ function showSource(sourceId) {
     });
     dispatch({
       type: "SHOW_SOURCE",
-      sourceUrl: (0, _source.getRawSourceURL)(source.get("url"))
+      sourceUrl: (0, _source.getRawSourceURL)(source.url)
     });
   };
 }

@@ -10,7 +10,7 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Task } = require("devtools/shared/task");
 
 const sourceUtils = {
-  isLoaded: source => source.get("loadedState") === "loaded"
+  isLoaded: source => source.loadedState === "loaded"
 };
 
 function log(msg, data) {
@@ -194,7 +194,7 @@ function waitForSource(dbg, url) {
     dbg,
     state => {
       const sources = dbg.selectors.getSources(state);
-      return sources.find(s => (s.get("url") || "").includes(url));
+      return Object.values(sources).find(s => (s.url || "").includes(url));
     },
     `source exists`
   );
@@ -359,11 +359,7 @@ function assertHighlightLocation(dbg, source, line) {
   source = findSource(dbg, source);
 
   // Check the selected source
-  is(
-    getSelectedSource(getState()).get("url"),
-    source.url,
-    "source url is correct"
-  );
+  is(getSelectedSource(getState()).url, source.url, "source url is correct");
 
   // Check the highlight line
   const lineEl = findElement(dbg, "highlightLine");
@@ -456,7 +452,7 @@ function isSelectedFrameSelected(dbg, state) {
     return false;
   }
 
-  const isLoaded = source.has("loadedState") && sourceUtils.isLoaded(source);
+  const isLoaded = source.loadedState && sourceUtils.isLoaded(source);
   if (!isLoaded) {
     return false;
   }
@@ -494,6 +490,7 @@ function clearDebuggerPreferences() {
   Services.prefs.clearUserPref("devtools.debugger.expressions");
   Services.prefs.clearUserPref("devtools.debugger.call-stack-visible");
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");
+  Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
 }
 
 /**
@@ -550,8 +547,8 @@ function findSource(dbg, url, { silent } = { silent: false }) {
     return source;
   }
 
-  const sources = dbg.selectors.getSources(dbg.getState());
-  const source = sources.find(s => (s.get("url") || "").includes(url));
+  const sources = Object.values(dbg.selectors.getSources(dbg.getState()));
+  const source = sources.find(s => (s.url || "").includes(url));
 
   if (!source) {
     if (silent) {
@@ -561,7 +558,7 @@ function findSource(dbg, url, { silent } = { silent: false }) {
     throw new Error(`Unable to find source: ${url}`);
   }
 
-  return source.toJS();
+  return source;
 }
 
 function sourceExists(dbg, url) {
@@ -580,10 +577,7 @@ function waitForLoadedSources(dbg) {
   return waitForState(
     dbg,
     state => {
-      const sources = dbg.selectors
-        .getSources(state)
-        .valueSeq()
-        .toJS();
+      const sources = Object.values(dbg.selectors.getSources(state));
       return !sources.some(source => source.loadedState == "loading");
     },
     "loaded source"
@@ -896,7 +890,7 @@ function invokeInTab(fnc, ...args) {
     fnc,
     args
   }) {
-    content.wrappedJSObject[fnc](...args); // eslint-disable-line mozilla/no-cpows-in-tests, max-len
+    return content.wrappedJSObject[fnc](...args); // eslint-disable-line mozilla/no-cpows-in-tests, max-len
   });
 }
 
@@ -1032,7 +1026,7 @@ const selectors = {
   expressionInput: ".expressions-list  input.input-expression",
   expressionNodes: ".expressions-list .tree-node",
   scopesHeader: ".scopes-pane ._header",
-  breakpointItem: i => `.breakpoints-list .breakpoint:nth-of-type(${i})`,
+  breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointItems: `.breakpoints-list .breakpoint`,
   scopes: ".scopes-list",
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
@@ -1217,9 +1211,8 @@ async function waitForScrolling(codeMirror) {
   return new Promise(resolve => {
     codeMirror.on("scroll", resolve);
     setTimeout(resolve, 500);
-  })
+  });
 }
-
 
 async function hoverAtPos(dbg, { line, ch }) {
   info(`Hovering at ${line}, ${ch}`);

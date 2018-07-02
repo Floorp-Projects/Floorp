@@ -19,7 +19,7 @@ async function getGeneratedLocation(state, source, location, sourceMaps) {
     line,
     sourceId,
     column
-  } = await sourceMaps.getGeneratedLocation(location, source.toJS());
+  } = await sourceMaps.getGeneratedLocation(location, source);
   const generatedSource = (0, _selectors.getSource)(state, sourceId);
 
   if (!generatedSource) {
