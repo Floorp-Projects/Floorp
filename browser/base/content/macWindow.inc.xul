@@ -56,15 +56,3 @@
 # The entire main menubar is placed into browser-menubar.inc, so that it can be
 # shared with browser.xul.
 #include browser-menubar.inc
-
-<!-- Dock menu -->
-<popupset>
-  <menupopup id="menu_mac_dockmenu">
-    <!-- The command cannot be cmd_newNavigator because we need to activate
-         the application. -->
-    <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();"
-              id="macDockMenuNewWindow" />
-    <menuitem label="&newPrivateWindow.label;" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
-              id="macDockMenuNewPrivateWindow" />
-  </menupopup>
-</popupset>
