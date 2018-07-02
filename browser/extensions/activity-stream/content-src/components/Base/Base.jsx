@@ -86,6 +86,12 @@ export class _Base extends React.PureComponent {
       return null;
     }
 
+    // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
+    // the new simplified onboarding experiment. CSS hacks ftw
+    if (prefs.asrouterOnboardingCohort > 0) {
+      global.document.body.classList.add("hide-onboarding");
+    }
+
     return (<IntlProvider locale={locale} messages={strings}>
         <ErrorBoundary className="base-content-fallback">
           <BaseContent {...this.props} />

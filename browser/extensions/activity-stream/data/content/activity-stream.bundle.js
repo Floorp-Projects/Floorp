@@ -6664,6 +6664,12 @@ class _Base extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComponent 
       return null;
     }
 
+    // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
+    // the new simplified onboarding experiment. CSS hacks ftw
+    if (prefs.asrouterOnboardingCohort > 0) {
+      global.document.body.classList.add("hide-onboarding");
+    }
+
     return __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
       __WEBPACK_IMPORTED_MODULE_1_react_intl__["IntlProvider"],
       { locale: locale, messages: strings },
