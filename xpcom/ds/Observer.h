@@ -7,7 +7,7 @@
 #ifndef mozilla_Observer_h
 #define mozilla_Observer_h
 
-#include "nsTObserverArray.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -48,7 +48,7 @@ public:
    */
   void AddObserver(Observer<T>* aObserver)
   {
-    mObservers.AppendElementUnlessExists(aObserver);
+    mObservers.AppendElement(aObserver);
   }
 
   /**
@@ -57,7 +57,17 @@ public:
    */
   bool RemoveObserver(Observer<T>* aObserver)
   {
-    return mObservers.RemoveElement(aObserver);
+    if (mObservers.RemoveElement(aObserver)) {
+      if (!mBroadcastCopy.IsEmpty()) {
+        // Annoyingly, someone could RemoveObserver() an item on the list
+        // while we're in a Broadcast()'s Notify() call.
+        auto i = mBroadcastCopy.IndexOf(aObserver);
+        MOZ_ASSERT(i != mBroadcastCopy.NoIndex);
+        mBroadcastCopy[i] = nullptr;
+      }
+      return true;
+    }
+    return false;
   }
 
   uint32_t Length()
@@ -67,18 +77,25 @@ public:
 
   /**
    * Call Notify() on each item in the list.
+   * Handles the case of Notify() calling RemoveObserver()
    */
   void Broadcast(const T& aParam)
   {
-    typename nsTObserverArray<Observer<T>*>::ForwardIterator iter(mObservers);
-    while (iter.HasMore()) {
-      Observer<T>* obs = iter.GetNext();
-      obs->Notify(aParam);
+    MOZ_ASSERT(mBroadcastCopy.IsEmpty());
+    mBroadcastCopy = mObservers;
+    uint32_t size = mBroadcastCopy.Length();
+    for (uint32_t i = 0; i < size; ++i) {
+      // nulled if Removed during Broadcast
+      if (mBroadcastCopy[i]) {
+        mBroadcastCopy[i]->Notify(aParam);
+      }
     }
+    mBroadcastCopy.Clear();
   }
 
 protected:
-  nsTObserverArray<Observer<T>*> mObservers;
+  nsTArray<Observer<T>*> mObservers;
+  nsTArray<Observer<T>*> mBroadcastCopy;
 };
 
 } // namespace mozilla
