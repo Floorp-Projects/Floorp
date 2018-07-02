@@ -17,6 +17,7 @@ include protocol PTexture;
 using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using mozilla::layers::ScrollUpdatesMap from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
+using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
@@ -79,7 +80,7 @@ parent:
   async Shutdown();
   sync ShutdownSync();
 child:
-  async WrUpdated(IdNamespace aNewIdNamespace);
+  async WrUpdated(IdNamespace aNewIdNamespace, TextureFactoryIdentifier textureFactoryIdentifier);
   async __delete__();
 };
 
