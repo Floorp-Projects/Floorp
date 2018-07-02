@@ -37,6 +37,8 @@ function getExtension() {
       } else {
         browser.test.assertTrue(securityInfo.certificates.length == 1, "no certificate chain");
       }
+      let cert = securityInfo.certificates[0];
+      browser.test.assertTrue(cert.validity.start < Date.now() < cert.validity.end, "cert validity is correct");
       if (options.rawDER) {
         for (let cert of securityInfo.certificates) {
           browser.test.assertTrue(cert.rawDER.length > 0, "have rawDER");
