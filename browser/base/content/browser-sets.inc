@@ -365,9 +365,7 @@
 #endif
          reserved="true"/>
 
-#ifdef FULL_BROWSER_WINDOW
     <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
-#endif
     <key id="key_undoCloseWindow" command="History:UndoCloseWindow" key="&newNavigatorCmd.key;" modifiers="accel,shift"/>
 
 #ifdef XP_GNOME
