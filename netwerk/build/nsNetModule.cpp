@@ -148,7 +148,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(LoadContextInfoFactory)
 #include "mozilla/net/CaptivePortalService.h"
 namespace mozilla {
 namespace net {
-  NS_GENERIC_FACTORY_CONSTRUCTOR(CaptivePortalService)
+  NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsICaptivePortalService,
+    CaptivePortalService::GetSingleton)
 } // namespace net
 } // namespace mozilla
 
@@ -896,7 +897,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_CACHE_STORAGE_SERVICE_CID, false, nullptr, CacheStorageServiceConstructor },
     { &kNS_NSILOADCONTEXTINFOFACTORY_CID, false, nullptr, LoadContextInfoFactoryConstructor },
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
-    { &kNS_CAPTIVEPORTAL_CID, false, nullptr, mozilla::net::CaptivePortalServiceConstructor },
+    { &kNS_CAPTIVEPORTAL_CID, false, nullptr, mozilla::net::nsICaptivePortalServiceConstructor },
     { &kNS_REQUESTCONTEXTSERVICE_CID, false, nullptr, RequestContextServiceConstructor },
 #ifdef BUILD_NETWORK_INFO_SERVICE
     { &kNETWORKINFOSERVICE_CID, false, nullptr, nsNetworkInfoServiceConstructor },
