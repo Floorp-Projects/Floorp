@@ -733,6 +733,14 @@ def enable_code_coverage(config, tests):
             test.pop('when', None)
             test['optimization'] = None
 
+            # Add a fetch task for the grcov binary.
+            if 'linux' in test['build-platform']:
+                test['fetches'] = ['grcov-linux-x86_64']
+            elif 'osx' in test['build-platform']:
+                test['fetches'] = ['grcov-osx-x86_64']
+            elif 'win' in test['build-platform']:
+                test['fetches'] = ['grcov-win-i686']
+
             if 'talos' in test['test-name']:
                 test['max-run-time'] = 7200
                 if 'linux' in test['build-platform']:
@@ -1058,6 +1066,8 @@ def make_job_description(config, tests):
         run['test'] = test
 
         jobdesc['worker-type'] = test.pop('worker-type')
+        if test.get('fetches'):
+            jobdesc['fetches'] = test.pop('fetches')
 
         yield jobdesc
 
