@@ -16,7 +16,6 @@
 class InitEditorSpellCheckCallback;
 class mozInlineSpellWordUtil;
 class mozInlineSpellChecker;
-class mozISpellI18NUtil;
 class mozInlineSpellResume;
 class UpdateCurrentDictionaryCallback;
 
@@ -135,7 +134,6 @@ private:
   RefPtr<mozilla::TextEditor> mTextEditor;
   RefPtr<mozilla::EditorSpellCheck> mSpellCheck;
   RefPtr<mozilla::EditorSpellCheck> mPendingSpellCheck;
-  nsCOMPtr<mozISpellI18NUtil> mConverter;
 
   int32_t mNumWordsInSpellSelection;
   int32_t mMaxNumWordsInSpellSelection;

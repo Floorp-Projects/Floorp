@@ -14,8 +14,9 @@
 #include "mozISpellCheckingEngine.h"
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
-#include "mozISpellI18NUtil.h"
 #include "nsCycleCollectionParticipant.h"
+
+class mozEnglishWordUtils;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -58,7 +59,7 @@ public:
 protected:
   virtual ~mozSpellChecker();
 
-  nsCOMPtr<mozISpellI18NUtil> mConverter;
+  RefPtr<mozEnglishWordUtils> mConverter;
   RefPtr<mozilla::TextServicesDocument> mTextServicesDocument;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
 
