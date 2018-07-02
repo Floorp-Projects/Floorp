@@ -524,7 +524,7 @@ devtools.main:
     extra_keys:
       lines: The number of lines contained in the command.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  pause_behaviour_changed:
+  pause_on_exceptions:
     objects: ["debugger"]
     bug_numbers: [1463117]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
@@ -534,7 +534,7 @@ devtools.main:
     expiry_version: never
     extra_keys:
       exceptions: Pause on exceptions is checked.
-      caught_exceptions: Pause on caught exceptions is checked.
+      caught_exceptio: Pause on caught exceptions is checked.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   pause:
     objects: ["debugger"]
@@ -546,7 +546,7 @@ devtools.main:
     expiry_version: never
     extra_keys:
       reason: caught-exception, uncaught-exception, pausing, debugger-statement or breakpoint.
-      collapsed_callstacks: Number of collapsed callstacks in the call tree. These are call stacks that are part of external libraries e.g. react, which are collapsed  by default.
+      lib_stacks: Number of collapsed callstacks in the call tree. These are call stacks that are part of external libraries e.g. react, which are collapsed  by default.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   continue:
     objects: ["debugger"]
