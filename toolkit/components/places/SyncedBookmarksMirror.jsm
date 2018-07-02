@@ -920,9 +920,11 @@ class SyncedBookmarksMirror {
       SELECT s.parentGuid AS guid, 0 AS missingParent, 0 AS missingChild,
              1 AS parentWithGaps
       FROM structure s
+      WHERE s.guid <> :rootGuid
       GROUP BY s.parentGuid
       HAVING (sum(DISTINCT position + 1) -
-                  (count(*) * (count(*) + 1) / 2)) <> 0`);
+                  (count(*) * (count(*) + 1) / 2)) <> 0`,
+      { rootGuid: PlacesUtils.bookmarks.rootGuid });
 
     for await (let row of yieldingIterator(orphanRows)) {
       let guid = row.getResultByName("guid");
