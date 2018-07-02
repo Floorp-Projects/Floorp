@@ -220,7 +220,7 @@ ClientNavigateOpChild::DoNavigate(const ClientNavigateOpConstructorArgs& aArgs)
 
   loadInfo->SetTriggeringPrincipal(principal);
   loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
-  loadInfo->SetLoadType(nsDocShellLoadInfo::loadStopContent);
+  loadInfo->SetLoadType(LOAD_STOP_CONTENT);
   loadInfo->SetSourceDocShell(docShell);
   rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, true);
   if (NS_FAILED(rv)) {

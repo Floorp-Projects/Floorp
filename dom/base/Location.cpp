@@ -237,9 +237,9 @@ Location::SetURI(nsIURI* aURI, bool aReplace)
       return NS_ERROR_FAILURE;
 
     if (aReplace) {
-      loadInfo->SetLoadType(nsDocShellLoadInfo::loadStopContentAndReplace);
+      loadInfo->SetLoadType(LOAD_STOP_CONTENT_AND_REPLACE);
     } else {
-      loadInfo->SetLoadType(nsDocShellLoadInfo::loadStopContent);
+      loadInfo->SetLoadType(LOAD_STOP_CONTENT);
     }
 
     // Get the incumbent script's browsing context to set as source.

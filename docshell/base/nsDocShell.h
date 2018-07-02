@@ -375,6 +375,10 @@ public:
     return static_cast<nsDocShell*>(aDocShell);
   }
 
+  // Returns true if the current load is a force reload (started by holding
+  // shift while triggering reload)
+  bool IsForceReloading();
+
 private: // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
