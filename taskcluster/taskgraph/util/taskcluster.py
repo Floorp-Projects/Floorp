@@ -228,18 +228,3 @@ def get_taskcluster_artifact_prefix(task, task_id, postfix='', locale=None, forc
     return tmpl.format(
         task_id=task_id, postfix=postfix, artifact_prefix=artifact_prefix
     )
-
-
-def send_email(address, subject, content, link, use_proxy=False):
-    """Sends an email using the notify service"""
-    logger.info('Sending email to {}.'.format(address))
-    if use_proxy:
-        url = 'http://taskcluster/notify/v1/email'
-    else:
-        url = 'https://notify.taskcluster.net/v1/email'
-    _do_request(url, json={
-        'address': address,
-        'subject': subject,
-        'content': content,
-        'link': link,
-    })
