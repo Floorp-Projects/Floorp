@@ -32,11 +32,16 @@ const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
 const URL_OVERRIDES_TYPE = "url_overrides";
 const NEW_TAB_KEY = "newTabURL";
 
-let gHomePane = {
+var gHomePane = {
   HOME_MODE_FIREFOX_HOME: "0",
   HOME_MODE_BLANK: "1",
   HOME_MODE_CUSTOM: "2",
   NEWTAB_ENABLED_PREF: "browser.newtabpage.enabled",
+  ACTIVITY_STREAM_PREF_BRANCH: "browser.newtabpage.activity-stream.",
+
+  get homePanePrefs() {
+    return Preferences.getAll().filter(pref => pref.id.includes(this.ACTIVITY_STREAM_PREF_BRANCH));
+  },
 
   /**
    * _handleNewTabOverrides: disables new tab settings UI. Called by
@@ -61,6 +66,23 @@ let gHomePane = {
     Services.obs.addObserver(newTabObserver, "newtab-url-changed");
     window.addEventListener("unload", () => {
       Services.obs.removeObserver(newTabObserver, "newtab-url-changed");
+    });
+  },
+
+  /**
+   * Listen for all preferences changes on the Home Tab in order to show or
+   * hide the Restore Defaults button.
+   */
+  watchHomeTabPrefChange() {
+    const observer = () => this.toggleRestoreDefaultsBtn();
+    Services.prefs.addObserver(this.ACTIVITY_STREAM_PREF_BRANCH, observer);
+    Services.prefs.addObserver("browser.startup.homepage", observer);
+    Services.prefs.addObserver(this.NEWTAB_ENABLED_PREF, observer);
+
+    window.addEventListener("unload", () => {
+      Services.prefs.removeObserver(this.ACTIVITY_STREAM_PREF_BRANCH, observer);
+      Services.prefs.removeObserver("browser.startup.homepage", observer);
+      Services.prefs.removeObserver(this.NEWTAB_ENABLED_PREF, observer);
     });
   },
 
@@ -354,6 +376,37 @@ let gHomePane = {
     homePref.value = value;
   },
 
+  /**
+   * Check all Home Tab preferences for user set values.
+   */
+  _changedHomeTabDefaultPrefs() {
+    const homeContentChanged = this.homePanePrefs.some(pref => pref.hasUserValue);
+    const homePref = Preferences.get("browser.startup.homepage");
+    const newtabPref = Preferences.get(this.NEWTAB_ENABLED_PREF);
+
+    return homeContentChanged ||
+      (homePref.value !== homePref.defaultValue) ||
+      newtabPref.hasUserValue;
+  },
+
+  /**
+   * Show the Restore Defaults button if any preference on the Home tab was
+   * changed, or hide it otherwise.
+   */
+  toggleRestoreDefaultsBtn() {
+    const btn = document.getElementById("restoreDefaultHomePageBtn");
+    const prefChanged = this._changedHomeTabDefaultPrefs();
+    btn.style.visibility = prefChanged ? "visible" : "hidden";
+  },
+
+  /**
+   * Set all prefs on the Home tab back to their default values.
+   */
+  restoreDefaultPrefsForHome() {
+    this.restoreDefaultHomePage();
+    this.homePanePrefs.forEach(pref => pref.value = pref.defaultValue);
+  },
+
   init() {
     // Event Listeners
     document.getElementById("homeMode").addEventListener("command", this.onMenuChange.bind(this));
@@ -361,7 +414,7 @@ let gHomePane = {
     document.getElementById("homePageUrl").addEventListener("input", this.onCustomHomePageInput.bind(this));
     document.getElementById("useCurrentBtn").addEventListener("command", this.setHomePageToCurrent.bind(this));
     document.getElementById("useBookmarkBtn").addEventListener("command", this.setHomePageToBookmark.bind(this));
-    document.getElementById("restoreDefaultHomePageBtn").addEventListener("command", this.restoreDefaultHomePage.bind(this));
+    document.getElementById("restoreDefaultHomePageBtn").addEventListener("command", this.restoreDefaultPrefsForHome.bind(this));
 
     this._updateUseCurrentButton();
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
@@ -373,6 +426,7 @@ let gHomePane = {
     document.getElementById("disableNewTabExtension").addEventListener("command",
       makeDisableControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY));
 
+    this.watchHomeTabPrefChange();
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "home-pane-loaded");
   }
