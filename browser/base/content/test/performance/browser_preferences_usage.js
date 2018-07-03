@@ -89,6 +89,9 @@ add_task(async function startup() {
       min: 45,
       max: 75,
     },
+    "network.loadinfo.skip_type_assertion": {
+      max: 650,
+    },
     "extensions.getAddons.cache.enabled": {
       min: 9,
       max: 55,
@@ -138,8 +141,11 @@ add_task(async function open_10_tabs() {
     "browser.startup.record": {
       max: 20,
     },
-    "dom.max_chrome_script_run_time": {
-      max: 20,
+    "browser.tabs.remote.logSwitchTiming": {
+      max: 25,
+    },
+    "network.loadinfo.skip_type_assertion": {
+      max: 60,
     },
     "toolkit.cosmeticAnimations.enabled": {
       min: 5,
