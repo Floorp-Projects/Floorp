@@ -444,7 +444,8 @@ protected:
   void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
   friend class AsyncFinishNotification;
   void DoFinishNotificationImmediately(MicroTaskRunnable* aAsync = nullptr);
-  void DispatchPlaybackEvent(const nsAString& aName);
+  void QueuePlaybackEvent(const nsAString& aName,
+                          TimeStamp&& aScheduledEventTime);
 
   /**
    * Remove this animation from the pending animation tracker and reset
@@ -522,6 +523,7 @@ protected:
   }
 
   nsIDocument* GetRenderedDocument() const;
+  nsIDocument* GetTimelineDocument() const;
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<AnimationEffect> mEffect;

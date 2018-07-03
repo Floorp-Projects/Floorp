@@ -92,6 +92,8 @@ public:
   void NotifyRefreshDriverCreated(nsRefreshDriver* aDriver);
   void NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver);
 
+  nsIDocument* GetDocument() const override { return mDocument; }
+
 protected:
   TimeStamp GetCurrentTimeStamp() const;
   nsRefreshDriver* GetRefreshDriver() const;
