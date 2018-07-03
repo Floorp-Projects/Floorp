@@ -967,10 +967,6 @@ private:
 class PrefEntry : public PLDHashEntryHdr
 {
 public:
-#ifdef DEBUG
-  // This field is before mPref to minimize sizeof(PrefEntry) on 64-bit.
-  uint32_t mAccessCount;
-#endif
   Pref* mPref; // Note: this is never null in a live entry.
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
@@ -986,9 +982,6 @@ public:
     auto entry = static_cast<PrefEntry*>(aEntry);
     auto prefName = static_cast<const char*>(aKey);
 
-#ifdef DEBUG
-    entry->mAccessCount = 0;
-#endif
     entry->mPref = new Pref(prefName);
   }
 
@@ -1076,6 +1069,43 @@ static PLDHashTable* gHashTable;
 static CallbackNode* gFirstCallback = nullptr;
 static CallbackNode* gLastPriorityNode = nullptr;
 
+#ifdef DEBUG
+#define ACCESS_COUNTS
+#endif
+
+#ifdef ACCESS_COUNTS
+using AccessCountsHashTable = nsDataHashtable<nsCStringHashKey, uint32_t>;
+static AccessCountsHashTable* gAccessCounts;
+
+static void
+AddAccessCount(const nsACString& aPrefName)
+{
+  // FIXME: Servo reads preferences from background threads in unsafe ways (bug
+  // 1474789), and triggers assertions here if we try to add usage count entries
+  // from background threads.
+  if (NS_IsMainThread()) {
+    uint32_t& count = gAccessCounts->GetOrInsert(aPrefName);
+    count++;
+  }
+}
+
+static void
+AddAccessCount(const char* aPrefName)
+{
+  AddAccessCount(nsDependentCString(aPrefName));
+}
+#else
+static void MOZ_MAYBE_UNUSED
+AddAccessCount(const nsACString& aPrefName)
+{
+}
+
+static void
+AddAccessCount(const char* aPrefName)
+{
+}
+#endif
+
 // These are only used during the call to NotifyCallbacks().
 static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
@@ -1147,9 +1177,7 @@ pref_HashTableLookup(const char* aPrefName)
     return nullptr;
   }
 
-#ifdef DEBUG
-  entry->mAccessCount += 1;
-#endif
+  AddAccessCount(aPrefName);
 
   return entry->mPref;
 }
@@ -3275,6 +3303,11 @@ Preferences::GetInstanceForService()
   gTelemetryLoadData =
     new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
 
+#ifdef ACCESS_COUNTS
+  MOZ_ASSERT(!gAccessCounts);
+  gAccessCounts = new AccessCountsHashTable();
+#endif
+
   gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
   gCacheDataDesc = "set by GetInstanceForService() (1)";
 
@@ -3407,6 +3440,10 @@ Preferences::~Preferences()
 
   delete gTelemetryLoadData;
   gTelemetryLoadData = nullptr;
+
+#ifdef ACCESS_COUNTS
+  delete gAccessCounts;
+#endif
 
   gPrefNameArena.Clear();
 }
@@ -3744,10 +3781,9 @@ Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 NS_IMETHODIMP
 Preferences::ReadStats(nsIPrefStatsCallback* aCallback)
 {
-#ifdef DEBUG
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    PrefEntry* entry = static_cast<PrefEntry*>(iter.Get());
-    aCallback->Visit(entry->mPref->Name(), entry->mAccessCount);
+#ifdef ACCESS_COUNTS
+  for (auto iter = gAccessCounts->Iter(); !iter.Done(); iter.Next()) {
+    aCallback->Visit(iter.Key(), iter.Data());
   }
 
   return NS_OK;
@@ -3759,10 +3795,8 @@ Preferences::ReadStats(nsIPrefStatsCallback* aCallback)
 NS_IMETHODIMP
 Preferences::ResetStats()
 {
-#ifdef DEBUG
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    static_cast<PrefEntry*>(iter.Get())->mAccessCount = 0;
-  }
+#ifdef ACCESS_COUNTS
+  gAccessCounts->Clear();
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
