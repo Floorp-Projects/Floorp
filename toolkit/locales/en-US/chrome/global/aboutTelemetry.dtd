@@ -34,6 +34,7 @@
 <!ENTITY aboutTelemetry.keyedScalarsSection "Keyed Scalars">
 <!ENTITY aboutTelemetry.histogramsSection "Histograms">
 <!ENTITY aboutTelemetry.keyedHistogramsSection "Keyed Histograms">
+<!ENTITY aboutTelemetry.eventsSection "Events">
 <!ENTITY aboutTelemetry.simpleMeasurementsSection "Simple Measurements">
 <!ENTITY aboutTelemetry.slowSqlSection "Slow SQL Statements">
 <!ENTITY aboutTelemetry.addonDetailsSection "Add-on Details">

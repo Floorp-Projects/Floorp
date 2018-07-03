@@ -416,7 +416,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     });
   },
 
-  changePassword(credentials) {
+  async changePassword(credentials) {
     // If |credentials| has fields that aren't handled by accounts storage,
     // updateUserAccountData will throw - mainly to prevent errors in code
     // that hard-codes field names.
@@ -436,8 +436,15 @@ this.FxAccountsWebChannelHelpers.prototype = {
         log.info("changePassword ignoring unsupported field", name);
       }
     }
-    return this._fxAccounts.updateUserAccountData(newCredentials)
-      .then(() => this._fxAccounts.updateDeviceRegistration());
+    await this._fxAccounts.updateUserAccountData(newCredentials);
+    // Force the keys derivation, to be able to register a send-tab command
+    // in updateDeviceRegistration.
+    try {
+      await this._fxAccounts.getKeys();
+    } catch (e) {
+      log.error("getKeys errored", e);
+    }
+    await this._fxAccounts.updateDeviceRegistration();
   },
 
   /**

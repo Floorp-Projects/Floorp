@@ -15,7 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 <script class="testbody" type="text/javascript">
 
 /** Test for cloning of CSS property values (including 'inherit', 'initial' and 'unset') **/
-var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
 var test_queue = [];
 var iframe = document.getElementById("iframe");
 
@@ -29,15 +28,13 @@ for (var prop in gCSSProperties) {
   test_queue.push({ prop: prop, value: "inherit",
                     inherited_value: info.other_values[0] });
   test_queue.push({ prop: prop, value: "initial" });
-  if (gTestUnset) {
-    if (info.inherited) {
-      test_queue.push({ prop: prop, value: "unset",
-                        inherited_value: info.initial_values[0] });
-      test_queue.push({ prop: prop, value: "unset",
-                        inherited_value: info.other_values[0] });
-    } else {
-      test_queue.push({ prop: prop, value: "unset" });
-    }
+  if (info.inherited) {
+    test_queue.push({ prop: prop, value: "unset",
+                      inherited_value: info.initial_values[0] });
+    test_queue.push({ prop: prop, value: "unset",
+                      inherited_value: info.other_values[0] });
+  } else {
+    test_queue.push({ prop: prop, value: "unset" });
   }
   for (var idx in info.initial_values) {
     test_queue.push({ prop: prop, value: info.initial_values[idx] });

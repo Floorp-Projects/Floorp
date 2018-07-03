@@ -1451,6 +1451,7 @@ const browsingContextTargetPrototype = {
    *
    */
   createStyleSheetActor(styleSheet) {
+    assert(!this.exited, "Target must not be exited to create a sheet actor.");
     if (this._styleSheetActors.has(styleSheet)) {
       return this._styleSheetActors.get(styleSheet);
     }
