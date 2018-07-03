@@ -24,8 +24,81 @@
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsContentUtils.h"
 
+#include <inttypes.h>
+
+static mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
+
+#define LOG(msg, ...)                                                          \
+  DDMOZ_LOG(sMediaCapabilitiesLog, LogLevel::Debug, msg, ##__VA_ARGS__)
+
 namespace mozilla {
 namespace dom {
+
+static nsCString
+VideoConfigurationToStr(const VideoConfiguration* aConfig)
+{
+  if (!aConfig) {
+    return nsCString();
+  }
+  auto str = nsPrintfCString(
+    "[contentType:%s width:%d height:%d bitrate:%" PRIu64 " framerate:%s]",
+    NS_ConvertUTF16toUTF8(aConfig->mContentType.Value()).get(),
+    aConfig->mWidth.Value(),
+    aConfig->mHeight.Value(),
+    aConfig->mBitrate.Value(),
+    NS_ConvertUTF16toUTF8(aConfig->mFramerate.Value()).get());
+  return std::move(str);
+}
+
+static nsCString
+AudioConfigurationToStr(const AudioConfiguration* aConfig)
+{
+  if (!aConfig) {
+    return nsCString();
+  }
+  auto str = nsPrintfCString(
+    "[contentType:%s channels:%s bitrate:%" PRIu64 " samplerate:%d]",
+    NS_ConvertUTF16toUTF8(aConfig->mContentType.Value()).get(),
+    aConfig->mChannels.WasPassed()
+      ? NS_ConvertUTF16toUTF8(aConfig->mChannels.Value()).get()
+      : "?",
+    aConfig->mBitrate.WasPassed() ? aConfig->mBitrate.Value() : 0,
+    aConfig->mSamplerate.WasPassed() ? aConfig->mSamplerate.Value() : 0);
+  return std::move(str);
+}
+
+static nsCString
+MediaCapabilitiesInfoToStr(const MediaCapabilitiesInfo* aInfo)
+{
+  if (!aInfo) {
+    return nsCString();
+  }
+  auto str = nsPrintfCString("[supported:%s smooth:%s powerEfficient:%s]",
+                             aInfo->Supported() ? "true" : "false",
+                             aInfo->Smooth() ? "true" : "false",
+                             aInfo->PowerEfficient() ? "true" : "false");
+  return std::move(str);
+}
+
+static nsCString
+MediaDecodingConfigurationToStr(const MediaDecodingConfiguration& aConfig)
+{
+  nsCString str;
+  str += NS_LITERAL_CSTRING("[");
+  if (aConfig.mVideo.IsAnyMemberPresent()) {
+    str +=
+      NS_LITERAL_CSTRING("video:") + VideoConfigurationToStr(&aConfig.mVideo);
+    if (aConfig.mAudio.IsAnyMemberPresent()) {
+      str += NS_LITERAL_CSTRING(" ");
+    }
+  }
+  if (aConfig.mAudio.IsAnyMemberPresent()) {
+    str +=
+      NS_LITERAL_CSTRING("audio:") + AudioConfigurationToStr(&aConfig.mAudio);
+  }
+  str += NS_LITERAL_CSTRING("]");
+  return str;
+}
 
 MediaCapabilities::MediaCapabilities(nsIGlobalObject* aParent)
   : mParent(aParent)
@@ -119,6 +192,8 @@ MediaCapabilities::DecodingInfo(
     }
   }
 
+  LOG("Processing %s", MediaDecodingConfigurationToStr(aConfiguration).get());
+
   bool supported = true;
   Maybe<MediaContainerType> videoContainer;
   Maybe<MediaContainerType> audioContainer;
@@ -154,6 +229,9 @@ MediaCapabilities::DecodingInfo(
   if (!supported) {
     auto info = MakeUnique<MediaCapabilitiesInfo>(
       false /* supported */, false /* smooth */, false /* power efficient */);
+    LOG("%s -> %s",
+        MediaDecodingConfigurationToStr(aConfiguration).get(),
+        MediaCapabilitiesInfoToStr(info.get()).get());
     promise->MaybeResolve(std::move(info));
     return promise.forget();
   }
@@ -216,6 +294,9 @@ MediaCapabilities::DecodingInfo(
           MakeUnique<MediaCapabilitiesInfo>(false /* supported */,
                                             false /* smooth */,
                                             false /* power efficient */);
+        LOG("%s -> %s",
+            MediaDecodingConfigurationToStr(aConfiguration).get(),
+            MediaCapabilitiesInfoToStr(info.get()).get());
         promise->MaybeResolve(std::move(info));
         return promise.forget();
       }
@@ -340,31 +421,46 @@ MediaCapabilities::DecodingInfo(
 
   MOZ_ASSERT(targetThread);
 
+  // this is only captured for use with the LOG macro.
+  RefPtr<MediaCapabilities> self = this;
+
   CapabilitiesPromise::All(targetThread, promises)
-    ->Then(targetThread,
-           __func__,
-           [promise, tracks = std::move(tracks), workerRef, holder](
-             const CapabilitiesPromise::AllPromiseType::ResolveOrRejectValue&
+    ->Then(
+      targetThread,
+      __func__,
+      [promise,
+       tracks = std::move(tracks),
+       workerRef,
+       holder,
+       aConfiguration,
+       self,
+       this](const CapabilitiesPromise::AllPromiseType::ResolveOrRejectValue&
                aValue) {
-             holder->Complete();
-             if (aValue.IsReject()) {
-               auto info =
-                 MakeUnique<MediaCapabilitiesInfo>(false /* supported */,
-                                                   false /* smooth */,
-                                                   false /* power efficient */);
-               promise->MaybeResolve(std::move(info));
-               return;
-             }
-             bool powerEfficient = true;
-             bool smooth = true;
-             for (auto&& capability : aValue.ResolveValue()) {
-               smooth &= capability.Smooth();
-               powerEfficient &= capability.PowerEfficient();
-             }
-             auto info = MakeUnique<MediaCapabilitiesInfo>(
-               true /* supported */, smooth, powerEfficient);
-             promise->MaybeResolve(std::move(info));
-           })
+        holder->Complete();
+        if (aValue.IsReject()) {
+          auto info =
+            MakeUnique<MediaCapabilitiesInfo>(false /* supported */,
+                                              false /* smooth */,
+                                              false /* power efficient */);
+          LOG("%s -> %s",
+              MediaDecodingConfigurationToStr(aConfiguration).get(),
+              MediaCapabilitiesInfoToStr(info.get()).get());
+          promise->MaybeResolve(std::move(info));
+          return;
+        }
+        bool powerEfficient = true;
+        bool smooth = true;
+        for (auto&& capability : aValue.ResolveValue()) {
+          smooth &= capability.Smooth();
+          powerEfficient &= capability.PowerEfficient();
+        }
+        auto info = MakeUnique<MediaCapabilitiesInfo>(
+          true /* supported */, smooth, powerEfficient);
+        LOG("%s -> %s",
+            MediaDecodingConfigurationToStr(aConfiguration).get(),
+            MediaCapabilitiesInfoToStr(info.get()).get());
+        promise->MaybeResolve(std::move(info));
+      })
     ->Track(*holder);
 
   return promise.forget();
