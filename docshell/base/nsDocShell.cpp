@@ -705,30 +705,29 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   // Extract the info from the DocShellLoadInfo struct...
   if (aLoadInfo) {
-    aLoadInfo->GetReferrer(getter_AddRefs(referrer));
-    aLoadInfo->GetOriginalURI(getter_AddRefs(originalURI));
-    GetMaybeResultPrincipalURI(aLoadInfo, resultPrincipalURI);
-    aLoadInfo->GetLoadReplace(&loadReplace);
-    nsDocShellLoadInfo::nsDocShellInfoLoadType lt = nsDocShellLoadInfo::loadNormal;
-    aLoadInfo->GetLoadType(&lt);
+    referrer = aLoadInfo->Referrer();
+    originalURI = aLoadInfo->OriginalURI();
+    aLoadInfo->GetMaybeResultPrincipalURI(resultPrincipalURI);
+    loadReplace = aLoadInfo->LoadReplace();
+    nsDocShellLoadInfo::nsDocShellInfoLoadType lt = aLoadInfo->LoadType();
     // Get the appropriate loadType from nsIDocShellLoadInfo type
     loadType = ConvertDocShellInfoLoadTypeToLoadType(lt);
 
-    aLoadInfo->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
-    aLoadInfo->GetInheritPrincipal(&inheritPrincipal);
-    aLoadInfo->GetPrincipalIsExplicit(&principalIsExplicit);
-    aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
-    aLoadInfo->GetTarget(getter_Copies(target));
-    aLoadInfo->GetPostDataStream(getter_AddRefs(postStream));
-    aLoadInfo->GetHeadersStream(getter_AddRefs(headersStream));
-    aLoadInfo->GetSendReferrer(&sendReferrer);
-    aLoadInfo->GetReferrerPolicy(&referrerPolicy);
-    aLoadInfo->GetIsSrcdocLoad(&isSrcdoc);
+    triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
+    inheritPrincipal = aLoadInfo->InheritPrincipal();
+    principalIsExplicit = aLoadInfo->PrincipalIsExplicit();
+    shEntry = aLoadInfo->SHEntry();
+    aLoadInfo->GetTarget(target);
+    postStream = aLoadInfo->PostDataStream();
+    headersStream = aLoadInfo->HeadersStream();
+    sendReferrer = aLoadInfo->SendReferrer();
+    referrerPolicy = aLoadInfo->ReferrerPolicy();
+    isSrcdoc = aLoadInfo->IsSrcdocLoad();
     aLoadInfo->GetSrcdocData(srcdoc);
-    aLoadInfo->GetSourceDocShell(getter_AddRefs(sourceDocShell));
-    aLoadInfo->GetBaseURI(getter_AddRefs(baseURI));
-    aLoadInfo->GetForceAllowDataURI(&forceAllowDataURI);
-    aLoadInfo->GetOriginalFrameSrc(&originalFrameSrc);
+    sourceDocShell = aLoadInfo->SourceDocShell();
+    baseURI = aLoadInfo->BaseURI();
+    forceAllowDataURI = aLoadInfo->ForceAllowDataURI();
+    originalFrameSrc = aLoadInfo->OriginalFrameSrc();
   }
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -9418,7 +9417,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         loadInfo->SetSendReferrer(!(aFlags &
                                     INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
         loadInfo->SetOriginalURI(aOriginalURI);
-        SetMaybeResultPrincipalURI(loadInfo, aResultPrincipalURI);
+        loadInfo->SetMaybeResultPrincipalURI(aResultPrincipalURI);
         loadInfo->SetLoadReplace(aLoadReplace);
         loadInfo->SetTriggeringPrincipal(aTriggeringPrincipal);
         loadInfo->SetInheritPrincipal(

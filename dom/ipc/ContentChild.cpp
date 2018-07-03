@@ -808,13 +808,11 @@ GetCreateWindowParams(mozIDOMWindowProxy* aParent,
 
   baseURI->GetSpec(aBaseURIString);
 
-  bool sendReferrer = true;
   if (aLoadInfo) {
-    aLoadInfo->GetSendReferrer(&sendReferrer);
-    if (!sendReferrer) {
+    if (!aLoadInfo->SendReferrer()) {
       *aReferrerPolicy = mozilla::net::RP_No_Referrer;
     } else {
-      aLoadInfo->GetReferrerPolicy(aReferrerPolicy);
+      *aReferrerPolicy = aLoadInfo->ReferrerPolicy();
     }
   }
 
