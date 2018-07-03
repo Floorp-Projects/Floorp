@@ -6,6 +6,7 @@
 
 #include "vm/StringType-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
@@ -30,11 +31,11 @@
 
 using namespace js;
 
+using mozilla::ArrayEqual;
 using mozilla::IsAsciiDigit;
 using mozilla::IsNegativeZero;
 using mozilla::IsSame;
 using mozilla::PodCopy;
-using mozilla::PodEqual;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
 using mozilla::Unused;
@@ -846,13 +847,13 @@ js::EqualChars(JSLinearString* str1, JSLinearString* str2)
     AutoCheckCannotGC nogc;
     if (str1->hasTwoByteChars()) {
         if (str2->hasTwoByteChars())
-            return PodEqual(str1->twoByteChars(nogc), str2->twoByteChars(nogc), len);
+            return ArrayEqual(str1->twoByteChars(nogc), str2->twoByteChars(nogc), len);
 
         return EqualChars(str2->latin1Chars(nogc), str1->twoByteChars(nogc), len);
     }
 
     if (str2->hasLatin1Chars())
-        return PodEqual(str1->latin1Chars(nogc), str2->latin1Chars(nogc), len);
+        return ArrayEqual(str1->latin1Chars(nogc), str2->latin1Chars(nogc), len);
 
     return EqualChars(str1->latin1Chars(nogc), str2->twoByteChars(nogc), len);
 }
@@ -868,14 +869,14 @@ js::HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start)
     if (text->hasLatin1Chars()) {
         const Latin1Char* textChars = text->latin1Chars(nogc) + start;
         if (pat->hasLatin1Chars())
-            return PodEqual(textChars, pat->latin1Chars(nogc), patLen);
+            return ArrayEqual(textChars, pat->latin1Chars(nogc), patLen);
 
         return EqualChars(textChars, pat->twoByteChars(nogc), patLen);
     }
 
     const char16_t* textChars = text->twoByteChars(nogc) + start;
     if (pat->hasTwoByteChars())
-        return PodEqual(textChars, pat->twoByteChars(nogc), patLen);
+        return ArrayEqual(textChars, pat->twoByteChars(nogc), patLen);
 
     return EqualChars(pat->latin1Chars(nogc), textChars, patLen);
 }
@@ -991,7 +992,7 @@ js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes)
 
     AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
-           ? PodEqual(latin1, str->latin1Chars(nogc), length)
+           ? ArrayEqual(latin1, str->latin1Chars(nogc), length)
            : EqualChars(latin1, str->twoByteChars(nogc), length);
 }
 
@@ -1757,7 +1758,7 @@ ExternalStringCache::lookup(const char16_t* chars, size_t len) const
         // Compare the chars. Don't do this for long strings as it will be
         // faster to allocate a new external string.
         static const size_t MaxLengthForCharComparison = 100;
-        if (len <= MaxLengthForCharComparison && PodEqual(chars, strChars, len))
+        if (len <= MaxLengthForCharComparison && ArrayEqual(chars, strChars, len))
             return str;
     }
 

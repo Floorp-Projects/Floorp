@@ -7,6 +7,7 @@
 #ifndef util_Text_h
 #define util_Text_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TextUtils.h"
@@ -62,7 +63,7 @@ template <typename Char1>
 inline bool
 EqualChars(const Char1* s1, const Char1* s2, size_t len)
 {
-    return mozilla::PodEqual(s1, s2, len);
+    return mozilla::ArrayEqual(s1, s2, len);
 }
 
 template <typename Char1, typename Char2>
