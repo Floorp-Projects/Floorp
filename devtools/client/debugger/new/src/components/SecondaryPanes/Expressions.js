@@ -14,6 +14,8 @@ var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored[
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
+var _prefs = require("../../utils/prefs");
+
 var _devtoolsReps = require("devtools/client/shared/components/reps/reps.js");
 
 var _actions = require("../../actions/index");
@@ -28,11 +30,12 @@ var _firefox = require("../../client/firefox");
 
 var _Button = require("../shared/Button/index");
 
+var _lodash = require("devtools/client/shared/vendor/lodash");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
 class Expressions extends _react.Component {
   constructor(props) {
     super(props);
@@ -49,10 +52,23 @@ class Expressions extends _react.Component {
     };
 
     this.handleChange = e => {
+      const target = e.target;
+
+      if (_prefs.features.autocompleteExpression) {
+        this.findAutocompleteMatches(target.value, target.selectionStart);
+      }
+
       this.setState({
-        inputValue: e.target.value
+        inputValue: target.value
       });
     };
+
+    this.findAutocompleteMatches = (0, _lodash.debounce)((value, selectionStart) => {
+      const {
+        autocomplete
+      } = this.props;
+      autocomplete(value, selectionStart);
+    }, 250);
 
     this.handleKeyDown = e => {
       if (e.key === "Escape") {
@@ -97,6 +113,8 @@ class Expressions extends _react.Component {
       if (!this.props.expressionError) {
         this.hideInput();
       }
+
+      this.props.clearAutocomplete();
     };
 
     this.renderExpression = (expression, index) => {
@@ -187,9 +205,10 @@ class Expressions extends _react.Component {
     const {
       expressions,
       expressionError,
-      showInput
+      showInput,
+      autocompleteMatches
     } = this.props;
-    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue || nextProps.showInput !== showInput || focused !== nextState.focused;
+    return autocompleteMatches !== nextProps.autocompleteMatches || expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue || nextProps.showInput !== showInput || focused !== nextState.focused;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -228,6 +247,31 @@ class Expressions extends _react.Component {
     this.hideInput();
   }
 
+  renderAutoCompleteMatches() {
+    if (!_prefs.features.autocompleteExpression) {
+      return null;
+    }
+
+    const {
+      autocompleteMatches
+    } = this.props;
+
+    if (autocompleteMatches) {
+      return _react2.default.createElement("datalist", {
+        id: "autocomplete-matches"
+      }, autocompleteMatches.map((match, index) => {
+        return _react2.default.createElement("option", {
+          key: index,
+          value: match
+        });
+      }));
+    }
+
+    return _react2.default.createElement("datalist", {
+      id: "autocomplete-matches"
+    });
+  }
+
   renderNewExpressionInput() {
     const {
       expressionError,
@@ -248,7 +292,7 @@ class Expressions extends _react.Component {
     }, _react2.default.createElement("form", {
       className: "expression-input-form",
       onSubmit: this.handleNewSubmit
-    }, _react2.default.createElement("input", {
+    }, _react2.default.createElement("input", _extends({
       className: "input-expression",
       type: "text",
       placeholder: placeholder,
@@ -259,7 +303,9 @@ class Expressions extends _react.Component {
       autoFocus: showInput,
       value: !editing ? inputValue : "",
       ref: c => this._input = c
-    }), _react2.default.createElement("input", {
+    }, _prefs.features.autocompleteExpression && {
+      list: "autocomplete-matches"
+    })), this.renderAutoCompleteMatches(), _react2.default.createElement("input", {
       type: "submit",
       style: {
         display: "none"
@@ -286,7 +332,7 @@ class Expressions extends _react.Component {
     }, _react2.default.createElement("form", {
       className: "expression-input-form",
       onSubmit: e => this.handleExistingSubmit(e, expression)
-    }, _react2.default.createElement("input", {
+    }, _react2.default.createElement("input", _extends({
       className: (0, _classnames2.default)("input-expression", {
         error
       }),
@@ -297,7 +343,9 @@ class Expressions extends _react.Component {
       onFocus: this.onFocus,
       value: editing ? inputValue : expression.input,
       ref: c => this._input = c
-    }), _react2.default.createElement("input", {
+    }, _prefs.features.autocompleteExpression && {
+      list: "autocomplete-matches"
+    })), this.renderAutoCompleteMatches(), _react2.default.createElement("input", {
       type: "submit",
       style: {
         display: "none"
@@ -317,9 +365,12 @@ class Expressions extends _react.Component {
 
 }
 
-const mapStateToProps = state => ({
-  expressions: (0, _selectors.getExpressions)(state),
-  expressionError: (0, _selectors.getExpressionError)(state)
-});
+const mapStateToProps = state => {
+  return {
+    autocompleteMatches: (0, _selectors.getAutocompleteMatchset)(state),
+    expressions: (0, _selectors.getExpressions)(state),
+    expressionError: (0, _selectors.getExpressionError)(state)
+  };
+};
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Expressions);

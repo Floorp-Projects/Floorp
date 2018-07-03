@@ -7,8 +7,6 @@ exports.getWorkers = exports.createDebuggeeState = undefined;
 exports.default = debuggee;
 exports.getWorker = getWorker;
 
-var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
-
 var _immutable = require("devtools/client/shared/vendor/immutable");
 
 var _makeRecord = require("../utils/makeRecord");
@@ -39,9 +37,7 @@ function debuggee(state = createDebuggeeState(), action) {
   }
 }
 
-const getDebuggeeWrapper = state => state.debuggee;
-
-const getWorkers = exports.getWorkers = (0, _reselect.createSelector)(getDebuggeeWrapper, debuggeeState => debuggeeState.get("workers"));
+const getWorkers = exports.getWorkers = state => state.debuggee.workers;
 
 function getWorker(state, url) {
   return getWorkers(state).find(value => url);

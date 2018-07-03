@@ -16,7 +16,7 @@ function findSource(sourceTree, sourceUrl) {
   let returnTarget = null;
 
   function _traverse(subtree) {
-    if ((0, _utils.nodeHasChildren)(subtree)) {
+    if (subtree.type === "directory") {
       for (const child of subtree.contents) {
         _traverse(child);
       }
@@ -28,7 +28,7 @@ function findSource(sourceTree, sourceUrl) {
     }
   }
 
-  sourceTree.contents.forEach(_traverse);
+  sourceTree.contents.forEach(node => _traverse(node));
 
   if (!returnTarget) {
     return sourceTree;

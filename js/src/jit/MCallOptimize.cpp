@@ -65,6 +65,13 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return InliningStatus_NotInlined;
     }
 
+    // Don't inline if we're constructing and new.target != callee. This can
+    // happen with Reflect.construct or derived class constructors.
+    if (callInfo.constructing() && callInfo.getNewTarget() != callInfo.fun()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineUnexpectedNewTarget);
+        return InliningStatus_NotInlined;
+    }
+
     // Default failure reason is observing an unsupported type.
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadType);
 
@@ -461,6 +468,13 @@ IonBuilder::inlineNonFunctionCall(CallInfo& callInfo, JSObject* target)
     // construct hook.
 
     MOZ_ASSERT(target->nonCCWRealm() == script()->realm());
+
+    // Don't inline if we're constructing and new.target != callee. This can
+    // happen with Reflect.construct or derived class constructors.
+    if (callInfo.constructing() && callInfo.getNewTarget() != callInfo.fun()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineUnexpectedNewTarget);
+        return InliningStatus_NotInlined;
+    }
 
     if (callInfo.constructing() && target->constructHook() == TypedObject::construct)
         return inlineConstructTypedObject(callInfo, &target->as<TypeDescr>());

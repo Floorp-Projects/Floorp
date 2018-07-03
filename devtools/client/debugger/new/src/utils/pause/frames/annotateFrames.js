@@ -69,6 +69,7 @@ function getBabelFrameIndexes(frames) {
   } // Receives an array of start and end index tuples and returns
   // an array of async call stack index ranges.
   // e.g. [[1,3], [5,7]] => [[1,2,3], [5,6,7]]
+  // $FlowIgnore
 
 
   return (0, _lodash.flatMap)((0, _lodash.zip)(startIndexes, endIndexes), ([startIndex, endIndex]) => (0, _lodash.range)(startIndex, endIndex + 1));

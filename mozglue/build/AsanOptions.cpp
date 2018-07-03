@@ -32,14 +32,6 @@
 //   allocations the same way we would handle them with a regular allocator and
 //   also uncovers potential bugs that might occur in these situations.
 //
-//   log_path=/tmp/ff_asan_log - When running with the ASan reporter extension
-//   enabled (MOZ_ASAN_REPORTER), then we need to dump our logs to files
-//   instead of stderr so the reporter extension can find it. Unfortunately,
-//   this function is called so early at startup that we can't use the profile
-//   directory or even ask XPCOM for a temporary directory. Since the extension
-//   is only meant to run on Linux and Mac OSX for now, hardcoding /tmp is an
-//   option that should work for most standard environments.
-//
 //   max_malloc_fill_size - Tell ASan to initialize memory to a certain value
 //   when it is allocated. This option specifies the maximum allocation size
 //   for which ASan should still initialize the memory. The value we specify
@@ -61,9 +53,7 @@ const char* __asan_default_options() {
     return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0"
            ":max_free_fill_size=268435456:max_malloc_fill_size=268435456"
            ":malloc_fill_byte=228:free_fill_byte=229"
-#ifdef MOZ_ASAN_REPORTER
-           ":log_path=/tmp/ff_asan_log"
-#endif
+           ":handle_sigill=1"
            ":allocator_may_return_null=1";
 }
 

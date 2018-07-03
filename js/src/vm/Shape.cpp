@@ -2043,6 +2043,8 @@ IsOriginalProto(GlobalObject* global, JSProtoKey key, NativeObject& proto)
     if (global->getPrototype(key) != ObjectValue(proto))
         return false;
 
+    MOZ_ASSERT(&proto.global() == global);
+
     if (key == JSProto_Object) {
         MOZ_ASSERT(proto.staticPrototypeIsImmutable(),
                    "proto should be Object.prototype, whose prototype is "
@@ -2071,7 +2073,6 @@ GetInitialShapeProtoKey(TaggedProto proto, JSContext* cx)
     if (proto.isObject() && proto.toObject()->isNative()) {
         GlobalObject* global = cx->global();
         NativeObject& obj = proto.toObject()->as<NativeObject>();
-        MOZ_ASSERT(global == &obj.global());
 
         if (IsOriginalProto(global, JSProto_Object, obj))
             return JSProto_Object;

@@ -1919,6 +1919,36 @@ js::NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj, PropertyName
     return NativeDefineDataProperty(cx, obj, id, value, attrs);
 }
 
+
+// ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
+// 9.4.5.9 IntegerIndexedElementSet
+static bool
+DefineNonexistentTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj, uint64_t index,
+                                   HandleValue v, ObjectOpResult& result)
+{
+    // This method is only called for non-existent properties, which
+    // means any absent indexed property must be out of range.
+    MOZ_ASSERT(index >= obj->length());
+
+    // Steps 1-2 are enforced by the caller.
+
+    // Step 3.
+    // We still need to call ToNumber, because of its possible side
+    // effects.
+    double d;
+    if (!ToNumber(cx, v, &d))
+        return false;
+
+    // Steps 4-5.
+    // ToNumber may have detached the array buffer.
+    if (obj->hasDetachedBuffer())
+        return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+
+    // Steps 6-9.
+    // We (wrongly) ignore out of range defines.
+    return result.failSoft(JSMSG_BAD_INDEX);
+}
+
 static bool
 DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                           HandleValue v, ObjectOpResult& result)
@@ -1941,30 +1971,8 @@ DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
         uint64_t index;
         if (IsTypedArrayIndex(id, &index)) {
-            // ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
-            // 9.4.5.9 IntegerIndexedElementSet
-
-            // This method is only called for non-existent properties, which
-            // means any absent indexed property must be out of range.
-            MOZ_ASSERT(index >= obj->as<TypedArrayObject>().length());
-
-            // Steps 1-2 are enforced by the caller.
-
-            // Step 3.
-            // We still need to call ToNumber, because of its possible side
-            // effects.
-            double d;
-            if (!ToNumber(cx, v, &d))
-                return false;
-
-            // Steps 4-5.
-            // ToNumber may have detached the array buffer.
-            if (obj->as<TypedArrayObject>().hasDetachedBuffer())
-                return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
-
-            // Steps 6-9.
-            // We (wrongly) ignore out of range defines.
-            return result.failSoft(JSMSG_BAD_INDEX);
+            Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
+            return DefineNonexistentTypedArrayElement(cx, tobj, index, v, result);
         }
     } else if (obj->is<ArgumentsObject>()) {
         // If this method is called with either |length| or |@@iterator|, the
@@ -2651,48 +2659,58 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
         return DefineNonexistentProperty(cx, obj, id, v, result);
     }
 
+    if (IsQualified && obj->is<TypedArrayObject>()) {
+        // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index)) {
+            Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
+            return DefineNonexistentTypedArrayElement(cx, tobj, index, v, result);
+        }
+    }
+
     return SetPropertyByDefining(cx, id, v, receiver, result);
 }
 
-/*
- * Set an existing own property obj[index] that's a dense element or typed
- * array element.
- */
+// ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
+// 9.4.5.9 IntegerIndexedElementSet
+// Set an existing own property obj[index] that's a typed array element.
 static bool
-SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t index, HandleValue v,
-                            ObjectOpResult& result)
+SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj, uint32_t index, HandleValue v,
+                     ObjectOpResult& result)
 {
-    if (obj->is<TypedArrayObject>()) {
-        // ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
-        // 9.4.5.9 IntegerIndexedElementSet
+    // Steps 1-2 are enforced by the caller.
 
-        // Steps 1-2 are enforced by the caller.
+    // Step 3.
+    double d;
+    if (!ToNumber(cx, v, &d))
+        return false;
 
-        // Step 3.
-        double d;
-        if (!ToNumber(cx, v, &d))
-            return false;
+    // Steps 6-7 don't apply for existing typed array elements.
 
-        // Steps 6-7 don't apply for existing typed array elements.
-
-        // Steps 8-16.
-        // Silently do nothing for out-of-bounds sets, for consistency with
-        // current behavior.  (ES6 currently says to throw for this in
-        // strict mode code, so we may eventually need to change.)
-        uint32_t len = obj->as<TypedArrayObject>().length();
-        if (index < len) {
-            TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
-            return result.succeed();
-        }
-
-        // Steps 4-5.
-        // A previously existing typed array element can only be out-of-bounds
-        // if the above ToNumber call detached the typed array's buffer.
-        MOZ_ASSERT(obj->as<TypedArrayObject>().hasDetachedBuffer());
-
-        return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+    // Steps 8-16.
+    // Silently do nothing for out-of-bounds sets, for consistency with
+    // current behavior.  (ES6 currently says to throw for this in
+    // strict mode code, so we may eventually need to change.)
+    uint32_t len = obj->as<TypedArrayObject>().length();
+    if (index < len) {
+        TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+        return result.succeed();
     }
 
+    // Steps 4-5.
+    // A previously existing typed array element can only be out-of-bounds
+    // if the above ToNumber call detached the typed array's buffer.
+    MOZ_ASSERT(obj->as<TypedArrayObject>().hasDetachedBuffer());
+
+    return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
+}
+
+// Set an existing own property obj[index] that's a dense element.
+static bool
+SetDenseElement(JSContext* cx, HandleNativeObject obj, uint32_t index, HandleValue v,
+                ObjectOpResult& result)
+{
+    MOZ_ASSERT(!obj->is<TypedArrayObject>());
     MOZ_ASSERT(obj->containsDenseElement(index));
 
     if (!obj->maybeCopyElementsForWrite(cx))
@@ -2716,13 +2734,19 @@ SetExistingProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue recei
 {
     // Step 5 for dense elements.
     if (prop.isDenseOrTypedArrayElement()) {
+        // TypedArray [[Set]] ignores the receiver completely.
+        if (pobj->is<TypedArrayObject>()) {
+            Rooted<TypedArrayObject*> tobj(cx, &pobj->as<TypedArrayObject>());
+            return SetTypedArrayElement(cx, tobj, JSID_TO_INT(id), v, result);
+        }
+
         // Step 5.a.
         if (pobj->denseElementsAreFrozen())
             return result.fail(JSMSG_READ_ONLY);
 
         // Pure optimization for the common case:
         if (receiver.isObject() && pobj == &receiver.toObject())
-            return SetDenseOrTypedArrayElement(cx, pobj, JSID_TO_INT(id), v, result);
+            return SetDenseElement(cx, pobj, JSID_TO_INT(id), v, result);
 
         // Steps 5.b-f.
         return SetPropertyByDefining(cx, id, v, receiver, result);
