@@ -753,7 +753,7 @@ class MochitestArguments(ArgumentContainer):
                     options.testingModulesDir = p
                     break
 
-        # Paths to specialpowers and mochijar from the tests zip.
+        # Paths to specialpowers and mochijar from the tests archive.
         options.stagedAddons = [
             os.path.join(here, 'extensions', 'specialpowers'),
             os.path.join(here, 'mochijar'),
