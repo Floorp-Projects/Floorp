@@ -17,12 +17,6 @@ import mozinfo
 
 import mozunit
 
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    # reload() has been moved to importlib in Python 3
-    # see https://docs.python.org/3.5/library/importlib.html#importlib.reload
-    from importlib import reload
 
 class TestMozinfo(unittest.TestCase):
 
