@@ -265,7 +265,7 @@ linux64-base-toolchains/opt:
     toolchains:
         - linux64-clang-3.9
         - linux64-gcc-6
-        - linux64-rust-1.26
+        - linux64-rust-1.27
         - linux64-sccache
 
 linux64-base-toolchains/debug:
@@ -295,7 +295,7 @@ linux64-base-toolchains/debug:
     toolchains:
         - linux64-clang-3.9
         - linux64-gcc-6
-        - linux64-rust-1.26
+        - linux64-rust-1.27
         - linux64-sccache
 
 linux/opt:
