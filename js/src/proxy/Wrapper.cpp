@@ -456,9 +456,10 @@ ErrorCopier::~ErrorCopier()
             cx->clearPendingException();
             ar.reset();
             Rooted<ErrorObject*> errObj(cx, &exc.toObject().as<ErrorObject>());
-            JSObject* copyobj = CopyErrorObject(cx, errObj);
-            if (copyobj)
-                cx->setPendingException(ObjectValue(*copyobj));
+            if (JSObject* copyobj = CopyErrorObject(cx, errObj)) {
+                RootedValue rootedCopy(cx, ObjectValue(*copyobj));
+                cx->setPendingException(rootedCopy);
+            }
         }
     }
 }

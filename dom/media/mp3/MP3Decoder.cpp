@@ -29,4 +29,19 @@ bool MP3Decoder::IsSupportedType(const MediaContainerType& aContainerType)
   return false;
 }
 
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+MP3Decoder::GetTracksInfo(const MediaContainerType& aType)
+{
+  nsTArray<UniquePtr<TrackInfo>> tracks;
+  if (!IsSupportedType(aType)) {
+    return tracks;
+  }
+
+  tracks.AppendElement(
+    CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+      NS_LITERAL_CSTRING("audio/mpeg"), aType));
+
+  return tracks;
+}
+
 } // namespace mozilla

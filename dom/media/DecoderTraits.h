@@ -7,7 +7,9 @@
 #ifndef DecoderTraits_h_
 #define DecoderTraits_h_
 
+#include "mozilla/UniquePtr.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -15,6 +17,7 @@ class DecoderDoctorDiagnostics;
 class MediaContainerType;
 struct MediaFormatReaderInit;
 class MediaFormatReader;
+class TrackInfo;
 
 enum CanPlayStatus {
   CANPLAY_NO,
@@ -57,6 +60,10 @@ public:
   static bool IsMatroskaType(const MediaContainerType& aType);
 
   static bool IsSupportedType(const MediaContainerType& aType);
+
+  // Returns an array of all TrackInfo objects described by this type.
+  static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
+    const MediaContainerType& aType);
 };
 
 } // namespace mozilla

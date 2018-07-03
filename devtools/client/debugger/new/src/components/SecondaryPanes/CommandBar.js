@@ -293,4 +293,18 @@ const mapStateToProps = state => ({
   skipPausing: (0, _selectors.getSkipPausing)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(CommandBar);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  timeTravelTo: _actions2.default.timeTravelTo,
+  clearHistory: _actions2.default.clearHistory,
+  resume: _actions2.default.resume,
+  stepIn: _actions2.default.stepIn,
+  stepOut: _actions2.default.stepOut,
+  stepOver: _actions2.default.stepOver,
+  breakOnNext: _actions2.default.breakOnNext,
+  rewind: _actions2.default.rewind,
+  reverseStepIn: _actions2.default.reverseStepIn,
+  reverseStepOut: _actions2.default.reverseStepOut,
+  reverseStepOver: _actions2.default.reverseStepOver,
+  pauseOnExceptions: _actions2.default.pauseOnExceptions,
+  toggleSkipPausing: _actions2.default.toggleSkipPausing
+})(CommandBar);

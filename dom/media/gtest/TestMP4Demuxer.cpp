@@ -17,8 +17,6 @@
 using namespace mozilla;
 using media::TimeUnit;
 
-class AutoTaskQueue;
-
 #define DO_FAIL [binding]()->void { EXPECT_TRUE(false); binding->mTaskQueue->BeginShutdown(); }
 
 class MP4DemuxerBinding

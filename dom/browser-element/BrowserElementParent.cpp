@@ -160,7 +160,7 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
                            val, &status);
 
   if (dispatchSucceeded) {
-    if (aPopupFrameElement->IsInUncomposedDoc()) {
+    if (aPopupFrameElement->IsInComposedDoc()) {
       return BrowserElementParent::OPEN_WINDOW_ADDED;
     }
     if (status == nsEventStatus_eConsumeNoDefault) {

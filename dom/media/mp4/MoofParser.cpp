@@ -53,7 +53,6 @@ bool
 MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
 {
   bool foundValidMoof = false;
-  bool foundMdat = false;
 
   for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moov") && mInitRange.IsEmpty()) {
@@ -606,7 +605,6 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
   }
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
-  uint8_t version = flags >> 24;
 
   if (!reader->CanReadType<uint32_t>()) {
     LOG(Moof, "Incomplete Box (missing sampleCount)");

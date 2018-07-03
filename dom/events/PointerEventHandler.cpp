@@ -632,7 +632,7 @@ PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
     return;
   }
 
-  if (!aIsGotCapture && !aCaptureTarget->IsInUncomposedDoc()) {
+  if (!aIsGotCapture && !aCaptureTarget->IsInComposedDoc()) {
     // If the capturing element was removed from the DOM tree, fire
     // ePointerLostCapture at the document.
     PointerEventInit init;

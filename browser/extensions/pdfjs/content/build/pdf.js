@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.641';
-var pdfjsBuild = '6fa2c779';
+var pdfjsVersion = '2.0.661';
+var pdfjsBuild = '42922c9a';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(6);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(18);
@@ -4223,7 +4223,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.641',
+    apiVersion: '2.0.661',
     source: {
       data: source.data,
       url: source.url,
@@ -5468,15 +5468,15 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
     this._canvas = params.canvasContext.canvas;
   }
   InternalRenderTask.prototype = {
-    initializeGraphics: function InternalRenderTask_initializeGraphics(transparency) {
+    initializeGraphics(transparency) {
+      if (this.cancelled) {
+        return;
+      }
       if (this._canvas) {
         if (canvasInRendering.has(this._canvas)) {
           throw new Error('Cannot use the same canvas during multiple render() operations. ' + 'Use different canvas or ensure previous operations were ' + 'cancelled or completed.');
         }
         canvasInRendering.set(this._canvas, this);
-      }
-      if (this.cancelled) {
-        return;
       }
       if (this._pdfBug && _global_scope2.default.StepperManager && _global_scope2.default.StepperManager.enabled) {
         this.stepper = _global_scope2.default.StepperManager.create(this.pageNumber - 1);
@@ -5563,8 +5563,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.641';
-  exports.build = build = '6fa2c779';
+  exports.version = version = '2.0.661';
+  exports.build = build = '42922c9a';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
