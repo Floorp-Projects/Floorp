@@ -94,19 +94,17 @@ async function setDisableCacheCheckboxChecked(tabX, state) {
 }
 
 function reloadTab(tabX) {
-  const def = defer();
   const browser = gBrowser.selectedBrowser;
 
-  BrowserTestUtils.browserLoaded(browser).then(function() {
+  const reloadTabPromise = BrowserTestUtils.browserLoaded(browser).then(function() {
     info("Reloaded tab " + tabX.title);
-    def.resolve();
   });
 
   info("Reloading tab " + tabX.title);
   const mm = loadFrameScriptUtils();
   mm.sendAsyncMessage("devtools:test:reload");
 
-  return def.promise;
+  return reloadTabPromise;
 }
 
 async function destroyTab(tabX) {

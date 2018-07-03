@@ -160,19 +160,20 @@ async function testSelect(select) {
 
     const observer = new PrefObserver("devtools.");
 
-    const deferred = defer();
     let changeSeen = false;
-    observer.once(pref, () => {
-      changeSeen = true;
-      is(GetPref(pref), option.value, "Preference been switched for " + pref);
-      deferred.resolve();
+    const changeSeenPromise = new Promise(resolve => {
+      observer.once(pref, () => {
+        changeSeen = true;
+        is(GetPref(pref), option.value, "Preference been switched for " + pref);
+        resolve();
+      });
     });
 
     select.selectedIndex = options.indexOf(option);
     const changeEvent = new Event("change");
     select.dispatchEvent(changeEvent);
 
-    await deferred.promise;
+    await changeSeenPromise;
 
     ok(changeSeen, "Correct pref was changed");
     observer.destroy();
@@ -180,16 +181,16 @@ async function testSelect(select) {
 }
 
 async function testMouseClick(node, prefValue) {
-  const deferred = defer();
-
   const observer = new PrefObserver("devtools.");
 
   const pref = node.getAttribute("data-pref");
   let changeSeen = false;
-  observer.once(pref, () => {
-    changeSeen = true;
-    is(GetPref(pref), !prefValue, "New value is correct for " + pref);
-    deferred.resolve();
+  const changeSeenPromise = new Promise(resolve => {
+    observer.once(pref, () => {
+      changeSeen = true;
+      is(GetPref(pref), !prefValue, "New value is correct for " + pref);
+      resolve();
+    });
   });
 
   node.scrollIntoView();
@@ -201,7 +202,7 @@ async function testMouseClick(node, prefValue) {
     EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
   });
 
-  await deferred.promise;
+  await changeSeenPromise;
 
   ok(changeSeen, "Correct pref was changed");
   observer.destroy();
@@ -402,23 +403,24 @@ async function testToggleTools() {
  * re-rendering of the tool list, we must re-query the checkboxes every time.
  */
 async function toggleTool(node) {
-  const deferred = defer();
-
   const toolId = node.getAttribute("id");
-  if (node.checked) {
-    gDevTools.once("tool-unregistered",
-      checkUnregistered.bind(null, toolId, deferred));
-  } else {
-    gDevTools.once("tool-registered",
-      checkRegistered.bind(null, toolId, deferred));
-  }
+
+  const registeredPromise = new Promise(resolve => {
+    if (node.checked) {
+      gDevTools.once("tool-unregistered",
+        checkUnregistered.bind(null, toolId, resolve));
+    } else {
+      gDevTools.once("tool-registered",
+        checkRegistered.bind(null, toolId, resolve));
+    }
+  });
   node.scrollIntoView();
   EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
 
-  await deferred.promise;
+  await registeredPromise;
 }
 
-function checkUnregistered(toolId, deferred, data) {
+function checkUnregistered(toolId, resolve, data) {
   if (data == toolId) {
     ok(true, "Correct tool removed");
     // checking tab on the toolbox
@@ -427,10 +429,10 @@ function checkUnregistered(toolId, deferred, data) {
   } else {
     ok(false, "Something went wrong, " + toolId + " was not unregistered");
   }
-  deferred.resolve();
+  resolve();
 }
 
-async function checkRegistered(toolId, deferred, data) {
+async function checkRegistered(toolId, resolve, data) {
   if (data == toolId) {
     ok(true, "Correct tool added back");
     // checking tab on the toolbox
@@ -439,7 +441,7 @@ async function checkRegistered(toolId, deferred, data) {
   } else {
     ok(false, "Something went wrong, " + toolId + " was not registered");
   }
-  deferred.resolve();
+  resolve();
 }
 
 function GetPref(name) {

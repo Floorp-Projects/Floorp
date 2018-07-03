@@ -8,7 +8,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {DOMHelpers} = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
@@ -243,36 +242,33 @@ WindowHost.prototype = {
    * Create a new xul window to contain the toolbox.
    */
   create: function() {
-    const deferred = defer();
+    return new Promise(resolve => {
+      const flags = "chrome,centerscreen,resizable,dialog=no";
+      const win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
+                                      flags, null);
 
-    const flags = "chrome,centerscreen,resizable,dialog=no";
-    const win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
-                                     flags, null);
+      const frameLoad = () => {
+        win.removeEventListener("load", frameLoad, true);
+        win.focus();
 
-    const frameLoad = () => {
-      win.removeEventListener("load", frameLoad, true);
-      win.focus();
+        let key;
+        if (AppConstants.platform === "macosx") {
+          key = win.document.getElementById("toolbox-key-toggle-osx");
+        } else {
+          key = win.document.getElementById("toolbox-key-toggle");
+        }
+        key.removeAttribute("disabled");
 
-      let key;
-      if (AppConstants.platform === "macosx") {
-        key = win.document.getElementById("toolbox-key-toggle-osx");
-      } else {
-        key = win.document.getElementById("toolbox-key-toggle");
-      }
-      key.removeAttribute("disabled");
+        this.frame = win.document.getElementById("toolbox-iframe");
+        this.emit("ready", this.frame);
+        resolve(this.frame);
+      };
 
-      this.frame = win.document.getElementById("toolbox-iframe");
-      this.emit("ready", this.frame);
+      win.addEventListener("load", frameLoad, true);
+      win.addEventListener("unload", this._boundUnload);
 
-      deferred.resolve(this.frame);
-    };
-
-    win.addEventListener("load", frameLoad, true);
-    win.addEventListener("unload", this._boundUnload);
-
-    this._window = win;
-
-    return deferred.promise;
+      this._window = win;
+    });
   },
 
   /**

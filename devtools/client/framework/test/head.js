@@ -56,18 +56,18 @@ function getSourceActor(aSources, aURL) {
  *         The new window object that holds Scratchpad.
  */
 async function openScratchpadWindow() {
-  const { promise: p, resolve } = defer();
   const win = ScratchpadManager.openScratchpad();
 
   await once(win, "load");
 
-  win.Scratchpad.addObserver({
-    onReady: function() {
-      win.Scratchpad.removeObserver(this);
-      resolve(win);
-    }
+  return new Promise(resolve => {
+    win.Scratchpad.addObserver({
+      onReady: function() {
+        win.Scratchpad.removeObserver(this);
+        resolve(win);
+      }
+    });
   });
-  return p;
 }
 
 /**
@@ -82,12 +82,12 @@ function waitForContentMessage(name) {
 
   const mm = gBrowser.selectedBrowser.messageManager;
 
-  const def = defer();
-  mm.addMessageListener(name, function onMessage(msg) {
-    mm.removeMessageListener(name, onMessage);
-    def.resolve(msg.data);
+  return new Promise(resolve => {
+    mm.addMessageListener(name, function onMessage(msg) {
+      mm.removeMessageListener(name, onMessage);
+      resolve(msg.data);
+    });
   });
-  return def.promise;
 }
 
 /**
@@ -207,15 +207,13 @@ function DevToolPanel(iframeWindow, toolbox) {
 
 DevToolPanel.prototype = {
   open: function() {
-    const deferred = defer();
-
-    executeSoon(() => {
-      this._isReady = true;
-      this.emit("ready");
-      deferred.resolve(this);
+    return new Promise(resolve => {
+      executeSoon(() => {
+        this._isReady = true;
+        this.emit("ready");
+        resolve(this);
+      });
     });
-
-    return deferred.promise;
   },
 
   get document() {
@@ -237,7 +235,7 @@ DevToolPanel.prototype = {
   _isReady: false,
 
   destroy: function() {
-    return defer(null);
+    return Promise.resolve(null);
   },
 };
 
