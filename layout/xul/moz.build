@@ -28,6 +28,7 @@ EXPORTS += [
     'nsPIBoxObject.h',
     'nsPIListBoxObject.h',
     'nsXULPopupManager.h',
+    'nsXULTooltipListener.h',
 ]
 
 EXPORTS.mozilla.dom += [
