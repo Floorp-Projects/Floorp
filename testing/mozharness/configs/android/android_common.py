@@ -286,6 +286,7 @@ config = {
                 "--log-tbpl-level=%(log_tbpl_level)s",
                 "--test-plugin-path=none",
                 "--deviceSerial=%(device_serial)s",
+                "%(xpcshell_extra)s",
             ],
         },
         "cppunittest": {
