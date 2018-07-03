@@ -579,7 +579,8 @@ public:
                   const DisplayItemClip& aClip,
                   LayerState aLayerState,
                   nsDisplayList *aList,
-                  DisplayItemEntryType aType);
+                  DisplayItemEntryType aType,
+                  nsTArray<size_t>& aOpacityIndices);
   AnimatedGeometryRoot* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
   /**
@@ -768,11 +769,6 @@ public:
    * These items get added by Accumulate().
    */
   nsTArray<AssignedDisplayItem> mAssignedDisplayItems;
-  /**
-   * Tracks the active opacity markers by holding the indices to PUSH_OPACITY
-   * items in |mAssignedDisplayItems|.
-   */
-  nsTArray<size_t> mOpacityIndices;
 };
 
 struct NewLayerEntry {
@@ -3351,8 +3347,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
 {
   PaintedLayerData* data = &aData;
 
-  MOZ_ASSERT(data->mOpacityIndices.IsEmpty());
-
   if (!data->mLayer) {
     // No layer was recycled, so we create a new one.
     RefPtr<PaintedLayer> paintedLayer = CreatePaintedLayer(data);
@@ -3639,18 +3633,19 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                              const DisplayItemClip& aClip,
                              LayerState aLayerState,
                              nsDisplayList* aList,
-                             DisplayItemEntryType aType)
+                             DisplayItemEntryType aType,
+                             nsTArray<size_t>& aOpacityIndices)
 {
   FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
 
-  const bool hasOpacity = mOpacityIndices.Length() > 0;
+  const bool hasOpacity = aOpacityIndices.Length() > 0;
 
   const DisplayItemClip* oldClip = mItemClip;
   mItemClip = &aClip;
 
   if (aType == DisplayItemEntryType::POP_OPACITY) {
-    MOZ_ASSERT(!mOpacityIndices.IsEmpty());
-    mOpacityIndices.RemoveLastElement();
+    MOZ_ASSERT(!aOpacityIndices.IsEmpty());
+    aOpacityIndices.RemoveLastElement();
 
     AssignedDisplayItem item(aItem, aLayerState,
                              nullptr, aContentRect, aType, hasOpacity);
@@ -3673,7 +3668,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
     if (!componentAlphaBounds.IsEmpty()) {
       // This display item needs background copy when pushing opacity group.
-      for (size_t i : mOpacityIndices) {
+      for (size_t i : aOpacityIndices) {
         AssignedDisplayItem& item = mAssignedDisplayItems[i];
         MOZ_ASSERT(item.mType == DisplayItemEntryType::PUSH_OPACITY ||
                    item.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG);
@@ -3696,7 +3691,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   mAssignedDisplayItems.AppendElement(std::move(item));
 
   if (aType == DisplayItemEntryType::PUSH_OPACITY) {
-    mOpacityIndices.AppendElement(mAssignedDisplayItems.Length() - 1);
+    aOpacityIndices.AppendElement(mAssignedDisplayItems.Length() - 1);
   }
 
   if (aItem->MustPaintOnContentSide()) {
@@ -4288,6 +4283,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   // Tracks the PaintedLayerData that the item will be accumulated in, if it is
   // non-null. Currently only used with PUSH_OPACITY and POP_OPACITY markers.
   PaintedLayerData* selectedPLD = nullptr;
+  AutoTArray<size_t, 2> opacityIndices;
 
   FLBDisplayItemIterator iter(mBuilder, aList, this);
   while (iter.HasNext()) {
@@ -4841,7 +4837,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         paintedLayerData->AccumulateHitTestInfo(this, hitTestInfo);
       } else {
         paintedLayerData->Accumulate(this, item, itemVisibleRect, itemContent, itemClip,
-                                     layerState, aList, marker);
+                                     layerState, aList, marker, opacityIndices);
 
         if (!paintedLayerData->mLayer) {
           // Try to recycle the old layer of this display item.
@@ -4868,7 +4864,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       if (marker == DisplayItemEntryType::POP_OPACITY ) {
         MOZ_ASSERT(selectedPLD);
 
-        if (selectedPLD->mOpacityIndices.IsEmpty()) {
+        if (opacityIndices.IsEmpty()) {
           selectedPLD = nullptr;
         }
       }
