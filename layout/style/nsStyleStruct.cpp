@@ -3861,13 +3861,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       }
     }
 
-    if (HasPerspectiveStyle() != aNewData.HasPerspectiveStyle()) {
-      // A change from/to being a containing block for position:fixed.
-      hint |= nsChangeHint_UpdateContainingBlock;
-    }
-
-    if (mChildPerspective != aNewData.mChildPerspective ||
-        mTransformStyle != aNewData.mTransformStyle ||
+    if (mTransformStyle != aNewData.mTransformStyle ||
         mTransformBox != aNewData.mTransformBox) {
       transformHint |= kUpdateOverflowAndRepaintHint;
     }
@@ -3883,6 +3877,16 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
         hint |= nsChangeHint_NeutralChange;
       }
     }
+  }
+
+  if (HasPerspectiveStyle() != aNewData.HasPerspectiveStyle()) {
+    // A change from/to being a containing block for position:fixed.
+    hint |= nsChangeHint_UpdateContainingBlock |
+            nsChangeHint_UpdateOverflow |
+            nsChangeHint_RepaintFrame;
+  } else if (mChildPerspective != aNewData.mChildPerspective) {
+    hint |= nsChangeHint_UpdateOverflow |
+            nsChangeHint_RepaintFrame;
   }
 
   // Note that the HasTransformStyle() != aNewData.HasTransformStyle()
