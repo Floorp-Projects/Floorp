@@ -85,7 +85,7 @@ function testConnectionUnavailableDiffOriginInnerIframe() {
 function testConnectionListSameObject() {
   return new Promise(function(aResolve, aReject) {
     is(navigator.presentation.receiver.connectionList, navigator.presentation.receiver.connectionList, "The promise should be the same object.");
-    var promise = navigator.presentation.receiver.connectionList.then(
+    navigator.presentation.receiver.connectionList.then(
       function(aList) {
         is(connection, aList.connections[0], "The connection from list and the one from |connectionavailable| event should be the same.");
         aResolve();
