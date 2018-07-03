@@ -169,10 +169,6 @@ CacheFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    if (aCount == 0) {
-      break;
-    }
-
     CacheFileChunkReadHandle hnd = mChunk->GetReadHandle();
     int64_t canRead = CanRead(&hnd);
     if (NS_FAILED(mStatus)) {
