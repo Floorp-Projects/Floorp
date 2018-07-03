@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const defer = require("devtools/shared/defer");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -514,26 +513,25 @@ OptionsPanel.prototype = {
       return this.destroyPromise;
     }
 
-    const deferred = defer();
-    this.destroyPromise = deferred.promise;
-
     this._removeListeners();
 
-    if (this.target.activeTab) {
-      this.disableJSNode.removeEventListener("click", this._disableJSClicked);
-      // FF41+ automatically cleans up state in actor on disconnect
-      if (!this.target.activeTab.traits.noTabReconfigureOnClose) {
-        const options = {
-          "javascriptEnabled": this._origJavascriptEnabled,
-          "performReload": false
-        };
-        this.target.activeTab.reconfigure(options, deferred.resolve);
+    this.destroyPromise = new Promise(resolve => {
+      if (this.target.activeTab) {
+        this.disableJSNode.removeEventListener("click", this._disableJSClicked);
+        // FF41+ automatically cleans up state in actor on disconnect
+        if (!this.target.activeTab.traits.noTabReconfigureOnClose) {
+          const options = {
+            "javascriptEnabled": this._origJavascriptEnabled,
+            "performReload": false
+          };
+          this.target.activeTab.reconfigure(options, resolve);
+        } else {
+          resolve();
+        }
       } else {
-        deferred.resolve();
+        resolve();
       }
-    } else {
-      deferred.resolve();
-    }
+    });
 
     this.panelWin = this.panelDoc = this.disableJSNode = this.toolbox = null;
 
