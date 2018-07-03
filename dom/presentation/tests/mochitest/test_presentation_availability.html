@@ -14,7 +14,7 @@
 // This test loads in an iframe, to ensure that the navigator instance is
 // loaded with the correct value of the preference.
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
+SimpleTest.requestFlakyTimeout("Test for guarantee not firing async event");
 SpecialPowers.pushPermissions([
   {type: "presentation-device-manage", allow: false, context: document},
 ], function() {

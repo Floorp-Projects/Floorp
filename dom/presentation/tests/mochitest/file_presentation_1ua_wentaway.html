@@ -13,33 +13,33 @@
 
 function is(a, b, msg) {
   if (a === b) {
-    alert('OK ' + msg);
+    alert("OK " + msg);
   } else {
-    alert('KO ' + msg + ' | reason: ' + a + ' != ' + b);
+    alert("KO " + msg + " | reason: " + a + " != " + b);
   }
 }
 
 function ok(a, msg) {
-  alert((a ? 'OK ' : 'KO ') + msg);
+  alert((a ? "OK " : "KO ") + msg);
 }
 
 function info(msg) {
-  alert('INFO ' + msg);
+  alert("INFO " + msg);
 }
 
 function command(name, data) {
-  alert('COMMAND ' + JSON.stringify({name: name, data: data}));
+  alert("COMMAND " + JSON.stringify({name, data}));
 }
 
 function finish() {
-  alert('DONE');
+  alert("DONE");
 }
 
 var connection;
 
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionAvailable ---');
+    info("Receiver: --- testConnectionAvailable ---");
     ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
 
@@ -61,10 +61,10 @@ function testConnectionAvailable() {
 
 function testConnectionReady() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionReady ---');
+    info("Receiver: --- testConnectionReady ---");
     connection.onconnect = function() {
       connection.onconnect = null;
-      ok(false, "Should not get |onconnect| event.")
+      ok(false, "Should not get |onconnect| event.");
       aReject();
     };
     if (connection.state === "connected") {
@@ -77,8 +77,8 @@ function testConnectionReady() {
 
 function testConnectionWentaway() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionWentaway ---\n');
-    command('forward-command', JSON.stringify({ name: 'ready-to-remove-receiverFrame' }));
+    info("Receiver: --- testConnectionWentaway ---\n");
+    command("forward-command", JSON.stringify({ name: "ready-to-remove-receiverFrame" }));
   });
 }
 

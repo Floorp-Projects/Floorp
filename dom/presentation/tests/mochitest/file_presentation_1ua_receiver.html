@@ -13,26 +13,26 @@
 
 function is(a, b, msg) {
   if (a === b) {
-    alert('OK ' + msg);
+    alert("OK " + msg);
   } else {
-    alert('KO ' + msg + ' | reason: ' + a + ' != ' + b);
+    alert("KO " + msg + " | reason: " + a + " != " + b);
   }
 }
 
 function ok(a, msg) {
-  alert((a ? 'OK ' : 'KO ') + msg);
+  alert((a ? "OK " : "KO ") + msg);
 }
 
 function info(msg) {
-  alert('INFO ' + msg);
+  alert("INFO " + msg);
 }
 
 function command(name, data) {
-  alert('COMMAND ' + JSON.stringify({name: name, data: data}));
+  alert("COMMAND " + JSON.stringify({name, data}));
 }
 
 function finish() {
-  alert('DONE');
+  alert("DONE");
 }
 
 var connection;
@@ -51,7 +51,7 @@ function is_same_buffer(recv_data, expect_data) {
 
   for (let i = 0; i < recv_dataview.length; i++) {
     if (recv_dataview[i] != expected_dataview[i]) {
-      info('discover byte differenct at ' + i);
+      info("discover byte differenct at " + i);
       return false;
     }
   }
@@ -60,7 +60,7 @@ function is_same_buffer(recv_data, expect_data) {
 
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionAvailable ---');
+    info("Receiver: --- testConnectionAvailable ---");
     ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
     is(navigator.presentation.defaultRequest, null, "Receiver: navigator.presentation.defaultRequest should be null.");
@@ -83,10 +83,10 @@ function testConnectionAvailable() {
 
 function testConnectionReady() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionReady ---');
+    info("Receiver: --- testConnectionReady ---");
     connection.onconnect = function() {
       connection.onconnect = null;
-      ok(false, "Should not get |onconnect| event.")
+      ok(false, "Should not get |onconnect| event.");
       aReject();
     };
     if (connection.state === "connected") {
@@ -99,27 +99,27 @@ function testConnectionReady() {
 
 function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testIncomingMessage ---');
-    connection.addEventListener('message', function(evt) {
+    info("Receiver: --- testIncomingMessage ---");
+    connection.addEventListener("message", function(evt) {
       let msg = evt.data;
-      is(msg, 'msg-sender-to-receiver', 'Receiver: Receiver should receive message from sender.');
-      command('forward-command', JSON.stringify({ name: 'message-from-sender-received' }));
+      is(msg, "msg-sender-to-receiver", "Receiver: Receiver should receive message from sender.");
+      command("forward-command", JSON.stringify({ name: "message-from-sender-received" }));
       aResolve();
     }, {once: true});
-    command('forward-command', JSON.stringify({ name: 'trigger-message-from-sender' }));
+    command("forward-command", JSON.stringify({ name: "trigger-message-from-sender" }));
   });
 }
 
 function testSendMessage() {
   return new Promise(function(aResolve, aReject) {
-    window.addEventListener('hashchange', function hashchangeHandler(evt) {
+    window.addEventListener("hashchange", function hashchangeHandler(evt) {
       var message = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
-      if (message.type === 'trigger-message-from-receiver') {
-        info('Receiver: --- testSendMessage ---');
-        connection.send('msg-receiver-to-sender');
+      if (message.type === "trigger-message-from-receiver") {
+        info("Receiver: --- testSendMessage ---");
+        connection.send("msg-receiver-to-sender");
       }
-      if (message.type === 'message-from-receiver-received') {
-        window.removeEventListener('hashchange', hashchangeHandler);
+      if (message.type === "message-from-receiver-received") {
+        window.removeEventListener("hashchange", hashchangeHandler);
         aResolve();
       }
     });
@@ -128,11 +128,11 @@ function testSendMessage() {
 
 function testIncomingBlobMessage() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testIncomingBlobMessage ---');
-    connection.send('testIncomingBlobMessage');
-    connection.addEventListener('message', function(evt) {
-      let recvData= String.fromCharCode.apply(null, new Uint8Array(evt.data));
-      is(recvData, "Hello World", 'expected same string data');
+    info("Receiver: --- testIncomingBlobMessage ---");
+    connection.send("testIncomingBlobMessage");
+    connection.addEventListener("message", function(evt) {
+      let recvData = String.fromCharCode.apply(null, new Uint8Array(evt.data));
+      is(recvData, "Hello World", "expected same string data");
       aResolve();
     }, {once: true});
   });
@@ -140,29 +140,29 @@ function testIncomingBlobMessage() {
 
 function testConnectionClosed() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionClosed ---');
+    info("Receiver: --- testConnectionClosed ---");
     connection.onclose = function() {
       connection.onclose = null;
       is(connection.state, "closed", "Receiver: Connection should be closed.");
-      command('forward-command', JSON.stringify({ name: 'receiver-closed' }));
+      command("forward-command", JSON.stringify({ name: "receiver-closed" }));
       aResolve();
     };
-    command('forward-command', JSON.stringify({ name: 'ready-to-close' }));
+    command("forward-command", JSON.stringify({ name: "ready-to-close" }));
   });
 }
 
 function testReconnectConnection() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testReconnectConnection ---');
-    window.addEventListener('hashchange', function hashchangeHandler(evt) {
+    info("Receiver: --- testReconnectConnection ---");
+    window.addEventListener("hashchange", function hashchangeHandler(evt) {
       var message = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
-      if (message.type === 'prepare-for-reconnect') {
-        command('forward-command', JSON.stringify({ name: 'ready-to-reconnect' }));
+      if (message.type === "prepare-for-reconnect") {
+        command("forward-command", JSON.stringify({ name: "ready-to-reconnect" }));
       }
     });
     connection.onconnect = function() {
       connection.onconnect = null;
-      ok(true, "The connection is reconnected.")
+      ok(true, "The connection is reconnected.");
       aResolve();
     };
   });
@@ -170,10 +170,10 @@ function testReconnectConnection() {
 
 function testIncomingArrayBuffer() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testIncomingArrayBuffer ---');
+    info("Receiver: --- testIncomingArrayBuffer ---");
     connection.binaryType = "blob";
-    connection.send('testIncomingArrayBuffer');
-    connection.addEventListener('message', function(evt) {
+    connection.send("testIncomingArrayBuffer");
+    connection.addEventListener("message", function(evt) {
       var fileReader = new FileReader();
       fileReader.onload = function() {
         ok(is_same_buffer(DATA_ARRAY_BUFFER, this.result), "expected same buffer data");
@@ -186,10 +186,10 @@ function testIncomingArrayBuffer() {
 
 function testIncomingArrayBufferView() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testIncomingArrayBufferView ---');
+    info("Receiver: --- testIncomingArrayBufferView ---");
     connection.binaryType = "arraybuffer";
-    connection.send('testIncomingArrayBufferView');
-    connection.addEventListener('message', function(evt) {
+    connection.send("testIncomingArrayBufferView");
+    connection.addEventListener("message", function(evt) {
       ok(is_same_buffer(evt.data, TYPED_DATA_ARRAY), "expected same buffer data");
       aResolve();
     }, {once: true});
