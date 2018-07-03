@@ -12,7 +12,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
-#include "nsIPopupContainer.h"
+#include "nsIRootBox.h"
 #include "nsMenuPopupFrame.h"
 
 nsIFrame*
@@ -32,10 +32,9 @@ nsPopupSetFrame::Init(nsIContent*       aContent,
 
   // Normally the root box is our grandparent, but in case of wrapping
   // it can be our great-grandparent.
-  nsIPopupContainer *popupContainer =
-    nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
-  if (popupContainer) {
-    popupContainer->SetPopupSetFrame(this);
+  nsIRootBox *rootBox = nsIRootBox::GetRootBox(PresContext()->GetPresShell());
+  if (rootBox) {
+    rootBox->SetPopupSetFrame(this);
   }
 }
 
@@ -109,10 +108,9 @@ nsPopupSetFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDest
 
   // Normally the root box is our grandparent, but in case of wrapping
   // it can be our great-grandparent.
-  nsIPopupContainer *popupContainer =
-    nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
-  if (popupContainer) {
-    popupContainer->SetPopupSetFrame(nullptr);
+  nsIRootBox *rootBox = nsIRootBox::GetRootBox(PresContext()->GetPresShell());
+  if (rootBox) {
+    rootBox->SetPopupSetFrame(nullptr);
   }
 
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);

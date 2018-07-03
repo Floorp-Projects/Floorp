@@ -26,7 +26,7 @@
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
-#include "nsIPopupContainer.h"
+#include "nsIRootBox.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -176,10 +176,10 @@ nsMenuPopupFrame::Init(nsIContent*       aContent,
   if (aContent->NodeInfo()->Equals(nsGkAtoms::tooltip, kNameSpaceID_XUL) &&
       aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_default,
                                          nsGkAtoms::_true, eIgnoreCase)) {
-    nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
-    if (popupContainer) {
-      popupContainer->SetDefaultTooltip(aContent->AsElement());
+    nsIRootBox* rootBox =
+      nsIRootBox::GetRootBox(PresContext()->GetPresShell());
+    if (rootBox) {
+      rootBox->SetDefaultTooltip(aContent->AsElement());
     }
   }
 
@@ -2319,10 +2319,10 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDes
   if (pm)
     pm->PopupDestroyed(this);
 
-  nsIPopupContainer* popupContainer =
-    nsIPopupContainer::GetPopupContainer(PresContext()->GetPresShell());
-  if (popupContainer && popupContainer->GetDefaultTooltip() == mContent) {
-    popupContainer->SetDefaultTooltip(nullptr);
+  nsIRootBox* rootBox =
+    nsIRootBox::GetRootBox(PresContext()->GetPresShell());
+  if (rootBox && rootBox->GetDefaultTooltip() == mContent) {
+    rootBox->SetDefaultTooltip(nullptr);
   }
 
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
