@@ -236,7 +236,8 @@ object TelemetryWrapper {
                             resources.getString(R.string.pref_key_secure),
                             resources.getString(R.string.pref_key_default_browser),
                             resources.getString(R.string.pref_key_autocomplete_preinstalled),
-                            resources.getString(R.string.pref_key_autocomplete_custom))
+                            resources.getString(R.string.pref_key_autocomplete_custom),
+                            resources.getString(R.string.pref_key_remote_debugging))
                     .setSettingsProvider(TelemetrySettingsProvider(context))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled)

@@ -67,8 +67,6 @@ public class WebViewProvider {
                     new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.useContentProcessHint(true);
             runtimeSettingsBuilder.nativeCrashReportingEnabled(true);
-            // TODO: #2824 remove remote debugging before release
-            runtimeSettingsBuilder.remoteDebuggingEnabled(true);
             geckoRuntime = GeckoRuntime.create(context.getApplicationContext(), runtimeSettingsBuilder.build());
         }
     }
@@ -212,6 +210,7 @@ public class WebViewProvider {
         private void applyAppSettings() {
             geckoRuntime.getSettings().setJavaScriptEnabled(!Settings.getInstance(getContext()).shouldBlockJavaScript());
             geckoRuntime.getSettings().setWebFontsEnabled(!Settings.getInstance(getContext()).shouldBlockWebFonts());
+            geckoRuntime.getSettings().setRemoteDebuggingEnabled(Settings.getInstance(getContext()).shouldEnableRemoteDebugging());
             final int cookiesValue;
             if (Settings.getInstance(getContext()).shouldBlockCookies() && Settings.getInstance(getContext()).shouldBlockThirdPartyCookies()) {
                 cookiesValue = GeckoRuntimeSettings.COOKIE_ACCEPT_NONE;

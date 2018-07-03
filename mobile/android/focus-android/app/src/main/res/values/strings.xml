@@ -603,4 +603,13 @@ be temporary, and you can try again later.</li>
 
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL copied</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Developer tools</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Advanced</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Remote debugging via USB/Wi-Fi</string>
 </resources>

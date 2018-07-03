@@ -22,6 +22,12 @@
         android:summary="@string/preference_search_summary"
         android:title="@string/preference_category_search" />
 
+    <Preference
+        android:key="@string/pref_key_advanced_screen"
+        android:layout="@layout/focus_preference"
+        android:summary="@string/preference_advanced_summary"
+        android:title="@string/preference_category_advanced" />
+
     <org.mozilla.focus.widget.DefaultBrowserPreference
         android:key="@string/pref_key_default_browser"
         android:layout="@layout/focus_preference"
