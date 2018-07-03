@@ -35,21 +35,21 @@ class TestNamedTemporaryFile(unittest.TestCase):
             temp.flush()
 
             # Test we can open the file again on all platforms
-            self.assertEqual(open(temp.name).read(), test_string)
+            self.assertEqual(open(temp.name, 'rb').read(), test_string)
 
     def test_iteration(self):
         """ensure the line iterator works"""
 
         # make a file and write to it
         tf = mozfile.NamedTemporaryFile()
-        notes = ['doe', 'rae', 'mi']
+        notes = [b'doe', b'rae', b'mi']
         for note in notes:
             tf.write(b'%s\n' % note)
         tf.flush()
 
         # now read from it
         tf.seek(0)
-        lines = [line.rstrip('\n') for line in tf.readlines()]
+        lines = [line.rstrip(b'\n') for line in tf.readlines()]
         self.assertEqual(lines, notes)
 
         # now read from it iteratively
