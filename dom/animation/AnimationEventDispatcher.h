@@ -23,7 +23,7 @@ namespace mozilla {
 
 struct AnimationEventInfo
 {
-  RefPtr<dom::Element> mElement;
+  RefPtr<dom::EventTarget> mTarget;
   RefPtr<dom::Animation> mAnimation;
   TimeStamp mTimeStamp;
 
@@ -37,7 +37,7 @@ struct AnimationEventInfo
                      double aElapsedTime,
                      const TimeStamp& aTimeStamp,
                      dom::Animation* aAnimation)
-    : mElement(aTarget.mElement)
+    : mTarget(aTarget.mElement)
     , mAnimation(aAnimation)
     , mTimeStamp(aTimeStamp)
     , mEvent(EventVariant(InternalAnimationEvent(true, aMessage)))
@@ -58,7 +58,7 @@ struct AnimationEventInfo
                      double aElapsedTime,
                      const TimeStamp& aTimeStamp,
                      dom::Animation* aAnimation)
-    : mElement(aTarget.mElement)
+    : mTarget(aTarget.mElement)
     , mAnimation(aAnimation)
     , mTimeStamp(aTimeStamp)
     , mEvent(EventVariant(InternalTransitionEvent(true, aMessage)))
@@ -128,7 +128,7 @@ public:
       MOZ_ASSERT(!info.AsWidgetEvent()->mFlags.mIsBeingDispatched &&
                  !info.AsWidgetEvent()->mFlags.mDispatchedAtLeastOnce,
                  "The WidgetEvent should be fresh");
-      EventDispatcher::Dispatch(info.mElement,
+      EventDispatcher::Dispatch(info.mTarget,
                                 mPresContext,
                                 info.AsWidgetEvent());
 
