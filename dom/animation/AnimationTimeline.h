@@ -23,6 +23,8 @@
 #undef GetCurrentTime
 #endif
 
+class nsIDocument;
+
 namespace mozilla {
 namespace dom {
 
@@ -103,6 +105,8 @@ public:
   }
 
   virtual void RemoveAnimation(Animation* aAnimation);
+
+  virtual nsIDocument* GetDocument() const = 0;
 
 protected:
   nsCOMPtr<nsIGlobalObject> mWindow;

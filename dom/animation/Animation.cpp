@@ -9,9 +9,9 @@
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/dom/DocumentTimeline.h"
+#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
 #include "mozilla/Maybe.h" // For Maybe
 #include "mozilla/TypeTraits.h" // For std::forward<>
 #include "nsAnimationManager.h" // For CSSAnimation
@@ -874,7 +874,8 @@ Animation::CancelNoUpdate()
     }
     ResetFinishedPromise();
 
-    DispatchPlaybackEvent(NS_LITERAL_STRING("cancel"));
+    // FIXME: Bug 1472900 - Use the timestamp associated with the timeline.
+    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"), TimeStamp());
   }
 
   StickyTimeDuration activeTime = mEffect
@@ -1555,6 +1556,12 @@ Animation::GetRenderedDocument() const
   return mEffect->AsKeyframeEffect()->GetRenderedDocument();
 }
 
+nsIDocument*
+Animation::GetTimelineDocument() const
+{
+  return mTimeline ? mTimeline->GetDocument() : nullptr;
+}
+
 class AsyncFinishNotification : public MicroTaskRunnable
 {
 public:
@@ -1624,12 +1631,26 @@ Animation::DoFinishNotificationImmediately(MicroTaskRunnable* aAsync)
 
   MaybeResolveFinishedPromise();
 
-  DispatchPlaybackEvent(NS_LITERAL_STRING("finish"));
+  QueuePlaybackEvent(NS_LITERAL_STRING("finish"),
+                     AnimationTimeToTimeStamp(EffectEnd()));
 }
 
 void
-Animation::DispatchPlaybackEvent(const nsAString& aName)
+Animation::QueuePlaybackEvent(const nsAString& aName,
+                              TimeStamp&& aScheduledEventTime)
 {
+  // Use document for timing.
+  // https://drafts.csswg.org/web-animations-1/#document-for-timing
+  nsIDocument* doc = GetTimelineDocument();
+  if (!doc) {
+    return;
+  }
+
+  nsPresContext* presContext = doc->GetPresContext();
+  if (!presContext) {
+    return;
+  }
+
   AnimationPlaybackEventInit init;
 
   if (aName.EqualsLiteral("finish")) {
@@ -1643,9 +1664,11 @@ Animation::DispatchPlaybackEvent(const nsAString& aName)
     AnimationPlaybackEvent::Constructor(this, aName, init);
   event->SetTrusted(true);
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, event);
-  asyncDispatcher->PostDOMEvent();
+  presContext->AnimationEventDispatcher()->
+    QueueEvent(AnimationEventInfo(aName,
+                                  std::move(event),
+                                  std::move(aScheduledEventTime),
+                                  this));
 }
 
 bool
