@@ -160,6 +160,23 @@ union PrefValue {
   int32_t mIntVal;
   bool mBoolVal;
 
+  PrefValue() = default;
+
+  explicit PrefValue(bool aVal)
+    : mBoolVal(aVal)
+  {
+  }
+
+  explicit PrefValue(int32_t aVal)
+    : mIntVal(aVal)
+  {
+  }
+
+  explicit PrefValue(const char* aVal)
+    : mStringVal(aVal)
+  {
+  }
+
   bool Equals(PrefType aType, PrefValue aValue)
   {
     switch (aType) {
@@ -437,6 +454,8 @@ struct PrefsSizes
 
 static ArenaAllocator<8192, 1> gPrefNameArena;
 
+class PrefWrapper;
+
 class Pref
 {
 public:
@@ -661,6 +680,8 @@ public:
       *aValueChanged = true;
     }
   }
+
+  void FromWrapper(PrefWrapper& aWrapper);
 
   bool HasAdvisablySizedValues()
   {
@@ -1079,6 +1100,21 @@ public:
   FORWARD(const char*, GetBareStringValue)
 #undef FORWARD
 
+  PrefValue GetValue(PrefValueKind aKind = PrefValueKind::User) const
+  {
+    switch (Type()) {
+      case PrefType::Bool:
+        return PrefValue{ GetBoolValue(aKind) };
+      case PrefType::Int:
+        return PrefValue{ GetIntValue(aKind) };
+      case PrefType::String:
+        return PrefValue{ GetBareStringValue(aKind) };
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected pref type");
+        return PrefValue{};
+    }
+  }
+
   Result<PrefValueKind, nsresult> WantValueKind(PrefType aType,
                                                 PrefValueKind aKind) const
   {
@@ -1121,7 +1157,66 @@ public:
     aResult = GetStringValue(kind);
     return NS_OK;
   }
+
+  bool Matches(PrefType aType,
+               PrefValueKind aKind,
+               PrefValue& aValue,
+               bool aIsSticky,
+               bool aIsLocked) const
+  {
+    return (ValueMatches(aKind, aType, aValue) && aIsSticky == IsSticky() &&
+            aIsLocked == IsLocked());
+  }
+
+  bool ValueMatches(PrefValueKind aKind,
+                    PrefType aType,
+                    const PrefValue& aValue) const
+  {
+    if (!IsType(aType)) {
+      return false;
+    }
+    if (!(aKind == PrefValueKind::Default ? HasDefaultValue()
+                                          : HasUserValue())) {
+      return false;
+    }
+    switch (aType) {
+      case PrefType::Bool:
+        return GetBoolValue(aKind) == aValue.mBoolVal;
+      case PrefType::Int:
+        return GetIntValue(aKind) == aValue.mIntVal;
+      case PrefType::String:
+        return strcmp(GetBareStringValue(aKind), aValue.mStringVal) == 0;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected preference type");
+        return false;
+    }
+  }
 };
+
+void
+Pref::FromWrapper(PrefWrapper& aWrapper)
+{
+  MOZ_ASSERT(aWrapper.is<SharedPrefMap::Pref>());
+  auto pref = aWrapper.as<SharedPrefMap::Pref>();
+
+  MOZ_ASSERT(IsTypeNone());
+  MOZ_ASSERT(strcmp(mName, pref.Name()) == 0);
+
+  mType = uint32_t(pref.Type());
+
+  mIsLocked = pref.IsLocked();
+  mIsSticky = pref.IsSticky();
+
+  mHasDefaultValue = pref.HasDefaultValue();
+  mHasUserValue = pref.HasUserValue();
+
+  if (mHasDefaultValue) {
+    mDefaultValue.Init(Type(), aWrapper.GetValue(PrefValueKind::Default));
+  }
+  if (mHasUserValue) {
+    mUserValue.Init(Type(), aWrapper.GetValue(PrefValueKind::User));
+  }
+}
 
 class CallbackNode
 {
@@ -1550,7 +1645,7 @@ pref_HashTableLookup(const char* aPrefName)
 static const PrefWrapper* gCallbackPref;
 
 Maybe<PrefWrapper>
-pref_Lookup(const char* aPrefName)
+pref_Lookup(const char* aPrefName, bool aIncludeTypeNone = false)
 {
   Maybe<PrefWrapper> result;
 
@@ -1561,10 +1656,41 @@ pref_Lookup(const char* aPrefName)
   if (gCallbackPref && strcmp(aPrefName, gCallbackPref->Name()) == 0) {
     result.emplace(*gCallbackPref);
   } else if (Pref* pref = pref_HashTableLookup(aPrefName)) {
-    result.emplace(pref);
+    if (aIncludeTypeNone || !pref->IsTypeNone()) {
+      result.emplace(pref);
+    }
+  } else if (gSharedMap) {
+    Maybe<SharedPrefMap::Pref> pref = gSharedMap->Get(aPrefName);
+    if (pref.isSome()) {
+      result.emplace(*pref);
+    }
   }
 
   return result;
+}
+
+static Result<Pref*, nsresult>
+pref_LookupForModify(const char* aPrefName,
+                     const std::function<bool(const PrefWrapper&)>& aCheckFn)
+{
+  Maybe<PrefWrapper> wrapper = pref_Lookup(aPrefName, /* includeTypeNone */ true);
+  if (wrapper.isNothing()) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+  if (!aCheckFn(*wrapper)) {
+    return nullptr;
+  }
+  if (wrapper->is<Pref*>()) {
+    return wrapper->as<Pref*>();
+  }
+
+  auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
+  if (!entry) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
+  Pref* pref = entry->mPref;
+  pref->FromWrapper(*wrapper);
+  return pref;
 }
 
 static nsresult
@@ -1582,15 +1708,29 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
-  if (!entry) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  Pref* pref = nullptr;
+  if (gSharedMap) {
+    auto result =
+      pref_LookupForModify(aPrefName, [&](const PrefWrapper& aWrapper) {
+        return !aWrapper.Matches(aType, aKind, aValue, aIsSticky, aIsLocked);
+      });
+    if (result.isOk() && !(pref = result.unwrap())) {
+      // No changes required.
+      return NS_OK;
+    }
   }
 
-  Pref* pref = entry->mPref;
-  if (pref->IsTypeNone()) {
-    // New entry. Set the type.
-    pref->SetType(aType);
+  if (!pref) {
+    auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
+    if (!entry) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    pref = entry->mPref;
+
+    if (pref->IsTypeNone()) {
+      // New entry. Set the type.
+      pref->SetType(aType);
+    }
   }
 
   bool valueChanged = false;
@@ -2769,10 +2909,9 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
 
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
+  for (auto& pref : PrefsIter(gHashTable, gSharedMap)) {
     if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
-      prefArray.AppendElement(pref->Name());
+      prefArray.AppendElement(pref->NameString());
     }
   }
 
@@ -4029,6 +4168,10 @@ Preferences::ResetPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetPrefs", "all prefs");
 
+  if (gSharedMap) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
@@ -4143,7 +4286,13 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
   //   needlessly, but that's ok because this case is rare.
   //
   if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
-    gHashTable->RemoveEntry(entry);
+    // If the preference exists in the shared map, we need to keep the dynamic
+    // entry around to mask it.
+    if (gSharedMap->Has(pref->Name())) {
+      pref->SetType(PrefType::None);
+    } else {
+      gHashTable->RemoveEntry(entry);
+    }
     pref = nullptr;
   }
 
@@ -4967,12 +5116,13 @@ Preferences::Lock(const char* aPrefName)
   ENSURE_PARENT_PROCESS("Lock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  if (!pref) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  Pref* pref;
+  MOZ_TRY_VAR(pref,
+              pref_LookupForModify(aPrefName, [](const PrefWrapper& aPref) {
+                return !aPref.IsLocked();
+              }));
 
-  if (!pref->IsLocked()) {
+  if (pref) {
     pref->SetIsLocked(true);
     NotifyCallbacks(aPrefName, PrefWrapper(pref));
   }
@@ -4986,12 +5136,13 @@ Preferences::Unlock(const char* aPrefName)
   ENSURE_PARENT_PROCESS("Unlock", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  Pref* pref = pref_HashTableLookup(aPrefName);
-  if (!pref) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  Pref* pref;
+  MOZ_TRY_VAR(pref,
+              pref_LookupForModify(aPrefName, [](const PrefWrapper& aPref) {
+                return aPref.IsLocked();
+              }));
 
-  if (pref->IsLocked()) {
+  if (pref) {
     pref->SetIsLocked(false);
     NotifyCallbacks(aPrefName, PrefWrapper(pref));
   }
@@ -5014,16 +5165,27 @@ Preferences::ClearUser(const char* aPrefName)
   ENSURE_PARENT_PROCESS("ClearUser", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
-  Pref* pref;
-  if (entry && (pref = entry->mPref) && pref->HasUserValue()) {
+  auto result = pref_LookupForModify(
+    aPrefName, [](const PrefWrapper& aPref) { return aPref.HasUserValue(); });
+  if (result.isErr()) {
+    return NS_OK;
+  }
+
+  if (Pref* pref = result.unwrap()) {
     pref->ClearUserValue();
 
     if (!pref->HasDefaultValue()) {
-      gHashTable->RemoveEntry(entry);
+      if (!gSharedMap || !gSharedMap->Has(pref->Name())) {
+        gHashTable->Remove(aPrefName);
+      } else {
+        pref->SetType(PrefType::None);
+      }
+
+      NotifyCallbacks(aPrefName);
+    } else {
+      NotifyCallbacks(aPrefName, PrefWrapper(pref));
     }
 
-    NotifyCallbacks(aPrefName);
     Preferences::HandleDirty();
   }
   return NS_OK;
