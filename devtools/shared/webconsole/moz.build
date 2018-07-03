@@ -13,6 +13,5 @@ DevToolsModules(
     'js-property-provider.js',
     'network-helper.js',
     'network-monitor.js',
-    'screenshot-helper.js',
     'throttle.js',
 )

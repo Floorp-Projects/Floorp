@@ -261,12 +261,12 @@ WebConsoleOutputWrapper.prototype = {
       promise = Promise.resolve();
     }
 
-    this.batchedMessageAdd(packet);
+    this.batchedMessagesAdd(packet);
     return promise;
   },
 
   dispatchMessagesAdd: function(messages) {
-    this.batchedMessagesAdd(messages);
+    store.dispatch(actions.messagesAdd(messages));
   },
 
   dispatchMessagesClear: function() {
@@ -373,13 +373,8 @@ WebConsoleOutputWrapper.prototype = {
     this.setTimeoutIfNeeded();
   },
 
-  batchedMessageAdd: function(message) {
+  batchedMessagesAdd: function(message) {
     this.queuedMessageAdds.push(message);
-    this.setTimeoutIfNeeded();
-  },
-
-  batchedMessagesAdd: function(messages) {
-    this.queuedMessageAdds = this.queuedMessageAdds.concat(messages);
     this.setTimeoutIfNeeded();
   },
 
