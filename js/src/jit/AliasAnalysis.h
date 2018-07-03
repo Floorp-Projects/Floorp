@@ -7,7 +7,7 @@
 #ifndef jit_AliasAnalysis_h
 #define jit_AliasAnalysis_h
 
-#include "jit/AliasAnalysisShared.h"
+
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
@@ -16,13 +16,61 @@ namespace jit {
 
 class LoopAliasInfo;
 
-class AliasAnalysis : public AliasAnalysisShared
+class AliasAnalysis
 {
+    MIRGenerator* mir;
+    MIRGraph& graph_;
     LoopAliasInfo* loop_;
 
+    void spewDependencyList();
+
+    TempAllocator& alloc() const {
+        return graph_.alloc();
+    }
+
   public:
-    AliasAnalysis(MIRGenerator* mir, MIRGraph& graph);
-    MOZ_MUST_USE bool analyze() override;
+    AliasAnalysis(MIRGenerator* mir, MIRGraph& graph)
+      :  mir(mir),
+         graph_(graph),
+         loop_(nullptr)
+    {}
+
+    MOZ_MUST_USE bool analyze();
+
+    static MDefinition::AliasType genericMightAlias(const MDefinition* load,
+                                                    const MDefinition* store);
+};
+
+// Iterates over the flags in an AliasSet.
+class AliasSetIterator
+{
+  private:
+    uint32_t flags;
+    unsigned pos;
+
+  public:
+    explicit AliasSetIterator(AliasSet set)
+      : flags(set.flags()), pos(0)
+    {
+        while (flags && (flags & 1) == 0) {
+            flags >>= 1;
+            pos++;
+        }
+    }
+    AliasSetIterator& operator ++(int) {
+        do {
+            flags >>= 1;
+            pos++;
+        } while (flags && (flags & 1) == 0);
+        return *this;
+    }
+    explicit operator bool() const {
+        return !!flags;
+    }
+    unsigned operator*() const {
+        MOZ_ASSERT(pos < AliasSet::NumCategories);
+        return pos;
+    }
 };
 
 } // namespace jit
