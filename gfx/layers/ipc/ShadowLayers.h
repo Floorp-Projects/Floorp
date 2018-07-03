@@ -177,7 +177,6 @@ public:
   void CreatedColorLayer(ShadowableLayer* aColor);
   void CreatedCanvasLayer(ShadowableLayer* aCanvas);
   void CreatedRefLayer(ShadowableLayer* aRef);
-  void CreatedBorderLayer(ShadowableLayer* aRef);
 
   /**
    * At least one attribute of |aMutant| has changed, and |aMutant|
