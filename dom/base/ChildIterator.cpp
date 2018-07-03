@@ -472,11 +472,5 @@ AllChildrenIterator::GetPreviousChild()
   return nullptr;
 }
 
-nsIContent*
-StyleChildrenIterator::GetNextChild()
-{
-  return AllChildrenIterator::GetNextChild();
-}
-
 } // namespace dom
 } // namespace mozilla
