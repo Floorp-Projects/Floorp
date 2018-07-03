@@ -17,6 +17,10 @@ const FontWeight = createFactory(require("./FontWeight"));
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
+// Maximum number of font families to be shown by default. Any others will be hidden
+// under a collapsed <details> element with a toggle to reveal them.
+const MAX_FONTS = 3;
+
 class FontEditor extends PureComponent {
   static get propTypes() {
     return {
@@ -97,9 +101,7 @@ class FontEditor extends PureComponent {
     return dom.details(
       {},
       dom.summary(
-        {
-          className: "font-family-unused-header",
-        },
+        {},
         getStr("fontinspector.familiesNotUsedLabel")
       ),
       familiesList
@@ -113,26 +115,24 @@ class FontEditor extends PureComponent {
    *        Fonts used on selected node.
    * @param {Array} families
    *        Font familes declared on selected node.
-   * @param {Function} onToggleFontHighlight
-   *        Callback to trigger in-context highlighting of text that uses a font.
    * @return {DOMNode}
    */
-  renderFontFamily(fonts, families, onToggleFontHighlight) {
+  renderFontFamily(fonts, families) {
     if (!fonts.length) {
       return null;
     }
 
-    const fontList = dom.ul(
-      {
-        className: "fonts-list"
-      },
-      fonts.map(font => {
-        return dom.li(
-          {},
-          FontMeta({ font, onToggleFontHighlight })
+    const topUsedFontsList = this.renderFontList(fonts.slice(0, MAX_FONTS));
+    const moreUsedFontsList = this.renderFontList(fonts.slice(MAX_FONTS, fonts.length));
+    const moreUsedFonts = moreUsedFontsList === null
+      ? null
+      : dom.details({},
+          dom.summary({},
+            dom.span({ className: "label-open" }, getStr("fontinspector.seeMore")),
+            dom.span({ className: "label-close" }, getStr("fontinspector.seeLess"))
+          ),
+          moreUsedFontsList
         );
-      })
-    );
 
     return dom.label(
       {
@@ -148,9 +148,40 @@ class FontEditor extends PureComponent {
         {
           className: "font-control-box",
         },
-        fontList,
+        topUsedFontsList,
+        moreUsedFonts,
         this.renderFamilesNotUsed(families.notUsed)
       )
+    );
+  }
+
+  /**
+   * Given an array of fonts, get an unordered list with rendered FontMeta components.
+   * If the array of fonts is empty, return null.
+   *
+   * @param {Array} fonts
+   *        Array of objects with information about fonts used on the selected node.
+   * @return {DOMNode|null}
+   */
+  renderFontList(fonts = []) {
+    if (!fonts.length) {
+      return null;
+    }
+
+    return dom.ul(
+      {
+        className: "fonts-list"
+      },
+      fonts.map(font => {
+        return dom.li(
+          {},
+          FontMeta({
+            font,
+            key: font.name,
+            onToggleFontHighlight: this.props.onToggleFontHighlight
+          })
+        );
+      })
     );
   }
 
@@ -244,7 +275,7 @@ class FontEditor extends PureComponent {
   }
 
   render() {
-    const { fontEditor, onToggleFontHighlight } = this.props;
+    const { fontEditor } = this.props;
     const { fonts, families, axes, instance, properties } = fontEditor;
     // Pick the first font to show editor controls regardless of how many fonts are used.
     const font = fonts[0];
@@ -267,7 +298,7 @@ class FontEditor extends PureComponent {
       // Render empty state message for nodes that don't have font properties.
       !hasWeight && this.renderWarning(),
       // Always render UI for font family, format and font file URL.
-      this.renderFontFamily(fonts, families, onToggleFontHighlight),
+      this.renderFontFamily(fonts, families),
       // Render UI for font variation instances if they are defined.
       hasFontInstances && this.renderInstances(font.variationInstances, instance),
       // Always render UI for font size.
