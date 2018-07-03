@@ -10,6 +10,7 @@
 #include "MediaContainerType.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionNoteChild.h"
@@ -19,7 +20,6 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
-
 namespace dom {
 
 struct MediaDecodingConfiguration;
@@ -46,10 +46,7 @@ public:
     ErrorResult& aRv);
   // End WebIDL Methods
 
-  explicit MediaCapabilities(nsIGlobalObject* aParent)
-    : mParent(aParent)
-  {
-  }
+  explicit MediaCapabilities(nsIGlobalObject* aParent);
 
   nsIGlobalObject* GetParentObject() const { return mParent; }
   JSObject* WrapObject(JSContext* aCx,
@@ -59,10 +56,10 @@ public:
 
 private:
   virtual ~MediaCapabilities() = default;
-  bool CheckContentType(const nsAString& aMIMEType,
-                        Maybe<MediaContainerType>& aContainer) const;
-  bool CheckVideoConfiguration(const VideoConfiguration& aConfig) const;
-  bool CheckAudioConfiguration(const AudioConfiguration& aConfig) const;
+  Maybe<MediaContainerType> CheckVideoConfiguration(
+    const VideoConfiguration& aConfig) const;
+  Maybe<MediaContainerType> CheckAudioConfiguration(
+    const AudioConfiguration& aConfig) const;
   bool CheckTypeForMediaSource(const nsAString& aType);
   bool CheckTypeForFile(const nsAString& aType);
   bool CheckTypeForEncoder(const nsAString& aType);
