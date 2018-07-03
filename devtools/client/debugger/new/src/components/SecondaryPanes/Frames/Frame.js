@@ -80,7 +80,7 @@ class FrameComponent extends _react.Component {
   }
 
   onMouseDown(e, frame, selectedFrame) {
-    if (e.nativeEvent.which == 3) {
+    if (e.which == 3) {
       return;
     }
 

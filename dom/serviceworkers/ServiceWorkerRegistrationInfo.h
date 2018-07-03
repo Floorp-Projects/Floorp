@@ -11,9 +11,12 @@
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "nsProxyRelease.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace dom {
+
+class ServiceWorkerRegistrationListener;
 
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
@@ -21,6 +24,20 @@ class ServiceWorkerRegistrationInfo final
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ServiceWorkerRegistrationDescriptor mDescriptor;
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
+  nsTObserverArray<ServiceWorkerRegistrationListener*> mInstanceList;
+
+  struct VersionEntry
+  {
+    const ServiceWorkerRegistrationDescriptor mDescriptor;
+    TimeStamp mTimeStamp;
+
+    explicit VersionEntry(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+      : mDescriptor(aDescriptor)
+      , mTimeStamp(TimeStamp::Now())
+    {
+    }
+  };
+  nsTArray<UniquePtr<VersionEntry>> mVersionList;
 
   uint32_t mControlledClientsCounter;
   uint32_t mDelayMultiplier;
@@ -59,6 +76,13 @@ public:
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
                                 ServiceWorkerUpdateViaCache aUpdateViaCache);
+
+  void
+  AddInstance(ServiceWorkerRegistrationListener* aInstance,
+              const ServiceWorkerRegistrationDescriptor& aDescriptor);
+
+  void
+  RemoveInstance(ServiceWorkerRegistrationListener* aInstance);
 
   const nsCString&
   Scope() const;
@@ -221,8 +245,20 @@ public:
   const ServiceWorkerRegistrationDescriptor&
   Descriptor() const;
 
+  uint64_t
+  Id() const;
+
+  uint64_t
+  Version() const;
+
   uint32_t
   GetUpdateDelay();
+
+  void
+  FireUpdateFound();
+
+  void
+  NotifyRemoved();
 
 private:
   // Roughly equivalent to [[Update Registration State algorithm]]. Make sure
@@ -230,6 +266,9 @@ private:
   // may get CC-ed.
   void
   UpdateRegistrationState();
+
+  void
+  UpdateRegistrationState(ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   // Used by devtools to track changes to the properties of *nsIServiceWorkerRegistrationInfo*.
   // Note, this doesn't necessarily need to be in sync with the DOM registration objects, but
@@ -240,6 +279,9 @@ private:
 
   static uint64_t
   GetNextId();
+
+  static uint64_t
+  GetNextVersion();
 };
 
 } // namespace dom

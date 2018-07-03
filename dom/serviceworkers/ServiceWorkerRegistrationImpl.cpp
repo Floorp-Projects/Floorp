@@ -61,11 +61,17 @@ ServiceWorkerRegistrationMainThread::StartListeningForEvents()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mListeningForEvents);
+  MOZ_DIAGNOSTIC_ASSERT(!mInfo);
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (swm) {
-    swm->AddRegistrationEventListener(mScope, this);
-    mListeningForEvents = true;
-  }
+  NS_ENSURE_TRUE_VOID(swm);
+
+  mInfo = swm->GetRegistration(mDescriptor.PrincipalInfo(),
+                               mDescriptor.Scope());
+  NS_ENSURE_TRUE_VOID(mInfo);
+
+  mInfo->AddInstance(this, mDescriptor);
+  mListeningForEvents = true;
 }
 
 void
@@ -76,10 +82,10 @@ ServiceWorkerRegistrationMainThread::StopListeningForEvents()
     return;
   }
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (swm) {
-    swm->RemoveRegistrationEventListener(mScope, this);
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mInfo);
+  mInfo->RemoveInstance(this);
+  mInfo = nullptr;
+
   mListeningForEvents = false;
 }
 
@@ -105,8 +111,23 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  mDescriptor = aDescriptor;
-  mOuter->UpdateState(aDescriptor);
+  NS_ENSURE_TRUE_VOID(mOuter);
+
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
+  RefPtr<ServiceWorkerRegistrationMainThread> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ServiceWorkerRegistrationMainThread::UpdateState",
+    [self, desc = std::move(aDescriptor)] () mutable {
+      self->mDescriptor = std::move(desc);
+      NS_ENSURE_TRUE_VOID(self->mOuter);
+      self->mOuter->UpdateState(self->mDescriptor);
+    });
+
+  Unused <<
+    global->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget(),
+                                                          NS_DISPATCH_NORMAL);
 }
 
 void
@@ -612,7 +633,8 @@ ServiceWorkerRegistrationMainThread::Unregister(ServiceWorkerBoolCallback&& aSuc
 
 class WorkerListener final : public ServiceWorkerRegistrationListener
 {
-  const nsString mScope;
+  ServiceWorkerRegistrationDescriptor mDescriptor;
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mInfo;
   bool mListeningForEvents;
 
   // Set and unset on worker thread, used on main-thread and protected by mutex.
@@ -624,8 +646,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerListener, override)
 
   WorkerListener(ServiceWorkerRegistrationWorkerThread* aReg,
-                 const nsAString& aScope)
-    : mScope(aScope)
+                 const ServiceWorkerRegistrationDescriptor& aDescriptor)
+    : mDescriptor(aDescriptor)
     , mListeningForEvents(false)
     , mRegistration(aReg)
     , mMutex("WorkerListener::mMutex")
@@ -638,13 +660,21 @@ public:
   StartListeningForEvents()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!mListeningForEvents);
+    MOZ_DIAGNOSTIC_ASSERT(!mListeningForEvents);
+    MOZ_DIAGNOSTIC_ASSERT(!mInfo);
+
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      // FIXME(nsm): Maybe the function shouldn't take an explicit scope.
-      swm->AddRegistrationEventListener(mScope, this);
-      mListeningForEvents = true;
-    }
+    NS_ENSURE_TRUE_VOID(swm);
+
+    RefPtr<ServiceWorkerRegistrationInfo> info =
+      swm->GetRegistration(mDescriptor.PrincipalInfo(), mDescriptor.Scope());
+    NS_ENSURE_TRUE_VOID(info);
+
+    mInfo = new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(
+      "WorkerListener::mInfo", info);
+
+    mInfo->AddInstance(this, mDescriptor);
+    mListeningForEvents = true;
   }
 
   void
@@ -656,13 +686,9 @@ public:
       return;
     }
 
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
-    if (swm) {
-      // FIXME(nsm): Maybe the function shouldn't take an explicit scope.
-      swm->RemoveRegistrationEventListener(mScope, this);
-      mListeningForEvents = false;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(mInfo);
+    mInfo->RemoveInstance(this);
+    mListeningForEvents = false;
   }
 
   // ServiceWorkerRegistrationListener
@@ -673,6 +699,7 @@ public:
   UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) override
   {
     MOZ_ASSERT(NS_IsMainThread());
+    mDescriptor = aDescriptor;
     // TODO: Not implemented
   }
 
@@ -682,7 +709,7 @@ public:
   void
   GetScope(nsAString& aScope) const override
   {
-    aScope = mScope;
+    CopyUTF8toUTF16(mDescriptor.Scope(), aScope);
   }
 
   bool
@@ -888,7 +915,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
     return;
   }
 
-  mListener = new WorkerListener(this, mScope);
+  mListener = new WorkerListener(this, mDescriptor);
 
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod("dom::WorkerListener::StartListeningForEvents",

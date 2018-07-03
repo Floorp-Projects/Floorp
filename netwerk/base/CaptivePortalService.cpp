@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CaptivePortalService.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
+#include "xpcpublic.h"
 
 static const char16_t kInterfaceName[] = u"captive-portal-inteface";
 
@@ -27,6 +29,21 @@ static LazyLogModule gCaptivePortalLog("CaptivePortalService");
 NS_IMPL_ISUPPORTS(CaptivePortalService, nsICaptivePortalService, nsIObserver,
                   nsISupportsWeakReference, nsITimerCallback,
                   nsICaptivePortalCallback, nsINamed)
+
+static StaticRefPtr<CaptivePortalService> gCPService;
+
+// static
+already_AddRefed<nsICaptivePortalService>
+CaptivePortalService::GetSingleton()
+{
+  if (gCPService) {
+    return do_AddRef(gCPService);
+  }
+
+  gCPService = new CaptivePortalService();
+  ClearOnShutdown(&gCPService);
+  return do_AddRef(gCPService);
+}
 
 CaptivePortalService::CaptivePortalService()
   : mState(UNKNOWN)
@@ -135,6 +152,11 @@ CaptivePortalService::Start()
 {
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (xpc::AreNonLocalConnectionsDisabled()
+      && !Preferences::GetBool("network.captive-portal-service.testMode", false)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (XRE_GetProcessType() != GeckoProcessType_Default) {

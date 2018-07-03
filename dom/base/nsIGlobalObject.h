@@ -120,6 +120,11 @@ public:
   virtual RefPtr<mozilla::dom::ServiceWorker>
   GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor);
 
+  // Get the DOM object for the given descriptor or return nullptr if it does
+  // not exist.
+  virtual RefPtr<mozilla::dom::ServiceWorkerRegistration>
+  GetServiceWorkerRegistration(const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor) const;
+
   // Get the DOM object for the given descriptor or attempt to create one.
   // Creation can still fail and return nullptr during shutdown, etc.
   virtual RefPtr<mozilla::dom::ServiceWorkerRegistration>

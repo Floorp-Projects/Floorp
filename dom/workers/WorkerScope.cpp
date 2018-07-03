@@ -557,8 +557,8 @@ WorkerGlobalScope::GetController() const
   return mWorkerPrivate->GetController();
 }
 
-RefPtr<ServiceWorkerRegistration>
-WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+RefPtr<mozilla::dom::ServiceWorkerRegistration>
+WorkerGlobalScope::GetServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor) const
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   RefPtr<ServiceWorkerRegistration> ref;
@@ -571,12 +571,18 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegis
     ref = swr.forget();
     *aDoneOut = true;
   });
+  return ref.forget();
+}
 
+RefPtr<ServiceWorkerRegistration>
+WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  RefPtr<ServiceWorkerRegistration> ref = GetServiceWorkerRegistration(aDescriptor);
   if (!ref) {
     ref = ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, this,
                                                      aDescriptor);
   }
-
   return ref.forget();
 }
 
