@@ -2779,6 +2779,11 @@ public:
     return mBackfaceHidden;
   }
 
+  bool HasDifferentFrame(const nsDisplayItem* aOther) const
+  {
+    return mFrame != aOther->mFrame;
+  }
+
   bool HasSameTypeAndClip(const nsDisplayItem* aOther) const
   {
     return GetPerFrameKey() == aOther->GetPerFrameKey() &&
@@ -4961,6 +4966,7 @@ public:
   virtual void Merge(const nsDisplayItem* aItem) override
   {
     MOZ_ASSERT(CanMerge(aItem));
+    MOZ_ASSERT(Frame() != aItem->Frame());
     MergeFromTrackingMergedFrames(static_cast<const nsDisplayWrapList*>(aItem));
   }
 
@@ -5155,7 +5161,7 @@ public:
     // items for the same content element should be merged into a single
     // compositing group
     // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
-    return HasSameTypeAndClip(aItem) && HasSameContent(aItem);
+    return HasDifferentFrame(aItem) && HasSameTypeAndClip(aItem) && HasSameContent(aItem);
   }
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
@@ -5375,7 +5381,7 @@ public:
     {
       // Items for the same content element should be merged into a single
       // compositing group.
-      return HasSameTypeAndClip(aItem) && HasSameContent(aItem)
+      return HasDifferentFrame(aItem) && HasSameTypeAndClip(aItem) && HasSameContent(aItem)
           && mIsForBackground == static_cast<const nsDisplayBlendContainer*>(aItem)->mIsForBackground;
     }
 
@@ -6130,7 +6136,7 @@ public:
   {
     // Items for the same content element should be merged into a single
     // compositing group.
-    return HasSameTypeAndClip(aItem) && HasSameContent(aItem);
+    return HasDifferentFrame(aItem) && HasSameTypeAndClip(aItem) && HasSameContent(aItem);
   }
 
   virtual void Merge(const nsDisplayItem* aItem) override
