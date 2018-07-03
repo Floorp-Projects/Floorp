@@ -12,7 +12,6 @@ interface nsIWebProgressListener;
 interface nsIFile;
 interface nsIChannel;
 interface nsILoadContext;
-interface nsIPrincipal;
 
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
@@ -67,6 +66,12 @@ interface nsIWebBrowserPersist : nsICancelable
   const unsigned long PERSIST_FLAGS_APPEND_TO_FILE = 32768;
 
   /**
+   * Force relevant cookies to be sent with this load even if normally they
+   * wouldn't be.
+   */
+  const unsigned long PERSIST_FLAGS_FORCE_ALLOW_COOKIES = 65536;
+
+  /**
    * Flags governing how data is fetched and saved from the network.
    * It is best to set this value explicitly unless you are prepared
    * to accept the default values.
@@ -111,8 +116,6 @@ interface nsIWebBrowserPersist : nsICancelable
    * @param aURI       URI to save to file. Some implementations of this interface
    *                   may also support <CODE>nullptr</CODE> to imply the currently
    *                   loaded URI.
-   * @param aTriggeringPrincipal
-   *                   The triggering principal for the URI we're saving.
    * @param aCacheKey  The necko cache key integer.
    * @param aReferrer  The referrer URI to pass with an HTTP request or
    *                   <CODE>nullptr</CODE>.
@@ -139,8 +142,7 @@ interface nsIWebBrowserPersist : nsICancelable
    *
    * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveURI(in nsIURI aURI, in nsIPrincipal aTriggeringPrincipal,
-      in unsigned long aCacheKey,
+  void saveURI(in nsIURI aURI, in unsigned long aCacheKey,
       in nsIURI aReferrer, in unsigned long aReferrerPolicy,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
@@ -152,8 +154,7 @@ interface nsIWebBrowserPersist : nsICancelable
    *                   of intermediate data, etc.)
    * @see saveURI for all other parameter descriptions
    */
-  void savePrivacyAwareURI(in nsIURI aURI,
-      in nsIPrincipal aTriggeringPrincipal, in unsigned long aCacheKey,
+  void savePrivacyAwareURI(in nsIURI aURI, in unsigned long aCacheKey,
       in nsIURI aReferrer, in unsigned long aReferrerPolicy,
       in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,

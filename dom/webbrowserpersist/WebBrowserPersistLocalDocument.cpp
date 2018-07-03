@@ -184,14 +184,6 @@ WebBrowserPersistLocalDocument::GetPostData(nsIInputStream** aStream)
     return history->GetPostData(aStream);
 }
 
-NS_IMETHODIMP
-WebBrowserPersistLocalDocument::GetPrincipal(nsIPrincipal** aPrincipal)
-{
-  nsCOMPtr<nsIPrincipal> nodePrincipal = mDocument->NodePrincipal();
-  nodePrincipal.forget(aPrincipal);
-  return NS_OK;
-}
-
 already_AddRefed<nsISHEntry>
 WebBrowserPersistLocalDocument::GetHistory()
 {

@@ -77,7 +77,6 @@ public:
   NS_DECL_NSIFLAVORDATAPROVIDER
 
   nsresult SaveURIToFile(nsIURI* inSourceURI,
-                         nsIPrincipal* inTriggeringPrincipal,
                          nsIFile* inDestFile, bool isPrivate);
 };
 

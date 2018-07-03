@@ -41,7 +41,6 @@ WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
         return;
     }
 
-    nsCOMPtr<nsIPrincipal> principal;
     WebBrowserPersistDocumentAttrs attrs;
     nsCOMPtr<nsIInputStream> postDataStream;
 #define ENSURE(e) do {           \
@@ -61,10 +60,6 @@ WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
     ENSURE(aDocument->GetContentDisposition(attrs.contentDisposition()));
     ENSURE(aDocument->GetCacheKey(&(attrs.cacheKey())));
     ENSURE(aDocument->GetPersistFlags(&(attrs.persistFlags())));
-
-    ENSURE(aDocument->GetPrincipal(getter_AddRefs(principal)));
-    ENSURE(ipc::PrincipalToPrincipalInfo(principal, &(attrs.principal())));
-
     ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
 #undef ENSURE
 
