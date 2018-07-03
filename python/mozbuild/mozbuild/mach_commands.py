@@ -1686,26 +1686,6 @@ class StaticAnalysis(MachCommandBase):
         if rc != 0:
             return rc
 
-        python = self.virtualenv_manager.python_path
-
-        if checks == '-*':
-            checks = self._get_checks()
-
-        common_args = ['-clang-tidy-binary', self._clang_tidy_path,
-                       '-clang-apply-replacements-binary', self._clang_apply_replacements,
-                       '-checks=%s' % checks,
-                       '-extra-arg=-DMOZ_CLANG_PLUGIN']
-
-        # Flag header-filter is passed to 'run-clang-tidy' in order to limit
-        # the diagnostic messages only to the specified header files.
-        # When no value is specified the default value is considered to be the source
-        # in order to limit the dianostic message to the source files or folders.
-        common_args.append('-header-filter=%s' %
-                           (header_filter if len(header_filter) else '|'.join(source)))
-
-        if fix:
-            common_args.append('-fix')
-
         compile_db = json.loads(open(self._compile_db, 'r').read())
         total = 0
         import re
@@ -1717,9 +1697,10 @@ class StaticAnalysis(MachCommandBase):
         if not total:
             return 0
 
-        args = [python, self._run_clang_tidy_path, '-p', self.topobjdir]
-        args += ['-j', str(jobs)] + common_args + source
         cwd = self.topobjdir
+        self._compilation_commands_path = self.topobjdir
+        args = self._get_clang_tidy_command(
+            check=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
         monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)
 
@@ -1731,6 +1712,30 @@ class StaticAnalysis(MachCommandBase):
                      {'count': len(monitor.warnings_db)},
                      '{count} warnings present.')
             return rc
+
+    def _get_clang_tidy_command(self, checks, header_filter, sources, jobs, fix):
+
+        if checks == '-*':
+            checks = self._get_checks()
+
+        common_args = ['-clang-tidy-binary', self._clang_tidy_path,
+                       '-clang-apply-replacements-binary', self._clang_apply_replacements,
+                       '-checks=%s' % checks,
+                       '-extra-arg=-DMOZ_CLANG_PLUGIN']
+
+        # Flag header-filter is passed in order to limit the diagnostic messages only
+        # to the specified header files. When no value is specified the default value
+        # is considered to be the source in order to limit the diagnostic message to
+        # the source files or folders.
+        common_args += ['-header-filter=%s' % (header_filter
+                                              if len(header_filter) else '|'.join(sources))]
+        if fix:
+            common_args += '-fix'
+
+        return [
+            self.virtualenv_manager.python_path, self._run_clang_tidy_path, '-j',
+            str(jobs), '-p', self._compilation_commands_path
+        ] + common_args + sources
 
     @StaticAnalysisSubCommand('static-analysis', 'autotest',
                               'Run the auto-test suite in order to determine that'
@@ -1804,6 +1809,7 @@ class StaticAnalysis(MachCommandBase):
 
         import concurrent.futures
         import multiprocessing
+        import shutil
 
         max_workers = multiprocessing.cpu_count()
 
@@ -1817,6 +1823,9 @@ class StaticAnalysis(MachCommandBase):
             cmd, stderr=subprocess.STDOUT).decode('utf-8')
         available_checks = clang_output.split('\n')[1:]
         self._clang_tidy_checks = [c.strip() for c in available_checks if c]
+
+        # Build the dummy compile_commands.json
+        self._compilation_commands_path = self._create_temp_compilation_db(config)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
@@ -1833,11 +1842,34 @@ class StaticAnalysis(MachCommandBase):
             for future in concurrent.futures.as_completed(futures):
                 ret_val = future.result()
                 if ret_val != self.TOOLS_SUCCESS:
+                    # Also delete the tmp folder
+                    shutil.rmtree(self._compilation_commands_path)
                     return ret_val
 
         self.log(logging.INFO, 'static-analysis', {}, "SUCCESS: clang-tidy all tests passed.")
+        # Also delete the tmp folder
+        shutil.rmtree(self._compilation_commands_path)
         return self.TOOLS_SUCCESS
 
+    def _create_temp_compilation_db(self, config):
+        directory = tempfile.mkdtemp(prefix='cc')
+        with open(mozpath.join(directory, "compile_commands.json"), "wb") as file_handler:
+            compile_commands = []
+            director = mozpath.join(self.topsrcdir, 'tools', 'clang-tidy', 'test')
+            for item in config['clang_checkers']:
+                if item['name'] in ['-*', 'mozilla-*']:
+                    continue
+                file = item['name'] + '.cpp'
+                element = {}
+                element["directory"] = director
+                element["command"] = 'cpp '+ file
+                element["file"] = mozpath.join(director, file)
+                compile_commands.append(element)
+
+            json.dump(compile_commands, file_handler)
+            file_handler.flush()
+
+            return directory
 
     @StaticAnalysisSubCommand('static-analysis', 'install',
                               'Install the static analysis helper tool')
@@ -1918,7 +1950,8 @@ class StaticAnalysis(MachCommandBase):
             self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker {} doesn't have a test file.".format(check))
             return self.TOOLS_CHECKER_NO_TEST_FILE
 
-        cmd = [self._clang_tidy_path, '-checks=-*, ' + check, test_file_path_cpp]
+        cmd = self._get_clang_tidy_command(
+            checks='-*,' + check, header_filter='', sources=[test_file_path_cpp], jobs=1, fix=False)
 
         clang_output = subprocess.check_output(
             cmd, stderr=subprocess.STDOUT).decode('utf-8')
