@@ -146,6 +146,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     // Clear the pattern cache to avoid dead object exceptions (Bug 1342051).
     this.clearCache();
+
+    this.flexData = null;
+
     AutoRefreshHighlighter.prototype.destroy.call(this);
   }
 
@@ -276,7 +279,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const oldFlexData = this.flexData;
-    this.flexData = this.currentNode.getAsFlexContainer();
+    this.flexData = getFlexData(this.currentNode.getAsFlexContainer(), this.win);
     const hasFlexDataChanged = compareFlexData(oldFlexData, this.flexData);
 
     const oldAlignItems = this.alignItemsValue;
@@ -390,11 +393,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.strokeStyle = DEFAULT_COLOR;
 
     const { bounds } = this.currentQuads.content[0];
-    const flexLines = this.flexData.getLines();
     const isColumn = this.flexDirection.startsWith("column");
     const options = { matrix: this.currentMatrix };
 
-    for (const flexLine of flexLines) {
+    for (const flexLine of this.flexData.lines) {
       const { crossStart, crossSize } = flexLine;
 
       switch (this.alignItemsValue) {
@@ -570,15 +572,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.strokeStyle = DEFAULT_COLOR;
 
     const { bounds } = this.currentQuads.content[0];
-    const flexLines = this.flexData.getLines();
 
-    for (const flexLine of flexLines) {
-      const flexItems = flexLine.getItems();
-
-      for (const flexItem of flexItems) {
-        const { node } = flexItem;
-        const quads = getAdjustedQuads(this.win, node, "border");
-
+    for (const flexLine of this.flexData.lines) {
+      for (const flexItem of flexLine.items) {
+        const quads = flexItem.quads;
         if (!quads.length) {
           continue;
         }
@@ -594,7 +591,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
         drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
         this.ctx.stroke();
 
-        this.renderFlexItemBasis(node, left, top, right, bottom, bounds.width);
+        this.renderFlexItemBasis(flexItem.node, left, top, right, bottom, bounds.width);
       }
     }
 
@@ -618,11 +615,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.strokeStyle = DEFAULT_COLOR;
 
     const { bounds } = this.currentQuads.content[0];
-    const flexLines = this.flexData.getLines();
     const isColumn = this.flexDirection.startsWith("column");
     const options = { matrix: this.currentMatrix };
 
-    for (const flexLine of flexLines) {
+    for (const flexLine of this.flexData.lines) {
       const { crossStart, crossSize } = flexLine;
 
       if (isColumn) {
@@ -669,18 +665,14 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     const { bounds } = this.currentQuads.content[0];
-    const flexLines = this.flexData.getLines();
     const isColumn = this.flexDirection.startsWith("column");
 
-    for (const flexLine of flexLines) {
+    for (const flexLine of this.flexData.lines) {
       const { crossStart, crossSize } = flexLine;
-      const flexItems = flexLine.getItems();
       let mainStart = 0;
 
-      for (const flexItem of flexItems) {
-        const { node } = flexItem;
-        const quads = getAdjustedQuads(this.win, node, "margin");
-
+      for (const flexItem of flexLine.items) {
+        const quads = flexItem.quads;
         if (!quads.length) {
           continue;
         }
@@ -752,6 +744,42 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 }
 
 /**
+ * Returns an object representation of the Flex data object and its array of FlexLine
+ * and FlexItem objects along with the box quads of the flex items.
+ *
+ * @param  {Flex} flex
+ *         The Flex data object.
+ * @param  {Window} win
+ *         The Window object.
+ * @return {Object} representation of the Flex data object.
+ */
+function getFlexData(flex, win) {
+  return {
+    lines: flex.getLines().map(line => {
+      return {
+        crossSize: line.crossSize,
+        crossStart: line.crossStart,
+        firstBaselineOffset: line.firstBaselineOffset,
+        growthState: line.growthState,
+        lastBaselineOffset: line.lastBaselineOffset,
+        items: line.getItems().map(item => {
+          return {
+            crossMaxSize: item.crossMaxSize,
+            crossMinSize: item.crossMinSize,
+            mainBaseSize: item.mainBaseSize,
+            mainDeltaSize: item.mainDeltaSize,
+            mainMaxSize: item.mainMaxSize,
+            mainMinSize: item.mainMinSize,
+            node: item.node,
+            quads: getAdjustedQuads(win, item.node),
+          };
+        }),
+      };
+    })
+  };
+}
+
+/**
  * Returns whether or not the flex data has changed.
  *
  * @param  {Flex} oldFlexData
@@ -765,8 +793,8 @@ function compareFlexData(oldFlexData, newFlexData) {
     return true;
   }
 
-  const oldLines = oldFlexData.getLines();
-  const newLines = newFlexData.getLines();
+  const oldLines = oldFlexData.lines;
+  const newLines = newFlexData.lines;
 
   if (oldLines.length !== newLines.length) {
     return true;
@@ -784,8 +812,8 @@ function compareFlexData(oldFlexData, newFlexData) {
       return true;
     }
 
-    const oldItems = oldLine.getItems();
-    const newItems = newLine.getItems();
+    const oldItems = oldLine.items;
+    const newItems = newLine.items;
 
     if (oldItems.length !== newItems.length) {
       return true;
@@ -801,6 +829,27 @@ function compareFlexData(oldFlexData, newFlexData) {
           oldItem.mainDeltaSize !== newItem.mainDeltaSize ||
           oldItem.mainMaxSize !== newItem.mainMaxSize ||
           oldItem.mainMinSize !== newItem.mainMinSize) {
+        return true;
+      }
+
+      const oldItemQuads = oldItem.quads;
+      const newItemQuads = newItem.quads;
+
+      if (oldItemQuads.length !== newItemQuads.length) {
+        return true;
+      }
+
+      const { bounds: oldItemBounds } = oldItemQuads[0];
+      const { bounds: newItemBounds } = newItemQuads[0];
+
+      if (oldItemBounds.bottom !== newItemBounds.bottom ||
+          oldItemBounds.height !== newItemBounds.height ||
+          oldItemBounds.left !== newItemBounds.left ||
+          oldItemBounds.right !== newItemBounds.right ||
+          oldItemBounds.top !== newItemBounds.top ||
+          oldItemBounds.width !== newItemBounds.width ||
+          oldItemBounds.x !== newItemBounds.x ||
+          oldItemBounds.y !== newItemBounds.y) {
         return true;
       }
     }
