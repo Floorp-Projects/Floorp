@@ -41,13 +41,25 @@ AnimationEventDispatcher::Disconnect()
 }
 
 void
+AnimationEventDispatcher::QueueEvent(AnimationEventInfo&& aEvent)
+{
+  mPendingEvents.AppendElement(std::move(aEvent));
+  mIsSorted = false;
+  ScheduleDispatch();
+}
+
+void
 AnimationEventDispatcher::QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
 {
-  MOZ_ASSERT(mPresContext,
-             "The pres context should be valid");
-
   mPendingEvents.AppendElements(std::move(aEvents));
   mIsSorted = false;
+  ScheduleDispatch();
+}
+
+void
+AnimationEventDispatcher::ScheduleDispatch()
+{
+  MOZ_ASSERT(mPresContext, "The pres context should be valid");
   if (!mIsObserving) {
     mPresContext->RefreshDriver()->ScheduleAnimationEventDispatch(this);
     mIsObserving = true;
