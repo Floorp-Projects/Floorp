@@ -679,8 +679,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     this.parentActor.off("stylesheet-added", this._onNewStyleSheetActor);
     this.parentActor.off("window-ready", this._onWindowReady);
 
-    this.parentActor.chromeEventHandler.removeEventListener("StyleSheetAdded",
-                                                            this._onSheetAdded, true);
+    this.parentActor.chromeEventHandler
+      .removeEventListener("StyleSheetApplicableStateChanged", this._onSheetAdded, true);
 
     protocol.Actor.prototype.destroy.call(this);
   },

@@ -327,24 +327,39 @@ var gSync = {
       console.error("Could not get the FxA device list", e);
       devices = []; // We can still run in degraded mode.
     }
-    const toSendMessages = [];
+    const fxaCommandsDevices = [];
+    const oldSendTabClients = [];
     for (const client of clients) {
       const device = devices.find(d => d.id == client.fxaDeviceId);
-      if (device && fxAccounts.messages.canReceiveSendTabMessages(device)) {
-        toSendMessages.push(device);
+      if (!device) {
+        console.error(`Could not find associated FxA device for ${client.name}`);
+        continue;
+      } else if ((await fxAccounts.commands.sendTab.isDeviceCompatible(device))) {
+        fxaCommandsDevices.push(device);
       } else {
-        try {
-          await Weave.Service.clientsEngine.sendURIToClientForDisplay(url, client.id, title);
-        } catch (e) {
-          console.error("Could not send tab to device", e);
-        }
+        oldSendTabClients.push(client);
       }
     }
-    if (toSendMessages.length) {
+    if (fxaCommandsDevices.length) {
+      console.log(`Sending a tab to ${fxaCommandsDevices.map(d => d.name).join(", ")} using FxA commands.`);
+      const report = await fxAccounts.commands.sendTab.send(fxaCommandsDevices, {url, title});
+      for (let {device, error} of report.failed) {
+        console.error(`Failed to send a tab with FxA commands for ${device.name}.
+                       Falling back on the Sync back-end`, error);
+        const client = clients.find(c => c.fxaDeviceId == device.id);
+        if (!client) {
+          console.error(`Could not find associated Sync device for ${device.name}`);
+          continue;
+        }
+        oldSendTabClients.push(client);
+      }
+    }
+    for (let client of oldSendTabClients) {
       try {
-        await fxAccounts.messages.sendTab(toSendMessages, {url, title});
+        console.log(`Sending a tab to ${client.name} using Sync.`);
+        await Weave.Service.clientsEngine.sendURIToClientForDisplay(url, client.id, title);
       } catch (e) {
-        console.error("Could not send tab to device", e);
+        console.error("Could not send tab to device.", e);
       }
     }
   },
@@ -591,7 +606,13 @@ var gSync = {
     const state = UIState.get();
     if (state.status == UIState.STATUS_SIGNED_IN) {
       this.updateSyncStatus({ syncing: true });
-      Services.tm.dispatchToMainThread(() => Weave.Service.sync());
+      Services.tm.dispatchToMainThread(() => {
+        // We are pretty confident that push helps us pick up all FxA commands,
+        // but some users might have issues with push, so let's unblock them
+        // by fetching the missed FxA commands on manual sync.
+        fxAccounts.commands.fetchMissedRemoteCommands();
+        Weave.Service.sync();
+      });
     }
   },
 

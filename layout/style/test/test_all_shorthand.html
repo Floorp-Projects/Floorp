@@ -3,7 +3,7 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="property_database.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
-<body>
+<body onload="runTest()">
 
 <style id="stylesheet">
 #parent { }
@@ -154,5 +154,4 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ "set": [["layout.css.unset-value.enabled", true]] }, runTest);
 </script>

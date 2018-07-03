@@ -533,11 +533,6 @@ SyncScheduler.prototype = {
       return;
     }
     Services.tm.dispatchToMainThread(() => {
-      // Terrible hack below: we do the fxa messages polling in the sync
-      // scheduler to get free post-wake/link-state etc detection.
-      fxAccounts.messages.consumeRemoteMessages().catch(e => {
-        this._log.error("Error while polling for FxA messages.", e);
-      });
       this.service.sync({engines, why});
     });
   },

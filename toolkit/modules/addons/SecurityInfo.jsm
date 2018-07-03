@@ -210,8 +210,8 @@ const SecurityInfo = {
       subject: cert.subjectName,
       issuer: cert.issuerName,
       validity: {
-        startGMT: cert.validity.notBeforeGMT,
-        endGMT: cert.validity.notAfterGMT,
+        start: cert.validity.notBefore,
+        end: cert.validity.notAfter,
       },
       fingerprint: {
         sha1: cert.sha1Fingerprint,
@@ -222,7 +222,6 @@ const SecurityInfo = {
       subjectPublicKeyInfoDigest: {
         sha256: cert.sha256SubjectPublicKeyInfoDigest,
       },
-      keyUsages: cert.keyUsages,
     };
     if (options.rawDER) {
       certData.rawDER = cert.getRawDER({});

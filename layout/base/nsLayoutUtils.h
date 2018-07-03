@@ -2396,11 +2396,6 @@ public:
   static bool CSSFiltersEnabled();
 
   /**
-   * Checks whether support for the CSS-wide "unset" value is enabled.
-   */
-  static bool UnsetValueEnabled();
-
-  /**
    * Checks whether support for inter-character ruby is enabled.
    */
   static bool IsInterCharacterRubyEnabled();

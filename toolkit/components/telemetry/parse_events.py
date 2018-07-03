@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import atexit
 import re
 import yaml
 import itertools
@@ -9,6 +10,7 @@ import string
 import shared_telemetry_utils as utils
 
 from shared_telemetry_utils import ParserError
+atexit.register(ParserError.exit_func)
 
 MAX_CATEGORY_NAME_LENGTH = 30
 MAX_METHOD_NAME_LENGTH = 20
@@ -168,14 +170,15 @@ class EventData:
         type_check_event_fields(self.identifier, name, definition)
 
         # Check method & object string patterns.
-        for method in self.methods:
-            string_check(self.identifier, field='methods', value=method,
-                         min_length=1, max_length=MAX_METHOD_NAME_LENGTH,
-                         regex=IDENTIFIER_PATTERN)
-        for obj in self.objects:
-            string_check(self.identifier, field='objects', value=obj,
-                         min_length=1, max_length=MAX_OBJECT_NAME_LENGTH,
-                         regex=IDENTIFIER_PATTERN)
+        if strict_type_checks:
+            for method in self.methods:
+                string_check(self.identifier, field='methods', value=method,
+                             min_length=1, max_length=MAX_METHOD_NAME_LENGTH,
+                             regex=IDENTIFIER_PATTERN)
+            for obj in self.objects:
+                string_check(self.identifier, field='objects', value=obj,
+                             min_length=1, max_length=MAX_OBJECT_NAME_LENGTH,
+                             regex=IDENTIFIER_PATTERN)
 
         # Check release_channel_collection
         rcc_key = 'release_channel_collection'
