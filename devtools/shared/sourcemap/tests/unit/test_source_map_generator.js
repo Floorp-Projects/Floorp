@@ -140,7 +140,7 @@ var SOURCE_MAP_TEST_MODULE =
 	  // Not enough info.
 	  assert.throws(function () {
 	    map.addMapping({});
-	  });
+	  }, /"generated" is a required argument/);
 	
 	  // Original file position, but no source.
 	  assert.throws(function () {
@@ -148,7 +148,7 @@ var SOURCE_MAP_TEST_MODULE =
 	      generated: { line: 1, column: 1 },
 	      original: { line: 1, column: 1 }
 	    });
-	  });
+	  }, /Invalid mapping/);
 	};
 	
 	exports['test adding mappings with skipValidation'] = function (assert) {
@@ -161,7 +161,7 @@ var SOURCE_MAP_TEST_MODULE =
 	  // Not enough info, caught by `util.getArgs`
 	  assert.throws(function () {
 	    map.addMapping({});
-	  });
+	  }, /"generated" is a required argument/);
 	
 	  // Original file position, but no source. Not checked.
 	  assert.doesNotThrow(function () {
@@ -396,7 +396,7 @@ var SOURCE_MAP_TEST_MODULE =
 	  var map2 = new SourceMapGenerator();
 	  assert.throws(function() {
 	    map.applySourceMap(new SourceMapConsumer(map2.toJSON()));
-	  });
+	  }, /Error: SourceMapGenerator.prototype.applySourceMap requires either an explicit source file/);
 	};
 	
 	exports['test the two additional parameters of applySourceMap'] = function (assert) {
