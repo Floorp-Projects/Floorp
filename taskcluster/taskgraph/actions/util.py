@@ -123,9 +123,7 @@ def create_tasks(to_run, full_task_graph, label_to_taskid,
     that this is passed _all_ tasks in the graph, not just the set in to_run. You
     may want to skip modifying tasks not in your to_run list.
 
-    If you wish to create the tasks in a new group, leave out decision_task_id.
-
-    Returns an updated label_to_taskid containing the new tasks"""
+    If you wish to create the tasks in a new group, leave out decision_task_id."""
     if suffix != '':
         suffix = '-{}'.format(suffix)
     to_run = set(to_run)
@@ -147,4 +145,3 @@ def create_tasks(to_run, full_task_graph, label_to_taskid,
     write_artifact('label-to-taskid{}.json'.format(suffix), label_to_taskid)
     write_artifact('to-run{}.json'.format(suffix), list(to_run))
     create.create_tasks(optimized_task_graph, label_to_taskid, params, decision_task_id)
-    return label_to_taskid
