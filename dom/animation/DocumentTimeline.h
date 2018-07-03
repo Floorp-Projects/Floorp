@@ -29,6 +29,7 @@ namespace dom {
 class DocumentTimeline final
   : public AnimationTimeline
   , public nsARefreshObserver
+  , public nsATimerAdjustmentObserver
   , public LinkedListElement<DocumentTimeline>
 {
 public:
@@ -85,6 +86,8 @@ public:
 
   // nsARefreshObserver methods
   void WillRefresh(TimeStamp aTime) override;
+  // nsATimerAdjustmentObserver methods
+  void NotifyTimerAdjusted(TimeStamp aTime) override;
 
   void NotifyRefreshDriverCreated(nsRefreshDriver* aDriver);
   void NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver);
@@ -93,6 +96,9 @@ protected:
   TimeStamp GetCurrentTimeStamp() const;
   nsRefreshDriver* GetRefreshDriver() const;
   void UnregisterFromRefreshDriver();
+  void MostRecentRefreshTimeUpdated();
+  void ObserveRefreshDriver(nsRefreshDriver* aDriver);
+  void DisconnectRefreshDriver(nsRefreshDriver* aDriver);
 
   nsCOMPtr<nsIDocument> mDocument;
 
