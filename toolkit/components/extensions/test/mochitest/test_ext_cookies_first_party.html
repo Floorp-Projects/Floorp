@@ -10,8 +10,6 @@
 async function background() {
   const url = "http://ext-cookie-first-party.mochi.test/";
   const firstPartyDomain = "ext-cookie-first-party.mochi.test";
-  // A first party domain with invalid characters for the file system, which just happens to be a IPv6 address.
-  const firstPartyDomainInvalidChars = "[2606:4700:4700::1111]";
   const expectedError = "First-Party Isolation is enabled, but the required 'firstPartyDomain' attribute was not set.";
 
   const assertExpectedCookies = (expected, cookies, message) => {
@@ -218,38 +216,6 @@ async function background() {
     browser.test.sendMessage("test_fpi_enabled");
   };
 
-  // Test FPI with a first party domain with invalid characters for
-  // the file system.
-  const test_fpi_with_invalid_characters = async () => {
-    let cookie;
-
-    // Test setting a cookie with a first party domain with invalid characters
-    // for the file system.
-    cookie = await browser.cookies.set({url, name: "foo5", value: "bar5",
-                                        firstPartyDomain: firstPartyDomainInvalidChars});
-    assertExpectedCookies([
-      {name: "foo5", value: "bar5", firstPartyDomain: firstPartyDomainInvalidChars},
-    ], [cookie], "set: FPI on, w/ firstPartyDomain with invalid characters, FP cookie");
-
-    // Test getting a cookie with a first party domain with invalid characters
-    // for the file system.
-    cookie = await browser.cookies.get({url, name: "foo5",
-                                        firstPartyDomain: firstPartyDomainInvalidChars});
-    assertExpectedCookies([
-      {name: "foo5", value: "bar5", firstPartyDomain: firstPartyDomainInvalidChars},
-    ], [cookie], "get: FPI on, w/ firstPartyDomain with invalid characters, FP cookie");
-
-    // Test removing a cookie with a first party domain with invalid characters
-    // for the file system.
-    cookie = await browser.cookies.remove({url, name: "foo5",
-                                           firstPartyDomain: firstPartyDomainInvalidChars});
-    assertExpectedCookies([
-      {url, name: "foo5", firstPartyDomain: firstPartyDomainInvalidChars},
-    ], [cookie], "remove: FPI on, w/ firstPartyDomain with invalid characters, FP cookie");
-
-    browser.test.sendMessage("test_fpi_with_invalid_characters");
-  };
-
   // Test when FPI is disabled again, accessing FP cookies set when FPI is enabled.
   const test_fpd_cookies_on_fpi_disabled = async () => {
     let cookie, cookies;
@@ -275,7 +241,6 @@ async function background() {
     switch (message) {
       case "test_fpi_disabled": return test_fpi_disabled();
       case "test_fpi_enabled": return test_fpi_enabled();
-      case "test_fpi_with_invalid_characters": return test_fpi_with_invalid_characters();
       case "test_fpd_cookies_on_fpi_disabled": return test_fpd_cookies_on_fpi_disabled();
       default: return browser.test.notifyFail("unknown-message");
     }
@@ -307,8 +272,6 @@ add_task(async () => {
   await enableFirstPartyIsolation();
   extension.sendMessage("test_fpi_enabled");
   await extension.awaitMessage("test_fpi_enabled");
-  extension.sendMessage("test_fpi_with_invalid_characters");
-  await extension.awaitMessage("test_fpi_with_invalid_characters");
   await disableFirstPartyIsolation();
   extension.sendMessage("test_fpd_cookies_on_fpi_disabled");
   await extension.awaitMessage("test_fpd_cookies_on_fpi_disabled");
