@@ -5,11 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaCapabilities.h"
+#include "Benchmark.h"
 #include "DecoderTraits.h"
 #include "Layers.h"
 #include "MediaInfo.h"
 #include "MediaRecorder.h"
 #include "PDMFactory.h"
+#include "VPXDecoder.h"
 #include "mozilla/Move.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TaskQueue.h"
@@ -201,10 +203,13 @@ MediaCapabilities::DecodingInfo(
               MOZ_ASSERT(config->IsVideo());
               nsAutoCString reason;
               bool powerEfficient = decoder->IsHardwareAccelerated(reason);
-              // TODO use benchmark result to narrow smoothness;
+              bool smooth = true;
+              if (!powerEfficient && VPXDecoder::IsVP9(config->mMimeType)) {
+                smooth = VP9Benchmark::IsVP9DecodeFast(true /* default */);
+              }
               p = CapabilitiesPromise::CreateAndResolve(
                 MediaCapabilitiesInfo(
-                  true /* supported */, true /* smooth */, powerEfficient),
+                  true /* supported */, smooth, powerEfficient),
                 __func__);
             }
             MOZ_ASSERT(p.get(), "the promise has been created");
@@ -262,11 +267,13 @@ MediaCapabilities::DecodingInfo(
                return;
              }
              bool powerEfficient = true;
+             bool smooth = true;
              for (auto&& capability : aValue.ResolveValue()) {
+               smooth &= capability.Smooth();
                powerEfficient &= capability.PowerEfficient();
              }
              auto info = MakeUnique<MediaCapabilitiesInfo>(
-               true /* supported */, true /* smooth */, powerEfficient);
+               true /* supported */, smooth, powerEfficient);
              promise->MaybeResolve(std::move(info));
            })
     ->Track(*holder);
