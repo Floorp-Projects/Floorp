@@ -6237,10 +6237,12 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
 nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList,
                                    const ActiveScrolledRoot* aActiveScrolledRoot,
-                                   bool aForEventsAndPluginsOnly)
+                                   bool aForEventsAndPluginsOnly,
+                                   bool aNeedsActiveLayer)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true)
     , mOpacity(aFrame->StyleEffects()->mOpacity)
     , mForEventsAndPluginsOnly(aForEventsAndPluginsOnly)
+    , mNeedsActiveLayer(aNeedsActiveLayer)
     , mChildOpacityState(ChildOpacityState::Unknown)
 {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
@@ -6434,7 +6436,7 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
     return false;
   }
 
-  if (NeedsActiveLayer(aBuilder, mFrame) || mOpacity == 0.0) {
+  if (mNeedsActiveLayer || mOpacity == 0.0) {
     // If our opacity is zero then we'll discard all descendant display items
     // except for layer event regions, so there's no point in doing this
     // optimization (and if we do do it, then invalidations of those descendants
@@ -6464,7 +6466,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_INACTIVE;
   }
 
-  if (NeedsActiveLayer(aBuilder, mFrame)) {
+  if (mNeedsActiveLayer) {
     // Returns LAYER_ACTIVE_FORCE to avoid flatterning the layer for async
     // animations.
     return LAYER_ACTIVE_FORCE;
