@@ -1247,6 +1247,231 @@ static PLDHashTableOps pref_HashTableOps = {
   PrefEntry::InitEntry,
 };
 
+class PrefsHashIter
+{
+  using Iterator = decltype(gHashTable->Iter());
+  using ElemType = Pref*;
+
+  Iterator mIter;
+
+public:
+  explicit PrefsHashIter(PLDHashTable* aTable)
+    : mIter(aTable->Iter())
+  {
+  }
+
+  class Elem
+  {
+    friend class PrefsHashIter;
+
+    PrefsHashIter& mParent;
+    bool mDone;
+
+    Elem(PrefsHashIter& aIter, bool aDone)
+      : mParent(aIter)
+      , mDone(aDone)
+    {
+    }
+
+    Iterator& Iter() { return mParent.mIter; }
+
+  public:
+    Elem& operator*() { return *this; }
+
+    ElemType get()
+    {
+      if (mDone) {
+        return nullptr;
+      }
+      return static_cast<PrefEntry*>(Iter().Get())->mPref;
+    }
+    ElemType get() const { return const_cast<Elem*>(this)->get(); }
+
+    ElemType operator->() { return get(); }
+    ElemType operator->() const { return get(); }
+
+    operator ElemType() { return get(); }
+
+    void Remove() { Iter().Remove(); }
+
+    Elem& operator++()
+    {
+      MOZ_ASSERT(!mDone);
+      Iter().Next();
+      mDone = Iter().Done();
+      return *this;
+    }
+
+    bool operator!=(Elem& other)
+    {
+      return mDone != other.mDone || this->get() != other.get();
+    }
+  };
+
+  Elem begin() { return Elem(*this, mIter.Done()); }
+
+  Elem end() { return Elem(*this, true); }
+};
+
+class PrefsIter
+{
+  using Iterator = decltype(gHashTable->Iter());
+  using ElemType = PrefWrapper;
+
+  using HashElem = PrefsHashIter::Elem;
+  using SharedElem = SharedPrefMap::Pref;
+
+  using ElemTypeVariant = Variant<HashElem, SharedElem>;
+
+  SharedPrefMap* mSharedMap;
+  PLDHashTable* mHashTable;
+  PrefsHashIter mIter;
+
+  ElemTypeVariant mPos;
+  ElemTypeVariant mEnd;
+
+  Maybe<PrefWrapper> mEntry;
+
+public:
+  PrefsIter(PLDHashTable* aHashTable, SharedPrefMap* aSharedMap)
+    : mSharedMap(aSharedMap)
+    , mHashTable(aHashTable)
+    , mIter(aHashTable)
+    , mPos(AsVariant(mIter.begin()))
+    , mEnd(AsVariant(mIter.end()))
+  {
+    if (Done()) {
+      NextIterator();
+    }
+  }
+
+private:
+#define MATCH(type, ...)                                                       \
+  do {                                                                         \
+    struct Matcher                                                             \
+    {                                                                          \
+      PrefsIter& mIter;                                                        \
+      type match(HashElem& pos)                                                \
+      {                                                                        \
+        HashElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<HashElem>();            \
+        __VA_ARGS__;                                                           \
+      }                                                                        \
+      type match(SharedElem& pos)                                              \
+      {                                                                        \
+        SharedElem& end MOZ_MAYBE_UNUSED = mIter.mEnd.as<SharedElem>();        \
+        __VA_ARGS__;                                                           \
+      }                                                                        \
+    };                                                                         \
+    return mPos.match(Matcher{ *this });                                       \
+  } while (0);
+
+  bool Done() { MATCH(bool, return pos == end); }
+
+  PrefWrapper MakeEntry() { MATCH(PrefWrapper, return PrefWrapper(pos)); }
+
+  void NextEntry()
+  {
+    mEntry.reset();
+    MATCH(void, ++pos);
+  }
+#undef MATCH
+
+  bool Next()
+  {
+    NextEntry();
+    return !Done() || NextIterator();
+  }
+
+  bool NextIterator()
+  {
+    if (mPos.is<HashElem>() && mSharedMap) {
+      mPos = AsVariant(mSharedMap->begin());
+      mEnd = AsVariant(mSharedMap->end());
+      return !Done();
+    }
+    return false;
+  }
+
+  bool IteratingBase() { return mPos.is<SharedElem>(); }
+
+  PrefWrapper& Entry()
+  {
+    MOZ_ASSERT(!Done());
+
+    if (!mEntry.isSome()) {
+      mEntry.emplace(MakeEntry());
+    }
+    return mEntry.ref();
+  }
+
+public:
+  class Elem
+  {
+    friend class PrefsIter;
+
+    PrefsIter& mParent;
+    bool mDone;
+
+    Elem(PrefsIter& aIter, bool aDone)
+      : mParent(aIter)
+      , mDone(aDone)
+    {
+      SkipDuplicates();
+    }
+
+    void Next() { mDone = !mParent.Next(); }
+
+    void SkipDuplicates()
+    {
+      while (!mDone && (mParent.IteratingBase()
+                          ? !!mParent.mHashTable->Search(ref().Name())
+                          : ref().IsTypeNone())) {
+        Next();
+      }
+    }
+
+  public:
+    Elem& operator*() { return *this; }
+
+    ElemType& ref() { return mParent.Entry(); }
+    const ElemType& ref() const { return const_cast<Elem*>(this)->ref(); }
+
+    ElemType* operator->() { return &ref(); }
+    const ElemType* operator->() const { return &ref(); }
+
+    operator ElemType() { return ref(); }
+
+    void Remove()
+    {
+      MOZ_ASSERT(!mParent.IteratingBase());
+      mParent.mPos.as<HashElem>().Remove();
+    }
+
+    Elem& operator++()
+    {
+      MOZ_ASSERT(!mDone);
+      Next();
+      SkipDuplicates();
+      return *this;
+    }
+
+    bool operator!=(Elem& other)
+    {
+      if (mDone != other.mDone) {
+        return true;
+      }
+      if (mDone) {
+        return false;
+      }
+      return &this->ref() != &other.ref();
+    }
+  };
+
+  Elem begin() { return { *this, Done() }; }
+
+  Elem end() { return { *this, true }; }
+};
+
 static Pref*
 pref_HashTableLookup(const char* aPrefName);
 
