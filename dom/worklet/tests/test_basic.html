@@ -12,23 +12,24 @@
 
 function configureTest() {
   return SpecialPowers.pushPrefEnv(
-    {"set": [["dom.audioWorklet.enabled", true],
+    {"set": [["dom.audioworklet.enabled", true],
              ["dom.worklet.enabled", true]]});
 }
 
 // This function is called into an iframe.
 function runTestInIframe() {
-  ok(!!audioWorklet, "audioWorklet exists");
+  var audioContext = new AudioContext();
+  ok(!!audioContext.audioWorklet, "audioContext.audioWorklet exists");
 
   // First loading
-  audioWorklet.import("common.js")
+  audioContext.audioWorklet.import("common.js")
   .then(() => {
     ok(true, "Import should load a resource.");
   })
 
   // Second loading - same file
   .then(() => {
-    return audioWorklet.import("common.js")
+    return audioContext.audioWorklet.import("common.js")
   })
   .then(() => {
     ok(true, "Import should load a resource.");
@@ -36,7 +37,7 @@ function runTestInIframe() {
 
   // 3rd loading - a network error
   .then(() => {
-    return audioWorklet.import("404.js");
+    return audioContext.audioWorklet.import("404.js");
   })
   .then(() => {
     ok(false, "The loading should fail.");
@@ -46,7 +47,7 @@ function runTestInIframe() {
 
   // 4th loading - a network error
   .then(() => {
-    return audioWorklet.import("404.js");
+    return audioContext.audioWorklet.import("404.js");
   })
   .then(() => {
     ok(false, "The loading should fail.");

@@ -708,9 +708,6 @@ public:
   ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult);
 
   mozilla::dom::Worklet*
-  GetAudioWorklet(mozilla::ErrorResult& aRv);
-
-  mozilla::dom::Worklet*
   GetPaintWorklet(mozilla::ErrorResult& aRv);
 
   void
@@ -1382,7 +1379,6 @@ protected:
   RefPtr<mozilla::dom::U2F> mU2F;
   RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
   RefPtr<mozilla::dom::Console> mConsole;
-  RefPtr<mozilla::dom::Worklet> mAudioWorklet;
   RefPtr<mozilla::dom::Worklet> mPaintWorklet;
   // We need to store an nsISupports pointer to this object because the
   // mozilla::dom::External class doesn't exist on b2g and using the type
