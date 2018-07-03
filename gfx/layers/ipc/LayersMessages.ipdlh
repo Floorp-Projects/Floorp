@@ -46,9 +46,6 @@ using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
 using mozilla::gfx::Glyph from "Layers.h";
-using mozilla::layers::BorderColors from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
@@ -72,7 +69,6 @@ struct OpCreatePaintedLayer    { LayerHandle layer; };
 struct OpCreateContainerLayer  { LayerHandle layer; };
 struct OpCreateImageLayer      { LayerHandle layer; };
 struct OpCreateColorLayer      { LayerHandle layer; };
-struct OpCreateBorderLayer       { LayerHandle layer; };
 struct OpCreateCanvasLayer     { LayerHandle layer; };
 struct OpCreateRefLayer        { LayerHandle layer; };
 
@@ -311,12 +307,6 @@ struct RefLayerAttributes {
   EventRegionsOverride eventRegionsOverride;
 };
 struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
-struct BorderLayerAttributes {
-  LayerRect rect;
-  BorderColors colors;
-  BorderCorners corners;
-  BorderWidths widths;
-};
 
 union SpecificLayerAttributes {
   null_t;
@@ -326,7 +316,6 @@ union SpecificLayerAttributes {
   CanvasLayerAttributes;
   RefLayerAttributes;
   ImageLayerAttributes;
-  BorderLayerAttributes;
 };
 
 struct LayerAttributes {
@@ -497,7 +486,6 @@ union Edit {
   OpCreateContainerLayer;
   OpCreateImageLayer;
   OpCreateColorLayer;
-  OpCreateBorderLayer;
   OpCreateCanvasLayer;
   OpCreateRefLayer;
 
