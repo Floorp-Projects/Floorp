@@ -419,7 +419,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     return NS_OK;
   }
 
-  nsIDocument *doc = content->GetUncomposedDoc();
+  nsIDocument *doc = content->GetComposedDoc();
   if (!doc) {
     return NS_ERROR_FAILURE;
   }
