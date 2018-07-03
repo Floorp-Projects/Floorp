@@ -3740,9 +3740,6 @@ public:
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
 
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) override;
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
@@ -3767,11 +3764,6 @@ public:
   }
 
 protected:
-  void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                          mozilla::wr::IpcResourceUpdateQueue& aResource,
-                                          const StackingContextHelper& aSc,
-                                          mozilla::layers::WebRenderLayerManager* aManager,
-                                          nsDisplayListBuilder* aDisplayListBuilder);
   template<typename T>
   T CalculateBounds(const nsStyleBorder& aStyleBorder) const
   {
@@ -3818,17 +3810,7 @@ protected:
     }
   }
 
-  mozilla::Array<mozilla::gfx::Color, 4> mColors;
-  mozilla::Array<mozilla::LayerCoord, 4> mWidths;
-  mozilla::Array<mozilla::LayerSize, 4> mCorners;
-  mozilla::Array<uint8_t, 4> mBorderStyles;
-  mozilla::LayerRect mRect;
-
-  mozilla::Maybe<nsCSSBorderRenderer> mBorderRenderer;
-  mozilla::Maybe<nsCSSBorderImageRenderer> mBorderImageRenderer;
-
   nsRect mBounds;
-  bool mBorderIsEmpty;
 };
 
 /**

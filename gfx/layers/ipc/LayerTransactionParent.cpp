@@ -236,17 +236,6 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
       UpdateHitTestingTree(layer, "CreateColorLayer");
       break;
     }
-    case Edit::TOpCreateBorderLayer: {
-      MOZ_LAYERS_LOG(("[ParentSide] CreateBorderLayer"));
-
-      RefPtr<BorderLayer> layer = mLayerManager->CreateBorderLayer();
-      if (!BindLayer(layer, edit.get_OpCreateBorderLayer())) {
-        return IPC_FAIL_NO_REASON(this);
-      }
-
-      UpdateHitTestingTree(layer, "CreateBorderLayer");
-      break;
-    }
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
@@ -599,19 +588,6 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
     }
     colorLayer->SetColor(specific.get_ColorLayerAttributes().color().value());
     colorLayer->SetBounds(specific.get_ColorLayerAttributes().bounds());
-    break;
-  }
-  case Specific::TBorderLayerAttributes: {
-    MOZ_LAYERS_LOG(("[ParentSide]   border layer"));
-
-    BorderLayer* borderLayer = layer->AsBorderLayer();
-    if (!borderLayer) {
-      return false;
-    }
-    borderLayer->SetRect(specific.get_BorderLayerAttributes().rect());
-    borderLayer->SetColors(specific.get_BorderLayerAttributes().colors());
-    borderLayer->SetCornerRadii(specific.get_BorderLayerAttributes().corners());
-    borderLayer->SetWidths(specific.get_BorderLayerAttributes().widths());
     break;
   }
   case Specific::TCanvasLayerAttributes: {
