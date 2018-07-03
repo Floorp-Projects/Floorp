@@ -7,9 +7,7 @@
 body {
   background-size: 64px 32px;
   background-repeat: repeat-x;
-  /* Top padding for when the window height is small.
-     Bottom padding to keep everything centered. */
-  padding: 75px 0;
+  padding: 0;
   /* info-pages.css sets a minimum width of 13em to the content
    * container. If we don't set a min-width here, the content
    * gets clipped in iframes with small width. We don't accomodate
@@ -28,10 +26,6 @@ body {
 }
 
 @media only screen and (max-width: 959px) {
-  body {
-    padding: 75px 48px;
-  }
-
   .title {
     background-image: none !important;
     padding-inline-start: 0;
@@ -45,11 +39,7 @@ body {
 
 @media only screen and (max-width: 640px) {
   body {
-    justify-content: unset;
-    /* Now that everything is top-aligned, we don't need the
-     * bottom padding for centering - though it's added back
-     * when the viewport height is < 480px (see below). */
-    padding: 75px 20px 0;
+    padding: 0 75px;
   }
 
   .title-text {

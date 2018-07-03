@@ -1,0 +1,226 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/error-pages.css");
+
+:root {
+  --exception-button-container-background: #F5F5F7;
+}
+
+body.certerror {
+  border-style: solid;
+  border-color: #ffe900;
+  border-width: 16px;
+  width: 100%;
+}
+
+body.captiveportal .title {
+  background-image: url("wifi.svg");
+}
+
+body.certerror .title {
+  background-image: url("cert-error-new.svg");
+}
+
+body.blocked .title {
+  background-image: url("chrome://global/skin/icons/blocked.svg");
+}
+
+#errorContainer {
+  display: none;
+}
+
+/* Pressing the retry button will cause the cursor to flicker from a pointer to
+ * not-allowed. Override the disabled cursor behaviour since we will never show
+ * the button disabled as the initial state. */
+button:disabled {
+  cursor: pointer;
+}
+
+#prefChangeContainer {
+  display: none;
+}
+
+#learnMoreContainer {
+  display: none;
+}
+
+#certErrorAndCaptivePortalButtonContainer {
+  display: none;
+}
+
+body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
+  display: flex;
+}
+
+body:not(.neterror) #netErrorButtonContainer {
+  display: none;
+}
+
+#errorTryAgain {
+  margin-top: 1.2em;
+}
+
+#advancedButton {
+  display: none;
+}
+
+body.captiveportal #returnButton {
+  display: none;
+}
+
+body:not(.captiveportal) #openPortalLoginPageButton {
+  display: none;
+}
+
+#openPortalLoginPageButton {
+  margin-inline-start: 0;
+}
+
+body:not(.neterror) #advancedButton {
+  display: block;
+}
+
+#certificateErrorReporting {
+  display: none;
+}
+
+#advancedPanelContainer {
+  width: 100%;
+  left: 0;
+}
+
+.advanced-panel {
+  /* Hidden until the link is clicked */
+  display: none;
+  background-color: white;
+  border: 1px lightgray solid;
+  margin: 48px auto;
+  min-width: var(--in-content-container-min-width);
+  max-width: var(--in-content-container-max-width);
+}
+
+#overrideWeakCryptoPanel {
+  display: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-content: space-between;
+  align-items: flex-start;
+  margin-top: 1em;
+}
+
+span#hostname {
+  font-weight: bold;
+}
+
+#automaticallyReportInFuture {
+  cursor: pointer;
+}
+
+#errorCode:not([href]) {
+  color: var(--in-content-page-color);
+  cursor: text;
+  text-decoration: none;
+}
+
+#errorCode[href] {
+  white-space: nowrap;
+}
+
+#badCertTechnicalInfo {
+  margin: 3em;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+#certificateErrorReporting {
+  display: none;
+}
+
+#certificateErrorDebugInformation {
+  display: none;
+  background-color: var(--in-content-box-background-hover) !important;
+  border-top: 1px solid var(--in-content-border-color);
+  width: 100%;
+  padding: 1em 17.5%;
+  box-sizing: border-box;
+}
+
+#certificateErrorText {
+  font-family: monospace;
+  white-space: pre-wrap;
+  padding: 1em 0;
+}
+
+#cert_domain_link:not([href]) {
+  color: var(--in-content-page-color);
+  text-decoration: none;
+}
+
+.exceptionDialogButtonContainer {
+  background-color: var(--exception-button-container-background);
+  display: flex;
+  justify-content: end;
+  padding: 10px;
+}
+
+.exceptionDialogButtonContainer[hidden] {
+  display: none;
+}
+
+.illustrated #errorPageContainer {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  background-position: left center;
+}
+
+.illustrated[dir="rtl"] #errorPageContainer {
+  background-position: right center;
+}
+
+.illustrated .title {
+  background: none;
+  padding-inline-start: 0;
+  margin-inline-start: 0;
+}
+
+.illustrated #text-container {
+  margin: auto;
+  padding-inline-start: 38%;
+}
+
+.illustrated #errorPageContainer {
+  background-repeat: no-repeat;
+  background-size: 38%;
+}
+
+.connectionFailure #errorPageContainer,
+.netInterrupt #errorPageContainer,
+.netTimeout #errorPageContainer,
+.netReset #errorPageContainer,
+.netOffline #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/error-connection-failure.svg");
+}
+
+.dnsNotFound #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/error-server-not-found.svg");
+}
+
+.malformedURI #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/error-malformed-url.svg");
+}
+
+.malformedURI #errorTryAgain {
+  display: none;
+}
+
+#wrongSystemTimePanel {
+  display: none;
+}
+
+#wrongSystemTimeWithoutReferencePanel {
+  display: none;
+}

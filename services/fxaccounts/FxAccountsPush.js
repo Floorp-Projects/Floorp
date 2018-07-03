@@ -7,6 +7,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 /**
  * FxAccountsPushService manages Push notifications for Firefox Accounts in the browser
  *
@@ -158,13 +160,11 @@ FxAccountsPushService.prototype = {
       return;
     }
     let payload = message.data.json();
-    if (payload.topic) {
-      this.log.debug(`received messages tickle with topic ${payload.topic}`);
-      this.fxAccounts.messages.consumeRemoteMessages();
-      return;
-    }
     this.log.debug(`push command: ${payload.command}`);
     switch (payload.command) {
+      case ON_COMMAND_RECEIVED_NOTIFICATION:
+        this.fxAccounts.commands.consumeRemoteCommand(payload.data.index);
+        break;
       case ON_DEVICE_CONNECTED_NOTIFICATION:
         Services.obs.notifyObservers(null, ON_DEVICE_CONNECTED_NOTIFICATION, payload.data.deviceName);
         break;

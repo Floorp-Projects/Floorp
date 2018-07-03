@@ -12,14 +12,14 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
 
+const ELEMENT_NODE = 1;
 const MAX_STRING_LENGTH = 250;
 
 /**
  * Pretty-print values passed to template strings.
  *
- * Usage:
+ * Usage::
  *
- * <pre><code>
  *     const {pprint} = Cu.import("chrome://marionette/content/error.js", {});
  *     let bool = {value: true};
  *     pprint`Expected boolean, got ${bool}`;
@@ -31,13 +31,12 @@ const MAX_STRING_LENGTH = 250;
  *
  *     pprint`Current window: ${window}`;
  *     => '[object Window https://www.mozilla.org/]'
- * </code></pre>
  */
 function pprint(ss, ...values) {
   function pretty(val) {
     let proto = Object.prototype.toString.call(val);
-
-    if (val && val.nodeType === 1) {
+    if (typeof val == "object" && val !== null &&
+        "nodeType" in val && val.nodeType === ELEMENT_NODE) {
       return prettyElement(val);
     } else if (["[object Window]", "[object ChromeWindow]"].includes(proto)) {
       return prettyWindowGlobal(val);

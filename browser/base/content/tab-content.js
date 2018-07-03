@@ -229,6 +229,7 @@ var ContentSearchMediator = {
   whitelist: new Set([
     "about:home",
     "about:newtab",
+    "about:welcome",
   ]),
 
   init(chromeGlobal) {

@@ -68,14 +68,14 @@ exports.ON_PASSWORD_RESET_NOTIFICATION = "fxaccounts:password_reset";
 exports.ON_ACCOUNT_DESTROYED_NOTIFICATION = "fxaccounts:account_destroyed";
 exports.ON_COLLECTION_CHANGED_NOTIFICATION = "sync:collection_changed";
 exports.ON_VERIFY_LOGIN_NOTIFICATION = "fxaccounts:verify_login";
+exports.ON_COMMAND_RECEIVED_NOTIFICATION = "fxaccounts:command_received";
 
 exports.FXA_PUSH_SCOPE_ACCOUNT_UPDATE = "chrome://fxa-device-update";
 
 exports.ON_PROFILE_CHANGE_NOTIFICATION = "fxaccounts:profilechange"; // WebChannel
 exports.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION = "fxaccounts:statechange";
 
-exports.CAPABILITY_MESSAGES = "messages";
-exports.CAPABILITY_MESSAGES_SENDTAB = "messages.sendtab";
+exports.COMMAND_SENDTAB = "https://identity.mozilla.com/cmd/open-uri";
 
 // UI Requests.
 exports.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";

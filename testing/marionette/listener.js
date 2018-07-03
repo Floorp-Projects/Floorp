@@ -17,6 +17,10 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("chrome://marionette/content/accessibility.js");
 ChromeUtils.import("chrome://marionette/content/action.js");
 ChromeUtils.import("chrome://marionette/content/atom.js");
+const {
+  Capabilities,
+  PageLoadStrategy,
+} = ChromeUtils.import("chrome://marionette/content/capabilities.js", {});
 ChromeUtils.import("chrome://marionette/content/capture.js");
 const {
   element,
@@ -41,7 +45,6 @@ ChromeUtils.import("chrome://marionette/content/legacyaction.js");
 const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 ChromeUtils.import("chrome://marionette/content/navigate.js");
 ChromeUtils.import("chrome://marionette/content/proxy.js");
-ChromeUtils.import("chrome://marionette/content/session.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(outerWindowID));
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
@@ -70,7 +73,7 @@ const SUPPORTED_STRATEGIES = new Set([
 Object.defineProperty(this, "capabilities", {
   get() {
     let payload = sendSyncMessage("Marionette:WebDriver:GetCapabilities");
-    return session.Capabilities.fromJSON(payload[0]);
+    return Capabilities.fromJSON(payload[0]);
   },
   configurable: true,
 });
@@ -278,8 +281,7 @@ const loadListener = {
         // is also treaded specifically here, because it gets temporary
         // loaded for new content processes, and we only want to rely on
         // complete loads for it.
-        } else if ((capabilities.get("pageLoadStrategy") ===
-            session.PageLoadStrategy.Eager &&
+        } else if ((capabilities.get("pageLoadStrategy") === PageLoadStrategy.Eager &&
             documentURI != "about:blank") ||
             /about:blocked\?/.exec(documentURI)) {
           this.stop();
@@ -397,8 +399,7 @@ const loadListener = {
 
     // Only wait if the page load strategy is not `none`
     loadEventExpected = loadEventExpected &&
-        (capabilities.get("pageLoadStrategy") !==
-        session.PageLoadStrategy.None);
+        (capabilities.get("pageLoadStrategy") !== PageLoadStrategy.None);
 
     if (loadEventExpected) {
       let startTime = new Date().getTime();

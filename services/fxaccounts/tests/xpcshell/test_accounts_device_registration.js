@@ -102,6 +102,9 @@ function MockFxAccounts(device = {}) {
     _getDeviceName() {
       return device.name || "mock device name";
     },
+    async availableCommands() {
+      return {};
+    },
     fxAccountsClient: new MockFxAccountsClient(device),
     fxaPushService: {
       registerPushEndpoint() {
@@ -190,6 +193,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
   await fxa.internal.setSignedInUser(credentials);
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: deviceId,
+    registeredCommandsKeys: [],
     registrationVersion: 1 // < 42
   }});
 
@@ -247,6 +251,7 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
   await fxa.internal.setSignedInUser(credentials);
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: currentDeviceId,
+    registeredCommandsKeys: [],
     registrationVersion: 1 // < 42
   }});
 
@@ -311,6 +316,7 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
   await fxa.internal.setSignedInUser(credentials);
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: currentDeviceId,
+    registeredCommandsKeys: [],
     registrationVersion: 1 // < 42
   }});
 
@@ -453,7 +459,7 @@ add_task(async function test_getDeviceId_with_registration_version_outdated_invo
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
-    () => Promise.resolve({ device: {id: "my id", registrationVersion: 0}});
+    () => Promise.resolve({ device: {id: "my id", registrationVersion: 0, registeredCommandsKeys: []}});
   fxa.internal._registerOrUpdateDevice = function() {
     spy.count += 1;
     spy.args.push(arguments);
@@ -476,7 +482,7 @@ add_task(async function test_getDeviceId_with_device_id_and_uptodate_registratio
 
   const spy = { count: 0 };
   fxa.internal.currentAccountState.getUserAccountData =
-    () => Promise.resolve({ device: {id: "foo's device id", registrationVersion: DEVICE_REGISTRATION_VERSION}});
+    async () => ({ device: {id: "foo's device id", registrationVersion: DEVICE_REGISTRATION_VERSION, registeredCommandsKeys: []}});
   fxa.internal._registerOrUpdateDevice = function() {
     spy.count += 1;
     return Promise.resolve("bar");
@@ -527,7 +533,7 @@ add_task(async function test_migration_toplevel_deviceId_to_device() {
 
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
-  Assert.deepEqual(data.device, {id: "mydeviceid", registrationVersion: DEVICE_REGISTRATION_VERSION});
+  Assert.deepEqual(data.device, {id: "mydeviceid", registrationVersion: DEVICE_REGISTRATION_VERSION, registeredCommandsKeys: []});
   Assert.ok(!data.deviceId);
   Assert.ok(!data.deviceRegistrationVersion);
 });
@@ -540,6 +546,7 @@ add_task(async function test_devicelist_pushendpointexpired() {
   await fxa.internal.setSignedInUser(credentials);
   await fxa.updateUserAccountData({uid: credentials.uid, device: {
     id: deviceId,
+    registeredCommandsKeys: [],
     registrationVersion: 1 // < 42
   }});
 

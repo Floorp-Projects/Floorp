@@ -1891,16 +1891,17 @@ nsHostResolver::Create(uint32_t maxCacheEntries,
                        uint32_t defaultGracePeriod,
                        nsHostResolver **result)
 {
-    auto *res = new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
-                                   defaultGracePeriod);
-    NS_ADDREF(res);
+    RefPtr<nsHostResolver> res =
+        new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
+                           defaultGracePeriod);
 
     nsresult rv = res->Init();
-    if (NS_FAILED(rv))
-        NS_RELEASE(res);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
-    *result = res;
-    return rv;
+    res.forget(result);
+    return NS_OK;
 }
 
 void

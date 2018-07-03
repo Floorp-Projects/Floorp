@@ -8,10 +8,15 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-ChromeUtils.import("chrome://marionette/content/session.js");
+const {
+  Capabilities,
+  PageLoadStrategy,
+  Proxy,
+  Timeouts,
+} = ChromeUtils.import("chrome://marionette/content/capabilities.js", {});
 
 add_test(function test_Timeouts_ctor() {
-  let ts = new session.Timeouts();
+  let ts = new Timeouts();
   equal(ts.implicit, 0);
   equal(ts.pageLoad, 300000);
   equal(ts.script, 30000);
@@ -20,13 +25,13 @@ add_test(function test_Timeouts_ctor() {
 });
 
 add_test(function test_Timeouts_toString() {
-  equal(new session.Timeouts().toString(), "[object session.Timeouts]");
+  equal(new Timeouts().toString(), "[object Timeouts]");
 
   run_next_test();
 });
 
 add_test(function test_Timeouts_toJSON() {
-  let ts = new session.Timeouts();
+  let ts = new Timeouts();
   deepEqual(ts.toJSON(), {"implicit": 0, "pageLoad": 300000, "script": 30000});
 
   run_next_test();
@@ -38,7 +43,7 @@ add_test(function test_Timeouts_fromJSON() {
     pageLoad: 20,
     script: 30,
   };
-  let ts = session.Timeouts.fromJSON(json);
+  let ts = Timeouts.fromJSON(json);
   equal(ts.implicit, json.implicit);
   equal(ts.pageLoad, json.pageLoad);
   equal(ts.script, json.script);
@@ -52,7 +57,7 @@ add_test(function test_Timeouts_fromJSON_unrecognised_field() {
     script: 42,
   };
   try {
-    session.Timeouts.fromJSON(json);
+    Timeouts.fromJSON(json);
   } catch (e) {
     equal(e.name, InvalidArgumentError.name);
     equal(e.message, "Unrecognised timeout: sessionId");
@@ -63,7 +68,7 @@ add_test(function test_Timeouts_fromJSON_unrecognised_field() {
 
 add_test(function test_Timeouts_fromJSON_invalid_type() {
   try {
-    session.Timeouts.fromJSON({script: "foobar"});
+    Timeouts.fromJSON({script: "foobar"});
   } catch (e) {
     equal(e.name, InvalidArgumentError.name);
     equal(e.message, "Expected [object String] \"script\" to be a positive integer, got [object String] \"foobar\"");
@@ -74,7 +79,7 @@ add_test(function test_Timeouts_fromJSON_invalid_type() {
 
 add_test(function test_Timeouts_fromJSON_bounds() {
   try {
-    session.Timeouts.fromJSON({script: -42});
+    Timeouts.fromJSON({script: -42});
   } catch (e) {
     equal(e.name, InvalidArgumentError.name);
     equal(e.message, "Expected [object String] \"script\" to be a positive integer, got [object Number] -42");
@@ -84,15 +89,15 @@ add_test(function test_Timeouts_fromJSON_bounds() {
 });
 
 add_test(function test_PageLoadStrategy() {
-  equal(session.PageLoadStrategy.None, "none");
-  equal(session.PageLoadStrategy.Eager, "eager");
-  equal(session.PageLoadStrategy.Normal, "normal");
+  equal(PageLoadStrategy.None, "none");
+  equal(PageLoadStrategy.Eager, "eager");
+  equal(PageLoadStrategy.Normal, "normal");
 
   run_next_test();
 });
 
 add_test(function test_Proxy_ctor() {
-  let p = new session.Proxy();
+  let p = new Proxy();
   let props = [
     "proxyType",
     "httpProxy",
@@ -111,7 +116,7 @@ add_test(function test_Proxy_ctor() {
 });
 
 add_test(function test_Proxy_init() {
-  let p = new session.Proxy();
+  let p = new Proxy();
 
   // no changed made, and 5 (system) is default
   equal(p.init(), false);
@@ -127,26 +132,26 @@ add_test(function test_Proxy_init() {
       "http://localhost:1234");
 
   // direct
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "direct";
   ok(p.init());
   equal(Preferences.get("network.proxy.type"), 0);
 
   // autodetect
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "autodetect";
   ok(p.init());
   equal(Preferences.get("network.proxy.type"), 4);
 
   // system
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "system";
   ok(p.init());
   equal(Preferences.get("network.proxy.type"), 5);
 
   // manual
   for (let proxy of ["ftp", "http", "ssl", "socks"]) {
-    p = new session.Proxy();
+    p = new Proxy();
     p.proxyType = "manual";
     p.noProxy = ["foo", "bar"];
     p[`${proxy}Proxy`] = "foo";
@@ -166,7 +171,7 @@ add_test(function test_Proxy_init() {
   }
 
   // empty no proxy should reset default exclustions
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "manual";
   p.noProxy = [];
   ok(p.init());
@@ -176,30 +181,30 @@ add_test(function test_Proxy_init() {
 });
 
 add_test(function test_Proxy_toString() {
-  equal(new session.Proxy().toString(), "[object session.Proxy]");
+  equal(new Proxy().toString(), "[object Proxy]");
 
   run_next_test();
 });
 
 add_test(function test_Proxy_toJSON() {
-  let p = new session.Proxy();
+  let p = new Proxy();
   deepEqual(p.toJSON(), {});
 
   // autoconfig url
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "pac";
   p.proxyAutoconfigUrl = "foo";
   deepEqual(p.toJSON(), {proxyType: "pac", proxyAutoconfigUrl: "foo"});
 
   // manual proxy
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "manual";
   deepEqual(p.toJSON(), {proxyType: "manual"});
 
   for (let proxy of ["ftpProxy", "httpProxy", "sslProxy", "socksProxy"]) {
     let expected = {proxyType: "manual"};
 
-    p = new session.Proxy();
+    p = new Proxy();
     p.proxyType = "manual";
 
     if (proxy == "socksProxy") {
@@ -231,7 +236,7 @@ add_test(function test_Proxy_toJSON() {
   }
 
   // noProxy: add brackets for IPv6 address
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "manual";
   p.noProxy = ["2001:db8::1"];
   let expected = {proxyType: "manual", noProxy: "[2001:db8::1]"};
@@ -241,35 +246,35 @@ add_test(function test_Proxy_toJSON() {
 });
 
 add_test(function test_Proxy_fromJSON() {
-  let p = new session.Proxy();
-  deepEqual(p, session.Proxy.fromJSON(undefined));
-  deepEqual(p, session.Proxy.fromJSON(null));
+  let p = new Proxy();
+  deepEqual(p, Proxy.fromJSON(undefined));
+  deepEqual(p, Proxy.fromJSON(null));
 
   for (let typ of [true, 42, "foo", []]) {
-    Assert.throws(() => session.Proxy.fromJSON(typ), /InvalidArgumentError/);
+    Assert.throws(() => Proxy.fromJSON(typ), /InvalidArgumentError/);
   }
 
   // must contain a valid proxyType
-  Assert.throws(() => session.Proxy.fromJSON({}), /InvalidArgumentError/);
-  Assert.throws(() => session.Proxy.fromJSON({proxyType: "foo"}),
+  Assert.throws(() => Proxy.fromJSON({}), /InvalidArgumentError/);
+  Assert.throws(() => Proxy.fromJSON({proxyType: "foo"}),
       /InvalidArgumentError/);
 
   // autoconfig url
   for (let url of [true, 42, [], {}]) {
-    Assert.throws(() => session.Proxy.fromJSON(
+    Assert.throws(() => Proxy.fromJSON(
         {proxyType: "pac", proxyAutoconfigUrl: url}), /InvalidArgumentError/);
   }
 
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "pac";
   p.proxyAutoconfigUrl = "foo";
   deepEqual(p,
-      session.Proxy.fromJSON({proxyType: "pac", proxyAutoconfigUrl: "foo"}));
+      Proxy.fromJSON({proxyType: "pac", proxyAutoconfigUrl: "foo"}));
 
   // manual proxy
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "manual";
-  deepEqual(p, session.Proxy.fromJSON({proxyType: "manual"}));
+  deepEqual(p, Proxy.fromJSON({proxyType: "manual"}));
 
   for (let proxy of ["httpProxy", "sslProxy", "ftpProxy", "socksProxy"]) {
     let manual = {proxyType: "manual"};
@@ -279,11 +284,11 @@ add_test(function test_Proxy_fromJSON() {
       "foo:-1", "foo:65536", "foo/test", "foo#42", "foo?foo=bar",
       "2001:db8::1"]) {
       manual[proxy] = host;
-      Assert.throws(() => session.Proxy.fromJSON(manual),
+      Assert.throws(() => Proxy.fromJSON(manual),
           /InvalidArgumentError/);
     }
 
-    p = new session.Proxy();
+    p = new Proxy();
     p.proxyType = "manual";
     if (proxy == "socksProxy") {
       manual.socksVersion = 5;
@@ -307,7 +312,7 @@ add_test(function test_Proxy_fromJSON() {
       p[`${proxy}`] = host_map[host].hostname;
       p[`${proxy}Port`] = host_map[host].port;
 
-      deepEqual(p, session.Proxy.fromJSON(manual));
+      deepEqual(p, Proxy.fromJSON(manual));
     }
 
     // Without a port the default port of the scheme is used
@@ -325,52 +330,53 @@ add_test(function test_Proxy_fromJSON() {
         p[`${proxy}Port`] = default_ports[proxy];
       }
 
-      deepEqual(p, session.Proxy.fromJSON(manual));
+      deepEqual(p, Proxy.fromJSON(manual));
     }
   }
 
   // missing required socks version
-  Assert.throws(() => session.Proxy.fromJSON(
+  Assert.throws(() => Proxy.fromJSON(
       {proxyType: "manual", socksProxy: "foo:1234"}),
       /InvalidArgumentError/);
 
   // noProxy: invalid settings
   for (let noProxy of [true, 42, {}, null, "foo",
       [true], [42], [{}], [null]]) {
-    Assert.throws(() => session.Proxy.fromJSON(
+    Assert.throws(() => Proxy.fromJSON(
         {proxyType: "manual", noProxy}),
         /InvalidArgumentError/);
   }
 
   // noProxy: valid settings
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "manual";
   for (let noProxy of [[], ["foo"], ["foo", "bar"], ["127.0.0.1"]]) {
     let manual = {proxyType: "manual", "noProxy": noProxy};
     p.noProxy = noProxy;
-    deepEqual(p, session.Proxy.fromJSON(manual));
+    deepEqual(p, Proxy.fromJSON(manual));
   }
 
   // noProxy: IPv6 needs brackets removed
-  p = new session.Proxy();
+  p = new Proxy();
   p.proxyType = "manual";
   p.noProxy = ["2001:db8::1"];
   let manual = {proxyType: "manual", "noProxy": ["[2001:db8::1]"]};
-  deepEqual(p, session.Proxy.fromJSON(manual));
+  deepEqual(p, Proxy.fromJSON(manual));
 
   run_next_test();
 });
 
 add_test(function test_Capabilities_ctor() {
-  let caps = new session.Capabilities();
+  let caps = new Capabilities();
   ok(caps.has("browserName"));
   ok(caps.has("browserVersion"));
   ok(caps.has("platformName"));
+  ok(["linux", "mac", "windows", "android"].includes(caps.get("platformName")));
   ok(caps.has("platformVersion"));
-  equal(session.PageLoadStrategy.Normal, caps.get("pageLoadStrategy"));
+  equal(PageLoadStrategy.Normal, caps.get("pageLoadStrategy"));
   equal(false, caps.get("acceptInsecureCerts"));
-  ok(caps.get("timeouts") instanceof session.Timeouts);
-  ok(caps.get("proxy") instanceof session.Proxy);
+  ok(caps.get("timeouts") instanceof Timeouts);
+  ok(caps.get("proxy") instanceof Proxy);
 
   ok(caps.has("rotatable"));
 
@@ -384,13 +390,13 @@ add_test(function test_Capabilities_ctor() {
 });
 
 add_test(function test_Capabilities_toString() {
-  equal("[object session.Capabilities]", new session.Capabilities().toString());
+  equal("[object Capabilities]", new Capabilities().toString());
 
   run_next_test();
 });
 
 add_test(function test_Capabilities_toJSON() {
-  let caps = new session.Capabilities();
+  let caps = new Capabilities();
   let json = caps.toJSON();
 
   equal(caps.get("browserName"), json.browserName);
@@ -415,7 +421,7 @@ add_test(function test_Capabilities_toJSON() {
 });
 
 add_test(function test_Capabilities_fromJSON() {
-  const {fromJSON} = session.Capabilities;
+  const {fromJSON} = Capabilities;
 
   // plain
   for (let typ of [{}, null, undefined]) {
@@ -426,7 +432,7 @@ add_test(function test_Capabilities_fromJSON() {
   }
 
   // matching
-  let caps = new session.Capabilities();
+  let caps = new Capabilities();
 
   caps = fromJSON({acceptInsecureCerts: true});
   equal(true, caps.get("acceptInsecureCerts"));
@@ -434,7 +440,7 @@ add_test(function test_Capabilities_fromJSON() {
   equal(false, caps.get("acceptInsecureCerts"));
   Assert.throws(() => fromJSON({acceptInsecureCerts: "foo"}), InvalidArgumentError);
 
-  for (let strategy of Object.values(session.PageLoadStrategy)) {
+  for (let strategy of Object.values(PageLoadStrategy)) {
     caps = fromJSON({pageLoadStrategy: strategy});
     equal(strategy, caps.get("pageLoadStrategy"));
   }
@@ -474,9 +480,9 @@ add_test(function test_Capabilities_fromJSON() {
   run_next_test();
 });
 
-// use session.Proxy.toJSON to test marshal
+// use Proxy.toJSON to test marshal
 add_test(function test_marshal() {
-  let proxy = new session.Proxy();
+  let proxy = new Proxy();
 
   // drop empty fields
   deepEqual({}, proxy.toJSON());
@@ -492,7 +498,7 @@ add_test(function test_marshal() {
   deepEqual({proxyType: {foo: "bar"}}, proxy.toJSON());
 
   // iterate over complex object that implement toJSON
-  proxy.proxyType = new session.Proxy();
+  proxy.proxyType = new Proxy();
   deepEqual({}, proxy.toJSON());
   proxy.proxyType.proxyType = "manual";
   deepEqual({proxyType: {proxyType: "manual"}}, proxy.toJSON());
@@ -500,7 +506,7 @@ add_test(function test_marshal() {
   // drop objects with no entries
   proxy.proxyType = {foo: {}};
   deepEqual({}, proxy.toJSON());
-  proxy.proxyType = {foo: new session.Proxy()};
+  proxy.proxyType = {foo: new Proxy()};
   deepEqual({}, proxy.toJSON());
 
   run_next_test();
