@@ -220,8 +220,8 @@ ParseVersion(const std::string& versionStr, uint32_t* const out_major,
     return true;
 }
 
-static uint8_t
-ChooseDebugFlags(CreateContextFlags createFlags)
+/*static*/ uint8_t
+GLContext::ChooseDebugFlags(const CreateContextFlags createFlags)
 {
     uint8_t debugFlags = 0;
 
