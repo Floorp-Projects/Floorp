@@ -20,8 +20,7 @@
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 var receiverUrl = SimpleTest.getTestFileURL("file_presentation_receiver.html");
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
   return new Promise(function(aResolve, aReject) {
@@ -51,10 +50,10 @@ function setup() {
       }
     });
 
-    var promise = new Promise(function(aResolve, aReject) {
+    var promise = new Promise(function(aInnerResolve, aInnerReject) {
       document.body.appendChild(iframe);
 
-      aResolve(iframe);
+      aInnerResolve(iframe);
     });
     obs.notifyObservers(promise, "setup-request-promise");
 

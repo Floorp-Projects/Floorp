@@ -78,12 +78,12 @@ let testRequestAndReceiver = (request) => new Promise((resolve, reject) => {
       resolve(iframe);
     }, {once: true});
 
-    let promise = new Promise((resolve) => {
+    let promise = new Promise((aInnerResolve) => {
       document.body.appendChild(iframe);
-      resolve(iframe);
+      aInnerResolve(iframe);
     });
 
-    let obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"].getService(SpecialPowers.Ci.nsIObserverService);
+    let obs = SpecialPowers.Services.obs;
     obs.notifyObservers(promise, "setup-request-promise");
   });
 

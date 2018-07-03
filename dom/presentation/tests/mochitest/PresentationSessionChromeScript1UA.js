@@ -5,6 +5,8 @@
 
 "use strict";
 
+/* eslint-env mozilla/frame-script */
+
 const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -251,8 +253,6 @@ function initMockAndListener() {
              originalFactory };
   }
   // Register mock factories.
-  const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                        .getService(Ci.nsIUUIDGenerator);
   originalFactoryData.push(registerMockFactory("@mozilla.org/presentation-device/prompt;1",
                                                uuidGenerator.generateUUID(),
                                                mockDevicePrompt));
@@ -326,10 +326,9 @@ function initMockAndListener() {
 
   addMessageListener("teardown", teardown);
 
-  var obs = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  obs.addObserver(function setupRequestPromiseHandler(aSubject, aTopic, aData) {
+  Services.obs.addObserver(function setupRequestPromiseHandler(aSubject, aTopic, aData) {
     debug("Got observer: setup-request-promise");
-    obs.removeObserver(setupRequestPromiseHandler, aTopic);
+    Services.obs.removeObserver(setupRequestPromiseHandler, aTopic);
     mockRequestUIGlue.promise = aSubject;
     sendAsyncMessage("promise-setup-ready");
   }, "setup-request-promise");

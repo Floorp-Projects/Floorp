@@ -16,20 +16,15 @@
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 function setup() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage("trigger-device-add");
+  gScript.sendAsyncMessage("trigger-device-add");
 
-    var promise = new Promise(function(aResolve, aReject) {
-      // In order to trigger timeout, do not resolve the promise.
-    });
-    obs.notifyObservers(promise, "setup-request-promise");
-
-    aResolve();
+  var promise = new Promise(function(aResolve, aReject) {
+    // In order to trigger timeout, do not resolve the promise.
   });
+  obs.notifyObservers(promise, "setup-request-promise");
 }
 
 function testIncomingSessionRequestReceiverLaunchTimeout() {
@@ -60,8 +55,8 @@ function teardown() {
 }
 
 function runTests() {
-  setup().
-  then(testIncomingSessionRequestReceiverLaunchTimeout).
+  setup();
+  testIncomingSessionRequestReceiverLaunchTimeout().
   then(teardown);
 }
 

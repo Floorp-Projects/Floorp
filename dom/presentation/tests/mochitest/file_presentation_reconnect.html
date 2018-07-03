@@ -55,7 +55,6 @@ function testStartRequest() {
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);
-        teardown();
         aReject();
       }
     );

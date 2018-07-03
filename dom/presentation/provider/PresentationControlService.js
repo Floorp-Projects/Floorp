@@ -1,24 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* jshint esnext:true, globalstrict:true, moz:true, undef:true, unused:true */
-/* globals Components, dump */
 "use strict";
 
-/* globals XPCOMUtils */
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-/* globals Services */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-/* globals NetUtil */
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-/* globals setTimeout, clearTimeout */
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-/* globals ControllerStateMachine */
-ChromeUtils.defineModuleGetter(this, "ControllerStateMachine", // jshint ignore:line
+ChromeUtils.defineModuleGetter(this, "ControllerStateMachine",
                                "resource://gre/modules/presentation/ControllerStateMachine.jsm");
-/* global ReceiverStateMachine */
-ChromeUtils.defineModuleGetter(this, "ReceiverStateMachine", // jshint ignore:line
+ChromeUtils.defineModuleGetter(this, "ReceiverStateMachine",
                                "resource://gre/modules/presentation/ReceiverStateMachine.jsm");
 
 const kProtocolVersion = 1; // need to review isCompatibleServer while fiddling the version number.
@@ -859,7 +851,7 @@ TCPControlChannel.prototype = {
     DEBUG && log("TCPControlChannel - reconnect with role: " +
                  this._direction); // jshint ignore:line
     if (this._direction != "sender") {
-      return Cr.NS_ERROR_FAILURE;
+      throw Cr.NS_ERROR_FAILURE;
     }
 
     this._stateMachine.reconnect(aPresentationId, aUrl);

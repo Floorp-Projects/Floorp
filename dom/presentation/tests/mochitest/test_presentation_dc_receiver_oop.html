@@ -25,8 +25,7 @@ var nonReceiverUrl = SimpleTest.getTestFileURL("file_presentation_non_receiver.h
 var isReceiverFinished = false;
 var isNonReceiverFinished = false;
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 var receiverIframe;
 
 function setup() {
@@ -69,14 +68,14 @@ function setup() {
       }
     });
 
-    var promise = new Promise(function(aResolve, aReject) {
+    var promise = new Promise(function(aInnerResolve, aInnerReject) {
       document.body.appendChild(receiverIframe);
       receiverIframe.addEventListener("mozbrowserloadstart", function() {
         var mm = SpecialPowers.getBrowserFrameMessageManager(receiverIframe);
         mm.loadFrameScript("data:,(" + loadPrivilegedScriptTest.toString() + ")();", false);
       }, {once: true});
 
-      aResolve(receiverIframe);
+      aInnerResolve(receiverIframe);
     });
     obs.notifyObservers(promise, "setup-request-promise");
 

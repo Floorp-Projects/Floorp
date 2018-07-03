@@ -3,6 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+/* eslint-env mozilla/frame-script */
+
 const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -124,11 +126,11 @@ const mockedControlChannel = {
     var isValid = false;
     if (aSDP.type == Ci.nsIPresentationChannelDescription.TYPE_TCP) {
       try {
-        var addresses = aSDP.tcpAddress;
-        if (addresses.length > 0) {
-          for (var i = 0; i < addresses.length; i++) {
+        var sdpAddresses = aSDP.tcpAddress;
+        if (sdpAddresses.length > 0) {
+          for (var i = 0; i < sdpAddresses.length; i++) {
             // Ensure CString addresses are used. Otherwise, an error will be thrown.
-            addresses.queryElementAt(i, Ci.nsISupportsCString);
+            sdpAddresses.queryElementAt(i, Ci.nsISupportsCString);
           }
 
           isValid = true;
@@ -255,11 +257,11 @@ const mockedSessionTransport = {
     this._listener = listener;
     this._role = Ci.nsIPresentationService.ROLE_RECEIVER;
 
-    var addresses = description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpAddress;
+    var tcpAddresses = description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpAddress;
     this._selfAddress = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsINetAddr]),
-      address: (addresses.length > 0) ?
-                addresses.queryElementAt(0, Ci.nsISupportsCString).data : "",
+      address: (tcpAddresses.length > 0) ?
+                tcpAddresses.queryElementAt(0, Ci.nsISupportsCString).data : "",
       port: description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpPort,
     };
 
@@ -464,10 +466,8 @@ addMessageListener("restore-control-channel-listener", function(message) {
   controlChannelListener = null;
 });
 
-var obs = Cc["@mozilla.org/observer-service;1"]
-          .getService(Ci.nsIObserverService);
-obs.addObserver(function observer(aSubject, aTopic, aData) {
-  obs.removeObserver(observer, aTopic);
+Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+  Services.obs.removeObserver(observer, aTopic);
 
   requestPromise = aSubject;
 }, "setup-request-promise");
