@@ -10,7 +10,6 @@ include protocol PFileDescriptorSet;
 include protocol PChildToParentStream; //FIXME: bug #792908
 include protocol PParentToChildStream; //FIXME: bug #792908
 
-include PBackgroundSharedTypes;
 include IPCStream;
 
 namespace mozilla {
@@ -30,7 +29,6 @@ struct WebBrowserPersistDocumentAttrs {
   nsString contentDisposition;
   uint32_t cacheKey;
   uint32_t persistFlags;
-  PrincipalInfo principal;
 };
 
 // IPDL doesn't have tuples, so this gives the pair of strings from

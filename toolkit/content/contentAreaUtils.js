@@ -62,15 +62,14 @@ function forbidCPOW(arg, func, argname) {
 // - A linked document using Alt-click Save Link As...
 //
 function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
-                 aSkipPrompt, aReferrer, aSourceDocument,
-                 aIsContentWindowPrivate, aPrincipal) {
+                 aSkipPrompt, aReferrer, aSourceDocument, aIsContentWindowPrivate) {
   forbidCPOW(aURL, "saveURL", "aURL");
   forbidCPOW(aReferrer, "saveURL", "aReferrer");
   // Allow aSourceDocument to be a CPOW.
 
   internalSave(aURL, null, aFileName, null, null, aShouldBypassCache,
                aFilePickerTitleKey, null, aReferrer, aSourceDocument,
-               aSkipPrompt, null, aIsContentWindowPrivate, aPrincipal);
+               aSkipPrompt, null, aIsContentWindowPrivate);
 }
 
 // Just like saveURL, but will get some info off the image before
@@ -113,7 +112,7 @@ const nsISupportsCString = Ci.nsISupportsCString;
  */
 function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
                       aSkipPrompt, aReferrer, aDoc, aContentType, aContentDisp,
-                      aIsContentWindowPrivate, aPrincipal) {
+                      aIsContentWindowPrivate) {
   forbidCPOW(aURL, "saveImageURL", "aURL");
   forbidCPOW(aReferrer, "saveImageURL", "aReferrer");
 
@@ -157,7 +156,7 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 
   internalSave(aURL, null, aFileName, aContentDisp, aContentType,
                aShouldBypassCache, aFilePickerTitleKey, null, aReferrer,
-               aDoc, aSkipPrompt, null, aIsContentWindowPrivate, aPrincipal);
+               null, aSkipPrompt, null, aIsContentWindowPrivate);
 }
 
 // This is like saveDocument, but takes any browser/frame-like element
@@ -332,15 +331,11 @@ XPCOMUtils.defineConstant(this, "kSaveAsType_Text", kSaveAsType_Text);
  *        This parameter is provided when the aInitiatingDocument is not a
  *        real document object. Stores whether aInitiatingDocument.defaultView
  *        was private or not.
- * @param aPrincipal [optional]
- *        This parameter is provided when neither aDocument nor
- *        aInitiatingDocument is provided. Used to determine what level of
- *        privilege to load the URI with.
  */
 function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
                       aContentType, aShouldBypassCache, aFilePickerTitleKey,
                       aChosenData, aReferrer, aInitiatingDocument, aSkipPrompt,
-                      aCacheKey, aIsContentWindowPrivate, aPrincipal) {
+                      aCacheKey, aIsContentWindowPrivate) {
   forbidCPOW(aURL, "internalSave", "aURL");
   forbidCPOW(aReferrer, "internalSave", "aReferrer");
   forbidCPOW(aCacheKey, "internalSave", "aCacheKey");
@@ -416,17 +411,8 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
         : aInitiatingDocument.isPrivate;
     }
 
-    // We have to cover the cases here where we were either passed an explicit
-    // principal, or a 'real' document (with a nodePrincipal property), or an
-    // nsIWebBrowserPersistDocument which has a principal property.
-    let sourcePrincipal =
-      aPrincipal ||
-      (aDocument && (aDocument.nodePrincipal || aDocument.principal)) ||
-      (aInitiatingDocument && aInitiatingDocument.nodePrincipal);
-
     var persistArgs = {
       sourceURI,
-      sourcePrincipal,
       sourceReferrer: aReferrer,
       sourceDocument: useSaveDocument ? aDocument : null,
       targetContentType: (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
@@ -477,7 +463,8 @@ function internalPersist(persistArgs) {
 
   // Calculate persist flags.
   const nsIWBP = Ci.nsIWebBrowserPersist;
-  const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+  const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                nsIWBP.PERSIST_FLAGS_FORCE_ALLOW_COOKIES;
   if (persistArgs.bypassCache)
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_BYPASS_CACHE;
   else
@@ -524,7 +511,6 @@ function internalPersist(persistArgs) {
                          persistArgs.targetContentType, encodingFlags, kWrapColumn);
   } else {
     persist.savePrivacyAwareURI(persistArgs.sourceURI,
-                                persistArgs.sourcePrincipal,
                                 persistArgs.sourceCacheKey,
                                 persistArgs.sourceReferrer,
                                 Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
