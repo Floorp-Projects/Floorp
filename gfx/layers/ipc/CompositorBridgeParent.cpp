@@ -1328,7 +1328,6 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   // Otherwise, it should be continually increasing.
   MOZ_ASSERT(aInfo.id() == TransactionId{1} || aInfo.id() > mPendingTransaction);
   mPendingTransaction = aInfo.id();
-  mRefreshStartTime = aInfo.refreshStart();
   mTxnStartTime = aInfo.transactionStart();
   mFwdTime = aInfo.fwdTime();
 
@@ -1637,14 +1636,14 @@ CompositorBridgeParent::AllocPLayerTransactionParent(const nsTArray<LayersBacken
 
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
-    LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, mRootLayerTreeID, mVsyncRate);
+    LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, mRootLayerTreeID);
     p->AddIPDLReference();
     return p;
   }
 
   mCompositionManager = new AsyncCompositionManager(this, mLayerManager);
 
-  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(), mRootLayerTreeID, mVsyncRate);
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(), mRootLayerTreeID);
   p->AddIPDLReference();
   return p;
 }
@@ -1874,7 +1873,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   txn.SetRootPipeline(aPipelineId);
   api->SendTransaction(txn);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
-  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, std::move(api), std::move(asyncMgr), std::move(animStorage), mVsyncRate);
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, std::move(api), std::move(asyncMgr), std::move(animStorage));
   mWrBridge.get()->AddRef(); // IPDL reference
 
   *aIdNamespace = mWrBridge->GetIdNamespace();
@@ -2132,16 +2131,15 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
     NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
 #if defined(ENABLE_FRAME_LATENCY_LOG)
     if (mPendingTransaction.IsValid()) {
-      if (mRefreshStartTime) {
-        int32_t latencyMs = lround((aCompositeEnd - mRefreshStartTime).ToMilliseconds());
+      if (mTxnStartTime) {
+        uint32_t latencyMs = round((aCompositeEnd - mTxnStartTime).ToMilliseconds());
         printf_stderr("From transaction start to end of generate frame latencyMs %d this %p\n", latencyMs, this);
       }
       if (mFwdTime) {
-        int32_t latencyMs = lround((aCompositeEnd - mFwdTime).ToMilliseconds());
+        uint32_t latencyMs = round((aCompositeEnd - mFwdTime).ToMilliseconds());
         printf_stderr("From forwarding transaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
       }
     }
-    mRefreshStartTime = TimeStamp();
     mTxnStartTime = TimeStamp();
     mFwdTime = TimeStamp();
 #endif
