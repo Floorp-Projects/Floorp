@@ -23,7 +23,7 @@ config = {
     # from android_common.py
     "download_tooltool": True,
     "download_minidump_stackwalk": True,
-    "tooltool_servers": ['https://api.pub.build.mozilla.org/tooltool/'],
+    "tooltool_servers": ['https://tooltool.mozilla-releng.net/'],
     # minidump_tooltool_manifest_path is relative to workspace/build/tests/
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/linux64/releng.manifest",
     "xpcshell_extra": "--remoteTestRoot=/data/local/tests",
