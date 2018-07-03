@@ -109,7 +109,7 @@ private:
 class VP9Benchmark
 {
 public:
-  static bool IsVP9DecodeFast();
+  static bool IsVP9DecodeFast(bool aDefault = false);
   static const char* sBenchmarkFpsPref;
   static const char* sBenchmarkFpsVersionCheck;
   static const uint32_t sBenchmarkVersionID;
