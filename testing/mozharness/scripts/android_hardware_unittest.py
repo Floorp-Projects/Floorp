@@ -399,6 +399,8 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             # marionette options
             'address': c.get('marionette_address') % {'device_ip': self.device_ip},
             'gecko_log': os.path.join(dirs["abs_blob_upload_dir"], 'gecko.log'),
+            'marionette_extra': c.get('marionette_extra', ''),
+            'xpcshell_extra': c.get('xpcshell_extra', ''),
             'test_manifest': os.path.join(
                 dirs['abs_marionette_tests_dir'],
                 self.config.get('marionette_test_manifest', '')
@@ -417,7 +419,9 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
                 # only query package name if requested
                 cmd.extend([option % {'app': self._query_package_name()}])
             else:
-                cmd.extend([option % str_format_values])
+                option = option % str_format_values
+                if option:
+                    cmd.extend([option])
 
         if user_paths:
             cmd.extend(user_paths.split(':'))

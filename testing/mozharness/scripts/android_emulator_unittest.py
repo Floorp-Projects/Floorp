@@ -440,6 +440,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             # marionette options
             'address': c.get('marionette_address'),
             'marionette_extra': c.get('marionette_extra', ''),
+            'xpcshell_extra': c.get('xpcshell_extra', ''),
             'test_manifest': os.path.join(
                 dirs['abs_marionette_tests_dir'],
                 self.config.get('marionette_test_manifest', '')
@@ -458,7 +459,9 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 # only query package name if requested
                 cmd.extend([option % {'app': self._query_package_name()}])
             else:
-                cmd.extend([option % str_format_values])
+                option = option % str_format_values
+                if option:
+                    cmd.extend([option])
 
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:
