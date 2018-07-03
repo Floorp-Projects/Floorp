@@ -1129,8 +1129,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             case R.id.report_site_issue:
                 SessionManager.getInstance()
-                        .createSession(Source.MENU, SupportUtils.REPORT_SITE_ISSUE_URL
-                                .replace("%s", getUrl()));
+                        .createSession(Source.MENU,
+                                String.format(SupportUtils.REPORT_SITE_ISSUE_URL, getUrl()));
                 TelemetryWrapper.reportSiteIssueEvent();
                 break;
 
