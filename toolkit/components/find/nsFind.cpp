@@ -197,19 +197,18 @@ SkipNode(const nsIContent* aContent)
       return false;
     }
 
-    content = content->GetParent();
+    content = content->GetFlattenedTreeParent();
   }
 
   return false;
 }
 
 static const nsIContent*
-GetBlockParent(const Text* aNode)
+GetBlockParent(const Text& aNode)
 {
-  // FIXME(emilio): This should use GetFlattenedTreeParent instead to properly
-  // handle Shadow DOM.
-  for (const nsIContent* current = aNode->GetParent(); current;
-       current = current->GetParent()) {
+  for (const nsIContent* current = aNode.GetFlattenedTreeParent();
+       current;
+       current = current->GetFlattenedTreeParent()) {
     if (IsBlockNode(current)) {
       return current;
     }
@@ -325,7 +324,7 @@ nsFind::State::Initialize()
     return;
   }
 
-  mLastBlockParent = GetBlockParent(current->AsText());
+  mLastBlockParent = GetBlockParent(*current->AsText());
 
   if (current != beginning) {
     return;
@@ -344,7 +343,7 @@ nsFind::State::GetNextNonEmptyTextFragmentInSameBlock()
       return nullptr;
     }
 
-    const nsIContent* blockParent = GetBlockParent(current);
+    const nsIContent* blockParent = GetBlockParent(*current);
     if (!blockParent || blockParent != mLastBlockParent) {
       return nullptr;
     }
@@ -576,7 +575,7 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
       // We have a new text content. If its block parent is different from the
       // block parent of the last text content, then we need to clear the match
       // since we don't want to find across block boundaries.
-      const nsIContent* blockParent = GetBlockParent(current);
+      const nsIContent* blockParent = GetBlockParent(*current);
       DEBUG_FIND_PRINTF("New node: old blockparent = %p, new = %p\n",
                         (void*)state.mLastBlockParent, (void*)blockParent);
       if (blockParent != state.mLastBlockParent) {
