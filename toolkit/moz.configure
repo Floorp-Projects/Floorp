@@ -99,6 +99,9 @@ include('../js/moz.configure')
 include('../build/moz.configure/rust.configure',
         when='--enable-compile-environment')
 
+# NodeJS
+# ==============================================================
+include('../build/moz.configure/node.configure')
 
 # L10N
 # ==============================================================
