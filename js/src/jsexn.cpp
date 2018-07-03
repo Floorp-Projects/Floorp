@@ -689,13 +689,14 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     if (!report)
         return;
 
-    RootedObject errObject(cx, ErrorObject::create(cx, exnType, stack, fileName, lineNumber,
-                                                   columnNumber, std::move(report), messageStr));
+    ErrorObject* errObject = ErrorObject::create(cx, exnType, stack, fileName, lineNumber,
+                                                 columnNumber, std::move(report), messageStr);
     if (!errObject)
         return;
 
     // Throw it.
-    cx->setPendingException(ObjectValue(*errObject));
+    RootedValue errValue(cx, ObjectValue(*errObject));
+    cx->setPendingException(errValue);
 
     // Flag the error report passed in to indicate an exception was raised.
     reportp->flags |= JSREPORT_EXCEPTION;

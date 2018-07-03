@@ -63,7 +63,6 @@ const kDownloadsStringsRequiringFormatting = {
   sizeWithUnits: true,
   statusSeparator: true,
   statusSeparatorBeforeNumber: true,
-  fileExecutableSecurityWarning: true
 };
 
 const kDownloadsStringsRequiringPluralForm = {

@@ -147,4 +147,6 @@ const mapStateToProps = state => {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Scopes);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  openLink: _actions2.default.openLink
+})(Scopes);

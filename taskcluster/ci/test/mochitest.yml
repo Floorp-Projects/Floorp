@@ -21,6 +21,7 @@ job-defaults:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 android-hw.*:
+                    - android/android_common.py
                     - android/android_hw.py
                 linux.*:
                     - unittests/linux_unittest.py

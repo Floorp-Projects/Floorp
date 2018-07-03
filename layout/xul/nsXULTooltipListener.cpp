@@ -107,7 +107,7 @@ nsXULTooltipListener::MouseOut(Event* aEvent)
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
       nsCOMPtr<nsINode> tooltipNode =
-        pm->GetLastTriggerTooltipNode(currentTooltip->GetUncomposedDoc());
+        pm->GetLastTriggerTooltipNode(currentTooltip->GetComposedDoc());
       if (tooltipNode == targetNode) {
         // if the target node is the current tooltip target node, the mouse
         // left the node the tooltip appeared on, so close the tooltip.
@@ -604,18 +604,21 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     return NS_OK;
   }
 
-  if (!tooltipId.IsEmpty() && aTarget->IsInUncomposedDoc()) {
+  if (!tooltipId.IsEmpty()) {
+    DocumentOrShadowRoot* documentOrShadowRoot =
+      aTarget->GetUncomposedDocOrConnectedShadowRoot();
     // tooltip must be an id, use getElementById to find it
-    //XXXsmaug If aTarget is in shadow dom, should we use
-    //         ShadowRoot::GetElementById()?
-    nsCOMPtr<nsIContent> tooltipEl = document->GetElementById(tooltipId);
+    if (documentOrShadowRoot) {
+      nsCOMPtr<nsIContent> tooltipEl =
+        documentOrShadowRoot->GetElementById(tooltipId);
 
-    if (tooltipEl) {
+      if (tooltipEl) {
 #ifdef MOZ_XUL
-      mNeedTitletip = false;
+        mNeedTitletip = false;
 #endif
-      tooltipEl.forget(aTooltip);
-      return NS_OK;
+        tooltipEl.forget(aTooltip);
+        return NS_OK;
+      }
     }
   }
 

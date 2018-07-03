@@ -11,7 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
-#include "AutoTaskQueue.h"
+#include "mozilla/TaskQueue.h"
 
 #include "MediaContainerType.h"
 #include "MediaData.h"
@@ -465,7 +465,7 @@ private:
   TrackData mAudioTracks;
 
   // TaskQueue methods and objects.
-  RefPtr<AutoTaskQueue> GetTaskQueueSafe() const
+  RefPtr<TaskQueue> GetTaskQueueSafe() const
   {
     MutexAutoLock mut(mMutex);
     return mTaskQueue;
@@ -473,7 +473,7 @@ private:
   NotNull<AbstractThread*> TaskQueueFromTaskQueue() const
   {
 #ifdef DEBUG
-    RefPtr<AutoTaskQueue> taskQueue = GetTaskQueueSafe();
+    RefPtr<TaskQueue> taskQueue = GetTaskQueueSafe();
     MOZ_ASSERT(taskQueue && taskQueue->IsCurrentThreadIn());
 #endif
     return WrapNotNull(mTaskQueue.get());
@@ -533,7 +533,7 @@ private:
   // mTaskQueue is only ever written after construction on the task queue.
   // As such, it can be accessed while on task queue without the need for the
   // mutex.
-  RefPtr<AutoTaskQueue> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
   // Stable audio and video track time ranges.
   media::TimeIntervals mVideoBufferedRanges;
   media::TimeIntervals mAudioBufferedRanges;

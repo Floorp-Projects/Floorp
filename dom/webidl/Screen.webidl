@@ -59,3 +59,27 @@ interface Screen : EventTarget {
 partial interface Screen {
   readonly attribute ScreenOrientation orientation;
 };
+
+// https://wicg.github.io/media-capabilities/#idl-index
+enum ScreenColorGamut {
+  "srgb",
+  "p3",
+  "rec2020",
+};
+
+[Func="mozilla::dom::MediaCapabilities::Enabled"]
+interface ScreenLuminance {
+  readonly attribute double min;
+  readonly attribute double max;
+  readonly attribute double maxAverage;
+};
+
+partial interface Screen {
+  [Func="mozilla::dom::MediaCapabilities::Enabled"]
+  readonly attribute ScreenColorGamut colorGamut;
+  [Func="mozilla::dom::MediaCapabilities::Enabled"]
+  readonly attribute ScreenLuminance? luminance;
+
+  [Func="mozilla::dom::MediaCapabilities::Enabled"]
+  attribute EventHandler onchange;
+};

@@ -373,4 +373,14 @@ const mapStateToProps = state => {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Expressions);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  autocomplete: _actions2.default.autocomplete,
+  clearAutocomplete: _actions2.default.clearAutocomplete,
+  onExpressionAdded: _actions2.default.onExpressionAdded,
+  addExpression: _actions2.default.addExpression,
+  clearExpressionError: _actions2.default.clearExpressionError,
+  evaluateExpressions: _actions2.default.evaluateExpressions,
+  updateExpression: _actions2.default.updateExpression,
+  deleteExpression: _actions2.default.deleteExpression,
+  openLink: _actions2.default.openLink
+})(Expressions);

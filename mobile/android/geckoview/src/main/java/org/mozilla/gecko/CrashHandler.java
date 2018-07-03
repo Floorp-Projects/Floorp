@@ -232,12 +232,11 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         final Context context = getAppContext();
         final Bundle extras = new Bundle();
         final String pkgName = getAppPackageName();
-        final String processName = getProcessName();
 
-        extras.putString("ProductName", pkgName);
         extras.putLong("CrashTime", getCrashTime());
         extras.putLong("StartupTime", getStartupTime());
-        extras.putString("AndroidProcessName", getProcessName());
+        extras.putString("Android_ProcessName", getProcessName());
+        extras.putString("Android_PackageName", pkgName);
 
         if (context != null) {
             final PackageManager pkgMgr = context.getPackageManager();

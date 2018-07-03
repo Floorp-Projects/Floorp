@@ -190,16 +190,9 @@ const mapStateToProps = state => ({
   selectedSource: (0, _selectors.getSelectedSource)(state)
 });
 
-const {
-  addExpression,
-  setPopupObjectProperties,
-  updatePreview,
-  clearPreview
-} = _actions2.default;
-const mapDispatchToProps = {
-  addExpression,
-  setPopupObjectProperties,
-  updatePreview,
-  clearPreview
-};
-exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Preview);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  clearPreview: _actions2.default.clearPreview,
+  setPopupObjectProperties: _actions2.default.setPopupObjectProperties,
+  addExpression: _actions2.default.addExpression,
+  updatePreview: _actions2.default.updatePreview
+})(Preview);

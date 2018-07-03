@@ -652,7 +652,7 @@ private:
   uint32_t mWidth = 0;
   uint32_t mHeight = 0;
   UINT mDeviceManagerToken = 0;
-  bool mConfiuredForSize = false;
+  bool mConfiguredForSize = false;
 };
 
 bool
@@ -1092,7 +1092,7 @@ HRESULT ConfigureOutput(IMFMediaType* aOutput, void* aData)
 HRESULT
 D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
 {
-  if (mConfiuredForSize && aWidth == mWidth && aHeight == mHeight) {
+  if (mConfiguredForSize && aWidth == mWidth && aHeight == mHeight) {
     // If the size hasn't changed, don't reconfigure.
     return S_OK;
   }
@@ -1148,7 +1148,7 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   });
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  mConfiuredForSize = true;
+  mConfiguredForSize = true;
 
   return S_OK;
 }

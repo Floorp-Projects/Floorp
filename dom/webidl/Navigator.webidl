@@ -16,6 +16,7 @@
  * http://wicg.github.io/netinfo/#extensions-to-the-navigator-interface
  * https://w3c.github.io/webappsec-credential-management/#framework-credential-management
  * https://w3c.github.io/webdriver/webdriver-spec.html#interface
+ * https://wicg.github.io/media-capabilities/#idl-index
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -148,6 +149,13 @@ partial interface Navigator {
 partial interface Navigator {
     [Pref="dom.w3c_pointer_events.enabled"]
     readonly attribute long maxTouchPoints;
+};
+
+// https://wicg.github.io/media-capabilities/#idl-index
+[Exposed=Window]
+partial interface Navigator {
+  [SameObject, Func="mozilla::dom::MediaCapabilities::Enabled"]
+  readonly attribute MediaCapabilities mediaCapabilities;
 };
 
 // Mozilla-specific extensions

@@ -1234,7 +1234,8 @@ TokenStreamCharsBase<CharT>::matchCodeUnit(int32_t expect)
 {
     MOZ_ASSERT(expect != EOF, "shouldn't be matching EOFs");
     MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
-    return MOZ_LIKELY(!sourceUnits.atEnd()) && sourceUnits.matchCodeUnit(toCharT(expect));
+    return MOZ_LIKELY(!this->sourceUnits.atEnd()) &&
+           this->sourceUnits.matchCodeUnit(toCharT(expect));
 }
 
 template<>
@@ -1242,7 +1243,7 @@ MOZ_MUST_USE inline bool
 TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const char16_t* cur,
                                                                          const char16_t* end)
 {
-    MOZ_ASSERT(charBuffer.length() == 0);
+    MOZ_ASSERT(this->charBuffer.length() == 0);
 
     while (cur < end) {
         // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are
@@ -1256,7 +1257,7 @@ TokenStreamCharsBase<char16_t>::fillCharBufferWithTemplateStringContents(const c
                 cur++;
         }
 
-        if (!charBuffer.append(ch))
+        if (!this->charBuffer.append(ch))
             return false;
     }
 
@@ -1317,8 +1318,6 @@ class GeneralTokenStreamChars
 
   protected:
     using typename CharsBase::SourceUnits;
-
-    using CharsBase::sourceUnits;
 
   protected:
     using CharsBase::CharsBase;
@@ -1390,8 +1389,8 @@ class GeneralTokenStreamChars
      * it's ungotten.
      */
     int32_t getCodeUnit() {
-        if (MOZ_LIKELY(!sourceUnits.atEnd()))
-            return sourceUnits.getCodeUnit();
+        if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
+            return this->sourceUnits.getCodeUnit();
 
         anyCharsAccess().flags.isEOF = true;
         return EOF;
@@ -1410,7 +1409,7 @@ class GeneralTokenStreamChars
     void consumeRestOfSingleLineComment();
 
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL() {
-        return anyCharsAccess().internalUpdateLineInfoForEOL(sourceUnits.offset());
+        return anyCharsAccess().internalUpdateLineInfoForEOL(this->sourceUnits.offset());
     }
 
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
@@ -1436,7 +1435,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCodeUnit;
     using TokenStreamCharsShared::isAsciiCodePoint;
-    using CharsBase::sourceUnits;
+    // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
     using GeneralCharsBase::ungetCodeUnit;
     using GeneralCharsBase::updateLineInfoForEOL;
 
@@ -1464,12 +1463,14 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     MOZ_MUST_USE bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
         MOZ_ASSERT(isAsciiCodePoint(lead),
                    "non-ASCII code units must be handled separately");
-        MOZ_ASSERT(lead == sourceUnits.previousCodeUnit(),
+        // NOTE: |this->|-qualify to avoid a gcc bug: see bug 1472569.
+        MOZ_ASSERT(lead == this->sourceUnits.previousCodeUnit(),
                    "getFullAsciiCodePoint called incorrectly");
 
         if (MOZ_UNLIKELY(lead == '\r')) {
-            if (MOZ_LIKELY(!sourceUnits.atEnd()))
-                sourceUnits.matchCodeUnit('\n');
+            // NOTE: |this->|-qualify to avoid a gcc bug: see bug 1472569.
+            if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
+                this->sourceUnits.matchCodeUnit('\n');
         } else if (MOZ_LIKELY(lead != '\n')) {
             *codePoint = lead;
             return true;
@@ -1611,7 +1612,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using TokenStreamCharsShared::appendCodePointToCharBuffer;
     using CharsBase::atomizeSourceChars;
     using GeneralCharsBase::badToken;
-    using TokenStreamCharsShared::charBuffer;
+    // Deliberately don't |using| |charBuffer| because of bug 1472569.  :-(
     using CharsBase::consumeKnownCodeUnit;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using TokenStreamCharsShared::copyCharBufferTo;
@@ -1631,7 +1632,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::newRegExpToken;
     using GeneralCharsBase::newSimpleToken;
     using CharsBase::peekCodeUnit;
-    using CharsBase::sourceUnits;
+    // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
     using SpecializedCharsBase::ungetCodePointIgnoreEOL;
     using GeneralCharsBase::ungetCodeUnit;
     using SpecializedCharsBase::ungetNonAsciiNormalizedCodePoint;
@@ -1727,14 +1728,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
         MOZ_ASSERT(anyChars.currentToken().type == TokenKind::TemplateHead ||
                    anyChars.currentToken().type == TokenKind::NoSubsTemplate);
-        const CharT* cur = sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.begin + 1);
+        const CharT* cur = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.begin + 1);
         const CharT* end;
         if (anyChars.currentToken().type == TokenKind::TemplateHead) {
             // Of the form    |`...${|   or   |}...${|
-            end = sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 2);
+            end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 2);
         } else {
             // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
-            end = sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
+            end = this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
         }
 
         if (!fillCharBufferWithTemplateStringContents(cur, end))
@@ -1966,11 +1967,11 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamAnyChars& other);
 
     const CharT* codeUnitPtrAt(size_t offset) const {
-        return sourceUnits.codeUnitPtrAt(offset);
+        return this->sourceUnits.codeUnitPtrAt(offset);
     }
 
     const CharT* rawLimit() const {
-        return sourceUnits.limit();
+        return this->sourceUnits.limit();
     }
 
     MOZ_MUST_USE bool identifierName(TokenStart start, const CharT* identStart,

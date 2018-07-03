@@ -17,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsImageModule.h"
 #include "imgRequestProxy.h"
@@ -1358,6 +1359,9 @@ void imgLoader::GlobalInit()
   RegisterStrongMemoryReporter(sMemReporter);
   RegisterImagesContentUsedUncompressedDistinguishedAmount(
     imgMemoryReporter::ImagesContentUsedUncompressedDistinguishedAmount);
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::IMAGES_WEBP_PROBE_OBSERVED, false);
+  Telemetry::ScalarSet(Telemetry::ScalarID::IMAGES_WEBP_CONTENT_OBSERVED, false);
 }
 
 void imgLoader::ShutdownMemoryReporter()

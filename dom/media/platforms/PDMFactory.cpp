@@ -294,7 +294,8 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
     return nullptr;
   }
 
-  if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseNullDecoder.mUse) {
+  if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseNullDecoder.mUse &&
+      !aParams.mNoWrapper.mDontUseWrapper) {
     RefPtr<H264Converter> h = new H264Converter(aPDM, aParams);
     const MediaResult result = h->GetLastError();
     if (NS_SUCCEEDED(result) || result == NS_ERROR_NOT_INITIALIZED) {

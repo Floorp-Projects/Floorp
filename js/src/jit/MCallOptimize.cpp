@@ -316,8 +316,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineToObject(callInfo);
       case InlinableNative::IntrinsicIsObject:
         return inlineIsObject(callInfo);
-      case InlinableNative::IntrinsicIsWrappedArrayConstructor:
-        return inlineIsWrappedArrayConstructor(callInfo);
+      case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
+        return inlineIsCrossRealmArrayConstructor(callInfo);
       case InlinableNative::IntrinsicToInteger:
         return inlineToInteger(callInfo);
       case InlinableNative::IntrinsicToString:
@@ -3299,7 +3299,7 @@ IonBuilder::inlineToObject(CallInfo& callInfo)
 }
 
 IonBuilder::InliningResult
-IonBuilder::inlineIsWrappedArrayConstructor(CallInfo& callInfo)
+IonBuilder::inlineIsCrossRealmArrayConstructor(CallInfo& callInfo)
 {
     MOZ_ASSERT(!callInfo.constructing());
     MOZ_ASSERT(callInfo.argc() == 1);
@@ -3311,18 +3311,14 @@ IonBuilder::inlineIsWrappedArrayConstructor(CallInfo& callInfo)
         return InliningStatus_NotInlined;
 
     TemporaryTypeSet* types = arg->resultTypeSet();
-    switch (types->forAllClasses(constraints(), IsProxyClass)) {
-      case TemporaryTypeSet::ForAllResult::ALL_FALSE:
-        break;
-      case TemporaryTypeSet::ForAllResult::EMPTY:
-      case TemporaryTypeSet::ForAllResult::ALL_TRUE:
-      case TemporaryTypeSet::ForAllResult::MIXED:
+    Realm* realm = types->getKnownRealm(constraints());
+    if (!realm || realm != script()->realm())
         return InliningStatus_NotInlined;
-    }
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    // Inline only if argument is absolutely *not* a Proxy.
+    // Inline only if argument is absolutely *not* a wrapper or a cross-realm
+    // object.
     pushConstant(BooleanValue(false));
     return InliningStatus_Inlined;
 }

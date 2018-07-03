@@ -7,7 +7,6 @@
 #if !defined(HLSDemuxer_h_)
 #define HLSDemuxer_h_
 
-#include "AutoTaskQueue.h"
 #include "GeneratedJNINatives.h"
 #include "GeneratedJNIWrappers.h"
 #include "MediaCodec.h"
@@ -16,6 +15,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TaskQueue.h"
 
 #include "VideoUtils.h"
 
@@ -51,7 +51,7 @@ public:
 
   void NotifyDataArrived() override;
 
-  AutoTaskQueue* GetTaskQueue() const { return mTaskQueue; }
+  TaskQueue* GetTaskQueue() const { return mTaskQueue; }
   void OnInitialized(bool aHasAudio, bool aHasVideo);
   void OnError(int aErrorCode);
 
@@ -62,7 +62,7 @@ private:
   ~HLSDemuxer();
   friend class HLSTrackDemuxer;
 
-  const RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   RefPtr<HLSTrackDemuxer> mAudioDemuxer;
   RefPtr<HLSTrackDemuxer> mVideoDemuxer;
 

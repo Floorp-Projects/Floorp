@@ -11,4 +11,5 @@ DevToolsModules(
     'index.js',
     'Outline.js',
     'SourcesTree.js',
+    'SourcesTreeItem.js',
 )

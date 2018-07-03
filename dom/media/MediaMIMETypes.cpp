@@ -7,6 +7,7 @@
 #include "MediaMIMETypes.h"
 
 #include "nsContentTypeParser.h"
+#include "mozilla/dom/MediaCapabilitiesBinding.h"
 
 namespace mozilla {
 
@@ -52,8 +53,6 @@ MediaMIMEType::MediaMIMEType(const nsACString& aType)
 Maybe<MediaMIMEType>
 MakeMediaMIMEType(const nsAString& aType)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsContentTypeParser parser(aType);
   nsAutoString mime;
   nsresult rv = parser.GetType(mime);
@@ -148,8 +147,10 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aOriginalString,
                                              const nsACString& aMIMEType,
                                              bool aHaveCodecs,
                                              const nsAString& aCodecs,
-                                             int32_t aWidth, int32_t aHeight,
-                                             int32_t aFramerate, int32_t aBitrate)
+                                             int32_t aWidth,
+                                             int32_t aHeight,
+                                             double aFramerate,
+                                             int32_t aBitrate)
   : mOriginalString(aOriginalString)
   , mMIMEType(aMIMEType)
   , mHaveCodecs(aHaveCodecs)
@@ -157,6 +158,23 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aOriginalString,
   , mWidth(aWidth)
   , mHeight(aHeight)
   , mFramerate(aFramerate)
+  , mBitrate(aBitrate)
+{
+}
+
+MediaExtendedMIMEType::MediaExtendedMIMEType(const nsACString& aOriginalString,
+                                             const nsACString& aMIMEType,
+                                             bool aHaveCodecs,
+                                             const nsAString& aCodecs,
+                                             int32_t aChannels,
+                                             int32_t aSamplerate,
+                                             int32_t aBitrate)
+  : mOriginalString(aOriginalString)
+  , mMIMEType(aMIMEType)
+  , mHaveCodecs(aHaveCodecs)
+  , mCodecs(aCodecs)
+  , mChannels(aChannels)
+  , mSamplerate(aSamplerate)
   , mBitrate(aBitrate)
 {
 }
@@ -173,11 +191,46 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(MediaMIMEType&& aType)
 {
 }
 
+/* static */ Maybe<double>
+MediaExtendedMIMEType::ComputeFractionalString(const nsAString& aFrac)
+{
+  nsAutoString frac(aFrac);
+  nsresult error;
+  double result = frac.ToDouble(&error);
+  if (NS_SUCCEEDED(error)) {
+    if (result <= 0) {
+      return Nothing();
+    }
+    return Some(result);
+  }
+
+  int32_t slashPos = frac.Find(NS_LITERAL_STRING("/"));
+  if (slashPos == kNotFound) {
+    return Nothing();
+  }
+
+  nsAutoString firstPart(Substring(frac, 0, slashPos - 1));
+  double first = firstPart.ToDouble(&error);
+  if (NS_FAILED(error)) {
+    return Nothing();
+  }
+  nsAutoString secondPart(Substring(frac, slashPos + 1));
+  double second = secondPart.ToDouble(&error);
+  if (NS_FAILED(error) || second == 0) {
+    return Nothing();
+  }
+
+  result = first / second;
+  if (result <= 0) {
+    return Nothing();
+  }
+
+  return Some(result);
+}
+
 Maybe<MediaExtendedMIMEType>
 MakeMediaExtendedMIMEType(const nsAString& aType)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsContentTypeParser parser(aType);
   nsAutoString mime;
   nsresult rv = parser.GetType(mime);
@@ -196,7 +249,7 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
 
   int32_t width = GetParameterAsNumber(parser, "width", -1);
   int32_t height = GetParameterAsNumber(parser, "height", -1);
-  int32_t framerate = GetParameterAsNumber(parser, "framerate", -1);
+  double framerate = GetParameterAsNumber(parser, "framerate", -1);
   int32_t bitrate = GetParameterAsNumber(parser, "bitrate", -1);
 
   return Some(MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aType),
@@ -204,6 +257,99 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
                                     haveCodecs, codecs,
                                     width, height,
                                     framerate, bitrate));
+}
+
+Maybe<MediaExtendedMIMEType>
+MakeMediaExtendedMIMEType(const dom::VideoConfiguration& aConfig)
+{
+  MOZ_ASSERT(aConfig.mContentType.WasPassed() &&
+             aConfig.mFramerate.WasPassed() &&
+             aConfig.mWidth.WasPassed() &&
+             aConfig.mHeight.WasPassed() &&
+             aConfig.mBitrate.WasPassed(),
+             "All dictionary members must be present");
+  if (aConfig.mContentType.Value().IsEmpty()) {
+    return Nothing();
+  }
+  nsContentTypeParser parser(aConfig.mContentType.Value());
+  nsAutoString mime;
+  nsresult rv = parser.GetType(mime);
+  if (!NS_SUCCEEDED(rv) || mime.IsEmpty()) {
+    return Nothing();
+  }
+
+  NS_ConvertUTF16toUTF8 mime8{ mime };
+  if (!IsMediaMIMEType(mime8)) {
+    return Nothing();
+  }
+
+  nsAutoString codecs;
+  rv = parser.GetParameter("codecs", codecs);
+  bool haveCodecs = NS_SUCCEEDED(rv);
+
+  auto framerate =
+    MediaExtendedMIMEType::ComputeFractionalString(aConfig.mFramerate.Value());
+  if (!framerate) {
+    return Nothing();
+  }
+
+  return Some(
+    MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aConfig.mContentType.Value()),
+                          mime8,
+                          haveCodecs,
+                          codecs,
+                          aConfig.mWidth.Value(),
+                          aConfig.mHeight.Value(),
+                          framerate.ref(),
+                          aConfig.mBitrate.Value()));
+}
+
+Maybe<MediaExtendedMIMEType>
+MakeMediaExtendedMIMEType(const dom::AudioConfiguration& aConfig)
+{
+  if (!aConfig.mContentType.WasPassed() ||
+      aConfig.mContentType.Value().IsEmpty()) {
+    return Nothing();
+  }
+  nsContentTypeParser parser(aConfig.mContentType.Value());
+  nsAutoString mime;
+  nsresult rv = parser.GetType(mime);
+  if (!NS_SUCCEEDED(rv) || mime.IsEmpty()) {
+    return Nothing();
+  }
+
+  NS_ConvertUTF16toUTF8 mime8{ mime };
+  if (!IsMediaMIMEType(mime8)) {
+    return Nothing();
+  }
+
+  nsAutoString codecs;
+  rv = parser.GetParameter("codecs", codecs);
+  bool haveCodecs = NS_SUCCEEDED(rv);
+
+  int32_t channels = 2; // use a stereo config if not known.
+  if (aConfig.mChannels.WasPassed()) {
+    // A channels string was passed. Make sure it is valid.
+    nsresult error;
+    double value = aConfig.mChannels.Value().ToDouble(&error);
+    if (NS_FAILED(error)) {
+      return Nothing();
+    }
+    // Value is a channel configuration such as 5.1. We want to treat this as 6.
+    channels = value;
+    double fp = value - channels;
+     // round up as .1 and .2 aren't exactly expressible in binary.
+    channels += (fp * 10) + .5;
+  }
+
+  return Some(MediaExtendedMIMEType(
+    NS_ConvertUTF16toUTF8(aConfig.mContentType.Value()),
+    mime8,
+    haveCodecs,
+    codecs,
+    channels,
+    aConfig.mSamplerate.WasPassed() ? aConfig.mSamplerate.Value() : 48000,
+    aConfig.mBitrate.WasPassed() ? aConfig.mBitrate.Value() : 131072));
 }
 
 size_t
