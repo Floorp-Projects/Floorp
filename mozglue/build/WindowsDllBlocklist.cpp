@@ -90,14 +90,14 @@ printf_stderr(const char *fmt, ...)
 
 
 typedef MOZ_NORETURN_PTR void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
-static WindowsDllInterceptor::FuncHookType<BaseThreadInitThunk_func> stub_BaseThreadInitThunk;
+static BaseThreadInitThunk_func stub_BaseThreadInitThunk = nullptr;
 
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
-static WindowsDllInterceptor::FuncHookType<LdrLoadDll_func> stub_LdrLoadDll;
+static LdrLoadDll_func stub_LdrLoadDll;
 
 #ifdef _M_AMD64
 typedef decltype(RtlInstallFunctionTableCallback)* RtlInstallFunctionTableCallback_func;
-static WindowsDllInterceptor::FuncHookType<RtlInstallFunctionTableCallback_func> stub_RtlInstallFunctionTableCallback;
+static RtlInstallFunctionTableCallback_func stub_RtlInstallFunctionTableCallback;
 
 extern uint8_t* sMsMpegJitCodeRegionStart;
 extern size_t sMsMpegJitCodeRegionSize;
@@ -662,8 +662,7 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
   // We specifically use a detour, because there are cases where external
   // code also tries to hook LdrLoadDll, and doesn't know how to relocate our
   // nop space patches. (Bug 951827)
-  bool ok = stub_LdrLoadDll.SetDetour(NtDllIntercept, "LdrLoadDll",
-                                      &patched_LdrLoadDll);
+  bool ok = NtDllIntercept.AddDetour("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
 
   if (!ok) {
     sBlocklistInitFailed = true;
@@ -684,18 +683,18 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 #ifdef _M_AMD64
   if (!IsWin8OrLater()) {
     // The crash that this hook works around is only seen on Win7.
-    stub_RtlInstallFunctionTableCallback.Set(Kernel32Intercept,
-                                             "RtlInstallFunctionTableCallback",
-                                             &patched_RtlInstallFunctionTableCallback);
+    Kernel32Intercept.AddHook("RtlInstallFunctionTableCallback",
+                              reinterpret_cast<intptr_t>(patched_RtlInstallFunctionTableCallback),
+                              (void**)&stub_RtlInstallFunctionTableCallback);
   }
 #endif
 
   // Bug 1361410: WRusr.dll will overwrite our hook and cause a crash.
   // Workaround: If we detect WRusr.dll, don't hook.
   if (!GetModuleHandleW(L"WRusr.dll")) {
-    if (!stub_BaseThreadInitThunk.SetDetour(Kernel32Intercept,
-                                            "BaseThreadInitThunk",
-                                            &patched_BaseThreadInitThunk)) {
+    if(!Kernel32Intercept.AddDetour("BaseThreadInitThunk",
+                                    reinterpret_cast<intptr_t>(patched_BaseThreadInitThunk),
+                                    (void**) &stub_BaseThreadInitThunk)) {
 #ifdef DEBUG
     printf_stderr("BaseThreadInitThunk hook failed\n");
 #endif
