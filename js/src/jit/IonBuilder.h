@@ -314,7 +314,7 @@ class IonBuilder
     AbortReasonOr<Ok> binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,
                                                                    MDefinition* left,
                                                                    MDefinition* right);
-    AbortReasonOr<Ok> arithTrySharedStub(bool* emitted, JSOp op, MDefinition* left,
+    AbortReasonOr<Ok> arithTryBinaryStub(bool* emitted, JSOp op, MDefinition* left,
                                          MDefinition* right);
 
     // jsop_bitnot helpers.
