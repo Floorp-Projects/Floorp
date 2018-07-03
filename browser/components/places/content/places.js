@@ -5,14 +5,26 @@
 
 /* import-globals-from editBookmark.js */
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
-/* import-globals-from ../PlacesUIUtils.jsm */
-/* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
 /* import-globals-from ../../downloads/content/allDownloadsView.js */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
+/* Shared Places Import - change other consumers if you change this: */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
+  PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
+                                  "chrome://browser/content/places/treeView.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["PlacesInsertionPoint", "PlacesController",
+                                         "PlacesControllerDragHelper"],
+                                  "chrome://browser/content/places/controller.js");
+/* End Shared Places Import */
+
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
 ChromeUtils.defineModuleGetter(this, "MigrationUtils",
                                "resource:///modules/MigrationUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "BookmarkJSONUtils",
