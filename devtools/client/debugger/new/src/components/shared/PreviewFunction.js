@@ -41,7 +41,8 @@ class PreviewFunction extends _react.Component {
     const commas = (0, _lodash.times)(params.length - 1).map((_, i) => _react2.default.createElement("span", {
       className: "delimiter",
       key: i
-    }, ", "));
+    }, ", ")); // $FlowIgnore
+
     return (0, _lodash.flatten)((0, _lodash.zip)(params, commas));
   }
 

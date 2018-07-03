@@ -8,6 +8,7 @@
 
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
+#include "ServiceWorkerRegistrationListener.h"
 
 namespace mozilla {
 namespace dom {
@@ -56,8 +57,6 @@ ServiceWorkerRegistrationInfo::Clear()
   RefPtr<ServiceWorkerInfo> waiting = mWaitingWorker.forget();
   RefPtr<ServiceWorkerInfo> active = mActiveWorker.forget();
 
-  UpdateRegistrationState();
-
   if (installing) {
     installing->UpdateState(ServiceWorkerState::Redundant);
     installing->UpdateRedundantTime();
@@ -77,6 +76,7 @@ ServiceWorkerRegistrationInfo::Clear()
     active->WorkerPrivate()->NoteDeadServiceWorkerInfo();
   }
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -98,7 +98,8 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextId(), aPrincipal, aScope, aUpdateViaCache)
+  , mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope,
+                aUpdateViaCache)
   , mControlledClientsCounter(0)
   , mDelayMultiplier(0)
   , mUpdateState(NoUpdate)
@@ -112,6 +113,41 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsControllingClients());
+}
+
+void
+ServiceWorkerRegistrationInfo::AddInstance(ServiceWorkerRegistrationListener* aInstance,
+                                           const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aInstance);
+  MOZ_ASSERT(!mInstanceList.Contains(aInstance));
+  MOZ_DIAGNOSTIC_ASSERT(aDescriptor.Id() == mDescriptor.Id());
+  MOZ_DIAGNOSTIC_ASSERT(aDescriptor.PrincipalInfo() == mDescriptor.PrincipalInfo());
+  MOZ_DIAGNOSTIC_ASSERT(aDescriptor.Scope() == mDescriptor.Scope());
+  MOZ_DIAGNOSTIC_ASSERT(aDescriptor.Version() <= mDescriptor.Version());
+  uint64_t lastVersion = aDescriptor.Version();
+  for (auto& entry : mVersionList) {
+    if (lastVersion > entry->mDescriptor.Version()) {
+      continue;
+    }
+    lastVersion = entry->mDescriptor.Version();
+    aInstance->UpdateState(entry->mDescriptor);
+  }
+  // Note, the mDescriptor may be contained in the version list.  Since the
+  // version list is aged out, though, it may also not be in the version list.
+  // So always check for the mDescriptor update here.
+  if (lastVersion < mDescriptor.Version()) {
+    aInstance->UpdateState(mDescriptor);
+  }
+  mInstanceList.AppendElement(aInstance);
+}
+
+void
+ServiceWorkerRegistrationInfo::RemoveInstance(ServiceWorkerRegistrationListener* aInstance)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aInstance);
+  DebugOnly<bool> removed = mInstanceList.RemoveElement(aInstance);
+  MOZ_ASSERT(removed);
 }
 
 const nsCString&
@@ -364,8 +400,7 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
   mActiveWorker->UpdateState(ServiceWorkerState::Activated);
   mActiveWorker->UpdateActivatedTime();
 
-  mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
-
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -414,20 +449,40 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
 void
 ServiceWorkerRegistrationInfo::UpdateRegistrationState()
 {
+  UpdateRegistrationState(mDescriptor.UpdateViaCache());
+}
+
+void
+ServiceWorkerRegistrationInfo::UpdateRegistrationState(ServiceWorkerUpdateViaCache aUpdateViaCache)
+{
   MOZ_ASSERT(NS_IsMainThread());
 
+  TimeStamp oldest = TimeStamp::Now() - TimeDuration::FromSeconds(30);
+  if (!mVersionList.IsEmpty() && mVersionList[0]->mTimeStamp < oldest) {
+    nsTArray<UniquePtr<VersionEntry>> list;
+    mVersionList.SwapElements(list);
+    for (auto& entry : list) {
+      if (entry->mTimeStamp >= oldest) {
+        mVersionList.AppendElement(std::move(entry));
+      }
+    }
+  }
+  mVersionList.AppendElement(MakeUnique<VersionEntry>(mDescriptor));
+
+  // We are going to modify the descriptor, so increase its version number.
+  mDescriptor.SetVersion(GetNextVersion());
+
+  // Note, this also sets the new version number on the ServiceWorkerInfo
+  // objects before we copy over their updated descriptors.
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
 
-  RefPtr<ServiceWorkerRegistrationInfo> self(this);
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ServiceWorkerRegistrationInfo::UpdateRegistrationState",
-    [self = std::move(self)] {
-      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      if (swm) {
-        swm->UpdateRegistrationListeners(self);
-      }
-    });
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  mDescriptor.SetUpdateViaCache(aUpdateViaCache);
+
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    target->UpdateState(mDescriptor);
+  }
 }
 
 void
@@ -571,12 +626,10 @@ ServiceWorkerRegistrationInfo::ClearInstalling()
   }
 
   RefPtr<ServiceWorkerInfo> installing = mInstallingWorker.forget();
-
-  UpdateRegistrationState();
-
   installing->UpdateState(ServiceWorkerState::Redundant);
   installing->UpdateRedundantTime();
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -588,11 +641,9 @@ ServiceWorkerRegistrationInfo::TransitionEvaluatingToInstalling()
   MOZ_ASSERT(!mInstallingWorker);
 
   mInstallingWorker = mEvaluatingWorker.forget();
-
-  UpdateRegistrationState();
-
   mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -609,12 +660,10 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
   }
 
   mWaitingWorker = mInstallingWorker.forget();
-
-  UpdateRegistrationState();
-
   mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
   mWaitingWorker->UpdateInstalledTime();
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 
   // TODO: When bug 1426401 is implemented we will need to call
@@ -650,7 +699,6 @@ ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
   // We don't need to update activated time when we load registration from
   // registrar.
   UpdateRegistrationState();
-
   NotifyChromeRegistrationListeners();
 }
 
@@ -669,9 +717,6 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
   // We are transitioning from waiting to active normally, so go to
   // the activating state.
   mActiveWorker = mWaitingWorker.forget();
-
-  UpdateRegistrationState();
-
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
 
   nsCOMPtr<nsIRunnable> r =
@@ -684,6 +729,7 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
     });
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
+  UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
 }
 
@@ -703,8 +749,7 @@ void
 ServiceWorkerRegistrationInfo::SetUpdateViaCache(
     ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
-  mDescriptor.SetUpdateViaCache(aUpdateViaCache);
-  UpdateRegistrationState();
+  UpdateRegistrationState(aUpdateViaCache);
 }
 
 int64_t
@@ -729,6 +774,18 @@ ServiceWorkerRegistrationInfo::Descriptor() const
   return mDescriptor;
 }
 
+uint64_t
+ServiceWorkerRegistrationInfo::Id() const
+{
+  return mDescriptor.Id();
+}
+
+uint64_t
+ServiceWorkerRegistrationInfo::Version() const
+{
+  return mDescriptor.Version();
+}
+
 uint32_t
 ServiceWorkerRegistrationInfo::GetUpdateDelay()
 {
@@ -749,6 +806,26 @@ ServiceWorkerRegistrationInfo::GetUpdateDelay()
   return delay;
 }
 
+void
+ServiceWorkerRegistrationInfo::FireUpdateFound()
+{
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    target->UpdateFound();
+  }
+}
+
+void
+ServiceWorkerRegistrationInfo::NotifyRemoved()
+{
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    target->RegistrationRemoved();
+  }
+}
+
 // static
 uint64_t
 ServiceWorkerRegistrationInfo::GetNextId()
@@ -756,6 +833,15 @@ ServiceWorkerRegistrationInfo::GetNextId()
   MOZ_ASSERT(NS_IsMainThread());
   static uint64_t sNextId = 0;
   return ++sNextId;
+}
+
+// static
+uint64_t
+ServiceWorkerRegistrationInfo::GetNextVersion()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static uint64_t sNextVersion = 0;
+  return ++sNextVersion;
 }
 
 } // namespace dom

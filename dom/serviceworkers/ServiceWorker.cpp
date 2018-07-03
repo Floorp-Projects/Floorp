@@ -12,6 +12,7 @@
 #include "ServiceWorkerImpl.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
+#include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -63,7 +64,7 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     return ref.forget();
   }
 
-  RefPtr<ServiceWorker::Inner> inner = new ServiceWorkerImpl(info);
+  RefPtr<ServiceWorker::Inner> inner = new ServiceWorkerImpl(info, reg);
   ref = new ServiceWorker(aOwner, aDescriptor, inner);
   return ref.forget();
 }
@@ -74,6 +75,7 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   : DOMEventTargetHelper(aGlobal)
   , mDescriptor(aDescriptor)
   , mInner(aInner)
+  , mLastNotifiedState(ServiceWorkerState::Installing)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
@@ -86,6 +88,32 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
 
   // This will update our state too.
   mInner->AddServiceWorker(this);
+
+  // Attempt to get an existing binding object for the registration
+  // associated with this ServiceWorker.
+  RefPtr<ServiceWorkerRegistration> reg = aGlobal->GetServiceWorkerRegistration(
+    ServiceWorkerRegistrationDescriptor(mDescriptor.RegistrationId(),
+                                        mDescriptor.RegistrationVersion(),
+                                        mDescriptor.PrincipalInfo(),
+                                        mDescriptor.Scope(),
+                                        ServiceWorkerUpdateViaCache::Imports));
+  if (reg) {
+    MaybeAttachToRegistration(reg);
+  } else {
+    RefPtr<ServiceWorker> self = this;
+
+    mInner->GetRegistration(
+      [self = std::move(self)] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+        nsIGlobalObject* global = self->GetParentObject();
+        NS_ENSURE_TRUE_VOID(global);
+        RefPtr<ServiceWorkerRegistration> reg =
+          global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+        self->MaybeAttachToRegistration(reg);
+      }, [] (ErrorResult& aRv) {
+        // do nothing
+        aRv.SuppressException();
+      });
+  }
 }
 
 ServiceWorker::~ServiceWorker()
@@ -93,6 +121,10 @@ ServiceWorker::~ServiceWorker()
   MOZ_ASSERT(NS_IsMainThread());
   mInner->RemoveServiceWorker(this);
 }
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker,
+                                   DOMEventTargetHelper,
+                                   mRegistration);
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -118,18 +150,24 @@ ServiceWorker::State() const
 void
 ServiceWorker::SetState(ServiceWorkerState aState)
 {
-  ServiceWorkerState oldState = mDescriptor.State();
+  NS_ENSURE_TRUE_VOID(aState >= mDescriptor.State());
   mDescriptor.SetState(aState);
-  if (oldState == aState) {
+}
+
+void
+ServiceWorker::MaybeDispatchStateChangeEvent()
+{
+  if (mDescriptor.State() <= mLastNotifiedState || !GetParentObject()) {
     return;
   }
+  mLastNotifiedState = mDescriptor.State();
 
   DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
 
   // Once we have transitioned to the redundant state then no
   // more statechange events will occur.  We can allow the DOM
   // object to GC if script is not holding it alive.
-  if (mDescriptor.State() == ServiceWorkerState::Redundant) {
+  if (mLastNotifiedState == ServiceWorkerState::Redundant) {
     IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("statechange"));
   }
 }
@@ -199,6 +237,23 @@ void
 ServiceWorker::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
+}
+
+void
+ServiceWorker::MaybeAttachToRegistration(ServiceWorkerRegistration* aRegistration)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aRegistration);
+  MOZ_DIAGNOSTIC_ASSERT(!mRegistration);
+
+  // If the registration no longer actually references this ServiceWorker
+  // then we must be in the redundant state.
+  if (!aRegistration->Descriptor().HasWorker(mDescriptor)) {
+    SetState(ServiceWorkerState::Redundant);
+    MaybeDispatchStateChangeEvent();
+    return;
+  }
+
+  mRegistration = aRegistration;
 }
 
 } // namespace dom

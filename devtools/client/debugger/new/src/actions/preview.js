@@ -28,6 +28,11 @@ var _pause = require("./pause/index");
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function findExpressionMatch(state, codeMirror, tokenPos) {
   const source = (0, _selectors.getSelectedSource)(state);
+
+  if (!source) {
+    return;
+  }
+
   const symbols = (0, _selectors.getSymbols)(state, source);
   let match;
 
@@ -83,6 +88,11 @@ function setPreview(expression, location, tokenPos, cursorPos) {
       type: "SET_PREVIEW",
       [_promise.PROMISE]: async function () {
         const source = (0, _selectors.getSelectedSource)(getState());
+
+        if (!source) {
+          return;
+        }
+
         const sourceId = source.id;
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 

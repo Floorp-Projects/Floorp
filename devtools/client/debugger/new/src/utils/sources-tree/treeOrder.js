@@ -58,11 +58,7 @@ function isExactDomainMatch(part, debuggeeHost) {
  * lookup value.
  */
 function findNodeInContents(tree, matcher) {
-  const {
-    contents
-  } = tree;
-
-  if (contents.length === 0) {
+  if (tree.type === "source" || tree.contents.length === 0) {
     return {
       found: false,
       index: 0
@@ -70,19 +66,19 @@ function findNodeInContents(tree, matcher) {
   }
 
   let left = 0;
-  let right = contents.length - 1;
+  let right = tree.contents.length - 1;
 
   while (left < right) {
     const middle = Math.floor((left + right) / 2);
 
-    if (matcher(contents[middle]) < 0) {
+    if (matcher(tree.contents[middle]) < 0) {
       left = middle + 1;
     } else {
       right = middle;
     }
   }
 
-  const result = matcher(contents[left]);
+  const result = matcher(tree.contents[left]);
 
   if (result === 0) {
     return {

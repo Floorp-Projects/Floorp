@@ -3268,11 +3268,17 @@ window._gBrowser = {
   },
 
   reloadAllTabs() {
-    let tabs = this.visibleTabs;
-    let l = tabs.length;
-    for (var i = 0; i < l; i++) {
+    this.reloadTabs(this.visibleTabs);
+  },
+
+  reloadMultiSelectedTabs() {
+    this.reloadTabs(this.selectedTabs);
+  },
+
+  reloadTabs(tabs) {
+    for (let tab of tabs) {
       try {
-        this.getBrowserForTab(tabs[i]).reload();
+        this.getBrowserForTab(tab).reload();
       } catch (e) {
         // ignore failure to reload so others will be reloaded
       }

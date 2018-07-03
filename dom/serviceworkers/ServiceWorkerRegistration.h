@@ -116,6 +116,9 @@ public:
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv);
 
+  const ServiceWorkerRegistrationDescriptor&
+  Descriptor() const;
+
 private:
   ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
                             const ServiceWorkerRegistrationDescriptor& aDescriptor,

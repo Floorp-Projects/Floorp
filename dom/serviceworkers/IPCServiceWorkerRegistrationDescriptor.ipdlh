@@ -16,6 +16,7 @@ namespace dom {
 struct IPCServiceWorkerRegistrationDescriptor
 {
   uint64_t id;
+  uint64_t version;
 
   // These values should match the principal and scope in each
   // associated worker.  It may be possible to optimize in the future,
