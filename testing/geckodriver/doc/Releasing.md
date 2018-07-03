@@ -25,13 +25,13 @@ Release new in-tree dependency crates
 geckodriver depends on a number of Rust crates that also live in
 central by using relative paths:
 
-    [dependencies]
-    …
-    mozprofile = { path = "../mozbase/rust/mozprofile" }
+	[dependencies]
+	…
+	mozprofile = { path = "../mozbase/rust/mozprofile" }
 	mozrunner = { path = "../mozbase/rust/mozrunner" }
 	mozversion = { path = "../mozbase/rust/mozversion" }
 	…
-    webdriver = { path = "../webdriver" }
+	webdriver = { path = "../webdriver" }
 
 Because we need to export the geckodriver source code to the old
 GitHub repository when we release, we first need to publish these
