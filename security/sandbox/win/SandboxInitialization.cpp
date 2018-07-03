@@ -15,7 +15,7 @@ namespace mozilla {
 namespace sandboxing {
 
 typedef BOOL(WINAPI* CloseHandle_func) (HANDLE hObject);
-static WindowsDllInterceptor::FuncHookType<CloseHandle_func> stub_CloseHandle;
+static CloseHandle_func stub_CloseHandle = nullptr;
 
 typedef BOOL(WINAPI* DuplicateHandle_func)(HANDLE hSourceProcessHandle,
                                            HANDLE hSourceHandle,
@@ -24,8 +24,7 @@ typedef BOOL(WINAPI* DuplicateHandle_func)(HANDLE hSourceProcessHandle,
                                            DWORD dwDesiredAccess,
                                            BOOL bInheritHandle,
                                            DWORD dwOptions);
-static WindowsDllInterceptor::FuncHookType<DuplicateHandle_func>
-  stub_DuplicateHandle;
+static DuplicateHandle_func stub_DuplicateHandle = nullptr;
 
 static BOOL WINAPI
 patched_CloseHandle(HANDLE hObject)
@@ -63,14 +62,17 @@ EnableHandleCloseMonitoring()
 {
   Kernel32Intercept.Init("kernel32.dll");
   bool hooked =
-    stub_CloseHandle.Set(Kernel32Intercept, "CloseHandle", &patched_CloseHandle);
+    Kernel32Intercept.AddHook("CloseHandle",
+                              reinterpret_cast<intptr_t>(patched_CloseHandle),
+                              (void**)&stub_CloseHandle);
   if (!hooked) {
     return false;
   }
 
   hooked =
-    stub_DuplicateHandle.Set(Kernel32Intercept, "DuplicateHandle",
-                             &patched_DuplicateHandle);
+    Kernel32Intercept.AddHook("DuplicateHandle",
+                              reinterpret_cast<intptr_t>(patched_DuplicateHandle),
+                              (void**)&stub_DuplicateHandle);
   if (!hooked) {
     return false;
   }
