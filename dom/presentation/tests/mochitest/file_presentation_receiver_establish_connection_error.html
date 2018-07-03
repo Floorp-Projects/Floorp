@@ -12,26 +12,26 @@
 
 function is(a, b, msg) {
   if (a === b) {
-    alert('OK ' + msg);
+    alert("OK " + msg);
   } else {
-    alert('KO ' + msg + ' | reason: ' + a + ' != ' + b);
+    alert("KO " + msg + " | reason: " + a + " != " + b);
   }
 }
 
 function ok(a, msg) {
-  alert((a ? 'OK ' : 'KO ') + msg);
+  alert((a ? "OK " : "KO ") + msg);
 }
 
 function info(msg) {
-  alert('INFO ' + msg);
+  alert("INFO " + msg);
 }
 
 function command(name, data) {
-  alert('COMMAND ' + JSON.stringify({name: name, data: data}));
+  alert("COMMAND " + JSON.stringify({name, data}));
 }
 
 function finish() {
-  alert('DONE');
+  alert("DONE");
 }
 
 function testConnectionAvailable() {
@@ -44,13 +44,13 @@ function testConnectionAvailable() {
 
 function testUnexpectedControlChannelClose() {
   // Trigger the control channel to be closed with error code.
-  command({ name: 'trigger-control-channel-close', data: 0x80004004 /* NS_ERROR_ABORT */ });
+  command({ name: "trigger-control-channel-close", data: 0x80004004 /* NS_ERROR_ABORT */ });
 
   return new Promise(function(aResolve, aReject) {
     return Promise.race([
       navigator.presentation.receiver.connectionList.then(
         (aList) => {
-          ok(false, "Should not get a connection list.")
+          ok(false, "Should not get a connection list.");
           aReject();
         },
         (aError) => {
