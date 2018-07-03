@@ -132,7 +132,43 @@ const KEYFRAMES_TEST_DATA = [
         ],
       },
     ],
-  }
+  },
+  {
+    targetClass: "same-color",
+    properties: [
+      {
+        name: "background-color",
+        expectedValues: [
+          {
+            title: "rgb(0, 255, 0)",
+            marginInlineStart: "0%",
+          },
+          {
+            title: "rgb(0, 255, 0)",
+            marginInlineStart: "100%",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    targetClass: "currentcolor",
+    properties: [
+      {
+        name: "background-color",
+        expectedValues: [
+          {
+            title: "currentcolor",
+            marginInlineStart: "0%",
+          },
+          {
+            title: "rgb(0, 255, 0)",
+            marginInlineStart: "100%",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /**
@@ -179,4 +215,3 @@ async function testKeyframesGraphKeyframesMarker() {
     }
   }
 }
-
