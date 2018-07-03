@@ -20,9 +20,9 @@ exports.isPrettyURL = isPrettyURL;
 exports.isThirdParty = isThirdParty;
 exports.getPrettySourceURL = getPrettySourceURL;
 exports.getRawSourceURL = getRawSourceURL;
-exports.getFilenameFromURL = getFilenameFromURL;
 exports.getFormattedSourceId = getFormattedSourceId;
 exports.getFilename = getFilename;
+exports.getTruncatedFileName = getTruncatedFileName;
 exports.getFileURL = getFileURL;
 exports.getSourcePath = getSourcePath;
 exports.getSourceLineCount = getSourceLineCount;
@@ -36,7 +36,7 @@ var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _utils = require("./utils");
 
-var _path = require("./path");
+var _text = require("../utils/text");
 
 var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
 
@@ -153,17 +153,6 @@ function resolveFileURL(url, transformUrl = initialUrl => initialUrl) {
   const name = transformUrl(url);
   return (0, _utils.endTruncateStr)(name, 50);
 }
-/**
- * Gets a readable filename from a URL for display purposes.
- *
- * @memberof utils/source
- * @static
- */
-
-
-function getFilenameFromURL(url) {
-  return resolveFileURL(url, initialUrl => (0, _devtoolsModules.getUnicodeUrlPath)((0, _path.basename)(initialUrl)) || "(index)");
-}
 
 function getFormattedSourceId(id) {
   const sourceId = id.split("/")[1];
@@ -188,14 +177,21 @@ function getFilename(source) {
     return getFormattedSourceId(id);
   }
 
-  let filename = getFilenameFromURL(url);
-  const qMarkIdx = filename.indexOf("?");
-
-  if (qMarkIdx > 0) {
-    filename = filename.slice(0, qMarkIdx);
-  }
-
+  const {
+    filename
+  } = (0, _sourcesTree.getURL)(source);
   return filename;
+}
+/**
+ * Provides a middle-trunated filename
+ *
+ * @memberof utils/source
+ * @static
+ */
+
+
+function getTruncatedFileName(source, length = 30) {
+  return (0, _text.truncateMiddleText)(getFilename(source), length);
 }
 /**
  * Gets a readable source URL for display purposes.

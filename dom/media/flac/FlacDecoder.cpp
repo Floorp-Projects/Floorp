@@ -30,4 +30,19 @@ FlacDecoder::IsSupportedType(const MediaContainerType& aContainerType)
           aContainerType.Type() == MEDIAMIMETYPE("application/x-flac"));
 }
 
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+FlacDecoder::GetTracksInfo(const MediaContainerType& aType)
+{
+  nsTArray<UniquePtr<TrackInfo>> tracks;
+  if (!IsSupportedType(aType)) {
+    return tracks;
+  }
+
+  tracks.AppendElement(
+    CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+      NS_LITERAL_CSTRING("audio/flac"), aType));
+
+  return tracks;
+}
+
 } // namespace mozilla

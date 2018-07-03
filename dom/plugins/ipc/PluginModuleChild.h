@@ -211,6 +211,8 @@ public:
                                              NPBool aShouldRegister);
     mozilla::ipc::IPCResult RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
         const NPAudioDeviceChangeDetailsIPC& detailsIPC) override;
+    mozilla::ipc::IPCResult RecvNPP_SetValue_NPNVaudioDeviceStateChanged(
+      const NPAudioDeviceStateChangedIPC& aDeviceStateIPC) override;
 
 private:
     NPError DoNP_Initialize(const PluginSettings& aSettings);

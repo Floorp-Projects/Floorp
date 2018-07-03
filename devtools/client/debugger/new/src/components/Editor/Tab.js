@@ -18,15 +18,11 @@ var _SourceIcon2 = _interopRequireDefault(_SourceIcon);
 
 var _Button = require("../shared/Button/index");
 
-var _text = require("../../utils/text");
-
 var _actions = require("../../actions/index");
 
 var _actions2 = _interopRequireDefault(_actions);
 
 var _source = require("../../utils/source");
-
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
 
 var _clipboard = require("../../utils/clipboard");
 
@@ -141,7 +137,6 @@ class Tab extends _react.PureComponent {
       closeTab,
       source
     } = this.props;
-    const filename = (0, _source.getFilename)(source);
     const sourceId = source.id;
     const active = selectedSource && sourceId == selectedSource.id && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
     const isPrettyCode = (0, _source.isPretty)(source);
@@ -177,7 +172,7 @@ class Tab extends _react.PureComponent {
       shouldHide: icon => ["file", "javascript"].includes(icon)
     }), _react2.default.createElement("div", {
       className: "filename"
-    }, (0, _text.truncateMiddleText)((0, _devtoolsModules.getUnicodeUrlPath)(filename), 30)), _react2.default.createElement(_Button.CloseButton, {
+    }, (0, _source.getTruncatedFileName)(source)), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onClickClose,
       tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
     }));
@@ -196,4 +191,10 @@ const mapStateToProps = (state, {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Tab);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  selectSpecificSource: _actions2.default.selectSpecificSource,
+  closeTab: _actions2.default.closeTab,
+  closeTabs: _actions2.default.closeTabs,
+  togglePrettyPrint: _actions2.default.togglePrettyPrint,
+  showSource: _actions2.default.showSource
+})(Tab);

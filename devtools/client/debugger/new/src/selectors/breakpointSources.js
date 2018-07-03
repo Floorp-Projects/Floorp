@@ -24,7 +24,7 @@ function getBreakpointsForSource(source, breakpoints) {
 function findBreakpointSources(sources, breakpoints) {
   const sourceIds = (0, _lodash.uniq)(breakpoints.valueSeq().filter(bp => !bp.hidden).map(bp => bp.location.sourceId).toJS());
   const breakpointSources = sourceIds.map(id => sources[id]).filter(source => source && !source.isBlackBoxed);
-  return (0, _lodash.sortBy)(breakpointSources, source => (0, _source.getFilenameFromURL)(source.url));
+  return (0, _lodash.sortBy)(breakpointSources, source => (0, _source.getFilename)(source));
 }
 
 function _getBreakpointSources(breakpoints, sources) {

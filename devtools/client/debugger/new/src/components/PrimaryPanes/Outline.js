@@ -202,4 +202,8 @@ const mapStateToProps = state => {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Outline);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  selectLocation: _actions2.default.selectLocation,
+  getFunctionText: _actions2.default.getFunctionText,
+  flashLineRange: _actions2.default.flashLineRange
+})(Outline);

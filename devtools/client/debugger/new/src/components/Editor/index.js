@@ -635,4 +635,13 @@ const mapStateToProps = state => {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Editor);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  openConditionalPanel: _actions2.default.openConditionalPanel,
+  closeConditionalPanel: _actions2.default.closeConditionalPanel,
+  setContextMenu: _actions2.default.setContextMenu,
+  continueToHere: _actions2.default.continueToHere,
+  toggleBreakpoint: _actions2.default.toggleBreakpoint,
+  addOrToggleDisabledBreakpoint: _actions2.default.addOrToggleDisabledBreakpoint,
+  jumpToMappedLocation: _actions2.default.jumpToMappedLocation,
+  traverseResults: _actions2.default.traverseResults
+})(Editor);

@@ -13,6 +13,11 @@
 
 namespace mozilla {
 
+namespace dom {
+struct AudioConfiguration;
+struct VideoConfiguration;
+}
+
 // Class containing pointing at a media MIME "type/subtype" string literal.
 // See IsMediaMIMEType for restrictions.
 // Mainly used to help construct a MediaMIMEType through the statically-checked
@@ -175,8 +180,10 @@ public:
   // Sizes and rates.
   Maybe<int32_t> GetWidth() const { return GetMaybeNumber(mWidth); }
   Maybe<int32_t> GetHeight() const { return GetMaybeNumber(mHeight); }
-  Maybe<int32_t> GetFramerate() const { return GetMaybeNumber(mFramerate); }
+  Maybe<double> GetFramerate() const { return GetMaybeNumber(mFramerate); }
   Maybe<int32_t> GetBitrate() const { return GetMaybeNumber(mBitrate); }
+  Maybe<int32_t> GetChannels() const { return GetMaybeNumber(mChannels); }
+  Maybe<int32_t> GetSamplerate() const { return GetMaybeNumber(mSamplerate); }
 
   // Original string. Note that "type/subtype" may not be lowercase,
   // use Type().AsString() instead to get the normalized "type/subtype".
@@ -184,32 +191,56 @@ public:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  // aFrac is either a floating-point number or a fraction made of two
+  // floating-point numbers.
+  static Maybe<double> ComputeFractionalString(const nsAString& aFrac);
+
 private:
   friend Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType);
+  friend Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
+    const dom::VideoConfiguration& aConfig);
+  friend Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
+    const dom::AudioConfiguration& aConfig);
+
   MediaExtendedMIMEType(const nsACString& aOriginalString,
                         const nsACString& aMIMEType,
                         bool aHaveCodecs, const nsAString& aCodecs,
                         int32_t aWidth, int32_t aHeight,
-                        int32_t aFramerate, int32_t aBitrate);
+                        double aFramerate, int32_t aBitrate);
+  MediaExtendedMIMEType(const nsACString& aOriginalString,
+                        const nsACString& aMIMEType,
+                        bool aHaveCodecs, const nsAString& aCodecs,
+                        int32_t aChannels, int32_t aSamplerate,
+                        int32_t aBitrate);
 
-  Maybe<int32_t> GetMaybeNumber(int32_t aNumber) const
+  template <typename T>
+  Maybe<T> GetMaybeNumber(T aNumber) const
   {
-    return (aNumber < 0) ? Maybe<int32_t>(Nothing()) : Some(int32_t(aNumber));
+    return (aNumber < 0) ? Maybe<T>(Nothing()) : Some(T(aNumber));
   }
 
   nsCString mOriginalString; // Original full string.
   MediaMIMEType mMIMEType; // MIME type/subtype.
   bool mHaveCodecs = false; // If false, mCodecs must be empty.
   MediaCodecs mCodecs;
+  // For video
   int32_t mWidth = -1; // -1 if not provided.
   int32_t mHeight = -1; // -1 if not provided.
-  int32_t mFramerate = -1; // -1 if not provided.
+  double mFramerate = -1; // -1 if not provided.
+  // For audio
+  int32_t mChannels = -1; // -1 if not provided.
+  int32_t mSamplerate = -1; // -1 if not provided.
+  // For both audio and video.
   int32_t mBitrate = -1; // -1 if not provided.
 };
 
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType);
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsACString& aType);
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const char* aType);
+Maybe<MediaExtendedMIMEType>
+MakeMediaExtendedMIMEType(const dom::VideoConfiguration& aConfig);
+Maybe<MediaExtendedMIMEType>
+MakeMediaExtendedMIMEType(const dom::AudioConfiguration& aConfig);
 
 } // namespace mozilla
 

@@ -56,7 +56,7 @@ class Tabs extends _react.PureComponent {
       const sourceTabEls = this.refs.sourceTabs.children;
       const hiddenTabs = (0, _tabs.getHiddenTabs)(tabSources, sourceTabEls);
 
-      if ((0, _ui.isVisible)() && hiddenTabs.find(tab => tab.id == selectedSource.id)) {
+      if (selectedSource && (0, _ui.isVisible)() && hiddenTabs.find(tab => tab.id == selectedSource.id)) {
         return moveTab(selectedSource.url, 0);
       }
 
@@ -205,4 +205,10 @@ const mapStateToProps = state => ({
   tabSources: (0, _selectors.getSourcesForTabs)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Tabs);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  selectSpecificSource: _actions2.default.selectSpecificSource,
+  moveTab: _actions2.default.moveTab,
+  closeTab: _actions2.default.closeTab,
+  togglePaneCollapse: _actions2.default.togglePaneCollapse,
+  showSource: _actions2.default.showSource
+})(Tabs);

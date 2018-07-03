@@ -157,4 +157,50 @@ BitReader::FillReservoir()
   mReservoir <<= 32 - mNumBitsLeft;
 }
 
+/* static */ uint32_t
+BitReader::GetBitLength(const mozilla::MediaByteBuffer* aNAL)
+{
+  size_t size = aNAL->Length();
+
+  while (size > 0 && aNAL->ElementAt(size - 1) == 0) {
+    size--;
+  }
+
+  if (!size) {
+    return 0;
+  }
+
+  if (size > UINT32_MAX / 8) {
+    // We can't represent it, we'll use as much as we can.
+    return UINT32_MAX;
+  }
+
+  uint8_t v = aNAL->ElementAt(size - 1);
+  size *= 8;
+
+  // Remove the stop bit and following trailing zeros.
+  if (v) {
+    // Count the consecutive zero bits (trailing) on the right by binary search.
+    // Adapted from Matt Whitlock algorithm to only bother with 8 bits integers.
+    uint32_t c;
+    if (v & 1) {
+      // Special case for odd v (assumed to happen half of the time).
+      c = 0;
+    } else {
+      c = 1;
+      if ((v & 0xf) == 0) {
+        v >>= 4;
+        c += 4;
+      }
+      if ((v & 0x3) == 0) {
+        v >>= 2;
+        c += 2;
+      }
+      c -= v & 0x1;
+    }
+    size -= c + 1;
+  }
+  return size;
+}
+
 } // namespace mozilla
