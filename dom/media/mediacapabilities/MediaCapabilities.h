@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_MediaCapabilities_h_
 #define mozilla_dom_MediaCapabilities_h_
 
+#include "DecoderDoctorLogger.h"
 #include "MediaContainerType.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
@@ -23,6 +24,11 @@ namespace mozilla {
 namespace layers {
 class KnowsCompositor;
 }
+namespace dom {
+class MediaCapabilities;
+} // namespace dom
+DDLoggedTypeName(dom::MediaCapabilities);
+
 namespace dom {
 
 struct MediaDecodingConfiguration;
