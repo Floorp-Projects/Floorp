@@ -12,14 +12,15 @@
 
 function configureTest() {
   return SpecialPowers.pushPrefEnv(
-    {"set": [["dom.audioWorklet.enabled", true],
+    {"set": [["dom.audioworklet.enabled", true],
              ["dom.worklet.enabled", true]]});
 }
 
 // This function is called into an iframe.
 function runTestInIframe() {
   // This loading should fail
-  audioWorklet.import("404.js")
+  var audioContext = new AudioContext();
+  audioContext.audioWorklet.import("404.js")
   .then(() => {
     ok(false, "We should not be called!");
   }, () => {
@@ -28,7 +29,7 @@ function runTestInIframe() {
 
   // This should throw from JS
   .then(() => {
-    return audioWorklet.import("worklet_exception.js")
+    return audioContext.audioWorklet.import("worklet_exception.js")
   })
   .then(() => {
     ok(false, "We should not be called!");
