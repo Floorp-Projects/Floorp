@@ -48,8 +48,7 @@ public:
   LayerTransactionParent(HostLayerManager* aManager,
                          CompositorBridgeParentBase* aBridge,
                          CompositorAnimationStorage* aAnimStorage,
-                         LayersId aId,
-                         TimeDuration aVsyncRate);
+                         LayersId aId);
 
 protected:
   ~LayerTransactionParent();
@@ -80,13 +79,9 @@ public:
   bool IsSameProcess() const override;
 
   const TransactionId& GetPendingTransactionId() { return mPendingTransaction; }
-  void SetPendingTransactionId(TransactionId aId,
-                               const TimeStamp& aRefreshStartTime,
-                               const TimeStamp& aTxnStartTime,
-                               const TimeStamp& aFwdTime)
+  void SetPendingTransactionId(TransactionId aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
   {
     mPendingTransaction = aId;
-    mRefreshStartTime = aRefreshStartTime;
     mTxnStartTime = aTxnStartTime;
     mFwdTime = aFwdTime;
   }
@@ -201,10 +196,7 @@ private:
   uint64_t mChildEpoch;
   uint64_t mParentEpoch;
 
-  TimeDuration mVsyncRate;
-
   TransactionId mPendingTransaction;
-  TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;
 

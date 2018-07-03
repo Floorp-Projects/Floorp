@@ -168,8 +168,6 @@ WebRenderLayerManager::BeginTransaction()
     return false;
   }
 
-  mTransactionStart = TimeStamp::Now();
-
   // Increment the paint sequence number even if test logging isn't
   // enabled in this process; it may be enabled in the parent process,
   // and the parent process expects unique sequence numbers.
@@ -210,7 +208,7 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   mWebRenderCommandBuilder.EmptyTransaction();
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
-  TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
+  TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
 
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
@@ -222,10 +220,8 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   }
 
   WrBridge()->EndEmptyTransaction(mFocusTarget, mPendingScrollUpdates,
-      mPaintSequenceNumber, mLatestTransactionId, refreshStart, mTransactionStart);
+      mPaintSequenceNumber, mLatestTransactionId, transactionStart);
   ClearPendingScrollInfoUpdate();
-
-  mTransactionStart = TimeStamp();
 
   MakeSnapshotIfRequired(size);
   return true;
@@ -312,7 +308,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   ClearPendingScrollInfoUpdate();
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
-  TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
+  TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
 
   for (const auto& key : mImageKeysToDelete) {
     resourceUpdates.DeleteImage(key);
@@ -341,10 +337,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   {
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction");
     WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(),
-                               mLatestTransactionId, mScrollData, refreshStart, mTransactionStart);
+                               mLatestTransactionId, mScrollData, transactionStart);
   }
-
-  mTransactionStart = TimeStamp();
 
   MakeSnapshotIfRequired(size);
   mNeedsComposite = false;
