@@ -202,6 +202,9 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
   if (!mEffect) {
     currentPhase = GetAnimationPhaseWithoutEffect
       <ComputedTiming::AnimationPhase>(*this);
+    if (currentPhase == mPreviousPhase) {
+      return;
+    }
   } else {
     ComputedTiming computedTiming = mEffect->GetComputedTiming();
     currentPhase = computedTiming.mPhase;
