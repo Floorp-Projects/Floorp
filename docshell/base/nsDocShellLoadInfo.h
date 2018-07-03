@@ -20,131 +20,124 @@ class nsDocShellLoadInfo
 {
 public:
   typedef uint32_t nsDocShellInfoLoadType;
-  typedef uint32_t nsDocShellInfoReferrerPolicy;
-  /* these are load type enums... */
-  const static uint32_t loadNormal = 0;                     // Normal Load
-  const static uint32_t loadNormalReplace = 1;              // Normal Load but replaces current history slot
-  const static uint32_t loadHistory = 2;                    // Load from history
-  const static uint32_t loadReloadNormal = 3;               // Reload
-  const static uint32_t loadReloadBypassCache = 4;
-  const static uint32_t loadReloadBypassProxy = 5;
-  const static uint32_t loadReloadBypassProxyAndCache = 6;
-  const static uint32_t loadLink = 7;
-  const static uint32_t loadRefresh = 8;
-  const static uint32_t loadReloadCharsetChange = 9;
-  const static uint32_t loadBypassHistory = 10;
-  const static uint32_t loadStopContent = 11;
-  const static uint32_t loadStopContentAndReplace = 12;
-  const static uint32_t loadNormalExternal = 13;
-  const static uint32_t loadNormalBypassCache = 14;
-  const static uint32_t loadNormalBypassProxy = 15;
-  const static uint32_t loadNormalBypassProxyAndCache = 16;
-  const static uint32_t loadPushState = 17;                 // history.pushState or replaceState
-  const static uint32_t loadReplaceBypassCache = 18;
-  const static uint32_t loadReloadMixedContent = 19;
-  const static uint32_t loadNormalAllowMixedContent = 20;
-  const static uint32_t loadReloadCharsetChangeBypassCache = 21;
-  const static uint32_t loadReloadCharsetChangeBypassProxyAndCache = 22;
 
+  enum LoadType: uint32_t {
+    loadNormal = 0,                     // Normal Load
+    loadNormalReplace = 1,              // Normal Load but replaces current history slot
+    loadHistory = 2,                    // Load from history
+    loadReloadNormal = 3,               // Reload
+    loadReloadBypassCache = 4,
+    loadReloadBypassProxy = 5,
+    loadReloadBypassProxyAndCache = 6,
+    loadLink = 7,
+    loadRefresh = 8,
+    loadReloadCharsetChange = 9,
+    loadBypassHistory = 10,
+    loadStopContent = 11,
+    loadStopContentAndReplace = 12,
+    loadNormalExternal = 13,
+    loadNormalBypassCache = 14,
+    loadNormalBypassProxy = 15,
+    loadNormalBypassProxyAndCache = 16,
+    loadPushState = 17,                 // history.pushState or replaceState
+    loadReplaceBypassCache = 18,
+    loadReloadMixedContent = 19,
+    loadNormalAllowMixedContent = 20,
+    loadReloadCharsetChangeBypassCache = 21,
+    loadReloadCharsetChangeBypassProxyAndCache = 22
+  };
 
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadInfo);
 
   nsDocShellLoadInfo();
 
-  NS_IMETHOD GetReferrer(nsIURI** aReferrer);
+  nsIURI* Referrer() const;
 
-  NS_IMETHOD SetReferrer(nsIURI* aReferrer);
+  void SetReferrer(nsIURI* aReferrer);
 
-  NS_IMETHOD GetOriginalURI(nsIURI** aOriginalURI);
+  nsIURI* OriginalURI() const;
 
-  NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI);
+  void SetOriginalURI(nsIURI* aOriginalURI);
 
-  NS_IMETHOD GetResultPrincipalURI(nsIURI** aResultPrincipalURI);
+  nsIURI* ResultPrincipalURI() const;
 
-  NS_IMETHOD
-  SetResultPrincipalURI(nsIURI* aResultPrincipalURI);
+  void SetResultPrincipalURI(nsIURI* aResultPrincipalURI);
 
-  NS_IMETHOD
-  GetResultPrincipalURIIsSome(bool* aIsSome);
+  bool ResultPrincipalURIIsSome() const;
 
-  NS_IMETHOD
-  SetResultPrincipalURIIsSome(bool aIsSome);
+  void SetResultPrincipalURIIsSome(bool aIsSome);
 
-  NS_IMETHOD
-  GetLoadReplace(bool* aLoadReplace);
+  bool LoadReplace() const;
 
-  NS_IMETHOD
-  SetLoadReplace(bool aLoadReplace);
+  void SetLoadReplace(bool aLoadReplace);
 
-  NS_IMETHOD
-  GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal);
+  nsIPrincipal* TriggeringPrincipal() const;
 
-  NS_IMETHOD
-  SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal);
+  void SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal);
 
-  NS_IMETHOD
-  GetInheritPrincipal(bool* aInheritPrincipal);
+  bool InheritPrincipal() const;
 
-  NS_IMETHOD
-  SetInheritPrincipal(bool aInheritPrincipal);
+  void SetInheritPrincipal(bool aInheritPrincipal);
 
-  NS_IMETHOD
-  GetPrincipalIsExplicit(bool* aPrincipalIsExplicit);
+  bool PrincipalIsExplicit() const;
 
-  NS_IMETHOD
-  SetPrincipalIsExplicit(bool aPrincipalIsExplicit);
+  void SetPrincipalIsExplicit(bool aPrincipalIsExplicit);
 
-  NS_IMETHOD
-  GetForceAllowDataURI(bool* aForceAllowDataURI);
+  bool ForceAllowDataURI() const;
 
-  NS_IMETHOD
-  SetForceAllowDataURI(bool aForceAllowDataURI);
+  void SetForceAllowDataURI(bool aForceAllowDataURI);
 
-  NS_IMETHOD GetOriginalFrameSrc(bool* aOriginalFrameSrc);
+  bool OriginalFrameSrc() const;
 
-  NS_IMETHOD SetOriginalFrameSrc(bool aOriginalFrameSrc);
+  void SetOriginalFrameSrc(bool aOriginalFrameSrc);
 
-  NS_IMETHOD GetLoadType(nsDocShellInfoLoadType* aLoadType);
+  nsDocShellInfoLoadType LoadType() const;
 
-  NS_IMETHOD SetLoadType(nsDocShellInfoLoadType aLoadType);
+  void SetLoadType(nsDocShellInfoLoadType aLoadType);
 
-  NS_IMETHOD GetSHEntry(nsISHEntry** aSHEntry);
+  nsISHEntry* SHEntry() const;
 
-  NS_IMETHOD SetSHEntry(nsISHEntry* aSHEntry);
+  void SetSHEntry(nsISHEntry* aSHEntry);
 
-  NS_IMETHOD GetTarget(char16_t** aTarget);
+  void GetTarget(nsAString& aTarget) const;
 
-  NS_IMETHOD SetTarget(const char16_t* aTarget);
+  void SetTarget(const nsAString& aTarget);
 
-  NS_IMETHOD GetPostDataStream(nsIInputStream** aResult);
+  nsIInputStream* PostDataStream() const;
 
-  NS_IMETHOD SetPostDataStream(nsIInputStream* aStream);
+  void SetPostDataStream(nsIInputStream* aStream);
 
-  NS_IMETHOD GetHeadersStream(nsIInputStream** aHeadersStream);
+  nsIInputStream* HeadersStream() const;
 
-  NS_IMETHOD SetHeadersStream(nsIInputStream* aHeadersStream);
+  void SetHeadersStream(nsIInputStream* aHeadersStream);
 
-  NS_IMETHOD GetSendReferrer(bool* aSendReferrer);
+  bool SendReferrer() const;
 
-  NS_IMETHOD SetSendReferrer(bool aSendReferrer);
+  void SetSendReferrer(bool aSendReferrer);
 
-  NS_IMETHOD GetReferrerPolicy(nsDocShellInfoReferrerPolicy* aReferrerPolicy);
+  uint32_t ReferrerPolicy() const;
 
-  NS_IMETHOD SetReferrerPolicy(nsDocShellInfoReferrerPolicy aReferrerPolicy);
+  void SetReferrerPolicy(mozilla::net::ReferrerPolicy aReferrerPolicy);
 
-  NS_IMETHOD GetIsSrcdocLoad(bool* aIsSrcdocLoad);
+  bool IsSrcdocLoad() const;
 
-  NS_IMETHOD GetSrcdocData(nsAString& aSrcdocData);
+  void GetSrcdocData(nsAString& aSrcdocData) const;
 
-  NS_IMETHOD SetSrcdocData(const nsAString& aSrcdocData);
+  void SetSrcdocData(const nsAString& aSrcdocData);
 
-  NS_IMETHOD GetSourceDocShell(nsIDocShell** aSourceDocShell);
+  nsIDocShell* SourceDocShell() const;
 
-  NS_IMETHOD SetSourceDocShell(nsIDocShell* aSourceDocShell);
+  void SetSourceDocShell(nsIDocShell* aSourceDocShell);
 
-  NS_IMETHOD GetBaseURI(nsIURI** aBaseURI);
+  nsIURI* BaseURI() const;
 
-  NS_IMETHOD SetBaseURI(nsIURI* aBaseURI);
+  void SetBaseURI(nsIURI* aBaseURI);
+
+  void
+  GetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const;
+
+  void
+  SetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
 
 protected:
   virtual ~nsDocShellLoadInfo();
@@ -161,7 +154,7 @@ protected:
   bool mForceAllowDataURI;
   bool mOriginalFrameSrc;
   bool mSendReferrer;
-  nsDocShellInfoReferrerPolicy mReferrerPolicy;
+  mozilla::net::ReferrerPolicy mReferrerPolicy;
   nsDocShellInfoLoadType mLoadType;
   nsCOMPtr<nsISHEntry> mSHEntry;
   nsString mTarget;
@@ -172,12 +165,5 @@ protected:
   nsCOMPtr<nsIDocShell> mSourceDocShell;
   nsCOMPtr<nsIURI> mBaseURI;
 };
-
-namespace mozilla {
-void
-GetMaybeResultPrincipalURI(nsDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>>& aRPURI);
-void
-SetMaybeResultPrincipalURI(nsDocShellLoadInfo* aLoadInfo, Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
-}
 
 #endif /* nsDocShellLoadInfo_h__ */
