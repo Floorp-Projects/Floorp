@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/Swizzle.h"
-#include "mozilla/PodOperations.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -50,17 +50,17 @@ TEST(Moz2D, PremultiplyData) {
   PremultiplyData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                   out, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                   IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_bgra));
+  EXPECT_TRUE(ArrayEqual(out, check_bgra));
 
   PremultiplyData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                   out, sizeof(in_bgra), SurfaceFormat::R8G8B8A8,
                   IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_rgba));
+  EXPECT_TRUE(ArrayEqual(out, check_rgba));
 
   PremultiplyData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                   out, sizeof(in_bgra), SurfaceFormat::A8R8G8B8,
                   IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_argb));
+  EXPECT_TRUE(ArrayEqual(out, check_argb));
 }
 
 TEST(Moz2D, UnpremultiplyData) {
@@ -103,17 +103,17 @@ TEST(Moz2D, UnpremultiplyData) {
   UnpremultiplyData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                     out, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                     IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_bgra));
+  EXPECT_TRUE(ArrayEqual(out, check_bgra));
 
   UnpremultiplyData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                     out, sizeof(in_bgra), SurfaceFormat::R8G8B8A8,
                     IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_rgba));
+  EXPECT_TRUE(ArrayEqual(out, check_rgba));
 
   UnpremultiplyData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
                     out, sizeof(in_bgra), SurfaceFormat::A8R8G8B8,
                     IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_argb));
+  EXPECT_TRUE(ArrayEqual(out, check_argb));
 }
 
 TEST(Moz2D, SwizzleData) {
@@ -199,42 +199,42 @@ TEST(Moz2D, SwizzleData) {
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out, sizeof(out), SurfaceFormat::B8G8R8A8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_bgra));
+  EXPECT_TRUE(ArrayEqual(out, check_bgra));
 
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out, sizeof(out), SurfaceFormat::R8G8B8A8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_rgba));
+  EXPECT_TRUE(ArrayEqual(out, check_rgba));
 
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out, sizeof(out), SurfaceFormat::A8R8G8B8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_argb));
+  EXPECT_TRUE(ArrayEqual(out, check_argb));
 
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out, sizeof(out), SurfaceFormat::R8G8B8X8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out, check_rgbx));
+  EXPECT_TRUE(ArrayEqual(out, check_rgbx));
 
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out24, sizeof(out24), SurfaceFormat::B8G8R8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out24, check_bgr));
+  EXPECT_TRUE(ArrayEqual(out24, check_bgr));
 
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out24, sizeof(out24), SurfaceFormat::R8G8B8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out24, check_rgb));
+  EXPECT_TRUE(ArrayEqual(out24, check_rgb));
 
   SwizzleData(in_bgra, sizeof(in_bgra), SurfaceFormat::B8G8R8A8,
               out8, sizeof(out8), SurfaceFormat::A8,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out8, check_a));
+  EXPECT_TRUE(ArrayEqual(out8, check_a));
 
   SwizzleData(SurfaceFormat::A8R8G8B8_UINT32 == SurfaceFormat::A8R8G8B8 ? check_argb : check_bgra,
               sizeof(in_bgra), SurfaceFormat::A8R8G8B8_UINT32,
               reinterpret_cast<uint8_t*>(out16), sizeof(out16), SurfaceFormat::R5G6B5_UINT16,
               IntSize(5, 1));
-  EXPECT_TRUE(PodEqual(out16, check_16));
+  EXPECT_TRUE(ArrayEqual(out16, check_16));
 }
 

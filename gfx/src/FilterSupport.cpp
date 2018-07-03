@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 
 #include "gfxContext.h"
@@ -763,7 +764,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       uint32_t type = atts.GetUint(eColorMatrixType);
       const nsTArray<float>& values = atts.GetFloats(eColorMatrixValues);
       if (NS_FAILED(ComputeColorMatrix(type, values, colorMatrix)) ||
-          PodEqual(colorMatrix, identityMatrix)) {
+          ArrayEqual(colorMatrix, identityMatrix)) {
         RefPtr<FilterNode> filter(aSources[0]);
         return filter.forget();
       }
@@ -974,7 +975,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         // All-zero coefficients sometimes occur in junk filters.
         if (!filter ||
             (coefficients.Length() == ArrayLength(allZero) &&
-             PodEqual(coefficients.Elements(), allZero, ArrayLength(allZero)))) {
+             ArrayEqual(coefficients.Elements(), allZero, ArrayLength(allZero)))) {
           return nullptr;
         }
         filter->SetAttribute(ATT_ARITHMETIC_COMBINE_COEFFICIENTS,
