@@ -56,6 +56,20 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "default": None,
          "help": "Number of this chunk",
          }
+    ], [
+        ["--log-raw-level"],
+        {"action": "store",
+         "dest": "log_raw_level",
+         "default": "info",
+         "help": "Set log level (debug|info|warning|error|critical|fatal)",
+         }
+    ], [
+        ["--log-tbpl-level"],
+        {"action": "store",
+         "dest": "log_tbpl_level",
+         "default": "info",
+         "help": "Set log level (debug|info|warning|error|critical|fatal)",
+         }
     ]] + copy.deepcopy(testing_config_options)
 
     app_name = None
@@ -103,6 +117,9 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                     self.this_chunk = m.group(2)
         self.sdk_level = None
         self.xre_path = None
+        self.device_serial = 'emulator-5554'
+        self.log_raw_level = c.get('log_raw_level')
+        self.log_tbpl_level = c.get('log_tbpl_level')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -402,10 +419,13 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
                                           '%s_errorsummary.log' % self.test_suite)
         str_format_values = {
+            'device_serial': self.device_serial,
             # IP address of the host as seen from the emulator
             'remote_webserver': '10.0.2.2',
             'xre_path': self.xre_path,
             'utility_path': self.xre_path,
+            'http_port': '8854',  # starting http port  to use for the mochitest server
+            'ssl_port': '4454',  # starting ssl port to use for the server
             'certs_path': os.path.join(dirs['abs_work_dir'], 'tests/certs'),
             # TestingMixin._download_and_extract_symbols() will set
             # self.symbols_path when downloading/extracting.
@@ -413,9 +433,14 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             'modules_dir': dirs['abs_modules_dir'],
             'installer_path': self.installer_path,
             'raw_log_file': raw_log_file,
+            'log_tbpl_level': self.log_tbpl_level,
+            'log_raw_level': self.log_raw_level,
             'error_summary_file': error_summary_file,
+            'gecko_log': '-',
             # marionette options
             'address': c.get('marionette_address'),
+            'marionette_extra': c.get('marionette_extra', ''),
+            'xpcshell_extra': c.get('xpcshell_extra', ''),
             'test_manifest': os.path.join(
                 dirs['abs_marionette_tests_dir'],
                 self.config.get('marionette_test_manifest', '')
@@ -434,7 +459,9 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 # only query package name if requested
                 cmd.extend([option % {'app': self._query_package_name()}])
             else:
-                cmd.extend([option % str_format_values])
+                option = option % str_format_values
+                if option:
+                    cmd.extend([option])
 
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:

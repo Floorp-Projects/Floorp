@@ -739,7 +739,7 @@ struct JSContext : public JS::RootingContext,
     bool isThrowingDebuggeeWouldRun();
     bool isClosingGenerator();
 
-    void setPendingException(const js::Value& v);
+    void setPendingException(JS::HandleValue v);
 
     void clearPendingException() {
         throwing = false;

@@ -12,7 +12,6 @@
 
 #include "AudioSegment.h"
 #include "AudioConverter.h"
-#include "AutoTaskQueue.h"
 #include "CSFLog.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
@@ -35,6 +34,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -116,8 +116,8 @@ public:
   VideoFrameConverter()
     : mLength(0)
     , mTaskQueue(
-        new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
-                          "VideoFrameConverter"))
+        new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                      "VideoFrameConverter"))
     , mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE)
     , mLastImage(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
 #ifdef DEBUG
@@ -458,7 +458,7 @@ protected:
   }
 
   Atomic<int32_t, Relaxed> mLength;
-  const RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   webrtc::I420BufferPool mBufferPool;
 
   // Written and read from the queueing thread (normally MSG).
@@ -486,8 +486,8 @@ public:
   explicit AudioProxyThread(AudioSessionConduit* aConduit)
     : mConduit(aConduit)
     , mTaskQueue(
-        new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
-                          "AudioProxy"))
+        new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                      "AudioProxy"))
     , mAudioConverter(nullptr)
   {
     MOZ_ASSERT(mConduit);
@@ -664,7 +664,7 @@ protected:
   }
 
   RefPtr<AudioSessionConduit> mConduit;
-  const RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   // Only accessed on mTaskQueue
   UniquePtr<AudioPacketizer<int16_t, int16_t>> mPacketizer;
   // A buffer to hold a single packet of audio.
@@ -1978,8 +1978,8 @@ public:
               ? mSource->GraphRate()
               : WEBRTC_MAX_SAMPLE_RATE)
     , mTaskQueue(
-        new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
-                          "AudioPipelineListener"))
+        new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                      "AudioPipelineListener"))
     , mLastLog(0)
   {
     AddTrackToSource(mRate);
@@ -2101,7 +2101,7 @@ private:
 
   RefPtr<MediaSessionConduit> mConduit;
   const TrackRate mRate;
-  const RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   // Graph's current sampling rate
   TrackTicks mLastLog = 0; // mPlayedTicks when we last logged
 };

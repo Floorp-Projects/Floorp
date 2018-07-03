@@ -123,7 +123,7 @@
     _(IntrinsicIsConstructor)       \
     _(IntrinsicToObject)            \
     _(IntrinsicIsObject)            \
-    _(IntrinsicIsWrappedArrayConstructor) \
+    _(IntrinsicIsCrossRealmArrayConstructor) \
     _(IntrinsicToInteger)           \
     _(IntrinsicToString)            \
     _(IntrinsicIsConstructing)      \

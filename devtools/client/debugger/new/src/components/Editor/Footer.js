@@ -70,7 +70,7 @@ class SourceFooter extends _react.PureComponent {
     } = this.props;
     const sourceLoaded = selectedSource && (0, _source.isLoaded)(selectedSource);
 
-    if (!sourceLoaded) {
+    if (!sourceLoaded || selectedSource.isPrettyPrinted) {
       return;
     }
 
@@ -195,4 +195,10 @@ const mapStateToProps = state => {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(SourceFooter);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  togglePrettyPrint: _actions2.default.togglePrettyPrint,
+  toggleBlackBox: _actions2.default.toggleBlackBox,
+  jumpToMappedLocation: _actions2.default.jumpToMappedLocation,
+  recordCoverage: _actions2.default.recordCoverage,
+  togglePaneCollapse: _actions2.default.togglePaneCollapse
+})(SourceFooter);

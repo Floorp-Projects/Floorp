@@ -7,7 +7,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
     'AsyncEventRunner.h',
-    'AutoTaskQueue.h',
     'MediaSourceDecoder.h',
     'MediaSourceDemuxer.h',
     'SourceBufferAttributes.h',

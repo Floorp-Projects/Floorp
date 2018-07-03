@@ -31,4 +31,19 @@ ADTSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   return false;
 }
 
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+ADTSDecoder::GetTracksInfo(const MediaContainerType& aType)
+{
+  nsTArray<UniquePtr<TrackInfo>> tracks;
+  if (!IsSupportedType(aType)) {
+    return tracks;
+  }
+
+  tracks.AppendElement(
+    CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+      NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+
+  return tracks;
+}
+
 } // namespace mozilla

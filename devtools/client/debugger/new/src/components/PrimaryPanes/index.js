@@ -124,4 +124,9 @@ const mapStateToProps = state => ({
   sourceSearchOn: (0, _selectors.getActiveSearch)(state) === "source"
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(PrimaryPanes);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  setPrimaryPaneTab: _actions2.default.setPrimaryPaneTab,
+  selectLocation: _actions2.default.selectLocation,
+  setActiveSearch: _actions2.default.setActiveSearch,
+  closeActiveSearch: _actions2.default.closeActiveSearch
+})(PrimaryPanes);

@@ -229,7 +229,14 @@ H264Converter::IsHardwareAccelerated(nsACString& aFailureReason) const
   if (mDecoder) {
     return mDecoder->IsHardwareAccelerated(aFailureReason);
   }
+#ifdef MOZ_APPLEMEDIA
+  // On mac, we can assume H264 is hardware accelerated for now.
+  // This allows MediaCapabilities to report that playback will be smooth.
+  // Which will always be.
+  return true;
+#else
   return MediaDataDecoder::IsHardwareAccelerated(aFailureReason);
+#endif
 }
 
 void

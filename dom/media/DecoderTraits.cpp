@@ -98,8 +98,8 @@ CanHandleCodecsType(const MediaContainerType& aType,
     if (WaveDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
     }
-    // We can only reach this position if a particular codec was requested,
-    // ogg is supported and working: the codec must be invalid.
+    // We can only reach this position if a particular codec was requested, wave
+    // is supported and working: the codec must be invalid or not supported.
     return CANPLAY_NO;
   }
   if (WebMDecoder::IsSupportedType(mimeType)) {
@@ -121,14 +121,29 @@ CanHandleCodecsType(const MediaContainerType& aType,
     return CANPLAY_NO;
   }
 #endif
-  if (MP3Decoder::IsSupportedType(aType)) {
-    return CANPLAY_YES;
+  if (MP3Decoder::IsSupportedType(mimeType)) {
+    if (MP3Decoder::IsSupportedType(aType)) {
+      return CANPLAY_YES;
+    }
+    // We can only reach this position if a particular codec was requested,
+    // mp3 is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
-  if (ADTSDecoder::IsSupportedType(aType)) {
-    return CANPLAY_YES;
+  if (ADTSDecoder::IsSupportedType(mimeType)) {
+    if (ADTSDecoder::IsSupportedType(aType)) {
+      return CANPLAY_YES;
+    }
+    // We can only reach this position if a particular codec was requested,
+    // adts is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
-  if (FlacDecoder::IsSupportedType(aType)) {
-    return CANPLAY_YES;
+  if (FlacDecoder::IsSupportedType(mimeType)) {
+    if (FlacDecoder::IsSupportedType(aType)) {
+      return CANPLAY_YES;
+    }
+    // We can only reach this position if a particular codec was requested,
+    // flac is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
 
   return CANPLAY_MAYBE;
@@ -322,6 +337,38 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     HLSDecoder::IsSupportedType(*type) ||
 #endif
     false;
+}
+
+/* static */ nsTArray<UniquePtr<TrackInfo>>
+DecoderTraits::GetTracksInfo(const MediaContainerType& aType)
+{
+  // Container type with just the MIME type/subtype, no codecs.
+  const MediaContainerType mimeType(aType.Type());
+
+  if (OggDecoder::IsSupportedType(mimeType)) {
+    return OggDecoder::GetTracksInfo(aType);
+  }
+  if (WaveDecoder::IsSupportedType(mimeType)) {
+    return WaveDecoder::GetTracksInfo(aType);
+  }
+#ifdef MOZ_FMP4
+  if (MP4Decoder::IsSupportedType(mimeType, nullptr)) {
+    return MP4Decoder::GetTracksInfo(aType);
+  }
+#endif
+  if (WebMDecoder::IsSupportedType(mimeType)) {
+    return WebMDecoder::GetTracksInfo(aType);
+  }
+  if (MP3Decoder::IsSupportedType(mimeType)) {
+    return MP3Decoder::GetTracksInfo(aType);
+  }
+  if (ADTSDecoder::IsSupportedType(mimeType)) {
+    return ADTSDecoder::GetTracksInfo(aType);
+  }
+  if (FlacDecoder::IsSupportedType(mimeType)) {
+    return FlacDecoder::GetTracksInfo(aType);
+  }
+  return nsTArray<UniquePtr<TrackInfo>>();
 }
 
 } // namespace mozilla

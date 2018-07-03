@@ -45,6 +45,10 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // This arrangement lets you prioritize work by dispatching runnables directly
 // to TQ1.  You can issue many runnables for important work.  Meanwhile the TQ2
 // and TQ3 work will always execute at most one runnable and then yield.
+//
+// A TaskQueue does not require explicit shutdown, however it provides a
+// BeginShutdown() method that places TaskQueue in a shut down state and returns
+// a promise that gets resolved once all pending tasks have completed
 class TaskQueue : public AbstractThread
 {
   class EventTargetWrapper;
@@ -95,7 +99,6 @@ public:
   void AwaitShutdownAndIdle();
 
   bool IsEmpty();
-  uint32_t ImpreciseLengthForHeuristics();
 
   // Returns true if the current thread is currently running a Runnable in
   // the task queue.
