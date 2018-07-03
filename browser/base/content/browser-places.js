@@ -387,21 +387,20 @@ var StarUI = {
 
 var PlacesCommandHook = {
   /**
-   * Adds a bookmark to the page loaded in the given browser.
+   * Adds a bookmark to the page loaded in the current browser.
    *
-   * @param aBrowser
-   *        a <browser> element.
    * @param [optional] aUrl
    *        Option to provide a URL to bookmark rather than the current page
    * @param [optional] aTitle
    *        Option to provide a title for a bookmark to use rather than the
    *        getting the current page's title
    */
-  async bookmarkPage(aBrowser, aUrl = null, aTitle = null) {
+  async bookmarkPage(aUrl = null, aTitle = null) {
+    let browser = gBrowser.selectedBrowser;
     // If aUrl is provided, we want to bookmark that url rather than the
     // the current page
     let isCurrentBrowser = !aUrl;
-    let url = aUrl ? new URL(aUrl) : new URL(aBrowser.currentURI.spec);
+    let url = aUrl ? new URL(aUrl) : new URL(browser.currentURI.spec);
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
     let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;
@@ -412,21 +411,21 @@ var PlacesCommandHook = {
       let charset = null;
 
       let isErrorPage = false;
-      if (!aUrl && aBrowser.documentURI) {
-        isErrorPage = /^about:(neterror|certerror|blocked)/.test(aBrowser.documentURI.spec);
+      if (!aUrl && browser.documentURI) {
+        isErrorPage = /^about:(neterror|certerror|blocked)/.test(browser.documentURI.spec);
       }
 
       try {
         if (isErrorPage) {
-          let entry = await PlacesUtils.history.fetch(aBrowser.currentURI);
+          let entry = await PlacesUtils.history.fetch(browser.currentURI);
           if (entry) {
             info.title = entry.title;
           }
         } else {
-          info.title = aTitle || aBrowser.contentTitle;
+          info.title = aTitle || browser.contentTitle;
         }
         info.title = info.title || url.href;
-        charset = aUrl ? null : aBrowser.characterSet;
+        charset = aUrl ? null : browser.characterSet;
       } catch (e) {
         Cu.reportError(e);
       }
@@ -441,7 +440,7 @@ var PlacesCommandHook = {
       info.guid = await PlacesTransactions.NewBookmark(info).transact();
 
       // Set the character-set
-      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
+      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(browser))
          PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
     }
 
@@ -1601,7 +1600,7 @@ var BookmarkingUI = {
         }, { once: true });
         this.star.setAttribute("animate", "true");
       }
-      PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser);
+      PlacesCommandHook.bookmarkPage();
     }
   },
 
