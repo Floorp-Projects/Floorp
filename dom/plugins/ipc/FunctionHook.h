@@ -9,7 +9,6 @@
 
 #include "IpdlTuple.h"
 #include "base/process.h"
-#include "mozilla/Atomics.h"
 
 #if defined(XP_WIN)
 #include "nsWindowsDllInterceptor.h"
@@ -97,17 +96,12 @@ typedef bool(ShouldHookFunc)(int aQuirks);
 template<FunctionHookId functionId, typename FunctionType>
 class BasicFunctionHook : public FunctionHook
 {
-  using FuncHookType = WindowsDllInterceptor::FuncHookType<FunctionType*>;
-
 public:
   BasicFunctionHook(const char* aModuleName,
                     const char* aFunctionName, FunctionType* aOldFunction,
-                    FunctionType* aNewFunction)
-    : mOldFunction(aOldFunction)
-    , mRegistration(UNREGISTERED)
-    , mModuleName(aModuleName)
-    , mFunctionName(aFunctionName)
-    , mNewFunction(aNewFunction)
+                    FunctionType* aNewFunction) :
+    mOldFunction(aOldFunction), mRegistration(UNREGISTERED), mModuleName(aModuleName),
+    mFunctionName(aFunctionName), mNewFunction(aNewFunction)
   {
     MOZ_ASSERT(mOldFunction);
     MOZ_ASSERT(mNewFunction);
@@ -134,8 +128,7 @@ protected:
   // Once the function is hooked, this field will take the value of a pointer to
   // a function that performs the old behavior.  Before that, it is a pointer to
   // the original function.
-  Atomic<FunctionType*> mOldFunction;
-  FuncHookType mStub;
+  FunctionType* mOldFunction;
 
   enum RegistrationStatus { UNREGISTERED, FAILED, SUCCEEDED };
   RegistrationStatus mRegistration;
@@ -177,14 +170,14 @@ BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks)
     return false;
   }
 
-  isHooked = mStub.Set(*dllInterceptor, mFunctionName.Data(), mNewFunction);
+  isHooked =
+    dllInterceptor->AddHook(mFunctionName.Data(), reinterpret_cast<intptr_t>(mNewFunction),
+                            reinterpret_cast<void**>(&mOldFunction));
 #endif
 
   if (isHooked) {
-    mOldFunction = mStub.GetStub();
     mRegistration = SUCCEEDED;
   }
-
   HOOK_LOG(LogLevel::Debug,
            ("Registering to intercept function '%s' : '%s'", mFunctionName.Data(),
             SuccessMsg(isHooked)));

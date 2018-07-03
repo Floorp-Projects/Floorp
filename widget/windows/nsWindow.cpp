@@ -352,6 +352,9 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 // General purpose user32.dll hook object
 static WindowsDllInterceptor sUser32Intercept;
 
+// AddHook success checks
+static mozilla::Maybe<bool> sHookedGetWindowInfo;
+
 // 2 pixel offset for eTransparencyBorderlessGlass which equals the size of
 // the default window border Windows paints. Glass will be extended inward
 // this distance to remove the border.
@@ -458,17 +461,17 @@ private:
     if (!IsWin10OrLater() && GetModuleHandle(L"tiptsf.dll") &&
         !sProcessCaretEventsStub) {
       sTipTsfInterceptor.Init("tiptsf.dll");
-      DebugOnly<bool> ok = sProcessCaretEventsStub.Set(sTipTsfInterceptor,
-                                                       "ProcessCaretEvents",
-                                                       &ProcessCaretEventsHook);
+      DebugOnly<bool> ok = sTipTsfInterceptor.AddHook("ProcessCaretEvents",
+          reinterpret_cast<intptr_t>(&ProcessCaretEventsHook),
+          (void**) &sProcessCaretEventsStub);
       MOZ_ASSERT(ok);
     }
 
     if (!sSendMessageTimeoutWStub) {
       sUser32Intercept.Init("user32.dll");
-      DebugOnly<bool> hooked = sSendMessageTimeoutWStub.Set(sUser32Intercept,
-                                                            "SendMessageTimeoutW",
-                                                            &SendMessageTimeoutWHook);
+      DebugOnly<bool> hooked = sUser32Intercept.AddHook("SendMessageTimeoutW",
+          reinterpret_cast<intptr_t>(&SendMessageTimeoutWHook),
+          (void**) &sSendMessageTimeoutWStub);
       MOZ_ASSERT(hooked);
     }
   }
@@ -553,10 +556,8 @@ private:
   }
 
   static WindowsDllInterceptor sTipTsfInterceptor;
-  static WindowsDllInterceptor::FuncHookType<WINEVENTPROC>
-    sProcessCaretEventsStub;
-  static WindowsDllInterceptor::FuncHookType<decltype(&SendMessageTimeoutW)>
-    sSendMessageTimeoutWStub;
+  static WINEVENTPROC sProcessCaretEventsStub;
+  static decltype(&SendMessageTimeoutW) sSendMessageTimeoutWStub;
   static StaticAutoPtr<TIPMessageHandler> sInstance;
 
   HHOOK                 mHook;
@@ -565,10 +566,8 @@ private:
 };
 
 WindowsDllInterceptor TIPMessageHandler::sTipTsfInterceptor;
-WindowsDllInterceptor::FuncHookType<WINEVENTPROC>
-  TIPMessageHandler::sProcessCaretEventsStub;
-WindowsDllInterceptor::FuncHookType<decltype(&SendMessageTimeoutW)>
-  TIPMessageHandler::sSendMessageTimeoutWStub;
+WINEVENTPROC TIPMessageHandler::sProcessCaretEventsStub;
+decltype(&SendMessageTimeoutW) TIPMessageHandler::sSendMessageTimeoutWStub;
 StaticAutoPtr<TIPMessageHandler> TIPMessageHandler::sInstance;
 
 } // namespace mozilla
@@ -2473,7 +2472,7 @@ nsWindow::ResetLayout()
 // margins are set.
 static const wchar_t kManageWindowInfoProperty[] = L"ManageWindowInfoProperty";
 typedef BOOL (WINAPI *GetWindowInfoPtr)(HWND hwnd, PWINDOWINFO pwi);
-static WindowsDllInterceptor::FuncHookType<GetWindowInfoPtr> sGetWindowInfoPtrStub;
+static GetWindowInfoPtr sGetWindowInfoPtrStub = nullptr;
 
 BOOL WINAPI
 GetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
@@ -2501,15 +2500,18 @@ nsWindow::UpdateGetWindowInfoCaptionStatus(bool aActiveCaption)
   if (!mWnd)
     return;
 
-  sUser32Intercept.Init("user32.dll");
-  sGetWindowInfoPtrStub.Set(sUser32Intercept, "GetWindowInfo",
-                            &GetWindowInfoHook);
-  if (!sGetWindowInfoPtrStub) {
-    return;
+  if (sHookedGetWindowInfo.isNothing()) {
+    sUser32Intercept.Init("user32.dll");
+    sHookedGetWindowInfo =
+      Some(sUser32Intercept.AddHook("GetWindowInfo",
+                                    reinterpret_cast<intptr_t>(GetWindowInfoHook),
+                                    (void**) &sGetWindowInfoPtrStub));
+    if (!sHookedGetWindowInfo.value()) {
+      return;
+    }
   }
-
   // Update our internally tracked caption status
-  SetPropW(mWnd, kManageWindowInfoProperty,
+  SetPropW(mWnd, kManageWindowInfoProperty, 
     reinterpret_cast<HANDLE>(static_cast<INT_PTR>(aActiveCaption) + 1));
 }
 

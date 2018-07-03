@@ -338,8 +338,7 @@ nsTArray<nsAutoPtr<DelayedNote> >* gDelayedAnnotations;
 // reporter is loaded instead (in case it became unloaded somehow)
 typedef LPTOP_LEVEL_EXCEPTION_FILTER (WINAPI *SetUnhandledExceptionFilter_func)
   (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
-static WindowsDllInterceptor::FuncHookType<SetUnhandledExceptionFilter_func>
-  stub_SetUnhandledExceptionFilter;
+static SetUnhandledExceptionFilter_func stub_SetUnhandledExceptionFilter = 0;
 static LPTOP_LEVEL_EXCEPTION_FILTER previousUnhandledExceptionFilter = nullptr;
 static WindowsDllInterceptor gKernel32Intercept;
 static bool gBlockUnhandledExceptionFilter = true;
@@ -1640,9 +1639,9 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   // protect the crash reporter from being unloaded
   gBlockUnhandledExceptionFilter = true;
   gKernel32Intercept.Init("kernel32.dll");
-  bool ok = stub_SetUnhandledExceptionFilter.Set(gKernel32Intercept,
-                                                 "SetUnhandledExceptionFilter",
-                                                 &patched_SetUnhandledExceptionFilter);
+  bool ok = gKernel32Intercept.AddHook("SetUnhandledExceptionFilter",
+          reinterpret_cast<intptr_t>(patched_SetUnhandledExceptionFilter),
+          (void**) &stub_SetUnhandledExceptionFilter);
 
 #ifdef DEBUG
   if (!ok)
