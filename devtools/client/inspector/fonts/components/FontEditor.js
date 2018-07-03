@@ -6,7 +6,6 @@
 
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { PluralForm } = require("devtools/shared/plural-form");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FontMeta = createFactory(require("./FontMeta"));
@@ -86,10 +85,6 @@ class FontEditor extends PureComponent {
       return null;
     }
 
-    const familiesNotUsedLabel = PluralForm
-      .get(familiesNotUsed.length, getStr("fontinspector.familiesNotUsedLabel"))
-      .replace("#1", familiesNotUsed.length);
-
     const familiesList = familiesNotUsed.map(family => {
       return dom.div(
         {
@@ -105,7 +100,7 @@ class FontEditor extends PureComponent {
         {
           className: "font-family-unused-header",
         },
-        familiesNotUsedLabel
+        getStr("fontinspector.familiesNotUsedLabel")
       ),
       familiesList
     );
