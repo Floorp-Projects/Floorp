@@ -1247,6 +1247,23 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
   return array.RemoveElement(aObserver);
 }
 
+bool
+nsRefreshDriver::AddTimerAdjustmentObserver(
+  nsATimerAdjustmentObserver *aObserver)
+{
+  MOZ_ASSERT(!mTimerAdjustmentObservers.Contains(aObserver));
+
+  return mTimerAdjustmentObservers.AppendElement(aObserver) != nullptr;
+}
+
+bool
+nsRefreshDriver::RemoveTimerAdjustmentObserver(
+  nsATimerAdjustmentObserver *aObserver)
+{
+  MOZ_ASSERT(mTimerAdjustmentObservers.Contains(aObserver));
+  return mTimerAdjustmentObservers.RemoveElement(aObserver);
+}
+
 void
 nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent)
 {
@@ -1387,7 +1404,7 @@ nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags)
   // The one exception to this is when we are restoring the refresh driver
   // from test control in which case the time is expected to go backwards
   // (see bug 1043078).
-  mMostRecentRefresh =
+  TimeStamp newMostRecentRefresh =
     aFlags & eAllowTimeToGoBackwards
     ? mActiveTimer->MostRecentRefresh()
     : std::max(mActiveTimer->MostRecentRefresh(), mMostRecentRefresh);
@@ -1396,6 +1413,17 @@ nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags)
     ? mActiveTimer->MostRecentRefreshEpochTime()
     : std::max(mActiveTimer->MostRecentRefreshEpochTime(),
                mMostRecentRefreshEpochTime);
+
+  if (mMostRecentRefresh != newMostRecentRefresh) {
+    mMostRecentRefresh = newMostRecentRefresh;
+
+    nsTObserverArray<nsATimerAdjustmentObserver*>::EndLimitedIterator
+      iter(mTimerAdjustmentObservers);
+    while (iter.HasMore()) {
+      nsATimerAdjustmentObserver* obs = iter.GetNext();
+      obs->NotifyTimerAdjusted(mMostRecentRefresh);
+    }
+  }
 }
 
 void
@@ -1429,6 +1457,7 @@ nsRefreshDriver::ObserverCount() const
   sum += mThrottledFrameRequestCallbackDocs.Length();
   sum += mViewManagerFlushIsPending;
   sum += mEarlyRunners.Length();
+  sum += mTimerAdjustmentObservers.Length();
   return sum;
 }
 
@@ -1441,6 +1470,9 @@ nsRefreshDriver::HasObservers() const
     }
   }
 
+  // We should NOT count mTimerAdjustmentObservers here since this method is
+  // used to determine whether or not to stop the timer or re-start it and timer
+  // adjustment observers should not influence timer starting or stopping.
   return mViewManagerFlushIsPending ||
          !mStyleFlushObservers.IsEmpty() ||
          !mLayoutFlushObservers.IsEmpty() ||
