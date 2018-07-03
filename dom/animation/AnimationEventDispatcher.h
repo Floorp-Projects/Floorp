@@ -13,6 +13,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Variant.h"
+#include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "nsCSSProps.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -27,7 +28,9 @@ struct AnimationEventInfo
   RefPtr<dom::Animation> mAnimation;
   TimeStamp mTimeStamp;
 
-  typedef Variant<InternalTransitionEvent, InternalAnimationEvent> EventVariant;
+  typedef Variant<InternalTransitionEvent,
+                  InternalAnimationEvent,
+                  RefPtr<dom::AnimationPlaybackEvent>> EventVariant;
   EventVariant mEvent;
 
   // For CSS animation events
@@ -73,10 +76,41 @@ struct AnimationEventInfo
       nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
   }
 
+  // For web animation events
+  AnimationEventInfo(const nsAString& aName,
+                     RefPtr<dom::AnimationPlaybackEvent>&& aEvent,
+                     TimeStamp&& aTimeStamp,
+                     dom::Animation* aAnimation)
+    : mTarget(aAnimation)
+    , mAnimation(aAnimation)
+    , mTimeStamp(std::move(aTimeStamp))
+    , mEvent(std::move(aEvent))
+  {
+  }
+
   AnimationEventInfo(const AnimationEventInfo& aOther) = delete;
   AnimationEventInfo& operator=(const AnimationEventInfo& aOther) = delete;
   AnimationEventInfo(AnimationEventInfo&& aOther) = default;
   AnimationEventInfo& operator=(AnimationEventInfo&& aOther) = default;
+
+  bool IsWebAnimationEvent() const
+  {
+    return mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>();
+  }
+
+#ifdef DEBUG
+  bool IsStale() const
+  {
+    const WidgetEvent* widgetEvent = AsWidgetEvent();
+    return widgetEvent->mFlags.mIsBeingDispatched ||
+           widgetEvent->mFlags.mDispatchedAtLeastOnce;
+  }
+
+  const WidgetEvent* AsWidgetEvent() const
+  {
+    return const_cast<AnimationEventInfo*>(this)->AsWidgetEvent();
+  }
+#endif
 
   WidgetEvent* AsWidgetEvent()
   {
@@ -86,9 +120,31 @@ struct AnimationEventInfo
     if (mEvent.is<InternalAnimationEvent>()) {
       return &mEvent.as<InternalAnimationEvent>();
     }
+    if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
+      return mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>()
+        ->WidgetEventPtr();
+    }
 
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected event type");
     return nullptr;
+  }
+
+  void Dispatch(nsPresContext* aPresContext)
+  {
+    if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
+      EventDispatcher::DispatchDOMEvent(
+        mTarget,
+        nullptr /* WidgetEvent */,
+        mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>(),
+        aPresContext,
+        nullptr /* nsEventStatus */);
+      return;
+    }
+
+    MOZ_ASSERT(mEvent.is<InternalTransitionEvent>() ||
+               mEvent.is<InternalAnimationEvent>());
+
+    EventDispatcher::Dispatch(mTarget, aPresContext, AsWidgetEvent());
   }
 };
 
@@ -126,12 +182,8 @@ public:
     // mIsSorted will be set to true by SortEvents above, and we leave it
     // that way since mPendingEvents is now empty
     for (AnimationEventInfo& info : events) {
-      MOZ_ASSERT(!info.AsWidgetEvent()->mFlags.mIsBeingDispatched &&
-                 !info.AsWidgetEvent()->mFlags.mDispatchedAtLeastOnce,
-                 "The WidgetEvent should be fresh");
-      EventDispatcher::Dispatch(info.mTarget,
-                                mPresContext,
-                                info.AsWidgetEvent());
+      MOZ_ASSERT(!info.IsStale(), "The event shouldn't be stale");
+      info.Dispatch(mPresContext);
 
       // Bail out if our mPresContext was nullified due to destroying the pres
       // context.
@@ -172,6 +224,11 @@ private:
         } else {
           return a.mTimeStamp < b.mTimeStamp;
         }
+      }
+
+      // Events in the Web Animations spec are prior to CSS events.
+      if (a.IsWebAnimationEvent() != b.IsWebAnimationEvent()) {
+        return a.IsWebAnimationEvent();
       }
 
       AnimationPtrComparator<RefPtr<dom::Animation>> comparator;
