@@ -52,6 +52,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'AutoplayRequest.h',
     'HTMLAllCollection.h',
     'HTMLAnchorElement.h',
     'HTMLAreaElement.h',
@@ -222,6 +223,7 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    'AutoplayRequest.cpp',
     # Includes npapi.h.
     'PluginDocument.cpp',
 ]

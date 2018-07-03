@@ -117,4 +117,23 @@ bool IsKabylake(uint32_t DeviceId)
     return std::find(std::begin(Kabylake), std::end(Kabylake), DeviceId) != std::end(Kabylake);
 }
 
+const char *GetVendorString(uint32_t vendorId)
+{
+    switch (vendorId)
+    {
+        case VENDOR_ID_AMD:
+            return "Advanced Micro Devices";
+        case VENDOR_ID_NVIDIA:
+            return "NVIDIA";
+        case VENDOR_ID_INTEL:
+            return "Intel";
+        case VENDOR_ID_QUALCOMM:
+            return "Qualcomm";
+        default:
+            // TODO(jmadill): More vendor IDs.
+            ASSERT(vendorId == 0xba5eba11);  // Mock vendor ID used for tests.
+            return "Unknown";
+    }
+}
+
 }  // namespace rx

@@ -30,6 +30,7 @@ enum class SubjectMessage
 {
     CONTENTS_CHANGED,
     STORAGE_CHANGED,
+    BINDING_CHANGED,
     DEPENDENT_DIRTY_BITS,
 };
 

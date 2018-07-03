@@ -41,7 +41,7 @@ angle::CheckedNumeric<GLsizeiptr> GetVerticesNeededForDraw(GLenum primitiveMode,
         case GL_POINTS:
             return checkedPrimcount * checkedCount;
         default:
-            NOTREACHED();
+            UNREACHABLE();
             return checkedPrimcount * checkedCount;
     }
 }
@@ -238,7 +238,7 @@ void TransformFeedback::detachBuffer(const Context *context, GLuint bufferName)
         {
             if (isBound)
             {
-                mState.mIndexedBuffers[index]->onBindingChanged(false,
+                mState.mIndexedBuffers[index]->onBindingChanged(context, false,
                                                                 BufferBinding::TransformFeedback);
             }
             mState.mIndexedBuffers[index].set(context, nullptr);
@@ -257,12 +257,13 @@ void TransformFeedback::bindIndexedBuffer(const Context *context,
     bool isBound = context && context->isCurrentTransformFeedback(this);
     if (isBound && mState.mIndexedBuffers[index].get())
     {
-        mState.mIndexedBuffers[index]->onBindingChanged(false, BufferBinding::TransformFeedback);
+        mState.mIndexedBuffers[index]->onBindingChanged(context, false,
+                                                        BufferBinding::TransformFeedback);
     }
     mState.mIndexedBuffers[index].set(context, buffer, offset, size);
     if (isBound && buffer)
     {
-        buffer->onBindingChanged(true, BufferBinding::TransformFeedback);
+        buffer->onBindingChanged(context, true, BufferBinding::TransformFeedback);
     }
 
     mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
@@ -301,14 +302,14 @@ const rx::TransformFeedbackImpl *TransformFeedback::getImplementation() const
     return mImplementation;
 }
 
-void TransformFeedback::onBindingChanged(bool bound)
+void TransformFeedback::onBindingChanged(const Context *context, bool bound)
 {
     for (auto &buffer : mState.mIndexedBuffers)
     {
         if (buffer.get())
         {
-            buffer->onBindingChanged(bound, BufferBinding::TransformFeedback);
+            buffer->onBindingChanged(context, bound, BufferBinding::TransformFeedback);
         }
     }
 }
-}
+}  // namespace gl

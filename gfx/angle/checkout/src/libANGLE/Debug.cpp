@@ -97,7 +97,7 @@ void Debug::insertMessage(GLenum source,
                           GLenum type,
                           GLuint id,
                           GLenum severity,
-                          const std::string &message)
+                          const std::string &message) const
 {
     std::string messageCopy(message);
     insertMessage(source, type, id, severity, std::move(messageCopy));
@@ -107,7 +107,7 @@ void Debug::insertMessage(GLenum source,
                           GLenum type,
                           GLuint id,
                           GLenum severity,
-                          std::string &&message)
+                          std::string &&message) const
 {
     if (!isMessageEnabled(source, type, id, severity))
     {

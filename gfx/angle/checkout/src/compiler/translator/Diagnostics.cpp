@@ -24,7 +24,7 @@ TDiagnostics::~TDiagnostics()
 }
 
 void TDiagnostics::writeInfo(Severity severity,
-                             const pp::SourceLocation &loc,
+                             const angle::pp::SourceLocation &loc,
                              const char *reason,
                              const char *token)
 {
@@ -54,19 +54,23 @@ void TDiagnostics::globalError(const char *message)
     mInfoSink << message << "\n";
 }
 
-void TDiagnostics::error(const pp::SourceLocation &loc, const char *reason, const char *token)
+void TDiagnostics::error(const angle::pp::SourceLocation &loc,
+                         const char *reason,
+                         const char *token)
 {
     writeInfo(SH_ERROR, loc, reason, token);
 }
 
-void TDiagnostics::warning(const pp::SourceLocation &loc, const char *reason, const char *token)
+void TDiagnostics::warning(const angle::pp::SourceLocation &loc,
+                           const char *reason,
+                           const char *token)
 {
     writeInfo(SH_WARNING, loc, reason, token);
 }
 
 void TDiagnostics::error(const TSourceLoc &loc, const char *reason, const char *token)
 {
-    pp::SourceLocation srcLoc;
+    angle::pp::SourceLocation srcLoc;
     srcLoc.file = loc.first_file;
     srcLoc.line = loc.first_line;
     error(srcLoc, reason, token);
@@ -74,13 +78,13 @@ void TDiagnostics::error(const TSourceLoc &loc, const char *reason, const char *
 
 void TDiagnostics::warning(const TSourceLoc &loc, const char *reason, const char *token)
 {
-    pp::SourceLocation srcLoc;
+    angle::pp::SourceLocation srcLoc;
     srcLoc.file = loc.first_file;
     srcLoc.line = loc.first_line;
     warning(srcLoc, reason, token);
 }
 
-void TDiagnostics::print(ID id, const pp::SourceLocation &loc, const std::string &text)
+void TDiagnostics::print(ID id, const angle::pp::SourceLocation &loc, const std::string &text)
 {
     writeInfo(isError(id) ? SH_ERROR : SH_WARNING, loc, message(id), text.c_str());
 }

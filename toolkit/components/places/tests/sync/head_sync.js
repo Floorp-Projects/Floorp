@@ -135,7 +135,6 @@ async function fetchLocalTree(rootGuid) {
     let itemInfo = { guid, index, title, type };
     if (node.annos) {
       let syncableAnnos = node.annos.filter(anno => [
-        PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO,
         PlacesUtils.LMANNO_FEEDURI,
         PlacesUtils.LMANNO_SITEURI,
       ].includes(anno.name));

@@ -13,6 +13,9 @@
 #include "compiler/preprocessor/Lexer.h"
 #include "compiler/preprocessor/Macro.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -79,5 +82,7 @@ class MacroExpander : public Lexer
 };
 
 }  // namespace pp
+
+}  // namespace angle
 
 #endif  // COMPILER_PREPROCESSOR_MACROEXPANDER_H_

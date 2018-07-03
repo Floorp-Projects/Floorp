@@ -53,7 +53,7 @@ Surface::Surface(EGLint surfaceType,
       mFixedSize(false),
       mFixedWidth(0),
       mFixedHeight(0),
-      mTextureFormat(EGL_NO_TEXTURE),
+      mTextureFormat(TextureFormat::NoTexture),
       mTextureTarget(EGL_NO_TEXTURE),
       // FIXME: Determine actual pixel aspect ratio
       mPixelAspectRatio(static_cast<EGLint>(1.0 * EGL_DISPLAY_SCALING)),
@@ -99,7 +99,7 @@ Surface::Surface(EGLint surfaceType,
 
     if (mType != EGL_WINDOW_BIT)
     {
-        mTextureFormat = static_cast<EGLenum>(attributes.get(EGL_TEXTURE_FORMAT, EGL_NO_TEXTURE));
+        mTextureFormat = attributes.getAsPackedEnum(EGL_TEXTURE_FORMAT, TextureFormat::NoTexture);
         mTextureTarget = static_cast<EGLenum>(attributes.get(EGL_TEXTURE_TARGET, EGL_NO_TEXTURE));
     }
 
@@ -119,7 +119,7 @@ Error Surface::destroyImpl(const Display *display)
 {
     if (mState.defaultFramebuffer)
     {
-        mState.defaultFramebuffer->destroyDefault(display);
+        mState.defaultFramebuffer->onDestroy(display->getProxyContext());
     }
     if (mImplementation)
     {
@@ -130,14 +130,15 @@ Error Surface::destroyImpl(const Display *display)
     {
         if (mImplementation)
         {
-            ANGLE_TRY(mImplementation->releaseTexImage(EGL_BACK_BUFFER));
+            ANGLE_TRY(
+                mImplementation->releaseTexImage(display->getProxyContext(), EGL_BACK_BUFFER));
         }
         auto glErr = mTexture->releaseTexImageFromSurface(display->getProxyContext());
         if (glErr.isError())
         {
             return Error(EGL_BAD_SURFACE);
         }
-        mTexture.set(nullptr, nullptr);
+        mTexture.set(display->getProxyContext(), nullptr);
     }
 
     if (mState.defaultFramebuffer)
@@ -312,7 +313,7 @@ EGLenum Surface::getSwapBehavior() const
     return mSwapBehavior;
 }
 
-EGLenum Surface::getTextureFormat() const
+TextureFormat Surface::getTextureFormat() const
 {
     return mTextureFormat;
 }
@@ -385,7 +386,7 @@ EGLint Surface::getHeight() const
 Error Surface::bindTexImage(const gl::Context *context, gl::Texture *texture, EGLint buffer)
 {
     ASSERT(!mTexture.get());
-    ANGLE_TRY(mImplementation->bindTexImage(texture, buffer));
+    ANGLE_TRY(mImplementation->bindTexImage(context, texture, buffer));
 
     auto glErr = texture->bindTexImageFromSurface(context, this);
     if (glErr.isError())
@@ -401,7 +402,7 @@ Error Surface::releaseTexImage(const gl::Context *context, EGLint buffer)
 {
     ASSERT(context);
 
-    ANGLE_TRY(mImplementation->releaseTexImage(buffer));
+    ANGLE_TRY(mImplementation->releaseTexImage(context, buffer));
 
     ASSERT(mTexture.get());
     auto glErr = mTexture->releaseTexImageFromSurface(context);

@@ -12,10 +12,20 @@
 class nsIDocument;
 
 namespace mozilla {
+
+class AutoplayRequest;
+
 namespace dom {
 
 class HTMLMediaElement;
 class AudioContext;
+
+enum class Authorization
+{
+  Allowed,
+  Blocked,
+  Prompt
+};
 
 /**
  * AutoplayPolicy is used to manage autoplay logic for all kinds of media,
@@ -32,10 +42,16 @@ class AudioContext;
 class AutoplayPolicy
 {
 public:
-  static bool IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement);
+  // Returns whether a given media element is allowed to play.
+  static Authorization IsAllowedToPlay(const HTMLMediaElement& aElement);
+
+  // Returns whether a given AudioContext is allowed to play.
   static bool IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext);
-private:
-  static bool IsDocumentAllowedToPlay(nsIDocument* aDoc);
+
+  // Returns the AutoplayRequest that a given document must request on
+  // for autoplay permission.
+  static already_AddRefed<AutoplayRequest> RequestFor(
+    const nsIDocument& aDocument);
 };
 
 } // namespace dom

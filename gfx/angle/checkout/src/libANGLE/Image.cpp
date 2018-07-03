@@ -26,7 +26,7 @@ gl::ImageIndex GetImageIndex(EGLenum eglTarget, const egl::AttributeMap &attribs
 {
     if (eglTarget == EGL_GL_RENDERBUFFER)
     {
-        return gl::ImageIndex::MakeInvalid();
+        return gl::ImageIndex();
     }
 
     gl::TextureTarget target = egl_gl::EGLImageTargetToTextureTarget(eglTarget);
@@ -40,7 +40,7 @@ gl::ImageIndex GetImageIndex(EGLenum eglTarget, const egl::AttributeMap &attribs
     else
     {
         ASSERT(layer == 0);
-        return gl::ImageIndex::MakeGeneric(target, mip);
+        return gl::ImageIndex::MakeFromTarget(target, mip);
     }
 }
 }  // anonymous namespace

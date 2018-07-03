@@ -16,6 +16,7 @@
 
 namespace gl
 {
+ERRMSG(BlitDimensionsOutOfRange, "BlitFramebuffer dimensions out of 32-bit integer range.");
 ERRMSG(BufferBoundForTransformFeedback, "Buffer is bound for transform feedback.");
 ERRMSG(BufferNotBound, "A buffer must be bound.");
 ERRMSG(CompressedTextureDimensionsMustMatchData,
@@ -64,6 +65,7 @@ ERRMSG(InvalidBorder, "Border must be 0.");
 ERRMSG(InvalidBufferTypes, "Invalid buffer target enum.");
 ERRMSG(InvalidBufferUsage, "Invalid buffer usage enum.");
 ERRMSG(InvalidClearMask, "Invalid mask bits.");
+ERRMSG(InvalidClientState, "Invalid client vertex array type.");
 ERRMSG(InvalidCombinedImageUnit,
        "Specified unit must be in [GL_TEXTURE0, GL_TEXTURE0 + GL_MAX_COMBINED_IMAGE_UNITS)");
 ERRMSG(InvalidConstantColor,
@@ -87,6 +89,8 @@ ERRMSG(InvalidFormat, "Invalid format.");
 ERRMSG(InvalidFramebufferTarget, "Invalid framebuffer target.");
 ERRMSG(InvalidFramebufferTextureLevel, "Mipmap level must be 0 when attaching a texture.");
 ERRMSG(InvalidFramebufferAttachmentParameter, "Invalid parameter name for framebuffer attachment.");
+ERRMSG(InvalidFramebufferLayer,
+       "Framebuffer layer cannot be less than 0 or greater than GL_MAX_FRAMEBUFFER_LAYERS_EXT.");
 ERRMSG(InvalidImageUnit,
        "Image unit cannot be greater than or equal to the value of MAX_IMAGE_UNITS.");
 ERRMSG(InvalidInternalFormat, "Invalid internal format.");
@@ -98,8 +102,12 @@ ERRMSG(InvalidMultitextureUnit,
 ERRMSG(InvalidName, "Invalid name.");
 ERRMSG(InvalidNameCharacters, "Name contains invalid characters.");
 ERRMSG(InvalidPname, "Invalid pname.");
+ERRMSG(InvalidPointerQuery, "Invalid pointer query.");
 ERRMSG(InvalidPrecision, "Invalid or unsupported precision type.");
 ERRMSG(InvalidProgramName, "Program object expected.");
+ERRMSG(InvalidProjectionMatrix,
+       "Invalid projection matrix. Left/right, top/bottom, near/far intervals cannot be zero, and "
+       "near/far cannot be less than zero.");
 ERRMSG(InvalidQueryId, "Invalid query Id.");
 ERRMSG(InvalidQueryTarget, "Invalid query target.");
 ERRMSG(InvalidQueryType, "Invalid query type.");
@@ -125,6 +133,9 @@ ERRMSG(InvalidType, "Invalid type.");
 ERRMSG(InvalidTypePureInt, "Invalid type, should be integer");
 ERRMSG(InvalidUnpackAlignment, "Unpack alignment must be 1, 2, 4, or 8.");
 ERRMSG(InvalidVertexAttrSize, "Vertex attribute size must be 1, 2, 3, or 4.");
+ERRMSG(InvalidVertexPointerSize, "Size for built-in vertex attribute is outside allowed range.");
+ERRMSG(InvalidVertexPointerStride, "Invalid stride for built-in vertex attribute.");
+ERRMSG(InvalidVertexPointerType, "Invalid type for built-in vertex attribute.");
 ERRMSG(InvalidWidth, "Invalid width.");
 ERRMSG(InvalidWrapModeTexture, "Invalid wrap mode for texture type.");
 ERRMSG(LevelNotZero, "Texture level must be zero.");
@@ -169,6 +180,7 @@ ERRMSG(PixelPackBufferBoundForTransformFeedback,
 ERRMSG(
     PixelUnpackBufferBoundForTransformFeedback,
     "It is undefined behavior to use a pixel unpack buffer that is bound for transform feedback.");
+ERRMSG(PointSizeArrayExtensionNotEnabled, "GL_OES_point_size_array not enabled.");
 ERRMSG(ProgramDoesNotExist, "Program doesn't exist.");
 ERRMSG(ProgramNotBound, "A program must be bound.");
 ERRMSG(ProgramNotLinked, "Program not linked.");
@@ -201,6 +213,8 @@ ERRMSG(UniformBufferBoundForTransformFeedback,
        "It is undefined behavior to use an uniform buffer that is bound for transform feedback.");
 ERRMSG(UniformSizeMismatch, "Uniform size does not match uniform method.");
 ERRMSG(UnknownParameter, "Unknown parameter value.");
+ERRMSG(UnsupportedDrawModeForTransformFeedback,
+       "The draw command is unsupported when transform feedback is active and not paused.");
 ERRMSG(VertexArrayNoBuffer, "An enabled vertex array has no buffer.");
 ERRMSG(VertexArrayNoBufferPointer, "An enabled vertex array has no buffer and no pointer.");
 ERRMSG(VertexBufferBoundForTransformFeedback,

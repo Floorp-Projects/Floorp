@@ -9,6 +9,7 @@
 #ifndef LIBANGLE_PACKEDGLENUMS_H_
 #define LIBANGLE_PACKEDGLENUMS_H_
 
+#include "libANGLE/PackedEGLEnums_autogen.h"
 #include "libANGLE/PackedGLEnums_autogen.h"
 
 #include <array>
@@ -70,8 +71,8 @@ template <typename E, typename T>
 class PackedEnumMap
 {
   private:
-    using UnderlyingType          = typename std::underlying_type<E>::type;
-    using Storage                 = std::array<T, EnumSize<E>()>;
+    using UnderlyingType = typename std::underlying_type<E>::type;
+    using Storage        = std::array<T, EnumSize<E>()>;
 
     Storage mData;
 
@@ -172,7 +173,15 @@ struct AllShaderTypes
     angle::EnumIterator<ShaderType> end() const { return kAfterShaderTypeMax; }
 };
 
+constexpr size_t kGraphicsShaderCount = static_cast<size_t>(ShaderType::EnumCount) - 1u;
+// Arrange the shader types in the order of rendering pipeline
+constexpr std::array<ShaderType, kGraphicsShaderCount> kAllGraphicsShaderTypes = {
+    ShaderType::Vertex, ShaderType::Geometry, ShaderType::Fragment};
+
 using ShaderBitSet = angle::PackedEnumBitSet<ShaderType>;
+
+template <typename T>
+using ShaderMap = angle::PackedEnumMap<ShaderType, T>;
 
 TextureType SamplerTypeToTextureType(GLenum samplerType);
 

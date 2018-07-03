@@ -12,6 +12,9 @@
 #include "compiler/preprocessor/DiagnosticsBase.h"
 #include "compiler/preprocessor/Token.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -479,3 +482,5 @@ void MacroExpander::MacroContext::unget()
 }
 
 }  // namespace pp
+
+}  // namespace angle

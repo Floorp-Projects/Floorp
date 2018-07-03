@@ -45,6 +45,7 @@ typedef uint32_t SuspendTypes;
 
 namespace mozilla {
 class ThrottledEventQueue;
+class AutoplayRequest;
 namespace dom {
 class AudioContext;
 class ClientInfo;
@@ -613,6 +614,10 @@ public:
   virtual nsISerialEventTarget*
   EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
 
+  // Returns the AutoplayRequest that documents in this window should use
+  // to request permission to autoplay.
+  already_AddRefed<mozilla::AutoplayRequest> GetAutoplayRequest();
+
 protected:
   void CreatePerformanceObjectIfNeeded();
 
@@ -695,6 +700,11 @@ protected:
 
   // The number of open WebSockets.
   uint32_t mNumOfOpenWebSockets;
+
+  // If we're in the process of requesting permission for this window to
+  // play audible media, or we've already been granted permission by the
+  // user, this is non-null, and encapsulates the request.
+  RefPtr<mozilla::AutoplayRequest> mAutoplayRequest;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)

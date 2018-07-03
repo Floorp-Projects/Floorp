@@ -33,6 +33,9 @@ enum Visit
 //
 // When using this, just fill in the methods for nodes you want visited.
 // Return false from a pre-visit to skip visiting that node's subtree.
+//
+// See also how to write AST transformations documentation:
+//   https://github.com/google/angle/blob/master/doc/WritingShaderASTTransformations.md
 class TIntermTraverser : angle::NonCopyable
 {
   public:

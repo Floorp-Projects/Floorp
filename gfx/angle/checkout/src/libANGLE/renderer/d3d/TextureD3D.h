@@ -98,7 +98,8 @@ class TextureD3D : public TextureImpl
 
     gl::Error setBaseLevel(const gl::Context *context, GLuint baseLevel) override;
 
-    void syncState(const gl::Texture::DirtyBits &dirtyBits) override;
+    gl::Error syncState(const gl::Context *context,
+                        const gl::Texture::DirtyBits &dirtyBits) override;
 
     gl::Error initializeContents(const gl::Context *context,
                                  const gl::ImageIndex &imageIndex) override;

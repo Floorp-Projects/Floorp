@@ -261,6 +261,10 @@ const ShCompileOptions SH_SKIP_D3D_CONSTANT_REGISTER_ZERO = UINT64_C(1) << 37;
 // Clamp gl_FragDepth to the range [0.0, 1.0] in case it is statically used.
 const ShCompileOptions SH_CLAMP_FRAG_DEPTH = UINT64_C(1) << 38;
 
+// Rewrite expressions like "v.x = z = expression;". Works around a bug in NVIDIA OpenGL drivers
+// prior to version 397.31.
+const ShCompileOptions SH_REWRITE_REPEATED_ASSIGN_TO_SWIZZLED = UINT64_C(1) << 39;
+
 // Defines alternate strategies for implementing array index clamping.
 enum ShArrayIndexClampingStrategy
 {

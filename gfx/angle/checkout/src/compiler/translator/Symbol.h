@@ -28,6 +28,14 @@ enum class SymbolType
     Empty  // Meaning symbol without a name.
 };
 
+enum class SymbolClass
+{
+    Function,
+    Variable,
+    Struct,
+    InterfaceBlock
+};
+
 // Symbol base class. (Can build functions or variables out of these...)
 class TSymbol : angle::NonCopyable
 {
@@ -36,9 +44,10 @@ class TSymbol : angle::NonCopyable
     TSymbol(TSymbolTable *symbolTable,
             const ImmutableString &name,
             SymbolType symbolType,
+            SymbolClass symbolClass,
             TExtension extension = TExtension::UNDEFINED);
 
-    // Note that we don't have a virtual destructor in order to support constexpr symbols. Data is
+    // Note that we can't have a virtual destructor in order to support constexpr symbols. Data is
     // either statically allocated or pool allocated.
     ~TSymbol() = default;
 
@@ -46,11 +55,11 @@ class TSymbol : angle::NonCopyable
     // as for internal variables.
     ImmutableString name() const;
     // Don't call getMangledName() for empty symbols (symbolType == SymbolType::Empty).
-    virtual ImmutableString getMangledName() const;
+    ImmutableString getMangledName() const;
 
-    virtual bool isFunction() const { return false; }
-    virtual bool isVariable() const { return false; }
-    virtual bool isStruct() const { return false; }
+    bool isFunction() const { return mSymbolClass == SymbolClass::Function; }
+    bool isVariable() const { return mSymbolClass == SymbolClass::Variable; }
+    bool isStruct() const { return mSymbolClass == SymbolClass::Struct; }
 
     const TSymbolUniqueId &uniqueId() const { return mUniqueId; }
     SymbolType symbolType() const { return mSymbolType; }
@@ -60,8 +69,13 @@ class TSymbol : angle::NonCopyable
     constexpr TSymbol(const TSymbolUniqueId &id,
                       const ImmutableString &name,
                       SymbolType symbolType,
-                      TExtension extension)
-        : mName(name), mUniqueId(id), mSymbolType(symbolType), mExtension(extension)
+                      TExtension extension,
+                      SymbolClass symbolClass)
+        : mName(name),
+          mUniqueId(id),
+          mSymbolType(symbolType),
+          mExtension(extension),
+          mSymbolClass(symbolClass)
     {
     }
 
@@ -71,6 +85,10 @@ class TSymbol : angle::NonCopyable
     const TSymbolUniqueId mUniqueId;
     const SymbolType mSymbolType;
     const TExtension mExtension;
+
+    // We use this instead of having virtual functions for querying the class in order to support
+    // constexpr symbols.
+    const SymbolClass mSymbolClass;
 };
 
 // Variable.
@@ -84,7 +102,6 @@ class TVariable : public TSymbol
               SymbolType symbolType,
               TExtension ext = TExtension::UNDEFINED);
 
-    bool isVariable() const override { return true; }
     const TType &getType() const { return *mType; }
 
     const TConstantUnion *getConstPointer() const { return unionArray; }
@@ -97,7 +114,9 @@ class TVariable : public TSymbol
                         SymbolType symbolType,
                         TExtension extension,
                         const TType *type)
-        : TSymbol(id, name, symbolType, extension), mType(type), unionArray(nullptr)
+        : TSymbol(id, name, symbolType, extension, SymbolClass::Variable),
+          mType(type),
+          unionArray(nullptr)
     {
     }
 
@@ -114,8 +133,6 @@ class TStructure : public TSymbol, public TFieldListCollection
                const ImmutableString &name,
                const TFieldList *fields,
                SymbolType symbolType);
-
-    bool isStruct() const override { return true; }
 
     // The char arrays passed in must be pool allocated or static.
     void createSamplerSymbols(const char *namePrefix,
@@ -204,12 +221,10 @@ class TFunction : public TSymbol
               const TType *retType,
               bool knownToNotHaveSideEffects);
 
-    bool isFunction() const override { return true; }
-
     void addParameter(const TVariable *p);
     void shareParameters(const TFunction &parametersSource);
 
-    ImmutableString getMangledName() const override
+    ImmutableString getFunctionMangledName() const
     {
         ASSERT(symbolType() != SymbolType::BuiltIn);
         if (mMangledName.empty())
@@ -245,7 +260,7 @@ class TFunction : public TSymbol
                         const TType *retType,
                         TOperator op,
                         bool knownToNotHaveSideEffects)
-        : TSymbol(id, name, SymbolType::BuiltIn, extension),
+        : TSymbol(id, name, SymbolType::BuiltIn, extension, SymbolClass::Function),
           mParametersVector(nullptr),
           mParameters(parameters),
           mParamCount(paramCount),

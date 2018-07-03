@@ -9,6 +9,9 @@
 
 #include <string>
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -86,5 +89,7 @@ class Diagnostics
 };
 
 }  // namespace pp
+
+}  // namespace angle
 
 #endif  // COMPILER_PREPROCESSOR_DIAGNOSTICSBASE_H_

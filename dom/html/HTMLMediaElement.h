@@ -45,6 +45,7 @@ typedef uint8_t AudibleState;
 
 namespace mozilla {
 class AbstractThread;
+class AutoplayRequest;
 class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class DOMMediaStream;
@@ -863,7 +864,7 @@ protected:
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
   };
 
-  already_AddRefed<Promise> PlayInternal(ErrorResult& aRv);
+  void PlayInternal(bool aHandlingUserInput);
 
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
@@ -1283,7 +1284,7 @@ protected:
   void AudioCaptureStreamChange(bool aCapture);
 
   // A method to check whether the media element is allowed to start playback.
-  bool IsAllowedToPlay();
+  bool AudioChannelAgentBlockedPlay();
 
   // If the network state is empty and then we would trigger DoLoad().
   void MaybeDoLoad();
@@ -1355,6 +1356,14 @@ protected:
   void PauseIfShouldNotBePlaying();
 
   WatchManager<HTMLMediaElement> mWatchManager;
+
+  // If the media element's tab has never been in the foreground, this
+  // registers as with the AudioChannelAgent to notify us when the tab
+  // is put in the foreground, whereupon we will begin playback.
+  bool AudioChannelAgentDelayingPlayback();
+
+  // Ensures we're prompting the user for permission to autoplay.
+  void EnsureAutoplayRequested(bool aHandlingUserInput);
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
@@ -1563,6 +1572,9 @@ protected:
   // Used to indicate if the MediaKeys attaching operation is on-going or not.
   bool mAttachingMediaKey = false;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMRequest;
+  // Request holder for permission prompt to autoplay. Non-null if we're
+  // currently showing a prompt for permission to autoplay.
+  MozPromiseRequestHolder<GenericPromise> mAutoplayPermissionRequest;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart = 1.0;

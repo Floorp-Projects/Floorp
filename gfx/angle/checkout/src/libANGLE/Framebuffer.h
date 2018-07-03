@@ -40,13 +40,13 @@ namespace gl
 class Context;
 class ContextState;
 class Framebuffer;
+class ImageIndex;
 class Renderbuffer;
 class State;
 class Texture;
 class TextureCapsMap;
 struct Caps;
 struct Extensions;
-struct ImageIndex;
 struct Rectangle;
 
 class FramebufferState final : angle::NonCopyable
@@ -89,6 +89,7 @@ class FramebufferState final : angle::NonCopyable
     GLint getDefaultHeight() const { return mDefaultHeight; };
     GLint getDefaultSamples() const { return mDefaultSamples; };
     bool getDefaultFixedSampleLocations() const { return mDefaultFixedSampleLocations; };
+    GLint getDefaultLayers() const { return mDefaultLayers; }
 
     bool hasDepth() const;
     bool hasStencil() const;
@@ -120,6 +121,7 @@ class FramebufferState final : angle::NonCopyable
     GLint mDefaultHeight;
     GLint mDefaultSamples;
     bool mDefaultFixedSampleLocations;
+    GLint mDefaultLayers;
 
     // It's necessary to store all this extra state so we can restore attachments
     // when DEPTH_STENCIL/DEPTH/STENCIL is unbound in WebGL 1.
@@ -144,7 +146,6 @@ class Framebuffer final : public angle::ObserverInterface, public LabeledObject
 
     ~Framebuffer() override;
     void onDestroy(const Context *context);
-    void destroyDefault(const egl::Display *display);
 
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
@@ -214,28 +215,30 @@ class Framebuffer final : public angle::ObserverInterface, public LabeledObject
     bool usingExtendedDrawBuffers() const;
 
     // This method calls checkStatus.
-    Error getSamples(const Context *context, int *samplesOut);
+    int getSamples(const Context *context);
 
-    Error getSamplePosition(size_t index, GLfloat *xy) const;
+    Error getSamplePosition(const Context *context, size_t index, GLfloat *xy) const;
 
     GLint getDefaultWidth() const;
     GLint getDefaultHeight() const;
     GLint getDefaultSamples() const;
     bool getDefaultFixedSampleLocations() const;
+    GLint getDefaultLayers() const;
     void setDefaultWidth(GLint defaultWidth);
     void setDefaultHeight(GLint defaultHeight);
     void setDefaultSamples(GLint defaultSamples);
     void setDefaultFixedSampleLocations(bool defaultFixedSampleLocations);
+    void setDefaultLayers(GLint defaultLayers);
 
     void invalidateCompletenessCache();
 
-    Error checkStatus(const Context *context, GLenum *statusOut);
+    GLenum checkStatus(const Context *context);
 
     // For when we don't want to check completeness in getSamples().
     int getCachedSamples(const Context *context);
 
     // Helper for checkStatus == GL_FRAMEBUFFER_COMPLETE.
-    Error isComplete(const Context *context, bool *completeOut);
+    bool isComplete(const Context *context);
 
     bool hasValidDepthStencil() const;
 
@@ -294,6 +297,7 @@ class Framebuffer final : public angle::ObserverInterface, public LabeledObject
         DIRTY_BIT_DEFAULT_HEIGHT,
         DIRTY_BIT_DEFAULT_SAMPLES,
         DIRTY_BIT_DEFAULT_FIXED_SAMPLE_LOCATIONS,
+        DIRTY_BIT_DEFAULT_LAYERS,
         DIRTY_BIT_UNKNOWN,
         DIRTY_BIT_MAX = DIRTY_BIT_UNKNOWN
     };

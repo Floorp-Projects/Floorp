@@ -268,14 +268,14 @@ void ConvertMinFilter(GLenum minFilter, D3DTEXTUREFILTERTYPE *d3dMinFilter, D3DT
     }
 }
 
-D3DQUERYTYPE ConvertQueryType(GLenum queryType)
+D3DQUERYTYPE ConvertQueryType(gl::QueryType type)
 {
-    switch (queryType)
+    switch (type)
     {
-        case GL_ANY_SAMPLES_PASSED_EXT:
-        case GL_ANY_SAMPLES_PASSED_CONSERVATIVE_EXT:
+        case gl::QueryType::AnySamples:
+        case gl::QueryType::AnySamplesConservative:
             return D3DQUERYTYPE_OCCLUSION;
-        case GL_COMMANDS_COMPLETED_CHROMIUM:
+        case gl::QueryType::CommandsCompleted:
             return D3DQUERYTYPE_EVENT;
         default:
             UNREACHABLE();
@@ -480,7 +480,7 @@ void GenerateCaps(IDirect3D9 *d3d9,
         MAX_VERTEX_CONSTANT_VECTORS_D3D9 - GetReservedVertexUniformVectors();
     caps->maxVertexUniformComponents = caps->maxVertexUniformVectors * 4;
 
-    caps->maxVertexUniformBlocks = 0;
+    caps->maxShaderUniformBlocks[gl::ShaderType::Vertex] = 0;
 
     // SM3 only supports 12 output variables, but the special 12th register is only for PSIZE.
     const unsigned int MAX_VERTEX_OUTPUT_VECTORS_SM3 = 12 - GetReservedVaryingVectors();
@@ -495,11 +495,11 @@ void GenerateCaps(IDirect3D9 *d3d9,
                                           D3DUSAGE_QUERY_VERTEXTEXTURE, D3DRTYPE_TEXTURE, D3DFMT_R16F)))
     {
         const size_t MAX_TEXTURE_IMAGE_UNITS_VTF_SM3 = 4;
-        caps->maxVertexTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS_VTF_SM3;
+        caps->maxShaderTextureImageUnits[gl::ShaderType::Vertex] = MAX_TEXTURE_IMAGE_UNITS_VTF_SM3;
     }
     else
     {
-        caps->maxVertexTextureImageUnits = 0;
+        caps->maxShaderTextureImageUnits[gl::ShaderType::Vertex] = 0;
     }
 
     // Fragment shader limits
@@ -510,9 +510,9 @@ void GenerateCaps(IDirect3D9 *d3d9,
                                                                 : MAX_PIXEL_CONSTANT_VECTORS_SM2) -
         GetReservedFragmentUniformVectors();
     caps->maxFragmentUniformComponents = caps->maxFragmentUniformVectors * 4;
-    caps->maxFragmentUniformBlocks = 0;
+    caps->maxShaderUniformBlocks[gl::ShaderType::Fragment]     = 0;
     caps->maxFragmentInputComponents = caps->maxVertexOutputComponents;
-    caps->maxTextureImageUnits = 16;
+    caps->maxShaderTextureImageUnits[gl::ShaderType::Fragment] = 16;
     caps->minProgramTexelOffset = 0;
     caps->maxProgramTexelOffset = 0;
 
@@ -527,7 +527,8 @@ void GenerateCaps(IDirect3D9 *d3d9,
 
     // Aggregate shader limits
     caps->maxVaryingVectors = caps->maxVertexOutputComponents / 4;
-    caps->maxCombinedTextureImageUnits = caps->maxVertexTextureImageUnits + caps->maxTextureImageUnits;
+    caps->maxCombinedTextureImageUnits = caps->maxShaderTextureImageUnits[gl::ShaderType::Vertex] +
+                                         caps->maxShaderTextureImageUnits[gl::ShaderType::Fragment];
 
     // Transform feedback limits
     caps->maxTransformFeedbackInterleavedComponents = 0;

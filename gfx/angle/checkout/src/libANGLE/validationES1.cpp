@@ -20,29 +20,134 @@
         return false;                                                 \
     }
 
-namespace
+namespace gl
 {
 
-bool ValidateAlphaFuncCommon(gl::Context *context, gl::AlphaTestFunc func)
+bool ValidateAlphaFuncCommon(Context *context, AlphaTestFunc func)
 {
     switch (func)
     {
-        case gl::AlphaTestFunc::AlwaysPass:
-        case gl::AlphaTestFunc::Equal:
-        case gl::AlphaTestFunc::Gequal:
-        case gl::AlphaTestFunc::Greater:
-        case gl::AlphaTestFunc::Lequal:
-        case gl::AlphaTestFunc::Less:
-        case gl::AlphaTestFunc::Never:
-        case gl::AlphaTestFunc::NotEqual:
+        case AlphaTestFunc::AlwaysPass:
+        case AlphaTestFunc::Equal:
+        case AlphaTestFunc::Gequal:
+        case AlphaTestFunc::Greater:
+        case AlphaTestFunc::Lequal:
+        case AlphaTestFunc::Less:
+        case AlphaTestFunc::Never:
+        case AlphaTestFunc::NotEqual:
             return true;
         default:
-            context->handleError(gl::InvalidEnum() << gl::kErrorEnumNotSupported);
+            ANGLE_VALIDATION_ERR(context, InvalidEnum(), EnumNotSupported);
             return false;
     }
 }
 
-}  // anonymous namespace
+bool ValidateClientStateCommon(Context *context, ClientVertexArrayType arrayType)
+{
+    ANGLE_VALIDATE_IS_GLES1(context);
+    switch (arrayType)
+    {
+        case ClientVertexArrayType::Vertex:
+        case ClientVertexArrayType::Normal:
+        case ClientVertexArrayType::Color:
+        case ClientVertexArrayType::TextureCoord:
+            return true;
+        case ClientVertexArrayType::PointSize:
+            if (!context->getExtensions().pointSizeArray)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), PointSizeArrayExtensionNotEnabled);
+                return false;
+            }
+            return true;
+        default:
+            ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidClientState);
+            return false;
+    }
+}
+
+bool ValidateBuiltinVertexAttributeCommon(Context *context,
+                                          ClientVertexArrayType arrayType,
+                                          GLint size,
+                                          GLenum type,
+                                          GLsizei stride,
+                                          const void *pointer)
+{
+    ANGLE_VALIDATE_IS_GLES1(context);
+
+    if (stride < 0)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidVertexPointerStride);
+        return false;
+    }
+
+    int minSize = 1;
+    int maxSize = 4;
+
+    switch (arrayType)
+    {
+        case ClientVertexArrayType::Vertex:
+        case ClientVertexArrayType::TextureCoord:
+            minSize = 2;
+            maxSize = 4;
+            break;
+        case ClientVertexArrayType::Normal:
+            minSize = 3;
+            maxSize = 3;
+            break;
+        case ClientVertexArrayType::Color:
+            minSize = 4;
+            maxSize = 4;
+            break;
+        case ClientVertexArrayType::PointSize:
+            if (!context->getExtensions().pointSizeArray)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), PointSizeArrayExtensionNotEnabled);
+                return false;
+            }
+
+            minSize = 1;
+            maxSize = 1;
+            break;
+        default:
+            UNREACHABLE();
+            return false;
+    }
+
+    if (size < minSize || size > maxSize)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidVertexPointerSize);
+        return false;
+    }
+
+    switch (type)
+    {
+        case GL_BYTE:
+            if (arrayType == ClientVertexArrayType::PointSize)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidVertexPointerType);
+                return false;
+            }
+            break;
+        case GL_SHORT:
+            if (arrayType == ClientVertexArrayType::PointSize ||
+                arrayType == ClientVertexArrayType::Color)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidVertexPointerType);
+                return false;
+            }
+            break;
+        case GL_FIXED:
+        case GL_FLOAT:
+            break;
+        default:
+            ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidVertexPointerType);
+            return false;
+    }
+
+    return true;
+}
+
+}  // namespace gl
 
 namespace gl
 {
@@ -113,8 +218,8 @@ bool ValidateColorPointer(Context *context,
                           GLsizei stride,
                           const void *pointer)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateBuiltinVertexAttributeCommon(context, ClientVertexArrayType::Color, size, type,
+                                                stride, pointer);
 }
 
 bool ValidateCullFace(Context *context, GLenum mode)
@@ -129,16 +234,14 @@ bool ValidateDepthRangex(Context *context, GLfixed n, GLfixed f)
     return true;
 }
 
-bool ValidateDisableClientState(Context *context, GLenum array)
+bool ValidateDisableClientState(Context *context, ClientVertexArrayType arrayType)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateClientStateCommon(context, arrayType);
 }
 
-bool ValidateEnableClientState(Context *context, GLenum array)
+bool ValidateEnableClientState(Context *context, ClientVertexArrayType arrayType)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateClientStateCommon(context, arrayType);
 }
 
 bool ValidateFogf(Context *context, GLenum pname, GLfloat param)
@@ -173,7 +276,11 @@ bool ValidateFrustumf(Context *context,
                       GLfloat n,
                       GLfloat f)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
+    if (l == r || b == t || n == f || n <= 0.0f || f <= 0.0f)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidProjectionMatrix);
+    }
     return true;
 }
 
@@ -185,7 +292,11 @@ bool ValidateFrustumx(Context *context,
                       GLfixed n,
                       GLfixed f)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
+    if (l == r || b == t || n == f || n <= 0 || f <= 0)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidProjectionMatrix);
+    }
     return true;
 }
 
@@ -239,8 +350,19 @@ bool ValidateGetMaterialxv(Context *context, GLenum face, GLenum pname, GLfixed 
 
 bool ValidateGetPointerv(Context *context, GLenum pname, void **params)
 {
-    UNIMPLEMENTED();
-    return true;
+    ANGLE_VALIDATE_IS_GLES1(context);
+    switch (pname)
+    {
+        case GL_VERTEX_ARRAY_POINTER:
+        case GL_NORMAL_ARRAY_POINTER:
+        case GL_COLOR_ARRAY_POINTER:
+        case GL_TEXTURE_COORD_ARRAY_POINTER:
+        case GL_POINT_SIZE_ARRAY_POINTER_OES:
+            return true;
+        default:
+            ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidPointerQuery);
+            return false;
+    }
 }
 
 bool ValidateGetTexEnvfv(Context *context, GLenum target, GLenum pname, GLfloat *params)
@@ -432,8 +554,8 @@ bool ValidateNormal3x(Context *context, GLfixed nx, GLfixed ny, GLfixed nz)
 
 bool ValidateNormalPointer(Context *context, GLenum type, GLsizei stride, const void *pointer)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateBuiltinVertexAttributeCommon(context, ClientVertexArrayType::Normal, 3, type,
+                                                stride, pointer);
 }
 
 bool ValidateOrthof(Context *context,
@@ -444,7 +566,11 @@ bool ValidateOrthof(Context *context,
                     GLfloat n,
                     GLfloat f)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
+    if (l == r || b == t || n == f || n <= 0.0f || f <= 0.0f)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidProjectionMatrix);
+    }
     return true;
 }
 
@@ -456,7 +582,11 @@ bool ValidateOrthox(Context *context,
                     GLfixed n,
                     GLfixed f)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
+    if (l == r || b == t || n == f || n <= 0 || f <= 0)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidProjectionMatrix);
+    }
     return true;
 }
 
@@ -528,13 +658,13 @@ bool ValidatePushMatrix(Context *context)
 
 bool ValidateRotatef(Context *context, GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
     return true;
 }
 
 bool ValidateRotatex(Context *context, GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
     return true;
 }
 
@@ -546,13 +676,13 @@ bool ValidateSampleCoveragex(Context *context, GLclampx value, GLboolean invert)
 
 bool ValidateScalef(Context *context, GLfloat x, GLfloat y, GLfloat z)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
     return true;
 }
 
 bool ValidateScalex(Context *context, GLfixed x, GLfixed y, GLfixed z)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
     return true;
 }
 
@@ -568,8 +698,8 @@ bool ValidateTexCoordPointer(Context *context,
                              GLsizei stride,
                              const void *pointer)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateBuiltinVertexAttributeCommon(context, ClientVertexArrayType::TextureCoord, size,
+                                                type, stride, pointer);
 }
 
 bool ValidateTexEnvf(Context *context, GLenum target, GLenum pname, GLfloat param)
@@ -625,13 +755,13 @@ bool ValidateTexParameterxv(Context *context,
 
 bool ValidateTranslatef(Context *context, GLfloat x, GLfloat y, GLfloat z)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
     return true;
 }
 
 bool ValidateTranslatex(Context *context, GLfixed x, GLfixed y, GLfixed z)
 {
-    UNIMPLEMENTED();
+    ANGLE_VALIDATE_IS_GLES1(context);
     return true;
 }
 
@@ -641,8 +771,8 @@ bool ValidateVertexPointer(Context *context,
                            GLsizei stride,
                            const void *pointer)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateBuiltinVertexAttributeCommon(context, ClientVertexArrayType::Vertex, size, type,
+                                                stride, pointer);
 }
 
 bool ValidateDrawTexfOES(Context *context,
@@ -742,8 +872,8 @@ bool ValidateWeightPointerOES(Context *context,
 
 bool ValidatePointSizePointerOES(Context *context, GLenum type, GLsizei stride, const void *pointer)
 {
-    UNIMPLEMENTED();
-    return true;
+    return ValidateBuiltinVertexAttributeCommon(context, ClientVertexArrayType::PointSize, 1, type,
+                                                stride, pointer);
 }
 
 bool ValidateQueryMatrixxOES(Context *context, GLfixed *mantissa, GLint *exponent)
@@ -917,4 +1047,5 @@ bool ValidateTexGenxOES(Context *context, GLenum coord, GLenum pname, GLfixed pa
     UNIMPLEMENTED();
     return true;
 }
-}
+
+}  // namespace gl

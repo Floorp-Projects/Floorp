@@ -22,8 +22,8 @@
 
 namespace gl
 {
-struct ImageIndex;
-}
+class ImageIndex;
+}  // namespace gl
 
 namespace rx
 {

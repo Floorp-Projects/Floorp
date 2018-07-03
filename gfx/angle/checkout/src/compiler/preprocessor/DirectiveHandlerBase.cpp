@@ -6,6 +6,9 @@
 
 #include "compiler/preprocessor/DirectiveHandlerBase.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -14,3 +17,5 @@ DirectiveHandler::~DirectiveHandler()
 }
 
 }  // namespace pp
+
+}  // namespace angle

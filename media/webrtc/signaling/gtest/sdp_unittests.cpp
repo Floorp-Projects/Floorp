@@ -3713,29 +3713,6 @@ TEST_P(NewSdpTest, CheckSsrcInSessionLevel) {
   }
 }
 
-const std::string kSsrcGroupInSessionSDP =
-"v=0" CRLF
-"o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
-"s=SIP Call" CRLF
-"c=IN IP4 224.0.0.1/100/12" CRLF
-"t=0 0" CRLF
-"a=ssrc-group:FID 5000" CRLF
-"m=video 9 RTP/SAVPF 120" CRLF
-"c=IN IP4 0.0.0.0" CRLF
-"a=rtpmap:120 VP8/90000" CRLF;
-
-// This may or may not parse, but if it does, the errant attribute
-// should be ignored.
-TEST_P(NewSdpTest, CheckSsrcGroupInSessionLevel) {
-  ParseSdp(kSsrcGroupInSessionSDP, false);
-  if (mSdp) {
-    ASSERT_FALSE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
-          SdpAttribute::kSsrcGroupAttribute));
-    ASSERT_FALSE(mSdp->GetAttributeList().HasAttribute(
-          SdpAttribute::kSsrcGroupAttribute));
-  }
-}
-
 const std::string kMalformedImageattr =
 "v=0" CRLF
 "o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
