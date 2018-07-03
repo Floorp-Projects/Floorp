@@ -4763,6 +4763,10 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     MOZ_ASSERT(cases->isKind(ParseNodeKind::LexicalScope) ||
                cases->isKind(ParseNodeKind::StatementList));
 
+    // Ensure that the column of the switch statement is set properly.
+    if (!updateSourceCoordNotes(pn->pn_pos.begin))
+        return false;
+
     // Emit code for the discriminant.
     if (!emitTree(pn->pn_left))
         return false;
@@ -7022,6 +7026,11 @@ BytecodeEmitter::emitIf(ParseNode* pn)
     IfEmitter ifThenElse(this);
 
   if_again:
+    // Make sure this code is attributed to the "if" so that it gets a useful
+    // column number, instead of the default 0 value.
+    if (!updateSourceCoordNotes(pn->pn_pos.begin))
+        return false;
+
     /* Emit code for the condition before pushing stmtInfo. */
     if (!emitTree(pn->pn_kid1))
         return false;
@@ -7152,6 +7161,10 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
 bool
 BytecodeEmitter::emitWith(ParseNode* pn)
 {
+    // Ensure that the column of the 'with' is set properly.
+    if (!updateSourceCoordNotes(pn->pn_pos.begin))
+        return false;
+
     if (!emitTree(pn->pn_left))
         return false;
 
@@ -8290,6 +8303,10 @@ BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isA
 bool
 BytecodeEmitter::emitDo(ParseNode* pn)
 {
+    // Ensure that the column of the 'do' is set properly.
+    if (!updateSourceCoordNotes(pn->pn_pos.begin))
+        return false;
+
     /* Emit an annotated nop so IonBuilder can recognize the 'do' loop. */
     unsigned noteIndex;
     if (!newSrcNote(SRC_WHILE, &noteIndex))
@@ -10943,11 +10960,19 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::Break:
+        // Ensure that the column of the 'break' is set properly.
+        if (!updateSourceCoordNotes(pn->pn_pos.begin))
+            return false;
+
         if (!emitBreak(pn->as<BreakStatement>().label()))
             return false;
         break;
 
       case ParseNodeKind::Continue:
+        // Ensure that the column of the 'continue' is set properly.
+        if (!updateSourceCoordNotes(pn->pn_pos.begin))
+            return false;
+
         if (!emitContinue(pn->as<ContinueStatement>().label()))
             return false;
         break;
