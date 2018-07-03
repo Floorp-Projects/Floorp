@@ -201,9 +201,8 @@ class QuickOpenModal extends _react.Component {
       if (this.isVariableQuery()) {
         const line = item.location && item.location.start ? item.location.start.line : 0;
         return selectLocation({
-          sourceId: selectedSource.get("id"),
-          line,
-          column: null
+          sourceId: selectedSource.id,
+          line
         });
       }
 
@@ -212,7 +211,7 @@ class QuickOpenModal extends _react.Component {
           start: item.location.start.line,
           end: item.location.end.line
         } : {}, {
-          sourceId: selectedSource.get("id")
+          sourceId: selectedSource.id
         }));
       }
     };
@@ -240,14 +239,14 @@ class QuickOpenModal extends _react.Component {
         selectLocation,
         selectedSource
       } = this.props;
-      const selectedSourceId = selectedSource ? selectedSource.get("id") : "";
+      const selectedSourceId = selectedSource ? selectedSource.id : "";
 
       if (location != null) {
         const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
         selectLocation({
           sourceId,
           line: location.line,
-          column: location.column || null
+          column: location.column
         });
         this.closeModal();
       }
@@ -259,7 +258,7 @@ class QuickOpenModal extends _react.Component {
         setQuickOpenQuery
       } = this.props;
       setQuickOpenQuery(e.target.value);
-      const noSource = !selectedSource || !selectedSource.get("text");
+      const noSource = !selectedSource || !selectedSource.text;
 
       if (this.isSymbolSearch() && noSource || this.isGotoQuery()) {
         return;
@@ -324,23 +323,6 @@ class QuickOpenModal extends _react.Component {
 
     this.isSourceSearch = () => this.isSourcesQuery() || this.isGotoSourceQuery();
 
-    this.renderHighlight = (candidateString, query, name) => {
-      const options = {
-        wrap: {
-          tagOpen: '<mark class="highlight">',
-          tagClose: "</mark>"
-        }
-      };
-
-      const html = _fuzzaldrinPlus2.default.wrap(candidateString, query, options);
-
-      return _react2.default.createElement("div", {
-        dangerouslySetInnerHTML: {
-          __html: html
-        }
-      });
-    };
-
     this.highlightMatching = (query, results) => {
       let newQuery = query;
 
@@ -350,9 +332,13 @@ class QuickOpenModal extends _react.Component {
 
       newQuery = query.replace(/[@:#?]/gi, " ");
       return results.map(result => {
-        return _objectSpread({}, result, {
-          title: this.renderHighlight(result.title, (0, _path.basename)(newQuery), "title")
-        });
+        if (typeof result.title == "string") {
+          return _objectSpread({}, result, {
+            title: this.renderHighlight(result.title, (0, _path.basename)(newQuery), "title")
+          });
+        }
+
+        return result;
       });
     };
 
@@ -386,6 +372,24 @@ class QuickOpenModal extends _react.Component {
     if (nowEnabled || queryChanged) {
       this.updateResults(this.props.query);
     }
+  }
+
+  /* eslint-disable react/no-danger */
+  renderHighlight(candidateString, query, name) {
+    const options = {
+      wrap: {
+        tagOpen: '<mark class="highlight">',
+        tagClose: "</mark>"
+      }
+    };
+
+    const html = _fuzzaldrinPlus2.default.wrap(candidateString, query, options);
+
+    return _react2.default.createElement("div", {
+      dangerouslySetInnerHTML: {
+        __html: html
+      }
+    });
   }
 
   shouldShowErrorEmoji() {
@@ -468,13 +472,13 @@ function mapStateToProps(state) {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   return {
     enabled: (0, _selectors.getQuickOpenEnabled)(state),
-    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state), (0, _selectors.getTabs)(state).toArray()),
+    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state), (0, _selectors.getTabs)(state)),
     selectedSource,
     symbols: (0, _quickOpen.formatSymbols)((0, _selectors.getSymbols)(state, selectedSource)),
     symbolsLoading: (0, _selectors.isSymbolsLoading)(state, selectedSource),
     query: (0, _selectors.getQuickOpenQuery)(state),
     searchType: (0, _selectors.getQuickOpenType)(state),
-    tabs: (0, _selectors.getTabs)(state).toArray()
+    tabs: (0, _selectors.getTabs)(state)
   };
 }
 /* istanbul ignore next: ignoring testing of redux connection stuff */

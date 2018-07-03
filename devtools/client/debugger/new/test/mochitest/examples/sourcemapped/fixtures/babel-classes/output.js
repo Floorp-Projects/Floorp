@@ -78,9 +78,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function root() {
   var one = 1;
 
-  var Thing = function Thing() {
-    _classCallCheck(this, Thing);
-  };
+  var Thing = function () {
+    function Thing() {
+      _classCallCheck(this, Thing);
+    }
+
+    _createClass(Thing, [{
+      key: "one",
+      value: function one() {
+        console.log("pause here");
+      }
+    }]);
+
+    return Thing;
+  }();
 
   var Another = function () {
     function Another() {
@@ -102,6 +113,7 @@ function root() {
   }();
 
   new Another().method();
+  new Thing().one();
 }
 
 /***/ })

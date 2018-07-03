@@ -200,7 +200,8 @@ private:
 
   void DoDestroy();
 
-  mozilla::ipc::IPCResult RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace) override;
+  mozilla::ipc::IPCResult RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace,
+                                        const TextureFactoryIdentifier& textureFactoryIdentifier) override;
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);

@@ -18,3 +18,6 @@ pref("toolkit.telemetry.eventping.enabled", false);
 
 pref("geckoview.console.enabled", false);
 
+// Disable Web Push until we get it working
+pref("dom.push.enabled", false);
+

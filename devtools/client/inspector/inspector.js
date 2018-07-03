@@ -64,7 +64,7 @@ const THREE_PANE_FIRST_RUN_PREF = "devtools.inspector.three-pane-first-run";
 const SHOW_THREE_PANE_ONBOARDING_PREF = "devtools.inspector.show-three-pane-tooltip";
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
-
+const THREE_PANE_CHROME_ENABLED_PREF = "devtools.inspector.chrome.three-pane-enabled";
 const TELEMETRY_EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
 
 /**
@@ -126,7 +126,6 @@ function Inspector(toolbox) {
   // telemetry counts in the Grid Inspector are not double counted on reload.
   this.previousURL = this.target.url;
 
-  this.is3PaneModeEnabled = Services.prefs.getBoolPref(THREE_PANE_ENABLED_PREF);
   this.is3PaneModeFirstRun = Services.prefs.getBoolPref(THREE_PANE_FIRST_RUN_PREF);
   this.show3PaneTooltip = Services.prefs.getBoolPref(SHOW_THREE_PANE_ONBOARDING_PREF);
 
@@ -203,6 +202,34 @@ Inspector.prototype = {
     }
 
     return this._highlighters;
+  },
+
+  get is3PaneModeEnabled() {
+    if (this.target.chrome) {
+      if (!this._is3PaneModeChromeEnabled) {
+        this._is3PaneModeChromeEnabled = Services.prefs.getBoolPref(
+          THREE_PANE_CHROME_ENABLED_PREF);
+      }
+
+      return this._is3PaneModeChromeEnabled;
+    }
+
+    if (!this._is3PaneModeEnabled) {
+      this._is3PaneModeEnabled = Services.prefs.getBoolPref(THREE_PANE_ENABLED_PREF);
+    }
+
+    return this._is3PaneModeEnabled;
+  },
+
+  set is3PaneModeEnabled(value) {
+    if (this.target.chrome) {
+      this._is3PaneModeChromeEnabled = value;
+      Services.prefs.setBoolPref(THREE_PANE_CHROME_ENABLED_PREF,
+        this._is3PaneModeChromeEnabled);
+    } else {
+      this._is3PaneModeEnabled = value;
+      Services.prefs.setBoolPref(THREE_PANE_ENABLED_PREF, this._is3PaneModeEnabled);
+    }
   },
 
   // Added in 53.
@@ -673,8 +700,6 @@ Inspector.prototype = {
 
   async onSidebarToggle() {
     this.is3PaneModeEnabled = !this.is3PaneModeEnabled;
-    Services.prefs.setBoolPref(THREE_PANE_ENABLED_PREF, this.is3PaneModeEnabled);
-
     await this.setupToolbar();
     await this.addRuleView({ skipQueue: true });
   },
@@ -1422,11 +1447,12 @@ Inspector.prototype = {
     this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
 
+    this._is3PaneModeChromeEnabled = null;
+    this._is3PaneModeEnabled = null;
     this._notificationBox = null;
     this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
-    this.is3PaneModeEnabled = null;
     this.is3PaneModeFirstRun = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;

@@ -10,10 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
-var _immutable = require("devtools/client/shared/vendor/immutable");
-
-var I = _interopRequireWildcard(_immutable);
-
 var _selectors = require("../../selectors/index");
 
 var _ui = require("../../utils/ui");
@@ -38,8 +34,6 @@ var _Dropdown = require("../shared/Dropdown");
 
 var _Dropdown2 = _interopRequireDefault(_Dropdown);
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -62,7 +56,7 @@ class Tabs extends _react.PureComponent {
       const sourceTabEls = this.refs.sourceTabs.children;
       const hiddenTabs = (0, _tabs.getHiddenTabs)(tabSources, sourceTabEls);
 
-      if ((0, _ui.isVisible)() && hiddenTabs.indexOf(selectedSource) !== -1) {
+      if ((0, _ui.isVisible)() && hiddenTabs.find(tab => tab.id == selectedSource.id)) {
         return moveTab(selectedSource.url, 0);
       }
 
@@ -71,25 +65,25 @@ class Tabs extends _react.PureComponent {
       });
     };
 
-    this.renderDropdownSource = sourceRecord => {
+    this.renderDropdownSource = source => {
       const {
         selectSpecificSource
       } = this.props;
-      const filename = (0, _source.getFilename)(sourceRecord);
+      const filename = (0, _source.getFilename)(source);
 
-      const onClick = () => selectSpecificSource(sourceRecord.id);
+      const onClick = () => selectSpecificSource(source.id);
 
       return _react2.default.createElement("li", {
-        key: sourceRecord.id,
+        key: source.id,
         onClick: onClick
       }, _react2.default.createElement("img", {
-        className: `dropdown-icon ${this.getIconClass(sourceRecord)}`
+        className: `dropdown-icon ${this.getIconClass(source)}`
       }), filename);
     };
 
     this.state = {
       dropdownShown: false,
-      hiddenTabs: I.List()
+      hiddenTabs: []
     };
     this.onResize = (0, _lodash.debounce)(() => {
       this.updateHiddenTabs();
@@ -122,12 +116,12 @@ class Tabs extends _react.PureComponent {
     }));
   }
 
-  getIconClass(sourceRecord) {
-    if ((0, _source.isPretty)(sourceRecord)) {
+  getIconClass(source) {
+    if ((0, _source.isPretty)(source)) {
       return "prettyPrint";
     }
 
-    if (sourceRecord.isBlackBoxed) {
+    if (source.isBlackBoxed) {
       return "blackBox";
     }
 
@@ -155,7 +149,7 @@ class Tabs extends _react.PureComponent {
   renderDropdown() {
     const hiddenTabs = this.state.hiddenTabs;
 
-    if (!hiddenTabs || hiddenTabs.size == 0) {
+    if (!hiddenTabs || hiddenTabs.length == 0) {
       return null;
     }
 

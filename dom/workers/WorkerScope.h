@@ -240,6 +240,9 @@ public:
   GetController() const override;
 
   RefPtr<mozilla::dom::ServiceWorkerRegistration>
+  GetServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor) const override;
+
+  RefPtr<mozilla::dom::ServiceWorkerRegistration>
   GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 };
 

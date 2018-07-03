@@ -10,44 +10,22 @@
     <script>
 
     function test() {
-      // Create memory and populate int32 array with some data.
-      var buf = Module._malloc(16);
-      var arr = new Int32Array(Module['buffer'], buf, 4);
-      arr.set(new Int32Array([1, 2, 3, 4]));
-
-      var average = Module.ccall(
-        'average',
-        'i32',
-        ['*', 'u32'],
-        [buf, arr.length]
-      );
-      console.log(average);
+      const result = wasmInstance.exports.fib(5);
+      console.log(result);
     }
 
-    // WebAssembly module is part of the emscripten generated one,
-    // loading emscripten module via script tag.
-    var Module = {
-      wasmBinary: null,
-      postRun: [],
-    };
-    function loadWasm(emscriptenWrapper, wasmUrl, sourceMapUrl) {
+    var wasmInstance = null;
+    function loadWasm(wasmUrl, sourceMapUrl) {
       return fetch(wasmUrl).then(res => res.arrayBuffer()).then(buffer => {
         if (!sourceMapUrl) return buffer;
         return updateSourceMappingURLSection(buffer, sourceMapUrl);
-      }).then(buffer => {
-        return new Promise(resolve => {
-          Module.wasmBinary = buffer;
-          Module.postRun.push(resolve);
-          let script = document.createElement('script');
-          script.src = emscriptenWrapper;
-          document.head.appendChild(script);
-        });
+      }).then(buffer => WebAssembly.instantiate(buffer)).then(({instance}) => {
+        wasmInstance = instance;
       });
     }
 
-    loadWasm('wasm-sourcemaps/average.js',
-              'wasm-sourcemaps/average.wasm',
-              new URL('wasm-sourcemaps/average.wasm.map', document.location).href).then(() => {
+    loadWasm('wasm-sourcemaps/fib.wasm',
+              new URL('wasm-sourcemaps/fib.wasm.map', document.location).href).then(() => {
       debugger;
 
       test();

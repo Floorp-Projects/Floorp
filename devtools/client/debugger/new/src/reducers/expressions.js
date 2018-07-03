@@ -32,7 +32,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const createExpressionState = exports.createExpressionState = (0, _makeRecord2.default)({
   expressions: (0, _immutable.List)(restoreExpressions()),
   expressionError: false,
-  autocompleteMatches: (0, _immutable.Map)({})
+  autocompleteMatches: (0, _immutable.Map)({}),
+  currentAutocompleteInput: null
 });
 
 function update(state = createExpressionState(), action) {
@@ -89,7 +90,10 @@ function update(state = createExpressionState(), action) {
         matchProp,
         matches
       } = action.result;
-      return state.updateIn(["autocompleteMatches", matchProp], list => matches);
+      return state.updateIn(["autocompleteMatches", matchProp], list => matches).set("currentAutocompleteInput", matchProp);
+
+    case "CLEAR_AUTOCOMPLETE":
+      return state.updateIn(["autocompleteMatches", ""], list => []).set("currentAutocompleteInput", "");
   }
 
   return state;
@@ -163,7 +167,8 @@ function getExpression(state, input) {
   return getExpressions(state).find(exp => exp.input == input);
 }
 
-function getAutocompleteMatchset(state, input) {
+function getAutocompleteMatchset(state) {
+  const input = state.expressions.get("currentAutocompleteInput");
   return getAutocompleteMatches(state).get(input);
 }
 

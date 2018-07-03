@@ -184,7 +184,8 @@ public:
   void UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                        wr::WebRenderAPI* aApi,
                        AsyncImagePipelineManager* aImageMgr,
-                       CompositorAnimationStorage* aAnimStorage);
+                       CompositorAnimationStorage* aAnimStorage,
+                       const TextureFactoryIdentifier& aTextureFactoryIdentifier);
 
   void RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch);
 
