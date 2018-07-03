@@ -54,8 +54,6 @@ module.exports = {
       require("../lib/rules/no-useless-removeEventListener"),
     "no-useless-run-test":
       require("../lib/rules/no-useless-run-test"),
-    "require-expected-throws-or-rejects":
-      require("../lib/rules/require-expected-throws-or-rejects"),
     "reject-importGlobalProperties":
       require("../lib/rules/reject-importGlobalProperties"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
