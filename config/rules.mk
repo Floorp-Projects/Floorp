@@ -817,10 +817,10 @@ cargo_build_flags += --frozen
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
 ifdef BUILD_VERBOSE_LOG
-cargo_build_flags += --verbose
+cargo_build_flags += -vv
 else
 ifdef MOZ_AUTOMATION
-cargo_build_flags += --verbose
+cargo_build_flags += -vv
 endif # MOZ_AUTOMATION
 endif # BUILD_VERBOSE_LOG
 
