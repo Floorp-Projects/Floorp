@@ -17,8 +17,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEventDispatcher)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEventDispatcher)
   for (auto& info : tmp->mPendingEvents) {
-    ImplCycleCollectionTraverse(cb, info.mElement,
-      "mozilla::AnimationEventDispatcher.mPendingEvents.mElement");
+    ImplCycleCollectionTraverse(cb, info.mTarget,
+      "mozilla::AnimationEventDispatcher.mPendingEvents.mTarget");
     ImplCycleCollectionTraverse(cb, info.mAnimation,
       "mozilla::AnimationEventDispatcher.mPendingEvents.mAnimation");
   }
