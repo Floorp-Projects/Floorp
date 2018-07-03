@@ -173,7 +173,34 @@
 
 .font-value-input {
   margin-left: 10px;
+  text-align: right;
   width: 60px;
+}
+
+/* Do not use browser "invalid" state */
+.font-value-input:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/* Do not show dotted line focus outline */
+.font-value-input:-moz-focusring {
+  outline: none;
+}
+
+/* Add space between input text from number stepper */
+.font-value-input[type=number]::-moz-number-spin-box{
+  margin-left: 3px;
+}
+
+/* Do not show number stepper for font-size */
+.font-value-input[name=font-size] {
+  -moz-appearance: textfield;
+  margin-right: 5px;
+  padding-right: 5px;
+}
+
+.font-unit-select {
+  padding: 2px;
 }
 
 .font-value-slider {
@@ -187,15 +214,15 @@
   Decorate the slider for font-weight to have 9 vertical notches using a linear gradient.
 */
 .font-value-slider[name=font-weight] {
-  --notch-size: 2px;
+  --notch-size: 3px;
   /* Draw a vertical line to get one notch per background-image instance */
   background-image: linear-gradient(90deg, var(--grey-30) var(--notch-size), transparent 0);
   /* Offset the background so the notch aligns with the center of the slider thumb */
-  background-position: 7px center;
+  background-position: 5px center;
   /* Repeat the background-image horizontally */
   background-repeat: repeat-x;
   /* Size the background to get nine visible notch instances. */
-  background-size: calc(12.5% - var(--notch-size)) 90%;
+  background-size: calc(12.5% - var(--notch-size) / 2) 7px;
 }
 
 .font-value-slider:-moz-focusring {
@@ -208,14 +235,12 @@
 
 .font-value-slider::-moz-range-thumb {
   background: var(--grey-50);
-  border-color: rgba(0, 0, 0, 0);
-}
-.font-value-slider::-moz-range-track {
-  background: var(--grey-30);
+  border: 0;
 }
 
-.font-value-slider:focus::-moz-range-thumb {
-  background: var(--blue-55);
+.font-value-slider::-moz-range-track {
+  background: var(--grey-30);
+  height: 3px;
 }
 
 /*
