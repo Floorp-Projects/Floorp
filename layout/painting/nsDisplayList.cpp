@@ -6241,7 +6241,7 @@ nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true)
     , mOpacity(aFrame->StyleEffects()->mOpacity)
     , mForEventsAndPluginsOnly(aForEventsAndPluginsOnly)
-    , mOpacityAppliedToChildren(false)
+    , mChildOpacityState(ChildOpacityState::Unknown)
 {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
   mState.mOpacity = mOpacity;
@@ -6378,6 +6378,10 @@ CollectItemsWithOpacity(nsDisplayList* aList,
 bool
 nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder)
 {
+  if (mChildOpacityState == ChildOpacityState::Deferred) {
+    return false;
+  }
+
   // Only try folding our opacity down if we have at most kMaxChildCount
   // children that don't overlap and can all apply the opacity to themselves.
   static const size_t kMaxChildCount = 3;
@@ -6386,6 +6390,7 @@ nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder)
   // child display item pointers to a temporary list.
   AutoTArray<nsDisplayItem*, kMaxChildCount> items;
   if (!CollectItemsWithOpacity(&mList, items, kMaxChildCount)) {
+    mChildOpacityState = ChildOpacityState::Deferred;
     return false;
   }
 
@@ -6405,6 +6410,7 @@ nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder)
   for (size_t i = 0; i < childCount; i++) {
     for (size_t j = i+1; j < childCount; j++) {
       if (children[i].bounds.Intersects(children[j].bounds)) {
+        mChildOpacityState = ChildOpacityState::Deferred;
         return false;
       }
     }
@@ -6414,16 +6420,13 @@ nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder)
     children[i].item->ApplyOpacity(aBuilder, mOpacity, mClipChain);
   }
 
-  mOpacityAppliedToChildren = true;
+  mChildOpacityState = ChildOpacityState::Applied;
   return true;
 }
 
 bool
 nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
-  // ShouldFlattenAway() should be called only once during painting.
-  MOZ_ASSERT(!mOpacityAppliedToChildren);
-
   if (mFrame->GetPrevContinuation() || mFrame->GetNextContinuation() ||
       mFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
     // If we've been split, then we might need to merge, so
