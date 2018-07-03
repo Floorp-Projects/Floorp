@@ -15,6 +15,27 @@
   flex: auto;
 }
 
+#font-editor summary {
+  -moz-user-select: none;
+  cursor: pointer;
+  margin-bottom: .7em;
+  width: fit-content;
+  width: -moz-fit-content;
+}
+
+#font-editor details .label-open,
+#font-editor details .label-close {
+  display: none;
+}
+
+#font-editor details[open] .label-close {
+  display: inline-block;
+}
+
+#font-editor details:not([open]) .label-open {
+  display: inline-block;
+}
+
 .fonts-list {
   padding: 0;
   margin: 0;
@@ -154,12 +175,6 @@
   min-width: 80px;
   margin-right: 10px;
   -moz-user-select: none;
-}
-
-.font-family-unused-header {
-  -moz-user-select: none;
-  margin-bottom: .7em;
-  cursor: pointer;
 }
 
 .font-family-unused {
