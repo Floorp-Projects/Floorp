@@ -1136,6 +1136,36 @@ TextEditor::SetText(const nsAString& aString)
 {
   MOZ_ASSERT(aString.FindChar(static_cast<char16_t>('\r')) == kNotFound);
 
+  AutoPlaceholderBatch batch(this, nullptr);
+  nsresult rv = SetTextAsSubAction(aString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditor::ReplaceTextAsAction(const nsAString& aString)
+{
+  AutoPlaceholderBatch batch(this, nullptr);
+
+  // This should emulates inserting text for better undo/redo behavior.
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::eInsertText,
+                                      nsIEditor::eNext);
+
+  nsresult rv = SetTextAsSubAction(aString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditor::SetTextAsSubAction(const nsAString& aString)
+{
+  MOZ_ASSERT(mPlaceholderBatch);
+
   if (NS_WARN_IF(!mRules)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1143,8 +1173,6 @@ TextEditor::SetText(const nsAString& aString)
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  // delete placeholder txns merge.
-  AutoPlaceholderBatch batch(this, nullptr);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eSetText,
                                       nsIEditor::eNext);
@@ -1169,6 +1197,11 @@ TextEditor::SetText(const nsAString& aString)
     return NS_OK;
   }
   if (!handled) {
+    // Note that do not notify selectionchange caused by selecting all text
+    // because it's preparation of our delete implementation so web apps
+    // shouldn't receive such selectionchange before the first mutation.
+    AutoUpdateViewBatch preventSelectionChangeEvent(this);
+
     // We want to select trailing BR node to remove all nodes to replace all,
     // but TextEditor::SelectEntireDocument doesn't select that BR node.
     if (rules->DocumentIsEmpty()) {

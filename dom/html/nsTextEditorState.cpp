@@ -2425,10 +2425,24 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
           bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
           mTextListener->SetValueChanged(notifyValueChanged);
 
-          // We preserve the undo history if we are explicitly setting the
-          // value for the user's input, or if we are setting the value for a
-          // XUL text control.
-          if (aFlags & (eSetValue_BySetUserInput | eSetValue_ForXUL)) {
+          if (aFlags & eSetValue_BySetUserInput) {
+            // If the caller inserts text as part of user input, for example,
+            // autocomplete, we need to replace the text as "insert string"
+            // because undo should cancel only this operation (i.e., previous
+            // transactions typed by user shouldn't be merged with this).
+            DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newValue);
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+              "Failed to set the new value");
+          } else if (aFlags & eSetValue_ForXUL) {
+            // On XUL <textbox> element, we need to preserve existing undo
+            // transactions.
+            // XXX Do we really need to do such complicated optimization?
+            //     This was landed for web pages which set <textarea> value
+            //     per line (bug 518122).  For example:
+            //       for (;;) {
+            //         textarea.value += oneLineText + "\n";
+            //       }
+            //     However, this path won't be used in web content anymore.
             nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
             uint32_t currentLength = currentValue.Length();
             uint32_t newlength = newValue.Length();
@@ -2457,6 +2471,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
                 "Failed to insert the new value");
             }
           } else {
+            // On <input> or <textarea>, we shouldn't preserve existing undo
+            // transactions because other browsers do not preserve them too
+            // and not preserving transactions makes setting value faster.
             AutoDisableUndo disableUndo(textEditor);
             if (selection) {
               // Since we don't use undo transaction, we don't need to store
