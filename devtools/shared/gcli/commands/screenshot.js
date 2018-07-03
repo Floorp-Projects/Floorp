@@ -554,6 +554,7 @@ var saveToFile = Task.async(function* (context, reply) {
   // the downloads toolbar button when the save is done.
   const nsIWBP = Ci.nsIWebBrowserPersist;
   const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                nsIWBP.PERSIST_FLAGS_FORCE_ALLOW_COOKIES |
                 nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
                 nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
   const isPrivate =
@@ -572,9 +573,7 @@ var saveToFile = Task.async(function* (context, reply) {
           isPrivate);
   const listener = new DownloadListener(window, tr);
   persist.progressListener = listener;
-  const principal = Services.scriptSecurityManager.getSystemPrincipal();
   persist.savePrivacyAwareURI(sourceURI,
-                              principal,
                               0,
                               document.documentURIObject,
                               Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,

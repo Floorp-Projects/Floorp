@@ -153,7 +153,7 @@ nsMacShellService::SetDesktopBackground(Element* aElement,
     loadContext = do_QueryInterface(docShell);
   }
 
-  return wbp->SaveURI(imageURI, aElement->NodePrincipal(), 0,
+  return wbp->SaveURI(imageURI, 0,
                       docURI, aElement->OwnerDoc()->GetReferrerPolicy(),
                       nullptr, nullptr,
                       mBackgroundFile, loadContext);
