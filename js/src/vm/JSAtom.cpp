@@ -96,14 +96,14 @@ js::AtomHasher::match(const AtomStateEntry& entry, const Lookup& lookup)
     if (key->hasLatin1Chars()) {
         const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
         if (lookup.isLatin1)
-            return mozilla::PodEqual(keyChars, lookup.latin1Chars, lookup.length);
+            return mozilla::ArrayEqual(keyChars, lookup.latin1Chars, lookup.length);
         return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
     }
 
     const char16_t* keyChars = key->twoByteChars(lookup.nogc);
     if (lookup.isLatin1)
         return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
-    return mozilla::PodEqual(keyChars, lookup.twoByteChars, lookup.length);
+    return mozilla::ArrayEqual(keyChars, lookup.twoByteChars, lookup.length);
 }
 
 inline JSAtom*
