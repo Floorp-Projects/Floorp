@@ -8,13 +8,22 @@ from __future__ import absolute_import
 
 import mozfile
 import mozhttpd
-import urllib2
 import os
 import unittest
 import json
 import tempfile
 
 import mozunit
+
+from six.moves.urllib.request import (
+    HTTPHandler,
+    ProxyHandler,
+    Request,
+    build_opener,
+    install_opener,
+    urlopen,
+)
+from six.moves.urllib.error import HTTPError
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -54,7 +63,7 @@ class ApiTest(unittest.TestCase):
     def try_get(self, server_port, querystr):
         self.resource_get_called = 0
 
-        f = urllib2.urlopen(self.get_url('/api/resource/1', server_port, querystr))
+        f = urlopen(self.get_url('/api/resource/1', server_port, querystr))
         try:
             self.assertEqual(f.getcode(), 200)
         except AttributeError:
@@ -67,9 +76,11 @@ class ApiTest(unittest.TestCase):
 
         postdata = {'hamburgers': '1234'}
         try:
-            f = urllib2.urlopen(self.get_url('/api/resource/', server_port, querystr),
-                                data=json.dumps(postdata))
-        except urllib2.HTTPError as e:
+            f = urlopen(
+                self.get_url('/api/resource/', server_port, querystr),
+                data=json.dumps(postdata),
+            )
+        except HTTPError as e:
             # python 2.4
             self.assertEqual(e.code, 201)
             body = e.fp.read()
@@ -84,8 +95,8 @@ class ApiTest(unittest.TestCase):
     def try_del(self, server_port, querystr):
         self.resource_del_called = 0
 
-        opener = urllib2.build_opener(urllib2.HTTPHandler)
-        request = urllib2.Request(self.get_url('/api/resource/1', server_port, querystr))
+        opener = build_opener(HTTPHandler)
+        request = Request(self.get_url('/api/resource/1', server_port, querystr))
         request.get_method = lambda: 'DEL'
         f = opener.open(request)
 
@@ -127,8 +138,8 @@ class ApiTest(unittest.TestCase):
         # GET: By default we don't serve any files if we just define an API
         exception_thrown = False
         try:
-            urllib2.urlopen(self.get_url('/', server_port, None))
-        except urllib2.HTTPError as e:
+            urlopen(self.get_url('/', server_port, None))
+        except HTTPError as e:
             self.assertEqual(e.code, 404)
             exception_thrown = True
         self.assertTrue(exception_thrown)
@@ -143,8 +154,8 @@ class ApiTest(unittest.TestCase):
         # GET: Return 404 for non-existent endpoint
         exception_thrown = False
         try:
-            urllib2.urlopen(self.get_url('/api/resource/', server_port, None))
-        except urllib2.HTTPError as e:
+            urlopen(self.get_url('/api/resource/', server_port, None))
+        except HTTPError as e:
             self.assertEqual(e.code, 404)
             exception_thrown = True
         self.assertTrue(exception_thrown)
@@ -152,9 +163,11 @@ class ApiTest(unittest.TestCase):
         # POST: POST should also return 404
         exception_thrown = False
         try:
-            urllib2.urlopen(self.get_url('/api/resource/', server_port, None),
-                            data=json.dumps({}))
-        except urllib2.HTTPError as e:
+            urlopen(
+                self.get_url('/api/resource/', server_port, None),
+                data=json.dumps({}),
+            )
+        except HTTPError as e:
             self.assertEqual(e.code, 404)
             exception_thrown = True
         self.assertTrue(exception_thrown)
@@ -162,12 +175,11 @@ class ApiTest(unittest.TestCase):
         # DEL: DEL should also return 404
         exception_thrown = False
         try:
-            opener = urllib2.build_opener(urllib2.HTTPHandler)
-            request = urllib2.Request(self.get_url('/api/resource/', server_port,
-                                                   None))
+            opener = build_opener(HTTPHandler)
+            request = Request(self.get_url('/api/resource/', server_port, None))
             request.get_method = lambda: 'DEL'
             opener.open(request)
-        except urllib2.HTTPError:
+        except HTTPError:
             self.assertEqual(e.code, 404)
             exception_thrown = True
         self.assertTrue(exception_thrown)
@@ -181,7 +193,7 @@ class ApiTest(unittest.TestCase):
         server_port = httpd.httpd.server_port
 
         # We defined a docroot, so we expect a directory listing
-        f = urllib2.urlopen(self.get_url('/', server_port, None))
+        f = urlopen(self.get_url('/', server_port, None))
         try:
             self.assertEqual(f.getcode(), 200)
         except AttributeError:
@@ -197,7 +209,7 @@ class ProxyTest(unittest.TestCase):
 
     def tearDown(self):
         # reset proxy opener in case it changed
-        urllib2.install_opener(None)
+        install_opener(None)
 
     def test_proxy(self):
         docroot = tempfile.mkdtemp()
@@ -211,7 +223,7 @@ class ProxyTest(unittest.TestCase):
 
         def index_contents(host): return '%s index' % host
 
-        index = file(os.path.join(docroot, index_filename), 'w')
+        index = open(os.path.join(docroot, index_filename), 'w')
         index.write(index_contents('*'))
         index.close()
 
@@ -219,12 +231,13 @@ class ProxyTest(unittest.TestCase):
         httpd.start(block=False)
         server_port = httpd.httpd.server_port
 
-        proxy_support = urllib2.ProxyHandler({'http': 'http://127.0.0.1:%d' %
-                                              server_port})
-        urllib2.install_opener(urllib2.build_opener(proxy_support))
+        proxy_support = ProxyHandler({
+            'http': 'http://127.0.0.1:%d' % server_port,
+        })
+        install_opener(build_opener(proxy_support))
 
         for host in hosts:
-            f = urllib2.urlopen(url(host))
+            f = urlopen(url(host))
             try:
                 self.assertEqual(f.getcode(), 200)
             except AttributeError:
@@ -239,18 +252,19 @@ class ProxyTest(unittest.TestCase):
         httpd.start(block=False)
         server_port = httpd.httpd.server_port
 
-        proxy_support = urllib2.ProxyHandler({'http': 'http://127.0.0.1:%d' %
-                                              server_port})
-        urllib2.install_opener(urllib2.build_opener(proxy_support))
+        proxy_support = ProxyHandler({
+            'http': 'http://127.0.0.1:%d' % server_port,
+        })
+        install_opener(build_opener(proxy_support))
 
         # set up dirs
         for host in hosts:
             os.mkdir(os.path.join(docroot, host))
-            file(os.path.join(docroot, host, index_filename), 'w') \
+            open(os.path.join(docroot, host, index_filename), 'w') \
                 .write(index_contents(host))
 
         for host in hosts:
-            f = urllib2.urlopen(url(host))
+            f = urlopen(url(host))
             try:
                 self.assertEqual(f.getcode(), 200)
             except AttributeError:
@@ -259,8 +273,8 @@ class ProxyTest(unittest.TestCase):
 
         exc = None
         try:
-            urllib2.urlopen(url(unproxied_host))
-        except urllib2.HTTPError as e:
+            urlopen(url(unproxied_host))
+        except HTTPError as e:
             exc = e
         self.assertNotEqual(exc, None)
         self.assertEqual(exc.code, 404)
