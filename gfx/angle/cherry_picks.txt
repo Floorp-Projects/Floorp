@@ -1,4 +1,12 @@
-commit 595ccab4acc3d818e98a82a3a6bb9849aa1e7cca
+commit fc96a1a98357cfa17510bcf701e99a59ab474ce0
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Fri Jun 29 19:06:56 2018 -0700
+
+    More includes missing from sources.
+    
+    Bug: angleproject:2699
+
+commit e30a1e0b967b42a5e17c4335361762ec1153e900
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Tue May 29 19:19:54 2018 -0700
 
@@ -15,53 +23,22 @@ Date:   Tue May 29 19:19:54 2018 -0700
     Test: angle_unittests
     Change-Id: I7c97cb56c01335db46f532fb8af3f9a4f2a30564
 
-commit 2426b097472f19c907b3c734d6186d444f9be9ad
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Fri May 18 18:32:16 2018 -0700
-
-    Add `formatType` arg to computeSkipBytes.
-    
-    Fix texture upload format tests:
-    - Format tests should definitely run on ES3 also.
-    - Also set filters to NEAREST since some formats aren't filterable.
-    - Fix RGB9_E5 test reference encoding and add a test for it.
-    - True int/uint textures require i/usamplers.
-    
-    Bug: angleproject:2576
-    Change-Id: Ia5bac34cdee6554a88db339de443689a71a0cf70
-
-commit 1c428b64f565ca0305ef875bc1a7d5643c7fb856
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Mon May 7 17:23:57 2018 -0700
-
-    Add headers to build file lists.
-    
-    Bug: angleproject:2535
-    Change-Id: If4d3037e43b403683554a710e89a76befd9b354a
-
 Cherries picked
 ================================================================================
-Merge base from: origin/chromium/3396
+Merge base from: origin/chromium/3440
 
-commit 702006f4a07e4f0069f189679f5c84ebda7c5772
-Author: Jamie Madill <jmadill@chromium.org>
-Date:   Fri May 11 16:54:17 2018 -0400
+commit ba16270867793da817417c722abe3a5d98d50fc0
+Author: Brandon Jones <brandon1.jones@intel.com>
+Date:   Thu May 24 12:47:50 2018 -0700
 
-    D3D11: Fix out-of-range access with robust access.
+    Fix entry point generation on non-Windows
     
-    When using a vertex buffer with DYNAMIC usage, with robust buffer
-    access enabled, we would sometimes read out-of-bounds when using very
-    large values for the index range. An unchecked signed addition would
-    overflow and lead to reading a negative offset.
+    In "Implement EGL_ANGLE_explicit_context", backslashes were introduced in
+    a file path, which broke generation on non-Windows machines. This fixes
+    the issue.
     
-    Fix this problem by keeping the value size_t whenever possible. Also do
-    clamped casts when converting to a smaller values.
-    
-    Also adds a regression test.
-    
-    Also combined with 26b0bfb46: Fix warnings from size_t conversions.
-    
-    Bug: chromium:842028
-    Change-Id: Ie1a8f476f3e97149362eb9855f08450c067ff807
-    Reviewed-on: https://chromium-review.googlesource.com/1064721
-    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Bug:angleproject:1395
+    Change-Id: I188c42c2a92afec37d7cb7dac5bffd7e855a0d2b
+    Reviewed-on: https://chromium-review.googlesource.com/1072509
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>

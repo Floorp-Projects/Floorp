@@ -9,7 +9,7 @@
 #ifndef LIBANGLE_VALIDATION_ES2_H_
 #define LIBANGLE_VALIDATION_ES2_H_
 
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -131,17 +131,17 @@ bool ValidateTexImage2D(Context *context,
                         GLenum format,
                         GLenum type,
                         const void *pixels);
-bool ValidateTexImage2DRobust(Context *context,
-                              TextureTarget target,
-                              GLint level,
-                              GLint internalformat,
-                              GLsizei width,
-                              GLsizei height,
-                              GLint border,
-                              GLenum format,
-                              GLenum type,
-                              GLsizei bufSize,
-                              const void *pixels);
+bool ValidateTexImage2DRobustANGLE(Context *context,
+                                   TextureTarget target,
+                                   GLint level,
+                                   GLint internalformat,
+                                   GLsizei width,
+                                   GLsizei height,
+                                   GLint border,
+                                   GLenum format,
+                                   GLenum type,
+                                   GLsizei bufSize,
+                                   const void *pixels);
 bool ValidateTexSubImage2D(Context *context,
                            TextureTarget target,
                            GLint level,

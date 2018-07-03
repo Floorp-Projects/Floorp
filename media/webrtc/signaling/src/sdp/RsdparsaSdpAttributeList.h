@@ -45,7 +45,6 @@ public:
   const SdpRemoteCandidatesAttribute& GetRemoteCandidates() const override;
   const SdpSetupAttribute& GetSetup() const override;
   const SdpSsrcAttributeList& GetSsrc() const override;
-  const SdpSsrcGroupAttributeList& GetSsrcGroup() const override;
   const SdpDtlsMessageAttribute& GetDtlsMessage() const override;
 
   // These attributes can appear multiple times, so the returned

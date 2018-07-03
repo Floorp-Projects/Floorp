@@ -39,10 +39,13 @@ class ShaderD3D : public ShaderImpl
     ~ShaderD3D() override;
 
     // ShaderImpl implementation
-    ShCompileOptions prepareSourceAndReturnOptions(std::stringstream *sourceStream,
+    ShCompileOptions prepareSourceAndReturnOptions(const gl::Context *context,
+                                                   std::stringstream *sourceStream,
                                                    std::string *sourcePath) override;
-    bool postTranslateCompile(gl::Compiler *compiler, std::string *infoLog) override;
-    std::string getDebugInfo() const override;
+    bool postTranslateCompile(const gl::Context *context,
+                              gl::Compiler *compiler,
+                              std::string *infoLog) override;
+    std::string getDebugInfo(const gl::Context *context) const override;
 
     // D3D-specific methods
     void uncompile();

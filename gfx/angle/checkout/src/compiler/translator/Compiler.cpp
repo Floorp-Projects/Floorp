@@ -38,6 +38,7 @@
 #include "compiler/translator/tree_ops/RemovePow.h"
 #include "compiler/translator/tree_ops/RemoveUnreferencedVariables.h"
 #include "compiler/translator/tree_ops/RewriteDoWhile.h"
+#include "compiler/translator/tree_ops/RewriteRepeatedAssignToSwizzled.h"
 #include "compiler/translator/tree_ops/ScalarizeVecAndMatConstructorArgs.h"
 #include "compiler/translator/tree_ops/SeparateDeclarations.h"
 #include "compiler/translator/tree_ops/SimplifyLoopConditions.h"
@@ -735,6 +736,11 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
     if (getShaderType() == GL_FRAGMENT_SHADER && (compileOptions & SH_CLAMP_FRAG_DEPTH))
     {
         ClampFragDepth(root, &getSymbolTable());
+    }
+
+    if (compileOptions & SH_REWRITE_REPEATED_ASSIGN_TO_SWIZZLED)
+    {
+        sh::RewriteRepeatedAssignToSwizzled(root);
     }
 
     if (compileOptions & SH_REWRITE_VECTOR_SCALAR_ARITHMETIC)

@@ -7,8 +7,6 @@
  * bookmark on init, we should not try to import.
  */
 
-const PREF_SMART_BOOKMARKS_VERSION = "browser.places.smartBookmarksVersion";
-
 function run_test() {
   // Create our bookmarks.html from bookmarks.glue.html.
   create_bookmarks_html("bookmarks.glue.html");
@@ -44,27 +42,21 @@ add_task(async function test_migrate_bookmarks() {
   bg.observe(null, "initial-migration-did-import-default-bookmarks", null);
   await promise;
 
-  let bm = await PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: 0
-  });
-  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
-
   // Check the created bookmark still exists.
-  bm = await PlacesUtils.bookmarks.fetch({
+  let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: SMART_BOOKMARKS_ON_MENU
+    index: 0
   });
   Assert.equal(bm.title, "migrated");
 
   // Check that we have not imported any new bookmark.
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: SMART_BOOKMARKS_ON_MENU + 1
+    index: 1
   })));
 
   Assert.ok(!(await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: SMART_BOOKMARKS_ON_MENU
+    index: 0
   })));
 });

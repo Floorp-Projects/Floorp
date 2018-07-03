@@ -49,7 +49,7 @@ Error ValidateCreatePbufferSurface(Display *display, Config *config, const Attri
 Error ValidateCreatePbufferFromClientBuffer(Display *display, EGLenum buftype, EGLClientBuffer buffer,
                                             Config *config, const AttributeMap& attributes);
 
-Error ValidateMakeCurrent(Display *display, EGLSurface draw, EGLSurface read, gl::Context *context);
+Error ValidateMakeCurrent(Display *display, Surface *draw, Surface *read, gl::Context *context);
 
 Error ValidateCreateImageKHR(const Display *display,
                              gl::Context *context,

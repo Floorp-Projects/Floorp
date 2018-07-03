@@ -73,6 +73,9 @@ enum RendererClass
     RENDERER_D3D9
 };
 
+// Check if the device is lost every 10 failures to get the query data
+constexpr unsigned int kPollingD3DDeviceLostCheckFrequency = 10;
+
 // Useful for unit testing
 class BufferFactoryD3D : angle::NonCopyable
 {

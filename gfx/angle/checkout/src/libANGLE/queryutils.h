@@ -11,7 +11,7 @@
 
 #include "angle_gl.h"
 #include "common/angleutils.h"
-#include "libANGLE/PackedGLEnums.h"
+#include "libANGLE/PackedEnums.h"
 
 #include <EGL/egl.h>
 
@@ -144,6 +144,8 @@ void QueryProgramInterfaceiv(const Program *program,
                              GLenum programInterface,
                              GLenum pname,
                              GLint *params);
+
+ClientVertexArrayType ParamToVertexArrayType(GLenum param);
 
 }  // namespace gl
 

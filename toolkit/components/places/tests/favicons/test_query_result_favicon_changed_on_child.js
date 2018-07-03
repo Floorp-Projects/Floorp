@@ -1,6 +1,6 @@
 /**
  * Test for bug 451499 <https://bugzilla.mozilla.org/show_bug.cgi?id=451499>:
- * Wrong folder icon appears on smart bookmarks.
+ * Wrong folder icon appears on queries.
  */
 
 "use strict";

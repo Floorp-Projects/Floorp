@@ -16,7 +16,7 @@ DEFINES['GL_GLEXT_PROTOTYPES'] = True
 DEFINES['LIBEGL_IMPLEMENTATION'] = True
 DEFINES['NOMINMAX'] = True
 #DEFINES['NO_TCMALLOC'] = True
-DEFINES['NTDDI_VERSION'] = '0x0A000000'
+DEFINES['NTDDI_VERSION'] = '0x0A000002'
 #DEFINES['PSAPI_VERSION'] = '1'
 #DEFINES['SAFE_BROWSING_CSD'] = True
 #DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
@@ -25,6 +25,7 @@ DEFINES['UNICODE'] = True
 #DEFINES['V8_DEPRECATION_WARNINGS'] = True
 #DEFINES['WIN32'] = True
 #DEFINES['WIN32_LEAN_AND_MEAN'] = True
+#DEFINES['WINAPI_FAMILY'] = 'WINAPI_FAMILY_DESKTOP_APP'
 #DEFINES['WINVER'] = '0x0A00'
 #DEFINES['WTF_USE_DYNAMIC_ANNOTATIONS'] = '1'
 DEFINES['_ATL_NO_OPENGL'] = True
@@ -41,12 +42,9 @@ DEFINES['_UNICODE'] = True
 #DEFINES['__STD_C'] = True
 
 LOCAL_INCLUDES += [
-    '../../checkout/',
     '../../checkout/include/',
-    '../../checkout/out/gen/',
     '../../checkout/out/gen/angle/',
     '../../checkout/src/',
-    '../../checkout/src/common/third_party/base/',
 ]
 
 #CXXFLAGS += [
@@ -143,7 +141,7 @@ OS_LIBS += [
 
 #LDFLAGS += [
 #    '/DEBUG',
-#    '/DYNAMICBASE:NO',
+#    '/DYNAMICBASE',
 #    '/fastfail',
 #    '/FIXED:NO',
 #    '/ignore:4199',

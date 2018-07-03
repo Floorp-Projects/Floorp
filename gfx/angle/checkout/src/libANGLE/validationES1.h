@@ -35,8 +35,8 @@ bool ValidateColorPointer(Context *context,
                           const void *pointer);
 bool ValidateCullFace(Context *context, GLenum mode);
 bool ValidateDepthRangex(Context *context, GLfixed n, GLfixed f);
-bool ValidateDisableClientState(Context *context, GLenum array);
-bool ValidateEnableClientState(Context *context, GLenum array);
+bool ValidateDisableClientState(Context *context, ClientVertexArrayType array);
+bool ValidateEnableClientState(Context *context, ClientVertexArrayType array);
 bool ValidateFogf(Context *context, GLenum pname, GLfloat param);
 bool ValidateFogfv(Context *context, GLenum pname, const GLfloat *params);
 bool ValidateFogx(Context *context, GLenum pname, GLfixed param);

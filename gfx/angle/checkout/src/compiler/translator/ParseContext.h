@@ -43,8 +43,8 @@ class TParseContext : angle::NonCopyable
                   const ShBuiltInResources &resources);
     ~TParseContext();
 
-    const pp::Preprocessor &getPreprocessor() const { return mPreprocessor; }
-    pp::Preprocessor &getPreprocessor() { return mPreprocessor; }
+    const angle::pp::Preprocessor &getPreprocessor() const { return mPreprocessor; }
+    angle::pp::Preprocessor &getPreprocessor() { return mPreprocessor; }
     void *getScanner() const { return mScanner; }
     void setScanner(void *scanner) { mScanner = scanner; }
     int getShaderVersion() const { return mShaderVersion; }
@@ -607,7 +607,7 @@ class TParseContext : angle::NonCopyable
     TString mHashErrMsg;
     TDiagnostics *mDiagnostics;
     TDirectiveHandler mDirectiveHandler;
-    pp::Preprocessor mPreprocessor;
+    angle::pp::Preprocessor mPreprocessor;
     void *mScanner;
     int mMinProgramTexelOffset;
     int mMaxProgramTexelOffset;

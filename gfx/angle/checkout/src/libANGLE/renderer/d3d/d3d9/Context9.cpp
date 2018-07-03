@@ -92,7 +92,7 @@ VertexArrayImpl *Context9::createVertexArray(const gl::VertexArrayState &data)
     return new VertexArray9(data);
 }
 
-QueryImpl *Context9::createQuery(GLenum type)
+QueryImpl *Context9::createQuery(gl::QueryType type)
 {
     return new Query9(mRenderer, type);
 }

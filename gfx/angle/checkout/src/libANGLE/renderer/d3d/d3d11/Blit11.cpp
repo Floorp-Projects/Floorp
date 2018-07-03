@@ -1498,7 +1498,10 @@ gl::Error Blit11::copyAndConvertImpl(const TextureHelper11 &source,
     // Clip dest area to the scissor
     if (scissor)
     {
-        gl::ClipRectangle(clipRect, *scissor, &clipRect);
+        if (!gl::ClipRectangle(clipRect, *scissor, &clipRect))
+        {
+            return gl::NoError();
+        }
     }
 
     convertFunction(sourceArea, destArea, clipRect, sourceSize, sourceMapping.RowPitch,

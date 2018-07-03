@@ -89,9 +89,7 @@
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters)
 # *must* go into the browser-sets.inc file so that they can be shared with other
 # top level windows in macWindow.inc.xul.
-#define FULL_BROWSER_WINDOW
 #include browser-sets.inc
-#undef FULL_BROWSER_WINDOW
 
   <popupset id="mainPopupSet">
     <menupopup id="tabContextMenu"

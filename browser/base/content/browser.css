@@ -251,10 +251,6 @@ panelview[mainview] > .panel-header {
   pointer-events: auto;
 }
 
-toolbar[printpreview="true"] {
-  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
-}
-
 toolbar[overflowable] > .customization-target {
   overflow: hidden;
 }

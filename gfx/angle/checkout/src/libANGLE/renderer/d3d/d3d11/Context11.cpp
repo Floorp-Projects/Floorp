@@ -189,7 +189,7 @@ VertexArrayImpl *Context11::createVertexArray(const gl::VertexArrayState &data)
     return new VertexArray11(data);
 }
 
-QueryImpl *Context11::createQuery(GLenum type)
+QueryImpl *Context11::createQuery(gl::QueryType type)
 {
     return new Query11(mRenderer, type);
 }
