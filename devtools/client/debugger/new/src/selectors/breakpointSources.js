@@ -17,16 +17,17 @@ var _source = require("../utils/source");
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function getBreakpointsForSource(source, breakpoints) {
-  return breakpoints.valueSeq().filter(bp => bp.location.sourceId == source.id && !bp.hidden && (bp.text || bp.condition)).sortBy(bp => bp.location.line).toJS();
+  const bpList = breakpoints.valueSeq();
+  return bpList.filter(bp => bp.location.sourceId == source.id && !bp.hidden && (bp.text || bp.condition)).sortBy(bp => bp.location.line).toJS();
 }
 
 function findBreakpointSources(sources, breakpoints) {
   const sourceIds = (0, _lodash.uniq)(breakpoints.valueSeq().filter(bp => !bp.hidden).map(bp => bp.location.sourceId).toJS());
-  const breakpointSources = sourceIds.map(id => (0, _selectors.getSourceInSources)(sources, id)).filter(source => source && !source.isBlackBoxed);
+  const breakpointSources = sourceIds.map(id => sources[id]).filter(source => source && !source.isBlackBoxed);
   return (0, _lodash.sortBy)(breakpointSources, source => (0, _source.getFilenameFromURL)(source.url));
 }
 
-function _getBreakpointSources(breakpoints, sources, selectedSource) {
+function _getBreakpointSources(breakpoints, sources) {
   const breakpointSources = findBreakpointSources(sources, breakpoints);
   return breakpointSources.map(source => ({
     source,

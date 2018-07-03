@@ -129,4 +129,14 @@ const char* PlatformBuildID();
  */
 void SetupErrorHandling(const char* progname);
 
+
+#ifdef MOZ_ASAN_REPORTER
+extern "C" {
+  void MOZ_EXPORT __sanitizer_set_report_path(const char *path);
+}
+void setASanReporterPath(nsIFile* aDir);
+
+already_AddRefed<nsIFile> GetFileFromEnv(const char *name);
+#endif
+
 #endif // nsAppRunner_h__

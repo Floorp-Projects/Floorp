@@ -8,17 +8,17 @@
 #define mozilla_dom_ServiceWorkerImpl_h
 
 #include "ServiceWorker.h"
-#include "ServiceWorkerInfo.h"
 
 namespace mozilla {
 namespace dom {
 
 class ServiceWorkerInfo;
+class ServiceWorkerRegistrationInfo;
 
 class ServiceWorkerImpl final : public ServiceWorker::Inner
-                              , public ServiceWorkerInfo::Listener
 {
   RefPtr<ServiceWorkerInfo> mInfo;
+  RefPtr<ServiceWorkerRegistrationInfo> mReg;
   ServiceWorker* mOuter;
 
   ~ServiceWorkerImpl();
@@ -31,16 +31,17 @@ class ServiceWorkerImpl final : public ServiceWorker::Inner
   RemoveServiceWorker(ServiceWorker* aWorker) override;
 
   void
+  GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                  ServiceWorkerFailureCallback&& aFailureCB) override;
+
+  void
   PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
               const ClientInfo& aClientInfo,
               const ClientState& aClientState) override;
 
-  // ServiceWorkerInfo::Listener interface
-  void
-  SetState(ServiceWorkerState aState) override;
-
 public:
-  explicit ServiceWorkerImpl(ServiceWorkerInfo* aInfo);
+  ServiceWorkerImpl(ServiceWorkerInfo* aInfo,
+                    ServiceWorkerRegistrationInfo* aReg);
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerImpl, override);
 };

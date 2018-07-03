@@ -74,8 +74,7 @@ function update(state = initialState(), action) {
 function addScopes(state, action) {
   const {
     frame,
-    status,
-    value
+    status
   } = action;
   const selectedFrameId = frame.id;
   const instance = state.history[state.position];
@@ -85,12 +84,16 @@ function addScopes(state, action) {
   }
 
   const pausedInst = instance.paused;
+  const scopeValue = status === "done" ? {
+    pending: false,
+    scope: action.value
+  } : {
+    pending: true,
+    scope: null
+  };
 
   const generated = _objectSpread({}, pausedInst.frameScopes.generated, {
-    [selectedFrameId]: {
-      pending: status !== "done",
-      scope: value
-    }
+    [selectedFrameId]: scopeValue
   });
 
   const newPaused = _objectSpread({}, pausedInst, {

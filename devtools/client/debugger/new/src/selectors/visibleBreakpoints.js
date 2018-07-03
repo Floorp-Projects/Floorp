@@ -25,7 +25,7 @@ function formatBreakpoint(breakpoint, selectedSource) {
     disabled,
     hidden
   } = breakpoint;
-  const sourceId = selectedSource.get("id");
+  const sourceId = selectedSource.id;
   const isGeneratedSource = (0, _devtoolsSourceMap.isGeneratedId)(sourceId);
   return {
     location: getLocation(breakpoint, isGeneratedSource),
@@ -37,16 +37,14 @@ function formatBreakpoint(breakpoint, selectedSource) {
 }
 
 function isVisible(breakpoint, selectedSource) {
-  const sourceId = selectedSource.get("id");
+  const sourceId = selectedSource.id;
   const isGeneratedSource = (0, _devtoolsSourceMap.isGeneratedId)(sourceId);
   const location = getLocation(breakpoint, isGeneratedSource);
   return location.sourceId === sourceId;
 }
 /*
  * Finds the breakpoints, which appear in the selected source.
- *
- * This
- */
+  */
 
 
 function getVisibleBreakpoints(state) {

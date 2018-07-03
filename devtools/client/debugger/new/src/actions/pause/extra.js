@@ -73,6 +73,11 @@ function fetchExtra() {
     getState
   }) {
     const frame = (0, _selectors.getSelectedFrame)(getState());
+
+    if (!frame) {
+      return;
+    }
+
     const extra = await dispatch(getExtra("this;", frame.this));
     dispatch({
       type: "ADD_EXTRA",

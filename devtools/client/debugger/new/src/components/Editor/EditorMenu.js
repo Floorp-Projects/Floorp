@@ -48,7 +48,7 @@ function getMenuItems(event, {
   toggleBlackBox
 }) {
   // variables
-  const hasSourceMap = !!selectedSource.get("sourceMapURL");
+  const hasSourceMap = !!selectedSource.sourceMapURL;
   const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(selectedLocation.sourceId);
   const isPrettyPrinted = (0, _source.isPretty)(selectedSource);
   const isPrettified = isPrettyPrinted || hasPrettyPrint;
@@ -104,7 +104,7 @@ function getMenuItems(event, {
     disabled: false,
     click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(selectedSource.url))
   };
-  const sourceId = selectedSource.get("id");
+  const sourceId = selectedSource.id;
   const sourceLine = (0, _editor.toSourceLine)(sourceId, line);
   const functionText = getFunctionText(sourceLine);
   const copyFunctionItem = {
@@ -146,7 +146,7 @@ function getMenuItems(event, {
     label: toggleBlackBoxLabel,
     accesskey: blackboxKey,
     disabled: isOriginal || isPrettyPrinted || hasSourceMap,
-    click: () => toggleBlackBox(selectedSource.toJS())
+    click: () => toggleBlackBox(selectedSource)
   };
   const watchExpressionItem = {
     id: "node-menu-add-watch-expression",

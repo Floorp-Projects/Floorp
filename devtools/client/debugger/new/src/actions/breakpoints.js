@@ -407,12 +407,13 @@ function toggleBreakpoint(line, column) {
     client,
     sourceMaps
   }) => {
-    if (!line) {
+    const state = getState();
+    const selectedSource = (0, _selectors.getSelectedSource)(state);
+
+    if (!line || !selectedSource) {
       return;
     }
 
-    const state = getState();
-    const selectedSource = (0, _selectors.getSelectedSource)(state);
     const bp = (0, _selectors.getBreakpointAtLocation)(state, {
       line,
       column
@@ -449,11 +450,12 @@ function addOrToggleDisabledBreakpoint(line, column) {
     client,
     sourceMaps
   }) => {
-    if (!line) {
+    const selectedSource = (0, _selectors.getSelectedSource)(getState());
+
+    if (!line || !selectedSource) {
       return;
     }
 
-    const selectedSource = (0, _selectors.getSelectedSource)(getState());
     const bp = (0, _selectors.getBreakpointAtLocation)(getState(), {
       line,
       column
@@ -469,8 +471,8 @@ function addOrToggleDisabledBreakpoint(line, column) {
     }
 
     return dispatch(addBreakpoint({
-      sourceId: selectedSource.get("id"),
-      sourceUrl: selectedSource.get("url"),
+      sourceId: selectedSource.id,
+      sourceUrl: selectedSource.url,
       line: line,
       column: column
     }));

@@ -307,7 +307,10 @@ async function waitUntilApzStable() {
     function parentProcessFlush() {
       addMessageListener("apz-flush", function() {
         ChromeUtils.import("resource://gre/modules/Services.jsm");
-        var topWin = Services.wm.getMostRecentWindow("navigator:browser");
+        var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+        if (!topWin) {
+          topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
+        }
         var topUtils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -445,6 +448,9 @@ function getSnapshot(rect) {
     addMessageListener('snapshot', function(rect) {
       ChromeUtils.import('resource://gre/modules/Services.jsm');
       var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+      if (!topWin) {
+        topWin = Services.wm.getMostRecentWindow('navigator:geckoview');
+      }
 
       // reposition the rect relative to the top-level browser window
       rect = JSON.parse(rect);

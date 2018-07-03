@@ -40,7 +40,7 @@ function createPrettySource(sourceId) {
     getState,
     sourceMaps
   }) => {
-    const source = (0, _selectors.getSource)(getState(), sourceId);
+    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
     const url = (0, _source.getPrettySourceURL)(source.url);
     const id = await sourceMaps.generatedToOriginalId(sourceId, url);
     const prettySource = {
@@ -120,8 +120,7 @@ function togglePrettyPrint(sourceId) {
     }
 
     if (prettySource) {
-      const _sourceId = prettySource.get("id");
-
+      const _sourceId = prettySource.id;
       return dispatch((0, _sources.selectLocation)(_objectSpread({}, options.location, {
         sourceId: _sourceId
       })));

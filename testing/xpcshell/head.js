@@ -513,7 +513,9 @@ function _execute_test() {
 
   const {PerTestCoverageUtils} = ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm", {});
 
-  PerTestCoverageUtils.beforeTestSync();
+  if (runningInParent) {
+    PerTestCoverageUtils.beforeTestSync();
+  }
 
   try {
     do_test_pending("MAIN run_test");
@@ -534,7 +536,9 @@ function _execute_test() {
       coverageCollector.recordTestCoverage(_TEST_FILE[0]);
     }
 
-    PerTestCoverageUtils.afterTestSync();
+    if (runningInParent) {
+      PerTestCoverageUtils.afterTestSync();
+    }
   } catch (e) {
     _passed = false;
     // do_check failures are already logged and set _quit to true and throw

@@ -23,13 +23,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 function findSource(dbg, url) {
   const sources = dbg.selectors.getSources();
-  const source = sources.find(s => (s.get("url") || "").includes(url));
+  const source = sources.find(s => (s.url || "").includes(url));
 
   if (!source) {
     return;
   }
 
-  return source.toJS();
+  return source;
 }
 
 function sendPacket(dbg, packet, callback) {

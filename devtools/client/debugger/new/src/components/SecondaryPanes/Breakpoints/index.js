@@ -77,7 +77,7 @@ class Breakpoints extends _react.Component {
       breakpoints
     }) => [_react2.default.createElement("div", {
       className: "breakpoint-heading",
-      title: source.url,
+      title: (0, _source.getRawSourceURL)(source.url),
       key: source.url,
       onClick: () => this.props.selectSource(source.id)
     }, _react2.default.createElement(_SourceIcon2.default, {

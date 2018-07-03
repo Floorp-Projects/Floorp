@@ -79,7 +79,6 @@
 #include "ServiceWorkerRegisterJob.h"
 #include "ServiceWorkerRegistrar.h"
 #include "ServiceWorkerRegistration.h"
-#include "ServiceWorkerRegistrationListener.h"
 #include "ServiceWorkerScriptCache.h"
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerUnregisterJob.h"
@@ -1583,6 +1582,8 @@ ServiceWorkerManager::LoadRegistration(
     registration->SetActive(
       new ServiceWorkerInfo(registration->Principal(),
                             registration->Scope(),
+                            registration->Id(),
+                            registration->Version(),
                             currentWorkerURL,
                             aRegistration.cacheName(),
                             importsLoadFlags));
@@ -1906,7 +1907,7 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   swm->NotifyListenersOnUnregister(info);
 
   swm->MaybeRemoveRegistrationInfo(scopeKey);
-  swm->NotifyServiceWorkerRegistrationRemoved(aRegistration);
+  aRegistration->NotifyRemoved();
 }
 
 void
@@ -2004,64 +2005,6 @@ ServiceWorkerManager::GetScopeForUrl(nsIPrincipal* aPrincipal,
 
   aScope = NS_ConvertUTF8toUTF16(r->Scope());
   return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::AddRegistrationEventListener(const nsAString& aScope,
-                                                   ServiceWorkerRegistrationListener* aListener)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aListener);
-#ifdef DEBUG
-  // Ensure a registration is only listening for it's own scope.
-  nsAutoString regScope;
-  aListener->GetScope(regScope);
-  MOZ_ASSERT(!regScope.IsEmpty());
-  MOZ_ASSERT(aScope.Equals(regScope));
-#endif
-
-  MOZ_ASSERT(!mServiceWorkerRegistrationListeners.Contains(aListener));
-  mServiceWorkerRegistrationListeners.AppendElement(aListener);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::RemoveRegistrationEventListener(const nsAString& aScope,
-                                                      ServiceWorkerRegistrationListener* aListener)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aListener);
-#ifdef DEBUG
-  // Ensure a registration is unregistering for it's own scope.
-  nsAutoString regScope;
-  aListener->GetScope(regScope);
-  MOZ_ASSERT(!regScope.IsEmpty());
-  MOZ_ASSERT(aScope.Equals(regScope));
-#endif
-
-  MOZ_ASSERT(mServiceWorkerRegistrationListeners.Contains(aListener));
-  mServiceWorkerRegistrationListeners.RemoveElement(aListener);
-  return NS_OK;
-}
-
-void
-ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations(
-  ServiceWorkerRegistrationInfo* aRegistration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    nsAutoString regScope;
-    target->GetScope(regScope);
-    MOZ_ASSERT(!regScope.IsEmpty());
-
-    NS_ConvertUTF16toUTF8 utf8Scope(regScope);
-    if (utf8Scope.Equals(aRegistration->Scope())) {
-      target->UpdateFound();
-    }
-  }
 }
 
 namespace {
@@ -2363,38 +2306,6 @@ ServiceWorkerManager::GetClientRegistration(const ClientInfo& aClientInfo,
   RefPtr<ServiceWorkerRegistrationInfo> ref = data->mRegistrationInfo;
   ref.forget(aRegistrationInfo);
   return NS_OK;
-}
-
-void
-ServiceWorkerManager::UpdateRegistrationListeners(ServiceWorkerRegistrationInfo* aReg)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    if (target->MatchesDescriptor(aReg->Descriptor())) {
-      target->UpdateState(aReg->Descriptor());
-    }
-  }
-}
-
-void
-ServiceWorkerManager::NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegistrationInfo* aRegistration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    nsAutoString regScope;
-    target->GetScope(regScope);
-    MOZ_ASSERT(!regScope.IsEmpty());
-
-    NS_ConvertUTF16toUTF8 utf8Scope(regScope);
-
-    if (utf8Scope.Equals(aRegistration->Scope())) {
-      target->RegistrationRemoved();
-    }
-  }
 }
 
 void
