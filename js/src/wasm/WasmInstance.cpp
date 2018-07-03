@@ -478,6 +478,7 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
     return -1;
 }
 
+#ifdef ENABLE_WASM_GC
 /* static */ void
 Instance::postBarrier(Instance* instance, PostBarrierArg arg)
 {
@@ -499,6 +500,7 @@ Instance::postBarrier(Instance* instance, PostBarrierArg arg)
     MOZ_ASSERT(cell);
     TlsContext.get()->runtime()->gc.storeBuffer().putCell(cell);
 }
+#endif // ENABLE_WASM_GC
 
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
@@ -662,7 +664,9 @@ Instance::init(JSContext* cx)
         return false;
     jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
     jsJitExceptionHandler_ = jitRuntime->getExceptionTail();
+#ifdef ENABLE_WASM_GC
     preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
+#endif
     return true;
 }
 
