@@ -399,6 +399,21 @@ public:
     // GetValueAt().
     size_t Index() const { return mEntry - mMap->Entries().get(); }
 
+    bool operator==(const Pref& aPref) const { return mEntry == aPref.mEntry; }
+    bool operator!=(const Pref& aPref) const { return !(*this == aPref); }
+
+    // This is odd, but necessary in order for the C++ range iterator protocol
+    // to work here.
+    Pref& operator*() { return *this; }
+
+    // Updates this wrapper to point to the next entry in the map. This should
+    // not be attempted unless Index() is less than the map's Count().
+    Pref& operator++()
+    {
+      mEntry++;
+      return *this;
+    }
+
     Pref(const Pref& aPref) = default;
 
   protected:
@@ -462,8 +477,34 @@ public:
   const Pref GetValueAt(uint32_t aIndex) const
   {
     MOZ_ASSERT(aIndex < Count());
+    return UncheckedGetValueAt(aIndex);
+  }
+
+private:
+  // Returns a wrapper with a pointer to an entry without checking its bounds.
+  // This should only be used by range iterators, to check their end positions.
+  //
+  // Note: In debug builds, the RangePtr returned by entries will still assert
+  // that aIndex is no more than 1 past the last element in the array, since it
+  // also takes into account the ranged iteration use case.
+  Pref UncheckedGetValueAt(uint32_t aIndex) const
+  {
     return { this, (Entries() + aIndex).get() };
   }
+
+public:
+  // C++ range iterator protocol. begin() and end() return references to the
+  // first and last entries in the array. The begin wrapper can be incremented
+  // until it matches the last element in the array, at which point it becomes
+  // invalid and the iteration is over.
+  Pref begin() const { return UncheckedGetValueAt(0); }
+  Pref end() const { return UncheckedGetValueAt(Count()); }
+
+  // A cosmetic helper for range iteration. Returns a reference value from a
+  // pointer to this instance so that its .begin() and .end() methods can be
+  // accessed in a ranged for loop. `map->Iter()` is equivalent to `*map`, but
+  // makes its purpose slightly clearer.
+  const SharedPrefMap& Iter() const { return *this; }
 
   // Returns a copy of the read-only file descriptor which backs the shared
   // memory region for this map. The file descriptor may be passed between
