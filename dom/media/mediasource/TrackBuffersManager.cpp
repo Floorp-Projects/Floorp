@@ -177,7 +177,7 @@ TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
   // The source buffer is a wrapped native, it would be unlinked twice and so
   // the TrackBuffersManager::Detach() would also be called twice. Since the
   // detach task has been done before, we could ignore this task.
-  RefPtr<AutoTaskQueue> taskQueue = GetTaskQueueSafe();
+  RefPtr<TaskQueue> taskQueue = GetTaskQueueSafe();
   if (!taskQueue) {
     MOZ_ASSERT(aTask->GetType() == SourceBufferTask::Type::Detach,
                "only detach task could happen here!");

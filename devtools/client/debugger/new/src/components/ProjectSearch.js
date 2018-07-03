@@ -321,4 +321,11 @@ const mapStateToProps = state => ({
   status: (0, _selectors.getTextSearchStatus)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(ProjectSearch);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  closeProjectSearch: _actions2.default.closeProjectSearch,
+  searchSources: _actions2.default.searchSources,
+  clearSearch: _actions2.default.clearSearch,
+  selectLocation: _actions2.default.selectLocation,
+  setActiveSearch: _actions2.default.setActiveSearch,
+  doSearchForHighlight: _actions2.default.doSearchForHighlight
+})(ProjectSearch);

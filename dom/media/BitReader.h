@@ -13,12 +13,12 @@ namespace mozilla
 class BitReader
 {
 public:
-  explicit BitReader(const mozilla::MediaByteBuffer* aBuffer);
-  BitReader(const mozilla::MediaByteBuffer* aBuffer, size_t aBits);
+  explicit BitReader(const MediaByteBuffer* aBuffer);
+  BitReader(const MediaByteBuffer* aBuffer, size_t aBits);
   BitReader(const uint8_t* aBuffer, size_t aBits);
   ~BitReader();
   uint32_t ReadBits(size_t aNum);
-  uint32_t ReadBit() { return ReadBits(1); }
+  bool ReadBit() { return ReadBits(1) != 0; }
   uint32_t ReadU32() { return ReadBits(32); }
   uint64_t ReadU64();
 
@@ -34,6 +34,9 @@ public:
   size_t BitCount() const;
   // Return the number of bits left.
   size_t BitsLeft() const;
+
+  // Return RBSP bit length.
+  static uint32_t GetBitLength(const MediaByteBuffer* aNAL);
 
 private:
   void FillReservoir();

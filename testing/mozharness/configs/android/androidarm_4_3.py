@@ -31,4 +31,5 @@ config = {
         "name": "test-1",
         "device_id": "emulator-5554",
     },
+    "marionette_extra": "--emulator",
 }

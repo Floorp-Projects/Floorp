@@ -174,4 +174,9 @@ const mapStateToProps = state => ({
   pause: (0, _selectors.isPaused)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Frames);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  selectFrame: _actions2.default.selectFrame,
+  toggleBlackBox: _actions2.default.toggleBlackBox,
+  toggleFrameworkGrouping: _actions2.default.toggleFrameworkGrouping,
+  disableFrameTruncate: _actions2.default.disableFrameTruncate
+})(Frames);

@@ -14,8 +14,15 @@ WorkerNavigator implements NavigatorConcurrentHardware;
 WorkerNavigator implements NavigatorStorage;
 
 // http://wicg.github.io/netinfo/#extensions-to-the-navigator-interface
-[Exposed=(Worker)]
+[Exposed=Worker]
 partial interface WorkerNavigator {
     [Func="mozilla::dom::DOMPrefs::NetworkInformationEnabled", Throws]
     readonly attribute NetworkInformation connection;
+};
+
+// https://wicg.github.io/media-capabilities/#idl-index
+[Exposed=Worker]
+partial interface WorkerNavigator {
+  [SameObject, Func="mozilla::dom::MediaCapabilities::Enabled"]
+  readonly attribute MediaCapabilities mediaCapabilities;
 };

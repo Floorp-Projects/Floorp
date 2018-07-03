@@ -6,7 +6,6 @@
 
 #include "MediaFormatReader.h"
 
-#include "AutoTaskQueue.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "VideoFrameContainer.h"
@@ -18,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
@@ -921,9 +921,9 @@ class MediaFormatReader::DemuxerProxy
 
 public:
   explicit DemuxerProxy(MediaDataDemuxer* aDemuxer)
-    : mTaskQueue(new AutoTaskQueue(
-        GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-        "DemuxerProxy::mTaskQueue"))
+    : mTaskQueue(
+        new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                      "DemuxerProxy::mTaskQueue"))
     , mData(new Data(aDemuxer))
   {
     MOZ_COUNT_CTOR(DemuxerProxy);
@@ -1016,7 +1016,7 @@ public:
   }
 
 private:
-  const RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   struct Data
   {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Data)
@@ -1049,7 +1049,7 @@ private:
 class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer
 {
 public:
-  Wrapper(MediaTrackDemuxer* aTrackDemuxer, AutoTaskQueue* aTaskQueue)
+  Wrapper(MediaTrackDemuxer* aTrackDemuxer, TaskQueue* aTaskQueue)
     : mMutex("TrackDemuxer Mutex")
     , mTaskQueue(aTaskQueue)
     , mGetSamplesMayBlock(aTrackDemuxer->GetSamplesMayBlock())
@@ -1166,7 +1166,7 @@ public:
 
 private:
   Mutex mMutex;
-  const RefPtr<AutoTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   const bool mGetSamplesMayBlock;
   const UniquePtr<TrackInfo> mInfo;
   // mTrackDemuxer is only ever accessed on demuxer's task queue.
@@ -1220,7 +1220,7 @@ MediaFormatReader::DemuxerProxy::Init()
   using InitPromise = MediaDataDemuxer::InitPromise;
 
   RefPtr<Data> data = mData;
-  RefPtr<AutoTaskQueue> taskQueue = mTaskQueue;
+  RefPtr<TaskQueue> taskQueue = mTaskQueue;
   return InvokeAsync(mTaskQueue, __func__,
                      [data, taskQueue]() {
                        if (!data->mDemuxer) {

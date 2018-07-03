@@ -328,6 +328,7 @@ public class CrashReporterService extends IntentService {
             sendPart(os, boundary, "Android_Display", Build.DISPLAY);
             sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
             sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI);
+            sendPart(os, boundary, "Android_PackageName", getPackageName());
             try {
                 sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
                 sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);

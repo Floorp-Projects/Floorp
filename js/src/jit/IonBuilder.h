@@ -780,7 +780,7 @@ class IonBuilder
     InliningResult inlineIsConstructor(CallInfo& callInfo);
     InliningResult inlineIsObject(CallInfo& callInfo);
     InliningResult inlineToObject(CallInfo& callInfo);
-    InliningResult inlineIsWrappedArrayConstructor(CallInfo& callInfo);
+    InliningResult inlineIsCrossRealmArrayConstructor(CallInfo& callInfo);
     InliningResult inlineToInteger(CallInfo& callInfo);
     InliningResult inlineToString(CallInfo& callInfo);
     InliningResult inlineDump(CallInfo& callInfo);

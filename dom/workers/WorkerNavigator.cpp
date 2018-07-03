@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/StorageManager.h"
@@ -31,7 +32,7 @@ namespace dom {
 using namespace workerinternals;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WorkerNavigator, mStorageManager,
-                                      mConnection);
+                                      mConnection, mMediaCapabilities);
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerNavigator, Release)
@@ -216,6 +217,20 @@ WorkerNavigator::GetConnection(ErrorResult& aRv)
   return mConnection;
 }
 
+dom::MediaCapabilities*
+WorkerNavigator::MediaCapabilities()
+{
+  if (!mMediaCapabilities) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+
+    nsIGlobalObject* global = workerPrivate->GlobalScope();
+    MOZ_ASSERT(global);
+
+    mMediaCapabilities = new dom::MediaCapabilities(global);
+  }
+  return mMediaCapabilities;
+}
 
 } // namespace dom
 } // namespace mozilla

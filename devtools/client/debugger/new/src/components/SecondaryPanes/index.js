@@ -408,4 +408,10 @@ const mapStateToProps = state => ({
   workers: (0, _selectors.getWorkers)(state)
 });
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(SecondaryPanes);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, {
+  toggleAllBreakpoints: _actions2.default.toggleAllBreakpoints,
+  toggleShortcutsModal: _actions2.default.toggleShortcutsModal,
+  evaluateExpressions: _actions2.default.evaluateExpressions,
+  pauseOnExceptions: _actions2.default.pauseOnExceptions,
+  breakOnNext: _actions2.default.breakOnNext
+})(SecondaryPanes);

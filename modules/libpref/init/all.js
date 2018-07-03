@@ -547,6 +547,8 @@ pref("media.benchmark.vp9.threshold", 150);
 pref("media.benchmark.frames", 300);
 pref("media.benchmark.timeout", 1000);
 
+pref("media.media-capabilities.enabled", false);
+
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.synth.enabled", false);
 #endif

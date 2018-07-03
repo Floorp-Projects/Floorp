@@ -538,8 +538,7 @@ OggDemuxer::ReadMetadata()
           NS_WARNING("Opus decoding disabled."
                      " See media.opus.enabled in about:config");
         }
-      } else if (StaticPrefs::MediaOggFlacEnabled() &&
-                 s->GetType() == OggCodecState::TYPE_FLAC &&
+      } else if (s->GetType() == OggCodecState::TYPE_FLAC &&
                  ReadHeaders(TrackInfo::kAudioTrack, s)) {
         if (!mFlacState) {
           SetupTarget(&mFlacState, s);

@@ -2347,6 +2347,50 @@ TemporaryTypeSet::getKnownClass(CompilerConstraintList* constraints)
     return clasp;
 }
 
+Realm*
+TemporaryTypeSet::getKnownRealm(CompilerConstraintList* constraints)
+{
+    if (unknownObject())
+        return nullptr;
+
+    Realm* realm = nullptr;
+    unsigned count = getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        const Class* clasp = getObjectClass(i);
+        if (!clasp)
+            continue;
+
+        // If clasp->isProxy(), this might be a cross-compartment wrapper and
+        // CCWs don't have a (single) realm, so we give up. If the object has
+        // unknownProperties(), hasStableClassAndProto (called below) will
+        // return |false| so fail now before attaching any constraints.
+        if (clasp->isProxy() || getObject(i)->unknownProperties())
+            return nullptr;
+
+        MOZ_ASSERT(hasSingleton(i) || hasGroup(i));
+
+        Realm* nrealm = hasSingleton(i) ? getSingleton(i)->nonCCWRealm() : getGroup(i)->realm();
+        MOZ_ASSERT(nrealm);
+        if (!realm) {
+            realm = nrealm;
+            continue;
+        }
+        if (realm != nrealm)
+            return nullptr;
+    }
+
+    if (realm) {
+        for (unsigned i = 0; i < count; i++) {
+            ObjectKey* key = getObject(i);
+            if (key && !key->hasStableClassAndProto(constraints))
+                return nullptr;
+        }
+    }
+
+    return realm;
+}
+
 void
 TemporaryTypeSet::getTypedArraySharedness(CompilerConstraintList* constraints,
                                           TypedArraySharedness* sharedness)

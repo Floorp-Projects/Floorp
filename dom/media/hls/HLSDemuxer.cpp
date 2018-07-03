@@ -132,8 +132,8 @@ private:
 };
 
 HLSDemuxer::HLSDemuxer(int aPlayerId)
-  : mTaskQueue(new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                                 /* aSupportsTailDispatch = */ false))
+  : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+                             /* aSupportsTailDispatch = */ false))
 {
   MOZ_ASSERT(NS_IsMainThread());
   HLSDemuxerCallbacksSupport::Init();
