@@ -49,6 +49,7 @@
 #include "nsWebShellWindow.h" // get rid of this one, too...
 #include "nsGlobalWindow.h"
 #include "XULDocument.h"
+#include "nsXULTooltipListener.h"
 
 #include "prenv.h"
 #include "mozilla/AutoRestore.h"
@@ -516,6 +517,8 @@ NS_IMETHODIMP nsXULWindow::Destroy()
     }
   }
 #endif
+
+  RemoveTooltipSupport();
 
   mDOMWindow = nullptr;
   if (mDocShell) {
@@ -1127,12 +1130,57 @@ void nsXULWindow::OnChromeLoaded()
       if (mShowAfterLoad) {
         SetVisibility(true);
       }
+      AddTooltipSupport();
     }
     // At this point the window may have been closed already during Show() or
     // SyncAttributesToWidget(), so nsXULWindow::Destroy may already have been
     // called. Take care!
   }
   mPersistentAttributesMask |= PAD_POSITION | PAD_SIZE | PAD_MISC;
+}
+
+bool
+nsXULWindow::NeedsTooltipListener()
+{
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
+  if (!docShellElement || docShellElement->IsXULElement()) {
+    // Tooltips in XUL are handled by each element.
+    return false;
+  }
+  // All other non-XUL document types need a tooltip listener.
+  return true;
+}
+
+void
+nsXULWindow::AddTooltipSupport()
+{
+  if (!NeedsTooltipListener()) {
+    return;
+  }
+  nsXULTooltipListener* listener = nsXULTooltipListener::GetInstance();
+  if (!listener) {
+    return;
+  }
+
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
+  MOZ_ASSERT(docShellElement);
+  listener->AddTooltipSupport(docShellElement);
+}
+
+void
+nsXULWindow::RemoveTooltipSupport()
+{
+  if (!NeedsTooltipListener()) {
+    return;
+  }
+  nsXULTooltipListener* listener = nsXULTooltipListener::GetInstance();
+  if (!listener) {
+    return;
+  }
+
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
+  MOZ_ASSERT(docShellElement);
+  listener->RemoveTooltipSupport(docShellElement);
 }
 
 // If aSpecWidth and/or aSpecHeight are > 0, we will use these CSS px sizes
