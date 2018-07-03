@@ -71,18 +71,16 @@ function getClient() {
 }
 
 function getTarget(client) {
-  const deferred = defer();
-
-  client.listTabs().then(tabList => {
-    const target = TargetFactory.forRemoteTab({
-      client: client,
-      form: tabList.tabs[tabList.selected],
-      chrome: false
+  return new Promise(resolve => {
+    client.listTabs().then(tabList => {
+      const target = TargetFactory.forRemoteTab({
+        client: client,
+        form: tabList.tabs[tabList.selected],
+        chrome: false
+      });
+      resolve(target);
     });
-    deferred.resolve(target);
   });
-
-  return deferred.promise;
 }
 
 function test() {
