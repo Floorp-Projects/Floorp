@@ -773,6 +773,12 @@ case "$target" in
             # jemalloc uses __declspec(allocator) as a profiler hint,
             # which clang-cl doesn't understand.
             CXXFLAGS="$CXXFLAGS -Wno-ignored-attributes"
+            # __attribute__((unused)) really means "might be unused" and
+            # we use it to avoid warnings about things that are unused
+            # in some compilation units, but used in many others.  This
+            # warning insists on complaining about the latter case, which
+            # is annoying, and rather noisy.
+            CXXFLAGS="$CXXFLAGS -Wno-used-but-marked-unused"
         fi
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
