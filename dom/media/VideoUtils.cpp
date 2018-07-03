@@ -417,11 +417,12 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec,
 
 bool
 ExtractH264CodecDetails(const nsAString& aCodec,
-                        int16_t& aProfile,
-                        int16_t& aLevel)
+                        uint8_t& aProfile,
+                        uint8_t& aConstraint,
+                        uint8_t& aLevel)
 {
   // H.264 codecs parameters have a type defined as avcN.PPCCLL, where
-  // N = avc type. avc3 is avcc with SPS & PPS implicit (within stream)
+  // N = avc type. avc3 is avcc with SPS & PPS implicit (within stream)
   // PP = profile_idc, CC = constraint_set flags, LL = level_idc.
   // We ignore the constraint_set flags, as it's not clear from any
   // documentation what constraints the platform decoders support.
@@ -437,9 +438,14 @@ ExtractH264CodecDetails(const nsAString& aCodec,
     return false;
   }
 
-  // Extract the profile_idc and level_idc.
+  // Extract the profile_idc, constraint_flags and level_idc.
   nsresult rv = NS_OK;
   aProfile = PromiseFlatString(Substring(aCodec, 5, 2)).ToInteger(&rv, 16);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Constraint flags are stored on the 6 most significant bits, first two bits
+  // are reserved_zero_2bits.
+  aConstraint = PromiseFlatString(Substring(aCodec, 7, 2)).ToInteger(&rv, 16);
   NS_ENSURE_SUCCESS(rv, false);
 
   aLevel = PromiseFlatString(Substring(aCodec, 9, 2)).ToInteger(&rv, 16);
@@ -451,14 +457,10 @@ ExtractH264CodecDetails(const nsAString& aCodec,
     aLevel *= 10;
   }
 
-  // Capture the constraint_set flag value for the purpose of Telemetry.
-  // We don't NS_ENSURE_SUCCESS here because ExtractH264CodecDetails doesn't
-  // care about this, but we make sure constraints is above 4 (constraint_set5_flag)
+  // We only make sure constraints is above 4 for collection perspective
   // otherwise collect 0 for unknown.
-  uint8_t constraints = PromiseFlatString(Substring(aCodec, 7, 2)).ToInteger(&rv, 16);
   Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG,
-                        constraints >= 4 ? constraints : 0);
-
+                        aConstraint >= 4 ? aConstraint : 0);
   // 244 is the highest meaningful profile value (High 4:4:4 Intra Profile)
   // that can be represented as single hex byte, otherwise collect 0 for unknown.
   Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_PROFILE,
@@ -659,9 +661,10 @@ StartsWith(const nsACString& string, const char (&prefix)[N])
 bool
 IsH264CodecString(const nsAString& aCodec)
 {
-  int16_t profile = 0;
-  int16_t level = 0;
-  return ExtractH264CodecDetails(aCodec, profile, level);
+  uint8_t profile = 0;
+  uint8_t constraint = 0;
+  uint8_t level = 0;
+  return ExtractH264CodecDetails(aCodec, profile, constraint, level);
 }
 
 bool
@@ -730,6 +733,18 @@ CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
       Maybe<int32_t> maybeHeight = aContainerType.ExtendedType().GetHeight();
       if (maybeHeight && *maybeHeight > 0) {
         videoInfo->mImage.height = *maybeHeight;
+      }
+    } else if (trackInfo->GetAsAudioInfo()) {
+      AudioInfo* audioInfo = trackInfo->GetAsAudioInfo();
+      Maybe<int32_t> maybeChannels =
+        aContainerType.ExtendedType().GetChannels();
+      if (maybeChannels && *maybeChannels > 0) {
+        audioInfo->mChannels = *maybeChannels;
+      }
+      Maybe<int32_t> maybeSamplerate =
+        aContainerType.ExtendedType().GetSamplerate();
+      if (maybeSamplerate && *maybeSamplerate > 0) {
+        audioInfo->mRate = *maybeSamplerate;
       }
     }
   }

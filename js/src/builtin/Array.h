@@ -192,7 +192,7 @@ extern bool
 array_construct(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
-IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result);
+IsCrossRealmArrayConstructor(JSContext* cx, const Value& v, bool* result);
 
 class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
 {

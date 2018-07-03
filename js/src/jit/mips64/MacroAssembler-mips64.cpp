@@ -99,6 +99,11 @@ MacroAssemblerMIPS64Compat::convertDoubleToFloat32(FloatRegister src, FloatRegis
     as_cvtsd(dest, src);
 }
 
+const int CauseBitPos = int(Assembler::CauseI);
+const int CauseBitCount = 1 + int(Assembler::CauseV) - int(Assembler::CauseI);
+const int CauseIOrVMask = ((1 << int(Assembler::CauseI)) |
+                           (1 << int(Assembler::CauseV))) >> int(Assembler::CauseI);
+
 // Checks whether a double is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
@@ -116,8 +121,8 @@ MacroAssemblerMIPS64Compat::convertDoubleToInt32(FloatRegister src, Register des
     as_truncwd(ScratchFloat32Reg, src);
     as_cfc1(ScratchRegister, Assembler::FCSR);
     moveFromFloat32(ScratchFloat32Reg, dest);
-    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 6);
-    as_andi(ScratchRegister, ScratchRegister, 0x11);//masking for Inexact and Invalid flag.
+    ma_ext(ScratchRegister, ScratchRegister, CauseBitPos, CauseBitCount);
+    as_andi(ScratchRegister, ScratchRegister, CauseIOrVMask); //masking for Inexact and Invalid flag.
     ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
@@ -136,7 +141,8 @@ MacroAssemblerMIPS64Compat::convertFloat32ToInt32(FloatRegister src, Register de
     as_truncws(ScratchFloat32Reg, src);
     as_cfc1(ScratchRegister, Assembler::FCSR);
     moveFromFloat32(ScratchFloat32Reg, dest);
-    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseI, 1);
+    ma_ext(ScratchRegister, ScratchRegister, CauseBitPos, CauseBitCount);
+    as_andi(ScratchRegister, ScratchRegister, CauseIOrVMask);
     ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 

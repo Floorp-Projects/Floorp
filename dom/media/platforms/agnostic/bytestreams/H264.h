@@ -473,6 +473,13 @@ public:
   // Returns the frame type. Returns I_FRAME if the sample is an IDR
   // (Instantaneous Decoding Refresh) Picture.
   static FrameType GetFrameType(const mozilla::MediaRawData* aSample);
+  // Create a dummy extradata, useful to create a decoder and test the
+  // capabilities of the decoder.
+  static already_AddRefed<mozilla::MediaByteBuffer> CreateExtraData(
+    uint8_t aProfile,
+    uint8_t aConstraints,
+    uint8_t aLevel,
+    const gfx::IntSize& aSize);
 
 private:
   friend class SPSNAL;
@@ -481,6 +488,8 @@ private:
      This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
    */
   static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
+    const uint8_t* aNAL, size_t aLength);
+  static already_AddRefed<mozilla::MediaByteBuffer> EncodeNALUnit(
     const uint8_t* aNAL, size_t aLength);
   /* Decode SPS NAL RBSP and fill SPSData structure */
   static bool DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest);

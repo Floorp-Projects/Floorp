@@ -31,6 +31,8 @@
 #include "prsystem.h"
 #include "nsIXULRuntime.h"
 #include "mozilla/mscom/EnsureMTA.h"
+#include <algorithm>
+#include <vector>
 
 extern const GUID CLSID_WebmMfVpxDec;
 extern const GUID CLSID_AMDWebmMfVp9Dec;
@@ -204,6 +206,17 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
   if ((aTrackInfo.mMimeType.EqualsLiteral("audio/mp4a-latm") ||
        aTrackInfo.mMimeType.EqualsLiteral("audio/mp4")) &&
        WMFDecoderModule::HasAAC()) {
+    const auto audioInfo = aTrackInfo.GetAsAudioInfo();
+    if (audioInfo && audioInfo->mRate > 0) {
+      // Supported sampling rates per:
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/dd742784(v=vs.85).aspx
+      const std::vector<uint32_t> frequencies = {
+        8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000,
+      };
+      return std::find(frequencies.begin(),
+                       frequencies.end(),
+                       audioInfo->mRate) != frequencies.end();
+    }
     return true;
   }
   if (MP4Decoder::IsH264(aTrackInfo.mMimeType) && WMFDecoderModule::HasH264()) {

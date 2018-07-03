@@ -307,7 +307,8 @@ js::ReportOutOfMemory(JSContext* cx)
     if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback)
         oomCallback(cx, cx->runtime()->oomCallbackData);
 
-    cx->setPendingException(StringValue(cx->names().outOfMemory));
+    RootedValue oomMessage(cx, StringValue(cx->names().outOfMemory));
+    cx->setPendingException(oomMessage);
 }
 
 mozilla::GenericErrorResult<OOM&>

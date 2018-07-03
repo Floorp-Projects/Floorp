@@ -1801,7 +1801,7 @@ nsCSSRendering::ShouldPaintBoxShadowInner(nsIFrame* aFrame)
     return false;
 
   if (aFrame->IsThemed() && aFrame->GetContent() &&
-      !nsContentUtils::IsChromeDoc(aFrame->GetContent()->GetUncomposedDoc())) {
+      !nsContentUtils::IsChromeDoc(aFrame->GetContent()->GetComposedDoc())) {
     // There's no way of getting hold of a shape corresponding to a
     // "padding-box" for native-themed widgets, so just don't draw
     // inner box-shadows for them. But we allow chrome to paint inner

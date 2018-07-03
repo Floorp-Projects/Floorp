@@ -809,14 +809,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
-// Flac
-// Use new MediaFormatReader architecture for plain ogg.
-VARCACHE_PREF(
-  "media.ogg.flac.enabled",
-   MediaOggFlacEnabled,
-  RelaxedAtomicBool, true
-)
-
 VARCACHE_PREF(
   "media.flac.enabled",
    MediaFlacEnabled,
@@ -888,6 +880,42 @@ VARCACHE_PREF(
   "media.autoplay.block-event.enabled",
    MediaBlockEventEnabled,
   bool, false
+)
+
+VARCACHE_PREF(
+  "media.media-capabilities.enabled",
+   MediaCapabilitiesEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  "media.benchmark.vp9.fps",
+   MediaBenchmarkVp9Fps,
+  RelaxedAtomicUint32, 0
+)
+
+VARCACHE_PREF(
+  "media.benchmark.vp9.threshold",
+   MediaBenchmarkVp9Threshold,
+  RelaxedAtomicUint32, 150
+)
+
+VARCACHE_PREF(
+  "media.benchmark.vp9.versioncheck",
+   MediaBenchmarkVp9Versioncheck,
+  RelaxedAtomicUint32, 0
+)
+
+VARCACHE_PREF(
+  "media.benchmark.frames",
+   MediaBenchmarkFrames,
+  RelaxedAtomicUint32, 300
+)
+
+VARCACHE_PREF(
+  "media.benchmark.timeout",
+   MediaBenchmarkTimeout,
+  RelaxedAtomicUint32, 1000
 )
 
 //---------------------------------------------------------------------------

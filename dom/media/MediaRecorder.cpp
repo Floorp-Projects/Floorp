@@ -1530,6 +1530,10 @@ static char const *const gWebMVideoEncoderCodecs[4] = {
   // no VP9 yet
   nullptr,
 };
+static char const *const gWebMAudioEncoderCodecs[4] = {
+  "opus",
+  nullptr,
+};
 static char const *const gOggAudioEncoderCodecs[2] = {
   "opus",
   // we could support vorbis here too, but don't
@@ -1578,9 +1582,14 @@ MediaRecorder::IsTypeSupported(const nsAString& aMIMEType)
     }
   }
 #ifdef MOZ_WEBM_ENCODER
-  else if (mimeType.EqualsLiteral(VIDEO_WEBM) &&
+  else if ((mimeType.EqualsLiteral(VIDEO_WEBM) ||
+            mimeType.EqualsLiteral(AUDIO_WEBM)) &&
            MediaEncoder::IsWebMEncoderEnabled()) {
-    codeclist = gWebMVideoEncoderCodecs;
+    if (mimeType.EqualsLiteral(AUDIO_WEBM)) {
+      codeclist = gWebMAudioEncoderCodecs;
+    } else {
+      codeclist = gWebMVideoEncoderCodecs;
+    }
   }
 #endif
 
