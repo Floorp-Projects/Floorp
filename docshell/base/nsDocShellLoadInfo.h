@@ -17,6 +17,10 @@ class nsISHEntry;
 class nsIURI;
 class nsIDocShell;
 
+/**
+ * nsDocShellLoadInfo contains setup information used in a nsIDocShell::loadURI
+ * call.
+ */
 class nsDocShellLoadInfo
 {
 public:
@@ -106,6 +110,8 @@ public:
 
   void SetBaseURI(nsIURI* aBaseURI);
 
+  // Helper function allowing convenient work with mozilla::Maybe in C++, hiding
+  // resultPrincipalURI and resultPrincipalURIIsSome attributes from the consumer.
   void
   GetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const;
 
@@ -116,26 +122,83 @@ protected:
   virtual ~nsDocShellLoadInfo();
 
 protected:
+  // This is the referrer for the load.
   nsCOMPtr<nsIURI> mReferrer;
+
+  // The originalURI to be passed to nsIDocShell.internalLoad. May be null.
   nsCOMPtr<nsIURI> mOriginalURI;
+
+  // Result principal URL from nsILoadInfo, may be null. Valid only if
+  // mResultPrincipalURIIsSome is true (has the same meaning as isSome() on
+  // mozilla::Maybe.)
   nsCOMPtr<nsIURI> mResultPrincipalURI;
-  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   bool mResultPrincipalURIIsSome;
+
+  // The principal of the load, that is, the entity responsible for causing the
+  // load to occur. In most cases the referrer and the triggeringPrincipal's URI
+  // will be identical.
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+
+  // loadReplace flag to be passed to nsIDocShell.internalLoad.
   bool mLoadReplace;
+
+  // If this attribute is true and no triggeringPrincipal is specified,
+  // copy the principal from the referring document.
   bool mInheritPrincipal;
+
+  // If this attribute is true only ever use the principal specified
+  // by the triggeringPrincipal and inheritPrincipal attributes.
+  // If there are security reasons for why this is unsafe, such
+  // as trying to use a systemprincipal as the triggeringPrincipal
+  // for a content docshell the load fails.
   bool mPrincipalIsExplicit;
+
+  // If this attribute is true, then a top-level navigation
+  // to a data URI will be allowed.
   bool mForceAllowDataURI;
+
+  // If this attribute is true, this load corresponds to a frame
+  // element loading its original src (or srcdoc) attribute.
   bool mOriginalFrameSrc;
+
+  // True if the referrer should be sent, false if it shouldn't be sent, even if
+  // it's available. This attribute defaults to true.
   bool mSendReferrer;
+
+  // Referrer policy for the load. This attribute holds one of the values
+  // (REFERRER_POLICY_*) defined in nsIHttpChannel.
   mozilla::net::ReferrerPolicy mReferrerPolicy;
+
+  // Contains a load type as specified by the nsDocShellLoadTypes::load*
+  // constants
   uint32_t mLoadType;
+
+  // SHEntry for this page
   nsCOMPtr<nsISHEntry> mSHEntry;
+
+  // Target for load, like _content, _blank etc.
   nsString mTarget;
+
+  // Post data
   nsCOMPtr<nsIInputStream> mPostDataStream;
+
+  // Additional Headers
   nsCOMPtr<nsIInputStream> mHeadersStream;
+
+  // True if the docshell has been created to load an iframe where the srcdoc
+  // attribute has been set. Set when srcdocData is specified.
   bool mIsSrcdocLoad;
+
+  // When set, the load will be interpreted as a srcdoc load, where contents of
+  // this string will be loaded instead of the URI. Setting srcdocData sets
+  // isSrcdocLoad to true
   nsString mSrcdocData;
+
+  // When set, this is the Source Browsing Context for the navigation.
   nsCOMPtr<nsIDocShell> mSourceDocShell;
+
+  // Used for srcdoc loads to give view-source knowledge of the load's base URI
+  // as this information isn't embedded in the load's URI.
   nsCOMPtr<nsIURI> mBaseURI;
 };
 
