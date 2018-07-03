@@ -161,6 +161,14 @@ public:
   nsresult SetText(const nsAString& aString);
 
   /**
+   * Replace all text in this editor with aString and treat the change as
+   * inserting the string.
+   *
+   * @param aString    The string to set.
+   */
+  nsresult ReplaceTextAsAction(const nsAString& aString);
+
+  /**
    * OnInputParagraphSeparator() is called when user tries to separate current
    * paragraph with Enter key press or something.
    */
@@ -262,6 +270,14 @@ protected: // May be called by friends.
   virtual nsresult
   DeleteSelectionWithTransaction(EDirection aAction,
                                  EStripWrappers aStripWrappers);
+
+  /**
+   * Replace existed string with aString.  Caller must guarantee that there
+   * is a placeholder transaction which will have the transaction.
+   *
+   * @ param aString   The string to be set.
+   */
+  nsresult SetTextAsSubAction(const nsAString& aString);
 
   /**
    * InsertBrElementWithTransaction() creates a <br> element and inserts it
