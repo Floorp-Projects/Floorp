@@ -344,6 +344,10 @@
 
 }
 
-#font-container .devtools-sidepanel-no-result + .accordion {
-  border-block-start: 1px solid var(--theme-splitter-color);
+#font-container .accordion {
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+#font-container .accordion + .accordion {
+  border-top: none;
 }
