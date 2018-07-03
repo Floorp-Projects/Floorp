@@ -53,22 +53,6 @@
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
-  <!-- On Mac, these are included via macWindow.inc.xul -->
-  <script type="application/javascript"><![CDATA[
-    ChromeUtils.defineModuleGetter(window,
-      "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
-    ChromeUtils.defineModuleGetter(window,
-      "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
-    ChromeUtils.defineModuleGetter(window,
-      "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
-
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-    XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
-      "chrome://browser/content/places/treeView.js");
-    XPCOMUtils.defineLazyScriptGetter(window,
-      ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
-       "chrome://browser/content/places/controller.js");
-  ]]></script>
 #endif
 
   <stringbundleset id="placesStringSet">
