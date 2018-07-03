@@ -67,7 +67,7 @@ def rust_compiler(rustc_info, cargo_info):
         You can install rust by running './mach bootstrap'
         or by directly running the installer from https://rustup.rs/
         '''))
-    rustc_min_version = Version('1.26.0')
+    rustc_min_version = Version('1.27.0')
     cargo_min_version = rustc_min_version
 
     version = rustc_info.version
