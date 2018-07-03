@@ -1,4 +1,5 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft= javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,8 +7,6 @@
 "use strict";
 
 const {Ci, Cu} = require("chrome");
-
-loader.lazyRequireGetter(this, "screenshot", "devtools/server/actors/webconsole/screenshot", true);
 
 // Note that this is only used in WebConsoleCommands, see $0 and pprint().
 if (!isWorker) {
@@ -591,28 +590,6 @@ WebConsoleCommands._registerOriginal("copy", function(owner, value) {
     type: "copyValueToClipboard",
     value: payload,
   };
-});
-
-/**
- * Take a screenshot of a page.
- *
- * @param object args
- *               The arguments to be passed to the screenshot
- * @return void
- */
-WebConsoleCommands._registerOriginal("screenshot", function(owner, args) {
-  owner.helperResult = (async () => {
-    // creates data for saving the screenshot
-    const value = await screenshot(owner, args);
-    return {
-      type: "screenshotOutput",
-      value,
-      // pass args through to the client, so that the client can take care of copying
-      // and saving the screenshot data on the client machine instead of on the
-      // remote machine
-      args
-    };
-  })();
 });
 
 /**

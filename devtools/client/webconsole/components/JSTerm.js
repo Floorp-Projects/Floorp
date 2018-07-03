@@ -19,7 +19,6 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyRequireGetter(this, "processScreenshot", "devtools/shared/webconsole/screenshot-helper");
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -332,7 +331,7 @@ class JSTerm extends Component {
    * @param object response
    *        The message received from the server.
    */
-  async _executeResultCallback(callback, response) {
+  _executeResultCallback(callback, response) {
     if (!this.hud) {
       return;
     }
@@ -374,12 +373,6 @@ class JSTerm extends Component {
         case "copyValueToClipboard":
           clipboardHelper.copyString(helperResult.value);
           break;
-        case "screenshotOutput":
-          const { args, value } = helperResult;
-          const results = await processScreenshot(this.hud.window, args, value);
-          this.screenshotNotify(results);
-          // early return as screenshot notify has dispatched all necessary messages
-          return;
       }
     }
 
@@ -404,11 +397,6 @@ class JSTerm extends Component {
       }
     }, true);
     return this.hud.consoleOutput;
-  }
-
-  screenshotNotify(results) {
-    const wrappedResults = results.map(result => ({ result }));
-    this.hud.consoleOutput.dispatchMessagesAdd(wrappedResults);
   }
 
   /**

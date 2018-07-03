@@ -5,10 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'commands.js',
     'content-process-forward.js',
     'listeners.js',
-    'screenshot.js',
     'utils.js',
     'worker-listeners.js',
 )
