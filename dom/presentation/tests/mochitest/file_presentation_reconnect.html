@@ -81,14 +81,13 @@ function testCloseConnection() {
 window.addEventListener("message", function onMessage(evt) {
   if (evt.data === "startConnection") {
     testStartRequest().then(
-      function () {
+      function() {
         command({ name: "connection-connected", id: connection.id });
       }
     );
-  }
-  else if (evt.data === "closeConnection") {
+  } else if (evt.data === "closeConnection") {
     testCloseConnection().then(
-      function () {
+      function() {
         command({ name: "connection-closed", id: connection.id });
       }
     );

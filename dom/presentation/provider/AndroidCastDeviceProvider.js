@@ -22,7 +22,7 @@ function log(str) {
 function descriptionToString(aDescription) {
   let json = {};
   json.type = aDescription.type;
-  switch(aDescription.type) {
+  switch (aDescription.type) {
     case Ci.nsIPresentationChannelDescription.TYPE_TCP:
       let addresses = aDescription.tcpAddress.QueryInterface(Ci.nsIArray);
       json.tcpAddress = [];
