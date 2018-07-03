@@ -113,36 +113,6 @@ ServiceWorkerInfo::DetachDebugger()
   return mServiceWorkerPrivate->DetachDebugger();
 }
 
-namespace {
-
-class ChangeStateUpdater final : public Runnable
-{
-public:
-  ChangeStateUpdater(const nsTArray<ServiceWorkerInfo::Listener*>& aInstances,
-                     ServiceWorkerState aState)
-    : Runnable("dom::ChangeStateUpdater")
-    , mState(aState)
-  {
-    for (size_t i = 0; i < aInstances.Length(); ++i) {
-      mInstances.AppendElement(aInstances[i]);
-    }
-  }
-
-  NS_IMETHOD Run() override
-  {
-    for (size_t i = 0; i < mInstances.Length(); ++i) {
-      mInstances[i]->SetState(mState);
-    }
-    return NS_OK;
-  }
-
-private:
-  AutoTArray<RefPtr<ServiceWorkerInfo::Listener>, 1> mInstances;
-  ServiceWorkerState mState;
-};
-
-}
-
 void
 ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 {
@@ -172,8 +142,6 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
     mServiceWorkerPrivate->UpdateState(aState);
   }
   mDescriptor.SetState(aState);
-  nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, State());
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
   if (State() == ServiceWorkerState::Redundant) {
     serviceWorkerScriptCache::PurgeCache(mPrincipal, mCacheName);
   }
@@ -181,12 +149,14 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 
 ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsACString& aScope,
+                                     uint64_t aRegistrationId,
+                                     uint64_t aRegistrationVersion,
                                      const nsACString& aScriptSpec,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
-  , mDescriptor(GetNextID(), aPrincipal, aScope, aScriptSpec,
-                ServiceWorkerState::Parsed)
+  , mDescriptor(GetNextID(), aRegistrationId, aRegistrationVersion, aPrincipal,
+                aScope, aScriptSpec, ServiceWorkerState::Parsed)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
   , mCreationTime(PR_Now())
@@ -222,24 +192,6 @@ uint64_t
 ServiceWorkerInfo::GetNextID() const
 {
   return ++gServiceWorkerInfoCurrentID;
-}
-
-void
-ServiceWorkerInfo::AddListener(Listener* aListener)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  MOZ_ASSERT(!mInstances.Contains(aListener));
-
-  mInstances.AppendElement(aListener);
-  aListener->SetState(State());
-}
-
-void
-ServiceWorkerInfo::RemoveListener(Listener* aListener)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aListener);
-  DebugOnly<bool> removed = mInstances.RemoveElement(aListener);
-  MOZ_ASSERT(removed);
 }
 
 void
@@ -283,6 +235,12 @@ ServiceWorkerInfo::UpdateRedundantTime()
   mRedundantTime =
     mCreationTime + static_cast<PRTime>((TimeStamp::Now() -
                                          mCreationTimeStamp).ToMicroseconds());
+}
+
+void
+ServiceWorkerInfo::SetRegistrationVersion(uint64_t aVersion)
+{
+  mDescriptor.SetRegistrationVersion(aVersion);
 }
 
 } // namespace dom

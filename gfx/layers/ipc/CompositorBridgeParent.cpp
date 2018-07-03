@@ -1802,7 +1802,8 @@ CompositorBridgeParent::RecvAdoptChild(const LayersId& child)
     childWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
                                    api,
                                    mWrBridge->AsyncImageManager(),
-                                   GetAnimationStorage());
+                                   GetAnimationStorage(),
+                                   mWrBridge->GetTextureFactoryIdentifier());
     // Pretend we composited, since parent CompositorBridgeParent was replaced.
     if (cpcp) {
       TimeStamp now = TimeStamp::Now();

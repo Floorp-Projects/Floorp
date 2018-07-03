@@ -79,7 +79,7 @@ async function waitUntil(predicate, msg) {
 
 function findSource(dbg, url) {
   const sources = dbg.selectors.getSources(dbg.getState());
-  return sources.find(s => (s.get("url") || "").includes(url));
+  return Object.values(sources).find(s => (s.url || "").includes(url));
 }
 
 function getCM(dbg) {
@@ -107,7 +107,7 @@ function waitForMetaData(dbg) {
       const source = dbg.selectors.getSelectedSource(state);
       // wait for metadata -- this involves parsing the file to determine its type.
       // if the object is empty, the data has not yet loaded
-      const metaData = dbg.selectors.getSourceMetaData(state, source.get("id"));
+      const metaData = dbg.selectors.getSourceMetaData(state, source.id);
       return !!Object.keys(metaData).length;
     },
     "has file metadata"
@@ -117,8 +117,7 @@ function waitForMetaData(dbg) {
 function waitForSources(dbg, expectedSources) {
   const { selectors } = dbg;
   function countSources(state) {
-    const sources = selectors.getSources(state);
-    return sources.size >= expectedSources;
+    return selectors.getSourceCount(state) >= expectedSources;
   }
   return waitForState(dbg, countSources, "count sources");
 }
@@ -168,19 +167,19 @@ function selectSource(dbg, url) {
   dump(`Selecting source: ${url}\n`);
   const line = 1;
   const source = findSource(dbg, url);
-  dbg.actions.selectLocation({ sourceId: source.get("id"), line });
+  dbg.actions.selectLocation({ sourceId: source.id, line });
   return waitForState(
     dbg,
     state => {
       const source = dbg.selectors.getSelectedSource(state);
-      const isLoaded = source && source.get("loadedState") === "loaded";
+      const isLoaded = source && source.loadedState === "loaded";
       if (!isLoaded) {
         return false;
       }
 
       // wait for symbols -- a flat map of all named variables in a file -- to be calculated.
       // this is a slow process and becomes slower the larger the file is
-      return dbg.selectors.hasSymbols(state, source.toJS());
+      return dbg.selectors.hasSymbols(state, source);
     },
     "selected source"
   );
@@ -230,7 +229,7 @@ async function addBreakpoint(dbg, line, url) {
   dump(`add breakpoint\n`);
   const source = findSource(dbg, url);
   const location = {
-    sourceId: source.get("id"),
+    sourceId: source.id,
     line,
     column: 0
   };

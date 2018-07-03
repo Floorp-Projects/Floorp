@@ -23,7 +23,7 @@ class CallSite extends _react.Component {
         source
       } = nextProps || this.props;
       const className = !breakpoint ? "call-site" : "call-site-bp";
-      const sourceId = source.get("id");
+      const sourceId = source.id;
       const editorRange = (0, _editor.toEditorRange)(sourceId, callSite.location);
       this.marker = (0, _editor.markText)(editor, className, editorRange);
     };

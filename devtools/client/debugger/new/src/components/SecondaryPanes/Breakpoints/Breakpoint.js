@@ -191,6 +191,7 @@ class Breakpoint extends _react.PureComponent {
 }
 
 const mapStateToProps = state => ({
+  breakpoints: (0, _selectors.getBreakpoints)(state),
   frame: (0, _selectors.getTopFrame)(state),
   selectedSource: (0, _selectors.getSelectedSource)(state)
 });
