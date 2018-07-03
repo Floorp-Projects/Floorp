@@ -255,22 +255,6 @@ function testMixedDir(){
 		   bdoRect.top, bdoRect.bottom,
 		   7*widthPerChar, bdoRect.height]]});
 }
-
-function testShadowDOM() {
-  var ifr = document.createElement("iframe");
-  document.body.appendChild(ifr);
-  var doc = ifr.contentDocument;
-  var d = doc.createElement("div");
-  var sr = d.attachShadow({mode: "open"});
-  sr.innerHTML = "<div>inside shadow DOM</div>";
-  doc.body.appendChild(d);
-  var r = new ifr.contentWindow.Range();
-  r.selectNode(sr.firstChild);
-  var rect = r.getBoundingClientRect();
-  isnot(rect.width, 0, "Div element inside shadow shouldn't have zero size.");
-  isnot(rect.height, 0, "Div element inside shadow shouldn't have zero size.");
-}
-
 function test(){
   //test ltr
   doTest();
@@ -289,9 +273,6 @@ function test(){
   isTransformed = true;
   root.style.transform = "translate(30px,50px)";
   doTest();
-
-  SpecialPowers.pushPrefEnv({"set":[["dom.webcomponents.shadowdom.enabled", true]]},
-                            testShadowDOM);
 
   SimpleTest.finish();
 }
