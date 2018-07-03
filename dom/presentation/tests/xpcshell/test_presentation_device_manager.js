@@ -155,7 +155,6 @@ function sessionRequest() {
 }
 
 function terminateRequest() {
-  let testUrl = "http://www.example.org/";
   let testPresentationId = "test-presentation-id";
   let testControlChannel = new TestPresentationControlChannel();
   let testIsFromReceiver = true;

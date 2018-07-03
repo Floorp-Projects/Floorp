@@ -70,8 +70,7 @@ function setup() {
       aResolve(receiverIframe);
     });
 
-    var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-                           .getService(SpecialPowers.Ci.nsIObserverService);
+    var obs = SpecialPowers.Services.obs;
     obs.notifyObservers(promise, "setup-request-promise");
   });
 

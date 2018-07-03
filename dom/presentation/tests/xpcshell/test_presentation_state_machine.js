@@ -67,9 +67,9 @@ function launch() {
     Assert.equal(presentationId, testPresentationId, "expected presentationId received");
     Assert.equal(url, testUrl, "expected url received");
 
-    mockControllerChannel.notifyLaunch = function(presentationId) {
+    mockControllerChannel.notifyLaunch = function(presId) {
       Assert.equal(controllerState.state, State.CONNECTED, "controller in connected state");
-      Assert.equal(presentationId, testPresentationId, "expected presentationId received from ack");
+      Assert.equal(presId, testPresentationId, "expected presentationId received from ack");
 
       run_next_test();
     };
@@ -85,9 +85,9 @@ function terminateByController() {
     Assert.equal(receiverState.state, State.CONNECTED, "receiver in connected state");
     Assert.equal(presentationId, testPresentationId, "expected presentationId received");
 
-    mockControllerChannel.notifyTerminate = function(presentationId) {
+    mockControllerChannel.notifyTerminate = function(presId) {
       Assert.equal(controllerState.state, State.CONNECTED, "controller in connected state");
-      Assert.equal(presentationId, testPresentationId, "expected presentationId received from ack");
+      Assert.equal(presId, testPresentationId, "expected presentationId received from ack");
 
       run_next_test();
     };
@@ -105,9 +105,9 @@ function terminateByReceiver() {
     Assert.equal(controllerState.state, State.CONNECTED, "controller in connected state");
     Assert.equal(presentationId, testPresentationId, "expected presentationId received");
 
-    mockReceiverChannel.notifyTerminate = function(presentationId) {
+    mockReceiverChannel.notifyTerminate = function(presId) {
       Assert.equal(receiverState.state, State.CONNECTED, "receiver in connected state");
-      Assert.equal(presentationId, testPresentationId, "expected presentationId received from ack");
+      Assert.equal(presId, testPresentationId, "expected presentationId received from ack");
       run_next_test();
     };
 
@@ -135,8 +135,8 @@ function exchangeSDP() {
         Assert.equal(candidate, testIceCandidate, "expected ice candidate received in receiver");
 
         receiverState.updateIceCandidate(testIceCandidate);
-        mockControllerChannel.notifyIceCandidate = function(candidate) {
-          Assert.equal(candidate, testIceCandidate, "expected ice candidate received in controller");
+        mockControllerChannel.notifyIceCandidate = function(controllerCandidate) {
+          Assert.equal(controllerCandidate, testIceCandidate, "expected ice candidate received in controller");
 
           run_next_test();
         };
@@ -157,8 +157,8 @@ function disconnect() {
     receiverState.onChannelClosed(Cr.NS_OK, true);
     Assert.equal(receiverState.state, State.CLOSED, "receiver in closed state");
 
-    mockControllerChannel.notifyDisconnected = function(reason) {
-      Assert.equal(reason, Cr.NS_OK, "receive close reason");
+    mockControllerChannel.notifyDisconnected = function(disconnectReason) {
+      Assert.equal(disconnectReason, Cr.NS_OK, "receive close reason");
       Assert.equal(controllerState.state, State.CLOSED, "controller in closed state");
 
       run_next_test();
@@ -183,8 +183,8 @@ function receiverDisconnect() {
     controllerState.onChannelClosed(Cr.NS_OK, true);
     Assert.equal(controllerState.state, State.CLOSED, "controller in closed state");
 
-    mockReceiverChannel.notifyDisconnected = function(reason) {
-      Assert.equal(reason, Cr.NS_OK, "receive close reason");
+    mockReceiverChannel.notifyDisconnected = function(disconnectReason) {
+      Assert.equal(disconnectReason, Cr.NS_OK, "receive close reason");
       Assert.equal(receiverState.state, State.CLOSED, "receiver in closed state");
 
       run_next_test();
@@ -210,8 +210,8 @@ function abnormalDisconnect() {
     receiverState.onChannelClosed(Cr.NS_OK, true);
     Assert.equal(receiverState.state, State.CLOSED, "receiver in closed state");
 
-    mockControllerChannel.notifyDisconnected = function(reason) {
-      Assert.equal(reason, testErrorReason, "receive abnormal close reason");
+    mockControllerChannel.notifyDisconnected = function(disconnectReason) {
+      Assert.equal(disconnectReason, testErrorReason, "receive abnormal close reason");
       Assert.equal(controllerState.state, State.CLOSED, "controller in closed state");
 
       run_next_test();

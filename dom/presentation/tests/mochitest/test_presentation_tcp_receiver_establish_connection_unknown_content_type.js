@@ -3,31 +3,26 @@
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("PresentationSessionChromeScript.js"));
 var receiverUrl = SimpleTest.getTestFileURL("file_presentation_unknown_content_type.test");
 
-var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-          .getService(SpecialPowers.Ci.nsIObserverService);
+var obs = SpecialPowers.Services.obs;
 
 var receiverIframe;
 
 function setup() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.sendAsyncMessage("trigger-device-add");
+  gScript.sendAsyncMessage("trigger-device-add");
 
-    receiverIframe = document.createElement("iframe");
-    receiverIframe.setAttribute("mozbrowser", "true");
-    receiverIframe.setAttribute("mozpresentation", receiverUrl);
-    receiverIframe.setAttribute("src", receiverUrl);
-    var oop = !location.pathname.includes("_inproc");
-    receiverIframe.setAttribute("remote", oop);
+  receiverIframe = document.createElement("iframe");
+  receiverIframe.setAttribute("mozbrowser", "true");
+  receiverIframe.setAttribute("mozpresentation", receiverUrl);
+  receiverIframe.setAttribute("src", receiverUrl);
+  var oop = !location.pathname.includes("_inproc");
+  receiverIframe.setAttribute("remote", oop);
 
-    var promise = new Promise(function(aResolve, aReject) {
-      document.body.appendChild(receiverIframe);
+  var promise = new Promise(function(aResolve, aReject) {
+    document.body.appendChild(receiverIframe);
 
-      aResolve(receiverIframe);
-    });
-    obs.notifyObservers(promise, "setup-request-promise");
-
-    aResolve();
+    aResolve(receiverIframe);
   });
+  obs.notifyObservers(promise, "setup-request-promise");
 }
 
 function testIncomingSessionRequestReceiverLaunchUnknownContentType() {
@@ -67,9 +62,9 @@ function teardown() {
 }
 
 function runTests() {
-  setup().
-  then(testIncomingSessionRequestReceiverLaunchUnknownContentType).
-  then(teardown);
+  setup();
+
+  testIncomingSessionRequestReceiverLaunchUnknownContentType().then(teardown);
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -3,15 +3,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* jshint esnext:true, globalstrict:true, moz:true, undef:true, unused:true */
-/* globals Components, dump */
 "use strict";
 
-// globals XPCOMUtils
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-// globals Services
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-// globals EventDispatcher
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 function log(str) {
@@ -328,9 +323,7 @@ ChromecastRemoteDisplayDevice.prototype = {
   },
 
   isRequestedUrlSupported: function CRDD_isRequestedUrlSupported(aUrl) {
-    let url = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService)
-                .newURI(aUrl);
+    let url = Services.io.newURI(aUrl);
     return url.scheme == "http" || url.scheme == "https";
   },
 

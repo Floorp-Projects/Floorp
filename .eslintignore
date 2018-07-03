@@ -229,10 +229,6 @@ dom/permission/**
 dom/plugins/test/mochitest/**
 dom/plugins/test/unit/**
 dom/power/**
-dom/presentation/Presentation*.js
-dom/presentation/provider/**
-dom/presentation/tests/mochitest/**
-dom/presentation/tests/xpcshell/**
 dom/promise/**
 dom/push/**
 dom/quota/**

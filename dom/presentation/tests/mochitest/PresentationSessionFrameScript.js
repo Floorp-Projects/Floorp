@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/frame-script */
+
 function loadPrivilegedScriptTest() {
   /**
    * The script is loaded as
@@ -34,6 +36,7 @@ function loadPrivilegedScriptTest() {
       handlers[type].forEach(handler => handler.apply(null, args));
     };
     var handlers = {};
+    /* eslint-disable-next-line no-native-reassign */
     addMessageListener = function(message, handler) {
       if (handlers.hasOwnProperty(message)) {
         handlers[message].push(handler);
@@ -41,6 +44,7 @@ function loadPrivilegedScriptTest() {
         handlers[message] = [handler];
       }
     };
+    /* eslint-disable-next-line no-native-reassign */
     removeMessageListener = function(message, handler) {
       if (!handler || !handlers.hasOwnProperty(message)) {
         return;
@@ -55,6 +59,7 @@ function loadPrivilegedScriptTest() {
   const Cm = Components.manager;
 
   const mockedChannelDescription = {
+    /* eslint-disable-next-line mozilla/use-chromeutils-generateqi */
     QueryInterface(iid) {
       const interfaces = [Ci.nsIPresentationChannelDescription];
 
@@ -64,6 +69,7 @@ function loadPrivilegedScriptTest() {
       return this;
     },
     get type() {
+      /* global Services */
       if (Services.prefs.getBoolPref("dom.presentation.session_transport.data_channel.enable")) {
         return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
       }
@@ -83,6 +89,7 @@ function loadPrivilegedScriptTest() {
   }
 
   const mockedSessionTransport = {
+    /* eslint-disable-next-line mozilla/use-chromeutils-generateqi */
     QueryInterface(iid) {
         const interfaces = [Ci.nsIPresentationSessionTransport,
                             Ci.nsIPresentationDataChannelSessionTransportBuilder,
