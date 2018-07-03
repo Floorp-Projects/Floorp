@@ -292,6 +292,10 @@ var invalidGradientAndElementValues = [
   "linear-gradient(to top, red,, blue)",
   "linear-gradient(to top, red, green 35%, 15%, 54%, blue)",
 
+  "linear-gradient(unset, 10px 10px, from(blue))",
+  "linear-gradient(unset, 10px 10px, blue 0)",
+  "repeating-linear-gradient(unset, 10px 10px, blue 0)",
+
 
   "radial-gradient(top left 45deg, red, blue)",
   "radial-gradient(20% bottom -300deg, red, blue)",
@@ -2750,7 +2754,7 @@ var gCSSProperties = {
     "none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
     "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
     ].concat(validGradientAndElementValues),
-    invalid_values: [ "linear-gradient(unset, 10px 10px, from(blue))", "linear-gradient(unset, 10px 10px, blue 0)", "repeating-linear-gradient(unset, 10px 10px, blue 0)"
+    invalid_values: [
     ].concat(invalidGradientAndElementValues),
     unbalanced_values: [
     ].concat(unbalancedGradientAndElementValues)
