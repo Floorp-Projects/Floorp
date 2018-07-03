@@ -32,6 +32,19 @@ If you use artifact builds you may also build geckodriver using cargo:
 Because all Rust code in central shares the same cargo workspace,
 the binary will be put in the `$(topsrcdir)/target` directory.
 
+You can run your freshly built geckodriver this way:
+
+	% ./mach geckodriver -- --other --flags
+
+And run its unit tests like this:
+
+	% ./mach test testing/geckodriver
+
+Or by invoking cargo in its subdirectory:
+
+	% cd testing/geckodriver
+	% cargo test
+
 [Rust]: https://www.rust-lang.org/
 [webdriver crate]: https://crates.io/crates/webdriver
 [commands]: https://docs.rs/webdriver/newest/webdriver/command/
