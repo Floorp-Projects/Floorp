@@ -5121,13 +5121,15 @@ public:
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
-                   bool aForEventsAndPluginsOnly);
+                   bool aForEventsAndPluginsOnly,
+                   bool aNeedsActiveLayer);
 
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
     : nsDisplayWrapList(aBuilder, aOther)
     , mOpacity(aOther.mOpacity)
     , mForEventsAndPluginsOnly(aOther.mForEventsAndPluginsOnly)
+    , mNeedsActiveLayer(aOther.mNeedsActiveLayer)
     , mChildOpacityState(ChildOpacityState::Unknown)
   {
     // We should not try to merge flattened opacities.
@@ -5225,6 +5227,7 @@ private:
     // Opacity is applied to our children.
     Applied
   };
+  bool mNeedsActiveLayer : 1;
 #ifndef __GNUC__
   ChildOpacityState mChildOpacityState : 2;
 #else
