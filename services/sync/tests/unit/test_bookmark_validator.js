@@ -168,12 +168,6 @@ function getDummyServerAndClient() {
             "guid": "cccccccccccc",
             "title": "",
             "id": 1002,
-            "annos": [{
-              "name": "Places/SmartBookmark",
-              "flags": 0,
-              "expires": 4,
-              "value": "RecentTags"
-            }],
             "type": "text/x-moz-place",
             "uri": "place:type=6&sort=14&maxResults=10"
           }

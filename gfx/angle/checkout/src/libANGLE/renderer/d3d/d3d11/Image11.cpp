@@ -30,7 +30,7 @@ Image11::Image11(Renderer11 *renderer)
       mStagingSubresource(0),
       mRecoverFromStorage(false),
       mAssociatedStorage(nullptr),
-      mAssociatedImageIndex(gl::ImageIndex::MakeInvalid()),
+      mAssociatedImageIndex(),
       mRecoveredFromStorageCount(0)
 {
 }
@@ -224,7 +224,7 @@ void Image11::disassociateStorage()
 
         mRecoverFromStorage   = false;
         mAssociatedStorage    = nullptr;
-        mAssociatedImageIndex = gl::ImageIndex::MakeInvalid();
+        mAssociatedImageIndex = gl::ImageIndex();
     }
 }
 

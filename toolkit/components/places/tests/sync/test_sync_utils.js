@@ -1711,14 +1711,6 @@ add_task(async function test_fetch() {
     folder: "taggy",
     title: "Tagged stuff",
   });
-  let smartBmk = await PlacesSyncUtils.bookmarks.insert({
-    kind: "query",
-    recordId: makeGuid(),
-    parentRecordId: "toolbar",
-    url: "place:folder=TOOLBAR",
-    query: "BookmarksToolbar",
-    title: "Bookmarks toolbar query",
-  });
 
   info("Fetch empty folder");
   {
@@ -1774,15 +1766,6 @@ add_task(async function test_fetch() {
       "Should include query-specific properties");
     equal(item.url.href, `place:tag=taggy`, "Should not rewrite outgoing tag queries");
     equal(item.folder, "taggy", "Should return tag name for tag queries");
-  }
-
-  info("Fetch smart bookmark");
-  {
-    let item = await PlacesSyncUtils.bookmarks.fetch(smartBmk.recordId);
-    deepEqual(Object.keys(item).sort(), ["recordId", "kind", "parentRecordId",
-      "url", "title", "query", "parentTitle", "dateAdded"].sort(),
-      "Should include smart bookmark-specific properties");
-    equal(item.query, "BookmarksToolbar", "Should return query name for smart bookmarks");
   }
 
   await PlacesUtils.bookmarks.eraseEverything();

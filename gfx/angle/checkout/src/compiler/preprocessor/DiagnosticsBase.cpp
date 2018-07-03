@@ -8,6 +8,9 @@
 
 #include "common/debug.h"
 
+namespace angle
+{
+
 namespace pp
 {
 
@@ -141,3 +144,5 @@ const char *Diagnostics::message(ID id)
 }
 
 }  // namespace pp
+
+}  // namespace angle

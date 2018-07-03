@@ -97,15 +97,15 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
     rx::TransformFeedbackImpl *getImplementation();
     const rx::TransformFeedbackImpl *getImplementation() const;
 
-    void onBindingChanged(bool bound);
+    void onBindingChanged(const Context *context, bool bound);
 
   private:
     void bindProgram(const Context *context, Program *program);
 
     TransformFeedbackState mState;
-    rx::TransformFeedbackImpl* mImplementation;
+    rx::TransformFeedbackImpl *mImplementation;
 };
 
-}
+}  // namespace gl
 
 #endif // LIBANGLE_TRANSFORM_FEEDBACK_H_

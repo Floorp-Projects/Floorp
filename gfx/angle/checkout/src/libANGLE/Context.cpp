@@ -24,6 +24,7 @@
 #include "libANGLE/Fence.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/GLES1Renderer.h"
 #include "libANGLE/Path.h"
 #include "libANGLE/Program.h"
 #include "libANGLE/ProgramPipeline.h"
@@ -264,7 +265,8 @@ Context::Context(rx::EGLImplFactory *implFactory,
                  TextureManager *shareTextures,
                  MemoryProgramCache *memoryProgramCache,
                  const egl::AttributeMap &attribs,
-                 const egl::DisplayExtensions &displayExtensions)
+                 const egl::DisplayExtensions &displayExtensions,
+                 const egl::ClientExtensions &clientExtensions)
     : mState(reinterpret_cast<ContextID>(this),
              shareContext ? &shareContext->mState : nullptr,
              shareTextures,
@@ -297,13 +299,13 @@ Context::Context(rx::EGLImplFactory *implFactory,
       mZeroFilledBuffer(1000u)
 {
     // Needed to solve a Clang warning of unused variables.
-    UNUSED_VARIABLE(mSavedArgsType);
-    UNUSED_VARIABLE(mParamsBuffer);
+    ANGLE_UNUSED_VARIABLE(mSavedArgsType);
+    ANGLE_UNUSED_VARIABLE(mParamsBuffer);
 
     mImplementation->setMemoryProgramCache(memoryProgramCache);
 
     bool robustResourceInit = GetRobustResourceInit(attribs);
-    initCaps(displayExtensions, robustResourceInit);
+    initCaps(displayExtensions, clientExtensions, robustResourceInit);
     initWorkarounds();
 
     mGLState.initialize(this, GetDebug(attribs), GetBindGeneratesResource(attribs),
@@ -350,15 +352,14 @@ Context::Context(rx::EGLImplFactory *implFactory,
         }
     }
 
-    const Extensions &nativeExtensions = mImplementation->getNativeExtensions();
-    if (nativeExtensions.textureRectangle)
+    if (mSupportedExtensions.textureRectangle)
     {
         Texture *zeroTextureRectangle =
             new Texture(mImplementation.get(), 0, TextureType::Rectangle);
         mZeroTextures[TextureType::Rectangle].set(this, zeroTextureRectangle);
     }
 
-    if (nativeExtensions.eglImageExternal || nativeExtensions.eglStreamConsumerExternal)
+    if (mSupportedExtensions.eglImageExternal || mSupportedExtensions.eglStreamConsumerExternal)
     {
         Texture *zeroTextureExternal = new Texture(mImplementation.get(), 0, TextureType::External);
         mZeroTextures[TextureType::External].set(this, zeroTextureExternal);
@@ -387,6 +388,12 @@ Context::Context(rx::EGLImplFactory *implFactory,
     for (unsigned int i = 0; i < mCaps.maxUniformBufferBindings; i++)
     {
         bindBufferRange(BufferBinding::Uniform, i, 0, 0, -1);
+    }
+
+    // Initialize GLES1 renderer if appropriate.
+    if (getClientVersion() < Version(2, 0))
+    {
+        mGLES1Renderer.reset(new GLES1Renderer());
     }
 
     // Initialize dirty bit masks
@@ -432,8 +439,17 @@ Context::Context(rx::EGLImplFactory *implFactory,
 
 egl::Error Context::onDestroy(const egl::Display *display)
 {
+    if (mGLES1Renderer)
+    {
+        mGLES1Renderer->onDestroy(this, &mGLState);
+    }
+
     // Delete the Surface first to trigger a finish() in Vulkan.
-    SafeDelete(mSurfacelessFramebuffer);
+    if (mSurfacelessFramebuffer)
+    {
+        mSurfacelessFramebuffer->onDestroy(this);
+        SafeDelete(mSurfacelessFramebuffer);
+    }
 
     ANGLE_TRY(releaseSurface(display));
 
@@ -1013,7 +1029,7 @@ void Context::bindDrawFramebuffer(GLuint framebufferHandle)
 void Context::bindVertexArray(GLuint vertexArrayHandle)
 {
     VertexArray *vertexArray = checkVertexArrayAllocation(vertexArrayHandle);
-    mGLState.setVertexArrayBinding(vertexArray);
+    mGLState.setVertexArrayBinding(this, vertexArray);
 }
 
 void Context::bindVertexBuffer(GLuint bindingIndex,
@@ -1070,7 +1086,7 @@ void Context::bindProgramPipeline(GLuint pipelineHandle)
     mGLState.setProgramPipelineBinding(this, pipeline);
 }
 
-void Context::beginQuery(GLenum target, GLuint query)
+void Context::beginQuery(QueryType target, GLuint query)
 {
     Query *queryObject = getQuery(query, true, target);
     ASSERT(queryObject);
@@ -1082,7 +1098,7 @@ void Context::beginQuery(GLenum target, GLuint query)
     mGLState.setActiveQuery(this, target, queryObject);
 }
 
-void Context::endQuery(GLenum target)
+void Context::endQuery(QueryType target)
 {
     Query *queryObject = mGLState.getActiveQuery(target);
     ASSERT(queryObject);
@@ -1093,9 +1109,9 @@ void Context::endQuery(GLenum target)
     mGLState.setActiveQuery(this, target, nullptr);
 }
 
-void Context::queryCounter(GLuint id, GLenum target)
+void Context::queryCounter(GLuint id, QueryType target)
 {
-    ASSERT(target == GL_TIMESTAMP_EXT);
+    ASSERT(target == QueryType::Timestamp);
 
     Query *queryObject = getQuery(id, true, target);
     ASSERT(queryObject);
@@ -1103,7 +1119,7 @@ void Context::queryCounter(GLuint id, GLenum target)
     handleError(queryObject->queryCounter());
 }
 
-void Context::getQueryiv(GLenum target, GLenum pname, GLint *params)
+void Context::getQueryiv(QueryType target, GLenum pname, GLint *params)
 {
     switch (pname)
     {
@@ -1113,10 +1129,10 @@ void Context::getQueryiv(GLenum target, GLenum pname, GLint *params)
         case GL_QUERY_COUNTER_BITS_EXT:
             switch (target)
             {
-                case GL_TIME_ELAPSED_EXT:
+                case QueryType::TimeElapsed:
                     params[0] = getExtensions().queryCounterBitsTimeElapsed;
                     break;
-                case GL_TIMESTAMP_EXT:
+                case QueryType::Timestamp:
                     params[0] = getExtensions().queryCounterBitsTimestamp;
                     break;
                 default:
@@ -1131,7 +1147,7 @@ void Context::getQueryiv(GLenum target, GLenum pname, GLint *params)
     }
 }
 
-void Context::getQueryivRobust(GLenum target,
+void Context::getQueryivRobust(QueryType target,
                                GLenum pname,
                                GLsizei bufSize,
                                GLsizei *length,
@@ -1206,7 +1222,7 @@ FenceNV *Context::getFenceNV(GLuint handle)
     return mFenceNVMap.query(handle);
 }
 
-Query *Context::getQuery(GLuint handle, bool create, GLenum type)
+Query *Context::getQuery(GLuint handle, bool create, QueryType type)
 {
     if (!mQueryMap.contains(handle))
     {
@@ -1216,6 +1232,7 @@ Query *Context::getQuery(GLuint handle, bool create, GLenum type)
     Query *query = mQueryMap.query(handle);
     if (!query && create)
     {
+        ASSERT(type != QueryType::InvalidEnum);
         query = new Query(mImplementation->createQuery(type), handle);
         query->addRef();
         mQueryMap.assign(handle, query);
@@ -1336,10 +1353,10 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxCombinedTextureImageUnits;
             break;
         case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
-            *params = mCaps.maxVertexTextureImageUnits;
+            *params = mCaps.maxShaderTextureImageUnits[ShaderType::Vertex];
             break;
         case GL_MAX_TEXTURE_IMAGE_UNITS:
-            *params = mCaps.maxTextureImageUnits;
+            *params = mCaps.maxShaderTextureImageUnits[ShaderType::Fragment];
             break;
         case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
             *params = mCaps.maxFragmentUniformVectors;
@@ -1383,10 +1400,10 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxUniformBufferBindings;
             break;
         case GL_MAX_VERTEX_UNIFORM_BLOCKS:
-            *params = mCaps.maxVertexUniformBlocks;
+            *params = mCaps.maxShaderUniformBlocks[ShaderType::Vertex];
             break;
         case GL_MAX_FRAGMENT_UNIFORM_BLOCKS:
-            *params = mCaps.maxFragmentUniformBlocks;
+            *params = mCaps.maxShaderUniformBlocks[ShaderType::Fragment];
             break;
         case GL_MAX_COMBINED_UNIFORM_BLOCKS:
             *params = mCaps.maxCombinedTextureImageUnits;
@@ -1522,7 +1539,7 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxVertexImageUniforms;
             break;
         case GL_MAX_VERTEX_SHADER_STORAGE_BLOCKS:
-            *params = mCaps.maxVertexShaderStorageBlocks;
+            *params = mCaps.maxShaderStorageBlocks[ShaderType::Vertex];
             break;
         case GL_MAX_FRAGMENT_ATOMIC_COUNTER_BUFFERS:
             *params = mCaps.maxFragmentAtomicCounterBuffers;
@@ -1534,7 +1551,7 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxFragmentImageUniforms;
             break;
         case GL_MAX_FRAGMENT_SHADER_STORAGE_BLOCKS:
-            *params = mCaps.maxFragmentShaderStorageBlocks;
+            *params = mCaps.maxShaderStorageBlocks[ShaderType::Fragment];
             break;
         case GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET:
             *params = mCaps.minProgramTextureGatherOffset;
@@ -1546,10 +1563,10 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxComputeWorkGroupInvocations;
             break;
         case GL_MAX_COMPUTE_UNIFORM_BLOCKS:
-            *params = mCaps.maxComputeUniformBlocks;
+            *params = mCaps.maxShaderUniformBlocks[ShaderType::Compute];
             break;
         case GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS:
-            *params = mCaps.maxComputeTextureImageUnits;
+            *params = mCaps.maxShaderTextureImageUnits[ShaderType::Compute];
             break;
         case GL_MAX_COMPUTE_SHARED_MEMORY_SIZE:
             *params = mCaps.maxComputeSharedMemorySize;
@@ -1570,7 +1587,7 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxCombinedComputeUniformComponents;
             break;
         case GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS:
-            *params = mCaps.maxComputeShaderStorageBlocks;
+            *params = mCaps.maxShaderStorageBlocks[ShaderType::Compute];
             break;
         case GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES:
             *params = mCaps.maxCombinedShaderOutputResources;
@@ -1617,7 +1634,7 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxGeometryUniformComponents;
             break;
         case GL_MAX_GEOMETRY_UNIFORM_BLOCKS_EXT:
-            *params = mCaps.maxGeometryUniformBlocks;
+            *params = mCaps.maxShaderUniformBlocks[ShaderType::Geometry];
             break;
         case GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS_EXT:
             *params = mCaps.maxCombinedGeometryUniformComponents;
@@ -1638,7 +1655,7 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxGeometryShaderInvocations;
             break;
         case GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_EXT:
-            *params = mCaps.maxGeometryTextureImageUnits;
+            *params = mCaps.maxShaderTextureImageUnits[ShaderType::Geometry];
             break;
         case GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS_EXT:
             *params = mCaps.maxGeometryAtomicCounterBuffers;
@@ -1650,7 +1667,7 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mCaps.maxGeometryImageUniforms;
             break;
         case GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS_EXT:
-            *params = mCaps.maxGeometryShaderStorageBlocks;
+            *params = mCaps.maxShaderStorageBlocks[ShaderType::Geometry];
             break;
         // GLES1 emulation: Caps queries
         case GL_MAX_TEXTURE_UNITS:
@@ -1665,6 +1682,38 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
         case GL_MAX_TEXTURE_STACK_DEPTH:
             *params = mCaps.maxTextureMatrixStackDepth;
             break;
+        // GLES1 emulation: Vertex attribute queries
+        case GL_VERTEX_ARRAY_BUFFER_BINDING:
+        case GL_NORMAL_ARRAY_BUFFER_BINDING:
+        case GL_COLOR_ARRAY_BUFFER_BINDING:
+        case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
+        case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
+            getVertexAttribiv(static_cast<GLuint>(vertexArrayIndex(ParamToVertexArrayType(pname))),
+                              GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, params);
+            break;
+        case GL_VERTEX_ARRAY_STRIDE:
+        case GL_NORMAL_ARRAY_STRIDE:
+        case GL_COLOR_ARRAY_STRIDE:
+        case GL_POINT_SIZE_ARRAY_STRIDE_OES:
+        case GL_TEXTURE_COORD_ARRAY_STRIDE:
+            getVertexAttribiv(static_cast<GLuint>(vertexArrayIndex(ParamToVertexArrayType(pname))),
+                              GL_VERTEX_ATTRIB_ARRAY_STRIDE, params);
+            break;
+        case GL_VERTEX_ARRAY_SIZE:
+        case GL_COLOR_ARRAY_SIZE:
+        case GL_TEXTURE_COORD_ARRAY_SIZE:
+            getVertexAttribiv(static_cast<GLuint>(vertexArrayIndex(ParamToVertexArrayType(pname))),
+                              GL_VERTEX_ATTRIB_ARRAY_SIZE, params);
+            break;
+        case GL_VERTEX_ARRAY_TYPE:
+        case GL_COLOR_ARRAY_TYPE:
+        case GL_NORMAL_ARRAY_TYPE:
+        case GL_POINT_SIZE_ARRAY_TYPE_OES:
+        case GL_TEXTURE_COORD_ARRAY_TYPE:
+            getVertexAttribiv(static_cast<GLuint>(vertexArrayIndex(ParamToVertexArrayType(pname))),
+                              GL_VERTEX_ATTRIB_ARRAY_TYPE, params);
+            break;
+
         default:
             handleError(mGLState.getIntegerv(this, pname, params));
             break;
@@ -1709,7 +1758,7 @@ void Context::getInteger64vImpl(GLenum pname, GLint64 *params)
 
 void Context::getPointerv(GLenum pname, void **params) const
 {
-    mGLState.getPointerv(pname, params);
+    mGLState.getPointerv(this, pname, params);
 }
 
 void Context::getPointervRobustANGLERobust(GLenum pname,
@@ -2420,9 +2469,9 @@ void Context::getProgramInterfaceivRobust(GLuint program,
     UNIMPLEMENTED();
 }
 
-void Context::handleError(const Error &error)
+void Context::handleError(const Error &error) const
 {
-    if (error.isError())
+    if (ANGLE_UNLIKELY(error.isError()))
     {
         GLenum code = error.getCode();
         mErrors.insert(code);
@@ -2454,7 +2503,7 @@ GLenum Context::getError()
 }
 
 // NOTE: this function should not assume that this context is current!
-void Context::markContextLost()
+void Context::markContextLost() const
 {
     if (mResetStrategy == GL_LOSE_CONTEXT_ON_RESET_EXT)
     {
@@ -2464,7 +2513,7 @@ void Context::markContextLost()
     mContextLost = true;
 }
 
-bool Context::isContextLost()
+bool Context::isContextLost() const
 {
     return mContextLost;
 }
@@ -2638,7 +2687,7 @@ void Context::detachVertexArray(GLuint vertexArray)
     // [OpenGL ES 3.0.2] section 2.10 page 43:
     // If a vertex array object that is currently bound is deleted, the binding
     // for that object reverts to zero and the default vertex array becomes current.
-    if (mGLState.removeVertexArrayBinding(vertexArray))
+    if (mGLState.removeVertexArrayBinding(this, vertexArray))
     {
         bindVertexArray(0);
     }
@@ -2839,14 +2888,12 @@ void Context::initExtensionStrings()
     }
     mExtensionString = mergeExtensionStrings(mExtensionStrings);
 
-    const gl::Extensions &nativeExtensions = mImplementation->getNativeExtensions();
-
     mRequestableExtensionStrings.clear();
     for (const auto &extensionInfo : GetExtensionInfoMap())
     {
         if (extensionInfo.second.Requestable &&
             !(mExtensions.*(extensionInfo.second.ExtensionsMember)) &&
-            nativeExtensions.*(extensionInfo.second.ExtensionsMember))
+            mSupportedExtensions.*(extensionInfo.second.ExtensionsMember))
         {
             mRequestableExtensionStrings.push_back(MakeStaticString(extensionInfo.first));
         }
@@ -2908,9 +2955,8 @@ bool Context::isExtensionRequestable(const char *name)
     const ExtensionInfoMap &extensionInfos = GetExtensionInfoMap();
     auto extension                         = extensionInfos.find(name);
 
-    const Extensions &nativeExtensions = mImplementation->getNativeExtensions();
     return extension != extensionInfos.end() && extension->second.Requestable &&
-           nativeExtensions.*(extension->second.ExtensionsMember);
+           mSupportedExtensions.*(extension->second.ExtensionsMember);
 }
 
 void Context::requestExtension(const char *name)
@@ -2919,7 +2965,7 @@ void Context::requestExtension(const char *name)
     ASSERT(extensionInfos.find(name) != extensionInfos.end());
     const auto &extension = extensionInfos.at(name);
     ASSERT(extension.Requestable);
-    ASSERT(mImplementation->getNativeExtensions().*(extension.ExtensionsMember));
+    ASSERT(isExtensionRequestable(name));
 
     if (mExtensions.*(extension.ExtensionsMember))
     {
@@ -2974,9 +3020,98 @@ bool Context::hasActiveTransformFeedback(GLuint program) const
     return false;
 }
 
-void Context::initCaps(const egl::DisplayExtensions &displayExtensions, bool robustResourceInit)
+Extensions Context::generateSupportedExtensions(const egl::DisplayExtensions &displayExtensions,
+                                                const egl::ClientExtensions &clientExtensions,
+                                                bool robustResourceInit) const
+{
+    Extensions supportedExtensions = mImplementation->getNativeExtensions();
+
+    if (getClientVersion() < ES_2_0)
+    {
+        // Default extensions for GLES1
+        supportedExtensions.pointSizeArray = true;
+        supportedExtensions.textureCubeMap = true;
+    }
+
+    if (getClientVersion() < ES_3_0)
+    {
+        // Disable ES3+ extensions
+        supportedExtensions.colorBufferFloat      = false;
+        supportedExtensions.eglImageExternalEssl3 = false;
+        supportedExtensions.textureNorm16         = false;
+        supportedExtensions.multiview             = false;
+        supportedExtensions.maxViews              = 1u;
+    }
+
+    if (getClientVersion() < ES_3_1)
+    {
+        // Disable ES3.1+ extensions
+        supportedExtensions.geometryShader = false;
+    }
+
+    if (getClientVersion() > ES_2_0)
+    {
+        // FIXME(geofflang): Don't support EXT_sRGB in non-ES2 contexts
+        // supportedExtensions.sRGB = false;
+    }
+
+    // Some extensions are always available because they are implemented in the GL layer.
+    supportedExtensions.bindUniformLocation   = true;
+    supportedExtensions.vertexArrayObject     = true;
+    supportedExtensions.bindGeneratesResource = true;
+    supportedExtensions.clientArrays          = true;
+    supportedExtensions.requestExtension      = true;
+
+    // Enable the no error extension if the context was created with the flag.
+    supportedExtensions.noError = mSkipValidation;
+
+    // Enable surfaceless to advertise we'll have the correct behavior when there is no default FBO
+    supportedExtensions.surfacelessContext = displayExtensions.surfacelessContext;
+
+    // Explicitly enable GL_KHR_debug
+    supportedExtensions.debug                   = true;
+    supportedExtensions.maxDebugMessageLength   = 1024;
+    supportedExtensions.maxDebugLoggedMessages  = 1024;
+    supportedExtensions.maxDebugGroupStackDepth = 1024;
+    supportedExtensions.maxLabelLength          = 1024;
+
+    // Explicitly enable GL_ANGLE_robust_client_memory
+    supportedExtensions.robustClientMemory = true;
+
+    // Determine robust resource init availability from EGL.
+    supportedExtensions.robustResourceInitialization = robustResourceInit;
+
+    // mExtensions.robustBufferAccessBehavior is true only if robust access is true and the backend
+    // supports it.
+    supportedExtensions.robustBufferAccessBehavior =
+        mRobustAccess && supportedExtensions.robustBufferAccessBehavior;
+
+    // Enable the cache control query unconditionally.
+    supportedExtensions.programCacheControl = true;
+
+    // Enable EGL_ANGLE_explicit_context subextensions
+    if (clientExtensions.explicitContext)
+    {
+        // GL_ANGLE_explicit_context_gles1
+        supportedExtensions.explicitContextGles1 = true;
+        // GL_ANGLE_explicit_context
+        supportedExtensions.explicitContext = true;
+    }
+
+    return supportedExtensions;
+}
+
+void Context::initCaps(const egl::DisplayExtensions &displayExtensions,
+                       const egl::ClientExtensions &clientExtensions,
+                       bool robustResourceInit)
 {
     mCaps = mImplementation->getNativeCaps();
+
+    mSupportedExtensions =
+        generateSupportedExtensions(displayExtensions, clientExtensions, robustResourceInit);
+    mExtensions          = mSupportedExtensions;
+
+    mLimitations = mImplementation->getNativeLimitations();
 
     // GLES1 emulation: Initialize caps (Table 6.20 / 6.22 in the ES 1.1 spec)
     if (getClientVersion() < Version(2, 0))
@@ -2988,66 +3123,6 @@ void Context::initCaps(const egl::DisplayExtensions &displayExtensions, bool rob
         mCaps.maxProjectionMatrixStackDepth = Caps::GlobalMatrixStackDepth;
         mCaps.maxTextureMatrixStackDepth    = Caps::GlobalMatrixStackDepth;
     }
-
-    mExtensions = mImplementation->getNativeExtensions();
-
-    mLimitations = mImplementation->getNativeLimitations();
-
-    if (getClientVersion() < Version(3, 0))
-    {
-        // Disable ES3+ extensions
-        mExtensions.colorBufferFloat      = false;
-        mExtensions.eglImageExternalEssl3 = false;
-        mExtensions.textureNorm16         = false;
-        mExtensions.multiview             = false;
-        mExtensions.maxViews              = 1u;
-    }
-
-    if (getClientVersion() < ES_3_1)
-    {
-        // Disable ES3.1+ extensions
-        mExtensions.geometryShader = false;
-    }
-
-    if (getClientVersion() > Version(2, 0))
-    {
-        // FIXME(geofflang): Don't support EXT_sRGB in non-ES2 contexts
-        // mExtensions.sRGB = false;
-    }
-
-    // Some extensions are always available because they are implemented in the GL layer.
-    mExtensions.bindUniformLocation   = true;
-    mExtensions.vertexArrayObject     = true;
-    mExtensions.bindGeneratesResource = true;
-    mExtensions.clientArrays          = true;
-    mExtensions.requestExtension      = true;
-
-    // Enable the no error extension if the context was created with the flag.
-    mExtensions.noError = mSkipValidation;
-
-    // Enable surfaceless to advertise we'll have the correct behavior when there is no default FBO
-    mExtensions.surfacelessContext = displayExtensions.surfacelessContext;
-
-    // Explicitly enable GL_KHR_debug
-    mExtensions.debug                   = true;
-    mExtensions.maxDebugMessageLength   = 1024;
-    mExtensions.maxDebugLoggedMessages  = 1024;
-    mExtensions.maxDebugGroupStackDepth = 1024;
-    mExtensions.maxLabelLength          = 1024;
-
-    // Explicitly enable GL_ANGLE_robust_client_memory
-    mExtensions.robustClientMemory = true;
-
-    // Determine robust resource init availability from EGL.
-    mExtensions.robustResourceInitialization = robustResourceInit;
-
-    // mExtensions.robustBufferAccessBehavior is true only if robust access is true and the backend
-    // supports it.
-    mExtensions.robustBufferAccessBehavior =
-        mRobustAccess && mExtensions.robustBufferAccessBehavior;
-
-    // Enable the cache control query unconditionally.
-    mExtensions.programCacheControl = true;
 
     // Apply implementation limits
     LimitCap(&mCaps.maxVertexAttributes, MAX_VERTEX_ATTRIBS);
@@ -3061,14 +3136,17 @@ void Context::initCaps(const egl::DisplayExtensions &displayExtensions, bool rob
         LimitCap(&mCaps.maxVertexAttribBindings, MAX_VERTEX_ATTRIB_BINDINGS);
     }
 
-    LimitCap(&mCaps.maxVertexUniformBlocks, IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS);
+    LimitCap(&mCaps.maxShaderUniformBlocks[ShaderType::Vertex],
+             IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS);
     LimitCap(&mCaps.maxVertexOutputComponents, IMPLEMENTATION_MAX_VARYING_VECTORS * 4);
     LimitCap(&mCaps.maxFragmentInputComponents, IMPLEMENTATION_MAX_VARYING_VECTORS * 4);
 
     // Limit textures as well, so we can use fast bitsets with texture bindings.
     LimitCap(&mCaps.maxCombinedTextureImageUnits, IMPLEMENTATION_MAX_ACTIVE_TEXTURES);
-    LimitCap(&mCaps.maxVertexTextureImageUnits, IMPLEMENTATION_MAX_ACTIVE_TEXTURES / 2);
-    LimitCap(&mCaps.maxTextureImageUnits, IMPLEMENTATION_MAX_ACTIVE_TEXTURES / 2);
+    LimitCap(&mCaps.maxShaderTextureImageUnits[ShaderType::Vertex],
+             IMPLEMENTATION_MAX_ACTIVE_TEXTURES / 2);
+    LimitCap(&mCaps.maxShaderTextureImageUnits[ShaderType::Fragment],
+             IMPLEMENTATION_MAX_ACTIVE_TEXTURES / 2);
 
     mCaps.maxSampleMaskWords = std::min<GLuint>(mCaps.maxSampleMaskWords, MAX_SAMPLE_MASK_WORDS);
 
@@ -3172,7 +3250,7 @@ void Context::updateCaps()
     }
 
     // If program binary is disabled, blank out the memory cache pointer.
-    if (!mImplementation->getNativeExtensions().getProgramBinary)
+    if (!mSupportedExtensions.getProgramBinary)
     {
         mMemoryProgramCache = nullptr;
     }
@@ -3217,6 +3295,11 @@ void Context::initWorkarounds()
 
 Error Context::prepareForDraw()
 {
+    if (mGLES1Renderer)
+    {
+        ANGLE_TRY(mGLES1Renderer->prepareForDraw(this, &mGLState));
+    }
+
     ANGLE_TRY(syncDirtyObjects());
 
     if (isRobustResourceInitEnabled())
@@ -3493,28 +3576,7 @@ void Context::framebufferTexture2D(GLenum target,
     if (texture != 0)
     {
         Texture *textureObj = getTexture(texture);
-
-        ImageIndex index = ImageIndex::MakeInvalid();
-
-        if (textarget == TextureTarget::_2D)
-        {
-            index = ImageIndex::Make2D(level);
-        }
-        else if (textarget == TextureTarget::Rectangle)
-        {
-            index = ImageIndex::MakeRectangle(level);
-        }
-        else if (textarget == TextureTarget::_2DMultisample)
-        {
-            ASSERT(level == 0);
-            index = ImageIndex::Make2DMultisample();
-        }
-        else
-        {
-            ASSERT(TextureTargetToType(textarget) == TextureType::CubeMap);
-            index = ImageIndex::MakeCube(textarget, level);
-        }
-
+        ImageIndex index    = ImageIndex::MakeFromTarget(textarget, level);
         framebuffer->setAttachment(this, GL_TEXTURE, attachment, index, textureObj);
     }
     else
@@ -3537,7 +3599,7 @@ void Context::framebufferRenderbuffer(GLenum target,
     {
         Renderbuffer *renderbufferObject = getRenderbuffer(renderbuffer);
 
-        framebuffer->setAttachment(this, GL_RENDERBUFFER, attachment, gl::ImageIndex::MakeInvalid(),
+        framebuffer->setAttachment(this, GL_RENDERBUFFER, attachment, gl::ImageIndex(),
                                    renderbufferObject);
     }
     else
@@ -3560,19 +3622,7 @@ void Context::framebufferTextureLayer(GLenum target,
     if (texture != 0)
     {
         Texture *textureObject = getTexture(texture);
-
-        ImageIndex index = ImageIndex::MakeInvalid();
-
-        if (textureObject->getType() == TextureType::_3D)
-        {
-            index = ImageIndex::Make3D(level, layer);
-        }
-        else
-        {
-            ASSERT(textureObject->getType() == TextureType::_2DArray);
-            index = ImageIndex::Make2DArray(level, layer);
-        }
-
+        ImageIndex index       = ImageIndex::MakeFromType(textureObject->getType(), level, layer);
         framebuffer->setAttachment(this, GL_TEXTURE, attachment, index, textureObject);
     }
     else
@@ -3673,9 +3723,7 @@ void Context::invalidateFramebuffer(GLenum target,
     Framebuffer *framebuffer = mGLState.getTargetFramebuffer(target);
     ASSERT(framebuffer);
 
-    bool complete = false;
-    ANGLE_CONTEXT_TRY(framebuffer->isComplete(this, &complete));
-    if (!complete)
+    if (!framebuffer->isComplete(this))
     {
         return;
     }
@@ -3697,9 +3745,7 @@ void Context::invalidateSubFramebuffer(GLenum target,
     Framebuffer *framebuffer = mGLState.getTargetFramebuffer(target);
     ASSERT(framebuffer);
 
-    bool complete = false;
-    ANGLE_CONTEXT_TRY(framebuffer->isComplete(this, &complete));
-    if (!complete)
+    if (!framebuffer->isComplete(this))
     {
         return;
     }
@@ -4793,7 +4839,7 @@ void Context::getMultisamplefv(GLenum pname, GLuint index, GLfloat *val)
     switch (pname)
     {
         case GL_SAMPLE_POSITION:
-            handleError(framebuffer->getSamplePosition(index, val));
+            handleError(framebuffer->getSamplePosition(this, index, val));
             break;
         default:
             UNREACHABLE();
@@ -4948,15 +4994,7 @@ GLenum Context::checkFramebufferStatus(GLenum target)
 {
     Framebuffer *framebuffer = mGLState.getTargetFramebuffer(target);
     ASSERT(framebuffer);
-
-    GLenum status = GL_NONE;
-    Error err     = framebuffer->checkStatus(this, &status);
-    if (err.isError())
-    {
-        handleError(err);
-        return 0;
-    }
-    return status;
+    return framebuffer->checkStatus(this);
 }
 
 void Context::compileShader(GLuint shader)
@@ -5691,7 +5729,7 @@ void Context::deleteQueries(GLsizei n, const GLuint *ids)
 
 GLboolean Context::isQuery(GLuint id)
 {
-    return (getQuery(id, false, GL_NONE) != nullptr) ? GL_TRUE : GL_FALSE;
+    return (getQuery(id, false, QueryType::InvalidEnum) != nullptr) ? GL_TRUE : GL_FALSE;
 }
 
 void Context::uniformMatrix2x3fv(GLint location,
@@ -7020,6 +7058,24 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
             case GL_MAX_MODELVIEW_STACK_DEPTH:
             case GL_MAX_PROJECTION_STACK_DEPTH:
             case GL_MAX_TEXTURE_STACK_DEPTH:
+            case GL_VERTEX_ARRAY_STRIDE:
+            case GL_NORMAL_ARRAY_STRIDE:
+            case GL_COLOR_ARRAY_STRIDE:
+            case GL_TEXTURE_COORD_ARRAY_STRIDE:
+            case GL_VERTEX_ARRAY_SIZE:
+            case GL_COLOR_ARRAY_SIZE:
+            case GL_TEXTURE_COORD_ARRAY_SIZE:
+            case GL_VERTEX_ARRAY_TYPE:
+            case GL_NORMAL_ARRAY_TYPE:
+            case GL_COLOR_ARRAY_TYPE:
+            case GL_TEXTURE_COORD_ARRAY_TYPE:
+            case GL_VERTEX_ARRAY_BUFFER_BINDING:
+            case GL_NORMAL_ARRAY_BUFFER_BINDING:
+            case GL_COLOR_ARRAY_BUFFER_BINDING:
+            case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
+            case GL_POINT_SIZE_ARRAY_STRIDE_OES:
+            case GL_POINT_SIZE_ARRAY_TYPE_OES:
+            case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
                 *type      = GL_INT;
                 *numParams = 1;
                 return true;

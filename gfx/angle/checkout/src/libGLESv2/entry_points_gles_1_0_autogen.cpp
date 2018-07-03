@@ -223,11 +223,12 @@ void GL_APIENTRY DisableClientState(GLenum array)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DisableClientState>(array);
+        ClientVertexArrayType arrayPacked = FromGLenum<ClientVertexArrayType>(array);
+        context->gatherParams<EntryPoint::DisableClientState>(arrayPacked);
 
-        if (context->skipValidation() || ValidateDisableClientState(context, array))
+        if (context->skipValidation() || ValidateDisableClientState(context, arrayPacked))
         {
-            context->disableClientState(array);
+            context->disableClientState(arrayPacked);
         }
     }
 }
@@ -239,11 +240,12 @@ void GL_APIENTRY EnableClientState(GLenum array)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::EnableClientState>(array);
+        ClientVertexArrayType arrayPacked = FromGLenum<ClientVertexArrayType>(array);
+        context->gatherParams<EntryPoint::EnableClientState>(arrayPacked);
 
-        if (context->skipValidation() || ValidateEnableClientState(context, array))
+        if (context->skipValidation() || ValidateEnableClientState(context, arrayPacked))
         {
-            context->enableClientState(array);
+            context->enableClientState(arrayPacked);
         }
     }
 }

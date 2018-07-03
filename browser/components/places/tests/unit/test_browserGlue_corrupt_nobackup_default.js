@@ -33,20 +33,13 @@ add_task(async function() {
   Assert.equal(PlacesUtils.history.databaseStatus,
                PlacesUtils.history.DATABASE_STATUS_CORRUPT);
 
-  // The test will continue once import has finished and smart bookmarks
-  // have been created.
+  // The test will continue once import has finished.
   await promiseTopicObserved("places-browser-init-complete");
 
+  // Check that default bookmarks have been restored.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
-  });
-  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
-
-  // Check that default bookmarks have been restored.
-  bm = await PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: SMART_BOOKMARKS_ON_TOOLBAR
   });
 
   // Bug 1283076: Nightly bookmark points to Get Involved page, not Getting Started one

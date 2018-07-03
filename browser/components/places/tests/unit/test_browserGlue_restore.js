@@ -42,21 +42,13 @@ add_task(async function test_main() {
   // nsBrowserGlue uses databaseStatus to manage initialization.
   Assert.equal(hs.databaseStatus, hs.DATABASE_STATUS_CREATE);
 
-  // The test will continue once restore has finished and smart bookmarks
-  // have been created.
+  // The test will continue once restore has finished.
   await promiseTopicObserved("places-browser-init-complete");
 
+  // Check that JSON backup has been restored.
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     index: 0
-  });
-  await checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
-
-  // Check that JSON backup has been restored.
-  // Notice restore from JSON notification is fired before smart bookmarks creation.
-  bm = await PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    index: SMART_BOOKMARKS_ON_TOOLBAR
   });
   Assert.equal(bm.title, "examplejson");
 });

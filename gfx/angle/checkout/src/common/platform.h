@@ -101,4 +101,15 @@
 // We will undef the macro so that the function name does not get replaced
 #undef MemoryBarrier
 
+// Macro for hinting that an expression is likely to be true/false.
+#if !defined(ANGLE_LIKELY) || !defined(ANGLE_UNLIKELY)
+#if defined(__GNUC__) || defined(__clang__)
+#define ANGLE_LIKELY(x) __builtin_expect(!!(x), 1)
+#define ANGLE_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define ANGLE_LIKELY(x) (x)
+#define ANGLE_UNLIKELY(x) (x)
+#endif  // defined(__GNUC__) || defined(__clang__)
+#endif  // !defined(ANGLE_LIKELY) || !defined(ANGLE_UNLIKELY)
+
 #endif // COMMON_PLATFORM_H_

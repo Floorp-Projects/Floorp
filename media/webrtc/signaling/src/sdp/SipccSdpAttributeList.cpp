@@ -1430,12 +1430,6 @@ SipccSdpAttributeList::GetSsrc() const
   return *static_cast<const SdpSsrcAttributeList*>(attr);
 }
 
-const SdpSsrcGroupAttributeList&
-SipccSdpAttributeList::GetSsrcGroup() const
-{
-  MOZ_CRASH("Not yet implemented");
-}
-
 void
 SipccSdpAttributeList::Serialize(std::ostream& os) const
 {

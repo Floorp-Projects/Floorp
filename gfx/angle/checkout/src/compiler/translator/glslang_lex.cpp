@@ -1205,6 +1205,7 @@ using namespace sh;
 #endif
 #endif
 
+#define YY_NO_INPUT
 #define YY_USER_ACTION                                 \
     yylloc->first_file = yylloc->last_file = yycolumn; \
     yylloc->first_line = yylloc->last_line = yylineno;
@@ -3781,9 +3782,9 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 
 yy_size_t string_input(char* buf, yy_size_t max_size, yyscan_t yyscanner) {
-    pp::Token token;
+    angle::pp::Token token;
     yyget_extra(yyscanner)->getPreprocessor().lex(&token);
-    yy_size_t len = token.type == pp::Token::LAST ? 0 : token.text.size();
+    yy_size_t len = token.type == angle::pp::Token::LAST ? 0 : token.text.size();
     if (len < max_size)
         memcpy(buf, token.text.c_str(), len);
     yyset_column(token.location.file, yyscanner);
@@ -4035,7 +4036,7 @@ int glslang_scan(size_t count, const char* const string[], const int length[],
     yyset_lineno(1, context->getScanner());
 
     // Initialize preprocessor.
-    pp::Preprocessor *preprocessor = &context->getPreprocessor();
+    angle::pp::Preprocessor *preprocessor = &context->getPreprocessor();
 
     if (!preprocessor->init(count, string, length))
         return 1;

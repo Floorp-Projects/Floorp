@@ -26,7 +26,7 @@
 namespace gl
 {
 class FramebufferAttachment;
-struct ImageIndex;
+class ImageIndex;
 }
 
 namespace rx
@@ -157,8 +157,7 @@ class Renderer11 : public RendererD3D
 
     unsigned int getReservedVertexUniformVectors() const;
     unsigned int getReservedFragmentUniformVectors() const;
-    unsigned int getReservedVertexUniformBuffers() const;
-    unsigned int getReservedFragmentUniformBuffers() const;
+    gl::ShaderMap<unsigned int> getReservedShaderUniformBuffers() const;
 
     bool getShareHandleSupport() const;
 

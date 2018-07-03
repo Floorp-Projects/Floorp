@@ -183,6 +183,36 @@ struct Extensions
     // Implies that TextureCaps for GL_ETC1_RGB8_OES exist
     bool compressedETC1RGB8Texture;
 
+    // OES_compressed_ETC2_RGB8_texture
+    bool compressedETC2RGB8Texture;
+
+    // OES_compressed_ETC2_sRGB8_texture
+    bool compressedETC2sRGB8Texture;
+
+    // OES_compressed_ETC2_punchthroughA_RGBA8_texture
+    bool compressedETC2PunchthroughARGB8Texture;
+
+    // OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture
+    bool compressedETC2PunchthroughAsRGB8AlphaTexture;
+
+    // OES_compressed_ETC2_RGBA8_texture
+    bool compressedETC2RGBA8Texture;
+
+    // OES_compressed_ETC2_sRGB8_alpha8_texture
+    bool compressedETC2sRGB8Alpha8Texture;
+
+    // OES_compressed_EAC_R11_unsigned_texture
+    bool compressedEACR11UnsignedTexture;
+
+    // OES_compressed_EAC_R11_signed_texture
+    bool compressedEACR11SignedTexture;
+
+    // OES_compressed_EAC_RG11_unsigned_texture
+    bool compressedEACRG11UnsignedTexture;
+
+    // OES_compressed_EAC_RG11_signed_texture
+    bool compressedEACRG11SignedTexture;
+
     // GL_EXT_sRGB
     // Implies that TextureCaps for GL_SRGB8_ALPHA8 and GL_SRGB8 exist
     // TODO: Don't advertise this extension in ES3
@@ -374,6 +404,18 @@ struct Extensions
 
     // GL_EXT_geometry_shader
     bool geometryShader;
+
+    // GLES1 emulation: GLES1 extensions
+    // GL_OES_point_size_array
+    bool pointSizeArray;
+    // GL_OES_texture_cube_map
+    bool textureCubeMap;
+
+    // EGL_ANGLE_explicit_context GL subextensions
+    // GL_ANGLE_explicit_context_gles1
+    bool explicitContextGles1;
+    // GL_ANGLE_explicit_context
+    bool explicitContext;
 };
 
 struct ExtensionInfo
@@ -488,28 +530,33 @@ struct Caps
     TypePrecision fragmentMediumpInt;
     TypePrecision fragmentLowpInt;
 
+    // Implementation dependent limits required on all shader types.
+    // TODO(jiawei.shao@intel.com): organize all such limits into ShaderMap.
+    // ES 3.1 (April 29, 2015) Table 20.43: Implementation dependent Vertex shader limits
+    // ES 3.1 (April 29, 2015) Table 20.44: Implementation dependent Fragment shader limits
+    // ES 3.1 (April 29, 2015) Table 20.45: implementation dependent compute shader limits
+    // GL_EXT_geometry_shader (May 31, 2016) Table 20.43gs: Implementation dependent geometry shader
+    // limits
+    ShaderMap<GLuint> maxShaderUniformBlocks;
+    ShaderMap<GLuint> maxShaderTextureImageUnits;
+    ShaderMap<GLuint> maxShaderStorageBlocks;
+
     // ES 3.1 (April 29, 2015) Table 20.43: Implementation dependent Vertex shader limits
     GLuint maxVertexAttributes;
     GLuint maxVertexUniformComponents;
     GLuint maxVertexUniformVectors;
-    GLuint maxVertexUniformBlocks;
     GLuint maxVertexOutputComponents;
-    GLuint maxVertexTextureImageUnits;
     GLuint maxVertexAtomicCounterBuffers;
     GLuint maxVertexAtomicCounters;
     GLuint maxVertexImageUniforms;
-    GLuint maxVertexShaderStorageBlocks;
 
     // ES 3.1 (April 29, 2015) Table 20.44: Implementation dependent Fragment shader limits
     GLuint maxFragmentUniformComponents;
     GLuint maxFragmentUniformVectors;
-    GLuint maxFragmentUniformBlocks;
     GLuint maxFragmentInputComponents;
-    GLuint maxTextureImageUnits;
     GLuint maxFragmentAtomicCounterBuffers;
     GLuint maxFragmentAtomicCounters;
     GLuint maxFragmentImageUniforms;
-    GLuint maxFragmentShaderStorageBlocks;
     GLint minProgramTextureGatherOffset;
     GLuint maxProgramTextureGatherOffset;
     GLint minProgramTexelOffset;
@@ -519,15 +566,12 @@ struct Caps
     std::array<GLuint, 3> maxComputeWorkGroupCount;
     std::array<GLuint, 3> maxComputeWorkGroupSize;
     GLuint maxComputeWorkGroupInvocations;
-    GLuint maxComputeUniformBlocks;
-    GLuint maxComputeTextureImageUnits;
     GLuint maxComputeSharedMemorySize;
     GLuint maxComputeUniformComponents;
     GLuint maxComputeAtomicCounterBuffers;
     GLuint maxComputeAtomicCounters;
     GLuint maxComputeImageUniforms;
     GLuint maxCombinedComputeUniformComponents;
-    GLuint maxComputeShaderStorageBlocks;
 
     // ES 3.1 (April 29, 2015) Table 20.46: implementation dependent aggregate shader limits
     GLuint maxUniformBufferBindings;
@@ -569,15 +613,12 @@ struct Caps
     // GL_EXT_geometry_shader (May 31, 2016) Table 20.43gs: Implementation dependent geometry shader
     // limits
     GLuint maxGeometryUniformComponents;
-    GLuint maxGeometryUniformBlocks;
     GLuint maxGeometryInputComponents;
     GLuint maxGeometryOutputComponents;
     GLuint maxGeometryOutputVertices;
     GLuint maxGeometryTotalOutputComponents;
-    GLuint maxGeometryTextureImageUnits;
     GLuint maxGeometryAtomicCounterBuffers;
     GLuint maxGeometryAtomicCounters;
-    GLuint maxGeometryShaderStorageBlocks;
     GLuint maxGeometryShaderInvocations;
 
     // GL_EXT_geometry_shader (May 31, 2016) Table 20.46: Implementation dependent aggregate shader
@@ -788,6 +829,9 @@ struct ClientExtensions
 
     // EGL_KHR_client_get_all_proc_addresses
     bool clientGetAllProcAddresses;
+
+    // EGL_ANGLE_explicit_context
+    bool explicitContext;
 };
 
 }  // namespace egl

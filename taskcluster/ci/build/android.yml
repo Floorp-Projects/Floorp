@@ -62,11 +62,6 @@ android-x86/opt:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-            # Increase the timeout because nsContentUtils.o takes a ridiculously
-            # long time to compile for x86 when using the current NDKs.  This
-            # will eventually get fixed, but for now we have to live with this.
-            # See https://github.com/android-ndk/ndk/issues/522 for more context.
-            SCCACHE_IDLE_TIMEOUT: "1500"
         artifacts:
             - name: public/android/R
               path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/R
@@ -121,11 +116,6 @@ android-x86-nightly/opt:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-            # Increase the timeout because nsContentUtils.o takes a ridiculously
-            # long time to compile for x86 when using the current NDKs.  This
-            # will eventually get fixed, but for now we have to live with this.
-            # See https://github.com/android-ndk/ndk/issues/522 for more context.
-            SCCACHE_IDLE_TIMEOUT: "1500"
         artifacts:
             - name: public/android/R
               path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/R

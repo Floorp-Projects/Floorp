@@ -924,7 +924,7 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 #endif
 
 typedef std::string YYSTYPE;
-typedef pp::SourceLocation YYLTYPE;
+typedef angle::pp::SourceLocation YYLTYPE;
 
 // Use the unused yycolumn variable to track file (string) number.
 #define yyfileno yycolumn
@@ -941,18 +941,19 @@ typedef pp::SourceLocation YYLTYPE;
 #define YY_USER_ACTION                                              \
     do                                                              \
     {                                                               \
-        pp::Input* input = &yyextra->input;                         \
-        pp::Input::Location* scanLoc = &yyextra->scanLoc;           \
+        angle::pp::Input *input             = &yyextra->input;      \
+        angle::pp::Input::Location *scanLoc = &yyextra->scanLoc;    \
         while ((scanLoc->sIndex < input->count()) &&                \
                (scanLoc->cIndex >= input->length(scanLoc->sIndex))) \
         {                                                           \
             scanLoc->cIndex -= input->length(scanLoc->sIndex++);    \
-            ++yyfileno; yylineno = 1;                               \
+            ++yyfileno;                                             \
+            yylineno = 1;                                           \
         }                                                           \
         yylloc->file = yyfileno;                                    \
         yylloc->line = yylineno;                                    \
         scanLoc->cIndex += yyleng;                                  \
-    } while(0);
+    } while (0);
 
 #define YY_INPUT(buf, result, maxSize) \
     result = yyextra->input.read(buf, maxSize, &yylineno);
@@ -964,15 +965,7 @@ typedef pp::SourceLocation YYLTYPE;
 #define INITIAL 0
 #define COMMENT 1
 
-
-
-
-
-
-#define YY_EXTRA_TYPE pp::Tokenizer::Context*
-
-
-
+#define YY_EXTRA_TYPE angle::pp::Tokenizer::Context *
 
 /* Holds the entire state of the reentrant scanner. */
 struct yyguts_t
@@ -1436,7 +1429,7 @@ YY_RULE_SETUP
     if (yylineno == INT_MAX)
     {
         *yylval = "Integer overflow on line number";
-        return pp::Token::GOT_ERROR;
+        return angle::pp::Token::GOT_ERROR;
     }
     ++yylineno;
 }
@@ -1453,28 +1446,28 @@ YY_RULE_SETUP
 {
     // # is only valid at start of line for preprocessor directives.
     yylval->assign(1, yytext[0]);
-    return yyextra->lineStart ? pp::Token::PP_HASH : pp::Token::PP_OTHER;
+    return yyextra->lineStart ? angle::pp::Token::PP_HASH : angle::pp::Token::PP_OTHER;
 }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::IDENTIFIER;
+    return angle::pp::Token::IDENTIFIER;
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::CONST_INT;
+    return angle::pp::Token::CONST_INT;
 }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::CONST_FLOAT;
+    return angle::pp::Token::CONST_FLOAT;
 }
 	YY_BREAK
 /* Anything that starts with a {DIGIT} or .{DIGIT} must be a number. */
@@ -1483,154 +1476,154 @@ case 11:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::PP_NUMBER;
+    return angle::pp::Token::PP_NUMBER;
 }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_INC;
+    return angle::pp::Token::OP_INC;
 }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_DEC;
+    return angle::pp::Token::OP_DEC;
 }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_LEFT;
+    return angle::pp::Token::OP_LEFT;
 }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_RIGHT;
+    return angle::pp::Token::OP_RIGHT;
 }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_LE;
+    return angle::pp::Token::OP_LE;
 }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_GE;
+    return angle::pp::Token::OP_GE;
 }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_EQ;
+    return angle::pp::Token::OP_EQ;
 }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_NE;
+    return angle::pp::Token::OP_NE;
 }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_AND;
+    return angle::pp::Token::OP_AND;
 }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_XOR;
+    return angle::pp::Token::OP_XOR;
 }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_OR;
+    return angle::pp::Token::OP_OR;
 }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_ADD_ASSIGN;
+    return angle::pp::Token::OP_ADD_ASSIGN;
 }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_SUB_ASSIGN;
+    return angle::pp::Token::OP_SUB_ASSIGN;
 }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_MUL_ASSIGN;
+    return angle::pp::Token::OP_MUL_ASSIGN;
 }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_DIV_ASSIGN;
+    return angle::pp::Token::OP_DIV_ASSIGN;
 }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_MOD_ASSIGN;
+    return angle::pp::Token::OP_MOD_ASSIGN;
 }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_LEFT_ASSIGN;
+    return angle::pp::Token::OP_LEFT_ASSIGN;
 }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_RIGHT_ASSIGN;
+    return angle::pp::Token::OP_RIGHT_ASSIGN;
 }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_AND_ASSIGN;
+    return angle::pp::Token::OP_AND_ASSIGN;
 }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_XOR_ASSIGN;
+    return angle::pp::Token::OP_XOR_ASSIGN;
 }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
 {
     yylval->assign(yytext, yyleng);
-    return pp::Token::OP_OR_ASSIGN;
+    return angle::pp::Token::OP_OR_ASSIGN;
 }
 	YY_BREAK
 case 33:
@@ -1651,7 +1644,7 @@ YY_RULE_SETUP
     if (yylineno == INT_MAX)
     {
         *yylval = "Integer overflow on line number";
-        return pp::Token::GOT_ERROR;
+        return angle::pp::Token::GOT_ERROR;
     }
     ++yylineno;
     yylval->assign(1, '\n');
@@ -1662,7 +1655,7 @@ case 36:
 YY_RULE_SETUP
 {
     yylval->assign(1, yytext[0]);
-    return pp::Token::PP_OTHER;
+    return angle::pp::Token::PP_OTHER;
 }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -1670,8 +1663,8 @@ case YY_STATE_EOF(COMMENT):
 {
     // YY_USER_ACTION is not invoked for handling EOF.
     // Set the location for EOF token manually.
-    pp::Input* input = &yyextra->input;
-    pp::Input::Location* scanLoc = &yyextra->scanLoc;
+    angle::pp::Input *input             = &yyextra->input;
+    angle::pp::Input::Location *scanLoc = &yyextra->scanLoc;
     yy_size_t sIndexMax = input->count() ? input->count() - 1 : 0;
     if (scanLoc->sIndex != sIndexMax)
     {
@@ -1688,14 +1681,14 @@ case YY_STATE_EOF(COMMENT):
     // Line number overflows fake EOFs to exit early, check for this case.
     if (yylineno == INT_MAX)
     {
-        yyextra->diagnostics->report(pp::Diagnostics::PP_TOKENIZER_ERROR,
-                                     pp::SourceLocation(yyfileno, yylineno),
+        yyextra->diagnostics->report(angle::pp::Diagnostics::PP_TOKENIZER_ERROR,
+                                     angle::pp::SourceLocation(yyfileno, yylineno),
                                      "Integer overflow on line number");
     }
     else if (YY_START == COMMENT)
     {
-        yyextra->diagnostics->report(pp::Diagnostics::PP_EOF_IN_COMMENT,
-                                     pp::SourceLocation(yyfileno, yylineno),
+        yyextra->diagnostics->report(angle::pp::Diagnostics::PP_EOF_IN_COMMENT,
+                                     angle::pp::SourceLocation(yyfileno, yylineno),
                                      "EOF while in a comment");
     }
     yyterminate();
@@ -2976,12 +2969,8 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-
-
-
-
-
-
+namespace angle
+{
 
 namespace pp {
 
@@ -3071,4 +3060,4 @@ void Tokenizer::destroyScanner()
 
 }  // namespace pp
 
-
+}  // namespace angle

@@ -53,7 +53,7 @@ D3D11_FILTER ConvertFilter(GLenum minFilter, GLenum magFilter, float maxAnisotro
 D3D11_TEXTURE_ADDRESS_MODE ConvertTextureWrap(GLenum wrap);
 UINT ConvertMaxAnisotropy(float maxAnisotropy, D3D_FEATURE_LEVEL featureLevel);
 
-D3D11_QUERY ConvertQueryType(GLenum queryType);
+D3D11_QUERY ConvertQueryType(gl::QueryType type);
 
 UINT8 GetColorMask(const gl::InternalFormat &formatInfo);
 

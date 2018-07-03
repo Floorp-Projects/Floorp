@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/dom/AutoplayRequest.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
@@ -8144,6 +8145,39 @@ const nsIGlobalObject*
 nsPIDOMWindowInner::AsGlobal() const
 {
   return nsGlobalWindowInner::Cast(this);
+}
+
+static nsPIDOMWindowInner*
+GetTopLevelInnerWindow(nsPIDOMWindowInner* aWindow)
+{
+  if (!aWindow) {
+    return nullptr;
+  }
+  nsIDocShell* docShell = aWindow->GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+  docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
+  if (!rootTreeItem || !rootTreeItem->GetDocument()) {
+    return nullptr;
+  }
+  return rootTreeItem->GetDocument()->GetInnerWindow();
+}
+
+already_AddRefed<mozilla::AutoplayRequest>
+nsPIDOMWindowInner::GetAutoplayRequest()
+{
+  // The AutoplayRequest is stored on the top level window.
+  nsPIDOMWindowInner* window = GetTopLevelInnerWindow(this);
+  if (!window) {
+    return nullptr;
+  }
+  if (!window->mAutoplayRequest) {
+    window->mAutoplayRequest = AutoplayRequest::Create(nsGlobalWindowInner::Cast(window));
+  }
+  RefPtr<mozilla::AutoplayRequest> request = window->mAutoplayRequest;
+  return request.forget();
 }
 
 // XXX: Can we define this in a header instead of here?

@@ -21,7 +21,7 @@ class Renderer11;
 class Query11 : public QueryImpl
 {
   public:
-    Query11(Renderer11 *renderer, GLenum type);
+    Query11(Renderer11 *renderer, gl::QueryType type);
     ~Query11() override;
 
     gl::Error begin() override;
@@ -41,6 +41,8 @@ class Query11 : public QueryImpl
     {
         QueryState();
         ~QueryState();
+
+        unsigned int getDataAttemptCount;
 
         d3d11::Query query;
         d3d11::Query beginTimestamp;

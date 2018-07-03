@@ -444,7 +444,8 @@ protected:
   void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
   friend class AsyncFinishNotification;
   void DoFinishNotificationImmediately(MicroTaskRunnable* aAsync = nullptr);
-  void DispatchPlaybackEvent(const nsAString& aName);
+  void QueuePlaybackEvent(const nsAString& aName,
+                          TimeStamp&& aScheduledEventTime);
 
   /**
    * Remove this animation from the pending animation tracker and reset
@@ -486,7 +487,43 @@ protected:
     return GetCurrentTimeForHoldTime(Nullable<TimeDuration>());
   }
 
+  // Earlier side of the elapsed time range reported in CSS Animations and CSS
+  // Transitions events.
+  //
+  // https://drafts.csswg.org/css-animations-2/#interval-start
+  // https://drafts.csswg.org/css-transitions-2/#interval-start
+  StickyTimeDuration
+  IntervalStartTime(const StickyTimeDuration& aActiveDuration) const
+  {
+    MOZ_ASSERT(AsCSSTransition() || AsCSSAnimation(),
+               "Should be called for CSS animations or transitions");
+    static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
+    return std::max(
+      std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().Delay()),
+               aActiveDuration),
+      zeroDuration);
+  }
+
+  // Later side of the elapsed time range reported in CSS Animations and CSS
+  // Transitions events.
+  //
+  // https://drafts.csswg.org/css-animations-2/#interval-end
+  // https://drafts.csswg.org/css-transitions-2/#interval-end
+  StickyTimeDuration
+  IntervalEndTime(const StickyTimeDuration& aActiveDuration) const
+  {
+    MOZ_ASSERT(AsCSSTransition() || AsCSSAnimation(),
+               "Should be called for CSS animations or transitions");
+
+    static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
+    return std::max(
+      std::min((EffectEnd() - mEffect->SpecifiedTiming().Delay()),
+               aActiveDuration),
+      zeroDuration);
+  }
+
   nsIDocument* GetRenderedDocument() const;
+  nsIDocument* GetTimelineDocument() const;
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<AnimationEffect> mEffect;

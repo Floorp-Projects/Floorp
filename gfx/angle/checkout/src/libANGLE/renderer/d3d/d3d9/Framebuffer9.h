@@ -32,7 +32,9 @@ class Framebuffer9 : public FramebufferD3D
                             const GLenum *attachments,
                             const gl::Rectangle &area) override;
 
-    gl::Error getSamplePosition(size_t index, GLfloat *xy) const override;
+    gl::Error getSamplePosition(const gl::Context *context,
+                                size_t index,
+                                GLfloat *xy) const override;
 
     gl::Error syncState(const gl::Context *context,
                         const gl::Framebuffer::DirtyBits &dirtyBits) override;

@@ -70,7 +70,7 @@ Error Query::isResultAvailable(bool *available)
     return mQuery->isResultAvailable(available);
 }
 
-GLenum Query::getType() const
+QueryType Query::getType() const
 {
     return mQuery->getType();
 }

@@ -179,6 +179,8 @@ class VaryingPacking final : angle::NonCopyable
         return static_cast<unsigned int>(mRegisterList.size());
     }
 
+    const std::vector<std::string> &getInactiveVaryingNames() const;
+
   private:
     bool packVarying(const PackedVarying &packedVarying);
     bool isFree(unsigned int registerRow,
@@ -192,6 +194,7 @@ class VaryingPacking final : angle::NonCopyable
     std::vector<Register> mRegisterMap;
     std::vector<PackedVaryingRegister> mRegisterList;
     std::vector<PackedVarying> mPackedVaryings;
+    std::vector<std::string> mInactiveVaryingNames;
 
     PackMode mPackMode;
 };

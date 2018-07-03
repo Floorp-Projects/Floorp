@@ -151,22 +151,20 @@ EffectSet::GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType)
 void
 EffectSet::AddEffect(dom::KeyframeEffect& aEffect)
 {
-  if (mEffects.Contains(&aEffect)) {
+  if (!mEffects.EnsureInserted(&aEffect)) {
     return;
   }
 
-  mEffects.PutEntry(&aEffect);
   MarkCascadeNeedsUpdate();
 }
 
 void
 EffectSet::RemoveEffect(dom::KeyframeEffect& aEffect)
 {
-  if (!mEffects.Contains(&aEffect)) {
+  if (!mEffects.EnsureRemoved(&aEffect)) {
     return;
   }
 
-  mEffects.RemoveEntry(&aEffect);
   MarkCascadeNeedsUpdate();
 }
 

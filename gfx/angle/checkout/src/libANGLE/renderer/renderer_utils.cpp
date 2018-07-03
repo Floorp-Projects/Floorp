@@ -539,7 +539,7 @@ gl::Error IncompleteTextureSet::getIncompleteTexture(
                                  area, GL_RGBA, GL_UNSIGNED_BYTE, color));
     }
 
-    t->syncState();
+    ANGLE_TRY(t->syncState(context));
 
     mIncompleteTextures[type].set(context, t.release());
     *textureOut = mIncompleteTextures[type].get();
