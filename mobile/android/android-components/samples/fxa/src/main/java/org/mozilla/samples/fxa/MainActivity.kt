@@ -55,7 +55,7 @@ open class MainActivity : AppCompatActivity() {
         if (Intent.ACTION_VIEW == action && data != null) {
             val txtView: TextView = findViewById(R.id.txtView)
             val info = authenticate(data)
-            txtView.text = "Signed in: $info"
+            txtView.text = getString(R.string.signed_in, info)
         }
     }
 
