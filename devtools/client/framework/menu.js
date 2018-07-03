@@ -6,7 +6,6 @@
 
 "use strict";
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -84,12 +83,7 @@ Menu.prototype.popupWithZoom = function(x, y, toolbox) {
  */
 Menu.prototype.popup = function(screenX, screenY, toolbox) {
   const doc = toolbox.doc;
-
-  let popupset = doc.querySelector("popupset");
-  if (!popupset) {
-    popupset = doc.createElementNS(XUL_NS, "popupset");
-    doc.documentElement.appendChild(popupset);
-  }
+  const popupset = doc.querySelector("popupset");
   // See bug 1285229, on Windows, opening the same popup multiple times in a
   // row ends up duplicating the popup. The newly inserted popup doesn't
   // dismiss the old one. So remove any previously displayed popup before
@@ -99,7 +93,7 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
     popup.hidePopup();
   }
 
-  popup = doc.createElementNS(XUL_NS, "menupopup");
+  popup = doc.createElement("menupopup");
   popup.setAttribute("menu-api", "true");
   popup.setAttribute("consumeoutsideclicks", "true");
 
@@ -134,10 +128,10 @@ Menu.prototype._createMenuItems = function(parent) {
     }
 
     if (item.submenu) {
-      const menupopup = doc.createElementNS(XUL_NS, "menupopup");
+      const menupopup = doc.createElement("menupopup");
       item.submenu._createMenuItems(menupopup);
 
-      const menu = doc.createElementNS(XUL_NS, "menu");
+      const menu = doc.createElement("menu");
       menu.appendChild(menupopup);
       menu.setAttribute("label", item.label);
       if (item.disabled) {
@@ -154,10 +148,10 @@ Menu.prototype._createMenuItems = function(parent) {
       }
       parent.appendChild(menu);
     } else if (item.type === "separator") {
-      const menusep = doc.createElementNS(XUL_NS, "menuseparator");
+      const menusep = doc.createElement("menuseparator");
       parent.appendChild(menusep);
     } else {
-      const menuitem = doc.createElementNS(XUL_NS, "menuitem");
+      const menuitem = doc.createElement("menuitem");
       menuitem.setAttribute("label", item.label);
       menuitem.addEventListener("command", () => {
         item.click();

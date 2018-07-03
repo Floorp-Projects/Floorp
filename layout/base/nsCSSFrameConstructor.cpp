@@ -106,7 +106,7 @@
 #include "nsThemeConstants.h"
 
 #ifdef MOZ_XUL
-#include "nsIPopupContainer.h"
+#include "nsIRootBox.h"
 #endif
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1054,10 +1054,9 @@ nsFrameConstructorState::nsFrameConstructorState(
     mCurrentPendingBindingInsertionPoint(nullptr)
 {
 #ifdef MOZ_XUL
-  nsIPopupContainer* popupContainer =
-    nsIPopupContainer::GetPopupContainer(aPresShell);
-  if (popupContainer) {
-    mPopupItems.containingBlock = popupContainer->GetPopupSetFrame();
+  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
+  if (rootBox) {
+    mPopupItems.containingBlock = rootBox->GetPopupSetFrame();
   }
 #endif
   MOZ_COUNT_CTOR(nsFrameConstructorState);
@@ -3988,9 +3987,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       // Icky XUL stuff, sadly
 
       if (aItem.mIsRootPopupgroup) {
-        NS_ASSERTION(nsIPopupContainer::GetPopupContainer(mPresShell) &&
-                     nsIPopupContainer::GetPopupContainer(mPresShell)->
-                      GetPopupSetFrame() == newFrame,
+        NS_ASSERTION(nsIRootBox::GetRootBox(mPresShell) &&
+                     nsIRootBox::GetRootBox(mPresShell)->GetPopupSetFrame() ==
+                     newFrame,
                      "Unexpected PopupSetFrame");
         aState.mPopupItems.containingBlock = newFrameAsContainer;
         aState.mHavePendingPopupgroup = false;
@@ -9021,9 +9020,8 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 
 #ifdef MOZ_XUL
   if (aFrame->IsPopupSetFrame()) {
-    nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(mPresShell);
-    if (popupContainer && popupContainer->GetPopupSetFrame() == aFrame) {
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
+    if (rootBox && rootBox->GetPopupSetFrame() == aFrame) {
       ReconstructDocElementHierarchy(InsertionKind::Async);
       return true;
     }

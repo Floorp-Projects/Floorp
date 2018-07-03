@@ -13,14 +13,12 @@
 #include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
 #include "nsIScrollPositionListener.h"
-#include "nsIPopupContainer.h"
 #include "nsDisplayList.h"
 #include "nsIAnonymousContentCreator.h"
 #include "gfxPrefs.h"
 
 class nsPresContext;
 class gfxContext;
-class nsPopupSetFrame;
 
 /**
  * Root frame class.
@@ -33,24 +31,18 @@ class nsPopupSetFrame;
  */
 class nsCanvasFrame final : public nsContainerFrame,
                             public nsIScrollPositionListener,
-                            public nsIAnonymousContentCreator,
-                            public nsIPopupContainer
+                            public nsIAnonymousContentCreator
 {
 public:
   explicit nsCanvasFrame(ComputedStyle* aStyle)
     : nsContainerFrame(aStyle, kClassID)
     , mDoPaintFocus(false)
     , mAddedScrollPositionListener(false)
-    , mPopupSetFrame(nullptr)
   {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
-  nsPopupSetFrame* GetPopupSetFrame() override;
-  void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) override;
-  Element* GetDefaultTooltip() override;
-  void SetDefaultTooltip(Element* aTooltip) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
@@ -131,10 +123,6 @@ protected:
   bool                      mAddedScrollPositionListener;
 
   nsCOMPtr<mozilla::dom::Element> mCustomContentContainer;
-
-private:
-  nsPopupSetFrame* mPopupSetFrame;
-  nsCOMPtr<mozilla::dom::Element> mPopupgroupContent;
 };
 
 /**
