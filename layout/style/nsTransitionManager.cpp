@@ -210,6 +210,16 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     intervalEndTime = IntervalEndTime(computedTiming.mActiveDuration);
   }
 
+  if (mPendingState != PendingState::NotPending &&
+      (mPreviousTransitionPhase == TransitionPhase::Idle ||
+       mPreviousTransitionPhase == TransitionPhase::Pending)) {
+    currentPhase = TransitionPhase::Pending;
+  }
+
+  if (currentPhase == mPreviousTransitionPhase) {
+    return;
+  }
+
   // TimeStamps to use for ordering the events when they are dispatched. We
   // use a TimeStamp so we can compare events produced by different elements,
   // perhaps even with different timelines.
@@ -218,13 +228,6 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
   TimeStamp zeroTimeStamp  = AnimationTimeToTimeStamp(zeroDuration);
   TimeStamp startTimeStamp = ElapsedTimeToTimeStamp(intervalStartTime);
   TimeStamp endTimeStamp   = ElapsedTimeToTimeStamp(intervalEndTime);
-
-  if (mPendingState != PendingState::NotPending &&
-      (mPreviousTransitionPhase == TransitionPhase::Idle ||
-       mPreviousTransitionPhase == TransitionPhase::Pending))
-  {
-    currentPhase = TransitionPhase::Pending;
-  }
 
   AutoTArray<AnimationEventInfo, 3> events;
 
