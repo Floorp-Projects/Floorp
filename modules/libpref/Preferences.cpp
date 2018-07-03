@@ -468,7 +468,6 @@ public:
     , mIsLocked(false)
     , mHasDefaultValue(false)
     , mHasUserValue(false)
-    , mHasChangedSinceInit(false)
     , mDefaultValue()
     , mUserValue()
   {
@@ -500,18 +499,7 @@ public:
   // Other properties.
 
   bool IsLocked() const { return mIsLocked; }
-  void SetIsLocked(bool aValue)
-  {
-    mIsLocked = aValue;
-    OnChanged();
-  }
-
-  void OnChanged()
-  {
-    if (gSharedMap) {
-      mHasChangedSinceInit = true;
-    }
-  }
+  void SetIsLocked(bool aValue) { mIsLocked = aValue; }
 
   bool IsSticky() const { return mIsSticky; }
 
@@ -538,32 +526,6 @@ public:
     } else {
       MOZ_ASSERT_UNREACHABLE("Unexpected preference type");
     }
-  }
-
-  // When a content process is created we could tell it about every pref. But
-  // the content process also initializes prefs from file, so we save a lot of
-  // IPC if we only tell it about prefs that have changed since initialization.
-  //
-  // Specifically, we send a pref if any of the following conditions are met.
-  //
-  // - If the pref has changed in any way (default value, user value, or other
-  //   attribute, such as whether it is locked) since being initialized from
-  //   file.
-  //
-  // - If the pref has a user value. (User values are more complicated than
-  //   default values, because they can be loaded from file after
-  //   initialization with Preferences::ReadUserPrefsFromFile(), so we are
-  //   conservative with them.)
-  //
-  // In other words, prefs that only have a default value and haven't changed
-  // need not be sent. One could do better with effort, but it's ok to be
-  // conservative and this still greatly reduces the number of prefs sent.
-  //
-  // Note: This function is only useful in the parent process.
-  bool MustSendToContentProcesses() const
-  {
-    MOZ_ASSERT(XRE_IsParentProcess());
-    return mHasChangedSinceInit;
   }
 
   // Other operations.
@@ -683,8 +645,6 @@ public:
       userValueChanged = true;
     }
 
-    OnChanged();
-
     if (userValueChanged || (defaultValueChanged && !mHasUserValue)) {
       *aValueChanged = true;
     }
@@ -732,7 +692,6 @@ public:
   {
     mUserValue.Clear(Type());
     mHasUserValue = false;
-    OnChanged();
   }
 
   nsresult SetDefaultValue(PrefType aType,
@@ -755,7 +714,6 @@ public:
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
         mHasDefaultValue = true;
-        OnChanged();
         if (aIsSticky) {
           mIsSticky = true;
         }
@@ -798,36 +756,11 @@ public:
       mUserValue.Replace(mHasUserValue, Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
-      OnChanged();
       if (!IsLocked()) {
         *aValueChanged = true;
       }
     }
     return NS_OK;
-  }
-
-  // Returns false if this pref doesn't have a user value worth saving.
-  bool UserValueToStringForSaving(nsCString& aStr)
-  {
-    // Should we save the user value, if present? Only if it does not match the
-    // default value, or it is sticky.
-    if (mHasUserValue &&
-        (!ValueMatches(PrefValueKind::Default, Type(), mUserValue) ||
-         mIsSticky)) {
-      if (IsTypeString()) {
-        StrEscape(mUserValue.mStringVal, aStr);
-
-      } else if (IsTypeInt()) {
-        aStr.AppendInt(mUserValue.mIntVal);
-
-      } else if (IsTypeBool()) {
-        aStr = mUserValue.mBoolVal ? "true" : "false";
-      }
-      return true;
-    }
-
-    // Do not save default prefs that haven't changed.
-    return false;
   }
 
   // Prefs are serialized in a manner that mirrors dom::Pref. The two should be
@@ -1005,7 +938,6 @@ private:
   uint32_t mIsLocked : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
-  uint32_t mHasChangedSinceInit : 1;
 
   PrefValue mDefaultValue;
   PrefValue mUserValue;
@@ -1160,6 +1092,30 @@ public:
 
     aResult = GetStringValue(kind);
     return NS_OK;
+  }
+
+  // Returns false if this pref doesn't have a user value worth saving.
+  bool UserValueToStringForSaving(nsCString& aStr)
+  {
+    // Should we save the user value, if present? Only if it does not match the
+    // default value, or it is sticky.
+    if (HasUserValue() &&
+        (!ValueMatches(PrefValueKind::Default, Type(), GetValue()) ||
+         IsSticky())) {
+      if (IsTypeString()) {
+        StrEscape(GetStringValue().get(), aStr);
+
+      } else if (IsTypeInt()) {
+        aStr.AppendInt(GetIntValue());
+
+      } else if (IsTypeBool()) {
+        aStr = GetBoolValue() ? "true" : "false";
+      }
+      return true;
+    }
+
+    // Do not save default prefs that haven't changed.
+    return false;
   }
 
   bool Matches(PrefType aType,
@@ -1612,9 +1568,7 @@ pref_savePrefs()
 
   PrefSaveData savedPrefs(gHashTable->EntryCount());
 
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
-
+  for (auto& pref : PrefsIter(gHashTable, gSharedMap)) {
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
       continue;
@@ -4034,7 +3988,7 @@ Preferences::SerializePreferences(nsCString& aStr)
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
-    if (pref->MustSendToContentProcesses() && pref->HasAdvisablySizedValues()) {
+    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
       pref->SerializeAndAppend(aStr);
     }
   }
@@ -4082,6 +4036,18 @@ Preferences::EnsureSnapshot(size_t* aSize)
     }
 
     gSharedMap = new SharedPrefMap(std::move(builder));
+
+    // Once we've built a snapshot of the database, there's no need to continue
+    // storing dynamic copies of the preferences it contains. Once we reset the
+    // hashtable, preference lookups will fall back to the snapshot for any
+    // preferences not in the dynamic hashtable.
+    //
+    // And since the majority of the database is now contained in the snapshot,
+    // we can initialize the hashtable with the expected number of per-session
+    // changed preferences, rather than the expected total number of
+    // preferences.
+    gHashTable->ClearAndPrepareForLength(kHashTableInitialLengthContent);
+    gPrefNameArena.Clear();
   }
 
   *aSize = gSharedMap->MapSize();
