@@ -430,6 +430,9 @@ public class SessionAccessibility {
                  eventType == AccessibilityEvent.TYPE_VIEW_HOVER_ENTER)) {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
+            if (mVirtualContentNode != null) {
+                mVirtualContentNode.recycle();
+            }
             mVirtualContentNode = AccessibilityNodeInfo.obtain(mView, eventSource);
             populateNodeInfoFromJSON(mVirtualContentNode, message);
         }
