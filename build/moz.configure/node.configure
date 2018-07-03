@@ -1,0 +1,73 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option('--enable-nodejs',
+       help='Require Node.js to build')
+
+
+# "nodejs" is first in the tuple on the assumption that it's only likely to
+# exist on systems (probably linux distros) where there is a program in the path
+# called "node" that does something else.
+nodejs = check_prog('NODEJS', ('nodejs', 'node',),
+                    allow_missing=True)
+
+
+@depends_if(nodejs)
+@checking('for node.js version')
+@imports('os')
+@imports('re')
+@imports('subprocess')
+def nodejs_version(node):
+    env = dict(os.environ)
+    env[b'NODE_DISABLE_COLORS'] = b'1'
+
+    try:
+        out = subprocess.check_output([node, '--version'], env=env,
+                                      stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        return None
+
+    match = re.search(r'v(.+)$', out)
+
+    if not match:
+        return None
+
+    return Version(match.group(1))
+
+
+@depends('--enable-nodejs', nodejs, nodejs_version)
+def nodejs_suitability(require, node, version):
+    MIN_NODE_VERSION = Version('8.11')
+
+    if not node:
+        msg = ('could not find Node.js executable; ensure `node` or `nodejs` '
+               'is in PATH or set NODEJS in environment to point to an '
+               'executable')
+
+        if require:
+            raise FatalCheckError(msg)
+        else:
+            log.warning(msg)
+            log.warning('(This will become a fatal error in the near future.)')
+            return
+
+    if not version:
+        msg = 'could not resolve Node.js version'
+        if require:
+            raise FatalCheckError(msg)
+        else:
+            log.warning(msg)
+            log.warning('(This will become a fatal error in the near future.)')
+            return
+
+    if version < MIN_NODE_VERSION:
+        msg = 'NODEJS must point to node %s or newer; %s found' (
+            MIN_NODE_VERSION, node_version)
+
+        if require:
+            raise FatalCheckError(msg)
+        else:
+            log.warning(msg)
