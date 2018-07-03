@@ -206,12 +206,8 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     ComputedTiming computedTiming = mEffect->GetComputedTiming();
 
     currentPhase = static_cast<TransitionPhase>(computedTiming.mPhase);
-    intervalStartTime =
-      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().Delay()),
-                        computedTiming.mActiveDuration), zeroDuration);
-    intervalEndTime =
-      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().Delay()),
-                        computedTiming.mActiveDuration), zeroDuration);
+    intervalStartTime = IntervalStartTime(computedTiming.mActiveDuration);
+    intervalEndTime = IntervalEndTime(computedTiming.mActiveDuration);
   }
 
   // TimeStamps to use for ordering the events when they are dispatched. We
