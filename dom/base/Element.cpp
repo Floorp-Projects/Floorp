@@ -1321,6 +1321,43 @@ Element::GetAttribute(const nsAString& aName, DOMString& aReturn)
   }
 }
 
+bool
+Element::ToggleAttribute(const nsAString& aName,
+                         const Optional<bool>& aForce,
+                         nsIPrincipal* aTriggeringPrincipal,
+                         ErrorResult& aError)
+{
+  aError = nsContentUtils::CheckQName(aName, false);
+  if (aError.Failed()) {
+    return false;
+  }
+
+  nsAutoString nameToUse;
+  const nsAttrName* name = InternalGetAttrNameFromQName(aName, &nameToUse);
+  if (!name) {
+    if (aForce.WasPassed() && !aForce.Value()) {
+      return false;
+    }
+    RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(nameToUse);
+    if (!nameAtom) {
+      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return false;
+    }
+    aError = SetAttr(kNameSpaceID_None, nameAtom, EmptyString(), aTriggeringPrincipal, true);
+    return true;
+  }
+  if (aForce.WasPassed() && aForce.Value()) {
+    return true;
+  }
+  // Hold a strong reference here so that the atom or nodeinfo doesn't go
+  // away during UnsetAttr. If it did UnsetAttr would be left with a
+  // dangling pointer as argument without knowing it.
+  nsAttrName tmp(*name);
+
+  aError = UnsetAttr(name->NamespaceID(), name->LocalName(), true);
+  return false;
+}
+
 void
 Element::SetAttribute(const nsAString& aName,
                       const nsAString& aValue,
