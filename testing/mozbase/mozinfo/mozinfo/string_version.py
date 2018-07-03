@@ -13,7 +13,7 @@ class StringVersion(str):
     """
 
     def __init__(self, vstring):
-        super(StringVersion, self).__init__()
+        str.__init__(self, vstring)
         self.version = LooseVersion(vstring)
 
     def __repr__(self):
