@@ -193,7 +193,6 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
     return;
   }
 
-  static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
   uint64_t currentIteration = 0;
   ComputedTiming::AnimationPhase currentPhase;
   StickyTimeDuration intervalStartTime;
@@ -211,14 +210,8 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
         currentIteration == mPreviousIteration) {
       return;
     }
-    intervalStartTime =
-      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().Delay()),
-                        computedTiming.mActiveDuration),
-               zeroDuration);
-    intervalEndTime =
-      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().Delay()),
-                        computedTiming.mActiveDuration),
-               zeroDuration);
+    intervalStartTime = IntervalStartTime(computedTiming.mActiveDuration);
+    intervalEndTime = IntervalEndTime(computedTiming.mActiveDuration);
 
     uint64_t iterationBoundary = mPreviousIteration > currentIteration
                                  ? currentIteration + 1
