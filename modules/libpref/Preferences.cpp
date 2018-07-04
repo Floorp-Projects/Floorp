@@ -83,6 +83,10 @@
 #include "plstr.h"
 #include "prlink.h"
 
+#ifdef MOZ_MEMORY
+#include "mozmemory.h"
+#endif
+
 #ifdef XP_WIN
 #include "windows.h"
 #endif
@@ -1686,7 +1690,12 @@ private:
 
   void RemoveExpiredCallback(PrefCallback* aCallback);
 
-  PrefName GetPrefName(const char* aPrefName) const;
+  PrefName GetPrefName(const char* aPrefName) const
+  {
+    return GetPrefName(nsDependentCString(aPrefName));
+  }
+
+  PrefName GetPrefName(const nsACString& aPrefName) const;
 
   void FreeObserverList(void);
 
@@ -2380,13 +2389,12 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
 }
 
 NS_IMETHODIMP
-nsPrefBranch::AddObserver(const char* aDomain,
-                          nsIObserver* aObserver,
-                          bool aHoldWeak)
+nsPrefBranch::AddObserverImpl(const nsACString& aDomain,
+                              nsIObserver* aObserver,
+                              bool aHoldWeak)
 {
   PrefCallback* pCallback;
 
-  NS_ENSURE_ARG(aDomain);
   NS_ENSURE_ARG(aObserver);
 
   nsCString prefName;
@@ -2432,9 +2440,9 @@ nsPrefBranch::AddObserver(const char* aDomain,
 }
 
 NS_IMETHODIMP
-nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
+nsPrefBranch::RemoveObserverImpl(const nsACString& aDomain,
+                                 nsIObserver* aObserver)
 {
-  NS_ENSURE_ARG(aDomain);
   NS_ENSURE_ARG(aObserver);
 
   nsresult rv = NS_OK;
@@ -2573,16 +2581,13 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
 }
 
 nsPrefBranch::PrefName
-nsPrefBranch::GetPrefName(const char* aPrefName) const
+nsPrefBranch::GetPrefName(const nsACString& aPrefName) const
 {
-  MOZ_ASSERT(aPrefName);
-
-  // For speed, avoid strcpy if we can.
   if (mPrefRoot.IsEmpty()) {
-    return PrefName(aPrefName);
+    return PrefName(PromiseFlatCString(aPrefName));
   }
 
-  return PrefName(mPrefRoot + nsDependentCString(aPrefName));
+  return PrefName(mPrefRoot + aPrefName);
 }
 
 //----------------------------------------------------------------------------
@@ -4582,7 +4587,7 @@ Preferences::GetType(const char* aPrefName)
 }
 
 /* static */ nsresult
-Preferences::AddStrongObserver(nsIObserver* aObserver, const char* aPref)
+Preferences::AddStrongObserver(nsIObserver* aObserver, const nsACString& aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -4590,7 +4595,7 @@ Preferences::AddStrongObserver(nsIObserver* aObserver, const char* aPref)
 }
 
 /* static */ nsresult
-Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
+Preferences::AddWeakObserver(nsIObserver* aObserver, const nsACString& aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -4598,7 +4603,7 @@ Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
 }
 
 /* static */ nsresult
-Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
+Preferences::RemoveObserver(nsIObserver* aObserver, const nsACString& aPref)
 {
   MOZ_ASSERT(aObserver);
   if (sShutdown) {
@@ -4609,12 +4614,27 @@ Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
   return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
+template<typename T>
+static void
+AssertNotMallocAllocated(T* aPtr)
+{
+#if defined(DEBUG) && defined(MOZ_MEMORY)
+  jemalloc_ptr_info_t info;
+  jemalloc_ptr_info((void*)aPtr, &info);
+  MOZ_ASSERT(info.tag == TagUnknown);
+#endif
+}
+
 /* static */ nsresult
 Preferences::AddStrongObservers(nsIObserver* aObserver, const char** aPrefs)
 {
   MOZ_ASSERT(aObserver);
   for (uint32_t i = 0; aPrefs[i]; i++) {
-    nsresult rv = AddStrongObserver(aObserver, aPrefs[i]);
+    AssertNotMallocAllocated(aPrefs[i]);
+
+    nsCString pref;
+    pref.AssignLiteral(aPrefs[i], strlen(aPrefs[i]));
+    nsresult rv = AddStrongObserver(aObserver, pref);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -4625,7 +4645,11 @@ Preferences::AddWeakObservers(nsIObserver* aObserver, const char** aPrefs)
 {
   MOZ_ASSERT(aObserver);
   for (uint32_t i = 0; aPrefs[i]; i++) {
-    nsresult rv = AddWeakObserver(aObserver, aPrefs[i]);
+    AssertNotMallocAllocated(aPrefs[i]);
+
+    nsCString pref;
+    pref.AssignLiteral(aPrefs[i], strlen(aPrefs[i]));
+    nsresult rv = AddWeakObserver(aObserver, pref);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -4642,7 +4666,7 @@ Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
 
   for (uint32_t i = 0; aPrefs[i]; i++) {
-    nsresult rv = RemoveObserver(aObserver, aPrefs[i]);
+    nsresult rv = RemoveObserver(aObserver, nsDependentCString(aPrefs[i]));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
