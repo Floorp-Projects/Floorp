@@ -2266,8 +2266,9 @@ ContentChild::RecvRegisterChrome(InfallibleTArray<ChromePackage>&& packages,
   nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
   nsChromeRegistryContent* chromeRegistry =
     static_cast<nsChromeRegistryContent*>(registrySvc.get());
-  if (!chromeRegistry)
+  if (!chromeRegistry) {
     return IPC_FAIL(this, "ChromeRegistryContent is null!");
+  }
   chromeRegistry->RegisterRemoteChrome(packages, resources, overrides,
                                        locale, reset);
   return IPC_OK();
@@ -2279,8 +2280,9 @@ ContentChild::RecvRegisterChromeItem(const ChromeRegistryItem& item)
   nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
   nsChromeRegistryContent* chromeRegistry =
     static_cast<nsChromeRegistryContent*>(registrySvc.get());
-  if (!chromeRegistry)
+  if (!chromeRegistry) {
     return IPC_FAIL(this, "ChromeRegistryContent is null!");
+  }
   switch (item.type()) {
     case ChromeRegistryItem::TChromePackage:
       chromeRegistry->RegisterPackage(item.get_ChromePackage());
