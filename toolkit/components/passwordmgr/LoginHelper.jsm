@@ -40,19 +40,13 @@ var LoginHelper = {
       return this.debug ? "debug" : "warn";
     };
 
-    let logger;
-    function getConsole() {
-      if (!logger) {
-        // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
-        let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
-        let consoleOptions = {
-          maxLogLevel: getMaxLogLevel(),
-          prefix: aLogPrefix,
-        };
-        logger = new ConsoleAPI(consoleOptions);
-      }
-      return logger;
-    }
+    // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+    let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+    let consoleOptions = {
+      maxLogLevel: getMaxLogLevel(),
+      prefix: aLogPrefix,
+    };
+    let logger = new ConsoleAPI(consoleOptions);
 
     // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
     Services.prefs.addObserver("signon.", () => {
@@ -60,31 +54,10 @@ var LoginHelper = {
       this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
-      if (logger) {
-        logger.maxLogLevel = getMaxLogLevel();
-      }
+      logger.maxLogLevel = getMaxLogLevel();
     });
 
-    return {
-      log: (...args) => {
-        if (this.debug) {
-          getConsole().log(...args);
-        }
-      },
-      error: (...args) => {
-        getConsole().error(...args);
-      },
-      debug: (...args) => {
-        if (this.debug) {
-          getConsole().debug(...args);
-        }
-      },
-      warn: (...args) => {
-        if (this.debug) {
-          getConsole().warn(...args);
-        }
-      },
-    };
+    return logger;
   },
 
   /**

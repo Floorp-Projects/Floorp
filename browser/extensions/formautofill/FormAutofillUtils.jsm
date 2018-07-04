@@ -45,26 +45,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "CreditCard",
   "resource://gre/modules/CreditCard.jsm");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "logLevel", "extensions.formautofill.loglevel",
-                                      "Warn");
-
-// A logging helper for debug logging to avoid creating Console objects
-// or triggering expensive JS -> C++ calls when debug logging is not
-// enabled.
-//
-// Console objects, even natively-implemented ones, can consume a lot of
-// memory, and since this code may run in every content process, that
-// memory can add up quickly. And, even when debug-level messages are
-// being ignored, console.debug() calls can be expensive.
-//
-// This helper avoids both of those problems by never touching the
-// console object unless debug logging is enabled.
-function debug() {
-  if (logLevel == "debug") {
-    this.log.debug(...arguments);
-  }
-}
-
 let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
   // information while requesting conutry information, and set country to true.
@@ -358,8 +338,6 @@ this.FormAutofillUtils = {
   },
 
   defineLazyLogGetter(scope, logPrefix) {
-    scope.debug = debug;
-
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
       let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
       return new ConsoleAPI({
