@@ -297,6 +297,7 @@ public:
                                           aNewItem->GetChildren(),
                                           containerASRForChildren,
                                           aNewItem->GetPerFrameKey())) {
+            aNewItem->InvalidateCachedChildInfo();
             mResultIsModified = true;
 
           }
@@ -401,6 +402,7 @@ public:
         nsDisplayList empty;
         if (mBuilder->MergeDisplayLists(&empty, item->GetChildren(), item->GetChildren(),
                                         containerASRForChildren, item->GetPerFrameKey())) {
+          item->InvalidateCachedChildInfo();
           mResultIsModified = true;
         }
         UpdateASR(item, containerASRForChildren);
