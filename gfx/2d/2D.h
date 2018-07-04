@@ -898,13 +898,18 @@ public:
   virtual cairo_scaled_font_t* GetCairoScaledFont() { return nullptr; }
   virtual void SetCairoScaledFont(cairo_scaled_font_t* font) {}
 
+  Float GetSyntheticObliqueAngle() const { return mSyntheticObliqueAngle; }
+  void SetSyntheticObliqueAngle(Float aAngle) { mSyntheticObliqueAngle = aAngle; }
+
 protected:
   explicit ScaledFont(const RefPtr<UnscaledFont>& aUnscaledFont)
     : mUnscaledFont(aUnscaledFont)
+    , mSyntheticObliqueAngle(0.0f)
   {}
 
   UserData mUserData;
   RefPtr<UnscaledFont> mUnscaledFont;
+  Float mSyntheticObliqueAngle;
 
 private:
   static Atomic<uint32_t> sDeletionCounter;
