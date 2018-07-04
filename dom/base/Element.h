@@ -1101,6 +1101,8 @@ public:
   void GetAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aLocalName,
                       nsAString& aReturn);
+  bool ToggleAttribute(const nsAString& aName, const Optional<bool>& aForce,
+                       nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError);
   void SetAttribute(const nsAString& aName, const nsAString& aValue,
                     nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError);
   void SetAttributeNS(const nsAString& aNamespaceURI,

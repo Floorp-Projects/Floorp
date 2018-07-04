@@ -88,7 +88,8 @@ class AnimationTarget extends Component {
     await this.ensureNodeFront();
 
     if (this.state.nodeFront) {
-      this.props.onShowBoxModelHighlighterForNode(this.state.nodeFront);
+      this.props.onShowBoxModelHighlighterForNode(
+        this.state.nodeFront, { hideInfoBar: true, hideGuides: true });
     }
   }
 

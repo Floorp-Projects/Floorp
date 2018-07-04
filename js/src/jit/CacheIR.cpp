@@ -4353,9 +4353,12 @@ GetIteratorIRGenerator::tryAttachStub()
     RootedObject obj(cx_, &val_.toObject());
 
     ObjOperandId objId = writer.guardIsObject(valId);
-    if (tryAttachNativeIterator(objId, obj))
-        return true;
+    if (tryAttachNativeIterator(objId, obj)) {
+      trackAttached("GetIterator");
+      return true;
+    }
 
+    trackAttached(IRGenerator::NotAttached);
     return false;
 }
 
@@ -4389,6 +4392,16 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
     writer.returnFromIC();
 
     return true;
+}
+
+void
+GetIteratorIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.valueProperty("val", val_);
+    }
+#endif
 }
 
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,

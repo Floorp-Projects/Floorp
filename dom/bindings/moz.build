@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
+if CONFIG['CC_TYPE'] == 'msvc':
+    CXXFLAGS += ['-bigobj']
+
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
