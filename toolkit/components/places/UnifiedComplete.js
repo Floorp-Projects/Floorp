@@ -266,9 +266,9 @@ const SQL_AUTOFILL_WITH = `
   WITH
   frecency_stats(count, sum, squares) AS (
     SELECT
-      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "frecency_count") AS REAL),
-      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "frecency_sum") AS REAL),
-      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "frecency_sum_of_squares") AS REAL)
+      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "origin_frecency_count") AS REAL),
+      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "origin_frecency_sum") AS REAL),
+      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "origin_frecency_sum_of_squares") AS REAL)
   ),
   autofill_frecency_threshold(value) AS (
     SELECT MAX(1,
