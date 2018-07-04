@@ -554,7 +554,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
     def download_and_extract(self):
         """
         download and extract test zip / download installer
-        optimizes which subfolders to extract from tests archive
+        optimizes which subfolders to extract from tests zip
         """
         c = self.config
 

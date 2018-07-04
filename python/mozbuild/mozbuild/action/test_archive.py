@@ -573,7 +573,7 @@ def find_files(archive):
 
     if archive == 'common':
         # Construct entries ensuring all our generated harness files are
-        # packaged in the common tests archive.
+        # packaged in the common tests zip.
         packaged_paths = set()
         for entry in OBJDIR_TEST_FILES.values():
             pat = mozpath.join(entry['base'], entry['pattern'])
