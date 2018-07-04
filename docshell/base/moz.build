@@ -46,7 +46,6 @@ XPIDL_SOURCES += [
     'nsIDocShellTreeOwner.idl',
     'nsIDocumentLoaderFactory.idl',
     'nsIDownloadHistory.idl',
-    'nsIGlobalHistory2.idl',
     'nsILoadContext.idl',
     'nsIPrivacyTransitionObserver.idl',
     'nsIReflowObserver.idl',
@@ -93,9 +92,6 @@ UNIFIED_SOURCES += [
     'nsWebNavigationInfo.cpp',
     'SerializedLoadContext.cpp',
 ]
-
-if not CONFIG['MOZ_PLACES']:
-    UNIFIED_SOURCES += ['nsDownloadHistory.cpp']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

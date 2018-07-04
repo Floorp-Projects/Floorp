@@ -117,7 +117,8 @@ public:
   /**
    * DeleteSelectionAsAction() removes selection content or content around
    * caret with transactions.  This should be used for handling it as an
-   * edit action.
+   * edit action.  If you'd like to remove selection for preparing to insert
+   * something, you probably should use DeleteSelectionAsSubAction().
    *
    * @param aDirection          How much range should be removed.
    * @param aStripWrappers      Whether the parent blocks should be removed
@@ -197,6 +198,18 @@ protected: // May be called by friends.
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
+
+  /**
+   * DeleteSelectionAsSubAction() removes selection content or content around
+   * caret with transactions.  This should be used for handling it as an
+   * edit sub-action.
+   *
+   * @param aDirection          How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  nsresult DeleteSelectionAsSubAction(EDirection aDirection,
+                                      EStripWrappers aStripWrappers);
 
   /**
    * DeleteSelectionWithTransaction() removes selected content or content

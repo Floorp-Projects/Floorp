@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/light-theme.css"?>
+<window class="theme-light"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Tooltip test">
+
+<vbox flex="1" style="position: relative">
+  <!-- Left edge -->
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+           top: 0; left: 0;">
+  </html:div>
+
+  <!-- Not left edge but still left of center plus RTL direction (which should
+       no affect the hang direction) -->
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; left: 25px; direction: rtl">
+  </html:div>
+
+  <!-- Wide but still left of center -->
+  <html:div class="anchor"
+    style="width:80%; height: 10px; position: absolute; background: red;
+    top: 0; left: 50px;">
+  </html:div>
+
+  <!-- Right edge -->
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 0;">
+  </html:div>
+
+  <!-- Not right edge but still right of center plus RTL direction (which should
+       no affect the hang direction) -->
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 25px; direction: rtl">
+  </html:div>
+
+  <!-- Wide but still right of center -->
+  <html:div class="anchor"
+    style="width:80%; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 50px;">
+  </html:div>
+  </vbox>
+</window>

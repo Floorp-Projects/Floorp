@@ -174,7 +174,7 @@ def test_build_kwargs_with_binary_or_address(expected_driver_args, build_kwargs_
             host, port = address.split(":")
             expected_driver_args.update({'host': host, 'port': int(port)})
         else:
-            expected_driver_args.update({'host': 'localhost', 'port': 2828})
+            expected_driver_args.update({'host': '127.0.0.1', 'port': 2828})
         expected_driver_args.assert_matches(built_kwargs)
     elif address is None:
         expected_driver_args.assert_keys_not_in(built_kwargs)
@@ -197,7 +197,7 @@ def test_build_kwargs_with_emulator_or_address(expected_driver_args, build_kwarg
             host, port = address.split(":")
             expected_driver_args.update({'host': host, 'port': int(port)})
         else:
-            expected_driver_args.update({'host': 'localhost', 'port': 2828})
+            expected_driver_args.update({'host': '127.0.0.1', 'port': 2828})
             assert 'connect_to_running_emulator' not in built_kwargs
         expected_driver_args.assert_matches(built_kwargs)
     elif not address:

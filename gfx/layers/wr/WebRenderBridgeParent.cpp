@@ -125,6 +125,26 @@ gecko_profiler_unregister_thread()
   PROFILER_UNREGISTER_THREAD();
 }
 
+void
+record_telemetry_time(mozilla::wr::TelemetryProbe aProbe, uint64_t aTimeNs)
+{
+  uint32_t time_ms = (uint32_t)(aTimeNs / 1000000);
+  switch (aProbe) {
+    case mozilla::wr::TelemetryProbe::SceneBuildTime:
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::WR_SCENEBUILD_TIME, time_ms);
+      break;
+    case mozilla::wr::TelemetryProbe::SceneSwapTime:
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::WR_SCENESWAP_TIME, time_ms);
+      break;
+    case mozilla::wr::TelemetryProbe::RenderTime:
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::WR_RENDER_TIME, time_ms);
+      break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+}
+
 namespace mozilla {
 
 namespace layers {

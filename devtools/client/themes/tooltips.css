@@ -262,6 +262,212 @@
   transform: rotate(45deg);
 }
 
+/* Tooltip : doorhanger style */
+
+:root {
+  --theme-arrowpanel-border-radius: 0px;
+}
+:root[platform="mac"] {
+  --theme-arrowpanel-border-radius: 3.5px;
+}
+
+.tooltip-container[type="doorhanger"] > .tooltip-panel {
+  padding: 4px 0;
+  color: var(--theme-arrowpanel-color);
+  margin: 4px;
+  max-width: 320px;
+}
+
+.tooltip-container[type="doorhanger"] > .tooltip-panel,
+.tooltip-container[type="doorhanger"] > .tooltip-arrow::before {
+  background: var(--theme-arrowpanel-background);
+  border: 1px solid var(--theme-arrowpanel-border-color);
+  border-radius: var(--theme-arrowpanel-border-radius);
+  box-shadow: 0 0 4px hsla(210,4%,10%,.2);
+}
+
+:root[platform="mac"] .tooltip-container[type="doorhanger"] > .tooltip-panel,
+:root[platform="mac"] .tooltip-container[type="doorhanger"] > .tooltip-arrow::before {
+  box-shadow: none;
+  /*
+   * The above should be:
+   *
+   *   box-shadow: 0 0 0 1px var(--theme-arrowpanel-border-color);
+   *
+   * but although that gives the right emphasis to the border it makes the
+   * platform shadow much too dark.
+   */
+}
+
+:root[platform="mac"].theme-light .tooltip-container[type="doorhanger"] > .tooltip-panel,
+:root[platform="mac"].theme-light .tooltip-container[type="doorhanger"] > .tooltip-arrow::before {
+  border: none;
+}
+
+.tooltip-container[type="doorhanger"] > .tooltip-arrow {
+  /* Desired width of the arrow */
+  --arrow-width: 20px;
+
+  /* Amount of room to allow for the shadow. Should be about half the radius. */
+  --shadow-radius: 4px;
+  --shadow-margin: calc(var(--shadow-radius) / 2);
+
+  /*
+   * Crop the arrow region to show half the arrow plus allow room for margins.
+   *
+   * The ARROW_WIDTH in HTMLTooltip.js needs to match the following value.
+   */
+  width: calc(var(--arrow-width) + 2 * var(--shadow-margin));
+  height: calc(var(--arrow-width) / 2 + var(--shadow-margin));
+}
+
+.tooltip-container[type="doorhanger"] > .tooltip-arrow::before {
+  /* Make sure the border is included in the size */
+  box-sizing: border-box;
+
+  /* Don't inherit any rounded corners. */
+  border-radius: 0;
+
+  /*
+   * When the box is rotated, it should have width <arrow-width>.
+   * That makes the length of one side of the box equal to:
+   *
+   *    (<arrow-width> / 2) / sin 45
+   */
+  --sin-45: 0.707106781;
+  --square-side: calc(var(--arrow-width) / 2 / var(--sin-45));
+  width: var(--square-side);
+  height: var(--square-side);
+
+  /*
+   * The rotated square will overshoot the left side
+   * and need to be shifted in by:
+   *
+   *   (<arrow-width> - square side) / 2
+   *
+   * But we also want to shift it in so that the box-shadow
+   * is not clipped when we clip the parent so we add
+   * a suitable margin for that.
+   */
+  --overhang: calc((var(--arrow-width) - var(--square-side)) / 2);
+  margin-left: calc(var(--overhang) + var(--shadow-margin));
+}
+
+.tooltip-container[type="doorhanger"].tooltip-top > .tooltip-panel {
+  /* Drop the margin between the doorhanger and the arrow. */
+  margin-bottom: 0;
+}
+
+.tooltip-container[type="doorhanger"].tooltip-bottom > .tooltip-panel {
+  /* Drop the margin between the doorhanger and the arrow. */
+  margin-top: 0;
+}
+
+.tooltip-container[type="doorhanger"].tooltip-top > .tooltip-arrow {
+  /* Overlap the arrow with the 1px border of the doorhanger */
+  margin-top: -1px;
+}
+
+.tooltip-container[type="doorhanger"].tooltip-bottom > .tooltip-arrow {
+  /* Overlap the arrow with the 1px border of the doorhanger */
+  margin-bottom: -1px;
+}
+
+.tooltip-container[type="doorhanger"].tooltip-top > .tooltip-arrow::before {
+  /* Show only the bottom half of the box */
+  margin-top: calc(var(--square-side) / -2);
+}
+
+.tooltip-container[type="doorhanger"].tooltip-bottom > .tooltip-arrow::before {
+  /* Shift the rotated box in so that it is not clipped */
+  margin-top: calc(var(--overhang) + var(--shadow-margin));
+}
+
+.tooltip-container[type="doorhanger"] .tooltip-panel ul {
+  /* Override the display: -moz-box declaration in minimal-xul.css
+   * or else menu items won't stack. */
+  display: block;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  padding: 4px 12px;
+  outline: none;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > button.command:-moz-any([role="menuitem"],[role="menuitemcheckbox"]) {
+  -moz-appearance: none;
+  border: none;
+  color: var(--theme-arrowpanel-color);
+  background-color: transparent;
+  text-align: start;
+  width: 100%;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command:not(:-moz-any([disabled],[open],:active)):-moz-any(:hover,:focus) {
+  background-color: var(--theme-arrowpanel-dimmed);
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command:-moz-focusring::-moz-focus-inner {
+  border-color: transparent;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command:not([disabled]):-moz-any([open],:hover:active) {
+  background-color: var(--theme-arrowpanel-dimmed-further);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command[aria-checked="true"] {
+  list-style-image: none;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background: url(chrome://browser/skin/check.svg) no-repeat transparent;
+  background-size: 11px 11px;
+  background-position: center left 7px;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command[aria-checked="true"]:-moz-locale-dir(rtl) {
+  background-position: center right 7px;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command > .label {
+  flex: 1;
+  padding-inline-start: 16px;
+  font: menu;
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command.iconic > .label::before {
+  content: " ";
+  display: inline-block;
+  margin-inline-end: 8px;
+  width: 16px;
+  height: 16px;
+  vertical-align: top;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  /*
+   * The icons in the sidebar menu have opacity: 0.8 here, but those in the
+   * hamburger menu don't. For now we match the hamburger menu styling,
+   * especially because the 80% opacity makes the icons look dull in dark mode.
+   */
+}
+
+.tooltip-container[type="doorhanger"] .menuitem > .command > .accelerator {
+  margin-inline-start: 10px;
+  color: var(--theme-arrowpanel-disabled-color);
+  font: message-box;
+}
+
+.tooltip-container[type="doorhanger"] hr {
+  display: block;
+  border: none;
+  border-top: 1px solid var(--theme-arrowpanel-separator);
+  margin: 6px 0;
+  padding: 0;
+}
+
 /* Tooltip: Events */
 
 .event-header {

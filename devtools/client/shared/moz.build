@@ -30,6 +30,7 @@ DevToolsModules(
     'DOMHelpers.jsm',
     'enum.js',
     'file-saver.js',
+    'focus.js',
     'getjson.js',
     'inplace-editor.js',
     'key-shortcuts.js',
