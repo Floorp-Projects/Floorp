@@ -36,7 +36,7 @@ private:
     bool ReadScript(nsIURI* uri, JSContext* cx, JS::HandleObject targetObj,
                     const nsAString& charset, const char* uriStr,
                     nsIIOService* serv,
-                    bool wantReturnValue,
+                    bool wantReturnValue, bool useCompilationScope,
                     JS::MutableHandleScript script);
 
     nsresult ReadScriptAsync(nsIURI* uri,
