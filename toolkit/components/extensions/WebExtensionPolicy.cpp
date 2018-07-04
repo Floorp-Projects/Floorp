@@ -282,9 +282,9 @@ namespace {
     NS_DECL_NSIOBSERVER
 
     static already_AddRefed<AtomSetPref>
-    Create(const char* aPref)
+    Create(const nsCString& aPref)
     {
-      RefPtr<AtomSetPref> self = new AtomSetPref(aPref);
+      RefPtr<AtomSetPref> self = new AtomSetPref(aPref.get());
       Preferences::AddWeakObserver(self, aPref);
       return self.forget();
     }
@@ -354,7 +354,7 @@ WebExtensionPolicy::IsRestrictedURI(const URLInfo &aURI)
 {
   static RefPtr<AtomSetPref> domains;
   if (!domains) {
-    domains = AtomSetPref::Create(kRestrictedDomainPref);
+    domains = AtomSetPref::Create(nsLiteralCString(kRestrictedDomainPref));
     ClearOnShutdown(&domains);
   }
 
