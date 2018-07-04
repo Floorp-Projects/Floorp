@@ -24,11 +24,7 @@ def nodejs_version(node):
     env = dict(os.environ)
     env[b'NODE_DISABLE_COLORS'] = b'1'
 
-    try:
-        out = subprocess.check_output([node, '--version'], env=env,
-                                      stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        return None
+    out = check_cmd_output(node, '--version', env=env)
 
     match = re.search(r'v(.+)$', out)
 
