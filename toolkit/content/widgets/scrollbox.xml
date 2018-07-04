@@ -570,9 +570,7 @@
       <handler event="overflow" phase="capturing"><![CDATA[
         // Ignore overflow events:
         // - from nested scrollable elements
-        // - when the window is tiny initially
-        if (event.target != this ||
-            window.outerWidth <= 1) {
+        if (event.target != this) {
           return;
         }
 
