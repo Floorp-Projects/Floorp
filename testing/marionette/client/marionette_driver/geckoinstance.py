@@ -454,7 +454,7 @@ class FennecInstance(GeckoInstance):
             logcat_args["logfile"] = self.gecko_log
         self.runner.device.start_logcat(**logcat_args)
 
-        # forward marionette port (localhost:2828)
+        # forward marionette port
         self.runner.device.device.forward(
             local="tcp:{}".format(self.marionette_port),
             remote="tcp:{}".format(self.marionette_port))

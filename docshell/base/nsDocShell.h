@@ -80,7 +80,6 @@ class nsIContentViewer;
 class nsIController;
 class nsIDocShellTreeOwner;
 class nsIDocument;
-class nsIGlobalHistory2;
 class nsIHttpChannel;
 class nsIMutableArray;
 class nsIPrompt;
@@ -660,8 +659,7 @@ private: // member functions
                      uint32_t aChannelRedirectFlags);
 
   /**
-   * Helper function for adding a URI visit using IHistory. If IHistory is
-   * not available, the method tries nsIGlobalHistory2.
+   * Helper function for adding a URI visit using IHistory.
    *
    * The IHistory API maintains chains of visits, tracking both HTTP referrers
    * and redirects for a user session. VisitURI requires the current URI and
@@ -928,7 +926,6 @@ private: // data members
   nsCOMPtr<nsIContentViewer> mContentViewer;
   nsCOMPtr<nsIWidget> mParentWidget;
   RefPtr<mozilla::dom::ChildSHistory> mSessionHistory;
-  nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
   nsCOMPtr<nsIWebBrowserFind> mFind;
   nsCOMPtr<nsICommandManager> mCommandManager;
 

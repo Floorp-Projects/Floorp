@@ -462,6 +462,13 @@ fn get_proc_address(glcontext_ptr: *mut c_void,
     symbol as *const _
 }
 
+#[repr(C)]
+pub enum TelemetryProbe {
+    SceneBuildTime = 0,
+    SceneSwapTime = 1,
+    RenderTime = 2,
+}
+
 extern "C" {
     fn is_in_compositor_thread() -> bool;
     fn is_in_render_thread() -> bool;
@@ -481,6 +488,7 @@ extern "C" {
     #[allow(dead_code)]
     fn gfx_critical_error(msg: *const c_char);
     fn gfx_critical_note(msg: *const c_char);
+    fn record_telemetry_time(probe: TelemetryProbe, time_ns: u64);
 }
 
 struct CppNotifier {
@@ -515,8 +523,11 @@ impl RenderNotifier for CppNotifier {
                        _: DocumentId,
                        _scrolled: bool,
                        composite_needed: bool,
-                       _render_time_ns: Option<u64>) {
+                       render_time_ns: Option<u64>) {
         unsafe {
+            if let Some(time) = render_time_ns {
+                record_telemetry_time(TelemetryProbe::RenderTime, time);
+            }
             if composite_needed {
                 wr_notifier_new_frame_ready(self.window_id);
             } else {
@@ -718,13 +729,19 @@ impl SceneBuilderHooks for APZCallbacks {
         unsafe { apz_register_updater(self.window_id) }
     }
 
-    fn pre_scene_swap(&self, _scenebuild_time: u64) {
-        unsafe { apz_pre_scene_swap(self.window_id) }
+    fn pre_scene_swap(&self, scenebuild_time: u64) {
+        unsafe {
+            record_telemetry_time(TelemetryProbe::SceneBuildTime, scenebuild_time);
+            apz_pre_scene_swap(self.window_id);
+        }
     }
 
-    fn post_scene_swap(&self, info: PipelineInfo, _sceneswap_time: u64) {
+    fn post_scene_swap(&self, info: PipelineInfo, sceneswap_time: u64) {
         let info = WrPipelineInfo::new(info);
-        unsafe { apz_post_scene_swap(self.window_id, info) }
+        unsafe {
+            record_telemetry_time(TelemetryProbe::SceneSwapTime, sceneswap_time);
+            apz_post_scene_swap(self.window_id, info);
+        }
 
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
