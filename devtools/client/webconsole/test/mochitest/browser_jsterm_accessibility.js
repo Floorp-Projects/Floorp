@@ -19,8 +19,16 @@ add_task(async function() {
   info("Test that the console input is not treated as a live region");
   ok(!isElementInLiveRegion(input), "Console input is not treated as a live region");
 
+  info("Test the console input has no aria-activedescendant attribute");
+  ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
+
   info("Type 'd' to open the autocomplete popup");
-  await autocomplete(jsterm, "d");
+  const onPopupOpen = jsterm.autocompletePopup.once("popup-opened");
+  autocomplete(jsterm, "d");
+  await onPopupOpen;
+
+  info("Test the console input has an aria-activedescendant attribute");
+  ok(input.hasAttribute("aria-activedescendant"), "aria-activedescendant");
 
   // Add listeners for focus and blur events.
   let wasBlurred = false;
@@ -46,6 +54,9 @@ add_task(async function() {
   await onPopupClosed;
 
   ok(wasFocused, "jsterm input received a focus event");
+
+  info("Test the console input has no aria-activedescendant attribute no more");
+  ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
 });
 
 async function autocomplete(jsterm, value) {
