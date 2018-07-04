@@ -631,13 +631,13 @@ the built executable with `./mach geckodriver -- --other --flags`.
 [Rust]: https://www.rust-lang.org/
 [Mozilla]: https://www.mozilla.org/en-US/
 [webdriver crate]: https://crates.io/crates/webdriver
-[commands]: https://docs.rs/webdriver/newest/webdriver/command/index.html
-[responses]: https://docs.rs/webdriver/newest/webdriver/response/index.html
+[commands]: https://docs.rs/webdriver/newest/webdriver/command/
+[responses]: https://docs.rs/webdriver/newest/webdriver/response/
 [errors]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html
-[Marionette protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/Protocol.html
-[WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
+[Marionette protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/doc/marionette/Protocol.html
+[WebDriver]: https://w3c.github.io/webdriver/
 [FirefoxDriver]: https://github.com/SeleniumHQ/selenium/wiki/FirefoxDriver
-[Marionette]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/
+[Marionette]: https://firefox-source-docs.mozilla.org/testing/marionette/doc/marionette/
 [Firefox CI]: https://treeherder.mozilla.org/
 [mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options
 
