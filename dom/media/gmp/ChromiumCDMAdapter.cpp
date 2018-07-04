@@ -197,7 +197,8 @@ typedef DWORD(WINAPI* QueryDosDeviceWFnPtr)(_In_opt_ LPCWSTR lpDeviceName,
                                             _Out_ LPWSTR lpTargetPath,
                                             _In_ DWORD ucchMax);
 
-static QueryDosDeviceWFnPtr sOriginalQueryDosDeviceWFnPtr = nullptr;
+static WindowsDllInterceptor::FuncHookType<QueryDosDeviceWFnPtr>
+  sOriginalQueryDosDeviceWFnPtr;
 
 static std::unordered_map<std::wstring, std::wstring>* sDeviceNames = nullptr;
 
@@ -276,9 +277,8 @@ InitializeHooks()
   }
 
   sKernel32Intercept.Init("kernelbase.dll");
-  sKernel32Intercept.AddHook("QueryDosDeviceW",
-                             reinterpret_cast<intptr_t>(QueryDosDeviceWHook),
-                             (void**)(&sOriginalQueryDosDeviceWFnPtr));
+  sOriginalQueryDosDeviceWFnPtr.Set(sKernel32Intercept, "QueryDosDeviceW",
+                                    &QueryDosDeviceWHook);
 }
 #endif
 

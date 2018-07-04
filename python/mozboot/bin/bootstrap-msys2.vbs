@@ -69,7 +69,7 @@ On Error GoTo 0
 ' Download installer
 On Error Resume Next
 Download "https://conemu.github.io/install2.ps1", "install2.ps1"
-conemuSettingsURI = "https://api.pub.build.mozilla.org/tooltool/sha512/9aa384ecc8025a974999e913c83064b3b797e05d19806e62ef558c8300e4c3f72967e9464ace59759f76216fc2fc66f338a1e5cdea3b9aa264529487f091d929"
+conemuSettingsURI = "https://tooltool.mozilla-releng.net/sha512/9aa384ecc8025a974999e913c83064b3b797e05d19806e62ef558c8300e4c3f72967e9464ace59759f76216fc2fc66f338a1e5cdea3b9aa264529487f091d929"
 ' Run installer
 errorCode = shell.Run("powershell.exe -NoProfile -ExecutionPolicy Unrestricted set dst '" & conemuPath & "'; set ver 'stable'; set lnk 'Mozilla Development Shell'; set xml '" & conemuSettingsURI & "'; set run $FALSE; .\install2.ps1", 0, true)
 ' Delete ConEmu installer
