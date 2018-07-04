@@ -399,7 +399,8 @@ bool ShouldTestTipTsf()
   return true;
 }
 
-int main()
+extern "C"
+int wmain(int argc, wchar_t* argv[])
 {
   LARGE_INTEGER start;
   QueryPerformanceCounter(&start);
