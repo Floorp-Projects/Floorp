@@ -474,6 +474,7 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
     options.flags |= wr::FontInstanceFlags::FORCE_GDI;
   }
   options.bg_color = wr::ToColorU(Color());
+  options.synthetic_italics = wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
   *aOutOptions = Some(options);
   return true;
 }

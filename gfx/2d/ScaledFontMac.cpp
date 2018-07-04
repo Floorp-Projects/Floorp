@@ -452,6 +452,7 @@ ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOpti
     options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
   options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
+  options.synthetic_italics = wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
   *aOutOptions = Some(options);
   return true;
 }

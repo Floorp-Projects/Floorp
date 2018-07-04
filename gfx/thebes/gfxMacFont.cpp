@@ -614,7 +614,7 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
         if (!mAzureScaledFont) {
             return nullptr;
         }
-
+        InitializeScaledFont();
         mAzureScaledFont->SetCairoScaledFont(mScaledFont);
     }
 
