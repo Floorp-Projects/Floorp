@@ -580,7 +580,7 @@ class Marionette(object):
     # so that slow builds have enough time to send the timeout error to the client.
     DEFAULT_SOCKET_TIMEOUT = 360
 
-    def __init__(self, host="localhost", port=2828, app=None, bin=None,
+    def __init__(self, host="127.0.0.1", port=2828, app=None, bin=None,
                  baseurl=None, socket_timeout=None,
                  startup_timeout=None, **instance_args):
         """Construct a holder for the Marionette connection.
@@ -589,7 +589,7 @@ class Marionette(object):
         connection and start a Marionette session.
 
         :param host: Host where the Marionette server listens.
-            Defaults to localhost.
+            Defaults to 127.0.0.1.
         :param port: Port where the Marionette server listens.
             Defaults to port 2828.
         :param baseurl: Where to look for files served from Marionette's
@@ -605,7 +605,7 @@ class Marionette(object):
         :param instance_args: Arguments to pass to ``instance_class``.
 
         """
-        self.host = host
+        self.host = "127.0.0.1"  # host
         self.port = self.local_port = int(port)
         self.bin = bin
         self.client = None

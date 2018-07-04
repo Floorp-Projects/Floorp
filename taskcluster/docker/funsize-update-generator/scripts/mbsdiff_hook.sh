@@ -20,7 +20,7 @@ CACHE_THRESHOLD=500000
 NAMESPACE='releng.releases.partials'
 if [ -e "${HOME}/.dogrc" ]
 then
-    METRIC_CMD="$(which dog)"
+    METRIC_CMD="$(command -v dog)"
 else
     METRIC_CMD="echo"
 fi
