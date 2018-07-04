@@ -73,11 +73,14 @@ class ParamsPanel extends Component {
    * This function also deal with duplicate key case
    * (for multiple selection and query params with same keys)
    *
+   * This function is not sorting result properties since it can
+   * results in unexpected order of params. See bug 1469533
+   *
    * @param {Object[]} arr - key-value pair array like query or form params
    * @returns {Object} Rep compatible object
    */
   getProperties(arr) {
-    return sortObjectKeys(arr.reduce((map, obj) => {
+    return arr.reduce((map, obj) => {
       const value = map[obj.name];
       if (value) {
         if (typeof value !== "object") {
@@ -88,7 +91,7 @@ class ParamsPanel extends Component {
         map[obj.name] = obj.value;
       }
       return map;
-    }, {}));
+    }, {});
   }
 
   render() {
