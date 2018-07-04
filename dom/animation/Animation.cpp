@@ -874,8 +874,8 @@ Animation::CancelNoUpdate()
     }
     ResetFinishedPromise();
 
-    // FIXME: Bug 1472900 - Use the timestamp associated with the timeline.
-    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"), TimeStamp());
+    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"),
+                       GetTimelineCurrentTimeAsTimeStamp());
   }
 
   StickyTimeDuration activeTime = mEffect
