@@ -526,11 +526,6 @@ var AudioPlaybackListener = {
         utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
         break;
       case "resumeMedia":
-        // User has clicked the tab audio indicator to play a delayed
-        // media. That's clear user intent to play, so gesture activate
-        // the content document tree so that the block-autoplay logic
-        // allows the media to autoplay.
-        content.document.notifyUserGestureActivation();
         utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
         break;
       default:
