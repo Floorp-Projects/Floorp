@@ -349,7 +349,7 @@ void sdp_get_msid_semantics(const RustAttributeList* aList, size_t listSize,
                             RustSdpAttributeMsidSemantic* ret);
 
 size_t sdp_get_group_count(const RustAttributeList* aList);
-nsresult sdp_get_groups(const RustAttributeList* aList, size_t listSize,
+void sdp_get_groups(const RustAttributeList* aList, size_t listSize,
                         RustSdpAttributeGroup* ret);
 
 nsresult sdp_get_rtcp(const RustAttributeList* aList,
