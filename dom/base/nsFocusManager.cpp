@@ -48,6 +48,7 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/Text.h"
@@ -3857,12 +3858,12 @@ nsFocusManager::GetNextTabbableMapArea(bool aForward,
                                        Element* aImageContent,
                                        nsIContent* aStartContent)
 {
-  nsAutoString useMap;
-  aImageContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, useMap);
+  if (aImageContent->IsInComposedDoc()) {
+    HTMLImageElement* imgElement = HTMLImageElement::FromNode(aImageContent);
+    // The caller should check the element type, so we can assert here.
+    MOZ_ASSERT(imgElement);
 
-  nsCOMPtr<nsIDocument> doc = aImageContent->GetComposedDoc();
-  if (doc) {
-    nsCOMPtr<nsIContent> mapContent = doc->FindImageMap(useMap);
+    nsCOMPtr<nsIContent> mapContent = imgElement->FindImageMap();
     if (!mapContent)
       return nullptr;
     uint32_t count = mapContent->GetChildCount();

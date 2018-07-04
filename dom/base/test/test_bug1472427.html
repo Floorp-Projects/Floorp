@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1472427
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1472427</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1472427 **/
+
+  SimpleTest.waitForExplicitFinish();
+  var image100x100 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnUlEQVR42u3RAQ0AAAQAMLJqqCA1zP4Kz+qe4IwUIgQhQhAiBCFCECJEiBCECEGIEIQIQYgQhCBECEKEIEQIQoQgBCFCECIEIUIQIgQhCBGCECEIEYIQIQhBiBCECEGIEIQIQQhChCBECEKEIEQIQhAiBCFCECIEIUIQghAhCBGCECEIEYIQhAhBiBCECEGIEIQIESIEIUIQIgQh3y1XQhXMIlaKKwAAAABJRU5ErkJggg==";
+  var ifr;
+  var doc;
+  var img;
+  var host;
+  var root;
+  var map;
+  var area;
+
+  function initPage() {
+    ifr = document.createElement("iframe");
+    ifr.src = "about:blank";
+    document.body.appendChild(ifr);
+    ifr.onload = initIframe;
+  }
+
+  function initIframe() {
+    ifr.contentWindow.focus();
+    doc = ifr.contentDocument;
+    host = doc.createElement("div");
+    doc.body.appendChild(host);
+    root = host.attachShadow({mode: "open"});
+
+    img = document.createElement("img");
+    img.useMap = "#map"
+    img.src = image100x100;
+    img.onload = runTest;
+    root.appendChild(img);
+
+    map = doc.createElement("map");
+    map.name = "map";
+    root.appendChild(map);
+
+    area = doc.createElement("area");
+    area.shape = "rect";
+    area.href = "#area";
+    area.coords = "0,0,100,100";
+    map.appendChild(area);
+  }
+
+  function runTest() {
+    var gotClick = false;
+    var expectedTarget = area;
+    root.addEventListener("click",
+                          function(e) {
+                            gotClick = true;
+                            is(e.target, expectedTarget,
+                                expectedTarget.localName + " element should be the target for the click.");
+                            e.preventDefault();
+                          });
+    synthesizeMouse(img, 50, 50, {}, ifr.contentWindow);
+    ok(gotClick, "Should have got a click event.");
+
+    gotclick = false;
+    map.name = "wrongNameMap";
+    expectedTarget = img;
+    synthesizeMouse(img, 50, 50, {}, ifr.contentWindow);
+    ok(gotClick, "Should have got a click event.");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="SpecialPowers.pushPrefEnv({'set':[['dom.webcomponents.shadowdom.enabled', true]]}, initPage);">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1472427">Mozilla Bug 1472427</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
