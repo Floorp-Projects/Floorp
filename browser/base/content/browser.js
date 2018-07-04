@@ -3028,6 +3028,10 @@ var BrowserOnClick = {
         goBackFromErrorPage();
         break;
 
+      case "advancedPanelReturnButton":
+        goBackFromErrorPage();
+        break;
+
       case "advancedButton":
         if (isTopFrame) {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_UNDERSTAND_RISKS);
