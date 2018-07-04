@@ -3,7 +3,7 @@
 buildscript {
     // Synchronized version numbers for dependencies used by (some) modules
     ext.dependencies = [
-        kotlin: '1.2.50',
+        kotlin: '1.2.51',
         coroutines: '0.23.3',
         supportLibraries: '27.1.1',
         fxa: '0.1.2',
