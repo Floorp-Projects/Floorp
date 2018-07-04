@@ -237,12 +237,35 @@ public:
 
   // Adds/Removes the observer for the root pref branch. See nsIPrefBranch.idl
   // for details.
-  static nsresult AddStrongObserver(nsIObserver* aObserver, const char* aPref);
-  static nsresult AddWeakObserver(nsIObserver* aObserver, const char* aPref);
-  static nsresult RemoveObserver(nsIObserver* aObserver, const char* aPref);
+  static nsresult AddStrongObserver(nsIObserver* aObserver,
+                                    const nsACString& aPref);
+  static nsresult AddWeakObserver(nsIObserver* aObserver,
+                                  const nsACString& aPref);
+  static nsresult RemoveObserver(nsIObserver* aObserver,
+                                 const nsACString& aPref);
+
+  template<int N>
+  static nsresult AddStrongObserver(nsIObserver* aObserver,
+                                    const char (&aPref)[N])
+  {
+    return AddStrongObserver(aObserver, nsLiteralCString(aPref));
+  }
+  template<int N>
+  static nsresult AddWeakObserver(nsIObserver* aObserver,
+                                  const char (&aPref)[N])
+  {
+    return AddWeakObserver(aObserver, nsLiteralCString(aPref));
+  }
+  template<int N>
+  static nsresult RemoveObserver(nsIObserver* aObserver, const char (&aPref)[N])
+  {
+    return RemoveObserver(aObserver, nsLiteralCString(aPref));
+  }
 
   // Adds/Removes two or more observers for the root pref branch. Pass to
   // aPrefs an array of const char* whose last item is nullptr.
+  // Note: All preference strings *must* be statically-allocated string
+  // literals.
   static nsresult AddStrongObservers(nsIObserver* aObserver,
                                      const char** aPrefs);
   static nsresult AddWeakObservers(nsIObserver* aObserver, const char** aPrefs);
