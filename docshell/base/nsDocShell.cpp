@@ -6219,6 +6219,8 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDel
    */
   loadInfo->SetReferrer(mCurrentURI);
 
+  loadInfo->SetOriginalURI(mCurrentURI);
+
   // Set the triggering pricipal to aPrincipal if available, or current
   // document's principal otherwise.
   nsCOMPtr<nsIPrincipal> principal = aPrincipal;
