@@ -56,7 +56,7 @@ with :func:`start_session() <Marionette.start_session>`:
 .. parsed-literal::
    from marionette_driver.marionette import Marionette
 
-   client = Marionette('localhost', port=2828)
+   client = Marionette('127.0.0.1', port=2828)
    client.start_session()
 
 This returns a session id and an object listing the capabilities of the

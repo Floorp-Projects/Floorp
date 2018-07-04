@@ -728,7 +728,7 @@ class BaseMarionetteTestRunner(object):
         }
         if self.bin or self.emulator:
             kwargs.update({
-                'host': 'localhost',
+                'host': '127.0.0.1',
                 'port': 2828,
                 'app': self.app,
                 'app_args': self.app_args,
