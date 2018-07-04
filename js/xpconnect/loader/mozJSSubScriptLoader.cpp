@@ -15,6 +15,8 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
+#include "ContentPrincipal.h"
+#include "SystemPrincipal.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -690,9 +692,27 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     // Suppress caching if we're compiling as content or if we're loading a
     // blob: URI.
-    bool ignoreCache = options.ignoreCache
-        || !GetObjectPrincipal(targetObj)->GetIsSystemPrincipal()
-        || scheme.EqualsLiteral("blob");
+    auto* principal = BasePrincipal::Cast(GetObjectPrincipal(targetObj));
+    bool isSystem = principal->Is<SystemPrincipal>();
+    if (!isSystem && principal->Is<ContentPrincipal>()) {
+        auto* content = principal->As<ContentPrincipal>();
+
+        nsAutoCString scheme;
+        content->mCodebase->GetScheme(scheme);
+
+        // We want to enable caching for scripts with Activity Stream's
+        // codebase URLs.
+        if (scheme.EqualsLiteral("about")) {
+            nsAutoCString filePath;
+            content->mCodebase->GetFilePath(filePath);
+
+            isSystem = filePath.EqualsLiteral("home") ||
+                       filePath.EqualsLiteral("newtab") ||
+                       filePath.EqualsLiteral("welcome");
+        }
+    }
+    bool ignoreCache = options.ignoreCache || !isSystem || scheme.EqualsLiteral("blob");
+
     StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
 
     nsAutoCString cachePath;
