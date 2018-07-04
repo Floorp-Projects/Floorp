@@ -374,13 +374,6 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
       return NS_OK;
     }
 
-    // Unlike full Tracking Protection, annotations don't block anything
-    // so we don't need to take into account add-ons or user exceptions.
-    if (aAnnotationsOnly) {
-      *result = true;
-      return NS_OK;
-    }
-
     if (AddonMayLoad(aChannel, chanURI)) {
         return NS_OK;
     }
