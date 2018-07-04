@@ -11,8 +11,8 @@ buildscript {
         // Test only:
         junit: '4.12',
         robolectric: '3.8',
-        mockito: '2.18.0',
-        mockwebserver: '3.7.0',
+        mockito: '2.19.0',
+        mockwebserver: '3.10.0',
         // Docs only"
         dokka: '0.9.16'
     ]
