@@ -56,6 +56,9 @@ project(':browser-search').projectDir = new File(rootDir, 'components/browser/se
 include ':browser-session'
 project(':browser-session').projectDir = new File(rootDir, 'components/browser/session')
 
+include ':browser-tabstray'
+project(':browser-tabstray').projectDir = new File(rootDir, 'components/browser/tabstray')
+
 include ':browser-toolbar'
 project(':browser-toolbar').projectDir = new File(rootDir, 'components/browser/toolbar')
 

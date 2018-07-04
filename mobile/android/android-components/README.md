@@ -111,6 +111,8 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
 
+* 🔴 [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
+
 * 🔴 [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
 
 ## Concept

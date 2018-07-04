@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:layout_margin="4dp">
+
+    <ImageButton
+        android:id="@+id/mozac_browser_tabstray_close"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:contentDescription="@string/mozac_browser_tabstray_close_tab"
+        android:src="@drawable/mozac_ic_close"/>
+    
+    <TextView
+        android:id="@+id/mozac_browser_tabstray_url"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:lines="1"
+        android:ellipsize="end"
+        android:padding="16dp" />
+</android.support.v7.widget.CardView>
