@@ -1339,6 +1339,14 @@ nsHTMLDocument::Open(JSContext* cx,
     return nullptr;
   }
 
+  // At this point we know this is a valid-enough document.open() call
+  // and not a no-op.  Increment our use counters.
+  SetDocumentAndPageUseCounter(eUseCounter_custom_DocumentOpen);
+  bool isReplace = aReplace.LowerCaseEqualsLiteral("replace");
+  if (isReplace) {
+    SetDocumentAndPageUseCounter(eUseCounter_custom_DocumentOpenReplace);
+  }
+
   // Stop current loads targeted at the window this document is in.
   if (mScriptGlobalObject) {
     nsCOMPtr<nsIContentViewer> cv;
@@ -1567,8 +1575,7 @@ nsHTMLDocument::Open(JSContext* cx,
   // so, we need to tell the docshell to not create a new history
   // entry for this load. Otherwise, make sure that we're doing a normal load,
   // not whatever type of load was previously done on this docshell.
-  shell->SetLoadType(aReplace.LowerCaseEqualsLiteral("replace") ?
-                       LOAD_NORMAL_REPLACE : LOAD_NORMAL);
+  shell->SetLoadType(isReplace ? LOAD_NORMAL_REPLACE : LOAD_NORMAL);
 
   nsCOMPtr<nsIContentViewer> cv;
   shell->GetContentViewer(getter_AddRefs(cv));

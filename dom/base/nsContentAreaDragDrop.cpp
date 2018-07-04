@@ -141,6 +141,7 @@ NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
 // into the file system
 nsresult
 nsContentAreaDragDropDataProvider::SaveURIToFile(nsIURI* inSourceURI,
+                                                 nsIPrincipal* inTriggeringPrincipal,
                                                  nsIFile* inDestFile,
                                                  bool isPrivate)
 {
@@ -162,7 +163,8 @@ nsContentAreaDragDropDataProvider::SaveURIToFile(nsIURI* inSourceURI,
   persist->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
 
   // referrer policy can be anything since the referrer is nullptr
-  return persist->SavePrivacyAwareURI(inSourceURI, 0, nullptr,
+  return persist->SavePrivacyAwareURI(inSourceURI,
+                                      inTriggeringPrincipal, 0, nullptr,
                                       mozilla::net::RP_Unset,
                                       nullptr, nullptr,
                                       inDestFile, isPrivate);
@@ -342,7 +344,9 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     bool isPrivate;
     aTransferable->GetIsPrivateData(&isPrivate);
 
-    rv = SaveURIToFile(sourceURI, file, isPrivate);
+    nsCOMPtr<nsIPrincipal> principal;
+    aTransferable->GetRequestingPrincipal(getter_AddRefs(principal));
+    rv = SaveURIToFile(sourceURI, principal, file, isPrivate);
     // send back an nsIFile
     if (NS_SUCCEEDED(rv)) {
       CallQueryInterface(file, aData);

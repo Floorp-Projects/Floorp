@@ -24,10 +24,20 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'crashreporter_win.cpp',
     ]
+    include('/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild')
+    include('/toolkit/crashreporter/breakpad-client/windows/sender/objs.mozbuild')
+    include('/toolkit/crashreporter/breakpad-client/windows/crash_generation/objs.mozbuild')
+    include('/toolkit/crashreporter/breakpad-client/windows/common/objs.mozbuild')
+    SOURCES += objs_common
+    SOURCES += objs_sender
+    SOURCES += objs_crash_generation
+    SOURCES += objs_client_common
+    SOURCES += [
+        '../google-breakpad/src/common/windows/http_upload.cc',
+    ]
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     USE_LIBS += [
-        'google_breakpad_libxul_s',
         'nss',
     ]
     OS_LIBS += [
