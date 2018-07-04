@@ -522,6 +522,11 @@ protected:
       zeroDuration);
   }
 
+  TimeStamp GetTimelineCurrentTimeAsTimeStamp() const
+  {
+    return mTimeline ? mTimeline->GetCurrentTimeAsTimeStamp() : TimeStamp();
+  }
+
   nsIDocument* GetRenderedDocument() const;
   nsIDocument* GetTimelineDocument() const;
 

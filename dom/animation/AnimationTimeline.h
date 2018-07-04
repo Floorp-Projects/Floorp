@@ -62,6 +62,13 @@ public:
     return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
   }
 
+  TimeStamp GetCurrentTimeAsTimeStamp() const {
+    Nullable<TimeDuration> currentTime = GetCurrentTime();
+    return !currentTime.IsNull()
+      ? ToTimeStamp(currentTime.Value())
+      : TimeStamp();
+  }
+
   /**
    * Returns true if the times returned by GetCurrentTime() are convertible
    * to and from wallclock-based TimeStamp (e.g. from TimeStamp::Now()) values

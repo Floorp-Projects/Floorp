@@ -255,8 +255,9 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
   if ((mPreviousTransitionPhase != TransitionPhase::Idle &&
        mPreviousTransitionPhase != TransitionPhase::After) &&
       currentPhase == TransitionPhase::Idle) {
-    TimeStamp activeTimeStamp = ElapsedTimeToTimeStamp(aActiveTime);
-    appendTransitionEvent(eTransitionCancel, aActiveTime, activeTimeStamp);
+    appendTransitionEvent(eTransitionCancel,
+                          aActiveTime,
+                          GetTimelineCurrentTimeAsTimeStamp());
   }
 
   // All other events

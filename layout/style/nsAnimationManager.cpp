@@ -254,8 +254,9 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
   if ((mPreviousPhase != AnimationPhase::Idle &&
        mPreviousPhase != AnimationPhase::After) &&
       currentPhase == AnimationPhase::Idle) {
-    TimeStamp activeTimeStamp = ElapsedTimeToTimeStamp(aActiveTime);
-    appendAnimationEvent(eAnimationCancel, aActiveTime, activeTimeStamp);
+    appendAnimationEvent(eAnimationCancel,
+                         aActiveTime,
+                         GetTimelineCurrentTimeAsTimeStamp());
   }
 
   switch (mPreviousPhase) {
