@@ -8,7 +8,7 @@ function testStartStop(should, node, options) {
       should(() => {
         node.start(time);
       }, `start(${time})`)
-    .throw('TypeError');
+    .throw(TypeError);
     });
 
   should(() => {
@@ -39,7 +39,7 @@ function testStartStop(should, node, options) {
       should(() => {
         node.stop(time);
       }, `stop(${time})`)
-    .throw('TypeError');
+    .throw(TypeError);
     });
 }
 
