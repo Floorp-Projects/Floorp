@@ -686,7 +686,7 @@ const browsingContextTargetPrototype = {
 
   _onWorkerTargetActorListChanged() {
     this._workerTargetActorList.onListChanged = null;
-    this.conn.sendActorEvent(this.actorID, "workerListChanged");
+    this.emit("workerListChanged");
   },
 
   observe(subject, topic, data) {
@@ -820,9 +820,7 @@ const browsingContextTargetPrototype = {
       return;
     }
 
-    this.conn.send({
-      from: this.actorID,
-      type: "frameUpdate",
+    this.emit("frameUpdate", {
       frames: windows
     });
   },
@@ -837,9 +835,7 @@ const browsingContextTargetPrototype = {
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils)
                         .outerWindowID;
-    this.conn.send({
-      from: this.actorID,
-      type: "frameUpdate",
+    this.emit("frameUpdate", {
       frames: [{
         id,
         destroy: true
@@ -848,9 +844,7 @@ const browsingContextTargetPrototype = {
   },
 
   _notifyDocShellDestroyAll() {
-    this.conn.send({
-      from: this.actorID,
-      type: "frameUpdate",
+    this.emit("frameUpdate", {
       destroyAll: true
     });
   },
@@ -933,8 +927,7 @@ const browsingContextTargetPrototype = {
 
     this._attached = false;
 
-    this.conn.send({ from: this.actorID,
-                     type: "tabDetached" });
+    this.emit("tabDetached");
 
     return true;
   },
@@ -1257,9 +1250,7 @@ const browsingContextTargetPrototype = {
       configurable: true
     });
     this.emit("changed-toplevel-document");
-    this.conn.send({
-      from: this.actorID,
-      type: "frameUpdate",
+    this.emit("frameUpdate", {
       selected: this.outerWindowID
     });
   },
@@ -1365,9 +1356,7 @@ const browsingContextTargetPrototype = {
     }
     threadActor.disableAllBreakpoints();
 
-    this.conn.send({
-      from: this.actorID,
-      type: "tabNavigated",
+    this.emit("tabNavigated", {
       url: newURI,
       nativeConsoleAPI: true,
       state: "start",
@@ -1407,9 +1396,7 @@ const browsingContextTargetPrototype = {
       threadActor.dbg.enabled = true;
     }
 
-    this.conn.send({
-      from: this.actorID,
-      type: "tabNavigated",
+    this.emit("tabNavigated", {
       url: this.url,
       title: this.title,
       nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
