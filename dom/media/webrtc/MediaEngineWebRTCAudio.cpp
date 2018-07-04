@@ -52,7 +52,7 @@ LogModule* AudioLogModule() {
 }
 
 void
-WebRTCAudioDataListener::NotifyOutputData(MediaStreamGraph* aGraph,
+WebRTCAudioDataListener::NotifyOutputData(MediaStreamGraphImpl* aGraph,
                                           AudioDataValue* aBuffer,
                                           size_t aFrames,
                                           TrackRate aRate,
@@ -145,7 +145,9 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mSkipProcessing(false)
   , mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100)
 {
+#ifndef ANDROID
   MOZ_ASSERT(mDeviceInfo->DeviceID());
+#endif
 
   // We'll init lazily as needed
   mSettings->mEchoCancellation.Construct(0);
@@ -1301,13 +1303,6 @@ void
 MediaEngineWebRTCMicrophoneSource::Shutdown()
 {
   AssertIsOnOwningThread();
-
-  if (mListener) {
-    // breaks a cycle, since the WebRTCAudioDataListener has a RefPtr to us
-    mListener->Shutdown();
-    // Don't release the webrtc.org pointers yet until the Listener is (async) shutdown
-    mListener = nullptr;
-  }
 
   if (mState == kStarted) {
     for (const Allocation& allocation : mAllocations) {
