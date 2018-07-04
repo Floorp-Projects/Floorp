@@ -398,6 +398,8 @@ CollectOrphans(nsINode* aRemovalRoot,
 void
 HTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+  // Note, this is explicitly using uncomposed doc, since we count
+  // only forms in document.
   nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(GetUncomposedDoc());
 
   // Mark all of our controls as maybe being orphans
@@ -1647,7 +1649,7 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
   // Get the document to form the URL.
   // We'll also need it later to get the DOM window when notifying form submit
   // observers (bug 33203)
-  if (!IsInUncomposedDoc()) {
+  if (!IsInComposedDoc()) {
     return NS_OK; // No doc means don't submit, see Bug 28988
   }
 
