@@ -51,6 +51,14 @@ android {
             dimension "abi"
         }
     }
+
+    variantFilter { variant ->
+        if (variant.buildType.name == "release") {
+            // This is a sample app that we are not releasing. Save some time and do not build
+            // release versions.
+            setIgnore(true)
+        }
+    }
 }
 
 kotlin {
