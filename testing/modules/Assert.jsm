@@ -327,19 +327,6 @@ proto.notStrictEqual = function notStrictEqual(actual, expected, message) {
   this.report(actual === expected, actual, expected, message, "!==");
 };
 
-function checkExpectedArgument(instance, funcName, expected) {
-  if (!expected) {
-    instance.ok(false, `Error: The 'expected' argument was not supplied to Assert.${funcName}()`);
-  }
-
-  if (!instanceOf(expected, "RegExp") &&
-      typeof expected !== "function" &&
-      typeof expected !== "object") {
-    instance.ok(false,
-      `Error: The 'expected' argument to Assert.${funcName}() must be a RegExp, function or an object`);
-  }
-}
-
 function expectedException(actual, expected) {
   if (!actual || !expected) {
     return false;
@@ -369,21 +356,27 @@ function expectedException(actual, expected) {
  * Assert.throws(() => testBody(), TypeError);
  * // The following will verify that an error was thrown with an error message matching "hello":
  * Assert.throws(() => testBody(), /hello/);
+ * // The following will verify that any error was thrown and will use "hello" in the test report:
+ * Assert.throws(() => testBody(), "hello");
  * ```
  *
  * @param block
  *        (function) Function block to evaluate and catch eventual thrown errors
  * @param expected (optional)
- *        (mixed) This parameter can be either a RegExp or a function. The
+ *        (mixed) This parameter can be either a RegExp, a function, or a string. The
  *        function is either the error type's constructor, or it's a method that returns a boolean
- *        that describes the test outcome.
+ *        that describes the test outcome. When string value is provided, it will be used as if it
+ *        was provided as the message parameter.
  * @param message (optional)
  *        (string) Short explanation of the expected result
  */
 proto.throws = function(block, expected, message) {
-  checkExpectedArgument(this, "throws", expected);
-
   let actual;
+
+  if (typeof expected === "string") {
+    message = expected;
+    expected = null;
+  }
 
   try {
     block();
@@ -391,14 +384,14 @@ proto.throws = function(block, expected, message) {
     actual = e;
   }
 
-  message = (expected.name ? " (" + expected.name + ")." : ".") +
+  message = (expected && expected.name ? " (" + expected.name + ")." : ".") +
             (message ? " " + message : ".");
 
   if (!actual) {
     this.report(true, actual, expected, "Missing expected exception" + message);
   }
 
-  if ((actual && !expectedException(actual, expected))) {
+  if ((actual && expected && !expectedException(actual, expected))) {
     throw actual;
   }
 
@@ -417,12 +410,15 @@ proto.throws = function(block, expected, message) {
  *        (string) Short explanation of the expected result
  */
 proto.rejects = function(promise, expected, message) {
-  checkExpectedArgument(this, "rejects", expected);
   return new Promise((resolve, reject) => {
+    if (typeof expected === "string") {
+      message = expected;
+      expected = null;
+    }
     return promise.then(
       () => this.report(true, null, expected, "Missing expected exception " + message),
       err => {
-        if (!expectedException(err, expected)) {
+        if (expected && !expectedException(err, expected)) {
           reject(err);
           return;
         }
