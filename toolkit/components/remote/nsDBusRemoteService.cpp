@@ -27,6 +27,8 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
+#include <dlfcn.h>
+
 NS_IMPL_ISUPPORTS(nsDBusRemoteService,
                   nsIRemoteService)
 
@@ -189,10 +191,17 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
   if (busName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
     busName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
+  static auto sDBusValidateBusName =
+    (bool (*)(const char *, DBusError *))
+    dlsym(RTLD_DEFAULT, "dbus_validate_bus_name");
+  if (!sDBusValidateBusName) {
+    return NS_ERROR_FAILURE;
+  }
+
   // We don't have a valid busName yet - try to create a default one.
-  if (!dbus_validate_bus_name(busName.get(), nullptr)) {
+  if (!sDBusValidateBusName(busName.get(), nullptr)) {
     busName = nsPrintfCString("org.mozilla.%s.%s", mAppName.get(), "default");
-    if (!dbus_validate_bus_name(busName.get(), nullptr)) {
+    if (!sDBusValidateBusName(busName.get(), nullptr)) {
       // We failed completelly to get a valid bus name - just quit
       // to prevent crash at dbus_bus_request_name().
       return NS_ERROR_FAILURE;
