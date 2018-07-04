@@ -34,13 +34,13 @@ public:
   Trampoline<MMPolicy> GetNextTrampoline()
   {
     uint32_t offset = mNextChunkIndex * kChunkSize;
-    if (!MaybeCommitNextPage(offset, kChunkSize)) {
+    if (!this->MaybeCommitNextPage(offset, kChunkSize)) {
       return nullptr;
     }
 
 
-    Trampoline<MMPolicy> result(this, GetLocalView() + offset,
-                                GetRemoteView() + offset, kChunkSize);
+    Trampoline<MMPolicy> result(this, this->GetLocalView() + offset,
+                                this->GetRemoteView() + offset, kChunkSize);
     if (!!result) {
       ++mNextChunkIndex;
     }
@@ -50,7 +50,8 @@ public:
 
   TrampolineCollection<MMPolicy> Items() const
   {
-    return TrampolineCollection<MMPolicy>(*this, GetLocalView(), GetRemoteView(),
+    return TrampolineCollection<MMPolicy>(*this, this->GetLocalView(),
+                                          this->GetRemoteView(),
                                           kChunkSize, mNextChunkIndex);
   }
 

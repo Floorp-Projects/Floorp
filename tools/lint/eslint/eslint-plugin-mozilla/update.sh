@@ -6,7 +6,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-echo "To complete this script you will need the following tokens from https://api.pub.build.mozilla.org/tokenauth/"
+echo "To complete this script you will need the following tokens from https://mozilla-releng.net/tokens"
 echo " - tooltool.upload.public"
 echo " - tooltool.download.public"
 echo ""
@@ -14,7 +14,7 @@ read -p "Are these tokens visible at the above URL (y/n)?" choice
 case "$choice" in
   y|Y )
     echo ""
-    echo "1. Go to https://api.pub.build.mozilla.org/"
+    echo "1. Go to https://mozilla-releng.net"
     echo "2. Log in using your Mozilla LDAP account."
     echo "3. Click on \"Tokens.\""
     echo "4. Issue a user token with the permissions tooltool.upload.public and tooltool.download.public."
@@ -49,10 +49,10 @@ tar cvz -f eslint-plugin-mozilla.tar.gz node_modules
 
 echo "Adding eslint-plugin-mozilla.tar.gz to tooltool..."
 rm -f manifest.tt
-../../../../python/mozbuild/mozbuild/action/tooltool.py add --visibility public --unpack eslint-plugin-mozilla.tar.gz --url="https://api.pub.build.mozilla.org/tooltool/"
+../../../../python/mozbuild/mozbuild/action/tooltool.py add --visibility public --unpack eslint-plugin-mozilla.tar.gz --url="https://tooltool.mozilla-releng.net/"
 
 echo "Uploading eslint-plugin-mozilla.tar.gz to tooltool..."
-../../../../python/mozbuild/mozbuild/action/tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint/eslint-plugin-mozilla" --url="https://api.pub.build.mozilla.org/tooltool/"
+../../../../python/mozbuild/mozbuild/action/tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint/eslint-plugin-mozilla" --url="https://tooltool.mozilla-releng.net/"
 
 echo "Cleaning up..."
 rm eslint-plugin-mozilla.tar.gz

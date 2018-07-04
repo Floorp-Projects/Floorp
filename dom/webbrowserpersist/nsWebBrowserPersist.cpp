@@ -83,6 +83,7 @@ struct nsWebBrowserPersist::DocData
     nsCOMPtr<nsIURI> mBaseURI;
     nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
     nsCOMPtr<nsIURI> mFile;
+    nsCOMPtr<nsIPrincipal> mPrincipal;
     nsCString mCharset;
 };
 
@@ -413,18 +414,20 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
 }
 
 NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
-    nsIURI *aURI, uint32_t aCacheKey,
+    nsIURI *aURI, nsIPrincipal *aPrincipal, uint32_t aCacheKey,
     nsIURI *aReferrer, uint32_t aReferrerPolicy,
     nsIInputStream *aPostData, const char *aExtraHeaders,
     nsISupports *aFile, nsILoadContext* aPrivacyContext)
 {
-    return SavePrivacyAwareURI(aURI, aCacheKey, aReferrer, aReferrerPolicy,
-                               aPostData, aExtraHeaders, aFile,
-                               aPrivacyContext && aPrivacyContext->UsePrivateBrowsing());
+    bool isPrivate =
+      aPrivacyContext && aPrivacyContext->UsePrivateBrowsing();
+    return SavePrivacyAwareURI(aURI, aPrincipal, aCacheKey,
+                               aReferrer, aReferrerPolicy,
+                               aPostData, aExtraHeaders, aFile, isPrivate);
 }
 
 NS_IMETHODIMP nsWebBrowserPersist::SavePrivacyAwareURI(
-    nsIURI *aURI, uint32_t aCacheKey,
+    nsIURI *aURI, nsIPrincipal *aPrincipal, uint32_t aCacheKey,
     nsIURI *aReferrer, uint32_t aReferrerPolicy,
     nsIInputStream *aPostData, const char *aExtraHeaders,
     nsISupports *aFile, bool aIsPrivate)
@@ -439,8 +442,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SavePrivacyAwareURI(
 
     // SaveURI doesn't like broken uris.
     mPersistFlags |= PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS;
-    rv = SaveURIInternal(aURI, aCacheKey, aReferrer, aReferrerPolicy,
-                         aPostData, aExtraHeaders, fileAsURI, false, aIsPrivate);
+    rv = SaveURIInternal(aURI, aPrincipal, aCacheKey,
+                         aReferrer, aReferrerPolicy,
+                         aPostData, aExtraHeaders, fileAsURI,
+                         false, aIsPrivate);
     return NS_FAILED(rv) ? rv : NS_OK;
 }
 
@@ -599,6 +604,13 @@ nsWebBrowserPersist::SerializeNextFile()
     }
 
     if (urisToPersist > 0) {
+        nsCOMPtr<nsIPrincipal> docPrincipal;
+        //XXXgijs I *think* this is already always true, but let's be sure.
+        MOZ_ASSERT(mDocList.Length() > 0,
+            "Should have the document for any walked URIs to persist!");
+        nsresult rv = mDocList.ElementAt(0)->mDocument->
+            GetPrincipal(getter_AddRefs(docPrincipal));
+        NS_ENSURE_SUCCESS_VOID(rv);
         // Persist each file in the uri map. The document(s)
         // will be saved after the last one of these is saved.
         for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
@@ -607,8 +619,6 @@ nsWebBrowserPersist::SerializeNextFile()
             if (!data->mNeedsPersisting || data->mSaved) {
                 continue;
             }
-
-            nsresult rv;
 
             // Create a URI from the key.
             nsCOMPtr<nsIURI> uri;
@@ -627,7 +637,7 @@ nsWebBrowserPersist::SerializeNextFile()
 
             // The Referrer Policy doesn't matter here since the referrer is
             // nullptr.
-            rv = SaveURIInternal(uri, 0, nullptr,
+            rv = SaveURIInternal(uri, docPrincipal, 0, nullptr,
                                  mozilla::net::RP_Unset, nullptr, nullptr,
                                  fileAsURI, true, mIsPrivate);
             // If SaveURIInternal fails, then it will have called EndDownload,
@@ -1324,7 +1334,8 @@ nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath, nsCO
 }
 
 nsresult nsWebBrowserPersist::SaveURIInternal(
-    nsIURI *aURI, uint32_t aCacheKey, nsIURI *aReferrer,
+    nsIURI *aURI, nsIPrincipal* aTriggeringPrincipal,
+    uint32_t aCacheKey, nsIURI *aReferrer,
     uint32_t aReferrerPolicy, nsIInputStream *aPostData,
     const char *aExtraHeaders, nsIURI *aFile,
     bool aCalcFileExt, bool aIsPrivate)
@@ -1350,7 +1361,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     nsCOMPtr<nsIChannel> inputChannel;
     rv = NS_NewChannel(getter_AddRefs(inputChannel),
                        aURI,
-                       nsContentUtils::GetSystemPrincipal(),
+                       aTriggeringPrincipal,
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
                        nullptr,  // aPerformanceStorage
@@ -1377,16 +1388,6 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         if (encodedChannel)
         {
             encodedChannel->SetApplyConversion(false);
-        }
-    }
-
-    if (mPersistFlags & PERSIST_FLAGS_FORCE_ALLOW_COOKIES)
-    {
-        nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-                do_QueryInterface(inputChannel);
-        if (httpChannelInternal) {
-            rv = httpChannelInternal->SetThirdPartyFlags(nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
-            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
