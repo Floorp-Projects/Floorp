@@ -36,7 +36,8 @@ add_task(async function preferred_API() {
       return image.href;
     });
 
-    saveImageURL(url, "image.jpg", null, true, false, null, null, null, null, false);
+    saveImageURL(url, "image.jpg", null, true, false, null, null, null, null,
+      false, gBrowser.contentPrincipal);
     let channel = gBrowser.contentDocumentAsCPOW.docShell.currentDocumentChannel;
     if (channel) {
       ok(true, channel.QueryInterface(Ci.nsIHttpChannelInternal)

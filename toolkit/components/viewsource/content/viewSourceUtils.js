@@ -226,7 +226,11 @@ var gViewSourceUtils = {
           webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
-          webBrowserPersist.savePrivacyAwareURI(uri, null, null, referrerPolicy, null, null, file, data.isPrivate);
+          let ssm = Services.scriptSecurityManager;
+          let principal = ssm.createCodebasePrincipal(data.uri,
+            browser.contentPrincipal.originAttributes);
+          webBrowserPersist.savePrivacyAwareURI(uri, principal, null, null,
+            referrerPolicy, null, null, file, data.isPrivate);
 
           let helperService = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
             .getService(Ci.nsPIExternalAppLauncher);
