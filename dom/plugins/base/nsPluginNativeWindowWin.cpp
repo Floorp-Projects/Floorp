@@ -357,10 +357,8 @@ typedef LONG_PTR
   (WINAPI *User32SetWindowLongPtrW)(HWND hWnd,
                                     int nIndex,
                                     LONG_PTR dwNewLong);
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongPtrA>
-  sUser32SetWindowLongAHookStub;
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongPtrW>
-  sUser32SetWindowLongWHookStub;
+static User32SetWindowLongPtrA sUser32SetWindowLongAHookStub = nullptr;
+static User32SetWindowLongPtrW sUser32SetWindowLongWHookStub = nullptr;
 #else
 typedef LONG
 (WINAPI *User32SetWindowLongA)(HWND hWnd,
@@ -370,10 +368,8 @@ typedef LONG
 (WINAPI *User32SetWindowLongW)(HWND hWnd,
                                int nIndex,
                                LONG dwNewLong);
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongA>
-  sUser32SetWindowLongAHookStub;
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongW>
-  sUser32SetWindowLongWHookStub;
+static User32SetWindowLongA sUser32SetWindowLongAHookStub = nullptr;
+static User32SetWindowLongW sUser32SetWindowLongWHookStub = nullptr;
 #endif
 static inline bool
 SetWindowLongHookCheck(HWND hWnd,
@@ -452,15 +448,23 @@ HookSetWindowLongPtr()
 {
   sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
-  sUser32SetWindowLongAHookStub.Set(sUser32Intercept, "SetWindowLongPtrA",
-                                    &SetWindowLongPtrAHook);
-  sUser32SetWindowLongWHookStub.Set(sUser32Intercept, "SetWindowLongPtrW",
-                                    &SetWindowLongPtrWHook);
+  if (!sUser32SetWindowLongAHookStub)
+    sUser32Intercept.AddHook("SetWindowLongPtrA",
+                             reinterpret_cast<intptr_t>(SetWindowLongPtrAHook),
+                             (void**) &sUser32SetWindowLongAHookStub);
+  if (!sUser32SetWindowLongWHookStub)
+    sUser32Intercept.AddHook("SetWindowLongPtrW",
+                             reinterpret_cast<intptr_t>(SetWindowLongPtrWHook),
+                             (void**) &sUser32SetWindowLongWHookStub);
 #else
-  sUser32SetWindowLongAHookStub.Set(sUser32Intercept, "SetWindowLongA",
-                                    &SetWindowLongAHook);
-  sUser32SetWindowLongWHookStub.Set(sUser32Intercept, "SetWindowLongW",
-                                    &SetWindowLongWHook);
+  if (!sUser32SetWindowLongAHookStub)
+    sUser32Intercept.AddHook("SetWindowLongA",
+                             reinterpret_cast<intptr_t>(SetWindowLongAHook),
+                             (void**) &sUser32SetWindowLongAHookStub);
+  if (!sUser32SetWindowLongWHookStub)
+    sUser32Intercept.AddHook("SetWindowLongW",
+                             reinterpret_cast<intptr_t>(SetWindowLongWHook),
+                             (void**) &sUser32SetWindowLongWHookStub);
 #endif
 }
 

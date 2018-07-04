@@ -209,20 +209,13 @@ WinIOAutoObservation::Filename(nsAString& aFilename)
 /*************************** IO Interposing Methods ***************************/
 
 // Function pointers to original functions
-static WindowsDllInterceptor::FuncHookType<NtCreateFileFn>
-  gOriginalNtCreateFile;
-static WindowsDllInterceptor::FuncHookType<NtReadFileFn>
-  gOriginalNtReadFile;
-static WindowsDllInterceptor::FuncHookType<NtReadFileScatterFn>
-  gOriginalNtReadFileScatter;
-static WindowsDllInterceptor::FuncHookType<NtWriteFileFn>
-  gOriginalNtWriteFile;
-static WindowsDllInterceptor::FuncHookType<NtWriteFileGatherFn>
-  gOriginalNtWriteFileGather;
-static WindowsDllInterceptor::FuncHookType<NtFlushBuffersFileFn>
-  gOriginalNtFlushBuffersFile;
-static WindowsDllInterceptor::FuncHookType<NtQueryFullAttributesFileFn>
-  gOriginalNtQueryFullAttributesFile;
+static NtCreateFileFn         gOriginalNtCreateFile;
+static NtReadFileFn           gOriginalNtReadFile;
+static NtReadFileScatterFn    gOriginalNtReadFileScatter;
+static NtWriteFileFn          gOriginalNtWriteFile;
+static NtWriteFileGatherFn    gOriginalNtWriteFileGather;
+static NtFlushBuffersFileFn   gOriginalNtFlushBuffersFile;
+static NtQueryFullAttributesFileFn gOriginalNtQueryFullAttributesFile;
 
 static NTSTATUS NTAPI
 InterposedNtCreateFile(PHANDLE aFileHandle,
@@ -455,21 +448,34 @@ InitPoisonIOInterposer()
 
   // Initialize dll interceptor and add hooks
   sNtDllInterceptor.Init("ntdll.dll");
-  gOriginalNtCreateFile.Set(sNtDllInterceptor, "NtCreateFile",
-                            &InterposedNtCreateFile);
-  gOriginalNtReadFile.Set(sNtDllInterceptor, "NtReadFile",
-                          &InterposedNtReadFile);
-  gOriginalNtReadFileScatter.Set(sNtDllInterceptor, "NtReadFileScatter",
-                                 &InterposedNtReadFileScatter);
-  gOriginalNtWriteFile.Set(sNtDllInterceptor, "NtWriteFile",
-                           &InterposedNtWriteFile);
-  gOriginalNtWriteFileGather.Set(sNtDllInterceptor, "NtWriteFileGather",
-                                 &InterposedNtWriteFileGather);
-  gOriginalNtFlushBuffersFile.Set(sNtDllInterceptor, "NtFlushBuffersFile",
-                                  &InterposedNtFlushBuffersFile);
-  gOriginalNtQueryFullAttributesFile.Set(sNtDllInterceptor,
-                                         "NtQueryFullAttributesFile",
-                                         &InterposedNtQueryFullAttributesFile);
+  sNtDllInterceptor.AddHook(
+    "NtCreateFile",
+    reinterpret_cast<intptr_t>(InterposedNtCreateFile),
+    reinterpret_cast<void**>(&gOriginalNtCreateFile));
+  sNtDllInterceptor.AddHook(
+    "NtReadFile",
+    reinterpret_cast<intptr_t>(InterposedNtReadFile),
+    reinterpret_cast<void**>(&gOriginalNtReadFile));
+  sNtDllInterceptor.AddHook(
+    "NtReadFileScatter",
+    reinterpret_cast<intptr_t>(InterposedNtReadFileScatter),
+    reinterpret_cast<void**>(&gOriginalNtReadFileScatter));
+  sNtDllInterceptor.AddHook(
+    "NtWriteFile",
+    reinterpret_cast<intptr_t>(InterposedNtWriteFile),
+    reinterpret_cast<void**>(&gOriginalNtWriteFile));
+  sNtDllInterceptor.AddHook(
+    "NtWriteFileGather",
+    reinterpret_cast<intptr_t>(InterposedNtWriteFileGather),
+    reinterpret_cast<void**>(&gOriginalNtWriteFileGather));
+  sNtDllInterceptor.AddHook(
+    "NtFlushBuffersFile",
+    reinterpret_cast<intptr_t>(InterposedNtFlushBuffersFile),
+    reinterpret_cast<void**>(&gOriginalNtFlushBuffersFile));
+  sNtDllInterceptor.AddHook(
+    "NtQueryFullAttributesFile",
+    reinterpret_cast<intptr_t>(InterposedNtQueryFullAttributesFile),
+    reinterpret_cast<void**>(&gOriginalNtQueryFullAttributesFile));
 }
 
 void
