@@ -7,6 +7,8 @@
 #ifndef js_SliceBudget_h
 #define js_SliceBudget_h
 
+#include "mozilla/TimeStamp.h"
+
 #include <stdint.h>
 
 #include "jstypes.h"
@@ -35,7 +37,7 @@ struct JS_PUBLIC_API(WorkBudget)
  */
 class JS_PUBLIC_API(SliceBudget)
 {
-    static const int64_t unlimitedDeadline = INT64_MAX;
+    static const mozilla::TimeStamp unlimitedDeadline;
     static const intptr_t unlimitedStartCounter = INTPTR_MAX;
 
     bool checkOverBudget();
@@ -49,7 +51,7 @@ class JS_PUBLIC_API(SliceBudget)
     TimeBudget timeBudget;
     WorkBudget workBudget;
 
-    int64_t deadline; /* in microseconds */
+    mozilla::TimeStamp deadline;
     intptr_t counter;
 
     static const intptr_t CounterReset = 1000;
@@ -81,8 +83,8 @@ class JS_PUBLIC_API(SliceBudget)
         return checkOverBudget();
     }
 
-    bool isWorkBudget() const { return deadline == 0; }
-    bool isTimeBudget() const { return deadline > 0 && !isUnlimited(); }
+    bool isWorkBudget() const { return deadline.IsNull(); }
+    bool isTimeBudget() const { return !deadline.IsNull() && !isUnlimited(); }
     bool isUnlimited() const { return deadline == unlimitedDeadline; }
 
     int describe(char* buffer, size_t maxlen) const;

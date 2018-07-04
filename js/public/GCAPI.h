@@ -141,7 +141,7 @@ typedef enum JSGCParamKey {
      * See setGCLastBytes in jsgc.cpp.
      *
      * Pref: javascript.options.mem.gc_high_frequency_time_limit_ms
-     * Default: HighFrequencyThresholdUsec
+     * Default: HighFrequencyThreshold
      */
     JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
 
