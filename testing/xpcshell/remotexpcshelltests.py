@@ -533,7 +533,7 @@ def verifyRemoteOptions(parser, options):
         elif options['objdir']:
             options['localLib'] = os.path.join(options['objdir'], 'dist/bin')
         elif os.path.isfile(os.path.join(here, '..', 'bin', 'xpcshell')):
-            # assume tests are being run from a tests.zip
+            # assume tests are being run from a tests archive
             options['localLib'] = os.path.abspath(os.path.join(here, '..', 'bin'))
         else:
             parser.error("Couldn't find local library dir, specify --local-lib-dir")
@@ -547,7 +547,7 @@ def verifyRemoteOptions(parser, options):
             else:
                 parser.error("Couldn't find local binary dir, specify --local-bin-dir")
         elif os.path.isfile(os.path.join(here, '..', 'bin', 'xpcshell')):
-            # assume tests are being run from a tests.zip
+            # assume tests are being run from a tests archive
             options['localBin'] = os.path.abspath(os.path.join(here, '..', 'bin'))
         else:
             parser.error("Couldn't find local binary dir, specify --local-bin-dir")

@@ -59,18 +59,6 @@ void ScrollBoxObject::ScrollBy(int32_t dx, int32_t dy, ErrorResult& aRv)
   ScrollTo(pt.x + dx, pt.y + dy, aRv);
 }
 
-void ScrollBoxObject::ScrollByLine(int32_t dlines, ErrorResult& aRv)
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  sf->ScrollBy(nsIntPoint(0, dlines), nsIScrollableFrame::LINES,
-               nsIScrollableFrame::SMOOTH);
-}
-
 // XUL <scrollbox> elements have a single box child element.
 // Get a pointer to that box.
 // Note that now that the <scrollbox> is just a regular box
@@ -212,20 +200,6 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
    }
 }
 
-void ScrollBoxObject::ScrollToLine(int32_t line, ErrorResult& aRv)
-{
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (!sf) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nscoord y = sf->GetLineScrollAmount().height * line;
-  nsRect range(0, y - nsPresContext::CSSPixelsToAppUnits(1),
-               0, nsPresContext::CSSPixelsToAppUnits(1));
-  sf->ScrollTo(nsPoint(0, y), nsIScrollableFrame::INSTANT, &range);
-}
-
 void ScrollBoxObject::ScrollToElement(Element& child, ErrorResult& aRv)
 {
   nsCOMPtr<nsIPresShell> shell = GetPresShell(false);
@@ -243,11 +217,6 @@ void ScrollBoxObject::ScrollToElement(Element& child, ErrorResult& aRv)
                                  nsIPresShell::SCROLL_ALWAYS),
                                nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
                                nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
-}
-
-void ScrollBoxObject::ScrollToIndex(int32_t index, ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 int32_t ScrollBoxObject::GetPositionX(ErrorResult& aRv)
@@ -304,46 +273,6 @@ void ScrollBoxObject::GetScrolledSize(nsRect& aRect, ErrorResult& aRv)
     aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
 }
 
-void ScrollBoxObject::GetPosition(JSContext* cx,
-                                  JS::Handle<JSObject*> x,
-                                  JS::Handle<JSObject*> y,
-                                  ErrorResult& aRv)
-{
-  CSSIntPoint pt;
-  GetPosition(pt, aRv);
-  JS::Rooted<JS::Value> v(cx);
-  if (!ToJSValue(cx, pt.x, &v) ||
-      !JS_SetProperty(cx, x, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  if (!ToJSValue(cx, pt.y, &v) ||
-      !JS_SetProperty(cx, y, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-}
-
-void ScrollBoxObject::GetScrolledSize(JSContext* cx,
-                                      JS::Handle<JSObject*> width,
-                                      JS::Handle<JSObject*> height,
-                                      ErrorResult& aRv)
-{
-  nsRect rect;
-  GetScrolledSize(rect, aRv);
-  JS::Rooted<JS::Value> v(cx);
-  if (!ToJSValue(cx, rect.width, &v) ||
-      !JS_SetProperty(cx, width, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-  if (!ToJSValue(cx, rect.height, &v) ||
-      !JS_SetProperty(cx, height, "value", v)) {
-    aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
-    return;
-  }
-}
-
 void ScrollBoxObject::EnsureElementIsVisible(Element& child, ErrorResult& aRv)
 {
     nsCOMPtr<nsIPresShell> shell = GetPresShell(false);
@@ -358,27 +287,14 @@ void ScrollBoxObject::EnsureElementIsVisible(Element& child, ErrorResult& aRv)
                                  nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
                                  nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
-
-void ScrollBoxObject::EnsureIndexIsVisible(int32_t index, ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-void ScrollBoxObject::EnsureLineIsVisible(int32_t line, ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
 } // namespace dom
 } // namespace mozilla
-
-// Creation Routine ///////////////////////////////////////////////////////////////////////
 
 using namespace mozilla::dom;
 
 nsresult
 NS_NewScrollBoxObject(nsIBoxObject** aResult)
 {
-  NS_ADDREF(*aResult = new ScrollBoxObject());
-  return NS_OK;
+    NS_ADDREF(*aResult = new ScrollBoxObject());
+    return NS_OK;
 }

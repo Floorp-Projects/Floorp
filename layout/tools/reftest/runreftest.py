@@ -933,7 +933,7 @@ def run_test_harness(parser, options):
 
     # We have to validate options.app here for the case when the mach
     # command is able to find it after argument parsing. This can happen
-    # when running from a tests.zip.
+    # when running from a tests archive.
     if not options.app:
         parser.error("could not find the application path, --appname must be specified")
 

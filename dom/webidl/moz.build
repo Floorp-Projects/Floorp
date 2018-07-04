@@ -328,6 +328,9 @@ with Files("WebAuthentication.webidl"):
 with Files("WebGL*"):
     BUG_COMPONENT = ("Core", "Canvas: WebGL")
 
+with Files("WebGPU*"):
+    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+
 with Files("WebKitCSSMatrix.webidl"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
@@ -922,6 +925,8 @@ WEBIDL_FILES = [
     'WebComponents.webidl',
     'WebGL2RenderingContext.webidl',
     'WebGLRenderingContext.webidl',
+    'WebGPU.webidl',
+    'WebGPUExtras.webidl',
     'WebKitCSSMatrix.webidl',
     'WebSocket.webidl',
     'WheelEvent.webidl',
