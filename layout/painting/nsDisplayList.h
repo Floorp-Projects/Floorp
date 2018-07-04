@@ -1462,24 +1462,18 @@ public:
       nsRect visible = aVisibleRect;
       nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
 
+#ifdef MOZ_WIDGET_ANDROID
       if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
           aBuilder->IsPaintingToWindow()) {
-        // position: fixed items are reflowed into and only drawn inside the
-        // viewport, or the scroll position clamping scrollport size, if one is
-        // set.
         nsIPresShell* ps = aFrame->PresShell();
-        if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
-          dirtyRectRelativeToDirtyFrame =
-            nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
-          visible = dirtyRectRelativeToDirtyFrame;
-#ifdef MOZ_WIDGET_ANDROID
-        } else {
+        if (!ps->IsScrollPositionClampingScrollPortSizeSet()) {
           dirtyRectRelativeToDirtyFrame =
             nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
           visible = dirtyRectRelativeToDirtyFrame;
-#endif
         }
       }
+#endif
+
       *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();
       visible -= aFrame->GetPosition();
 
