@@ -10,6 +10,7 @@ import copy
 import logging
 import requests
 import os
+import re
 
 from requests.exceptions import HTTPError
 
@@ -17,7 +18,13 @@ from taskgraph import create
 from taskgraph.decision import read_artifact, write_artifact
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.optimize import optimize_task_graph
-from taskgraph.util.taskcluster import get_session, find_task_id, get_artifact, list_tasks
+from taskgraph.util.taskcluster import (
+    get_session,
+    find_task_id,
+    get_artifact,
+    list_tasks,
+    parse_time,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -164,3 +171,30 @@ def combine_task_graph_files(suffixes):
     for suffix in suffixes:
         all.update(read_artifact('task-graph-{}.json'.format(suffix)))
     write_artifact('task-graph.json', all)
+
+
+def relativize_datestamps(task_def):
+    """
+    Given a task definition as received from the queue, convert all datestamps
+    to {relative_datestamp: ..} format, with the task creation time as "now".
+    The result is useful for handing to ``create_task``.
+    """
+    base = parse_time(task_def['created'])
+    # borrowed from https://github.com/epoberezkin/ajv/blob/master/lib/compile/formats.js
+    ts_pattern = re.compile(
+        r'^\d\d\d\d-[0-1]\d-[0-3]\d[t\s]'
+        r'(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?'
+        r'(?:z|[+-]\d\d:\d\d)$', re.I)
+
+    def recurse(value):
+        if isinstance(value, basestring):
+            if ts_pattern.match(value):
+                value = parse_time(value)
+                diff = value - base
+                return {'relative-datestamp': '{} seconds'.format(int(diff.total_seconds()))}
+        if isinstance(value, list):
+            return [recurse(e) for e in value]
+        if isinstance(value, dict):
+            return {k: recurse(v) for k, v in value.items()}
+        return value
+    return recurse(task_def)
