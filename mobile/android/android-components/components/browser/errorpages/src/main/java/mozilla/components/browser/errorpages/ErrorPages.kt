@@ -31,7 +31,7 @@ object ErrorPages {
         TIMEOUT(
                 R.string.error_timeout_title,
                 R.string.error_timeout_message),
-        REDIRECT_LOOP (
+        REDIRECT_LOOP(
                 R.string.error_redirectLoop_title,
                 R.string.error_redirectLoop_message),
         UNSUPPORTED_PROTOCOL(

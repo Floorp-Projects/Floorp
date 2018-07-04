@@ -82,7 +82,7 @@ class SafeIntentTest {
 
         assertFalse(SafeIntent(intent).isLauncherIntent)
 
-        //both category and action are not valid
+        // both category and action are not valid
         val category = HashSet<String>()
 
         category.add("NOT" + Intent.CATEGORY_LAUNCHER)
@@ -138,7 +138,7 @@ class SafeIntentTest {
     @Test
     fun `isLauncherIntent returns true if intent is Launcher Intent`() {
 
-        //both category and action are not valid
+        // both category and action are not valid
         val category = HashSet<String>()
         category.add(Intent.CATEGORY_LAUNCHER)
 

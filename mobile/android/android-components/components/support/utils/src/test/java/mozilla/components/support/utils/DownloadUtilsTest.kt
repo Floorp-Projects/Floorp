@@ -24,7 +24,7 @@ class DownloadUtilsTest {
         assertContentDisposition("downloadfile.bin", "")
 
         CONTENT_DISPOSITION_TYPES.forEach { contentDisposition ->
-            //continuing with default filenames
+            // continuing with default filenames
             assertContentDisposition("downloadfile.bin", contentDisposition)
             assertContentDisposition("downloadfile.bin", contentDisposition + ";")
             assertContentDisposition("downloadfile.bin", contentDisposition + "; filename")

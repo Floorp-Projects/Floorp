@@ -52,42 +52,42 @@ class Session(
      * The currently loading or loaded URL.
      */
     var url: String by Delegates.observable(initialUrl) {
-        _, old, new -> notifyObservers (old, new, { onUrlChanged() })
+        _, old, new -> notifyObservers(old, new) { onUrlChanged() }
     }
 
     /**
      * The progress loading the current URL.
      */
     var progress: Int by Delegates.observable(0) {
-        _, old, new -> notifyObservers (old, new, { onProgress() })
+        _, old, new -> notifyObservers(old, new) { onProgress() }
     }
 
     /**
      * Loading state, true if this session's url is currently loading, otherwise false.
      */
     var loading: Boolean by Delegates.observable(false) {
-        _, old, new -> notifyObservers (old, new, { onLoadingStateChanged() })
+        _, old, new -> notifyObservers(old, new) { onLoadingStateChanged() }
     }
 
     /**
      * Navigation state, true if there's an history item to go back to, otherwise false.
      */
     var canGoBack: Boolean by Delegates.observable(false) {
-        _, old, new -> notifyObservers (old, new, { onNavigationStateChanged() })
+        _, old, new -> notifyObservers(old, new) { onNavigationStateChanged() }
     }
 
     /**
      * Navigation state, true if there's an history item to go forward to, otherwise false.
      */
     var canGoForward: Boolean by Delegates.observable(false) {
-        _, old, new -> notifyObservers (old, new, { onNavigationStateChanged() })
+        _, old, new -> notifyObservers(old, new) { onNavigationStateChanged() }
     }
 
     /**
      * The currently / last used search terms.
      */
     var searchTerms: String by Delegates.observable("") {
-        _, _, new -> notifyObservers ({ if (!new.isEmpty()) onSearch() })
+        _, _, new -> notifyObservers { if (!new.isEmpty()) onSearch() }
     }
 
     /**
@@ -95,14 +95,14 @@ class Session(
      * for a secure URL, as well as the host and SSL certificate authority, if applicable.
      */
     var securityInfo: SecurityInfo by Delegates.observable(SecurityInfo()) {
-        _, old, new -> notifyObservers (old, new, { onSecurityChanged() })
+        _, old, new -> notifyObservers(old, new) { onSecurityChanged() }
     }
 
     /**
      * Configuration data in case this session is used for a Custom Tab.
      */
     var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) {
-        _, _, _ -> notifyObservers ({ onCustomTabConfigChanged() })
+        _, _, _ -> notifyObservers { onCustomTabConfigChanged() }
     }
 
     /**
