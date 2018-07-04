@@ -84,32 +84,32 @@
 namespace mozilla {
 namespace interceptor {
 
+template <typename T>
+struct OriginalFunctionPtrTraits;
+
+template <typename R, typename... Args>
+struct OriginalFunctionPtrTraits<R (*)(Args...)>
+{
+  using ReturnType = R;
+};
+
+#if defined(_M_IX86)
+template <typename R, typename... Args>
+struct OriginalFunctionPtrTraits<R (__stdcall*)(Args...)>
+{
+  using ReturnType = R;
+};
+
+template <typename R, typename... Args>
+struct OriginalFunctionPtrTraits<R (__fastcall*)(Args...)>
+{
+  using ReturnType = R;
+};
+#endif // defined(_M_IX86)
+
 template <typename InterceptorT, typename FuncPtrT>
 class FuncHook final
 {
-  template <typename T>
-  struct OriginalFunctionPtrTraits;
-
-  template <typename R, typename... Args>
-  struct OriginalFunctionPtrTraits<R (*)(Args...)>
-  {
-    using ReturnType = R;
-  };
-
-#if defined(_M_IX86)
-  template <typename R, typename... Args>
-  struct OriginalFunctionPtrTraits<R (__stdcall*)(Args...)>
-  {
-    using ReturnType = R;
-  };
-
-  template <typename R, typename... Args>
-  struct OriginalFunctionPtrTraits<R (__fastcall*)(Args...)>
-  {
-    using ReturnType = R;
-  };
-#endif // defined(_M_IX86)
-
 public:
   using ThisType = FuncHook<InterceptorT, FuncPtrT>;
   using ReturnType = typename OriginalFunctionPtrTraits<FuncPtrT>::ReturnType;
@@ -221,15 +221,99 @@ private:
   INIT_ONCE mInitOnce;
 };
 
+template <typename InterceptorT, typename FuncPtrT>
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final
+{
+public:
+  using ThisType = FuncHookCrossProcess<InterceptorT, FuncPtrT>;
+  using ReturnType = typename OriginalFunctionPtrTraits<FuncPtrT>::ReturnType;
+
+#if defined(DEBUG)
+  FuncHookCrossProcess() {}
+#endif // defined(DEBUG)
+
+  bool Set(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
+           FuncPtrT aHookDest)
+  {
+    if (!aInterceptor.AddHook(aName, reinterpret_cast<intptr_t>(aHookDest),
+                              reinterpret_cast<void**>(&mOrigFunc))) {
+      return false;
+    }
+
+    return CopyStubToChildProcess(aProcess);
+  }
+
+  bool SetDetour(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
+                 FuncPtrT aHookDest)
+  {
+    if (!aInterceptor.AddDetour(aName, reinterpret_cast<intptr_t>(aHookDest),
+                                reinterpret_cast<void**>(&mOrigFunc))) {
+      return false;
+    }
+
+    return CopyStubToChildProcess(aProcess);
+  }
+
+  explicit operator bool() const
+  {
+    return !!mOrigFunc;
+  }
+
+  /**
+   * NB: This operator is only meaningful when invoked in the target process!
+   */
+  template <typename... ArgsType>
+  ReturnType operator()(ArgsType... aArgs) const
+  {
+    return mOrigFunc(std::forward<ArgsType>(aArgs)...);
+  }
+
+#if defined(DEBUG)
+  FuncHookCrossProcess(const FuncHookCrossProcess&) = delete;
+  FuncHookCrossProcess(FuncHookCrossProcess&&) = delete;
+  FuncHookCrossProcess& operator=(const FuncHookCrossProcess&) = delete;
+  FuncHookCrossProcess& operator=(FuncHookCrossProcess&& aOther) = delete;
+#endif // defined(DEBUG)
+
+private:
+  bool CopyStubToChildProcess(HANDLE aProcess)
+  {
+    SIZE_T bytesWritten;
+    return !!::WriteProcessMemory(aProcess, &mOrigFunc, &mOrigFunc,
+                                  sizeof(mOrigFunc), &bytesWritten);
+  }
+
+private:
+  FuncPtrT  mOrigFunc;
+};
+
 enum
 {
   kDefaultTrampolineSize = 128
 };
 
+template <typename MMPolicyT, typename InterceptorT>
+struct TypeResolver;
+
+template <typename InterceptorT>
+struct TypeResolver<mozilla::interceptor::MMPolicyInProcess, InterceptorT>
+{
+  template <typename FuncPtrT>
+  using FuncHookType = FuncHook<InterceptorT, FuncPtrT>;
+};
+
+template <typename InterceptorT>
+struct TypeResolver<mozilla::interceptor::MMPolicyOutOfProcess, InterceptorT>
+{
+  template <typename FuncPtrT>
+  using FuncHookType = FuncHookCrossProcess<InterceptorT, FuncPtrT>;
+};
+
 template <typename VMPolicy =
             mozilla::interceptor::VMSharingPolicyShared<
               mozilla::interceptor::MMPolicyInProcess, kDefaultTrampolineSize>>
-class WindowsDllInterceptor final
+class WindowsDllInterceptor final : public TypeResolver<typename VMPolicy::MMPolicyT,
+                                                        WindowsDllInterceptor<VMPolicy>>
 {
   typedef WindowsDllInterceptor<VMPolicy> ThisType;
 
@@ -372,13 +456,12 @@ private:
     return mDetourPatcher.AddHook(aProc, aHookDest, aOrigFunc);
   }
 
-public:
-  template <typename FuncPtrT>
-  using FuncHookType = FuncHook<ThisType, FuncPtrT>;
-
 private:
   template <typename InterceptorT, typename FuncPtrT>
   friend class FuncHook;
+
+  template <typename InterceptorT, typename FuncPtrT>
+  friend class FuncHookCrossProcess;
 };
 
 } // namespace interceptor
