@@ -1,4 +1,4 @@
-# [Android Components](../../README.md) > Samples > Browser
+# [Android Components](../../README.md) > Samples > FxA
 
 ![](src/main/res/mipmap-xhdpi/ic_launcher.png)
 
