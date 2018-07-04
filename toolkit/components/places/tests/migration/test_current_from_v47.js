@@ -20,8 +20,8 @@ add_task(async function database_is_valid() {
   // Now wait for moz_origins.frecency to be populated before continuing with
   // other test tasks.
   await TestUtils.waitForCondition(() => {
-    return !Services.prefs.getBoolPref("places.database.migrateV48Frecencies", false);
-  }, "Waiting for v48 origin frecencies to be migrated", 100, 3000);
+    return !Services.prefs.getBoolPref("places.database.migrateV52OriginFrecencies", false);
+  }, "Waiting for v52 origin frecencies to be migrated", 100, 3000);
 });
 
 
@@ -52,7 +52,7 @@ add_task(async function test_origins() {
   Assert.notEqual(rows.length, 0);
 
   let seenOriginIDs = [];
-  let maxFrecencyByOriginID = {};
+  let frecenciesByOriginID = {};
 
   // Make sure moz_places.origin_id refers to the right origins.
   for (let row of rows) {
@@ -65,21 +65,17 @@ add_task(async function test_origins() {
     seenOriginIDs.push(originID);
 
     let frecency = row.getResultByName("frecency");
-    if (!(originID in maxFrecencyByOriginID)) {
-      maxFrecencyByOriginID[originID] = frecency;
-    } else {
-      maxFrecencyByOriginID[originID] =
-        Math.max(frecency, maxFrecencyByOriginID[originID]);
-    }
+    frecenciesByOriginID[originID] = frecenciesByOriginID[originID] || 0;
+    frecenciesByOriginID[originID] += frecency;
   }
 
   for (let origin of origins) {
     // Make sure each origin corresponds to at least one moz_place.
     Assert.ok(seenOriginIDs.includes(origin.id));
 
-    // moz_origins.frecency should be the max frecency of all moz_places with
-    // the origin.
-    Assert.equal(origin.frecency, maxFrecencyByOriginID[origin.id]);
+    // moz_origins.frecency should be the sum of frecencies of all moz_places
+    // with the origin.
+    Assert.equal(origin.frecency, frecenciesByOriginID[origin.id]);
   }
 
   // Make sure moz_hosts was emptied.
@@ -95,11 +91,9 @@ add_task(async function test_origins() {
 add_task(async function test_frecency_stats() {
   let db = await PlacesUtils.promiseDBConnection();
 
-  // Collect positive frecencies from moz_places.
+  // Collect positive frecencies from moz_origins.
   let rows = await db.execute(`
-    SELECT frecency
-    FROM moz_places
-    WHERE id >= 0 AND frecency > 0;
+    SELECT frecency FROM moz_origins WHERE frecency > 0
   `);
   Assert.notEqual(rows.length, 0);
   let frecencies = rows.map(r => r.getResultByName("frecency"));
@@ -107,9 +101,9 @@ add_task(async function test_frecency_stats() {
   // Collect stats.
   rows = await db.execute(`
     SELECT
-      (SELECT value FROM moz_meta WHERE key = "frecency_count"),
-      (SELECT value FROM moz_meta WHERE key = "frecency_sum"),
-      (SELECT value FROM moz_meta WHERE key = "frecency_sum_of_squares")
+      (SELECT value FROM moz_meta WHERE key = "origin_frecency_count"),
+      (SELECT value FROM moz_meta WHERE key = "origin_frecency_sum"),
+      (SELECT value FROM moz_meta WHERE key = "origin_frecency_sum_of_squares")
   `);
   let count = rows[0].getResultByIndex(0);
   let sum = rows[0].getResultByIndex(1);
