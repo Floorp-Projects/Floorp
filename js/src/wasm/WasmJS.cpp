@@ -1554,9 +1554,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    limits.initial *= PageSize;
-    if (limits.maximum)
-        limits.maximum = Some(*limits.maximum * PageSize);
+    ConvertMemoryPagesToBytes(&limits);
 
     RootedArrayBufferObjectMaybeShared buffer(cx);
     if (!CreateWasmBuffer(cx, limits, &buffer))
