@@ -685,8 +685,9 @@ class FontInspector {
       filterProperties: FONT_PROPERTIES
     });
 
-    if (!this.nodeComputedStyle) {
+    if (!this.nodeComputedStyle || !fonts.length) {
       this.store.dispatch(resetFontEditor());
+      this.inspector.emit("fonteditor-updated");
       return;
     }
 
