@@ -1474,23 +1474,25 @@ public:
       nsRect visible = aVisibleRect;
       nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
 
-      if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
-          aBuilder->IsPaintingToWindow()) {
-        // position: fixed items are reflowed into and only drawn inside the
-        // viewport, or the visual viewport size, if one is set.
-        nsIPresShell* ps = aFrame->PresShell();
-        if (ps->IsVisualViewportSizeSet()) {
-          dirtyRectRelativeToDirtyFrame =
-            nsRect(nsPoint(0, 0), ps->GetVisualViewportSize());
-          visible = dirtyRectRelativeToDirtyFrame;
 #ifdef MOZ_WIDGET_ANDROID
-        } else {
-          dirtyRectRelativeToDirtyFrame =
-            nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
-          visible = dirtyRectRelativeToDirtyFrame;
-#endif
+        if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
+            aBuilder->IsPaintingToWindow()) {
+            // We want to ensure that fixed position elements are visible when
+            // being async scrolled, so we paint them at the size of the larger
+            // viewport.
+            dirtyRectRelativeToDirtyFrame =
+              nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
+
+            nsIPresShell* ps = aFrame->PresShell();
+            if (ps->IsVisualViewportSizeSet() &&
+                dirtyRectRelativeToDirtyFrame.Size() < ps->GetVisualViewportSize()) {
+                dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetVisualViewportSize());
+            }
+
+            visible = dirtyRectRelativeToDirtyFrame;
         }
-      }
+#endif
+
       *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();
       visible -= aFrame->GetPosition();
 
