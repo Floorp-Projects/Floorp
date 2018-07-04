@@ -63,6 +63,9 @@ const JUSTIFY_CONTENT = "justify-content";
  * - showAlignment(isShown)
  *   @param  {Boolean} isShown
  *   Shows the alignment in the flexbox highlighter.
+ * - showFlexBasis(isShown)
+ *   @param  {Boolean} isShown
+ *   Shows the flex basis in the flexbox highlighter.
  */
 class FlexboxHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
@@ -536,7 +539,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
    * Renders the flex basis for a given flex item.
    */
   renderFlexItemBasis(flexItem, left, top, right, bottom, boundsWidth) {
-    if (!this.computedStyle) {
+    if (!this.options.showFlexBasis || !this.computedStyle) {
       return;
     }
 

@@ -1776,7 +1776,7 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
                               int32_t(aTelemetry.mDecodeTime.ToMicroseconds()));
       }
 
-      if (aTelemetry.mSpeedHistogram) {
+      if (aTelemetry.mSpeedHistogram && aTelemetry.mBytesDecoded) {
         Telemetry::Accumulate(*aTelemetry.mSpeedHistogram, aTelemetry.Speed());
       }
     }
