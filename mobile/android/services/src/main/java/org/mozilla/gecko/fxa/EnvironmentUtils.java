@@ -13,11 +13,11 @@ import android.support.annotation.Nullable;
  */
 public class EnvironmentUtils {
     /**
-     * Must be kept in-sync with {@link org.mozilla.gecko.GeckoApp.PREFS_IS_FIRST_RUN}.
+     * Must be kept in-sync with {@link org.mozilla.gecko.GeckoApp#PREFS_IS_FIRST_RUN}.
      */
     private static final String GECKO_PREFS_IS_FIRST_RUN = "telemetry-isFirstRun";
     /**
-     * Must be kept in-sync with {@link org.mozilla.gecko.BrowserApp.FIRSTRUN_UUID}.
+     * Must be kept in-sync with {@link org.mozilla.gecko.firstrun.OnboardingHelper#FIRSTRUN_UUID}.
      */
     private static final String GECKO_PREFS_FIRSTRUN_UUID = "firstrun_uuid";
 

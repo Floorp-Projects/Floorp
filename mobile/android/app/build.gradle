@@ -145,6 +145,7 @@ android {
                     exclude 'org/mozilla/gecko/mma/MmaStubImp.java'
                 } else {
                     exclude 'org/mozilla/gecko/mma/MmaLeanplumImp.java'
+                    exclude 'org/mozilla/gecko/mma/LeanplumVariables.java'
                 }
 
                 if (!mozconfig.substs.MOZ_ANDROID_GCM) {

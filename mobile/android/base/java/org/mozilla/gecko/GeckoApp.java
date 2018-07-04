@@ -146,7 +146,7 @@ public abstract class GeckoApp extends GeckoActivity
 
      * Originally, this was only used for the telemetry core ping logic. To avoid
      * having to write custom migration logic, we just keep the original pref key.
-     * Be aware of {@link org.mozilla.gecko.fxa.EnvironmentUtils.GECKO_PREFS_IS_FIRST_RUN}.
+     * Be aware of {@link org.mozilla.gecko.fxa.EnvironmentUtils#GECKO_PREFS_IS_FIRST_RUN}.
      */
     public static final String PREFS_IS_FIRST_RUN = "telemetry-isFirstRun";
 
