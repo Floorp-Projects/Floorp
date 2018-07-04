@@ -44,8 +44,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("haspopupListbox", { "haspopup": "listbox" }, true);
       testAttrs("haspopupMenu", { "haspopup": "menu" }, true);
       testAttrs("haspopupTree", { "haspopup": "tree" }, true);
-      testAttrs("hidden", {"hidden": "true"}, true);
-      testAbsentAttrs("hidden_false", { "hidden": "false" });
       testAbsentAttrs("modal", {"modal": "true"});
       testAttrs("sortAscending", {"sort": "ascending"}, true);
       testAttrs("sortDescending", {"sort": "descending"}, true);
@@ -155,51 +153,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   </script>
 </head>
 <body>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=475006"
-     title="Extend nsARIAMap to capture ARIA attribute characteristics">
-    Mozilla Bug 475006
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=391829"
-     title="Add support for container-live-role to object attributes">
-    Mozilla Bug 391829
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=581952"
-     title="Make explicit that aria-label is not an object attribute">
-    Mozilla Bug 475006
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
-     title="make HTML <output> accessible">
-    Mozilla Bug 558036
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=896400"
-     title="Tablist should no longer be an implicit live region">
-    Mozilla Bug 896400
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=563862"
-     title="Expand support for nsIAccessibleEvent::OBJECT_ATTRIBUTE_CHANGE">
-    Mozilla Bug 563862
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=819303"
-     title="crash in nsTextEquivUtils::AppendTextEquivFromTextContent">
-    Mozilla Bug 819303
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=838407"
-     title="aria-hidden false value shouldn't be exposed via object attributes">
-    Mozilla Bug 838407
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121518"
-     title="ARIA 1.1: Support role 'searchbox'">
-    Mozilla Bug 1121518
-  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -226,8 +179,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="haspopupListbox" aria-haspopup="listbox"></div>
   <div id="haspopupMenu" aria-haspopup="menu"></div>
   <div id="haspopupTree" aria-haspopup="tree"></div>
-  <div id="hidden" aria-hidden="true"></div>
-  <div id="hidden_false" aria-hidden="false"></div>
   <div id="modal" aria-modal="true"></div>
   <div id="sortAscending" role="columnheader" aria-sort="ascending"></div>
   <div id="sortDescending" role="columnheader" aria-sort="descending"></div>

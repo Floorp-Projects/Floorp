@@ -278,7 +278,12 @@ public:
    * Return an accessible for the given DOM node or container accessible if
    * the node is not accessible.
    */
-  Accessible* GetAccessibleOrContainer(nsINode* aNode) const;
+  enum {
+    eIgnoreARIAHidden = 0,
+    eNoContainerIfARIAHidden = 1
+  };
+  Accessible* GetAccessibleOrContainer(nsINode* aNode,
+                                       int aARIAHiddenFlag = eIgnoreARIAHidden) const;
 
   /**
    * Return a container accessible for the given DOM node.
@@ -292,7 +297,8 @@ public:
    * Return an accessible for the given node if any, or an immediate accessible
    * container for it.
    */
-  Accessible* AccessibleOrTrueContainer(nsINode* aNode) const;
+  Accessible* AccessibleOrTrueContainer(nsINode* aNode,
+                                        int aARIAHiddenFlag = eIgnoreARIAHidden) const;
 
   /**
    * Return an accessible for the given node or its first accessible descendant.
