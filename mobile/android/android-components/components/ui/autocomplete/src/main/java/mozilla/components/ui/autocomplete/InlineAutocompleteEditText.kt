@@ -48,7 +48,7 @@ typealias TextFormatter = (String) -> String
  * A filter listener (see [setOnFilterListener]) needs to be attached to
  * provide autocomplete results. It will be invoked when the input
  * text changes. The listener gets direct access to this component (via its view
- * parameter), so it can call {@link onAutocomplete} in return.
+ * parameter), so it can call {@link applyAutocompleteResult} in return.
  *
  * A commit listener (see [setOnCommitListener]) can be attached which is
  * invoked when the user selected the result i.e. is done editing.
@@ -340,18 +340,19 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     }
 
     /**
-     * Add autocomplete text based on the result URI.
+     * Applies the provided result by updating the current autocomplete
+     * text and selection, if any.
      *
-     * @param result Result URI to be turned into autocomplete text
+     * @param result the [AutocompleteResult] to apply
      */
-    fun onAutocomplete(result: AutocompleteResult?) {
+    fun applyAutocompleteResult(result: AutocompleteResult) {
         // If discardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
         if (discardAutoCompleteResult) {
             return
         }
 
-        if (!isEnabled || result == null || result.isEmpty) {
+        if (!isEnabled || result.isEmpty) {
             autocompleteResult = AutocompleteResult.emptyResult()
             return
         }
@@ -540,7 +541,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             if (doAutocomplete && autocompleteResult.startsWith(text)) {
                 // If this text already matches our autocomplete text, autocomplete likely
                 // won't change. Just reuse the old autocomplete value.
-                onAutocomplete(autocompleteResult)
+                applyAutocompleteResult(autocompleteResult)
                 doAutocomplete = false
             } else {
                 // Otherwise, remove the old autocomplete text

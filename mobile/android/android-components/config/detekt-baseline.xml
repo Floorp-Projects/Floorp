@@ -6,7 +6,7 @@
     <ID>ComplexCondition:InlineAutocompleteEditText.kt$InlineAutocompleteEditText.&lt;no name provided&gt;$composingStart &gt;= 0 &amp;&amp; composingEnd &gt;= 0 &amp;&amp; composingEnd - composingStart &gt; text.length &amp;&amp; removeAutocomplete(editable)</ID>
     <ID>ComplexMethod:DownloadUtils.kt$DownloadUtils$ @JvmStatic fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String</ID>
     <ID>ComplexMethod:ErrorPages.kt$ErrorPages$ fun mapWebViewErrorCodeToErrorType(errorCode: Int): ErrorType</ID>
-    <ID>ComplexMethod:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ fun onAutocomplete(result: AutocompleteResult?)</ID>
+    <ID>ComplexMethod:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ fun applyAutocompleteResult(result: AutocompleteResult)</ID>
     <ID>ComplexMethod:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection?</ID>
     <ID>EmptyCatchBlock:DownloadUtils.kt$DownloadUtils${ }</ID>
     <ID>LargeClass:InlineAutocompleteEditText.kt$InlineAutocompleteEditText : AppCompatEditText</ID>
@@ -22,7 +22,7 @@
     <ID>MaxLineLength:WebURLFinder.kt$mozilla.components.support.utils.WebURLFinder.kt</ID>
     <ID>NestedBlockDepth:DownloadUtils.kt$DownloadUtils$ @JvmStatic fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String</ID>
     <ID>ReturnCount:DownloadUtils.kt$DownloadUtils$private fun parseContentDisposition(contentDisposition: String): String?</ID>
-    <ID>ReturnCount:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ fun onAutocomplete(result: AutocompleteResult?)</ID>
+    <ID>ReturnCount:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ fun applyAutocompleteResult(result: AutocompleteResult)</ID>
     <ID>ReturnCount:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun (_: View, keyCode: Int, event: KeyEvent): Boolean</ID>
     <ID>ReturnCount:SafeBundle.kt$SafeBundle$fun &lt;T : Parcelable&gt; getParcelable(name: String): T?</ID>
     <ID>ReturnCount:SafeBundle.kt$SafeBundle$fun getString(name: String): String?</ID>

@@ -54,7 +54,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.setAutocompleteFilter { value, view ->
             view?.let {
                 val result = autoCompleteProvider.autocomplete(value)
-                view.onAutocomplete(
+                view.applyAutocompleteResult(
                         InlineAutocompleteEditText.AutocompleteResult(result.text, result.source, result.size, { result.url }))
             }
         }

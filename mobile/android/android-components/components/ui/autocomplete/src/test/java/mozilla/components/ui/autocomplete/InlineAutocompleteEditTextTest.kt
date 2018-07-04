@@ -117,14 +117,11 @@ class InlineAutocompleteEditTextTest {
         val et = spy(InlineAutocompleteEditText(context, attributes))
 
         doReturn(false).`when`(et).isEnabled
-        et.onAutocomplete(AutocompleteResult("text", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text", "source", 1))
         assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
 
         doReturn(true).`when`(et).isEnabled
-        et.onAutocomplete(null)
-        assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
-
-        et.onAutocomplete(AutocompleteResult.emptyResult())
+        et.applyAutocompleteResult(AutocompleteResult.emptyResult())
         assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
     }
 
@@ -134,11 +131,11 @@ class InlineAutocompleteEditTextTest {
         doReturn(true).`when`(et).isEnabled
         et.setText("text")
 
-        et.onAutocomplete(AutocompleteResult("stale result", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("stale result", "source", 1))
         assertEquals("text", et.text.toString())
 
         et.text.setSpan(AUTOCOMPLETE_SPAN, 1, 3, SPAN_EXCLUSIVE_EXCLUSIVE)
-        et.onAutocomplete(AutocompleteResult("stale result", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("stale result", "source", 1))
         assertEquals("text", et.text.toString())
     }
 
@@ -149,7 +146,7 @@ class InlineAutocompleteEditTextTest {
 
         et.setText("text")
         et.text.setSpan(AUTOCOMPLETE_SPAN, 1, 3, SPAN_EXCLUSIVE_EXCLUSIVE)
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
         assertEquals("text completed", et.text.toString())
     }
 
@@ -159,7 +156,7 @@ class InlineAutocompleteEditTextTest {
         doReturn(true).`when`(et).isEnabled
 
         et.setText("text")
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
         assertEquals("text completed", et.text.toString())
     }
 
@@ -169,7 +166,7 @@ class InlineAutocompleteEditTextTest {
         doReturn(true).`when`(et).isEnabled
 
         et.setText("text")
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
 
         assertEquals(4, et.text.getSpanStart(AUTOCOMPLETE_SPAN))
         assertEquals(14, et.text.getSpanEnd(AUTOCOMPLETE_SPAN))
@@ -206,7 +203,7 @@ class InlineAutocompleteEditTextTest {
         et.onAttachedToWindow()
 
         et.setText("text")
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
         assertEquals(4, et.text.getSpanStart(AUTOCOMPLETE_SPAN))
 
         et.onSelectionChanged(4, 14)
@@ -276,7 +273,7 @@ class InlineAutocompleteEditTextTest {
         }
 
         // Text existing autocomplete result
-        et.onAutocomplete(AutocompleteResult("text", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text", "source", 1))
         et.setText("text")
         assertEquals(listOf("text", null), invokedWithParams)
 
@@ -301,14 +298,14 @@ class InlineAutocompleteEditTextTest {
         doReturn(true).`when`(et).isEnabled
 
         et.setText("text")
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
         assertEquals("text completed", et.text.toString())
 
         icw?.deleteSurroundingText(0, 1)
         assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
         assertEquals("text", et.text.toString())
 
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
         assertEquals("text completed", et.text.toString())
 
         BaseInputConnection.setComposingSpans(et.text)
@@ -316,7 +313,7 @@ class InlineAutocompleteEditTextTest {
         assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
         assertEquals("text", et.text.toString())
 
-        et.onAutocomplete(AutocompleteResult("text completed", "source", 1))
+        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
         assertEquals("text completed", et.text.toString())
 
         BaseInputConnection.setComposingSpans(et.text)
