@@ -64,8 +64,8 @@ def nodejs_suitability(require, node, version):
             return
 
     if version < MIN_NODE_VERSION:
-        msg = 'NODEJS must point to node %s or newer; %s found' (
-            MIN_NODE_VERSION, node_version)
+        msg = 'NODEJS must point to node %s or newer; %s found' % (
+            MIN_NODE_VERSION, version)
 
         if require:
             raise FatalCheckError(msg)
