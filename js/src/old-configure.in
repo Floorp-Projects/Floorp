@@ -63,6 +63,8 @@ dnl ========================================================
 USE_PTHREADS=
 _PTHREAD_LDFLAGS=""
 
+LDFLAGS="$LDFLAGS $LINKER_LDFLAGS"
+
 MOZ_DEFAULT_COMPILER
 
 if test -z "$JS_STANDALONE"; then

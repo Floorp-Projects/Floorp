@@ -242,7 +242,6 @@ class TestEmitterBasic(unittest.TestCase):
     def test_link_flags(self):
         reader = self.reader('link-flags', extra_substs={
             'OS_LDFLAGS': ['-Wl,rpath-link=/usr/lib'],
-            'LINKER_LDFLAGS': ['-fuse-ld=gold'],
             'MOZ_OPTIMIZE': '',
             'MOZ_OPTIMIZE_LDFLAGS': ['-Wl,-dead_strip'],
             'MOZ_DEBUG_LDFLAGS': ['-framework ExceptionHandling'],
@@ -250,7 +249,6 @@ class TestEmitterBasic(unittest.TestCase):
         sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertEqual(ldflags.flags['OS'], reader.config.substs['OS_LDFLAGS'])
-        self.assertEqual(ldflags.flags['LINKER'], reader.config.substs['LINKER_LDFLAGS'])
         self.assertEqual(ldflags.flags['MOZBUILD'], ['-Wl,-U_foo', '-framework Foo', '-x'])
         self.assertEqual(ldflags.flags['OPTIMIZE'], [])
 

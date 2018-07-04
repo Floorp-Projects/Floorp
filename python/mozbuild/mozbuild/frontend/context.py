@@ -384,8 +384,6 @@ class LinkFlags(BaseCompileFlags):
 
         self.flag_variables = (
             ('OS', self._os_ldflags(), ('LDFLAGS',)),
-            ('LINKER', context.config.substs.get('LINKER_LDFLAGS'),
-             ('LDFLAGS',)),
             ('DEFFILE', None, ('LDFLAGS',)),
             ('MOZBUILD', None, ('LDFLAGS',)),
             ('FIX_LINK_PATHS', context.config.substs.get('MOZ_FIX_LINK_PATHS'),

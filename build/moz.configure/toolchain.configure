@@ -1331,10 +1331,6 @@ def lto(value, c_compiler):
 
     # clang and clang-cl
     if c_compiler.type in ('clang', 'clang-cl'):
-        # Until Bug 1457168 is fixed, we have to hardcode -fuse-ld=lld here
-        if c_compiler.type == 'clang':
-            flags.append("-fuse-ld=lld")
-
         if len(value) and value[0].lower() == 'full':
             flags.append("-flto")
             ldflags.append("-flto")
@@ -1644,7 +1640,7 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
 
 set_config('LD_IS_BFD', depends(select_linker.KIND)
            (lambda x: x == 'bfd' or None))
-set_config('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
+add_old_configure_assignment('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
 
 
 js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
