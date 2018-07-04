@@ -20,7 +20,9 @@
 #include "nsISupportsUtils.h"
 #include "nsIThreadManager.h"
 #include "nsAutoPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsPrintfCString.h"
+#include "nsXPCOMCIDInternal.h"
 #include "prthread.h"
 #include "prerror.h"
 #include "prtime.h"
@@ -536,11 +538,11 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     , mDefaultCacheLifetime(defaultCacheEntryLifetime)
     , mDefaultGracePeriod(defaultGracePeriod)
     , mLock("nsHostResolver.mLock")
-    , mIdleThreadCV(mLock, "nsHostResolver.mIdleThreadCV")
+    , mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV")
     , mEvictionQSize(0)
     , mShutdown(true)
-    , mNumIdleThreads(0)
-    , mThreadCount(0)
+    , mNumIdleTasks(0)
+    , mActiveTaskCount(0)
     , mActiveAnyThreadCount(0)
     , mPendingCount(0)
 {
@@ -591,6 +593,13 @@ nsHostResolver::Init()
         res_ninit(&_res);
     }
 #endif
+
+    nsCOMPtr<nsIThreadPool> threadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MAX_RESOLVER_THREADS));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(MAX_RESOLVER_THREADS));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
+    MOZ_ALWAYS_SUCCEEDS(threadPool->SetName(NS_LITERAL_CSTRING("DNS Resolver")));
+    mResolverThreads = threadPool.forget();
 
     return NS_OK;
 }
@@ -674,8 +683,8 @@ nsHostResolver::Shutdown()
         mEvictionQSize = 0;
         mPendingCount = 0;
 
-        if (mNumIdleThreads)
-            mIdleThreadCV.NotifyAll();
+        if (mNumIdleTasks)
+            mIdleTaskCV.NotifyAll();
 
         // empty host database
         mRecordDB.Clear();
@@ -705,12 +714,12 @@ nsHostResolver::Shutdown()
     // Use this approach instead of PR_JoinThread() because that does
     // not allow a timeout which may be necessary for a semi-responsive
     // shutdown if the thread is blocked on a very slow DNS resolution.
-    // mThreadCount is read outside of mLock, but the worst case
+    // mActiveTaskCount is read outside of mLock, but the worst case
     // scenario for that race is one extra 25ms sleep.
 
     PRIntervalTime delay = PR_MillisecondsToInterval(25);
     PRIntervalTime stopTime = PR_IntervalNow() + PR_SecondsToInterval(20);
-    while (mThreadCount && PR_IntervalNow() < stopTime)
+    while (mActiveTaskCount && PR_IntervalNow() < stopTime)
         PR_Sleep(delay);
 #endif
 
@@ -719,6 +728,8 @@ nsHostResolver::Shutdown()
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to shutdown GetAddrInfo");
     }
+
+    mResolverThreads->Shutdown();
 }
 
 nsresult
@@ -989,7 +1000,7 @@ nsHostResolver::ResolveHost(const nsACString &aHost,
                         rec->remove();
                         mMediumQ.insertBack(rec);
                         rec->flags = flags;
-                        mIdleThreadCV.Notify();
+                        mIdleTaskCV.Notify();
                     }
                 }
             }
@@ -1051,31 +1062,20 @@ nsHostResolver::DetachCallback(const nsACString &host,
 nsresult
 nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
 {
-    if (mNumIdleThreads) {
-        // wake up idle thread to process this lookup
-        mIdleThreadCV.Notify();
+    if (mNumIdleTasks) {
+        // wake up idle tasks to process this lookup
+        mIdleTaskCV.Notify();
     }
-    else if ((mThreadCount < HighThreadThreshold) ||
-             (IsHighPriority(rec->flags) && mThreadCount < MAX_RESOLVER_THREADS)) {
-        static nsThreadPoolNaming naming;
-        nsCString name = naming.GetNextThreadName("DNS Resolver");
-
-        // dispatch new worker thread
-        nsCOMPtr<nsIThread> thread;
-        nsresult rv = NS_NewNamedThread(name, getter_AddRefs(thread), nullptr,
-                                        nsIThreadManager::kThreadPoolStackSize);
-        if (NS_WARN_IF(NS_FAILED(rv)) || !thread) {
-            return rv;
-        }
-
+    else if ((mActiveTaskCount < HighThreadThreshold) ||
+             (IsHighPriority(rec->flags) && mActiveTaskCount < MAX_RESOLVER_THREADS)) {
         nsCOMPtr<nsIRunnable> event =
             mozilla::NewRunnableMethod("nsHostResolver::ThreadFunc",
                                        this,
                                        &nsHostResolver::ThreadFunc);
-        mThreadCount++;
-        rv = thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+        mActiveTaskCount++;
+        nsresult rv = mResolverThreads->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
         if (NS_FAILED(rv)) {
-            mThreadCount--;
+            mActiveTaskCount--;
         }
     }
     else {
@@ -1226,9 +1226,9 @@ nsHostResolver::NativeLookup(nsHostRecord *aRec)
     nsresult rv = ConditionallyCreateThread(rec);
 
     LOG (("  DNS thread counters: total=%d any-live=%d idle=%d pending=%d\n",
-          static_cast<uint32_t>(mThreadCount),
+          static_cast<uint32_t>(mActiveTaskCount),
           static_cast<uint32_t>(mActiveAnyThreadCount),
-          static_cast<uint32_t>(mNumIdleThreads),
+          static_cast<uint32_t>(mNumIdleTasks),
           static_cast<uint32_t>(mPendingCount)));
 
     return rv;
@@ -1322,7 +1322,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
 
     MutexAutoLock lock(mLock);
 
-    timeout = (mNumIdleThreads >= HighThreadThreshold) ? mShortIdleTimeout : mLongIdleTimeout;
+    timeout = (mNumIdleTasks >= HighThreadThreshold) ? mShortIdleTimeout : mLongIdleTimeout;
     epoch = TimeStamp::Now();
 
     while (!mShutdown) {
@@ -1364,9 +1364,9 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
         //  (2) the shutdown flag has been set
         //  (3) the thread has been idle for too long
 
-        mNumIdleThreads++;
-        mIdleThreadCV.Wait(timeout);
-        mNumIdleThreads--;
+        mNumIdleTasks++;
+        mIdleTaskCV.Wait(timeout);
+        mNumIdleTasks--;
 
         now = TimeStamp::Now();
 
@@ -1879,12 +1879,8 @@ nsHostResolver::ThreadFunc()
         }
     } while(true);
 
-    nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
-    NS_DispatchToMainThread(NS_NewRunnableFunction("nsHostResolver::ThreadFunc::AsyncShutdown", [thread]() {
-        thread->AsyncShutdown();
-    }));
-    mThreadCount--;
-    LOG(("DNS lookup thread - queue empty, thread finished.\n"));
+    mActiveTaskCount--;
+    LOG(("DNS lookup thread - queue empty, task finished.\n"));
 }
 
 void
