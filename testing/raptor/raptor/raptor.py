@@ -188,6 +188,7 @@ def main(args=sys.argv[1:]):
     commandline.setup_logging('raptor', args, {'tbpl': sys.stdout})
     LOG = get_default_logger(component='raptor-main')
 
+    LOG.info("raptor-start")
     LOG.info("received command line arguments: %s" % str(args))
 
     # if a test name specified on command line, and it exists, just run that one
