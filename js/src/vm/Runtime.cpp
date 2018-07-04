@@ -173,7 +173,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     autoWritableJitCodeActive_(false),
     oomCallback(nullptr),
     debuggerMallocSizeOf(ReturnZeroSize),
-    lastAnimationTime(0),
     performanceMonitoring_(),
     stackFormat_(parentRuntime ? js::StackFormat::Default
                                : js::StackFormat::SpiderMonkey),

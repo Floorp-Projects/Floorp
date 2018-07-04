@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TimeStamp.h"
 
 #include <stdint.h>
 
@@ -420,7 +421,7 @@ js::NotifyAnimationActivity(JSObject* obj)
 {
     MOZ_ASSERT(obj->is<GlobalObject>());
 
-    int64_t timeNow = PRMJ_Now();
+    auto timeNow = mozilla::TimeStamp::Now();
     obj->as<GlobalObject>().realm()->lastAnimationTime = timeNow;
     obj->runtimeFromMainThread()->lastAnimationTime = timeNow;
 }
