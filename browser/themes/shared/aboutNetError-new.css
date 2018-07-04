@@ -51,6 +51,13 @@ button:disabled {
   display: none;
 }
 
+#advancedPanelButtonContainer {
+  background-color: var(--exception-button-container-background);
+  display: flex;
+  justify-content: end;
+  padding: 5px;
+}
+
 body:not(.neterror) #certErrorAndCaptivePortalButtonContainer {
   display: flex;
 }
@@ -85,6 +92,7 @@ body:not(.neterror) #advancedButton {
 
 #certificateErrorReporting {
   display: none;
+  padding-bottom: 10px;
 }
 
 #advancedPanelContainer {
@@ -164,7 +172,6 @@ span#hostname {
   background-color: var(--exception-button-container-background);
   display: flex;
   justify-content: end;
-  padding: 10px;
 }
 
 .exceptionDialogButtonContainer[hidden] {
