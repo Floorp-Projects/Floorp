@@ -1655,6 +1655,18 @@ Inspector.prototype = {
       click: () => this.showDOMProperties(),
     }));
 
+    if (this.selection.nodeFront.customElementLocation) {
+      menu.append(new MenuItem({
+        type: "separator",
+      }));
+
+      menu.append(new MenuItem({
+        id: "node-menu-jumptodefinition",
+        label: INSPECTOR_L10N.getStr("inspectorCustomElementDefinition.label"),
+        click: () => this.jumpToCustomElementDefinition(),
+      }));
+    }
+
     this.buildA11YMenuItem(menu);
 
     const nodeLinkMenuItems = this._getNodeLinkMenuItems();
@@ -2071,6 +2083,12 @@ Inspector.prototype = {
       jsterm.execute("inspect($0)");
       jsterm.focus();
     });
+  },
+
+  jumpToCustomElementDefinition: function() {
+    const node = this.selection.nodeFront;
+    const { url, line } = node.customElementLocation;
+    this._toolbox.viewSourceInDebugger(url, line);
   },
 
   /**
