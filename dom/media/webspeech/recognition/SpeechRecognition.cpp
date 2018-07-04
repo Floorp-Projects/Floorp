@@ -753,7 +753,7 @@ SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
   if (aStream.WasPassed()) {
     StartRecording(&aStream.Value());
   } else {
-    AutoNoJSAPI();
+    AutoNoJSAPI nojsapi;
     MediaManager* manager = MediaManager::Get();
     MediaManager::GetUserMediaSuccessCallback onsuccess(
       new GetUserMediaSuccessCallback(this));
