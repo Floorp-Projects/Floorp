@@ -117,6 +117,10 @@ class TabBar(UIBaseLib):
         automatically be performed. But if it opens in the background, the current
         tab will keep its focus.
 
+        It will first verify that a new `<tab>` element has been
+        introduced in the tabbar, and then that a new content
+        browser has been created.
+
         :param trigger: Optional, method to open the new tab. This can
          be a string with one of `menu`, `button` or `shortcut`, or a callback
          which gets triggered with the current :class:`Tab` as parameter.
@@ -125,6 +129,7 @@ class TabBar(UIBaseLib):
         :returns: :class:`Tab` instance for the opened tab.
         """
         start_handles = self.marionette.window_handles
+        start_tabs = self.window.tabbar.tabs
 
         # Prepare action which triggers the opening of the browser window
         if callable(trigger):
@@ -132,19 +137,21 @@ class TabBar(UIBaseLib):
         elif trigger == 'button':
             self.window.tabbar.newtab_button.click()
         elif trigger == 'menu':
-            self.window.menubar.select_by_id('file-menu',
-                                             'menu_newNavigatorTab')
+            self.window.menubar.select_by_id('file-menu', 'menu_newNavigatorTab')
         elif trigger == 'shortcut':
-            self.window.send_shortcut(self.window.localize_entity('tabCmd.commandkey'),
-                                      accel=True)
+            self.window.send_shortcut(
+                self.window.localize_entity('tabCmd.commandkey'),
+                accel=True)
         # elif - need to add other cases
         else:
             raise ValueError('Unknown opening method: "%s"' % trigger)
 
-        # TODO: Needs to be replaced with event handling code (bug 1121705)
+        Wait(self.marionette).until(
+            lambda _: len(self.window.tabbar.tabs) == len(start_tabs) + 1,
+            message='No new tab present in tabbar')
         Wait(self.marionette).until(
             lambda mn: len(mn.window_handles) == len(start_handles) + 1,
-            message='No new tab has been opened.')
+            message='No new content browser created')
 
         handles = self.marionette.window_handles
         [new_handle] = list(set(handles) - set(start_handles))
@@ -291,6 +298,10 @@ class Tab(UIBaseLib):
     def close(self, trigger='menu', force=False):
         """Closes the tab by using the specified trigger.
 
+        To ensure the tab was closed, it will first ensure the
+        `<tab>` element is removed from the tabbar, and then confirm
+        that the content browser was discarded.
+
         When the tab is closed a :func:`switch_to` call is automatically performed, so that
         the new selected tab becomes active.
 
@@ -303,6 +314,7 @@ class Tab(UIBaseLib):
         """
         handle = self.handle
         start_handles = self.marionette.window_handles
+        start_tabs = self.window.tabbar.tabs
 
         self.switch_to()
 
@@ -321,8 +333,11 @@ class Tab(UIBaseLib):
             raise ValueError('Unknown closing method: "%s"' % trigger)
 
         Wait(self.marionette).until(
-            lambda _: len(self.window.tabbar.tabs) == len(start_handles) - 1,
-            message='Tab with handle "%s" has not been closed.' % handle)
+            lambda _: len(self.window.tabbar.tabs) == len(start_tabs) - 1,
+            message='Tab"%s" has not been closed' % handle)
+        Wait(self.marionette).until(
+            lambda mn: len(mn.window_handles) == len(start_handles) - 1,
+            message='Content browser "%s" has not been closed' % handle)
 
         # Ensure to switch to the window handle which represents the new selected tab
         self.window.tabbar.selected_tab.switch_to()
