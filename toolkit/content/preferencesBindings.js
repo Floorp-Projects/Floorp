@@ -365,8 +365,8 @@ const Preferences = window.Preferences = (function() {
           // it has to be set if the value is true and removed if the value
           // is false in order to be interpreted correctly by the element.
           if (value) {
-            // In theory we can set it to anything; however xbl implementations
-            // of `checkbox` and `listitem` only work with "true".
+            // In theory we can set it to anything; however xbl implementation
+            // of `checkbox` only works with "true".
             element.setAttribute(attribute, "true");
           } else {
             element.removeAttribute(attribute);
@@ -375,8 +375,7 @@ const Preferences = window.Preferences = (function() {
           element.setAttribute(attribute, value);
         }
       }
-      if (aElement.localName == "checkbox" ||
-          aElement.localName == "listitem")
+      if (aElement.localName == "checkbox")
         setValue(aElement, "checked", val);
       else if (aElement.localName == "colorpicker")
         setValue(aElement, "color", val);
@@ -418,8 +417,7 @@ const Preferences = window.Preferences = (function() {
         return element.getAttribute(attribute);
       }
       let value;
-      if (aElement.localName == "checkbox" ||
-          aElement.localName == "listitem")
+      if (aElement.localName == "checkbox")
         value = getValue(aElement, "checked");
       else if (aElement.localName == "colorpicker")
         value = getValue(aElement, "color");
@@ -441,7 +439,6 @@ const Preferences = window.Preferences = (function() {
       case "colorpicker":
       case "radiogroup":
       case "textbox":
-      case "listitem":
       case "listbox":
       case "menulist":
         return true;
