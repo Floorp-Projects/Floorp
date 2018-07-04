@@ -164,39 +164,77 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             self.info("expecting Google Chrome to be pre-installed locally")
             return
 
-        chrome_url = "https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg"
         # in production we can put the chrome build in mozharness/mozilla/testing/chrome
         self.chrome_dest = os.path.join(here, 'chrome')
-        chrome_dmg = os.path.join(self.chrome_dest, 'googlechrome.dmg')
+
+        # mozharness/base/script.py.self.platform_name will return one of:
+        # 'linux64', 'linux', 'macosx', 'win64', 'win32'
+
+        if 'mac' in self.platform_name():
+            chrome_archive_file = "googlechrome.dmg"
+            chrome_url = "https://dl.google.com/chrome/mac/stable/GGRO/%s" % chrome_archive_file
+            self.chrome_path = os.path.join(self.chrome_dest, 'Google Chrome.app',
+                                            'Contents', 'MacOS', 'Google Chrome')
+
+        elif 'linux' in self.platform_name():
+            chrome_archive_file = "google-chrome-stable_current_amd64.deb"
+            chrome_url = "https://dl.google.com/linux/direct/%s" % chrome_archive_file
+            self.chrome_path = os.path.join(self.chrome_dest, 'opt', 'google',
+                                            'chrome', 'google-chrome')
+
+        else:
+            # windows 7/10
+            if '64' in self.platform_name():
+                chrome_archive_file = "standalonesetup64.exe"
+            else:
+                chrome_archive_file = "standalonesetup.exe"
+            chrome_url = "https://dl.google.com/chrome/install/%s" % chrome_archive_file
+
+        chrome_archive = os.path.join(self.chrome_dest, chrome_archive_file)
 
         self.info("installing google chrome - temporary install hack")
-        self.info("chrome_dest is: %s" % self.chrome_dest)
-
-        self.chrome_path = os.path.join(self.chrome_dest, 'Google Chrome.app',
-                                        'Contents', 'MacOS', 'Google Chrome')
+        self.info("chrome archive is: %s" % chrome_archive)
+        self.info("chrome dest is: %s" % self.chrome_dest)
 
         if os.path.exists(self.chrome_path):
             self.info("google chrome binary already exists at: %s" % self.chrome_path)
             return
 
-        if not os.path.exists(chrome_dmg):
-            # download the chrome dmg
+        if not os.path.exists(chrome_archive):
+            # download the chrome installer
             self.download_file(chrome_url, parent_dir=self.chrome_dest)
 
-        command = ["open", "googlechrome.dmg"]
-        return_code = self.run_command(command, cwd=self.chrome_dest)
-        if return_code not in [0]:
-            self.info("abort: failed to open %s/googlechrome.dmg" % self.chrome_dest)
-            return
-        # give 30 sec for open cmd to finish
-        time.sleep(30)
+        commands = []
 
-        # now that the googlechrome dmg is mounted, extract/copy app from mnt to our folder
-        command = ["cp", "-r", "/Volumes/Google Chrome/Google Chrome.app", "."]
-        return_code = self.run_command(command, cwd=self.chrome_dest)
-        if return_code not in [0]:
-            self.info("abort: failed to open %s/googlechrome.dmg" % self.chrome_dest)
-            return
+        if 'mac' in self.platform_name():
+            # open the chrome dmg to have it mounted
+            commands.append(["open", chrome_archive_file])
+
+            # then extract/copy app from mnt to our folder
+            commands.append(["cp", "-r", "/Volumes/Google Chrome/Google Chrome.app", "."])
+
+        elif 'linux' in self.platform_name():
+            # on linux in order to avoid needing sudo, we unpack the google chrome deb
+            # manually using ar, and then unpack the contents of the ar after that
+            commands.append(["ar", "x", chrome_archive_file])
+
+            # now we have the google chrome .deb file unpacked using ar, we need to
+            # unpack the tar.xz file that was inside the .deb
+            commands.append(['tar', '-xJf',
+                            os.path.join(self.chrome_dest, 'data.tar.xz'),
+                            '-C', self.chrome_dest])
+
+        else:
+            # TODO: Bug 1473389 - finish this for windows 7 (x32) and winows 10 (x64)
+            pass
+
+        # now run the commands to unpack / install google chrome
+        for next_command in commands:
+            return_code = self.run_command(next_command, cwd=self.chrome_dest)
+            time.sleep(30)
+            if return_code not in [0]:
+                self.info("abort: failed to install %s to %s with command: %s"
+                          % (chrome_archive_file, self.chrome_dest, next_command))
 
         # now ensure chrome binary exists
         if os.path.exists(self.chrome_path):
