@@ -192,20 +192,20 @@ class TypedArrayObject : public NativeObject
 
     ArrayBufferObject* bufferUnshared() const {
         MOZ_ASSERT(!isSharedMemory());
-        JSObject* obj = bufferValue(this).toObjectOrNull();
+        JSObject* obj = bufferObject();
         if (!obj)
             return nullptr;
         return &obj->as<ArrayBufferObject>();
     }
     SharedArrayBufferObject* bufferShared() const {
         MOZ_ASSERT(isSharedMemory());
-        JSObject* obj = bufferValue(this).toObjectOrNull();
+        JSObject* obj = bufferObject();
         if (!obj)
             return nullptr;
         return &obj->as<SharedArrayBufferObject>();
     }
     ArrayBufferObjectMaybeShared* bufferEither() const {
-        JSObject* obj = bufferValue(this).toObjectOrNull();
+        JSObject* obj = bufferObject();
         if (!obj)
             return nullptr;
         if (isSharedMemory())
