@@ -42,6 +42,7 @@ const whitelist = {
     "resource://gre/modules/XPCOMUtils.jsm",
 
     // Logging related
+    "resource://gre/modules/Console.jsm", // bug 1470333
     "resource://gre/modules/Log.jsm",
 
     // Session store
