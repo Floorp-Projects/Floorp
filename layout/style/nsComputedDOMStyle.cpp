@@ -3397,14 +3397,6 @@ nsComputedDOMStyle::DoGetTextEmphasisStyle()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetTextIndent()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleText()->mTextIndent, false);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetTextOverflow()
 {
   const nsStyleTextReset *style = StyleTextReset();
@@ -5086,14 +5078,6 @@ nsComputedDOMStyle::DoGetClipPath()
 {
   return GetShapeSource(StyleSVGReset()->mClipPath,
                         nsCSSProps::kClipPathGeometryBoxKTable);
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetShapeMargin()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleDisplay()->mShapeMargin, true);
-  return val.forget();
 }
 
 already_AddRefed<CSSValue>
