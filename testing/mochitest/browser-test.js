@@ -423,7 +423,6 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.Promise = ChromeUtils.import("resource://gre/modules/Promise.jsm", null).Promise;
   this.PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
   this.Assert = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
-  this.PerTestCoverageUtils = ChromeUtils.import("resource://testing-common/PerTestCoverageUtils.jsm", null).PerTestCoverageUtils;
 
   this.PromiseTestUtils.init();
 
@@ -501,8 +500,6 @@ Tester.prototype = {
                                                    {});
       this._coverageCollector = new CoverageCollector(coveragePath);
     }
-
-    this.PerTestCoverageUtils.beforeTestSync();
 
     this.structuredLogger.info("*** Start BrowserChrome Test Results ***");
     Services.console.registerListener(this);
@@ -692,8 +689,6 @@ Tester.prototype = {
       if (this._coverageCollector) {
         this._coverageCollector.recordTestCoverage(this.currentTest.path);
       }
-
-      this.PerTestCoverageUtils.afterTestSync();
 
       // Run cleanup functions for the current test before moving on to the
       // next one.
