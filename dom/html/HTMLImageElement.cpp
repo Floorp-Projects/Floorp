@@ -520,23 +520,16 @@ HTMLImageElement::IsHTMLFocusable(bool aWithMouse,
 {
   int32_t tabIndex = TabIndex();
 
-  if (IsInUncomposedDoc()) {
-    nsAutoString usemap;
-    GetUseMap(usemap);
-    // XXXbz which document should this be using?  sXBL/XBL2 issue!  I
-    // think that OwnerDoc() is right, since we don't want to
-    // assume stuff about the document we're bound to.
-    if (OwnerDoc()->FindImageMap(usemap)) {
-      if (aTabIndex) {
-        // Use tab index on individual map areas
-        *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
-      }
-      // Image map is not focusable itself, but flag as tabbable
-      // so that image map areas get walked into.
-      *aIsFocusable = false;
-
-      return false;
+  if (IsInComposedDoc() && FindImageMap()) {
+    if (aTabIndex) {
+      // Use tab index on individual map areas
+      *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
     }
+    // Image map is not focusable itself, but flag as tabbable
+    // so that image map areas get walked into.
+    *aIsFocusable = false;
+
+    return false;
   }
 
   if (aTabIndex) {
