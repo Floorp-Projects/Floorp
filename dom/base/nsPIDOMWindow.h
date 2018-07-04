@@ -251,17 +251,6 @@ public:
     mMayHavePointerEnterLeaveEventListener = true;
   }
 
-  // Sets the event for window.event. Does NOT take ownership, so
-  // the caller is responsible for clearing the event before the
-  // event gets deallocated. Pass nullptr to set window.event to
-  // undefined. Returns the previous value.
-  mozilla::dom::Event* SetEvent(mozilla::dom::Event* aEvent)
-  {
-    mozilla::dom::Event* old = mEvent;
-    mEvent = aEvent;
-    return old;
-  }
-
   /**
    * Check whether this window is a secure context.
    */
@@ -716,10 +705,6 @@ protected:
   // play audible media, or we've already been granted permission by the
   // user, this is non-null, and encapsulates the request.
   RefPtr<mozilla::AutoplayRequest> mAutoplayRequest;
-
-  // The event dispatch code sets and unsets this while keeping
-  // the event object alive.
-  mozilla::dom::Event* mEvent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)

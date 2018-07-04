@@ -369,8 +369,7 @@ public:
                    WidgetEvent* aEvent,
                    dom::Event** aDOMEvent,
                    dom::EventTarget* aCurrentTarget,
-                   nsEventStatus* aEventStatus,
-                   bool aItemInShadowTree)
+                   nsEventStatus* aEventStatus)
   {
     if (mListeners.IsEmpty() || aEvent->PropagationStopped()) {
       return;
@@ -391,7 +390,7 @@ public:
       return;
     }
     HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
-                        aEventStatus, aItemInShadowTree);
+                        aEventStatus);
   }
 
   /**
@@ -500,8 +499,7 @@ protected:
                            WidgetEvent* aEvent,
                            dom::Event** aDOMEvent,
                            dom::EventTarget* aCurrentTarget,
-                           nsEventStatus* aEventStatus,
-                           bool aItemInShadowTree);
+                           nsEventStatus* aEventStatus);
 
   nsresult HandleEventSubType(Listener* aListener,
                               dom::Event* aDOMEvent,
@@ -591,10 +589,6 @@ public:
       GetTypedEventHandler(nsGkAtoms::onbeforeunload, EmptyString());
     return typedHandler ? typedHandler->OnBeforeUnloadEventHandler() : nullptr;
   }
-
-private:
-  already_AddRefed<nsPIDOMWindowInner> WindowFromListener(Listener* aListener,
-                                                          bool aItemInShadowTree);
 
 protected:
   /**
