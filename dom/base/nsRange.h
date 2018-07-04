@@ -135,6 +135,11 @@ public:
   void SetSelection(mozilla::dom::Selection* aSelection);
 
   /**
+   * Returns pointer to a Selection if the range is associated with a Selection.
+   */
+  mozilla::dom::Selection* GetSelection() const { return mSelection; }
+
+  /**
    * Return true if this range was generated.
    * @see SetIsGenerated
    */

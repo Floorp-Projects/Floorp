@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display"></div>
+<textarea id="textarea">abc abx abc</textarea>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let textarea = document.getElementById("textarea");
+  let editor = SpecialPowers.wrap(textarea).editor;
+
+  let inlineSpellChecker = editor.getInlineSpellChecker(true);
+
+  textarea.focus();
+
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(textarea, () => {
+    SimpleTest.executeSoon(() => {
+      let misspelledWord = inlineSpellChecker.getMisspelledWord(editor.rootElement.firstChild, 5);
+      is(misspelledWord.startOffset, 4,
+         "Misspelled word should start from 4");
+      is(misspelledWord.endOffset, 7,
+         "Misspelled word should end at 7");
+      inlineSpellChecker.replaceWord(editor.rootElement.firstChild, 5, "aux");
+      is(textarea.value, "abc aux abc",
+         "'abx' should be replaced with 'aux'");
+      synthesizeKey("z", { accelKey: true });
+      is(textarea.value, "abc abx abc",
+         "'abx' should be restored by undo");
+      synthesizeKey("z", { accelKey: true, shiftKey: true });
+      is(textarea.value, "abc aux abc",
+         "'aux' should be restored by redo");
+
+      SimpleTest.finish();
+    });
+  });
+});
+</script>
+</body>
+</html>

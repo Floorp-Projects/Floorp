@@ -14,10 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1170484
   /** Test for Bug 1170484 **/
   SimpleTest.waitForExplicitFinish();
 
-  // An assertion is recorded due to nested replacing words from spellchecker but not a problem.
-  // It is necessary to detect invalid method call without event loop.
-  SimpleTest.expectAssertions(1, 1);
-
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
 
