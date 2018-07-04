@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.5">
+  <style>
+    body {
+      margin: 0;
+      height: 2000px;
+      overflow: hidden;
+    }
+    #tall {
+      height: 100vh;
+    }
+    #sticky {
+      position: sticky;
+      bottom: 0;
+      width: 100%;
+      height: 500px;
+      background: repeating-linear-gradient(90deg, transparent, transparent 20px, black 20px, black 40px);
+    }
+  </style>
+</head>
+<body onload="scrollTo(0, 500); document.documentElement.classList.remove('reftest-wait');">
+  <!-- This is similar to the position-fixed testcase, but we add a tall
+       element before the sticky element to ensure that the sticky element is
+       in its "fixed" configuration on page load. -->
+  <div id="tall"></div>
+  <div id="sticky"></div>
+</body>
+</html>
+

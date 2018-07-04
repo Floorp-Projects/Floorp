@@ -22,3 +22,12 @@ fuzzy-if(Android,51,22) skip-if(!Android) pref(apz.allow_zooming,true) == scroll
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
 
 skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping-ref.html
+
+# Test that position:fixed and position:sticky elements are attached to the
+# layout viewport.
+#
+# We skip these tests on Desktop platforms since they require container
+# scrolling, which is enabled by default on Android, but behind a "Once" pref
+# and cannot be enabled for individual reftests.
+skip-if(!Android) pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
