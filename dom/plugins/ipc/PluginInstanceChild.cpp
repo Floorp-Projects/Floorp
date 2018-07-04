@@ -73,17 +73,21 @@ typedef BOOL (WINAPI *User32TrackPopupMenu)(HMENU hMenu,
                                             CONST RECT *prcRect);
 static WindowsDllInterceptor sUser32Intercept;
 static HWND sWinlessPopupSurrogateHWND = nullptr;
-static WindowsDllInterceptor::FuncHookType<User32TrackPopupMenu> sUser32TrackPopupMenuStub;
+static User32TrackPopupMenu sUser32TrackPopupMenuStub = nullptr;
 
 static WindowsDllInterceptor sImm32Intercept;
-static WindowsDllInterceptor::FuncHookType<decltype(&ImmGetContext)> sImm32ImmGetContextStub;
-static WindowsDllInterceptor::FuncHookType<decltype(&ImmGetCompositionStringW)> sImm32ImmGetCompositionStringStub;
-static WindowsDllInterceptor::FuncHookType<decltype(&ImmSetCandidateWindow)> sImm32ImmSetCandidateWindowStub;
-static WindowsDllInterceptor::FuncHookType<decltype(&ImmNotifyIME)> sImm32ImmNotifyIME;
-static WindowsDllInterceptor::FuncHookType<decltype(&ImmAssociateContextEx)> sImm32ImmAssociateContextExStub;
-
+static decltype(ImmGetContext)* sImm32ImmGetContextStub = nullptr;
+static decltype(ImmGetCompositionStringW)* sImm32ImmGetCompositionStringStub =
+                                             nullptr;
+static decltype(ImmSetCandidateWindow)* sImm32ImmSetCandidateWindowStub =
+                                          nullptr;
+static decltype(ImmNotifyIME)* sImm32ImmNotifyIME = nullptr;
+static decltype(ImmAssociateContextEx)* sImm32ImmAssociateContextExStub =
+                                          nullptr;
 static PluginInstanceChild* sCurrentPluginInstance = nullptr;
 static const HIMC sHookIMC = (const HIMC)0xefefefef;
+static bool sPopupMenuHookSet;
+static bool sSetWindowLongHookSet;
 
 using mozilla::gfx::SharedDIB;
 
@@ -1789,8 +1793,8 @@ typedef LONG_PTR
   (WINAPI *User32SetWindowLongPtrW)(HWND hWnd,
                                     int nIndex,
                                     LONG_PTR dwNewLong);
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongPtrA> sUser32SetWindowLongAHookStub;
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongPtrW> sUser32SetWindowLongWHookStub;
+static User32SetWindowLongPtrA sUser32SetWindowLongAHookStub = nullptr;
+static User32SetWindowLongPtrW sUser32SetWindowLongWHookStub = nullptr;
 #else
 typedef LONG
 (WINAPI *User32SetWindowLongA)(HWND hWnd,
@@ -1800,8 +1804,8 @@ typedef LONG
 (WINAPI *User32SetWindowLongW)(HWND hWnd,
                                int nIndex,
                                LONG dwNewLong);
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongA> sUser32SetWindowLongAHookStub;
-static WindowsDllInterceptor::FuncHookType<User32SetWindowLongW> sUser32SetWindowLongWHookStub;
+static User32SetWindowLongA sUser32SetWindowLongAHookStub = nullptr;
+static User32SetWindowLongW sUser32SetWindowLongWHookStub = nullptr;
 #endif
 
 extern LRESULT CALLBACK
@@ -1911,17 +1915,27 @@ PluginInstanceChild::HookSetWindowLongPtr()
         return;
     }
 
+    // Only pass through here once
+    if (sSetWindowLongHookSet) {
+        return;
+    }
+    sSetWindowLongHookSet = true;
+
     sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
-    sUser32SetWindowLongAHookStub.Set(sUser32Intercept, "SetWindowLongPtrA",
-                                      &SetWindowLongPtrAHook);
-    sUser32SetWindowLongWHookStub.Set(sUser32Intercept, "SetWindowLongPtrW",
-                                      &SetWindowLongPtrWHook);
+    if (!sUser32SetWindowLongAHookStub)
+        sUser32Intercept.AddHook("SetWindowLongPtrA", reinterpret_cast<intptr_t>(SetWindowLongPtrAHook),
+                                 (void**) &sUser32SetWindowLongAHookStub);
+    if (!sUser32SetWindowLongWHookStub)
+        sUser32Intercept.AddHook("SetWindowLongPtrW", reinterpret_cast<intptr_t>(SetWindowLongPtrWHook),
+                                 (void**) &sUser32SetWindowLongWHookStub);
 #else
-    sUser32SetWindowLongAHookStub.Set(sUser32Intercept, "SetWindowLongA",
-                                      &SetWindowLongAHook);
-    sUser32SetWindowLongWHookStub.Set(sUser32Intercept, "SetWindowLongW",
-                                      &SetWindowLongWHook);
+    if (!sUser32SetWindowLongAHookStub)
+        sUser32Intercept.AddHook("SetWindowLongA", reinterpret_cast<intptr_t>(SetWindowLongAHook),
+                                 (void**) &sUser32SetWindowLongAHookStub);
+    if (!sUser32SetWindowLongWHookStub)
+        sUser32Intercept.AddHook("SetWindowLongW", reinterpret_cast<intptr_t>(SetWindowLongWHook),
+                                 (void**) &sUser32SetWindowLongWHookStub);
 #endif
 }
 
@@ -1989,13 +2003,19 @@ PluginInstanceChild::InitPopupMenuHook()
         return;
     }
 
+    // Only pass through here once
+    if (sPopupMenuHookSet) {
+        return;
+    }
+    sPopupMenuHookSet = true;
+
     // Note, once WindowsDllInterceptor is initialized for a module,
     // it remains initialized for that particular module for it's
     // lifetime. Additional instances are needed if other modules need
     // to be hooked.
     sUser32Intercept.Init("user32.dll");
-    sUser32TrackPopupMenuStub.Set(sUser32Intercept, "TrackPopupMenu",
-                                  &TrackPopupHookProc);
+    sUser32Intercept.AddHook("TrackPopupMenu", reinterpret_cast<intptr_t>(TrackPopupHookProc),
+                             (void**) &sUser32TrackPopupMenuStub);
 }
 
 void
@@ -2137,23 +2157,36 @@ PluginInstanceChild::InitImm32Hook()
         return;
     }
 
+    if (sImm32ImmGetContextStub) {
+        return;
+    }
+
     // When using windowless plugin, IMM API won't work due ot OOP.
     //
     // ImmReleaseContext on Windows 7+ just returns TRUE only, so we don't
     // need to hook this.
 
     sImm32Intercept.Init("imm32.dll");
-    sImm32ImmGetContextStub.Set(sImm32Intercept, "ImmGetContext",
-                                &ImmGetContextProc);
-    sImm32ImmGetCompositionStringStub.Set(sImm32Intercept,
-                                          "ImmGetCompositionStringW",
-                                          &ImmGetCompositionStringProc);
-    sImm32ImmSetCandidateWindowStub.Set(sImm32Intercept,
-                                        "ImmSetCandidateWindow",
-                                        &ImmSetCandidateWindowProc);
-    sImm32ImmNotifyIME.Set(sImm32Intercept, "ImmNotifyIME", &ImmNotifyIME);
-    sImm32ImmAssociateContextExStub.Set(sImm32Intercept, "ImmAssociateContextEx",
-                                        &ImmAssociateContextExProc);
+    sImm32Intercept.AddHook(
+        "ImmGetContext",
+        reinterpret_cast<intptr_t>(ImmGetContextProc),
+        (void**)&sImm32ImmGetContextStub);
+    sImm32Intercept.AddHook(
+        "ImmGetCompositionStringW",
+        reinterpret_cast<intptr_t>(ImmGetCompositionStringProc),
+        (void**)&sImm32ImmGetCompositionStringStub);
+    sImm32Intercept.AddHook(
+        "ImmSetCandidateWindow",
+        reinterpret_cast<intptr_t>(ImmSetCandidateWindowProc),
+        (void**)&sImm32ImmSetCandidateWindowStub);
+    sImm32Intercept.AddHook(
+        "ImmNotifyIME",
+        reinterpret_cast<intptr_t>(ImmNotifyIME),
+        (void**)&sImm32ImmNotifyIME);
+    sImm32Intercept.AddHook(
+        "ImmAssociateContextEx",
+        reinterpret_cast<intptr_t>(ImmAssociateContextExProc),
+        (void**)&sImm32ImmAssociateContextExStub);
 }
 
 void
