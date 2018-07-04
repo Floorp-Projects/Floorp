@@ -14,13 +14,14 @@ add_task(async function setup() {
   Services.prefs.setBoolPref(PREF_TRIMURL, true);
   Services.prefs.setBoolPref(PREF_AUTOFILL, true);
 
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+
   // Adding a tab would hit switch-to-tab, so it's safer to just add a visit.
   await PlacesTestUtils.addVisits([{
     uri: "http://www.autofilltrimurl.com/whatever",
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }, {
     uri: "https://www.secureautofillurl.com/whatever",
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }]);
 });
 
