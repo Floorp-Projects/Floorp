@@ -1838,6 +1838,33 @@ waitForAllPaints(() => {
     await ensureElementRemoval(div);
   });
 
+  // Tests that transform animations are not able to run on the compositor due
+  // to layout restrictions (e.g. animations on a large size frame) doesn't
+  // flush layout at all.
+  add_task(async function flush_layout_for_transform_animations() {
+    // Set layout.animation.prerender.partial to disallow transform animations
+    // on large frames to be sent to the compositor.
+    await SpecialPowers.pushPrefEnv({
+      set: [['layout.animation.prerender.partial', false]] });
+    const div = addDiv(null, { style: 'width: 10000px; height: 10000px;' });
+
+    const animation = div.animate([ { transform: 'rotate(360deg)', } ],
+                                  { duration: 100 * MS_PER_SEC,
+                                    // Set step-end to skip further restyles.
+                                    easing: 'step-end' });
+
+    const FLUSH_LAYOUT = SpecialPowers.DOMWindowUtils.FLUSH_LAYOUT;
+    ok(SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
+       'Flush layout is needed for the appended div');
+    await waitForAnimationReadyToRestyle(animation);
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    ok(!SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
+       'No further flush layout needed');
+
+    await ensureElementRemoval(div);
+  });
+
 });
 
 </script>
