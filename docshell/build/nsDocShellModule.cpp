@@ -36,12 +36,6 @@
 #include "nsSHistory.h"
 #include "nsSHTransaction.h"
 
-#ifndef MOZ_PLACES
-// download history
-#include "nsDownloadHistory.h"
-#endif
-
-
 // LoadContexts (used for testing)
 #include "LoadContext.h"
 
@@ -101,11 +95,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ContentHandlerService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
 
-#ifndef MOZ_PLACES
-// download history
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadHistory)
-#endif
-
 NS_DEFINE_NAMED_CID(NS_DOCSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_DEFAULTURIFIXUP_CID);
 NS_DEFINE_NAMED_CID(NS_WEBNAVIGATION_INFO_CID);
@@ -127,9 +116,6 @@ NS_DEFINE_NAMED_CID(NS_EXTERNALURLHANDLERSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SHENTRY_CID);
 NS_DEFINE_NAMED_CID(NS_SHTRANSACTION_CID);
-#ifndef MOZ_PLACES
-NS_DEFINE_NAMED_CID(NS_DOWNLOADHISTORY_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_CONTENTHANDLERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_LOADCONTEXT_CID);
 NS_DEFINE_NAMED_CID(NS_PRIVATELOADCONTEXT_CID);
@@ -158,9 +144,6 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
 #endif
   { &kNS_SHENTRY_CID, false, nullptr, nsSHEntryConstructor },
   { &kNS_SHTRANSACTION_CID, false, nullptr, nsSHTransactionConstructor },
-#ifndef MOZ_PLACES
-  { &kNS_DOWNLOADHISTORY_CID, false, nullptr, nsDownloadHistoryConstructor },
-#endif
   { &kNS_LOADCONTEXT_CID, false, nullptr, mozilla::CreateTestLoadContext },
   { &kNS_PRIVATELOADCONTEXT_CID, false, nullptr, mozilla::CreatePrivateTestLoadContext },
   { nullptr }
@@ -219,9 +202,6 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
 #endif
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
   { NS_SHTRANSACTION_CONTRACTID, &kNS_SHTRANSACTION_CID },
-#ifndef MOZ_PLACES
-  { NS_DOWNLOADHISTORY_CONTRACTID, &kNS_DOWNLOADHISTORY_CID },
-#endif
   { NS_LOADCONTEXT_CONTRACTID, &kNS_LOADCONTEXT_CID },
   { NS_PRIVATELOADCONTEXT_CONTRACTID, &kNS_PRIVATELOADCONTEXT_CID },
   { nullptr }
