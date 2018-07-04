@@ -15,11 +15,14 @@
   flex: auto;
 }
 
+#font-editor {
+  padding-bottom: .8em;
+}
+
 #font-editor summary {
   -moz-user-select: none;
   cursor: pointer;
   margin-bottom: .7em;
-  width: fit-content;
   width: -moz-fit-content;
 }
 
@@ -141,19 +144,27 @@
   vertical-align: middle;
 }
 
+.font-axes-controls {
+  border-top: 1px solid var(--theme-splitter-color);
+  margin-top: .8em;
+  padding-top: .8em;
+}
+
 .font-control {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 20px;
+  padding: 4px 18px;
 }
 
 .font-control-family {
   align-items: flex-start;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  margin-bottom: .8em;
+  padding-top: .6em;
+  padding-bottom: .4em;
 }
 
 .font-control-box,
@@ -172,7 +183,7 @@
   display: inline-block;
   flex: 1;
   font-size: 12px;
-  min-width: 80px;
+  max-width: 70px;
   margin-right: 10px;
   -moz-user-select: none;
 }
@@ -193,6 +204,7 @@
 }
 
 /* Do not use browser "invalid" state */
+.font-value-slider:-moz-ui-invalid,
 .font-value-input:-moz-ui-invalid {
   box-shadow: none;
 }
@@ -300,7 +312,7 @@
   transition: background-position .1s ease-out;
 }
 
-.font-value-toggle:checked{
+.font-value-toggle:checked {
   --bg: var(--blue-55);
   --thumb-color: white;
   --thumb-position: 100% 50%;

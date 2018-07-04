@@ -58,20 +58,27 @@ class FontEditor extends PureComponent {
   }
 
   /**
-   * Get an array of FontPropertyValue components for of the given variable font axes.
-   * If an axis is defined in the fontEditor store, use its value, else use the default.
+   * Get a container with the rendered FontPropertyValue components with editing controls
+   * for of the given variable font axes. If no axes were given, return null.
+   * If an axis has a value in the fontEditor store (i.e.: it was declared in CSS or
+   * it was changed using the font editor), use its value, otherwise use the font axis
+   * default.
    *
    * @param  {Array} fontAxes
    *         Array of font axis instances
    * @param  {Object} editedAxes
    *         Object with axes and values edited by the user or predefined in the CSS
    *         declaration for font-variation-settings.
-   * @return {Array}
-  *          Array of FontPropertyValue components
+   * @return {DOMNode|null}
    */
   renderAxes(fontAxes = [], editedAxes) {
-    return fontAxes.map(axis => {
+    if (!fontAxes.length) {
+      return null;
+    }
+
+    const controls = fontAxes.map(axis => {
       return FontPropertyValue({
+        key: axis.tag,
         min: axis.minValue,
         max: axis.maxValue,
         value: editedAxes[axis.tag] || axis.defaultValue,
@@ -82,6 +89,13 @@ class FontEditor extends PureComponent {
         unit: null
       });
     });
+
+    return dom.div(
+      {
+        className: "font-axes-controls"
+      },
+      controls
+    );
   }
 
   renderFamilesNotUsed(familiesNotUsed = []) {
