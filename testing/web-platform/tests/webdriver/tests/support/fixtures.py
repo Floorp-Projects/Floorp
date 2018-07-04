@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import copy
 import json
 import os
 import urlparse
@@ -19,6 +20,10 @@ default_page_load_timeout = 300
 default_implicit_wait_timeout = 0
 
 
+_current_session = None
+_custom_session = False
+
+
 def ignore_exceptions(f):
     def inner(*args, **kwargs):
         try:
@@ -29,63 +34,67 @@ def ignore_exceptions(f):
     return inner
 
 
-@ignore_exceptions
-def _ensure_valid_window(session):
-    """If current window is not open anymore, ensure to have a valid
-    one selected.
+def cleanup_session(session):
+    """Clean-up the current session for a clean state."""
+    @ignore_exceptions
+    def _dismiss_user_prompts(session):
+        """Dismiss any open user prompts in windows."""
+        current_window = session.window_handle
 
-    """
-    try:
-        session.window_handle
-    except webdriver.NoSuchWindowException:
-        session.window_handle = session.handles[0]
+        for window in _windows(session):
+            session.window_handle = window
+            try:
+                session.alert.dismiss()
+            except webdriver.NoSuchAlertException:
+                pass
 
+        session.window_handle = current_window
 
-@ignore_exceptions
-def _dismiss_user_prompts(session):
-    """Dismisses any open user prompts in windows."""
-    current_window = session.window_handle
-
-    for window in _windows(session):
-        session.window_handle = window
+    @ignore_exceptions
+    def _ensure_valid_window(session):
+        """If current window was closed, ensure to have a valid one selected."""
         try:
-            session.alert.dismiss()
-        except webdriver.NoSuchAlertException:
-            pass
+            session.window_handle
+        except webdriver.NoSuchWindowException:
+            session.window_handle = session.handles[0]
 
-    session.window_handle = current_window
+    @ignore_exceptions
+    def _restore_timeouts(session):
+        """Restore modified timeouts to their default values."""
+        session.timeouts.implicit = default_implicit_wait_timeout
+        session.timeouts.page_load = default_page_load_timeout
+        session.timeouts.script = default_script_timeout
 
+    @ignore_exceptions
+    def _restore_window_state(session):
+        """Reset window to an acceptable size.
 
-@ignore_exceptions
-def _restore_timeouts(session):
-    """Restores modified timeouts to their default values"""
-    session.timeouts.implicit = default_implicit_wait_timeout
-    session.timeouts.page_load = default_page_load_timeout
-    session.timeouts.script = default_script_timeout
+        This also includes bringing it out of maximized, minimized,
+        or fullscreened state.
+        """
+        session.window.size = (800, 600)
 
+    @ignore_exceptions
+    def _restore_windows(session):
+        """Close superfluous windows opened by the test.
 
-@ignore_exceptions
-def _restore_window_state(session):
-    """Reset window to an acceptable size, bringing it out of maximized,
-    minimized, or fullscreened state
+        It will not end the session implicitly by closing the last window.
+        """
+        current_window = session.window_handle
 
-    """
-    session.window.size = (800, 600)
+        for window in _windows(session, exclude=[current_window]):
+            session.window_handle = window
+            if len(session.handles) > 1:
+                session.close()
 
+        session.window_handle = current_window
 
-@ignore_exceptions
-def _restore_windows(session):
-    """Closes superfluous windows opened by the test without ending
-    the session implicitly by closing the last window.
-    """
-    current_window = session.window_handle
-
-    for window in _windows(session, exclude=[current_window]):
-        session.window_handle = window
-        if len(session.handles) > 1:
-            session.close()
-
-    session.window_handle = current_window
+    _restore_timeouts(session)
+    _ensure_valid_window(session)
+    _dismiss_user_prompts(session)
+    _restore_windows(session)
+    _restore_window_state(session)
+    _switch_to_top_level_browsing_context(session)
 
 
 @ignore_exceptions
@@ -172,10 +181,7 @@ def configuration():
     }
 
 
-_current_session = None
-
-
-def session(configuration, request):
+def session(capabilities, configuration, request):
     """Create and start a session for a test that does not itself test session creation.
 
     By default the session will stay open after each test, but we always try to start a
@@ -183,70 +189,37 @@ def session(configuration, request):
     possible to recover from some errors that might leave the session in a bad state, but
     does not demand that we start a new session per test."""
     global _current_session
+
+    # Update configuration capabilities with custom ones from the
+    # capabilities fixture, which can be set by tests
+    caps = copy.deepcopy(configuration["capabilities"])
+    caps.update(capabilities)
+    caps = {"alwaysMatch": caps}
+
+    # If there is a session with different capabilities active, end it now
+    if _current_session is not None and (
+            caps != _current_session.requested_capabilities):
+        _current_session.end()
+        _current_session = None
+
     if _current_session is None:
-        _current_session = webdriver.Session(configuration["host"],
-                                             configuration["port"],
-                                             capabilities={"alwaysMatch": configuration["capabilities"]})
+        _current_session = webdriver.Session(
+            configuration["host"],
+            configuration["port"],
+            capabilities=caps)
     try:
         _current_session.start()
     except webdriver.error.SessionNotCreatedException:
         if not _current_session.session_id:
             raise
 
-    # finalisers are popped off a stack,
-    # making their ordering reverse
-    request.addfinalizer(lambda: _switch_to_top_level_browsing_context(_current_session))
-    request.addfinalizer(lambda: _restore_window_state(_current_session))
-    request.addfinalizer(lambda: _restore_windows(_current_session))
-    request.addfinalizer(lambda: _dismiss_user_prompts(_current_session))
-    request.addfinalizer(lambda: _ensure_valid_window(_current_session))
-    request.addfinalizer(lambda: _restore_timeouts(_current_session))
+    yield _current_session
 
-    return _current_session
+    cleanup_session(_current_session)
 
 
 def current_session():
     return _current_session
-
-
-def new_session(configuration, request):
-    """Return a factory function that will attempt to start a session with a given body.
-
-    This is intended for tests that are themselves testing new session creation, and the
-    session created is closed at the end of the test."""
-    def end():
-        global _current_session
-        if _current_session is not None and _current_session.session_id:
-            _current_session.end()
-
-        _current_session = None
-
-    def create_session(body):
-        global _current_session
-        _session = webdriver.Session(configuration["host"],
-                                     configuration["port"],
-                                     capabilities=None)
-        value = _session.send_command("POST", "session", body=body)
-        # Don't set the global session until we are sure this succeeded
-        _current_session = _session
-        _session.session_id = value["sessionId"]
-
-        return value, _current_session
-
-    end()
-    request.addfinalizer(end)
-
-    return create_session
-
-
-def add_browser_capabilites(configuration):
-    def update_capabilities(capabilities):
-        # Make sure there aren't keys in common.
-        assert not set(configuration["capabilities"]).intersection(set(capabilities))
-        result = dict(configuration["capabilities"])
-        result.update(capabilities)
-        return result
-    return update_capabilities
 
 
 def url(server_config):
@@ -257,6 +230,7 @@ def url(server_config):
 
     inner.__name__ = "url"
     return inner
+
 
 def create_dialog(session):
     """Create a dialog (one of "alert", "prompt", or "confirm") and provide a

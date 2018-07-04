@@ -66,6 +66,7 @@ xul|*.text-link:-moz-focusring {
 xul|button:-moz-focusring,
 xul|menulist:-moz-focusring,
 xul|checkbox:-moz-focusring > .checkbox-check,
+*|button.primary:focus,
 html|input[type="checkbox"]:-moz-focusring + html|label:before,
 xul|radio[focused="true"] > .radio-check,
 xul|tab:-moz-focusring > .tab-middle > .tab-text {

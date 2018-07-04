@@ -126,7 +126,7 @@
       });
       yield undefined;
 
-      // And the nodes get notified after the "link-visited" topic, so
+      // And the nodes get notified after the "uri-visit-saved" topic, so
       // we need to execute soon...
       SimpleTest.executeSoon(nextTest);
       yield undefined;

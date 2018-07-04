@@ -1,5 +1,6 @@
+import pytest
+
 from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
-from tests.support.fixtures import create_dialog
 
 
 def set_window_rect(session, rect):
@@ -12,24 +13,24 @@ def test_handle_prompt_dismiss():
     """TODO"""
 
 
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_accept(session, create_dialog):
     original = session.window.rect
 
     # step 2
-    create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
+    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
     result = set_window_rect(session, {"x": original["x"],
                                        "y": original["y"]})
     assert result.status == 200
     assert_dialog_handled(session, "dismiss #1")
 
-    create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
+    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
     result = set_window_rect(session, {"x": original["x"],
                                        "y": original["y"]})
     assert result.status == 200
     assert_dialog_handled(session, "dismiss #2")
 
-    create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
+    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
     result = set_window_rect(session, {"x": original["x"],
                                        "y": original["y"]})
     assert_success(result)

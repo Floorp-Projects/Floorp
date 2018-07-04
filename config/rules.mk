@@ -847,7 +847,12 @@ ifdef CARGO_INCREMENTAL
 cargo_incremental := CARGO_INCREMENTAL=$(CARGO_INCREMENTAL)
 endif
 
-rustflags_override = RUSTFLAGS='$(MOZ_RUST_DEFAULT_FLAGS) $(RUSTFLAGS)'
+rustflags_neon =
+ifeq (neon,$(MOZ_FPU))
+rustflags_neon += -C target_feature=+neon
+endif
+
+rustflags_override = RUSTFLAGS='$(MOZ_RUST_DEFAULT_FLAGS) $(RUSTFLAGS) $(rustflags_neon)'
 
 ifdef MOZ_MSVCBITS
 # If we are building a MozillaBuild shell, we want to clear out the

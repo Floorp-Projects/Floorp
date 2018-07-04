@@ -1,5 +1,6 @@
+import pytest
+
 from tests.support.asserts import assert_error, assert_dialog_handled
-from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
 
 
@@ -23,30 +24,10 @@ def test_handle_prompt_ignore():
     """TODO"""
 
 
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    """
-    2. Handle any user prompts and return its value if it is an error.
-
-    [...]
-
-    In order to handle any user prompts a remote end must take the
-    following steps:
-
-      [...]
-
-      2. Perform the following substeps based on the current session's
-      user prompt handler:
-
-        [...]
-
-        - accept state
-           Accept the current user prompt.
-
-    """
-    _, session = new_session({"capabilities": {
-        "alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+def test_handle_prompt_accept(session, create_dialog):
     session.url = inline("<title>WD doc title</title>")
-    create_dialog(session)("alert", text="accept #1", result_var="accept1")
+    create_dialog("alert", text="accept #1", result_var="accept1")
 
     fullscreen(session)
 
@@ -54,14 +35,14 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
     assert read_global(session, "accept1") is None
 
     read_global(session, "document.title")
-    create_dialog(session)("confirm", text="accept #2", result_var="accept2")
+    create_dialog("confirm", text="accept #2", result_var="accept2")
 
     fullscreen(session)
 
     assert_dialog_handled(session, "accept #2")
     assert read_global(session, "accept2"), True
 
-    create_dialog(session)("prompt", text="accept #3", result_var="accept3")
+    create_dialog("prompt", text="accept #3", result_var="accept3")
 
     fullscreen(session)
 
@@ -70,26 +51,6 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
 
 
 def test_handle_prompt_missing_value(session, create_dialog):
-    """
-    2. Handle any user prompts and return its value if it is an error.
-
-    [...]
-
-    In order to handle any user prompts a remote end must take the
-    following steps:
-
-      [...]
-
-      2. Perform the following substeps based on the current session's
-      user prompt handler:
-
-        [...]
-
-        - missing value default state
-           1. Dismiss the current user prompt.
-           2. Return error with error code unexpected alert open.
-
-    """
     session.url = inline("<title>WD doc title</title>")
     create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
