@@ -5912,6 +5912,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         if (WinUtils::LogToPhysFactor(mWnd) != mDefaultScale) {
           ChangedDPI();
           ResetLayout();
+          if (mWidgetListener) {
+            mWidgetListener->UIResolutionChanged();
+          }
         }
       }
       break;
