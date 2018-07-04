@@ -9,6 +9,9 @@
 include ':concept-toolbar'
 project(':concept-toolbar').projectDir = new File(rootDir, 'components/concept/toolbar')
 
+include ':concept-tabstray'
+project(':concept-tabstray').projectDir = new File(rootDir, 'components/concept/tabstray')
+
 include ':concept-engine'
 project(':concept-engine').projectDir = new File(rootDir, 'components/concept/engine')
 
