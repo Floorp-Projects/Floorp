@@ -246,8 +246,7 @@ IsDllAllowed(const UNICODE_STRING& aLeafName, void* aBaseAddress)
 }
 
 typedef decltype(&NtMapViewOfSection) NtMapViewOfSection_func;
-static mozilla::CrossProcessDllInterceptor::FuncHookType<NtMapViewOfSection_func>
-  stub_NtMapViewOfSection;
+static NtMapViewOfSection_func stub_NtMapViewOfSection;
 
 static NTSTATUS NTAPI
 patched_NtMapViewOfSection(HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress,
@@ -357,8 +356,9 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
 {
   mozilla::CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");
-  bool ok = stub_NtMapViewOfSection.SetDetour(intcpt, "NtMapViewOfSection",
-                                              &patched_NtMapViewOfSection);
+  bool ok = intcpt.AddDetour("NtMapViewOfSection",
+                             reinterpret_cast<intptr_t>(&patched_NtMapViewOfSection),
+                             (void**) &stub_NtMapViewOfSection);
   if (!ok) {
     return false;
   }
