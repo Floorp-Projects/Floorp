@@ -5,36 +5,30 @@
 /*---
 esid: sec-atomics.wake
 description: >
-  Test that Atomics.wake wakes zero waiters if there are no agents that match
-  its arguments waiting.
+  Test that Atomics.wake wakes zero waiters if there are no waiters
+  at the index specified.
+includes: [atomicsHelper.js]
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
+const RUNNING = 1;
 
-$262.agent.start(
-`
-$262.agent.receiveBroadcast(function (sab) {
-  var ia = new Int32Array(sab);
-  Atomics.add(ia, 1, 1);
-  $262.agent.leaving();
-})
+$262.agent.start(`
+  $262.agent.receiveBroadcast(function(sab) {
+    const i32a = new Int32Array(sab);
+    Atomics.add(i32a, ${RUNNING}, 1);
+    $262.agent.leaving();
+  });
 `);
 
-var ia = new Int32Array(new SharedArrayBuffer(2 * Int32Array.BYTES_PER_ELEMENT));
-$262.agent.broadcast(ia.buffer);
+const i32a = new Int32Array(
+  new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 2)
+);
 
-waitUntil(ia, 1);
+$262.agent.broadcast(i32a.buffer);
+$262.agent.waitUntil(i32a, RUNNING, 1);
 
-// There are ZERO matching agents...
-assert.sameValue(Atomics.wake(ia, 1, 1), 0);
-
-function waitUntil(ia, k) {
-  var i = 0;
-  while (Atomics.load(ia, k) !== 1 && i < 15) {
-    $262.agent.sleep(100);
-    i++;
-  }
-  assert.sameValue(Atomics.load(ia, k), 1, "All agents are running");
-}
+// There are ZERO matching agents waiting on index 1
+assert.sameValue(Atomics.wake(i32a, 1, 1), 0, 'Atomics.wake(i32a, 1, 1) returns 0');
 
 reportCompare(0, 0);
