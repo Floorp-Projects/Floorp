@@ -942,25 +942,12 @@ mozInlineSpellChecker::ReplaceWord(nsINode *aNode, int32_t aOffset,
   nsresult res = GetMisspelledWord(aNode, aOffset, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res);
 
-  if (range)
-  {
-    // This range was retrieved from the spellchecker selection. As
-    // ranges cannot be shared between selections, we must clone it
-    // before adding it to the editor's selection.
-    RefPtr<nsRange> editorRange = range->CloneRange();
-
-    AutoPlaceholderBatch phb(mTextEditor, nullptr);
-
-    RefPtr<Selection> selection = mTextEditor->GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_UNEXPECTED);
-    selection->RemoveAllRanges(IgnoreErrors());
-    selection->AddRange(*editorRange, IgnoreErrors());
-
-    MOZ_ASSERT(mTextEditor);
-    DebugOnly<nsresult> rv = mTextEditor->InsertTextAsAction(newword);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new word");
+  if (!range) {
+    return NS_OK;
   }
 
+  DebugOnly<nsresult> rv = mTextEditor->ReplaceTextAsAction(newword, range);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new word");
   return NS_OK;
 }
 

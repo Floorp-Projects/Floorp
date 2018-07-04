@@ -26,10 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 
 /** Test for Bug 1272623 **/
 
-  // 2 assertions are recorded due to nested replacing words from spellchecker but not a problem.
-  // They are necessary to detect invalid method call without event loop.
-  SimpleTest.expectAssertions(2, 2);
-
   async function performCorrection(misspelled, area) {
     synthesizeMouseAtCenter($(misspelled), {}, window);
     await new Promise(resolve => onSpellCheck($(area), resolve));

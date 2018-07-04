@@ -161,12 +161,15 @@ public:
   nsresult SetText(const nsAString& aString);
 
   /**
-   * Replace all text in this editor with aString and treat the change as
-   * inserting the string.
+   * Replace text in aReplaceRange or all text in this editor with aString and
+   * treat the change as inserting the string.
    *
-   * @param aString    The string to set.
+   * @param aString             The string to set.
+   * @param aReplaceRange       The range to be replaced.
+   *                            If nullptr, all contents will be replaced.
    */
-  nsresult ReplaceTextAsAction(const nsAString& aString);
+  nsresult ReplaceTextAsAction(const nsAString& aString,
+                               nsRange* aReplaceRange = nullptr);
 
   /**
    * OnInputParagraphSeparator() is called when user tries to separate current
@@ -278,6 +281,13 @@ protected: // May be called by friends.
    * @ param aString   The string to be set.
    */
   nsresult SetTextAsSubAction(const nsAString& aString);
+
+  /**
+   * ReplaceSelectionAsSubAction() replaces selection with aString.
+   *
+   * @param aString    The string to replace.
+   */
+  nsresult ReplaceSelectionAsSubAction(const nsAString& aString);
 
   /**
    * InsertBrElementWithTransaction() creates a <br> element and inserts it
