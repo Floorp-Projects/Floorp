@@ -8,8 +8,6 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "UserAgentOverrides", "resource://gre/modules/UserAgentOverrides.jsm");
-Cu.importGlobalProperties(["URL"]);
 
 const TLDsToSpoof = /(^(www|encrypted|maps)\.google\.)|((.*\.facebook|.*\.fbcdn|.*\.fbsbx)\.(com|net)$)/;
 
@@ -30,12 +28,48 @@ const IsPhone = defaultUA.includes("Mobile");
 
 const TargetUA = IsPhone ? ChromePhoneUA : ChromeTabletUA;
 
-const EnabledPref = "extensions.gws-and-facebook-chrome-spoof.enabled";
+const EnabledPrefBranch = "extensions.gws-and-facebook-chrome-spoof.";
+const EnabledPref = `${EnabledPrefBranch}enabled`;
 
-let Enabled = true;
+const Observer = {
+  observe: function HTTP_on_modify_request(aSubject, aTopic, aData) {
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    if (channel && channel.URI.asciiHost.match(TLDsToSpoof)) {
+      channel.setRequestHeader("User-Agent", TargetUA, false);
+      console.info(OverrideNotice);
+    }
+  }
+};
+
+function enable() {
+  try {
+    Services.obs.addObserver(Observer, "http-on-modify-request");
+  } catch (_) {
+  }
+}
+
+function disable() {
+  try {
+    Services.obs.removeObserver(Observer, "http-on-modify-request");
+  } catch (_) {
+  }
+}
 
 function checkIfEnabled() {
-  Enabled = Services.prefs.getBoolPref(EnabledPref, true);
+  try {
+    if (Services.prefs.getBoolPref(EnabledPref)) {
+      enable();
+    } else {
+      disable();
+    }
+  } catch (_) {
+    // If the pref does not exist yet, we specify a default value of true.
+    // (the "reset" option in about:config removes prefs without defaults,
+    // and our add-on will not be informed, forcing the user to re-create
+    // the pref manually to disable the add-on).
+    Services.prefs.getDefaultBranch(EnabledPrefBranch).setBoolPref("enabled", true);
+    enable();
+  }
 }
 
 this.install = () => {
@@ -43,31 +77,15 @@ this.install = () => {
 };
 
 this.uninstall = () => {
-  Services.prefs.clearUserPref(EnabledPref);
+  Services.prefs.getDefaultBranch(null).deleteBranch(EnabledPrefBranch);
 };
 
 this.shutdown = () => {
   Services.prefs.removeObserver(EnabledPref, checkIfEnabled);
-  Enabled = false;
+  disable();
 };
 
 this.startup = () => {
-  UserAgentOverrides.addComplexOverride((channel, defaultUA) => {
-    if (!Enabled) {
-      return false;
-    }
-
-    try {
-      let domain = new URL(channel.URI.spec).host;
-      if (domain.match(TLDsToSpoof)) {
-        console.info(OverrideNotice);
-        return TargetUA;
-      }
-    } catch (_) {
-    }
-    return false;
-  });
-
   Services.prefs.addObserver(EnabledPref, checkIfEnabled);
   checkIfEnabled();
 };
