@@ -152,6 +152,14 @@ enum class RepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class TelemetryProbe {
+  SceneBuildTime = 0,
+  SceneSwapTime = 1,
+  RenderTime = 2,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class TransformStyle : uint32_t {
   Flat = 0,
   Preserve3D = 1,
@@ -1014,6 +1022,9 @@ extern bool is_in_compositor_thread();
 extern bool is_in_main_thread();
 
 extern bool is_in_render_thread();
+
+extern void record_telemetry_time(TelemetryProbe aProbe,
+                                  uint64_t aTimeNs);
 
 WR_INLINE
 bool remove_program_binary_disk_cache(const nsAString *aProfPath)

@@ -1432,7 +1432,7 @@ nsContextMenu.prototype = {
 
   bookmarkThisPage: function CM_bookmarkThisPage() {
     window.top.PlacesCommandHook
-              .bookmarkPage(this.browser)
+              .bookmarkPage()
               .catch(Cu.reportError);
   },
 
