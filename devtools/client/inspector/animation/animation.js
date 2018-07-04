@@ -517,7 +517,8 @@ class AnimationInspector {
     await this.inspector.highlighters.hideBoxModelHighlighter();
 
     if (nodeFront) {
-      await this.inspector.highlighters.showBoxModelHighlighter(nodeFront);
+      await this.inspector.highlighters.showBoxModelHighlighter(
+        nodeFront, { hideInfoBar: true, hideGuides: true });
     }
 
     this.inspector.store.dispatch(updateHighlightedNode(nodeFront));
