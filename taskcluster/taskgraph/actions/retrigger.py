@@ -8,13 +8,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
+import textwrap
 
 from slugid import nice as slugid
 from .util import (
     combine_task_graph_files,
     create_tasks,
+    fetch_graph_and_labels,
+    relativize_datestamps,
     create_task_from_def,
-    fetch_graph_and_labels
 )
 from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
@@ -148,11 +150,40 @@ def mochitest_retrigger_action(parameters, graph_config, input, task_group_id, t
     name='retrigger',
     symbol='rt',
     kind='hook',
+    cb_name='retrigger-decision',
+    description=textwrap.dedent('''\
+        Create a clone of the task (retriggering decision, action, and cron tasks requires
+        special scopes).'''),
+    order=11,
+    context=[
+        {'kind': 'decision-task'},
+        {'kind': 'action-callback'},
+        {'kind': 'cron-task'},
+    ],
+)
+def retrigger_decision_action(parameters, graph_config, input, task_group_id, task_id, task):
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+        parameters, graph_config)
+    """For a single task, we try to just run exactly the same task once more.
+    It's quite possible that we don't have the scopes to do so (especially for
+    an action), but this is best-effort."""
+
+    # make all of the timestamps relative; they will then be turned back into
+    # absolute timestamps relative to the current time.
+    task = relativize_datestamps(task)
+    create_task_from_def(slugid(), task, parameters['level'])
+
+
+@register_callback_action(
+    title='Retrigger',
+    name='retrigger',
+    symbol='rt',
+    kind='hook',
     generic=True,
     description=(
-        'Create a clone of the task.\n\n'
+        'Create a clone of the task.'
     ),
-    order=11,  # must be greater than other orders in this file, as this is the fallback version
+    order=19,  # must be greater than other orders in this file, as this is the fallback version
     context=[{}],
     schema={
         'type': 'object',
@@ -181,6 +212,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id, ta
         parameters, graph_config)
 
     label = task['metadata']['name']
+
     with_downstream = ' '
     to_run = [label]
 
