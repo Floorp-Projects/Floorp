@@ -3247,6 +3247,17 @@
     "n_buckets": 50,
     "description": "Time for a completed native name resolution (msec)"
   },
+  "DNS_NATIVE_QUEUING": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "bug_numbers": [1470215],
+    "n_buckets": 50,
+    "description": "Time in resolve queue waiting to getaddrinfo (msec)"
+  },
   "DNS_TRR_RACE": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
@@ -13820,5 +13831,35 @@
     "releaseChannelCollection": "opt-out",
     "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
     "description": "How common are different types of out-of-reach viewport overflow?"
+  },
+  "WR_SCENEBUILD_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1470901],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "WebRender scene build time in milliseconds"
+  },
+  "WR_SCENESWAP_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1470901],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "WebRender scene swap time in milliseconds"
+  },
+  "WR_RENDER_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1470901],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "WebRender render time in milliseconds"
   }
 }

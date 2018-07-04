@@ -9,7 +9,6 @@
 #include "nsINavHistoryService.h"
 #include "nsINavBookmarksService.h"
 #include "nsIFaviconService.h"
-#include "nsIGlobalHistory2.h"
 
 #include "nsIObserverService.h"
 #include "nsICollation.h"

@@ -86,7 +86,6 @@
 #include "nsIExternalProtocolService.h"
 #include "nsIFormPOSTActionChannel.h"
 #include "nsIFrame.h"
-#include "nsIGlobalHistory2.h"
 #include "nsIGlobalObject.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -3878,27 +3877,13 @@ nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
 NS_IMETHODIMP
 nsDocShell::SetUseGlobalHistory(bool aUseGlobalHistory)
 {
-  nsresult rv;
-
   mUseGlobalHistory = aUseGlobalHistory;
-
   if (!aUseGlobalHistory) {
-    mGlobalHistory = nullptr;
     return NS_OK;
   }
 
-  // No need to initialize mGlobalHistory if IHistory is available.
   nsCOMPtr<IHistory> history = services::GetHistoryService();
-  if (history) {
-    return NS_OK;
-  }
-
-  if (mGlobalHistory) {
-    return NS_OK;
-  }
-
-  mGlobalHistory = do_GetService(NS_GLOBALHISTORY2_CONTRACTID, &rv);
-  return rv;
+  return history ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -12534,12 +12519,6 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
     }
 
     (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);
-  } else if (mGlobalHistory) {
-    // Falls back to sync global history interface.
-    (void)mGlobalHistory->AddURI(aURI,
-                                 !!aChannelRedirectFlags,
-                                 !IsFrame(),
-                                 aReferrerURI);
   }
 }
 
@@ -13925,8 +13904,6 @@ nsDocShell::UpdateGlobalHistoryTitle(nsIURI* aURI)
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     if (history) {
       history->SetURITitle(aURI, mTitle);
-    } else if (mGlobalHistory) {
-      mGlobalHistory->SetPageTitle(aURI, nsString(mTitle));
     }
   }
 }

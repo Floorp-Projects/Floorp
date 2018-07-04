@@ -91,11 +91,11 @@ load 1393171.html
 needs-focus load 1402196.html
 load 1402469.html
 load 1402526.html
-load 1402904.html
-load 1405747.html
+asserts(1) load 1402904.html
+asserts(1) load 1405747.html
 load 1405897.html
 load 1408170.html
-load 1414581.html
+asserts(0-1) load 1414581.html
 load 1415231.html
 load 1423767.html
 needs-focus load 1423776.html

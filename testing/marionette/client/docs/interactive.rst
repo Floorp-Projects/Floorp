@@ -17,7 +17,7 @@ Now create the client for this session. Assuming you're using the default
 port on a Marionette instance running locally:
 
 .. parsed-literal::
-   client = Marionette(host='localhost', port=2828)
+   client = Marionette(host='127.0.0.1', port=2828)
    client.start_session()
 
 This will return some id representing your session id. Now that you've
