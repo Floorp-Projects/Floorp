@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1472426
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1472426</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1472426 **/
+
+  var shadowIframe;
+  var targetIframe;
+  var form;
+  var sr;
+
+  function checkMPSubmission(sub, expected, test) {
+    function getPropCount(o) {
+      var x, l = 0;
+      for (x in o) ++l;
+      return l;
+    }
+    function mpquote(s) {
+      return s.replace(/\r\n/g, " ")
+              .replace(/\r/g, " ")
+              .replace(/\n/g, " ")
+              .replace(/\"/g, "\\\"");
+    }
+
+    is(sub.length, expected.length,
+       "Correct number of multipart items in " + test);
+
+    if (sub.length != expected.length) {
+      alert(JSON.stringify(sub));
+    }
+
+    var i;
+    for (i = 0; i < expected.length; ++i) {
+      if (!("fileName" in expected[i])) {
+        is(sub[i].headers["Content-Disposition"],
+           "form-data; name=\"" + mpquote(expected[i].name) + "\"",
+           "Correct name in " + test);
+        is (getPropCount(sub[i].headers), 1,
+            "Wrong number of headers in " + test);
+        is(sub[i].body,
+           expected[i].value.replace(/\r\n|\r|\n/, "\r\n"),
+           "Correct value in " + test);
+      }
+      else {
+        is(sub[i].headers["Content-Disposition"],
+           "form-data; name=\"" + mpquote(expected[i].name) + "\"; filename=\"" +
+             mpquote(expected[i].fileName) + "\"",
+           "Correct name in " + test);
+        is(sub[i].headers["Content-Type"],
+           expected[i].contentType,
+           "Correct content type in " + test);
+        is (getPropCount(sub[i].headers), 2,
+            "Wrong number of headers in " + test);
+        is(sub[i].body,
+           expected[i].value,
+           "Correct value in " + test);
+      }
+    }
+  }
+
+  function testFormSubmissionInShadowDOM() {
+    targetIframe = document.getElementById("target_iframe");
+    shadowIframe = document.createElement("iframe");
+    shadowIframe.src = "about:blank";
+    shadowIframe.onload = shadowFrameCreated;
+    document.body.appendChild(shadowIframe);
+  }
+
+  function shadowFrameCreated() {
+    var doc = shadowIframe.contentDocument;
+    var body = doc.body;
+    var host = doc.createElement("div");
+    body.appendChild(host);
+    sr = host.attachShadow({ mode: "open" });
+    sr.appendChild(document.getElementById('template').content.cloneNode(true));
+    targetIframe.onload = checkSubmitValues;
+    sr.getElementById("form").submit();
+  }
+
+  function checkSubmitValues() {
+    submission = JSON.parse(targetIframe.contentDocument.documentElement.textContent);
+    var expected = [
+       { name: "text", value: "textvalue" },
+       { name: "hidden", value: "hiddenvalue" },
+       { name: "select", value: "selectvalue" },
+       { name: "textarea", value: "textareavalue" }
+      ];
+    checkMPSubmission(submission, expected, "form submission inside shadow DOM");
+    SimpleTest.finish();
+  }
+
+  window.onload = function() {
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({"set":[["dom.webcomponents.shadowdom.enabled", true]]},
+                              () => {
+                                testFormSubmissionInShadowDOM();
+                              });
+  }
+
+  </script>
+  <template id="template">
+    <form action="form_submit_server.sjs" target="target_iframe" id="form"
+          method="POST" enctype="multipart/form-data">
+      <input name="text" value="textvalue">
+      <input name="hidden" value="hiddenvalue" type="hidden">
+      <select name="select"><option selected>selectvalue</option></select>
+      <textarea name="textarea">textareavalue</textarea>
+    </form>
+  </template>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1472426">Mozilla Bug 1472426</a>
+<iframe name="target_iframe" id="target_iframe"></iframe>
+</body>
+</html>
