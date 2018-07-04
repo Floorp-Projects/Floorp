@@ -13821,5 +13821,35 @@
     "releaseChannelCollection": "opt-out",
     "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
     "description": "How common are different types of out-of-reach viewport overflow?"
+  },
+  "WR_SCENEBUILD_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1470901],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "WebRender scene build time in milliseconds"
+  },
+  "WR_SCENESWAP_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1470901],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "WebRender scene swap time in milliseconds"
+  },
+  "WR_RENDER_TIME": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1470901],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "WebRender render time in milliseconds"
   }
 }
