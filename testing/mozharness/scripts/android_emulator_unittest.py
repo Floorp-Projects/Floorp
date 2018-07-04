@@ -723,7 +723,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
 
     def download_and_extract(self):
         """
-        Download and extract fennec APK, tests, host utils, and robocop (if required).
+        Download and extract fennec APK, tests.zip, host utils, and robocop (if required).
         """
         super(AndroidEmulatorTest, self).download_and_extract(
             suite_categories=self._query_suite_categories())
