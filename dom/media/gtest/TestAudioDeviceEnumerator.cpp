@@ -130,6 +130,9 @@ public:
   int EnumerateDevices(cubeb_device_type aType,
                        cubeb_device_collection* collection)
   {
+#ifdef ANDROID
+    EXPECT_TRUE(false) << "This is not to be called on Android.";
+#endif
     size_t count = 0;
     if (aType & CUBEB_DEVICE_TYPE_INPUT) {
       count += mInputDevices.Length();
@@ -514,6 +517,7 @@ TestEnumeration(MockCubeb* aMock,
   }
 }
 
+#ifndef ANDROID
 TEST(CubebDeviceEnumerator, EnumerateSimple)
 {
   // It looks like we're leaking this object, but in fact it will be freed by
@@ -552,3 +556,19 @@ TEST(CubebDeviceEnumerator, EnumerateSimple)
     }
   }
 }
+#else // building for Android, which has no device enumeration support
+TEST(CubebDeviceEnumerator, EnumerateAndroid)
+{
+  MockCubeb* mock = new MockCubeb();
+  mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
+
+  CubebDeviceEnumerator enumerator;
+
+  nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
+  enumerator.EnumerateAudioInputDevices(inputDevices);
+  EXPECT_EQ(inputDevices.Length(), 1u) <<  "Android always exposes a single input device.";
+  EXPECT_EQ(inputDevices[0]->MaxChannels(), 1u) << "With a single channel.";
+  EXPECT_EQ(inputDevices[0]->DeviceID(), nullptr) << "It's always the default device.";
+  EXPECT_TRUE(inputDevices[0]->Preferred()) << "it's always the prefered device.";
+}
+#endif
