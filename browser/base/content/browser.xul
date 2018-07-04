@@ -98,8 +98,8 @@
             label="&reopenInContainer.label;"
             accesskey="&reopenInContainer.accesskey;"
             hidden="true">
-        <menupopup oncommand="reopenInContainer(event);"
-                   onpopupshowing="return createReopenInContainerMenu(event);" />
+        <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
+                   onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
       </menu>
       <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
                 accesskey="&moveToNewWindow.accesskey;"
