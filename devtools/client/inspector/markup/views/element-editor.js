@@ -295,7 +295,11 @@ ElementEditor.prototype = {
     this.displayBadge.title = showDisplayBadge ?
       DISPLAY_TYPES[this.node.displayType] : "";
     this.displayBadge.classList.toggle("active",
+      this.highlighters.flexboxHighlighterShown === this.node ||
       this.highlighters.gridHighlighterShown === this.node);
+    this.displayBadge.classList.toggle("interactive",
+      Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
+      (this.node.displayType === "flex" || this.node.displayType === "inline-flex"));
   },
 
   /**
@@ -648,11 +652,17 @@ ElementEditor.prototype = {
     event.stopPropagation();
 
     const target = event.target;
-    if (target.dataset.display !== "grid" && target.dataset.display !== "inline-grid") {
-      return;
+
+    if (Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
+        (target.dataset.display === "flex" || target.dataset.display === "inline-flex")) {
+      this.highlighters.toggleFlexboxHighlighter(this.inspector.selection.nodeFront,
+        "markup");
     }
 
-    this.highlighters.toggleGridHighlighter(this.inspector.selection.nodeFront, "markup");
+    if (target.dataset.display === "grid" || target.dataset.display === "inline-grid") {
+      this.highlighters.toggleGridHighlighter(this.inspector.selection.nodeFront,
+        "markup");
+    }
   },
 
   /**
