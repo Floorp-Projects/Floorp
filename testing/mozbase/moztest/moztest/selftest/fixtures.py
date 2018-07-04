@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-"""Pytest fixtures to help set up Firefox and a tests archive
+"""Pytest fixtures to help set up Firefox and a tests.zip
 in test harness selftests.
 """
 
