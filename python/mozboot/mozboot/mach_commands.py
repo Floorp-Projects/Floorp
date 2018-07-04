@@ -43,37 +43,53 @@ class VersionControlCommands(object):
     def __init__(self, context):
         self._context = context
 
-    @Command('mercurial-setup', category='devenv',
-             description='Help configure Mercurial for optimal development.')
+    @Command('vcs-setup', category='devenv',
+             description='Help configure a VCS for optimal development.')
     @CommandArgument('-u', '--update-only', action='store_true',
                      help='Only update recommended extensions, don\'t run the wizard.')
-    def mercurial_setup(self, update_only=False):
-        """Ensure Mercurial is optimally configured.
+    @CommandArgument('-g', '--git', action='store_true',
+                     help='Use Git instead of Mercurial.')
+    def vcs_setup(self, update_only=False, git=False):
+        """Ensure a Version Control System (Mercurial or Git) is optimally
+        configured.
 
-        This command will inspect your Mercurial configuration and
+        This command will inspect your VCS configuration and
         guide you through an interactive wizard helping you configure
-        Mercurial for optimal use on Mozilla projects.
+        VCS for optimal use on Mozilla projects.
 
         User choice is respected: no changes are made without explicit
         confirmation from you.
 
         If "--update-only" is used, the interactive wizard is disabled
         and this command only ensures that remote repositories providing
-        Mercurial extensions are up to date.
+        VCS extensions are up to date.
+
+        If "--git" is used, then Git is selected as the VCS instead of Mercurial,
+        which is the default.
         """
         import which
         import mozboot.bootstrap as bootstrap
 
+        vcs = 'hg'
+        if git:
+            vcs = 'git'
+
         # "hg" is an executable script with a shebang, which will be found
-        # be which.which. We need to pass a win32 executable to the function
+        # by which.which. We need to pass a win32 executable to the function
         # because we spawn a process
         # from it.
         if sys.platform in ('win32', 'msys'):
-            hg = which.which('hg.exe')
+            vcs = which.which(vcs + '.exe')
         else:
-            hg = which.which('hg')
+            vcs = which.which(vcs)
 
         if update_only:
-            bootstrap.update_vct(hg, self._context.state_dir)
+            if git:
+                bootstrap.update_git_tools(vcs, self._context.state_dir)
+            else:
+                bootstrap.update_vct(vcs, self._context.state_dir)
         else:
-            bootstrap.configure_mercurial(hg, self._context.state_dir)
+            if git:
+                bootstrap.configure_git(vcs, self._context.state_dir)
+            else:
+                bootstrap.configure_mercurial(vcs, self._context.state_dir)
