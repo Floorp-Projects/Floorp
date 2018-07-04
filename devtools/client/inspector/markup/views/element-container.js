@@ -34,8 +34,13 @@ function MarkupElementContainer(markupView, node) {
   MarkupContainer.prototype.initialize.call(this, markupView, node,
     "elementcontainer");
 
+  this.onFlexboxHighlighterChange = this.onFlexboxHighlighterChange.bind(this);
   this.onGridHighlighterChange = this.onGridHighlighterChange.bind(this);
 
+  this.markup.highlighters.on("flexbox-highlighter-hidden",
+    this.onFlexboxHighlighterChange);
+  this.markup.highlighters.on("flexbox-highlighter-shown",
+    this.onFlexboxHighlighterChange);
   this.markup.highlighters.on("grid-highlighter-hidden", this.onGridHighlighterChange);
   this.markup.highlighters.on("grid-highlighter-shown", this.onGridHighlighterChange);
 
@@ -50,6 +55,10 @@ function MarkupElementContainer(markupView, node) {
 
 MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
   destroy: function() {
+    this.markup.highlighters.off("flexbox-highlighter-hidden",
+      this.onFlexboxHighlighterChange);
+    this.markup.highlighters.off("flexbox-highlighter-shown",
+      this.onFlexboxHighlighterChange);
     this.markup.highlighters.off("grid-highlighter-hidden", this.onGridHighlighterChange);
     this.markup.highlighters.off("grid-highlighter-shown", this.onGridHighlighterChange);
 
@@ -62,6 +71,16 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     }
 
     this._buildEventTooltipContent(event.target);
+  },
+
+  /**
+   * Handler for "flexbox-highlighter-hidden" and "flexbox-highlighter-shown" event
+   * emitted from the HighlightersOverlay. Toggles the active state of the display badge
+   * if it matches the highlighted flex container node.
+   */
+  onFlexboxHighlighterChange: function() {
+    this.editor.displayBadge.classList.toggle("active",
+      this.markup.highlighters.flexboxHighlighterShown === this.node);
   },
 
   /**
