@@ -4716,6 +4716,8 @@ pref("webgl.dxgl.enabled", true);
 pref("webgl.dxgl.needs-finish", false);
 #endif
 
+pref("dom.webgpu.enable", false);
+
 pref("gfx.offscreencanvas.enabled", false);
 
 // sendbuffer of 0 means use OS default, sendbuffer unset means use

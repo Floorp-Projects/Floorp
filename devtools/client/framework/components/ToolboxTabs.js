@@ -75,6 +75,8 @@ class ToolboxTabs extends Component {
   }
 
   componentWillUnmount() {
+    window.removeEventListener("resize", this.resizeHandler);
+    window.cancelIdleCallback(this._resizeTimerId);
     this._tabsOrderManager.destroy();
   }
 

@@ -128,8 +128,10 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
   }
 
   if (!mFirstPartyDomain.IsEmpty()) {
-    MOZ_RELEASE_ASSERT(mFirstPartyDomain.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) == kNotFound);
-    params.Set(NS_LITERAL_STRING("firstPartyDomain"), mFirstPartyDomain);
+    nsAutoString sanitizedFirstPartyDomain(mFirstPartyDomain);
+    sanitizedFirstPartyDomain.ReplaceChar(dom::quota::QuotaManager::kReplaceChars, '+');
+
+    params.Set(NS_LITERAL_STRING("firstPartyDomain"), sanitizedFirstPartyDomain);
   }
 
   aStr.Truncate();

@@ -94,15 +94,15 @@ MOZSEARCH_RUST_ANALYSIS_BASENAME = $(PKG_BASENAME).mozsearch-rust
 MOZHARNESS_PACKAGE = mozharness.zip
 
 # Test package naming
-TEST_PACKAGE = $(PKG_BASENAME).common.tests.zip
-CPP_TEST_PACKAGE = $(PKG_BASENAME).cppunittest.tests.zip
-XPC_TEST_PACKAGE = $(PKG_BASENAME).xpcshell.tests.zip
-MOCHITEST_PACKAGE = $(PKG_BASENAME).mochitest.tests.zip
-REFTEST_PACKAGE = $(PKG_BASENAME).reftest.tests.zip
+TEST_PACKAGE = $(PKG_BASENAME).common.tests.tar.gz
+CPP_TEST_PACKAGE = $(PKG_BASENAME).cppunittest.tests.tar.gz
+XPC_TEST_PACKAGE = $(PKG_BASENAME).xpcshell.tests.tar.gz
+MOCHITEST_PACKAGE = $(PKG_BASENAME).mochitest.tests.tar.gz
+REFTEST_PACKAGE = $(PKG_BASENAME).reftest.tests.tar.gz
 WP_TEST_PACKAGE = $(PKG_BASENAME).web-platform.tests.tar.gz
-TALOS_PACKAGE = $(PKG_BASENAME).talos.tests.zip
-AWSY_PACKAGE = $(PKG_BASENAME).awsy.tests.zip
-GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.zip
+TALOS_PACKAGE = $(PKG_BASENAME).talos.tests.tar.gz
+AWSY_PACKAGE = $(PKG_BASENAME).awsy.tests.tar.gz
+GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.tar.gz
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)

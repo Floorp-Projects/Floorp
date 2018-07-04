@@ -1668,6 +1668,8 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator
                            HandleValue value);
 
     bool tryAttachStub();
+
+    void trackAttached(const char *name);
 };
 
 class MOZ_RAII CallIRGenerator : public IRGenerator
