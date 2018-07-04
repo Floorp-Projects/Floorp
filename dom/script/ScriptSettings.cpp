@@ -651,6 +651,8 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   // This relies on us having a cx() because the AutoJSAPI constructor already
   // ran.
   , mCallerOverride(cx())
+  , mAutoProfilerLabel("AutoEntryScript", aReason, __LINE__,
+                       js::ProfilingStackFrame::Category::JS)
 {
   MOZ_ASSERT(aGlobalObject);
 
