@@ -155,7 +155,6 @@ bitflags! {
     #[derive(Deserialize, Serialize)]
     pub struct FontInstanceFlags: u32 {
         // Common flags
-        const SYNTHETIC_ITALICS = 1 << 0;
         const SYNTHETIC_BOLD    = 1 << 1;
         const EMBEDDED_BITMAPS  = 1 << 2;
         const SUBPIXEL_BGR      = 1 << 3;
@@ -199,6 +198,51 @@ impl Default for FontInstanceFlags {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
+pub struct SyntheticItalics {
+    // Angle in degrees (-90..90) for synthetic italics in 8.8 fixed-point.
+    pub angle: i16,
+}
+
+impl SyntheticItalics {
+    pub const ANGLE_SCALE: f32 = 256.0;
+
+    pub fn from_degrees(degrees: f32) -> Self {
+        SyntheticItalics { angle: (degrees.max(-89.0).min(89.0) * Self::ANGLE_SCALE) as i16 }
+    }
+
+    pub fn to_degrees(&self) -> f32 {
+        self.angle as f32 / Self::ANGLE_SCALE
+    }
+
+    pub fn to_radians(&self) -> f32 {
+        self.to_degrees().to_radians()
+    }
+
+    pub fn to_skew(&self) -> f32 {
+        self.to_radians().tan()
+    }
+
+    pub fn enabled() -> Self {
+        Self::from_degrees(14.0)
+    }
+
+    pub fn disabled() -> Self {
+        SyntheticItalics { angle: 0 }
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        self.angle != 0
+    }
+}
+
+impl Default for SyntheticItalics {
+    fn default() -> Self {
+        SyntheticItalics::disabled()
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstanceOptions {
     pub render_mode: FontRenderMode,
     pub flags: FontInstanceFlags,
@@ -206,6 +250,7 @@ pub struct FontInstanceOptions {
     /// the text will be rendered with bg_color.r/g/b as an opaque estimated
     /// background color.
     pub bg_color: ColorU,
+    pub synthetic_italics: SyntheticItalics,
 }
 
 impl Default for FontInstanceOptions {
@@ -214,6 +259,7 @@ impl Default for FontInstanceOptions {
             render_mode: FontRenderMode::Subpixel,
             flags: Default::default(),
             bg_color: ColorU::new(0, 0, 0, 0),
+            synthetic_italics: SyntheticItalics::disabled(),
         }
     }
 }
