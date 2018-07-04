@@ -232,7 +232,7 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
 
   auto appendAnimationEvent = [&](EventMessage aMessage,
                                   const StickyTimeDuration& aElapsedTime,
-                                  const TimeStamp& aTimeStamp) {
+                                  const TimeStamp& aScheduledEventTimeStamp) {
     double elapsedTime = aElapsedTime.ToSeconds();
     if (aMessage == eAnimationCancel) {
       // 0 is an inappropriate value for this callsite. What we need to do is
@@ -246,7 +246,7 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
                                             mOwningElement.Target(),
                                             aMessage,
                                             elapsedTime,
-                                            aTimeStamp,
+                                            aScheduledEventTimeStamp,
                                             this));
   };
 
