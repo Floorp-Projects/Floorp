@@ -167,6 +167,11 @@ class ContentPage {
     this.browser.messageManager.loadFrameScript(frameScript, true);
   }
 
+  addFrameScriptHelper(func) {
+    let frameScript = `data:text/javascript,${encodeURI(func)}`;
+    this.browser.messageManager.loadFrameScript(frameScript, false, true);
+  }
+
   async loadURL(url, redirectUrl = undefined) {
     await this.browserReady;
 
