@@ -128,7 +128,6 @@ public:
     , mMayHaveListenerManager(true)
     , mWantsPreHandleEvent(false)
     , mRootOfClosedTree(false)
-    , mItemInShadowTree(false)
     , mParentIsSlotInClosedTree(false)
     , mParentIsChromeHandler(false)
     , mRelatedTargetRetargetedInCurrentScope(false)
@@ -150,7 +149,6 @@ public:
     mMayHaveListenerManager = true;
     mWantsPreHandleEvent = false;
     mRootOfClosedTree = false;
-    mItemInShadowTree = false;
     mParentIsSlotInClosedTree = false;
     mParentIsChromeHandler = false;
     // Note, we don't clear mRelatedTargetRetargetedInCurrentScope explicitly,
@@ -238,12 +236,6 @@ public:
    * chrome only access tree (for example native anonymous content).
    */
   bool mRootOfClosedTree;
-
-  /**
-   * If target is node and its root is a shadow root.
-   * https://dom.spec.whatwg.org/#event-path-item-in-shadow-tree
-   */
-  bool mItemInShadowTree;
 
   /**
    * True if mParentTarget is HTMLSlotElement in a closed shadow tree and the
