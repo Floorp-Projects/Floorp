@@ -719,7 +719,7 @@ private:
   void WindowSizeMoveDone() override;
   void SysColorChanged() override { mPresContext->SysColorChanged(); }
   void ThemeChanged() override { mPresContext->ThemeChanged(); }
-  void BackingScaleFactorChanged() override { mPresContext->UIResolutionChanged(); }
+  void BackingScaleFactorChanged() override { mPresContext->UIResolutionChangedSync(); }
   nsIDocument* GetPrimaryContentDocument() override;
 
   void PausePainting() override;
