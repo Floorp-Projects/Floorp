@@ -451,6 +451,7 @@ impl ResourceCache {
             render_mode,
             flags,
             bg_color,
+            synthetic_italics,
             ..
         } = options.unwrap_or_default();
         let instance = FontInstance::new(
@@ -460,6 +461,7 @@ impl ResourceCache {
             bg_color,
             render_mode,
             flags,
+            synthetic_italics,
             platform_options,
             variations,
         );
