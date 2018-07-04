@@ -30,6 +30,9 @@ class TaskGraph(object):
         "Get a task by label"
         return self.tasks[label]
 
+    def __contains__(self, label):
+        return label in self.tasks
+
     def __iter__(self):
         "Iterate over tasks in undefined order"
         return self.tasks.itervalues()
