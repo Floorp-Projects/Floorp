@@ -1989,12 +1989,24 @@ internal_ApplyScalarActions(const StaticMutexAutoLock& lock,
           switch (scalarType)
           {
             case nsITelemetry::SCALAR_TYPE_COUNT:
+              if (!upd.mData->is<uint32_t>()) {
+                NS_WARNING("Attempting to set a count scalar to a non-integer.");
+                continue;
+              }
               scalar->SetValue(upd.mData->as<uint32_t>());
               break;
             case nsITelemetry::SCALAR_TYPE_BOOLEAN:
+              if (!upd.mData->is<bool>()) {
+                NS_WARNING("Attempting to set a boolean scalar to a non-boolean.");
+                continue;
+              }
               scalar->SetValue(upd.mData->as<bool>());
               break;
             case nsITelemetry::SCALAR_TYPE_STRING:
+              if (!upd.mData->is<nsString>()) {
+                NS_WARNING("Attempting to set a string scalar to a non-string.");
+                continue;
+              }
               scalar->SetValue(upd.mData->as<nsString>());
               break;
           }
@@ -2007,16 +2019,24 @@ internal_ApplyScalarActions(const StaticMutexAutoLock& lock,
             continue;
           }
           // We only support adding uint32_t.
+          if (!upd.mData->is<uint32_t>()) {
+            NS_WARNING("Attempting to add to a count scalar with a non-integer.");
+            continue;
+          }
           scalar->AddValue(upd.mData->as<uint32_t>());
           break;
         }
       case ScalarActionType::eSetMaximum:
         {
           if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
-            NS_WARNING("Attempting to add on a non count scalar.");
+            NS_WARNING("Attempting to setMaximum on a non count scalar.");
             continue;
           }
           // We only support SetMaximum on uint32_t.
+          if (!upd.mData->is<uint32_t>()) {
+            NS_WARNING("Attempting to setMaximum a count scalar to a non-integer.");
+            continue;
+          }
           scalar->SetMaximum(upd.mData->as<uint32_t>());
           break;
         }
@@ -2085,9 +2105,17 @@ internal_ApplyKeyedScalarActions(const StaticMutexAutoLock& lock,
           switch (scalarType)
           {
             case nsITelemetry::SCALAR_TYPE_COUNT:
+              if (!upd.mData->is<uint32_t>()) {
+                NS_WARNING("Attempting to set a count scalar to a non-integer.");
+                continue;
+              }
               scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
               break;
             case nsITelemetry::SCALAR_TYPE_BOOLEAN:
+              if (!upd.mData->is<bool>()) {
+                NS_WARNING("Attempting to set a boolean scalar to a non-boolean.");
+                continue;
+              }
               scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<bool>());
               break;
             default:
@@ -2102,16 +2130,24 @@ internal_ApplyKeyedScalarActions(const StaticMutexAutoLock& lock,
             continue;
           }
           // We only support adding on uint32_t.
+          if (!upd.mData->is<uint32_t>()) {
+            NS_WARNING("Attempting to add to a count scalar with a non-integer.");
+            continue;
+          }
           scalar->AddValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
           break;
         }
       case ScalarActionType::eSetMaximum:
         {
           if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
-            NS_WARNING("Attempting to add on a non count scalar.");
+            NS_WARNING("Attempting to setMaximum on a non count scalar.");
             continue;
           }
           // We only support SetMaximum on uint32_t.
+          if (!upd.mData->is<uint32_t>()) {
+            NS_WARNING("Attempting to setMaximum a count scalar to a non-integer.");
+            continue;
+          }
           scalar->SetMaximum(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
           break;
         }
