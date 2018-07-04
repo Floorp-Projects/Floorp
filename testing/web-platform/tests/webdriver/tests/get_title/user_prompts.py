@@ -1,11 +1,7 @@
 import pytest
 
-from tests.support.asserts import assert_error, assert_success, assert_dialog_handled
+from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
 from tests.support.inline import inline
-
-
-def read_global(session, name):
-    return session.execute_script("return %s;" % name)
 
 
 def get_title(session):
@@ -14,85 +10,43 @@ def get_title(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
-def test_title_handle_prompt_dismiss(session, create_dialog):
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_title_handle_prompt_dismiss(session, create_dialog, dialog_type):
     session.url = inline("<title>WD doc title</title>")
+    expected_title = session.title
 
-    expected_title = read_global(session, "document.title")
-    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
+    create_dialog(dialog_type, text="dialog")
 
-    result = get_title(session)
-    assert_success(result, expected_title)
-    assert_dialog_handled(session, "dismiss #1")
-    assert read_global(session, "dismiss1") is None
+    response = get_title(session)
+    assert_success(response, expected_title)
 
-    expected_title = read_global(session, "document.title")
-    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
-
-    result = get_title(session)
-    assert_success(result, expected_title)
-    assert_dialog_handled(session, "dismiss #2")
-    assert read_global(session, "dismiss2") is False
-
-    expected_title = read_global(session, "document.title")
-    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
-
-    result = get_title(session)
-    assert_success(result, expected_title)
-    assert_dialog_handled(session, "dismiss #3")
-    assert read_global(session, "dismiss3") is None
+    assert_dialog_handled(session, expected_text="dialog")
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
-def test_title_handle_prompt_accept(session, create_dialog):
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_title_handle_prompt_accept(session, create_dialog, dialog_type):
     session.url = inline("<title>WD doc title</title>")
-    create_dialog("alert", text="accept #1", result_var="accept1")
+    expected_title = session.title
 
-    expected_title = read_global(session, "document.title")
+    create_dialog(dialog_type, text="dialog")
 
-    result = get_title(session)
-    assert_success(result, expected_title)
-    assert_dialog_handled(session, "accept #1")
-    assert read_global(session, "accept1") is None
+    response = get_title(session)
+    assert_success(response, expected_title)
 
-    expected_title = read_global(session, "document.title")
-    create_dialog("confirm", text="accept #2", result_var="accept2")
-
-    result = get_title(session)
-    assert_success(result, expected_title)
-    assert_dialog_handled(session, "accept #2")
-    assert read_global(session, "accept2") is True
-
-    expected_title = read_global(session, "document.title")
-    create_dialog("prompt", text="accept #3", result_var="accept3")
-
-    result = get_title(session)
-    assert_success(result, expected_title)
-    assert_dialog_handled(session, "accept #3")
-    assert read_global(session, "accept3") == "" or read_global(session, "accept3") == "undefined"
+    assert_dialog_handled(session, expected_text="dialog")
 
 
-def test_title_handle_prompt_missing_value(session, create_dialog):
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_title_handle_prompt_missing_value(session, create_dialog, dialog_type):
     session.url = inline("<title>WD doc title</title>")
-    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = get_title(session)
-    assert_error(result, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #1")
-    assert read_global(session, "dismiss1") is None
+    create_dialog(dialog_type, text="dialog")
 
-    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
+    response = get_title(session)
+    assert_error(response, "unexpected alert open")
 
-    result = get_title(session)
-    assert_error(result, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #2")
-    assert read_global(session, "dismiss2") is False
-
-    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
-
-    result = get_title(session)
-    assert_error(result, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #3")
-    assert read_global(session, "dismiss3") is None
+    assert_dialog_handled(session, expected_text="dialog")
 
 
 # The behavior of the `window.print` function is platform-dependent and may not
