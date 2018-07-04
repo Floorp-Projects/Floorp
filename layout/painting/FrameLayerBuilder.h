@@ -665,7 +665,7 @@ protected:
    * PaintedLayer.
    */
 
-  static void RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aItems,
+  static void RecomputeVisibilityForItems(std::vector<AssignedDisplayItem>& aItems,
                                           nsDisplayListBuilder* aBuilder,
                                           const nsIntRegion& aRegionToDraw,
                                           nsRect& aPreviousRectToDraw,
@@ -674,7 +674,7 @@ protected:
                                           float aXScale,
                                           float aYScale);
 
-  void PaintItems(nsTArray<AssignedDisplayItem>& aItems,
+  void PaintItems(std::vector<AssignedDisplayItem>& aItems,
                   const nsIntRect& aRect,
                   gfxContext* aContext,
                   nsDisplayListBuilder* aBuilder,
