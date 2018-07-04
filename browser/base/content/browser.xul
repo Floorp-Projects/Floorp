@@ -6,18 +6,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
-<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/controlcenter/panel.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/customizableui/panelUI.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
-<?xml-stylesheet href="chrome://browser/skin/searchbar.css"?>
-<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
-<?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
-<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser-window.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/compacttheme.css" type="text/css" alternate="yes" title="Light/Dark"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
