@@ -10,9 +10,11 @@ includes: [testTypedArray.js]
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-var buffer = new SharedArrayBuffer(1024);
+const buffer = new SharedArrayBuffer(1024);
 testWithTypedArrayConstructors(function(TA) {
-  assert.throws(TypeError, (() => Atomics.load(new TA(buffer), 0)));
+  assert.throws(TypeError, function() {
+    Atomics.load(new TA(buffer), 0);
+  }, '`Atomics.load(new TA(buffer), 0)` throws TypeError');
 }, floatArrayConstructors);
 
 reportCompare(0, 0);

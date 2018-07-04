@@ -18,16 +18,18 @@ info: |
 features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-var sab = new SharedArrayBuffer(4);
-var view = new Int32Array(sab);
-var poisoned = {
+const i32a = new Int32Array(
+  new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)
+);
+
+const poisoned = {
   valueOf: function() {
-    throw new Test262Error("should not evaluate this code");
+    throw new Test262Error('should not evaluate this code');
   }
 };
 
 assert.throws(Test262Error, function() {
-  Atomics.wake(view, 0, poisoned);
-});
+  Atomics.wake(i32a, 0, poisoned);
+}, '`Atomics.wake(i32a, 0, poisoned)` throws Test262Error');
 
 reportCompare(0, 0);

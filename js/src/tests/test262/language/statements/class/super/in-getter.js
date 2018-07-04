@@ -1,7 +1,7 @@
 // Copyright (C) 2014 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
-es6id: 14.5
+esid: sec-makesuperpropertyreference
 description: >
     class super in getter
 ---*/
@@ -20,4 +20,5 @@ class C extends B {
   }
 }
 assert.sameValue(new C().y, 1, "The value of `new C().y` is `1`");
+
 reportCompare(0, 0);

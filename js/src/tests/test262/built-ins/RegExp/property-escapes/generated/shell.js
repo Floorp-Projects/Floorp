@@ -1,5 +1,5 @@
 // file: regExpUtils.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
+// Copyright (C) 2017 Mathias Bynens.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |

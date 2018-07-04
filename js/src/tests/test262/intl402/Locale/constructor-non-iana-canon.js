@@ -58,12 +58,6 @@ var testData = [
         tag: "heb-x-private",
     },
     {
-        tag: "und-ita",
-        // canonical: "und" or "ita" ?
-        maximized: "en-Latn-US",
-        minimized: "und",
-    },
-    {
         tag: "de-u-kf",
         maximized: "de-Latn-DE-u-kf",
     },

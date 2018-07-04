@@ -549,7 +549,7 @@ function decimalToPercentHexString(n) {
 }
 
 // file: detachArrayBuffer.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
+// Copyright (C) 2016 the V8 project authors.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
@@ -598,7 +598,7 @@ function isConstructor(f) {
 }
 
 // file: nans.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
+// Copyright (C) 2016 the V8 project authors.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
@@ -621,7 +621,7 @@ var NaNs = [
 ];
 
 // file: nativeFunctionMatcher.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
+// Copyright (C) 2016 Michael Ficarra.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: Assert _NativeFunction_ Syntax
@@ -675,7 +675,7 @@ function checkSequence(arr, message) {
 }
 
 // file: proxyTrapsHelper.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
+// Copyright (C) 2016 Jordan Harband.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
@@ -707,7 +707,7 @@ function allowProxyTraps(overrides) {
 }
 
 // file: tcoHelper.js
-// Copyright (C) 2015 André Bargull. All rights reserved.
+// Copyright (C) 2016 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
