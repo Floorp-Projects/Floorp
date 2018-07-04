@@ -24,7 +24,7 @@ The recommended way to push to try is via the ``mach try`` command. This require
 
 .. code-block:: shell
 
-    $ mach mercurial-setup
+    $ mach vcs-setup
 
 You should also enable the ``firefoxtree`` extension which will provide a handy ``try`` path alias.
 You can also create this alias manually by adding
@@ -39,8 +39,12 @@ This is only necessary if not using ``firefoxtree``.
 Configuring Try with Git Cinnabar
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The recommended way to use try with git is with `git cinnabar`_. You can follow `this tutorial`_ for
-a workflow which includes setting up the ability to push to try.
+The recommended way to use try with git is with `git cinnabar`, which can be
+installed by running:
+
+.. code-block:: shell
+
+    $ mach vcs-setup --git
 
 
 Configuring Try with Vanilla Git
