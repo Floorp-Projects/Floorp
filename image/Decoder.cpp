@@ -277,8 +277,8 @@ Decoder::Telemetry() const
 {
   MOZ_ASSERT(mIterator);
   return DecoderTelemetry(SpeedHistogram(),
-                          mIterator->ByteCount(),
-                          mIterator->ChunkCount(),
+                          mIterator ? mIterator->ByteCount() : 0,
+                          mIterator ? mIterator->ChunkCount() : 0,
                           mDecodeTime);
 }
 
