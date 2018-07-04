@@ -5,7 +5,7 @@
 use api::{ColorF, ColorU, DevicePoint};
 use api::{FontInstanceFlags, FontInstancePlatformOptions};
 use api::{FontKey, FontRenderMode, FontTemplate, FontVariation};
-use api::{GlyphIndex, GlyphDimensions};
+use api::{GlyphIndex, GlyphDimensions, SyntheticItalics};
 use api::{LayoutPoint, LayoutToWorldTransform, WorldPoint};
 use app_units::Au;
 use euclid::approxeq::ApproxEq;
@@ -111,7 +111,8 @@ impl FontTransform {
         self.pre_scale(x_scale.recip() as f32, y_scale.recip() as f32)
     }
 
-    pub fn synthesize_italics(&self, skew_factor: f32) -> Self {
+    pub fn synthesize_italics(&self, angle: SyntheticItalics) -> Self {
+        let skew_factor = angle.to_skew();
         FontTransform::new(
             self.scale_x,
             self.skew_x - self.scale_x * skew_factor,
@@ -176,6 +177,7 @@ pub struct FontInstance {
     pub bg_color: ColorU,
     pub render_mode: FontRenderMode,
     pub flags: FontInstanceFlags,
+    pub synthetic_italics: SyntheticItalics,
     pub platform_options: Option<FontInstancePlatformOptions>,
     pub variations: Vec<FontVariation>,
     pub transform: FontTransform,
@@ -189,6 +191,7 @@ impl FontInstance {
         bg_color: ColorU,
         render_mode: FontRenderMode,
         flags: FontInstanceFlags,
+        synthetic_italics: SyntheticItalics,
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
     ) -> Self {
@@ -203,6 +206,7 @@ impl FontInstance {
             bg_color,
             render_mode,
             flags,
+            synthetic_italics,
             platform_options,
             variations,
             transform: FontTransform::identity(),
@@ -708,6 +712,7 @@ mod test_glyph_rasterizer {
             ColorF::new(0.0, 0.0, 0.0, 1.0),
             ColorU::new(0, 0, 0, 0),
             FontRenderMode::Subpixel,
+            Default::default(),
             Default::default(),
             None,
             Vec::new(),
