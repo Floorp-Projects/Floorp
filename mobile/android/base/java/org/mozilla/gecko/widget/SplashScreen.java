@@ -39,6 +39,10 @@ public class SplashScreen extends RelativeLayout {
         }
     }
 
+    public void show(final int duration) {
+        atLeast(duration);
+    }
+
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();

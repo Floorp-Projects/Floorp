@@ -38,6 +38,7 @@ import org.mozilla.gecko.search.SearchEngineManager;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -99,11 +100,18 @@ public class SwitchBoard {
      * @param c ApplicationContext
      * @param serverUrl Server URL endpoint.
      */
-    public static void loadConfig(Context c, @NonNull String serverUrl) {
+    public static void loadConfig(Context c, @NonNull String serverUrl,
+                                  @NonNull final ConfigStatusListener listener) {
         final URL url;
         try {
             url = new URL(serverUrl);
         } catch (MalformedURLException e) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onExperimentsConfigLoadFailed();
+                }
+            });
             Log.e(TAG, "Exception creating server URL", e);
             return;
         }
@@ -111,11 +119,23 @@ public class SwitchBoard {
         final String result = readFromUrlGET(url);
         if (DEBUG) Log.d(TAG, "Result: " + result);
         if (result == null) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onExperimentsConfigLoadFailed();
+                }
+            });
             return;
         }
 
         // Cache result locally in shared preferences.
         Preferences.setDynamicConfigJson(c, result);
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                listener.onExperimentsConfigLoaded();
+            }
+        });
     }
 
     public static boolean isInBucket(Context c, int low, int high) {
@@ -452,5 +472,11 @@ public class SwitchBoard {
         crc.update(uuid.getBytes());
         long checksum = crc.getValue();
         return (int)(checksum % 100L);
+    }
+
+    public interface ConfigStatusListener {
+        void onExperimentsConfigLoaded();
+
+        void onExperimentsConfigLoadFailed();
     }
 }

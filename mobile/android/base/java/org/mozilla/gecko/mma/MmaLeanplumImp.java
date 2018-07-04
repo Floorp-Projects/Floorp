@@ -9,7 +9,6 @@ package org.mozilla.gecko.mma;
 import android.app.Activity;
 import android.app.Notification;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
@@ -19,15 +18,17 @@ import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
 import com.leanplum.LeanplumPushNotificationCustomizer;
 import com.leanplum.LeanplumPushService;
+import com.leanplum.annotations.Parser;
+import com.leanplum.callbacks.VariablesChangedCallback;
 import com.leanplum.internal.Constants;
 import com.leanplum.internal.LeanplumInternal;
-import com.leanplum.internal.VarCache;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
+import org.mozilla.gecko.firstrun.PanelConfig;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
-import java.util.UUID;
 
 
 public class MmaLeanplumImp implements MmaInterface {
@@ -46,6 +47,8 @@ public class MmaLeanplumImp implements MmaInterface {
         Leanplum.setApplicationContext(activity.getApplicationContext());
 
         LeanplumActivityHelper.enableLifecycleCallbacks(activity.getApplication());
+
+        Parser.parseVariables(LeanplumVariables.getInstance(activity.getApplicationContext()));
 
         if (AppConstants.MOZILLA_OFFICIAL) {
             Leanplum.setAppIdForProductionMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
@@ -145,4 +148,45 @@ public class MmaLeanplumImp implements MmaInterface {
         Leanplum.setDeviceId(deviceId);
     }
 
+    @Override
+    public PanelConfig getPanelConfig(@NonNull Context context, PanelConfig.TYPE type, final boolean useLocalValues) {
+        if (useLocalValues) {
+            throw new UnsupportedOperationException("Cannot build remote panel config with local values");
+        }
+
+        switch (type) {
+            case WELCOME:
+                return new PanelConfig(type, useLocalValues, LeanplumVariables.welcomePanelTitle, LeanplumVariables.welcomePanelMessage,
+                        LeanplumVariables.welcomePanelSubtext, LeanplumVariables.getWelcomeImage());
+            case PRIVACY:
+                return new PanelConfig(type, useLocalValues, LeanplumVariables.privacyPanelTitle, LeanplumVariables.privacyPanelMessage,
+                        LeanplumVariables.privacyPanelSubtext, LeanplumVariables.getPrivacyImage());
+            case CUSTOMIZE:
+            case LAST_CUSTOMIZE:
+                return new PanelConfig(type, useLocalValues, LeanplumVariables.customizePanelTitle, LeanplumVariables.customizePanelMessage,
+                        LeanplumVariables.customizePanelSubtext, LeanplumVariables.getCustomizingImage());
+            case SYNC:
+                return new PanelConfig(type, useLocalValues, LeanplumVariables.syncPanelTitle, LeanplumVariables.syncPanelMessage,
+                        LeanplumVariables.syncPanelSubtext, LeanplumVariables.getSyncImage());
+            default:    // This will also be the case for "WELCOME"
+                return new PanelConfig(type, useLocalValues, LeanplumVariables.welcomePanelTitle, LeanplumVariables.welcomePanelMessage,
+                        LeanplumVariables.welcomePanelSubtext, LeanplumVariables.getWelcomeImage());
+        }
+    }
+
+    @Override
+    public void listenOnceForVariableChanges(@NonNull final MmaDelegate.MmaVariablesChangedListener listener) {
+        final WeakReference<MmaDelegate.MmaVariablesChangedListener> listenerRef = new WeakReference<>(listener);
+
+        Leanplum.addVariablesChangedHandler(new VariablesChangedCallback() {
+            @Override
+            public void variablesChanged() {
+                Leanplum.removeVariablesChangedHandler(this);
+                MmaDelegate.MmaVariablesChangedListener variablesChangesListener = listenerRef.get();
+                if (variablesChangesListener != null) {
+                    variablesChangesListener.onRemoteVariablesChanged();
+                }
+            }
+        });
+    }
 }

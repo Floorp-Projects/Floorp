@@ -24,10 +24,12 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.activitystream.homepanel.ActivityStreamConfiguration;
+import org.mozilla.gecko.firstrun.PanelConfig;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.util.ContextUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +49,8 @@ public class MmaDelegate {
     public static final String RESUMED_FROM_BACKGROUND = "E_Resumed_From_Background";
     public static final String NEW_TAB = "E_Opened_New_Tab";
     public static final String DISMISS_ONBOARDING = "E_Dismiss_Onboarding";
+    public static final String ONBOARDING_DEFAULT_VALUES = "E_Onboarding_With_Default_Values";
+    public static final String ONBOARDING_REMOTE_VALUES = "E_Onboarding_With_Remote_Values";
 
     private static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
     private static final String LAUNCH_BROWSER = "E_Launch_Browser";
@@ -75,7 +79,8 @@ public class MmaDelegate {
     private static final MmaInterface mmaHelper = MmaConstants.getMma();
     private static Context applicationContext;
 
-    public static void init(Activity activity) {
+    public static void init(final Activity activity,
+                            final MmaVariablesChangedListener remoteVariablesListener) {
         applicationContext = activity.getApplicationContext();
         // Since user attributes are gathered in Fennec, not in MMA implementation,
         // we gather the information here then pass to mmaHelper.init()
@@ -92,6 +97,12 @@ public class MmaDelegate {
         }
         mmaHelper.event(MmaDelegate.LAUNCH_BROWSER);
 
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mmaHelper.listenOnceForVariableChanges(remoteVariablesListener);
+            }
+        });
     }
 
     public static void stop() {
@@ -211,6 +222,10 @@ public class MmaDelegate {
         }
     }
 
+    public static PanelConfig getPanelConfig(@NonNull Context context, PanelConfig.TYPE panelConfigType, final boolean useLocalValues) {
+        return mmaHelper.getPanelConfig(context, panelConfigType, useLocalValues);
+    }
+
     private static String getDeviceId(Activity activity) {
         if (SwitchBoard.isInExperiment(activity, Experiments.LEANPLUM_DEBUG)) {
             return DEBUG_LEANPLUM_DEVICE_ID;
@@ -223,5 +238,11 @@ public class MmaDelegate {
             sharedPreferences.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
         }
         return deviceId;
+    }
+
+    public interface MmaVariablesChangedListener {
+        void onRemoteVariablesChanged();
+
+        void onRemoteVariablesUnavailable();
     }
 }
