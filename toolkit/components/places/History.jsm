@@ -765,6 +765,8 @@ var invalidateFrecencies = async function(db, idList) {
      WHERE id in (${ ids })
      AND frecency <> 0`
   );
+  // Trigger frecency updates for all affected origins.
+  await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
 };
 
 // Inner implementation of History.clear().
@@ -824,6 +826,9 @@ var clear = async function(db) {
   notify(observers, "onClearHistory");
   // Notify frecency change observers.
   notify(observers, "onManyFrecenciesChanged");
+
+  // Trigger frecency updates for all affected origins.
+  await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
 };
 
 /**

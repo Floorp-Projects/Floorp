@@ -28,6 +28,7 @@ async function cleanDatabase() {
   // are properly cleared.
   await PlacesUtils.bookmarks.eraseEverything();
   mDBConn.executeSimpleSQL("DELETE FROM moz_places");
+  mDBConn.executeSimpleSQL("DELETE FROM moz_origins");
   mDBConn.executeSimpleSQL("DELETE FROM moz_historyvisits");
   mDBConn.executeSimpleSQL("DELETE FROM moz_anno_attributes");
   mDBConn.executeSimpleSQL("DELETE FROM moz_annos");
@@ -1690,13 +1691,13 @@ tests.push({
 
 tests.push({
   name: "T.1",
-  desc: "history.recalculateFrecencyStats() is called",
+  desc: "history.recalculateOriginFrecencyStats() is called",
 
   async setup() {
     let urls = [
-      "http://example.com/1",
-      "http://example.com/2",
-      "http://example.com/3",
+      "http://example1.com/",
+      "http://example2.com/",
+      "http://example3.com/",
     ];
     await PlacesTestUtils.addVisits(urls.map(u => ({ uri: u })));
 
@@ -1711,9 +1712,9 @@ tests.push({
       "T.1",
       db => db.execute(`
         INSERT OR REPLACE INTO moz_meta VALUES
-        ('frecency_count', 99),
-        ('frecency_sum', 99999),
-        ('frecency_sum_of_squares', 99999 * 99999);
+        ('origin_frecency_count', 99),
+        ('origin_frecency_sum', 99999),
+        ('origin_frecency_sum_of_squares', 99999 * 99999);
       `)
     );
 
@@ -1742,9 +1743,9 @@ tests.push({
     let db = await PlacesUtils.promiseDBConnection();
     let rows = await db.execute(`
       SELECT
-        IFNULL((SELECT value FROM moz_meta WHERE key = "frecency_count"), 0),
-        IFNULL((SELECT value FROM moz_meta WHERE key = "frecency_sum"), 0),
-        IFNULL((SELECT value FROM moz_meta WHERE key = "frecency_sum_of_squares"), 0)
+        IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_count"), 0),
+        IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum"), 0),
+        IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum_of_squares"), 0)
     `);
     return {
       count: rows[0].getResultByIndex(0),
