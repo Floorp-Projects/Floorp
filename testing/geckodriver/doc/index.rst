@@ -25,4 +25,5 @@ For developers
 .. toctree::
    :maxdepth: 1
 
+   Building.md
    Releasing.md

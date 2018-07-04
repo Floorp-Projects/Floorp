@@ -1981,7 +1981,9 @@ enum class SymbolicAddress
     Wake,
     MemCopy,
     MemFill,
+#ifdef ENABLE_WASM_GC
     PostBarrier,
+#endif
 #if defined(JS_CODEGEN_MIPS32)
     js_jit_gAtomic64Lock,
 #endif
