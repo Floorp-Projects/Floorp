@@ -1030,7 +1030,7 @@ var gIdentityHandler = {
       let block = document.createElement("vbox");
       block.setAttribute("id", "identity-popup-popup-container");
       menulist.setAttribute("sizetopopup", "none");
-      menulist.setAttribute("class", "identity-popup-popup-menulist");
+      menulist.setAttribute("class", "identity-popup-popup-menulist subviewkeynav");
       menulist.setAttribute("id", "identity-popup-popup-menulist");
 
       for (let state of SitePermissions.getAvailableStates(aPermission.id)) {
@@ -1093,7 +1093,7 @@ var gIdentityHandler = {
     }
 
     let button = document.createElement("button");
-    button.setAttribute("class", "identity-popup-permission-remove-button");
+    button.setAttribute("class", "identity-popup-permission-remove-button subviewkeynav");
     let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
     button.setAttribute("tooltiptext", tooltiptext);
     button.addEventListener("command", () => {
@@ -1149,7 +1149,7 @@ var gIdentityHandler = {
 
     let text = document.createElement("label");
     text.setAttribute("flex", "1");
-    text.setAttribute("class", "identity-popup-permission-label text-link");
+    text.setAttribute("class", "identity-popup-permission-label text-link subviewkeynav");
 
     let popupCount = gBrowser.selectedBrowser.blockedPopups.length;
     let messageBase = gNavigatorBundle.getString("popupShowBlockedPopupsIndicatorText");
