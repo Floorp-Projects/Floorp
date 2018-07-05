@@ -2931,7 +2931,7 @@ pref("layout.css.text-align-unsafe-value.enabled", false);
 // Is support for CSS text-justify property enabled?
 pref("layout.css.text-justify.enabled", true);
 
-// Is support for the CSS4 image-orientation property enabled?
+// Is support for the CSS image-orientation property enabled?
 pref("layout.css.image-orientation.enabled", true);
 
 // Is the paint-order property supported for HTML text?
