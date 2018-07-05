@@ -24,7 +24,8 @@ add_task(async function test_main_process_crash() {
         ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
         scope.TelemetryController.testSetup();
         crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-        crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
+        crashReporter.annotateCrashReport(
+          CrashReporter.annotations.ShutdownProgress, "event-test");
       },
       (minidump, extra) => {
         basename = minidump.leafName;

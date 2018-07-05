@@ -325,10 +325,8 @@ AddContentSandboxLevelAnnotation()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     int level = GetEffectiveContentSandboxLevel();
-    nsAutoCString levelString;
-    levelString.AppendInt(level);
     CrashReporter::AnnotateCrashReport(
-      NS_LITERAL_CSTRING("ContentSandboxLevel"), levelString);
+      CrashReporter::Annotation::ContentSandboxLevel, level);
   }
 }
 #endif /* MOZ_CONTENT_SANDBOX */

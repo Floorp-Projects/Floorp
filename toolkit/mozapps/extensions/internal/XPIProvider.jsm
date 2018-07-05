@@ -28,6 +28,7 @@ ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  CrashReporter: "resource://gre/modules/CrashReporter.jsm",
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
@@ -2124,8 +2125,9 @@ var XPIProvider = {
       if (AppConstants.MOZ_CRASHREPORTER) {
         // Annotate the crash report with relevant add-on information.
         try {
-          Services.appinfo.annotateCrashReport("EMCheckCompatibility",
-                                               AddonManager.checkCompatibility);
+          CrashReporter.addAnnotation(
+            CrashReporter.annotations.EMCheckCompatibility,
+            AddonManager.checkCompatibility);
         } catch (e) { }
         this.addAddonsToCrashReporter();
       }
@@ -2315,15 +2317,14 @@ var XPIProvider = {
    * Adds a list of currently active add-ons to the next crash report.
    */
   addAddonsToCrashReporter() {
-    if (!(Services.appinfo instanceof Ci.nsICrashReporter) ||
-        Services.appinfo.inSafeMode) {
+    if (Services.appinfo.inSafeMode) {
       return;
     }
 
     let data = Array.from(XPIStates.enabledAddons(), a => a.telemetryKey).join(",");
 
     try {
-      Services.appinfo.annotateCrashReport("Add-ons", data);
+      CrashReporter.addAnnotation(CrashReporter.annotations.Addons, data);
     } catch (e) { }
 
     TelemetrySession.setAddOns(data);
