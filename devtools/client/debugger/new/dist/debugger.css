@@ -1777,6 +1777,16 @@ menuseparator {
   fill: var(--theme-textbox-box-shadow);
 }
 
+.source-icon.vue {
+  background: url("chrome://devtools/skin/images/debugger/vuejs.svg") 1px 1px no-repeat;
+  background-size: 15px;
+}
+
+.source-icon.angular {
+  background: url("chrome://devtools/skin/images/debugger/angular.svg") 1px 1px no-repeat;
+  background-size: 13px 13px;
+}
+
 .source-icon.blackBox {
   mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
   mask-size: 100%;

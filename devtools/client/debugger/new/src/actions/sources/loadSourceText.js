@@ -17,7 +17,9 @@ var parser = _interopRequireWildcard(_parser);
 
 var _source = require("../../utils/source");
 
-var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+var _telemetry = require("devtools/client/shared/telemetry");
+
+var _telemetry2 = _interopRequireDefault(_telemetry);
 
 var _defer = require("../../utils/defer");
 
@@ -33,7 +35,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 const requests = new Map(); // Measures the time it takes for a source to load
 
 const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
-const telemetry = new _devtoolsModules.Telemetry();
+const telemetry = new _telemetry2.default();
 
 async function loadSource(source, {
   sourceMaps,
