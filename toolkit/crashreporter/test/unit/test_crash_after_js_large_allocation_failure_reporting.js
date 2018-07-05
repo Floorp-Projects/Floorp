@@ -7,7 +7,7 @@ function run_test() {
   do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-      crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
+      crashReporter.annotateCrashReport("TestKey", "Yes");
 
       function crashWhileReporting() {
         CrashTestUtils.crash(crashType);
@@ -17,7 +17,7 @@ function run_test() {
       Cu.getJSTestingFunctions().reportLargeAllocationFailure();
     },
     function(mdump, extra) {
-      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.equal(extra.TestKey, "Yes");
       Assert.equal(extra.JSLargeAllocationFailure, "Reporting");
     },
     true);
