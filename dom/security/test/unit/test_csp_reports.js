@@ -113,7 +113,8 @@ function run_test() {
                                        "", // aNonce
                                        false, // aParserCreated
                                        content, // aContent
-                                       0); // aLineNumber
+                                       0, // aLineNumber
+                                       0); // aColumnNumber
 
         // this is not a report only policy, so it better block inline scripts
         Assert.ok(!inlineOK);
@@ -122,7 +123,9 @@ function run_test() {
   // test that eval violations cause a report.
   makeTest(1, {"blocked-uri": "",
                // JSON script-sample is UTF8 encoded
-               "script-sample" : "\xc2\xa3\xc2\xa5\xc2\xb5\xe5\x8c\x97\xf0\xa0\x9d\xb9"}, false,
+               "script-sample" : "\xc2\xa3\xc2\xa5\xc2\xb5\xe5\x8c\x97\xf0\xa0\x9d\xb9",
+               "line-number": 1,
+               "column-number": 2}, false,
       function(csp) {
         let evalOK = true, oReportViolation = {'value': false};
         evalOK = csp.getAllowsEval(oReportViolation);
@@ -140,7 +143,8 @@ function run_test() {
                                   // csp report in JSON is not cut-off, please
                                   // note that JSON is UTF8 encoded.
                                   "\u00a3\u00a5\u00b5\u5317\ud841\udf79",
-                                  1);
+                                  1, // line number
+                                  2); // column number
         }
       });
 
@@ -163,7 +167,8 @@ function run_test() {
                                        "", // aNonce
                                        false, // aParserCreated
                                        content, // aContent
-                                       0); // aLineNumber
+                                       0, // aLineNumber
+                                       0); // aColumnNumber
 
         // this is a report only policy, so it better allow inline scripts
         Assert.ok(inlineOK);
@@ -185,7 +190,8 @@ function run_test() {
           csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT,
                                   selfuri.asciiSpec,
                                   "script sample",
-                                  4);
+                                  4, // line number
+                                  5); // column number
         }
       });
 
