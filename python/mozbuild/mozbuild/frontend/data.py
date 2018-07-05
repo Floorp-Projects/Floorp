@@ -763,6 +763,22 @@ class SharedLibrary(Library):
             self.symbols_file = symbols_file
 
 
+class HostSharedLibrary(HostMixin, Library):
+    """Context derived container object for a host shared library.
+
+    This class supports less things than SharedLibrary does for target shared
+    libraries. Currently has enough build system support to build the clang
+    plugin."""
+    KIND = 'host'
+
+    def __init__(self, context, basename):
+        Library.__init__(self, context, basename)
+        self.lib_name = '%s%s%s' % (
+            context.config.host_dll_prefix,
+            self.basename,
+            context.config.host_dll_suffix,
+        )
+
 
 class ExternalLibrary(object):
     """Empty mixin for libraries built by an external build system."""
@@ -944,6 +960,13 @@ class GeneratedSources(BaseSources):
 
 class HostSources(HostMixin, BaseSources):
     """Represents files to be compiled for the host during the build."""
+
+    def __init__(self, context, files, canonical_suffix):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class HostGeneratedSources(HostMixin, BaseSources):
+    """Represents generated files to be compiled for the host during the build."""
 
     def __init__(self, context, files, canonical_suffix):
         BaseSources.__init__(self, context, files, canonical_suffix)
