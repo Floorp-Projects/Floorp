@@ -18,7 +18,6 @@ import platform
 from os.path import abspath, dirname, isfile, realpath
 from contextlib import contextmanager
 from copy import copy
-from itertools import chain
 from subprocess import list2cmdline, call
 
 from lib.tests import RefTestCase, get_jitflags, get_cpu_count, \
@@ -30,8 +29,6 @@ if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     from lib.tasks_unix import run_all_tests
 else:
     from lib.tasks_win import run_all_tests
-
-here = dirname(abspath(__file__))
 
 
 @contextmanager
@@ -295,76 +292,6 @@ def parse_args():
     return (options, prefix, requested_paths, excluded_paths)
 
 
-def load_wpt_tests(requested_paths, excluded_paths, debug):
-    """Return a list of `RefTestCase` objects for the jsshell testharness.js
-    tests filtered by the given paths and debug-ness."""
-    repo_root = abspath(os.path.join(here, "..", "..", ".."))
-    wp = os.path.join(repo_root, "testing", "web-platform")
-    wpt = os.path.join(wp, "tests")
-
-    sys_paths = [
-        "python/mozterm",
-        "testing/mozbase/mozcrash",
-        "testing/mozbase/mozdevice",
-        "testing/mozbase/mozfile",
-        "testing/mozbase/mozinfo",
-        "testing/mozbase/mozleak",
-        "testing/mozbase/mozlog",
-        "testing/mozbase/mozprocess",
-        "testing/mozbase/mozprofile",
-        "testing/mozbase/mozrunner",
-        "testing/web-platform/tests/tools",
-        "testing/web-platform/tests/tools/third_party/html5lib",
-        "testing/web-platform/tests/tools/third_party/webencodings",
-        "testing/web-platform/tests/tools/wptrunner",
-        "testing/web-platform/tests/tools/wptserve",
-    ]
-    sys.path[0:0] = [os.path.join(repo_root, path) for path in sys_paths]
-
-    from wptrunner import products, testloader, wptcommandline, wpttest, wptlogging
-
-    wptlogging.setup({}, {})
-    kwargs = {
-        "config": None,
-        "tests_root": wpt,
-        "metadata_root": os.path.join(wp, "meta"),
-        "gecko_e10s": False,
-        "verify": False,
-    }
-    wptcommandline.set_from_config(kwargs)
-    test_paths = kwargs["test_paths"]
-
-    def filter_jsshell_tests(it):
-        for test in it:
-            if test[1].get("jsshell"):
-                yield test
-
-    test_manifests = testloader.ManifestLoader(test_paths, types=["testharness"],
-                                               meta_filters=[filter_jsshell_tests]).load()
-
-    run_info_extras = products.load_product(kwargs["config"], "firefox")[-1](**kwargs)
-    run_info = wpttest.get_run_info(kwargs["metadata_root"], "firefox",
-                                    debug=debug, extras=run_info_extras)
-
-    path_filter = testloader.TestFilter(test_manifests,
-                                        include=requested_paths,
-                                        exclude=excluded_paths)
-    loader = testloader.TestLoader(test_manifests,
-                                   ["testharness"],
-                                   run_info,
-                                   manifest_filters=[path_filter])
-
-    extra_helper_paths = [
-        os.path.join(wpt, "resources", "testharness.js"),
-        os.path.join(here, "testharnessreport.js"),
-    ]
-
-    return [
-        RefTestCase(wpt, test_path, extra_helper_paths=extra_helper_paths, wpt=test)
-        for test_path, test_type, test in loader.iter_tests()
-    ]
-
-
 def load_tests(options, requested_paths, excluded_paths):
     """
     Returns a tuple: (test_count, test_gen)
@@ -388,11 +315,6 @@ def load_tests(options, requested_paths, excluded_paths):
     path_options = PathOptions(test_dir, requested_paths, excluded_paths)
     test_count = manifest.count_tests(test_dir, path_options)
     test_gen = manifest.load_reftests(test_dir, path_options, xul_tester)
-
-    wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
-                               debug=xul_tester.test("isDebugBuild"))
-    test_count += len(wpt_tests)
-    test_gen = chain(test_gen, wpt_tests)
 
     if options.test_reflect_stringify is not None:
         def trs_gen(tests):
