@@ -33,6 +33,7 @@ else:
 
 here = dirname(abspath(__file__))
 
+
 @contextmanager
 def changedir(dirname):
     pwd = os.getcwd()
@@ -338,7 +339,8 @@ def load_wpt_tests(requested_paths, excluded_paths, debug):
             if test[1].get("jsshell"):
                 yield test
 
-    test_manifests = testloader.ManifestLoader(test_paths, types=["testharness"], meta_filters=[filter_jsshell_tests]).load()
+    test_manifests = testloader.ManifestLoader(test_paths, types=["testharness"],
+                                               meta_filters=[filter_jsshell_tests]).load()
 
     run_info_extras = products.load_product(kwargs["config"], "firefox")[-1](**kwargs)
     run_info = wpttest.get_run_info(kwargs["metadata_root"], "firefox",
@@ -387,7 +389,8 @@ def load_tests(options, requested_paths, excluded_paths):
     test_count = manifest.count_tests(test_dir, path_options)
     test_gen = manifest.load_reftests(test_dir, path_options, xul_tester)
 
-    wpt_tests = load_wpt_tests(requested_paths, excluded_paths, debug=xul_tester.test("isDebugBuild"))
+    wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
+                               debug=xul_tester.test("isDebugBuild"))
     test_count += len(wpt_tests)
     test_gen = chain(test_gen, wpt_tests)
 
