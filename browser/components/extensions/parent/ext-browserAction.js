@@ -73,6 +73,7 @@ this.browserAction = class extends ExtensionAPI {
       title: options.default_title || extension.name,
       badgeText: "",
       badgeBackgroundColor: null,
+      badgeTextColor: null,
       popup: options.default_popup || "",
       area: browserAreas[options.default_area || "navbar"],
     };
@@ -441,10 +442,18 @@ this.browserAction = class extends ExtensionAPI {
         node.setAttribute("disabled", "true");
       }
 
-      let color = tabData.badgeBackgroundColor;
-      if (color) {
-        color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] / 255})`;
-        node.setAttribute("badgeStyle", `background-color: ${color};`);
+      let {badgeBackgroundColor, badgeTextColor} = tabData;
+      let badgeStyle = [];
+      if (badgeBackgroundColor) {
+        let [r, g, b, a] = badgeBackgroundColor;
+        badgeStyle.push(`background-color: rgba(${r}, ${g}, ${b}, ${a / 255})`);
+      }
+      if (badgeTextColor) {
+        let [r, g, b, a] = badgeTextColor;
+        badgeStyle.push(`color: rgba(${r}, ${g}, ${b}, ${a / 255})`);
+      }
+      if (badgeStyle.length) {
+        node.setAttribute("badgeStyle", badgeStyle.join("; "));
       } else {
         node.removeAttribute("badgeStyle");
       }
@@ -585,8 +594,8 @@ this.browserAction = class extends ExtensionAPI {
    * @param {Object} details
    *        An object with optional `tabId` or `windowId` properties.
    * @param {string} prop
-   *        String property to set. Should should be one of "icon", "title",
-   *        "badgeText", "popup", "badgeBackgroundColor" or "enabled".
+   *        String property to set. Should should be one of "icon", "title", "badgeText"
+   *        "popup", "badgeBackgroundColor", "badgeTextColor" or "enabled".
    * @param {string} value
    *        Value for prop.
    */
@@ -621,6 +630,17 @@ this.browserAction = class extends ExtensionAPI {
     let {tabManager} = extension;
 
     let browserAction = this;
+
+    function parseColor(color, kind) {
+      if (typeof color == "string") {
+        let rgba = InspectorUtils.colorToRGBA(color);
+        if (!rgba) {
+          throw new ExtensionError(`Invalid badge ${kind} color: "${color}"`);
+        }
+        color = [rgba.r, rgba.g, rgba.b, Math.round(rgba.a * 255)];
+      }
+      return color;
+    }
 
     return {
       browserAction: {
@@ -696,20 +716,23 @@ this.browserAction = class extends ExtensionAPI {
         },
 
         setBadgeBackgroundColor: function(details) {
-          let color = details.color;
-          if (typeof color == "string") {
-            let col = InspectorUtils.colorToRGBA(color);
-            if (!col) {
-              throw new ExtensionError(`Invalid badge background color: "${color}"`);
-            }
-            color = col && [col.r, col.g, col.b, Math.round(col.a * 255)];
-          }
+          let color = parseColor(details.color, "background");
           browserAction.setProperty(details, "badgeBackgroundColor", color);
         },
 
         getBadgeBackgroundColor: function(details, callback) {
           let color = browserAction.getProperty(details, "badgeBackgroundColor");
           return color || [0xd9, 0, 0, 255];
+        },
+
+        setBadgeTextColor: function(details) {
+          let color = parseColor(details.color, "text");
+          browserAction.setProperty(details, "badgeTextColor", color);
+        },
+
+        getBadgeTextColor: function(details, callback) {
+          let color = browserAction.getProperty(details, "badgeTextColor");
+          return color || [255, 255, 255, 255];
         },
 
         openPopup: function() {
