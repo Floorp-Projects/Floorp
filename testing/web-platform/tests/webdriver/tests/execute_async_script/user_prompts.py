@@ -27,6 +27,17 @@ def test_handle_prompt_accept(session):
         session.alert.accept()
 
 
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
+def test_handle_prompt_accept_and_notify(session):
+    response = execute_async_script(session, "window.alert('Hello');")
+    assert_success(response, None)
+
+    with pytest.raises(error.UnexpectedAlertOpenException):
+        session.title
+    with pytest.raises(error.NoSuchAlertException):
+        session.alert.accept()
+
+
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
 def test_handle_prompt_dismiss(session):
     response = execute_async_script(session, "window.alert('Hello');")
@@ -46,17 +57,6 @@ def test_handle_prompt_dismiss_and_notify(session):
         session.title
     with pytest.raises(error.NoSuchAlertException):
         session.alert.dismiss()
-
-
-@pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
-def test_handle_prompt_accept_and_notify(session):
-    response = execute_async_script(session, "window.alert('Hello');")
-    assert_success(response, None)
-
-    with pytest.raises(error.UnexpectedAlertOpenException):
-        session.title
-    with pytest.raises(error.NoSuchAlertException):
-        session.alert.accept()
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "ignore"})
