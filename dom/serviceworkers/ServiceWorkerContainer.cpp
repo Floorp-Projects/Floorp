@@ -544,7 +544,14 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
       RefPtr<ServiceWorkerRegistration> reg =
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       NS_ENSURE_TRUE_VOID(reg);
-      outer->MaybeResolve(reg);
+
+      // Don't resolve the ready promise until the registration has
+      // reached the right version.  This ensures that the active
+      // worker property is set correctly on the registration.
+      reg->WhenVersionReached(aDescriptor.Version(),
+        [outer, reg] (bool aResult) {
+          outer->MaybeResolve(reg);
+        });
     }, [self, outer] (ErrorResult& aRv) {
       outer->MaybeReject(aRv);
     });
