@@ -4,7 +4,8 @@ var SOURCE_URL = getFileUrl("setBreakpoint-on-column.js");
 
 async function run_test() {
   do_test_pending();
-  DebuggerServer.registerModule("xpcshell-test/testactors");
+  const { createRootActor } = require("xpcshell-test/testactors");
+  DebuggerServer.setRootActor(createRootActor);
   DebuggerServer.init(() => true);
   const global = createTestGlobal("test");
   DebuggerServer.addTestGlobal(global);

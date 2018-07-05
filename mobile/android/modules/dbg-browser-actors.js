@@ -26,7 +26,7 @@ const { BrowserTabList, BrowserAddonList, sendShutdownEvent } =
  * * @param aConnection DebuggerServerConnection
  *        The conection to the client.
  */
-function createRootActor(aConnection) {
+exports.createRootActor = function createRootActor(aConnection) {
   let parameters = {
     tabList: new MobileTabList(aConnection),
     addonList: new BrowserAddonList(aConnection),
@@ -34,7 +34,7 @@ function createRootActor(aConnection) {
     onShutdown: sendShutdownEvent
   };
   return new RootActor(aConnection, parameters);
-}
+};
 
 /**
  * A live list of BrowserTabActors representing the current browser tabs,
@@ -66,12 +66,4 @@ MobileTabList.prototype._getSelectedBrowser = function(aWindow) {
 
 MobileTabList.prototype._getChildren = function(aWindow) {
   return aWindow.BrowserApp.tabs.map(tab => tab.browser);
-};
-
-exports.register = function(handle) {
-  handle.setRootActor(createRootActor);
-};
-
-exports.unregister = function(handle) {
-  handle.setRootActor(null);
 };

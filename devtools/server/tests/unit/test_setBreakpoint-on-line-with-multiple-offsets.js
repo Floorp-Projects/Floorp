@@ -6,7 +6,8 @@ function run_test() {
   return (async function() {
     do_test_pending();
 
-    DebuggerServer.registerModule("xpcshell-test/testactors");
+    const { createRootActor } = require("xpcshell-test/testactors");
+    DebuggerServer.setRootActor(createRootActor);
     DebuggerServer.init(() => true);
 
     const global = createTestGlobal("test");
