@@ -58,7 +58,7 @@ const CUSTOM_CSS = `
 #homeContentsGroup [data-subcategory] {
   margin-top: 14px;
 }
-#homeContentsGroup [data-subcategory] > checkbox {
+#homeContentsGroup [data-subcategory] .section-checkbox {
   font-weight: 600;
 }
 #homeContentsGroup [data-subcategory] > vbox menulist {
@@ -198,9 +198,24 @@ this.AboutPreferences = class AboutPreferences {
       const sectionVbox = createAppend("vbox", contentsGroup);
       sectionVbox.setAttribute("data-subcategory", id);
       const checkbox = createAppend("checkbox", sectionVbox);
+      checkbox.classList.add("section-checkbox");
       checkbox.setAttribute("label", formatString(titleString));
       checkbox.setAttribute("src", iconUrl);
       linkPref(checkbox, name, "bool");
+
+      // Specially add a link for stories
+      if (id === "topstories") {
+        const sponsoredHbox = createAppend("hbox", sectionVbox);
+        sponsoredHbox.setAttribute("align", "center");
+        sponsoredHbox.appendChild(checkbox);
+        checkbox.classList.add("tail-with-learn-more");
+
+        const link = createAppend("label", sponsoredHbox);
+        link.classList.add("learn-sponsored");
+        link.classList.add("text-link");
+        link.setAttribute("href", sectionData.disclaimer.link.href);
+        link.textContent = formatString("prefs_topstories_sponsored_learn_more");
+      }
 
       // Add more details for the section (e.g., description, more prefs)
       const detailVbox = createAppend("vbox", sectionVbox);
@@ -209,20 +224,6 @@ this.AboutPreferences = class AboutPreferences {
         const label = createAppend("label", detailVbox);
         label.classList.add("indent");
         label.textContent = formatString(descString);
-
-        // Specially add a link for stories
-        if (id === "topstories") {
-          const sponsoredHbox = createAppend("hbox", detailVbox);
-          sponsoredHbox.setAttribute("align", "center");
-          sponsoredHbox.appendChild(label);
-          label.classList.add("tail-with-learn-more");
-
-          const link = createAppend("label", sponsoredHbox);
-          link.classList.add("learn-sponsored");
-          link.classList.add("text-link");
-          link.setAttribute("href", sectionData.disclaimer.link.href);
-          link.textContent = formatString("prefs_topstories_sponsored_learn_more");
-        }
 
         // Add a rows dropdown if we have a pref to control and a maximum
         if (rowsPref && maxRows) {

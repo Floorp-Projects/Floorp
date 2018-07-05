@@ -1611,11 +1611,11 @@ main {
   .collapsible-section .section-disclaimer {
     color: var(--newtab-text-conditional-color);
     font-size: 13px;
-    margin-bottom: 16px;
-    position: relative; }
+    margin-bottom: 26px;
+    position: relative;
+    display: flex; }
     .collapsible-section .section-disclaimer .section-disclaimer-text {
       display: inline-block;
-      min-height: 26px;
       width: calc(100% - 130px); }
       @media (max-width: 610px) {
         .collapsible-section .section-disclaimer .section-disclaimer-text {
@@ -1629,10 +1629,10 @@ main {
       border: 1px solid #B1B1B3;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 2px;
       max-width: 130px;
       min-height: 26px;
-      inset-inline-end: 0; }
+      inset-inline-end: 0;
+      align-self: center; }
       .collapsible-section .section-disclaimer button:hover:not(.dismiss) {
         box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
         transition: box-shadow 150ms; }

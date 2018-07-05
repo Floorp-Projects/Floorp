@@ -129,6 +129,7 @@ describe("AboutPreferences Feed", () => {
     let strings;
     let prefStructure;
     let Preferences;
+    let gHomePane;
     const testRender = () => instance.renderPreferences({
       document: {
         createElementNS: sandbox.stub().returns(node),
@@ -136,7 +137,8 @@ describe("AboutPreferences Feed", () => {
         getElementById: sandbox.stub().returns(node),
         insertBefore: sandbox.stub().returnsArg(0)
       },
-      Preferences
+      Preferences,
+      gHomePane
     }, strings, prefStructure);
     beforeEach(() => {
       node = {
@@ -152,6 +154,7 @@ describe("AboutPreferences Feed", () => {
         add: sandbox.stub(),
         get: sandbox.stub().returns({})
       };
+      gHomePane = {toggleRestoreDefaultsBtn: sandbox.stub()};
     });
     describe("#formatString", () => {
       it("should fall back to string id if missing", () => {
@@ -231,6 +234,24 @@ describe("AboutPreferences Feed", () => {
         assert.calledWith(node.setAttribute, "src", icon);
       });
     });
+    describe("title line", () => {
+      it("should render a title", () => {
+        const titleString = "the_title";
+        prefStructure = [{pref: {titleString}}];
+
+        testRender();
+
+        assert.calledWith(node.setAttribute, "label", titleString);
+      });
+      it("should add a link for top stories", () => {
+        const href = "https://disclaimer/";
+        prefStructure = [{disclaimer: {link: {href}}, id: "topstories"}];
+
+        testRender();
+
+        assert.calledWith(node.setAttribute, "href", href);
+      });
+    });
     describe("description line", () => {
       it("should render a description", () => {
         const descString = "the_desc";
@@ -239,14 +260,6 @@ describe("AboutPreferences Feed", () => {
         testRender();
 
         assert.equal(node.textContent, descString);
-      });
-      it("should add a link for top stories", () => {
-        const href = "https://disclaimer/";
-        prefStructure = [{disclaimer: {link: {href}}, id: "topstories", pref: {descString: "some_desc"}}];
-
-        testRender();
-
-        assert.calledWith(node.setAttribute, "href", href);
       });
       it("should render rows dropdown with appropriate number", () => {
         prefStructure = [{rowsPref: "row_pref", maxRows: 3, pref: {descString: "foo"}}];
@@ -266,6 +279,13 @@ describe("AboutPreferences Feed", () => {
         testRender();
 
         assert.calledWith(node.setAttribute, "label", titleString);
+      });
+    });
+    describe("restore defaults btn", () => {
+      it("should call toggleRestoreDefaultsBtn", () => {
+        testRender();
+
+        assert.calledOnce(gHomePane.toggleRestoreDefaultsBtn);
       });
     });
   });
