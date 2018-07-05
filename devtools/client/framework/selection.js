@@ -173,7 +173,7 @@ Selection.prototype = {
       if (node === this._walker.rootNode) {
         return true;
       }
-      node = node.parentNode();
+      node = node.parentOrHost();
     }
     return false;
   },

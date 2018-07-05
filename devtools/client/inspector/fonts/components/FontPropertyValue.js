@@ -97,6 +97,7 @@ class FontPropertyValue extends PureComponent {
     const input = dom.input(
       {
         ...defaults,
+        name: this.props.name,
         className: "font-value-input",
         type: "number",
       }

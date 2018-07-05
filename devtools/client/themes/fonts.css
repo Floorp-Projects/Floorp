@@ -15,6 +15,30 @@
   flex: auto;
 }
 
+#font-editor {
+  padding-bottom: .8em;
+}
+
+#font-editor summary {
+  -moz-user-select: none;
+  cursor: pointer;
+  margin-bottom: .7em;
+  width: -moz-fit-content;
+}
+
+#font-editor details .label-open,
+#font-editor details .label-close {
+  display: none;
+}
+
+#font-editor details[open] .label-close {
+  display: inline-block;
+}
+
+#font-editor details:not([open]) .label-open {
+  display: inline-block;
+}
+
 .fonts-list {
   padding: 0;
   margin: 0;
@@ -120,19 +144,27 @@
   vertical-align: middle;
 }
 
+.font-axes-controls {
+  border-top: 1px solid var(--theme-splitter-color);
+  margin-top: .8em;
+  padding-top: .8em;
+}
+
 .font-control {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 20px;
+  padding: 4px 18px;
 }
 
 .font-control-family {
   align-items: flex-start;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  margin-bottom: .8em;
+  padding-top: .6em;
+  padding-bottom: .4em;
 }
 
 .font-control-box,
@@ -151,15 +183,9 @@
   display: inline-block;
   flex: 1;
   font-size: 12px;
-  min-width: 80px;
+  max-width: 70px;
   margin-right: 10px;
   -moz-user-select: none;
-}
-
-.font-family-unused-header {
-  -moz-user-select: none;
-  margin-bottom: .7em;
-  cursor: pointer;
 }
 
 .font-family-unused {
@@ -173,7 +199,35 @@
 
 .font-value-input {
   margin-left: 10px;
+  text-align: right;
   width: 60px;
+}
+
+/* Do not use browser "invalid" state */
+.font-value-slider:-moz-ui-invalid,
+.font-value-input:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/* Do not show dotted line focus outline */
+.font-value-input:-moz-focusring {
+  outline: none;
+}
+
+/* Add space between input text from number stepper */
+.font-value-input[type=number]::-moz-number-spin-box{
+  margin-left: 3px;
+}
+
+/* Do not show number stepper for font-size */
+.font-value-input[name=font-size] {
+  -moz-appearance: textfield;
+  margin-right: 5px;
+  padding-right: 5px;
+}
+
+.font-unit-select {
+  padding: 2px;
 }
 
 .font-value-slider {
@@ -187,15 +241,15 @@
   Decorate the slider for font-weight to have 9 vertical notches using a linear gradient.
 */
 .font-value-slider[name=font-weight] {
-  --notch-size: 2px;
+  --notch-size: 3px;
   /* Draw a vertical line to get one notch per background-image instance */
   background-image: linear-gradient(90deg, var(--grey-30) var(--notch-size), transparent 0);
   /* Offset the background so the notch aligns with the center of the slider thumb */
-  background-position: 7px center;
+  background-position: 5px center;
   /* Repeat the background-image horizontally */
   background-repeat: repeat-x;
   /* Size the background to get nine visible notch instances. */
-  background-size: calc(12.5% - var(--notch-size)) 90%;
+  background-size: calc(12.5% - var(--notch-size) / 2) 7px;
 }
 
 .font-value-slider:-moz-focusring {
@@ -208,14 +262,12 @@
 
 .font-value-slider::-moz-range-thumb {
   background: var(--grey-50);
-  border-color: rgba(0, 0, 0, 0);
-}
-.font-value-slider::-moz-range-track {
-  background: var(--grey-30);
+  border: 0;
 }
 
-.font-value-slider:focus::-moz-range-thumb {
-  background: var(--blue-55);
+.font-value-slider::-moz-range-track {
+  background: var(--grey-30);
+  height: 3px;
 }
 
 /*
@@ -260,7 +312,7 @@
   transition: background-position .1s ease-out;
 }
 
-.font-value-toggle:checked{
+.font-value-toggle:checked {
   --bg: var(--blue-55);
   --thumb-color: white;
   --thumb-position: 100% 50%;
@@ -304,6 +356,10 @@
 
 }
 
-#font-container .devtools-sidepanel-no-result + .accordion {
-  border-block-start: 1px solid var(--theme-splitter-color);
+#font-container .accordion {
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+#font-container .accordion + .accordion {
+  border-top: none;
 }
