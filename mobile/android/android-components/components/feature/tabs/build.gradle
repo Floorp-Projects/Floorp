@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.build['minSdkVersion']
+        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
+
+dependencies {
+    implementation project(':browser-session')
+    implementation project(':concept-tabstray')
+    implementation project(':concept-toolbar')
+    implementation project(':ui-icons')
+    implementation project(':support-ktx')
+
+    implementation "com.android.support:support-fragment:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation "com.android.support:recyclerview-v7:${rootProject.ext.dependencies['supportLibraries']}"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
+
+    // In tests we are constructing our own SessionManager instance which needs to know about an "engine".
+    testImplementation project(':concept-engine')
+
+    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+}
+
+archivesBaseName = "feature-tabs"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(
+        'org.mozilla.components',
+        'feature-tabs',
+        'Feature implementation connecting a trabs tray implementation with the session and toolbar modules.')

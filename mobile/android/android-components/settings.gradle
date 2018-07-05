@@ -25,6 +25,9 @@ project(':feature-search').projectDir = new File(rootDir, 'components/feature/se
 include ':feature-session'
 project(':feature-session').projectDir = new File(rootDir, 'components/feature/session')
 
+include ':feature-tabs'
+project(':feature-tabs').projectDir = new File(rootDir, 'components/feature/tabs')
+
 include ':feature-toolbar'
 project(':feature-toolbar').projectDir = new File(rootDir, 'components/feature/toolbar')
 

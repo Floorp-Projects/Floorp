@@ -133,6 +133,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session module.
 
+* 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a trabs tray implementation with the session and toolbar modules.
+
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
 ## UI
