@@ -785,7 +785,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       csp->LogViolationDetails(
         nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE,
         NS_ConvertUTF8toUTF16(spec), EmptyString(),
-        0, EmptyString(), EmptyString());
+        0, 0, EmptyString(), EmptyString());
       return NS_OK;
     }
   } else {

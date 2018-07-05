@@ -198,13 +198,15 @@ CheckCSPForEval(JSContext* aCx, nsGlobalWindowInner* aWindow, ErrorResult& aErro
 
     // Get the calling location.
     uint32_t lineNum = 0;
+    uint32_t columnNum = 0;
     nsAutoString fileNameString;
-    if (!nsJSUtils::GetCallingLocation(aCx, fileNameString, &lineNum)) {
+    if (!nsJSUtils::GetCallingLocation(aCx, fileNameString, &lineNum,
+                                       &columnNum)) {
       fileNameString.AssignLiteral("unknown");
     }
 
     csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
-                             fileNameString, scriptSample, lineNum,
+                             fileNameString, scriptSample, lineNum, columnNum,
                              EmptyString(), EmptyString());
   }
 
