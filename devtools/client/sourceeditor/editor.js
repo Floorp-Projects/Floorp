@@ -28,6 +28,7 @@ const MAX_VERTICAL_OFFSET = 3;
 // line in text selection.
 const RE_SCRATCHPAD_ERROR = /(?:@Scratchpad\/\d+:|\()(\d+):?(\d+)?(?:\)|\n)/;
 const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
+const AUTOCOMPLETE_MARK_CLASSNAME = "cm-auto-complete-shadow-text";
 
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -1273,10 +1274,20 @@ Editor.prototype = {
     }
   },
 
+  getAutoCompletionText() {
+    const cm = editors.get(this);
+    const mark = cm.getAllMarks().find(m => m.className === AUTOCOMPLETE_MARK_CLASSNAME);
+    if (!mark) {
+      return "";
+    }
+
+    return mark.title || "";
+  },
+
   setAutoCompletionText: function(text) {
     const cursor = this.getCursor();
     const cm = editors.get(this);
-    const className = "cm-auto-complete-shadow-text";
+    const className = AUTOCOMPLETE_MARK_CLASSNAME;
 
     cm.getAllMarks().forEach(mark => {
       if (mark.className === className) {
