@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
@@ -308,13 +309,35 @@ public final class NotificationClient implements NotificationListener {
         return false;
     }
 
-    private void setForegroundNotificationLocked(final String name,
-                                                 final Notification notification) {
+    private void setForegroundNotificationLocked(@NonNull final String name,
+                                                 @NonNull final Notification notification) {
         mForegroundNotification = name;
 
         final Intent intent = new Intent(mContext, NotificationService.class);
         intent.putExtra(NotificationService.EXTRA_NOTIFICATION, notification);
-        mContext.startService(intent);
+        toggleForegroundService(intent);
+    }
+
+    private void removeForegroundNotificationLocked() {
+        mForegroundNotification = null;
+
+        final Intent intent = new Intent(mContext, NotificationService.class);
+        intent.putExtra(NotificationService.EXTRA_ACTION_STOP, true);
+        toggleForegroundService(intent);
+    }
+
+    /**
+     * Method used to toggle the NotificationService.
+     * When the intent is passed with {@link NotificationService#EXTRA_ACTION_STOP} we are queueing a stopSelf action.
+     * @param intent
+     */
+    @SuppressLint("NewApi")
+    private void toggleForegroundService(Intent intent) {
+        if (AppConstants.Versions.preO) {
+            mContext.startService(intent);
+        } else {
+            mContext.startForegroundService(intent);
+        }
     }
 
     private void updateForegroundNotificationLocked(final String oldName) {
@@ -337,6 +360,6 @@ public final class NotificationClient implements NotificationListener {
             }
         }
 
-        setForegroundNotificationLocked(null, null);
+        removeForegroundNotificationLocked();
     }
 }
