@@ -9,67 +9,25 @@
     table {
       border-spacing: 0px;
     }
+    div {
+      width: 200px; height: 100px;
+    }
+    td {
+      width: 100px; height: 50px;
+    }
   </style>
 </head>
 <body>
   <div>
     <table>
       <tr>
-        <td id="ul"></td>
-        <td id="ur"></td>
+        <td style="background-color: rgb(254, 0, 122);"></td>
+        <td style="background-color: rgb(0, 255, 1);"></td>
       </tr>
       <tr>
-        <td id="ll"></td>
-        <td id="lr"></td>
+        <td style="background-color: rgb(191, 0, 93);"></td>
+        <td style="background-color: rgb(0, 191, 0);"></td>
       </tr>
     </table>
   </div>
-
-  <script>
-    var orientationInfo = location.search.substring(1).split("&");
-    var angle = parseInt(orientationInfo[0]);
-    var flip = orientationInfo[1] == "flip" ? true : false;
-
-    // Each id corresponds to a color.
-    var ids = ["ul", "ur", "lr", "ll"];
-    var colors = [
-      "rgb(0, 191, 0)",
-      "rgb(0, 255, 1)",
-      "rgb(254, 0, 122)",
-      "rgb(191, 0, 93)",
-    ];
-
-    // 'Rotate' the colors according to the angle.
-    colors.unshift.apply(colors, colors.splice((360 - angle) / 90, colors.length));
-
-    // 'Flip' the colors if requested.
-    if (flip) {
-        var tmp = colors[0];
-        colors[0] = colors[1];
-        colors[1] = tmp;
-        tmp = colors[2];
-        colors[2] = colors[3];
-        colors[3] = tmp;
-    }
-
-    // Construct a style.
-    var style = "";
-
-    if (angle == 90 || angle == 270) {
-      style += "div { width: 200px; height: 100px; }\n";
-      style += "td { width: 100px; height: 50px; }\n";
-    } else {
-      style += "div { width: 100px; height: 200px; }\n";
-      style += "td { width: 50px; height: 100px; }\n";
-    }
-
-    for (var i = 0 ; i < 4 ; ++i) {
-      style += "#" + ids[i] + " { background-color: " + colors[i] + "; }\n";
-    }
-
-    // Apply the style to the document.
-    var sheet = document.createElement('style');
-    sheet.innerHTML = style;
-    document.body.appendChild(sheet);
-  </script>
 </body>

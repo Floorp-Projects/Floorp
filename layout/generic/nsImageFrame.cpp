@@ -262,7 +262,7 @@ nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
     return;
   }
 
-  nsStyleImageOrientation newOrientation = StyleVisibility()->mImageOrientation;
+  auto newOrientation = StyleVisibility()->mImageOrientation;
 
   // We need to update our orientation either if we had no ComputedStyle before
   // because this is the first time it's been set, or if the image-orientation

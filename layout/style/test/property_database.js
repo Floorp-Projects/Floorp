@@ -7131,73 +7131,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.image-orientation.enabled")) {
     domProp: "imageOrientation",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [
-      "0deg",
-      "0grad",
-      "0rad",
-      "0turn",
-
-      // Rounded initial values.
-      "15deg",
-      "360deg",
-    ],
-    other_values: [
-      "-90deg",
-      "0deg flip",
-      "90deg",
-      "90deg flip",
-      "180deg",
-      "180deg flip",
-      "270deg",
-      "270deg flip",
-      "flip",
-      "from-image",
-
-      // Grad units.
-      "0grad flip",
-      "100grad",
-      "100grad flip",
-      "200grad",
-      "200grad flip",
-      "300grad",
-      "300grad flip",
-
-      // Radian units.
-      "0rad flip",
-      "1.57079633rad",
-      "1.57079633rad flip",
-      "3.14159265rad",
-      "3.14159265rad flip",
-      "4.71238898rad",
-      "4.71238898rad flip",
-
-      // Turn units.
-      "0turn flip",
-      "0.25turn",
-      "0.25turn flip",
-      "0.5turn",
-      "0.5turn flip",
-      "0.75turn",
-      "0.75turn flip",
-
-      // Rounded values.
-      "-45deg flip",
-      "65deg flip",
-      "400deg flip",
-    ],
-    invalid_values: [
-      "none",
-      "0deg none",
-      "flip 0deg",
-      "flip 0deg",
-      "0",
-      "0 flip",
-      "flip 0",
-      "0deg from-image",
-      "from-image 0deg",
-      "flip from-image",
-      "from-image flip",
-    ]
+    initial_values: [ "none" ],
+    other_values: [ "from-image" ],
+    invalid_values: [ "0", "0deg" ]
   };
 }
 
