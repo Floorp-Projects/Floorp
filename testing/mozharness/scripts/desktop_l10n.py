@@ -360,7 +360,8 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
         else:
             prop_value = message
         self.set_property(prop_key, prop_value)
-        BaseScript.add_failure(self, locale, message=message, **kwargs)
+        BaseScript.add_failure(self, locale, message=message,
+                               increment_return_code=False, **kwargs)
 
     def query_failed_locales(self):
         return [l for l, res in self.locales_property.items() if

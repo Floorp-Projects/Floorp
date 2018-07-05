@@ -24,7 +24,7 @@ describe("Testing UI", () => {
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       store.dispatch(actions.sidebarClose());
@@ -40,7 +40,7 @@ describe("Testing UI", () => {
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       store.dispatch(actions.messagesClear());
@@ -58,7 +58,7 @@ describe("Testing UI", () => {
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
@@ -71,13 +71,13 @@ describe("Testing UI", () => {
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
       const state = store.getState().ui;
 
-      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
       expect(store.getState().ui).toEqual(state);
     });
 
@@ -88,7 +88,7 @@ describe("Testing UI", () => {
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
-      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+      store.dispatch(actions.showMessageObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       expect(store.getState().ui.gripInSidebar).toEqual(message.parameters[0]);
@@ -99,7 +99,7 @@ describe("Testing UI", () => {
 
       const newActorId = newMessage.parameters[0].actor;
       const newMessageId = getLastMessage(store.getState()).id;
-      store.dispatch(actions.showObjectInSidebar(newActorId, newMessageId));
+      store.dispatch(actions.showMessageObjectInSidebar(newActorId, newMessageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       expect(store.getState().ui.gripInSidebar).toEqual(newMessage.parameters[0]);

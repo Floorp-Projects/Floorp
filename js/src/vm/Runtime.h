@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
 #include <algorithm>
@@ -934,7 +935,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::MainThreadData<mozilla::MallocSizeOf> debuggerMallocSizeOf;
 
     /* Last time at which an animation was played for this runtime. */
-    mozilla::Atomic<int64_t> lastAnimationTime;
+    js::MainThreadData<mozilla::TimeStamp> lastAnimationTime;
 
   private:
     js::MainThreadData<js::PerformanceMonitoring> performanceMonitoring_;

@@ -116,7 +116,7 @@ class FontEditor extends PureComponent {
       {},
       dom.summary(
         {},
-        getStr("fontinspector.familiesNotUsedLabel")
+        getStr("fontinspector.familiesUnusedLabel")
       ),
       familiesList
     );
@@ -142,8 +142,8 @@ class FontEditor extends PureComponent {
       ? null
       : dom.details({},
           dom.summary({},
-            dom.span({ className: "label-open" }, getStr("fontinspector.seeMore")),
-            dom.span({ className: "label-close" }, getStr("fontinspector.seeLess"))
+            dom.span({ className: "label-open" }, getStr("fontinspector.showMore")),
+            dom.span({ className: "label-close" }, getStr("fontinspector.showLess"))
           ),
           moreUsedFontsList
         );
@@ -282,9 +282,14 @@ class FontEditor extends PureComponent {
   renderWarning() {
     return dom.div(
       {
-        className: "devtools-sidepanel-no-result"
+        id: "font-editor"
       },
-      getStr("fontinspector.noFontsOnSelectedElement")
+      dom.div(
+        {
+          className: "devtools-sidepanel-no-result"
+        },
+        getStr("fontinspector.noFontsOnSelectedElement")
+      )
     );
   }
 
@@ -302,15 +307,16 @@ class FontEditor extends PureComponent {
     const hasWeightAxis = hasFontAxes && font.variationAxes.find(axis => {
       return axis.tag === "wght";
     });
-    // Check for falsy font-weight value (undefined or empty string).
-    const hasWeight = properties["font-weight"] != null;
+
+    // Render empty state message for nodes that don't have a used font.
+    if (!font) {
+      return this.renderWarning();
+    }
 
     return dom.div(
       {
         id: "font-editor"
       },
-      // Render empty state message for nodes that don't have font properties.
-      !hasWeight && this.renderWarning(),
       // Always render UI for font family, format and font file URL.
       this.renderFontFamily(fonts, families),
       // Render UI for font variation instances if they are defined.
