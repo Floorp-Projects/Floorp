@@ -120,6 +120,8 @@ const SQLITE_MAX_VARIABLE_NUMBER = 999;
 // migration code to `migrateMirrorSchema`.
 const MIRROR_SCHEMA_VERSION = 2;
 
+const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
+
 // Use a shared jankYielder in these functions
 XPCOMUtils.defineLazyGetter(this, "maybeYield", () => Async.jankYielder());
 function yieldingIterator(collection) {
@@ -405,6 +407,13 @@ class SyncedBookmarksMirror {
    *         The current server time, in seconds.
    * @param  {String[]} [options.weakUpload]
    *         GUIDs of bookmarks to weakly upload.
+   * @param  {Number} [options.maxFrecenciesToRecalculate]
+   *         The maximum number of bookmark URL frecencies to recalculate after
+   *         this merge. Frecency calculation blocks other Places writes, so we
+   *         limit the number of URLs we process at once. We'll process either
+   *         the next set of URLs after the next merge, or all remaining URLs
+   *         when Places automatically fixes invalid frecencies on idle;
+   *         whichever comes first.
    * @return {Object.<String, BookmarkChangeRecord>}
    *         A changeset containing locally changed and reconciled records to
    *         upload to the server, and to store in the mirror once upload
@@ -412,15 +421,21 @@ class SyncedBookmarksMirror {
    */
   async apply({ localTimeSeconds = Date.now() / 1000,
                 remoteTimeSeconds = 0,
-                weakUpload = [] } = {}) {
+                weakUpload = [],
+                maxFrecenciesToRecalculate =
+                  DEFAULT_MAX_FRECENCIES_TO_RECALCULATE } = {}) {
     // We intentionally don't use `executeBeforeShutdown` in this function,
     // since merging can take a while for large trees, and we don't want to
     // block shutdown. Since all new items are in the mirror, we'll just try
     // to merge again on the next sync.
 
+    let observersToNotify = new BookmarkObserverRecorder(this.db,
+      { maxFrecenciesToRecalculate });
+
     let hasChanges = weakUpload.length > 0 || (await this.hasChanges());
     if (!hasChanges) {
       MirrorLog.debug("No changes detected in both mirror and Places");
+      await observersToNotify.updateFrecencies();
       return {};
     }
 
@@ -485,8 +500,6 @@ class SyncedBookmarksMirror {
       MirrorLog.debug("Built remote tree from mirror\n" +
                       remoteTree.toASCIITreeString());
     }
-
-    let observersToNotify = new BookmarkObserverRecorder(this.db);
 
     let changeRecords;
     try {
@@ -2122,11 +2135,12 @@ async function initializeTempMirrorEntities(db) {
     CREATE TEMP TRIGGER removeLocalItems
     AFTER DELETE ON itemsToRemove
     BEGIN
-      /* Recalculate frecencies. */
+      /* Flag URL frecency for recalculation. */
       UPDATE moz_places SET
-        frecency = -1
+        frecency = -frecency
       WHERE id = (SELECT fk FROM moz_bookmarks
-                  WHERE guid = OLD.guid);
+                  WHERE guid = OLD.guid) AND
+            frecency > 0;
 
       /* Trigger frecency updates for all affected origins. */
       DELETE FROM moz_updateoriginsupdate_temp;
@@ -2373,9 +2387,16 @@ async function initializeTempMirrorEntities(db) {
             id = OLD.localId;
 
       UPDATE moz_places SET
-        frecency = -1
+        frecency = -frecency
       WHERE OLD.oldPlaceId <> OLD.newPlaceId AND
-            id IN (OLD.oldPlaceId, OLD.newPlaceId);
+            id = OLD.oldPlaceId AND
+            frecency > 0;
+
+      UPDATE moz_places SET
+        frecency = -frecency
+      WHERE OLD.oldPlaceId <> OLD.newPlaceId AND
+            id = OLD.newPlaceId AND
+            frecency > 0;
 
       /* Insert a new keyword for the new URL, if one is set. */
       INSERT OR IGNORE INTO moz_keywords(keyword, place_id, post_data)
@@ -4504,8 +4525,9 @@ BookmarkMerger.STRUCTURE = {
  * record and fire.
  */
 class BookmarkObserverRecorder {
-  constructor(db) {
+  constructor(db, { maxFrecenciesToRecalculate }) {
     this.db = db;
+    this.maxFrecenciesToRecalculate = maxFrecenciesToRecalculate;
     this.bookmarkObserverNotifications = [];
     this.annoObserverNotifications = [];
     this.shouldInvalidateKeywords = false;
@@ -4531,7 +4553,13 @@ class BookmarkObserverRecorder {
     await this.db.execute(`
       UPDATE moz_places SET
         frecency = CALCULATE_FRECENCY(id)
-      WHERE frecency = -1`);
+      WHERE id IN (
+        SELECT id FROM moz_places
+        WHERE frecency < 0
+        ORDER BY frecency ASC
+        LIMIT :limit
+      )`,
+      { limit: this.maxFrecenciesToRecalculate });
   }
 
   noteItemAdded(info) {
