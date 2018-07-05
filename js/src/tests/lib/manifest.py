@@ -328,6 +328,9 @@ def _parse_external_manifest(filename, relpath):
     relpath - str: relative path of the directory containing the manifest
                    within the test suite
     """
+    if not os.path.exists(filename):
+        return []
+
     entries = []
 
     with open(filename, 'r') as fp:
@@ -427,7 +430,7 @@ def load_reftests(location, path_options, xul_tester):
         # Skip empty files.
         fullpath = os.path.join(location, filename)
 
-        testcase = RefTestCase(filename)
+        testcase = RefTestCase(location, filename)
         _apply_external_manifests(filename, testcase, externalManifestEntries,
                                   xul_tester)
         _parse_test_header(fullpath, testcase, xul_tester)
