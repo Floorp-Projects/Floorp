@@ -1650,7 +1650,7 @@ public:
     if (!vector.Length()) {
       return;
     }
-    vector.Normalize();
+    vector.RobustNormalize();
 
     double x = vector.x;
     double y = vector.y;

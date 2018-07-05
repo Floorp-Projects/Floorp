@@ -32,6 +32,7 @@ fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget,154,644) ra
 fuzzy-if(skiaContent,1,4) == matrix3d-1a.html matrix3d-1-ref.html
 == matrix3d-2a.html matrix3d-2-ref.html
 == rotate3d-1a.html rotatex-1-ref.html
+== 1467277-1.html rotatex-1-ref.html
 fuzzy-if(webrender,0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
