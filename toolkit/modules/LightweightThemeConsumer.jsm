@@ -118,6 +118,7 @@ function LightweightThemeConsumer(aDocument) {
 
   this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
+  this._win.addEventListener("EndSwapDocShells", this, true);
   this._win.messageManager.addMessageListener("LightweightTheme:Request", this);
 
   let darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
@@ -163,7 +164,12 @@ LightweightThemeConsumer.prototype = {
       case "unload":
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
         this._win.removeEventListener("resolutionchange", this);
+        this._win.removeEventListener("EndSwapDocShells", this, true);
         this._win = this._doc = null;
+        break;
+      case "EndSwapDocShells":
+        let contentThemeData = _getContentProperties(this._doc, this._active, this._lastData);
+        aEvent.target.messageManager.sendAsyncMessage("LightweightTheme:Update", contentThemeData);
         break;
     }
   },
