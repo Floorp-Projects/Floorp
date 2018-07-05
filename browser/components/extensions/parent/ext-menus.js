@@ -828,9 +828,10 @@ this.menusInternal = class extends ExtensionAPI {
             // The menus.onShown event is fired before the user has consciously
             // interacted with an extension, so we require permissions before
             // exposing sensitive contextual data.
+            let contextUrl = contextData.inFrame ? contextData.frameUrl : contextData.pageUrl;
             let includeSensitiveData =
               (nativeTab && extension.tabManager.hasActiveTabPermission(nativeTab)) ||
-              extension.whiteListedHosts.matches(contextData.inFrame ? contextData.frameUrl : contextData.pageUrl);
+              (contextUrl && extension.whiteListedHosts.matches(contextUrl));
 
             addMenuEventInfo(info, contextData, includeSensitiveData);
 
