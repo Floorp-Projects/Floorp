@@ -539,12 +539,9 @@ ServiceWorkerUpdateJob::Install()
   // The job promise cannot be rejected after this point, but the job can
   // still fail; e.g. if the install event handler throws, etc.
 
-  // fire the updatefound event
-  nsCOMPtr<nsIRunnable> upr = NewRunnableMethod(
-      "ServiceWorkerRegistrationInfo::FireUpdateFound",
-      mRegistration,
-      &ServiceWorkerRegistrationInfo::FireUpdateFound);
-  NS_DispatchToMainThread(upr);
+  // Note, the updatefound event is fired automatically when the installing
+  // property is set on the ServiceWorkerRegistration binding object.  This
+  // happens via the TransitionEvaluatingToInstalling() call above.
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
     new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(

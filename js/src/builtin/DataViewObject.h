@@ -61,33 +61,32 @@ class DataViewObject : public NativeObject
   public:
     static const Class class_;
 
-    static Value byteOffsetValue(DataViewObject* view) {
+    static Value byteOffsetValue(const DataViewObject* view) {
         Value v = view->getFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
-    static Value byteLengthValue(DataViewObject* view) {
+    static Value byteLengthValue(const DataViewObject* view) {
         Value v = view->getFixedSlot(TypedArrayObject::LENGTH_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
-    static Value bufferValue(DataViewObject* view) {
+    static Value bufferValue(const DataViewObject* view) {
         return view->getFixedSlot(TypedArrayObject::BUFFER_SLOT);
     }
 
     uint32_t byteOffset() const {
-        return byteOffsetValue(const_cast<DataViewObject*>(this)).toInt32();
+        return byteOffsetValue(this).toInt32();
     }
 
     uint32_t byteLength() const {
-        return byteLengthValue(const_cast<DataViewObject*>(this)).toInt32();
+        return byteLengthValue(this).toInt32();
     }
 
     ArrayBufferObjectMaybeShared& arrayBufferEither() const {
-        return bufferValue(
-            const_cast<DataViewObject*>(this)).toObject().as<ArrayBufferObjectMaybeShared>();
+        return bufferValue(this).toObject().as<ArrayBufferObjectMaybeShared>();
     }
 
     SharedMem<void*> dataPointerEither() const {
