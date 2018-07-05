@@ -7,13 +7,13 @@ function run_test() {
   do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-      crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
+      crashReporter.annotateCrashReport("TestKey", "Yes");
       Cu.getJSTestingFunctions().reportOutOfMemory();
       Cu.forceGC(); // recover from first OOM
       Cu.getJSTestingFunctions().reportOutOfMemory();
     },
     function(mdump, extra) {
-      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.equal(extra.TestKey, "Yes");
 
       // Technically, GC can happen at any time, but it would be really
       // peculiar for it to happen again heuristically right after a GC was

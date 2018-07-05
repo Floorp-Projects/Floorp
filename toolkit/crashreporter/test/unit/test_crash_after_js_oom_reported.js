@@ -7,7 +7,7 @@ function run_test() {
   do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
-      crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
+      crashReporter.annotateCrashReport("TestKey", "Yes");
 
       // GC now to avoid having it happen randomly later, which would make the
       // test bogusly fail. See comment below.
@@ -16,7 +16,7 @@ function run_test() {
       Cu.getJSTestingFunctions().reportOutOfMemory();
     },
     function(mdump, extra) {
-      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.equal(extra.TestKey, "Yes");
 
       // The JSOutOfMemory field is absent if the JS engine never reported OOM,
       // "Reported" if it did, and "Recovered" if it reported OOM but

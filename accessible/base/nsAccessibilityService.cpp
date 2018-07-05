@@ -1393,7 +1393,7 @@ nsAccessibilityService::Init()
   gApplicationAccessible->Init();
 
   CrashReporter::
-    AnnotateCrashReport(NS_LITERAL_CSTRING("Accessibility"),
+    AnnotateCrashReport(CrashReporter::Annotation::Accessibility,
                         NS_LITERAL_CSTRING("Active"));
 
 #ifdef XP_WIN

@@ -33,6 +33,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
+#include "nsICrashReporter.h"
 #include "nsILabelableRunnable.h"
 
 #if defined(ANDROID) && defined(DEBUG)
@@ -914,9 +915,9 @@ private:
 };
 
 #if defined(XP_MACOSX)
-void AnnotateCrashReportWithErrno(const char* tag, int error);
+void AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error);
 #else
-static inline void AnnotateCrashReportWithErrno(const char* tag, int error)
+static inline void AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error)
 {}
 #endif
 
@@ -936,7 +937,8 @@ CreateEndpoints(const PrivateIPDLInterface& aPrivate,
   TransportDescriptor parentTransport, childTransport;
   nsresult rv;
   if (NS_FAILED(rv = CreateTransport(aParentDestPid, &parentTransport, &childTransport))) {
-    AnnotateCrashReportWithErrno("IpcCreateEndpointsNsresult", int(rv));
+    AnnotateCrashReportWithErrno(
+      CrashReporter::Annotation::IpcCreateEndpointsNsresult, int(rv));
     return rv;
   }
 
