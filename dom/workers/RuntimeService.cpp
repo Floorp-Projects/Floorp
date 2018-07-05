@@ -584,14 +584,18 @@ class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable
 {
   nsString mFileName;
   uint32_t mLineNum;
+  uint32_t mColumnNum;
 
 public:
   LogViolationDetailsRunnable(WorkerPrivate* aWorker,
                               const nsString& aFileName,
-                              uint32_t aLineNum)
+                              uint32_t aLineNum,
+                              uint32_t aColumnNum)
     : WorkerMainThreadRunnable(aWorker,
                                NS_LITERAL_CSTRING("RuntimeService :: LogViolationDetails"))
-    , mFileName(aFileName), mLineNum(aLineNum)
+    , mFileName(aFileName)
+    , mLineNum(aLineNum)
+    , mColumnNum(aColumnNum)
   {
     MOZ_ASSERT(aWorker);
   }
@@ -611,16 +615,17 @@ ContentSecurityPolicyAllows(JSContext* aCx)
   if (worker->GetReportCSPViolations()) {
     nsString fileName;
     uint32_t lineNum = 0;
+    uint32_t columnNum = 0;
 
     JS::AutoFilename file;
-    if (JS::DescribeScriptedCaller(aCx, &file, &lineNum) && file.get()) {
+    if (JS::DescribeScriptedCaller(aCx, &file, &lineNum, &columnNum) && file.get()) {
       fileName = NS_ConvertUTF8toUTF16(file.get());
     } else {
       MOZ_ASSERT(!JS_IsExceptionPending(aCx));
     }
 
     RefPtr<LogViolationDetailsRunnable> runnable =
-        new LogViolationDetailsRunnable(worker, fileName, lineNum);
+        new LogViolationDetailsRunnable(worker, fileName, lineNum, columnNum);
 
     ErrorResult rv;
     runnable->Dispatch(Killing, rv);
@@ -2620,7 +2625,7 @@ LogViolationDetailsRunnable::MainThreadRun()
         "Call to eval() or related function blocked by CSP.");
     if (mWorkerPrivate->GetReportCSPViolations()) {
       csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
-                               mFileName, scriptSample, mLineNum,
+                               mFileName, scriptSample, mLineNum, mColumnNum,
                                EmptyString(), EmptyString());
     }
   }
