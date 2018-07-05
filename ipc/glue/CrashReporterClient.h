@@ -65,7 +65,8 @@ public:
   static void DestroySingleton();
   static RefPtr<CrashReporterClient> GetSingleton();
 
-  void AnnotateCrashReport(const nsCString& aKey, const nsCString& aData);
+  void AnnotateCrashReport(CrashReporter::Annotation aKey,
+                           const nsCString& aData);
   void AppendAppNotes(const nsCString& aData);
 
 private:

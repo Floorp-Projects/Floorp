@@ -237,6 +237,8 @@ public:
     Recovered
   };
 
+  const char* OOMStateToString(const OOMState aOomState) const;
+
   void SetLargeAllocationFailure(OOMState aNewState);
 
   void AnnotateAndSetOutOfMemory(OOMState* aStatePtr, OOMState aNewState);

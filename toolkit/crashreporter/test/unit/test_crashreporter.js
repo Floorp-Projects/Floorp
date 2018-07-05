@@ -39,27 +39,28 @@ function run_test() {
   cr.minidumpPath = cwd;
   Assert.equal(cr.minidumpPath.path, cwd.path);
 
+  // Test annotateCrashReport()
   try {
-    cr.annotateCrashReport("equal=equal", "");
-    do_throw("Calling annotateCrashReport() with an '=' in key should have thrown!");
+    cr.annotateCrashReport(undefined, "");
+    do_throw("Calling annotateCrashReport() with an undefined key should have thrown!");
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
-    cr.annotateCrashReport("new\nline", "");
-    do_throw("Calling annotateCrashReport() with a '\\n' in key should have thrown!");
+    cr.annotateCrashReport("foobar", "");
+    do_throw("Calling annotateCrashReport() with a bogus key should have thrown!");
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
-    cr.annotateCrashReport("", "da\0ta");
+    cr.annotateCrashReport("TestKey", "da\0ta");
     do_throw("Calling annotateCrashReport() with a '\\0' in data should have thrown!");
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
-  cr.annotateCrashReport("testKey", "testData1");
+  cr.annotateCrashReport("TestKey", "testData1");
   // Replace previous data.
-  cr.annotateCrashReport("testKey", "testData2");
+  cr.annotateCrashReport("TestKey", "testData2");
 
   try {
     cr.appendAppNotesToCrashReport("da\0ta");
@@ -71,6 +72,22 @@ function run_test() {
   // Add more data.
   cr.appendAppNotesToCrashReport("additional testData4");
 
+  // Test removeCrashReportAnnotation()
+  try {
+    cr.removeCrashReportAnnotation(undefined);
+    do_throw("Calling removeCrashReportAnnotation() with an undefined key should have thrown!");
+  } catch (ex) {
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+  try {
+    cr.removeCrashReportAnnotation("foobar");
+    do_throw("Calling removeCrashReportAnnotation() with a bogus key should have thrown!");
+  } catch (ex) {
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+  cr.removeCrashReportAnnotation("TestKey");
+
+  // Testing setting the minidumpPath field
   cr.minidumpPath = cwd;
   Assert.equal(cr.minidumpPath.path, cwd.path);
 }
