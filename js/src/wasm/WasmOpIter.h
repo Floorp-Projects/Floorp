@@ -1769,7 +1769,7 @@ OpIter<Policy>::readRefNull(ValType* type)
     if (!d_.readValType(&code, &refTypeIndex))
         return fail("unknown nullref type");
     if (code == uint8_t(TypeCode::Ref)) {
-        if (refTypeIndex > MaxTypes)
+        if (refTypeIndex >= MaxTypes || refTypeIndex >= env_.types.length())
             return fail("invalid nullref type");
     } else if (code != uint8_t(TypeCode::AnyRef)) {
         return fail("unknown nullref type");
