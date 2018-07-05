@@ -35,6 +35,11 @@ function FrameTargetActorProxy(connection, browser, options = {}) {
 }
 
 FrameTargetActorProxy.prototype = {
+  // As these proxies are added to pools, they are considered as actors and should have
+  // a prefix set, even if that's never really used. FrameTargetActor's actorID is going
+  // to be used in form().
+  actorPrefix: "frameTargetProxy",
+
   async connect() {
     const onDestroy = () => {
       if (this._deferredUpdate) {
