@@ -47,6 +47,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
   , mInner(aInner)
   , mScheduledUpdateFoundId(kInvalidUpdateFoundId)
   , mDispatchedUpdateFoundId(kInvalidUpdateFoundId)
+  , mPendingUpdatePromises(0)
 {
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
@@ -200,8 +201,11 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
 
   RefPtr<ServiceWorkerRegistration> self = this;
 
+  mPendingUpdatePromises += 1;
+
   mInner->Update(
     [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
+      auto scopeExit = MakeScopeExit([&] { self->UpdatePromiseSettled(); });
       nsIGlobalObject* global = self->GetParentObject();
       MOZ_DIAGNOSTIC_ASSERT(global);
       RefPtr<ServiceWorkerRegistration> ref =
@@ -211,7 +215,8 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
         return;
       }
       outer->MaybeResolve(ref);
-    }, [outer] (ErrorResult& aRv) {
+    }, [outer, self] (ErrorResult& aRv) {
+      auto scopeExit = MakeScopeExit([&] { self->UpdatePromiseSettled(); });
       outer->MaybeReject(aRv);
     });
 
@@ -363,6 +368,10 @@ ServiceWorkerRegistration::MaybeScheduleUpdateFound(const Maybe<ServiceWorkerDes
 
   mScheduledUpdateFoundId = newId;
 
+  if (mPendingUpdatePromises > 0) {
+    return;
+  }
+
   nsIGlobalObject* global = GetParentObject();
   NS_ENSURE_TRUE_VOID(global);
 
@@ -388,6 +397,28 @@ ServiceWorkerRegistration::MaybeDispatchUpdateFound()
 
   mDispatchedUpdateFoundId = scheduledId;
   DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
+}
+
+void
+ServiceWorkerRegistration::UpdatePromiseSettled()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mPendingUpdatePromises > 0);
+  mPendingUpdatePromises -= 1;
+  if (mPendingUpdatePromises > 0 ||
+      mScheduledUpdateFoundId == kInvalidUpdateFoundId) {
+    return;
+  }
+
+  nsIGlobalObject* global = GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
+  nsCOMPtr<nsIRunnable> r = NewCancelableRunnableMethod(
+    "ServiceWorkerRegistration::MaybeDispatchUpdateFound",
+    this,
+    &ServiceWorkerRegistration::MaybeDispatchUpdateFound);
+
+  Unused << global->EventTargetFor(TaskCategory::Other)->Dispatch(
+    r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
