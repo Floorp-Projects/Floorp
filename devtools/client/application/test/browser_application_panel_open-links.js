@@ -35,6 +35,12 @@ add_task(async function() {
   // BrowserTestUtils.waitForNewTab checks the URL.
   ok(newTab, "The expected tab was opened.");
 
+  info("Wait until the main about debugging container is available");
+  await waitUntil(() => {
+    const aboutDebuggingDoc = newTab.linkedBrowser.contentDocument;
+    return aboutDebuggingDoc.querySelector(".app");
+  });
+
   // close the tab
   info("Closing the tab.");
   await BrowserTestUtils.removeTab(newTab);
