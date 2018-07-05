@@ -1435,12 +1435,12 @@ Database::CheckRoots()
   // If the database has just been created, skip straight to the part where
   // we create the roots.
   if (mDatabaseStatus == nsINavHistoryService::DATABASE_STATUS_CREATE) {
-    return EnsureBookmarkRoots(0);
+    return EnsureBookmarkRoots(0, /* shouldReparentRoots */ false);
   }
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT guid, id, position FROM moz_bookmarks WHERE guid IN ( "
+    "SELECT guid, id, position, parent FROM moz_bookmarks WHERE guid IN ( "
       "'" ROOT_GUID "', '" MENU_ROOT_GUID "', '" TOOLBAR_ROOT_GUID "', "
       "'" TAGS_ROOT_GUID "', '" UNFILED_ROOT_GUID "', '" MOBILE_ROOT_GUID "' )"
     ), getter_AddRefs(stmt));
@@ -1449,12 +1449,16 @@ Database::CheckRoots()
   bool hasResult;
   nsAutoCString guid;
   int32_t maxPosition = 0;
+  bool shouldReparentRoots = false;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     rv = stmt->GetUTF8String(0, guid);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    int64_t parentId = stmt->AsInt64(3);
+
     if (guid.EqualsLiteral(ROOT_GUID)) {
       mRootId = stmt->AsInt64(1);
+      shouldReparentRoots |= parentId != 0;
     }
     else {
       maxPosition = std::max(stmt->AsInt32(2), maxPosition);
@@ -1474,25 +1478,23 @@ Database::CheckRoots()
       else if (guid.EqualsLiteral(MOBILE_ROOT_GUID)) {
         mMobileRootId = stmt->AsInt64(1);
       }
+      shouldReparentRoots |= parentId != mRootId;
     }
   }
 
-  rv = EnsureBookmarkRoots(maxPosition + 1);
+  rv = EnsureBookmarkRoots(maxPosition + 1, shouldReparentRoots);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 nsresult
-Database::EnsureBookmarkRoots(const int32_t startPosition)
+Database::EnsureBookmarkRoots(const int32_t startPosition,
+                              bool shouldReparentRoots)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
-
-  // Note: If the root is missing, we recreate it but we don't fix any
-  // remaining built-in folder parent ids. We leave these to a maintenance task,
-  // so that we're not needing to do extra checks on startup.
 
   if (mRootId < 1) {
     // The first root's title is an empty string.
@@ -1560,11 +1562,77 @@ Database::EnsureBookmarkRoots(const int32_t startPosition)
       if (NS_FAILED(rv)) return rv;
 
       rv = mobileRootSyncStatusStmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) return rv;
 
       mMobileRootId = mobileRootId;
     }
   }
+
+  if (!shouldReparentRoots) {
+    return NS_OK;
+  }
+
+  // At least one root had the wrong parent, so we need to ensure that
+  // all roots are parented correctly, fix their positions, and bump the
+  // Sync change counter.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMP TRIGGER moz_ensure_bookmark_roots_trigger "
+    "AFTER UPDATE OF parent ON moz_bookmarks FOR EACH ROW "
+    "WHEN OLD.parent <> NEW.parent "
+    "BEGIN "
+      "UPDATE moz_bookmarks SET "
+        "syncChangeCounter = syncChangeCounter + 1 "
+      "WHERE id IN (OLD.parent, NEW.parent, NEW.id); "
+
+      "UPDATE moz_bookmarks SET "
+        "position = position - 1 "
+      "WHERE parent = OLD.parent AND position >= OLD.position; "
+
+      // Fix the positions of the root's old siblings. Since we've already
+      // moved the root, we need to exclude it from the subquery.
+      "UPDATE moz_bookmarks SET "
+        "position = IFNULL((SELECT MAX(position) + 1 FROM moz_bookmarks "
+                           "WHERE parent = NEW.parent AND "
+                                 "id <> NEW.id), 0)"
+      "WHERE id = NEW.id; "
+    "END"
+  ));
+  if (NS_FAILED(rv)) return rv;
+  auto guard = MakeScopeExit([&]() {
+    Unused << mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DROP TRIGGER moz_ensure_bookmark_roots_trigger"));
+  });
+
+  nsCOMPtr<mozIStorageStatement> reparentStmt;
+  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_bookmarks SET "
+      "parent = CASE id WHEN :root_id THEN 0 ELSE :root_id END "
+    "WHERE id IN (:root_id, :menu_root_id, :toolbar_root_id, :tags_root_id, "
+                 ":unfiled_root_id, :mobile_root_id)"
+  ), getter_AddRefs(reparentStmt));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = reparentStmt->BindInt64ByName(NS_LITERAL_CSTRING("root_id"),
+                                     mRootId);
+  if (NS_FAILED(rv)) return rv;
+  rv = reparentStmt->BindInt64ByName(NS_LITERAL_CSTRING("menu_root_id"),
+                                     mMenuRootId);
+  if (NS_FAILED(rv)) return rv;
+  rv = reparentStmt->BindInt64ByName(NS_LITERAL_CSTRING("toolbar_root_id"),
+                                     mToolbarRootId);
+  if (NS_FAILED(rv)) return rv;
+  rv = reparentStmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_root_id"),
+                                     mTagsRootId);
+  if (NS_FAILED(rv)) return rv;
+  rv = reparentStmt->BindInt64ByName(NS_LITERAL_CSTRING("unfiled_root_id"),
+                                     mUnfiledRootId);
+  if (NS_FAILED(rv)) return rv;
+  rv = reparentStmt->BindInt64ByName(NS_LITERAL_CSTRING("mobile_root_id"),
+                                     mMobileRootId);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = reparentStmt->Execute();
+  if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
 }
