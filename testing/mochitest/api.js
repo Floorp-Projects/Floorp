@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals ExtensionAPI */
+
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -38,10 +40,20 @@ const windowTracker = {
   },
 };
 
-function androidStartup(data, reason) {
+function androidStartup() {
   // Only browser chrome tests need help starting.
   let testRoot = Services.prefs.getStringPref("mochitest.testRoot", "");
   if (testRoot.endsWith("/chrome")) {
+    // The initial window is created from browser startup, which races
+    // against extension initialization.  If it has already been created,
+    // inject the test scripts now, otherwise wait for the browser window
+    // to show up.
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (win) {
+      loadChromeScripts(win);
+      return;
+    }
+
     windowTracker.init();
   }
 }
@@ -94,29 +106,38 @@ function loadMochitest(e) {
   loadChromeScripts(win);
 }
 
-function startup(data, reason) {
-  if (AppConstants.platform == "android") {
-    androidStartup(data, reason);
-  } else {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    // wait for event fired from start_desktop.js containing the
-    // suite and url to load
-    win.addEventListener("mochitest-load", loadMochitest);
-  }
-}
+this.mochikit = class extends ExtensionAPI {
+  onStartup() {
+    let aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"]
+                                 .getService(Ci.amIAddonManagerStartup);
+    const manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+    const targetURL = this.extension.rootURI.resolve("content/");
+    this.chromeHandle = aomStartup.registerChrome(manifestURI, [
+      ["content", "mochikit", targetURL],
+    ]);
 
-function shutdown(data, reason) {
-  if (AppConstants.platform != "android") {
-    let windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
-      WindowListener.tearDownWindow(win);
+    if (AppConstants.platform == "android") {
+      androidStartup();
+    } else {
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      // wait for event fired from start_desktop.js containing the
+      // suite and url to load
+      win.addEventListener("mochitest-load", loadMochitest);
+    }
+  }
+
+  onShutdown() {
+    if (AppConstants.platform != "android") {
+      let windows = Services.wm.getEnumerator("navigator:browser");
+      while (windows.hasMoreElements()) {
+        let win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+        WindowListener.tearDownWindow(win);
+      }
+
+      Services.wm.removeListener(WindowListener);
     }
 
-    Services.wm.removeListener(WindowListener);
+    this.chromeHandle.destruct();
+    this.chromeHandle = null;
   }
-}
-
-function install(data, reason) {}
-function uninstall(data, reason) {}
-
+};
