@@ -87,6 +87,7 @@ class RaptorControlServer():
         self.port = None
         self.results_handler = results_handler
         self.browser_proc = None
+        self._finished = False
 
     def start(self):
         config_dir = os.path.join(here, 'tests')
@@ -116,13 +117,14 @@ class RaptorControlServer():
         self.kill_thread.daemon = True
         self.kill_thread.start()
 
-    def wait_for_quit(self, timeout=5):
+    def wait_for_quit(self, timeout=75):
         """Wait timeout seconds for the process to exit. If it hasn't
         exited by then, kill it.
         """
         self.browser_proc.wait(timeout)
         if self.browser_proc.poll() is None:
             self.browser_proc.kill()
+        self._finished = True
 
     def stop(self):
         LOG.info("shutting down control server")
