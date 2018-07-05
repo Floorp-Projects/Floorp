@@ -414,9 +414,6 @@
                          tooltiptext="&closeNotification.tooltip;"
                          oncommand="document.getBindingParent(this).dismiss();"/>
     </content>
-    <resources>
-      <stylesheet src="chrome://global/skin/notification.css"/>
-    </resources>
     <implementation>
       <property name="label" onset="this.setAttribute('label', val); return val;"
                              onget="return this.getAttribute('label');"/>
@@ -556,9 +553,6 @@
                     xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,highlight=buttonhighlight,disabled=mainactiondisabled"/>
       </xul:hbox>
     </content>
-    <resources>
-      <stylesheet src="chrome://global/skin/notification.css"/>
-    </resources>
     <implementation>
       <field name="checkbox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "checkbox");
