@@ -1016,7 +1016,9 @@ OpIter<Policy>::readBlockType(ExprType* type)
         known = true;
         break;
       case uint8_t(ExprType::Ref):
-        known = env_.gcTypesEnabled == HasGcTypes::True;
+        known = env_.gcTypesEnabled == HasGcTypes::True &&
+                uncheckedRefTypeIndex < MaxTypes &&
+                uncheckedRefTypeIndex < env_.types.length();
         break;
       case uint8_t(ExprType::AnyRef):
         known = env_.gcTypesEnabled == HasGcTypes::True;
