@@ -46,7 +46,7 @@ config = {
     "tooltool_servers": ['http://relengapi/tooltool/'],
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "avds_dir": "/builds/worker/workspace/build/.android",
-    "log_format": "%(levelname)8s - %(message)s",
+    # "log_format": "%(levelname)8s - %(message)s",
     "log_tbpl_level": "info",
     "log_raw_level": "info",
     "minidump_stackwalk_path": "/usr/local/bin/linux64-minidump_stackwalk",
