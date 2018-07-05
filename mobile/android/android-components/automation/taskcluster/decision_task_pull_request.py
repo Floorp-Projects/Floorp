@@ -28,7 +28,7 @@ def fetch_module_names():
     if exit_code is not 0:
         print "Gradle command returned error:", exit_code
 
-    return re.findall('mobule: (.*)', output, re.M)
+    return re.findall('module: (.*)', output, re.M)
 
 
 def schedule_task(queue, taskId, task):

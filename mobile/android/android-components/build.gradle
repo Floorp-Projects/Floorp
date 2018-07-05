@@ -230,7 +230,7 @@ task ktlint(type: JavaExec, group: "verification") {
 task printModules {
     doLast {
         subprojects.each { p ->
-            println "mobule: " + p.path
+            println "module: " + p.path
         }
     }
 }
