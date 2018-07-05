@@ -412,6 +412,11 @@ add_task(async function testExtensionTag() {
 });
 
 add_task(async function testScalars() {
+  // Do not bother testing telemetry scalars if they're already expired.
+  if (SCALARS_EXPIRED) {
+    return;
+  }
+
   const fetchStub = sinon.stub();
   const reporter = new BrowserErrorReporter({
     fetch: fetchStub,
