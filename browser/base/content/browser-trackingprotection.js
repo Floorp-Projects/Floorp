@@ -8,6 +8,7 @@ var TrackingProtection = {
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   PREF_APP_MENU_TOGGLE: "privacy.trackingprotection.appMenuToggle.enabled",
+  PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
   enabledGlobally: false,
   enabledInPrivateWindows: false,
   container: null,
@@ -36,6 +37,10 @@ var TrackingProtection = {
     this.icon = $("#tracking-protection-icon");
     this.appMenuContainer = $("#appMenu-tp-container");
     this.appMenuSeparator = $("#appMenu-tp-separator");
+    this.iconBox = $("#tracking-protection-icon-box");
+    this.animatedIcon = $("#tracking-protection-icon-animatable-image");
+    this.animatedIcon.addEventListener("animationend", () => this.iconBox.removeAttribute("animate"));
+
     this.broadcaster = $("#trackingProtectionBroadcaster");
 
     this.enableTooltip =
@@ -46,6 +51,15 @@ var TrackingProtection = {
       gNavigatorBundle.getString("trackingProtection.toggle.enable.pbmode.tooltip");
     this.disableTooltipPB =
       gNavigatorBundle.getString("trackingProtection.toggle.disable.pbmode.tooltip");
+
+    this.updateAnimationsEnabled = () => {
+      this.iconBox.toggleAttribute("animationsenabled",
+        Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false));
+    };
+
+    this.updateAnimationsEnabled();
+
+    Services.prefs.addObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
 
     this.updateEnabled();
 
@@ -78,6 +92,7 @@ var TrackingProtection = {
     Services.prefs.removeObserver(this.PREF_ENABLED_GLOBALLY, this);
     Services.prefs.removeObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
     Services.prefs.removeObserver(this.PREF_APP_MENU_TOGGLE, this.updateAppMenuToggle);
+    Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
   },
 
   observe() {
@@ -156,21 +171,29 @@ var TrackingProtection = {
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD").add(value);
   },
 
-  onSecurityChange(state, isSimulated) {
+  cancelAnimation() {
+    let iconAnimation = this.animatedIcon.getAnimations()[0];
+    if (iconAnimation && iconAnimation.currentTime) {
+      iconAnimation.cancel();
+    }
+    this.iconBox.removeAttribute("animate");
+  },
+
+  onSecurityChange(state, webProgress, isSimulated) {
     let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.
     if (!baseURI) {
-      this.icon.removeAttribute("state");
+      this.cancelAnimation();
+      this.iconBox.removeAttribute("state");
       return;
     }
 
-    // Only animate the shield if the event was not fired directly from
-    // the tabbrowser (due to a browser change).
-    if (isSimulated) {
-      this.icon.removeAttribute("animate");
-    } else {
-      this.icon.setAttribute("animate", "true");
+    // The user might have navigated before the shield animation
+    // finished. In this case, reset the animation to be able to
+    // play it in full again and avoid choppiness.
+    if (webProgress.isTopLevel) {
+      this.cancelAnimation();
     }
 
     let isBlocking = state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
@@ -192,8 +215,14 @@ var TrackingProtection = {
     }
 
     if (isBlocking && this.enabled) {
-      this.icon.setAttribute("tooltiptext", this.activeTooltipText);
-      this.icon.setAttribute("state", "blocked-tracking-content");
+      if (isSimulated) {
+        this.cancelAnimation();
+      } else if (webProgress.isTopLevel) {
+        this.iconBox.setAttribute("animate", "true");
+      }
+
+      this.iconBox.setAttribute("tooltiptext", this.activeTooltipText);
+      this.iconBox.setAttribute("state", "blocked-tracking-content");
       this.content.setAttribute("state", "blocked-tracking-content");
 
       // Open the tracking protection introduction panel, if applicable.
@@ -208,22 +237,28 @@ var TrackingProtection = {
 
       this.shieldHistogramAdd(2);
     } else if (isAllowing) {
+      if (isSimulated) {
+        this.cancelAnimation();
+      } else if (webProgress.isTopLevel) {
+        this.iconBox.setAttribute("animate", "true");
+      }
+
       // Only show the shield when TP is enabled for now.
       if (this.enabled) {
-        this.icon.setAttribute("tooltiptext", this.disabledTooltipText);
-        this.icon.setAttribute("state", "loaded-tracking-content");
+        this.iconBox.setAttribute("tooltiptext", this.disabledTooltipText);
+        this.iconBox.setAttribute("state", "loaded-tracking-content");
         this.shieldHistogramAdd(1);
       } else {
-        this.icon.removeAttribute("tooltiptext");
-        this.icon.removeAttribute("state");
+        this.iconBox.removeAttribute("tooltiptext");
+        this.iconBox.removeAttribute("state");
         this.shieldHistogramAdd(0);
       }
 
       // Warn in the control center even with TP disabled.
       this.content.setAttribute("state", "loaded-tracking-content");
     } else {
-      this.icon.removeAttribute("tooltiptext");
-      this.icon.removeAttribute("state");
+      this.iconBox.removeAttribute("tooltiptext");
+      this.iconBox.removeAttribute("state");
       this.content.removeAttribute("state");
 
       // We didn't show the shield
