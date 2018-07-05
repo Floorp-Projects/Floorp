@@ -12,6 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPtr.h"
 
 #include "nsError.h"
 #include "nsIFrame.h"
@@ -5492,6 +5493,8 @@ nsComputedDOMStyle::GetComputedStyleMap()
   return &map;
 }
 
+static StaticAutoPtr<nsTArray<const char*>> gCallbackPrefs;
+
 /* static */ void
 nsComputedDOMStyle::RegisterPrefChangeCallbacks()
 {
@@ -5499,22 +5502,41 @@ nsComputedDOMStyle::RegisterPrefChangeCallbacks()
   // just those that are implemented on computed style objects, as it's not
   // easy to grab specific property data from ServoCSSPropList.h based on the
   // entries iterated in nsComputedDOMStylePropertyList.h.
-  ComputedStyleMap* data = GetComputedStyleMap();
+
+  AutoTArray<const char*, 64> prefs;
   for (const auto* p = nsCSSProps::kPropertyPrefTable;
        p->mPropID != eCSSProperty_UNKNOWN; p++) {
-    nsCString name;
-    name.AssignLiteral(p->mPref, strlen(p->mPref));
-    Preferences::RegisterCallback(MarkComputedStyleMapDirty, name, data);
+    // Many properties are controlled by the same preference, so de-duplicate
+    // them before adding observers.
+    //
+    // Note: This is done by pointer comparison, which works because the mPref
+    // members are string literals from the same same translation unit, and are
+    // therefore de-duplicated by the compiler. On the off chance that we wind
+    // up with some duplicates with different pointers, though, it's not a bit
+    // deal.
+    if (!prefs.ContainsSorted(p->mPref)) {
+      prefs.InsertElementSorted(p->mPref);
+    }
   }
+  prefs.AppendElement(nullptr);
+
+  MOZ_ASSERT(!gCallbackPrefs);
+  gCallbackPrefs = new nsTArray<const char*>(std::move(prefs));
+
+  Preferences::RegisterCallbacks(MarkComputedStyleMapDirty,
+                                 gCallbackPrefs->Elements(),
+                                 GetComputedStyleMap());
 }
 
 /* static */ void
 nsComputedDOMStyle::UnregisterPrefChangeCallbacks()
 {
-  ComputedStyleMap* data = GetComputedStyleMap();
-  for (const auto* p = nsCSSProps::kPropertyPrefTable;
-       p->mPropID != eCSSProperty_UNKNOWN; p++) {
-    Preferences::UnregisterCallback(MarkComputedStyleMapDirty,
-                                    nsDependentCString(p->mPref), data);
+  if (!gCallbackPrefs) {
+    return;
   }
+
+  Preferences::UnregisterCallbacks(MarkComputedStyleMapDirty,
+                                   gCallbackPrefs->Elements(),
+                                   GetComputedStyleMap());
+  gCallbackPrefs = nullptr;
 }
