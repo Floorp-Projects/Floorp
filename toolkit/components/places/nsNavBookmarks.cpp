@@ -2182,14 +2182,14 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime,
+nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,
                                const nsACString& aGUID,
                                uint16_t aReason, uint32_t aTransitionType)
 {
   NS_ENSURE_ARG(aURI);
 
   // Notify "cleartime" only if all visits to the page have been removed.
-  if (!aVisitTime) {
+  if (!aPartialRemoval) {
     // If the page is bookmarked, notify observers for each associated bookmark.
     ItemChangeData changeData;
     nsresult rv = aURI->GetSpec(changeData.bookmark.url);

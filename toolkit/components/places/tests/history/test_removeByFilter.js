@@ -310,9 +310,9 @@ function getObserverPromise(bookmarkedUri) {
           resolve();
         }
       },
-      onDeleteVisits(aURI, aVisitTime) {
+      onDeleteVisits(aURI, aPartialRemoval) {
         try {
-          Assert.equal(aVisitTime, PlacesUtils.toPRTime(new Date(0)), "Observing onDeleteVisits deletes all visits");
+          Assert.equal(aPartialRemoval, false, "Observing onDeleteVisits deletes all visits");
           Assert.equal(aURI.spec, bookmarkedUri, "Bookmarked URI should have all visits removed but not the page itself");
         } finally {
           resolve();

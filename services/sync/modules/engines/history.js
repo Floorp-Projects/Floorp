@@ -512,7 +512,7 @@ HistoryTracker.prototype = {
     }
   },
 
-  onDeleteVisits(uri, visitTime, guid, reason) {
+  onDeleteVisits(uri, partialRemoval, guid, reason) {
     this.asyncObserver.enqueueCall(() =>
       this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteVisits", SCORE_INCREMENT_SMALL)
     );
