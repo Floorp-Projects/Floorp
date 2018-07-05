@@ -4,7 +4,8 @@
 "use strict";
 
 function run_test() {
-  DebuggerServer.registerModule("xpcshell-test/testactors-no-bulk");
+  const { createRootActor } = require("xpcshell-test/testactors-no-bulk");
+  DebuggerServer.setRootActor(createRootActor);
   // Allow incoming connections.
   DebuggerServer.init();
 

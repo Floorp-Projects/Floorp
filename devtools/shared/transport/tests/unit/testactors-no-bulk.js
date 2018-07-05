@@ -8,7 +8,7 @@ const { DebuggerServer } = require("devtools/server/main");
 /**
  * Root actor that doesn't have the bulk trait.
  */
-function createRootActor(connection) {
+exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
     globalActorFactories: DebuggerServer.globalActorFactories
   });
@@ -17,12 +17,4 @@ function createRootActor(connection) {
     bulk: false
   };
   return root;
-}
-
-exports.register = function(handle) {
-  handle.setRootActor(createRootActor);
-};
-
-exports.unregister = function(handle) {
-  handle.setRootActor(null);
 };
