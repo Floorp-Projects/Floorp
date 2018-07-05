@@ -711,6 +711,14 @@ nsRFPService::GetSpoofedUserAgent(nsACString &userAgent)
   return rv;
 }
 
+static const char* gCallbackPrefs[] = {
+  RESIST_FINGERPRINTING_PREF,
+  RFP_TIMER_PREF,
+  RFP_TIMER_VALUE_PREF,
+  RFP_JITTER_VALUE_PREF,
+  nullptr,
+};
+
 nsresult
 nsRFPService::Init()
 {
@@ -729,20 +737,8 @@ nsRFPService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(prefs, NS_ERROR_NOT_AVAILABLE);
-
-  rv = prefs->AddObserver(RESIST_FINGERPRINTING_PREF, this, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = prefs->AddObserver(RFP_TIMER_PREF, this, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = prefs->AddObserver(RFP_TIMER_VALUE_PREF, this, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = prefs->AddObserver(RFP_JITTER_VALUE_PREF, this, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Preferences::RegisterCallbacks(PREF_CHANGE_METHOD(nsRFPService::PrefChanged),
+                                 gCallbackPrefs, this);
 
   Preferences::AddAtomicBoolVarCache(&sPrivacyTimerPrecisionReduction,
                                      RFP_TIMER_PREF,
@@ -855,16 +851,9 @@ nsRFPService::StartShutdown()
 
   if (obs) {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    if (prefs) {
-      prefs->RemoveObserver(RESIST_FINGERPRINTING_PREF, this);
-      prefs->RemoveObserver(RFP_TIMER_PREF, this);
-      prefs->RemoveObserver(RFP_TIMER_VALUE_PREF, this);
-      prefs->RemoveObserver(RFP_JITTER_VALUE_PREF, this);
-    }
   }
+  Preferences::UnregisterCallbacks(PREF_CHANGE_METHOD(nsRFPService::PrefChanged),
+                                   gCallbackPrefs, this);
 }
 
 /* static */
@@ -1094,32 +1083,34 @@ nsRFPService::GetSpoofedKeyCode(const nsIDocument* aDoc,
   return false;
 }
 
+void
+nsRFPService::PrefChanged(const char* aPref)
+{
+  nsDependentCString pref(aPref);
+
+  if (pref.EqualsLiteral(RFP_TIMER_PREF) ||
+      pref.EqualsLiteral(RFP_TIMER_VALUE_PREF) ||
+      pref.EqualsLiteral(RFP_JITTER_VALUE_PREF)) {
+    UpdateTimers();
+  }
+  else if (pref.EqualsLiteral(RESIST_FINGERPRINTING_PREF)) {
+    UpdateRFPPref();
+
+#if defined(XP_WIN)
+    if (!XRE_IsE10sParentProcess()) {
+      // Windows does not follow POSIX. Updates to the TZ environment variable
+      // are not reflected immediately on that platform as they are on UNIX
+      // systems without this call.
+      _tzset();
+    }
+#endif
+  }
+}
+
 NS_IMETHODIMP
 nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
                       const char16_t* aMessage)
 {
-  if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
-    NS_ConvertUTF16toUTF8 pref(aMessage);
-
-    if (pref.EqualsLiteral(RFP_TIMER_PREF) ||
-        pref.EqualsLiteral(RFP_TIMER_VALUE_PREF) ||
-        pref.EqualsLiteral(RFP_JITTER_VALUE_PREF)) {
-      UpdateTimers();
-    }
-    else if (pref.EqualsLiteral(RESIST_FINGERPRINTING_PREF)) {
-      UpdateRFPPref();
-
-#if defined(XP_WIN)
-      if (!XRE_IsE10sParentProcess()) {
-        // Windows does not follow POSIX. Updates to the TZ environment variable
-        // are not reflected immediately on that platform as they are on UNIX
-        // systems without this call.
-        _tzset();
-      }
-#endif
-    }
-  }
-
   if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
     StartShutdown();
   }
