@@ -138,6 +138,143 @@ class FontInspector {
   }
 
   /**
+   * Convert a value for font-size between two CSS unit types.
+   * Conversion is done via pixels. If neither of the two given unit types is "px",
+   * recursively get the value in pixels, then convert that result to the desired unit.
+   *
+   * @param  {Number} value
+   *         Numeric value to convert.
+   * @param  {String} fromUnit
+   *         CSS unit to convert from.
+   * @param  {String} toUnit
+   *         CSS unit to convert to.
+   * @return {Number}
+   *         Converted numeric value.
+   */
+  async convertUnits(value, fromUnit, toUnit) {
+    if (value !== parseFloat(value)) {
+      throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
+    }
+
+    if (fromUnit === toUnit) {
+      return value;
+    }
+
+    // If neither unit is in pixels, first convert the value to pixels.
+    // Reassign input value and source CSS unit.
+    if (toUnit !== "px" && fromUnit !== "px") {
+      value = await this.convertUnits(value, fromUnit, "px");
+      fromUnit = "px";
+    }
+
+    // Whether the conversion is done from pixels.
+    const fromPx = fromUnit === "px";
+    // Determine the target CSS unit for conversion.
+    const unit = toUnit === "px" ? fromUnit : toUnit;
+    // NodeFront instance of selected element.
+    const node = this.inspector.selection.nodeFront;
+    // Default output value to input value for a 1-to-1 conversion as a guard against
+    // unrecognized CSS units. It will not be correct, but it will also not break.
+    let out = value;
+    // Computed style for reference node used for conversion of "em", "rem", "%".
+    let computedStyle;
+    // Raw DOM node of selected element used for conversion of "vh", "vw", "vmin", "vmax".
+    let rawNode;
+
+    if (unit === "in") {
+      out = fromPx
+        ? value / 96
+        : value * 96;
+    }
+
+    if (unit === "cm") {
+      out = fromPx
+        ? value * 0.02645833333
+        : value / 0.02645833333;
+    }
+
+    if (unit === "mm") {
+      out = fromPx
+        ? value * 0.26458333333
+        : value / 0.26458333333;
+    }
+
+    if (unit === "pt") {
+      out = fromPx
+        ? value * 0.75
+        : value / 0.75;
+    }
+
+    if (unit === "pc") {
+      out = fromPx
+        ? value * 0.0625
+        : value / 0.0625;
+    }
+
+    if (unit === "%") {
+      computedStyle = await this.pageStyle.getComputed(node.parentNode());
+      out = fromPx
+        ? value * 100 / parseFloat(computedStyle["font-size"].value)
+        : value / 100 * parseFloat(computedStyle["font-size"].value);
+    }
+
+    if (unit === "em") {
+      computedStyle = await this.pageStyle.getComputed(node.parentNode());
+      out = fromPx
+        ? value / parseFloat(computedStyle["font-size"].value)
+        : value * parseFloat(computedStyle["font-size"].value);
+    }
+
+    if (unit === "rem") {
+      const document = await this.inspector.walker.documentElement();
+      computedStyle = await this.pageStyle.getComputed(document);
+      out = fromPx
+        ? value / parseFloat(computedStyle["font-size"].value)
+        : value * parseFloat(computedStyle["font-size"].value);
+    }
+
+    if (unit === "vh") {
+      rawNode = await node.rawNode();
+      out = fromPx
+        ? value * 100 / rawNode.ownerGlobal.innerHeight
+        : value / 100 * rawNode.ownerGlobal.innerHeight;
+    }
+
+    if (unit === "vw") {
+      rawNode = await node.rawNode();
+      out = fromPx
+        ? value * 100 / rawNode.ownerGlobal.innerWidth
+        : value / 100 * rawNode.ownerGlobal.innerWidth;
+    }
+
+    if (unit === "vmin") {
+      rawNode = await node.rawNode();
+      out = fromPx
+        ? value * 100 / Math.min(
+          rawNode.ownerGlobal.innerWidth, rawNode.ownerGlobal.innerHeight)
+        : value / 100 * Math.min(
+          rawNode.ownerGlobal.innerWidth, rawNode.ownerGlobal.innerHeight);
+    }
+
+    if (unit === "vmax") {
+      rawNode = await node.rawNode();
+      out = fromPx
+        ? value * 100 / Math.max(
+          rawNode.ownerGlobal.innerWidth, rawNode.ownerGlobal.innerHeight)
+        : value / 100 * Math.max(
+          rawNode.ownerGlobal.innerWidth, rawNode.ownerGlobal.innerHeight);
+    }
+
+    // Return rounded pixel values. Limit other values to 3 decimals.
+    if (fromPx) {
+      // Round values like 1.000 to 1
+      return out === Math.round(out) ? Math.round(out) : out.toFixed(3);
+    }
+
+    return Math.round(out);
+  }
+
+  /**
    * Destruction function called when the inspector is destroyed. Removes event listeners
    * and cleans up references.
    */
@@ -569,11 +706,20 @@ class FontInspector {
    *         CSS font property name or axis name
    * @param  {String} value
    *         CSS font property numeric value or axis value
-   * @param  {String|null} unit
-   *         CSS unit or null
+   * @param  {String|undefined} fromUnit
+   *         Optional CSS unit to convert from
+   * @param  {String|undefined} toUnit
+   *         Optional CSS unit to convert to
    */
-  onPropertyChange(property, value, unit) {
+  async onPropertyChange(property, value, fromUnit, toUnit) {
     if (FONT_PROPERTIES.includes(property)) {
+      let unit = fromUnit;
+
+      if (toUnit && fromUnit) {
+        value = await this.convert(value, fromUnit, toUnit);
+        unit = toUnit;
+      }
+
       this.onFontPropertyUpdate(property, value, unit);
     } else {
       this.onAxisUpdate(property, value);
