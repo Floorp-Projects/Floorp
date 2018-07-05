@@ -40,11 +40,13 @@ CreateTransport(base::ProcessId aProcIdOne,
   // dup them here
   fd1 = dup(fd1);
   if (fd1 < 0) {
-    AnnotateCrashReportWithErrno("IpcCreateTransportDupErrno", errno);
+    AnnotateCrashReportWithErrno(
+      CrashReporter::Annotation::IpcCreateTransportDupErrno, errno);
   }
   fd2 = dup(fd2);
   if (fd2 < 0) {
-    AnnotateCrashReportWithErrno("IpcCreateTransportDupErrno", errno);
+    AnnotateCrashReportWithErrno(
+      CrashReporter::Annotation::IpcCreateTransportDupErrno, errno);
   }
 
   if (fd1 < 0 || fd2 < 0) {

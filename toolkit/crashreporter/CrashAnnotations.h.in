@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef CrashAnnotations_h
+#define CrashAnnotations_h
+
+#include <cstdint>
+
+namespace CrashReporter {
+
+// Typed enum representing all crash annotations
+enum class Annotation : uint32_t {
+${enum}
+};
+
+// Stringified crash annotation names
+const char* const kAnnotationStrings[] = {
+${strings}
+};
+
+// Whitelist of crash annotations that can be included in a crash ping
+const Annotation kCrashPingWhitelist[] = {
+${whitelist}
+};
+
+// Blacklist of crash annotations that shouldn't be read from a content process
+const Annotation kContentProcessBlacklist[] = {
+${blacklist}
+};
+
+/**
+ * Return the string representation of a crash annotation.
+ *
+ * @param aAnnotation a crash annotation
+ * @returns A constant string holding the annotation name
+ */
+static inline const char*
+AnnotationToString(Annotation aAnnotation) {
+  return kAnnotationStrings[static_cast<uint32_t>(aAnnotation)];
+}
+
+/**
+ * Converts a string to its corresponding crash annotation.
+ *
+ * @param aResult a reference where the annotation will be stored
+ * @param aValue the string to be converted
+ * @return true if the string was successfully converted, false if it did not
+ *         correspond to any known annotation
+ */
+bool AnnotationFromString(Annotation& aResult, const char* aValue);
+
+/**
+ * Checks if the given crash annotation is whitelisted for inclusion in the
+ * crash ping.
+ *
+ * @param aAnnotation the crash annotation to be checked
+ * @return true if the annotation can be included in the crash ping, false
+ *         otherwise
+ */
+bool IsAnnotationWhitelistedForPing(Annotation aAnnotation);
+
+/**
+ * Checks if the given crash annotation needs to be filtered out when reading
+ * a content process crash annotations. Blacklisted annotations will be
+ * replaced with ones provided by the parent process.
+ *
+ * @param aAnnotation the crash annotation to be checked
+ * @return true if the annotation needs to be filtered out when reading
+ *         annotations provided by a content process, false otherwise
+ */
+bool IsAnnotationBlacklistedForContent(Annotation aAnnotation);
+
+} // namespace CrashReporter
+
+#endif // CrashAnnotations_h

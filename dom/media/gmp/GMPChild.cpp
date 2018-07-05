@@ -560,8 +560,9 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
 
   nsCString libPath;
   if (!GetUTF8LibPath(libPath)) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GMPLibraryPath"),
-                                       NS_ConvertUTF16toUTF8(mPluginPath));
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GMPLibraryPath,
+      NS_ConvertUTF16toUTF8(mPluginPath));
 
 #ifdef XP_WIN
     return IPC_FAIL(
@@ -615,8 +616,9 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
                         adapter)) {
     NS_WARNING("Failed to load GMP");
     delete platformAPI;
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GMPLibraryPath"),
-                                       NS_ConvertUTF16toUTF8(mPluginPath));
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GMPLibraryPath,
+      NS_ConvertUTF16toUTF8(mPluginPath));
 
 #ifdef XP_WIN
     return IPC_FAIL(

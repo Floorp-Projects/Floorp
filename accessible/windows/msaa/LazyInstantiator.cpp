@@ -17,7 +17,6 @@
 #include "nsAccessibilityService.h"
 #include "nsWindowsHelpers.h"
 #include "nsCOMPtr.h"
-#include "nsExceptionHandler.h"
 #include "nsIFile.h"
 #include "nsXPCOM.h"
 #include "RootAccessibleWrap.h"
