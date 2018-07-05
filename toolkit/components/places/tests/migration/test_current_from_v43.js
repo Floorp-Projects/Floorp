@@ -93,8 +93,8 @@ add_task(async function test_roots_removed() {
   rows = await db.execute(`
     SELECT guid FROM moz_bookmarks
     WHERE parent = :rootId`, {rootId});
-  // Note the -1 here is because we reparented the menu root wrongly above.
-  Assert.equal(rows.length, EXPECTED_REMAINING_ROOTS.length - 1,
+
+  Assert.equal(rows.length, EXPECTED_REMAINING_ROOTS.length,
     "Should only have the built-in folder roots.");
 
   for (let row of rows) {
@@ -105,10 +105,12 @@ add_task(async function test_roots_removed() {
 
   // Check the reparented menu now.
   rows = await db.execute(`
-    SELECT id FROM moz_bookmarks
+    SELECT id, parent FROM moz_bookmarks
     WHERE guid = :guid
   `, {guid: PlacesUtils.bookmarks.menuGuid});
   Assert.equal(rows.length, 1, "Should have found the menu root.");
+  Assert.equal(rows[0].getResultByName("parent"), PlacesUtils.placesRootId,
+    "Should have moved the menu back to the Places root.");
 });
 
 add_task(async function test_tombstones_added() {
