@@ -42,30 +42,32 @@ const CACHE_LINE: usize = 64;
 
 const CACHE_LINE_MASK: usize = CACHE_LINE - 1;
 
+/// Returns true if the string is both longer than a cache line
+/// and the first cache line is ASCII.
 #[inline(always)]
-fn starts_with_ascii(buffer: &[u8]) -> bool {
+fn long_string_starts_with_ascii(buffer: &[u8]) -> bool {
     // We examine data only up to the end of the cache line
     // to make this check minimally disruptive.
-    let bound = if buffer.len() <= CACHE_LINE {
-        buffer.len()
-    } else {
-        CACHE_LINE - ((buffer.as_ptr() as usize) & CACHE_LINE_MASK)
-    };
+    if buffer.len() <= CACHE_LINE {
+        return false;
+    }
+    let bound = CACHE_LINE - ((buffer.as_ptr() as usize) & CACHE_LINE_MASK);
     is_ascii(&buffer[..bound])
 }
 
+/// Returns true if the string is both longer than two cache lines
+/// and the first two cache lines are Basic Latin.
 #[inline(always)]
-fn starts_with_basic_latin(buffer: &[u16]) -> bool {
+fn long_string_stars_with_basic_latin(buffer: &[u16]) -> bool {
     // We look at two cache lines with code unit size of two. There is need
     // to look at more than one cache line in the UTF-16 case, because looking
     // at just one cache line wouldn't catch non-ASCII Latin with high enough
     // probability with Latin-script languages that have relatively infrequent
     // non-ASCII characters.
-    let bound = if buffer.len() <= CACHE_LINE {
-        buffer.len()
-    } else {
-        (CACHE_LINE * 2 - ((buffer.as_ptr() as usize) & CACHE_LINE_MASK)) / 2
-    };
+    if buffer.len() <= CACHE_LINE {
+        return false;
+    }
+    let bound = (CACHE_LINE * 2 - ((buffer.as_ptr() as usize) & CACHE_LINE_MASK)) / 2;
     is_basic_latin(&buffer[..bound])
 }
 
@@ -118,7 +120,8 @@ macro_rules! shrinking_conversion {
                 self.bulk_write(old_len.checked_add(needed).ok_or(())?, old_len, false)?
             };
             let written = $convert(other, &mut handle.as_mut_slice()[old_len..]);
-            Ok(handle.finish(old_len + written, true))
+            let new_len = old_len + written;
+            Ok(handle.finish(new_len, new_len > CACHE_LINE))
         }
      )
 }
@@ -313,9 +316,22 @@ impl nsACString {
         other: &[u16],
         old_len: usize,
     ) -> Result<BulkWriteOk, ()> {
-        // We first size the buffer for ASCII if the first cache line is ASCII. If that turns out not to
-        // be enough, we size for the worst case given the length of the remaining input at that point.
-        let (filled, num_ascii, mut handle) = if starts_with_basic_latin(other) {
+        // We first size the buffer for ASCII if the first two cache lines are ASCII. If that turns out
+        // not to be enough, we size for the worst case given the length of the remaining input at that
+        // point. BUT if the worst case fits inside the inline capacity of an autostring, we skip
+        // the ASCII stuff.
+        let worst_case_needed = if let Some(inline_capacity) = self.inline_capacity() {
+            let worst_case = times_three_plus_one(other.len()).ok_or(())?;
+            if worst_case <= inline_capacity {
+                Some(worst_case)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let (filled, num_ascii, mut handle) = if worst_case_needed.is_none() &&
+                                                 long_string_stars_with_basic_latin(other) {
             let new_len_with_ascii = old_len.checked_add(other.len()).ok_or(())?;
             let mut handle = unsafe { self.bulk_write(new_len_with_ascii, old_len, false)? };
             let num_ascii = copy_basic_latin_to_ascii(other, &mut handle.as_mut_slice()[old_len..]);
@@ -332,7 +348,11 @@ impl nsACString {
             (filled, num_ascii, handle)
         } else {
             // Started with non-ASCII. Compute worst case
-            let needed = times_three_plus_one(other.len()).ok_or(())?;
+            let needed = if let Some(n) = worst_case_needed {
+                n
+            } else {
+                times_three_plus_one(other.len()).ok_or(())?
+            };
             let new_len = old_len.checked_add(needed).ok_or(())?;
             let mut handle = unsafe { self.bulk_write(new_len, old_len, false)? };
             (old_len, 0, handle)
@@ -568,31 +588,47 @@ impl nsACString {
                 (&mut handle.as_mut_slice()[old_len..filled]).copy_from_slice(&other[..num_ascii]);
             }
             (filled, num_ascii, handle)
-        } else if starts_with_ascii(other) {
-            // Wrapper didn't check for ASCII, so let's see if `other` starts with ASCII
-            // `other` starts with ASCII, so let's first size the buffer
-            // with optimism that it's ASCII-only.
-            let new_len_with_ascii = old_len.checked_add(other.len()).ok_or(())?;
-            let mut handle = unsafe { self.bulk_write(new_len_with_ascii, old_len, false)? };
-            let num_ascii = copy_ascii_to_ascii(other, &mut handle.as_mut_slice()[old_len..]);
-            let left = other.len() - num_ascii;
-            let filled = old_len + num_ascii;
-            if left == 0 {
-                // `other` was all ASCII
-                return Ok(handle.finish(filled, true));
-            }
-            let needed = left.checked_mul(2).ok_or(())?;
-            let new_len = filled.checked_add(needed).ok_or(())?;
-            unsafe {
-                handle.restart_bulk_write(new_len, filled, false)?;
-            }
-            (filled, num_ascii, handle)
         } else {
-            // Started with non-ASCII. Assume worst case.
-            let needed = other.len().checked_mul(2).ok_or(())?;
-            let new_len = old_len.checked_add(needed).ok_or(())?;
-            let mut handle = unsafe { self.bulk_write(new_len, old_len, false)? };
-            (old_len, 0, handle)
+            let worst_case_needed = if let Some(inline_capacity) = self.inline_capacity() {
+                let worst_case = other.len().checked_mul(2).ok_or(())?;
+                if worst_case <= inline_capacity {
+                    Some(worst_case)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            if worst_case_needed.is_none() && long_string_starts_with_ascii(other) {
+                // Wrapper didn't check for ASCII, so let's see if `other` starts with ASCII
+                // `other` starts with ASCII, so let's first size the buffer
+                // with optimism that it's ASCII-only.
+                let new_len_with_ascii = old_len.checked_add(other.len()).ok_or(())?;
+                let mut handle = unsafe { self.bulk_write(new_len_with_ascii, old_len, false)? };
+                let num_ascii = copy_ascii_to_ascii(other, &mut handle.as_mut_slice()[old_len..]);
+                let left = other.len() - num_ascii;
+                let filled = old_len + num_ascii;
+                if left == 0 {
+                    // `other` was all ASCII
+                    return Ok(handle.finish(filled, true));
+                }
+                let needed = left.checked_mul(2).ok_or(())?;
+                let new_len = filled.checked_add(needed).ok_or(())?;
+                unsafe {
+                    handle.restart_bulk_write(new_len, filled, false)?;
+                }
+                (filled, num_ascii, handle)
+            } else {
+                // Started with non-ASCII. Assume worst case.
+                let needed = if let Some(n) = worst_case_needed {
+                    n
+                } else {
+                    other.len().checked_mul(2).ok_or(())?
+                };
+                let new_len = old_len.checked_add(needed).ok_or(())?;
+                let mut handle = unsafe { self.bulk_write(new_len, old_len, false)? };
+                (old_len, 0, handle)
+            }
         };
         let written =
             convert_latin1_to_utf8(&other[num_ascii..], &mut handle.as_mut_slice()[filled..]);
