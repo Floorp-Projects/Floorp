@@ -56,6 +56,8 @@ ChromeUtils.defineModuleGetter(this, "HttpServer",
                                "resource://testing-common/httpd.js");
 ChromeUtils.defineModuleGetter(this, "MockAsyncShutdown",
                                "resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "MockCrashReporter",
+                               "resource://testing-common/AddonTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "MockRegistrar",
                                "resource://testing-common/MockRegistrar.jsm");
 ChromeUtils.defineModuleGetter(this, "MockRegistry",
@@ -577,12 +579,14 @@ function do_check_in_crash_annotation(aId, aVersion) {
     return;
   }
 
-  if (!("Add-ons" in gAppInfo.annotations)) {
+  const annotation = MockCrashReporter.annotations.Addons;
+
+  if (!(annotation in MockCrashReporter.currentAnnotations)) {
     Assert.equal(false, true);
     return;
   }
 
-  let addons = gAppInfo.annotations["Add-ons"].split(",");
+  let addons = MockCrashReporter.currentAnnotations[annotation].split(",");
   Assert.ok(addons.includes(`${encodeURIComponent(aId)}:${encodeURIComponent(aVersion)}`));
 }
 
@@ -600,12 +604,14 @@ function do_check_not_in_crash_annotation(aId, aVersion) {
     return;
   }
 
-  if (!("Add-ons" in gAppInfo.annotations)) {
+  const annotation = MockCrashReporter.annotations.Addons;
+
+  if (!(annotation in MockCrashReporter.currentAnnotations)) {
     Assert.ok(true);
     return;
   }
 
-  let addons = gAppInfo.annotations["Add-ons"].split(",");
+  let addons = MockCrashReporter.currentAnnotations[annotation].split(",");
   Assert.ok(!addons.includes(`${encodeURIComponent(aId)}:${encodeURIComponent(aVersion)}`));
 }
 

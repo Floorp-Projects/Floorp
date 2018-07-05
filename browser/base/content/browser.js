@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Color: "resource://gre/modules/Color.jsm",
   ContentSearch: "resource:///modules/ContentSearch.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
+  CrashReporter: "resource://gre/modules/CrashReporter.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   Deprecated: "resource://gre/modules/Deprecated.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
@@ -71,11 +72,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   webrtcUI: "resource:///modules/webrtcUI.jsm",
   ZoomUI: "resource:///modules/ZoomUI.jsm",
 });
-
-if (AppConstants.MOZ_CRASHREPORTER) {
-  ChromeUtils.defineModuleGetter(this, "PluginCrashReporter",
-    "resource:///modules/ContentCrashHandlers.jsm");
-}
 
 XPCOMUtils.defineLazyScriptGetter(this, "PlacesTreeView",
                                   "chrome://browser/content/places/treeView.js");
@@ -144,12 +140,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   SessionStartup: ["@mozilla.org/browser/sessionstartup;1", "nsISessionStartup"],
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
-
-if (AppConstants.MOZ_CRASHREPORTER) {
-  XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
-                                     "@mozilla.org/xre/app-info;1",
-                                     "nsICrashReporter");
-}
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
@@ -4816,7 +4806,7 @@ var XULBrowserWindow = {
       } catch (ex) { /* Ignore failures on about: URIs. */ }
 
       try {
-        gCrashReporter.annotateCrashReport("URL", uri.spec);
+        CrashReporter.addAnnotation(CrashReporter.annotations.URL, uri.spec);
       } catch (ex) {
         // Don't make noise when the crash reporter is built but not enabled.
         if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {

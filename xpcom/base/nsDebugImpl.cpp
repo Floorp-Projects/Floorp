@@ -409,8 +409,9 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
         note += nonPIDBuf.buffer;
         note += ")";
         CrashReporter::AppendAppNotesToCrashReport(note);
-        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AbortMessage"),
-                                           nsDependentCString(nonPIDBuf.buffer));
+        CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::AbortMessage,
+          nsDependentCString(nonPIDBuf.buffer));
       }
 
 #if defined(DEBUG) && defined(_WIN32)

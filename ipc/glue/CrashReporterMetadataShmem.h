@@ -25,10 +25,12 @@ public:
   ~CrashReporterMetadataShmem();
 
   // Metadata writers. These must only be called in child processes.
-  void AnnotateCrashReport(const nsCString& aKey, const nsCString& aData);
+  void AnnotateCrashReport(CrashReporter::Annotation aKey,
+                           const nsCString& aData);
   void AppendAppNotes(const nsCString& aData);
 
-  static void ReadAppNotes(const Shmem& aShmem, CrashReporter::AnnotationTable* aNotes);
+  static void ReadAppNotes(const Shmem& aShmem,
+                           CrashReporter::AnnotationTable& aNotes);
 
 private:
   void SyncNotesToShmem();
@@ -36,7 +38,7 @@ private:
 private:
   Shmem mShmem;
 
-  AnnotationTable mNotes;
+  AnnotationTable mAnnotations;
   nsCString mAppNotes;
 };
 
