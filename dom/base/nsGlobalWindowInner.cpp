@@ -1306,7 +1306,6 @@ nsGlobalWindowInner::FreeInnerObjects()
 
   mConsole = nullptr;
 
-  mAudioWorklet = nullptr;
   mPaintWorklet = nullptr;
 
   mExternal = nullptr;
@@ -1462,7 +1461,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mU2F)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInstallTrigger)
@@ -1552,7 +1550,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mU2F)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInstallTrigger)
@@ -7997,22 +7994,6 @@ nsGlobalWindowInner::AbstractMainThreadFor(TaskCategory aCategory)
     return GetDocGroup()->AbstractMainThreadFor(aCategory);
   }
   return DispatcherTrait::AbstractMainThreadFor(aCategory);
-}
-
-Worklet*
-nsGlobalWindowInner::GetAudioWorklet(ErrorResult& aRv)
-{
-  if (!mAudioWorklet) {
-    nsIPrincipal* principal = GetPrincipal();
-    if (!principal) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    mAudioWorklet = new Worklet(this, principal, Worklet::eAudioWorklet);
-  }
-
-  return mAudioWorklet;
 }
 
 Worklet*
