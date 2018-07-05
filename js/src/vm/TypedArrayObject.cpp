@@ -996,11 +996,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     fromObject(JSContext* cx, HandleObject other, HandleObject proto);
 
     static const NativeType
-    getIndex(JSObject* obj, uint32_t index)
+    getIndex(TypedArrayObject* tarray, uint32_t index)
     {
-        TypedArrayObject& tarray = obj->as<TypedArrayObject>();
-        MOZ_ASSERT(index < tarray.length());
-        return jit::AtomicOperations::loadSafeWhenRacy(tarray.viewDataEither().cast<NativeType*>() + index);
+        MOZ_ASSERT(index < tarray->length());
+        return jit::AtomicOperations::loadSafeWhenRacy(tarray->viewDataEither().cast<NativeType*>() + index);
     }
 
     static void
@@ -1010,7 +1009,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         jit::AtomicOperations::storeSafeWhenRacy(tarray.viewDataEither().cast<NativeType*>() + index, val);
     }
 
-    static Value getIndexValue(JSObject* tarray, uint32_t index);
+    static Value getIndexValue(TypedArrayObject* tarray, uint32_t index);
 };
 
 #define CREATE_TYPE_FOR_TYPED_ARRAY(T, N) \
@@ -1717,7 +1716,7 @@ TypedArrayObject::sharedTypedArrayPrototypeClass = {
 // less than 32-bits in size.
 template<typename NativeType>
 Value
-TypedArrayObjectTemplate<NativeType>::getIndexValue(JSObject* tarray, uint32_t index)
+TypedArrayObjectTemplate<NativeType>::getIndexValue(TypedArrayObject* tarray, uint32_t index)
 {
     static_assert(sizeof(NativeType) < 4,
                   "this method must only handle NativeType values that are "
@@ -1731,14 +1730,14 @@ namespace {
 // and we need to specialize for 32-bit integers and floats
 template<>
 Value
-TypedArrayObjectTemplate<int32_t>::getIndexValue(JSObject* tarray, uint32_t index)
+TypedArrayObjectTemplate<int32_t>::getIndexValue(TypedArrayObject* tarray, uint32_t index)
 {
     return Int32Value(getIndex(tarray, index));
 }
 
 template<>
 Value
-TypedArrayObjectTemplate<uint32_t>::getIndexValue(JSObject* tarray, uint32_t index)
+TypedArrayObjectTemplate<uint32_t>::getIndexValue(TypedArrayObject* tarray, uint32_t index)
 {
     uint32_t val = getIndex(tarray, index);
     return NumberValue(val);
@@ -1746,7 +1745,7 @@ TypedArrayObjectTemplate<uint32_t>::getIndexValue(JSObject* tarray, uint32_t ind
 
 template<>
 Value
-TypedArrayObjectTemplate<float>::getIndexValue(JSObject* tarray, uint32_t index)
+TypedArrayObjectTemplate<float>::getIndexValue(TypedArrayObject* tarray, uint32_t index)
 {
     float val = getIndex(tarray, index);
     double dval = val;
@@ -1766,7 +1765,7 @@ TypedArrayObjectTemplate<float>::getIndexValue(JSObject* tarray, uint32_t index)
 
 template<>
 Value
-TypedArrayObjectTemplate<double>::getIndexValue(JSObject* tarray, uint32_t index)
+TypedArrayObjectTemplate<double>::getIndexValue(TypedArrayObject* tarray, uint32_t index)
 {
     double val = getIndex(tarray, index);
 
