@@ -116,8 +116,6 @@ class SessionManager(
 
         unlink(session)
 
-        notifyObservers { onSessionRemoved(session) }
-
         // Recalculate selection
         val newSelectedIndex = when {
             // All items have been removed
@@ -133,11 +131,16 @@ class SessionManager(
             else -> selectedIndex
         }
 
-        if (newSelectedIndex != selectedIndex) {
+        val selectionUpdated = newSelectedIndex != selectedIndex
+
+        if (selectionUpdated) {
             selectedIndex = newSelectedIndex
-            if (selectedIndex != NO_SELECTION) {
-                notifyObservers { onSessionSelected(selectedSession) }
-            }
+        }
+
+        notifyObservers { onSessionRemoved(session) }
+
+        if (selectionUpdated && selectedIndex != NO_SELECTION) {
+            notifyObservers { onSessionSelected(selectedSession) }
         }
     }
 
