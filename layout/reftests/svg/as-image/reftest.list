@@ -198,62 +198,9 @@ HTTP == svg-stylesheet-external-1.html blue100x100.svg
 # over to use media fragments once bug 790640 lands.
 fuzzy(2,1) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
 
-# Tests for image-orientation with a viewbox and an intrinsic size:
-== image-orientation-viewbox-and-size.html?0        image-orientation-ref.html?0
-== image-orientation-viewbox-and-size.html?90       image-orientation-ref.html?90
-== image-orientation-viewbox-and-size.html?180      image-orientation-ref.html?180
-== image-orientation-viewbox-and-size.html?270      image-orientation-ref.html?270
-== image-orientation-viewbox-and-size.html?0&flip   image-orientation-ref.html?0&flip
-== image-orientation-viewbox-and-size.html?90&flip  image-orientation-ref.html?90&flip
-== image-orientation-viewbox-and-size.html?180&flip image-orientation-ref.html?180&flip
-== image-orientation-viewbox-and-size.html?270&flip image-orientation-ref.html?270&flip
-
-# Tests for image-orientation with a viewbox and no intrinsic size:
-== image-orientation-viewbox-no-size.html?0        image-orientation-ref.html?0
-== image-orientation-viewbox-no-size.html?90       image-orientation-ref.html?90
-== image-orientation-viewbox-no-size.html?180      image-orientation-ref.html?180
-== image-orientation-viewbox-no-size.html?270      image-orientation-ref.html?270
-== image-orientation-viewbox-no-size.html?0&flip   image-orientation-ref.html?0&flip
-== image-orientation-viewbox-no-size.html?90&flip  image-orientation-ref.html?90&flip
-== image-orientation-viewbox-no-size.html?180&flip image-orientation-ref.html?180&flip
-== image-orientation-viewbox-no-size.html?270&flip image-orientation-ref.html?270&flip
-
-# Tests for image-orientation with no viewbox and an intrinsic size:
-== image-orientation-no-viewbox-and-size.html?0        image-orientation-ref.html?0
-== image-orientation-no-viewbox-and-size.html?90       image-orientation-ref.html?90
-== image-orientation-no-viewbox-and-size.html?180      image-orientation-ref.html?180
-== image-orientation-no-viewbox-and-size.html?270      image-orientation-ref.html?270
-== image-orientation-no-viewbox-and-size.html?0&flip   image-orientation-ref.html?0&flip
-== image-orientation-no-viewbox-and-size.html?90&flip  image-orientation-ref.html?90&flip
-== image-orientation-no-viewbox-and-size.html?180&flip image-orientation-ref.html?180&flip
-== image-orientation-no-viewbox-and-size.html?270&flip image-orientation-ref.html?270&flip
-
-# Tests for image-orientation with no viewbox and no intrinsic size:
-== image-orientation-no-viewbox-no-size.html?0        image-orientation-ref.html?0
-== image-orientation-no-viewbox-no-size.html?90       image-orientation-ref.html?90
-== image-orientation-no-viewbox-no-size.html?180      image-orientation-ref.html?180
-== image-orientation-no-viewbox-no-size.html?270      image-orientation-ref.html?270
-== image-orientation-no-viewbox-no-size.html?0&flip   image-orientation-ref.html?0&flip
-== image-orientation-no-viewbox-no-size.html?90&flip  image-orientation-ref.html?90&flip
-== image-orientation-no-viewbox-no-size.html?180&flip image-orientation-ref.html?180&flip
-== image-orientation-no-viewbox-no-size.html?270&flip image-orientation-ref.html?270&flip
-
 # Test that 'image-orientation: from-image' has no effect, since SVGs don't have EXIF data.
-== image-orientation-viewbox-and-size.html?from-image  image-orientation-ref.html?0
-== image-orientation-viewbox-no-size.html?from-image   image-orientation-ref.html?0
-
-# Sanity checks for the image-orientation tests. Ensures that the various
-# combinations of rotations and flips actually look different from each other.
-!= image-orientation-ref.html?0    image-orientation-ref.html?90
-!= image-orientation-ref.html?0    image-orientation-ref.html?180
-!= image-orientation-ref.html?0    image-orientation-ref.html?270
-!= image-orientation-ref.html?90   image-orientation-ref.html?180
-!= image-orientation-ref.html?90   image-orientation-ref.html?270
-!= image-orientation-ref.html?180  image-orientation-ref.html?270
-!= image-orientation-ref.html?0    image-orientation-ref.html?0&flip
-!= image-orientation-ref.html?90   image-orientation-ref.html?90&flip
-!= image-orientation-ref.html?180  image-orientation-ref.html?180&flip
-!= image-orientation-ref.html?270  image-orientation-ref.html?270&flip
+== image-orientation-viewbox-and-size.html?from-image  image-orientation-viewbox-and-size.html?none
+== image-orientation-viewbox-no-size.html?from-image   image-orientation-viewbox-no-size.html?none
 
 # Tests that nonuniform scales work with SVG-as-image.
 == nonuniform-scale-2d.html?0.5&1.0  nonuniform-scale-ref.html?50&100
