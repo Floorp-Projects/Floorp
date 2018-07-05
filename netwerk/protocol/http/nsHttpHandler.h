@@ -434,7 +434,7 @@ private:
     //
     void     BuildUserAgent();
     void     InitUserAgentComponents();
-    void     PrefsChanged(nsIPrefBranch *prefs, const char *pref);
+    void     PrefsChanged(const char *pref);
 
     MOZ_MUST_USE nsresult SetAccept(const char *);
     MOZ_MUST_USE nsresult SetAcceptLanguages();
