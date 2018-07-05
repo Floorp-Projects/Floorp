@@ -26,38 +26,37 @@ function test() {
 }
 
 function testPrefsAreRespectedWhenReopeningToolbox() {
-  const deferred = defer();
   const target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  info("Closing toolbox to test after reopening");
-  gDevTools.closeToolbox(target).then(() => {
-    const tabTarget = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(tabTarget)
-      .then(testSelectTool)
-      .then(() => {
-        info("Toolbox has been reopened.  Checking UI state.");
-        testPreferenceAndUIStateIsConsistent();
-        deferred.resolve();
-      });
+  return new Promise(resolve => {
+    info("Closing toolbox to test after reopening");
+    gDevTools.closeToolbox(target).then(() => {
+      const tabTarget = TargetFactory.forTab(gBrowser.selectedTab);
+      gDevTools.showToolbox(tabTarget)
+        .then(testSelectTool)
+        .then(() => {
+          info("Toolbox has been reopened.  Checking UI state.");
+          testPreferenceAndUIStateIsConsistent();
+          resolve();
+        });
+    });
   });
-
-  return deferred.promise;
 }
 
 function testSelectTool(devtoolsToolbox) {
-  const deferred = defer();
-  info("Selecting the options panel");
+  return new Promise(resolve => {
+    info("Selecting the options panel");
 
-  toolbox = devtoolsToolbox;
-  doc = toolbox.doc;
-  toolbox.once("options-selected", tool => {
-    ok(true, "Options panel selected via selectTool method");
-    panelWin = tool.panelWin;
-    deferred.resolve();
+    toolbox = devtoolsToolbox;
+    doc = toolbox.doc;
+
+    toolbox.selectTool("options");
+    toolbox.once("options-selected", tool => {
+      ok(true, "Options panel selected via selectTool method");
+      panelWin = tool.panelWin;
+      resolve();
+    });
   });
-  toolbox.selectTool("options");
-
-  return deferred.promise;
 }
 
 function testPreferenceAndUIStateIsConsistent() {

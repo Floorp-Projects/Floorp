@@ -59,20 +59,6 @@
 <script type="application/javascript">
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
-
-  ChromeUtils.defineModuleGetter(window,
-    "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
-  ChromeUtils.defineModuleGetter(window,
-    "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
-  ChromeUtils.defineModuleGetter(window,
-    "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
-
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-  XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
-    "chrome://browser/content/places/treeView.js");
-  XPCOMUtils.defineLazyScriptGetter(window,
-    ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
-     "chrome://browser/content/places/controller.js");
 </script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters)

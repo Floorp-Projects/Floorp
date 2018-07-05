@@ -17,16 +17,16 @@ function runTests(aTab) {
     url: "about:blank",
     label: "someLabel",
     build: function(iframeWindow, toolbox) {
-      const deferred = defer();
-      executeSoon(() => {
-        deferred.resolve({
-          target: toolbox.target,
-          toolbox: toolbox,
-          isReady: true,
-          destroy: function() {},
+      return new Promise(resolve => {
+        executeSoon(() => {
+          resolve({
+            target: toolbox.target,
+            toolbox: toolbox,
+            isReady: true,
+            destroy: function() {},
+          });
         });
       });
-      return deferred.promise;
     },
   };
 

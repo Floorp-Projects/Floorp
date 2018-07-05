@@ -41,21 +41,12 @@ const extraDefinitions = [
   // defineLazyScriptGetter (and map to
   // single) variable.
   {name: "XPCOMUtils", writable: false},
-  {name: "Task", writable: false},
-  {name: "PlacesUtils", writable: false},
-  {name: "PlacesUIUtils", writable: false},
-  {name: "PlacesTransactions", writable: false},
-  {name: "PlacesTreeView", writable: false},
-  {name: "PlacesInsertionPoint", writable: false},
-  {name: "PlacesController", writable: false},
-  {name: "PlacesControllerDragHelper", writable: false}
+  {name: "Task", writable: false}
 ];
 
 // Some files in global-scripts.inc need mapping to specific locations.
 const MAPPINGS = {
   "printUtils.js": "toolkit/components/printing/content/printUtils.js",
-  "browserPlacesViews.js":
-    "browser/components/places/content/browserPlacesViews.js",
   "panelUI.js": "browser/components/customizableui/content/panelUI.js",
   "viewSourceUtils.js":
     "toolkit/components/viewsource/content/viewSourceUtils.js"

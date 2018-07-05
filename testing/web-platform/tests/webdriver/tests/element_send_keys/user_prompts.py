@@ -1,6 +1,6 @@
 import pytest
 
-from tests.support.asserts import assert_error, assert_dialog_handled
+from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
 from tests.support.inline import inline
 
 
@@ -12,11 +12,29 @@ def element_send_keys(session, element, text):
         {"text": text})
 
 
-def test_handle_prompt_dismiss_and_notify():
-    """TODO"""
+@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_accept(session, create_dialog, dialog_type):
+    session.url = inline("<input>")
+    element = session.find.css("input", all=False)
+
+    create_dialog(dialog_type, text="dialog")
+
+    response = element_send_keys(session, element, "foo")
+    assert_success(response)
+
+    assert_dialog_handled(session, expected_text="dialog")
 
 
 def test_handle_prompt_accept_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_dismiss():
+    """TODO"""
+
+
+def test_handle_prompt_dismiss_and_notify():
     """TODO"""
 
 
@@ -24,43 +42,14 @@ def test_handle_prompt_ignore():
     """TODO"""
 
 
-@pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
-def test_handle_prompt_accept(session, create_dialog):
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_default(session, create_dialog, dialog_type):
     session.url = inline("<input>")
     element = session.find.css("input", all=False)
 
-    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
-    response = element_send_keys(session, element, "foo")
-    assert response.status == 200
-    assert_dialog_handled(session, "dismiss #1")
-
-    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
-    response = element_send_keys(session, element, "foo")
-    assert response.status == 200
-    assert_dialog_handled(session, "dismiss #2")
-
-    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
-    response = element_send_keys(session, element, "foo")
-    assert response.status == 200
-    assert_dialog_handled(session, "dismiss #3")
-
-
-def test_handle_prompt_missing_value(session, create_dialog):
-    session.url = inline("<input>")
-    element = session.find.css("input", all=False)
-
-    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
+    create_dialog(dialog_type, text="dialog")
 
     response = element_send_keys(session, element, "foo")
     assert_error(response, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #1")
 
-    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
-    response = element_send_keys(session, element, "foo")
-    assert_error(response, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #2")
-
-    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
-    response = element_send_keys(session, element, "foo")
-    assert_error(response, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #3")
+    assert_dialog_handled(session, expected_text="dialog")

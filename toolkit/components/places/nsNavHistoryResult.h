@@ -75,7 +75,7 @@ private:
   NS_IMETHOD OnPageChanged(nsIURI *aURI, uint32_t aChangedAttribute,    \
                            const nsAString &aNewValue,                  \
                            const nsACString &aGUID) __VA_ARGS__;        \
-  NS_IMETHOD OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime,            \
+  NS_IMETHOD OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,         \
                             const nsACString& aGUID, uint16_t aReason,  \
                             uint32_t aTransitionType) __VA_ARGS__;
 

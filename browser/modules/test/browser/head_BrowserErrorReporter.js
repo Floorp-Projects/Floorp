@@ -20,6 +20,10 @@ const TELEMETRY_ERROR_REPORTED = "browser.errors.reported_success_count";
 const TELEMETRY_ERROR_REPORTED_FAIL = "browser.errors.reported_failure_count";
 const TELEMETRY_ERROR_SAMPLE_RATE = "browser.errors.sample_rate";
 
+const currentVersion = Services.appinfo.platformVersion;
+const expiringVersion = "64.0";
+const SCALARS_EXPIRED = Services.vc.compare(currentVersion, expiringVersion) === -1;
+
 add_task(async function testSetup() {
   const canRecordExtended = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
