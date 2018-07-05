@@ -7,11 +7,86 @@
 <head>
 <meta charset=utf-8>
 <title>Test for performance observer</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <div id="log"></div>
+<script>
+SimpleTest.requestFlakyTimeout("For testing when observer callbacks should not be called.");
+SimpleTest.waitForExplicitFinish();
+
+let _tests = [];
+
+let test = promise_test = fn => {
+  let cleanups = [];
+  _tests.push(async () => {
+    try {
+      await fn({
+        add_cleanup: f => { cleanups.push(f); },
+        step_timeout: function(f, timeout) {
+          var test_this = this;
+          var args = Array.prototype.slice.call(arguments, 2);
+          return setTimeout(() => {
+            return f.apply(test_this, args);
+          }, timeout);
+        }
+      });
+    } catch(e) {
+      ok(false, `got unexpected exception ${e}`);
+    }
+    try {
+      for (const fn of cleanups) {
+        fn();
+      }
+      runNextTest();
+    } catch (e) {
+      ok(false, `got unexpected exception during cleanup ${e}`);
+    }
+  });
+}
+
+function runNextTest() {
+  if (_tests.length == 0) {
+    SimpleTest.finish()
+    return;
+  }
+  _tests.shift()();
+}
+
+function assert_equals(actual, expected, description) {
+  ok(typeof actual == typeof expected,
+     `${description} expected (${typeof expected}) ${expected} but got (${typeof actual}) ${actual}`);
+  ok(Object.is(actual, expected),
+     `${description} expected ${expected} but got ${actual}`);
+}
+
+function assert_array_equals(actual, expected, description) {
+  ok(actual.length === expected.length,
+     `${description} lengths differ, expected ${expected.length} but got ${actual.length}`);
+  for (var i = 0; i < actual.length; i++) {
+    ok(actual.hasOwnProperty(i) === expected.hasOwnProperty(i),
+       `${description} property expected to be ${expected[i]} but got ${actual[i]}`);
+  }
+}
+
+function assert_throws(expected_exc, func, desc) {
+  try {
+    func.call(this);
+  } catch(e) {
+    var actual = e.name || e.type;
+    var expected = expected_exc.name || expected_exc.type;
+    ok(actual == expected,
+       `Expected '${expected}', got '${actual}'.`);
+    return;
+  }
+  ok(false, "Expected exception, but none was thrown");
+}
+
+function assert_unreached(description) {
+  ok(false, `${description} reached unreachable code`);
+}
+</script>
 <script src="test_performance_observer.js"></script>
 <script>
 function makeXHR(aUrl) {
@@ -19,6 +94,12 @@ function makeXHR(aUrl) {
   xmlhttp.open("get", aUrl, true);
   xmlhttp.send();
 }
+
+let waitForConsole = new Promise(resolve => {
+  SimpleTest.monitorConsole(resolve, [{
+    message: /JavaScript Warning: "Ignoring unsupported entryTypes: invalid."/,
+  }]);
+});
 
 promise_test(t => {
   var promise = new Promise(resolve => {
@@ -31,7 +112,7 @@ promise_test(t => {
 
   makeXHR("test-data.json");
 
-  return promise.then(list => {
+  return promise.then(async list => {
     assert_equals(list.getEntries().length, 1);
     assert_array_equals(list.getEntries(),
                         performance.getEntriesByType("resource"),
@@ -50,8 +131,12 @@ promise_test(t => {
     assert_array_equals(list.getEntries({initiatorType: "link"}),
                         [],
                         "getEntries with non-existent initiatorType filter should return an empty array.");
+
+    SimpleTest.endMonitorConsole();
+    await waitForConsole;
   });
 }, "resource-timing test");
 
+runNextTest();
 </script>
 </body>

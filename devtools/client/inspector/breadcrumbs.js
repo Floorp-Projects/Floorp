@@ -739,7 +739,7 @@ HTMLBreadcrumbs.prototype = {
           currentPrettyPrintText: this.prettyPrintNodeAsText(node)
         });
       }
-      node = node.parentNode();
+      node = node.parentOrHost();
     }
     this.container.appendChild(fragment, this.container.firstChild);
   },
