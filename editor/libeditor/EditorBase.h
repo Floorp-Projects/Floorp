@@ -389,11 +389,21 @@ public:
   }
 
   /**
+   * Returns number of maximum undo/redo transactions.
+   */
+  int32_t NumberOfMaximumTransactions() const
+  {
+    return mTransactionManager ?
+             mTransactionManager->NumberOfMaximumTransactions() : 0;
+  }
+
+  /**
    * Returns true if this editor can store transactions for undo/redo.
    */
   bool IsUndoRedoEnabled() const
   {
-    return !!mTransactionManager;
+    return mTransactionManager &&
+           mTransactionManager->NumberOfMaximumTransactions();
   }
 
   /**
@@ -424,8 +434,6 @@ public:
     if (!mTransactionManager) {
       return true;
     }
-    // XXX Even we clear the transaction manager, IsUndoRedoEnabled() keep
-    //     returning true...
     return mTransactionManager->DisableUndoRedo();
   }
   bool ClearUndoRedo()
