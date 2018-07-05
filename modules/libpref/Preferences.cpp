@@ -83,6 +83,10 @@
 #include "plstr.h"
 #include "prlink.h"
 
+#ifdef MOZ_MEMORY
+#include "mozmemory.h"
+#endif
+
 #ifdef XP_WIN
 #include "windows.h"
 #endif
@@ -204,7 +208,10 @@ union PrefValue {
     mStringVal = nullptr;
   }
 
-  void Replace(bool aHasValue, PrefType aOldType, PrefType aNewType, PrefValue aNewValue)
+  void Replace(bool aHasValue,
+               PrefType aOldType,
+               PrefType aNewType,
+               PrefValue aNewValue)
   {
     if (aHasValue) {
       Clear(aOldType);
@@ -997,11 +1004,11 @@ public:
 class CallbackNode
 {
 public:
-  CallbackNode(const char* aDomain,
+  CallbackNode(const nsACString& aDomain,
                PrefChangedFunc aFunc,
                void* aData,
                Preferences::MatchKind aMatchKind)
-    : mDomain(moz_xstrdup(aDomain))
+    : mDomain(aDomain)
     , mFunc(aFunc)
     , mData(aData)
     , mNextAndMatchKind(aMatchKind)
@@ -1010,7 +1017,7 @@ public:
 
   // mDomain is a UniquePtr<>, so any uses of Domain() should only be temporary
   // borrows.
-  const char* Domain() const { return mDomain.get(); }
+  const nsCString& Domain() const { return mDomain; }
 
   PrefChangedFunc Func() const { return mFunc; }
   void ClearFunc() { mFunc = nullptr; }
@@ -1039,14 +1046,15 @@ public:
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
   {
     aSizes.mCallbacksObjects += aMallocSizeOf(this);
-    aSizes.mCallbacksDomains += aMallocSizeOf(mDomain.get());
+    aSizes.mCallbacksDomains +=
+      mDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
 private:
   static const uintptr_t kMatchKindMask = uintptr_t(0x1);
   static const uintptr_t kNextMask = ~kMatchKindMask;
 
-  UniqueFreePtr<const char> mDomain;
+  nsCString mDomain;
 
   // If someone attempts to remove the node from the callback list while
   // NotifyCallbacks() is running, |func| is set to nullptr. Such nodes will
@@ -1236,12 +1244,13 @@ NotifyCallbacks(const char* aPrefName)
   // if we haven't reentered.
   gCallbacksInProgress = true;
 
+  nsDependentCString prefName(aPrefName);
+
   for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
     if (node->Func()) {
-      bool matches =
-        node->MatchKind() == Preferences::ExactMatch
-          ? strcmp(node->Domain(), aPrefName) == 0
-          : strncmp(node->Domain(), aPrefName, strlen(node->Domain())) == 0;
+      bool matches = node->MatchKind() == Preferences::ExactMatch
+                       ? node->Domain() == prefName
+                       : StringBeginsWith(prefName, node->Domain());
       if (matches) {
         (node->Func())(aPrefName, node->Data());
       }
@@ -1459,7 +1468,7 @@ public:
 
 public:
   // Create a PrefCallback with a strong reference to its observer.
-  PrefCallback(const char* aDomain,
+  PrefCallback(const nsACString& aDomain,
                nsIObserver* aObserver,
                nsPrefBranch* aBranch)
     : mDomain(aDomain)
@@ -1473,7 +1482,7 @@ public:
   }
 
   // Create a PrefCallback with a weak reference to its observer.
-  PrefCallback(const char* aDomain,
+  PrefCallback(const nsACString& aDomain,
                nsISupportsWeakReference* aObserver,
                nsPrefBranch* aBranch)
     : mDomain(aDomain)
@@ -1629,6 +1638,16 @@ private:
       static const char* match(const nsCString& aVal) { return aVal.get(); }
     };
 
+    struct CStringMatcher
+    {
+      // Note: This is a reference, not an instance. It's used to pass our outer
+      // method argument through to our matcher methods.
+      nsACString& mStr;
+
+      void match(const char* aVal) { mStr.Assign(aVal); }
+      void match(const nsCString& aVal) { mStr.Assign(aVal); }
+    };
+
     struct LenMatcher
     {
       static size_t match(const char* aVal) { return strlen(aVal); }
@@ -1640,6 +1659,8 @@ private:
       static PtrMatcher m;
       return match(m);
     }
+
+    void get(nsACString& aStr) const { match(CStringMatcher{ aStr }); }
 
     size_t Length() const
     {
@@ -1669,7 +1690,12 @@ private:
 
   void RemoveExpiredCallback(PrefCallback* aCallback);
 
-  PrefName GetPrefName(const char* aPrefName) const;
+  PrefName GetPrefName(const char* aPrefName) const
+  {
+    return GetPrefName(nsDependentCString(aPrefName));
+  }
+
+  PrefName GetPrefName(const nsACString& aPrefName) const;
 
   void FreeObserverList(void);
 
@@ -2363,14 +2389,16 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
 }
 
 NS_IMETHODIMP
-nsPrefBranch::AddObserver(const char* aDomain,
-                          nsIObserver* aObserver,
-                          bool aHoldWeak)
+nsPrefBranch::AddObserverImpl(const nsACString& aDomain,
+                              nsIObserver* aObserver,
+                              bool aHoldWeak)
 {
   PrefCallback* pCallback;
 
-  NS_ENSURE_ARG(aDomain);
   NS_ENSURE_ARG(aObserver);
+
+  nsCString prefName;
+  GetPrefName(aDomain).get(prefName);
 
   // Hold a weak reference to the observer if so requested.
   if (aHoldWeak) {
@@ -2383,11 +2411,11 @@ nsPrefBranch::AddObserver(const char* aDomain,
     }
 
     // Construct a PrefCallback with a weak reference to the observer.
-    pCallback = new PrefCallback(aDomain, weakRefFactory, this);
+    pCallback = new PrefCallback(prefName, weakRefFactory, this);
 
   } else {
     // Construct a PrefCallback with a strong reference to the observer.
-    pCallback = new PrefCallback(aDomain, aObserver, this);
+    pCallback = new PrefCallback(prefName, aObserver, this);
   }
 
   auto p = mObservers.LookupForAdd(pCallback);
@@ -2402,9 +2430,8 @@ nsPrefBranch::AddObserver(const char* aDomain,
   // We must pass a fully qualified preference name to the callback
   // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
-  const PrefName& pref = GetPrefName(aDomain);
   Preferences::RegisterCallback(NotifyObserver,
-                                pref.get(),
+                                prefName,
                                 pCallback,
                                 Preferences::PrefixMatch,
                                 /* isPriority */ false);
@@ -2413,9 +2440,9 @@ nsPrefBranch::AddObserver(const char* aDomain,
 }
 
 NS_IMETHODIMP
-nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
+nsPrefBranch::RemoveObserverImpl(const nsACString& aDomain,
+                                 nsIObserver* aObserver)
 {
-  NS_ENSURE_ARG(aDomain);
   NS_ENSURE_ARG(aObserver);
 
   nsresult rv = NS_OK;
@@ -2434,14 +2461,14 @@ nsPrefBranch::RemoveObserver(const char* aDomain, nsIObserver* aObserver)
   // Remove the relevant PrefCallback from mObservers and get an owning pointer
   // to it. Unregister the callback first, and then let the owning pointer go
   // out of scope and destroy the callback.
-  PrefCallback key(aDomain, aObserver, this);
+  nsCString prefName;
+  GetPrefName(aDomain).get(prefName);
+  PrefCallback key(prefName, aObserver, this);
   nsAutoPtr<PrefCallback> pCallback;
   mObservers.Remove(&key, &pCallback);
   if (pCallback) {
-    // aDomain == nullptr is the only possible failure, trapped above.
-    const PrefName& pref = GetPrefName(aDomain);
     rv = Preferences::UnregisterCallback(
-      NotifyObserver, pref.get(), pCallback, Preferences::PrefixMatch);
+      NotifyObserver, prefName, pCallback, Preferences::PrefixMatch);
   }
 
   return rv;
@@ -2475,7 +2502,7 @@ nsPrefBranch::NotifyObserver(const char* aNewPref, void* aData)
   // Remove any root this string may contain so as to not confuse the observer
   // by passing them something other than what they passed us as a topic.
   uint32_t len = pCallback->GetPrefBranch()->GetRootLength();
-  nsAutoCString suffix(aNewPref + len);
+  nsDependentCString suffix(aNewPref + len);
 
   observer->Observe(static_cast<nsIPrefBranch*>(pCallback->GetPrefBranch()),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
@@ -2508,10 +2535,8 @@ nsPrefBranch::FreeObserverList()
   mFreeingObserverList = true;
   for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
-    nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const PrefName& pref = prefBranch->GetPrefName(callback->GetDomain().get());
     Preferences::UnregisterCallback(nsPrefBranch::NotifyObserver,
-                                    pref.get(),
+                                    callback->GetDomain(),
                                     callback,
                                     Preferences::PrefixMatch);
     iter.Remove();
@@ -2556,16 +2581,13 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
 }
 
 nsPrefBranch::PrefName
-nsPrefBranch::GetPrefName(const char* aPrefName) const
+nsPrefBranch::GetPrefName(const nsACString& aPrefName) const
 {
-  MOZ_ASSERT(aPrefName);
-
-  // For speed, avoid strcpy if we can.
   if (mPrefRoot.IsEmpty()) {
-    return PrefName(aPrefName);
+    return PrefName(PromiseFlatCString(aPrefName));
   }
 
-  return PrefName(mPrefRoot + nsDependentCString(aPrefName));
+  return PrefName(mPrefRoot + aPrefName);
 }
 
 //----------------------------------------------------------------------------
@@ -2891,6 +2913,14 @@ AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
 #endif
 }
 
+static void
+AssertNotAlreadyCached(const char* aPrefType,
+                       const nsACString& aPref,
+                       void* aPtr)
+{
+  AssertNotAlreadyCached(aPrefType, PromiseFlatCString(aPref).get(), aPtr);
+}
+
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
 /* static */ void
@@ -3030,8 +3060,6 @@ PreferenceServiceReporter::CollectReports(
 
   for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
-    nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const auto& pref = prefBranch->GetPrefName(callback->GetDomain().get());
 
     if (callback->IsWeak()) {
       nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);
@@ -3044,16 +3072,15 @@ PreferenceServiceReporter::CollectReports(
       numStrong++;
     }
 
-    nsDependentCString prefString(pref.get());
     uint32_t oldCount = 0;
-    prefCounter.Get(prefString, &oldCount);
+    prefCounter.Get(callback->GetDomain(), &oldCount);
     uint32_t currentCount = oldCount + 1;
-    prefCounter.Put(prefString, currentCount);
+    prefCounter.Put(callback->GetDomain(), currentCount);
 
     // Keep track of preferences that have a suspiciously large number of
     // referents (a symptom of a leak).
     if (currentCount == kSuspectReferentCount) {
-      suspectPreferences.AppendElement(prefString);
+      suspectPreferences.AppendElement(callback->GetDomain());
     }
   }
 
@@ -4560,7 +4587,7 @@ Preferences::GetType(const char* aPrefName)
 }
 
 /* static */ nsresult
-Preferences::AddStrongObserver(nsIObserver* aObserver, const char* aPref)
+Preferences::AddStrongObserver(nsIObserver* aObserver, const nsACString& aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -4568,7 +4595,7 @@ Preferences::AddStrongObserver(nsIObserver* aObserver, const char* aPref)
 }
 
 /* static */ nsresult
-Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
+Preferences::AddWeakObserver(nsIObserver* aObserver, const nsACString& aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -4576,7 +4603,7 @@ Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
 }
 
 /* static */ nsresult
-Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
+Preferences::RemoveObserver(nsIObserver* aObserver, const nsACString& aPref)
 {
   MOZ_ASSERT(aObserver);
   if (sShutdown) {
@@ -4587,12 +4614,27 @@ Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
   return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
+template<typename T>
+static void
+AssertNotMallocAllocated(T* aPtr)
+{
+#if defined(DEBUG) && defined(MOZ_MEMORY)
+  jemalloc_ptr_info_t info;
+  jemalloc_ptr_info((void*)aPtr, &info);
+  MOZ_ASSERT(info.tag == TagUnknown);
+#endif
+}
+
 /* static */ nsresult
 Preferences::AddStrongObservers(nsIObserver* aObserver, const char** aPrefs)
 {
   MOZ_ASSERT(aObserver);
   for (uint32_t i = 0; aPrefs[i]; i++) {
-    nsresult rv = AddStrongObserver(aObserver, aPrefs[i]);
+    AssertNotMallocAllocated(aPrefs[i]);
+
+    nsCString pref;
+    pref.AssignLiteral(aPrefs[i], strlen(aPrefs[i]));
+    nsresult rv = AddStrongObserver(aObserver, pref);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -4603,7 +4645,11 @@ Preferences::AddWeakObservers(nsIObserver* aObserver, const char** aPrefs)
 {
   MOZ_ASSERT(aObserver);
   for (uint32_t i = 0; aPrefs[i]; i++) {
-    nsresult rv = AddWeakObserver(aObserver, aPrefs[i]);
+    AssertNotMallocAllocated(aPrefs[i]);
+
+    nsCString pref;
+    pref.AssignLiteral(aPrefs[i], strlen(aPrefs[i]));
+    nsresult rv = AddWeakObserver(aObserver, pref);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -4620,7 +4666,7 @@ Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
 
   for (uint32_t i = 0; aPrefs[i]; i++) {
-    nsresult rv = RemoveObserver(aObserver, aPrefs[i]);
+    nsresult rv = RemoveObserver(aObserver, nsDependentCString(aPrefs[i]));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -4628,12 +4674,11 @@ Preferences::RemoveObservers(nsIObserver* aObserver, const char** aPrefs)
 
 /* static */ nsresult
 Preferences::RegisterCallback(PrefChangedFunc aCallback,
-                              const char* aPrefNode,
+                              const nsACString& aPrefNode,
                               void* aData,
                               MatchKind aMatchKind,
                               bool aIsPriority)
 {
-  NS_ENSURE_ARG(aPrefNode);
   NS_ENSURE_ARG(aCallback);
 
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -4663,21 +4708,21 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
 
 /* static */ nsresult
 Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
-                                     const char* aPref,
+                                     const nsACString& aPref,
                                      void* aClosure,
                                      MatchKind aMatchKind)
 {
   MOZ_ASSERT(aCallback);
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
-    (*aCallback)(aPref, aClosure);
+    (*aCallback)(PromiseFlatCString(aPref).get(), aClosure);
   }
   return rv;
 }
 
 /* static */ nsresult
 Preferences::UnregisterCallback(PrefChangedFunc aCallback,
-                                const char* aPrefNode,
+                                const nsACString& aPrefNode,
                                 void* aData,
                                 MatchKind aMatchKind)
 {
@@ -4694,8 +4739,7 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
 
   while (node) {
     if (node->Func() == aCallback && node->Data() == aData &&
-        node->MatchKind() == aMatchKind &&
-        strcmp(node->Domain(), aPrefNode) == 0) {
+        node->MatchKind() == aMatchKind && node->Domain() == aPrefNode) {
       if (gCallbacksInProgress) {
         // Postpone the node removal until after callbacks enumeration is
         // finished.
@@ -4734,13 +4778,13 @@ BoolVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache,
-                             const char* aPref,
+                             const nsACString& aPref,
                              bool aDefault,
                              bool aSkipAssignment)
 {
   AssertNotAlreadyCached("bool", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetBool(aPref, aDefault);
+    *aCache = GetBool(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4766,13 +4810,13 @@ AtomicBoolVarChanged(const char* aPref, void* aClosure)
 template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
-                                   const char* aPref,
+                                   const nsACString& aPref,
                                    bool aDefault,
                                    bool aSkipAssignment)
 {
   AssertNotAlreadyCached("bool", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetBool(aPref, aDefault);
+    *aCache = GetBool(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4796,13 +4840,13 @@ IntVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddIntVarCache(int32_t* aCache,
-                            const char* aPref,
+                            const nsACString& aPref,
                             int32_t aDefault,
                             bool aSkipAssignment)
 {
   AssertNotAlreadyCached("int", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetInt(aPref, aDefault);
+    *aCache = GetInt(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4825,13 +4869,13 @@ AtomicIntVarChanged(const char* aPref, void* aClosure)
 template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
-                                  const char* aPref,
+                                  const nsACString& aPref,
                                   int32_t aDefault,
                                   bool aSkipAssignment)
 {
   AssertNotAlreadyCached("int", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetInt(aPref, aDefault);
+    *aCache = GetInt(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4855,13 +4899,13 @@ UintVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddUintVarCache(uint32_t* aCache,
-                             const char* aPref,
+                             const nsACString& aPref,
                              uint32_t aDefault,
                              bool aSkipAssignment)
 {
   AssertNotAlreadyCached("uint", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetUint(aPref, aDefault);
+    *aCache = GetUint(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4887,13 +4931,13 @@ AtomicUintVarChanged(const char* aPref, void* aClosure)
 template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
-                                   const char* aPref,
+                                   const nsACString& aPref,
                                    uint32_t aDefault,
                                    bool aSkipAssignment)
 {
   AssertNotAlreadyCached("uint", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetUint(aPref, aDefault);
+    *aCache = GetUint(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4912,43 +4956,43 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 // limited orders are needed and therefore implemented.
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
-                                   const char*,
+                                   const nsACString&,
                                    bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, ReleaseAcquire>*,
-                                   const char*,
+                                   const nsACString&,
                                    bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, SequentiallyConsistent>*,
-                                   const char*,
+                                   const nsACString&,
                                    bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
-                                  const char*,
+                                  const nsACString&,
                                   int32_t,
                                   bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
-                                   const char*,
+                                   const nsACString&,
                                    uint32_t,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, ReleaseAcquire>*,
-                                   const char*,
+                                   const nsACString&,
                                    uint32_t,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, SequentiallyConsistent>*,
-                                   const char*,
+                                   const nsACString&,
                                    uint32_t,
                                    bool);
 
@@ -4962,13 +5006,13 @@ FloatVarChanged(const char* aPref, void* aClosure)
 
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache,
-                              const char* aPref,
+                              const nsACString& aPref,
                               float aDefault,
                               bool aSkipAssignment)
 {
   AssertNotAlreadyCached("float", aPref, aCache);
   if (!aSkipAssignment) {
-    *aCache = GetFloat(aPref, aDefault);
+    *aCache = GetFloat(PromiseFlatCString(aPref).get(), aDefault);
   }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -5059,12 +5103,12 @@ SetPref_String(const char* aName, const char* aDefaultValue)
 }
 
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  bool* aCache,
                  bool aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_bool(aName, aDefaultValue);
+  SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddBoolVarCache(aCache, aName, aDefaultValue, true);
@@ -5073,12 +5117,12 @@ InitVarCachePref(const char* aName,
 
 template<MemoryOrdering Order>
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  Atomic<bool, Order>* aCache,
                  bool aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_bool(aName, aDefaultValue);
+  SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicBoolVarCache(aCache, aName, aDefaultValue, true);
@@ -5087,12 +5131,12 @@ InitVarCachePref(const char* aName,
 
 // XXX: this will eventually become used
 MOZ_MAYBE_UNUSED static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  int32_t* aCache,
                  int32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, aDefaultValue);
+  SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddIntVarCache(aCache, aName, aDefaultValue, true);
@@ -5101,12 +5145,12 @@ InitVarCachePref(const char* aName,
 
 template<MemoryOrdering Order>
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  Atomic<int32_t, Order>* aCache,
                  int32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, aDefaultValue);
+  SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicIntVarCache(aCache, aName, aDefaultValue, true);
@@ -5114,12 +5158,13 @@ InitVarCachePref(const char* aName,
 }
 
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  uint32_t* aCache,
                  uint32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, static_cast<int32_t>(aDefaultValue));
+  SetPref_int32_t(PromiseFlatCString(aName).get(),
+                  static_cast<int32_t>(aDefaultValue));
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddUintVarCache(aCache, aName, aDefaultValue, true);
@@ -5128,12 +5173,13 @@ InitVarCachePref(const char* aName,
 
 template<MemoryOrdering Order>
 static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  Atomic<uint32_t, Order>* aCache,
                  uint32_t aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_int32_t(aName, static_cast<int32_t>(aDefaultValue));
+  SetPref_int32_t(PromiseFlatCString(aName).get(),
+                  static_cast<int32_t>(aDefaultValue));
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddAtomicUintVarCache(aCache, aName, aDefaultValue, true);
@@ -5142,12 +5188,12 @@ InitVarCachePref(const char* aName,
 
 // XXX: this will eventually become used
 MOZ_MAYBE_UNUSED static void
-InitVarCachePref(const char* aName,
+InitVarCachePref(const nsACString& aName,
                  float* aCache,
                  float aDefaultValue,
                  bool aIsStartup)
 {
-  SetPref_float(aName, aDefaultValue);
+  SetPref_float(PromiseFlatCString(aName).get(), aDefaultValue);
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddFloatVarCache(aCache, aName, aDefaultValue, true);
@@ -5174,7 +5220,10 @@ StaticPrefs::InitAll(bool aIsStartup)
 // which prevents automatic int-to-float coercion.
 #define PREF(name, cpp_type, value) SetPref_##cpp_type(name, value);
 #define VARCACHE_PREF(name, id, cpp_type, value)                               \
-  InitVarCachePref(name, &StaticPrefs::sVarCache_##id, value, aIsStartup);
+  InitVarCachePref(NS_LITERAL_CSTRING(name),                                   \
+                   &StaticPrefs::sVarCache_##id,                               \
+                   value,                                                      \
+                   aIsStartup);
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF
