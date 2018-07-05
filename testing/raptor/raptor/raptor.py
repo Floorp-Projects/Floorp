@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import json
 import os
 import sys
+import time
 
 import mozinfo
 
@@ -139,10 +140,18 @@ class Raptor(object):
         proc = self.runner.process_handler
         self.output_handler.proc = proc
         self.control_server.browser_proc = proc
+        self.control_server._finished = False
 
+        # convert to seconds and account for page cycles
+        timeout = int(timeout / 1000) * int(test['page_cycles'])
         try:
-            self.runner.wait(timeout)
-
+            elapsed_time = 0
+            while not self.control_server._finished:
+                time.sleep(1)
+                elapsed_time += 1
+                if elapsed_time > (timeout) - 5:  # stop 5 seconds early
+                    self.control_server.wait_for_quit()
+                    break
         finally:
             try:
                 self.runner.check_for_crashes()
@@ -159,7 +168,7 @@ class Raptor(object):
             self.profile.addons.remove_addon(webext_id)
 
         if self.runner.is_running():
-            self.log("Application timed out after {} seconds".format(timeout))
+            self.log.info("Application timed out after {} seconds".format(timeout))
             self.runner.stop()
 
     def process_results(self):
@@ -209,7 +218,11 @@ def main(args=sys.argv[1:]):
     raptor.start_control_server()
 
     for next_test in raptor_test_list:
-        raptor.run_test(next_test)
+        if 'page_timeout' not in next_test.keys():
+            next_test['page_timeout'] = 120000
+        if 'page_cycles' not in next_test.keys():
+            next_test['page_cycles'] = 1
+        raptor.run_test(next_test, timeout=int(next_test['page_timeout']))
 
     success = raptor.process_results()
     raptor.clean_up()
