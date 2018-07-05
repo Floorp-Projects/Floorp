@@ -79,7 +79,8 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleStartElement(const char16_t *aName,
                                    const char16_t **aAtts,
                                    uint32_t aAttsCount,
-                                   uint32_t aLineNumber)
+                                   uint32_t aLineNumber,
+                                   uint32_t aColumnNumber)
 {
   if (!mContentHandler)
     return NS_OK;

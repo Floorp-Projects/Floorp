@@ -56,6 +56,8 @@ public:
   void OverrideBaseURI(nsIURI* aNewBaseURI) override;
   void SetLineNumber(uint32_t aLineNumber) override;
   uint32_t GetLineNumber() override;
+  void SetColumnNumber(uint32_t aColumnNumber) override;
+  uint32_t GetColumnNumber() override;
 
   enum RelValue {
     ePREFETCH =     0x00000001,
@@ -136,6 +138,7 @@ protected:
   bool mDontLoadStyle;
   bool mUpdatesEnabled;
   uint32_t mLineNumber;
+  uint32_t mColumnNumber;
 };
 
 #endif /* nsStyleLinkElement_h___ */

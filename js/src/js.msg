@@ -151,7 +151,7 @@ MSG_DEF(JSMSG_PARAMETER_AFTER_REST,    0, JSEXN_SYNTAXERR, "parameter after rest
 MSG_DEF(JSMSG_TOO_MANY_ARGUMENTS,      0, JSEXN_RANGEERR, "too many arguments provided for a function call")
 
 // CSP
-MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,        0, JSEXN_ERR, "call to eval() blocked by CSP")
+MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,        0, JSEXN_EVALERR, "call to eval() blocked by CSP")
 MSG_DEF(JSMSG_CSP_BLOCKED_FUNCTION,    0, JSEXN_ERR, "call to Function() blocked by CSP")
 
 // Wrappers

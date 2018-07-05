@@ -523,7 +523,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
                                                 doc->NodePrincipal(),
                                                 nullptr,
                                                 doc->GetDocumentURI(),
-                                                0, aString, nullptr)) {
+                                                0, 0, aString, nullptr)) {
     return;
   }
 
@@ -567,7 +567,8 @@ nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
                                                 doc->NodePrincipal(),
                                                 nullptr,
                                                 doc->GetDocumentURI(),
-                                                0, kPlaceholderText, nullptr)) {
+                                                0, 0, kPlaceholderText,
+                                                nullptr)) {
     return result;
   }
 

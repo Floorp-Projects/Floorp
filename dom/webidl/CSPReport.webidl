@@ -16,6 +16,7 @@ dictionary CSPReportProperties {
   DOMString source-file;
   DOMString script-sample;
   long line-number;
+  long column-number;
 };
 
 dictionary CSPReport {

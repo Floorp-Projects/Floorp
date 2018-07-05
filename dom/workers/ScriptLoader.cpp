@@ -1226,7 +1226,7 @@ private:
       if (wcsp) {
         wcsp->LogViolationDetails(
             nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT,
-            aLoadInfo.mURL, EmptyString(), 0, EmptyString(), EmptyString());
+            aLoadInfo.mURL, EmptyString(), 0, 0, EmptyString(), EmptyString());
       }
       return NS_ERROR_SRI_CORRUPT;
     }

@@ -49,7 +49,7 @@ using namespace mozilla;
 // specific signal occurs.
 static Atomic<int> sDumpPipeWriteFd(-1);
 
-const char* const FifoWatcher::kPrefName =
+const char FifoWatcher::kPrefName[] =
   "memory_info_dumper.watch_fifo.enabled";
 
 static void

@@ -247,10 +247,11 @@ NS_IMETHODIMP
 nsXBLContentSink::HandleStartElement(const char16_t *aName,
                                      const char16_t **aAtts,
                                      uint32_t aAttsCount,
-                                     uint32_t aLineNumber)
+                                     uint32_t aLineNumber,
+                                     uint32_t aColumnNumber)
 {
   nsresult rv = nsXMLContentSink::HandleStartElement(aName, aAtts, aAttsCount,
-                                                     aLineNumber);
+                                                     aLineNumber, aColumnNumber);
   if (NS_FAILED(rv))
     return rv;
 
@@ -850,7 +851,8 @@ nsXBLContentSink::ConstructParameter(const char16_t **aAtts)
 
 nsresult
 nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
-                                mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
+                                mozilla::dom::NodeInfo* aNodeInfo,
+                                uint32_t aLineNumber, uint32_t aColumnNumber,
                                 nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
 {
@@ -858,7 +860,7 @@ nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
   if (!aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
 #endif
     return nsXMLContentSink::CreateElement(aAtts, aAttsCount, aNodeInfo,
-                                           aLineNumber, aResult,
+                                           aLineNumber, aColumnNumber, aResult,
                                            aAppendContent, aFromParser);
 #ifdef MOZ_XUL
   }

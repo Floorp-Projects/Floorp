@@ -32,6 +32,7 @@ public:
 
   explicit nsIScriptElement(mozilla::dom::FromParser aFromParser)
     : mLineNumber(1),
+      mColumnNumber(1),
       mAlreadyStarted(false),
       mMalformed(false),
       mDoneAddingChildren(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
@@ -144,6 +145,16 @@ public:
   uint32_t GetScriptLineNumber()
   {
     return mLineNumber;
+  }
+
+  void SetScriptColumnNumber(uint32_t aColumnNumber)
+  {
+    mColumnNumber = aColumnNumber;
+  }
+
+  uint32_t GetScriptColumnNumber()
+  {
+    return mColumnNumber;
   }
 
   void SetIsMalformed()
@@ -296,6 +307,11 @@ protected:
    * The start line number of the script.
    */
   uint32_t mLineNumber;
+
+  /**
+   * The start column number of the script.
+   */
+  uint32_t mColumnNumber;
 
   /**
    * The "already started" flag per HTML5.

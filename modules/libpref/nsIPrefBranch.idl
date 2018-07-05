@@ -5,6 +5,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsLiteralString.h"
+%}
+
 interface nsIObserver;
 
 /**
@@ -23,7 +27,7 @@ interface nsIObserver;
  * @see nsIPrefService
  */
 
-[scriptable, uuid(55d25e49-793f-4727-a69f-de8b15f4b985)]
+[scriptable, builtinclass, uuid(55d25e49-793f-4727-a69f-de8b15f4b985)]
 interface nsIPrefBranch : nsISupports
 {
 
@@ -421,7 +425,8 @@ interface nsIPrefBranch : nsISupports
    * @see nsIObserver
    * @see removeObserver
    */
-  void addObserver(in string aDomain, in nsIObserver aObserver,
+  [binaryname(AddObserverImpl)]
+  void addObserver(in ACString aDomain, in nsIObserver aObserver,
                    [optional] in boolean aHoldWeak);
 
   /**
@@ -438,7 +443,34 @@ interface nsIPrefBranch : nsISupports
    * @see nsIObserver
    * @see addObserver
    */
-  void removeObserver(in string aDomain, in nsIObserver aObserver);
+  [binaryname(RemoveObserverImpl)]
+  void removeObserver(in ACString aDomain, in nsIObserver aObserver);
+
+  %{C++
+  nsresult AddObserver(const nsACString& aDomain, nsIObserver* aObserver,
+                       bool aHoldWeak = false)
+  {
+    return AddObserverImpl(aDomain, aObserver, aHoldWeak);
+  }
+
+  template <int N>
+  nsresult AddObserver(const char (&aDomain)[N], nsIObserver* aObserver,
+                       bool aHoldWeak = false)
+  {
+    return AddObserverImpl(nsLiteralCString(aDomain), aObserver, aHoldWeak);
+  }
+
+  nsresult RemoveObserver(const nsACString& aDomain, nsIObserver* aObserver)
+  {
+    return RemoveObserverImpl(aDomain, aObserver);
+  }
+
+  template <int N>
+  nsresult RemoveObserver(const char (&aDomain)[N], nsIObserver* aObserver)
+  {
+    return RemoveObserverImpl(nsLiteralCString(aDomain), aObserver);
+  }
+  %}
 };
 
 

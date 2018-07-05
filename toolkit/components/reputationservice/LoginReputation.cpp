@@ -30,6 +30,7 @@ static Atomic<bool> gShuttingDown(false);
 
 static const char* kObservedPrefs[] = {
   PREF_PASSWORD_ALLOW_TABLE,
+  nullptr,
 };
 
 // -------------------------------------------------------------------------
@@ -273,9 +274,7 @@ LoginReputationService::Enable()
   nsresult rv = mLoginWhitelist->Init();
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  for (const char* pref : kObservedPrefs) {
-    Preferences::AddStrongObserver(this, pref);
-  }
+  Preferences::AddStrongObservers(this, kObservedPrefs);
 
   return NS_OK;
 }
@@ -294,9 +293,7 @@ LoginReputationService::Disable()
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    for (const char* pref : kObservedPrefs) {
-      prefs->RemoveObserver(pref, this);
-    }
+    Preferences::RemoveObservers(this, kObservedPrefs);
   }
 
   return NS_OK;

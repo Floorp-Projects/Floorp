@@ -264,7 +264,7 @@ public:
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(std::move(nameRef));
             MOZ_ALWAYS_SUCCEEDS(Preferences::AddStrongObserver(
-                    appShell, nameStr->ToCString().get()));
+                    appShell, nameStr->ToCString()));
         }
     }
 
@@ -279,7 +279,7 @@ public:
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(std::move(nameRef));
             MOZ_ALWAYS_SUCCEEDS(Preferences::RemoveObserver(
-                    appShell, nameStr->ToCString().get()));
+                    appShell, nameStr->ToCString()));
         }
     }
 

@@ -202,6 +202,19 @@ public:
    *         was set
    */
   virtual uint32_t GetLineNumber() = 0;
+
+  // This doesn't entirely belong here since they only make sense for
+  // some types of linking elements, but it's a better place than
+  // anywhere else.
+  virtual void SetColumnNumber(uint32_t aColumnNumber) = 0;
+
+  /**
+   * Get the column number, as previously set by SetColumnNumber.
+   *
+   * @return the column number of this element; or 1 if no column number
+   *         was set
+   */
+  virtual uint32_t GetColumnNumber() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleSheetLinkingElement,

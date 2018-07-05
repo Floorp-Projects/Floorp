@@ -407,7 +407,8 @@ NS_IMETHODIMP
 XULContentSinkImpl::HandleStartElement(const char16_t *aName,
                                        const char16_t **aAtts,
                                        uint32_t aAttsCount,
-                                       uint32_t aLineNumber)
+                                       uint32_t aLineNumber,
+                                       uint32_t aColumnNumber)
 {
   // XXX Hopefully the parser will flag this before we get here. If
   // we're in the epilog, there should be no new elements
@@ -666,7 +667,7 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
   parsererror.Append((char16_t)0xFFFF);
   parsererror.AppendLiteral("parsererror");
 
-  rv = HandleStartElement(parsererror.get(), noAtts, 0, 0);
+  rv = HandleStartElement(parsererror.get(), noAtts, 0, 0, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, NS_strlen(aErrorText));
@@ -676,7 +677,7 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
   sourcetext.Append((char16_t)0xFFFF);
   sourcetext.AppendLiteral("sourcetext");
 
-  rv = HandleStartElement(sourcetext.get(), noAtts, 0, 0);
+  rv = HandleStartElement(sourcetext.get(), noAtts, 0, 0, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aSourceText, NS_strlen(aSourceText));

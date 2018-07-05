@@ -48,10 +48,14 @@ template<typename T>
 using StripAtomic = typename StripAtomicImpl<T>::Type;
 
 template<typename T>
-struct IsAtomic : FalseType {};
+struct IsAtomic : FalseType
+{
+};
 
 template<typename T, MemoryOrdering Order>
-struct IsAtomic<Atomic<T, Order>> : TrueType {};
+struct IsAtomic<Atomic<T, Order>> : TrueType
+{
+};
 
 class StaticPrefs
 {
@@ -70,8 +74,10 @@ class StaticPrefs
 #define VARCACHE_PREF(str, id, cpp_type, default_value)                        \
 private:                                                                       \
   static cpp_type sVarCache_##id;                                              \
+                                                                               \
 public:                                                                        \
-  static StripAtomic<cpp_type> id() {                                          \
+  static StripAtomic<cpp_type> id()                                            \
+  {                                                                            \
     MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),                 \
                "Non-atomic static pref '" str                                  \
                "' being accessed on background thread");                       \

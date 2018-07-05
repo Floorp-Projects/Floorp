@@ -121,7 +121,8 @@ NS_IMETHODIMP
 txStylesheetSink::HandleStartElement(const char16_t *aName,
                                      const char16_t **aAtts,
                                      uint32_t aAttsCount,
-                                     uint32_t aLineNumber)
+                                     uint32_t aLineNumber,
+                                     uint32_t aColumnNumber)
 {
     MOZ_ASSERT(aAttsCount % 2 == 0, "incorrect aAttsCount");
 

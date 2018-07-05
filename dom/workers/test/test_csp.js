@@ -28,7 +28,7 @@ xhr.onload = (e) => {
   worker = new Worker(uri);
   worker.postMessage({ do: "eval" })
   worker.onmessage = function(event) {
-    is(event.data, "Error: call to eval() blocked by CSP", "Eval threw");
+    is(event.data, "EvalError: call to eval() blocked by CSP", "Eval threw");
     testDone();
   }
 }
@@ -42,7 +42,7 @@ xhr.onload = (e) => {
   worker = new Worker(uri);
   worker.postMessage({ do: "nest", uri: uri, level: 3 })
   worker.onmessage = function(event) {
-    is(event.data, "Error: call to eval() blocked by CSP", "Eval threw in nested worker");
+    is(event.data, "EvalError: call to eval() blocked by CSP", "Eval threw in nested worker");
     testDone();
   }
 }

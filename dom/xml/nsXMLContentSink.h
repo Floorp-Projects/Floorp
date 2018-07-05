@@ -117,7 +117,8 @@ protected:
                                nsIContent *aContent);
   virtual bool NotifyForDocElement() { return true; }
   virtual nsresult CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
-                                 mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
+                                 mozilla::dom::NodeInfo* aNodeInfo,
+                                 uint32_t aLineNumber, uint32_t aColumnNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
 
@@ -181,7 +182,7 @@ protected:
 
   nsresult HandleStartElement(const char16_t *aName, const char16_t **aAtts,
                               uint32_t aAttsCount, uint32_t aLineNumber,
-                              bool aInterruptable);
+                              uint32_t aColumnNumber, bool aInterruptable);
   nsresult HandleEndElement(const char16_t *aName, bool aInterruptable);
   nsresult HandleCharacterData(const char16_t *aData, uint32_t aLength,
                                bool aInterruptable);
