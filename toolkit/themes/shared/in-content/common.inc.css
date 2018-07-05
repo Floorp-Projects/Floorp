@@ -108,7 +108,7 @@ xul|groupbox > xul|caption {
   padding: 4px 0;
 }
 
-xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.menulist-label):not(.indent):not(.learnMore):not(.tail-with-learn-more),
+xul|groupbox xul|label:not(.menu-accel):not(.menu-iconic-accel):not(.menu-text):not(.menu-iconic-text):not(.menulist-label):not(.indent):not(.learnMore):not(.tail-with-learn-more),
 xul|groupbox xul|description {
   /* !important needed to override toolkit !important rule */
   margin-inline-start: 0 !important;
