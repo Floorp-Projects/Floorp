@@ -85,8 +85,8 @@ add_task(async function test_pref_maxpages() {
       print("onDeleteURI " + aURI.spec);
       currentTest.receivedNotifications++;
     };
-    historyObserver.onDeleteVisits = (aURI, aTime) => {
-      print("onDeleteVisits " + aURI.spec + " " + aTime);
+    historyObserver.onDeleteVisits = (aURI, aPartialRemoval) => {
+      print("onDeleteVisits " + aURI.spec + " " + aPartialRemoval);
     };
     PlacesUtils.history.addObserver(historyObserver);
 

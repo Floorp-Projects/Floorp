@@ -699,9 +699,8 @@ interface nsINavHistoryObserver : nsISupports
    *
    * @param aURI
    *        The page whose visits have been expired.
-   * @param aVisitTime
-   *        The largest visit time in microseconds that has been expired.  We
-   *        guarantee that we don't have any visit older than this date.
+   * @param aPartialRemoval
+   *        Set to true if only some of the visits for the page have been removed.
    * @param aGUID
    *        The unique ID associated with the page.
    *
@@ -716,7 +715,7 @@ interface nsINavHistoryObserver : nsISupports
    *        have been removed.
    */
   void onDeleteVisits(in nsIURI aURI,
-                      in PRTime aVisitTime,
+                      in boolean aPartialRemoval,
                       in ACString aGUID,
                       in unsigned short aReason,
                       in unsigned long aTransitionType);
