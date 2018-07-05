@@ -12,7 +12,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/PerformanceUtils.h"
+#include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"
@@ -655,29 +655,27 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
 }
 #endif // NIGHTLY_BUILD
 
-/* static */ void
-ChromeUtils::RequestPerformanceMetrics(GlobalObject&)
+/* static */
+already_AddRefed<Promise>
+ChromeUtils::RequestPerformanceMetrics(GlobalObject& aGlobal,
+                                       ErrorResult& aRv)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  // calling all content processes via IPDL (async)
-  nsTArray<ContentParent*> children;
-  ContentParent::GetAll(children);
-  for (uint32_t i = 0; i < children.Length(); i++) {
-    mozilla::Unused << children[i]->SendRequestPerformanceMetrics();
+  // Creating a promise
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+  RefPtr<Promise> domPromise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
+  MOZ_ASSERT(domPromise);
 
+  // requesting metrics, that will be returned into the promise
+  PerformanceMetricsCollector::RequestMetrics(domPromise);
 
-  // collecting the current process counters and notifying them
-  nsTArray<PerformanceInfo> info;
-  CollectPerformanceInfo(info);
-  SystemGroup::Dispatch(TaskCategory::Performance,
-    NS_NewRunnableFunction(
-      "RequestPerformanceMetrics",
-      [info]() { mozilla::Unused << NS_WARN_IF(NS_FAILED(NotifyPerformanceInfo(info))); }
-    )
-  );
-
+  // sending back the promise instance
+  return domPromise.forget();
 }
 
 constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;

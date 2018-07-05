@@ -68,12 +68,8 @@ add_task(async function test() {
     let duration = 0;
     let total = 0;
 
-    function getInfoFromService(subject, topic, value) {
-      subject = subject.QueryInterface(Ci.nsIMutableArray);
-      let enumerator = subject.enumerate();
-      while (enumerator.hasMoreElements()) {
-        let entry = enumerator.getNext();
-        entry = entry.QueryInterface(Ci.nsIPerformanceMetricsData);
+    function exploreResults(data) {
+      for (let entry of data) {
         if (entry.pid == Services.appinfo.processID) {
           parent_process_event = true;
         }
@@ -83,12 +79,8 @@ add_task(async function test() {
         } else {
           duration += entry.duration;
         }
-        // let's look at the XPCOM data we got back
-        let items = entry.items.QueryInterface(Ci.nsIMutableArray);
-        let enumerator2 = items.enumerate();
-        while (enumerator2.hasMoreElements()) {
-          let item = enumerator2.getNext();
-          item = item.QueryInterface(Ci.nsIPerformanceMetricsDispatchCategory);
+        // let's look at the data we got back
+        for (let item of entry.items) {
           if (entry.worker) {
             worker_total += item.count;
           } else {
@@ -98,17 +90,9 @@ add_task(async function test() {
       }
     }
 
-    Services.obs.addObserver(getInfoFromService, "performance-metrics");
-
-    // wait until we get some events back by triggering requestPerformanceMetrics
-    await BrowserTestUtils.waitForCondition(() => {
-      ChromeUtils.requestPerformanceMetrics();
-      return worker_duration > 0 && duration > 0 && parent_process_event;
-    }, "wait for events to come in", 250, 20);
-
-    BrowserTestUtils.removeTab(page1);
-    BrowserTestUtils.removeTab(page2);
-    BrowserTestUtils.removeTab(page3);
+    // get all metrics via the promise
+    let results = await ChromeUtils.requestPerformanceMetrics();
+    exploreResults(results);
 
     Assert.ok(worker_duration > 0, "Worker duration should be positive");
     Assert.ok(worker_total > 0, "Worker count should be positive");
@@ -117,5 +101,8 @@ add_task(async function test() {
     Assert.ok(parent_process_event, "parent process sent back some events");
   });
 
+  BrowserTestUtils.removeTab(page1);
+  BrowserTestUtils.removeTab(page2);
+  BrowserTestUtils.removeTab(page3);
   SpecialPowers.clearUserPref('dom.performance.enable_scheduler_timing');
 });
