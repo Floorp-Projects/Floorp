@@ -27,10 +27,12 @@ UNIFIED_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'PerformanceMetricsCollector.cpp',
     'PerformanceUtils.cpp'
 ]
 
 EXPORTS.mozilla += [
+    'PerformanceMetricsCollector.h',
     'PerformanceUtils.h'
 ]
 
