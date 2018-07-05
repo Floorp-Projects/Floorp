@@ -123,6 +123,10 @@ def create_tasks(to_run, full_task_graph, label_to_taskid,
     that this is passed _all_ tasks in the graph, not just the set in to_run. You
     may want to skip modifying tasks not in your to_run list.
 
+    If `suffix` is given, then it is used to give unique names to the resulting
+    artifacts.  If you call this function multiple times in the same action,
+    pass a different suffix each time to avoid overwriting artifacts.
+
     If you wish to create the tasks in a new group, leave out decision_task_id.
 
     Returns an updated label_to_taskid containing the new tasks"""
