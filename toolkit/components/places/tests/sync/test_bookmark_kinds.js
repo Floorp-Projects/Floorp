@@ -81,7 +81,6 @@ add_task(async function test_livemarks() {
     }]));
 
     info("Apply remote");
-    let observer = expectBookmarkChangeNotifications();
     let changesToUpload = await buf.apply();
     deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
@@ -234,169 +233,20 @@ add_task(async function test_livemarks() {
       }],
     }, "Should apply and dedupe livemarks");
 
-    let livemarkA = await PlacesUtils.livemarks.getLivemark({
-      guid: "livemarkAAAA",
-    });
-    let livemarkB = await PlacesUtils.livemarks.getLivemark({
-      guid: "livemarkB111",
-    });
-    let livemarkC = await PlacesUtils.livemarks.getLivemark({
+    let cLivemark = await PlacesUtils.livemarks.getLivemark({
       guid: "livemarkCCCC",
     });
-    let livemarkE = await PlacesUtils.livemarks.getLivemark({
-      guid: "livemarkEEEE",
-    });
+    equal(cLivemark.title, "C (remote)", "Should set livemark C title");
+    ok(cLivemark.feedURI.equals(Services.io.newURI(site + "/feed/c-remote")),
+      "Should set livemark C feed URL");
 
-    observer.check([{
-      name: "onItemChanged",
-      params: { itemId: livemarkB.id, property: "guid", isAnnoProperty: false,
-                newValue: "livemarkB111", parentId: PlacesUtils.toolbarFolderId,
-                type: PlacesUtils.bookmarks.TYPE_FOLDER, guid: "livemarkB111",
-                parentGuid: "toolbar_____", oldValue: "livemarkBBBB",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAdded",
-      params: { itemId: livemarkC.id, parentId: PlacesUtils.toolbarFolderId,
-                index: 0, type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                urlHref: null, title: "C (remote)", guid: "livemarkCCCC",
-                parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAdded",
-      params: { itemId: livemarkE.id,
-                parentId: PlacesUtils.unfiledBookmarksFolderId,
-                index: 0, type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                urlHref: null, title: "E", guid: "livemarkEEEE",
-                parentGuid: "unfiled_____",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemMoved",
-      params: { itemId: livemarkB.id, oldParentId: PlacesUtils.toolbarFolderId,
-                oldIndex: 0, newParentId: PlacesUtils.toolbarFolderId,
-                newIndex: 1, type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                guid: "livemarkB111", uri: null,
-                oldParentGuid: PlacesUtils.bookmarks.toolbarGuid,
-                newParentGuid: PlacesUtils.bookmarks.toolbarGuid,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkA.id, property: "title", isAnnoProperty: false,
-                newValue: "A (remote)", type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.bookmarksMenuFolderId,
-                guid: "livemarkAAAA",
-                parentGuid: PlacesUtils.bookmarks.menuGuid, oldValue: "A",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkA.id, property: PlacesUtils.LMANNO_FEEDURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.bookmarksMenuFolderId,
-                guid: "livemarkAAAA",
-                parentGuid: PlacesUtils.bookmarks.menuGuid, oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkA.id, property: PlacesUtils.LMANNO_FEEDURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.bookmarksMenuFolderId,
-                guid: "livemarkAAAA",
-                parentGuid: PlacesUtils.bookmarks.menuGuid, oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkC.id, property: "livemark/feedURI",
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.toolbarFolderId, guid: "livemarkCCCC",
-                parentGuid: PlacesUtils.bookmarks.toolbarGuid, oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkB.id, property: PlacesUtils.LMANNO_FEEDURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.toolbarFolderId,
-                guid: "livemarkB111",
-                parentGuid: PlacesUtils.bookmarks.toolbarGuid, oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkB.id, property: PlacesUtils.LMANNO_SITEURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.toolbarFolderId,
-                guid: "livemarkB111",
-                parentGuid: PlacesUtils.bookmarks.toolbarGuid, oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkB.id, property: PlacesUtils.LMANNO_FEEDURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.toolbarFolderId,
-                guid: "livemarkB111",
-                parentGuid: PlacesUtils.bookmarks.toolbarGuid, oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkE.id, property: PlacesUtils.LMANNO_FEEDURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.unfiledBookmarksFolderId,
-                guid: "livemarkEEEE",
-                parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemChanged",
-      params: { itemId: livemarkE.id, property: PlacesUtils.LMANNO_SITEURI,
-                isAnnoProperty: true, newValue: "",
-                type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                parentId: PlacesUtils.unfiledBookmarksFolderId,
-                guid: "livemarkEEEE",
-                parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                oldValue: "",
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationRemoved",
-      params: { itemId: livemarkA.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkA.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkC.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationRemoved",
-      params: { itemId: livemarkB.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationRemoved",
-      params: { itemId: livemarkB.id, name: PlacesUtils.LMANNO_SITEURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkB.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkE.id, name: PlacesUtils.LMANNO_FEEDURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }, {
-      name: "onItemAnnotationSet",
-      params: { itemId: livemarkE.id, name: PlacesUtils.LMANNO_SITEURI,
-                source: PlacesUtils.bookmarks.SOURCES.SYNC,
-                dontUpdateLastModified: true },
-    }]);
+    let bLivemark = await PlacesUtils.livemarks.getLivemark({
+      guid: "livemarkB111",
+    });
+    ok(bLivemark.feedURI.equals(Services.io.newURI(site + "/feed/b-remote")),
+      "Should set deduped livemark B feed URL");
+    strictEqual(bLivemark.siteURI, null,
+      "Should remove deduped livemark B site URL");
 
     await buf.finalize();
   } finally {
