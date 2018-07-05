@@ -216,9 +216,10 @@ ActorPool.prototype = {
     actor.conn = this.conn;
     if (!actor.actorID) {
       // Older style actors use actorPrefix, while protocol.js-based actors use typeName
-      let prefix = actor.actorPrefix || actor.typeName;
-      if (!prefix && typeof actor == "function") {
-        prefix = actor.prototype.actorPrefix || actor.prototype.typeName;
+      const prefix = actor.actorPrefix || actor.typeName;
+      if (!prefix) {
+        throw new Error("Actor should precify either `actorPrefix` or `typeName` " +
+                        "attribute");
       }
       actor.actorID = this.conn.allocID(prefix || undefined);
     }
