@@ -133,6 +133,11 @@ ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistration
 void
 ServiceWorkerRegistrationMainThread::RegistrationRemoved()
 {
+  NS_ENSURE_TRUE_VOID(mOuter);
+
+  nsIGlobalObject* global = mOuter->GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
   // Queue a runnable to clean up the registration.  This is necessary
   // because there may be runnables in the event queue already to
   // update the registration state.  We want to let those run
@@ -141,7 +146,10 @@ ServiceWorkerRegistrationMainThread::RegistrationRemoved()
     "ServiceWorkerRegistrationMainThread::RegistrationRemoved",
     this,
     &ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal);
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+
+  Unused <<
+    global->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget(),
+                                                          NS_DISPATCH_NORMAL);
 }
 
 bool
