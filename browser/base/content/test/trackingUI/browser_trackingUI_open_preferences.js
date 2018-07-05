@@ -6,8 +6,6 @@
 const PREF = "privacy.trackingprotection.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
-
 async function waitAndAssertPreferencesShown() {
   await BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
   await TestUtils.waitForCondition(() => gBrowser.currentURI.spec == "about:preferences#privacy",

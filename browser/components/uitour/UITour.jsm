@@ -187,7 +187,12 @@ var UITour = {
       },
     }],
     ["trackingProtection", {
-      query: "#tracking-protection-icon",
+      query: (aDocument) => {
+        if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled", false)) {
+          return aDocument.getElementById("tracking-protection-icon-animatable-box");
+        }
+        return aDocument.getElementById("tracking-protection-icon");
+      },
     }],
     ["urlbar",      {
       query: "#urlbar",

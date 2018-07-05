@@ -38,10 +38,10 @@ function testTrackingPage(window) {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   is(TrackingProtection.content.getAttribute("state"), "blocked-tracking-content",
      'content: state="blocked-tracking-content"');
-  is(TrackingProtection.icon.getAttribute("state"), "blocked-tracking-content",
-     'icon: state="blocked-tracking-content"');
+  is(TrackingProtection.iconBox.getAttribute("state"), "blocked-tracking-content",
+     'iconBox: state="blocked-tracking-content"');
 
-  ok(!hidden("#tracking-protection-icon"), "icon is visible");
+  ok(!hidden("#tracking-protection-icon-box"), "icon box is visible");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
 
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
@@ -59,10 +59,10 @@ function testTrackingPageUnblocked() {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   is(TrackingProtection.content.getAttribute("state"), "loaded-tracking-content",
      'content: state="loaded-tracking-content"');
-  is(TrackingProtection.icon.getAttribute("state"), "loaded-tracking-content",
-     'icon: state="loaded-tracking-content"');
+  is(TrackingProtection.iconBox.getAttribute("state"), "loaded-tracking-content",
+     'iconBox: state="loaded-tracking-content"');
 
-  ok(!hidden("#tracking-protection-icon"), "icon is visible");
+  ok(!hidden("#tracking-protection-icon-box"), "icon box is visible");
   ok(!hidden("#tracking-action-block"), "blockButton is visible");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
 
