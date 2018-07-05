@@ -126,6 +126,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       systemId: this.rawNode.systemId,
 
       attrs: this.writeAttrs(),
+      customElementLocation: this.getCustomElementLocation(),
       isBeforePseudoElement: isBeforePseudoElement(this.rawNode),
       isAfterPseudoElement: isAfterPseudoElement(this.rawNode),
       isAnonymous: isAnonymous(this.rawNode),
@@ -348,6 +349,36 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     });
 
     return listenerArray;
+  },
+
+  /**
+   * Retrieve the script location of the custom element definition for this node, when
+   * relevant. To be linked to a custom element definition
+   */
+  getCustomElementLocation: function() {
+    // Get a reference to the custom element definition function.
+    const name = this.rawNode.localName;
+
+    const customElementsRegistry = this.rawNode.ownerGlobal.customElements;
+    const customElement = customElementsRegistry && customElementsRegistry.get(name);
+    if (!customElement) {
+      return undefined;
+    }
+    // Create debugger object for the customElement function.
+    const global = Cu.getGlobalForObject(customElement);
+    const dbg = this.parent().targetActor.makeDebugger();
+    const globalDO = dbg.addDebuggee(global);
+    const customElementDO = globalDO.makeDebuggeeValue(customElement);
+
+    // Return undefined if we can't find a script for the custom element definition.
+    if (!customElementDO.script) {
+      return undefined;
+    }
+
+    return {
+      url: customElementDO.script.url,
+      line: customElementDO.script.startLine,
+    };
   },
 
   /**
