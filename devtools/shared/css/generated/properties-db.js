@@ -7273,6 +7273,58 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "offset-block-end": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "offset-block-start": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-block-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "offset-inline-end": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-inline-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "offset-inline-start": {
+    "isInherited": false,
+    "subproperties": [
+      "inset-inline-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "opacity": {
     "isInherited": false,
     "subproperties": [
