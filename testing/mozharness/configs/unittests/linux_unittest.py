@@ -287,5 +287,5 @@ config = {
     "download_nodejs": True,
     "nodejs_path": NODEJS_PATH,
     "nodejs_tooltool_manifest_path": NODEJS_TOOLTOOL_MANIFEST_PATH,
-    "log_format": "%(levelname)8s - %(message)s",
+    # "log_format": "%(levelname)8s - %(message)s",
 }
