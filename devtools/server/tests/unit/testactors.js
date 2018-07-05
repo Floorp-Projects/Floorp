@@ -62,7 +62,7 @@ TestTabList.prototype = {
   }
 };
 
-function createRootActor(connection) {
+exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
     tabList: new TestTabList(connection),
     globalActorFactories: DebuggerServer.globalActorFactories,
@@ -70,7 +70,7 @@ function createRootActor(connection) {
 
   root.applicationType = "xpcshell-tests";
   return root;
-}
+};
 
 function TestTargetActor(connection, global) {
   this.conn = connection;
@@ -164,12 +164,4 @@ TestTargetActor.prototype.requestTypes = {
   "attach": TestTargetActor.prototype.onAttach,
   "detach": TestTargetActor.prototype.onDetach,
   "reload": TestTargetActor.prototype.onReload
-};
-
-exports.register = function(handle) {
-  handle.setRootActor(createRootActor);
-};
-
-exports.unregister = function(handle) {
-  handle.setRootActor(null);
 };

@@ -70,7 +70,7 @@ exports.sendShutdownEvent = sendShutdownEvent;
  * * @param connection DebuggerServerConnection
  *          The conection to the client.
  */
-function createRootActor(connection) {
+exports.createRootActor = function createRootActor(connection) {
   return new RootActor(connection, {
     tabList: new BrowserTabList(connection),
     addonList: new BrowserAddonList(connection),
@@ -81,7 +81,7 @@ function createRootActor(connection) {
     globalActorFactories: DebuggerServer.globalActorFactories,
     onShutdown: sendShutdownEvent
   });
-}
+};
 
 /**
  * A live list of FrameTargetActorProxys representing the current browser tabs,
@@ -757,11 +757,3 @@ BrowserAddonList.prototype._adjustListener = function() {
 };
 
 exports.BrowserAddonList = BrowserAddonList;
-
-exports.register = function(handle) {
-  handle.setRootActor(createRootActor);
-};
-
-exports.unregister = function(handle) {
-  handle.setRootActor(null);
-};
