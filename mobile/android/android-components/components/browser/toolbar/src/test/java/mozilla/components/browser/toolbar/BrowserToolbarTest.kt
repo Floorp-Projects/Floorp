@@ -147,7 +147,7 @@ class BrowserToolbarTest {
             }
         }
 
-        toolbar.setOnUrlChangeListener(mockedListener::invoke)
+        toolbar.setOnUrlCommitListener(mockedListener::invoke)
         toolbar.onUrlEntered("https://www.mozilla.org")
 
         assertTrue(mockedListener.called)

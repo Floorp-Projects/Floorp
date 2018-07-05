@@ -126,7 +126,7 @@ class BrowserToolbar @JvmOverloads constructor(
 
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""
-    private var listener: ((String) -> Unit)? = null
+    private var urlCommitListener: ((String) -> Unit)? = null
 
     override var url: String = ""
         set(value) {
@@ -195,8 +195,8 @@ class BrowserToolbar @JvmOverloads constructor(
         displayToolbar.updateProgress(progress)
     }
 
-    override fun setOnUrlChangeListener(listener: (String) -> Unit) {
-        this.listener = listener
+    override fun setOnUrlCommitListener(listener: (String) -> Unit) {
+        this.urlCommitListener = listener
     }
 
     /**
@@ -273,7 +273,7 @@ class BrowserToolbar @JvmOverloads constructor(
     internal fun onUrlEntered(url: String) {
         displayMode()
 
-        listener?.invoke(url)
+        urlCommitListener?.invoke(url)
     }
 
     private fun updateState(state: State) {

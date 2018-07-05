@@ -24,7 +24,7 @@ class ToolbarInteractor(
      * in response.
      */
     fun start() {
-        toolbar.setOnUrlChangeListener { text ->
+        toolbar.setOnUrlCommitListener { text ->
             if (text.isUrl()) {
                 loadUrlUseCase.invoke(text.toNormalizedUrl())
             } else {
@@ -37,6 +37,6 @@ class ToolbarInteractor(
      * Stops this interactor.
      */
     fun stop() {
-        toolbar.setOnUrlChangeListener { }
+        toolbar.setOnUrlCommitListener { }
     }
 }

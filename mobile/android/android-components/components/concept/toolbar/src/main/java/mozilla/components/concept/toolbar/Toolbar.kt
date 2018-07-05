@@ -42,12 +42,12 @@ interface Toolbar {
     fun onBackPressed(): Boolean
 
     /**
-     * Registers the given function to be invoked when the url changes as result
-     * of user input.
+     * Registers the given function to be invoked when the user selected a new URL i.e. is done
+     * editing.
      *
      * @param listener the listener function
      */
-    fun setOnUrlChangeListener(listener: (String) -> Unit)
+    fun setOnUrlCommitListener(listener: (String) -> Unit)
 
     /**
      * Adds an action to be displayed on the right side of the toolbar in display mode.

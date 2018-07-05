@@ -352,7 +352,7 @@ class ToolbarActivity : AppCompatActivity() {
         // Whenever an URL was entered.. pretend to load it and re-insert it into the toolbar
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        toolbar.setOnUrlChangeListener { url ->
+        toolbar.setOnUrlCommitListener { url ->
             simulateReload(urlBoxProgress)
 
             if (url.isNotEmpty()) {
