@@ -773,6 +773,7 @@ nsStyleUtil::CSPAllowsInlineStyle(Element* aElement,
                                   nsIPrincipal* aTriggeringPrincipal,
                                   nsIURI* aSourceURI,
                                   uint32_t aLineNumber,
+                                  uint32_t aColumnNumber,
                                   const nsAString& aStyleText,
                                   nsresult* aRv)
 {
@@ -821,7 +822,7 @@ nsStyleUtil::CSPAllowsInlineStyle(Element* aElement,
   rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_STYLESHEET,
                             nonce,
                             false, // aParserCreated only applies to scripts
-                            styleText, aLineNumber,
+                            styleText, aLineNumber, aColumnNumber,
                             &allowInlineStyle);
   NS_ENSURE_SUCCESS(rv, false);
 
