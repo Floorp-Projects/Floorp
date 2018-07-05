@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <img src="big.png">
+  <style>
+    body {
+      border:  0px;
+      margin:  0px;
+      padding: 0px;
+    }
+  </style>
+  <img src="image-exif-180-deg.jpg">
   <script>
     document.addEventListener("MozReftestInvalidate", function() {
-      document.querySelector("img").style.imageOrientation = "90deg";
+      document.querySelector("img").style.imageOrientation = "from-image";
       document.documentElement.className = "";
     });
   </script>
