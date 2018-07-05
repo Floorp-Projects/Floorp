@@ -188,7 +188,7 @@
 #include "ContentProcessManager.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/PerformanceUtils.h"
+#include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
@@ -3339,14 +3339,16 @@ ContentParent::RecvFinishMemoryReport(const uint32_t& aGeneration)
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvAddPerformanceMetrics(nsTArray<PerformanceInfo>&& aMetrics)
+ContentParent::RecvAddPerformanceMetrics(const nsID& aID,
+                                         nsTArray<PerformanceInfo>&& aMetrics)
 {
   if (!mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
     // The pref is off, we should not get a performance metrics from the content
     // child
     return IPC_OK();
   }
-  Unused << NS_WARN_IF(NS_FAILED(mozilla::NotifyPerformanceInfo(aMetrics)));
+  nsresult rv = PerformanceMetricsCollector::DataReceived(aID, aMetrics);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
   return IPC_OK();
 }
 

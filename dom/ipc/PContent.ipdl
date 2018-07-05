@@ -408,7 +408,7 @@ child:
                               bool anonymize,
                               bool minimizeMemoryUsage,
                               MaybeFileDesc DMDFile);
-    async RequestPerformanceMetrics();
+    async RequestPerformanceMetrics(nsID aID);
 
     /**
      * Communication between the PuppetBidiKeyboard and the actual
@@ -1150,7 +1150,7 @@ parent:
 
     async BHRThreadHang(HangDetails aHangDetails);
 
-    async AddPerformanceMetrics(PerformanceInfo[] aMetrics);
+    async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
