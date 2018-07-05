@@ -157,6 +157,45 @@ add_task(async function test_hiddenPageActionContextMenu() {
   await extension.unload();
 });
 
+add_task(async function test_bookmarkContextMenu() {
+  async function showBookmarksToolbar(visible = true) {
+    let bt = document.getElementById("PersonalToolbar");
+    let transitionPromise =
+      BrowserTestUtils.waitForEvent(bt, "transitionend",
+                                    e => e.propertyName == "max-height");
+    setToolbarVisibility(bt, visible);
+    await transitionPromise;
+  }
+
+  const ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["menus", "bookmarks"],
+    },
+    async background() {
+      await browser.menus.create({title: "blarg", contexts: ["bookmark"]});
+      browser.menus.onShown.addListener(() => {
+        browser.test.sendMessage("hello");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await showBookmarksToolbar();
+  await ext.startup();
+  await ext.awaitMessage("ready");
+
+  let menu = await openChromeContextMenu("placesContext",
+                                         "#PlacesToolbarItems .bookmark-item");
+  let children = Array.from(menu.children);
+  let item = children[children.length - 1];
+  is(item.label, "blarg", "Menu item label is correct");
+  await ext.awaitMessage("hello"); // onShown listener fired
+
+  closeChromeContextMenu("placesContext", item);
+  await ext.unload();
+  await showBookmarksToolbar(false);
+});
+
 add_task(async function test_tabContextMenu() {
   const first = ExtensionTestUtils.loadExtension({
     manifest: {
