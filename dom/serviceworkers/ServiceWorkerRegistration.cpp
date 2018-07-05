@@ -158,6 +158,17 @@ ServiceWorkerRegistration::UpdateState(const ServiceWorkerRegistrationDescriptor
   UpdateStateInternal(aDescriptor.GetInstalling(),
                       aDescriptor.GetWaiting(),
                       aDescriptor.GetActive());
+
+  nsTArray<UniquePtr<VersionCallback>> callbackList;
+  mVersionCallbackList.SwapElements(callbackList);
+  for (auto& cb : callbackList) {
+    if (cb->mVersion > mDescriptor.Version()) {
+      mVersionCallbackList.AppendElement(std::move(cb));
+      continue;
+    }
+
+    cb->mFunc(cb->mVersion == mDescriptor.Version());
+  }
 }
 
 bool
@@ -341,6 +352,19 @@ const ServiceWorkerRegistrationDescriptor&
 ServiceWorkerRegistration::Descriptor() const
 {
   return mDescriptor;
+}
+
+void
+ServiceWorkerRegistration::WhenVersionReached(uint64_t aVersion,
+                                              ServiceWorkerBoolCallback&& aCallback)
+{
+  if (aVersion <= mDescriptor.Version()) {
+    aCallback(aVersion == mDescriptor.Version());
+    return;
+  }
+
+  mVersionCallbackList.AppendElement(
+    MakeUnique<VersionCallback>(aVersion, std::move(aCallback)));
 }
 
 void
