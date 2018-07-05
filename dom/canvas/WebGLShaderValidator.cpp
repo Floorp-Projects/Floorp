@@ -5,7 +5,6 @@
 
 #include "WebGLShaderValidator.h"
 
-#include <algorithm>
 #include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/gfx/Logging.h"
@@ -102,21 +101,12 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
 ////////////////////////////////////////
 
 static ShShaderOutput
-ShaderOutput(gl::GLContext* const gl)
+ShaderOutput(gl::GLContext* gl)
 {
     if (gl->IsGLES()) {
         return SH_ESSL_OUTPUT;
     } else {
         uint32_t version = gl->ShadingLanguageVersion();
-
-        // Version 130 starts to require integral constant expressions for loop indices.
-        // Both version 400 and gpu_shader5 remove this restrictions.
-        // gpu_shader5 went core in 400, so we can just check for the GLFeature.
-        // If we're compiling for webglsl1, even for webgl2, we need gpu_shader5, or GLSL_COMPAT.
-        if (!gl->IsSupported(gl::GLFeature::gpu_shader5)) {
-            version = std::min<uint32_t>(version, 120);
-        }
-
         switch (version) {
         case 100: return SH_GLSL_COMPATIBILITY_OUTPUT;
         case 120: return SH_GLSL_COMPATIBILITY_OUTPUT;
