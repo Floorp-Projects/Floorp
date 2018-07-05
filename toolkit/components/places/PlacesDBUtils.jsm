@@ -347,7 +347,8 @@ var PlacesDBUtils = {
       // D.4 move orphan items to unsorted folder
       { query:
         `UPDATE moz_bookmarks SET
-          parent = :unsorted_folder
+          parent = :unsorted_folder,
+          syncChangeCounter = syncChangeCounter + 1
         WHERE guid NOT IN (
           :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
         ) AND id IN (
@@ -422,7 +423,8 @@ var PlacesDBUtils = {
       // as parent, if they have bad parent move them to unsorted bookmarks.
       { query:
         `UPDATE moz_bookmarks SET
-          parent = :unsorted_folder
+          parent = :unsorted_folder,
+          syncChangeCounter = syncChangeCounter + 1
         WHERE guid NOT IN (
           :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
         ) AND id IN (
@@ -659,6 +661,7 @@ var PlacesDBUtils = {
       { query:
         `UPDATE moz_bookmarks
         SET guid = GENERATE_GUID(),
+            syncChangeCounter = syncChangeCounter + 1,
             syncStatus = :syncStatus
         WHERE guid IS NULL OR
               NOT IS_VALID_GUID(guid)`,
@@ -709,7 +712,7 @@ var PlacesDBUtils = {
       BEGIN
         UPDATE moz_bookmarks
         SET syncChangeCounter = syncChangeCounter + 1
-        WHERE id IN (OLD.parent, NEW.parent, NEW.id);
+        WHERE id IN (OLD.parent, NEW.parent);
       END`
     });
     cleanupStatements.unshift({
