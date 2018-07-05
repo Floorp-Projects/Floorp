@@ -13,6 +13,7 @@ from mozbuild.frontend.data import (
     ChromeManifestEntry,
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
+    GeneratedFile,
     JARManifest,
     LocalizedFiles,
     LocalizedPreprocessedFiles,
@@ -36,6 +37,8 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
         self._l10n_dependencies = OrderedDefaultDict(list)
 
         self._has_xpidl = False
+
+        self._generated_files_map = {}
 
     def _add_preprocess(self, obj, path, dest, target=None, **kwargs):
         if target is None:
@@ -111,9 +114,14 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                         )
                     if isinstance(f, ObjDirPath):
                         dep_target = 'install-%s' % obj.install_target
-                        self._dependencies[dep_target].append(
-                            mozpath.relpath(f.full_path,
-                                            self.environment.topobjdir))
+                        dep = mozpath.relpath(f.full_path, self.environment.topobjdir)
+                        if dep in self._generated_files_map:
+                            # Only the first output file is specified as a
+                            # dependency. If there are multiple output files
+                            # from a single GENERATED_FILES invocation that are
+                            # installed, we only want to run the command once.
+                            dep = self._generated_files_map[dep]
+                        self._dependencies[dep_target].append(dep)
 
         elif isinstance(obj, ChromeManifestEntry) and \
                 obj.install_target.startswith('dist/bin'):
@@ -123,6 +131,17 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                                                         obj.install_target)
                 self._manifest_entries[top_level].add(entry)
             self._manifest_entries[obj.path].add(str(obj.entry))
+
+        elif isinstance(obj, GeneratedFile):
+            if obj.outputs:
+                first_output = mozpath.relpath(mozpath.join(obj.objdir, obj.outputs[0]), self.environment.topobjdir)
+                for o in obj.outputs[1:]:
+                    fullpath = mozpath.join(obj.objdir, o)
+                    self._generated_files_map[mozpath.relpath(fullpath, self.environment.topobjdir)] = first_output
+            # We don't actually handle GeneratedFiles, we just need to know if
+            # we can build multiple of them from a single make invocation in the
+            # faster backend.
+            return False
 
         elif isinstance(obj, XPIDLFile):
             self._has_xpidl = True
