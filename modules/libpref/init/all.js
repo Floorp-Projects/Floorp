@@ -3629,7 +3629,11 @@ pref("font.name-list.cursive.zh-CN", "KaiTi, KaiTi_GB2312");
 // Per Taiwanese users' demand. They don't want to use TC fonts for
 // rendering Latin letters. (bug 88579)
 pref("font.name-list.serif.zh-TW", "Times New Roman, PMingLiu, MingLiU, MingLiU-ExtB");
+#ifdef EARLY_BETA_OR_EARLIER
+pref("font.name-list.sans-serif.zh-TW", "Arial, Microsoft JhengHei, PMingLiU, MingLiU, MingLiU-ExtB");
+#else
 pref("font.name-list.sans-serif.zh-TW", "Arial, PMingLiU, MingLiU, MingLiU-ExtB");
+#endif
 pref("font.name-list.monospace.zh-TW", "MingLiU, MingLiU-ExtB");
 pref("font.name-list.cursive.zh-TW", "DFKai-SB");
 
