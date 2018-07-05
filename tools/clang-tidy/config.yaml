@@ -34,6 +34,8 @@ clang_checkers:
     publish: !!bool yes
   - name: misc-assert-side-effect
     publish: !!bool yes
+  - name: misc-bool-pointer-implicit-conversion
+    publish: !!bool yes
   - name: misc-forward-declaration-namespace
     # Name with clang tidy 6.0. We are currently using 5.0
     # - name: bugprone-forward-declaration-namespace
