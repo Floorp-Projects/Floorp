@@ -807,16 +807,6 @@ ServiceWorkerRegistrationInfo::GetUpdateDelay()
 }
 
 void
-ServiceWorkerRegistrationInfo::FireUpdateFound()
-{
-  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);
-  while (it.HasMore()) {
-    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
-    target->UpdateFound();
-  }
-}
-
-void
 ServiceWorkerRegistrationInfo::NotifyRemoved()
 {
   nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mInstanceList);

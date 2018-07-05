@@ -103,12 +103,6 @@ ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal()
 }
 
 void
-ServiceWorkerRegistrationMainThread::UpdateFound()
-{
-  mOuter->DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
-}
-
-void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
   NS_ENSURE_TRUE_VOID(mOuter);
@@ -643,6 +637,7 @@ class WorkerListener final : public ServiceWorkerRegistrationListener
 {
   ServiceWorkerRegistrationDescriptor mDescriptor;
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mInfo;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
   bool mListeningForEvents;
 
   // Set and unset on worker thread, used on main-thread and protected by mutex.
@@ -654,13 +649,16 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerListener, override)
 
   WorkerListener(ServiceWorkerRegistrationWorkerThread* aReg,
-                 const ServiceWorkerRegistrationDescriptor& aDescriptor)
+                 const ServiceWorkerRegistrationDescriptor& aDescriptor,
+                 nsISerialEventTarget* aEventTarget)
     : mDescriptor(aDescriptor)
+    , mEventTarget(aEventTarget)
     , mListeningForEvents(false)
     , mRegistration(aReg)
     , mMutex("WorkerListener::mMutex")
   {
     MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    MOZ_ASSERT(mEventTarget);
     MOZ_ASSERT(mRegistration);
   }
 
@@ -701,14 +699,29 @@ public:
 
   // ServiceWorkerRegistrationListener
   void
-  UpdateFound() override;
-
-  void
   UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) override
   {
     MOZ_ASSERT(NS_IsMainThread());
+
     mDescriptor = aDescriptor;
-    // TODO: Not implemented
+
+    nsCOMPtr<nsIRunnable> r =
+      NewCancelableRunnableMethod<ServiceWorkerRegistrationDescriptor>(
+        "WorkerListener::UpdateState",
+        this,
+        &WorkerListener::UpdateStateOnWorkerThread,
+        aDescriptor);
+
+    Unused << mEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  }
+
+  void
+  UpdateStateOnWorkerThread(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+  {
+    MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    if (mRegistration) {
+      mRegistration->UpdateState(aDescriptor);
+    }
   }
 
   void
@@ -923,7 +936,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
     return;
   }
 
-  mListener = new WorkerListener(this, mDescriptor);
+  mListener = new WorkerListener(this, mDescriptor, worker->HybridEventTarget());
 
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod("dom::WorkerListener::StartListeningForEvents",
@@ -944,9 +957,9 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener()
   mListener->ClearRegistration();
 
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod("dom::WorkerListener::StopListeningForEvents",
-                      mListener,
-                      &WorkerListener::StopListeningForEvents);
+    NewCancelableRunnableMethod("dom::WorkerListener::StopListeningForEvents",
+                                mListener,
+                                &WorkerListener::StopListeningForEvents);
   // Calling GetPrivate() is safe because this method is called when the
   // WorkerRef is notified.
   MOZ_ALWAYS_SUCCEEDS(mWorkerRef->GetPrivate()->DispatchToMainThread(r.forget()));
@@ -955,47 +968,12 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener()
   mWorkerRef = nullptr;
 }
 
-class FireUpdateFoundRunnable final : public WorkerRunnable
-{
-  RefPtr<WorkerListener> mListener;
-public:
-  FireUpdateFoundRunnable(WorkerPrivate* aWorkerPrivate,
-                          WorkerListener* aListener)
-    : WorkerRunnable(aWorkerPrivate)
-    , mListener(aListener)
-  {
-    // Need this assertion for now since runnables which modify busy count can
-    // only be dispatched from parent thread to worker thread and we don't deal
-    // with nested workers. SW threads can't be nested.
-    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
-  }
-
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-    mListener->UpdateFound();
-    return true;
-  }
-};
-
 void
-WorkerListener::UpdateFound()
+ServiceWorkerRegistrationWorkerThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  MutexAutoLock lock(mMutex);
-  if (!mRegistration) {
-    return;
+  if (mOuter) {
+    mOuter->UpdateState(aDescriptor);
   }
-
-  if (NS_IsMainThread()) {
-    RefPtr<FireUpdateFoundRunnable> r =
-      new FireUpdateFoundRunnable(mRegistration->GetWorkerPrivate(lock), this);
-    Unused << NS_WARN_IF(!r->Dispatch());
-    return;
-  }
-
-  mRegistration->UpdateFound();
 }
 
 class RegistrationRemovedWorkerRunnable final : public WorkerRunnable
@@ -1041,12 +1019,6 @@ WorkerListener::RegistrationRemoved()
   }
 
   mRegistration->RegistrationRemoved();
-}
-
-void
-ServiceWorkerRegistrationWorkerThread::UpdateFound()
-{
-  mOuter->DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
 }
 
 WorkerPrivate*

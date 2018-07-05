@@ -296,7 +296,6 @@ ServiceWorkerRegistration::ShowNotification(JSContext* aCx,
   // Until we ship ServiceWorker objects on worker threads the active
   // worker will always be nullptr.  So limit this check to main
   // thread for now.
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mDescriptor.GetActive().isNothing());
   if (mDescriptor.GetActive().isNothing() && NS_IsMainThread()) {
     aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(scope);
     return nullptr;
