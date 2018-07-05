@@ -39,9 +39,11 @@ from .data import (
     ExternalStaticLibrary,
     ExternalSharedLibrary,
     HostDefines,
+    HostGeneratedSources,
     HostLibrary,
     HostProgram,
     HostRustProgram,
+    HostSharedLibrary,
     HostSimpleProgram,
     HostSources,
     InstallationTarget,
@@ -352,7 +354,9 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # We have to wait for all the self._link_library calls above to have
         # happened for obj.cxx_link to be final.
-        if not isinstance(obj, (StaticLibrary, HostLibrary,
+        # FIXME: Theoretically, HostSharedLibrary shouldn't be here (bug
+        # 1474022).
+        if not isinstance(obj, (StaticLibrary, HostLibrary, HostSharedLibrary,
                                 BaseRustProgram)) and obj.cxx_link:
             if context.config.substs.get(self.LIBSTDCXX_VAR[obj.KIND]):
                 self._link_library(context, obj, variable,
@@ -645,6 +649,8 @@ class TreeMetadataEmitter(LoggingMixin):
             is_rust_library = context.get('IS_RUST_LIBRARY')
             if is_rust_library:
                 lib = self._rust_library(context, host_libname, {}, cls=HostRustLibrary)
+            elif context.get('FORCE_SHARED_LIB'):
+                lib = HostSharedLibrary(context, host_libname)
             else:
                 lib = HostLibrary(context, host_libname)
             self._libs[host_libname].append(lib)
@@ -857,9 +863,8 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError('File listed in %s does not '
                         'exist: \'%s\'' % (symbol, full_path), context)
 
-        # HOST_SOURCES and UNIFIED_SOURCES only take SourcePaths, so
-        # there should be no generated source in here
-        assert not gen_sources['HOST_SOURCES']
+        # UNIFIED_SOURCES only take SourcePaths, so there should be no
+        # generated source in here
         assert not gen_sources['UNIFIED_SOURCES']
 
         no_pgo = context.get('NO_PGO')
@@ -903,7 +908,7 @@ class TreeMetadataEmitter(LoggingMixin):
         all_suffixes = list(suffix_map.keys())
         varmap = dict(
             SOURCES=(Sources, GeneratedSources, all_suffixes),
-            HOST_SOURCES=(HostSources, None, ['.c', '.mm', '.cpp']),
+            HOST_SOURCES=(HostSources, HostGeneratedSources, ['.c', '.mm', '.cpp']),
             UNIFIED_SOURCES=(UnifiedSources, None, ['.c', '.mm', '.cpp']),
         )
         # Track whether there are any C++ source files.
