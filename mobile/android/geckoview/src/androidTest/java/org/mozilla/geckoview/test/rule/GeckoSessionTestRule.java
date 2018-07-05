@@ -13,6 +13,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.test.util.UiThreadUtils;
 import org.mozilla.geckoview.test.rdp.Actor;
 import org.mozilla.geckoview.test.rdp.Promise;
 import org.mozilla.geckoview.test.rdp.RDPConnection;
@@ -96,7 +97,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     public static final String APK_URI_PREFIX = "resource://android/";
 
-    private static final Method sGetNextMessage;
     private static final Method sOnPageStart;
     private static final Method sOnPageStop;
     private static final Method sOnNewSession;
@@ -104,8 +104,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     static {
         try {
-            sGetNextMessage = MessageQueue.class.getDeclaredMethod("next");
-            sGetNextMessage.setAccessible(true);
             sOnPageStart = GeckoSession.ProgressDelegate.class.getMethod(
                     "onPageStart", GeckoSession.class, String.class);
             sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
@@ -337,12 +335,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         boolean value() default true;
     }
 
-    public static class TimeoutException extends RuntimeException {
-        public TimeoutException(final String detailMessage) {
-            super(detailMessage);
-        }
-    }
-
     public static class ChildCrashedException extends RuntimeException {
         public ChildCrashedException(final String detailMessage) {
             super(detailMessage);
@@ -403,7 +395,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
          */
         public Object getValue() {
             while (mPromise.isPending()) {
-                loopUntilIdle(mTimeoutMillis);
+                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
             }
             if (mPromise.isRejected()) {
                 throw new RejectedPromiseException(mPromise.getReason());
@@ -870,40 +862,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final Set<Class<?>> DEFAULT_DELEGATES = getDefaultDelegates();
 
-    private static final class TimeoutRunnable implements Runnable {
-        private long timeout;
-
-        public void set(final long timeout) {
-            this.timeout = timeout;
-            cancel();
-            HANDLER.postDelayed(this, timeout);
-        }
-
-        public void cancel() {
-            HANDLER.removeCallbacks(this);
-        }
-
-        @Override
-        public void run() {
-            throw new TimeoutException("Timed out after " + timeout + "ms");
-        }
-    }
-
-    /* package */ static final Handler HANDLER = new Handler(Looper.getMainLooper());
-    private static final TimeoutRunnable TIMEOUT_RUNNABLE = new TimeoutRunnable();
-    private static final MessageQueue.IdleHandler IDLE_HANDLER = new MessageQueue.IdleHandler() {
-        @Override
-        public boolean queueIdle() {
-            final Message msg = Message.obtain(HANDLER);
-            msg.obj = HANDLER;
-            HANDLER.sendMessageAtFrontOfQueue(msg);
-            return false; // Remove this idle handler.
-        }
-    };
-
     private static GeckoRuntime sRuntime;
     private static RDPConnection sRDPConnection;
-    private static long sLongestWait;
     protected static GeckoSession sCachedSession;
     protected static Tab sCachedRDPTab;
 
@@ -1390,7 +1350,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             };
 
             do {
-                loopUntilIdle(getDefaultTimeoutMillis());
+                UiThreadUtils.loopUntilIdle(getDefaultTimeoutMillis());
             } while (mCallRecordHandler != null);
 
         } finally {
@@ -1405,7 +1365,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         if (sCachedSession != null && mIgnoreCrash) {
             // Make sure the cached session has been closed by crashes.
             while (sCachedSession.isOpen()) {
-                loopUntilIdle(mTimeoutMillis);
+                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
             }
         }
 
@@ -1506,59 +1466,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     @Override
     protected boolean shouldRunOnUiThread(final Description description) {
         return true;
-    }
-
-    /**
-     * Loop the current thread until the message queue is idle. If loop is already idle and
-     * timeout is not specified, return immediately. If loop is already idle and timeout is
-     * specified, wait for a message to arrive first; an exception is thrown if timeout
-     * expires during the wait.
-     *
-     * @param timeout Wait timeout in milliseconds or 0 to not wait.
-     */
-    protected static void loopUntilIdle(final long timeout) {
-        // Adapted from GeckoThread.pumpMessageLoop.
-        final MessageQueue queue = HANDLER.getLooper().getQueue();
-        if (timeout > 0) {
-            TIMEOUT_RUNNABLE.set(timeout);
-        } else {
-            queue.addIdleHandler(IDLE_HANDLER);
-        }
-
-        final long startTime = SystemClock.uptimeMillis();
-        try {
-            while (true) {
-                final Message msg;
-                try {
-                    msg = (Message) sGetNextMessage.invoke(queue);
-                } catch (final IllegalAccessException | InvocationTargetException e) {
-                    throw unwrapRuntimeException(e);
-                }
-                if (msg.getTarget() == HANDLER && msg.obj == HANDLER) {
-                    // Our idle signal.
-                    break;
-                } else if (msg.getTarget() == null) {
-                    HANDLER.getLooper().quit();
-                    return;
-                }
-                msg.getTarget().dispatchMessage(msg);
-
-                if (timeout > 0) {
-                    TIMEOUT_RUNNABLE.cancel();
-                    queue.addIdleHandler(IDLE_HANDLER);
-                }
-            }
-
-            final long waitDuration = SystemClock.uptimeMillis() - startTime;
-            if (waitDuration > sLongestWait) {
-                sLongestWait = waitDuration;
-                Log.i(LOGTAG, "New longest wait: " + waitDuration + "ms");
-            }
-        } finally {
-            if (timeout > 0) {
-                TIMEOUT_RUNNABLE.cancel();
-            }
-        }
     }
 
     /**
@@ -1796,7 +1703,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         while (!calledAny || !methodCalls.isEmpty()) {
             while (index >= mCallRecords.size()) {
-                loopUntilIdle(mTimeoutMillis);
+                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
             }
 
             final MethodCall recorded = mCallRecords.get(index).methodCall;
@@ -2158,7 +2065,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     private Object evaluateJS(final @NonNull Tab tab, final @NonNull String js) {
         final Actor.Reply<Object> reply = tab.getConsole().evaluateJS(js);
         while (!reply.hasResult()) {
-            loopUntilIdle(mTimeoutMillis);
+            UiThreadUtils.loopUntilIdle(mTimeoutMillis);
         }
 
         final Object result = reply.get();
