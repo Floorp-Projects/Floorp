@@ -53,6 +53,10 @@
 
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["many option"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
       runner.eventTextMatches(evt, ["much range", "label"]);
 
       evt = await runner.moveNext("Simple",
@@ -119,7 +123,11 @@
 
       evt = await runner.movePrevious("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
-      runner.eventTextMatches(evt, ["many option", "checked", "check button", "First item", "list", "1 item"]);
+      runner.eventTextMatches(evt, ["many option", "label", "First item", "list", "1 item"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["many option", "checked", "check button"]);
 
       evt = await runner.activateCurrent(0,
         AndroidEvents.VIEW_CLICKED,

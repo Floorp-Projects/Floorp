@@ -51,20 +51,12 @@ BaseTraversalRule.prototype = {
           Filters.MATCH | Filters.IGNORE_SUBTREE : Filters.IGNORE;
       }
 
-      let matchResult =
-        (this._explicitMatchRoles.has(role) || !this._explicitMatchRoles.size) ?
-        this._matchFunc(aAccessible) : Filters.IGNORE;
-
-      // If we are on a label that nests a checkbox/radio we should land on it.
-      // It is a bigger touch target, and it reduces clutter.
-      if (role == Roles.LABEL && !(matchResult & Filters.IGNORE_SUBTREE)) {
-        let control = Utils.getEmbeddedControl(aAccessible);
-        if (control && this._explicitMatchRoles.has(control.role)) {
-          matchResult = this._matchFunc(control) | Filters.IGNORE_SUBTREE;
-        }
+      if (this._explicitMatchRoles.has(role) ||
+          !this._explicitMatchRoles.size) {
+        return this._matchFunc(aAccessible);
       }
 
-      return matchResult;
+      return Filters.IGNORE;
     },
 
     QueryInterface: ChromeUtils.generateQI([Ci.nsIAccessibleTraversalRule])
