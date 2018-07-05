@@ -374,7 +374,6 @@ private:
   already_AddRefed<CSSValue> DoGetTextDecorationStyle();
   already_AddRefed<CSSValue> DoGetTextEmphasisPosition();
   already_AddRefed<CSSValue> DoGetTextEmphasisStyle();
-  already_AddRefed<CSSValue> DoGetTextIndent();
   already_AddRefed<CSSValue> DoGetTextOverflow();
   already_AddRefed<CSSValue> DoGetTextShadow();
   already_AddRefed<CSSValue> DoGetLetterSpacing();
@@ -416,7 +415,6 @@ private:
   already_AddRefed<CSSValue> DoGetScrollSnapCoordinate();
   already_AddRefed<CSSValue> DoGetScrollbarFaceColor();
   already_AddRefed<CSSValue> DoGetScrollbarTrackColor();
-  already_AddRefed<CSSValue> DoGetShapeMargin();
   already_AddRefed<CSSValue> DoGetShapeOutside();
 
   /* User interface properties */

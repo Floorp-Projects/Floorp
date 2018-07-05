@@ -2093,6 +2093,9 @@ async function initializeTempMirrorEntities(db) {
       WHERE id = (SELECT fk FROM moz_bookmarks
                   WHERE guid = OLD.guid);
 
+      /* Trigger frecency updates for all affected origins. */
+      DELETE FROM moz_updateoriginsupdate_temp;
+
       /* Remove annos for the deleted items. */
       DELETE FROM moz_items_annos
       WHERE item_id = (SELECT id FROM moz_bookmarks

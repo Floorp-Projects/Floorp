@@ -301,6 +301,16 @@ nsHostRecord::ResolveComplete()
                               ((mNativeSuccess ? Telemetry::LABELS_DNS_TRR_COMPARE::NativeWorked :
                                 (mTRRSuccess ? Telemetry::LABELS_DNS_TRR_COMPARE::TRRWorked:
                                  Telemetry::LABELS_DNS_TRR_COMPARE::BothFailed))));
+    } else if (mResolverMode == MODE_TRRFIRST) {
+        if(flags & nsIDNSService::RESOLVE_DISABLE_TRR) {
+            // TRR is disabled on request, which is a next-level back-off method.
+            Telemetry::Accumulate(Telemetry::DNS_TRR_DISABLED, mNativeSuccess);
+        } else {
+            AccumulateCategorical(mTRRSuccess?
+                                  Telemetry::LABELS_DNS_TRR_FIRST::TRRWorked :
+                                  ((mNativeSuccess ? Telemetry::LABELS_DNS_TRR_FIRST::NativeFallback :
+                                    Telemetry::LABELS_DNS_TRR_FIRST::BothFailed)));
+        }
     }
 
     switch(mResolverMode) {

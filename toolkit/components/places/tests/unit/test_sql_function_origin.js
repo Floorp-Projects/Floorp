@@ -6,7 +6,8 @@
 // * get_prefix
 // * strip_prefix_and_userinfo
 
-add_task(async function test() {
+// Tests actual URL strings.
+add_task(async function urls() {
   let sets = [
     ["http:"],
     ["", "//"],
@@ -34,6 +35,28 @@ add_task(async function test() {
     }
   }
 });
+
+
+// Tests strings that aren't URLs.
+add_task(async function nonURLs() {
+  let db = await PlacesUtils.promiseDBConnection();
+
+  let value = (await db.execute(`
+    SELECT get_prefix("hello");
+  `))[0].getString(0);
+  Assert.equal(value, "");
+
+  value = (await db.execute(`
+    SELECT get_host_and_port("hello");
+  `))[0].getString(0);
+  Assert.equal(value, "hello");
+
+  value = (await db.execute(`
+    SELECT strip_prefix_and_userinfo("hello");
+  `))[0].getString(0);
+  Assert.equal(value, "hello");
+});
+
 
 function permute(sets = []) {
   if (!sets.length) {
