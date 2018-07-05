@@ -884,6 +884,7 @@ EventListenerManager::SetEventHandler(nsAtom* aName,
                                 true, // aParserCreated (true because attribute event handler)
                                 sampleIString,
                                 0,             // aLineNumber
+                                0,             // aColumnNumber
                                 &allowsInlineScript);
       NS_ENSURE_SUCCESS(rv, rv);
 
