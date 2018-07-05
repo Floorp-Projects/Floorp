@@ -804,6 +804,12 @@ static inline wr::WrYuvColorSpace ToWrYuvColorSpace(YUVColorSpace aYUVColorSpace
   return wr::WrYuvColorSpace::Rec601;
 }
 
+static inline wr::SyntheticItalics DegreesToSyntheticItalics(float aDegrees) {
+  wr::SyntheticItalics synthetic_italics;
+  synthetic_italics.angle = int16_t(std::min(std::max(aDegrees, -89.0f), 89.0f) * 256.0f);
+  return synthetic_italics;
+}
+
 } // namespace wr
 } // namespace mozilla
 

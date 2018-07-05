@@ -418,16 +418,19 @@ function getUserMediaTracksAndStreams(count, type = 'audio') {
   });
 }
 
-// Creates an offer for the caller, set it as the caller's local description and
-// then sets the callee's remote description to the offer. Returns the Promise
-// of the setRemoteDescription call.
-function performOffer(caller, callee) {
-  let sessionDescription;
-  return caller.createOffer()
-  .then(offer => {
-    sessionDescription = offer;
-    return caller.setLocalDescription(offer);
-  }).then(() => callee.setRemoteDescription(sessionDescription));
+async function exchangeOffer(caller, callee) {
+  const offer = await caller.createOffer();
+  await caller.setLocalDescription(offer);
+  return callee.setRemoteDescription(offer);
+}
+async function exchangeAnswer(caller, callee) {
+  const answer = await callee.createAnswer();
+  await callee.setLocalDescription(answer);
+  return caller.setRemoteDescription(answer);
+}
+async function exchangeOfferAnswer(caller, callee) {
+  await exchangeOffer(caller, callee);
+  return exchangeAnswer(caller, callee);
 }
 
 
@@ -444,4 +447,14 @@ class Resolver {
     this.resolve = promiseResolve;
     this.reject = promiseReject;
   }
+}
+
+function addEventListenerPromise(t, target, type, listener) {
+  return new Promise((resolve, reject) => {
+    target.addEventListener(type, t.step_func(e => {
+      if (listener != undefined)
+        e = listener(e);
+      resolve(e);
+    }));
+  });
 }

@@ -13,6 +13,7 @@
 
 #include "DrawCommand.h"
 #include "Logging.h"
+#include "RwAssert.h"
 
 namespace mozilla {
 namespace gfx {
@@ -24,13 +25,15 @@ public:
     : mLastCommand(nullptr)
   {}
   CaptureCommandList(CaptureCommandList&& aOther)
-   : mStorage(std::move(aOther.mStorage)), mLastCommand(aOther.mLastCommand)
+    : mStorage(std::move(aOther.mStorage))
+    , mLastCommand(aOther.mLastCommand)
   {
     aOther.mLastCommand = nullptr;
   }
   ~CaptureCommandList();
 
-  CaptureCommandList& operator =(CaptureCommandList&& aOther) {
+  CaptureCommandList& operator=(CaptureCommandList&& aOther) {
+    RwAssert::Writer lock(mAssert);
     mStorage = std::move(aOther.mStorage);
     mLastCommand = aOther.mLastCommand;
     aOther.mLastCommand = nullptr;
@@ -39,6 +42,7 @@ public:
 
   template <typename T>
   T* Append() {
+    RwAssert::Writer lock(mAssert);
     size_t oldSize = mStorage.size();
     mStorage.resize(mStorage.size() + sizeof(T) + sizeof(uint32_t));
     uint8_t* nextDrawLocation = &mStorage.front() + oldSize;
@@ -50,9 +54,12 @@ public:
 
   template <typename T>
   T* ReuseOrAppend() {
-    if (mLastCommand != nullptr &&
-      mLastCommand->GetType() == T::Type) {
-      return reinterpret_cast<T*>(mLastCommand);
+    { // Scope lock
+      RwAssert::Writer lock(mAssert);
+      if (mLastCommand != nullptr &&
+        mLastCommand->GetType() == T::Type) {
+        return reinterpret_cast<T*>(mLastCommand);
+      }
     }
     return Append<T>();
   }
@@ -65,11 +72,17 @@ public:
        mCurrent(nullptr),
        mEnd(nullptr)
     {
+      mParent.mAssert.BeginReading();
       if (!mParent.mStorage.empty()) {
         mCurrent = &mParent.mStorage.front();
         mEnd = mCurrent + mParent.mStorage.size();
       }
     }
+    ~iterator()
+    {
+      mParent.mAssert.EndReading();
+    }
+
     bool Done() const {
       return mCurrent >= mEnd;
     }
@@ -104,6 +117,7 @@ private:
 private:
   std::vector<uint8_t> mStorage;
   DrawingCommand* mLastCommand;
+  RwAssert mAssert;
 };
 
 } // namespace gfx

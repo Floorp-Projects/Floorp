@@ -601,6 +601,7 @@ protected:
   TimeDuration mVsyncRate;
 
   TransactionId mPendingTransaction;
+  TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;
 

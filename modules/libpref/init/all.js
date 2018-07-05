@@ -5814,7 +5814,7 @@ pref("toolkit.crashreporter.include_context_heap", true);
 // Open noopener links in a new process
 pref("dom.noopener.newprocess.enabled", true);
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
 pref("layers.omtp.enabled", true);
 #else
 pref("layers.omtp.enabled", false);

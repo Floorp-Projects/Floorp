@@ -157,13 +157,6 @@ LayerManagerMLGPU::CreateImageLayer()
   return MakeAndAddRef<ImageLayerMLGPU>(this);
 }
 
-already_AddRefed<BorderLayer>
-LayerManagerMLGPU::CreateBorderLayer()
-{
-  MOZ_ASSERT_UNREACHABLE("Not yet implemented");
-  return nullptr;
-}
-
 already_AddRefed<CanvasLayer>
 LayerManagerMLGPU::CreateCanvasLayer()
 {
