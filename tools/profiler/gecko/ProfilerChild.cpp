@@ -88,22 +88,26 @@ CollectProfileOrEmptyString(bool aIsShuttingDown)
   return profileCString;
 }
 
+Shmem
+ProfilerChild::ConvertProfileStringToShmem(const nsCString& aProfileCString) {
+  Shmem shmem;
+  if (!AllocShmem(aProfileCString.Length(),
+                  SharedMemory::TYPE_BASIC,
+                  &shmem)) {
+    return shmem;
+  }
+
+  PodCopy(shmem.get<char>(),
+          aProfileCString.BeginReading(),
+          aProfileCString.Length());
+  return shmem;
+}
+
 mozilla::ipc::IPCResult
 ProfilerChild::RecvGatherProfile(GatherProfileResolver&& aResolve)
 {
-  mozilla::ipc::Shmem shmem;
-  profiler_get_profile_json_into_lazily_allocated_buffer(
-    [&](size_t allocationSize) -> char* {
-      if (AllocShmem(allocationSize,
-                     mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
-                     &shmem)) {
-        return shmem.get<char>();
-      }
-      return nullptr;
-    },
-    /* aSinceTime */ 0,
-    /* aIsShuttingDown */ false);
-  aResolve(std::move(shmem));
+  nsCString profile = CollectProfileOrEmptyString(/* aIsShuttingDown */ false);
+  aResolve(ConvertProfileStringToShmem(profile));
   return IPC_OK();
 }
 
