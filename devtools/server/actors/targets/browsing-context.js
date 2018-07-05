@@ -290,7 +290,6 @@ const browsingContextTargetPrototype = {
   },
 
   _targetScopedActorPool: null,
-  _contextPool: null,
 
   /**
    * A constant prefix that will be used to form the actor ID by the server.
@@ -579,7 +578,7 @@ const browsingContextTargetPrototype = {
     }
 
     // Create a pool for context-lifetime actors.
-    this._pushContext();
+    this._createThreadActor();
 
     // on xpcshell, there is no document
     if (this.window) {
@@ -850,28 +849,19 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Creates a thread actor and a pool for context-lifetime actors. It then sets
-   * up the content window for debugging.
+   * Creates and manages the thread actor as part of the Browsing Context Target pool.
+   * This sets up the content window for being debugged
    */
-  _pushContext() {
-    assert(!this._contextPool, "Can't push multiple contexts");
-
-    this._contextPool = new ActorPool(this.conn);
-    this.conn.addActorPool(this._contextPool);
-
+  _createThreadActor() {
     this.threadActor = new ThreadActor(this, this.window);
-    this._contextPool.addActor(this.threadActor);
+    this.manage(this.threadActor);
   },
 
   /**
-   * Exits the current thread actor and removes the context-lifetime actor pool.
+   * Exits the current thread actor and removes it from the Browsing Context Target pool.
    * The content window is no longer being debugged after this call.
    */
-  _popContext() {
-    assert(!!this._contextPool, "No context to pop.");
-
-    this.conn.removeActorPool(this._contextPool);
-    this._contextPool = null;
+  _destroyThreadActor() {
     this.threadActor.exit();
     this.threadActor = null;
     this._sources = null;
@@ -905,7 +895,7 @@ const browsingContextTargetPrototype = {
       Services.obs.removeObserver(this, "webnavigation-destroy");
     }
 
-    this._popContext();
+    this._destroyThreadActor();
 
     // Shut down actors that belong to this target's pool.
     this._styleSheetActors.clear();
