@@ -13,6 +13,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 
 #include <string.h>
@@ -1422,6 +1423,7 @@ static HandleErrorContinuation
 HandleError(JSContext* cx, InterpreterRegs& regs)
 {
     MOZ_ASSERT(regs.fp()->script()->containsPC(regs.pc));
+    MOZ_ASSERT(cx->realm() == regs.fp()->script()->realm());
 
     if (regs.fp()->script()->hasScriptCounts()) {
         PCCounts* counts = regs.fp()->script()->getThrowCounts(regs.pc);
@@ -2257,6 +2259,7 @@ CASE(JSOP_RETRVAL)
   jit_return:
 
         MOZ_ASSERT(CodeSpec[*REGS.pc].format & JOF_INVOKE);
+        MOZ_ASSERT(cx->realm() == script->realm());
 
         /* Resume execution in the calling frame. */
         if (MOZ_LIKELY(interpReturnOK)) {
@@ -3208,8 +3211,16 @@ CASE(JSOP_FUNCALL)
         if (!funScript)
             goto error;
 
-        if (cx->realm() != funScript->realm())
+        // Enter the callee's realm if this is a cross-realm call. Use
+        // MakeScopeExit to leave this realm on all error/JIT-return paths
+        // below.
+        const bool isCrossRealm = cx->realm() != funScript->realm();
+        if (isCrossRealm)
             cx->enterRealmOf(funScript);
+        auto leaveRealmGuard = mozilla::MakeScopeExit([isCrossRealm, cx, &script] {
+            if (isCrossRealm)
+                cx->leaveRealm(script->realm());
+        });
 
         if (construct) {
             bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
@@ -3240,6 +3251,7 @@ CASE(JSOP_FUNCALL)
 
         if (!activation.pushInlineFrame(args, funScript, construct))
             goto error;
+        leaveRealmGuard.release(); // We leave the callee's realm when we call popInlineFrame.
     }
 
     SET_SCRIPT(REGS.fp()->script());

@@ -283,15 +283,24 @@ nsHostRecord::ResolveComplete()
 
     if (mTRRUsed && mNativeUsed && mNativeSuccess && mTRRSuccess) { // race or shadow!
         static const TimeDuration k50ms = TimeDuration::FromMilliseconds(50);
+        static const TimeDuration k100ms = TimeDuration::FromMilliseconds(100);
         if (mTrrDuration <= mNativeDuration) {
-            AccumulateCategorical(((mNativeDuration - mTrrDuration) > k50ms) ?
-                                  Telemetry::LABELS_DNS_TRR_RACE::TRRFasterBy50 :
-                                  Telemetry::LABELS_DNS_TRR_RACE::TRRFaster);
+            if ((mNativeDuration - mTrrDuration) > k100ms) {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_RACE2::TRRFasterBy100);
+            } else if ((mNativeDuration - mTrrDuration) > k50ms) {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_RACE2::TRRFasterBy50);
+            } else {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_RACE2::TRRFaster);
+            }
             LOG(("nsHostRecord::Complete %s Dns Race: TRR\n", host.get()));
         } else {
-            AccumulateCategorical(((mTrrDuration - mNativeDuration) > k50ms) ?
-                                  Telemetry::LABELS_DNS_TRR_RACE::NativeFasterBy50 :
-                                  Telemetry::LABELS_DNS_TRR_RACE::NativeFaster);
+            if ((mTrrDuration - mNativeDuration) > k100ms) {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_RACE2::NativeFasterBy100);
+            } else if ((mTrrDuration - mNativeDuration) > k50ms) {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_RACE2::NativeFasterBy50);
+            } else {
+                AccumulateCategorical(Telemetry::LABELS_DNS_TRR_RACE2::NativeFaster);
+            }
             LOG(("nsHostRecord::Complete %s Dns Race: NATIVE\n", host.get()));
         }
     }

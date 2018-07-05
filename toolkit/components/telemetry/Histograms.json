@@ -3258,12 +3258,13 @@
     "n_buckets": 50,
     "description": "Time in resolve queue waiting to getaddrinfo (msec)"
   },
-  "DNS_TRR_RACE": {
+  "DNS_TRR_RACE2": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["TRRFasterBy50", "TRRFaster", "NativeFaster", "NativeFasterBy50"],
+    "labels": ["TRRFasterBy100", "TRRFasterBy50", "TRRFaster", "NativeFaster", "NativeFasterBy50",
+               "NativeFasterBy100"],
     "bug_numbers": [1434852],
     "description": "DNS: TRR parallel resolve racing results"
   },
