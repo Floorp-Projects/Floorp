@@ -54,9 +54,6 @@
 #define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
 #endif
 
-// Fired after frecency has been updated.
-#define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
-
 // The preference we watch to know when the mobile bookmarks folder is filled by
 // sync.
 #define MOBILE_BOOKMARKS_PREF "browser.bookmarks.showMobileBookmarks"
@@ -75,7 +72,6 @@ class nsIAutoCompleteController;
 class nsIEffectiveTLDService;
 class nsIIDNService;
 class nsNavHistory;
-class PlacesDecayFrecencyCallback;
 class PlacesSQLQueryBuilder;
 
 // nsNavHistory
@@ -85,7 +81,6 @@ class nsNavHistory final : public nsSupportsWeakReference
                          , public nsIObserver
                          , public mozIStorageVacuumParticipant
 {
-  friend class PlacesDecayFrecencyCallback;
   friend class PlacesSQLQueryBuilder;
 
 public:
@@ -176,15 +171,6 @@ public:
    *       otherwise will reuse the old hidden value.
    */
   nsresult UpdateFrecency(int64_t aPlaceId);
-
-  /**
-   * Recalculates frecency for all pages requesting that (frecency < 0). Those
-   * may be generated:
-   *  * After a "clear private data"
-   *  * After removing visits
-   *  * After migrating from older versions
-   */
-  nsresult FixInvalidFrecencies();
 
   /**
    * Invalidate the frecencies of a list of places, so they will be recalculated
@@ -507,6 +493,8 @@ public:
                                   const RefPtr<nsNavHistoryQuery>& aQuery,
                                   nsNavHistoryQueryOptions* aOptions);
 
+  void DecayFrecencyCompleted(uint16_t reason);
+
 private:
   ~nsNavHistory();
 
@@ -519,9 +507,14 @@ protected:
   RefPtr<mozilla::places::Database> mDB;
 
   /**
-   * Decays frecency and inputhistory values.  Runs on idle-daily.
+   * Recalculates frecency for all pages where frecency < 0, then decays
+   * frecency and inputhistory values. Pages can invalidate frecencies:
+   *  * After a "clear private data"
+   *  * After removing visits
+   *  * After migrating from older versions
+   * This method runs on idle-daily.
    */
-  nsresult DecayFrecency();
+  nsresult FixAndDecayFrecency();
 
   /**
    * Loads all of the preferences that we use into member variables.
@@ -634,7 +627,6 @@ protected:
   int32_t mUnvisitedTypedBonus;
   int32_t mReloadVisitBonus;
 
-  void DecayFrecencyCompleted(uint16_t reason);
   uint32_t mDecayFrecencyPendingCount;
 
   nsresult RecalculateOriginFrecencyStatsInternal();
