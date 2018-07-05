@@ -49,14 +49,13 @@ add_task(async function test_nsNavHistory_invalidateFrecencies_allPages() {
   await Promise.all([onManyFrecenciesChanged(), PlacesUtils.history.clear()]);
 });
 
-// nsNavHistory::DecayFrecency and nsNavHistory::FixInvalidFrecencies
-add_task(async function test_nsNavHistory_DecayFrecency_and_nsNavHistory_FixInvalidFrecencies() {
-  // FixInvalidFrecencies is at the end of a path that DecayFrecency is also on,
-  // so expect two notifications.  Trigger the path by making nsNavHistory
-  // observe the idle-daily notification.
+// nsNavHistory::FixAndDecayFrecency
+add_task(async function test_nsNavHistory_FixAndDecayFrecency() {
+  // Fix and decay frecencies by making nsNavHistory observe the idle-daily
+  // notification.
   PlacesUtils.history.QueryInterface(Ci.nsIObserver).
     observe(null, "idle-daily", "");
-  await Promise.all([onManyFrecenciesChanged(), onManyFrecenciesChanged()]);
+  await Promise.all([onManyFrecenciesChanged()]);
 });
 
 function onFrecencyChanged(expectedURI) {
