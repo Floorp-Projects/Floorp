@@ -9,32 +9,6 @@ const LAST_USED_META_DATA = "places/bookmarks/edit/lastusedfolder";
 
 let expectedGuids = [];
 
-async function adjustIndices(db, itemGuid) {
-  await db.execute(`
-    UPDATE moz_bookmarks SET
-      position = position - 1
-    WHERE parent = (SELECT parent FROM moz_bookmarks
-                    WHERE guid = :itemGuid) AND
-          position >= (SELECT position FROM moz_bookmarks
-                       WHERE guid = :itemGuid)`,
-    { itemGuid });
-}
-
-async function fetchChildInfos(db, parentGuid) {
-  let rows = await db.execute(`
-    SELECT b.guid, b.position, b.syncChangeCounter
-    FROM moz_bookmarks b
-    JOIN moz_bookmarks p ON p.id = b.parent
-    WHERE p.guid = :parentGuid
-    ORDER BY b.position`,
-    { parentGuid });
-  return rows.map(row => ({
-    guid: row.getResultByName("guid"),
-    position: row.getResultByName("position"),
-    syncChangeCounter: row.getResultByName("syncChangeCounter"),
-  }));
-}
-
 add_task(async function setup() {
   await setupPlacesDatabase("places_v43.sqlite");
 
@@ -60,36 +34,6 @@ add_task(async function setup() {
     });
     expectedGuids.unshift(guid);
   }
-
-  info("Move menu into unfiled");
-  await adjustIndices(db, "menu________");
-  await db.execute(`
-    UPDATE moz_bookmarks SET
-      parent = (SELECT id FROM moz_bookmarks WHERE guid = :newParentGuid),
-      position = IFNULL((SELECT MAX(position) + 1 FROM moz_bookmarks
-                         WHERE guid = :newParentGuid), 0)
-    WHERE guid = :itemGuid`,
-    { newParentGuid: "unfiled_____",
-      itemGuid: "menu________" });
-
-  info("Move toolbar into mobile");
-  let mobileChildren = ["bookmarkAAAA", "bookmarkBBBB", "toolbar_____",
-                        "bookmarkCCCC", "bookmarkDDDD"];
-  await adjustIndices(db, "toolbar_____");
-  for (let position = 0; position < mobileChildren.length; position++) {
-    await db.execute(`
-      INSERT INTO moz_bookmarks(guid, parent, position)
-      VALUES(:guid, (SELECT id FROM moz_bookmarks WHERE guid = 'mobile______'),
-             :position)
-      ON CONFLICT(guid) DO UPDATE SET
-        parent = excluded.parent,
-        position = excluded.position`,
-      { guid: mobileChildren[position], position });
-  }
-
-  info("Reset Sync change counters");
-  await db.execute(`UPDATE moz_bookmarks SET syncChangeCounter = 0`);
-
   await db.close();
 });
 
@@ -118,54 +62,4 @@ add_task(async function test_no_orphan_annotations() {
   let db = await PlacesUtils.promiseDBConnection();
 
   await assertNoOrphanAnnotations(db);
-});
-
-add_task(async function test_roots_fixed() {
-  let db = await PlacesUtils.promiseDBConnection();
-
-  let expectedRootInfos = [{
-    guid: PlacesUtils.bookmarks.tagsGuid,
-    position: 0,
-    syncChangeCounter: 0,
-  }, {
-    guid: PlacesUtils.bookmarks.unfiledGuid,
-    position: 1,
-    syncChangeCounter: 1,
-  }, {
-    guid: PlacesUtils.bookmarks.mobileGuid,
-    position: 2,
-    syncChangeCounter: 1,
-  }, {
-    guid: PlacesUtils.bookmarks.menuGuid,
-    position: 3,
-    syncChangeCounter: 1,
-  }, {
-    guid: PlacesUtils.bookmarks.toolbarGuid,
-    position: 4,
-    syncChangeCounter: 1,
-  }];
-  Assert.deepEqual(expectedRootInfos,
-    await fetchChildInfos(db, PlacesUtils.bookmarks.rootGuid),
-    "All roots should be reparented to the Places root");
-
-  let expectedMobileInfos = [{
-    guid: "bookmarkAAAA",
-    position: 0,
-    syncChangeCounter: 0,
-  }, {
-    guid: "bookmarkBBBB",
-    position: 1,
-    syncChangeCounter: 0,
-  }, {
-    guid: "bookmarkCCCC",
-    position: 2,
-    syncChangeCounter: 0,
-  }, {
-    guid: "bookmarkDDDD",
-    position: 3,
-    syncChangeCounter: 0,
-  }];
-  Assert.deepEqual(expectedMobileInfos,
-    await fetchChildInfos(db, PlacesUtils.bookmarks.mobileGuid),
-    "Should fix misparented root sibling positions");
 });

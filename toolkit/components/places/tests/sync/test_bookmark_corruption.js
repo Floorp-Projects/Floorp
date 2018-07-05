@@ -1,128 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
- async function reparentItem(db, guid, newParentGuid = null) {
-   await db.execute(`
-     UPDATE moz_bookmarks SET
-       parent = IFNULL((SELECT id FROM moz_bookmarks
-                        WHERE guid = :newParentGuid), 0)
-     WHERE guid = :guid`,
-     { newParentGuid, guid });
- }
-
 async function getCountOfBookmarkRows(db) {
   let queryRows = await db.execute("SELECT COUNT(*) FROM moz_bookmarks");
   Assert.equal(queryRows.length, 1);
   return queryRows[0].getResultByIndex(0);
 }
 
-add_task(async function test_corrupt_local_roots() {
+add_task(async function test_corrupt_roots() {
   let buf = await openMirror("corrupt_roots");
-
-  info("Set up empty mirror");
-  await PlacesTestUtils.markBookmarksAsSynced();
-
-  info("Make remote changes");
-  await storeRecords(buf, [{
-    id: "menu",
-    type: "folder",
-    children: ["bookmarkAAAA"],
-  }, {
-    id: "bookmarkAAAA",
-    type: "bookmark",
-    title: "A",
-    bmkUri: "http://example.com/a",
-  }, {
-    id: "toolbar",
-    type: "folder",
-    children: ["bookmarkBBBB"],
-  }, {
-    id: "bookmarkBBBB",
-    type: "bookmark",
-    title: "B",
-    bmkUri: "http://example.com/b",
-  }]);
-
-  try {
-    info("Move local menu into unfiled");
-    await reparentItem(buf.db, PlacesUtils.bookmarks.menuGuid,
-                       PlacesUtils.bookmarks.unfiledGuid);
-    await Assert.rejects(buf.apply(), /Local tree has misparented root/,
-      "Should abort merge if local tree has misparented syncable root");
-
-    info("Move local Places root into toolbar");
-    await buf.db.executeTransaction(async function() {
-      await reparentItem(buf.db, PlacesUtils.bookmarks.menuGuid,
-                         PlacesUtils.bookmarks.rootGuid);
-      await reparentItem(buf.db, PlacesUtils.bookmarks.rootGuid,
-                         PlacesUtils.bookmarks.toolbarGuid);
-    });
-    await Assert.rejects(buf.apply(), /Local tree has misparented root/,
-      "Should abort merge if local tree has misparented Places root");
-  } finally {
-    info("Restore local roots");
-    await buf.db.executeTransaction(async function() {
-      await reparentItem(buf.db, PlacesUtils.bookmarks.rootGuid);
-      await reparentItem(buf.db, PlacesUtils.bookmarks.menuGuid,
-                         PlacesUtils.bookmarks.rootGuid);
-    });
-  }
-
-  info("Apply remote with restored roots");
-  let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-
-  deepEqual(changesToUpload, {}, "Should not reupload any local records");
-
-  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
-    guid: PlacesUtils.bookmarks.rootGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 0,
-    title: "",
-    children: [{
-      guid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 0,
-      title: BookmarksMenuTitle,
-      children: [{
-        guid: "bookmarkAAAA",
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 0,
-        title: "A",
-        url: "http://example.com/a",
-      }],
-    }, {
-      guid: PlacesUtils.bookmarks.toolbarGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 1,
-      title: BookmarksToolbarTitle,
-      children: [{
-        guid: "bookmarkBBBB",
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        index: 0,
-        title: "B",
-        url: "http://example.com/b",
-      }],
-    }, {
-      guid: PlacesUtils.bookmarks.unfiledGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 3,
-      title: UnfiledBookmarksTitle,
-    }, {
-      guid: PlacesUtils.bookmarks.mobileGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      index: 4,
-      title: MobileBookmarksTitle,
-    }],
-  }, "Should parent (A B) correctly with restored roots");
-
-  await buf.finalize();
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesSyncUtils.bookmarks.reset();
-});
-
-add_task(async function test_corrupt_remote_roots() {
-  let buf = await openMirror("corrupt_remote_roots");
 
   info("Set up empty mirror");
   await PlacesTestUtils.markBookmarksAsSynced();
@@ -154,25 +40,7 @@ add_task(async function test_corrupt_remote_roots() {
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
-  let datesAdded = await promiseManyDatesAdded([
-    PlacesUtils.bookmarks.menuGuid]);
-  deepEqual(changesToUpload, {
-    menu: {
-      tombstone: false,
-      counter: 1,
-      synced: false,
-      cleartext: {
-        id: "menu",
-        type: "folder",
-        parentid: "places",
-        hasDupe: true,
-        parentName: "",
-        dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
-        title: BookmarksMenuTitle,
-        children: ["bookmarkAAAA"],
-      },
-    },
-  }, "Should reupload invalid roots");
+  deepEqual(changesToUpload, {}, "Should not reupload invalid roots");
 
   await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
