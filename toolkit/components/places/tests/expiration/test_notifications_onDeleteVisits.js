@@ -22,6 +22,7 @@ var tests = [
     addBookmarks: 1,
     limitExpiration: -1,
     expectedNotifications: 1, // Will expire visits for 1 page.
+    expectedIsPartialRemoval: true,
   },
 
   { desc: "Add 2 pages, 1 bookmarked.",
@@ -30,6 +31,7 @@ var tests = [
     addBookmarks: 1,
     limitExpiration: -1,
     expectedNotifications: 1, // Will expire visits for 1 page.
+    expectedIsPartialRemoval: true,
   },
 
   { desc: "Add 10 pages, none bookmarked.",
@@ -38,6 +40,7 @@ var tests = [
     addBookmarks: 0,
     limitExpiration: -1,
     expectedNotifications: 0, // Will expire only full pages.
+    expectedIsPartialRemoval: false,
   },
 
   { desc: "Add 10 pages, all bookmarked.",
@@ -45,7 +48,8 @@ var tests = [
     visitsPerPage: 1,
     addBookmarks: 10,
     limitExpiration: -1,
-    expectedNotifications: 10, // Will expire visist for all pages.
+    expectedNotifications: 10, // Will expire visits for all pages.
+    expectedIsPartialRemoval: true,
   },
 
   { desc: "Add 10 pages with lot of visits, none bookmarked.",
@@ -53,8 +57,10 @@ var tests = [
     visitsPerPage: 10,
     addBookmarks: 0,
     limitExpiration: 10,
-    expectedNotifications: 10, // Will expire 1 visist for each page, but won't
-  },                           // expire pages since they still have visits.
+    expectedNotifications: 10, // Will expire 1 visit for each page, but won't
+                               // expire pages since they still have visits.
+    expectedIsPartialRemoval: true,
+  },
 
 ];
 
@@ -110,9 +116,11 @@ add_task(async function test_notifications_onDeleteVisits() {
         Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
       onPageChanged() {},
-      onDeleteVisits(aURI, aTime, aGUID, aReason) {
+      onDeleteVisits(aURI, aPartialRemoval, aGUID, aReason) {
         currentTest.receivedNotifications++;
         do_check_guid_for_uri(aURI, aGUID);
+        Assert.equal(aPartialRemoval, currentTest.expectedIsPartialRemoval,
+          "Should have the correct flag setting for partial removal");
         Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
     };

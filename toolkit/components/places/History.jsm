@@ -920,7 +920,7 @@ var notifyCleanup = async function(db, pages) {
       // We have removed all visits, but the page is still alive, e.g.
       // because of a bookmark.
       notify(observers, "onDeleteVisits",
-        [uri, /* last visit*/0, guid, reason, -1]);
+        [uri, false, guid, reason, -1]);
     } else {
       // The page has been entirely removed.
       notify(observers, "onDeleteURI",

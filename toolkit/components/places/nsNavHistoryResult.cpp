@@ -2616,7 +2616,7 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnDeleteVisits(nsIURI* aURI,
-                                            PRTime aVisitTime,
+                                            bool aPartialRemoval,
                                             const nsACString& aGUID,
                                             uint16_t aReason,
                                             uint32_t aTransitionType)
@@ -2624,7 +2624,7 @@ nsNavHistoryQueryResultNode::OnDeleteVisits(nsIURI* aURI,
   MOZ_ASSERT(mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY,
              "Bookmarks queries should not get a OnDeleteVisits notification");
 
-  if (aVisitTime == 0) {
+  if (!aPartialRemoval) {
     // All visits for this uri have been removed, but the uri won't be removed
     // from the databse, most likely because it's a bookmark.  For a history
     // query this is equivalent to a onDeleteURI notification.
@@ -4691,14 +4691,14 @@ nsNavHistoryResult::OnPageChanged(nsIURI* aURI,
  */
 NS_IMETHODIMP
 nsNavHistoryResult::OnDeleteVisits(nsIURI* aURI,
-                                   PRTime aVisitTime,
+                                   bool aPartialRemoval,
                                    const nsACString& aGUID,
                                    uint16_t aReason,
                                    uint32_t aTransitionType)
 {
   NS_ENSURE_ARG(aURI);
 
-  ENUMERATE_HISTORY_OBSERVERS(OnDeleteVisits(aURI, aVisitTime, aGUID, aReason,
+  ENUMERATE_HISTORY_OBSERVERS(OnDeleteVisits(aURI, aPartialRemoval, aGUID, aReason,
                                              aTransitionType));
   return NS_OK;
 }

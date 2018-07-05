@@ -86,7 +86,7 @@ add_task(async function test_notifications_onDeleteURI() {
         Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
       onPageChanged() {},
-      onDeleteVisits(aURI, aTime) { },
+      onDeleteVisits() {},
     };
     hs.addObserver(historyObserver);
 
