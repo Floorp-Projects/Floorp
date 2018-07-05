@@ -24,6 +24,7 @@ describe("PrefsFeed", () => {
     feed.store = {
       dispatch: sinon.spy(),
       getState() { return this.state; },
+      state: {Theme: {className: ""}},
       dbStorage: {getDbTable: sandbox.stub().returns(storage)}
     };
     // Setup for tests that don't call `init`
@@ -261,6 +262,27 @@ describe("PrefsFeed", () => {
 
       assert.calledOnce(feed._prefs.reset);
       assert.calledWithExactly(feed._prefs.reset, "collapseTopSites");
+    });
+  });
+  describe("THEME_UPDATE prerendering", () => {
+    it("should set a prerender pref on THEME_UPDATE", async () => {
+      sandbox.stub(feed, "_setPrerenderPref");
+
+      feed.onAction({type: at.THEME_UPDATE, data: {className: "dark-theme"}});
+
+      assert.calledOnce(feed._setPrerenderPref);
+    });
+    it("should set the prerender pref to false if the theme is changed to be different than the default", async () => {
+      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      await feed._setPrerenderPref({className: "dark-theme"});
+      // feed.onAction({type: at.THEME_UPDATE, data: {className: "dark-theme"}});
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
+    });
+    it("should set the prerender pref back to true if the theme is changed to the default", async () => {
+      Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
+      feed.store.state.Theme.className = "dark-theme";
+      await feed._setPrerenderPref({className: ""});
+      assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
     });
   });
 });

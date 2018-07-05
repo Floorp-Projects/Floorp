@@ -196,14 +196,6 @@
               "popup_highlight_text": {
                 "$ref": "ThemeColor",
                 "optional": true
-              },
-              "ntp_background": {
-                "$ref": "ThemeColor",
-                "optional": true
-              },
-              "ntp_text": {
-                "$ref": "ThemeColor",
-                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }

@@ -747,8 +747,6 @@ BrowserGlue.prototype = {
       popup_border: "#27272b",
       toolbar_field_text: "rgb(249, 249, 250)",
       toolbar_field_border: "rgba(249, 249, 250, 0.2)",
-      ntp_background: "#2A2A2E",
-      ntp_text: "rgb(249, 249, 250)",
       author: vendorShortName,
     }, {
       useInDarkMode: true

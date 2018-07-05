@@ -71,7 +71,7 @@
     overflow: hidden;
     position: relative;
 
-    [lwt-newtab-brighttext] & {
+    .dark-theme & {
       background-color: $grey-60;
     }
 
