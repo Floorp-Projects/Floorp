@@ -68,6 +68,7 @@ ScaledFontFreeType::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOu
   // options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
   options.flags = 0;
   options.bg_color = wr::ToColorU(Color());
+  options.synthetic_italics = wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 
   wr::FontInstancePlatformOptions platformOptions;
   platformOptions.lcd_filter = wr::FontLCDFilter::None;

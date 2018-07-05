@@ -74,11 +74,13 @@ public:
                       const gfx::IntSize& aSize,
                       TransactionId aTransactionId,
                       const WebRenderScrollData& aScrollData,
+                      const mozilla::TimeStamp& aRefreshStartTime,
                       const mozilla::TimeStamp& aTxnStartTime);
   void EndEmptyTransaction(const FocusTarget& aFocusTarget,
                            const ScrollUpdatesMap& aUpdates,
                            uint32_t aPaintSequenceNumber,
                            TransactionId aTransactionId,
+                           const mozilla::TimeStamp& aRefreshStartTime,
                            const mozilla::TimeStamp& aTxnStartTime);
   void ProcessWebRenderParentCommands();
 

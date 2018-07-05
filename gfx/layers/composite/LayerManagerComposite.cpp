@@ -1242,50 +1242,6 @@ LayerManagerComposite::HandlePixelsTarget()
 }
 #endif
 
-class BorderLayerComposite : public BorderLayer,
-                             public LayerComposite
-{
-public:
-  explicit BorderLayerComposite(LayerManagerComposite *aManager)
-    : BorderLayer(aManager, nullptr)
-    , LayerComposite(aManager)
-  {
-    MOZ_COUNT_CTOR(BorderLayerComposite);
-    mImplData = static_cast<LayerComposite*>(this);
-  }
-
-protected:
-  ~BorderLayerComposite()
-  {
-    MOZ_COUNT_DTOR(BorderLayerComposite);
-    Destroy();
-  }
-
-public:
-  // LayerComposite Implementation
-  virtual Layer* GetLayer() override { return this; }
-
-  virtual void SetLayerManager(HostLayerManager* aManager) override
-  {
-    LayerComposite::SetLayerManager(aManager);
-    mManager = aManager;
-  }
-
-  virtual void Destroy() override { mDestroyed = true; }
-
-  virtual void RenderLayer(const gfx::IntRect& aClipRect,
-                           const Maybe<gfx::Polygon>& aGeometry) override {}
-  virtual void CleanupResources() override {};
-
-  virtual void GenEffectChain(EffectChain& aEffect) override {}
-
-  CompositableHost* GetCompositableHost() override { return nullptr; }
-
-  virtual HostLayer* AsHostLayer() override { return this; }
-
-  virtual const char* Name() const override { return "BorderLayerComposite"; }
-};
-
 already_AddRefed<PaintedLayer>
 LayerManagerComposite::CreatePaintedLayer()
 {
@@ -1344,16 +1300,6 @@ LayerManagerComposite::CreateRefLayer()
     return nullptr;
   }
   return RefPtr<RefLayer>(new RefLayerComposite(this)).forget();
-}
-
-already_AddRefed<BorderLayer>
-LayerManagerComposite::CreateBorderLayer()
-{
-  if (LayerManagerComposite::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nullptr;
-  }
-  return RefPtr<BorderLayer>(new BorderLayerComposite(this)).forget();
 }
 
 LayerManagerComposite::AutoAddMaskEffect::AutoAddMaskEffect(Layer* aMaskLayer,

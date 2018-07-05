@@ -199,7 +199,7 @@ pub struct YamlFrameReader {
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
 
     fonts: HashMap<FontDescriptor, FontKey>,
-    font_instances: HashMap<(FontKey, Au, FontInstanceFlags, Option<ColorU>), FontInstanceKey>,
+    font_instances: HashMap<(FontKey, Au, FontInstanceFlags, Option<ColorU>, SyntheticItalics), FontInstanceKey>,
     font_render_mode: Option<FontRenderMode>,
     allow_mipmaps: bool,
 
@@ -563,12 +563,13 @@ impl YamlFrameReader {
         size: Au,
         bg_color: Option<ColorU>,
         flags: FontInstanceFlags,
+        synthetic_italics: SyntheticItalics,
         wrench: &mut Wrench,
     ) -> FontInstanceKey {
         let font_render_mode = self.font_render_mode;
 
         *self.font_instances
-            .entry((font_key, size, flags, bg_color))
+            .entry((font_key, size, flags, bg_color, synthetic_italics))
             .or_insert_with(|| {
                 wrench.add_font_instance(
                     font_key,
@@ -576,6 +577,7 @@ impl YamlFrameReader {
                     flags,
                     font_render_mode,
                     bg_color,
+                    synthetic_italics,
                 )
             })
     }
@@ -1134,11 +1136,15 @@ impl YamlFrameReader {
         let size = item["size"].as_pt_to_au().unwrap_or(Au::from_f32_px(16.0));
         let color = item["color"].as_colorf().unwrap_or(*BLACK_COLOR);
         let bg_color = item["bg-color"].as_colorf().map(|c| c.into());
+        let synthetic_italics = if let Some(angle) = item["synthetic-italics"].as_f32() {
+            SyntheticItalics::from_degrees(angle)
+        } else if item["synthetic-italics"].as_bool().unwrap_or(false) {
+            SyntheticItalics::enabled()
+        } else {
+            SyntheticItalics::disabled()
+        };
 
         let mut flags = FontInstanceFlags::empty();
-        if item["synthetic-italics"].as_bool().unwrap_or(false) {
-            flags |= FontInstanceFlags::SYNTHETIC_ITALICS;
-        }
         if item["synthetic-bold"].as_bool().unwrap_or(false) {
             flags |= FontInstanceFlags::SYNTHETIC_BOLD;
         }
@@ -1166,6 +1172,7 @@ impl YamlFrameReader {
                                                                  size,
                                                                  bg_color,
                                                                  flags,
+                                                                 synthetic_italics,
                                                                  wrench);
 
         assert!(

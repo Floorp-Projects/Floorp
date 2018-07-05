@@ -89,7 +89,7 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == stretchy-largeop-3.html stretchy-largeop-3-ref.html
 == table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
-fails-if(webrender&&winWidget) == table-width-3.html table-width-3-ref.html # bug 1460259
+== table-width-3.html table-width-3-ref.html
 == table-width-4.html table-width-4-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml

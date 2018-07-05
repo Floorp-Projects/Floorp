@@ -28,7 +28,7 @@ use render_backend::FrameId;
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
-use resource_cache::{ImageProperties, ImageRequest};
+use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
 use std::{mem, usize};
@@ -328,10 +328,17 @@ pub enum BrushKind {
 }
 
 impl BrushKind {
-    fn supports_segments(&self) -> bool {
+    fn supports_segments(&self, resource_cache: &ResourceCache) -> bool {
         match *self {
+            BrushKind::Image { ref request, .. } => {
+                // tiled images don't support segmentation
+                resource_cache
+                    .get_image_properties(request.key)
+                    .and_then(|properties| properties.tiling)
+                    .is_none()
+            }
+
             BrushKind::Solid { .. } |
-            BrushKind::Image { .. } |
             BrushKind::YuvImage { .. } |
             BrushKind::RadialGradient { .. } |
             BrushKind::Border { .. } |
@@ -2004,7 +2011,7 @@ impl PrimitiveStore {
             None => {
                 // If no segment descriptor built yet, see if it is a brush
                 // type that wants to be segmented.
-                if !brush.kind.supports_segments() {
+                if !brush.kind.supports_segments(frame_state.resource_cache) {
                     return;
                 }
             }

@@ -38,7 +38,6 @@ class TestInputFile(TestUsingServer):
                          resp.read().split(" "))
 
     def test_seek_input_longer_than_buffer(self):
-
         @wptserve.handlers.handler
         def handler(request, response):
             rv = []
@@ -77,7 +76,6 @@ class TestInputFile(TestUsingServer):
         self.assertEqual(["12345\n", "abcdef\r\n", "zyxwv"], resp.read().split(" "))
 
     def test_iter_input_longer_than_buffer(self):
-
         @wptserve.handlers.handler
         def handler(request, response):
             f = request.raw_input
@@ -94,6 +92,7 @@ class TestInputFile(TestUsingServer):
             self.assertEqual(["12345\n", "abcdef\r\n", "zyxwv"], resp.read().split(" "))
         finally:
             InputFile.max_buffer_size = old_max_buf
+
 
 class TestRequest(TestUsingServer):
     def test_body(self):
@@ -117,6 +116,7 @@ class TestRequest(TestUsingServer):
         resp = self.request("/test/some_route")
         self.assertEqual("some route", resp.read())
 
+
 class TestAuth(TestUsingServer):
     def test_auth(self):
         @wptserve.handlers.handler
@@ -128,6 +128,3 @@ class TestAuth(TestUsingServer):
         resp = self.request(route[1], auth=("test", "PASS"))
         self.assertEqual(200, resp.getcode())
         self.assertEqual(["test", "PASS"], resp.read().split(" "))
-
-if __name__ == '__main__':
-    unittest.main()
