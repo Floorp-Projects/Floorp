@@ -1272,6 +1272,22 @@ Editor.prototype = {
     }
   },
 
+  setAutoCompletionText: function(text) {
+    const cursor = this.getCursor();
+    const cm = editors.get(this);
+    const className = "cm-auto-complete-shadow-text";
+
+    cm.getAllMarks().forEach(mark => {
+      if (mark.className === className) {
+        mark.clear();
+      }
+    });
+
+    if (text) {
+      cm.markText({...cursor, ch: cursor.ch - 1}, cursor, { className, title: text });
+    }
+  },
+
   /**
    * Extends an instance of the Editor object with additional
    * functions. Each function will be called with context as
