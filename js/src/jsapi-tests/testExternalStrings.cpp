@@ -26,7 +26,7 @@ static const JSStringFinalizer finalizer2 = { finalize_str };
 static void
 finalize_str(const JSStringFinalizer* fin, char16_t* chars)
 {
-    if (chars && ArrayEqual(const_cast<const char16_t*>(chars), arr, arrlen)) {
+    if (chars && ArrayEqual(chars, arr, arrlen)) {
         if (fin == &finalizer1) {
             ++finalized1;
         } else if (fin == &finalizer2) {
