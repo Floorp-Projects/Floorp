@@ -30,6 +30,7 @@
 #include "signaling/src/sdp/SipccSdp.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "mozilla/net/DataChannelProtocol.h"
+#include "signaling/src/sdp/ParsingResultComparer.h"
 
 namespace mozilla {
 
@@ -1288,6 +1289,8 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
   UniquePtr<Sdp> parsed = mSipccParser.Parse(sdp);
   if (mRunRustParser) {
     UniquePtr<Sdp> rustParsed = mRsdparsaParser.Parse(sdp);
+    ParsingResultComparer comparer;
+    comparer.Compare(*rustParsed, *parsed, sdp);
   }
   if (!parsed) {
     std::string error = "Failed to parse SDP: ";
