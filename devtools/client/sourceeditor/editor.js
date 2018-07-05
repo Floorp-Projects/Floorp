@@ -58,22 +58,23 @@ const CM_SCRIPTS = [
 const CM_IFRAME = "chrome://devtools/content/sourceeditor/codemirror/cmiframe.html";
 
 const CM_MAPPING = [
+  "clearHistory",
+  "defaultCharWidth",
+  "extendSelection",
   "focus",
+  "getCursor",
+  "getScrollInfo",
+  "getSelection",
+  "getViewport",
   "hasFocus",
   "lineCount",
-  "somethingSelected",
-  "getCursor",
-  "setSelection",
-  "getSelection",
-  "replaceSelection",
-  "extendSelection",
-  "undo",
-  "redo",
-  "clearHistory",
   "openDialog",
+  "redo",
   "refresh",
-  "getScrollInfo",
-  "getViewport"
+  "replaceSelection",
+  "setSelection",
+  "somethingSelected",
+  "undo",
 ];
 
 const editors = new WeakMap();

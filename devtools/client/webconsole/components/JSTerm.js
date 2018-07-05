@@ -170,14 +170,6 @@ class JSTerm extends Component {
     // such as the browser console which doesn't have a toolbox.
     this.autocompletePopup = new AutocompletePopup(tooltipDoc, autocompleteOptions);
 
-    this.inputBorderSize = this.inputNode
-      ? this.inputNode.getBoundingClientRect().height - this.inputNode.clientHeight
-      : 0;
-
-    // Update the character width and height needed for the popup offset
-    // calculations.
-    this._updateCharSize();
-
     if (this.props.codeMirrorEnabled) {
       if (this.node) {
         this.editor = new Editor({
@@ -279,6 +271,14 @@ class JSTerm extends Component {
       this.inputNode.addEventListener("keyup", this._inputEventHandler);
       this.focus();
     }
+
+    this.inputBorderSize = this.inputNode
+      ? this.inputNode.getBoundingClientRect().height - this.inputNode.clientHeight
+      : 0;
+
+    // Update the character and chevron width needed for the popup offset calculations.
+    this._inputCharWidth = this._getInputCharWidth();
+    this._chevronWidth = this.editor ? null : this._getChevronWidth();
 
     this.hud.window.addEventListener("blur", this._blurEventHandler);
     this.lastInputValue && this.setInputValue(this.lastInputValue);
@@ -1291,15 +1291,20 @@ class JSTerm extends Component {
     const prefix = suffix ? this.getInputValue().replace(/[\S]/g, " ") : "";
     this.completeNode.value = prefix + suffix;
   }
+
   /**
-   * Calculates the width and height of a single character of the input box.
+   * Calculates and returns the width of a single character of the input box.
    * This will be used in opening the popup at the correct offset.
    *
-   * @private
+   * @returns {Number|null}: Width off the "x" char, or null if the input does not exist.
    */
-  _updateCharSize() {
-    if (this.props.codeMirrorEnabled || !this.inputNode) {
-      return;
+  _getInputCharWidth() {
+    if (!this.inputNode && !this.node) {
+      return null;
+    }
+
+    if (this.editor) {
+      return this.editor.defaultCharWidth();
     }
 
     const doc = this.hud.document;
@@ -1313,12 +1318,28 @@ class JSTerm extends Component {
     WebConsoleUtils.copyTextStyles(this.inputNode, tempLabel);
     tempLabel.textContent = "x";
     doc.documentElement.appendChild(tempLabel);
-    this._inputCharWidth = tempLabel.offsetWidth;
+    const width = tempLabel.offsetWidth;
     tempLabel.remove();
-    // Calculate the width of the chevron placed at the beginning of the input
+    return width;
+  }
+
+  /**
+   * Calculates and returns the width of the chevron icon.
+   * This will be used in opening the popup at the correct offset.
+   *
+   * @returns {Number|null}: Width of the icon, or null if the input does not exist.
+   */
+  _getChevronWidth() {
+    if (!this.inputNode) {
+      return null;
+    }
+
+   // Calculate the width of the chevron placed at the beginning of the input
     // box. Remove 4 more pixels to accommodate the padding of the popup.
-    this._chevronWidth = +doc.defaultView.getComputedStyle(this.inputNode)
-                             .paddingLeft.replace(/[^0-9.]/g, "") - 4;
+    const doc = this.hud.document;
+    return doc.defaultView
+      .getComputedStyle(this.inputNode)
+      .paddingLeft.replace(/[^0-9.]/g, "") - 4;
   }
 
   destroy() {
