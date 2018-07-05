@@ -37,13 +37,8 @@ public:
   }
 
   void Write(const char* aStr) override;
-  void CopyDataIntoLazilyAllocatedBuffer(
-    const std::function<char*(size_t)> aAllocator) const;
   mozilla::UniquePtr<char[]> CopyData() const;
   void Take(ChunkedJSONWriteFunc&& aOther);
-  // Returns the byte length of the complete combined string, including the
-  // null terminator byte.
-  size_t GetTotalLength() const;
 
 private:
   void AllocChunk(size_t aChunkSize);

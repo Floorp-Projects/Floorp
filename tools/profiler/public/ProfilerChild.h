@@ -44,6 +44,7 @@ private:
   mozilla::ipc::IPCResult RecvGatherProfile(GatherProfileResolver&& aResolve) override;
 
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
+  Shmem ConvertProfileStringToShmem(const nsCString& profile);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PProfilerChild)
 
