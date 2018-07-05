@@ -14,7 +14,7 @@ desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Th
 deps = [
     'mozdevice>=1.*',
     'mozfile==1.*',
-    'mozinfo>=0.7,<1',
+    'mozinfo>=0.7,<2',
     'mozlog==3.*',
     'mozprocess>=0.23,<1',
     'mozprofile>=1.1.0,<2',
