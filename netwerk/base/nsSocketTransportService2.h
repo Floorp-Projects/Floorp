@@ -237,7 +237,8 @@ private:
 
     // Preference Monitor for SendBufferSize and Keepalive prefs.
     nsresult    UpdatePrefs();
-    void        UpdateSendBufferPref(nsIPrefBranch *);
+    static void PrefCallback(const char* aPref, nsSocketTransportService* aSelf);
+    void        UpdateSendBufferPref();
     int32_t     mSendBufferSize;
     // Number of seconds of connection is idle before first keepalive ping.
     int32_t     mKeepaliveIdleTimeS;
