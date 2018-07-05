@@ -166,6 +166,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 'name': name,
                 'title': title,
                 'description': description,
+                # target taskGroupId (the task group this decision task is creating)
                 'taskGroupId': task_group_id,
                 'cb_name': cb.__name__,
                 'symbol': symbol,
@@ -241,8 +242,8 @@ def register_callback_action(name, title, symbol, description, order=10000,
                         # and pass everything else through from our own context
                         "user": {
                             'input': {'$eval': 'input'},
-                            'taskId': {'$eval': 'taskId'},
-                            'taskGroupId': {'$eval': 'taskGroupId'},
+                            'taskId': {'$eval': 'taskId'},  # target taskId (or null)
+                            'taskGroupId': {'$eval': 'taskGroupId'},  # target task group
                         }
                     },
                 })
@@ -303,7 +304,7 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
         create.testing = True
         taskcluster.testing = True
 
-    # fetch the task, if taskId was given
+    # fetch the target task, if taskId was given
     # FIXME: many actions don't need this, so move this fetch into the callbacks
     # that do need it
     if task_id:
