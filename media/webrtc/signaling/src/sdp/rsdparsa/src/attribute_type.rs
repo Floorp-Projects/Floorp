@@ -116,6 +116,13 @@ impl SdpAttributeCandidate {
 
 #[derive(Clone)]
 #[cfg_attr(feature="serialize", derive(Serialize))]
+pub enum SdpAttributeDtlsMessage {
+    Client(String),
+    Server(String),
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature="serialize", derive(Serialize))]
 pub struct SdpAttributeRemoteCandidate {
     pub component: u32,
     pub address: IpAddr,
@@ -411,6 +418,7 @@ impl SdpAttributeSsrc {
 pub enum SdpAttribute {
     BundleOnly,
     Candidate(SdpAttributeCandidate),
+    DtlsMessage(SdpAttributeDtlsMessage),
     EndOfCandidates,
     Extmap(SdpAttributeExtmap),
     Fingerprint(SdpAttributeFingerprint),
@@ -476,6 +484,7 @@ impl SdpAttribute {
             SdpAttribute::Ssrc(..) |
             SdpAttribute::SsrcGroup(..) => false,
 
+            SdpAttribute::DtlsMessage{..} |
             SdpAttribute::EndOfCandidates |
             SdpAttribute::Extmap(..) |
             SdpAttribute::Fingerprint(..) |
@@ -496,6 +505,7 @@ impl SdpAttribute {
 
     pub fn allowed_at_media_level(&self) -> bool {
         match *self {
+            SdpAttribute::DtlsMessage{..} |
             SdpAttribute::Group(..) |
             SdpAttribute::IceLite |
             SdpAttribute::Identity(..) |
@@ -544,6 +554,7 @@ impl fmt::Display for SdpAttribute {
         let printable = match *self {
             SdpAttribute::BundleOnly => "bundle-only",
             SdpAttribute::Candidate(..) => "candidate",
+            SdpAttribute::DtlsMessage{..} => "dtls-message",
             SdpAttribute::EndOfCandidates => "end-of-candidates",
             SdpAttribute::Extmap(..) => "extmap",
             SdpAttribute::Fingerprint(..) => "fingerprint",
@@ -614,6 +625,7 @@ impl FromStr for SdpAttribute {
         }
         match name.as_str() {
             "bundle-only" => Ok(SdpAttribute::BundleOnly),
+            "dtls-message" => parse_dtls_message(val),
             "end-of-candidates" => Ok(SdpAttribute::EndOfCandidates),
             "ice-lite" => Ok(SdpAttribute::IceLite),
             "ice-mismatch" => Ok(SdpAttribute::IceMismatch),
@@ -662,6 +674,7 @@ impl FromStr for SdpAttribute {
 pub enum SdpAttributeType {
     BundleOnly,
     Candidate,
+    DtlsMessage,
     EndOfCandidates,
     Extmap,
     Fingerprint,
@@ -705,6 +718,7 @@ impl<'a> From<&'a SdpAttribute> for SdpAttributeType {
         match *other {
             SdpAttribute::BundleOnly{..} => SdpAttributeType::BundleOnly,
             SdpAttribute::Candidate{..} => SdpAttributeType::Candidate,
+            SdpAttribute::DtlsMessage{..} => SdpAttributeType::DtlsMessage,
             SdpAttribute::EndOfCandidates{..} => SdpAttributeType::EndOfCandidates,
             SdpAttribute::Extmap{..} => SdpAttributeType::Extmap,
             SdpAttribute::Fingerprint{..} => SdpAttributeType::Fingerprint,
@@ -875,6 +889,26 @@ fn parse_candidate(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
         }
     }
     Ok(SdpAttribute::Candidate(cand))
+}
+
+fn parse_dtls_message(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
+    let tokens:Vec<&str> = to_parse.split(" ").collect();
+
+    if tokens.len() != 2 {
+        return Err(SdpParserInternalError::Generic(
+            "dtls-message must have a role token and a value token.".to_string()
+        ));
+    }
+
+    Ok(SdpAttribute::DtlsMessage(match tokens[0] {
+        "client" => SdpAttributeDtlsMessage::Client(tokens[1].to_string()),
+        "server" => SdpAttributeDtlsMessage::Server(tokens[1].to_string()),
+        e @ _ => {
+            return Err(SdpParserInternalError::Generic(
+                format!("dtls-message has unknown role token '{}'",e).to_string()
+            ));
+        }
+    }))
 }
 
 // ABNF for extmap is defined in RFC 5285
@@ -1700,6 +1734,42 @@ fn test_parse_attribute_candidate() {
         ).is_err()
     );
     assert!(parse_attribute("candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 70000").is_err());
+}
+
+#[test]
+fn test_parse_dtls_message() {
+    let check_parse = |x| -> SdpAttributeDtlsMessage {
+        if let Ok(SdpType::Attribute(SdpAttribute::DtlsMessage(x))) = parse_attribute(x) {
+            x
+        } else {
+            unreachable!();
+        }
+    };
+
+    assert!(parse_attribute("dtls-message:client SGVsbG8gV29ybGQ=").is_ok());
+    assert!(parse_attribute("dtls-message:server SGVsbG8gV29ybGQ=").is_ok());
+    assert!(parse_attribute("dtls-message:client IGlzdCBl/W4gUeiBtaXQg+JSB1bmQCAkJJkSNEQ=").is_ok());
+    assert!(parse_attribute("dtls-message:server IGlzdCBl/W4gUeiBtaXQg+JSB1bmQCAkJJkSNEQ=").is_ok());
+
+    let mut dtls_message = check_parse("dtls-message:client SGVsbG8gV29ybGQ=");
+    match dtls_message {
+        SdpAttributeDtlsMessage::Client(x) => {
+            assert_eq!(x, "SGVsbG8gV29ybGQ=");
+        },
+        _ => { unreachable!(); }
+    }
+
+    dtls_message = check_parse("dtls-message:server SGVsbG8gV29ybGQ=");
+    match dtls_message {
+        SdpAttributeDtlsMessage::Server(x) => {
+            assert_eq!(x, "SGVsbG8gV29ybGQ=");
+        },
+        _ => { unreachable!(); }
+    }
+
+
+    assert!(parse_attribute("dtls-message:client").is_err());
+    assert!(parse_attribute("dtls-message:server").is_err());
 }
 
 #[test]
