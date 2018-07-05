@@ -25,8 +25,9 @@
       // added until then.
       window.addEventListener("MozAfterPaint", function() {
         setTimeout(redirectToHarness, 0);
-        // In case the listener was not ready, try again after a few seconds.
-        setTimeout(redirectToHarness, 5000);
+
+        // In case the listener is not ready, re-try periodically
+        setInterval(redirectToHarness, 5000);
       }, {once: true});
 
     }
