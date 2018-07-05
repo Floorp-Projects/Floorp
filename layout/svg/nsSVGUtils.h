@@ -613,6 +613,14 @@ public:
       : shouldGenerateMaskLayer(false), shouldGenerateClipMaskLayer(false),
         shouldApplyClipPath(false), shouldApplyBasicShape(false), opacity(0.0)
     { }
+
+    bool shouldDoSomething() {
+      return shouldGenerateMaskLayer
+          || shouldGenerateClipMaskLayer
+          || shouldApplyClipPath
+          || shouldApplyBasicShape
+          || opacity != 1.0;
+    }
   };
 
   static void DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
