@@ -76,12 +76,17 @@ class TestAccessibility(MarionetteTestCase):
         "button10"
     ]
 
-    displayed_elementIDs = [
-        "button1", "button2", "button3", "button4", "button5", "button6",
+    displayed_elementIDs = ["button1", "button2", "button4", "button5", "button6"]
+
+    displayed_but_have_no_accessible_elementIDs = [
+        # Button3 does not have an accessible object
+        "button3",
+        # Button 7 is hidden with aria-hidden set to true
+        "button7",
+        # Button 8 is inside an element with aria-hidden set to true
+        "button8",
         "no_accessible_but_displayed"
     ]
-
-    displayed_but_a11y_hidden_elementIDs = ["button7", "button8"]
 
     disabled_elementIDs = ["button11", "no_accessible_but_disabled"]
 
@@ -164,7 +169,7 @@ class TestAccessibility(MarionetteTestCase):
     def test_element_visible_but_not_visible_to_accessbility(self):
         self.setup_accessibility()
         # Elements are displayed but hidden from accessibility API
-        self.run_element_test(self.displayed_but_a11y_hidden_elementIDs,
+        self.run_element_test(self.displayed_but_have_no_accessible_elementIDs,
                               lambda element: self.assertRaises(ElementNotAccessibleException,
                                                                 element.is_displayed))
 

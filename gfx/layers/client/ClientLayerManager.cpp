@@ -436,9 +436,15 @@ ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   if (mRepeatTransaction) {
     mRepeatTransaction = false;
     mIsRepeatTransaction = true;
+
+    // BeginTransaction will reset the transaction start time, but we
+    // would like to keep the original time for telemetry purposes.
+    TimeStamp transactionStart = mTransactionStart;
     if (BeginTransaction()) {
+      mTransactionStart = transactionStart;
       ClientLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
     }
+
     mIsRepeatTransaction = false;
   } else {
     MakeSnapshotIfRequired();
@@ -755,12 +761,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   mPhase = PHASE_FORWARD;
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(!mIsRepeatTransaction);
-  TimeStamp transactionStart;
-  if (!mTransactionIdAllocator->GetTransactionStart().IsNull()) {
-    transactionStart = mTransactionIdAllocator->GetTransactionStart();
-  } else {
-    transactionStart = mTransactionStart;
-  }
+  TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
 
   if (gfxPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
     mForwarder->SendPaintTime(mLatestTransactionId, mLastPaintTime);
@@ -770,7 +771,8 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   bool sent = false;
   bool ok = mForwarder->EndTransaction(
     mRegionToClear, mLatestTransactionId, aScheduleComposite,
-    mPaintSequenceNumber, mIsRepeatTransaction, transactionStart,
+    mPaintSequenceNumber, mIsRepeatTransaction,
+    refreshStart, mTransactionStart,
     &sent);
   if (ok) {
     if (sent) {

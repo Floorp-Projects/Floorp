@@ -460,6 +460,7 @@ impl Wrench {
         flags: FontInstanceFlags,
         render_mode: Option<FontRenderMode>,
         bg_color: Option<ColorU>,
+        synthetic_italics: SyntheticItalics,
     ) -> FontInstanceKey {
         let key = self.api.generate_font_instance_key();
         let mut txn = Transaction::new();
@@ -471,6 +472,7 @@ impl Wrench {
         if let Some(bg_color) = bg_color {
             options.bg_color = bg_color;
         }
+        options.synthetic_italics = synthetic_italics;
         txn.add_font_instance(key, font_key, size, Some(options), None, Vec::new());
         self.api.update_resources(txn.resource_updates);
         key
