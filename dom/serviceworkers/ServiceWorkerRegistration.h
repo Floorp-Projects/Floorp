@@ -126,6 +126,11 @@ private:
 
   ~ServiceWorkerRegistration();
 
+  void
+  UpdateStateInternal(const Maybe<ServiceWorkerDescriptor>& aInstalling,
+                      const Maybe<ServiceWorkerDescriptor>& aWaiting,
+                      const Maybe<ServiceWorkerDescriptor>& aActive);
+
   ServiceWorkerRegistrationDescriptor mDescriptor;
   RefPtr<Inner> mInner;
 
