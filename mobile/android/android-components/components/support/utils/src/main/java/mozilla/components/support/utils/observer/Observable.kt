@@ -1,6 +1,7 @@
 package mozilla.components.support.utils.observer
 
 import android.arch.lifecycle.LifecycleOwner
+import android.view.View
 
 /**
  * Interface for observables. This interface is implemented by ObserverRegistry so that classes that
@@ -17,11 +18,23 @@ import android.arch.lifecycle.LifecycleOwner
 interface Observable<T> {
     /**
      * Registers an observer to get notified about changes.
-     *
-     * Optionally a LifecycleOwner can be provided. Once the lifecycle state becomes DESTROYED the
-     * observer is automatically unregistered.
      */
-    fun register(observer: T, owner: LifecycleOwner? = null)
+    fun register(observer: T)
+
+    /**
+     * Registers an observer to get notified about changes.
+     *
+     * The observer will automatically unsubscribe if the lifecycle of the provided LifecycleOwner
+     * becomes DESTROYED.
+     */
+    fun register(observer: T, owner: LifecycleOwner)
+
+    /**
+     * Registers an observer to get notified about changes.
+     *
+     * The observer will automatically unsubscribe if the provided view gets detached.
+     */
+    fun register(observer: T, view: View)
 
     /**
      * Unregisters an observer.

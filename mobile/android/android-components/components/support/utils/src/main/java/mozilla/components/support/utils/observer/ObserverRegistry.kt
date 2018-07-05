@@ -7,6 +7,7 @@ package mozilla.components.support.utils.observer
 import android.arch.lifecycle.GenericLifecycleObserver
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleOwner
+import android.view.View
 import java.util.WeakHashMap
 
 /**
@@ -16,32 +17,60 @@ import java.util.WeakHashMap
 class ObserverRegistry<T> : Observable<T> {
     private val observers = mutableListOf<T>()
     private val lifecycleObservers = WeakHashMap<T, LifecycleBoundObserver<T>>()
+    private val viewObservers = WeakHashMap<T, ViewBoundObserver<T>>()
+
+    /**
+     * Registers an observer to get notified about changes.
+     */
+    override fun register(observer: T) {
+        synchronized(observers) {
+            observers.add(observer)
+        }
+    }
 
     /**
      * Registers an observer to get notified about changes.
      *
-     * Optionally a LifecycleOwner can be provided. Once the lifecycle state becomes DESTROYED the
-     * observer is automatically unregistered.
+     * The observer will automatically unsubscribe if the lifecycle of the provided LifecycleOwner
+     * becomes DESTROYED.
      */
-    override fun register(observer: T, owner: LifecycleOwner?) {
-        if (owner?.lifecycle?.currentState == Lifecycle.State.DESTROYED) {
+    override fun register(observer: T, owner: LifecycleOwner) {
+        if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             return
         }
 
-        synchronized(observers) {
-            observers.add(observer)
+        register(observer)
+
+        val lifecycleObserver = LifecycleBoundObserver(
+                owner,
+                registry = this,
+                observer = observer)
+
+        lifecycleObservers[observer] = lifecycleObserver
+
+        owner.lifecycle.addObserver(lifecycleObserver)
+    }
+
+    /**
+     * Registers an observer to get notified about changes.
+     *
+     * The observer will automatically unsubscribe if the provided view gets detached.
+     */
+    override fun register(observer: T, view: View) {
+        if (!view.isAttachedToWindow) {
+            return
         }
 
-        owner?.let {
-            val lifecycleObserver = LifecycleBoundObserver(
-                    owner,
-                    registry = this,
-                    observer = observer)
+        register(observer)
 
-            lifecycleObservers[observer] = lifecycleObserver
+        val viewObserver = ViewBoundObserver(
+            view,
+            registry = this,
+            observer = observer)
 
-            it.lifecycle.addObserver(lifecycleObserver)
-        }
+        viewObservers[observer] = viewObserver
+
+        view.addOnAttachStateChangeListener(viewObserver)
     }
 
     /**
@@ -53,6 +82,7 @@ class ObserverRegistry<T> : Observable<T> {
         }
 
         lifecycleObservers[observer]?.remove()
+        viewObservers[observer]?.remove()
     }
 
     /**
@@ -95,5 +125,21 @@ class ObserverRegistry<T> : Observable<T> {
         fun remove() {
             owner.lifecycle.removeObserver(this)
         }
+    }
+
+    private class ViewBoundObserver<T>(
+        private val view: View,
+        private val registry: ObserverRegistry<T>,
+        private val observer: T
+    ) : View.OnAttachStateChangeListener {
+        override fun onViewDetachedFromWindow(view: View) {
+            registry.unregister(observer)
+        }
+
+        fun remove() {
+            view.removeOnAttachStateChangeListener(this)
+        }
+
+        override fun onViewAttachedToWindow(view: View) = Unit
     }
 }

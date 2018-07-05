@@ -4,14 +4,24 @@
 
 package mozilla.components.support.utils.observer
 
+import android.app.Activity
 import android.arch.lifecycle.GenericLifecycleObserver
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.LifecycleOwner
+import android.view.View
+import android.view.WindowManager
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
+import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
+@RunWith(RobolectricTestRunner::class)
 class ObserverRegistryTest {
     @Test
     fun `registered observer gets notified`() {
@@ -196,6 +206,60 @@ class ObserverRegistryTest {
 
         assertFalse(observer1.notified)
         assertFalse(observer2.notified)
+    }
+
+    @Test
+    fun `observer will not get added if view is detached`() {
+        val view = mock(View::class.java)
+
+        val registry = ObserverRegistry<TestObserver>()
+        val observer = TestObserver()
+
+        @Suppress("UsePropertyAccessSyntax")
+        doReturn(false).`when`(view).isAttachedToWindow()
+
+        registry.register(observer, view)
+
+        assertFalse(observer.notified)
+
+        registry.notifyObservers {
+            somethingChanged()
+        }
+
+        assertFalse(observer.notified)
+    }
+
+    @Test
+    fun `observer will get unregistered if view gets detached`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+        val view = View(RuntimeEnvironment.application)
+        activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
+
+        val registry = ObserverRegistry<TestObserver>()
+        val observer = TestObserver()
+
+        assertTrue(view.isAttachedToWindow)
+
+        registry.register(observer, view)
+
+        assertFalse(observer.notified)
+
+        registry.notifyObservers {
+            somethingChanged()
+        }
+
+        assertTrue(observer.notified)
+
+        observer.notified = false
+
+        activity.windowManager.removeView(view)
+        assertFalse(view.isAttachedToWindow)
+
+        registry.notifyObservers {
+            somethingChanged()
+        }
+
+        assertFalse(observer.notified)
     }
 
     private class TestObserver {
