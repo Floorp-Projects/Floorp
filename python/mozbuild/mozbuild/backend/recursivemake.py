@@ -43,6 +43,7 @@ from ..frontend.data import (
     GeneratedFile,
     GeneratedSources,
     HostDefines,
+    HostGeneratedSources,
     HostLibrary,
     HostProgram,
     HostRustProgram,
@@ -60,6 +61,7 @@ from ..frontend.data import (
     PerSourceFlag,
     Program,
     RustLibrary,
+    HostSharedLibrary,
     HostRustLibrary,
     RustProgram,
     RustTests,
@@ -477,16 +479,22 @@ class RecursiveMakeBackend(CommonBackend):
                 f = mozpath.relpath(f, base)
                 for var in variables:
                     backend_file.write('%s += %s\n' % (var, f))
-        elif isinstance(obj, HostSources):
+        elif isinstance(obj, (HostSources, HostGeneratedSources)):
             suffix_map = {
                 '.c': 'HOST_CSRCS',
                 '.mm': 'HOST_CMMSRCS',
                 '.cpp': 'HOST_CPPSRCS',
             }
-            var = suffix_map[obj.canonical_suffix]
+            variables = [suffix_map[obj.canonical_suffix]]
+            if isinstance(obj, GeneratedSources):
+                variables.append('GARBAGE')
+                base = backend_file.objdir
+            else:
+                base = backend_file.srcdir
             for f in sorted(obj.files):
-                backend_file.write('%s += %s\n' % (
-                    var, mozpath.relpath(f, backend_file.srcdir)))
+                f = mozpath.relpath(f, base)
+                for var in variables:
+                    backend_file.write('%s += %s\n' % (var, f))
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
@@ -680,6 +688,10 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, HostLibrary):
             self._process_host_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
+
+        elif isinstance(obj, HostSharedLibrary):
+            self._process_host_shared_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, ObjdirFiles):
@@ -1269,6 +1281,9 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
+
+    def _process_host_shared_library(self, libdef, backend_file):
+        backend_file.write('HOST_SHARED_LIBRARY = %s\n' % libdef.lib_name)
 
     def _build_target_for_obj(self, obj):
         return '%s/%s' % (mozpath.relpath(obj.objdir,
