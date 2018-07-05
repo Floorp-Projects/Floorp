@@ -149,7 +149,9 @@ interface nsIAccessibleText : nsISupports
                            out long endOffset);
 
   /**
-   * Set the bounds for the given selection range
+   * Set the bounds for the given selection range.
+   * A reverse range where the start offset is larger than the end offset is
+   * acceptable. The caretOffset will be set to the endOffset argument.
    */
   void setSelectionBounds (in long selectionNum,
                            in long startOffset,
