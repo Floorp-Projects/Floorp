@@ -119,6 +119,9 @@ public:
   const ServiceWorkerRegistrationDescriptor&
   Descriptor() const;
 
+  void
+  WhenVersionReached(uint64_t aVersion, ServiceWorkerBoolCallback&& aCallback);
+
 private:
   ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
                             const ServiceWorkerRegistrationDescriptor& aDescriptor,
@@ -147,6 +150,20 @@ private:
   RefPtr<ServiceWorker> mWaitingWorker;
   RefPtr<ServiceWorker> mActiveWorker;
   RefPtr<PushManager> mPushManager;
+
+  struct VersionCallback
+  {
+    uint64_t mVersion;
+    ServiceWorkerBoolCallback mFunc;
+
+    VersionCallback(uint64_t aVersion, ServiceWorkerBoolCallback&& aFunc)
+      : mVersion(aVersion)
+      , mFunc(std::move(aFunc))
+    {
+      MOZ_DIAGNOSTIC_ASSERT(mFunc);
+    }
+  };
+  nsTArray<UniquePtr<VersionCallback>> mVersionCallbackList;
 
   uint64_t mScheduledUpdateFoundId;
   uint64_t mDispatchedUpdateFoundId;
