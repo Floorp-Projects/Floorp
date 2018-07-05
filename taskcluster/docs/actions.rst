@@ -246,93 +246,12 @@ The artifacts are:
   This is the mapping from label to ``taskid`` for all tasks involved in
   the task-graph. This includes dependencies.
 
-Creating a Custom Action Task
-------------------------------
+More Information
+----------------
 
-It is possible to define an action that doesn't take a callback. Instead, you'll
-then have to provide a task template. For details on how the task template
-language works refer to `the actions.json spec`_. There are two options for
-creating this sort of action in-tree. The first option is to create a yaml file
-and the second allows you to use Python to do some extra work if you'd like.
-The example below illustrates how to create such an action in Python::
-
-  from registry import register_task_action
-
-  @register_task_action(
-      name='retrigger',
-      title='Retrigger',
-      description="Create a clone of the task",
-      order=1,
-      context=[{'platform': 'linux'}],
-      input={
-          'title': 'priority'
-          'description': 'Priority that should be given to the tasks',
-          'type': 'string',
-          'enum': ['low', 'normal', 'high'],
-          'default': 'low',
-      },
-  )
-  def task_template_builder(parameters, graph_config):
-      # The task template builder may return None to signal that the action
-      # isn't available.
-      if parameters.get('project', None) != 'try':
-        return None
-      return {
-          'created': {'$fromNow': ''},
-          'deadline': {'$fromNow': '1 hour'},
-          'expires': {'$fromNow': '14 days'},
-          'provisionerId': '...',
-          'workerType': '...',
-          'priority': '${input}',
-          'payload': {
-              'command': '...',
-              'env': {
-                  'TASK_DEFINITION': {'$json': {'eval': 'task'}}
-              },
-              ...
-          },
-          # It's now your responsibility to include treeherder routes, as well
-          # additional metadata for treeherder in task.extra.treeherder.
-          ...
-      },
-
-An equivalent in yaml. Notice that we can't inspect parameters in this case:
-
-.. code-block: yaml
-
-  ---
-  name: retrigger
-  title: Retrigger
-  description: Create a clone of the task
-  order: 1
-  context:
-    - platform: linux
-  input:
-    title: priority
-    description: Priority that should be given to the tasks
-    type: string
-    enum:
-      - low
-      - normal
-      - high
-    default: low'
-  ---
-  created: {'$fromNow': ''}
-  deadline: {'$fromNow': '1 hour'}
-  expires: {'$fromNow': '14 days'}
-  provisionerId: '...'
-  workerType: '...'
-  priority: '${input}'
-  payload:
-    command: '...'
-    env:
-      TASK_DEFINITION: {'$json': {'eval': 'task'}}
-
-These kinds of actions are useful for creating simple derivative tasks, but are
-limited by the expressiveness of the template language. On the other hand, they
-are more efficient than an action callback as they do not involve an
-intermediate action task before creating the task the user requested.
-
-For further details on the template language, see `the actions.json spec`_.
+For further details on actions in general, see `the actions.json spec`_.
+The hooks used for in-tree actions are set up by `ci-admin`_ based on configuration in `ci-configuration`_.
 
 .. _the actions.json spec: https://docs.taskcluster.net/manual/tasks/actions/spec
+.. _ci-admin: http://hg.mozilla.org/build/ci-admin/
+.. _ci-configuration: http://hg.mozilla.org/build/ci-configuration/
