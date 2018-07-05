@@ -18,6 +18,7 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+ChromeUtils.import("resource://gre/modules/CrashReporter.jsm", this);
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ServiceRequest.jsm", this);
@@ -681,21 +682,20 @@ var TelemetrySendImpl = {
    */
   _annotateCrashReport() {
     try {
-      const cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
-      if (cr) {
-        const crs = cr.getService(Ci.nsICrashReporter);
+      let clientId = ClientID.getCachedClientID();
+      let server = this._server || Services.prefs.getStringPref(TelemetryUtils.Preferences.Server, undefined);
 
-        let clientId = ClientID.getCachedClientID();
-        let server = this._server || Services.prefs.getStringPref(TelemetryUtils.Preferences.Server, undefined);
-
-        if (!this.sendingEnabled() || !TelemetryReportingPolicy.canUpload()) {
-          // If we cannot send pings then clear the crash annotations
-          crs.annotateCrashReport("TelemetryClientId", "");
-          crs.annotateCrashReport("TelemetryServerURL", "");
-        } else {
-          crs.annotateCrashReport("TelemetryClientId", clientId);
-          crs.annotateCrashReport("TelemetryServerURL", server);
-        }
+      if (!this.sendingEnabled() || !TelemetryReportingPolicy.canUpload()) {
+        // If we cannot send pings then clear the crash annotations
+        CrashReporter.removeAnnotation(
+          CrashReporter.annotations.TelemetryClientId);
+        CrashReporter.removeAnnotation(
+          CrashReporter.annotations.TelemetryServerURL);
+      } else {
+        CrashReporter.addAnnotation(
+          CrashReporter.annotations.TelemetryClientId, clientId);
+        CrashReporter.addAnnotation(
+          CrashReporter.annotations.TelemetryServerURL, server);
       }
     } catch (e) {
       // Ignore errors when crash reporting is disabled

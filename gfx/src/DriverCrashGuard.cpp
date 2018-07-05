@@ -165,9 +165,8 @@ DriverCrashGuard::~DriverCrashGuard()
     dom::ContentChild::GetSingleton()->SendEndDriverCrashGuard(uint32_t(mType));
   }
 
-  // Remove the crash report annotation.
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
-                                     NS_LITERAL_CSTRING(""));
+  CrashReporter::RemoveCrashReportAnnotation(
+    CrashReporter::Annotation::GraphicsStartupTest);
 }
 
 bool
@@ -210,8 +209,8 @@ DriverCrashGuard::ActivateGuard()
   // attribute a random parent process crash to a graphics problem in a child
   // process.
   if (mMode != Mode::Proxy) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
-                                       NS_LITERAL_CSTRING("1"));
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GraphicsStartupTest, true);
   }
 
   // If we're in the content process, the rest of the guarding is handled

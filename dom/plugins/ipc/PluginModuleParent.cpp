@@ -738,26 +738,36 @@ PluginModuleChromeParent::WriteExtraDataForMinidump()
         filePos = 0;
     else
         filePos++;
-    mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginFilename"), cstring(pluginFile.substr(filePos).c_str()));
-
-    mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginName"), mPluginName);
-    mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginVersion"), mPluginVersion);
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginFilename,
+                                  cstring(pluginFile.substr(filePos).c_str()));
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginName,
+                                  mPluginName);
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginVersion,
+                                  mPluginVersion);
 
     if (mCrashReporter) {
 #ifdef XP_WIN
         if (mPluginCpuUsageOnHang.Length() > 0) {
-            mCrashReporter->AddNote(NS_LITERAL_CSTRING("NumberOfProcessors"),
-                                    nsPrintfCString("%d", PR_GetNumberOfProcessors()));
+            mCrashReporter->AddAnnotation(
+              CrashReporter::Annotation::NumberOfProcessors,
+              PR_GetNumberOfProcessors());
 
             nsCString cpuUsageStr;
             cpuUsageStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[0] * 100) / 100);
-            mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginCpuUsage"), cpuUsageStr);
+            mCrashReporter->AddAnnotation(
+              CrashReporter::Annotation::PluginCpuUsage,
+              cpuUsageStr);
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
-            for (uint32_t i=1; i<mPluginCpuUsageOnHang.Length(); ++i) {
+            for (uint32_t i = 1; i < mPluginCpuUsageOnHang.Length(); ++i) {
                 nsCString tempStr;
                 tempStr.AppendFloat(std::ceil(mPluginCpuUsageOnHang[i] * 100) / 100);
-                mCrashReporter->AddNote(nsPrintfCString("CpuUsageFlashProcess%d", i), tempStr);
+                // HACK: There can only be at most two flash processes hence
+                // the hardcoded annotations
+                CrashReporter::Annotation annotation =
+                  (i == 1) ? CrashReporter::Annotation::CpuUsageFlashProcess1
+                           : CrashReporter::Annotation::CpuUsageFlashProcess2;
+                mCrashReporter->AddAnnotation(annotation, tempStr);
             }
 #endif
         }
@@ -1244,8 +1254,8 @@ PluginModuleChromeParent::OnTakeFullMinidumpComplete(bool aReportsReady,
                 }
             }
         }
-        mCrashReporter->AddNote(NS_LITERAL_CSTRING("additional_minidumps"),
-                                additionalDumps);
+        mCrashReporter->AddAnnotation(Annotation::additional_minidumps,
+                                      additionalDumps);
 
         mTakeFullMinidumpCallback.Invoke(mCrashReporter->MinidumpID());
     } else {
@@ -1306,18 +1316,15 @@ PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgL
         mTerminateChildProcessCallback.Invoke(true);
         return;
     }
-    mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginHang"),
-                            NS_LITERAL_CSTRING("1"));
-    mCrashReporter->AddNote(NS_LITERAL_CSTRING("HangMonitorDescription"),
-                            aMonitorDescription);
+    mCrashReporter->AddAnnotation(Annotation::PluginHang, true);
+    mCrashReporter->AddAnnotation(Annotation::HangMonitorDescription,
+                                  aMonitorDescription);
 #ifdef XP_WIN
     if (mHangUIParent) {
         unsigned int hangUIDuration = mHangUIParent->LastShowDurationMs();
         if (hangUIDuration) {
-            nsPrintfCString strHangUIDuration("%u", hangUIDuration);
-            mCrashReporter->AddNote(
-                    NS_LITERAL_CSTRING("PluginHangUIDuration"),
-                    strHangUIDuration);
+            mCrashReporter->AddAnnotation(Annotation::PluginHangUIDuration,
+                                          hangUIDuration);
         }
     }
 #endif // XP_WIN
@@ -1583,7 +1590,8 @@ PluginModuleChromeParent::ProcessFirstMinidump()
                       NS_ConvertUTF16toUTF8(mCrashReporter->MinidumpID()).get()));
 
     if (!flashProcessType.IsEmpty()) {
-        mCrashReporter->AddNote(NS_LITERAL_CSTRING("FlashProcessDump"), flashProcessType);
+        mCrashReporter->AddAnnotation(Annotation::FlashProcessDump,
+                                      flashProcessType);
     }
     mCrashReporter->FinalizeCrashReport();
 }

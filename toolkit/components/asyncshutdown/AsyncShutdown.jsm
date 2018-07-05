@@ -45,21 +45,11 @@ ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CrashReporter: "resource://gre/modules/CrashReporter.jsm",
+});
 XPCOMUtils.defineLazyServiceGetter(this, "gDebug",
   "@mozilla.org/xpcom/debug;1", "nsIDebug2");
-Object.defineProperty(this, "gCrashReporter", {
-  get() {
-    delete this.gCrashReporter;
-    try {
-      let reporter = Cc["@mozilla.org/xre/app-info;1"].
-            getService(Ci.nsICrashReporter);
-      return this.gCrashReporter = reporter;
-    } catch (ex) {
-      return this.gCrashReporter = null;
-    }
-  },
-  configurable: true
-});
 
 // `true` if this is a content process, `false` otherwise.
 // It would be nicer to go through `Services.appinfo`, but some tests need to be
@@ -944,12 +934,13 @@ Barrier.prototype = Object.freeze({
             " ensure that we do not leave the user with an unresponsive" +
             " process draining resources.";
           fatalerr(msg);
-          if (gCrashReporter && gCrashReporter.enabled) {
+          if (CrashReporter.enabled) {
             let data = {
               phase: topic,
               conditions: state
             };
-            gCrashReporter.annotateCrashReport("AsyncShutdownTimeout",
+            CrashReporter.addAnnotation(
+              CrashReporter.annotations.AsyncShutdownTimeout,
               JSON.stringify(data));
           } else {
             warn("No crash reporter available");
