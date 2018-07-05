@@ -19,8 +19,9 @@ def execute_script(session, script, args=None):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
-def test_handle_prompt_accept(session):
-    response = execute_script(session, "window.alert('Hello');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_accept(session, dialog_type):
+    response = execute_script(session, "window.{}('Hello');".format(dialog_type))
     assert_success(response, None)
 
     session.title
@@ -29,8 +30,9 @@ def test_handle_prompt_accept(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept and notify"})
-def test_handle_prompt_accept_and_notify(session):
-    response = execute_script(session, "window.alert('Hello');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_accept_and_notify(session, dialog_type):
+    response = execute_script(session, "window.{}('Hello');".format(dialog_type))
     assert_success(response, None)
 
     with pytest.raises(error.UnexpectedAlertOpenException):
@@ -40,8 +42,9 @@ def test_handle_prompt_accept_and_notify(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss"})
-def test_handle_prompt_dismiss(session):
-    response = execute_script(session, "window.alert('Hello');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_dismiss(session, dialog_type):
+    response = execute_script(session, "window.{}('Hello');".format(dialog_type))
     assert_success(response, None)
 
     session.title
@@ -50,8 +53,9 @@ def test_handle_prompt_dismiss(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "dismiss and notify"})
-def test_handle_prompt_dismiss_and_notify(session):
-    response = execute_script(session, "window.alert('Hello');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_dismiss_and_notify(session, dialog_type):
+    response = execute_script(session, "window.{}('Hello');".format(dialog_type))
     assert_success(response, None)
 
     with pytest.raises(error.UnexpectedAlertOpenException):
@@ -61,8 +65,9 @@ def test_handle_prompt_dismiss_and_notify(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "ignore"})
-def test_handle_prompt_ignore(session):
-    response = execute_script(session, "window.alert('Hello');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_ignore(session, dialog_type):
+    response = execute_script(session, "window.{}('Hello');".format(dialog_type))
     assert_success(response, None)
 
     with pytest.raises(error.UnexpectedAlertOpenException):
@@ -70,8 +75,9 @@ def test_handle_prompt_ignore(session):
     session.alert.dismiss()
 
 
-def test_handle_prompt_default(session):
-    response = execute_script(session, "window.alert('Hello');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_default(session, dialog_type):
+    response = execute_script(session, "window.{}('Hello');".format(dialog_type))
     assert_success(response, None)
 
     with pytest.raises(error.UnexpectedAlertOpenException):
@@ -81,8 +87,10 @@ def test_handle_prompt_default(session):
 
 
 @pytest.mark.capabilities({"unhandledPromptBehavior": "accept"})
-def test_handle_prompt_twice(session):
-    response = execute_script(session, "window.alert('Hello');window.alert('Bye');")
+@pytest.mark.parametrize("dialog_type", ["alert", "confirm", "prompt"])
+def test_handle_prompt_twice(session, dialog_type):
+    response = execute_script(
+        session, "window.{0}('Hello');window.{0}('Bye');".format(dialog_type))
     assert_success(response, None)
 
     session.alert.dismiss()
