@@ -10,7 +10,6 @@
 #include "nsExceptionHandler.h"
 #include "nsIMemoryReporter.h"
 #include "nsMemoryPressure.h"
-#include "nsPrintfCString.h"
 #endif
 
 #include "nsIObserver.h"
@@ -151,8 +150,8 @@ nsAvailableMemoryWatcher::IsCommitSpaceLow(const MEMORYSTATUSEX& aStat)
       (aStat.ullAvailPageFile < kLowCommitSpaceThreshold)) {
     sNumLowCommitSpaceEvents++;
     CrashReporter::AnnotateCrashReport(
-      NS_LITERAL_CSTRING("LowCommitSpaceEvents"),
-      nsPrintfCString("%" PRIu32, uint32_t(sNumLowCommitSpaceEvents)));
+      CrashReporter::Annotation::LowCommitSpaceEvents,
+      uint32_t(sNumLowCommitSpaceEvents));
     return true;
   }
 
