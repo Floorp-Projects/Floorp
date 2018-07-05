@@ -1603,7 +1603,11 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
         if toolchain_flags:
             cmd += toolchain_flags
 
-        cmd_output = check_cmd_output(*cmd).decode('utf-8')
+        cmd_output = check_cmd_output(*cmd, onerror=lambda: None)
+        if cmd_output is None:
+            return None
+        cmd_output = cmd_output.decode('utf-8')
+
         if 'GNU ld' in cmd_output:
             # We are using the normal linker
             kind = 'bfd'
@@ -1623,13 +1627,21 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
         )
 
     result = try_linker(linker)
+    if result is None:
+        if linker:
+            die("Could not use {} as linker".format(linker))
+        die("Failed to find a linker")
 
     if (linker is None and enable_gold.origin == 'default' and
             developer_options and result.KIND == 'bfd'):
-        gold = try_linker('gold')
-
-        if gold.KIND == 'gold':
-            result = gold
+        # try and use lld if available.
+        tried = try_linker('lld')
+        if tried is None or tried.KIND != 'lld':
+            tried = try_linker('gold')
+            if tried is None or tried.KIND != 'gold':
+                tried = None
+        if tried:
+            result = tried
 
     # If an explicit linker was given, error out if what we found is different.
     if linker and not linker.startswith(result.KIND):
