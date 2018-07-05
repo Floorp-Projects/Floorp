@@ -1305,14 +1305,14 @@ interface nsINavHistoryService : nsISupports
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
 
   /**
-   * Resets and recalculates the frecency statistics that are kept in the
+   * Resets and recalculates the origin frecency statistics that are kept in the
    * moz_meta table.
    *
    * @param aCallback
    *        Called when the recalculation is complete.  The arguments passed to
    *        the observer are not defined.
    */
-  void recalculateFrecencyStats([optional] in nsIObserver aCallback);
+  void recalculateOriginFrecencyStats([optional] in nsIObserver aCallback);
 
   /**
    * The database connection used by Places.

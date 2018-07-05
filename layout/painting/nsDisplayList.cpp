@@ -656,10 +656,6 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
     // asynchronously so that it will not throttle the main thread
     // animation.
     aFrame->SetProperty(nsIFrame::RefusedAsyncAnimationProperty(), true);
-
-    // We need to schedule another refresh driver run so that EffectCompositor
-    // gets a chance to unthrottle the animation.
-    aFrame->SchedulePaint();
     return;
   }
 

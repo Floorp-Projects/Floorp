@@ -57,6 +57,13 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
          "help": "Number of this chunk",
          }
     ], [
+        ["--gpu-required"],
+        {"action": "store_true",
+         "dest": "gpu_required",
+         "default": False,
+         "help": "Run additional verification on modified tests using gpu instances.",
+         }
+    ], [
         ["--log-raw-level"],
         {"action": "store",
          "dest": "log_raw_level",
