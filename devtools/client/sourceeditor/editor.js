@@ -179,6 +179,16 @@ function Editor(config) {
   // indenting with tabs, insert one tab. Otherwise insert N
   // whitespaces where N == indentUnit option.
   this.config.extraKeys.Tab = cm => {
+    if (config.extraKeys && config.extraKeys.Tab) {
+      // If a consumer registers its own extraKeys.Tab, we execute it before doing
+      // anything else. If it returns false, that mean that all the key handling work is
+      // done, so we can do an early return.
+      const res = config.extraKeys.Tab(cm);
+      if (res === false) {
+        return;
+      }
+    }
+
     if (cm.somethingSelected()) {
       cm.indentSelection("add");
       return;
