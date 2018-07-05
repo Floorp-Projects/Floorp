@@ -17,17 +17,17 @@ function test() {
     label: "Test tool",
     isTargetSupported: () => true,
     build: function(iframeWindow, toolbox) {
-      const deferred = defer();
-      executeSoon(() => {
-        deferred.resolve({
-          target: toolbox.target,
-          toolbox: toolbox,
-          isReady: true,
-          destroy: function() {},
-          panelDoc: iframeWindow.document,
+      return new Promise(resolve => {
+        executeSoon(() => {
+          resolve({
+            target: toolbox.target,
+            toolbox: toolbox,
+            isReady: true,
+            destroy: function() {},
+            panelDoc: iframeWindow.document,
+          });
         });
       });
-      return deferred.promise;
     },
   };
 

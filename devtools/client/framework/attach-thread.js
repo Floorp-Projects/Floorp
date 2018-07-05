@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Services = require("Services");
-const defer = require("devtools/shared/defer");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
@@ -37,8 +36,6 @@ function handleThreadState(toolbox, event, packet) {
 }
 
 function attachThread(toolbox) {
-  const deferred = defer();
-
   const target = toolbox.target;
   const { form: { chromeDebugger, actor } } = target;
 
@@ -58,58 +55,57 @@ function attachThread(toolbox) {
 
   const threadOptions = { useSourceMaps, autoBlackBox, ignoreFrameEnvironment };
 
-  const handleResponse = ([res, threadClient]) => {
-    if (res.error) {
-      deferred.reject(new Error("Couldn't attach to thread: " + res.error));
-      return;
-    }
-    threadClient.addListener("paused", handleThreadState.bind(null, toolbox));
-    threadClient.addListener("resumed", handleThreadState.bind(null, toolbox));
-
-    if (!threadClient.paused) {
-      deferred.reject(
-        new Error("Thread in wrong state when starting up, should be paused")
-      );
-    }
-
-    // These flags need to be set here because the client sends them
-    // with the `resume` request. We make sure to do this before
-    // resuming to avoid another interrupt. We can't pass it in with
-    // `threadOptions` because the resume request will override them.
-    threadClient.pauseOnExceptions(
-      Services.prefs.getBoolPref("devtools.debugger.pause-on-exceptions"),
-      Services.prefs.getBoolPref("devtools.debugger.ignore-caught-exceptions")
-    );
-
-    threadClient.resume(res => {
-      if (res.error === "wrongOrder") {
-        const box = toolbox.getNotificationBox();
-        box.appendNotification(
-          L10N.getStr("toolbox.resumeOrderWarning"),
-          "wrong-resume-order",
-          "",
-          box.PRIORITY_WARNING_HIGH
-        );
+  return new Promise((resolve, reject) => {
+    const handleResponse = ([res, threadClient]) => {
+      if (res.error) {
+        reject(new Error("Couldn't attach to thread: " + res.error));
+        return;
       }
 
-      deferred.resolve(threadClient);
-    });
-  };
+      threadClient.addListener("paused", handleThreadState.bind(null, toolbox));
+      threadClient.addListener("resumed", handleThreadState.bind(null, toolbox));
 
-  if (target.isBrowsingContext) {
-    // Attaching a tab, a browser process, or a WebExtensions add-on.
-    target.activeTab.attachThread(threadOptions).then(handleResponse);
-  } else if (target.isAddon) {
-    // Attaching a legacy addon.
-    target.client.attachAddon(actor).then(([res]) => {
-      target.client.attachThread(res.threadActor).then(handleResponse);
-    });
-  } else {
-    // Attaching an old browser debugger or a content process.
-    target.client.attachThread(chromeDebugger).then(handleResponse);
-  }
+      if (!threadClient.paused) {
+        reject(new Error("Thread in wrong state when starting up, should be paused"));
+      }
 
-  return deferred.promise;
+      // These flags need to be set here because the client sends them
+      // with the `resume` request. We make sure to do this before
+      // resuming to avoid another interrupt. We can't pass it in with
+      // `threadOptions` because the resume request will override them.
+      threadClient.pauseOnExceptions(
+        Services.prefs.getBoolPref("devtools.debugger.pause-on-exceptions"),
+        Services.prefs.getBoolPref("devtools.debugger.ignore-caught-exceptions")
+      );
+
+      threadClient.resume(res => {
+        if (res.error === "wrongOrder") {
+          const box = toolbox.getNotificationBox();
+          box.appendNotification(
+            L10N.getStr("toolbox.resumeOrderWarning"),
+            "wrong-resume-order",
+            "",
+            box.PRIORITY_WARNING_HIGH
+          );
+        }
+
+        resolve(threadClient);
+      });
+    };
+
+    if (target.isBrowsingContext) {
+      // Attaching a tab, a browser process, or a WebExtensions add-on.
+      target.activeTab.attachThread(threadOptions).then(handleResponse);
+    } else if (target.isAddon) {
+      // Attaching a legacy addon.
+      target.client.attachAddon(actor).then(([res]) => {
+        target.client.attachThread(res.threadActor).then(handleResponse);
+      });
+    } else {
+      // Attaching an old browser debugger or a content process.
+      target.client.attachThread(chromeDebugger).then(handleResponse);
+    }
+  });
 }
 
 function detachThread(threadClient) {

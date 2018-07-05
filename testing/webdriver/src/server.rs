@@ -4,6 +4,7 @@ use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Mutex;
 use std::thread;
+use std::time::Duration;
 
 use hyper::header::{ContentType, CacheControl, CacheDirective};
 use hyper::mime::{Mime, TopLevel, SubLevel, Attr, Value};
@@ -239,24 +240,27 @@ impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
     }
 }
 
-pub fn start<T, U>(address: SocketAddr,
-                   handler: T,
-                   extension_routes: &[(Method, &str, U)])
-                   -> Result<Listening>
-    where T: 'static + WebDriverHandler<U>,
-          U: 'static + WebDriverExtensionRoute
+pub fn start<T, U>(
+    address: SocketAddr,
+    handler: T,
+    extension_routes: &[(Method, &str, U)],
+) -> Result<Listening>
+where
+    T: 'static + WebDriverHandler<U>,
+    U: 'static + WebDriverExtensionRoute,
 {
     let (msg_send, msg_recv) = channel();
 
     let api = WebDriverHttpApi::new(extension_routes);
     let http_handler = HttpHandler::new(api, msg_send);
-    let server = try!(Server::http(address));
+    let mut server = Server::http(address)?;
+    server.keep_alive(Some(Duration::from_secs(90)));
 
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
-    try!(builder.spawn(move || {
+    builder.spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv);
-    }));
+    })?;
 
     server.handle(http_handler)
 }
