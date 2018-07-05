@@ -593,7 +593,7 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
     // For a SVG doc:
     //   SVG 1.1 say that if we fail to resolve a mask, we should draw the
     //   object unmasked.
-    //   Left patinResult.maskSurface empty, the caller should paint all
+    //   Left paintResult.maskSurface empty, the caller should paint all
     //   masked content as if this mask is an opaque white one(no mask).
     paintResult.transparentBlackMask =
       !(aParams.frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
@@ -760,16 +760,19 @@ private:
   gfxContext* mContext;
 };
 
-void
+bool
 nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 {
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity,
                                  maskUsage);
+  if (!maskUsage.shouldDoSomething()) {
+    return false;
+  }
 
   nsIFrame* frame = aParams.frame;
   if (!ValidateSVGFrame(frame)) {
-    return;
+    return false;
   }
 
   gfxContext& ctx = aParams.ctx;
@@ -819,7 +822,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
       ctx.SetColor(Color(1.0, 1.0, 1.0, 1.0));
       ctx.Fill();
 
-      return;
+      return true;
     }
   }
 
@@ -852,6 +855,8 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
                                    &clipMaskTransform, maskSurface,
                                    ctx.CurrentMatrix());
   }
+
+  return true;
 }
 
 void
