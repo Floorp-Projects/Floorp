@@ -131,6 +131,12 @@ private:
                       const Maybe<ServiceWorkerDescriptor>& aWaiting,
                       const Maybe<ServiceWorkerDescriptor>& aActive);
 
+  void
+  MaybeScheduleUpdateFound(const Maybe<ServiceWorkerDescriptor>& aInstallingDescriptor);
+
+  void
+  MaybeDispatchUpdateFound();
+
   ServiceWorkerRegistrationDescriptor mDescriptor;
   RefPtr<Inner> mInner;
 
@@ -138,6 +144,9 @@ private:
   RefPtr<ServiceWorker> mWaitingWorker;
   RefPtr<ServiceWorker> mActiveWorker;
   RefPtr<PushManager> mPushManager;
+
+  uint64_t mScheduledUpdateFoundId;
+  uint64_t mDispatchedUpdateFoundId;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerRegistration, NS_DOM_SERVICEWORKERREGISTRATION_IID)
