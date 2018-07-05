@@ -35,9 +35,9 @@ add_task(async function test_fetch() {
 
     is(TrackingProtection.content.getAttribute("state"), "blocked-tracking-content",
         'content: state="blocked-tracking-content"');
-    is(TrackingProtection.icon.getAttribute("state"), "blocked-tracking-content",
-        'icon: state="blocked-tracking-content"');
-    is(TrackingProtection.icon.getAttribute("tooltiptext"),
+    is(TrackingProtection.iconBox.getAttribute("state"), "blocked-tracking-content",
+        'iconBox: state="blocked-tracking-content"');
+    is(TrackingProtection.iconBox.getAttribute("tooltiptext"),
        gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
   });
 });
