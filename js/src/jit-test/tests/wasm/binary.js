@@ -17,40 +17,6 @@ function versionError(actual) {
     return RegExp(str);
 }
 
-function toU8(array) {
-    for (let b of array)
-        assertEq(b < 256, true);
-    return Uint8Array.from(array);
-}
-
-function varU32(u32) {
-    assertEq(u32 >= 0, true);
-    assertEq(u32 < Math.pow(2,32), true);
-    var bytes = [];
-    do {
-        var byte = u32 & 0x7f;
-        u32 >>>= 7;
-        if (u32 != 0)
-            byte |= 0x80;
-        bytes.push(byte);
-    } while (u32 != 0);
-    return bytes;
-}
-
-function varS32(s32) {
-    assertEq(s32 >= -Math.pow(2,31), true);
-    assertEq(s32 < Math.pow(2,31), true);
-    var bytes = [];
-    do {
-        var byte = s32 & 0x7f;
-        s32 >>= 7;
-        if (s32 != 0 && s32 != -1)
-            byte |= 0x80;
-        bytes.push(byte);
-    } while (s32 != 0 && s32 != -1);
-    return bytes;
-}
-
 const U32MAX_LEB = [255, 255, 255, 255, 15];
 
 const wasmEval = (code, imports) => new WebAssembly.Instance(new Module(code), imports).exports;
@@ -63,10 +29,6 @@ assertErrorMessage(() => wasmEval(toU8([magic0, magic1, magic2, magic3])), Compi
 assertErrorMessage(() => wasmEval(toU8([magic0, magic1, magic2, magic3, 1])), CompileError, versionError(0x6d736100));
 assertErrorMessage(() => wasmEval(toU8([magic0, magic1, magic2, magic3, ver0])), CompileError, versionError(0x6d736100));
 assertErrorMessage(() => wasmEval(toU8([magic0, magic1, magic2, magic3, ver0, ver1, ver2])), CompileError, versionError(0x6d736100));
-
-function moduleHeaderThen(...rest) {
-    return [magic0, magic1, magic2, magic3, ver0, ver1, ver2, ver3, ...rest];
-}
 
 var o = wasmEval(toU8(moduleHeaderThen()));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
@@ -99,182 +61,6 @@ assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1, 0, 0))), CompileEr
 wasmEval(toU8(moduleHeaderThen(0, 1, 0)));  // empty id
 wasmEval(toU8(moduleHeaderThen(0, 1, 0,  0, 1, 0)));  // 2x empty id
 wasmEval(toU8(moduleHeaderThen(0, 2, 1, 65)));  // id = "A"
-
-function string(name) {
-    var nameBytes = name.split('').map(c => {
-        var code = c.charCodeAt(0);
-        assertEq(code < 128, true); // TODO
-        return code
-    });
-    return varU32(nameBytes.length).concat(nameBytes);
-}
-
-function encodedString(name, len) {
-    var name = unescape(encodeURIComponent(name)); // break into string of utf8 code points
-    var nameBytes = name.split('').map(c => c.charCodeAt(0)); // map to array of numbers
-    return varU32(len === undefined ? nameBytes.length : len).concat(nameBytes);
-}
-
-function moduleWithSections(sectionArray) {
-    var bytes = moduleHeaderThen();
-    for (let section of sectionArray) {
-        bytes.push(section.name);
-        bytes.push(...varU32(section.body.length));
-        bytes.push(...section.body);
-    }
-    return toU8(bytes);
-}
-
-function sigSection(sigs) {
-    var body = [];
-    body.push(...varU32(sigs.length));
-    for (let sig of sigs) {
-        body.push(...varU32(FuncCode));
-        body.push(...varU32(sig.args.length));
-        for (let arg of sig.args)
-            body.push(...varU32(arg));
-        body.push(...varU32(sig.ret == VoidCode ? 0 : 1));
-        if (sig.ret != VoidCode)
-            body.push(...varU32(sig.ret));
-    }
-    return { name: typeId, body };
-}
-
-function declSection(decls) {
-    var body = [];
-    body.push(...varU32(decls.length));
-    for (let decl of decls)
-        body.push(...varU32(decl));
-    return { name: functionId, body };
-}
-
-function funcBody(func) {
-    var body = varU32(func.locals.length);
-    for (let local of func.locals)
-        body.push(...varU32(local));
-    body = body.concat(...func.body);
-    body.push(EndCode);
-    body.splice(0, 0, ...varU32(body.length));
-    return body;
-}
-
-function bodySection(bodies) {
-    var body = varU32(bodies.length).concat(...bodies);
-    return { name: codeId, body };
-}
-
-function importSection(imports) {
-    var body = [];
-    body.push(...varU32(imports.length));
-    for (let imp of imports) {
-        body.push(...string(imp.module));
-        body.push(...string(imp.func));
-        body.push(...varU32(FunctionCode));
-        body.push(...varU32(imp.sigIndex));
-    }
-    return { name: importId, body };
-}
-
-function exportSection(exports) {
-    var body = [];
-    body.push(...varU32(exports.length));
-    for (let exp of exports) {
-        body.push(...string(exp.name));
-        body.push(...varU32(FunctionCode));
-        body.push(...varU32(exp.funcIndex));
-    }
-    return { name: exportId, body };
-}
-
-function tableSection(initialSize) {
-    var body = [];
-    body.push(...varU32(1));           // number of tables
-    body.push(...varU32(AnyFuncCode));
-    body.push(...varU32(0x0));         // for now, no maximum
-    body.push(...varU32(initialSize));
-    return { name: tableId, body };
-}
-
-function memorySection(initialSize) {
-    var body = [];
-    body.push(...varU32(1));           // number of memories
-    body.push(...varU32(0x0));         // for now, no maximum
-    body.push(...varU32(initialSize));
-    return { name: memoryId, body };
-}
-
-function dataSection(segmentArrays) {
-    var body = [];
-    body.push(...varU32(segmentArrays.length));
-    for (let array of segmentArrays) {
-        body.push(...varU32(0)); // table index
-        body.push(...varU32(I32ConstCode));
-        body.push(...varS32(array.offset));
-        body.push(...varU32(EndCode));
-        body.push(...varU32(array.elems.length));
-        for (let elem of array.elems)
-            body.push(...varU32(elem));
-    }
-    return { name: dataId, body };
-}
-
-function elemSection(elemArrays) {
-    var body = [];
-    body.push(...varU32(elemArrays.length));
-    for (let array of elemArrays) {
-        body.push(...varU32(0)); // table index
-        body.push(...varU32(I32ConstCode));
-        body.push(...varS32(array.offset));
-        body.push(...varU32(EndCode));
-        body.push(...varU32(array.elems.length));
-        for (let elem of array.elems)
-            body.push(...varU32(elem));
-    }
-    return { name: elemId, body };
-}
-
-function moduleNameSubsection(moduleName) {
-    var body = [];
-    body.push(...varU32(nameTypeModule));
-
-    var subsection = encodedString(moduleName);
-    body.push(...varU32(subsection.length));
-    body.push(...subsection);
-
-    return body;
-}
-
-function funcNameSubsection(funcNames) {
-    var body = [];
-    body.push(...varU32(nameTypeFunction));
-
-    var subsection = varU32(funcNames.length);
-
-    var funcIndex = 0;
-    for (let f of funcNames) {
-        subsection.push(...varU32(f.index ? f.index : funcIndex));
-        subsection.push(...encodedString(f.name, f.nameLen));
-        funcIndex++;
-    }
-
-    body.push(...varU32(subsection.length));
-    body.push(...subsection);
-    return body;
-}
-
-function nameSection(subsections) {
-    var body = [];
-    body.push(...string(nameName));
-
-    for (let ss of subsections)
-        body.push(...ss);
-
-    return { name: userDefinedId, body };
-}
-
-function customSection(name, ...body) {
-    return { name: userDefinedId, body: [...string(name), ...body] };
-}
 
 const v2vSig = {args:[], ret:VoidCode};
 const v2vSigSection = sigSection([v2vSig]);
@@ -329,12 +115,6 @@ assertErrorMessage(() => wasmEval(moduleWithSections([v2vSigSection, declSection
 wasmEval(moduleWithSections([v2vSigSection, declSection([0,0,0]), tableSection(4), elemSection([{offset:0, elems:[0,1,0,2]}]), bodySection([v2vBody, v2vBody, v2vBody])]));
 wasmEval(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection(3), elemSection([{offset:0,elems:[0,1,2]}]), bodySection([v2vBody, v2vBody, v2vBody])]));
 
-function tableSection0() {
-    var body = [];
-    body.push(...varU32(0));           // number of tables
-    return { name: tableId, body };
-}
-
 function invalidTableSection2() {
     var body = [];
     body.push(...varU32(2));           // number of tables
@@ -351,12 +131,6 @@ wasmEval(moduleWithSections([tableSection0()]));
 assertErrorMessage(() => wasmEval(moduleWithSections([invalidTableSection2()])), CompileError, /number of tables must be at most one/);
 
 wasmEval(moduleWithSections([memorySection(0)]));
-
-function memorySection0() {
-    var body = [];
-    body.push(...varU32(0));           // number of memories
-    return { name: memoryId, body };
-}
 
 function invalidMemorySection2() {
     var body = [];

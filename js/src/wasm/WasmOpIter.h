@@ -1016,7 +1016,9 @@ OpIter<Policy>::readBlockType(ExprType* type)
         known = true;
         break;
       case uint8_t(ExprType::Ref):
-        known = env_.gcTypesEnabled == HasGcTypes::True;
+        known = env_.gcTypesEnabled == HasGcTypes::True &&
+                uncheckedRefTypeIndex < MaxTypes &&
+                uncheckedRefTypeIndex < env_.types.length();
         break;
       case uint8_t(ExprType::AnyRef):
         known = env_.gcTypesEnabled == HasGcTypes::True;
@@ -1769,7 +1771,7 @@ OpIter<Policy>::readRefNull(ValType* type)
     if (!d_.readValType(&code, &refTypeIndex))
         return fail("unknown nullref type");
     if (code == uint8_t(TypeCode::Ref)) {
-        if (refTypeIndex > MaxTypes)
+        if (refTypeIndex >= MaxTypes || refTypeIndex >= env_.types.length())
             return fail("invalid nullref type");
     } else if (code != uint8_t(TypeCode::AnyRef)) {
         return fail("unknown nullref type");

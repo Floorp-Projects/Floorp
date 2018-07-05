@@ -116,18 +116,18 @@ class TypedArrayObject : public NativeObject
     inline Scalar::Type type() const;
     inline size_t bytesPerElement() const;
 
-    static Value bufferValue(TypedArrayObject* tarr) {
+    static Value bufferValue(const TypedArrayObject* tarr) {
         return tarr->getFixedSlot(BUFFER_SLOT);
     }
-    static Value byteOffsetValue(TypedArrayObject* tarr) {
+    static Value byteOffsetValue(const TypedArrayObject* tarr) {
         Value v = tarr->getFixedSlot(BYTEOFFSET_SLOT);
         MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
-    static Value byteLengthValue(TypedArrayObject* tarr) {
+    static Value byteLengthValue(const TypedArrayObject* tarr) {
         return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * tarr->bytesPerElement());
     }
-    static Value lengthValue(TypedArrayObject* tarr) {
+    static Value lengthValue(const TypedArrayObject* tarr) {
         return tarr->getFixedSlot(LENGTH_SLOT);
     }
 
@@ -135,19 +135,19 @@ class TypedArrayObject : public NativeObject
     ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
     bool hasBuffer() const {
-        return bufferValue(const_cast<TypedArrayObject*>(this)).isObject();
+        return bufferValue(this).isObject();
     }
     JSObject* bufferObject() const {
-        return bufferValue(const_cast<TypedArrayObject*>(this)).toObjectOrNull();
+        return bufferValue(this).toObjectOrNull();
     }
     uint32_t byteOffset() const {
-        return byteOffsetValue(const_cast<TypedArrayObject*>(this)).toInt32();
+        return byteOffsetValue(this).toInt32();
     }
     uint32_t byteLength() const {
-        return byteLengthValue(const_cast<TypedArrayObject*>(this)).toInt32();
+        return byteLengthValue(this).toInt32();
     }
     uint32_t length() const {
-        return lengthValue(const_cast<TypedArrayObject*>(this)).toInt32();
+        return lengthValue(this).toInt32();
     }
 
     bool hasInlineElements() const;
@@ -192,20 +192,20 @@ class TypedArrayObject : public NativeObject
 
     ArrayBufferObject* bufferUnshared() const {
         MOZ_ASSERT(!isSharedMemory());
-        JSObject* obj = bufferValue(const_cast<TypedArrayObject*>(this)).toObjectOrNull();
+        JSObject* obj = bufferObject();
         if (!obj)
             return nullptr;
         return &obj->as<ArrayBufferObject>();
     }
     SharedArrayBufferObject* bufferShared() const {
         MOZ_ASSERT(isSharedMemory());
-        JSObject* obj = bufferValue(const_cast<TypedArrayObject*>(this)).toObjectOrNull();
+        JSObject* obj = bufferObject();
         if (!obj)
             return nullptr;
         return &obj->as<SharedArrayBufferObject>();
     }
     ArrayBufferObjectMaybeShared* bufferEither() const {
-        JSObject* obj = bufferValue(const_cast<TypedArrayObject*>(this)).toObjectOrNull();
+        JSObject* obj = bufferObject();
         if (!obj)
             return nullptr;
         if (isSharedMemory())
@@ -264,7 +264,7 @@ class TypedArrayObject : public NativeObject
 
     /* Initialization bits */
 
-    template<Value ValueGetter(TypedArrayObject* tarr)>
+    template<Value ValueGetter(const TypedArrayObject* tarr)>
     static bool
     GetterImpl(JSContext* cx, const CallArgs& args)
     {
@@ -276,7 +276,7 @@ class TypedArrayObject : public NativeObject
     // ValueGetter is a function that takes an unwrapped typed array object and
     // returns a Value. Given such a function, Getter<> is a native that
     // retrieves a given Value, probably from a slot on the object.
-    template<Value ValueGetter(TypedArrayObject* tarr)>
+    template<Value ValueGetter(const TypedArrayObject* tarr)>
     static bool
     Getter(JSContext* cx, unsigned argc, Value* vp)
     {

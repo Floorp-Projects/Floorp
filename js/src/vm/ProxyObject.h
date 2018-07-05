@@ -59,7 +59,7 @@ class ProxyObject : public ShapedObject
     }
     MOZ_MUST_USE bool initExternalValueArrayAfterSwap(JSContext* cx, const Vector<Value>& values);
 
-    const Value& private_() {
+    const Value& private_() const {
         return GetProxyPrivate(this);
     }
 
@@ -67,11 +67,11 @@ class ProxyObject : public ShapedObject
     void setSameCompartmentPrivate(const Value& priv);
 
     JSObject* target() const {
-        return const_cast<ProxyObject*>(this)->private_().toObjectOrNull();
+        return private_().toObjectOrNull();
     }
 
     const BaseProxyHandler* handler() const {
-        return GetProxyHandler(const_cast<ProxyObject*>(this));
+        return GetProxyHandler(this);
     }
 
     void setHandler(const BaseProxyHandler* handler) {
@@ -89,7 +89,7 @@ class ProxyObject : public ShapedObject
         return JSCLASS_RESERVED_SLOTS(getClass());
     }
     const Value& reservedSlot(size_t n) const {
-        return GetProxyReservedSlot(const_cast<ProxyObject*>(this), n);
+        return GetProxyReservedSlot(this, n);
     }
 
     void setReservedSlot(size_t n, const Value& extra) {
@@ -151,7 +151,7 @@ JSObject::is<js::ProxyObject>() const
     // functions to ensure the implementations are tied together.
     // Note 2: this specialization isn't used for subclasses of ProxyObject
     // which must supply their own implementation.
-    return js::IsProxy(const_cast<JSObject*>(this));
+    return js::IsProxy(this);
 }
 
 inline bool

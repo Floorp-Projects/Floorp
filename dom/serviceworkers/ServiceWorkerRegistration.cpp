@@ -35,12 +35,19 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerRegistration)
   NS_INTERFACE_MAP_ENTRY(ServiceWorkerRegistration)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
+namespace {
+const uint64_t kInvalidUpdateFoundId = 0;
+} // anonymous namespace
+
 ServiceWorkerRegistration::ServiceWorkerRegistration(nsIGlobalObject* aGlobal,
                                                      const ServiceWorkerRegistrationDescriptor& aDescriptor,
                                                      ServiceWorkerRegistration::Inner* aInner)
   : DOMEventTargetHelper(aGlobal)
   , mDescriptor(aDescriptor)
   , mInner(aInner)
+  , mScheduledUpdateFoundId(kInvalidUpdateFoundId)
+  , mDispatchedUpdateFoundId(kInvalidUpdateFoundId)
+  , mPendingUpdatePromises(0)
 {
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
@@ -104,6 +111,16 @@ ServiceWorkerRegistration::DisconnectFromOwner()
 void
 ServiceWorkerRegistration::RegistrationRemoved()
 {
+  // Its possible that the registration will fail to install and be
+  // immediately removed.  In that case we may never receive the
+  // UpdateState() call if the actor was too slow to connect, etc.
+  // Ensure that we force all our known actors to redundant so that
+  // the appropriate statechange events are fired.  If we got the
+  // UpdateState() already then this will be a no-op.
+  UpdateStateInternal(Maybe<ServiceWorkerDescriptor>(),
+                      Maybe<ServiceWorkerDescriptor>(),
+                      Maybe<ServiceWorkerDescriptor>());
+
   // Our underlying registration was removed from SWM, so we
   // will never get an updatefound event again.  We can let
   // the object GC if content is not holding it alive.
@@ -138,91 +155,19 @@ ServiceWorkerRegistration::UpdateState(const ServiceWorkerRegistrationDescriptor
 
   mDescriptor = aDescriptor;
 
-  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
+  UpdateStateInternal(aDescriptor.GetInstalling(),
+                      aDescriptor.GetWaiting(),
+                      aDescriptor.GetActive());
 
-  // Move the currently exposed workers into a separate list
-  // of "old" workers.  We will then potentially add them
-  // back to the registration properties below based on the
-  // given descriptor.  Any that are not restored will need
-  // to be moved to the redundant state.
-  AutoTArray<RefPtr<ServiceWorker>, 3> oldWorkerList({
-    mInstallingWorker.forget(),
-    mWaitingWorker.forget(),
-    mActiveWorker.forget(),
-  });
-
-  // Its important that all state changes are actually applied before
-  // dispatching any statechange events.  Each ServiceWorker object
-  // should be in the correct state and the ServiceWorkerRegistration
-  // properties need to be set correctly as well.  To accomplish this
-  // we use a ScopeExit to dispatch any statechange events.
-  auto scopeExit = MakeScopeExit([&] {
-    // Check to see if any of the "old" workers was completely discarded.
-    // Set these workers to the redundant state.
-    for (auto& oldWorker : oldWorkerList) {
-      if (!oldWorker ||
-           oldWorker == mInstallingWorker ||
-           oldWorker == mWaitingWorker ||
-           oldWorker == mActiveWorker) {
-        continue;
-      }
-
-      oldWorker->SetState(ServiceWorkerState::Redundant);
+  nsTArray<UniquePtr<VersionCallback>> callbackList;
+  mVersionCallbackList.SwapElements(callbackList);
+  for (auto& cb : callbackList) {
+    if (cb->mVersion > mDescriptor.Version()) {
+      mVersionCallbackList.AppendElement(std::move(cb));
+      continue;
     }
 
-    // Check each worker to see if it needs a statechange event dispatched.
-    if (mInstallingWorker) {
-      mInstallingWorker->MaybeDispatchStateChangeEvent();
-    }
-    if (mWaitingWorker) {
-      mWaitingWorker->MaybeDispatchStateChangeEvent();
-    }
-    if (mActiveWorker) {
-      mActiveWorker->MaybeDispatchStateChangeEvent();
-    }
-
-    // We also check the "old" workers to see if they need a statechange
-    // event as well.  Note, these may overlap with the known worker properties
-    // above, but MaybeDispatchStateChangeEvent() will ignore duplicated calls.
-    for (auto& oldWorker : oldWorkerList) {
-      if (!oldWorker) {
-        continue;
-      }
-
-      oldWorker->MaybeDispatchStateChangeEvent();
-    }
-  });
-
-  // Clear all workers if the registration has been detached from the global.
-  // Also, we cannot expose ServiceWorker objects on worker threads yet, so
-  // do the same on when off-main-thread.  This main thread check should be
-  // removed as part of bug 1113522.
-  if (!global || !NS_IsMainThread()) {
-    return;
-  }
-
-  Maybe<ServiceWorkerDescriptor> active = aDescriptor.GetActive();
-  if (active.isSome()) {
-    mActiveWorker = global->GetOrCreateServiceWorker(active.ref());
-    mActiveWorker->SetState(active.ref().State());
-  } else {
-    mActiveWorker = nullptr;
-  }
-
-  Maybe<ServiceWorkerDescriptor> waiting = aDescriptor.GetWaiting();
-  if (waiting.isSome()) {
-    mWaitingWorker = global->GetOrCreateServiceWorker(waiting.ref());
-    mWaitingWorker->SetState(waiting.ref().State());
-  } else {
-    mWaitingWorker = nullptr;
-  }
-
-  Maybe<ServiceWorkerDescriptor> installing = aDescriptor.GetInstalling();
-  if (installing.isSome()) {
-    mInstallingWorker = global->GetOrCreateServiceWorker(installing.ref());
-    mInstallingWorker->SetState(installing.ref().State());
-  } else {
-    mInstallingWorker = nullptr;
+    cb->mFunc(cb->mVersion == mDescriptor.Version());
   }
 }
 
@@ -267,8 +212,11 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
 
   RefPtr<ServiceWorkerRegistration> self = this;
 
+  mPendingUpdatePromises += 1;
+
   mInner->Update(
     [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
+      auto scopeExit = MakeScopeExit([&] { self->UpdatePromiseSettled(); });
       nsIGlobalObject* global = self->GetParentObject();
       MOZ_DIAGNOSTIC_ASSERT(global);
       RefPtr<ServiceWorkerRegistration> ref =
@@ -278,7 +226,8 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
         return;
       }
       outer->MaybeResolve(ref);
-    }, [outer] (ErrorResult& aRv) {
+    }, [outer, self] (ErrorResult& aRv) {
+      auto scopeExit = MakeScopeExit([&] { self->UpdatePromiseSettled(); });
       outer->MaybeReject(aRv);
     });
 
@@ -358,7 +307,6 @@ ServiceWorkerRegistration::ShowNotification(JSContext* aCx,
   // Until we ship ServiceWorker objects on worker threads the active
   // worker will always be nullptr.  So limit this check to main
   // thread for now.
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mDescriptor.GetActive().isNothing());
   if (mDescriptor.GetActive().isNothing() && NS_IsMainThread()) {
     aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(scope);
     return nullptr;
@@ -404,6 +352,190 @@ const ServiceWorkerRegistrationDescriptor&
 ServiceWorkerRegistration::Descriptor() const
 {
   return mDescriptor;
+}
+
+void
+ServiceWorkerRegistration::WhenVersionReached(uint64_t aVersion,
+                                              ServiceWorkerBoolCallback&& aCallback)
+{
+  if (aVersion <= mDescriptor.Version()) {
+    aCallback(aVersion == mDescriptor.Version());
+    return;
+  }
+
+  mVersionCallbackList.AppendElement(
+    MakeUnique<VersionCallback>(aVersion, std::move(aCallback)));
+}
+
+void
+ServiceWorkerRegistration::MaybeScheduleUpdateFound(const Maybe<ServiceWorkerDescriptor>& aInstallingDescriptor)
+{
+  uint64_t newId = aInstallingDescriptor.isSome()
+                 ? aInstallingDescriptor.ref().Id()
+                 : kInvalidUpdateFoundId;
+
+  if (mScheduledUpdateFoundId != kInvalidUpdateFoundId) {
+    if (mScheduledUpdateFoundId == newId) {
+      return;
+    }
+    MaybeDispatchUpdateFound();
+    MOZ_DIAGNOSTIC_ASSERT(mScheduledUpdateFoundId == kInvalidUpdateFoundId);
+  }
+
+  bool updateFound = newId != kInvalidUpdateFoundId &&
+                     mDispatchedUpdateFoundId != newId;
+
+  if (!updateFound) {
+    return;
+  }
+
+  mScheduledUpdateFoundId = newId;
+
+  if (mPendingUpdatePromises > 0) {
+    return;
+  }
+
+  nsIGlobalObject* global = GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
+  nsCOMPtr<nsIRunnable> r = NewCancelableRunnableMethod(
+    "ServiceWorkerRegistration::MaybeDispatchUpdateFound",
+    this,
+    &ServiceWorkerRegistration::MaybeDispatchUpdateFound);
+
+  Unused << global->EventTargetFor(TaskCategory::Other)->Dispatch(
+    r.forget(), NS_DISPATCH_NORMAL);
+}
+
+void
+ServiceWorkerRegistration::MaybeDispatchUpdateFound()
+{
+  uint64_t scheduledId = mScheduledUpdateFoundId;
+  mScheduledUpdateFoundId = kInvalidUpdateFoundId;
+
+  if (scheduledId == kInvalidUpdateFoundId ||
+      scheduledId == mDispatchedUpdateFoundId) {
+    return;
+  }
+
+  mDispatchedUpdateFoundId = scheduledId;
+  DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
+}
+
+void
+ServiceWorkerRegistration::UpdatePromiseSettled()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mPendingUpdatePromises > 0);
+  mPendingUpdatePromises -= 1;
+  if (mPendingUpdatePromises > 0 ||
+      mScheduledUpdateFoundId == kInvalidUpdateFoundId) {
+    return;
+  }
+
+  nsIGlobalObject* global = GetParentObject();
+  NS_ENSURE_TRUE_VOID(global);
+
+  nsCOMPtr<nsIRunnable> r = NewCancelableRunnableMethod(
+    "ServiceWorkerRegistration::MaybeDispatchUpdateFound",
+    this,
+    &ServiceWorkerRegistration::MaybeDispatchUpdateFound);
+
+  Unused << global->EventTargetFor(TaskCategory::Other)->Dispatch(
+    r.forget(), NS_DISPATCH_NORMAL);
+}
+
+void
+ServiceWorkerRegistration::UpdateStateInternal(const Maybe<ServiceWorkerDescriptor>& aInstalling,
+                                               const Maybe<ServiceWorkerDescriptor>& aWaiting,
+                                               const Maybe<ServiceWorkerDescriptor>& aActive)
+{
+  // Do this immediately as it may flush an already pending updatefound
+  // event.  In that case we want to fire the pending event before
+  // modifying any of the registration properties.
+  MaybeScheduleUpdateFound(aInstalling);
+
+  // Move the currently exposed workers into a separate list
+  // of "old" workers.  We will then potentially add them
+  // back to the registration properties below based on the
+  // given descriptor.  Any that are not restored will need
+  // to be moved to the redundant state.
+  AutoTArray<RefPtr<ServiceWorker>, 3> oldWorkerList({
+    mInstallingWorker.forget(),
+    mWaitingWorker.forget(),
+    mActiveWorker.forget(),
+  });
+
+  // Its important that all state changes are actually applied before
+  // dispatching any statechange events.  Each ServiceWorker object
+  // should be in the correct state and the ServiceWorkerRegistration
+  // properties need to be set correctly as well.  To accomplish this
+  // we use a ScopeExit to dispatch any statechange events.
+  auto scopeExit = MakeScopeExit([&] {
+    // Check to see if any of the "old" workers was completely discarded.
+    // Set these workers to the redundant state.
+    for (auto& oldWorker : oldWorkerList) {
+      if (!oldWorker ||
+          oldWorker == mInstallingWorker ||
+          oldWorker == mWaitingWorker ||
+          oldWorker == mActiveWorker) {
+        continue;
+      }
+
+      oldWorker->SetState(ServiceWorkerState::Redundant);
+    }
+
+    // Check each worker to see if it needs a statechange event dispatched.
+    if (mInstallingWorker) {
+      mInstallingWorker->MaybeDispatchStateChangeEvent();
+    }
+    if (mWaitingWorker) {
+      mWaitingWorker->MaybeDispatchStateChangeEvent();
+    }
+    if (mActiveWorker) {
+      mActiveWorker->MaybeDispatchStateChangeEvent();
+    }
+
+    // We also check the "old" workers to see if they need a statechange
+    // event as well.  Note, these may overlap with the known worker properties
+    // above, but MaybeDispatchStateChangeEvent() will ignore duplicated calls.
+    for (auto& oldWorker : oldWorkerList) {
+      if (!oldWorker) {
+        continue;
+      }
+
+      oldWorker->MaybeDispatchStateChangeEvent();
+    }
+  });
+
+  // Clear all workers if the registration has been detached from the global.
+  // Also, we cannot expose ServiceWorker objects on worker threads yet, so
+  // do the same on when off-main-thread.  This main thread check should be
+  // removed as part of bug 1113522.
+  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
+  if (!global || !NS_IsMainThread()) {
+    return;
+  }
+
+  if (aActive.isSome()) {
+    mActiveWorker = global->GetOrCreateServiceWorker(aActive.ref());
+    mActiveWorker->SetState(aActive.ref().State());
+  } else {
+    mActiveWorker = nullptr;
+  }
+
+  if (aWaiting.isSome()) {
+    mWaitingWorker = global->GetOrCreateServiceWorker(aWaiting.ref());
+    mWaitingWorker->SetState(aWaiting.ref().State());
+  } else {
+    mWaitingWorker = nullptr;
+  }
+
+  if (aInstalling.isSome()) {
+    mInstallingWorker = global->GetOrCreateServiceWorker(aInstalling.ref());
+    mInstallingWorker->SetState(aInstalling.ref().State());
+  } else {
+    mInstallingWorker = nullptr;
+  }
 }
 
 } // dom namespace
