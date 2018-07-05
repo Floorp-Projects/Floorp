@@ -23,13 +23,11 @@ class nsIPrefBranch;
 //-----------------------------------------------------------------------------
 
 class nsIDNService final : public nsIIDNService,
-                           public nsIObserver,
                            public nsSupportsWeakReference
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDNSERVICE
-  NS_DECL_NSIOBSERVER
 
   nsIDNService();
 
@@ -98,7 +96,13 @@ private:
                      stringPrepFlag flag);
 
   bool isInWhitelist(const nsACString &host);
-  void prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref);
+  void prefsChanged(const char *pref);
+
+  static void PrefChanged(const char* aPref, nsIDNService* aSelf)
+  {
+    mozilla::MutexAutoLock lock(aSelf->mLock);
+    aSelf->prefsChanged(aPref);
+  }
 
   /**
    * Determine whether a label is considered safe to display to the user
