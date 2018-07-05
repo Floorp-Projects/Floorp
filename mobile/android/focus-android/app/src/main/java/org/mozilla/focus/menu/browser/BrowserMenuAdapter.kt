@@ -160,8 +160,8 @@ class BrowserMenuAdapter(
 
         val item = items[position]
         when (item) {
-            is MenuItem.Default -> (holder as MenuItemViewHolder).bind(item)
             is MenuItem.Custom -> (holder as CustomTabMenuItemViewHolder).bind(item)
+            is MenuItem.Default -> (holder as MenuItemViewHolder).bind(item)
         }
     }
 
