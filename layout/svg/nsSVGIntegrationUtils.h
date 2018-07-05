@@ -168,9 +168,10 @@ public:
 
   /**
    * Paint mask of non-SVG frame onto a given context, aParams.ctx.
-   * aParams.ctx must contain an A8 surface.
+   * aParams.ctx must contain an A8 surface. Returns false if the mask
+   * didn't get painted and should be ignored at the call site.
    */
-  static void
+  static bool
   PaintMask(const PaintFramesParams& aParams);
 
   /**
