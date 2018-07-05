@@ -891,7 +891,8 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(bool aVisibility)
   nsCOMPtr<nsIObserverService> obssvc = services::GetObserverService();
   NS_ASSERTION(obssvc, "Couldn't get observer service.");
   if (obssvc) {
-    obssvc->NotifyObservers(nullptr, "xul-window-visible", nullptr);
+    obssvc->NotifyObservers(static_cast<nsIXULWindow*>(this),
+                            "xul-window-visible", nullptr);
   }
 
   mDebuting = false;
