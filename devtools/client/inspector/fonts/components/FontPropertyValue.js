@@ -47,9 +47,8 @@ class FontPropertyValue extends PureComponent {
   }
 
   onUnitChange(e) {
-    // TODO implement conversion.
-    // Bug 1459898: https://bugzilla.mozilla.org/show_bug.cgi?id=1459898
-    this.props.onChange(this.props.name, this.props.value, e.target.value);
+    this.props.onChange(this.props.name, this.props.value, this.props.unit,
+       e.target.value);
   }
 
   onMouseDown(e) {
